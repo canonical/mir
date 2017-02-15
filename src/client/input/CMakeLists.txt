@@ -14,17 +14,8 @@
 #
 # Authored by: Thomas Voss <thomas.voss@canonical.com>
 
-set(
-  ANDROID_SHARED_INPUT_SOURCES
-)
-
-include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
-include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
-
-add_subdirectory(android)
 
 add_library(mirsharedinput OBJECT
-  ${ANDROID_SHARED_INPUT_SOURCES}
   input_event.cpp
   input_devices.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/xkb_mapper.cpp

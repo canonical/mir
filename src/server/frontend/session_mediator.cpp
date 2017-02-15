@@ -349,9 +349,6 @@ void mf::SessionMediator::create_surface(
     response->set_pixel_format(request->pixel_format());
     response->set_buffer_usage(request->buffer_usage());
 
-    if (surface->supports_input())
-        response->add_fd(surface->client_input_fd());
-    
     for (unsigned int i = 0; i < mir_window_attribs; i++)
     {
         auto setting = response->add_attributes();

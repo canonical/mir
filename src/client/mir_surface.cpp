@@ -28,7 +28,6 @@
 #include "mir/client_buffer.h"
 #include "mir/mir_buffer_stream.h"
 #include "mir/dispatch/threaded_dispatcher.h"
-#include "mir/input/input_platform.h"
 #include "mir/input/xkb_mapper.h"
 #include "mir/cookie/cookie.h"
 #include "mir_cookie.h"
@@ -139,7 +138,6 @@ MirSurface::MirSurface(
     mclr::DisplayServer& the_server,
     mclr::DisplayServerDebug* debug,
     std::shared_ptr<MirBufferStream> const& buffer_stream,
-    std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirWindowSpec const& spec,
     mir::protobuf::Surface const& surface_proto,
     std::shared_ptr<MirWaitHandle> const& handle)
@@ -152,7 +150,6 @@ MirSurface::MirSurface(
       modify_result{mcl::make_protobuf_object<mir::protobuf::Void>()},
       connection_(allocating_connection),
       default_stream(buffer_stream),
-      input_platform(input_platform),
       keymapper(std::make_shared<mircv::XKBMapper>()),
       configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()},
       frame_clock(std::make_shared<FrameClock>()),
@@ -193,12 +190,6 @@ MirSurface::MirSurface(
             this,
             std::placeholders::_1,
             spec.event_handler.value().context);
-    }
-
-    if (surface_proto.fd_size() > 0 && handle_event_callback)
-    {
-        input_thread = std::make_shared<md::ThreadedDispatcher>("Input dispatch", 
-            input_platform->create_input_receiver( surface_proto.fd(0), keymapper, handle_event_callback));
     }
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
@@ -486,14 +477,6 @@ void MirSurface::set_event_handler(MirWindowEventCallback callback,
         handle_event_callback = std::bind(callback, this,
                                           std::placeholders::_1,
                                           context);
-
-        if (surface->fd_size() > 0 && handle_event_callback)
-        {
-            auto input_dispatcher = input_platform->create_input_receiver(surface->fd(0),
-                                                                          keymapper,
-                                                                          handle_event_callback);
-            input_thread = std::make_shared<md::ThreadedDispatcher>("Input dispatch", input_dispatcher);
-        }
     }
 }
 

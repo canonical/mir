@@ -1,13 +1,9 @@
-include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
-include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
 include_directories(${PROJECT_SOURCE_DIR}/include/renderers/sw)
 set(
   INPUT_SOURCES
 
   basic_seat.cpp
   builtin_cursor_images.cpp
-  channel.cpp
-  channel_factory.cpp
   config_changer.cpp
   config_changer.h
   cursor_controller.cpp
@@ -21,7 +17,6 @@ set(
   input_modifier_utils.cpp
   input_probe.cpp
   key_repeat_dispatcher.cpp
-  null_input_channel_factory.cpp
   null_input_dispatcher.cpp
   seat_input_device_tracker.cpp
   surface_input_dispatcher.cpp
@@ -32,11 +27,8 @@ set(
   seat_observer_multiplexer.h
 )
 
-add_subdirectory(android)
-
 add_library(
   mirinput OBJECT
 
   ${INPUT_SOURCES}
 )
-uses_android_input(mirinput)
