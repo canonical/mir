@@ -39,7 +39,7 @@
 #include <algorithm>
 
 #include <string.h> // memcpy
-
+//#define USE_ANDROID_INPUT
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -138,6 +138,12 @@ void ms::SurfaceObservers::placed_relative(geometry::Rectangle const& placement)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
                  { observer->placed_relative(placement); });
+}
+
+void ms::SurfaceObservers::input_consumed(MirEvent const* event)
+{
+    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+                 { observer->input_consumed(event); });
 }
 
 
@@ -869,7 +875,11 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 
 void ms::BasicSurface::consume(MirEvent const* event)
 {
+#ifdef USE_ANDROID_INPUT
     input_validator.validate_and_dispatch(*event);
+#else
+    observers.input_consumed(event);
+#endif
 }
 
 void ms::BasicSurface::set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,

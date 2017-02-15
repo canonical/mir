@@ -126,6 +126,8 @@ struct InputEvent
        touch @5 : TouchScreenEvent;
        pointer @6 : PointerEvent;
     }
+
+    windowId @7 :Int32;
 }
 
 struct InputConfigurationEvent
@@ -235,6 +237,8 @@ struct InputDeviceStateEvent
         pressedKeys @1 :List(UInt32);
         buttons @2 :UInt32;
     }
+
+    windowId @6 :Int32;
 }
 
 struct SurfacePlacementEvent

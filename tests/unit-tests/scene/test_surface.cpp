@@ -410,8 +410,14 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     mev::add_touch(*touch_event, 0, mir_touch_action_down, mir_touch_tooltype_finger, 0, 0,
         0, 0, 0, 0);
 
-    EXPECT_CALL(mock_sender, send_event(mt::MirKeyboardEventMatches(key_event.get()), _)).Times(1);
-    EXPECT_CALL(mock_sender, send_event(mt::MirTouchEventMatches(touch_event.get()), _)).Times(1);
+    auto const mock_event_sink = std::make_shared<MockEventSink>();
+    ms::OutputPropertiesCache cache;
+    auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), surface, cache, mock_event_sink);
+
+    surface.add_observer(observer);
+
+    EXPECT_CALL(*mock_event_sink, handle_event(mt::MirKeyboardEventMatches(key_event.get()))).Times(1);
+    EXPECT_CALL(*mock_event_sink, handle_event(mt::MirTouchEventMatches(touch_event.get()))).Times(1);
 
     surface.consume(key_event.get());
     surface.consume(touch_event.get());

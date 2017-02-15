@@ -207,7 +207,7 @@ public:
 
     void set_event_handler(MirWindowEventCallback callback,
                            void* context);
-    void handle_event(MirEvent const& e);
+    void handle_event(MirEvent& e);
 
     void request_and_wait_for_configure(MirWindowAttrib a, int value);
 
