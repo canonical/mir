@@ -316,7 +316,7 @@ TEST_F(GLRenderer, swaps_buffers_after_rendering)
     renderer.render(renderable_list);
 }
 
-TEST_F(GLRenderer, sets_exact_viewport)
+TEST_F(GLRenderer, sets_viewport_exact)
 {
     int const screen_width = 1920;
     int const screen_height = 1080;
@@ -336,6 +336,54 @@ TEST_F(GLRenderer, sets_exact_viewport)
         .WillByDefault(Return(view_area));
 
     EXPECT_CALL(mock_gl, glViewport(0, 0, screen_width, screen_height));
+
+    mrg::Renderer renderer(mock_display_buffer);
+}
+
+TEST_F(GLRenderer, sets_viewport_scaled_up_no_gaps)
+{
+    int const screen_width = 1920;
+    int const screen_height = 1080;
+    int const viewport_width = 1280;
+    int const viewport_height = 720;
+
+    mir::geometry::Rectangle const view_area
+        {{0,0}, {viewport_width,viewport_height}};
+
+    ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_WIDTH,_))
+        .WillByDefault(DoAll(SetArgPointee<3>(screen_width),
+                             Return(EGL_TRUE)));
+    ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_HEIGHT,_))
+        .WillByDefault(DoAll(SetArgPointee<3>(screen_height),
+                             Return(EGL_TRUE)));
+    ON_CALL(mock_display_buffer, view_area())
+        .WillByDefault(Return(view_area));
+
+    EXPECT_CALL(mock_gl, glViewport(0, 0, screen_width, screen_height));
+
+    mrg::Renderer renderer(mock_display_buffer);
+}
+
+TEST_F(GLRenderer, sets_viewport_letterboxed)
+{
+    int const screen_width = 1920;
+    int const screen_height = 1080;
+    int const viewport_width = 640;
+    int const viewport_height = 480;
+
+    mir::geometry::Rectangle const view_area
+        {{0,0}, {viewport_width,viewport_height}};
+
+    ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_WIDTH,_))
+        .WillByDefault(DoAll(SetArgPointee<3>(screen_width),
+                             Return(EGL_TRUE)));
+    ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_HEIGHT,_))
+        .WillByDefault(DoAll(SetArgPointee<3>(screen_height),
+                             Return(EGL_TRUE)));
+    ON_CALL(mock_display_buffer, view_area())
+        .WillByDefault(Return(view_area));
+
+    EXPECT_CALL(mock_gl, glViewport(240, 0, 1440, 1080));
 
     mrg::Renderer renderer(mock_display_buffer);
 }
