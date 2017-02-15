@@ -39,6 +39,7 @@ using testing::ReturnRef;
 using testing::Pointee;
 using testing::AnyNumber;
 using testing::AtLeast;
+using testing::DoAll;
 using testing::_;
 
 namespace mt=mir::test;
@@ -313,4 +314,28 @@ TEST_F(GLRenderer, swaps_buffers_after_rendering)
     EXPECT_CALL(mock_display_buffer, swap_buffers());
 
     renderer.render(renderable_list);
+}
+
+TEST_F(GLRenderer, sets_exact_viewport)
+{
+    int const screen_width = 1920;
+    int const screen_height = 1080;
+    int const viewport_width = screen_width;
+    int const viewport_height = screen_height;
+
+    mir::geometry::Rectangle const view_area
+        {{0,0}, {viewport_width,viewport_height}};
+
+    ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_WIDTH,_))
+        .WillByDefault(DoAll(SetArgPointee<3>(screen_width),
+                             Return(EGL_TRUE)));
+    ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_HEIGHT,_))
+        .WillByDefault(DoAll(SetArgPointee<3>(screen_height),
+                             Return(EGL_TRUE)));
+    ON_CALL(mock_display_buffer, view_area())
+        .WillByDefault(Return(view_area));
+
+    EXPECT_CALL(mock_gl, glViewport(0, 0, screen_width, screen_height));
+
+    mrg::Renderer renderer(mock_display_buffer);
 }
