@@ -316,15 +316,11 @@ TEST_F(GLRenderer, swaps_buffers_after_rendering)
     renderer.render(renderable_list);
 }
 
-TEST_F(GLRenderer, sets_viewport_exact)
+TEST_F(GLRenderer, sets_viewport_unscaled_exact)
 {
     int const screen_width = 1920;
     int const screen_height = 1080;
-    int const viewport_width = screen_width;
-    int const viewport_height = screen_height;
-
-    mir::geometry::Rectangle const view_area
-        {{0,0}, {viewport_width,viewport_height}};
+    mir::geometry::Rectangle const view_area{{0,0}, {1920,1080}};
 
     ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_WIDTH,_))
         .WillByDefault(DoAll(SetArgPointee<3>(screen_width),
@@ -340,15 +336,11 @@ TEST_F(GLRenderer, sets_viewport_exact)
     mrg::Renderer renderer(mock_display_buffer);
 }
 
-TEST_F(GLRenderer, sets_viewport_scaled_up_no_gaps)
+TEST_F(GLRenderer, sets_viewport_upscaled_exact)
 {
     int const screen_width = 1920;
     int const screen_height = 1080;
-    int const viewport_width = 1280;
-    int const viewport_height = 720;
-
-    mir::geometry::Rectangle const view_area
-        {{0,0}, {viewport_width,viewport_height}};
+    mir::geometry::Rectangle const view_area{{0,0}, {1280,720}};
 
     ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_WIDTH,_))
         .WillByDefault(DoAll(SetArgPointee<3>(screen_width),
@@ -364,15 +356,31 @@ TEST_F(GLRenderer, sets_viewport_scaled_up_no_gaps)
     mrg::Renderer renderer(mock_display_buffer);
 }
 
-TEST_F(GLRenderer, sets_viewport_letterboxed)
+TEST_F(GLRenderer, sets_viewport_downscaled_exact)
+{
+    int const screen_width = 1280;
+    int const screen_height = 720;
+    mir::geometry::Rectangle const view_area{{0,0}, {1920,1080}};
+
+    ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_WIDTH,_))
+        .WillByDefault(DoAll(SetArgPointee<3>(screen_width),
+                             Return(EGL_TRUE)));
+    ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_HEIGHT,_))
+        .WillByDefault(DoAll(SetArgPointee<3>(screen_height),
+                             Return(EGL_TRUE)));
+    ON_CALL(mock_display_buffer, view_area())
+        .WillByDefault(Return(view_area));
+
+    EXPECT_CALL(mock_gl, glViewport(0, 0, screen_width, screen_height));
+
+    mrg::Renderer renderer(mock_display_buffer);
+}
+
+TEST_F(GLRenderer, sets_viewport_upscaled_narrow)
 {
     int const screen_width = 1920;
     int const screen_height = 1080;
-    int const viewport_width = 640;
-    int const viewport_height = 480;
-
-    mir::geometry::Rectangle const view_area
-        {{0,0}, {viewport_width,viewport_height}};
+    mir::geometry::Rectangle const view_area{{0,0}, {640,480}};
 
     ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_WIDTH,_))
         .WillByDefault(DoAll(SetArgPointee<3>(screen_width),
@@ -384,6 +392,26 @@ TEST_F(GLRenderer, sets_viewport_letterboxed)
         .WillByDefault(Return(view_area));
 
     EXPECT_CALL(mock_gl, glViewport(240, 0, 1440, 1080));
+
+    mrg::Renderer renderer(mock_display_buffer);
+}
+
+TEST_F(GLRenderer, sets_viewport_downscaled_wide)
+{
+    int const screen_width = 640;
+    int const screen_height = 480;
+    mir::geometry::Rectangle const view_area{{0,0}, {1920,1080}};
+
+    ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_WIDTH,_))
+        .WillByDefault(DoAll(SetArgPointee<3>(screen_width),
+                             Return(EGL_TRUE)));
+    ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_HEIGHT,_))
+        .WillByDefault(DoAll(SetArgPointee<3>(screen_height),
+                             Return(EGL_TRUE)));
+    ON_CALL(mock_display_buffer, view_area())
+        .WillByDefault(Return(view_area));
+
+    EXPECT_CALL(mock_gl, glViewport(0, 60, 640, 360));
 
     mrg::Renderer renderer(mock_display_buffer);
 }
