@@ -696,28 +696,26 @@ TEST_F(DisplayConfigurationTest, mode_width_and_height_are_independent_of_orient
 
         // But logical size is affected by orientation:
         auto current_mode = mir_output_get_current_mode(output);
-        if (current_mode)
-        {
-            unsigned physical_width = mir_output_mode_get_width(current_mode);
-            unsigned physical_height = mir_output_mode_get_height(current_mode);
-            unsigned logical_width = mir_output_get_logical_width(output);
-            unsigned logical_height = mir_output_get_logical_height(output);
+        ASSERT_TRUE(current_mode);
+        unsigned physical_width = mir_output_mode_get_width(current_mode);
+        unsigned physical_height = mir_output_mode_get_height(current_mode);
+        unsigned logical_width = mir_output_get_logical_width(output);
+        unsigned logical_height = mir_output_get_logical_height(output);
 
-            switch (orientation)
-            {
-            case mir_orientation_normal:
-            case mir_orientation_inverted:
-                EXPECT_EQ(physical_width, logical_width);
-                EXPECT_EQ(physical_height, logical_height);
-                break;
-            case mir_orientation_left:
-            case mir_orientation_right:
-                EXPECT_EQ(physical_height, logical_width);
-                EXPECT_EQ(physical_width, logical_height);
-                break;
-            default:
-                break;
-            }
+        switch (orientation)
+        {
+        case mir_orientation_normal:
+        case mir_orientation_inverted:
+            EXPECT_EQ(physical_width, logical_width);
+            EXPECT_EQ(physical_height, logical_height);
+            break;
+        case mir_orientation_left:
+        case mir_orientation_right:
+            EXPECT_EQ(physical_height, logical_width);
+            EXPECT_EQ(physical_width, logical_height);
+            break;
+        default:
+            break;
         }
     }
 
