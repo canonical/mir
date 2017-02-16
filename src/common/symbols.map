@@ -480,3 +480,12 @@ MIR_COMMON_0.26 {
       MirEvent::to_window_placement*;
   };
 } MIR_COMMON_0.25;
+
+
+MIR_COMMON_0.27 {
+ global:
+  extern "C++" {
+      MirKeyboardEvent::text*;
+      MirKeyboardEvent::set_text*;
+  };
+} MIR_COMMON_0.26;

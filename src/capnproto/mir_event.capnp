@@ -52,6 +52,7 @@ struct KeyboardEvent
         down @1;
         repeat @2;
     }
+    text @3 :Text;
 }
 
 struct TouchScreenEvent

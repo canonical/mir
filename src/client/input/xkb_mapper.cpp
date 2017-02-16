@@ -313,13 +313,15 @@ void mircv::XKBMapper::XkbMappingState::set_key_state(std::vector<uint32_t> cons
     state = make_unique_state(keymap.get());
     modifier_state = mir_input_event_modifier_none;
     std::unordered_set<uint32_t> pressed_codes;
+    std::string t;
     for (uint32_t scan_code : key_state)
     {
         bool already_pressed = pressed_codes.count(scan_code) > 0;
 
         update_state(to_xkb_scan_code(scan_code),
                      (already_pressed) ? mir_keyboard_action_up : mir_keyboard_action_down,
-                     nullptr);
+                     nullptr,
+                     t);
 
         if (already_pressed)
             pressed_codes.erase(scan_code);
@@ -333,8 +335,12 @@ bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event, mircv::X
     auto& key_ev = *event.to_input()->to_keyboard();
     uint32_t xkb_scan_code = to_xkb_scan_code(key_ev.scan_code());
     auto old_state = modifier_state;
+    std::string key_text;
+    xkb_keysym_t key_sym;
+    key_sym = update_state(xkb_scan_code, key_ev.action(), compose_state, key_text);
 
-    key_ev.set_key_code(update_state(xkb_scan_code, key_ev.action(), compose_state));
+    key_ev.set_key_code(key_sym);
+    key_ev.set_text(key_text.c_str());
     // TODO we should also indicate effective/consumed modifier state to properly
     // implement short cuts with keys that are only reachable via modifier keys
     key_ev.set_modifiers(expand_modifiers(modifier_state));
@@ -342,13 +348,21 @@ bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event, mircv::X
     return old_state != modifier_state;
 }
 
-xkb_keysym_t mircv::XKBMapper::XkbMappingState::update_state(uint32_t scan_code, MirKeyboardAction action, mircv::XKBMapper::ComposeState* compose_state)
+xkb_keysym_t mircv::XKBMapper::XkbMappingState::update_state(uint32_t scan_code, MirKeyboardAction action, mircv::XKBMapper::ComposeState* compose_state, std::string& text)
 {
     auto key_sym = xkb_state_key_get_one_sym(state.get(), scan_code);
     auto mod_change = xkb_key_code_to_modifier(key_sym);
 
+    if(action == mir_keyboard_action_down || action == mir_keyboard_action_repeat)
+    {
+        char buffer[7];
+        // scan code? really? not keysym?
+        xkb_state_key_get_utf8(state.get(), scan_code, buffer, sizeof(buffer));
+        text = buffer;
+    }
+
     if (compose_state)
-        key_sym = compose_state->update_state(key_sym, action);
+        key_sym = compose_state->update_state(key_sym, action, text);
 
     if (action == mir_keyboard_action_up)
     {
@@ -405,25 +419,31 @@ void mircv::XKBMapper::ComposeState::update_and_map(MirEvent& event)
 
     auto const key_sym = key_ev.key_code();
     auto const action = key_ev.action();
-    key_ev.set_key_code(update_state(key_sym, action));
+    std::string text;
+    key_ev.set_key_code(update_state(key_sym, action, text));
+    key_ev.set_text(text.c_str());
 }
 
-xkb_keysym_t mircv::XKBMapper::ComposeState::update_state(xkb_keysym_t mapped_key, MirKeyboardAction action)
+xkb_keysym_t mircv::XKBMapper::ComposeState::update_state(xkb_keysym_t mapped_key, MirKeyboardAction action, std::string& mapped_text)
 {
     // the state machine only cares about downs
     if (action == mir_keyboard_action_down)
     {
         if (xkb_compose_state_feed(state.get(), mapped_key) == XKB_COMPOSE_FEED_ACCEPTED)
         {
-            auto result =  xkb_compose_state_get_status(state.get());
+            auto result = xkb_compose_state_get_status(state.get());
             if (result == XKB_COMPOSE_COMPOSED)
             {
+                char buffer[7];
+                xkb_compose_state_get_utf8(state.get(), buffer, sizeof(buffer));
+                mapped_text = buffer;
                 auto composed_key_sym = xkb_compose_state_get_one_sym(state.get());
                 last_composed_key = std::make_tuple(mapped_key, composed_key_sym);
                 return composed_key_sym;
             }
             else if (result == XKB_COMPOSE_COMPOSING)
             {
+                mapped_text = "";
                 consumed_keys.insert(mapped_key);
                 return XKB_KEY_NoSymbol;
             }
@@ -440,12 +460,24 @@ xkb_keysym_t mircv::XKBMapper::ComposeState::update_state(xkb_keysym_t mapped_ke
             mapped_key == std::get<0>(last_composed_key.value()))
         {
             if (action == mir_keyboard_action_up)
+            {
+                mapped_text = "";
                 return std::get<1>(last_composed_key.consume());
+            }
             else
+            {
+                // on repeat get the text of the compose state
+                char buffer[7];
+                xkb_compose_state_get_utf8(state.get(), buffer, sizeof(buffer));
+                mapped_text = buffer;
                 return std::get<1>(last_composed_key.value());
+            }
         }
         if (consumed_keys.erase(mapped_key))
+        {
+            mapped_text = "";
             return XKB_KEY_NoSymbol;
+        }
     }
 
     return mapped_key;

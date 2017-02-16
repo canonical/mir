@@ -82,6 +82,14 @@ xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* event);
 int mir_keyboard_event_scan_code(MirKeyboardEvent const* event);
 
 /**
+ * Retrieve the text the key press would emit as utf8 string.
+ *
+ *   \param [in] event The key event
+ *   \return           The text
+ */
+char const* mir_keyboard_event_key_text(MirKeyboardEvent const* event);
+
+/**
  * Retrieve the modifier keys pressed when the key action occured.
  *
  *   \param [in] event The key event
