@@ -19,6 +19,7 @@
 #include "mir/events/event_builders.h"
 #include "mir/scene/surface_event_source.h"
 #include "mir/scene/surface.h"
+#include "mir/events/event_builders.h"
 #include "output_properties_cache.h"
 
 #include "mir/geometry/size.h"
@@ -92,4 +93,11 @@ void ms::SurfaceEventSource::keymap_changed(MirInputDeviceId device_id,
 void ms::SurfaceEventSource::placed_relative(geometry::Rectangle const& placement)
 {
     event_sink->handle_event(*mev::make_event(id, placement));
+}
+
+void ms::SurfaceEventSource::input_consumed(MirEvent const* event)
+{
+    auto ev = mev::clone_event(*event);
+    mev::set_window_id(*ev, id.as_value());
+    event_sink->handle_event(*ev);
 }

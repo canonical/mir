@@ -32,18 +32,8 @@ namespace doubles
 
 struct StubInputSurface : public mir::input::Surface
 {
-    StubInputSurface(std::shared_ptr<mir::input::InputChannel> const& channel)
-        : channel(channel)
-    {
-    }
     StubInputSurface()
-        : channel(nullptr)
     {
-    }
-
-    std::shared_ptr<mir::input::InputChannel> input_channel() const
-    {
-        return channel;
     }
 
     mir::input::InputReceptionMode reception_mode() const { return mir::input::InputReceptionMode::normal; }
@@ -51,10 +41,8 @@ struct StubInputSurface : public mir::input::Surface
     std::string name() const { return {}; }
     mir::geometry::Rectangle input_bounds() const override { return {{},{}}; }
     bool input_area_contains(mir::geometry::Point const&) const { return false; }
-    
-    std::shared_ptr<graphics::CursorImage> cursor_image() const { return nullptr; }
 
-    std::shared_ptr<mir::input::InputChannel> const channel;
+    std::shared_ptr<graphics::CursorImage> cursor_image() const { return nullptr; }
 };
 
 }

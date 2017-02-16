@@ -31,23 +31,17 @@ namespace doubles
 {
 struct MockFrontendSurface : public frontend::Surface
 {
-    MockFrontendSurface(std::shared_ptr<graphics::Buffer> const&, int input_fd)
+    MockFrontendSurface()
     {
         using namespace testing;
         ON_CALL(*this, client_size())
             .WillByDefault(Return(geometry::Size()));
         ON_CALL(*this, pixel_format())
             .WillByDefault(Return(MirPixelFormat()));
-        ON_CALL(*this, supports_input())
-            .WillByDefault(Return(true));
-        ON_CALL(*this, client_input_fd())
-            .WillByDefault(Return(input_fd));
     }
-
-    MockFrontendSurface(int input_fd) :
-        MockFrontendSurface(nullptr, input_fd)
-    {
-    }
+    MockFrontendSurface(std::shared_ptr<graphics::Buffer> const&)
+        : MockFrontendSurface()
+    {}
 
     ~MockFrontendSurface() noexcept {}
 
@@ -57,9 +51,6 @@ struct MockFrontendSurface : public frontend::Surface
     MOCK_CONST_METHOD0(client_size, geometry::Size());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
 
-    MOCK_CONST_METHOD0(supports_input, bool());
-    MOCK_CONST_METHOD0(client_input_fd, int());
-    
     MOCK_METHOD1(set_cursor_image, void(std::shared_ptr<graphics::CursorImage> const&));
     MOCK_METHOD2(set_cursor_stream, void(std::shared_ptr<frontend::BufferStream> const&, geometry::Displacement const&));
 

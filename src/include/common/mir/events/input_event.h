@@ -24,6 +24,10 @@
 struct MirInputEvent : MirEvent
 {
     MirInputEventType input_type() const;
+
+    int window_id() const;
+    void set_window_id(int id);
+
     MirInputDeviceId device_id() const;
     void set_device_id(MirInputDeviceId id);
 

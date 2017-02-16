@@ -23,8 +23,6 @@
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
 
-#include <androidfw/Input.h>
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 

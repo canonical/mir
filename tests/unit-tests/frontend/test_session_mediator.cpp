@@ -157,7 +157,7 @@ public:
         using namespace testing;
         mg::BufferProperties properties;
         create_buffer_stream(properties);
-        auto surface = std::make_shared<testing::NiceMock<mtd::MockFrontendSurface>>(testing_client_input_fd);
+        auto surface = std::make_shared<testing::NiceMock<mtd::MockFrontendSurface>>();
         mock_surfaces[id] = surface;
         return surface;
     }
@@ -229,15 +229,12 @@ public:
 
     std::map<mf::BufferStreamId, std::shared_ptr<mtd::MockBufferStream>> mock_streams;
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
-    static int const testing_client_input_fd;
     int last_stream_id = 0;
     int last_surface_id = 0;
     int buffer_count = 0;
     int native_buffer_count = 0;
     int destroy_buffers = 0;
 };
-
-int const StubbedSession::testing_client_input_fd{11};
 
 struct StubScreencast : mtd::NullScreencast
 {
@@ -472,35 +469,6 @@ TEST_F(SessionMediator, connect_packs_display_configuration)
     mediator->connect(&connect_parameters, &connection, null_callback.get());
 
     EXPECT_THAT(connection.display_configuration(), mt::DisplayConfigMatches(std::cref(config)));
-}
-
-TEST_F(SessionMediator, creating_surface_packs_response_with_input_fds)
-{
-    mediator.connect(&connect_parameters, &connection, null_callback.get());
-
-    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
-    ASSERT_THAT(surface_response.fd().size(), testing::Ge(1));
-    EXPECT_EQ(StubbedSession::testing_client_input_fd, surface_response.fd(0));
-
-    mediator.disconnect(nullptr, nullptr, null_callback.get());
-}
-
-TEST_F(SessionMediator, no_input_channel_returns_no_fds)
-{
-    using namespace testing;
-
-    auto surface = stubbed_session->mock_surface_at(mf::SurfaceId{0});
-    EXPECT_CALL(*surface, supports_input())
-        .WillOnce(Return(false));
-    EXPECT_CALL(*surface, client_input_fd())
-        .Times(0);
-
-    mediator.connect(&connect_parameters, &connection, null_callback.get());
-
-    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
-    EXPECT_THAT(surface_response.fd().size(), Eq(0));
-
-    mediator.disconnect(nullptr, nullptr, null_callback.get());
 }
 
 TEST_F(SessionMediator, display_config_request)

@@ -102,7 +102,6 @@ add_subdirectory(shell/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
 add_subdirectory(input/)
-add_subdirectory(android_input/)
 add_subdirectory(scene/)
 add_subdirectory(thread/)
 add_subdirectory(dispatch/)
@@ -122,8 +121,6 @@ mir_add_wrapped_executable(mir_unit_tests
 mir_precompiled_header(mir_unit_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hpp)
 
 add_dependencies(mir_unit_tests GMock)
-
-uses_android_input(mir_unit_tests)
 
 target_link_libraries(
   mir_unit_tests

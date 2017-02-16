@@ -160,52 +160,13 @@ MIR_COMMON_0.25_PRIVATE {
 # New functions in Mir 0.16
       # These symbols are supposed to be "private" (they're under 3rd_party)
       # but they are used by libmirplatform, libmirclient or libmirserver
-      android::InputChannel::InputChannel*;
-      android::InputChannel::openInputFdPair*;
-      android::InputConsumer::consume*;
-      android::InputConsumer::hasDeferredEvent*;
-      android::InputConsumer::hasPendingBatch*;
-      android::InputConsumer::?InputConsumer*;
-      android::InputConsumer::InputConsumer*;
-      android::InputConsumer::sendFinishedSignal*;
-      android::InputPublisher::?InputPublisher*;
-      android::InputPublisher::InputPublisher*;
-      android::InputPublisher::publishKeyEvent*;
-      android::InputPublisher::publishMotionEvent*;
-      android::InputPublisher::receiveFinishedSignal*;
-      android::IntSet::contains*;
-      android::IntSet::indexOf*;
-      android::IntSet::?IntSet*;
-      android::IntSet::IntSet*;
-      android::IntSet::operator*;
-      android::IntSet::remove*;
-      android::KeyEvent::initialize*;
-      android::MotionEvent::getAxisValue*;
-      android::MotionEvent::getHistoricalAxisValue*;
-      android::MotionEvent::getRawAxisValue*;
-      android::PointerCoords::copyFrom*;
-      android::PointerCoords::getAxisValue*;
-      android::PointerCoords::operator*;
-      android::PointerCoords::setAxisValue*;
-      android::PointerProperties::copyFrom*;
-      android::PointerProperties::operator*;
-      android::RefBase::decStrong*;
-      android::RefBase::incStrong*;
-      android::RefBase::onFirstRef*;
-      android::RefBase::onIncStrongAttempted*;
-      android::RefBase::onLastStrongRef*;
-      android::RefBase::onLastWeakRef*;
-      android::RefBase::?RefBase*;
-      android::RefBase::RefBase*;
       mir::write_to_log;
       typeinfo?for?android::RefBase;
-      vtable?for?android::IntSet;
 
 # New functions in Mir 0.19.0
       # These symbols are supposed to be "private" (they're under src/include)
       # but they are used by libmirplatform, libmirclient or libmirserver
       typeinfo?for?mir::time::SteadyClock;
-      typeinfo?for?android::InputChannel;
       mir::detail::libname_impl*;
 
 # New functions in Mir 0.22
@@ -481,11 +442,14 @@ MIR_COMMON_0.26 {
   };
 } MIR_COMMON_0.25;
 
-
 MIR_COMMON_0.27 {
  global:
   extern "C++" {
-      MirKeyboardEvent::text*;
+      MirInputDeviceStateEvent::set_window_id*;
+      MirInputDeviceStateEvent::window_id*;
+      MirInputEvent::set_window_id*;
+      MirInputEvent::window_id*;
       MirKeyboardEvent::set_text*;
+      MirKeyboardEvent::text*;
   };
 } MIR_COMMON_0.26;
