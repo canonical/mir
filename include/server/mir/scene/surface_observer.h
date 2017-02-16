@@ -61,6 +61,7 @@ public:
     virtual void renamed(char const* name) = 0;
     virtual void cursor_image_removed() = 0;
     virtual void placed_relative(geometry::Rectangle const& placement) = 0;
+    virtual void input_consumed(MirEvent const* event) = 0;
 
 protected:
     SurfaceObserver() = default;

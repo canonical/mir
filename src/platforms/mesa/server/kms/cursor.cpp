@@ -107,18 +107,16 @@ inline mgm::Cursor::GBMBOWrapper::~GBMBOWrapper()    { gbm_bo_destroy(buffer); }
 mgm::Cursor::Cursor(
     gbm_device* gbm,
     KMSOutputContainer& output_container,
-    std::shared_ptr<CurrentConfiguration> const& current_configuration,
-    std::shared_ptr<mg::CursorImage> const& initial_image) :
+    std::shared_ptr<CurrentConfiguration> const& current_configuration) :
         output_container(output_container),
         current_position(),
-        visible(true),
         last_set_failed(false),
         buffer(gbm),
         buffer_width(gbm_bo_get_width(buffer)),
         buffer_height(gbm_bo_get_height(buffer)),
         current_configuration(current_configuration)
 {
-    show(*initial_image);
+    hide();
     if (last_set_failed)
         throw std::runtime_error("Initial KMS cursor set failed");
 }
@@ -213,9 +211,17 @@ void mgm::Cursor::move_to(geometry::Point position)
 void mir::graphics::mesa::Cursor::suspend()
 {
     std::lock_guard<std::mutex> lg(guard);
+    clear(lg);
+}
 
-    output_container.for_each_output(
-        [&](KMSOutput& output) { output.clear_cursor(); });
+void mir::graphics::mesa::Cursor::clear(std::lock_guard<std::mutex> const&)
+{
+    last_set_failed = false;
+    output_container.for_each_output([&](KMSOutput& output)
+        {
+            if (!output.clear_cursor())
+                last_set_failed = true;
+        });
 }
 
 void mgm::Cursor::resume()
@@ -227,9 +233,7 @@ void mgm::Cursor::hide()
 {
     std::lock_guard<std::mutex> lg(guard);
     visible = false;
-
-    output_container.for_each_output(
-        [&](KMSOutput& output) { output.clear_cursor(); });
+    clear(lg);
 }
 
 void mgm::Cursor::for_each_used_output(
@@ -285,8 +289,7 @@ void mgm::Cursor::place_cursor_at_locked(
             output.move_cursor(geom::Point{} + dp - hotspot);
             if (force_state || !output.has_cursor()) // TODO - or if orientation had changed - then set buffer..
             {
-                output.set_cursor(buffer);
-                if (!output.has_cursor())
+                if (!output.set_cursor(buffer) || !output.has_cursor())
                     set_on_all_outputs = false;
             }
         }

@@ -40,6 +40,7 @@
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
 
+#include "mir/event_printer.h"
 #include <boost/bind.hpp>
 #include <boost/throw_exception.hpp>
 #include <endian.h>
@@ -400,41 +401,48 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                 {
                     rpc_report->event_parsing_succeeded(*e);
 
-                    int surface_id = 0;
-                    bool is_surface_event = true;
+                    int window_id = 0;
+                    bool is_window_event = true;
 
                     switch (e->type())
                     {
                     case mir_event_type_window:
-                        surface_id = e->to_surface()->id();
+                        window_id = e->to_surface()->id();
                         break;
                     case mir_event_type_resize:
-                        surface_id = e->to_resize()->surface_id();
+                        window_id = e->to_resize()->surface_id();
                         break;
                     case mir_event_type_orientation:
-                        surface_id = e->to_orientation()->surface_id();
+                        window_id = e->to_orientation()->surface_id();
                         break;
                     case mir_event_type_close_window:
-                        surface_id = e->to_close_window()->surface_id();
+                        window_id = e->to_close_window()->surface_id();
                         break;
                     case mir_event_type_keymap:
-                        surface_id = e->to_keymap()->surface_id();
+                        window_id = e->to_keymap()->surface_id();
                         break;
                     case mir_event_type_window_output:
-                        surface_id = e->to_window_output()->surface_id();
+                        window_id = e->to_window_output()->surface_id();
                         break;
                     case mir_event_type_window_placement:
-                        surface_id = e->to_window_placement()->id();
+                        window_id = e->to_window_placement()->id();
+                        break;
+                    case mir_event_type_input:
+                        window_id = e->to_input()->window_id();
+                        break;
+                    case mir_event_type_input_device_state:
+                        window_id = e->to_input_device_state()->window_id();
                         break;
                     default:
-                        is_surface_event = false;
+                        is_window_event = false;
                         event_sink->handle_event(*e);
                     }
 
-                    if (is_surface_event)
+                    if (is_window_event)
                         if (auto map = surface_map.lock())
-                            if (auto surf = map->surface(mf::SurfaceId(surface_id)))
+                            if (auto surf = map->surface(mf::SurfaceId(window_id)))
                                 surf->handle_event(*e);
+
                 }
             }
             catch(...)

@@ -64,11 +64,12 @@ TEST_F(NestedCursor, sets_default_cursor_image)
     EXPECT_CALL(*connection, set_cursor_image(CursorImageEquals(a_cursor_image.as_argb_8888()))).Times(1);
 
     mgn::Cursor cursor(connection, mt::fake_shared(a_cursor_image));
+    cursor.show();
 }
 
 TEST_F(NestedCursor, can_set_other_images)
 {
-    EXPECT_CALL(*connection, set_cursor_image(CursorImageEquals(a_cursor_image.as_argb_8888()))).Times(1);
+    EXPECT_CALL(*connection, set_cursor_image(CursorImageEquals(a_cursor_image.as_argb_8888()))).Times(0);
     EXPECT_CALL(*connection, set_cursor_image(CursorImageEquals(another_cursor_image.as_argb_8888()))).Times(1);
 
     mgn::Cursor cursor(connection, mt::fake_shared(a_cursor_image));
@@ -83,6 +84,7 @@ TEST_F(NestedCursor, hides_cursor)
     EXPECT_CALL(*connection, set_cursor_image(CursorImageEquals(another_cursor_image.as_argb_8888()))).Times(1);
 
     mgn::Cursor cursor(connection, mt::fake_shared(a_cursor_image));
+    cursor.show();
     cursor.hide();
     cursor.show(another_cursor_image);
 }

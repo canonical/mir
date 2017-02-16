@@ -121,6 +121,7 @@ MIR_SERVER_0.27 {
     mir::scene::NullSurfaceObserver::cursor_image_set_to*;
     mir::scene::NullSurfaceObserver::frame_posted*;
     mir::scene::NullSurfaceObserver::hidden_set_to*;
+    mir::scene::NullSurfaceObserver::input_consumed*;
     mir::scene::NullSurfaceObserver::keymap_changed*;
     mir::scene::NullSurfaceObserver::moved_to*;
     mir::scene::NullSurfaceObserver::?NullSurfaceObserver*;
@@ -398,6 +399,7 @@ MIR_SERVER_0.27 {
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::cursor_image_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::frame_posted*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::hidden_set_to*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::input_consumed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::keymap_changed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::moved_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::?NullSurfaceObserver*;

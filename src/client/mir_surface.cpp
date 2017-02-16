@@ -54,6 +54,25 @@ namespace
 {
 std::mutex handle_mutex;
 std::unordered_set<MirWindow*> valid_surfaces;
+
+void apply_device_state(MirEvent const& event, mi::KeyMapper& keymapper)
+{
+    auto device_state = mir_event_get_input_device_state_event(&event);
+    std::vector<uint32_t> keys;
+
+    for (size_t index = 0, end_index = mir_input_device_state_event_device_count(device_state);
+         index != end_index; ++index)
+    {
+        auto device_id = mir_input_device_state_event_device_id(device_state, index);
+        auto key_count = mir_input_device_state_event_device_pressed_keys_count(device_state, index);
+        for (decltype(key_count) i = 0; i != key_count; ++i)
+            keys.push_back(
+                mir_input_device_state_event_device_pressed_keys_for_index(device_state, index, i));
+
+        keymapper.set_key_state(device_id, keys);
+    }
+}
+
 }
 
 #pragma GCC diagnostic push
@@ -480,7 +499,7 @@ void MirSurface::set_event_handler(MirWindowEventCallback callback,
     }
 }
 
-void MirSurface::handle_event(MirEvent const& e)
+void MirSurface::handle_event(MirEvent& e)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
 
@@ -494,6 +513,12 @@ void MirSurface::handle_event(MirEvent const& e)
             attrib_cache[a] = mir_window_event_get_attribute_value(sev);
         break;
     }
+    case mir_event_type_input:
+        keymapper->map_event(e);
+        break;
+    case mir_event_type_input_device_state:
+        apply_device_state(e, *keymapper);
+        break;
     case mir_event_type_orientation:
         orientation = mir_orientation_event_get_direction(mir_event_get_orientation_event(&e));
         break;

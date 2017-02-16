@@ -46,7 +46,6 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mis = mir::input::synthesis;
-namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace msc = mir::scene;
 namespace geom = mir::geometry;
@@ -82,6 +81,7 @@ public:
     MOCK_METHOD1(renamed, void(char const* name));
     MOCK_METHOD0(cursor_image_removed, void());
     MOCK_METHOD1(placed_relative, void(geom::Rectangle const& placement));
+    MOCK_METHOD1(input_consumed, void(MirEvent const*));
 };
 
 
