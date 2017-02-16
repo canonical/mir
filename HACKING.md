@@ -76,12 +76,6 @@ largely depend upon the public interfaces of components - but tests of units wit
 a component will include headers from within the source tree.
 
 
-Code structure: 3rd_party
-
-Third party code imported into our source tree for use in Mir. We try not to change
-anything to avoid maintaining a fork.
-
-
 Error handling strategy
 -----------------------
 
