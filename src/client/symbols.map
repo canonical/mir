@@ -609,4 +609,6 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
     mir_connection_apply_session_input_config;
     mir_connection_set_base_input_config;
     mir_get_client_api_version;
+    mir_output_get_logical_width;
+    mir_output_get_logical_height;
 } MIR_CLIENT_0.26.1;
