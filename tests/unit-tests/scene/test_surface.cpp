@@ -25,14 +25,10 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface_event_source.h"
-#include "mir/input/input_channel.h"
 
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/mock_input_surface.h"
 #include "mir/test/doubles/stub_buffer.h"
-#include "mir/test/doubles/mock_input_sender.h"
-#include "mir/test/doubles/stub_input_channel.h"
-#include "mir/test/doubles/stub_input_sender.h"
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
@@ -54,15 +50,6 @@ namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mr = mir::report;
-
-namespace
-{
-struct MockInputChannel : public mi::InputChannel
-{
-    MOCK_CONST_METHOD0(server_fd, int());
-    MOCK_CONST_METHOD0(client_fd, int());
-};
-}
 
 TEST(SurfaceCreationParametersTest, default_creation_parameters)
 {
@@ -195,8 +182,6 @@ struct SurfaceCreation : public ::testing::Test
         : surface(surface_name,
             rect, mir_pointer_unconfined,
             streams,
-            std::make_shared<mtd::StubInputChannel>(),
-            std::make_shared<mtd::StubInputSender>(),
             nullptr /* cursor_image */, report)
     {
     }
@@ -367,39 +352,14 @@ TEST_F(SurfaceCreation, test_surface_set_alpha)
     EXPECT_FLOAT_EQ(alpha, renderables[0]->alpha());
 }
 
-TEST_F(SurfaceCreation, input_fds)
-{
-    using namespace testing;
-
-    MockInputChannel channel;
-    int const client_fd = 13;
-    EXPECT_CALL(channel, client_fd()).Times(AnyNumber()).WillRepeatedly(Return(client_fd));
-
-    ms::BasicSurface input_surf(
-        surface_name,
-        rect,
-        mir_pointer_unconfined,
-        streams,
-        mt::fake_shared(channel),
-        std::make_shared<mtd::StubInputSender>(),
-        std::shared_ptr<mg::CursorImage>(),
-        report);
-
-    EXPECT_EQ(client_fd, input_surf.client_input_fd());
-}
-
 TEST_F(SurfaceCreation, consume_calls_send_event)
 {
     using namespace testing;
-
-    NiceMock<mtd::MockInputSender> mock_sender;
     ms::BasicSurface surface(
         surface_name,
         rect,
         mir_pointer_unconfined,
         streams,
-        std::make_shared<mtd::StubInputChannel>(),
-        mt::fake_shared(mock_sender),
         std::shared_ptr<mg::CursorImage>(),
         report);
 

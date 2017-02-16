@@ -38,7 +38,6 @@
 #include "mir/events/event_builders.h"
 
 #include "mir/frontend/connector.h"
-#include "mir/input/input_platform.h"
 
 #include "mir/test/test_protobuf_server.h"
 #include "mir/test/stub_server_tool.h"
@@ -219,19 +218,6 @@ std::map<int, int> MockServerPackageGenerator::sent_surface_attributes = {
     { mir_window_attrib_preferred_orientation, mir_orientation_mode_any }
 };
 
-struct StubClientInputPlatform : public mircv::InputPlatform
-{
-    std::shared_ptr<mir::dispatch::Dispatchable> create_input_receiver(int /* fd */, std::shared_ptr<mircv::XKBMapper> const&, std::function<void(MirEvent*)> const& /* callback */)
-    {
-        return std::shared_ptr<mir::dispatch::Dispatchable>();
-    }
-};
-
-struct MockClientInputPlatform : public mircv::InputPlatform
-{
-    MOCK_METHOD3(create_input_receiver, std::shared_ptr<mir::dispatch::Dispatchable>(int, std::shared_ptr<mircv::XKBMapper> const&, std::function<void(MirEvent*)> const&));
-};
-
 class TestConnectionConfiguration : public mcl::DefaultConnectionConfiguration
 {
 public:
@@ -270,10 +256,6 @@ struct FakeRpcChannel : public mir::client::rpc::MirBasicRpcChannel
 };
 
 void null_connected_callback(MirConnection* /*connection*/, void * /*client_context*/)
-{
-}
-
-void null_event_callback(MirWindow*, MirEvent const*, void*)
 {
 }
 
@@ -327,7 +309,6 @@ struct MirClientSurfaceTest : public testing::Test
             server_stub,
             nullptr,
             stub_buffer_stream,
-            input_platform,
             spec,
             surface_proto,
             wh);
@@ -342,7 +323,6 @@ struct MirClientSurfaceTest : public testing::Test
             server_stub,
             nullptr,
             buffer_stream,
-            input_platform,
             spec,
             surface_proto,
             wh);
@@ -367,8 +347,6 @@ struct MirClientSurfaceTest : public testing::Test
 
     MirWindowSpec const spec{nullptr, 33, 45, mir_pixel_format_abgr_8888};
     std::shared_ptr<mtd::MockMirBufferStream> stub_buffer_stream{std::make_shared<mtd::MockMirBufferStream>()};
-    std::shared_ptr<StubClientInputPlatform> const input_platform =
-        std::make_shared<StubClientInputPlatform>();
     std::shared_ptr<MockServerPackageGenerator> const mock_server_tool =
         std::make_shared<MockServerPackageGenerator>();
 
@@ -395,32 +373,10 @@ TEST_F(MirClientSurfaceTest, attributes_set_on_surface_creation)
     }
 }
 
-TEST_F(MirClientSurfaceTest, creates_input_thread_with_input_dispatcher_when_delegate_specified)
-{
-    using namespace ::testing;
-
-    auto dispatched = std::make_shared<mt::Signal>();
-
-    auto mock_input_dispatcher = std::make_shared<mt::TestDispatchable>([dispatched]() { dispatched->raise(); });
-    auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
-
-    EXPECT_CALL(*mock_input_platform, create_input_receiver(_, _, _)).Times(1)
-        .WillOnce(Return(mock_input_dispatcher));
-
-    MirWindow surface{connection.get(), *client_comm_channel, nullptr,
-        stub_buffer_stream, mock_input_platform, spec, surface_proto, wh};
-    surface.set_event_handler(null_event_callback, nullptr);
-
-    mock_input_dispatcher->trigger();
-
-    EXPECT_TRUE(dispatched->wait_for(std::chrono::seconds{5}));
-}
-
 TEST_F(MirClientSurfaceTest, adopts_the_default_stream)
 {
     using namespace ::testing;
 
-    auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
     auto mock_stream = std::make_shared<mtd::MockMirBufferStream>(); 
 
     MirWindow* adopted_by = nullptr;
@@ -432,7 +388,7 @@ TEST_F(MirClientSurfaceTest, adopts_the_default_stream)
 
     {
         MirWindow win{connection.get(), *client_comm_channel, nullptr,
-            mock_stream, mock_input_platform, spec, surface_proto, wh};
+            mock_stream, spec, surface_proto, wh};
         EXPECT_EQ(&win,    adopted_by);
         EXPECT_EQ(nullptr, unadopted_by);
     }
@@ -446,7 +402,6 @@ TEST_F(MirClientSurfaceTest, adopts_custom_streams_set_before_construction)
     using namespace ::testing;
 
     mir::frontend::BufferStreamId const mock_stream_id(777888);
-    auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
     auto mock_stream = std::make_shared<mtd::MockMirBufferStream>(); 
 
     MirWindow* adopted_by = nullptr;
@@ -468,7 +423,7 @@ TEST_F(MirClientSurfaceTest, adopts_custom_streams_set_before_construction)
         };
         spec.streams = replacements;
         MirWindow win{connection.get(), *client_comm_channel, nullptr,
-            nullptr, mock_input_platform, spec, surface_proto, wh};
+            nullptr, spec, surface_proto, wh};
         ASSERT_EQ(&win,    adopted_by);
         ASSERT_EQ(nullptr, unadopted_by);
     }
@@ -480,8 +435,6 @@ TEST_F(MirClientSurfaceTest, adopts_custom_streams_set_before_construction)
 TEST_F(MirClientSurfaceTest, adopts_custom_streams_set_after_construction)
 {
     using namespace testing;
-
-    auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
 
     mir::frontend::BufferStreamId const mock_old_stream_id(11);
     auto mock_old_stream = std::make_shared<mtd::MockMirBufferStream>(); 
@@ -509,7 +462,7 @@ TEST_F(MirClientSurfaceTest, adopts_custom_streams_set_after_construction)
     surface_map->insert(mock_new_stream_id, mock_new_stream);
     {
         MirWindow win{connection.get(), *client_comm_channel, nullptr,
-            mock_old_stream, mock_input_platform, spec, surface_proto, wh};
+            mock_old_stream, spec, surface_proto, wh};
     
         EXPECT_EQ(&win,    old_adopted_by);
         EXPECT_EQ(nullptr, old_unadopted_by);
@@ -531,43 +484,6 @@ TEST_F(MirClientSurfaceTest, adopts_custom_streams_set_after_construction)
     EXPECT_EQ(new_adopted_by, new_unadopted_by);
     surface_map->erase(mock_old_stream_id);
     surface_map->erase(mock_new_stream_id);
-}
-
-TEST_F(MirClientSurfaceTest, replacing_delegate_with_nullptr_prevents_further_dispatch)
-{
-    using namespace ::testing;
-
-    auto dispatched = std::make_shared<mt::Signal>();
-
-    auto mock_input_dispatcher = std::make_shared<mt::TestDispatchable>([dispatched]() { dispatched->raise(); });
-    auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
-
-    EXPECT_CALL(*mock_input_platform, create_input_receiver(_, _, _)).Times(1)
-        .WillOnce(Return(mock_input_dispatcher));
-
-    MirWindow surface{connection.get(), *client_comm_channel, nullptr,
-        stub_buffer_stream, mock_input_platform, spec, surface_proto, wh};
-    surface.set_event_handler(null_event_callback, nullptr);
-
-    // Should now not get dispatched.
-    surface.set_event_handler(nullptr, nullptr);
-
-    mock_input_dispatcher->trigger();
-
-    EXPECT_FALSE(dispatched->wait_for(std::chrono::seconds{1}));
-}
-
-
-TEST_F(MirClientSurfaceTest, does_not_create_input_dispatcher_when_no_delegate_specified)
-{
-    using namespace ::testing;
-
-    auto mock_input_platform = std::make_shared<MockClientInputPlatform>();
-
-    EXPECT_CALL(*mock_input_platform, create_input_receiver(_, _, _)).Times(0);
-
-    MirWindow surface{connection.get(), *client_comm_channel, nullptr,
-        stub_buffer_stream, mock_input_platform, spec, surface_proto, wh};
 }
 
 TEST_F(MirClientSurfaceTest, valid_surface_is_valid)
@@ -622,9 +538,6 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_no_customized
     using namespace testing;
     auto mock_stream = std::make_shared<mtd::MockMirBufferStream>(); 
     mir::frontend::BufferStreamId const mock_stream_id(2);
-    auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
-    ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
-        .WillByDefault(Return(std::make_shared<mt::TestDispatchable>([]{})));
     ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mock_stream_id));
 
     geom::Size size(120, 124);
@@ -632,7 +545,7 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_no_customized
     auto ev = mir::events::make_event(mir::frontend::SurfaceId(2), size);
 
     MirWindow surface{connection.get(), *client_comm_channel, nullptr,
-        mock_stream, mock_input_platform, spec, surface_proto, wh};
+        mock_stream, spec, surface_proto, wh};
     surface_map->insert(mock_stream_id, mock_stream);
     surface.handle_event(*ev);
     surface_map->erase(mock_stream_id);
@@ -643,16 +556,13 @@ TEST_F(MirClientSurfaceTest, resizes_streams_and_calls_callback_if_customized_st
     using namespace testing;
     auto mock_stream = std::make_shared<NiceMock<mtd::MockMirBufferStream>>();
     mir::frontend::BufferStreamId const mock_stream_id(2);
-    auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
     ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mock_stream_id));
-    ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
-        .WillByDefault(Return(std::make_shared<mt::TestDispatchable>([]{})));
 
     geom::Size size(120, 124);
     EXPECT_CALL(*mock_stream, set_size(size)).Times(0);
     auto ev = mir::events::make_event(mir::frontend::SurfaceId(2), size);
     MirWindow surface{connection.get(), *client_comm_channel, nullptr,
-        mock_stream, mock_input_platform, spec, surface_proto, wh};
+        mock_stream, spec, surface_proto, wh};
 
     MirWindowSpec spec;
     std::vector<ContentInfo> info =
@@ -668,9 +578,6 @@ TEST_F(MirClientSurfaceTest, parameters_are_unhooked_from_stream_sizes)
 {
     using namespace testing;
     auto mock_stream = std::make_shared<mtd::MockMirBufferStream>(); 
-    auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
-    ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
-        .WillByDefault(Return(std::make_shared<mt::TestDispatchable>([]{})));
     ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mir::frontend::BufferStreamId(2)));
     geom::Size size(120, 124);
     EXPECT_CALL(*mock_stream, set_size(size));
@@ -680,7 +587,7 @@ TEST_F(MirClientSurfaceTest, parameters_are_unhooked_from_stream_sizes)
     surface_proto.set_height(size.height.as_int());
 
     MirWindow surface{connection.get(), *client_comm_channel, nullptr,
-        mock_stream, mock_input_platform, spec, surface_proto, wh};
+        mock_stream, spec, surface_proto, wh};
 
     auto params = surface.get_parameters();
     EXPECT_THAT(params.width, Eq(size.width.as_int())); 
@@ -696,16 +603,13 @@ TEST_F(MirClientSurfaceTest, initial_sizes_are_from_response_from_server)
 {
     using namespace testing;
     auto mock_stream = std::make_shared<mtd::MockMirBufferStream>(); 
-    auto mock_input_platform = std::make_shared<NiceMock<MockClientInputPlatform>>();
-    ON_CALL(*mock_input_platform, create_input_receiver(_,_,_))
-        .WillByDefault(Return(std::make_shared<mt::TestDispatchable>([]{})));
     ON_CALL(*mock_stream, rpc_id()).WillByDefault(Return(mir::frontend::BufferStreamId(2)));
     geom::Size size(120, 124);
 
     surface_proto.set_width(size.width.as_int());
     surface_proto.set_height(size.height.as_int());
     MirWindow surface{connection.get(), *client_comm_channel, nullptr,
-        mock_stream, mock_input_platform, spec, surface_proto, wh};
+        mock_stream, spec, surface_proto, wh};
 
     auto params = surface.get_parameters();
     EXPECT_THAT(params.width, Eq(size.width.as_int()));

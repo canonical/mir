@@ -81,8 +81,6 @@ add_library(mir-test-framework-static STATIC
 
 add_dependencies(mir-test-framework-static GMock)
 
-uses_android_input(mir-protected-test-framework)
-
 target_link_libraries(mir-test-framework-static
 
   mirclient

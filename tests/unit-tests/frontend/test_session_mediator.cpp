@@ -157,7 +157,7 @@ public:
         using namespace testing;
         mg::BufferProperties properties;
         create_buffer_stream(properties);
-        auto surface = std::make_shared<testing::NiceMock<mtd::MockFrontendSurface>>(testing_client_input_fd);
+        auto surface = std::make_shared<testing::NiceMock<mtd::MockFrontendSurface>>();
         mock_surfaces[id] = surface;
         return surface;
     }
@@ -229,15 +229,12 @@ public:
 
     std::map<mf::BufferStreamId, std::shared_ptr<mtd::MockBufferStream>> mock_streams;
     std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
-    static int const testing_client_input_fd;
     int last_stream_id = 0;
     int last_surface_id = 0;
     int buffer_count = 0;
     int native_buffer_count = 0;
     int destroy_buffers = 0;
 };
-
-int const StubbedSession::testing_client_input_fd{11};
 
 struct StubScreencast : mtd::NullScreencast
 {

@@ -52,9 +52,6 @@ public:
 
     virtual std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const = 0;
 
-    virtual bool supports_input() const = 0;
-    virtual int client_input_fd() const = 0;
-
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
     virtual void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const& image,
         geometry::Displacement const& hotspot) = 0;

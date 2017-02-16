@@ -50,7 +50,6 @@ namespace input
 {
 namespace receiver
 {
-class InputPlatform;
 class XKBMapper;
 }
 }
@@ -178,7 +177,6 @@ public:
         mir::client::rpc::DisplayServer& server,
         mir::client::rpc::DisplayServerDebug* debug,
         std::shared_ptr<MirBufferStream> const& buffer_stream,
-        std::shared_ptr<mir::input::receiver::InputPlatform> const& input_platform,
         MirWindowSpec const& spec, mir::protobuf::Surface const& surface_proto,
         std::shared_ptr<MirWaitHandle> const& handle);
 
@@ -253,7 +251,6 @@ private:
     std::shared_ptr<MirBufferStream> default_stream;
     typedef std::unordered_set<std::shared_ptr<MirBufferStream>> StreamSet;
     StreamSet streams;
-    std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
     std::shared_ptr<mir::input::receiver::XKBMapper> const keymapper;
 
     std::unique_ptr<mir::protobuf::SurfaceSetting> const configure_result;
