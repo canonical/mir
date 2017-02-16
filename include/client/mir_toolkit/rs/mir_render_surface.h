@@ -170,6 +170,11 @@ void mir_window_spec_set_cursor_render_surface(
     int hotspot_x, int hotspot_y)
 __attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
+MirCursorConfiguration* mir_cursor_configuration_from_render_surface(
+    MirRenderSurface* surface,
+    int hotspot_x, int hotspot_y)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+
 #pragma GCC diagnostic pop
 
 #ifdef __cplusplus

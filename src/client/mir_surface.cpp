@@ -313,9 +313,11 @@ MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor
         setting.mutable_surfaceid()->CopyFrom(surface->id());
         if (cursor)
         {
-            if (cursor->stream != nullptr)
+            if (cursor->surface || cursor->stream)
             {
-                setting.mutable_buffer_stream()->set_value(cursor->stream->rpc_id().as_value());
+                auto id = cursor->surface ? cursor->surface->stream_id().as_value() :
+                                            cursor->stream->rpc_id().as_value();
+                setting.mutable_buffer_stream()->set_value(id);
                 setting.set_hotspot_x(cursor->hotspot_x);
                 setting.set_hotspot_y(cursor->hotspot_y);
             }

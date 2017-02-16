@@ -28,11 +28,19 @@ struct MirCursorConfiguration
 {
     MirCursorConfiguration(char const* name);
     MirCursorConfiguration(MirBufferStream const* stream, int hotspot_x, int hotspot_y);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    MirCursorConfiguration(MirRenderSurface const* surface, int hotspot_x, int hotspot_y);
+#pragma GCC diagnostic pop
 
     std::string name;
     MirBufferStream const* stream;
     int hotspot_x;
     int hotspot_y;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    MirRenderSurface const* surface;
+#pragma GCC diagnostic pop
 };
 
 #endif // MIR_CLIENT_CURSOR_CONFIGURATION_H_

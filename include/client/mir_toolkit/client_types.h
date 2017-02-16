@@ -57,6 +57,12 @@ typedef struct MirRenderSurface MirRenderSurface
 __attribute__((deprecated("This type is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
+ * Opaque structure containing cursor parameterization. Create with mir_cursor* family.
+ * Used with mir_window_configure_cursor.
+ */
+typedef struct MirCursorConfiguration MirCursorConfiguration;
+
+/**
  * Descriptor for an output connection.
  *
  *  Each MirOutput corresponds to a video output. This may be a physical connection on the system,

@@ -235,6 +235,22 @@ void mir_window_spec_set_cursor_render_surface(
     spec->rendersurface_cursor = MirWindowSpec::RenderSurfaceCursor{rs->stream_id(), {hotspot_x, hotspot_y}};
 }
 
+MirCursorConfiguration* mir_cursor_configuration_from_render_surface(
+    MirRenderSurface* surface,
+    int hotspot_x, int hotspot_y)
+try
+{
+    mir::require(surface);
+    auto connection = connection_map.connection(surface);
+    auto rs = connection->connection_surface_map()->render_surface(surface);
+    return new MirCursorConfiguration(rs.get(), hotspot_x, hotspot_y);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
 //temporary, until we stop trampolining via the RenderSurfaceToConnectionMap above
 MirRenderSurface* mir::client::render_surface_lookup(void* key)
 try

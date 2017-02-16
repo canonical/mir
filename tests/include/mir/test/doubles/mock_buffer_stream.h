@@ -81,6 +81,8 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD1(disassociate_buffer, void(graphics::BufferID));
     MOCK_METHOD1(associate_buffer, void(graphics::BufferID));
     MOCK_METHOD1(set_scale, void(float));
+    MOCK_CONST_METHOD0(suitable_for_cursor, bool());
+
 };
 }
 }
