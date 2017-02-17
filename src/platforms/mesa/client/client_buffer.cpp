@@ -81,8 +81,6 @@ std::shared_ptr<mir::graphics::mesa::NativeBuffer> to_native_buffer(
 {
     auto buffer = std::make_shared<mir::graphics::mesa::NativeBuffer>();
     *static_cast<MirBufferPackage*>(buffer.get()) = package;
-    if (gbm)
-        printf("YEPPERS GBM %i\n", package.fd[0]);
     buffer->is_gbm_buffer = gbm;
     buffer->native_format = native_format;
     buffer->native_flags = native_flags;

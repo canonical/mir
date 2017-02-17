@@ -176,42 +176,24 @@ catch (...)
     return nullptr;
 }
 
-#if 0
-gbm_bo* get_gbm_bo(MirBuffer* b)
+bool is_gbm_importable(MirBuffer* b)
 try
 {
     if (!b)
-        return nullptr;
+        return false;
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    if (auto native = dynamic_cast<mgm::NativeBuffer*>(buffer))
-        return native->bo;
-    else
-        return nullptr;
+    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    if (!native)
+        return false;
+    return native->is_gbm_buffer;
 }
 catch (...)
 {
-    return nullptr;
-}
-#endif
-
-bool is_gbm_importable(MirBuffer* b)
-{
-    if (!b)
-        return false;
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    printf("BB %X\n", (int)(long) buffer);
-    printf("BBB %X\n", (int)(long) buffer->client_buffer().get());
-    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
-    printf("NATIVE %X\n", (int)(long) native);
-    if (!native)
-    {
-        printf("WHUT\n");
-        return false;
-    }
-    return native->is_gbm_buffer;
+    return false;
 }
 
 int import_fd(MirBuffer* b)
+try
 {
     if (!is_gbm_importable(b))
         return -1;
@@ -219,8 +201,13 @@ int import_fd(MirBuffer* b)
     auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
     return native->fd[0];
 }
+catch (...)
+{
+    return -1;
+}
 
 uint32_t buffer_stride(MirBuffer* b)
+try
 {
     if (!is_gbm_importable(b))
         return 0;
@@ -228,8 +215,13 @@ uint32_t buffer_stride(MirBuffer* b)
     auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
     return native->stride;
 }
+catch (...)
+{
+    return 0;
+}
 
 uint32_t buffer_format(MirBuffer* b)
+try
 {
     if (!is_gbm_importable(b))
         return 0;
@@ -237,8 +229,13 @@ uint32_t buffer_format(MirBuffer* b)
     auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
     return native->native_format;
 }
+catch (...)
+{
+    return 0;
+}
 
 uint32_t buffer_flags(MirBuffer* b)
+try
 {
     if (!is_gbm_importable(b))
         return 0;
@@ -246,8 +243,13 @@ uint32_t buffer_flags(MirBuffer* b)
     auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
     return native->native_flags;
 }
+catch (...)
+{
+    return 0;
+}
 
 uint64_t buffer_age(MirBuffer* b)
+try
 {
     if (!is_gbm_importable(b))
         return 0;
@@ -255,7 +257,10 @@ uint64_t buffer_age(MirBuffer* b)
     auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
     return native->age;
 }
-
+catch (...)
+{
+    return INT64_MAX;
+}
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirBufferStream* get_hw_stream(
