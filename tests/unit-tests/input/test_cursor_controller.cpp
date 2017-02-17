@@ -105,7 +105,7 @@ struct MockCursor : public mg::Cursor
 struct StubInputSurface : public mtd::StubSceneSurface
 {
     StubInputSurface(geom::Rectangle const& input_bounds, std::shared_ptr<mg::CursorImage> const& cursor_image)
-        : mtd::StubSceneSurface(0),
+        : mtd::StubSceneSurface{},
           bounds(input_bounds),
           cursor_image_(cursor_image)
     {
@@ -126,11 +126,6 @@ struct StubInputSurface : public mtd::StubSceneSurface
     bool input_area_contains(geom::Point const& point) const override
     {
         return bounds.contains(point);
-    }
-
-    std::shared_ptr<mi::InputChannel> input_channel() const override
-    {
-        return nullptr;
     }
 
     mi::InputReceptionMode reception_mode() const override

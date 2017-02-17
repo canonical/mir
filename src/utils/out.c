@@ -525,19 +525,6 @@ int main(int argc, char *argv[])
                 if (model)
                     printf(", \"%s\"", model);
 
-                MirOutputMode const* current_mode =
-                    mir_output_get_current_mode(out);
-                if (current_mode)
-                {
-                    printf(", %dx%d",
-                           mir_output_mode_get_width(current_mode),
-                           mir_output_mode_get_height(current_mode));
-                }
-                else
-                {
-                    printf(", ");
-                }
-
                 int physical_width_mm = mir_output_get_physical_width_mm(out);
                 int physical_height_mm = mir_output_get_physical_height_mm(out);
                 float inches = sqrtf(
@@ -545,7 +532,9 @@ int main(int argc, char *argv[])
                     (physical_height_mm * physical_height_mm))
                     / 25.4f;
 
-                printf("%+d%+d, %s, %s, %dmm x %dmm (%.1f\"), %s, %.2fx, %s, %s",
+                printf(", %ux%u%+d%+d, %s, %s, %dmm x %dmm (%.1f\"), %s, %.2fx, %s, %s",
+                       mir_output_get_logical_width(out),
+                       mir_output_get_logical_height(out),
                        mir_output_get_position_x(out),
                        mir_output_get_position_y(out),
                        mir_output_is_enabled(out) ? "enabled" : "disabled",

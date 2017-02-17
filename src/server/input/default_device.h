@@ -30,6 +30,7 @@
 
 #include <memory>
 #include <functional>
+#include <mutex>
 
 namespace mir
 {
@@ -74,6 +75,7 @@ private:
     std::shared_ptr<dispatch::ActionQueue> const actions;
     std::shared_ptr<KeyMapper> const key_mapper;
     std::function<void(Device*)> device_changed_callback;
+    std::mutex mutable config_mutex;
 };
 
 }

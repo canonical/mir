@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -13,14 +13,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
-#define MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
+#ifndef MIR_TEST_DOUBLES_STUB_CLIENT_PLATFORM_FACTORY_H_
+#define MIR_TEST_DOUBLES_STUB_CLIENT_PLATFORM_FACTORY_H_
 
-#include "mir/input/input_channel.h"
-#include "mir/fd.h"
+#include "mir/client_platform_factory.h"
 
 namespace mir
 {
@@ -29,32 +28,23 @@ namespace test
 namespace doubles
 {
 
-struct StubInputChannel : public input::InputChannel
+struct StubClientPlatformFactory : public client::ClientPlatformFactory
 {
-    StubInputChannel(int fd)
-      : input_fd(fd)
+    StubClientPlatformFactory(std::shared_ptr<client::ClientPlatform> const& platform)
+        : platform{platform}
     {
     }
 
-    StubInputChannel()
-     : StubInputChannel(Fd::invalid)
+    std::shared_ptr<client::ClientPlatform> create_client_platform(client::ClientContext*)
     {
+        return platform;
     }
 
-    int client_fd() const override
-    {
-        return input_fd;
-    }
-    int server_fd() const override
-    {
-        return input_fd;
-    }
-    Fd input_fd;
+    std::shared_ptr<client::ClientPlatform> platform;
 };
 
 }
 }
-} // namespace mir
+}
 
-#endif // MIR_TEST_DOUBLES_STUB_INPUT_CHANNEL_H_
-
+#endif /* MIR_TEST_DOUBLES_STUB_CLIENT_PLATFORM_FACTORY_H_ */

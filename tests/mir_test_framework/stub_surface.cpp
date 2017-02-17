@@ -53,21 +53,6 @@ void mtd::StubSurface::set_streams(std::list<mir::scene::StreamInfo> const& /*st
 {
 }
 
-bool mtd::StubSurface::supports_input() const
-{
-    return false;
-}
-
-int mtd::StubSurface::client_input_fd() const
-{
-    return 0;
-}
-
-std::shared_ptr <mir::input::InputChannel> mtd::StubSurface::input_channel() const
-{
-    return {};
-}
-
 mir::input::InputReceptionMode mtd::StubSurface::reception_mode() const
 {
     return mir::input::InputReceptionMode::normal;

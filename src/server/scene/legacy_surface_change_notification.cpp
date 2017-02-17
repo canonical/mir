@@ -104,3 +104,7 @@ void ms::LegacySurfaceChangeNotification::renamed(char const*)
 {
     notify_scene_change();
 }
+
+void ms::LegacySurfaceChangeNotification::input_consumed(MirEvent const*)
+{
+}

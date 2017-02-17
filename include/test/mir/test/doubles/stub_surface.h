@@ -37,9 +37,6 @@ struct StubSurface : scene::Surface
     geometry::Size client_size() const override;
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
     void set_streams(std::list<scene::StreamInfo> const& streams) override;
-    bool supports_input() const override;
-    int client_input_fd() const override;
-    std::shared_ptr<input::InputChannel> input_channel() const override;
     input::InputReceptionMode reception_mode() const override;
     void set_reception_mode(input::InputReceptionMode mode) override;
     void set_input_region(std::vector<geometry::Rectangle> const& input_rectangles) override;

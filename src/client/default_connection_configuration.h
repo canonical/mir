@@ -54,7 +54,6 @@ public:
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> the_rpc_channel() override;
     std::shared_ptr<mir::logging::Logger> the_logger() override;
     std::shared_ptr<ClientPlatformFactory> the_client_platform_factory() override;
-    std::shared_ptr<input::receiver::InputPlatform> the_input_platform() override;
     std::shared_ptr<input::InputDevices> the_input_devices() override;
     std::shared_ptr<DisplayConfiguration> the_display_configuration() override;
     std::shared_ptr<LifecycleControl> the_lifecycle_control() override;
@@ -73,7 +72,6 @@ protected:
     CachedPtr<mir::client::rpc::MirBasicRpcChannel> rpc_channel;
     CachedPtr<mir::logging::Logger> logger;
     CachedPtr<ClientPlatformFactory> client_platform_factory;
-    CachedPtr<input::receiver::InputPlatform> input_platform;
     CachedPtr<input::InputDevices> input_devices;
     CachedPtr<ConnectionSurfaceMap> surface_map;
     CachedPtr<DisplayConfiguration> display_configuration;
