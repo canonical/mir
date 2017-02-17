@@ -303,19 +303,19 @@ TEST_F(MesaClientPlatformTest, bo_buffer_is_gbm_compatible)
         wh->wait_for_all();
     auto ext = static_cast<MirExtensionGbmBufferV2*>(
         platform->request_interface("mir_extension_gbm_buffer", 2));
+    auto client_buffer = std::make_shared<mclm::ClientBuffer>(
+        std::make_shared<StubOps>(), make_pkg(), geom::Size{width, height}, pf, flags);
+    mcl::Buffer mirbuffer(nullptr, nullptr, 0, client_buffer, nullptr, mir_buffer_usage_hardware);
+
     ASSERT_THAT(ext, Ne(nullptr));
     ASSERT_THAT(ext->is_gbm_importable, Ne(nullptr));
-    ASSERT_THAT(ext->import_fd, Ne(nullptr));
+    ASSERT_THAT(ext->fd, Ne(nullptr));
     ASSERT_THAT(ext->stride, Ne(nullptr));
     ASSERT_THAT(ext->format, Ne(nullptr));
     ASSERT_THAT(ext->flags, Ne(nullptr));
     ASSERT_THAT(ext->age, Ne(nullptr));
-
-    auto client_buffer = std::make_shared<mclm::ClientBuffer>(
-        std::make_shared<StubOps>(), make_pkg(), geom::Size{width, height}, pf, flags);
-    mcl::Buffer mirbuffer(nullptr, nullptr, 0, client_buffer, nullptr, mir_buffer_usage_hardware);
     EXPECT_TRUE(ext->is_gbm_importable(reinterpret_cast<MirBuffer*>(&mirbuffer)));
-    EXPECT_THAT(ext->import_fd(reinterpret_cast<MirBuffer*>(&mirbuffer)), Eq(fake_fd));
+    EXPECT_THAT(ext->fd(reinterpret_cast<MirBuffer*>(&mirbuffer)), Eq(fake_fd));
     EXPECT_THAT(ext->stride(reinterpret_cast<MirBuffer*>(&mirbuffer)), Eq(stride));
     EXPECT_THAT(ext->format(reinterpret_cast<MirBuffer*>(&mirbuffer)), Eq(pf));
     EXPECT_THAT(ext->flags(reinterpret_cast<MirBuffer*>(&mirbuffer)), Eq(flags));
