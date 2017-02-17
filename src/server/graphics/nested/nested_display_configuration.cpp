@@ -165,7 +165,7 @@ void mgn::NestedDisplayConfiguration::for_each_output(
 
         auto output_id = mir_output_get_id(mir_output);
         set_local_config_for(output_id,
-            {user.scale, user.form_factor, user.subpixel_arrangement,
+            {user.scale, user.form_factor,
              user.gamma, user.gamma_supported});
 
         if (mir_output_get_num_modes(mir_output) > 0)
@@ -203,7 +203,6 @@ mgn::NestedDisplayConfiguration::get_local_config_for(uint32_t output_id) const
     std::lock_guard<std::mutex> lock{local_config_mutex};
 
     LocalOutputConfig const default_values {1.0f, mir_form_factor_monitor,
-                                            mir_subpixel_arrangement_unknown,
                                             {}, mir_output_gamma_unsupported};
 
     bool inserted;

@@ -61,7 +61,6 @@ private:
     {
         float scale;
         MirFormFactor form_factor;
-        MirSubpixelArrangement subpixel_arrangement;
         GammaCurves gamma;
         MirOutputGammaSupported gamma_supported;
     };
