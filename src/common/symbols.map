@@ -152,17 +152,9 @@ MIR_COMMON_0.25 {
   local: *;
 };
 
-MIR_COMMON_0.25_PRIVATE {
+MIR_COMMON_0.27_PRIVATE {
  global:
-  __android_log_print;
-  systemTime;
   extern "C++" {
-# New functions in Mir 0.16
-      # These symbols are supposed to be "private" (they're under 3rd_party)
-      # but they are used by libmirplatform, libmirclient or libmirserver
-      mir::write_to_log;
-      typeinfo?for?android::RefBase;
-
 # New functions in Mir 0.19.0
       # These symbols are supposed to be "private" (they're under src/include)
       # but they are used by libmirplatform, libmirclient or libmirserver
@@ -319,7 +311,6 @@ MIR_COMMON_0.25_PRIVATE {
 # New functions in Mir 0.24
       # These symbols are supposed to be "private" (they're under src/include)
       # but they are used by libmirplatform, libmirclient or libmirserver
-       android::InputPublisher::publishEventBuffer*;
        MirEvent::to_input_device_state*;
        MirInputDeviceStateEvent::MirInputDeviceStateEvent*;
        MirInputDeviceStateEvent::device_count*;
@@ -336,7 +327,6 @@ MIR_COMMON_0.25_PRIVATE {
        MirInputDeviceStateEvent::when*;
        mir::time::SteadyClock::now*;
        mir::time::SteadyClock::min_wait_until*;
-       android::MotionEvent::initialize*;
        mir::dispatch::epoll_to_fd_event*;
        mir::dispatch::fd_event_to_epoll*;
 
