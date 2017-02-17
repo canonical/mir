@@ -23,6 +23,7 @@
 #include "native_surface.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/client_context.h"
+#include "mir/client_buffer.h"
 #include "mir/mir_render_surface.h"
 #include "mir/mir_buffer.h"
 #include "mir/weak_egl.h"
@@ -175,6 +176,7 @@ catch (...)
     return nullptr;
 }
 
+#if 0
 gbm_bo* get_gbm_bo(MirBuffer* b)
 try
 {
@@ -189,6 +191,69 @@ try
 catch (...)
 {
     return nullptr;
+}
+#endif
+
+bool is_gbm_importable(MirBuffer* b)
+{
+    if (!b)
+        return false;
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    printf("BB %X\n", (int)(long) buffer);
+    printf("BBB %X\n", (int)(long) buffer->client_buffer().get());
+    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    printf("NATIVE %X\n", (int)(long) native);
+    if (!native)
+    {
+        printf("WHUT\n");
+        return false;
+    }
+    return native->is_gbm_buffer;
+}
+
+int import_fd(MirBuffer* b)
+{
+    if (!is_gbm_importable(b))
+        return -1;
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    return native->fd[0];
+}
+
+uint32_t buffer_stride(MirBuffer* b)
+{
+    if (!is_gbm_importable(b))
+        return 0;
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    return native->stride;
+}
+
+uint32_t buffer_format(MirBuffer* b)
+{
+    if (!is_gbm_importable(b))
+        return 0;
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    return native->native_format;
+}
+
+uint32_t buffer_flags(MirBuffer* b)
+{
+    if (!is_gbm_importable(b))
+        return 0;
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    return native->native_flags;
+}
+
+uint64_t buffer_age(MirBuffer* b)
+{
+    if (!is_gbm_importable(b))
+        return 0;
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    return native->age;
 }
 
 #pragma GCC diagnostic push
@@ -222,7 +287,8 @@ mclm::ClientPlatform::ClientPlatform(
       drm_extensions{auth_fd_ext, auth_magic_ext},
       mesa_auth{set_device, this},
       gbm_buffer1{allocate_buffer_gbm},
-      gbm_buffer2{allocate_buffer_gbm, allocate_buffer_gbm_sync, get_gbm_bo},
+      gbm_buffer2{allocate_buffer_gbm, allocate_buffer_gbm_sync,
+                  is_gbm_importable, import_fd, buffer_stride, buffer_format, buffer_flags, buffer_age},
       hw_stream{get_hw_stream}
 {
 }

@@ -60,6 +60,12 @@ typedef struct MirExtensionGbmBufferV1
     mir_connection_allocate_buffer_gbm allocate_buffer_gbm;
 } MirExtensionGbmBufferV1;
 
+static inline MirExtensionGbmBufferV1 const* mir_extension_gbm_buffer_v1(
+    MirConnection* connection)
+{
+    return (MirExtensionGbmBufferV1 const*) mir_connection_request_extension(
+        connection, "mir_extension_gbm_buffer", 1);
+}
 
 /** Allocate a MirBuffer via gbm and wait for the allocation.
  *  available in V2.
@@ -78,25 +84,66 @@ typedef MirBuffer* (*MirConnectionAllocateBufferGbmSync)(
     unsigned int gbm_pixel_format,
     unsigned int gbm_bo_flags);
 
-/* get the gbm_bo of a given buffer.
- *   \pre   The buffer must be a gbm buffer object.
- *   \param [in] buffer The buffer 
- *   \return            The gbm_bo of the buffer.
+/** Check if a MirBuffer is suitable for import via GBM_BO_IMPORT_FD
+ * 
+ *   \param [in] buffer The buffer
+ *   \return            True if suitable, false if unsuitable
  */
-typedef struct gbm_bo* (*MirBufferGetGbmBo)(MirBuffer* buffer);
+typedef bool (*MirBufferIsGBMImportable)(MirBuffer* buffer);
+
+/** Access the import fd a MirBuffer
+ *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
+ *   \warning           The fd is owned by the buffer. Do not close() it.
+ *   \param [in] buffer The buffer
+ *   \return            The stride of the buffer
+ */
+typedef int (*MirBufferImportFd)(MirBuffer* buffer);
+
+/** Check the stride of a MirBuffer
+ *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
+ *   \param [in] buffer The buffer
+ *   \return            The stride of the buffer
+ */
+typedef uint32_t (*MirBufferStride)(MirBuffer* buffer);
+
+/** Check the GBM_FORMAT of a MirBuffer
+ *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
+ *   \param [in] buffer The buffer
+ *   \return            The GBM_FORMAT of the buffer
+ */
+typedef uint32_t (*MirBufferFormat)(MirBuffer* buffer);
+
+/** Check the gbm_bo_flags of a MirBuffer
+ *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
+ *   \param [in] buffer The buffer
+ *   \return            The gbm_bo_flags of the buffer
+ */
+typedef uint32_t (*MirBufferFlags)(MirBuffer* buffer);
+
+/** Check the gbm_bo_flags of a MirBuffer
+ *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
+ *   \param [in] buffer The buffer
+ *   \return            The age of the buffer
+ */
+typedef uint64_t (*MirBufferAge)(MirBuffer* buffer);
 
 typedef struct MirExtensionGbmBufferV2
 {
     mir_connection_allocate_buffer_gbm allocate_buffer_gbm;
     MirConnectionAllocateBufferGbmSync allocate_buffer_gbm_sync;
-    MirBufferGetGbmBo get_gbm_bo;
+    MirBufferIsGBMImportable is_gbm_importable;
+    MirBufferImportFd import_fd;
+    MirBufferStride stride;
+    MirBufferFormat format;
+    MirBufferFlags flags;
+    MirBufferAge age;
 } MirExtensionGbmBufferV2;
 
-static inline MirExtensionGbmBufferV1 const* mir_extension_gbm_buffer_v1(
+static inline MirExtensionGbmBufferV2 const* mir_extension_gbm_buffer_v2(
     MirConnection* connection)
 {
-    return (MirExtensionGbmBufferV1 const*) mir_connection_request_extension(
-        connection, "mir_extension_gbm_buffer", 1);
+    return (MirExtensionGbmBufferV2 const*) mir_connection_request_extension(
+        connection, "mir_extension_gbm_buffer", 2);
 }
 
 #ifdef __cplusplus
