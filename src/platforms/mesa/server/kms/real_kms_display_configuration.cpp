@@ -75,7 +75,6 @@ kms_connector_type_to_output_type(uint32_t connector_type)
 
 MirSubpixelArrangement kms_subpixel_to_mir_subpixel(uint32_t subpixel)
 {
-    return mir_subpixel_arrangement_vertical_rgb;
     switch (subpixel)
     {
     case DRM_MODE_SUBPIXEL_UNKNOWN:
