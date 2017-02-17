@@ -37,6 +37,9 @@ struct MirKeyboardEvent : MirInputEvent
 
     int32_t scan_code() const;
     void set_scan_code(int32_t scan_code);
+
+    char const* text() const;
+    void set_text(char const* str);
 };
 
 #endif /* MIR_COMMON_KEYBOARD_EVENT_H_ */
