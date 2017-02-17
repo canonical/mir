@@ -67,9 +67,10 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
 
     auto& last_entry = onscreen_buffers.front();
     last_entry.use_count++;
+    auto last_entry_buffer = last_entry.buffer;
     if (mode == mc::MultiMonitorMode::multi_monitor_sync)
         clean_onscreen_buffers(lk);
-    return onscreen_buffers.front().buffer;
+    return last_entry_buffer;
 }
 
 void mc::MultiMonitorArbiter::compositor_release(std::shared_ptr<mg::Buffer> const& buffer)
