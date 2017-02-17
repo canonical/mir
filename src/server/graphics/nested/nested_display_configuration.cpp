@@ -130,7 +130,7 @@ mg::DisplayConfigurationOutput mgn::NestedDisplayConfiguration::create_display_o
         orientation,
         local_config.scale,
         local_config.form_factor,
-        local_config.subpixel_arrangement,
+        mir_output_get_subpixel_arrangement(output),
         local_config.gamma,
         local_config.gamma_supported,
         std::move(edid)
