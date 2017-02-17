@@ -435,9 +435,11 @@ MIR_COMMON_0.26 {
 MIR_COMMON_0.27 {
  global:
   extern "C++" {
-      MirInputEvent::window_id*;
-      MirInputEvent::set_window_id*;
-      MirInputDeviceStateEvent::window_id*;
       MirInputDeviceStateEvent::set_window_id*;
+      MirInputDeviceStateEvent::window_id*;
+      MirInputEvent::set_window_id*;
+      MirInputEvent::window_id*;
+      MirKeyboardEvent::set_text*;
+      MirKeyboardEvent::text*;
   };
 } MIR_COMMON_0.26;

@@ -1003,6 +1003,43 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
     mir_input_config_release(config);
 }
 
+TEST_F(TestClientInput, key_event_contains_text_to_append)
+{
+    Client a_client(new_connection(), first);
+
+    EXPECT_CALL(a_client, handle_input(mt::KeyWithText("x")))
+        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_X));
+    a_client.all_events_received.wait_for(10s);
+}
+
+TEST_F(TestClientInput, key_event_text_applies_shift_modifiers)
+{
+    Client a_client(new_connection(), first);
+
+    EXPECT_CALL(a_client, handle_input(AllOf(mt::KeyWithText(""), mt::KeyOfSymbol(XKB_KEY_Shift_L))));
+    EXPECT_CALL(a_client, handle_input(mt::KeyWithText("W")))
+        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_LEFTSHIFT));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_W));
+    a_client.all_events_received.wait_for(10s);
+}
+
+TEST_F(TestClientInput, on_ctrl_c_key_event_text_is_end_of_text)
+{
+    Client a_client(new_connection(), first);
+
+    EXPECT_CALL(a_client, handle_input(AllOf(mt::KeyWithText(""), mt::KeyOfSymbol(XKB_KEY_Control_R))));
+    EXPECT_CALL(a_client, handle_input(mt::KeyWithText("\003")))
+        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTCTRL));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_C));
+    a_client.all_events_received.wait_for(10s);
+}
+
 TEST_F(TestClientInput, num_lock_is_off_on_startup)
 {
     Client a_client(new_connection(), first);
