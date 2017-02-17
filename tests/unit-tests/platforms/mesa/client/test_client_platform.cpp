@@ -19,9 +19,12 @@
 #include "mir/client_platform.h"
 #include "mir/shared_library.h"
 #include "mir/raii.h"
+#include "src/platforms/mesa/client/buffer_file_ops.h"
+#include "src/platforms/mesa/client/client_buffer.h"
 #include "src/platforms/mesa/client/mesa_native_display_container.h"
 #include "src/client/rpc/mir_basic_rpc_channel.h"
 #include "src/client/mir_connection.h"
+#include "src/client/buffer.h"
 #include "mir_test_framework/client_platform_factory.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_egl_native_surface.h"
@@ -50,6 +53,12 @@ using namespace testing;
 
 namespace
 {
+struct StubOps : mclm::BufferFileOps
+{
+    int close(int) const override { return 0; }
+    void* map(int, off_t, size_t) const override { return nullptr; }
+    void unmap(void*, size_t) const override {}
+};
 
 struct StubClientContext : mcl::ClientContext
 {
@@ -98,10 +107,28 @@ struct MesaClientPlatformTest : testing::Test
         return platform->platform_operation(request_msg.get());
     }
 
+    std::shared_ptr<MirBufferPackage> make_pkg()
+    {
+        auto pkg = std::make_shared<MirBufferPackage>();
+        pkg->width = width;
+        pkg->height = height;
+        pkg->stride = stride;
+        pkg->fd_items = 1;
+        pkg->fd[0] = fake_fd;
+        pkg->data_items = 0;
+        return pkg;
+    }
+
     StubClientContext client_context;
     std::shared_ptr<mir::client::ClientPlatform> platform =
         mtf::create_mesa_client_platform(&client_context);
     mir::test::doubles::MockEGL mock_egl;
+    int fake_fd = 11;
+    int width = 23;
+    int height = 230;
+    int stride = 81290;
+    int flags = GBM_BO_USE_RENDERING;
+    int pf = GBM_FORMAT_ABGR8888;
 };
 
 }
@@ -203,16 +230,14 @@ TEST_F(MesaClientPlatformTest, egl_native_window_can_be_set_with_null_native_sur
     EXPECT_NE(nullptr, egl_native_window);
 }
 
-TEST_F(MesaClientPlatformTest, can_allocate_buffer)
+TEST_F(MesaClientPlatformTest, can_allocate_buffer_v1)
 {
     using namespace std::literals::chrono_literals;
 
     mtd::StubConnectionConfiguration conf(platform);
     MirConnection connection(conf);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_wait_for(connection.connect("", [](MirConnection*, void*){}, nullptr));
-#pragma GCC diagnostic pop
+    if (auto wh = connection.connect("", [](MirConnection*, void*){}, nullptr))
+        wh->wait_for_all();
 
     int width = 32;
     int height = 90;
@@ -228,6 +253,73 @@ TEST_F(MesaClientPlatformTest, can_allocate_buffer)
         GBM_FORMAT_ARGB8888, 0,
         [] (::MirBuffer*, void*) {}, nullptr);
     EXPECT_THAT(conf.channel->channel_call_count, Eq(call_count + 1));
+}
+
+TEST_F(MesaClientPlatformTest, can_allocate_buffer_v2)
+{
+    using namespace std::literals::chrono_literals;
+
+    mtd::StubConnectionConfiguration conf(platform);
+    MirConnection connection(conf);
+    if (auto wh = connection.connect("", [](MirConnection*, void*){}, nullptr))
+        wh->wait_for_all();
+
+    int width = 32;
+    int height = 90;
+    auto ext = static_cast<MirExtensionGbmBufferV1*>(
+        platform->request_interface("mir_extension_gbm_buffer", 2));
+    ASSERT_THAT(ext, Ne(nullptr));
+    ASSERT_THAT(ext->allocate_buffer_gbm, Ne(nullptr));
+
+    auto call_count = conf.channel->channel_call_count;
+    ext->allocate_buffer_gbm(
+        &connection, width, height, pf, flags,
+        [] (::MirBuffer*, void*) {}, nullptr);
+    EXPECT_THAT(conf.channel->channel_call_count, Eq(call_count + 1));
+}
+
+TEST_F(MesaClientPlatformTest, shm_buffer_is_not_gbm_compatible)
+{
+    mtd::StubConnectionConfiguration conf(platform);
+    MirConnection connection(conf);
+    if (auto wh = connection.connect("", [](MirConnection*, void*){}, nullptr))
+        wh->wait_for_all();
+    auto ext = static_cast<MirExtensionGbmBufferV2*>(
+        platform->request_interface("mir_extension_gbm_buffer", 2));
+    ASSERT_THAT(ext, Ne(nullptr));
+    ASSERT_THAT(ext->is_gbm_importable, Ne(nullptr));
+
+    auto client_buffer = std::make_shared<mclm::ClientBuffer>(
+        std::make_shared<StubOps>(), make_pkg(), geom::Size{width, height}, mir_pixel_format_rgb_888);
+    mcl::Buffer mirbuffer(nullptr, nullptr, 0, client_buffer, nullptr, mir_buffer_usage_software);
+    EXPECT_FALSE(ext->is_gbm_importable(reinterpret_cast<MirBuffer*>(&mirbuffer)));
+}
+
+TEST_F(MesaClientPlatformTest, bo_buffer_is_gbm_compatible)
+{
+    mtd::StubConnectionConfiguration conf(platform);
+    MirConnection connection(conf);
+    if (auto wh = connection.connect("", [](MirConnection*, void*){}, nullptr))
+        wh->wait_for_all();
+    auto ext = static_cast<MirExtensionGbmBufferV2*>(
+        platform->request_interface("mir_extension_gbm_buffer", 2));
+    ASSERT_THAT(ext, Ne(nullptr));
+    ASSERT_THAT(ext->is_gbm_importable, Ne(nullptr));
+    ASSERT_THAT(ext->import_fd, Ne(nullptr));
+    ASSERT_THAT(ext->stride, Ne(nullptr));
+    ASSERT_THAT(ext->format, Ne(nullptr));
+    ASSERT_THAT(ext->flags, Ne(nullptr));
+    ASSERT_THAT(ext->age, Ne(nullptr));
+
+    auto client_buffer = std::make_shared<mclm::ClientBuffer>(
+        std::make_shared<StubOps>(), make_pkg(), geom::Size{width, height}, pf, flags);
+    mcl::Buffer mirbuffer(nullptr, nullptr, 0, client_buffer, nullptr, mir_buffer_usage_hardware);
+    EXPECT_TRUE(ext->is_gbm_importable(reinterpret_cast<MirBuffer*>(&mirbuffer)));
+    EXPECT_THAT(ext->import_fd(reinterpret_cast<MirBuffer*>(&mirbuffer)), Eq(fake_fd));
+    EXPECT_THAT(ext->stride(reinterpret_cast<MirBuffer*>(&mirbuffer)), Eq(stride));
+    EXPECT_THAT(ext->format(reinterpret_cast<MirBuffer*>(&mirbuffer)), Eq(pf));
+    EXPECT_THAT(ext->flags(reinterpret_cast<MirBuffer*>(&mirbuffer)), Eq(flags));
+    EXPECT_THAT(ext->age(reinterpret_cast<MirBuffer*>(&mirbuffer)), Eq(0));
 }
 
 TEST_F(MesaClientPlatformTest, converts_gbm_format_correctly)
