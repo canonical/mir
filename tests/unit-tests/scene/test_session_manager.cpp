@@ -85,8 +85,6 @@ struct SessionManagerSetup : public testing::Test
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
-        std::shared_ptr<mi::InputChannel>(),
-        std::shared_ptr<mi::InputSender>(),
         std::shared_ptr<mg::CursorImage>(),
         mir::report::null_scene_report());
     testing::NiceMock<mtd::MockSurfaceStack> surface_stack;

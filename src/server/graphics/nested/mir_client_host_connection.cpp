@@ -21,6 +21,7 @@
 #include "host_stream.h"
 #include "host_chain.h"
 #include "host_surface_spec.h"
+#include "host_buffer.h"
 #include "native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_extension_core.h"
@@ -610,176 +611,6 @@ mgn::GraphicsRegion::~GraphicsRegion()
 
 namespace
 {
-class HostBuffer : public mgn::NativeBuffer
-{
-public:
-    HostBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties) :
-        fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
-    {
-        mir_connection_allocate_buffer(
-            mir_connection,
-            properties.size.width.as_int(),
-            properties.size.height.as_int(),
-            properties.format,
-            buffer_available, this);
-        std::unique_lock<std::mutex> lk(mut);
-        cv.wait(lk, [&]{ return handle; });
-        if (!mir_buffer_is_valid(handle))
-        {
-            mir_buffer_release(handle);
-            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
-        }
-    }
-
-    HostBuffer(MirConnection* mir_connection, geom::Size size, MirPixelFormat format) :
-        fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
-    {
-        mir_connection_allocate_buffer(
-            mir_connection,
-            size.width.as_int(),
-            size.height.as_int(),
-            format,
-            buffer_available, this);
-        std::unique_lock<std::mutex> lk(mut);
-        cv.wait(lk, [&]{ return handle; });
-        if (!mir_buffer_is_valid(handle))
-        {
-            mir_buffer_release(handle);
-            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
-        }
-    }
-
-    HostBuffer(MirConnection* mir_connection,
-        MirExtensionGbmBufferV1 const* ext,
-        geom::Size size, unsigned int native_pf, unsigned int native_flags) :
-        fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
-    {
-        ext->allocate_buffer_gbm(
-            mir_connection, size.width.as_int(), size.height.as_int(), native_pf, native_flags,
-            buffer_available, this);
-        std::unique_lock<std::mutex> lk(mut);
-        cv.wait(lk, [&]{ return handle; });
-        if (!mir_buffer_is_valid(handle))
-        {
-            mir_buffer_release(handle);
-            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
-        }
-    }
-
-    HostBuffer(MirConnection* mir_connection,
-        MirExtensionAndroidBufferV1 const* ext,
-        geom::Size size, unsigned int native_pf, unsigned int native_flags) :
-        fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
-    {
-        ext->allocate_buffer_android(
-            mir_connection, size.width.as_int(), size.height.as_int(), native_pf, native_flags,
-            buffer_available, this);
-        std::unique_lock<std::mutex> lk(mut);
-        cv.wait(lk, [&]{ return handle; });
-        if (!mir_buffer_is_valid(handle))
-        {
-            mir_buffer_release(handle);
-            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
-        }
-    }
-
-    ~HostBuffer()
-    {
-        mir_buffer_release(handle);
-    }
-
-    void sync(MirBufferAccess access, std::chrono::nanoseconds ns) override
-    {
-        if (fence_extensions && fence_extensions->wait_for_access)
-            fence_extensions->wait_for_access(handle, access, ns.count());
-    }
-
-    MirBuffer* client_handle() const override
-    {
-        return handle;
-    }
-
-    std::unique_ptr<mgn::GraphicsRegion> get_graphics_region() override
-    {
-        return std::make_unique<mgn::GraphicsRegion>(handle);
-    }
-
-    geom::Size size() const override
-    {
-        return { mir_buffer_get_width(handle), mir_buffer_get_height(handle) };
-    }
-
-    MirPixelFormat format() const override
-    {
-        return mir_buffer_get_pixel_format(handle);
-    }
-
-    std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const override
-    {
-        EGLenum type;
-        EGLClientBuffer client_buffer = nullptr;;
-        EGLint* attrs = nullptr;
-        // TODO: check return value
-        mir_buffer_get_egl_image_parameters(handle, &type, &client_buffer, &attrs);
-        
-        return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{type, client_buffer, attrs};
-    }
-
-    static void buffer_available(MirBuffer* buffer, void* context)
-    {
-        auto host_buffer = static_cast<HostBuffer*>(context);
-        host_buffer->available(buffer);
-    }
-
-    void available(MirBuffer* buffer) override
-    {
-        std::unique_lock<std::mutex> lk(mut);
-        if (!handle)
-        {
-            handle = buffer;
-            cv.notify_all();
-        }
-
-        auto g = f;
-        lk.unlock();
-        if (g)
-            g();
-    }
-
-    void on_ownership_notification(std::function<void()> const& fn) override
-    {
-        std::unique_lock<std::mutex> lk(mut);
-        f = fn;
-    }
-
-    MirBufferPackage* package() const override
-    {
-       return mir_buffer_get_buffer_package(handle);
-    }
-
-    void set_fence(mir::Fd fd) override
-    {
-        if (fence_extensions && fence_extensions->associate_fence)
-            fence_extensions->associate_fence(handle, fd, mir_read_write);
-    }
-
-    mir::Fd fence() const override
-    {
-        if (fence_extensions && fence_extensions->get_fence)
-            return mir::Fd{fence_extensions->get_fence(handle)};
-        else
-            return mir::Fd{mir::Fd::invalid};
-    }
-
-private:
-    MirExtensionFencedBuffersV1 const* fence_extensions = nullptr;
-
-    std::function<void()> f;
-    MirBuffer* handle = nullptr;
-    std::mutex mut;
-    std::condition_variable cv;
-};
-
 class SurfaceSpec : public mgn::HostSurfaceSpec
 {
 public:
@@ -824,13 +655,13 @@ private:
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     mg::BufferProperties const& properties)
 {
-    return std::make_shared<HostBuffer>(mir_connection, properties);
+    return std::make_shared<mgn::HostBuffer>(mir_connection, properties);
 }
 
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     geom::Size size, MirPixelFormat format)
 {
-    return std::make_shared<HostBuffer>(mir_connection, size, format);
+    return std::make_shared<mgn::HostBuffer>(mir_connection, size, format);
 }
 
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
@@ -838,12 +669,12 @@ std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
 {
     if (auto ext = mir_extension_gbm_buffer_v1(mir_connection))
     {
-        return std::make_shared<HostBuffer>(mir_connection, ext, size, native_format, native_flags);
+        return std::make_shared<mgn::HostBuffer>(mir_connection, ext, size, native_format, native_flags);
     }
 
     if (auto ext = mir_extension_android_buffer_v1(mir_connection))
     {
-        return std::make_shared<HostBuffer>(mir_connection, ext, size, native_format, native_flags);
+        return std::make_shared<mgn::HostBuffer>(mir_connection, ext, size, native_format, native_flags);
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error("could not create hardware buffer"));
@@ -854,13 +685,13 @@ std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surfa
     return std::make_unique<SurfaceSpec>(mir_connection);
 }
 
-bool mgn::MirClientHostConnection::supports_passthrough()
+bool mgn::MirClientHostConnection::supports_passthrough(mg::BufferUsage usage)
 {
-    auto buffer = create_buffer(geom::Size{1, 1} , mir_pixel_format_abgr_8888);
-    auto hints = buffer->egl_image_creation_hints();
-    if (std::get<1>(hints) == nullptr && std::get<2>(hints) == nullptr)
-        return false;
-    return true;
+    //FIXME: ShmBuffers currently don't upload properly. The logic here uses
+    //       passthrough where supported (ANativeWindowBuffer and gbm_bo)
+    //       (LP: #1663062 for more details)
+    return (mir_extension_android_buffer_v1(mir_connection) || 
+           ((mir_extension_gbm_buffer_v1(mir_connection) && usage == mg::BufferUsage::hardware)));
 }
 
 void mgn::MirClientHostConnection::apply_input_configuration(MirInputConfig const* config)

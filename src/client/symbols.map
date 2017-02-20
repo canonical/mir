@@ -597,6 +597,13 @@ MIR_CLIENT_0.26.1 { # New functions in Mir 0.26.1
     mir_window_request_window_id_sync;
 } MIR_CLIENT_0.26;
 
+MIR_CLIENT_DETAIL_0.27 {  # New functions in Mir 0.27
+  global:
+    extern "C++" {
+      mir::events::set_window_id*;
+    };
+} MIR_CLIENT_DETAIL_0.26.1;
+
 MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
   global:
     mir_connection_apply_session_input_config;
@@ -604,6 +611,9 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
     mir_get_client_api_version;
     mir_input_device_get_mutable_touchscreen_config;
     mir_input_device_get_touchscreen_config;
+    mir_keyboard_event_key_text;
+    mir_output_get_logical_height;
+    mir_output_get_logical_width;
     mir_touchscreen_config_get_mapping_mode;
     mir_touchscreen_config_get_output_id;
     mir_touchscreen_config_set_mapping_mode;

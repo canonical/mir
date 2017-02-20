@@ -349,9 +349,6 @@ void mf::SessionMediator::create_surface(
     response->set_pixel_format(request->pixel_format());
     response->set_buffer_usage(request->buffer_usage());
 
-    if (surface->supports_input())
-        response->add_fd(surface->client_input_fd());
-    
     for (unsigned int i = 0; i < mir_window_attribs; i++)
     {
         auto setting = response->add_attributes();
@@ -812,6 +809,7 @@ void mf::SessionMediator::create_screencast(
 
     protobuf_screencast->mutable_screencast_id()->set_value(
         screencast_session_id.as_value());
+    protobuf_screencast->mutable_buffer_stream()->set_pixel_format(pixel_format);
     protobuf_screencast->mutable_buffer_stream()->mutable_id()->set_value(
         screencast_session_id.as_value());
 

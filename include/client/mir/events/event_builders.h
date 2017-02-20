@@ -159,6 +159,7 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
 
 EventUPtr clone_event(MirEvent const& event);
 void transform_positions(MirEvent& event, mir::geometry::Displacement const& movement);
+void set_window_id(MirEvent& event, int window_id);
 
 }
 }

@@ -64,6 +64,7 @@ endfunction()
 #These headers are not part of the libmirplatform ABI
 set(mirplatform-exclude-headers "${CMAKE_SOURCE_DIR}/include/platform/mir/input")
 
+make_lib_descriptor(core)
 make_lib_descriptor(client)
 make_lib_descriptor(server)
 make_lib_descriptor(common)
@@ -97,7 +98,7 @@ macro(_define_abi_check_for libname)
   )
 endmacro(_define_abi_check_for)
 
-set(the_libs mirserver mirclient mircommon mirplatform mircookie mirplatforminputevdev)
+set(the_libs mircore mirserver mirclient mircommon mirplatform mircookie mirplatforminputevdev)
 if(MIR_BUILD_PLATFORM_MESA_KMS)
   set(the_libs ${the_libs} mirclientplatformmesa mirplatformgraphicsmesakms)
 endif()

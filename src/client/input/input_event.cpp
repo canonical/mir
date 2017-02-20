@@ -73,6 +73,13 @@ MirInputEventType mir_input_event_get_type(MirInputEvent const* ev) MIR_HANDLE_E
     return ev->input_type();
 })
 
+int mir_input_event_get_window_id(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    expect_event_type(ev, mir_event_type_input);
+
+    return ev->window_id();
+})
+
 MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input);
@@ -134,6 +141,11 @@ int mir_keyboard_event_scan_code(MirKeyboardEvent const* kev) MIR_HANDLE_EVENT_E
 MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* kev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return kev->modifiers();
+})
+
+char const* mir_keyboard_event_key_text(MirKeyboardEvent const* kev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return kev->text();
 })
 
 /* Touch event accessors */

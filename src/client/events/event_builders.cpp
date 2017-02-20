@@ -414,3 +414,39 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     auto e = new_event<MirTouchEvent>(device_id, timestamp, cookie, modifiers, contacts);
     return make_uptr_event(e);
 }
+
+void mev::set_window_id(MirEvent& event, int window_id)
+{
+    switch (event.type())
+    {
+    case mir_event_type_input:
+        event.to_input()->set_window_id(window_id);
+        break;
+    case mir_event_type_input_device_state:
+        event.to_input_device_state()->set_window_id(window_id);
+        break;
+    case mir_event_type_window:
+        event.to_surface()->set_id(window_id);
+        break;
+    case mir_event_type_resize:
+        event.to_resize()->set_surface_id(window_id);
+        break;
+    case mir_event_type_orientation:
+        event.to_orientation()->set_surface_id(window_id);
+        break;
+    case mir_event_type_close_window:
+        event.to_close_window()->set_surface_id(window_id);
+        break;
+    case mir_event_type_keymap:
+        event.to_keymap()->set_surface_id(window_id);
+        break;
+    case mir_event_type_window_output:
+        event.to_window_output()->set_surface_id(window_id);
+        break;
+    case mir_event_type_window_placement:
+        event.to_window_placement()->set_id(window_id);
+        break;
+    default:
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Event has no window id."));
+    }
+}

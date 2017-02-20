@@ -52,6 +52,16 @@ MirInputEventType MirInputEvent::input_type() const
     }
 }
 
+int MirInputEvent::window_id() const
+{
+    return event.asReader().getInput().getWindowId();
+}
+
+void MirInputEvent::set_window_id(int id)
+{
+    event.getInput().setWindowId(id);
+}
+
 MirInputDeviceId MirInputEvent::device_id() const
 {
     return event.asReader().getInput().getDeviceId().getId();

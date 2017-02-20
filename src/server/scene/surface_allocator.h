@@ -23,11 +23,6 @@
 
 namespace mir
 {
-namespace input
-{
-class InputChannelFactory;
-class InputSender;
-}
 namespace graphics
 {
 class CursorImage;
@@ -41,8 +36,6 @@ class SurfaceAllocator : public SurfaceFactory
 {
 public:
     SurfaceAllocator(
-         std::shared_ptr<input::InputChannelFactory> const& input_factory,
-         std::shared_ptr<input::InputSender> const& input_sender,
          std::shared_ptr<graphics::CursorImage> const& default_cursor_image,
          std::shared_ptr<SceneReport> const& report);
 
@@ -51,8 +44,6 @@ public:
         SurfaceCreationParameters const& params) override;
 
 private:
-    std::shared_ptr<input::InputChannelFactory> const input_factory;
-    std::shared_ptr<input::InputSender> const input_sender;
     std::shared_ptr<graphics::CursorImage> const default_cursor_image;
     std::shared_ptr<SceneReport> const report;
 };

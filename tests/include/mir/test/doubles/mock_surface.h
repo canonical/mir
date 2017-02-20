@@ -22,10 +22,6 @@
 #include "src/server/scene/basic_surface.h"
 #include "src/server/report/null_report_factory.h"
 #include "mock_buffer_stream.h"
-#include "stub_input_channel.h"
-
-// GMock wants to be able to construct MirEvent as it is passed by reference to consume
-#include "mir/events/event_private.h"
 
 #include <gmock/gmock.h>
 
@@ -44,8 +40,6 @@ struct MockSurface : public scene::BasicSurface
             {{},{}},
             mir_pointer_unconfined,
             { { std::make_shared<testing::NiceMock<MockBufferStream>>(), {0, 0}, {} } },
-            std::make_shared<StubInputChannel>(),
-            {},
             {},
             mir::report::null_scene_report())
     {
@@ -65,9 +59,6 @@ struct MockSurface : public scene::BasicSurface
 
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
-
-    MOCK_CONST_METHOD0(supports_input, bool());
-    MOCK_CONST_METHOD0(client_input_fd, int());
 
     MOCK_METHOD2(configure, int(MirWindowAttrib, int));
     MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::SurfaceObserver> const&));

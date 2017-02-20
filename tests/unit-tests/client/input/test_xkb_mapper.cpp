@@ -438,3 +438,64 @@ TEST_F(XKBMapper, no_key_composition_when_no_compose_file_is_found)
     EXPECT_EQ(XKB_KEY_u, map_key(local_mapper, keyboard, mir_keyboard_action_down, KEY_U));
     EXPECT_EQ(XKB_KEY_u, map_key(local_mapper, keyboard, mir_keyboard_action_up, KEY_U));
 }
+
+namespace
+{
+struct XKBMapperWithUsKeymap : XKBMapper
+{
+    MirInputDeviceId keyboard = MirInputDeviceId{0};
+    XKBMapperWithUsKeymap()
+    {
+        mapper.set_keymap_for_all_devices(mi::Keymap{"pc105", "us", "intl",""});
+    }
+};
+}
+
+TEST_F(XKBMapperWithUsKeymap, key_event_contains_text_to_append)
+{
+    EXPECT_CALL(*this, mapped_event(mt::KeyWithText("u")));
+    EXPECT_CALL(*this, mapped_event(mt::KeyWithText("")));
+
+    map_event(keyboard, mir_keyboard_action_down, KEY_U);
+    map_event(keyboard, mir_keyboard_action_up, KEY_U);
+}
+
+TEST_F(XKBMapperWithUsKeymap, key_event_text_applies_shift_modifiers)
+{
+    EXPECT_CALL(*this, mapped_event(AllOf(mt::KeyWithText(""), mt::KeyOfSymbol(XKB_KEY_Shift_L))));
+    EXPECT_CALL(*this, mapped_event(mt::KeyWithText("U")));
+    EXPECT_CALL(*this, mapped_event(AllOf(mt::KeyWithText(""), mt::KeyOfSymbol(XKB_KEY_U))));
+
+    map_event(keyboard, mir_keyboard_action_down, KEY_LEFTSHIFT);
+    map_event(keyboard, mir_keyboard_action_down, KEY_U);
+    map_event(keyboard, mir_keyboard_action_up, KEY_U);
+}
+
+TEST_F(XKBMapperWithUsKeymap, on_ctrl_c_key_event_text_is_u0003)
+{
+    EXPECT_CALL(*this, mapped_event(AllOf(mt::KeyWithText(""), mt::KeyOfSymbol(XKB_KEY_Control_R))));
+    EXPECT_CALL(*this, mapped_event(AllOf(mt::KeyWithText("\003"), mt::KeyOfSymbol(XKB_KEY_c))));
+    EXPECT_CALL(*this, mapped_event(AllOf(mt::KeyWithText(""), mt::KeyOfSymbol(XKB_KEY_c))));
+
+    map_event(keyboard, mir_keyboard_action_down, KEY_RIGHTCTRL);
+    map_event(keyboard, mir_keyboard_action_down, KEY_C);
+    map_event(keyboard, mir_keyboard_action_up, KEY_C);
+}
+
+TEST_F(XKBMapperWithUsKeymap, compose_key_sequence_contains_text_on_key_down)
+{
+    InSequence seq;
+    EXPECT_CALL(*this, mapped_event(AllOf(mt::KeyWithText(""),mt::KeyOfSymbol(XKB_KEY_Shift_R))));
+    EXPECT_CALL(*this, mapped_event(AllOf(mt::KeyWithText(""),mt::KeyOfSymbol(XKB_KEY_NoSymbol))));
+    EXPECT_CALL(*this, mapped_event(AllOf(mt::KeyWithText(""),mt::KeyOfSymbol(XKB_KEY_NoSymbol))));
+    EXPECT_CALL(*this, mapped_event(AllOf(mt::KeyWithText(""),mt::KeyOfSymbol(XKB_KEY_Shift_R))));
+    EXPECT_CALL(*this, mapped_event(AllOf(mt::KeyWithText("ü"),mt::KeyOfSymbol(XKB_KEY_udiaeresis))));
+    EXPECT_CALL(*this, mapped_event(AllOf(mt::KeyWithText(""),mt::KeyOfSymbol(XKB_KEY_udiaeresis))));
+
+    map_event(keyboard, mir_keyboard_action_down, KEY_RIGHTSHIFT);
+    map_event(keyboard, mir_keyboard_action_down, KEY_APOSTROPHE);
+    map_event(keyboard, mir_keyboard_action_up, KEY_APOSTROPHE);
+    map_event(keyboard, mir_keyboard_action_up, KEY_RIGHTSHIFT);
+    map_event(keyboard, mir_keyboard_action_down, KEY_U);
+    map_event(keyboard, mir_keyboard_action_up, KEY_U);
+}
