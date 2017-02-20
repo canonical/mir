@@ -78,7 +78,7 @@ public:
     virtual std::shared_ptr<NativeBuffer> create_buffer(graphics::BufferProperties const&) = 0;
     virtual std::shared_ptr<NativeBuffer> create_buffer(mir::geometry::Size, MirPixelFormat format) = 0;
     virtual std::shared_ptr<NativeBuffer> create_buffer(geometry::Size, uint32_t format, uint32_t flags) = 0;
-    virtual bool supports_passthrough() = 0;
+    virtual bool supports_passthrough(graphics::BufferUsage) = 0;
     virtual void apply_input_configuration(MirInputConfig const* config) = 0;
 
 protected:

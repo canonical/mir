@@ -18,6 +18,7 @@
 
 #include "src/server/compositor/screencast_display_buffer.h"
 #include "src/server/compositor/queueing_schedule.h"
+#include "mir/renderer/gl/texture_target.h"
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_gl_buffer.h"
@@ -123,7 +124,14 @@ TEST_F(ScreencastDisplayBufferTest, sets_render_buffer_size_to_supplied_size)
 
 TEST_F(ScreencastDisplayBufferTest, renders_to_supplied_buffer)
 {
-    testing::NiceMock<mtd::MockGLBuffer> mock_buffer{
+    struct MockTargetBuffer : mtd::MockBuffer,
+                              mir::renderer::gl::TextureTarget
+    {
+        using MockBuffer::MockBuffer;
+        MOCK_METHOD0(bind_for_write, void());
+    };
+ 
+    testing::NiceMock<MockTargetBuffer> mock_buffer{
         default_rect.size, geom::Stride{100}, mir_pixel_format_xbgr_8888};
 
     mc::QueueingSchedule free_queue;
@@ -131,7 +139,7 @@ TEST_F(ScreencastDisplayBufferTest, renders_to_supplied_buffer)
 
     InSequence s;
     /* Set the buffer as rendering target */
-    EXPECT_CALL(mock_buffer, bind());
+    EXPECT_CALL(mock_buffer, bind_for_write());
     EXPECT_CALL(mock_gl,
                 glViewport(0, 0,
                            mock_buffer.size().width.as_int(),
@@ -143,6 +151,22 @@ TEST_F(ScreencastDisplayBufferTest, renders_to_supplied_buffer)
                                    default_mirror_mode, free_queue,
                                    ready_queue, stub_display};
     db.bind();
+}
+
+TEST_F(ScreencastDisplayBufferTest, throws_if_cannot_write_to_supplied_buffer)
+{
+    testing::NiceMock<mtd::MockGLBuffer> mock_buffer{
+        default_rect.size, geom::Stride{100}, mir_pixel_format_xbgr_8888};
+
+    mc::QueueingSchedule free_queue;
+    free_queue.schedule(mt::fake_shared(mock_buffer));
+
+    mc::ScreencastDisplayBuffer db{default_rect, default_size,
+                                   default_mirror_mode, free_queue,
+                                   ready_queue, stub_display};
+    EXPECT_THROW({
+        db.bind();
+    }, std::invalid_argument);
 }
 
 TEST_F(ScreencastDisplayBufferTest, forces_rendering_to_complete_on_swap)

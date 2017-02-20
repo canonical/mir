@@ -124,3 +124,13 @@ MirPointerButtons MirInputDeviceStateEvent::device_pointer_buttons(size_t index)
 {
     return event.asReader().getInputDevice().getDevices()[index].getButtons();
 }
+
+void MirInputDeviceStateEvent::set_window_id(int id)
+{
+    event.getInputDevice().setWindowId(id);
+}
+
+int MirInputDeviceStateEvent::window_id() const
+{
+    return event.asReader().getInputDevice().getWindowId();
+}

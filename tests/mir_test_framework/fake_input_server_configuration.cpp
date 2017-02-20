@@ -66,8 +66,3 @@ std::shared_ptr<mi::InputDispatcher> mtf::FakeInputServerConfiguration::the_inpu
 {
     return DefaultServerConfiguration::the_input_dispatcher();
 }
-
-std::shared_ptr<mi::InputSender> mtf::FakeInputServerConfiguration::the_input_sender()
-{
-    return DefaultServerConfiguration::the_input_sender();
-}

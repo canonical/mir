@@ -32,7 +32,6 @@
 #include "mir/test/doubles/stub_renderer.h"
 #include "mir/test/doubles/stub_display_buffer.h"
 #include "mir/test/doubles/stub_buffer.h"
-#include "mir/test/doubles/stub_input_sender.h"
 #include "mir/test/doubles/null_display_sync_group.h"
 #include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "mir/test/doubles/mock_event_sink.h"
@@ -134,8 +133,6 @@ struct SurfaceStackCompositor : public Test
             geom::Rectangle{{0,0},{1,1}},
             mir_pointer_unconfined,
             streams,
-            std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mtd::StubInputSender>(),
             std::shared_ptr<mg::CursorImage>(),
             null_scene_report)},
         stub_buffer(std::make_shared<mtd::StubBuffer>())

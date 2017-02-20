@@ -327,7 +327,6 @@ MirConnection::MirConnection(
         display_configuration_response{mcl::make_protobuf_object<mir::protobuf::DisplayConfiguration>()},
         set_base_display_configuration_response{mcl::make_protobuf_object<mir::protobuf::Void>()},
         client_platform_factory(conf.the_client_platform_factory()),
-        input_platform(conf.the_input_platform()),
         display_configuration(conf.the_display_configuration()),
         input_devices{conf.the_input_devices()},
         lifecycle_control(conf.the_lifecycle_control()),
@@ -466,7 +465,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
     else
     {
         surf = std::make_shared<MirWindow>(
-            this, server, &debug, default_stream, input_platform, spec, *surface_proto, request->wh);
+            this, server, &debug, default_stream, spec, *surface_proto, request->wh);
         surface_map->insert(mf::SurfaceId{surface_proto->id().value()}, surf);
     }
 

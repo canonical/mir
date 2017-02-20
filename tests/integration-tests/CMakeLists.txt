@@ -64,8 +64,6 @@ mir_precompiled_header(mir_integration_tests ${CMAKE_CURRENT_SOURCE_DIR}/precomp
 
 add_dependencies(mir_integration_tests GMock)
 
-uses_android_input(mir_integration_tests)
-
 target_link_libraries(
   mir_integration_tests
 

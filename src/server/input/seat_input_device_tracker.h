@@ -118,6 +118,7 @@ private:
     std::vector<TouchVisualizer::Spot> spots;
     mir::geometry::Rectangles confined_region;
 
+    std::mutex mutable device_state_mutex;
     std::mutex mutable region_mutex;
 
     std::mutex mutable output_mutex;

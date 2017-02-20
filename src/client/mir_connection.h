@@ -77,14 +77,6 @@ class MirBasicRpcChannel;
 }
 }
 
-namespace input
-{
-namespace receiver
-{
-class InputPlatform;
-}
-}
-
 namespace logging
 {
 class Logger;
@@ -341,8 +333,6 @@ private:
     std::shared_ptr<mir::client::ClientPlatformFactory> const client_platform_factory;
     std::shared_ptr<mir::client::ClientBufferFactory> client_buffer_factory;
     std::shared_ptr<EGLNativeDisplayType> native_display;
-
-    std::shared_ptr<mir::input::receiver::InputPlatform> const input_platform;
 
     std::string error_message;
 

@@ -89,8 +89,6 @@ add_library(mir-test-doubles-static STATIC
 
 add_dependencies(mir-test-doubles-static GMock)
 
-uses_android_input(mir-public-test-doubles)
-
 target_link_libraries(mir-test-doubles-static
 
   mirserver

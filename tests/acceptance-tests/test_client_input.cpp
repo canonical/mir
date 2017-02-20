@@ -177,6 +177,7 @@ struct Client
         }
         auto spec = mir_create_normal_window_spec(connection, surface_width, surface_height);
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+        mir_window_spec_set_event_handler(spec, handle_event, this);
         mir_window_spec_set_name(spec, name.c_str());
         window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
@@ -184,7 +185,6 @@ struct Client
             BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a window: "}+
                 mir_window_get_error_message(window)});
 
-        mir_window_set_event_handler(window, handle_event, this);
         mir_buffer_stream_swap_buffers_sync(
             mir_window_get_buffer_stream(window));
 
@@ -218,12 +218,12 @@ struct Client
     static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<Client*>(context);
+        std::lock_guard<std::mutex> lock(client->client_status);
         auto type = mir_event_get_type(ev);
         if (type == mir_event_type_window)
         {
             auto window_event = mir_event_get_window_event(ev);
             client->handle_window_event(window_event);
-
         }
         if (type == mir_event_type_input)
             client->handle_input(ev);
@@ -253,6 +253,7 @@ struct Client
     bool exposed = false;
     bool focused = false;
     bool input_device_state_received = false;
+    std::mutex client_status;
 };
 
 struct DeviceCounter : mi::InputDeviceObserver
@@ -1045,6 +1046,43 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
     auto config = mir_connection_create_input_config(a_client.connection);
     EXPECT_THAT(mir_input_config_device_count(config), Eq(2u));
     mir_input_config_release(config);
+}
+
+TEST_F(TestClientInput, key_event_contains_text_to_append)
+{
+    Client a_client(new_connection(), first);
+
+    EXPECT_CALL(a_client, handle_input(mt::KeyWithText("x")))
+        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_X));
+    a_client.all_events_received.wait_for(10s);
+}
+
+TEST_F(TestClientInput, key_event_text_applies_shift_modifiers)
+{
+    Client a_client(new_connection(), first);
+
+    EXPECT_CALL(a_client, handle_input(AllOf(mt::KeyWithText(""), mt::KeyOfSymbol(XKB_KEY_Shift_L))));
+    EXPECT_CALL(a_client, handle_input(mt::KeyWithText("W")))
+        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_LEFTSHIFT));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_W));
+    a_client.all_events_received.wait_for(10s);
+}
+
+TEST_F(TestClientInput, on_ctrl_c_key_event_text_is_end_of_text)
+{
+    Client a_client(new_connection(), first);
+
+    EXPECT_CALL(a_client, handle_input(AllOf(mt::KeyWithText(""), mt::KeyOfSymbol(XKB_KEY_Control_R))));
+    EXPECT_CALL(a_client, handle_input(mt::KeyWithText("\003")))
+        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTCTRL));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_C));
+    a_client.all_events_received.wait_for(10s);
 }
 
 TEST_F(TestClientInput, num_lock_is_off_on_startup)

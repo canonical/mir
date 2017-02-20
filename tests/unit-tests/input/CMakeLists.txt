@@ -1,4 +1,3 @@
-add_subdirectory(android)
 add_subdirectory(evdev)
 
 list(APPEND UNIT_TEST_SOURCES
@@ -6,7 +5,6 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_cursor_controller.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_xcursor_loader.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_touchspot_controller.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_input_channel_factory.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_input_event.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_config_changer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_event_builders.cpp

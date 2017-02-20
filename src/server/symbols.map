@@ -73,8 +73,6 @@ MIR_SERVER_0.27 {
     mir::input::EventFilter::?EventFilter*;
     mir::input::EventFilter::EventFilter*;
     mir::input::EventFilter::operator*;
-    mir::input::InputChannel::InputChannel*;
-    mir::input::InputChannel::operator*;
     mir::input::InputDeviceHub::?InputDeviceHub*;
     mir::input::InputDeviceHub::InputDeviceHub*;
     mir::input::InputDeviceHub::operator*;
@@ -121,6 +119,7 @@ MIR_SERVER_0.27 {
     mir::scene::NullSurfaceObserver::cursor_image_set_to*;
     mir::scene::NullSurfaceObserver::frame_posted*;
     mir::scene::NullSurfaceObserver::hidden_set_to*;
+    mir::scene::NullSurfaceObserver::input_consumed*;
     mir::scene::NullSurfaceObserver::keymap_changed*;
     mir::scene::NullSurfaceObserver::moved_to*;
     mir::scene::NullSurfaceObserver::?NullSurfaceObserver*;
@@ -398,6 +397,7 @@ MIR_SERVER_0.27 {
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::cursor_image_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::frame_posted*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::hidden_set_to*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::input_consumed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::keymap_changed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::moved_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::?NullSurfaceObserver*;
@@ -513,7 +513,6 @@ MIR_SERVER_0.27 {
     typeinfo?for?mir::input::CursorListener;
     typeinfo?for?mir::input::Device;
     typeinfo?for?mir::input::EventFilter;
-    typeinfo?for?mir::input::InputChannel;
     typeinfo?for?mir::input::InputDeviceHub;
     typeinfo?for?mir::input::InputDeviceObserver;
     typeinfo?for?mir::input::InputDispatcher;
@@ -596,7 +595,6 @@ MIR_SERVER_0.27 {
     vtable?for?mir::input::CursorListener;
     vtable?for?mir::input::Device;
     vtable?for?mir::input::EventFilter;
-    vtable?for?mir::input::InputChannel;
     vtable?for?mir::input::InputDeviceHub;
     vtable?for?mir::input::InputDeviceObserver;
     vtable?for?mir::input::InputDispatcher;
@@ -705,7 +703,6 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.27 {
     mir::DefaultServerConfiguration::clock*;
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
     mir::DefaultServerConfiguration::new_ipc_factory*;
-    mir::DefaultServerConfiguration::the_android_input_dispatcher*;
     mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
@@ -744,7 +741,6 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.27 {
     mir::DefaultServerConfiguration::the_graphics_platform*;
     mir::DefaultServerConfiguration::the_host_connection*;
     mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
-    mir::DefaultServerConfiguration::the_input_channel_factory*;
     mir::DefaultServerConfiguration::the_input_configuration_changer*;
     mir::DefaultServerConfiguration::the_input_device_hub*;
     mir::DefaultServerConfiguration::the_input_device_registry*;
@@ -755,11 +751,9 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.27 {
     mir::DefaultServerConfiguration::the_input_registrar*;
     mir::DefaultServerConfiguration::the_input_report*;
     mir::DefaultServerConfiguration::the_input_scene*;
-    mir::DefaultServerConfiguration::the_input_sender*;
     mir::DefaultServerConfiguration::the_input_target_enumerator*;
     mir::DefaultServerConfiguration::the_input_targeter*;
     mir::DefaultServerConfiguration::the_input_translator*;
-    mir::DefaultServerConfiguration::the_legacy_input_dispatchable*;
     mir::DefaultServerConfiguration::the_logger*;
     mir::DefaultServerConfiguration::the_main_loop*;
     mir::DefaultServerConfiguration::the_mediating_display_changer*;

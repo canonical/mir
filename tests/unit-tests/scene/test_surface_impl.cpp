@@ -28,7 +28,6 @@
 
 #include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
-#include "mir/test/doubles/stub_input_sender.h"
 #include "mir/test/doubles/null_event_sink.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/fake_shared.h"
@@ -86,13 +85,11 @@ struct Surface : testing::Test
             std::string("stub"), geom::Rectangle{{},{}},
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { buffer_stream, {}, {} } },
-            nullptr, stub_input_sender, nullptr, report);
+            nullptr, report);
     }
 
     mf::SurfaceId stub_id;
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
-    std::shared_ptr<mtd::StubInputSender> const stub_input_sender = std::make_shared<mtd::StubInputSender>();
-    
     std::shared_ptr<ms::BasicSurface> surface;
 };
 }
@@ -281,8 +278,6 @@ TEST_F(Surface, preferred_orientation_mode_defaults_to_any)
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { buffer_stream, {}, {} } },
-        std::shared_ptr<mi::InputChannel>(),
-        stub_input_sender,
         std::shared_ptr<mg::CursorImage>(),
         report);
 
