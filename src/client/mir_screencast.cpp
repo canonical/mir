@@ -57,6 +57,9 @@ mir::protobuf::ScreencastParameters serialize_spec(MirScreencastSpec const& spec
         message.mutable_region()->set_height(region.height);
     }
 
+    if (spec.num_buffers.is_set() && spec.num_buffers.value() == 0 && !spec.pixel_format.is_set())
+        message.set_pixel_format(mir_pixel_format_abgr_8888);
+        
     return message;
 }
 
@@ -76,7 +79,6 @@ void throw_if_invalid(MirScreencastSpec const& spec)
 
     THROW_IF_ZERO(width);
     THROW_IF_ZERO(height);
-    THROW_IF_EQ(pixel_format, mir_pixel_format_invalid);
     THROW_IF_UNSET(capture_region);
 
     if (spec.capture_region.is_set())
@@ -86,6 +88,14 @@ void throw_if_invalid(MirScreencastSpec const& spec)
             BOOST_THROW_EXCEPTION(std::runtime_error("Invalid capture region width"));
         if (region.height == 0)
             BOOST_THROW_EXCEPTION(std::runtime_error("Invalid capture region height"));
+    }
+
+    //zero nbuffers don't need to set pixel format
+    if (!spec.pixel_format.is_set() &&
+        ((spec.num_buffers.is_set() && spec.num_buffers.value() > 0) ||
+         (!spec.num_buffers.is_set())))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid pixel format"));
     }
 }
 }

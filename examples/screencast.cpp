@@ -53,12 +53,12 @@ try
             disp_id = atoi(optarg);
         case 'h':
         default:
-            puts(argv[0]);
-            printf("Usage:\n");
-            printf("    -m <Mir server socket>\n");
-            printf("    -f file to output to\n");
-            printf("    -d output id to capture\n");
-            printf("    -h help dialog\n");
+            std::cout << argv[0] << std::endl;
+            std::cout << "Usage:\n";
+            std::cout << "    -m <Mir server socket>\n";
+            std::cout << "    -f file to output to\n";
+            std::cout << "    -d output id to capture\n";
+            std::cout << "    -h help dialog\n";
             return -1;
         }
     }
@@ -98,8 +98,6 @@ try
     //      Set to zero to avoid this, and when the old screencast-bufferstream method is removed,
     //      the initial capture will be removed. 
     mir_screencast_spec_set_number_of_buffers(spec, 0);
-
-    mir_screencast_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     auto screencast = mir_screencast_create_sync(spec);
     mir_screencast_spec_release(spec);
@@ -150,7 +148,6 @@ try
         mir_buffer_unmap(buffer);
     }
 
-    printf("hram?\n");
 //    mir_screencast_release_sync(screencast);
 //    mir_connection_release(connection);
     return 0;
