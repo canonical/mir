@@ -95,6 +95,11 @@ mgm::GBMFrontBuffer::operator gbm_bo*()
     return bo;
 }
 
+mgm::GBMFrontBuffer::operator bool() const
+{
+    return (surf != nullptr) && (bo != nullptr);
+}
+
 class mgm::DRMFB
 {
 public:

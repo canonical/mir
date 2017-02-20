@@ -57,6 +57,7 @@ public:
     GBMFrontBuffer& operator=(std::nullptr_t);
 
     operator gbm_bo*();
+    operator bool() const;
 private:
     gbm_surface* const surf;
     gbm_bo* const bo;
