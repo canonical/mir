@@ -21,31 +21,6 @@ add_library(playgroundserverconfig STATIC
 add_subdirectory(demo-shell/)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99")
-mir_add_wrapped_executable(mir_demo_client_prerendered_frames
-    mir_demo_client_prerendered_frames.c
-)
-
-target_link_libraries(mir_demo_client_prerendered_frames
-    mirclient
-    m
-)
-
-mir_add_wrapped_executable(mir_demo_client_chain_jumping_buffers
-    mir_demo_client_chain_jumping_buffers.c
-)
-
-target_link_libraries(mir_demo_client_chain_jumping_buffers
-    mirclient
-)
-
-mir_add_wrapped_executable(mir_demo_client_render_surface
-  render_surface.cpp
-)
-
-target_link_libraries(mir_demo_client_render_surface
-    mirclient
-    eglapp
-)
 
 mir_add_wrapped_executable(mir_demo_client_egldiamond_render_surface
     egldiamond_render_surface.c

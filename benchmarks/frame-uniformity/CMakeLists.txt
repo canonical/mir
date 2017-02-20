@@ -10,8 +10,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}
-  ${MIR_ANDROID_INCLUDE_DIRECTORIES}
-  ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES}
 
   # needed for fake_event_hub_server_configuration.h (which relies on private APIs)
   ${PROJECT_SOURCE_DIR}/tests/include/
@@ -51,5 +49,3 @@ target_link_libraries(frame_uniformity_test_client
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
-
-uses_android_input(frame_uniformity_test_client)
