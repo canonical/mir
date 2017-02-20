@@ -91,36 +91,36 @@ typedef MirBuffer* (*MirConnectionAllocateBufferGbmSync)(
  */
 typedef bool (*MirBufferExtIsGBMImportable)(MirBuffer* buffer);
 
-/** Access the import fd a MirBuffer
+/** Access the fd a MirBuffer suitable for gbm import
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \warning           The fd is owned by the buffer. Do not close() it.
  *   \param [in] buffer The buffer
- *   \return            The stride of the buffer
+ *   \return            The fd
  */
 typedef int (*MirBufferExtFd)(MirBuffer* buffer);
 
-/** Check the stride of a MirBuffer
+/** Get the stride of a MirBuffer
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \param [in] buffer The buffer
  *   \return            The stride of the buffer
  */
 typedef uint32_t (*MirBufferExtStride)(MirBuffer* buffer);
 
-/** Check the GBM_FORMAT of a MirBuffer
+/** Get the GBM_FORMAT of a MirBuffer
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \param [in] buffer The buffer
  *   \return            The GBM_FORMAT of the buffer
  */
 typedef uint32_t (*MirBufferExtFormat)(MirBuffer* buffer);
 
-/** Check the gbm_bo_flags of a MirBuffer
+/** Get the gbm_bo_flags of a MirBuffer
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \param [in] buffer The buffer
  *   \return            The gbm_bo_flags of the buffer
  */
 typedef uint32_t (*MirBufferExtFlags)(MirBuffer* buffer);
 
-/** Check the gbm_bo_flags of a MirBuffer
+/** Get the age of a MirBuffer
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \param [in] buffer The buffer
  *   \return            The age of the buffer
