@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_screencast.h"
 #include "mir_toolkit/mir_buffer.h"
+#include "mir/raii.h"
 #include <thread>
 #include <memory>
 #include <chrono>
@@ -37,7 +38,8 @@ try
     int arg = -1;
     static char const *socket_file = NULL;
     static char const *output_file = "screencap_output.raw";
-    while ((arg = getopt (argc, argv, "m:f:h:")) != -1)
+    auto disp_id = 0;
+    while ((arg = getopt (argc, argv, "m:f:d:h:")) != -1)
     {
         switch (arg)
         {
@@ -47,32 +49,56 @@ try
         case 'f':
             output_file = optarg;
             break;
+        case 'd':
+            disp_id = atoi(optarg);
         case 'h':
         default:
             puts(argv[0]);
             printf("Usage:\n");
             printf("    -m <Mir server socket>\n");
             printf("    -f file to output to\n");
+            printf("    -d output id to capture\n");
             printf("    -h help dialog\n");
             return -1;
         }
     }
 
+
     int rc = 0;
     auto connection = mir_connect_sync(socket_file, "screencap_to_buffer");
 
+    auto const display_config = mir::raii::deleter_for(
+        mir_connection_create_display_configuration(connection),
+        &mir_display_config_release);
+
+    if (disp_id < 0 || disp_id > mir_display_config_get_num_outputs(display_config.get()))
+    {
+        std::cerr << "invalid display id set\n";
+        return -1;
+    }
+
+    auto output = mir_display_config_get_output(display_config.get(), disp_id);
+    auto mode = mir_output_get_current_mode(output);
+
     auto pf = mir_pixel_format_abgr_8888;
-    unsigned int width = 420;
-    unsigned int height = 320;
-    MirRectangle rect { 0, 0, width, height };
+    unsigned int width = 400;
+    unsigned int height = 300;
+    MirRectangle rect {
+        mir_output_get_position_x(output),
+        mir_output_get_position_y(output),
+        static_cast<unsigned int>(mir_output_mode_get_width(mode)),
+        static_cast<unsigned int>(mir_output_mode_get_height(mode)) };
     auto spec = mir_create_screencast_spec(connection);
     mir_screencast_spec_set_width(spec, width);
     mir_screencast_spec_set_height(spec, height);
     mir_screencast_spec_set_capture_region(spec, &rect);
     mir_screencast_spec_set_mirror_mode(spec, mir_mirror_mode_none);
+
+    //TODO: the default screencast spec will capture a buffer when creating the screencast.
+    //      Set to zero to avoid this, and when the old screencast-bufferstream method is removed,
+    //      the initial capture will be removed. 
     mir_screencast_spec_set_number_of_buffers(spec, 0);
 
-    //TODO: no
     mir_screencast_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
 
     auto screencast = mir_screencast_create_sync(spec);
@@ -88,7 +114,7 @@ try
     } cap;
 
     auto error = mir_screencast_capture_to_buffer_sync(screencast, buffer);
-    if (mir_error_get_domain(error) == mir_error_domain_screencast)
+    if (error && mir_error_get_domain(error) == mir_error_domain_screencast)
     {
         auto code = mir_error_get_code(error);
         switch (code)
@@ -109,18 +135,24 @@ try
         }
     }  
 
-    std::ofstream output(output_file);
+    std::ofstream file(output_file);
     if (!rc && output)
     {
         MirBufferLayout layout;
         MirGraphicsRegion region;
         mir_buffer_map(buffer, &region, &layout);
-        output.write(region.vaddr, region.stride * region.height);
+        auto addr = region.vaddr + (region.height - 1)*region.stride;
+        for (int i = 0; i < region.height; i++)
+        {
+            file.write(addr, region.width*4);
+            addr -= region.stride;
+        }
         mir_buffer_unmap(buffer);
     }
 
-    mir_screencast_release_sync(screencast);
-    mir_connection_release(connection);
+    printf("hram?\n");
+//    mir_screencast_release_sync(screencast);
+//    mir_connection_release(connection);
     return 0;
 }
 catch(std::exception& e)
