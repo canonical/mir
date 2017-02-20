@@ -48,10 +48,8 @@ class TextureAccess :
 {
 public:
     TextureAccess(
-        mgn::Buffer& buffer,
         std::shared_ptr<mgn::NativeBuffer> const& native_buffer,
         std::shared_ptr<mgn::HostConnection> const& connection) :
-        buffer(buffer),
         native_buffer(native_buffer),
         connection(connection)
     {
@@ -110,7 +108,6 @@ public:
     }
 
 private:
-    mgn::Buffer& buffer;
     std::shared_ptr<mgn::NativeBuffer> const native_buffer;
     std::shared_ptr<mgn::HostConnection> const connection;
     mg::EGLExtensions extensions;
@@ -198,7 +195,7 @@ std::shared_ptr<mg::NativeBufferBase> mgn::Buffer::create_native_base(mg::Buffer
     if (usage == mg::BufferUsage::software)
         return std::make_shared<PixelAndTextureAccess>(*this, buffer);
     else if (usage == mg::BufferUsage::hardware)
-        return std::make_shared<TextureAccess>(*this, buffer, connection);
+        return std::make_shared<TextureAccess>(buffer, connection);
     else
         BOOST_THROW_EXCEPTION(std::invalid_argument("usage not supported when creating nested::Buffer"));
 }
@@ -217,7 +214,7 @@ mgn::Buffer::Buffer(
     geom::Size size, uint32_t native_format, uint32_t native_flags) :
     connection(connection),
     buffer(connection->create_buffer(size, native_format, native_flags)),
-    native_base(std::make_shared<TextureAccess>(*this, buffer, connection))
+    native_base(std::make_shared<TextureAccess>(buffer, connection))
 {
 }
 
