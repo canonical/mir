@@ -27,6 +27,7 @@ using namespace testing;
 using namespace std::literals::chrono_literals;
 
 typedef mt::ScreencastBase ScreencastToBuffer;
+#if 0
 TEST_F(ScreencastToBuffer, can_cast_to_buffer)
 {
     EXPECT_CALL(mock_authorizer, screencast_is_allowed(_))
@@ -85,3 +86,4 @@ TEST_F(ScreencastToBuffer, can_cast_to_buffer)
     mir_screencast_release_sync(screencast);
     mir_connection_release(connection);
 }
+#endif
