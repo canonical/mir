@@ -25,6 +25,7 @@
 #include "mir/fatal.h"
 #include "mir/log.h"
 #include "native_buffer.h"
+#include "mir/graphics/egl_error.h"
 
 #include <boost/throw_exception.hpp>
 #include MIR_SERVER_GL_H
@@ -38,15 +39,71 @@ namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
-class mgm::BufferObject
+mgm::GBMFrontBuffer::GBMFrontBuffer()
+    : surf{nullptr},
+      bo{nullptr}
+{
+}
+
+mgm::GBMFrontBuffer::GBMFrontBuffer(gbm_surface* surface)
+    : surf{surface},
+      bo{gbm_surface_lock_front_buffer(surface)}
+{
+    if (!bo)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to acquire front buffer of gbm_surface"));
+    }
+}
+
+mgm::GBMFrontBuffer::~GBMFrontBuffer()
+{
+    if (surf)
+    {
+        gbm_surface_release_buffer(surf, bo);
+    }
+}
+
+mgm::GBMFrontBuffer::GBMFrontBuffer(GBMFrontBuffer&& from)
+    : surf{from.surf},
+      bo{from.bo}
+{
+    const_cast<gbm_surface*&>(from.surf) = nullptr;
+}
+
+auto mgm::GBMFrontBuffer::operator=(GBMFrontBuffer&& from) -> GBMFrontBuffer&
+{
+    if (surf)
+    {
+        gbm_surface_release_buffer(surf, bo);
+    }
+
+    const_cast<gbm_surface*&>(surf) = from.surf;
+    const_cast<gbm_bo*&>(bo) = from.bo;
+
+    const_cast<gbm_surface*&>(from.surf) = nullptr;
+
+    return *this;
+}
+
+auto mgm::GBMFrontBuffer::operator=(std::nullptr_t) -> GBMFrontBuffer&
+{
+    return *this = GBMFrontBuffer{};
+}
+
+mgm::GBMFrontBuffer::operator gbm_bo*()
+{
+    return bo;
+}
+
+class mgm::DRMFB
 {
 public:
-    BufferObject(gbm_surface* surface, gbm_bo* bo, uint32_t drm_fb_id)
-        : surface{surface}, bo{bo}, drm_fb_id{drm_fb_id}
+    DRMFB(gbm_bo* bo, uint32_t drm_fb_id)
+        : bo{bo}, drm_fb_id{drm_fb_id}
     {
     }
 
-    ~BufferObject()
+    ~DRMFB()
     {
         if (drm_fb_id)
         {
@@ -55,18 +112,12 @@ public:
         }
     }
 
-    void release() const
-    {
-        gbm_surface_release_buffer(surface, bo);
-    }
-
     uint32_t get_drm_fb_id() const
     {
         return drm_fb_id;
     }
 
 private:
-    gbm_surface *surface;
     gbm_bo *bo;
     uint32_t drm_fb_id;
 };
@@ -76,7 +127,7 @@ namespace
 
 void bo_user_data_destroy(gbm_bo* /*bo*/, void *data)
 {
-    auto bufobj = static_cast<mgm::BufferObject*>(data);
+    auto bufobj = static_cast<mgm::DRMFB*>(data);
     delete bufobj;
 }
 
@@ -104,9 +155,7 @@ mgm::DisplayBuffer::DisplayBuffer(
     MirOrientation rot,
     GLConfig const& gl_config,
     EGLContext shared_context)
-    : visible_composite_frame{nullptr},
-      scheduled_composite_frame{nullptr},
-      listener(listener),
+    : listener(listener),
       bypass_option(option),
       drm(drm),
       gbm(gbm),
@@ -148,11 +197,11 @@ mgm::DisplayBuffer::DisplayBuffer(
 
     listener->report_successful_egl_buffer_swap_on_construction();
 
-    scheduled_composite_frame = get_front_buffer_object();
-    if (!scheduled_composite_frame)
+    visible_composite_frame = GBMFrontBuffer{surface_gbm.get()};
+    if (!visible_composite_frame)
         fatal_error("Failed to get frontbuffer");
 
-    set_crtc(scheduled_composite_frame);
+    set_crtc(get_drm_fb(visible_composite_frame));
 
     release_current();
 
@@ -167,15 +216,6 @@ mgm::DisplayBuffer::DisplayBuffer(
 
 mgm::DisplayBuffer::~DisplayBuffer()
 {
-    /*
-     * There is no need to destroy visible_composite_frame manually.
-     * It will be destroyed when its gbm_surface gets destroyed.
-     */
-    if (visible_composite_frame)
-        visible_composite_frame->release();
-
-    if (scheduled_composite_frame)
-        scheduled_composite_frame->release();
 }
 
 geom::Rectangle mgm::DisplayBuffer::view_area() const
@@ -240,7 +280,7 @@ void mgm::DisplayBuffer::swap_buffers()
     bypass_bufobj = nullptr;
 }
 
-void mgm::DisplayBuffer::set_crtc(BufferObject const* forced_frame)
+void mgm::DisplayBuffer::set_crtc(DRMFB const* forced_frame)
 {
     for (auto& output : outputs)
     {
@@ -268,14 +308,15 @@ void mgm::DisplayBuffer::post()
      */
     wait_for_page_flip();
 
-    mgm::BufferObject *bufobj;
+    mgm::DRMFB *bufobj;
     if (bypass_buf)
     {
         bufobj = bypass_bufobj;
     }
     else
     {
-        bufobj = get_front_buffer_object();
+        scheduled_composite_frame = GBMFrontBuffer(surface_gbm.get());
+        bufobj = get_drm_fb(scheduled_composite_frame);
         if (!bufobj)
             fatal_error("Failed to get front buffer object");
     }
@@ -327,7 +368,6 @@ void mgm::DisplayBuffer::post()
          * making us double-buffered (noticeably less laggy than the triple
          * buffering that clone mode requires).
          */
-        scheduled_composite_frame = bufobj;
         if (outputs.size() == 1)
             wait_for_page_flip();
 
@@ -359,18 +399,12 @@ std::chrono::milliseconds mgm::DisplayBuffer::recommended_sleep() const
     return recommend_sleep;
 }
 
-mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
+mgm::DRMFB* mgm::DisplayBuffer::get_drm_fb(GBMFrontBuffer& bo)
 {
-    auto front = gbm_surface_lock_front_buffer(surface_gbm.get());
-    auto ret = get_buffer_object(front);
-
-    if (!ret)
-        gbm_surface_release_buffer(surface_gbm.get(), front);
-
-    return ret;
+    return get_buffer_object(bo);
 }
 
-mgm::BufferObject* mgm::DisplayBuffer::get_buffer_object(
+mgm::DRMFB* mgm::DisplayBuffer::get_buffer_object(
     struct gbm_bo *bo)
 {
     if (!bo)
@@ -378,9 +412,9 @@ mgm::BufferObject* mgm::DisplayBuffer::get_buffer_object(
 
     /*
      * Check if we have already set up this gbm_bo (the gbm implementation is
-     * free to reuse gbm_bos). If so, return the associated BufferObject.
+     * free to reuse gbm_bos). If so, return the associated DRMFB.
      */
-    auto bufobj = static_cast<BufferObject*>(gbm_bo_get_user_data(bo));
+    auto bufobj = static_cast<DRMFB*>(gbm_bo_get_user_data(bo));
     if (bufobj)
         return bufobj;
 
@@ -405,15 +439,15 @@ mgm::BufferObject* mgm::DisplayBuffer::get_buffer_object(
     if (ret)
         return nullptr;
 
-    /* Create a BufferObject and associate it with the gbm_bo */
-    bufobj = new BufferObject{surface_gbm.get(), bo, fb_id};
+    /* Create a DRMFB and associate it with the gbm_bo */
+    bufobj = new DRMFB{bo, fb_id};
     gbm_bo_set_user_data(bo, bufobj, bo_user_data_destroy);
 
     return bufobj;
 }
 
 
-bool mgm::DisplayBuffer::schedule_page_flip(BufferObject* bufobj)
+bool mgm::DisplayBuffer::schedule_page_flip(DRMFB* bufobj)
 {
     /*
      * Schedule the current front buffer object for display. Note that
@@ -446,9 +480,7 @@ void mgm::DisplayBuffer::wait_for_page_flip()
         visible_bypass_frame = scheduled_bypass_frame;
         scheduled_bypass_frame = nullptr;
     
-        if (visible_composite_frame)
-            visible_composite_frame->release();
-        visible_composite_frame = scheduled_composite_frame;
+        visible_composite_frame = std::move(scheduled_composite_frame);
         scheduled_composite_frame = nullptr;
     }
 }

@@ -41,8 +41,26 @@ namespace mesa
 {
 
 class Platform;
-class BufferObject;
+class DRMFB;
 class KMSOutput;
+
+class GBMFrontBuffer
+{
+public:
+    GBMFrontBuffer(gbm_surface* surface);
+    GBMFrontBuffer();
+    ~GBMFrontBuffer();
+
+    GBMFrontBuffer(GBMFrontBuffer&& from);
+
+    GBMFrontBuffer& operator=(GBMFrontBuffer&& from);
+    GBMFrontBuffer& operator=(std::nullptr_t);
+
+    operator gbm_bo*();
+private:
+    gbm_surface* const surf;
+    gbm_bo* const bo;
+};
 
 class DisplayBuffer : public graphics::DisplayBuffer,
                       public graphics::DisplaySyncGroup,
@@ -82,16 +100,16 @@ public:
     void wait_for_page_flip();
 
 private:
-    BufferObject* get_front_buffer_object();
-    BufferObject* get_buffer_object(struct gbm_bo *bo);
-    bool schedule_page_flip(BufferObject* bufobj);
-    void set_crtc(BufferObject const*);
+    DRMFB* get_drm_fb(GBMFrontBuffer& bo);
+    DRMFB* get_buffer_object(struct gbm_bo *bo);
+    bool schedule_page_flip(DRMFB* bufobj);
+    void set_crtc(DRMFB const*);
 
-    BufferObject* visible_composite_frame;
-    BufferObject* scheduled_composite_frame;
+    GBMFrontBuffer visible_composite_frame;
+    GBMFrontBuffer scheduled_composite_frame;
     std::shared_ptr<graphics::Buffer> visible_bypass_frame, scheduled_bypass_frame;
     std::shared_ptr<Buffer> bypass_buf{nullptr};
-    BufferObject* bypass_bufobj{nullptr};
+    DRMFB* bypass_bufobj{nullptr};
     std::shared_ptr<DisplayReport> const listener;
     BypassOption bypass_option;
     /* DRM helper from mgm::Platform */
