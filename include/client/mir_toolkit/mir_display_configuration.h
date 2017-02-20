@@ -59,7 +59,8 @@ void mir_display_config_release(MirDisplayConfig* config);
  *               supportable at this time.
  */
 int mir_display_config_get_max_simultaneous_outputs(
-    MirDisplayConfig const* config);
+    MirDisplayConfig const* config)
+    __attribute__((deprecated("Not accurate in Mir 0.26 and later. May be removed in future.")));
 
 /**
  * Get the number of outputs available in this display configuration.
@@ -308,6 +309,28 @@ int mir_output_get_position_x(MirOutput const* output);
  *              virtual display space.
  */
 int mir_output_get_position_y(MirOutput const* output);
+
+/**
+ * Get the width of the virtual display space occupied by an output.
+ *
+ * This may not be equal to the width of its current mode, for example if
+ * it is rotated or (in future) cloning another output.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The width in logical pixels (not physical screen pixels)
+ */
+unsigned int mir_output_get_logical_width(MirOutput const* output);
+
+/**
+ * Get the height of the virtual display space occupied by an output.
+ *
+ * This may not be equal to the height of its current mode, for example if
+ * it is rotated or (in future) cloning another output.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The height in logical pixels (not physical screen pixels)
+ */
+unsigned int mir_output_get_logical_height(MirOutput const* output);
 
 /**
  * Set the coordinates of the top-left point of the output in the virtual

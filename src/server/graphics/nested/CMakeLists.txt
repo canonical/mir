@@ -15,4 +15,5 @@ add_library(
   platform.cpp
   buffer.cpp
   ipc_operations.cpp
+  host_buffer.cpp
 )

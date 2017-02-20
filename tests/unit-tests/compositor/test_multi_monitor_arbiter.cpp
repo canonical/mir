@@ -538,6 +538,23 @@ TEST_F(MultiMonitorArbiter, can_advance_buffer_manually)
     EXPECT_THAT(b3->id(), Eq(buffers[2]->id()));
 }
 
+TEST_F(MultiMonitorArbiter, checks_if_buffer_is_valid_after_clean_onscreen_buffer)
+{
+    int comp_id1{0};
+
+    schedule.set_schedule({buffers[0], buffers[1], buffers[2], buffers[3]});
+
+    arbiter.advance_schedule();
+    arbiter.advance_schedule();
+    arbiter.advance_schedule();
+    arbiter.advance_schedule();
+
+    auto b1 = arbiter.compositor_acquire(&comp_id1);
+
+    EXPECT_THAT(b1->id(), Eq(buffers[3]->id()));
+    EXPECT_THAT(b1->size(), Eq(buffers[3]->size()));
+}
+
 TEST_F(MultiMonitorArbiter, releases_buffer_on_destruction)
 {
     mc::MultiMonitorArbiter arbiter{guarantee, mt::fake_shared(mock_map), mt::fake_shared(schedule)};

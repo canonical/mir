@@ -94,9 +94,9 @@ struct WrappingDisplay : mg::Display
     {
         display->resume();
     }
-    std::shared_ptr<mg::Cursor> create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& initial_image) override
+    std::shared_ptr<mg::Cursor> create_hardware_cursor() override
     {
-        return display->create_hardware_cursor(initial_image);
+        return display->create_hardware_cursor();
     }
     std::unique_ptr<mg::VirtualOutput> create_virtual_output(int width, int height) override
     {

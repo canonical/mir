@@ -36,7 +36,6 @@ public:
     MOCK_CONST_METHOD0(name, std::string());
     MOCK_CONST_METHOD0(input_bounds, geometry::Rectangle());
     MOCK_CONST_METHOD1(input_area_contains, bool(geometry::Point const&));
-    MOCK_CONST_METHOD0(input_channel, std::shared_ptr<input::InputChannel>());
     MOCK_CONST_METHOD0(cursor_image, std::shared_ptr<graphics::CursorImage>());
     MOCK_CONST_METHOD0(reception_mode, input::InputReceptionMode());
     MOCK_METHOD1(consume, void(MirEvent const*));

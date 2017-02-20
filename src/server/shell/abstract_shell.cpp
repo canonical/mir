@@ -161,6 +161,26 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
         window_manager->modify_surface(session, surface, wm_relevant_mods);
     }
 
+    if (modifications.cursor_image.is_set())
+    {
+        surface->set_cursor_image(modifications.cursor_image.value());
+    }
+
+    if (modifications.stream_cursor.is_set())
+    {
+        auto stream_id = modifications.stream_cursor.value().stream_id;
+        if (stream_id != mir::frontend::BufferStreamId{-1})
+        {
+            auto hotspot = modifications.stream_cursor.value().hotspot;
+            auto stream = session->get_buffer_stream(modifications.stream_cursor.value().stream_id);
+            surface->set_cursor_stream(stream, hotspot);
+        }
+        else
+        {
+            surface->set_cursor_image({});
+        }
+    }
+
     if (modifications.confine_pointer.is_set() && focused_surface() == surface)
     {
         if (surface->confine_pointer_state() == mir_pointer_confined_to_window)

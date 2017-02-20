@@ -50,6 +50,7 @@ public:
     void renamed(char const*) override;
     void cursor_image_removed() override;
     void placed_relative(geometry::Rectangle const& placement) override;
+    void input_consumed(MirEvent const* event) override;
 };
 
 }
