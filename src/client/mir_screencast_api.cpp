@@ -133,6 +133,7 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
+static MirError unknown(mir_error_domain_screencast, mir_screencast_error_failure);
 void mir_screencast_capture_to_buffer(
     MirScreencast* screencast,
     MirBuffer* b,
@@ -148,6 +149,7 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    available_callback(nullptr, &unknown, available_context);
 }
 
 MirError const* mir_screencast_capture_to_buffer_sync(MirScreencast* screencast, MirBuffer* buffer)
@@ -183,6 +185,5 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    static MirError unknown(mir_error_domain_screencast, mir_screencast_error_failure);
     return &unknown;
 }
