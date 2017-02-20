@@ -103,6 +103,8 @@ void copy_image(MirGraphicsRegion const& g, mg::CursorImage const& image)
     }
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 class MirClientHostSurface : public mgn::HostSurface
 {
 public:
@@ -161,7 +163,8 @@ public:
 
             if (image_width != g.width || image_height != g.height)
             {
-                mir_buffer_stream_release_sync(cursor);
+                mir_render_surface_release(surface);
+                surface = nullptr;
                 cursor = nullptr;
             }
         }
@@ -170,12 +173,12 @@ public:
 
         if (new_cursor)
         {
-            cursor = mir_connection_create_buffer_stream_sync(
+            surface = mir_connection_create_render_surface_sync(
                 mir_connection,
-                image_width,
-                image_height,
-                cursor_pixel_format,
-                mir_buffer_usage_software);
+                image_width, image_height);
+
+            cursor = mir_render_surface_get_buffer_stream(
+                surface, image_width, image_height, cursor_pixel_format);
 
             mir_buffer_stream_get_graphics_region(cursor, &g);
         }
@@ -188,8 +191,8 @@ public:
         {
             cursor_hotspot = image.hotspot();
 
-            auto conf = mir_cursor_configuration_from_buffer_stream(
-                cursor, cursor_hotspot.dx.as_int(), cursor_hotspot.dy.as_int());
+            auto conf =
+                mir_cursor_configuration_from_render_surface(surface, 0, 0);
 
             mir_window_configure_cursor(mir_surface, conf);
             mir_cursor_configuration_destroy(conf);
@@ -198,7 +201,12 @@ public:
 
     void hide_cursor()
     {
-        if (cursor) { mir_buffer_stream_release_sync(cursor); cursor = nullptr; }
+        if (cursor)
+        {
+            mir_render_surface_release(surface);
+            surface = nullptr;
+            cursor = nullptr;
+        }
 
         auto spec = mir_create_window_spec(mir_connection);
         mir_window_spec_set_cursor_name(spec, mir_disabled_cursor_name);
@@ -211,10 +219,9 @@ private:
     MirWindow* const mir_surface;
     MirBufferStream* cursor{nullptr};
     mir::geometry::Displacement cursor_hotspot;
+    MirRenderSurface* surface{nullptr};
 };
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 class MirClientHostStream : public mgn::HostStream
 {
 public:
