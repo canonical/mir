@@ -1,3 +1,17 @@
+mir (0.26.2-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.26.2 (https://launchpad.net/mir/+milestone/0.26.2)
+    - Bugs fixed:
+      . EDID does not change when hotplugging a monitor (LP: #1660017)
+      . [regression] mirout crashes when connecting to unity8 or any nested
+        server: [libprotobuf FATAL /usr/include/google/protobuf/repeated_field.
+        h:1408] CHECK failed: (index) < (current_size_) (LP: #1661163)
+      . Mir server crashed with SIGSEGV in
+        mir::compositor::TemporaryBuffer::size() called from
+        mir::gl::tessellate_renderable_into_rectangle() (LP: #1664760)
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 20 Feb 2017 13:37:13 +0800
+
 mir (0.26.1+17.04.20170209.1-0ubuntu1) zesty; urgency=medium
 
   * New upstream release 0.26.1 (https://launchpad.net/mir/+milestone/0.26.1)
