@@ -68,6 +68,7 @@ mgm::GBMFrontBuffer::GBMFrontBuffer(GBMFrontBuffer&& from)
       bo{from.bo}
 {
     const_cast<gbm_surface*&>(from.surf) = nullptr;
+    const_cast<gbm_bo*&>(from.bo) = nullptr;
 }
 
 auto mgm::GBMFrontBuffer::operator=(GBMFrontBuffer&& from) -> GBMFrontBuffer&
@@ -81,6 +82,7 @@ auto mgm::GBMFrontBuffer::operator=(GBMFrontBuffer&& from) -> GBMFrontBuffer&
     const_cast<gbm_bo*&>(bo) = from.bo;
 
     const_cast<gbm_surface*&>(from.surf) = nullptr;
+    const_cast<gbm_bo*&>(from.bo) = nullptr;
 
     return *this;
 }
