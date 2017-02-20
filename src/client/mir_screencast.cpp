@@ -226,6 +226,8 @@ void MirScreencast::screencast_done(ScreencastRequest* request)
 {
     if (request->response.has_error())
         error = std::make_unique<MirError>(mir_error_domain_screencast, mir_screencast_error_failure);
+    else
+        error = nullptr;
 
     request->available_callback(
         reinterpret_cast<MirBuffer*>(request->buffer), error.get(), request->available_context);

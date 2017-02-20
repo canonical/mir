@@ -36,9 +36,7 @@ MirScreencast* create_screencast(MirScreencastSpec* spec)
 {
     auto& server = spec->connection->display_server();
     auto screencast = std::make_unique<MirScreencast>(*spec, server, null_callback, nullptr);
-    printf("bing\n");
     screencast->creation_wait_handle()->wait_for_all();
-    printf("bong\n");
 
     auto raw_screencast = screencast.get();
     screencast.release();

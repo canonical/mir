@@ -33,4 +33,3 @@ target_link_libraries(mir_demo_client_egldiamond_render_surface
     ${EGL_LIBRARIES}
     ${GLESv2_LIBRARIES}
 )
-
