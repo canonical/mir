@@ -55,7 +55,6 @@ TEST_F(ScreencastToBuffer, can_cast_to_buffer)
     MirScreencastSpec* spec = mir_create_screencast_spec(connection);
 
     //TODO: makes no sense:
-
     mir_screencast_spec_set_number_of_buffers(spec, 0);
     mir_screencast_spec_set_width(spec, default_width);
     mir_screencast_spec_set_height(spec, default_height);
@@ -72,7 +71,7 @@ TEST_F(ScreencastToBuffer, can_cast_to_buffer)
     } capture;
 
     mir_screencast_capture_to_buffer(screencast, buffer_info.buffer, 
-        [] (MirBuffer*, void* context) {
+        [] (MirBuffer*, MirError const*, void* context) {
             auto c = reinterpret_cast<Capture*>(context);
             std::unique_lock<decltype(c->mutex)> lk(c->mutex);
             c->capture = true;

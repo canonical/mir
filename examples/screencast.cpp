@@ -26,24 +26,40 @@
 #include <cstring>
 #include <unistd.h>
 #include <signal.h>
+#include <getopt.h>
 #include <mutex>
+#include <fstream>
 #include <condition_variable>
 
 int main(int argc, char *argv[])
 try
 {
+    int arg = -1;
+    static char const *socket_file = NULL;
+    static char const *output_file = "screencap_output.raw";
+    while ((arg = getopt (argc, argv, "m:f:h:")) != -1)
+    {
+        switch (arg)
+        {
+        case 'm':
+            socket_file = optarg;
+            break;
+        case 'f':
+            output_file = optarg;
+            break;
+        case 'h':
+        default:
+            puts(argv[0]);
+            printf("Usage:\n");
+            printf("    -m <Mir server socket>\n");
+            printf("    -f file to output to\n");
+            printf("    -h help dialog\n");
+            return -1;
+        }
+    }
+
     int rc = 0;
-    (void) argc; (void) argv;
-/*
-    sigset_t sigset;
-    siginfo_t siginfo;
-    sigemptyset(&sigset);
-    sigaddset(&sigset, SIGTERM);
-    sigaddset(&sigset, SIGINT);
-    sigprocmask(SIG_BLOCK, &sigset, nullptr);
-    sigwaitinfo(&sigset, &siginfo);
-*/
-    auto connection = mir_connect_sync(nullptr, "caps");
+    auto connection = mir_connect_sync(socket_file, "screencap_to_buffer");
 
     auto pf = mir_pixel_format_abgr_8888;
     unsigned int width = 420;
@@ -93,15 +109,13 @@ try
         }
     }  
 
-    if (!rc)
+    std::ofstream output(output_file);
+    if (!rc && output)
     {
         MirBufferLayout layout;
         MirGraphicsRegion region;
         mir_buffer_map(buffer, &region, &layout);
-        for(auto i = 0; i < region.stride; i++)
-        {
-            printf("%X ", region.vaddr[i]);
-        }
+        output.write(region.vaddr, region.stride * region.height);
         mir_buffer_unmap(buffer);
     }
 
