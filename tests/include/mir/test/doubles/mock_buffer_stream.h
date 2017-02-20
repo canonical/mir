@@ -69,7 +69,6 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD1(allow_framedropping, void(bool));
     MOCK_CONST_METHOD0(framedropping, bool());
 
-    MOCK_METHOD0(drop_outstanding_requests, void());
     MOCK_CONST_METHOD1(buffers_ready_for_compositor, int(void const*));
     MOCK_METHOD0(drop_old_buffers, void());
     MOCK_METHOD0(drop_client_requests, void());
