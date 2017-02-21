@@ -45,16 +45,29 @@ extern "C" char const* const mir_crosshair_cursor_name = "crosshair";
 
 MirCursorConfiguration::MirCursorConfiguration(char const* name) :
     name{name ? name : std::string()},
-    stream(nullptr)   
+    stream(nullptr),
+    surface(nullptr)
 {
 }
 
 MirCursorConfiguration::MirCursorConfiguration(MirBufferStream const* stream, int hotspot_x, int hotspot_y) :
     stream(stream),
     hotspot_x(hotspot_x),
-    hotspot_y(hotspot_y)
+    hotspot_y(hotspot_y),
+    surface(nullptr)
 {
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+MirCursorConfiguration::MirCursorConfiguration(MirRenderSurface const* surface, int hotspot_x, int hotspot_y) :
+    stream(nullptr),
+    hotspot_x(hotspot_x),
+    hotspot_y(hotspot_y),
+    surface(surface)
+{
+}
+#pragma GCC diagnostic pop
 
 void mir_cursor_configuration_destroy(MirCursorConfiguration *cursor)
 {

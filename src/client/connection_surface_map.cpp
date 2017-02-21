@@ -110,15 +110,6 @@ std::shared_ptr<mcl::MirBuffer> mcl::ConnectionSurfaceMap::buffer(int buffer_id)
         BOOST_THROW_EXCEPTION(std::runtime_error("could not find buffer"));
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-void mcl::ConnectionSurfaceMap::insert(void* render_surface_key, std::shared_ptr<MirRenderSurface> const& render_surface)
-{
-    std::lock_guard<decltype(guard)> lk(stream_guard);
-    render_surfaces[render_surface_key] = render_surface;
-}
-#pragma GCC diagnostic pop
-
 void mcl::ConnectionSurfaceMap::erase(void* render_surface_key)
 {
     std::lock_guard<decltype(guard)> lk(stream_guard);
@@ -129,6 +120,12 @@ void mcl::ConnectionSurfaceMap::erase(void* render_surface_key)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+void mcl::ConnectionSurfaceMap::insert(void* render_surface_key, std::shared_ptr<MirRenderSurface> const& render_surface)
+{
+    std::lock_guard<decltype(guard)> lk(stream_guard);
+    render_surfaces[render_surface_key] = render_surface;
+}
+
 std::shared_ptr<MirRenderSurface> mcl::ConnectionSurfaceMap::render_surface(void* render_surface_key) const
 {
     std::shared_lock<decltype(guard)> lk(stream_guard);
