@@ -181,11 +181,6 @@ void mc::Stream::transition_schedule(
     arbiter->set_schedule(schedule);
 }
 
-void mc::Stream::drop_outstanding_requests()
-{
-    //we dont block any requests in this system, nothing to force
-}
-
 int mc::Stream::buffers_ready_for_compositor(void const* id) const
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 

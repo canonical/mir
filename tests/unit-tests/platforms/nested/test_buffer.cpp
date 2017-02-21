@@ -234,6 +234,30 @@ TEST_F(NestedBuffer, binds_to_texture)
     texture_source->gl_bind_to_texture();
 }
 
+TEST_F(NestedBuffer, binds_to_texture_gl_buffer)
+{
+    auto pf = sw_properties.format;
+    auto format = GL_RGBA;
+    auto type = GL_UNSIGNED_BYTE;
+
+    mgn::Buffer buffer(mt::fake_shared(mock_connection), size, pf);
+
+    auto native_base = buffer.native_buffer_base();
+    ASSERT_THAT(native_base, Ne(nullptr));
+    auto texture_source = dynamic_cast<mir::renderer::gl::TextureSource*>(native_base);
+    ASSERT_THAT(texture_source, Ne(nullptr));
+
+    EXPECT_CALL(mock_egl, glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, _))
+        .Times(0);
+
+    EXPECT_CALL(mock_gl, glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+    EXPECT_CALL(mock_gl, glTexImage2D(
+            GL_TEXTURE_2D, 0, format,
+            buffer.size().width.as_int(), buffer.size().height.as_int(),
+            0, format, type, _));
+    texture_source->gl_bind_to_texture();
+}
+
 TEST_F(NestedBuffer, just_makes_one_bind_per_display_context_pair)
 {
     ON_CALL(*client_buffer, egl_image_creation_hints())

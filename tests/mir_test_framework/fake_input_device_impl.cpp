@@ -252,6 +252,23 @@ void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::TouchpadSettings 
     // forwards already interpreted events.
 }
 
+mir::optional_value<mi::TouchscreenSettings> mtf::FakeInputDeviceImpl::InputDevice::get_touchscreen_settings() const
+{
+    mir::optional_value<mi::TouchscreenSettings> ret;
+    if (!contains(info.capabilities, mi::DeviceCapability::touchscreen))
+        return ret;
+
+    ret = touchscreen;
+    return ret;
+}
+
+void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::TouchscreenSettings const& new_settings)
+{
+    if (!contains(info.capabilities, mi::DeviceCapability::touchscreen))
+        return;
+    this->touchscreen = new_settings;
+}
+
 void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, float& y)
 {
     // TODO take orientation of input sink into account?

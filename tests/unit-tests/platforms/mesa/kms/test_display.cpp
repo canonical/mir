@@ -424,10 +424,12 @@ TEST_F(MesaDisplayTest, post_update)
             .Times(1)
             .WillOnce(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
 
-        /* Release last_flipped_bufobj (at destruction time) */
+        // The initially-visible buffer will be released when the pageflip completes,
+        // replacing it.
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
             .Times(Exactly(1));
-        /* Release scheduled_bufobj (at destruction time) */
+
+        /* Release scheduled_composite_frame (at destruction time) */
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo2))
             .Times(Exactly(1));
     }

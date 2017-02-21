@@ -56,10 +56,6 @@ public:
     {
     }
 
-    void drop_outstanding_requests() override
-    {
-    }
-
     void allow_framedropping(bool) override
     {
     }

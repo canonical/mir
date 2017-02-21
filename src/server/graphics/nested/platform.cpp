@@ -75,10 +75,7 @@ public:
 
     std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties) override
     {
-        if (passthrough_candidate(properties.size, properties.usage))
-            return std::make_shared<mgn::Buffer>(connection, properties);
-        else
-            return guest_allocator->alloc_buffer(properties);
+        return guest_allocator->alloc_buffer(properties);
     }
 
     std::shared_ptr<mg::Buffer> alloc_buffer(

@@ -685,13 +685,10 @@ std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surfa
     return std::make_unique<SurfaceSpec>(mir_connection);
 }
 
-bool mgn::MirClientHostConnection::supports_passthrough(mg::BufferUsage usage)
+bool mgn::MirClientHostConnection::supports_passthrough(mg::BufferUsage)
 {
-    //FIXME: ShmBuffers currently don't upload properly. The logic here uses
-    //       passthrough where supported (ANativeWindowBuffer and gbm_bo)
-    //       (LP: #1663062 for more details)
-    return (mir_extension_android_buffer_v1(mir_connection) || 
-           ((mir_extension_gbm_buffer_v1(mir_connection) && usage == mg::BufferUsage::hardware)));
+    return mir_extension_android_buffer_v1(mir_connection) || 
+           mir_extension_gbm_buffer_v1(mir_connection);
 }
 
 void mgn::MirClientHostConnection::apply_input_configuration(MirInputConfig const* config)

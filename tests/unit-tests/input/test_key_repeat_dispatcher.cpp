@@ -26,6 +26,7 @@
 #include "mir/input/input_device_observer.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_touchscreen_config.h"
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/input/device.h"
 
@@ -97,6 +98,8 @@ struct StubDevice : public mi::Device
     void apply_touchpad_configuration(MirTouchpadConfig const&) {}
     mir::optional_value<MirKeyboardConfig> keyboard_configuration() const {return {};}
     void apply_keyboard_configuration(MirKeyboardConfig const&) {}
+    mir::optional_value<MirTouchscreenConfig> touchscreen_configuration() const {return {};}
+    void apply_touchscreen_configuration(MirTouchscreenConfig const&) {}
 };
 
 struct KeyRepeatDispatcher : public testing::Test

@@ -23,6 +23,7 @@
 #include "mir/input/input_device_info.h" // needed for fake device setup
 #include "mir/input/pointer_settings.h"
 #include "mir/input/touchpad_settings.h"
+#include "mir/input/touchscreen_settings.h"
 
 #include <gmock/gmock.h>
 
@@ -44,6 +45,8 @@ struct MockInputDevice : input::InputDevice
     MOCK_METHOD1(apply_settings, void(input::PointerSettings const&));
     MOCK_CONST_METHOD0(get_touchpad_settings, mir::optional_value<input::TouchpadSettings>());
     MOCK_METHOD1(apply_settings, void(input::TouchpadSettings const&));
+    MOCK_CONST_METHOD0(get_touchscreen_settings, mir::optional_value<input::TouchscreenSettings>());
+    MOCK_METHOD1(apply_settings, void(input::TouchscreenSettings const&));
 };
 }
 }
