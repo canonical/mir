@@ -106,8 +106,6 @@ private:
     bool schedule_page_flip(DRMFB* bufobj);
     void set_crtc(DRMFB const*);
 
-    GBMFrontBuffer visible_composite_frame;
-    GBMFrontBuffer scheduled_composite_frame;
     std::shared_ptr<graphics::Buffer> visible_bypass_frame, scheduled_bypass_frame;
     std::shared_ptr<Buffer> bypass_buf{nullptr};
     DRMFB* bypass_bufobj{nullptr};
@@ -117,8 +115,17 @@ private:
     std::shared_ptr<helpers::DRMHelper> const drm;
     std::shared_ptr<helpers::GBMHelper> const gbm;
     std::vector<std::shared_ptr<KMSOutput>> outputs;
-    GBMSurfaceUPtr surface_gbm;
+
+    /*
+     * Destruction order is important here:
+     *  - The GBM surface depends on EGL
+     *  - The GBMFrontBuffers depend on the GBM surface
+     */
     helpers::EGLHelper egl;
+    GBMSurfaceUPtr surface_gbm;
+    GBMFrontBuffer visible_composite_frame;
+    GBMFrontBuffer scheduled_composite_frame;
+
     geometry::Rectangle area;
     uint32_t fb_width, fb_height;
     glm::mat2 transform;
