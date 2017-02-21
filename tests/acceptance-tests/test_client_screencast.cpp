@@ -156,7 +156,8 @@ TEST_F(Screencast, can_cast_to_buffer)
 
     MirScreencastSpec* spec = mir_create_screencast_spec(connection);
 
-    //TODO: makes no sense:
+    //TODO: we have to set nbuffers == 0 now to avoid setting pixel format, as
+    //default screencast takes a capture on creation now.
     mir_screencast_spec_set_number_of_buffers(spec, 0);
     mir_screencast_spec_set_width(spec, default_width);
     mir_screencast_spec_set_height(spec, default_height);

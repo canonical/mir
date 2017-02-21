@@ -80,7 +80,7 @@ public:
       display_buffer{std::make_unique<ScreencastDisplayBuffer>(capture_region, capture_size, mirror_mode, free_queue, ready_queue, display)},
       display_buffer_compositor{db_compositor_factory.create_compositor_for(*display_buffer)},
       virtual_output{make_virtual_output(display, capture_region)},
-      capture_size{capture_size}
+      queue_size(capture_size)
     {
         for (auto buffer : buffers)
             free_queue.schedule(buffer);
@@ -97,6 +97,9 @@ public:
     std::shared_ptr<mg::Buffer> capture()
     {
         std::lock_guard<decltype(mutex)> lk(mutex);
+        if (queue_size != display_buffer->renderbuffer_size())
+            display_buffer->set_renderbuffer_size(queue_size);
+
         //FIXME:: the client needs a better way to express it is no longer
         //using the last captured buffer
         if (last_captured_buffer)
@@ -110,8 +113,8 @@ public:
 
     void capture(std::shared_ptr<mg::Buffer> const& buffer)
     {
-        if (buffer->size() != capture_size)
-            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid buffer size"));
+        if (buffer->size() != display_buffer->renderbuffer_size())
+            display_buffer->set_renderbuffer_size(buffer->size());
         
         std::lock_guard<decltype(mutex)> lk(mutex);
         auto scheduled = free_queue.num_scheduled();
@@ -134,7 +137,7 @@ private:
     std::unique_ptr<compositor::DisplayBufferCompositor> display_buffer_compositor;
     std::unique_ptr<graphics::VirtualOutput> virtual_output;
     std::shared_ptr<mg::Buffer> last_captured_buffer;
-    geom::Size capture_size;
+    geom::Size queue_size;
 };
 
 

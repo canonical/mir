@@ -89,11 +89,8 @@ try
         static_cast<unsigned int>(mir_output_mode_get_width(mode)),
         static_cast<unsigned int>(mir_output_mode_get_height(mode)) };
     auto spec = mir_create_screencast_spec(connection);
-    mir_screencast_spec_set_width(spec, width);
-    mir_screencast_spec_set_height(spec, height);
     mir_screencast_spec_set_capture_region(spec, &rect);
     mir_screencast_spec_set_mirror_mode(spec, mir_mirror_mode_none);
-
     //TODO: the default screencast spec will capture a buffer when creating the screencast.
     //      Set to zero to avoid this, and when the old screencast-bufferstream method is removed,
     //      the initial capture will be removed. 
@@ -139,6 +136,8 @@ try
         MirBufferLayout layout;
         MirGraphicsRegion region;
         mir_buffer_map(buffer, &region, &layout);
+
+        //should we should change the GL renderer to be smarter and not screenshot upside down.
         auto addr = region.vaddr + (region.height - 1)*region.stride;
         for (int i = 0; i < region.height; i++)
         {
@@ -148,7 +147,8 @@ try
         mir_buffer_unmap(buffer);
     }
 
-//    mir_screencast_release_sync(screencast);
+    mir_screencast_release_sync(screencast);
+    //hmm, for tomorrow, why does this segfault?
 //    mir_connection_release(connection);
     return 0;
 }

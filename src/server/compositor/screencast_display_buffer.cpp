@@ -72,7 +72,8 @@ mc::ScreencastDisplayBuffer::ScreencastDisplayBuffer(
       rect(rect),
       transform(mg::transformation(mirror_mode)),
       free_queue(free_queue), ready_queue(ready_queue),
-      old_fbo(), old_viewport()
+      old_fbo(), old_viewport(),
+      current_size(size)
 {
     auto const gl_context_raii = mir::raii::paired_calls(
         [this] { gl_context->make_current(); },
@@ -181,4 +182,24 @@ glm::mat2 mc::ScreencastDisplayBuffer::transformation() const
 mg::NativeDisplayBuffer* mc::ScreencastDisplayBuffer::native_display_buffer()
 {
     return this;
+}
+
+geom::Size mc::ScreencastDisplayBuffer::renderbuffer_size()
+{
+    return current_size;
+}
+
+void mc::ScreencastDisplayBuffer::set_renderbuffer_size(geom::Size size)
+{
+    auto depth_buffer = allocate_gl_resource<glGenRenderbuffers, glDeleteRenderbuffers>();
+    glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
+                          size.width.as_uint32_t(),
+                          size.height.as_uint32_t());
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                              GL_RENDERBUFFER, depth_buffer);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create FBO for buffer"));
+    depth_rbo =  std::move(depth_buffer);
 }
