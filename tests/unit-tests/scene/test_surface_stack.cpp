@@ -989,7 +989,7 @@ TEST_F(SurfaceStack, scene_observers_notified_of_generic_scene_change)
     stack.emit_scene_changed();
 }
 
-TEST_F(SurfaceStack, only_enumerates_exposed_input_surfaces)
+TEST_F(SurfaceStack, for_each_enumerates_all_input_surfaces)
 {
     using namespace ::testing;
 
@@ -1007,7 +1007,7 @@ TEST_F(SurfaceStack, only_enumerates_exposed_input_surfaces)
     };
 
     stack.for_each(count_exposed_surfaces);
-    EXPECT_THAT(num_exposed_surfaces, Eq(1));
+    EXPECT_THAT(num_exposed_surfaces, Eq(3));
 }
 
 using namespace ::testing;
