@@ -191,6 +191,9 @@ geom::Size mc::ScreencastDisplayBuffer::renderbuffer_size()
 
 void mc::ScreencastDisplayBuffer::set_renderbuffer_size(geom::Size size)
 {
+    if (size == current_size)
+        return;
+
     auto depth_buffer = allocate_gl_resource<glGenRenderbuffers, glDeleteRenderbuffers>();
     glBindRenderbuffer(GL_RENDERBUFFER, depth_buffer);
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,

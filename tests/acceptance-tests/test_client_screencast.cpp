@@ -155,13 +155,8 @@ TEST_F(Screencast, can_cast_to_buffer)
     ASSERT_TRUE(buffer_info.cv.wait_for(lk, 5s, [&] { return buffer_info.buffer; }));
 
     MirScreencastSpec* spec = mir_create_screencast_spec(connection);
-
-    //TODO: we have to set nbuffers == 0 now to avoid setting pixel format, as
-    //default screencast takes a capture on creation now.
+    //We have to set nbuffers == 0 now to avoid capturing at startup. Current default is 1.
     mir_screencast_spec_set_number_of_buffers(spec, 0);
-    mir_screencast_spec_set_width(spec, default_width);
-    mir_screencast_spec_set_height(spec, default_height);
-    mir_screencast_spec_set_pixel_format(spec, default_pixel_format);
 
     mir_screencast_spec_set_capture_region(spec, &default_capture_region);
     auto screencast = mir_screencast_create_sync(spec);
