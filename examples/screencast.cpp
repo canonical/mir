@@ -90,7 +90,7 @@ try
         static_cast<unsigned int>(mir_output_mode_get_height(mode)) };
     auto spec = mir_create_screencast_spec(connection);
     mir_screencast_spec_set_capture_region(spec, &rect);
-    mir_screencast_spec_set_mirror_mode(spec, mir_mirror_mode_none);
+    mir_screencast_spec_set_mirror_mode(spec, mir_mirror_mode_horizontal);
     //TODO: the default screencast spec will capture a buffer when creating the screencast.
     //      Set to zero to avoid this, and when the old screencast-bufferstream method is removed,
     //      the initial capture will be removed. 
@@ -137,6 +137,7 @@ try
         MirGraphicsRegion region;
         mir_buffer_map(buffer, &region, &layout);
 
+#if UPSIDEDOWNSIES
         //should we should change the GL renderer to be smarter and not screenshot upside down.
         auto addr = region.vaddr + (region.height - 1)*region.stride;
         for (int i = 0; i < region.height; i++)
@@ -144,6 +145,16 @@ try
             file.write(addr, region.width*4);
             addr -= region.stride;
         }
+#else
+        printf ("RIGHTSIES\n");
+        auto addr = region.vaddr;
+        for (int i = 0; i < region.height; i++)
+        {
+            file.write(addr, region.width*4);
+            addr += region.stride;
+        }
+
+#endif
         mir_buffer_unmap(buffer);
     }
 

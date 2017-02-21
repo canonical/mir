@@ -203,3 +203,8 @@ void mc::ScreencastDisplayBuffer::set_renderbuffer_size(geom::Size size)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create FBO for buffer"));
     depth_rbo =  std::move(depth_buffer);
 }
+
+void mc::ScreencastDisplayBuffer::set_transformation(glm::mat2 const& t)
+{
+    transform = t;
+}

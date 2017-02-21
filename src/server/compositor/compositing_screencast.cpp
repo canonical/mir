@@ -26,6 +26,7 @@
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
+#include "mir/graphics/transformation.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/raii.h"
@@ -80,7 +81,8 @@ public:
       display_buffer{std::make_unique<ScreencastDisplayBuffer>(capture_region, capture_size, mirror_mode, free_queue, ready_queue, display)},
       display_buffer_compositor{db_compositor_factory.create_compositor_for(*display_buffer)},
       virtual_output{make_virtual_output(display, capture_region)},
-      queue_size(capture_size)
+      queue_size(capture_size),
+      mirror_mode(mirror_mode)
     {
         for (auto buffer : buffers)
             free_queue.schedule(buffer);
@@ -113,10 +115,24 @@ public:
 
     void capture(std::shared_ptr<mg::Buffer> const& buffer)
     {
+        std::lock_guard<decltype(mutex)> lk(mutex);
         if (buffer->size() != display_buffer->renderbuffer_size())
             display_buffer->set_renderbuffer_size(buffer->size());
-        
-        std::lock_guard<decltype(mutex)> lk(mutex);
+       
+        //a bit confusingly, the old way of screencasting had the mirror_mode_none
+        //produce upside down buffers.
+        if (mirror_mode == mir_mirror_mode_none)
+            display_buffer->set_transformation(mg::transformation(mir_mirror_mode_vertical));
+        if (mirror_mode == mir_mirror_mode_vertical)
+            display_buffer->set_transformation(mg::transformation(mir_mirror_mode_none));
+        if (mirror_mode == mir_mirror_mode_horizontal)
+        {
+            glm::mat2 mat;
+            mat[0][0] = -1;
+            mat[1][1] = -1;
+            display_buffer->set_transformation(mat);
+        }
+ 
         auto scheduled = free_queue.num_scheduled();
         free_queue.schedule(buffer);
         for(auto i = 0u; i < scheduled; i++)
@@ -125,6 +141,8 @@ public:
         display_buffer_compositor->composite(scene->scene_elements_for(this));
         if (buffer != ready_queue.next_buffer())
             throw std::runtime_error("unable to capture to buffer");
+
+        display_buffer->set_transformation(mg::transformation(mirror_mode));
     }
 
 private:
@@ -138,6 +156,7 @@ private:
     std::unique_ptr<graphics::VirtualOutput> virtual_output;
     std::shared_ptr<mg::Buffer> last_captured_buffer;
     geom::Size queue_size;
+    MirMirrorMode mirror_mode;
 };
 
 
