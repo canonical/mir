@@ -283,15 +283,6 @@ pid_t ms::ApplicationSession::process_id() const
     return pid;
 }
 
-void ms::ApplicationSession::drop_outstanding_requests()
-{
-    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
-    for (auto& stream : streams)
-    {
-        stream.second->drop_outstanding_requests();
-    }
-}
-
 void ms::ApplicationSession::hide()
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
@@ -392,7 +383,6 @@ void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
     if (stream_it == streams.end())
         BOOST_THROW_EXCEPTION(std::runtime_error("cannot destroy stream: Invalid BufferStreamId"));
 
-    stream_it->second->drop_outstanding_requests();
     streams.erase(stream_it);
 }
 
