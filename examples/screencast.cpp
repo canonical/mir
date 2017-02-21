@@ -19,19 +19,11 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_screencast.h"
 #include "mir_toolkit/mir_buffer.h"
-#include "mir/raii.h"
-#include <thread>
 #include <memory>
-#include <chrono>
 #include <iostream>
-#include <cstring>
 #include <unistd.h>
-#include <signal.h>
 #include <getopt.h>
-#include <mutex>
 #include <fstream>
-#include <condition_variable>
-#include <regex>
 
 int main(int argc, char *argv[])
 try
@@ -78,6 +70,12 @@ try
 
     int rc = 0;
     auto connection = mir_connect_sync(socket_file, "screencap_to_buffer");
+    if (!mir_connection_is_valid(connection))
+    {
+        std::cerr << "could not connect to server\n";
+        return -1;
+    }
+
     auto display_config = mir_connection_create_display_configuration(connection);
     if (disp_id < 0 || disp_id > mir_display_config_get_num_outputs(display_config))
     {
@@ -140,7 +138,7 @@ try
         auto addr = region.vaddr;
         for (int i = 0; i < region.height; i++)
         {
-            file.write(addr, region.width*4);
+            file.write(addr, region.width * MIR_BYTES_PER_PIXEL(pf));
             addr += region.stride;
         }
 
