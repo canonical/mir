@@ -31,15 +31,19 @@
 #include <mutex>
 #include <fstream>
 #include <condition_variable>
+#include <regex>
 
 int main(int argc, char *argv[])
 try
 {
     int arg = -1;
-    static char const *socket_file = NULL;
-    static char const *output_file = "screencap_output.raw";
+    static char const* socket_file = NULL;
+    static char const* output_file = "screencap_output.raw";
+    unsigned int width = 400;
+    unsigned int height = 300;
+
     auto disp_id = 0;
-    while ((arg = getopt (argc, argv, "m:f:d:h:")) != -1)
+    while ((arg = getopt (argc, argv, "m:f:d:s:h:")) != -1)
     {
         switch (arg)
         {
@@ -51,6 +55,14 @@ try
             break;
         case 'd':
             disp_id = atoi(optarg);
+            break;
+        case 's':
+            if (sscanf(optarg, "%ux%u", &width, &height) != 2 || width == 0 || height == 0)
+            {
+                std::cerr << "could not parse size " << optarg << '\n';
+                return -1;
+            }
+            break;
         case 'h':
         default:
             std::cout << argv[0] << std::endl;
@@ -58,36 +70,32 @@ try
             std::cout << "    -m <Mir server socket>\n";
             std::cout << "    -f file to output to\n";
             std::cout << "    -d output id to capture\n";
+            std::cout << "    -s size of capture buffer (WxH)\n";
             std::cout << "    -h help dialog\n";
             return -1;
         }
     }
 
-
     int rc = 0;
     auto connection = mir_connect_sync(socket_file, "screencap_to_buffer");
-
-    auto const display_config = mir::raii::deleter_for(
-        mir_connection_create_display_configuration(connection),
-        &mir_display_config_release);
-
-    if (disp_id < 0 || disp_id > mir_display_config_get_num_outputs(display_config.get()))
+    auto display_config = mir_connection_create_display_configuration(connection);
+    if (disp_id < 0 || disp_id > mir_display_config_get_num_outputs(display_config))
     {
         std::cerr << "invalid display id set\n";
         return -1;
     }
 
-    auto output = mir_display_config_get_output(display_config.get(), disp_id);
+    auto output = mir_display_config_get_output(display_config, disp_id);
     auto mode = mir_output_get_current_mode(output);
 
     auto pf = mir_pixel_format_abgr_8888;
-    unsigned int width = 400;
-    unsigned int height = 300;
     MirRectangle rect {
         mir_output_get_position_x(output),
         mir_output_get_position_y(output),
         static_cast<unsigned int>(mir_output_mode_get_width(mode)),
         static_cast<unsigned int>(mir_output_mode_get_height(mode)) };
+    mir_display_config_release(display_config);
+
     auto spec = mir_create_screencast_spec(connection);
     mir_screencast_spec_set_capture_region(spec, &rect);
     mir_screencast_spec_set_mirror_mode(spec, mir_mirror_mode_horizontal);
@@ -100,14 +108,6 @@ try
     mir_screencast_spec_release(spec);
 
     auto buffer = mir_connection_allocate_buffer_sync(connection, width, height, pf);
-
-    struct Capture
-    {
-        std::mutex mutex;
-        std::condition_variable cv;
-        bool done = false;
-    } cap;
-
     auto error = mir_screencast_capture_to_buffer_sync(screencast, buffer);
     if (error && mir_error_get_domain(error) == mir_error_domain_screencast)
     {
@@ -137,16 +137,6 @@ try
         MirGraphicsRegion region;
         mir_buffer_map(buffer, &region, &layout);
 
-#if UPSIDEDOWNSIES
-        //should we should change the GL renderer to be smarter and not screenshot upside down.
-        auto addr = region.vaddr + (region.height - 1)*region.stride;
-        for (int i = 0; i < region.height; i++)
-        {
-            file.write(addr, region.width*4);
-            addr -= region.stride;
-        }
-#else
-        printf ("RIGHTSIES\n");
         auto addr = region.vaddr;
         for (int i = 0; i < region.height; i++)
         {
@@ -154,13 +144,12 @@ try
             addr += region.stride;
         }
 
-#endif
         mir_buffer_unmap(buffer);
     }
 
+    mir_buffer_release(buffer);
     mir_screencast_release_sync(screencast);
-    //hmm, for tomorrow, why does this segfault?
-//    mir_connection_release(connection);
+    mir_connection_release(connection);
     return 0;
 }
 catch(std::exception& e)
