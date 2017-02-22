@@ -24,6 +24,7 @@
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/input/mir_keyboard_config.h"
+#include "mir/input/mir_touchscreen_config.h"
 #include "mir/optional_value.h"
 
 namespace mir
@@ -76,6 +77,15 @@ struct StubDevice : input::Device
     }
 
     void apply_keyboard_configuration(MirKeyboardConfig const&) override
+    {
+    }
+
+    mir::optional_value<MirTouchscreenConfig> touchscreen_configuration() const override
+    {
+        return {};
+    }
+
+    void apply_touchscreen_configuration(MirTouchscreenConfig const&) override
     {
     }
 

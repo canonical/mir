@@ -1,6 +1,7 @@
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
   ${PROJECT_SOURCE_DIR}/include/platforms/mesa
+  ${PROJECT_SOURCE_DIR}/include/platforms/common
 )
 
 add_library(
@@ -15,4 +16,5 @@ add_library(
   platform.cpp
   buffer.cpp
   ipc_operations.cpp
+  host_buffer.cpp
 )

@@ -28,7 +28,6 @@
 #include "mir/client_buffer.h"
 #include "mir/mir_buffer_stream.h"
 #include "mir/dispatch/threaded_dispatcher.h"
-#include "mir/input/input_platform.h"
 #include "mir/input/xkb_mapper.h"
 #include "mir/cookie/cookie.h"
 #include "mir_cookie.h"
@@ -54,6 +53,25 @@ namespace
 {
 std::mutex handle_mutex;
 std::unordered_set<MirWindow*> valid_surfaces;
+
+void apply_device_state(MirEvent const& event, mi::KeyMapper& keymapper)
+{
+    auto device_state = mir_event_get_input_device_state_event(&event);
+    std::vector<uint32_t> keys;
+
+    for (size_t index = 0, end_index = mir_input_device_state_event_device_count(device_state);
+         index != end_index; ++index)
+    {
+        auto device_id = mir_input_device_state_event_device_id(device_state, index);
+        auto key_count = mir_input_device_state_event_device_pressed_keys_count(device_state, index);
+        for (decltype(key_count) i = 0; i != key_count; ++i)
+            keys.push_back(
+                mir_input_device_state_event_device_pressed_keys_for_index(device_state, index, i));
+
+        keymapper.set_key_state(device_id, keys);
+    }
+}
+
 }
 
 #pragma GCC diagnostic push
@@ -120,7 +138,6 @@ MirSurface::MirSurface(
     mclr::DisplayServer& the_server,
     mclr::DisplayServerDebug* debug,
     std::shared_ptr<MirBufferStream> const& buffer_stream,
-    std::shared_ptr<mircv::InputPlatform> const& input_platform,
     MirWindowSpec const& spec,
     mir::protobuf::Surface const& surface_proto,
     std::shared_ptr<MirWaitHandle> const& handle)
@@ -133,7 +150,6 @@ MirSurface::MirSurface(
       modify_result{mcl::make_protobuf_object<mir::protobuf::Void>()},
       connection_(allocating_connection),
       default_stream(buffer_stream),
-      input_platform(input_platform),
       keymapper(std::make_shared<mircv::XKBMapper>()),
       configure_result{mcl::make_protobuf_object<mir::protobuf::SurfaceSetting>()},
       frame_clock(std::make_shared<FrameClock>()),
@@ -174,12 +190,6 @@ MirSurface::MirSurface(
             this,
             std::placeholders::_1,
             spec.event_handler.value().context);
-    }
-
-    if (surface_proto.fd_size() > 0 && handle_event_callback)
-    {
-        input_thread = std::make_shared<md::ThreadedDispatcher>("Input dispatch", 
-            input_platform->create_input_receiver( surface_proto.fd(0), keymapper, handle_event_callback));
     }
 
     std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
@@ -313,9 +323,11 @@ MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor
         setting.mutable_surfaceid()->CopyFrom(surface->id());
         if (cursor)
         {
-            if (cursor->stream != nullptr)
+            if (cursor->surface || cursor->stream)
             {
-                setting.mutable_buffer_stream()->set_value(cursor->stream->rpc_id().as_value());
+                auto id = cursor->surface ? cursor->surface->stream_id().as_value() :
+                                            cursor->stream->rpc_id().as_value();
+                setting.mutable_buffer_stream()->set_value(id);
                 setting.set_hotspot_x(cursor->hotspot_x);
                 setting.set_hotspot_y(cursor->hotspot_y);
             }
@@ -467,18 +479,10 @@ void MirSurface::set_event_handler(MirWindowEventCallback callback,
         handle_event_callback = std::bind(callback, this,
                                           std::placeholders::_1,
                                           context);
-
-        if (surface->fd_size() > 0 && handle_event_callback)
-        {
-            auto input_dispatcher = input_platform->create_input_receiver(surface->fd(0),
-                                                                          keymapper,
-                                                                          handle_event_callback);
-            input_thread = std::make_shared<md::ThreadedDispatcher>("Input dispatch", input_dispatcher);
-        }
     }
 }
 
-void MirSurface::handle_event(MirEvent const& e)
+void MirSurface::handle_event(MirEvent& e)
 {
     std::unique_lock<decltype(mutex)> lock(mutex);
 
@@ -492,6 +496,12 @@ void MirSurface::handle_event(MirEvent const& e)
             attrib_cache[a] = mir_window_event_get_attribute_value(sev);
         break;
     }
+    case mir_event_type_input:
+        keymapper->map_event(e);
+        break;
+    case mir_event_type_input_device_state:
+        apply_device_state(e, *keymapper);
+        break;
     case mir_event_type_orientation:
         orientation = mir_orientation_event_get_direction(mir_event_get_orientation_event(&e));
         break;

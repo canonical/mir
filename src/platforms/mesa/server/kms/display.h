@@ -93,7 +93,7 @@ public:
     void pause() override;
     void resume() override;
 
-    std::shared_ptr<graphics::Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
+    std::shared_ptr<graphics::Cursor> create_hardware_cursor() override;
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
     NativeDisplay* native_display() override;
 

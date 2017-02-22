@@ -251,6 +251,16 @@ int mir_output_get_position_y(MirOutput const* output)
     return output->position_y();
 }
 
+unsigned int mir_output_get_logical_width(MirOutput const* output)
+{
+    return output->logical_width();
+}
+
+unsigned int mir_output_get_logical_height(MirOutput const* output)
+{
+    return output->logical_height();
+}
+
 void mir_output_set_position(MirOutput* output, int x, int y)
 {
     output->set_position_x(x);

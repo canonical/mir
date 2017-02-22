@@ -46,7 +46,6 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mis = mir::input::synthesis;
-namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace msc = mir::scene;
 namespace geom = mir::geometry;
@@ -82,6 +81,7 @@ public:
     MOCK_METHOD1(renamed, void(char const* name));
     MOCK_METHOD0(cursor_image_removed, void());
     MOCK_METHOD1(placed_relative, void(geom::Rectangle const& placement));
+    MOCK_METHOD1(input_consumed, void(MirEvent const*));
 };
 
 
@@ -560,6 +560,82 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
 
     expectations_satisfied.wait_for(std::chrono::seconds{500});
 
+    expect_client_shutdown();
+}
+
+TEST_F(TestClientCursorAPI, cursor_request_applied_from_surface)
+{
+    using namespace ::testing;
+
+    static int hotspot_x = 1, hotspot_y = 1;
+
+    client_geometries[client_name_1] =
+        geom::Rectangle{{0, 0}, {1, 1}};
+
+    {
+        InSequence seq;
+        EXPECT_CALL(cursor, show(_)).Times(3);
+        EXPECT_CALL(cursor, show(_)).Times(1)
+            .WillOnce(mt::WakeUp(&expectations_satisfied));
+    }
+
+    mt::Signal wait;
+
+    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+        .WillRepeatedly(mt::WakeUp(&wait));
+
+    auto connection =
+        mir_connect_sync(new_connection().c_str(), client_name_1.c_str());
+    auto spec = mir_create_normal_window_spec(connection, 1, 1);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+    mir_window_spec_set_name(spec, client_name_1.c_str());
+    auto const window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
+
+    mir_buffer_stream_swap_buffers_sync(
+        mir_window_get_buffer_stream(window));
+
+    auto ret = mt::spin_wait_for_condition_or_timeout(
+        [window]
+        {
+            return mir_window_get_visibility(window) == mir_window_visibility_exposed &&
+                mir_window_get_focus_state(window) == mir_window_focus_state_focused;
+        },
+        std::chrono::seconds{5});
+
+    if (!ret)
+        throw std::runtime_error("Timeout waiting for window to become focused and exposed");
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    auto surface =
+        mir_connection_create_render_surface_sync(connection, 24, 24);
+    auto stream =
+        mir_render_surface_get_buffer_stream(surface, 24, 24, mir_pixel_format_argb_8888);
+    auto conf =
+        mir_cursor_configuration_from_render_surface(surface, hotspot_x, hotspot_y);
+#pragma GCC diagnostic pop
+
+    mir_buffer_stream_swap_buffers_sync(stream);
+
+    mir_window_configure_cursor(window, conf);
+
+    mir_cursor_configuration_destroy(conf);
+
+    mir_buffer_stream_swap_buffers_sync(stream);
+    mir_buffer_stream_swap_buffers_sync(stream);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    mir_render_surface_release(surface);
+#pragma GCC diagnostic pop
+
+    mir_window_release_sync(window);
+    mir_connection_release(connection);
+
+    EXPECT_TRUE(wait.wait_for(timeout));
+
+    expectations_satisfied.wait_for(std::chrono::seconds{5});
     expect_client_shutdown();
 }
 

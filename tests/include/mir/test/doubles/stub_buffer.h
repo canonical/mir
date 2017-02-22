@@ -72,7 +72,7 @@ public:
               native_buffer,
               graphics::BufferProperties{
                   size,
-                  mir_pixel_format_abgr_8888,
+                  mir_pixel_format_argb_8888,
                   graphics::BufferUsage::hardware},
                   geometry::Stride{}}
 

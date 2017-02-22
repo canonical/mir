@@ -37,7 +37,6 @@ public:
     std::shared_ptr<mir::input::InputManager> the_input_manager() override;
     std::shared_ptr<mir::input::InputDispatcher> the_input_dispatcher() override;
     std::shared_ptr<mir::shell::InputTargeter> the_input_targeter() override;
-    std::shared_ptr<mir::input::InputSender> the_input_sender() override;
 };
 
 }

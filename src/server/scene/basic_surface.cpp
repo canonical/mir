@@ -21,9 +21,7 @@
 #include "basic_surface.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/frontend/event_sink.h"
-#include "mir/input/input_channel.h"
 #include "mir/shell/input_targeter.h"
-#include "mir/input/input_sender.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/cursor_image.h"
 #include "mir/graphics/pixel_format_utils.h"
@@ -39,7 +37,7 @@
 #include <algorithm>
 
 #include <string.h> // memcpy
-
+//#define USE_ANDROID_INPUT
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -140,6 +138,12 @@ void ms::SurfaceObservers::placed_relative(geometry::Rectangle const& placement)
                  { observer->placed_relative(placement); });
 }
 
+void ms::SurfaceObservers::input_consumed(MirEvent const* event)
+{
+    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+                 { observer->input_consumed(event); });
+}
+
 
 struct ms::CursorStreamImageAdapter
 {
@@ -229,8 +233,6 @@ ms::BasicSurface::BasicSurface(
     std::weak_ptr<Surface> const& parent,
     MirPointerConfinementState state,
     std::list<StreamInfo> const& layers,
-    std::shared_ptr<mi::InputChannel> const& input_channel,
-    std::shared_ptr<input::InputSender> const& input_sender,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
     surface_name(name),
@@ -240,15 +242,12 @@ ms::BasicSurface::BasicSurface(
     input_mode(mi::InputReceptionMode::normal),
     custom_input_rectangles(),
     surface_buffer_stream(default_stream(layers)),
-    server_input_channel(input_channel),
-    input_sender(input_sender),
     cursor_image_(cursor_image),
     report(report),
     parent_(parent),
     layers(layers),
     confine_pointer_state_(state),
-    cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)},
-    input_validator([this](MirEvent const& ev) { this->input_sender->send_event(ev, server_input_channel); })
+    cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)}
 {
     report->surface_created(this, surface_name);
 }
@@ -258,12 +257,10 @@ ms::BasicSurface::BasicSurface(
     geometry::Rectangle rect,
     MirPointerConfinementState state,
     std::list<StreamInfo> const& layers,
-    std::shared_ptr<mi::InputChannel> const& input_channel,
-    std::shared_ptr<input::InputSender> const& input_sender,
     std::shared_ptr<mg::CursorImage> const& cursor_image,
     std::shared_ptr<SceneReport> const& report) :
     BasicSurface(name, rect, std::shared_ptr<Surface>{nullptr}, state, layers,
-                 input_channel, input_sender, cursor_image, report)
+                 cursor_image, report)
 {
 }
 
@@ -316,25 +313,6 @@ mir::geometry::Size ms::BasicSurface::client_size() const
 std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() const
 {
     return surface_buffer_stream;
-}
-
-bool ms::BasicSurface::supports_input() const
-{
-    if (server_input_channel  && server_input_channel->client_fd() != -1)
-        return true;
-    return false;
-}
-
-int ms::BasicSurface::client_input_fd() const
-{
-    if (!supports_input())
-        BOOST_THROW_EXCEPTION(std::logic_error("Surface does not support input"));
-    return server_input_channel->client_fd();
-}
-
-std::shared_ptr<mi::InputChannel> ms::BasicSurface::input_channel() const
-{
-    return server_input_channel;
 }
 
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
@@ -869,7 +847,7 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 
 void ms::BasicSurface::consume(MirEvent const* event)
 {
-    input_validator.validate_and_dispatch(*event);
+    observers.input_consumed(event);
 }
 
 void ms::BasicSurface::set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,

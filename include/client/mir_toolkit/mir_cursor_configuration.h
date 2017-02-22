@@ -21,12 +21,6 @@
 #include <mir_toolkit/common.h>
 #include <mir_toolkit/client_types.h>
 
-/**
- * Opaque structure containing cursor parameterization. Create with mir_cursor* family.
- * Used with mir_window_configure_cursor.
- */
-typedef struct MirCursorConfiguration MirCursorConfiguration;
-
 #ifdef __cplusplus
 /**
  * \addtogroup mir_toolkit

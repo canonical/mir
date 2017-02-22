@@ -314,7 +314,7 @@ void mga::Display::resume()
 {
 }
 
-auto mga::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* initial_image */) -> std::shared_ptr<Cursor>
+auto mga::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
     return nullptr;
 }

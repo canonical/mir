@@ -51,6 +51,11 @@ void MirSurfacePlacementEvent::set_placement(MirRectangle const& placement)
     rect.setHeight(placement.height);
 }
 
+MirSurfacePlacementEvent* MirEvent::to_window_placement()
+{
+    return static_cast<MirSurfacePlacementEvent*>(this);
+}
+
 MirSurfacePlacementEvent const* MirEvent::to_window_placement() const
 {
     return static_cast<MirSurfacePlacementEvent const*>(this);

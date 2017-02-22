@@ -52,8 +52,6 @@ struct MockSceneSession : public scene::Session
     MOCK_CONST_METHOD0(name, std::string());
     MOCK_CONST_METHOD0(process_id, pid_t());
 
-    MOCK_METHOD0(drop_outstanding_requests, void());
-
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
 

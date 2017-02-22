@@ -57,13 +57,13 @@ public:
     void resize(geometry::Size const& size) override;
     void allow_framedropping(bool) override;
     bool framedropping() const override;
-    void drop_outstanding_requests() override;
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;
     bool has_submitted_buffer() const override;
     void associate_buffer(graphics::BufferID) override;
     void disassociate_buffer(graphics::BufferID) override;
     void set_scale(float scale) override;
+    bool suitable_for_cursor() const override;
 
 private:
     enum class ScheduleMode;

@@ -82,6 +82,18 @@ xkb_keysym_t mir_keyboard_event_key_code(MirKeyboardEvent const* event);
 int mir_keyboard_event_scan_code(MirKeyboardEvent const* event);
 
 /**
+ * Retrieve the text the key press would emit as null terminated utf8 string.
+ *
+ * The text will only be available to key down and key repeat events.
+ * For mir_keyboard_action_up or key presses that do produce text an empty
+ * string will be returned.
+ *
+ *   \param [in] event The key event
+ *   \return           The text
+ */
+char const* mir_keyboard_event_key_text(MirKeyboardEvent const* event);
+
+/**
  * Retrieve the modifier keys pressed when the key action occured.
  *
  *   \param [in] event The key event

@@ -349,9 +349,6 @@ void mf::SessionMediator::create_surface(
     response->set_pixel_format(request->pixel_format());
     response->set_buffer_usage(request->buffer_usage());
 
-    if (surface->supports_input())
-        response->add_fd(surface->client_input_fd());
-    
     for (unsigned int i = 0; i < mir_window_attribs; i++)
     {
         auto setting = response->add_attributes();
@@ -953,7 +950,8 @@ void mf::SessionMediator::configure_cursor(
         auto hotspot = geom::Displacement{cursor_request->hotspot_x(), cursor_request->hotspot_y()};
         auto stream = session->get_buffer_stream(stream_id);
 
-        throw_if_unsuitable_for_cursor(*stream);
+        if (!stream->suitable_for_cursor())
+            BOOST_THROW_EXCEPTION(std::logic_error("Cursor buffer streams must have mir_pixel_format_argb_8888 format"));
 
         surface->set_cursor_stream(stream, hotspot);
     }

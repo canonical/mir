@@ -174,7 +174,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (shell_report_opt, po::value<std::string>()->default_value(off_opt_value),
          "How to handle the Shell report. [{log,off}]")
-        (composite_delay_opt, po::value<int>()->default_value(-1),
+        (composite_delay_opt, po::value<int>()->default_value(0),
             "Compositor frame delay in milliseconds (how long to wait for new "
             "frames from clients before compositing). Higher values result in "
             "lower latency but risk causing frame skipping. "

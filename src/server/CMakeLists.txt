@@ -110,6 +110,7 @@ target_link_libraries(mirserver LINK_PUBLIC
   mirprotobuf
   mircookie
 
+  server_platform_common
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}

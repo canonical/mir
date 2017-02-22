@@ -23,6 +23,7 @@
 #include "mir/input/device_capability.h"
 #include "mir/input/input_device.h"
 #include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_touchscreen_config.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/key_mapper.h"
 
@@ -31,11 +32,20 @@
 
 namespace mi = mir::input;
 
-mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
-                                 InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper,
+mi::DefaultDevice::DefaultDevice(MirInputDeviceId id,
+                                 std::shared_ptr<dispatch::ActionQueue> const& actions,
+                                 InputDevice& device,
+                                 std::shared_ptr<KeyMapper> const& key_mapper,
                                  std::function<void(Device*)> const& callback)
-    : device_id{id}, device{device}, info(device.get_device_info()), pointer{device.get_pointer_settings()},
-      touchpad{device.get_touchpad_settings()}, actions{actions}, key_mapper{key_mapper}, device_changed_callback{callback}
+    : device_id{id},
+      device{device},
+      info(device.get_device_info()),
+      pointer{device.get_pointer_settings()},
+      touchpad{device.get_touchpad_settings()},
+      touchscreen{device.get_touchscreen_settings()},
+      actions{actions},
+      key_mapper{key_mapper},
+      device_changed_callback{callback}
 {
     if (contains(info.capabilities, mi::DeviceCapability::keyboard))
     {
@@ -72,6 +82,7 @@ MirInputDeviceId mi::DefaultDevice::id() const
 
 mir::optional_value<MirPointerConfig> mi::DefaultDevice::pointer_configuration() const
 {
+    std::lock_guard<std::mutex> lock(config_mutex);
     if (!pointer.is_set())
         return {};
 
@@ -84,6 +95,7 @@ mir::optional_value<MirPointerConfig> mi::DefaultDevice::pointer_configuration()
 
 mir::optional_value<MirTouchpadConfig> mi::DefaultDevice::touchpad_configuration() const
 {
+    std::lock_guard<std::mutex> lock(config_mutex);
     if (!touchpad.is_set())
         return {};
 
@@ -96,8 +108,11 @@ mir::optional_value<MirTouchpadConfig> mi::DefaultDevice::touchpad_configuration
 
 void mi::DefaultDevice::apply_pointer_configuration(MirPointerConfig const& conf)
 {
-    if (!pointer.is_set())
-        BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a pointer configuration"));
+    {
+        std::lock_guard<std::mutex> lock(config_mutex);
+        if (!pointer.is_set())
+            BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a pointer configuration"));
+    }
 
     if (conf.cursor_acceleration_bias() < -1.0 || conf.cursor_acceleration_bias() > 1.0)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor acceleration bias out of range"));
@@ -109,7 +124,10 @@ void mi::DefaultDevice::apply_pointer_configuration(MirPointerConfig const& conf
     settings.vertical_scroll_scale = conf.vertical_scroll_scale();
     settings.horizontal_scroll_scale = conf.horizontal_scroll_scale();
 
-    pointer = settings;
+    {
+        std::lock_guard<std::mutex> lock(config_mutex);
+        pointer = settings;
+    }
 
     actions->enqueue([settings = std::move(settings), dev=&device]
                      {
@@ -120,8 +138,11 @@ void mi::DefaultDevice::apply_pointer_configuration(MirPointerConfig const& conf
 
 void mi::DefaultDevice::apply_touchpad_configuration(MirTouchpadConfig const& conf)
 {
-    if (!touchpad.is_set())
-        BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a touchpad configuration"));
+    {
+        std::lock_guard<std::mutex> lock(config_mutex);
+        if (!touchpad.is_set())
+            BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a touchpad configuration"));
+    }
 
     if (conf.scroll_mode() & mir_touchpad_scroll_mode_button_down_scroll &&
         conf.button_down_scroll_button() == mi::no_scroll_button)
@@ -136,7 +157,10 @@ void mi::DefaultDevice::apply_touchpad_configuration(MirTouchpadConfig const& co
     settings.tap_to_click = conf.tap_to_click();
     settings.middle_mouse_button_emulation = conf.middle_mouse_button_emulation();
 
-    touchpad = settings;
+    {
+        std::lock_guard<std::mutex> lock(config_mutex);
+        touchpad = settings;
+    }
 
     actions->enqueue([settings = std::move(settings), dev=&device]
                      {
@@ -147,6 +171,7 @@ void mi::DefaultDevice::apply_touchpad_configuration(MirTouchpadConfig const& co
 
 mir::optional_value<MirKeyboardConfig> mi::DefaultDevice::keyboard_configuration() const
 {
+    std::lock_guard<std::mutex> lock(config_mutex);
     return keyboard;
 }
 
@@ -155,11 +180,41 @@ void mi::DefaultDevice::apply_keyboard_configuration(MirKeyboardConfig const& co
     if (!contains(info.capabilities, mi::DeviceCapability::keyboard))
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a keyboard configuration"));
 
-    if (keyboard.value().device_keymap() != conf.device_keymap())
     {
-        keyboard = conf;
-
-        key_mapper->set_keymap_for_device(device_id, conf.device_keymap());
-        device_changed_callback(this);
+        std::lock_guard<std::mutex> lock(config_mutex);
+        if (keyboard.value().device_keymap() != conf.device_keymap())
+            keyboard = conf;
+        else
+            return;
     }
+    key_mapper->set_keymap_for_device(device_id, conf.device_keymap());
+    device_changed_callback(this);
+}
+
+mir::optional_value<MirTouchscreenConfig> mi::DefaultDevice::touchscreen_configuration() const
+{
+    if (!touchscreen.is_set())
+        return {};
+
+    auto const& settings = touchscreen.value();
+
+    return MirTouchscreenConfig(settings.output_id, settings.mapping_mode);
+}
+
+void mi::DefaultDevice::apply_touchscreen_configuration(MirTouchscreenConfig const& config)
+{
+    if (!touchscreen.is_set())
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a touchscreen configuration"));
+
+    TouchscreenSettings settings;
+    settings.output_id = config.output_id();
+    settings.mapping_mode = config.mapping_mode();
+
+    touchscreen = settings;
+
+    actions->enqueue([settings = std::move(settings), dev=&device]
+                     {
+                         dev->apply_settings(settings);
+                     });
+    device_changed_callback(this);
 }
