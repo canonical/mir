@@ -291,9 +291,8 @@ mclm::ClientPlatform::ClientPlatform(
       gbm_dev{nullptr},
       drm_extensions{auth_fd_ext, auth_magic_ext},
       mesa_auth{set_device, this},
-      gbm_buffer1{allocate_buffer_gbm},
-      gbm_buffer2{allocate_buffer_gbm, allocate_buffer_gbm_sync,
-                  is_gbm_importable, import_fd, buffer_stride, buffer_format, buffer_flags, buffer_age},
+      gbm_buffer{allocate_buffer_gbm, allocate_buffer_gbm_sync,
+                 is_gbm_importable, import_fd, buffer_stride, buffer_format, buffer_flags, buffer_age},
       hw_stream{get_hw_stream}
 {
 }
@@ -417,10 +416,8 @@ void* mclm::ClientPlatform::request_interface(char const* extension_name, int ve
         return &drm_extensions;
     if (!strcmp(extension_name, "mir_extension_set_gbm_device") && (version == 1))
         return &mesa_auth;
-    if (!strcmp(extension_name, "mir_extension_gbm_buffer") && (version == 1))
-        return &gbm_buffer1;
-    if (!strcmp(extension_name, "mir_extension_gbm_buffer") && (version == 2))
-        return &gbm_buffer2;
+    if (!strcmp(extension_name, "mir_extension_gbm_buffer") && (version <= 2))
+        return &gbm_buffer;
     if (!strcmp(extension_name, "mir_extension_hardware_buffer_stream") && (version == 1))
         return &hw_stream;
 

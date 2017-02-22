@@ -65,8 +65,7 @@ private:
     gbm_device* gbm_dev;
     MirExtensionMesaDRMAuthV1 drm_extensions;
     MirExtensionSetGbmDeviceV1 mesa_auth;
-    MirExtensionGbmBufferV1 gbm_buffer1;
-    MirExtensionGbmBufferV2 gbm_buffer2;
+    MirExtensionGbmBufferV2 gbm_buffer;
     MirExtensionHardwareBufferStreamV1 hw_stream;
 };
 
