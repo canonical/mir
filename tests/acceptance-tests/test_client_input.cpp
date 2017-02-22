@@ -24,6 +24,8 @@
 #include "mir/scene/surface.h"
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/input/mir_input_config.h"
+#include "mir/input/input_device.h"
+#include "mir/input/touchscreen_settings.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
@@ -1502,13 +1504,21 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_can_be_mapped_to_second_output
     int const expected_x = touch_x + second_screen.top_left.x.as_int();
     int const expected_y = touch_y + second_screen.top_left.y.as_int();
 
+    mt::Signal touchscreen_ready;
+    fake_touch_screen->on_new_configuration_do(
+        [&touchscreen_ready, second_output](mi::InputDevice const& dev)
+        {
+            auto ts = dev.get_touchscreen_settings();
+            if (ts.is_set() && ts.value().output_id == second_output)
+                touchscreen_ready.raise();
+        });
+
     Client client(new_connection(), first);
     auto config = mir_connection_create_input_config(client.connection);
     auto touchscreen = get_mutable_device_with_capabilities(config,
                                                             mir_input_device_capability_touchscreen|
                                                             mir_input_device_capability_multitouch);
     auto touchscreen_config = mir_input_device_get_mutable_touchscreen_config(touchscreen);
-
     mir_touchscreen_config_set_output_id(touchscreen_config, second_output);
     mir_touchscreen_config_set_mapping_mode(touchscreen_config, mir_touchscreen_mapping_mode_to_output);
 
@@ -1521,6 +1531,7 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_can_be_mapped_to_second_output
             mir_input_config_release(config);
         });
 
+    EXPECT_TRUE(touchscreen_ready.wait_for(10s));
     EXPECT_CALL(client, handle_input(mt::TouchEvent(expected_x, expected_y)))
         .WillOnce(mt::WakeUp(&client.all_events_received));
     fake_touch_screen->emit_event(mis::a_touch_event()
@@ -1565,6 +1576,17 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_mapped_to_deactivated_output_i
     ASSERT_THAT(mir_output_get_power_mode(mir_display_config_get_output(display_config, 1)), Eq(mir_power_mode_off));
     mir_display_config_release(display_config);
 
+    mt::Signal touchscreen_ready;
+    fake_touch_screen->on_new_configuration_do(
+        [&touchscreen_ready, second_output](mi::InputDevice const& dev)
+        {
+            auto ts = dev.get_touchscreen_settings();
+            if (ts.is_set()
+                && ts.value().output_id == second_output
+                && ts.value().mapping_mode == mir_touchscreen_mapping_mode_to_output)
+                touchscreen_ready.raise();
+        });
+
     auto config = mir_connection_create_input_config(client.connection);
     auto touchscreen = get_mutable_device_with_capabilities(config,
                                                             mir_input_device_capability_touchscreen|
@@ -1583,6 +1605,7 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_mapped_to_deactivated_output_i
             mir_input_config_release(config);
         });
 
+    EXPECT_TRUE(touchscreen_ready.wait_for(10s));
     ON_CALL(client, handle_input(mt::TouchEvent(expected_x, expected_y)))
         .WillByDefault(mt::WakeUp(&client.all_events_received));
     fake_touch_screen->emit_event(mis::a_touch_event()

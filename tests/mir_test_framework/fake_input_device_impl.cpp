@@ -110,10 +110,19 @@ void mtf::FakeInputDeviceImpl::emit_touch_sequence(std::function<mir::input::syn
         });
 }
 
+void mtf::FakeInputDeviceImpl::on_new_configuration_do(std::function<void(mir::input::InputDevice const& device)> callback)
+{
+    device->set_apply_settings_callback(callback);
+}
+void mtf::FakeInputDeviceImpl::InputDevice::set_apply_settings_callback(std::function<void(mir::input::InputDevice const&)> const& callback)
+{
+    std::lock_guard<std::mutex> lock(config_callback_mutex);
+    this->callback = callback;
+}
 
 mtf::FakeInputDeviceImpl::InputDevice::InputDevice(mi::InputDeviceInfo const& info,
                                                    std::shared_ptr<mir::dispatch::Dispatchable> const& dispatchable)
-    : info(info), queue{dispatchable}, buttons{0}
+    : info(info), queue{dispatchable}, buttons{0}, callback([](mir::input::InputDevice const&){})
 {
     // the default setup results in a direct mapping of input velocity to output velocity.
     settings.acceleration = mir_pointer_acceleration_none;
@@ -241,6 +250,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::PointerSettings c
     if (!contains(info.capabilities, mi::DeviceCapability::pointer))
         return;
     this->settings = settings;
+    trigger_callback();
 }
 
 mir::optional_value<mi::TouchpadSettings> mtf::FakeInputDeviceImpl::InputDevice::get_touchpad_settings() const
@@ -256,6 +266,17 @@ void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::TouchpadSettings 
 {
     // Not applicable for configuration since FakeInputDevice just
     // forwards already interpreted events.
+    trigger_callback();
+}
+
+void mtf::FakeInputDeviceImpl::InputDevice::trigger_callback() const
+{
+    decltype(callback) stored_callback;
+    {
+        std::lock_guard<std::mutex> lock(config_callback_mutex);
+        stored_callback = callback;
+    }
+    stored_callback(*this);
 }
 
 mir::optional_value<mi::TouchscreenSettings> mtf::FakeInputDeviceImpl::InputDevice::get_touchscreen_settings() const
@@ -273,6 +294,8 @@ void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::TouchscreenSettin
     if (!contains(info.capabilities, mi::DeviceCapability::touchscreen))
         return;
     this->touchscreen = new_settings;
+
+    trigger_callback();
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, float& y)
