@@ -321,6 +321,16 @@ mgmh::EGLHelper::EGLHelper(GLConfig const& gl_config)
 {
 }
 
+mgmh::EGLHelper::EGLHelper(
+    GLConfig const& gl_config,
+    GBMHelper const& gbm,
+    gbm_surface* surface,
+    EGLContext shared_context)
+    : EGLHelper(gl_config)
+{
+    setup(gbm, surface, shared_context);
+}
+
 void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 {
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
