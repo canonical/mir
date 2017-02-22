@@ -613,4 +613,8 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
     mir_keyboard_event_key_text;
     mir_output_get_logical_width;
     mir_output_get_logical_height;
+    mir_create_freestyle_window_spec;
+    mir_create_gloss_window_spec;
+    mir_create_satellite_window_spec;
+    mir_create_utility_window_spec;
 } MIR_CLIENT_0.26.1;
