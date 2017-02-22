@@ -481,3 +481,13 @@ void mie::LibInputDevice::apply_settings(mi::TouchpadSettings const& settings)
                                                                  LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED :
                                                                  LIBINPUT_CONFIG_MIDDLE_EMULATION_DISABLED);
 }
+
+mir::optional_value<mi::TouchscreenSettings> mie::LibInputDevice::get_touchscreen_settings() const
+{
+    return touchscreen;
+}
+
+void mie::LibInputDevice::apply_settings(mi::TouchscreenSettings const& settings)
+{
+    touchscreen = settings;
+}

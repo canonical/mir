@@ -170,6 +170,21 @@ void mir_window_spec_set_cursor_render_surface(
     int hotspot_x, int hotspot_y)
 __attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
+/**
+ * Returns a new cursor configuration tied to a given render surface.
+ * If the configuration is successfully applied buffers from the surface
+ * will be used to fill the system cursor.
+ *    \param [in] surface      The render surface
+ *    \param [in] hotspot_x The x-coordinate to use as the cursor's hotspot.
+ *    \param [in] hotspot_y The y-coordinate to use as the cursor's hotspot.
+ *    \return A cursor parameters object which must be passed
+ *            to_mir_cursor_configuration_destroy
+ */
+MirCursorConfiguration* mir_cursor_configuration_from_render_surface(
+    MirRenderSurface* surface,
+    int hotspot_x, int hotspot_y)
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+
 #pragma GCC diagnostic pop
 
 #ifdef __cplusplus

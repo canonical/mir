@@ -584,6 +584,34 @@ struct ClientWithAPaintedSurfaceAndABufferStream : virtual Client, ClientWithAPa
     MirBufferStream* const buffer_stream;
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+struct ClientWithAPaintedWindowAndASurface : virtual Client, ClientWithAPaintedSurface
+{
+    ClientWithAPaintedWindowAndASurface(NestedMirRunner& nested_mir) :
+        Client(nested_mir),
+        ClientWithAPaintedSurface(nested_mir),
+        surface(mir_connection_create_render_surface_sync(
+            connection,
+            cursor_size, cursor_size)),
+        buffer_stream(mir_render_surface_get_buffer_stream(
+            surface,
+            cursor_size, cursor_size,
+            mir_pixel_format_argb_8888))
+    {
+        mir_buffer_stream_swap_buffers_sync(buffer_stream);
+    }
+
+    ~ClientWithAPaintedWindowAndASurface()
+    {
+        mir_render_surface_release(surface);
+    }
+
+    MirRenderSurface* const surface;
+    MirBufferStream* const buffer_stream;
+};
+#pragma GCC diagnostic pop
+
 struct ClientWithADisplayChangeCallbackAndAPaintedSurface : virtual Client, ClientWithADisplayChangeCallback, ClientWithAPaintedSurface
 {
     ClientWithADisplayChangeCallbackAndAPaintedSurface(NestedMirRunner& nested_mir, MirDisplayConfigCallback callback, void* context) :
@@ -887,6 +915,53 @@ TEST_F(NestedServer, animated_cursor_image_changes_are_forwarded_to_host)
     }
     Mock::VerifyAndClearExpectations(mock_cursor.get());
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+TEST_F(NestedServer, animated_cursor_image_changes_from_surface_are_forwarded_to_host)
+{
+    int const frames = 10;
+    NestedMirRunner nested_mir{new_connection()};
+
+    ClientWithAPaintedWindowAndASurface client(nested_mir);
+    nested_mir.wait_until_surface_ready(client.window);
+
+    auto const mock_cursor = the_mock_cursor();
+
+    server.the_cursor_listener()->cursor_moved_to(489, 9);
+
+    // FIXME: In this test setup the software cursor will trigger scene_changed() on show(...).
+    // Thus a new frame will be composed. Then a "FramePostObserver" in basic_surface.cpp will
+    // react to the frame_posted callback by setting the cursor buffer again via show(..)
+    // The number of show calls depends solely on scheduling decisions
+    EXPECT_CALL(*mock_cursor, show(_)).Times(AtLeast(frames))
+        .WillRepeatedly(InvokeWithoutArgs(
+                    [&]
+                    {
+                        condition.raise();
+                        test_processed_result.wait_for(timeout);
+                        test_processed_result.reset();
+                    }));
+
+    auto conf = mir_cursor_configuration_from_render_surface(client.surface, 0, 0);
+    mir_window_configure_cursor(client.window, conf);
+    mir_cursor_configuration_destroy(conf);
+
+    EXPECT_TRUE(condition.wait_for(long_timeout));
+    condition.reset();
+    test_processed_result.raise();
+
+    for (int i = 0; i != frames; ++i)
+    {
+        mir_buffer_stream_swap_buffers_sync(client.buffer_stream);
+
+        EXPECT_TRUE(condition.wait_for(timeout));
+        condition.reset();
+        test_processed_result.raise();
+    }
+    Mock::VerifyAndClearExpectations(mock_cursor.get());
+}
+#pragma GCC diagnostic pop
 
 TEST_F(NestedServer, named_cursor_image_changes_are_forwarded_to_host)
 {

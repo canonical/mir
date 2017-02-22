@@ -376,6 +376,7 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_render_surface_release;
     mir_window_spec_add_render_surface;
     mir_window_spec_set_cursor_render_surface;
+    mir_cursor_configuration_from_render_surface;
 
     #private functions needed temporarily by nested passthrough
     #should not be published along with the rest of the NBS symbols
@@ -609,7 +610,17 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
     mir_connection_apply_session_input_config;
     mir_connection_set_base_input_config;
     mir_get_client_api_version;
+    mir_input_device_get_keyboard_config;
+    mir_input_device_get_mutable_keyboard_config;
+    mir_keyboard_config_get_keymap_layout;
+    mir_keyboard_config_get_keymap_model;
+    mir_keyboard_config_get_keymap_options;
+    mir_keyboard_config_get_keymap_variant;
+    mir_keyboard_config_set_keymap_layout;
+    mir_keyboard_config_set_keymap_model;
+    mir_keyboard_config_set_keymap_options;
+    mir_keyboard_config_set_keymap_variant;
     mir_keyboard_event_key_text;
-    mir_output_get_logical_width;
     mir_output_get_logical_height;
+    mir_output_get_logical_width;
 } MIR_CLIENT_0.26.1;
