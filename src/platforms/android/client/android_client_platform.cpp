@@ -180,11 +180,17 @@ void create_buffer(
     unsigned int hal_pixel_format,
     unsigned int gralloc_usage_flags,
     MirBufferCallback available_callback, void* available_context)
+try
 {
     auto context = mcl::to_client_context(connection);
     context->allocate_buffer(
         mir::geometry::Size{width, height}, hal_pixel_format, gralloc_usage_flags,
         available_callback, available_context); 
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    available_callback(nullptr, available_context);
 }
 
 MirBuffer* create_buffer_sync(
@@ -192,6 +198,7 @@ MirBuffer* create_buffer_sync(
     int width, int height,
     unsigned int hal_pixel_format,
     unsigned int gralloc_usage_flags)
+try
 {
     struct BufferSync
     {
@@ -219,76 +226,120 @@ MirBuffer* create_buffer_sync(
         &sync);
     return sync.wait_for_buffer();
 }
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
 
-bool is_android_compatible(MirBuffer* b)
+ANativeWindowBuffer* to_anwb(MirBuffer* b)
 {
     if (!b)
         std::abort();
     auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    return dynamic_cast<mga::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    auto native = dynamic_cast<mga::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    if (!native)
+        return nullptr;
+    return native->anwb();
+}
+
+bool is_android_compatible(MirBuffer* b)
+try
+{
+    return to_anwb(b);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
 }
 
 void android_native_handle(
     MirBuffer* b,
     int* num_fds, int const** fds,
     int* num_data, int const** data)
+try
 {
-    if (!b || !num_fds || !fds || !num_data || !data)
+    auto anwb = to_anwb(b);
+    if (!anwb)
+        BOOST_THROW_EXCEPTION(std::runtime_error("MirBuffer is not android compatible cannot get native handle"));
+    if (!num_fds || !fds || !num_data || !data)
         std::abort();
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
-    auto handle = native->anwb()->handle;
-    printf("hrmo %i %i\n", handle->numFds, handle->numInts);
+
+    auto handle = anwb->handle;
     *num_fds = handle->numFds;
     *num_data = handle->numInts;
     *fds = handle->data;
     *data = handle->data + handle->numFds;
 }
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
 
 unsigned int hal_pixel_format(MirBuffer* b)
+try
 {
-    if (!b)
-        std::abort();
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
-    return native->anwb()->format; 
+    if (auto anwb = to_anwb(b))
+        return anwb->format;
+    BOOST_THROW_EXCEPTION(std::runtime_error("MirBuffer is not android compatible cannot get hal format"));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return std::numeric_limits<unsigned int>::max();
 }
 
 unsigned int gralloc_usage(MirBuffer* b)
+try
 {
-    if (!b)
-        std::abort();
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
-    return native->anwb()->usage; 
+    if (auto anwb = to_anwb(b))
+        return anwb->usage; 
+    BOOST_THROW_EXCEPTION(std::runtime_error("MirBuffer is not android compatible cannot get usage"));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return std::numeric_limits<unsigned int>::max();
 }
 
 unsigned int android_stride(MirBuffer* b)
+try
 {
-    if (!b)
-        std::abort();
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
-    return native->anwb()->stride; 
+    if (auto anwb = to_anwb(b))
+        return anwb->stride;
+    BOOST_THROW_EXCEPTION(std::runtime_error("MirBuffer is not android compatible cannot get stride"));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return std::numeric_limits<unsigned int>::max();
 }
 
 void incref(MirBuffer* b)
+try
 {
-    if (!b)
-        std::abort();
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
-    native->anwb()->incStrong(native->anwb());
+    if (auto anwb = to_anwb(b))
+        anwb->incStrong(anwb);
+    BOOST_THROW_EXCEPTION(std::runtime_error("MirBuffer is not android compatible cannot incref"));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 void decref(MirBuffer* b)
+try
 {
-    if (!b)
-        std::abort();
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
-    native->anwb()->decStrong(native->anwb());
+    if (auto anwb = to_anwb(b))
+        anwb->decStrong(anwb);
+    BOOST_THROW_EXCEPTION(std::runtime_error("MirBuffer is not android compatible cannot decref"));
 }
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirBufferStream* get_hw_stream(
