@@ -181,11 +181,6 @@ void mc::Stream::transition_schedule(
     arbiter->set_schedule(schedule);
 }
 
-void mc::Stream::drop_outstanding_requests()
-{
-    //we dont block any requests in this system, nothing to force
-}
-
 int mc::Stream::buffers_ready_for_compositor(void const* id) const
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 
@@ -241,4 +236,19 @@ void mc::Stream::drop_frame()
 {
     if (schedule->num_scheduled() > 1)
         buffers->send_buffer(schedule->next_buffer()->id());
+}
+
+bool mc::Stream::suitable_for_cursor() const
+{
+    if (associated_buffers.empty())
+    {
+        return true;
+    }
+    else
+    {
+        for (auto it : associated_buffers)
+            if ((*buffers)[it]->pixel_format() != mir_pixel_format_argb_8888)
+                return false;
+    }
+    return true;
 }

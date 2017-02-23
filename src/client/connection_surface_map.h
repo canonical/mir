@@ -50,10 +50,10 @@ public:
     void erase(int buffer_id) override;
     std::shared_ptr<MirBuffer> buffer(int buffer_id) const override;
 
+    void erase(void* render_surface_key);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     void insert(void* render_surface_key, std::shared_ptr<MirRenderSurface> const& render_surface);
-    void erase(void* render_surface_key);
     std::shared_ptr<MirRenderSurface> render_surface(void* render_surface_key) const;
 #pragma GCC diagnostic pop
 private:

@@ -37,10 +37,6 @@ std::string mtd::StubSession::name() const
     return {};
 }
 
-void mtd::StubSession::drop_outstanding_requests()
-{
-}
-
 pid_t mtd::StubSession::process_id() const
 {
     return pid;

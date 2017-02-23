@@ -17,9 +17,11 @@
  *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include "mir/graphics/gl_format.h"
 #include "shm_file.h"
 #include "shm_buffer.h"
 #include "buffer_texture_binder.h"
+
 #include MIR_SERVER_GL_H
 #include MIR_SERVER_GLEXT_H
 
@@ -34,9 +36,7 @@ namespace mg=mir::graphics;
 namespace mgc = mir::graphics::common;
 namespace geom = mir::geometry;
 
-namespace {
-
-bool get_gl_pixel_format(MirPixelFormat mir_format,
+bool mg::get_gl_pixel_format(MirPixelFormat mir_format,
                          GLenum& gl_format, GLenum& gl_type)
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
@@ -84,12 +84,10 @@ bool get_gl_pixel_format(MirPixelFormat mir_format,
     return gl_format != GL_INVALID_ENUM && gl_type != GL_INVALID_ENUM;
 }
 
-} // anonymous namespace
-
 bool mgc::ShmBuffer::supports(MirPixelFormat mir_format)
 {
     GLenum gl_format, gl_type;
-    return get_gl_pixel_format(mir_format, gl_format, gl_type);
+    return mg::get_gl_pixel_format(mir_format, gl_format, gl_type);
 }
 
 mgc::ShmBuffer::ShmBuffer(
@@ -127,7 +125,7 @@ void mgc::ShmBuffer::gl_bind_to_texture()
 {
     GLenum format, type;
 
-    if (get_gl_pixel_format(pixel_format_, format, type))
+    if (mg::get_gl_pixel_format(pixel_format_, format, type))
     {
         /*
          * All existing Mir logic assumes that strides are whole multiples of
