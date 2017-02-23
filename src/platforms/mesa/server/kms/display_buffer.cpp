@@ -120,7 +120,6 @@ void ensure_egl_image_extensions()
 
 mgm::DisplayBuffer::DisplayBuffer(
     mgm::BypassOption option,
-    std::shared_ptr<helpers::DRMHelper> const& drm,
     std::shared_ptr<DisplayReport> const& listener,
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     GBMOutputSurface&& surface_gbm,
@@ -128,7 +127,6 @@ mgm::DisplayBuffer::DisplayBuffer(
     MirOrientation rot)
     : listener(listener),
       bypass_option(option),
-      drm(drm),
       outputs(outputs),
       surface{std::move(surface_gbm)},
       area(area),

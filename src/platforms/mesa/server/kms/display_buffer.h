@@ -97,7 +97,6 @@ class DisplayBuffer : public graphics::DisplayBuffer,
 {
 public:
     DisplayBuffer(BypassOption bypass_options,
-                  std::shared_ptr<helpers::DRMHelper> const& drm,
                   std::shared_ptr<DisplayReport> const& listener,
                   std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                   GBMOutputSurface&& surface_gbm,
@@ -133,8 +132,7 @@ private:
     DRMFB* bypass_bufobj{nullptr};
     std::shared_ptr<DisplayReport> const listener;
     BypassOption bypass_option;
-    /* DRM helper from mgm::Platform */
-    std::shared_ptr<helpers::DRMHelper> const drm;
+
     std::vector<std::shared_ptr<KMSOutput>> outputs;
 
     /*

@@ -149,7 +149,6 @@ TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
 {
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -163,7 +162,6 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_is_held_for_full_frame)
 {
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -188,7 +186,6 @@ TEST_F(MesaDisplayBufferTest, predictive_bypass_is_throttled)
 {
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -215,7 +212,6 @@ TEST_F(MesaDisplayBufferTest, frames_requiring_gl_are_not_throttled)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -236,7 +232,6 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_only_referenced_once_by_db)
 {
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -258,7 +253,6 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass
 {
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -277,7 +271,6 @@ TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -303,7 +296,6 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -317,7 +309,6 @@ TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
 {
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -336,7 +327,6 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_cannot_bypass)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -355,7 +345,6 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -375,7 +364,6 @@ TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -396,7 +384,6 @@ TEST_F(MesaDisplayBufferTest, clone_mode_first_flip_flips_but_no_wait)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output, mock_kms_output},
         make_output_surface(),
@@ -416,7 +403,6 @@ TEST_F(MesaDisplayBufferTest, single_mode_first_post_flips_with_wait)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -444,7 +430,6 @@ TEST_F(MesaDisplayBufferTest, clone_mode_waits_for_page_flip_on_second_flip)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output, mock_kms_output},
         make_output_surface(),
@@ -467,7 +452,6 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_list)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),
@@ -493,7 +477,6 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
         null_display_report(),
         {mock_kms_output},
         make_output_surface(),

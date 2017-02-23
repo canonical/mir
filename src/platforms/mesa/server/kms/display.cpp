@@ -420,7 +420,6 @@ void mgm::Display::configure_locked(
 
                 std::unique_ptr<DisplayBuffer> db{
                     new DisplayBuffer{bypass_option,
-                    drm,
                     listener,
                     kms_outputs,
                     GBMOutputSurface{
