@@ -415,17 +415,22 @@ void mgm::Display::configure_locked(
 
                 auto surface = gbm->create_scanout_surface(width, height);
 
+                helpers::EGLHelper egl{*gl_config};
+                egl.setup(*gbm, surface.get(), shared_egl.context());
+
                 std::unique_ptr<DisplayBuffer> db{
                     new DisplayBuffer{bypass_option,
                     drm,
-                    gbm,
                     listener,
                     kms_outputs,
-                    std::move(surface),
+                    GBMOutputSurface{
+                        drm->fd,
+                        std::move(surface),
+                        width, height,
+                        std::move(egl)
+                    },
                     bounding_rect,
-                    orientation,
-                    *gl_config,
-                    shared_egl.context()}};
+                    orientation}};
 
                 display_buffers_new.push_back(std::move(db));
             }

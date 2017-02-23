@@ -108,6 +108,7 @@ public:
         gbm_surface* surface,
         EGLContext shared_context);
     ~EGLHelper() noexcept;
+    EGLHelper(EGLHelper&& from);
 
     EGLHelper(const EGLHelper&) = delete;
     EGLHelper& operator=(const EGLHelper&) = delete;

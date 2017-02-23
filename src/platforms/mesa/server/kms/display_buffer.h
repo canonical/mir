@@ -43,6 +43,7 @@ namespace mesa
 class Platform;
 class DRMFB;
 class KMSOutput;
+class NativeBuffer;
 
 class GBMFrontBuffer
 {
@@ -63,6 +64,32 @@ private:
     gbm_bo* const bo;
 };
 
+class GBMOutputSurface : public renderer::gl::RenderTarget
+{
+public:
+    GBMOutputSurface(
+        int drm_fd,
+        GBMSurfaceUPtr&& surface,
+        uint32_t width,
+        uint32_t height,
+        helpers::EGLHelper&& egl);
+    GBMOutputSurface(GBMOutputSurface&& from);
+
+    // gl::RenderTarget
+    void make_current() override;
+    void release_current() override;
+    void swap_buffers() override;
+    void bind() override;
+
+    GBMFrontBuffer lock_front();
+    void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> const& to);
+private:
+    int const drm_fd;
+    uint32_t width, height;
+    helpers::EGLHelper egl;
+    GBMSurfaceUPtr surface;
+};
+
 class DisplayBuffer : public graphics::DisplayBuffer,
                       public graphics::DisplaySyncGroup,
                       public graphics::NativeDisplayBuffer,
@@ -71,14 +98,11 @@ class DisplayBuffer : public graphics::DisplayBuffer,
 public:
     DisplayBuffer(BypassOption bypass_options,
                   std::shared_ptr<helpers::DRMHelper> const& drm,
-                  std::shared_ptr<helpers::GBMHelper> const& gbm,
                   std::shared_ptr<DisplayReport> const& listener,
                   std::vector<std::shared_ptr<KMSOutput>> const& outputs,
-                  GBMSurfaceUPtr surface_gbm,
+                  GBMOutputSurface&& surface_gbm,
                   geometry::Rectangle const& area,
-                  MirOrientation rot,
-                  GLConfig const& gl_config,
-                  EGLContext shared_context);
+                  MirOrientation rot);
     ~DisplayBuffer();
 
     geometry::Rectangle view_area() const override;
@@ -113,7 +137,6 @@ private:
     BypassOption bypass_option;
     /* DRM helper from mgm::Platform */
     std::shared_ptr<helpers::DRMHelper> const drm;
-    std::shared_ptr<helpers::GBMHelper> const gbm;
     std::vector<std::shared_ptr<KMSOutput>> outputs;
 
     /*
@@ -121,8 +144,7 @@ private:
      *  - The GBM surface depends on EGL
      *  - The GBMFrontBuffers depend on the GBM surface
      */
-    helpers::EGLHelper egl;
-    GBMSurfaceUPtr surface_gbm;
+    GBMOutputSurface surface;
     GBMFrontBuffer visible_composite_frame;
     GBMFrontBuffer scheduled_composite_frame;
 
