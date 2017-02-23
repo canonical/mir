@@ -125,10 +125,8 @@ public:
     void wait_for_page_flip();
 
 private:
-    DRMFB* get_drm_fb(GBMFrontBuffer& bo);
-    DRMFB* get_buffer_object(struct gbm_bo *bo);
-    bool schedule_page_flip(DRMFB* bufobj);
-    void set_crtc(DRMFB const*);
+    bool schedule_page_flip(DRMFB const& bufobj);
+    void set_crtc(DRMFB const&);
 
     std::shared_ptr<graphics::Buffer> visible_bypass_frame, scheduled_bypass_frame;
     std::shared_ptr<Buffer> bypass_buf{nullptr};

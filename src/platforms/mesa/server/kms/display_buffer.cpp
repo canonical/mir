@@ -102,41 +102,8 @@ mgm::GBMFrontBuffer::operator bool() const
     return (surf != nullptr) && (bo != nullptr);
 }
 
-class mgm::DRMFB
-{
-public:
-    DRMFB(gbm_bo* bo, uint32_t drm_fb_id)
-        : bo{bo}, drm_fb_id{drm_fb_id}
-    {
-    }
-
-    ~DRMFB()
-    {
-        if (drm_fb_id)
-        {
-            int drm_fd = gbm_device_get_fd(gbm_bo_get_device(bo));
-            drmModeRmFB(drm_fd, drm_fb_id);
-        }
-    }
-
-    uint32_t get_drm_fb_id() const
-    {
-        return drm_fb_id;
-    }
-
-private:
-    gbm_bo *bo;
-    uint32_t drm_fb_id;
-};
-
 namespace
 {
-
-void bo_user_data_destroy(gbm_bo* /*bo*/, void *data)
-{
-    auto bufobj = static_cast<mgm::DRMFB*>(data);
-    delete bufobj;
-}
 
 void ensure_egl_image_extensions()
 {
@@ -200,7 +167,7 @@ mgm::DisplayBuffer::DisplayBuffer(
     if (!visible_composite_frame)
         fatal_error("Failed to get frontbuffer");
 
-    set_crtc(get_drm_fb(visible_composite_frame));
+    set_crtc(*outputs.front()->fb_for(visible_composite_frame, fb_width, fb_height));
 
     release_current();
 
@@ -250,7 +217,7 @@ bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
             if (native->flags & mir_buffer_flag_can_scanout &&
                 bypass_buffer->size() == geom::Size{fb_width,fb_height})
             {
-                if (auto bufobj = get_buffer_object(native->bo))
+                if (auto bufobj = outputs.front()->fb_for(native->bo, fb_width, fb_height))
                 {
                     bypass_buf = bypass_buffer;
                     bypass_bufobj = bufobj;
@@ -278,7 +245,7 @@ void mgm::DisplayBuffer::swap_buffers()
     bypass_bufobj = nullptr;
 }
 
-void mgm::DisplayBuffer::set_crtc(DRMFB const* forced_frame)
+void mgm::DisplayBuffer::set_crtc(DRMFB const& forced_frame)
 {
     for (auto& output : outputs)
     {
@@ -289,7 +256,7 @@ void mgm::DisplayBuffer::set_crtc(DRMFB const* forced_frame)
          * sometimes it's really not there). Xorg often reports similar
          * errors, and it's not fatal.
          */
-        if (!output->set_crtc(forced_frame->get_drm_fb_id()))
+        if (!output->set_crtc(forced_frame))
             mir::log_error("Failed to set DRM CRTC. "
                 "Screen contents may be incomplete. "
                 "Try plugging the monitor in again.");
@@ -314,7 +281,7 @@ void mgm::DisplayBuffer::post()
     else
     {
         scheduled_composite_frame = surface.lock_front();
-        bufobj = get_drm_fb(scheduled_composite_frame);
+        bufobj = outputs.front()->fb_for(scheduled_composite_frame, fb_width, fb_height);
         if (!bufobj)
             fatal_error("Failed to get front buffer object");
     }
@@ -323,7 +290,7 @@ void mgm::DisplayBuffer::post()
      * Try to schedule a page flip as first preference to avoid tearing.
      * [will complete in a background thread]
      */
-    if (!needs_set_crtc && !schedule_page_flip(bufobj))
+    if (!needs_set_crtc && !schedule_page_flip(*bufobj))
         needs_set_crtc = true;
 
     /*
@@ -332,7 +299,7 @@ void mgm::DisplayBuffer::post()
      */
     if (needs_set_crtc)
     {
-        set_crtc(bufobj);
+        set_crtc(*bufobj);
         needs_set_crtc = false;
     }
 
@@ -397,55 +364,7 @@ std::chrono::milliseconds mgm::DisplayBuffer::recommended_sleep() const
     return recommend_sleep;
 }
 
-mgm::DRMFB* mgm::DisplayBuffer::get_drm_fb(GBMFrontBuffer& bo)
-{
-    return get_buffer_object(bo);
-}
-
-mgm::DRMFB* mgm::DisplayBuffer::get_buffer_object(
-    struct gbm_bo *bo)
-{
-    if (!bo)
-        return nullptr;
-
-    /*
-     * Check if we have already set up this gbm_bo (the gbm implementation is
-     * free to reuse gbm_bos). If so, return the associated DRMFB.
-     */
-    auto bufobj = static_cast<DRMFB*>(gbm_bo_get_user_data(bo));
-    if (bufobj)
-        return bufobj;
-
-    uint32_t fb_id{0};
-    uint32_t handles[4] = {gbm_bo_get_handle(bo).u32, 0, 0, 0};
-    uint32_t strides[4] = {gbm_bo_get_stride(bo), 0, 0, 0};
-    uint32_t offsets[4] = {0, 0, 0, 0};
-
-    auto format = gbm_bo_get_format(bo);
-    /*
-     * Mir might use the old GBM_BO_ enum formats, but KMS and the rest of
-     * the world need fourcc formats, so convert...
-     */
-    if (format == GBM_BO_FORMAT_XRGB8888)
-        format = GBM_FORMAT_XRGB8888;
-    else if (format == GBM_BO_FORMAT_ARGB8888)
-        format = GBM_FORMAT_ARGB8888;
-
-    /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB2(drm->fd, fb_width, fb_height, format,
-                             handles, strides, offsets, &fb_id, 0);
-    if (ret)
-        return nullptr;
-
-    /* Create a DRMFB and associate it with the gbm_bo */
-    bufobj = new DRMFB{bo, fb_id};
-    gbm_bo_set_user_data(bo, bufobj, bo_user_data_destroy);
-
-    return bufobj;
-}
-
-
-bool mgm::DisplayBuffer::schedule_page_flip(DRMFB* bufobj)
+bool mgm::DisplayBuffer::schedule_page_flip(DRMFB const& bufobj)
 {
     /*
      * Schedule the current front buffer object for display. Note that
@@ -453,7 +372,7 @@ bool mgm::DisplayBuffer::schedule_page_flip(DRMFB* bufobj)
      */
     for (auto& output : outputs)
     {
-        if (output->schedule_page_flip(bufobj->get_drm_fb_id()))
+        if (output->schedule_page_flip(bufobj))
             page_flips_pending = true;
     }
 

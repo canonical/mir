@@ -35,6 +35,8 @@ namespace graphics
 namespace mesa
 {
 
+class DRMFB;
+
 class KMSOutput
 {
 public:
@@ -52,9 +54,9 @@ public:
      */
     virtual int max_refresh_rate() const = 0;
 
-    virtual bool set_crtc(uint32_t fb_id) = 0;
+    virtual bool set_crtc(DRMFB const& fb) = 0;
     virtual void clear_crtc() = 0;
-    virtual bool schedule_page_flip(uint32_t fb_id) = 0;
+    virtual bool schedule_page_flip(DRMFB const& fb) = 0;
     virtual void wait_for_page_flip() = 0;
 
     virtual bool set_cursor(gbm_bo* buffer) = 0;
@@ -65,6 +67,8 @@ public:
     virtual void set_power_mode(MirPowerMode mode) = 0;
     virtual void set_gamma(GammaCurves const& gamma) = 0;
     virtual Frame last_frame() const = 0;
+
+    virtual DRMFB* fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const = 0;
 
 protected:
     KMSOutput() = default;
