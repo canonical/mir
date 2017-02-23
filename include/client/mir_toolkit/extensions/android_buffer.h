@@ -102,8 +102,8 @@ typedef bool (*MirBufferIsAndroidCompatible)(MirBuffer* buffer);
  */
 typedef void (*MirBufferAndroidNativeHandle)(
     MirBuffer* buffer,
-    int* num_fds, int** fds,
-    int* num_data, int** data);
+    int* num_fds, int const** fds,
+    int* num_data, int const** data);
 
 /** Access the HAL_PIXEL_FORMAT of the buffer
  *   \pre                   The buffer is suitable for android use

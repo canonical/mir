@@ -315,6 +315,8 @@ TEST_F(AndroidClientPlatformTest, can_access_buffer_properties)
     std::shared_ptr<native_handle_t> native(
         static_cast<native_handle*>(::operator new((header_size + num_ints + num_fds) * sizeof(int))),
         [](auto *a) { ::operator delete(a); });
+    native->numInts = num_ints;
+    native->numFds = num_fds;
     for (auto i = 0; i < num_ints + num_fds; i++)
         native->data[i] = i * 31;
 
@@ -324,7 +326,7 @@ TEST_F(AndroidClientPlatformTest, can_access_buffer_properties)
     stub_buffer->stub_anwb.usage = 18;
     stub_buffer->stub_anwb.handle = native.get();
 
-    auto client_buffer = std::make_shared<mtd::MockClientBuffer>();
+    auto client_buffer = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
     ON_CALL(*client_buffer, native_buffer_handle())
         .WillByDefault(Return(stub_buffer));
     Buffer buffer(nullptr, nullptr, 0, client_buffer, nullptr, mir_buffer_usage_hardware);
@@ -344,9 +346,9 @@ TEST_F(AndroidClientPlatformTest, can_access_buffer_properties)
     EXPECT_TRUE(ext->is_android_compatible(b));
     int nints = 0;
     int nfds = 0;
-    int* fds = nullptr;
-    int* data = nullptr;
-    ext->native_handle(b, &num_fds, &fds, &num_ints, &data);
+    int const* fds = nullptr;
+    int const* data = nullptr;
+    ext->native_handle(b, &nfds, &fds, &nints, &data);
     EXPECT_THAT(nints, Eq(num_ints));
     EXPECT_THAT(nfds, Eq(num_fds));
     for (auto i = 0; i < nfds; i++)

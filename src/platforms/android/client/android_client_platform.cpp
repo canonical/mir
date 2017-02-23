@@ -37,7 +37,8 @@
 #include "mir_toolkit/mir_connection.h"
 #include "mir/uncaught.h"
 #include <EGL/egl.h>
-
+#include <mutex>
+#include <condition_variable>
 #include <boost/throw_exception.hpp>
 
 namespace mcl=mir::client;
@@ -186,6 +187,108 @@ void create_buffer(
         available_callback, available_context); 
 }
 
+MirBuffer* create_buffer_sync(
+    MirConnection* connection,
+    int width, int height,
+    unsigned int hal_pixel_format,
+    unsigned int gralloc_usage_flags)
+{
+    struct BufferSync
+    {
+        void set_buffer(MirBuffer* b)
+        {
+            std::unique_lock<decltype(mutex)> lk(mutex);
+            buffer = b;
+            cv.notify_all();
+        }
+
+        MirBuffer* wait_for_buffer()
+        {
+            std::unique_lock<decltype(mutex)> lk(mutex);
+            cv.wait(lk, [this]{ return buffer; });
+            return buffer;
+        }
+    private:
+        std::mutex mutex;
+        std::condition_variable cv;
+        MirBuffer* buffer = nullptr;
+    } sync;
+    
+    create_buffer(connection, width, height, hal_pixel_format, gralloc_usage_flags,
+        [](auto* b, auto* context){ reinterpret_cast<BufferSync*>(context)->set_buffer(b); },
+        &sync);
+    return sync.wait_for_buffer();
+}
+
+bool is_android_compatible(MirBuffer* b)
+{
+    if (!b)
+        std::abort();
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    return dynamic_cast<mga::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+}
+
+void android_native_handle(
+    MirBuffer* b,
+    int* num_fds, int const** fds,
+    int* num_data, int const** data)
+{
+    if (!b || !num_fds || !fds || !num_data || !data)
+        std::abort();
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
+    auto handle = native->anwb()->handle;
+    printf("hrmo %i %i\n", handle->numFds, handle->numInts);
+    *num_fds = handle->numFds;
+    *num_data = handle->numInts;
+    *fds = handle->data;
+    *data = handle->data + handle->numFds;
+}
+
+unsigned int hal_pixel_format(MirBuffer* b)
+{
+    if (!b)
+        std::abort();
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
+    return native->anwb()->format; 
+}
+
+unsigned int gralloc_usage(MirBuffer* b)
+{
+    if (!b)
+        std::abort();
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
+    return native->anwb()->usage; 
+}
+
+unsigned int android_stride(MirBuffer* b)
+{
+    if (!b)
+        std::abort();
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
+    return native->anwb()->stride; 
+}
+
+void incref(MirBuffer* b)
+{
+    if (!b)
+        std::abort();
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
+    native->anwb()->incStrong(native->anwb());
+}
+
+void decref(MirBuffer* b)
+{
+    if (!b)
+        std::abort();
+    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto native = mga::to_native_buffer_checked(buffer->client_buffer()->native_buffer_handle());
+    native->anwb()->decStrong(native->anwb());
+}
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirBufferStream* get_hw_stream(
@@ -210,7 +313,12 @@ mcla::AndroidClientPlatform::AndroidClientPlatform(
     native_display{std::make_shared<EGLNativeDisplayType>(EGL_DEFAULT_DISPLAY)},
     android_types_extension{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb},
     fence_extension{get_fence, associate_fence, wait_for_access},
-    buffer_extension{create_buffer},
+    buffer_extension{
+        create_buffer,
+        create_buffer_sync,
+        is_android_compatible,
+        android_native_handle, hal_pixel_format, gralloc_usage, android_stride,
+        incref, decref},
     hw_stream{get_hw_stream}
 {
 }
@@ -301,7 +409,7 @@ void* mcla::AndroidClientPlatform::request_interface(char const* name, int versi
 {
     if (!strcmp(name, "mir_extension_android_egl") && (version == 1))
         return &android_types_extension;
-    if (!strcmp(name, "mir_extension_android_buffer") && (version == 1))
+    if (!strcmp(name, "mir_extension_android_buffer") && (version <= 2))
         return &buffer_extension;
     if (!strcmp(name, "mir_extension_fenced_buffers") && version == 1)
         return &fence_extension;
