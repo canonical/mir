@@ -504,14 +504,15 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
 
     if (new_egl)
     {
-        surface =
-            mir_connection_create_render_surface_sync(connection, *width, *height);
+        surface = mir_connection_create_render_surface_sync(connection, *width, *height);
         CHECK(mir_render_surface_is_valid(surface), "could not create surface");
         CHECK(mir_render_surface_get_error_message(surface), "");
         mir_window_spec_add_render_surface(spec, surface, *width, *height, 0, 0);
     }
     else
+    {
         mir_window_spec_set_pixel_format(spec, pixel_format);
+    }
 
     char const* name = argv[0];
     for (char const* p = name; *p; p++)
@@ -529,7 +530,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
 
     CHECK(mir_window_is_valid(window), "Can't create a window");
 
-    mir_window_set_event_handler(window, mir_eglapp_handle_event, surface);
+    mir_window_set_event_handler(window, mir_eglapp_handle_event, NULL);
 
     spec = mir_create_window_spec(connection);
     mir_window_spec_set_cursor_name(spec, cursor_name);
@@ -538,8 +539,10 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
 
     if (new_egl)
     {
-        eglsurface =
-            eglCreateWindowSurface(egldisplay, eglconfig, (EGLNativeWindowType)surface, NULL);
+        eglsurface = eglCreateWindowSurface(egldisplay,
+                                            eglconfig,
+                                            (EGLNativeWindowType)surface,
+                                            NULL);
     }
     else
     {
