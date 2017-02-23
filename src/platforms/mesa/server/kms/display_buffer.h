@@ -45,28 +45,30 @@ class DRMFB;
 class KMSOutput;
 class NativeBuffer;
 
-class GBMFrontBuffer
-{
-public:
-    GBMFrontBuffer(gbm_surface* surface);
-    GBMFrontBuffer();
-    ~GBMFrontBuffer();
-
-    GBMFrontBuffer(GBMFrontBuffer&& from);
-
-    GBMFrontBuffer& operator=(GBMFrontBuffer&& from);
-    GBMFrontBuffer& operator=(std::nullptr_t);
-
-    operator gbm_bo*();
-    operator bool() const;
-private:
-    gbm_surface* const surf;
-    gbm_bo* const bo;
-};
-
 class GBMOutputSurface : public renderer::gl::RenderTarget
 {
 public:
+    class FrontBuffer
+    {
+    public:
+        FrontBuffer();
+        ~FrontBuffer();
+
+        FrontBuffer(FrontBuffer&& from);
+
+        FrontBuffer& operator=(FrontBuffer&& from);
+        FrontBuffer& operator=(std::nullptr_t);
+
+        operator gbm_bo*();
+        operator bool() const;
+    private:
+        friend class GBMOutputSurface;
+        FrontBuffer(gbm_surface* surface);
+
+        gbm_surface* const surf;
+        gbm_bo* const bo;
+    };
+
     GBMOutputSurface(
         int drm_fd,
         GBMSurfaceUPtr&& surface,
@@ -81,7 +83,7 @@ public:
     void swap_buffers() override;
     void bind() override;
 
-    GBMFrontBuffer lock_front();
+    FrontBuffer lock_front();
     void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> const& to);
 private:
     int const drm_fd;
@@ -137,12 +139,11 @@ private:
 
     /*
      * Destruction order is important here:
-     *  - The GBM surface depends on EGL
      *  - The GBMFrontBuffers depend on the GBM surface
      */
     GBMOutputSurface surface;
-    GBMFrontBuffer visible_composite_frame;
-    GBMFrontBuffer scheduled_composite_frame;
+    GBMOutputSurface::FrontBuffer visible_composite_frame;
+    GBMOutputSurface::FrontBuffer scheduled_composite_frame;
 
     geometry::Rectangle area;
     uint32_t fb_width, fb_height;

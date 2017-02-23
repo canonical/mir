@@ -39,13 +39,13 @@ namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
-mgm::GBMFrontBuffer::GBMFrontBuffer()
+mgm::GBMOutputSurface::FrontBuffer::FrontBuffer()
     : surf{nullptr},
       bo{nullptr}
 {
 }
 
-mgm::GBMFrontBuffer::GBMFrontBuffer(gbm_surface* surface)
+mgm::GBMOutputSurface::FrontBuffer::FrontBuffer(gbm_surface* surface)
     : surf{surface},
       bo{gbm_surface_lock_front_buffer(surface)}
 {
@@ -55,7 +55,7 @@ mgm::GBMFrontBuffer::GBMFrontBuffer(gbm_surface* surface)
     }
 }
 
-mgm::GBMFrontBuffer::~GBMFrontBuffer()
+mgm::GBMOutputSurface::FrontBuffer::~FrontBuffer()
 {
     if (surf)
     {
@@ -63,7 +63,7 @@ mgm::GBMFrontBuffer::~GBMFrontBuffer()
     }
 }
 
-mgm::GBMFrontBuffer::GBMFrontBuffer(GBMFrontBuffer&& from)
+mgm::GBMOutputSurface::FrontBuffer::FrontBuffer(FrontBuffer&& from)
     : surf{from.surf},
       bo{from.bo}
 {
@@ -71,7 +71,7 @@ mgm::GBMFrontBuffer::GBMFrontBuffer(GBMFrontBuffer&& from)
     const_cast<gbm_bo*&>(from.bo) = nullptr;
 }
 
-auto mgm::GBMFrontBuffer::operator=(GBMFrontBuffer&& from) -> GBMFrontBuffer&
+auto mgm::GBMOutputSurface::FrontBuffer::operator=(FrontBuffer&& from) -> FrontBuffer&
 {
     if (surf)
     {
@@ -87,17 +87,17 @@ auto mgm::GBMFrontBuffer::operator=(GBMFrontBuffer&& from) -> GBMFrontBuffer&
     return *this;
 }
 
-auto mgm::GBMFrontBuffer::operator=(std::nullptr_t) -> GBMFrontBuffer&
+auto mgm::GBMOutputSurface::FrontBuffer::operator=(std::nullptr_t) -> FrontBuffer&
 {
-    return *this = GBMFrontBuffer{};
+    return *this = FrontBuffer{};
 }
 
-mgm::GBMFrontBuffer::operator gbm_bo*()
+mgm::GBMOutputSurface::FrontBuffer::operator gbm_bo*()
 {
     return bo;
 }
 
-mgm::GBMFrontBuffer::operator bool() const
+mgm::GBMOutputSurface::FrontBuffer::operator bool() const
 {
     return (surf != nullptr) && (bo != nullptr);
 }
@@ -473,9 +473,9 @@ void mgm::GBMOutputSurface::bind()
 
 }
 
-auto mgm::GBMOutputSurface::lock_front() -> GBMFrontBuffer
+auto mgm::GBMOutputSurface::lock_front() -> FrontBuffer
 {
-    return GBMFrontBuffer{surface.get()};
+    return FrontBuffer{surface.get()};
 }
 
 void mgm::GBMOutputSurface::report_egl_configuration(
