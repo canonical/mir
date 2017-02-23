@@ -157,7 +157,7 @@ typedef struct MirExtensionAndroidBufferV2
 static inline MirExtensionAndroidBufferV2 const* mir_extension_android_buffer_v2(
     MirConnection* connection)
 {
-    return (MirExtensionAndroidBufferV1 const*) mir_connection_request_extension(
+    return (MirExtensionAndroidBufferV2 const*) mir_connection_request_extension(
         connection, "mir_extension_android_buffer", 2);
 }
 #ifdef __cplusplus
