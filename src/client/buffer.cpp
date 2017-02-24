@@ -54,6 +54,7 @@ void mcl::Buffer::submitted()
 
 void mcl::Buffer::received()
 {
+    printf("RECEIVED\n");
     {
         std::lock_guard<decltype(mutex)> lk(mutex);
         if (!owned)
@@ -65,6 +66,7 @@ void mcl::Buffer::received()
 
 void mcl::Buffer::received(MirBufferPackage const& update_package)
 {
+    printf("RECEIVE\n");
     {
         std::lock_guard<decltype(mutex)> lk(mutex);
         if (!owned)
@@ -74,7 +76,9 @@ void mcl::Buffer::received(MirBufferPackage const& update_package)
         }
     }
 
+    printf("TRIG CB\n");
     cb();
+    printf("TRIG CB done\n");
 }
     
 MirGraphicsRegion mcl::Buffer::map_region()
@@ -137,5 +141,6 @@ char const* mcl::Buffer::error_message() const
 
 void mcl::Buffer::set_callback(MirBufferCallback callback, void* context)
 {
+    printf("CALLBACK SET %X\n", (int)(long)context);
     cb.set_callback([&, callback, context]{ (*callback)(reinterpret_cast<::MirBuffer*>(this), context); });
 }

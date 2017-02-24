@@ -27,6 +27,7 @@
 #include "mir/geometry/size.h"
 #include "mir/fd.h"
 
+#include <atomic>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -47,9 +48,9 @@ struct Chain
     Chain(Chain const&) = delete;
     Chain& operator=(Chain const&) = delete;
 
-    Chain(MirConnection* connection) :
+    Chain(MirConnection* connection, MirPresentMode mode) :
         rs(mir_connection_create_render_surface_sync(connection, 0, 0)),
-        chain(mir_create_presentation_chain(rs, mir_present_mode_fifo_dropping))
+        chain(mir_create_presentation_chain(rs, mode))
     {
     }
 
@@ -95,8 +96,11 @@ public:
         mir_window_release_sync(window);
     }
 protected:
-    SurfaceWithChain(MirConnection* connection, std::function<MirWindow*(Chain&)> const& fn) :
-        chain_(connection),
+    SurfaceWithChain(
+        MirConnection* connection,
+        MirPresentMode mode,
+        std::function<MirWindow*(Chain&)> const& fn) :
+        chain_(connection, mode),
         window(fn(chain_))
     {
     }
@@ -110,8 +114,10 @@ struct SurfaceWithChainFromStart : SurfaceWithChain
     SurfaceWithChainFromStart(SurfaceWithChainFromStart const&) = delete;
     SurfaceWithChainFromStart& operator=(SurfaceWithChainFromStart const&) = delete;
 
-    SurfaceWithChainFromStart(MirConnection* connection, geom::Size size, MirPixelFormat pf) :
-        SurfaceWithChain(connection,
+    SurfaceWithChainFromStart(
+        MirConnection* connection, MirPresentMode mode,
+        geom::Size size, MirPixelFormat pf) :
+        SurfaceWithChain(connection, mode,
         std::bind(&SurfaceWithChainFromStart::create_surface, this,
             std::placeholders::_1, connection, size, pf))
     {
@@ -133,13 +139,14 @@ private:
     }
 };
 
+#if 0
 struct SurfaceWithChainFromReassociation : SurfaceWithChain
 {
     SurfaceWithChainFromReassociation(SurfaceWithChainFromReassociation const&) = delete;
     SurfaceWithChainFromReassociation& operator=(SurfaceWithChainFromReassociation const&) = delete;
     SurfaceWithChainFromReassociation(MirConnection* connection, geom::Size size, MirPixelFormat pf) :
         SurfaceWithChain(connection,
-        std::bind(&SurfaceWithChainFromReassociation::create_surface, this,
+        std::bind(&SurfaceWithChainFromReassociation::create_surface, mode, this,
             std::placeholders::_1, connection, size, pf))
     {
     }
@@ -162,7 +169,7 @@ private:
         return window;
     }
 };
-
+#endif
 struct PresentationChain : mtf::ConnectedClientHeadlessServer
 {
     geom::Size const size {100, 20};
@@ -239,7 +246,7 @@ TEST_F(PresentationChain, supported_modes)
 
 TEST_F(PresentationChain, allocation_calls_callback)
 {
-    SurfaceWithChainFromStart window(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
 
     MirBufferSync context;
     mir_connection_allocate_buffer(
@@ -253,7 +260,7 @@ TEST_F(PresentationChain, allocation_calls_callback)
 
 TEST_F(PresentationChain, can_access_platform_message_representing_buffer)
 {
-    SurfaceWithChainFromStart window(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
 
     MirBufferSync context;
     mir_connection_allocate_buffer(
@@ -275,7 +282,7 @@ TEST_F(PresentationChain, can_access_platform_message_representing_buffer)
 
 TEST_F(PresentationChain, has_native_fence)
 {
-    SurfaceWithChainFromStart window(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
 
     auto ext = mir_extension_fenced_buffers_v1(connection);
     ASSERT_THAT(ext, Ne(nullptr));
@@ -297,7 +304,7 @@ TEST_F(PresentationChain, has_native_fence)
 
 TEST_F(PresentationChain, can_map_for_cpu_render)
 {
-    SurfaceWithChainFromStart window(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
 
     MirGraphicsRegion region;
     MirBufferLayout region_layout = mir_buffer_layout_unknown;
@@ -323,7 +330,7 @@ TEST_F(PresentationChain, can_map_for_cpu_render)
 
 TEST_F(PresentationChain, submission_will_eventually_call_callback)
 {
-    SurfaceWithChainFromStart window(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
 
     auto const num_buffers = 2u;
     std::array<MirBufferSync, num_buffers> contexts;
@@ -354,7 +361,7 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback)
 
 TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
 {
-    SurfaceWithChainFromStart window(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
 
     MirBufferSync context;
     auto buffer = mir_connection_allocate_buffer_sync(
@@ -366,7 +373,7 @@ TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
 
 TEST_F(PresentationChain, buffers_can_be_flushed)
 {
-    SurfaceWithChainFromStart window(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping,size, pf);
 
     auto buffer = mir_connection_allocate_buffer_sync(
         connection, size.width.as_int(), size.height.as_int(), pf);
@@ -426,7 +433,7 @@ TEST_F(PresentationChain, can_access_basic_buffer_properties)
     geom::Height height { 33 };
     auto format = mir_pixel_format_abgr_8888;
 
-    SurfaceWithChainFromStart window(connection, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
     auto buffer = mir_connection_allocate_buffer_sync(
         connection, width.as_int(), height.as_int(), format);
     EXPECT_THAT(mir_buffer_get_width(buffer), Eq(width.as_uint32_t()));
@@ -451,3 +458,87 @@ TEST_F(PresentationChain, can_check_invalid_buffers)
     EXPECT_THAT(mir_buffer_get_error_message(buffer), Not(StrEq("")));
     mir_buffer_release(buffer);
 }
+
+namespace
+{
+    struct TrackedBuffer
+    {
+        TrackedBuffer(MirConnection* connection, std::atomic<unsigned int>& counter) :
+            buffer(mir_connection_allocate_buffer_sync(connection, 100, 100, pf)),
+            counter(counter)
+        {
+        }
+        ~TrackedBuffer()
+        {
+            mir_buffer_release(buffer);
+        }
+
+        void submit_to(MirPresentationChain* chain)
+        {
+            std::unique_lock<std::mutex> lk(mutex);
+            printf("SUBMITTY\n");
+            if (!avail)
+                throw std::runtime_error("test problem");
+            avail = false;
+            mir_presentation_chain_submit_buffer(chain, buffer, tavailable, this);
+        }
+
+        static void tavailable(MirBuffer*, void* ctxt)
+        {
+            printf("AVAILABLE...\n");
+            TrackedBuffer* buf = reinterpret_cast<TrackedBuffer*>(ctxt);
+            buf->ready();
+        }
+
+        void ready()
+        {
+            last_count_ = counter.fetch_add(1);
+            std::unique_lock<std::mutex> lk(mutex);
+            avail = true;
+            cv.notify_all();
+        }
+
+        bool wait_ready(std::chrono::milliseconds ms)
+        {
+            std::unique_lock<std::mutex> lk(mutex);
+            return cv.wait_for(lk, ms, [this] { return avail; });
+        }
+
+        bool is_ready() { return avail; }
+        unsigned int last_count() const
+        {
+            return last_count_;
+        }
+ 
+        MirPixelFormat pf = mir_pixel_format_abgr_8888;
+        MirBuffer* buffer;
+        std::atomic<unsigned int>& counter;
+        unsigned int last_count_ = 0u;
+        bool avail = true;
+        std::condition_variable cv;
+        std::mutex mutex;
+    };
+}
+
+TEST_F(PresentationChain, fifo_dropping_looks_correct_from_client_perspective_no_drops)
+{
+    SurfaceWithChainFromStart window(
+        connection, mir_present_mode_fifo_dropping,size, pf);
+
+    int const num_buffers = 5;
+
+    std::atomic<unsigned int> counter{ 0u };
+    std::array<std::unique_ptr<TrackedBuffer>, num_buffers> buffers;
+    for (auto& buffer : buffers)
+        buffer = std::make_unique<TrackedBuffer>(connection, counter);
+    for(auto& b : buffers)
+        b->submit_to(window.chain());
+
+    //the last one that will return;
+    EXPECT_TRUE(buffers[3]->wait_ready(5s));
+    EXPECT_THAT(buffers[0]->last_count(), Lt(buffers[1]->last_count()));
+    EXPECT_THAT(buffers[1]->last_count(), Lt(buffers[2]->last_count()));
+    EXPECT_THAT(buffers[2]->last_count(), Lt(buffers[3]->last_count()));
+    EXPECT_FALSE(buffers[4]->is_ready());
+}
+
