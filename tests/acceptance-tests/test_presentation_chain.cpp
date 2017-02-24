@@ -143,12 +143,6 @@ private:
 
 struct PresentationChain : mtf::ConnectedClientHeadlessServer
 {
-    void SetUp()
-    {
-//        server.override_the_display_buffer_compositor_factory(
-//            [] { return std::make_shared<mtd::NullDisplayBufferCompositorFactory>(); } );
-        mtf::ConnectedClientHeadlessServer::SetUp();
-    }
     geom::Size const size {100, 20};
     MirPixelFormat const pf = mir_pixel_format_abgr_8888;
 };
@@ -209,12 +203,10 @@ void buffer_callback(MirBuffer* buffer, void* context)
 TEST_F(PresentationChain, supported_modes)
 {
     EXPECT_TRUE(mir_connection_present_mode_supported(
-        connection, mir_present_mode_fifo_dropping));
+        connection, mir_present_mode_fifo));
     EXPECT_TRUE(mir_connection_present_mode_supported(
         connection, mir_present_mode_mailbox));
     //TODOs: 
-    EXPECT_FALSE(mir_connection_present_mode_supported(
-        connection, mir_present_mode_fifo));
     EXPECT_FALSE(mir_connection_present_mode_supported(
         connection, mir_present_mode_fifo_relaxed));
     EXPECT_FALSE(mir_connection_present_mode_supported(
@@ -223,7 +215,7 @@ TEST_F(PresentationChain, supported_modes)
 
 TEST_F(PresentationChain, allocation_calls_callback)
 {
-    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo, size, pf);
 
     MirBufferSync context;
     mir_connection_allocate_buffer(
@@ -237,7 +229,7 @@ TEST_F(PresentationChain, allocation_calls_callback)
 
 TEST_F(PresentationChain, can_access_platform_message_representing_buffer)
 {
-    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo, size, pf);
 
     MirBufferSync context;
     mir_connection_allocate_buffer(
@@ -259,7 +251,7 @@ TEST_F(PresentationChain, can_access_platform_message_representing_buffer)
 
 TEST_F(PresentationChain, has_native_fence)
 {
-    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo, size, pf);
 
     auto ext = mir_extension_fenced_buffers_v1(connection);
     ASSERT_THAT(ext, Ne(nullptr));
@@ -281,7 +273,7 @@ TEST_F(PresentationChain, has_native_fence)
 
 TEST_F(PresentationChain, can_map_for_cpu_render)
 {
-    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo, size, pf);
 
     MirGraphicsRegion region;
     MirBufferLayout region_layout = mir_buffer_layout_unknown;
@@ -307,7 +299,7 @@ TEST_F(PresentationChain, can_map_for_cpu_render)
 
 TEST_F(PresentationChain, submission_will_eventually_call_callback)
 {
-    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo, size, pf);
 
     auto const num_buffers = 2u;
     std::array<MirBufferSync, num_buffers> contexts;
@@ -338,7 +330,7 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback)
 
 TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
 {
-    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo, size, pf);
 
     MirBufferSync context;
     auto buffer = mir_connection_allocate_buffer_sync(
@@ -350,7 +342,7 @@ TEST_F(PresentationChain, buffers_can_be_destroyed_before_theyre_returned)
 
 TEST_F(PresentationChain, buffers_can_be_flushed)
 {
-    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping,size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo,size, pf);
 
     auto buffer = mir_connection_allocate_buffer_sync(
         connection, size.width.as_int(), size.height.as_int(), pf);
@@ -362,7 +354,7 @@ TEST_F(PresentationChain, buffers_can_be_flushed)
 TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with_chain)
 {
     auto rs_chain = mir_connection_create_render_surface_sync(connection, 1, 1);
-    auto chain = mir_create_presentation_chain(rs_chain, mir_present_mode_fifo_dropping);
+    auto chain = mir_create_presentation_chain(rs_chain, mir_present_mode_fifo);
     auto rs_stream = mir_connection_create_render_surface_sync(connection, 1, 1);
     auto stream = mir_render_surface_get_buffer_stream(rs_stream, 25, 12, mir_pixel_format_abgr_8888);
     ASSERT_TRUE(mir_presentation_chain_is_valid(chain));
@@ -410,7 +402,7 @@ TEST_F(PresentationChain, can_access_basic_buffer_properties)
     geom::Height height { 33 };
     auto format = mir_pixel_format_abgr_8888;
 
-    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo_dropping, size, pf);
+    SurfaceWithChainFromStart window(connection, mir_present_mode_fifo, size, pf);
     auto buffer = mir_connection_allocate_buffer_sync(
         connection, width.as_int(), height.as_int(), format);
     EXPECT_THAT(mir_buffer_get_width(buffer), Eq(width.as_uint32_t()));
@@ -498,7 +490,7 @@ namespace
 TEST_F(PresentationChain, fifo_looks_correct_from_client_perspective)
 {
     SurfaceWithChainFromStart window(
-        connection, mir_present_mode_fifo_dropping,size, pf);
+        connection, mir_present_mode_fifo,size, pf);
 
     int const num_buffers = 5;
 
@@ -531,46 +523,12 @@ TEST_F(PresentationChain, mailbox_looks_correct_from_client_perspective)
 
     for(auto i = 0u; i < buffers.size(); i++)
     {
-        if (i == 1)
-            EXPECT_FALSE(buffers[i-1]->is_ready());
-        if (i > 1)
-        {
-            for(auto j = 0u; j < i - 2; j++) 
-                EXPECT_TRUE(buffers[j]->is_ready());
-            EXPECT_FALSE(buffers[i-1]->is_ready());
-        }
         buffers[i]->submit_to(window.chain());
+        if (i > 1)
+            EXPECT_TRUE(buffers[i-1]->wait_ready(5s));
     }
 
-    EXPECT_THAT(buffers[0]->last_count(), Lt(buffers[1]->last_count()));
-    EXPECT_THAT(buffers[1]->last_count(), Lt(buffers[2]->last_count()));
-    EXPECT_THAT(buffers[2]->last_count(), Lt(buffers[3]->last_count()));
+    for(auto i = 0u; i < num_buffers - 1; i++)
+        EXPECT_TRUE(buffers[i]->is_ready());
     EXPECT_FALSE(buffers[4]->is_ready());
 }
-
-#if 0
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-TEST_F(PresentationChain, fifo_dropping_looks_correct_from_client_perspective_serverside_drops)
-{
-    //occluded, we should get the buffers back at timeouts.
-    auto rs = mir_connection_create_render_surface_sync(connection, 100, 100);
-    auto chain = mir_create_presentation_chain(rs, mir_present_mode_fifo_dropping);
-    int const num_buffers = 5;
-
-    std::atomic<unsigned int> counter{ 0u };
-    std::array<std::unique_ptr<TrackedBuffer>, num_buffers> buffers;
-    for (auto& buffer : buffers)
-        buffer = std::make_unique<TrackedBuffer>(connection, counter);
-    for(auto& b : buffers)
-        b->submit_to(chain);
-
-    EXPECT_FALSE(buffers[0]->wait_ready(5s));
-//    the last one that will return;
-//    EXPECT_THAT(buffers[0]->last_count(), Lt(buffers[1]->last_count()));
-//    EXPECT_THAT(buffers[1]->last_count(), Lt(buffers[2]->last_count()));
-//    EXPECT_THAT(buffers[2]->last_count(), Lt(buffers[3]->last_count()));
-//    EXPECT_FALSE(buffers[4]->is_ready());
-}
-#pragma GCC diagnostic pop
-#endif

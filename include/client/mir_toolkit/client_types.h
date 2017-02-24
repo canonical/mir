@@ -266,9 +266,6 @@ typedef enum MirPresentMode
     mir_present_mode_mailbox, //same as VK_PRESENT_MODE_MAILBOX_KHR
     mir_present_mode_fifo, //same as VK_PRESENT_MODE_FIFO_KHR
     mir_present_mode_fifo_relaxed, //same as VK_PRESENT_MODE_FIFO_RELAXED_KHR
-    mir_present_mode_fifo_dropping, //mostly the same as mir_present_mode_fifo,
-                                    //but will return buffers to the client if a timeout
-                                    //is reached without the compositor consuming the buffer.
 } MirPresentMode;
 
 /**

@@ -18,6 +18,7 @@
 
 #include "mir_connection.h"
 #include "render_surface.h"
+#include "presentation_chain.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
 #include "mir/require.h"
@@ -272,8 +273,10 @@ try
     auto connection = connection_map.connection(surface);
     mir::require(surface && mir_connection_present_mode_supported(connection, mode));
     auto rs = connection->connection_surface_map()->render_surface(surface);
-    return reinterpret_cast<MirPresentationChain*>(
-        connection->create_chain(rs.get()).get());
+    auto chain = connection->create_chain(rs.get());
+    if (mode == mir_present_mode_mailbox)
+        chain->set_dropping_mode();
+    return reinterpret_cast<MirPresentationChain*>(chain.get());
 }
 catch (std::exception const& ex)
 {
