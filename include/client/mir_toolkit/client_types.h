@@ -260,6 +260,17 @@ typedef enum MirBufferLayout
     mir_buffer_layout_linear  = 1,
 } MirBufferLayout;
 
+typedef enum MirPresentMode
+{
+    mir_present_mode_immediate, //same as VK_PRESENT_MODE_IMMEDIATE_KHR
+    mir_present_mode_mailbox, //same as VK_PRESENT_MODE_MAILBOX_KHR
+    mir_present_mode_fifo, //same as VK_PRESENT_MODE_FIFO_KHR
+    mir_present_mode_fifo_relaxed, //same as VK_PRESENT_MODE_FIFO_RELAXED_KHR
+    mir_present_mode_fifo_dropping, //mostly the same as mir_present_mode_fifo,
+                                    //but will return buffers to the client if a timeout
+                                    //is reached without the compositor consuming the buffer.
+} MirPresentMode;
+
 /**
  * Retrieved information about a MirWindow. This is most useful for learning
  * how and where to write to a 'mir_buffer_usage_software' surface.

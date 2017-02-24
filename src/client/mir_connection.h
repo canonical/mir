@@ -160,9 +160,8 @@ public:
         MirBufferStreamCallback callback,
         void *context);
 
-    std::shared_ptr<mir::client::PresentationChain> create_presentation_chain_with_id(
-        MirRenderSurface* render_surface,
-        mir::protobuf::BufferStream const& a_protobuf_bs);
+    std::shared_ptr<mir::client::PresentationChain> create_chain(
+        MirRenderSurface* render_surface);
 
     void release_consumer_stream(MirBufferStream*);
 

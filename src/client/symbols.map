@@ -374,6 +374,10 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_render_surface_get_size;
     mir_render_surface_set_size;
     mir_render_surface_release;
+    mir_connection_present_mode_supported;
+    mir_create_presentation_chain;
+    mir_presentation_chain_release;
+    mir_presentation_chain_set_mode;
     mir_window_spec_add_render_surface;
     mir_window_spec_set_cursor_render_surface;
     mir_cursor_configuration_from_render_surface;

@@ -82,12 +82,7 @@ MirPresentationChain* mcl::RenderSurface::get_presentation_chain()
 {
     if (chain_from_id || stream_from_id)
         BOOST_THROW_EXCEPTION(std::logic_error("Content already handed out"));
-
-    chain_from_id = connection_->create_presentation_chain_with_id(this,
-                                                                   *protobuf_bs);
-    //TODO: Figure out how to handle mir_buffer_usage_hardware once
-    //      EGL is made to support RSs.
-
+    chain_from_id = connection_->create_chain(this);
     return reinterpret_cast<MirPresentationChain*>(chain_from_id.get());
 }
 
