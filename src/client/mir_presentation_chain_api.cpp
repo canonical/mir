@@ -95,7 +95,7 @@ catch (std::exception const& ex)
 bool mir_connection_present_mode_supported(
     MirConnection*, MirPresentMode mode)
 {
-    return mode == mir_present_mode_fifo_dropping;
+    return mode == mir_present_mode_fifo;
 }
 
 void mir_presentation_chain_set_mode(
