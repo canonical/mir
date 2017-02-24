@@ -30,7 +30,6 @@ void mc::QueueingSchedule::schedule(std::shared_ptr<graphics::Buffer> const& buf
     if (it != queue.end())
         queue.erase(it);
     queue.emplace_back(buffer);
-    printf("PUT BACK %i\n", (int) queue.size());
 }
 
 unsigned int mc::QueueingSchedule::num_scheduled()
@@ -46,6 +45,5 @@ std::shared_ptr<mg::Buffer> mc::QueueingSchedule::next_buffer()
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer scheduled"));
     auto buffer = queue.front();
     queue.pop_front();
-    printf("POP POP\n");
     return buffer;
 }

@@ -24,6 +24,7 @@
 #include "mir_toolkit/mir_extension_core.h"
 #include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_test_framework/connected_client_headless_server.h"
+#include "mir/test/doubles/null_display_buffer_compositor_factory.h"
 #include "mir/geometry/size.h"
 #include "mir/fd.h"
 
@@ -36,6 +37,7 @@ namespace mtf = mir_test_framework;
 namespace mt = mir::test;
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
+namespace mtd = mir::test::doubles;
 using namespace testing;
 using namespace std::chrono_literals;
 
@@ -139,39 +141,14 @@ private:
     }
 };
 
-#if 0
-struct SurfaceWithChainFromReassociation : SurfaceWithChain
-{
-    SurfaceWithChainFromReassociation(SurfaceWithChainFromReassociation const&) = delete;
-    SurfaceWithChainFromReassociation& operator=(SurfaceWithChainFromReassociation const&) = delete;
-    SurfaceWithChainFromReassociation(MirConnection* connection, geom::Size size, MirPixelFormat pf) :
-        SurfaceWithChain(connection,
-        std::bind(&SurfaceWithChainFromReassociation::create_surface, mode, this,
-            std::placeholders::_1, connection, size, pf))
-    {
-    }
-private:
-    MirWindow* create_surface(Chain& chain, MirConnection* connection, geom::Size size, MirPixelFormat pf)
-    {
-        MirWindowSpec* spec = mir_create_normal_window_spec(
-            connection, size.width.as_int(), size.height.as_int());
-        mir_window_spec_set_pixel_format(spec, pf);
-        auto window = mir_create_window_sync(spec);
-        mir_window_spec_release(spec);
-        spec = mir_create_window_spec(connection);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_window_spec_add_render_surface(
-            spec, chain.content(), size.width.as_int(), size.height.as_int(), 0, 0);
-#pragma GCC diagnostic pop
-        mir_window_apply_spec(window, spec);
-        mir_window_spec_release(spec);
-        return window;
-    }
-};
-#endif
 struct PresentationChain : mtf::ConnectedClientHeadlessServer
 {
+    void SetUp()
+    {
+//        server.override_the_display_buffer_compositor_factory(
+//            [] { return std::make_shared<mtd::NullDisplayBufferCompositorFactory>(); } );
+        mtf::ConnectedClientHeadlessServer::SetUp();
+    }
     geom::Size const size {100, 20};
     MirPixelFormat const pf = mir_pixel_format_abgr_8888;
 };
@@ -233,13 +210,13 @@ TEST_F(PresentationChain, supported_modes)
 {
     EXPECT_TRUE(mir_connection_present_mode_supported(
         connection, mir_present_mode_fifo_dropping));
+    EXPECT_TRUE(mir_connection_present_mode_supported(
+        connection, mir_present_mode_mailbox));
     //TODOs: 
     EXPECT_FALSE(mir_connection_present_mode_supported(
         connection, mir_present_mode_fifo));
     EXPECT_FALSE(mir_connection_present_mode_supported(
         connection, mir_present_mode_fifo_relaxed));
-    EXPECT_FALSE(mir_connection_present_mode_supported(
-        connection, mir_present_mode_mailbox));
     EXPECT_FALSE(mir_connection_present_mode_supported(
         connection, mir_present_mode_immediate));
 }
@@ -476,7 +453,6 @@ namespace
         void submit_to(MirPresentationChain* chain)
         {
             std::unique_lock<std::mutex> lk(mutex);
-            printf("SUBMITTY\n");
             if (!avail)
                 throw std::runtime_error("test problem");
             avail = false;
@@ -485,7 +461,6 @@ namespace
 
         static void tavailable(MirBuffer*, void* ctxt)
         {
-            printf("AVAILABLE...\n");
             TrackedBuffer* buf = reinterpret_cast<TrackedBuffer*>(ctxt);
             buf->ready();
         }
@@ -520,7 +495,7 @@ namespace
     };
 }
 
-TEST_F(PresentationChain, fifo_dropping_looks_correct_from_client_perspective_no_drops)
+TEST_F(PresentationChain, fifo_looks_correct_from_client_perspective)
 {
     SurfaceWithChainFromStart window(
         connection, mir_present_mode_fifo_dropping,size, pf);
@@ -542,3 +517,60 @@ TEST_F(PresentationChain, fifo_dropping_looks_correct_from_client_perspective_no
     EXPECT_FALSE(buffers[4]->is_ready());
 }
 
+TEST_F(PresentationChain, mailbox_looks_correct_from_client_perspective)
+{
+    SurfaceWithChainFromStart window(
+        connection, mir_present_mode_mailbox, size, pf);
+
+    int const num_buffers = 5;
+
+    std::atomic<unsigned int> counter{ 0u };
+    std::array<std::unique_ptr<TrackedBuffer>, num_buffers> buffers;
+    for (auto& buffer : buffers)
+        buffer = std::make_unique<TrackedBuffer>(connection, counter);
+
+    for(auto i = 0u; i < buffers.size(); i++)
+    {
+        if (i == 1)
+            EXPECT_FALSE(buffers[i-1]->is_ready());
+        if (i > 1)
+        {
+            for(auto j = 0u; j < i - 2; j++) 
+                EXPECT_TRUE(buffers[j]->is_ready());
+            EXPECT_FALSE(buffers[i-1]->is_ready());
+        }
+        buffers[i]->submit_to(window.chain());
+    }
+
+    EXPECT_THAT(buffers[0]->last_count(), Lt(buffers[1]->last_count()));
+    EXPECT_THAT(buffers[1]->last_count(), Lt(buffers[2]->last_count()));
+    EXPECT_THAT(buffers[2]->last_count(), Lt(buffers[3]->last_count()));
+    EXPECT_FALSE(buffers[4]->is_ready());
+}
+
+#if 0
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+TEST_F(PresentationChain, fifo_dropping_looks_correct_from_client_perspective_serverside_drops)
+{
+    //occluded, we should get the buffers back at timeouts.
+    auto rs = mir_connection_create_render_surface_sync(connection, 100, 100);
+    auto chain = mir_create_presentation_chain(rs, mir_present_mode_fifo_dropping);
+    int const num_buffers = 5;
+
+    std::atomic<unsigned int> counter{ 0u };
+    std::array<std::unique_ptr<TrackedBuffer>, num_buffers> buffers;
+    for (auto& buffer : buffers)
+        buffer = std::make_unique<TrackedBuffer>(connection, counter);
+    for(auto& b : buffers)
+        b->submit_to(chain);
+
+    EXPECT_FALSE(buffers[0]->wait_ready(5s));
+//    the last one that will return;
+//    EXPECT_THAT(buffers[0]->last_count(), Lt(buffers[1]->last_count()));
+//    EXPECT_THAT(buffers[1]->last_count(), Lt(buffers[2]->last_count()));
+//    EXPECT_THAT(buffers[2]->last_count(), Lt(buffers[3]->last_count()));
+//    EXPECT_FALSE(buffers[4]->is_ready());
+}
+#pragma GCC diagnostic pop
+#endif

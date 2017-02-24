@@ -360,7 +360,6 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                         buffer->received();
                         break;
                     case mp::BufferOperation::update:
-                        printf("UPDATO\n");
                         map->buffer(buffer_id)->received(
                             *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
                         break;

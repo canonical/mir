@@ -64,12 +64,14 @@ TimeoutFrameDroppingPolicy::TimeoutFrameDroppingPolicy(std::shared_ptr<mir::time
 
 void TimeoutFrameDroppingPolicy::swap_now_blocking()
 {
+    printf("swap now blocking\n");
     if (pending_swaps++ == 0)
         alarm->reschedule_in(timeout);
 }
 
 void TimeoutFrameDroppingPolicy::swap_unblocked()
 {
+    printf("swap un blocking\n");
     if (alarm->state() != mir::time::Alarm::cancelled && alarm->cancel())
     {
         if (--pending_swaps > 0)

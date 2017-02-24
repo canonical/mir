@@ -45,6 +45,7 @@ mc::Stream::DroppingCallback::DroppingCallback(Stream* stream) :
 
 void mc::Stream::DroppingCallback::operator()()
 {
+    printf("DROP!!!\n");
     stream->drop_frame();
 }
 
