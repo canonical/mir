@@ -11,6 +11,8 @@ mir (0.26.2-0ubuntu1) UNRELEASED; urgency=medium
         mir::gl::tessellate_renderable_into_rectangle() (LP: #1664760)
       . Nested servers (Unity8) periodically stutter (half frame rate) with
         Mir 0.26.1 (LP: #1666372)
+      . Don't dereference the end iterator in ms::ApplicationSession::
+        surface_after() (LP: #1667645)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 20 Feb 2017 13:37:13 +0800
 
