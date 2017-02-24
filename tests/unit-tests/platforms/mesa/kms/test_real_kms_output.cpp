@@ -66,6 +66,9 @@ public:
     {
         ON_CALL(mock_page_flipper, wait_for_flip(_))
             .WillByDefault(Return(mg::Frame{}));
+
+        ON_CALL(mock_gbm, gbm_bo_get_handle(_))
+            .WillByDefault(Return(gbm_bo_handle{0}));
     }
 
     void setup_outputs_connected_crtc()
