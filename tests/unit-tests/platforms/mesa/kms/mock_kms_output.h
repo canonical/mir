@@ -43,19 +43,19 @@ struct MockKMSOutput : public graphics::mesa::KMSOutput
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(max_refresh_rate, int());
 
-    bool set_crtc(graphics::mesa::DRMFB const& fb) override
+    bool set_crtc(graphics::mesa::FBHandle const& fb) override
     {
         return set_crtc_thunk(&fb);
     }
 
-    MOCK_METHOD1(set_crtc_thunk, bool(graphics::mesa::DRMFB const*));
+    MOCK_METHOD1(set_crtc_thunk, bool(graphics::mesa::FBHandle const*));
     MOCK_METHOD0(clear_crtc, void());
 
-    bool schedule_page_flip(graphics::mesa::DRMFB const& fb) override
+    bool schedule_page_flip(graphics::mesa::FBHandle const& fb) override
     {
         return schedule_page_flip_thunk(&fb);
     }
-    MOCK_METHOD1(schedule_page_flip_thunk, bool(graphics::mesa::DRMFB const*));
+    MOCK_METHOD1(schedule_page_flip_thunk, bool(graphics::mesa::FBHandle const*));
     MOCK_METHOD0(wait_for_page_flip, void());
 
     MOCK_CONST_METHOD0(last_frame, graphics::Frame());
@@ -68,7 +68,7 @@ struct MockKMSOutput : public graphics::mesa::KMSOutput
     MOCK_METHOD1(set_power_mode, void(MirPowerMode));
     MOCK_METHOD1(set_gamma, void(mir::graphics::GammaCurves const&));
 
-    MOCK_CONST_METHOD3(fb_for, graphics::mesa::DRMFB*(gbm_bo*, uint32_t, uint32_t));
+    MOCK_CONST_METHOD3(fb_for, graphics::mesa::FBHandle*(gbm_bo*, uint32_t, uint32_t));
 };
 
 } // namespace test

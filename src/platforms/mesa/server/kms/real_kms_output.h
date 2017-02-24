@@ -47,9 +47,9 @@ public:
     geometry::Size size() const override;
     int max_refresh_rate() const override;
 
-    bool set_crtc(DRMFB const& fb) override;
+    bool set_crtc(FBHandle const& fb) override;
     void clear_crtc() override;
-    bool schedule_page_flip(DRMFB const& fb) override;
+    bool schedule_page_flip(FBHandle const& fb) override;
     void wait_for_page_flip() override;
 
     bool set_cursor(gbm_bo* buffer) override;
@@ -62,7 +62,7 @@ public:
 
     Frame last_frame() const override;
 
-    DRMFB* fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const override;
+    FBHandle* fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const override;
 
 private:
     bool ensure_crtc();

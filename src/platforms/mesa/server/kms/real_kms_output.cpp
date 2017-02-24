@@ -31,15 +31,15 @@ namespace mgm = mg::mesa;
 namespace mgk = mg::kms;
 namespace geom = mir::geometry;
 
-class mgm::DRMFB
+class mgm::FBHandle
 {
 public:
-    DRMFB(gbm_bo* bo, uint32_t drm_fb_id)
+    FBHandle(gbm_bo* bo, uint32_t drm_fb_id)
         : bo{bo}, drm_fb_id{drm_fb_id}
     {
     }
 
-    ~DRMFB()
+    ~FBHandle()
     {
         if (drm_fb_id)
         {
@@ -62,7 +62,7 @@ namespace
 {
 void bo_user_data_destroy(gbm_bo* /*bo*/, void *data)
 {
-    auto bufobj = static_cast<mgm::DRMFB*>(data);
+    auto bufobj = static_cast<mgm::FBHandle*>(data);
     delete bufobj;
 }
 
@@ -145,7 +145,7 @@ void mgm::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_in
     mode_index = kms_mode_index;
 }
 
-bool mgm::RealKMSOutput::set_crtc(DRMFB const& fb)
+bool mgm::RealKMSOutput::set_crtc(FBHandle const& fb)
 {
     if (!ensure_crtc())
     {
@@ -196,7 +196,7 @@ void mgm::RealKMSOutput::clear_crtc()
     current_crtc = nullptr;
 }
 
-bool mgm::RealKMSOutput::schedule_page_flip(DRMFB const& fb)
+bool mgm::RealKMSOutput::schedule_page_flip(FBHandle const& fb)
 {
     std::unique_lock<std::mutex> lg(power_mutex);
     if (power_mode != mir_power_mode_on)
@@ -357,16 +357,16 @@ void mgm::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
     // TODO: return bool in future? Then do what with it?
 }
 
-mgm::DRMFB* mgm::RealKMSOutput::fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const
+mgm::FBHandle* mgm::RealKMSOutput::fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const
 {
     if (!bo)
         return nullptr;
 
     /*
      * Check if we have already set up this gbm_bo (the gbm implementation is
-     * free to reuse gbm_bos). If so, return the associated DRMFB.
+     * free to reuse gbm_bos). If so, return the associated FBHandle.
      */
-    auto bufobj = static_cast<DRMFB*>(gbm_bo_get_user_data(bo));
+    auto bufobj = static_cast<FBHandle*>(gbm_bo_get_user_data(bo));
     if (bufobj)
         return bufobj;
 
@@ -391,8 +391,8 @@ mgm::DRMFB* mgm::RealKMSOutput::fb_for(gbm_bo* bo, uint32_t width, uint32_t heig
     if (ret)
         return nullptr;
 
-    /* Create a DRMFB and associate it with the gbm_bo */
-    bufobj = new DRMFB{bo, fb_id};
+    /* Create a FBHandle and associate it with the gbm_bo */
+    bufobj = new FBHandle{bo, fb_id};
     gbm_bo_set_user_data(bo, bufobj, bo_user_data_destroy);
 
     return bufobj;

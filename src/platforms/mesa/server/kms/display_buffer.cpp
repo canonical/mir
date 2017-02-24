@@ -243,7 +243,7 @@ void mgm::DisplayBuffer::swap_buffers()
     bypass_bufobj = nullptr;
 }
 
-void mgm::DisplayBuffer::set_crtc(DRMFB const& forced_frame)
+void mgm::DisplayBuffer::set_crtc(FBHandle const& forced_frame)
 {
     for (auto& output : outputs)
     {
@@ -271,7 +271,7 @@ void mgm::DisplayBuffer::post()
      */
     wait_for_page_flip();
 
-    mgm::DRMFB *bufobj;
+    mgm::FBHandle *bufobj;
     if (bypass_buf)
     {
         bufobj = bypass_bufobj;
@@ -362,7 +362,7 @@ std::chrono::milliseconds mgm::DisplayBuffer::recommended_sleep() const
     return recommend_sleep;
 }
 
-bool mgm::DisplayBuffer::schedule_page_flip(DRMFB const& bufobj)
+bool mgm::DisplayBuffer::schedule_page_flip(FBHandle const& bufobj)
 {
     /*
      * Schedule the current front buffer object for display. Note that

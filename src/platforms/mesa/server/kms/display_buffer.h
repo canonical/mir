@@ -41,7 +41,7 @@ namespace mesa
 {
 
 class Platform;
-class DRMFB;
+class FBHandle;
 class KMSOutput;
 class NativeBuffer;
 
@@ -126,12 +126,12 @@ public:
     void wait_for_page_flip();
 
 private:
-    bool schedule_page_flip(DRMFB const& bufobj);
-    void set_crtc(DRMFB const&);
+    bool schedule_page_flip(FBHandle const& bufobj);
+    void set_crtc(FBHandle const&);
 
     std::shared_ptr<graphics::Buffer> visible_bypass_frame, scheduled_bypass_frame;
     std::shared_ptr<Buffer> bypass_buf{nullptr};
-    DRMFB* bypass_bufobj{nullptr};
+    FBHandle* bypass_bufobj{nullptr};
     std::shared_ptr<DisplayReport> const listener;
     BypassOption bypass_option;
 
