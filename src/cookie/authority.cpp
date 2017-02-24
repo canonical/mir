@@ -41,13 +41,13 @@
 
 namespace
 {
-uint32_t const mac_byte_size{20};
+uint32_t const mac_byte_size{32};
 
 size_t cookie_size_from_format(mir::cookie::Format const& format)
 {
     switch (format)
     {
-        case mir::cookie::Format::hmac_sha_1_8:
+        case mir::cookie::Format::hmac_sha_256:
             return mir::cookie::default_blob_size;
         default:
             break;
@@ -68,7 +68,7 @@ static mir::cookie::Secret get_random_data(unsigned size)
     unsigned got = read(fd, buffer.data(), size);
     int error = errno;
     close(fd);
-    
+
     if (got != size)
         BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(),
                                                 "read failed on urandom"));
@@ -90,7 +90,7 @@ public:
             BOOST_THROW_EXCEPTION(std::logic_error("Secret size " + std::to_string(secret.size()) + " is to small, require " +
                                                    std::to_string(minimum_secret_size) + " or greater."));
 
-        hmac_sha1_set_key(&ctx, secret.size(), secret.data());
+        hmac_sha256_set_key(&ctx, secret.size(), secret.data());
     }
 
     virtual ~AuthorityNettle() noexcept = default;
@@ -98,25 +98,25 @@ public:
 
     std::unique_ptr<mir::cookie::Cookie> make_cookie(uint64_t const& timestamp) override
     {
-        return std::make_unique<mir::cookie::HMACCookie>(timestamp, calculate_cookie(timestamp), mir::cookie::Format::hmac_sha_1_8);
+        return std::make_unique<mir::cookie::HMACCookie>(timestamp, calculate_cookie(timestamp), mir::cookie::Format::hmac_sha_256);
     }
 
     std::unique_ptr<mir::cookie::Cookie> make_cookie(std::vector<uint8_t> const& raw_cookie) override
     {
         /*
-        SHA_1 Format:
+        SHA_256 Format:
         1  byte  = FORMAT
         8  bytes = TIMESTAMP
-        20 bytes = MAC
+        32 bytes = MAC
         */
 
-        if (raw_cookie.size() != cookie_size_from_format(mir::cookie::Format::hmac_sha_1_8))
+        if (raw_cookie.size() != cookie_size_from_format(mir::cookie::Format::hmac_sha_256))
         {
            BOOST_THROW_EXCEPTION(mir::cookie::SecurityCheckError());
         }
 
         mir::cookie::Format format = static_cast<mir::cookie::Format>(raw_cookie[0]);
-        if (format != mir::cookie::Format::hmac_sha_1_8)
+        if (format != mir::cookie::Format::hmac_sha_256)
         {
             BOOST_THROW_EXCEPTION(mir::cookie::SecurityCheckError());
         }
@@ -133,7 +133,7 @@ public:
         memcpy(mac.data(), ptr, mac.size());
 
         std::unique_ptr<mir::cookie::Cookie> cookie =
-            std::make_unique<mir::cookie::HMACCookie>(timestamp, mac, mir::cookie::Format::hmac_sha_1_8);
+            std::make_unique<mir::cookie::HMACCookie>(timestamp, mac, mir::cookie::Format::hmac_sha_256);
 
         if (!verify_cookie(timestamp, cookie))
         {
@@ -147,8 +147,8 @@ private:
     std::vector<uint8_t> calculate_cookie(uint64_t const& timestamp)
     {
         std::vector<uint8_t> mac(mac_byte_size);
-        hmac_sha1_update(&ctx, sizeof(timestamp), reinterpret_cast<uint8_t const*>(&timestamp));
-        hmac_sha1_digest(&ctx, mac.size(), mac.data());
+        hmac_sha256_update(&ctx, sizeof(timestamp), reinterpret_cast<uint8_t const*>(&timestamp));
+        hmac_sha256_digest(&ctx, mac.size(), mac.data());
 
         return mac;
     }
@@ -164,15 +164,15 @@ private:
                mir::cookie::const_memcmp(this_stream.data(), other_stream.data(), this_stream.size()) == 0;
     }
 
-    struct hmac_sha1_ctx ctx;
+    struct hmac_sha256_ctx ctx;
 };
 
 size_t mir::cookie::Authority::optimal_secret_size()
 {
     // Secret keys smaller than this are internally zero-extended to this size.
     // Secret keys larger than this are internally hashed to this size.
-    size_t const hmac_sha1_block_size{64};
-    return hmac_sha1_block_size;
+    size_t const hmac_sha256_block_size{64};
+    return hmac_sha256_block_size;
 }
 
 std::unique_ptr<mir::cookie::Authority> mir::cookie::Authority::create_from(mir::cookie::Secret const& secret)

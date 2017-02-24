@@ -27,7 +27,7 @@ namespace cookie
 {
 enum class Format : uint8_t
 {
-    hmac_sha_1_8,
+    hmac_sha_256,
 };
 }
 }
