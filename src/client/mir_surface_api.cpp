@@ -132,6 +132,41 @@ mir_create_input_method_window_spec(MirConnection* connection,
     return spec;
 }
 
+MirWindowSpec*
+mir_create_gloss_window_spec(MirConnection* connection, int width, int height)
+{
+    auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
+    spec->type = mir_window_type_gloss;
+    return spec;
+}
+
+MirWindowSpec*
+mir_create_satellite_window_spec(MirConnection* connection, int width, int height, MirWindow* parent)
+{
+    mir::require(mir_window_is_valid(parent));
+
+    auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
+    spec->type = mir_window_type_satellite;
+    spec->parent = parent;
+
+    return spec;
+}
+
+MirWindowSpec*
+mir_create_utility_window_spec(MirConnection* connection, int width, int height)
+{
+    auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
+    spec->type = mir_window_type_utility;
+    return spec;
+}
+
+MirWindowSpec*
+mir_create_freestyle_window_spec(MirConnection* connection, int width, int height){
+    auto spec = new MirWindowSpec{connection, width, height, mir_pixel_format_invalid};
+    spec->type = mir_window_type_freestyle;
+    return spec;
+}
+
 MirWindowSpec* mir_create_window_spec(MirConnection* connection)
 try
 {
