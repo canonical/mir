@@ -250,7 +250,6 @@ TEST_F(ClientSurfaces, can_be_input_methods)
 
 TEST_F(ClientSurfaces, can_be_gloss)
 {
-    auto parent = mtf::make_any_surface(connection);
     auto spec = mir_create_gloss_window_spec(connection, 640, 480);
     ASSERT_THAT(spec, NotNull());
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
@@ -260,7 +259,6 @@ TEST_F(ClientSurfaces, can_be_gloss)
     EXPECT_EQ(mir_window_get_type(window), mir_window_type_gloss);
 
     mir_window_release_sync(window);
-    mir_window_release_sync(parent);
 }
 
 TEST_F(ClientSurfaces, can_be_satellite)
