@@ -392,8 +392,8 @@ TEST_F(FrameClockTest, frames_skipped_only_after_2_frames_take_over_3_periods)
     fake_sleep_for(one_frame * 8 / 5);  // Render time: 1.6 frames
 
     auto d = clock.next_frame_after(c);
+    EXPECT_EQ(2*one_frame, d - c);      // One frame skipped
     EXPECT_LT(d, now);                  // Targets the past, catching up again
-    EXPECT_EQ(2*one_frame, d - c);      // But one frame was skipped
 
     fake_sleep_until(d);
     fake_sleep_for(one_frame/4);        // Short render time, immediate recovery
