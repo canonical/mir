@@ -10,6 +10,7 @@ option(
 if(DOXYGEN_FOUND AND (DOXYGEN_VERSION VERSION_GREATER "1.8"))
   message(STATUS "doxygen ${DOXYGEN_VERSION} (>= 1.8.0) available - enabling make target doc")
   EXECUTE_PROCESS(COMMAND "date" "-u" OUTPUT_VARIABLE DATE_TODAY)
+  EXECUTE_PROCESS(COMMAND "date" "+%Y" OUTPUT_VARIABLE YEAR_TODAY)
   configure_file(doc/Doxyfile.in
                  ${PROJECT_BINARY_DIR}/Doxyfile @ONLY IMMEDIATE)
   configure_file(doc/footer.html.in
