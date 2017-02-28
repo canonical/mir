@@ -52,6 +52,9 @@ static void shutdown(int signum)
        return -1; \
     }
 
+MirConnection* connection;
+MirWindow* window;
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 //The client arranges the scene in the subscene
@@ -66,6 +69,10 @@ void resize_callback(MirWindow* window, MirEvent const* event, void* context)
         int height = mir_resize_event_get_height(resize_event);
         MirRenderSurface* rs = (MirRenderSurface*) context;
         mir_render_surface_set_size(rs, width, height);
+        MirWindowSpec* spec = mir_create_window_spec(connection);
+        mir_window_spec_add_render_surface(spec, rs, width, height, 0, 0);
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
     }
 }
 
@@ -156,8 +163,6 @@ int main(int argc, char *argv[])
     EGLConfig eglconfig;
     EGLint neglconfigs;
     EGLBoolean ok;
-    MirConnection* connection = NULL;
-    MirWindow* window = NULL;
     MirRenderSurface* render_surface = NULL;
 
     signal(SIGINT, shutdown);

@@ -20,6 +20,7 @@
 
 #include "mir/input/pointer_settings.h"
 #include "mir/input/touchpad_settings.h"
+#include "mir/input/touchscreen_settings.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/event_builder.h"
@@ -116,6 +117,19 @@ mir::optional_value<mi::TouchpadSettings> mix::XInputDevice::get_touchpad_settin
 }
 
 void mix::XInputDevice::apply_settings(TouchpadSettings const&)
+{
+}
+
+mir::optional_value<mi::TouchscreenSettings> mix::XInputDevice::get_touchscreen_settings() const
+{
+    optional_value<TouchscreenSettings> ret;
+    if (contains(info.capabilities, DeviceCapability::touchscreen))
+        ret = TouchscreenSettings();
+
+    return ret;
+}
+
+void mix::XInputDevice::apply_settings(TouchscreenSettings const&)
 {
 }
 

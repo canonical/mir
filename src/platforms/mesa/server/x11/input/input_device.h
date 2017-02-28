@@ -50,6 +50,8 @@ public:
     void apply_settings(PointerSettings const& settings) override;
     optional_value<TouchpadSettings> get_touchpad_settings() const override;
     void apply_settings(TouchpadSettings const& settings) override;
+    virtual optional_value<TouchscreenSettings> get_touchscreen_settings() const override;
+    virtual void apply_settings(TouchscreenSettings const&) override;
 
     bool started() const;
     void key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code);

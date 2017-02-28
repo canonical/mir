@@ -37,8 +37,6 @@ struct StubSession : scene::Session
 
     std::string name() const override;
 
-    void drop_outstanding_requests() override;
-
     pid_t process_id() const override;
 
     void take_snapshot(scene::SnapshotCallback const& snapshot_taken) override;
