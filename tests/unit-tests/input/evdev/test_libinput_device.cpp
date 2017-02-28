@@ -795,8 +795,8 @@ TEST_F(LibInputDeviceOnTouchScreen, device_maps_to_selected_output)
                 mi::OutputInfo{
                     true,
                     geom::Size{width, height},
-                    Matrix{1.0f, 0.0f, output_x_pos,
-                           0.0f, 1.0f, output_y_pos}}));
+                    Matrix{{1.0f, 0.0f, output_x_pos,
+                            0.0f, 1.0f, output_y_pos}}}));
     EXPECT_CALL(mock_sink,
                 handle_input(
                     mt::TouchContact(
@@ -832,8 +832,8 @@ TEST_F(LibInputDeviceOnTouchScreen, device_maps_to_left_rotated_output)
                 mi::OutputInfo{
                                true,
                                geom::Size{width, height},
-                               Matrix{0.0f, 1.0f, output_x_pos,
-                                      -1.0f, 0.0f, width + output_y_pos}}));
+                               Matrix{{0.0f, 1.0f, output_x_pos,
+                                       -1.0f, 0.0f, width + output_y_pos}}}));
     EXPECT_CALL(mock_sink,
                 handle_input(
                     mt::TouchContact(
@@ -861,8 +861,8 @@ TEST_F(LibInputDeviceOnTouchScreen, device_maps_to_right_rotated_output)
                 mi::OutputInfo{
                     true,
                     geom::Size{width, height},
-                    Matrix{0.0f, -1.0f, height + output_x_pos,
-                           1.0f, 0.0f, output_y_pos}}));
+                    Matrix{{0.0f, -1.0f, height + output_x_pos,
+                            1.0f, 0.0f, output_y_pos}}}));
     EXPECT_CALL(mock_sink,
                 handle_input(
                     mt::TouchContact(
@@ -890,8 +890,8 @@ TEST_F(LibInputDeviceOnTouchScreen, device_maps_to_inverted_output)
                 mi::OutputInfo{
                     true,
                     geom::Size{width, height},
-                    Matrix{-1.0f, 0.0f, width + output_x_pos,
-                           0.0f, -1.0f, height + output_y_pos}}));
+                    Matrix{{-1.0f, 0.0f, width + output_x_pos,
+                            0.0f, -1.0f, height + output_y_pos}}}));
     EXPECT_CALL(mock_sink,
                 handle_input(
                     mt::TouchContact(
@@ -933,7 +933,7 @@ TEST_F(LibInputDeviceOnTouchScreen, drops_touchscreen_event_on_deactivated_outpu
     EXPECT_CALL(mock_sink, handle_input(_)).Times(0);
 
     ON_CALL(mock_sink, output_info(output_id))
-        .WillByDefault(Return(mi::OutputInfo{false, geom::Size{width, height}, Matrix{1,0,0,0,1,0}}));
+        .WillByDefault(Return(mi::OutputInfo{false, geom::Size{width, height}, Matrix{{1,0,0,0,1,0}}}));
 
     touch_screen.apply_settings(mi::TouchscreenSettings{output_id, mir_touchscreen_mapping_mode_to_output});
 
