@@ -25,6 +25,7 @@
 #include "mir/geometry/point.h"
 
 #include <vector>
+#include <array>
 
 namespace mir
 {
@@ -33,15 +34,25 @@ namespace input
 
 struct OutputInfo
 {
+    using Matrix = std::array<float,6>; // 2x3 row major matrix
     OutputInfo() {}
-    OutputInfo(bool active, geometry::Size size, geometry::Point pos, MirOrientation orientation)
-        : active{active}, output_size{size}, position{pos}, orientation{orientation}
+    OutputInfo(bool active, geometry::Size size, Matrix const& transformation)
+        : active{active}, output_size{size}, output_to_scene{transformation}
     {}
 
     bool active{false};
     geometry::Size output_size;
-    geometry::Point position;
-    MirOrientation orientation{mir_orientation_normal};
+    Matrix output_to_scene;
+
+    inline void transform_to_scene(float& x, float& y) const
+    {
+        auto original_x = x;
+        auto original_y = y;
+        auto const& mat = output_to_scene;
+
+        x = mat[0]*original_x + mat[1]*original_y + mat[2]*1;
+        y = mat[3]*original_x + mat[4]*original_y + mat[5]*1;
+    }
 };
 
 class InputSink

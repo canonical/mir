@@ -309,24 +309,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, floa
     x = (x - float(FakeInputDevice::minimum_touch_axis_value))*x_scale;
     y = (y - float(FakeInputDevice::minimum_touch_axis_value))*y_scale;
 
-    if (info.orientation == mir_orientation_left)
-    {
-        std::swap(x, y);
-        y = width - y;
-    }
-    else if (info.orientation == mir_orientation_right)
-    {
-        std::swap(x, y);
-        x = height - x;
-    }
-    else if (info.orientation == mir_orientation_inverted)
-    {
-        x = width - x;
-        y = height - y;
-    }
-
-    x += info.position.x.as_int();
-    y += info.position.y.as_int();
+    info.transform_to_scene(x, y);
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::start(mi::InputSink* destination, mi::EventBuilder* event_builder)
@@ -345,19 +328,19 @@ void mtf::FakeInputDeviceImpl::InputDevice::stop()
 
 mi::OutputInfo mtf::FakeInputDeviceImpl::InputDevice::get_output_info() const
 {
-    mi::OutputInfo info;
     if (touchscreen.mapping_mode == mir_touchscreen_mapping_mode_to_output)
     {
-        info = sink->output_info(touchscreen.output_id);
+        return sink->output_info(touchscreen.output_id);
     }
     else
     {
         auto scene_bbox = sink->bounding_rectangle();
-        info.active = true;
-        info.position = scene_bbox.top_left;
-        info.output_size = scene_bbox.size;
+        return mi::OutputInfo(
+            true,
+            scene_bbox.size,
+            mi::OutputInfo::Matrix{1.0f, 0.0f, float(scene_bbox.top_left.x.as_int()),
+                                   0.0f, 1.0f, float(scene_bbox.top_left.y.as_int())});
     }
-    return info;
 }
 
 bool mtf::FakeInputDeviceImpl::InputDevice::is_output_active() const

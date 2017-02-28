@@ -306,24 +306,7 @@ void mie::LibInputDevice::update_contact_data(ContactData & data, MirTouchAction
     data.major = libinput_event_touch_get_major_transformed(touch, width, height);
     data.minor = libinput_event_touch_get_minor_transformed(touch, width, height);
 
-    if (info.orientation == mir_orientation_left)
-    {
-        std::swap(data.x, data.y);
-        data.y = width - data.y;
-    }
-    else if (info.orientation == mir_orientation_right)
-    {
-        std::swap(data.x, data.y);
-        data.x = height - data.x;
-    }
-    else if (info.orientation == mir_orientation_inverted)
-    {
-        data.x = width - data.x;
-        data.y = height - data.y;
-    }
-
-    data.x += info.position.x.as_int();
-    data.y += info.position.y.as_int();
+    info.transform_to_scene(data.x, data.y);
 }
 
 void mie::LibInputDevice::handle_touch_motion(libinput_event_touch* touch)
@@ -394,19 +377,19 @@ libinput_device* mie::LibInputDevice::device() const
 
 mi::OutputInfo mie::LibInputDevice::get_output_info() const
 {
-    mi::OutputInfo info;
     if (touchscreen.is_set() && touchscreen.value().mapping_mode == mir_touchscreen_mapping_mode_to_output)
     {
-        info = sink->output_info(touchscreen.value().output_id);
+        return sink->output_info(touchscreen.value().output_id);
     }
     else
     {
         auto scene_bbox = sink->bounding_rectangle();
-        info.active = true;
-        info.position = scene_bbox.top_left;
-        info.output_size = scene_bbox.size;
+        return mi::OutputInfo(
+            true,
+            scene_bbox.size,
+            mi::OutputInfo::Matrix{1.0f, 0.0f, float(scene_bbox.top_left.x.as_int()),
+                                   0.0f, 1.0f, float(scene_bbox.top_left.y.as_int())});
     }
-    return info;
 }
 
 bool mie::LibInputDevice::is_output_active() const

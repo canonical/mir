@@ -28,8 +28,8 @@
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
 
-#include <glm/gtx/matrix_transform_2d.hpp>
 #include <algorithm>
+#include <array>
 
 namespace mi = mir::input;
 namespace mf = mir::frontend;
@@ -51,17 +51,48 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
         conf.for_each_output(
             [this, &output_rectangles](mg::DisplayConfigurationOutput const& output)
             {
-                mi::OutputInfo data;
-                data.active = output.used && output.connected && output.power_mode == mir_power_mode_on;
-                data.position = output.top_left;
-                data.orientation = output.orientation;
-                if (output.current_mode_index < output.modes.size())
+                if (!output.used || !output.connected)
+                    return;
+                if (!output.valid())
+                    return;
+
+                // TODO make the decision whether display that is used but powered off should emit
+                // touch screen events in a policy
+                bool active = output.power_mode == mir_power_mode_on;
+
+                auto output_size = output.modes[output.current_mode_index].size;
+                auto width = output_size.width.as_int();
+                auto height = output_size.height.as_int();
+                OutputInfo::Matrix output_matrix;
+                output_matrix[2] = output.top_left.x.as_int();
+                output_matrix[5] = output.top_left.y.as_int();
+
+                switch(output.orientation)
                 {
-                    data.output_size = output.modes[output.current_mode_index].size;
-                    if (data.active)
-                       output_rectangles.add(output.extents());
+                case mir_orientation_normal:
+                    output_matrix[0] = 1;
+                    output_matrix[4] = 1;
+                    break;
+                case mir_orientation_left:
+                    output_matrix[1] = 1;
+                    output_matrix[3] = -1;
+                    output_matrix[5] += width;
+                    break;
+                case mir_orientation_right:
+                    output_matrix[1] = -1;
+                    output_matrix[2] += height;
+                    output_matrix[3] = 1;
+                    break;
+                case mir_orientation_inverted:
+                    output_matrix[0] = -1;
+                    output_matrix[2] += width;
+                    output_matrix[4] = -1;
+                    output_matrix[5] += height;
+                    break;
                 }
-                outputs.insert(std::make_pair(output.id.as_value(), data));
+                if (active)
+                    output_rectangles.add(output.extents());
+                outputs.insert(std::make_pair(output.id.as_value(), OutputInfo{active, output_size, output_matrix}));
             });
         input_state_tracker.update_outputs(output_rectangles);
         bounding_rectangle = output_rectangles.bounding_rectangle();
