@@ -368,18 +368,24 @@ TEST_F(FrameClockTest, does_not_resync_on_most_frames)
     EXPECT_EQ(2, callbacks);   // resync because we went idle too long
 }
 
-TEST_F(FrameClockTest, one_frame_skipped_only_after_2_frames_take_3_periods)
+TEST_F(FrameClockTest, frames_skipped_only_after_2_frames_take_over_3_periods)
 {
     FrameClock clock(with_fake_time);
+    auto& now = fake_time[CLOCK_MONOTONIC];
     clock.set_period(one_frame);
 
-    PosixTimestamp a;
+    auto a = clock.next_frame_after(PosixTimestamp());
+    fake_sleep_until(a);
+    fake_sleep_for(one_frame / 9);      // Start with a fast frame
+
     auto b = clock.next_frame_after(a);
+    EXPECT_GT(b, now);
 
     fake_sleep_until(b);
     fake_sleep_for(one_frame * 3 / 2);  // Render time: 1.5 frames
 
     auto c = clock.next_frame_after(b);
+    EXPECT_LT(c, now);                  // Targets the past, catching up
     EXPECT_EQ(one_frame, c - b);        // No frame skipped
 
     fake_sleep_until(c);
@@ -387,12 +393,14 @@ TEST_F(FrameClockTest, one_frame_skipped_only_after_2_frames_take_3_periods)
 
     auto d = clock.next_frame_after(c);
     EXPECT_EQ(2*one_frame, d - c);      // One frame skipped
+    EXPECT_LT(d, now);                  // Targets the past, catching up again
 
     fake_sleep_until(d);
     fake_sleep_for(one_frame/4);        // Short render time, immediate recovery
 
     auto e = clock.next_frame_after(d);
     EXPECT_EQ(one_frame, e - d);        // No frame skipped. We have recovered.
+    EXPECT_GT(e, now);                  // And targeting the future
 }
 
 TEST_F(FrameClockTest, nesting_adds_zero_lag)
