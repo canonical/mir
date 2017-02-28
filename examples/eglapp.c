@@ -368,7 +368,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
         {"-o <id>", "%u", &output_id, "Force placement on output monitor ID"},
         {"-q", "!", &quiet, "Quiet mode (no messages output)"},
         {"-s <width>x<height>", "=", &dims, "Force window size"},
-        {"-r", "!", &new_egl, "Use the new Mir EGL backend for Mesa"},
+        {"-r", "!", &new_egl, "Use new EGL (must have new EGL backend installed)"},
         {"--", "$", NULL, "Ignore all arguments that follow"},
         {NULL, NULL, NULL, NULL}
     };
@@ -414,7 +414,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
 
     if (new_egl)
     {
-        printf("Using the new EGL driver.\n");
+        printf("Using the new EGL driver - program will crash if your EGL"
+               " driver does not support the new EGL backend.\n");
         egldisplay = eglGetDisplay(connection);
     }
     else
