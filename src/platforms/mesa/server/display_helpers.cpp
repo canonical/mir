@@ -340,6 +340,10 @@ mgmh::EGLHelper::EGLHelper(EGLHelper&& from)
       egl_surface{from.egl_surface},
       should_terminate_egl{from.should_terminate_egl}
 {
+    from.should_terminate_egl = false;
+    from.egl_display = EGL_NO_DISPLAY;
+    from.egl_context = EGL_NO_CONTEXT;
+    from.egl_surface = EGL_NO_SURFACE;
 }
 
 void mgmh::EGLHelper::setup(GBMHelper const& gbm)
