@@ -235,6 +235,9 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
     if (next == surfaces.end())
         next = std::find_if(begin(surfaces), current, can_take_focus);
 
+    if (next == end(surfaces))
+        return {};
+
     return next->second;
 }
 

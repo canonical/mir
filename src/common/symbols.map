@@ -270,13 +270,8 @@ MIR_COMMON_0.27_PRIVATE {
        MirPointerEvent::x*;
        MirPointerEvent::y*;
        MirTouchEvent::MirTouchEvent*;
-       MirTouchEvent::buttons*;
-       MirTouchEvent::set_buttons*;
-       MirTouchEvent::event_time*;
-       MirTouchEvent::set_event_time*;
        MirTouchEvent::pointer_count*;
        MirTouchEvent::set_pointer_count*;
-       MirTouchEvent::pointer_coordinates*;
        MirTouchEvent::id*;
        MirTouchEvent::set_id*;
        MirTouchEvent::x*;
@@ -291,10 +286,6 @@ MIR_COMMON_0.27_PRIVATE {
        MirTouchEvent::set_pressure*;
        MirTouchEvent::orientation*;
        MirTouchEvent::set_orientation*;
-       MirTouchEvent::vscroll*;
-       MirTouchEvent::set_vscroll*;
-       MirTouchEvent::hscroll*;
-       MirTouchEvent::set_hscroll*;
        MirTouchEvent::tool_type*;
        MirTouchEvent::set_tool_type*;
        MirTouchEvent::action*;
