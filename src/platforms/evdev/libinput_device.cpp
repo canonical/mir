@@ -387,8 +387,8 @@ mi::OutputInfo mie::LibInputDevice::get_output_info() const
         return mi::OutputInfo(
             true,
             scene_bbox.size,
-            mi::OutputInfo::Matrix{1.0f, 0.0f, float(scene_bbox.top_left.x.as_int()),
-                                   0.0f, 1.0f, float(scene_bbox.top_left.y.as_int())});
+            mi::OutputInfo::Matrix{{1.0f, 0.0f, float(scene_bbox.top_left.x.as_int()),
+                                    0.0f, 1.0f, float(scene_bbox.top_left.y.as_int())}});
     }
 }
 
