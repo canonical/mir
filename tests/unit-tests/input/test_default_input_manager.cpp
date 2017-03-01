@@ -49,7 +49,7 @@ struct DefaultInputManagerTest : ::testing::Test
     NiceMock<mtd::MockInputPlatform> platform;
     mir::Fd event_hub_fd{eventfd(0, EFD_CLOEXEC|EFD_NONBLOCK)};
     mir::input::DefaultInputManager input_manager{mt::fake_shared(multiplexer), mt::fake_shared(platform)};
-    std::chrono::seconds const timeout{3};
+    std::chrono::seconds const timeout{30};
 
     DefaultInputManagerTest()
     {
