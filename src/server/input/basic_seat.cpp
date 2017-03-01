@@ -63,9 +63,9 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
                 auto output_size = output.modes[output.current_mode_index].size;
                 auto width = output_size.width.as_int();
                 auto height = output_size.height.as_int();
-                OutputInfo::Matrix output_matrix = {
+                OutputInfo::Matrix output_matrix{{
                     1.0f, 0.0f, float(output.top_left.x.as_int()),
-                    0.0f, 1.0f, float(output.top_left.y.as_int())};
+                    0.0f, 1.0f, float(output.top_left.y.as_int())}};
 
                 switch(output.orientation)
                 {
