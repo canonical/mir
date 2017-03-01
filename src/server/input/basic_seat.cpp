@@ -53,7 +53,7 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
             {
                 if (!output.used || !output.connected)
                     return;
-                if (!output.valid())
+                if (!output.valid() || (output.current_mode_index >= output.modes.size()))
                     return;
 
                 // TODO make the decision whether display that is used but powered off should emit

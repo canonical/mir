@@ -42,7 +42,8 @@ struct OutputInfo
 
     bool active{false};
     geometry::Size output_size;
-    Matrix output_to_scene;
+    Matrix output_to_scene{{1,0,0,
+                            0,1,0}};
 
     inline void transform_to_scene(float& x, float& y) const
     {
