@@ -46,19 +46,15 @@ struct MockBufferMap : mf::ClientBuffers
 
 struct FixedSchedule : mc::Schedule
 {
-    void schedule(std::shared_ptr<mg::Buffer> const&)
+    void schedule(std::shared_ptr<mg::Buffer> const&) override
     {
         throw std::runtime_error("this stub doesnt support this");
     }
-    void cancel(std::shared_ptr<mg::Buffer> const&)
-    {
-        throw std::runtime_error("this stub doesnt support this");
-    }
-    unsigned int num_scheduled()
+    unsigned int num_scheduled() override
     {
         return sched.size() - current;
     }
-    std::shared_ptr<mg::Buffer> next_buffer()
+    std::shared_ptr<mg::Buffer> next_buffer() override
     {
         if (sched.empty() || current == sched.size())
             throw std::runtime_error("no buffer scheduled");
