@@ -37,7 +37,7 @@ struct OutputInfo
     using Matrix = std::array<float,6>; // 2x3 row major matrix
     OutputInfo() {}
     OutputInfo(bool active, geometry::Size size, Matrix const& transformation)
-        : active{active}, output_size{size}, output_to_scene{transformation}
+        : active{active}, output_size{size}, output_to_scene(transformation)
     {}
 
     bool active{false};
