@@ -317,8 +317,8 @@ void mie::LibInputDevice::update_device_info()
 {
     auto dev = device();
     std::string name = libinput_device_get_name(dev);
-    std::stringstream unique_id(name);
-    unique_id << '-' << libinput_device_get_sysname(dev) << '-' <<
+    std::stringstream unique_id;
+    unique_id << name << '-' << libinput_device_get_sysname(dev) << '-' <<
         libinput_device_get_id_vendor(dev) << '-' <<
         libinput_device_get_id_product(dev);
     mi::DeviceCapabilities caps;
