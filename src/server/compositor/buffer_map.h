@@ -54,7 +54,7 @@ private:
     //used to keep strong reference
     Map buffers;
     Map::iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&);
-    Map::const_iterator checked_buffers_find_const(graphics::BufferID, std::unique_lock<std::mutex> const&) const;
+    Map::const_iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&) const;
 
     //would be better to schedule the async buffer callbacks in the ipc subsystem,
     //instead of driving from within the compositor threads (LP: #1395421)

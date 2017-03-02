@@ -94,7 +94,7 @@ void mc::BufferMap::receive_buffer(graphics::BufferID id)
 std::shared_ptr<mg::Buffer> mc::BufferMap::get(mg::BufferID id) const
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
-    return checked_buffers_find_const(id, lk)->second.buffer;
+    return checked_buffers_find(id, lk)->second.buffer;
 }
 
 mc::BufferMap::Map::iterator mc::BufferMap::checked_buffers_find(
@@ -106,7 +106,7 @@ mc::BufferMap::Map::iterator mc::BufferMap::checked_buffers_find(
     return it;
 }
 
-mc::BufferMap::Map::const_iterator mc::BufferMap::checked_buffers_find_const(
+mc::BufferMap::Map::const_iterator mc::BufferMap::checked_buffers_find(
     mg::BufferID id, std::unique_lock<std::mutex> const&) const
 {
     auto it = buffers.find(id);
