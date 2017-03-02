@@ -32,7 +32,7 @@ class ClientBuffers
 public:
     virtual graphics::BufferID add_buffer(std::shared_ptr<graphics::Buffer> const& properties) = 0;
     virtual void remove_buffer(graphics::BufferID id) = 0;
-    virtual std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID) = 0;
+    virtual std::shared_ptr<graphics::Buffer> operator[](graphics::BufferID) = 0;
     virtual void send_buffer(graphics::BufferID id) = 0;
     virtual void receive_buffer(graphics::BufferID id) = 0;
 

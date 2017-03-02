@@ -66,7 +66,7 @@ struct StubBufferMap : mf::ClientBuffers
     {
         sink.send_buffer(mf::BufferStreamId{33}, *operator[](id), mg::BufferIpcMsgType::update_msg);
     }
-    std::shared_ptr<mg::Buffer>& operator[](mg::BufferID id)
+    std::shared_ptr<mg::Buffer> operator[](mg::BufferID id)
     {
         auto it = std::find_if(buffers.begin(), buffers.end(),
             [id](std::shared_ptr<mg::Buffer> const& b)
