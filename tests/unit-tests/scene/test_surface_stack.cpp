@@ -292,7 +292,7 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
 
     struct StubBuffers : mtd::StubClientBuffers
     {
-        std::shared_ptr<mg::Buffer> operator[](mg::BufferID) override
+        std::shared_ptr<mg::Buffer> operator[](mg::BufferID) const override
         {
             return buffer;
         }
