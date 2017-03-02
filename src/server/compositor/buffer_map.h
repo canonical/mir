@@ -39,7 +39,7 @@ public:
     void receive_buffer(graphics::BufferID id) override;
     void send_buffer(graphics::BufferID id) override;
 
-    std::shared_ptr<graphics::Buffer> operator[](graphics::BufferID) const override;
+    std::shared_ptr<graphics::Buffer> get(graphics::BufferID) const override;
     
 private:
     std::mutex mutable mutex;

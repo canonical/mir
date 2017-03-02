@@ -40,7 +40,7 @@ struct MockBufferMap : mf::ClientBuffers
     MOCK_METHOD1(receive_buffer, void(mg::BufferID id));
     MOCK_METHOD1(send_buffer, void(mg::BufferID id));
     MOCK_CONST_METHOD0(client_owned_buffer_count, size_t());
-    std::shared_ptr<mg::Buffer> operator[](mg::BufferID) const { return {}; }
+    MOCK_CONST_METHOD1(get, std::shared_ptr<mg::Buffer>(mg::BufferID));
 };
 
 struct FixedSchedule : mc::Schedule

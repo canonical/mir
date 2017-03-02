@@ -91,7 +91,7 @@ void mc::BufferMap::receive_buffer(graphics::BufferID id)
         it->second.owner = Owner::server;
 }
 
-std::shared_ptr<mg::Buffer> mc::BufferMap::operator[](mg::BufferID id) const
+std::shared_ptr<mg::Buffer> mc::BufferMap::get(mg::BufferID id) const
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     return checked_buffers_find_const(id, lk)->second.buffer;

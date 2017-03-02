@@ -39,7 +39,7 @@ struct StubClientBuffers : frontend::ClientBuffers
     void remove_buffer(graphics::BufferID) override
     {
     }
-    std::shared_ptr<graphics::Buffer> operator[](graphics::BufferID) const override
+    std::shared_ptr<graphics::Buffer> get(graphics::BufferID) const override
     {
         return buffer;
     }
