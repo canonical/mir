@@ -90,6 +90,8 @@ unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mute
 
 void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
+    std::shared_ptr<mg::Buffer> dropped;
+
     if (!buffer)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot submit null buffer"));
 
@@ -97,11 +99,16 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
         std::lock_guard<decltype(mutex)> lk(mutex); 
         first_frame_posted = true;
         buffers->receive_buffer(buffer->id());
-        schedule->schedule((*buffers)[buffer->id()]);
+        schedule->schedule_nonblocking((*buffers)[buffer->id()], dropped);
         if (!associated_buffers.empty() && (client_owned_buffer_count(lk) == 0))
             drop_policy->swap_now_blocking();
     }
     observers.frame_posted(1, buffer->size());
+
+    // Socket IO must complete without holding locks. Otherwise it holds up the
+    // compositor thread(s).
+    if (dropped)
+        buffers->send_buffer(dropped->id());
 }
 
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const& fn)

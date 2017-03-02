@@ -30,12 +30,21 @@ mc::DroppingSchedule::DroppingSchedule(std::shared_ptr<mf::ClientBuffers> const&
 {
 }
 
-void mc::DroppingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
+void mc::DroppingSchedule::schedule(std::shared_ptr<mg::Buffer> const& in)
+{
+    std::shared_ptr<mg::Buffer> out;
+    schedule_nonblocking(in, out);
+    if (out)
+        sender->send_buffer(out->id());
+}
+
+void mc::DroppingSchedule::schedule_nonblocking(
+    std::shared_ptr<mg::Buffer> const& in,
+    std::shared_ptr<mg::Buffer>& out)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-    if ((the_only_buffer != buffer) && the_only_buffer)
-        sender->send_buffer(the_only_buffer->id());
-    the_only_buffer = buffer;
+    out = (the_only_buffer != in) ? the_only_buffer : nullptr;
+    the_only_buffer = in;
 }
 
 unsigned int mc::DroppingSchedule::num_scheduled()

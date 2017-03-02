@@ -50,6 +50,11 @@ struct FixedSchedule : mc::Schedule
     {
         throw std::runtime_error("this stub doesnt support this");
     }
+    void schedule_nonblocking(std::shared_ptr<mg::Buffer> const&,
+                              std::shared_ptr<mg::Buffer>&) override
+    {
+        throw std::runtime_error("this stub doesnt support this");
+    }
     unsigned int num_scheduled() override
     {
         return sched.size() - current;
