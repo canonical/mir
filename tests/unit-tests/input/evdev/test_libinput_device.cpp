@@ -324,6 +324,20 @@ TEST_F(LibInputDevice, input_info_combines_capabilities)
                                       mi::DeviceCapability::alpha_numeric));
 }
 
+TEST_F(LibInputDevice, unique_id_contains_device_name)
+{
+    auto fake_device = env.mock_libinput.get_next_fake_ptr<libinput_device*>();
+    auto fake_dev_group = env.mock_libinput.get_next_fake_ptr<libinput_device_group*>();
+    auto udev_dev = env.mock_libinput.get_next_fake_ptr<udev_device*>();
+    env.mock_libinput.setup_device(fake_device, fake_dev_group, udev_dev, "Keyboard", "event4", 1, 2);
+
+    mie::LibInputDevice dev(mir::report::null_input_report(),
+                            mie::make_libinput_device(lib, fake_device));
+    auto info = dev.get_device_info();
+
+    EXPECT_THAT(info.unique_id, Eq("Keyboard-event4-1-2"));
+}
+
 TEST_F(LibInputDevice, removal_unrefs_libinput_device)
 {
     auto fake_device = setup_laptop_keyboard();

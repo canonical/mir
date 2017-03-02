@@ -108,7 +108,7 @@ libinput_device* mtf::LibInputEnvironment::setup_device(std::string const& devic
     auto group = mock_libinput.get_next_fake_ptr<libinput_device_group*>();
     auto u_dev = mock_libinput.get_next_fake_ptr<udev_device*>();
 
-    mock_libinput.setup_device(dev, group, u_dev, device_name.c_str(), 123, 456);
+    mock_libinput.setup_device(dev, group, u_dev, device_name.c_str(), entry->second.path.c_str(), 123, 456);
     ON_CALL(mock_udev, udev_device_get_devnode(u_dev))
         .WillByDefault(Return(entry->second.path.c_str()));
     ON_CALL(mock_udev, udev_device_get_property_value(u_dev, _))
