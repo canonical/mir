@@ -183,6 +183,25 @@ TEST_F(Stream, calls_observers_after_scheduling_on_submissions)
     stream.submit_buffer(buffers[0]);
 }
 
+TEST_F(Stream, wakes_compositor_before_starting_socket_io)
+{
+    auto observer = std::make_shared<MockSurfaceObserver>();
+
+    InSequence seq;
+    EXPECT_CALL(*observer, frame_posted(_,_));
+    EXPECT_CALL(mock_sink, send_buffer(_,_,_));
+    EXPECT_CALL(*observer, frame_posted(_,_));
+
+    stream.add_observer(observer);
+    stream.allow_framedropping(true);
+    EXPECT_EQ(0, stream.buffers_ready_for_compositor(this));
+    stream.submit_buffer(buffers[0]);
+    EXPECT_EQ(1, stream.buffers_ready_for_compositor(this));
+    stream.submit_buffer(buffers[1]);
+    EXPECT_EQ(1, stream.buffers_ready_for_compositor(this));
+    stream.remove_observer(observer);
+}
+
 TEST_F(Stream, calls_observers_call_doesnt_hold_lock)
 {
     auto observer = std::make_shared<MockSurfaceObserver>();
