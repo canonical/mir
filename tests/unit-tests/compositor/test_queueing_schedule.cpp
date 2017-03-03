@@ -77,7 +77,7 @@ TEST_F(QueueingSchedule, queues_buffers_up)
 
 TEST_F(QueueingSchedule, nonblocking_schedule_queues_buffers_up)
 {
-    EXPECT_FALSE(schedule.num_scheduled());
+    EXPECT_EQ(0U, schedule.num_scheduled());
 
     std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers {
         buffers[1], buffers[3], buffers[0], buffers[2], buffers[4]
@@ -90,11 +90,9 @@ TEST_F(QueueingSchedule, nonblocking_schedule_queues_buffers_up)
         EXPECT_TRUE(!out);
     }
 
-    EXPECT_TRUE(schedule.num_scheduled());
-
+    EXPECT_EQ(scheduled_buffers.size(), schedule.num_scheduled());
     EXPECT_THAT(drain_queue(), ContainerEq(scheduled_buffers));
-
-    EXPECT_FALSE(schedule.num_scheduled());
+    EXPECT_EQ(0U, schedule.num_scheduled());
 }
 
 TEST_F(QueueingSchedule, queuing_the_same_buffer_moves_it_to_front_of_queue)
