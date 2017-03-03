@@ -297,7 +297,7 @@ std::shared_ptr<mi::Seat> mir::DefaultServerConfiguration::the_seat()
                     the_input_dispatcher(),
                     the_touch_visualizer(),
                     the_cursor_listener(),
-                    the_input_region(),
+                    the_display_configuration_observer_registrar(),
                     the_key_mapper(),
                     the_clock(),
                     the_seat_observer());
