@@ -90,17 +90,22 @@ TEST_F(DroppingSchedule, drops_excess_buffers)
 
 TEST_F(DroppingSchedule, nonblocking_schedule_avoids_socket_io)
 {
-    EXPECT_CALL(mock_client_buffers, send_buffer(_))
-        .Times(0);
- 
-    for(auto i = 0u; i < num_buffers; i++)
+    for (auto i = 0u; i < num_buffers; i++)
     {
-        std::shared_ptr<mg::Buffer> dropped;
-        schedule.schedule_nonblocking(buffers[i], dropped);
+        EXPECT_CALL(mock_client_buffers, send_buffer(_))
+            .Times(0);
+
+        auto deferred_io = schedule.schedule_nonblocking(buffers[i]);
+
+        testing::Mock::VerifyAndClearExpectations(&mock_client_buffers);
         if (i > 0)
-            EXPECT_EQ(buffers[i-1], dropped);
-        else
-            EXPECT_TRUE(!dropped);
+        {
+            EXPECT_CALL(mock_client_buffers, send_buffer(buffers[i-1]->id()))
+                .Times(1);
+            ASSERT_TRUE(deferred_io.valid());
+            deferred_io.wait();
+            testing::Mock::VerifyAndClearExpectations(&mock_client_buffers);
+        }
     }
 
     auto queue = drain_queue();

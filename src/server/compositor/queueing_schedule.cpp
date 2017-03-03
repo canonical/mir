@@ -32,11 +32,11 @@ void mc::QueueingSchedule::schedule(std::shared_ptr<graphics::Buffer> const& buf
     queue.emplace_back(buffer);
 }
 
-void mc::QueueingSchedule::schedule_nonblocking(
-    std::shared_ptr<graphics::Buffer> const& in,
-    std::shared_ptr<graphics::Buffer>&)
+std::future<void> mc::QueueingSchedule::schedule_nonblocking(
+    std::shared_ptr<graphics::Buffer> const& buffer)
 {
-    schedule(in);
+    schedule(buffer);
+    return {};
 }
 
 unsigned int mc::QueueingSchedule::num_scheduled()

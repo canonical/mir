@@ -30,21 +30,28 @@ mc::DroppingSchedule::DroppingSchedule(std::shared_ptr<mf::ClientBuffers> const&
 {
 }
 
-void mc::DroppingSchedule::schedule(std::shared_ptr<mg::Buffer> const& in)
+void mc::DroppingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    std::shared_ptr<mg::Buffer> out;
-    schedule_nonblocking(in, out);
-    if (out)
-        sender->send_buffer(out->id());
+    auto drop = schedule_nonblocking(buffer);
+    if (drop.valid())
+        drop.wait();
 }
 
-void mc::DroppingSchedule::schedule_nonblocking(
-    std::shared_ptr<mg::Buffer> const& in,
-    std::shared_ptr<mg::Buffer>& out)
+std::future<void> mc::DroppingSchedule::schedule_nonblocking(
+    std::shared_ptr<mg::Buffer> const& buffer)
 {
+    std::future<void> drop;
     std::lock_guard<decltype(mutex)> lk(mutex);
-    out = (the_only_buffer != in) ? the_only_buffer : nullptr;
-    the_only_buffer = in;
+    if ((the_only_buffer != buffer) && the_only_buffer)
+    {
+        drop = std::async(std::launch::deferred,
+            [this, dropped=the_only_buffer]()
+            {
+                sender->send_buffer(dropped->id());
+            });
+    }
+    the_only_buffer = buffer;
+    return drop;
 }
 
 unsigned int mc::DroppingSchedule::num_scheduled()

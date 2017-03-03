@@ -32,9 +32,8 @@ class QueueingSchedule : public Schedule
 {
 public:
     void schedule(std::shared_ptr<graphics::Buffer> const& buffer) override;
-    void schedule_nonblocking(
-        std::shared_ptr<graphics::Buffer> const& in,
-        std::shared_ptr<graphics::Buffer>& out) override;
+    std::future<void> schedule_nonblocking(
+        std::shared_ptr<graphics::Buffer> const& buffer) override;
     unsigned int num_scheduled() override;
     std::shared_ptr<graphics::Buffer> next_buffer() override;
 

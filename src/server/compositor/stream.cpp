@@ -90,7 +90,7 @@ unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mute
 
 void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    std::shared_ptr<mg::Buffer> dropped;
+    std::future<void> deferred_io;
 
     if (!buffer)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot submit null buffer"));
@@ -99,7 +99,7 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
         std::lock_guard<decltype(mutex)> lk(mutex); 
         first_frame_posted = true;
         buffers->receive_buffer(buffer->id());
-        schedule->schedule_nonblocking(buffers->get(buffer->id()), dropped);
+        deferred_io = schedule->schedule_nonblocking(buffers->get(buffer->id()));
         if (!associated_buffers.empty() && (client_owned_buffer_count(lk) == 0))
             drop_policy->swap_now_blocking();
     }
@@ -107,10 +107,10 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 
     // Ensure that mutex is not locked while we do this (synchronous!) socket
     // IO. Holding it locked blocks the compositor thread(s) from rendering.
-    if (dropped)
+    if (deferred_io.valid())
     {
         // TODO: Throttling of GPU hogs goes here (LP: #1211700, LP: #1665802)
-        buffers->send_buffer(dropped->id());
+        deferred_io.wait();
     }
 }
 
