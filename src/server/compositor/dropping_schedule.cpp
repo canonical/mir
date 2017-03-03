@@ -45,7 +45,7 @@ std::future<void> mc::DroppingSchedule::schedule_nonblocking(
     if ((the_only_buffer != buffer) && the_only_buffer)
     {
         drop = std::async(std::launch::deferred,
-            [this, dropped=the_only_buffer]()
+            [sender=sender, dropped=the_only_buffer]()
             {
                 sender->send_buffer(dropped->id());
             });
