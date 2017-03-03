@@ -196,6 +196,8 @@ TEST_F(Stream, wakes_compositor_before_starting_socket_io)
     stream.submit_buffer(buffers[0]);
     stream.submit_buffer(buffers[1]);
     stream.remove_observer(observer);
+
+    Mock::VerifyAndClearExpectations(&mock_sink);
 }
 
 TEST_F(Stream, calls_observers_call_doesnt_hold_lock)
