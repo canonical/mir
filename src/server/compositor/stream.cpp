@@ -105,8 +105,8 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
     }
     observers.frame_posted(1, buffer->size());
 
-    // Socket IO must complete without holding locks. Otherwise it holds up the
-    // compositor thread(s).
+    // Ensure that mutex is not locked while we do this (synchronous!) socket
+    // IO. Holding it locked blocks the compositor thread(s) from rendering.
     if (dropped)
     {
         // TODO: Throttling of GPU hogs goes here (LP: #1211700, LP: #1665802)
