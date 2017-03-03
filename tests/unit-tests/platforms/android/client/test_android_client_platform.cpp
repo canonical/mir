@@ -28,9 +28,11 @@
 #include "mir/test/doubles/mock_client_context.h"
 #include "mir/test/doubles/mock_egl_native_surface.h"
 #include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_client_buffer.h"
 #include "mir/test/doubles/mock_buffer_registrar.h"
 #include "mir/test/doubles/mock_android_native_buffer.h"
 #include "mir/test/doubles/mock_android_hw.h"
+#include "mir/test/doubles/stub_android_native_buffer.h"
 #include "mir_test_framework/client_platform_factory.h"
 #include "src/platforms/android/client/buffer.h"
 #include "src/client/buffer.h"
@@ -303,4 +305,57 @@ TEST_F(AndroidClientPlatformTest, can_allocate_buffer)
         GRALLOC_USAGE_HW_RENDER | GRALLOC_USAGE_HW_TEXTURE,
         [] (::MirBuffer*, void*) {}, nullptr);
     EXPECT_THAT(channel->channel_call_count, Eq(call_count+1));
+}
+
+TEST_F(AndroidClientPlatformTest, can_access_buffer_properties)
+{
+    auto const header_size = 3;
+    int num_ints = 8;
+    int num_fds = 2;
+    std::shared_ptr<native_handle_t> native(
+        static_cast<native_handle*>(::operator new((header_size + num_ints + num_fds) * sizeof(int))),
+        [](auto *a) { ::operator delete(a); });
+    native->numInts = num_ints;
+    native->numFds = num_fds;
+    for (auto i = 0; i < num_ints + num_fds; i++)
+        native->data[i] = i * 31;
+
+    auto stub_buffer = std::make_shared<mtd::StubAndroidNativeBuffer>();
+    stub_buffer->stub_anwb.stride = 1098;
+    stub_buffer->stub_anwb.format = 893;
+    stub_buffer->stub_anwb.usage = 18;
+    stub_buffer->stub_anwb.handle = native.get();
+
+    auto client_buffer = std::make_shared<NiceMock<mtd::MockClientBuffer>>();
+    ON_CALL(*client_buffer, native_buffer_handle())
+        .WillByDefault(Return(stub_buffer));
+    Buffer buffer(nullptr, nullptr, 0, client_buffer, nullptr, mir_buffer_usage_hardware);
+
+    auto ext = static_cast<MirExtensionAndroidBufferV2*>(
+        platform->request_interface("mir_extension_android_buffer", 2));
+    ASSERT_THAT(ext, Ne(nullptr));
+    ASSERT_THAT(ext->is_android_compatible, Ne(nullptr));
+    ASSERT_THAT(ext->native_handle, Ne(nullptr));
+    ASSERT_THAT(ext->hal_pixel_format, Ne(nullptr));
+    ASSERT_THAT(ext->gralloc_usage, Ne(nullptr));
+    ASSERT_THAT(ext->stride, Ne(nullptr));
+    ASSERT_THAT(ext->inc_ref, Ne(nullptr));
+    ASSERT_THAT(ext->dec_ref, Ne(nullptr));
+
+    auto b = reinterpret_cast<::MirBuffer*>(&buffer);
+    EXPECT_TRUE(ext->is_android_compatible(b));
+    int nints = 0;
+    int nfds = 0;
+    int const* fds = nullptr;
+    int const* data = nullptr;
+    ext->native_handle(b, &nfds, &fds, &nints, &data);
+    EXPECT_THAT(nints, Eq(num_ints));
+    EXPECT_THAT(nfds, Eq(num_fds));
+    for (auto i = 0; i < nfds; i++)
+        EXPECT_THAT(fds[i], Eq(native->data[i]));
+    for (auto i = 0; i < nints; i++)
+        EXPECT_THAT(data[i], Eq(native->data[i + nfds]));
+    EXPECT_THAT(ext->hal_pixel_format(b), Eq(stub_buffer->stub_anwb.format));
+    EXPECT_THAT(ext->gralloc_usage(b), Eq(stub_buffer->stub_anwb.usage));
+    EXPECT_THAT(ext->stride(b), Eq(stub_buffer->stub_anwb.stride));
 }
