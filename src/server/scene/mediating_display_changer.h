@@ -22,7 +22,6 @@
 #include "mir/frontend/display_changer.h"
 #include "mir/display_changer.h"
 #include "mir/shell/display_configuration_controller.h"
-#include "mir/input/input_region.h"
 
 #include <mutex>
 #include <map>
@@ -45,10 +44,6 @@ namespace graphics
     class DisplayConfigurationObserver;
 }
 namespace compositor { class Compositor; }
-namespace input
-{
-class InputRegion;
-}
 namespace scene
 {
 class SessionEventHandlerRegister;
@@ -68,7 +63,6 @@ public:
         std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
         std::shared_ptr<ServerActionQueue> const& server_action_queue,
         std::shared_ptr<graphics::DisplayConfigurationObserver> const& observer,
-        std::shared_ptr<input::InputRegion> const& region,
         std::shared_ptr<time::AlarmFactory> const& alarm_factory);
 
     /* From mir::frontend::DisplayChanger */
@@ -106,7 +100,6 @@ private:
     void apply_base_config();
     void send_config_to_all_sessions(
         std::shared_ptr<graphics::DisplayConfiguration> const& conf);
-    void update_input_rectangles(graphics::DisplayConfiguration const& conf);
 
     std::shared_ptr<graphics::Display> const display;
     std::shared_ptr<compositor::Compositor> const compositor;
@@ -122,7 +115,6 @@ private:
     std::weak_ptr<frontend::Session> focused_session;
     std::shared_ptr<graphics::DisplayConfiguration> base_configuration_;
     bool base_configuration_applied;
-    std::shared_ptr<input::InputRegion> const region;
     std::shared_ptr<time::AlarmFactory> const alarm_factory;
     std::unique_ptr<time::Alarm> preview_configuration_timeout;
     std::weak_ptr<frontend::Session> currently_previewing_session;

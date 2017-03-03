@@ -19,7 +19,6 @@
 #include "mir/default_server_configuration.h"
 
 #include "key_repeat_dispatcher.h"
-#include "display_input_region.h"
 #include "event_filter_chain_dispatcher.h"
 #include "config_changer.h"
 #include "cursor_controller.h"
@@ -94,15 +93,6 @@ bool is_arale()
     return false;
 }
 
-}
-
-std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
-{
-    return input_region(
-        []()
-        {
-            return std::make_shared<mi::DisplayInputRegion>();
-        });
 }
 
 std::shared_ptr<mi::CompositeEventFilter>
