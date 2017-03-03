@@ -99,7 +99,7 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
         std::lock_guard<decltype(mutex)> lk(mutex); 
         first_frame_posted = true;
         buffers->receive_buffer(buffer->id());
-        schedule->schedule(buffers->get(buffer->id()));
+        deferred_io = schedule->schedule_nonblocking(buffers->get(buffer->id()));
         if (!associated_buffers.empty() && (client_owned_buffer_count(lk) == 0))
             drop_policy->swap_now_blocking();
     }
