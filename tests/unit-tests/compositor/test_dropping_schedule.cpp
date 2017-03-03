@@ -88,6 +88,26 @@ TEST_F(DroppingSchedule, drops_excess_buffers)
     EXPECT_THAT(queue[0]->id(), Eq(buffers[4]->id()));
 }
 
+TEST_F(DroppingSchedule, nonblocking_schedule_avoids_socket_io)
+{
+    EXPECT_CALL(mock_client_buffers, send_buffer(_))
+        .Times(0);
+ 
+    for(auto i = 0u; i < num_buffers; i++)
+    {
+        std::shared_ptr<mg::Buffer> dropped;
+        schedule.schedule_nonblocking(buffers[i], dropped);
+        if (i > 0)
+            EXPECT_EQ(buffers[i-1], dropped);
+        else
+            EXPECT_TRUE(!dropped);
+    }
+
+    auto queue = drain_queue();
+    ASSERT_THAT(queue, SizeIs(1));
+    EXPECT_THAT(queue[0]->id(), Eq(buffers[4]->id()));
+}
+
 TEST_F(DroppingSchedule, queueing_same_buffer_many_times_doesnt_drop)
 {
     EXPECT_CALL(mock_client_buffers, send_buffer(_)).Times(0);
