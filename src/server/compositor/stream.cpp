@@ -108,7 +108,10 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
     // Socket IO must complete without holding locks. Otherwise it holds up the
     // compositor thread(s).
     if (dropped)
+    {
+        // TODO: Throttling of GPU hogs goes here (LP: #1211700, LP: #1665802)
         buffers->send_buffer(dropped->id());
+    }
 }
 
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const& fn)
