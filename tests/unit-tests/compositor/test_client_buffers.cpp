@@ -49,7 +49,7 @@ TEST_F(ClientBuffers, sends_full_buffer_on_allocation)
 TEST_F(ClientBuffers, access_of_nonexistent_buffer_throws)
 {
     EXPECT_THROW({
-        auto buffer = map[stub_buffer.id()];
+        auto buffer = map.get(stub_buffer.id());
     }, std::logic_error);
 }
 
@@ -63,13 +63,13 @@ TEST_F(ClientBuffers, removal_of_nonexistent_buffer_throws)
 TEST_F(ClientBuffers, can_access_once_added)
 {
     auto id = map.add_buffer(mt::fake_shared(stub_buffer));
-    EXPECT_THAT(map[id].get(), Eq(&stub_buffer));
+    EXPECT_THAT(map.get(id).get(), Eq(&stub_buffer));
 }
 
 TEST_F(ClientBuffers, sends_update_msg_to_send_buffer)
 {
     auto id = map.add_buffer(mt::fake_shared(stub_buffer));
-    auto buffer = map[id];
+    auto buffer = map.get(id);
     EXPECT_CALL(*mock_sink, update_buffer(Ref(*buffer)));
     map.send_buffer(id);
 }
@@ -77,7 +77,7 @@ TEST_F(ClientBuffers, sends_update_msg_to_send_buffer)
 TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
 {
     auto id = map.add_buffer(mt::fake_shared(stub_buffer));
-    auto buffer = map[id];
+    auto buffer = map.get(id);
 
     EXPECT_CALL(*mock_sink, remove_buffer(Ref(*buffer)));
     map.remove_buffer(id);

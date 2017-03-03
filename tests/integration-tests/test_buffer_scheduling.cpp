@@ -485,7 +485,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
                 if (!submit_stream)
                     return;
                 mg::BufferID id{static_cast<unsigned int>(buffer.buffer_id())};
-                submit_stream->submit_buffer((*map)[id]);
+                submit_stream->submit_buffer(map->get(id));
             });
         ipc->on_allocate(
             [this](geom::Size sz)
