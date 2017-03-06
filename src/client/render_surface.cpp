@@ -82,7 +82,8 @@ MirPresentationChain* mcl::RenderSurface::get_presentation_chain()
 {
     if (chain_from_id || stream_from_id)
         BOOST_THROW_EXCEPTION(std::logic_error("Content already handed out"));
-    chain_from_id = connection_->create_chain(this);
+    chain_from_id = connection_->create_presentation_chain_with_id(this,
+                                                                   *protobuf_bs);
     return reinterpret_cast<MirPresentationChain*>(chain_from_id.get());
 }
 

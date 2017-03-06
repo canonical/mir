@@ -1252,16 +1252,16 @@ std::unique_ptr<mir::protobuf::DisplayConfiguration> MirConnection::snapshot_dis
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-std::shared_ptr<mcl::PresentationChain> MirConnection::create_chain(
-    MirRenderSurface* surface)
+std::shared_ptr<mcl::PresentationChain> MirConnection::create_presentation_chain_with_id(
+    MirRenderSurface* render_surface,
+    mir::protobuf::BufferStream const& a_protobuf_bs)
 {
     if (!client_buffer_factory)
         client_buffer_factory = platform->create_buffer_factory();
     auto chain = std::make_shared<mcl::PresentationChain>(
-        this, surface->stream_id().as_value(),
-        server, client_buffer_factory, buffer_factory);
+        this, a_protobuf_bs.id().value(), server, client_buffer_factory, buffer_factory);
 
-    surface_map->insert(surface->stream_id(), chain);
+    surface_map->insert(render_surface->stream_id(), chain);
     return chain;
 }
 #pragma GCC diagnostic pop
