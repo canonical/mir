@@ -155,7 +155,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
  */
 MirPresentationChain* mir_render_surface_get_presentation_chain(
     MirRenderSurface* render_surface)
-__attribute__((deprecated("Use mir_render_surface_create_presentation_chain")));
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /** Query whether the server supports a given presentation mode.
  *

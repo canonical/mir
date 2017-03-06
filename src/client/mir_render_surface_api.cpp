@@ -20,7 +20,6 @@
 #include "render_surface.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
-#include "mir/require.h"
 #include "connection_surface_map.h"
 
 #pragma GCC diagnostic push
