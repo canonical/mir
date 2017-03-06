@@ -69,6 +69,7 @@ struct MockKMSOutput : public graphics::mesa::KMSOutput
     MOCK_METHOD1(set_gamma, void(mir::graphics::GammaCurves const&));
 
     MOCK_CONST_METHOD3(fb_for, graphics::mesa::FBHandle*(gbm_bo*, uint32_t, uint32_t));
+    MOCK_CONST_METHOD1(buffer_requires_migration, bool(gbm_bo*));
 };
 
 } // namespace test

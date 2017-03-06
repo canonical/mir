@@ -70,6 +70,16 @@ public:
 
     virtual FBHandle* fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const = 0;
 
+    /**
+     * Check whether buffer need to be migrated to GPU-private memory for display.
+     *
+     * \param [in] bo   GBM buffer to test
+     * \return  True if buffer must be migrated to display-private memory in order to be displayed.
+     *          If this method returns true the caller should probably copy it to a new buffer before
+     *          calling fb_for(buffer), as acquiring a FBHandle to the buffer will likely make it
+     *          unusable for rendering on the original GPU.
+     */
+    virtual bool buffer_requires_migration(gbm_bo* bo) const = 0;
 protected:
     KMSOutput() = default;
     KMSOutput(const KMSOutput&) = delete;

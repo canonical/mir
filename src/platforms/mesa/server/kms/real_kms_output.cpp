@@ -397,3 +397,15 @@ mgm::FBHandle* mgm::RealKMSOutput::fb_for(gbm_bo* bo, uint32_t width, uint32_t h
 
     return bufobj;
 }
+
+bool mgm::RealKMSOutput::buffer_requires_migration(gbm_bo* bo) const
+{
+    /*
+     * It's possible that some devices will not require migration -
+     * Intel GPUs can obviously scanout from main memory, as can USB outputs such as
+     * DisplayLink.
+     *
+     * For a first go, just say that *every* device scans out of GPU-private memory.
+     */
+    return gbm_device_get_fd(gbm_bo_get_device(bo)) != drm_fd;
+}

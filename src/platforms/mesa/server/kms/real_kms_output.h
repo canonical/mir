@@ -64,6 +64,7 @@ public:
 
     FBHandle* fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const override;
 
+    bool buffer_requires_migration(gbm_bo* bo) const override;
 private:
     bool ensure_crtc();
     void restore_saved_crtc();
