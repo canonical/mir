@@ -24,6 +24,8 @@
 #include "mir/scene/surface.h"
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/input/mir_input_config.h"
+#include "mir/input/input_device.h"
+#include "mir/input/touchscreen_settings.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
@@ -94,6 +96,22 @@ struct MockEventFilter : public mi::EventFilter
         return true;
     }
 };
+
+
+template<typename SetCallback, typename Apply>
+void apply_and_wait_for_completion(MirConnection* connection, SetCallback set_callback, Apply apply)
+{
+    mt::Signal change_complete;
+    set_callback(connection,
+                 [](MirConnection*, void* context)
+                 {
+                     static_cast<mt::Signal*>(context)->raise(); 
+                 },
+                 &change_complete
+                );
+    apply(connection);
+    ASSERT_TRUE(change_complete.wait_for(10s));
+}
 
 const int surface_width = 100;
 const int surface_height = 100;
@@ -353,6 +371,35 @@ struct TestClientInput : mtf::HeadlessInProcessServer
                 return dev;
         }
         return nullptr;
+    }
+};
+
+struct TestClientInputWithTwoScreens : TestClientInput
+{
+    geom::Rectangle second_screen{{1000,0}, {200,400}};
+
+    int const width{second_screen.size.width.as_int()};
+    int const height{second_screen.size.height.as_int()};
+    float const touch_range = mtf::FakeInputDevice::maximum_touch_axis_value - mtf::FakeInputDevice::minimum_touch_axis_value + 1;
+    float const scale_to_device_width = touch_range / width;
+    float const scale_to_device_height = touch_range / height;
+
+    void SetUp() override
+    {
+        initial_display_layout({screen_geometry, second_screen});
+
+        server.wrap_shell(
+            [this](std::shared_ptr<mir::shell::Shell> const& wrapped)
+            {
+                shell = std::make_shared<mtf::PlacementApplyingShell>(wrapped, input_regions, positions);
+                return shell;
+            });
+
+        HeadlessInProcessServer::SetUp();
+
+        // make surface span over both outputs to test coordinates mapped into second ouput:
+        positions[first] =
+            geom::Rectangle{{0, 0}, {second_screen.bottom_right().x.as_int(), second_screen.bottom_right().y.as_int()}};
     }
 };
 
@@ -1246,19 +1293,14 @@ TEST_F(TestClientInput, clients_can_apply_changed_input_configuration)
     mir_pointer_config_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
     mir_pointer_config_set_acceleration_bias(pointer_config, increased_acceleration);
 
-    mt::Signal changes_complete;
-    mir_connection_set_input_config_change_callback(
+    apply_and_wait_for_completion(
         a_client.connection,
-        [](MirConnection*, void* context)
+        mir_connection_set_input_config_change_callback,
+        [config](MirConnection* connection)
         {
-            static_cast<mt::Signal*>(context)->raise();
-        },
-        &changes_complete
-        );
-    mir_connection_apply_session_input_config(a_client.connection, config);
-    mir_input_config_release(config);
-
-    EXPECT_TRUE(changes_complete.wait_for(10s));
+            mir_connection_apply_session_input_config(connection, config);
+            mir_input_config_release(config);
+        });
 
     config = mir_connection_create_input_config(a_client.connection);
     mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
@@ -1353,19 +1395,14 @@ TEST_F(TestClientInput, unfocused_client_can_change_base_configuration)
 
     mir_pointer_config_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
 
-    mt::Signal changes_complete;
-    mir_connection_set_input_config_change_callback(
+    apply_and_wait_for_completion(
         unfocused_client.connection,
-        [](MirConnection*, void* context)
+        mir_connection_set_input_config_change_callback,
+        [config](MirConnection* connection)
         {
-            static_cast<mt::Signal*>(context)->raise();
-        },
-        &changes_complete
-        );
-    mir_connection_set_base_input_config(unfocused_client.connection, config);
-    mir_input_config_release(config);
-
-    EXPECT_TRUE(changes_complete.wait_for(10s));
+            mir_connection_set_base_input_config(connection, config);
+            mir_input_config_release(config);
+        });
 
     config = mir_connection_create_input_config(unfocused_client.connection);
     mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
@@ -1414,19 +1451,14 @@ TEST_F(TestClientInput, focused_client_can_change_base_configuration)
 
     mir_pointer_config_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
 
-    mt::Signal changes_complete;
-    mir_connection_set_input_config_change_callback(
+    apply_and_wait_for_completion(
         focused_client.connection,
-        [](MirConnection*, void* context)
+        mir_connection_set_input_config_change_callback,
+        [config](MirConnection* connection)
         {
-            static_cast<mt::Signal*>(context)->raise();
-        },
-        &changes_complete
-        );
-    mir_connection_set_base_input_config(focused_client.connection, config);
-    mir_input_config_release(config);
-
-    changes_complete.wait_for(10s);
+            mir_connection_set_base_input_config(connection, config);
+            mir_input_config_release(config);
+        });
 
     config = mir_connection_create_input_config(focused_client.connection);
     mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
@@ -1510,4 +1542,146 @@ TEST_F(TestClientInput, error_callback_triggered_on_wrong_configuration)
     mir_input_config_release(config);
 
     EXPECT_TRUE(wait_for_error.wait_for(10s));
+}
+
+TEST_F(TestClientInput, touchscreen_config_is_mutable)
+{
+    wait_for_input_devices();
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto touchscreen = get_mutable_device_with_capabilities(config,
+                                                 mir_input_device_capability_touchscreen|
+                                                 mir_input_device_capability_multitouch);
+    ASSERT_THAT(touchscreen, Ne(nullptr));
+
+    auto touchscreen_config = mir_input_device_get_mutable_touchscreen_config(touchscreen);
+
+    mir_touchscreen_config_set_output_id(touchscreen_config, 4);
+    mir_touchscreen_config_set_mapping_mode(touchscreen_config, mir_touchscreen_mapping_mode_to_display_wall);
+
+    EXPECT_THAT(mir_touchscreen_config_get_mapping_mode(touchscreen_config), Eq(mir_touchscreen_mapping_mode_to_display_wall));
+    EXPECT_THAT(mir_touchscreen_config_get_output_id(touchscreen_config), Eq(4));
+
+    mir_input_config_release(config);
+}
+
+TEST_F(TestClientInputWithTwoScreens, touchscreen_can_be_mapped_to_second_output)
+{
+    wait_for_input_devices();
+    uint32_t const second_output = 2;
+    int const touch_x = 10;
+    int const touch_y = 10;
+
+    int const expected_x = touch_x + second_screen.top_left.x.as_int();
+    int const expected_y = touch_y + second_screen.top_left.y.as_int();
+
+    mt::Signal touchscreen_ready;
+    fake_touch_screen->on_new_configuration_do(
+        [&touchscreen_ready, second_output](mi::InputDevice const& dev)
+        {
+            auto ts = dev.get_touchscreen_settings();
+            if (ts.is_set() && ts.value().output_id == second_output)
+                touchscreen_ready.raise();
+        });
+
+    Client client(new_connection(), first);
+    auto config = mir_connection_create_input_config(client.connection);
+    auto touchscreen = get_mutable_device_with_capabilities(config,
+                                                            mir_input_device_capability_touchscreen|
+                                                            mir_input_device_capability_multitouch);
+    auto touchscreen_config = mir_input_device_get_mutable_touchscreen_config(touchscreen);
+    mir_touchscreen_config_set_output_id(touchscreen_config, second_output);
+    mir_touchscreen_config_set_mapping_mode(touchscreen_config, mir_touchscreen_mapping_mode_to_output);
+
+    apply_and_wait_for_completion(
+        client.connection,
+        mir_connection_set_input_config_change_callback,
+        [config](MirConnection* connection)
+        {
+            mir_connection_set_base_input_config(connection, config);
+            mir_input_config_release(config);
+        });
+
+    EXPECT_TRUE(touchscreen_ready.wait_for(10s));
+    EXPECT_CALL(client, handle_input(mt::TouchEvent(expected_x, expected_y)))
+        .WillOnce(mt::WakeUp(&client.all_events_received));
+    fake_touch_screen->emit_event(mis::a_touch_event()
+                           .at_position({touch_x*scale_to_device_width, touch_y*scale_to_device_height}));
+
+    EXPECT_TRUE(client.all_events_received.wait_for(10s));
+}
+
+TEST_F(TestClientInputWithTwoScreens, touchscreen_mapped_to_deactivated_output_is_filtered_out)
+{
+    wait_for_input_devices();
+    uint32_t const second_output = 2;
+    int const touch_x = 10;
+    int const touch_y = 10;
+
+    int const expected_x = second_screen.top_left.x.as_int() + touch_x;
+    int const expected_y = second_screen.top_left.y.as_int() + touch_y;
+
+    Client client(new_connection(), first);
+    auto display_config = mir_connection_create_display_configuration(client.connection);
+    auto second_output_ptr = mir_display_config_get_mutable_output(display_config, 1);
+    mir_output_set_power_mode(second_output_ptr, mir_power_mode_off);
+
+    apply_and_wait_for_completion(
+        client.connection,
+        mir_connection_set_display_config_change_callback,
+        [display_config](MirConnection* con)
+        {
+            mir_connection_preview_base_display_configuration(con, display_config, 10);
+        });
+
+    apply_and_wait_for_completion(
+        client.connection,
+        mir_connection_set_display_config_change_callback,
+        [display_config](MirConnection* con)
+        {
+            mir_connection_confirm_base_display_configuration(con, display_config);
+            mir_display_config_release(display_config);
+        });
+
+    display_config = mir_connection_create_display_configuration(client.connection);
+    ASSERT_THAT(mir_output_get_power_mode(mir_display_config_get_output(display_config, 1)), Eq(mir_power_mode_off));
+    mir_display_config_release(display_config);
+
+    mt::Signal touchscreen_ready;
+    fake_touch_screen->on_new_configuration_do(
+        [&touchscreen_ready, second_output](mi::InputDevice const& dev)
+        {
+            auto ts = dev.get_touchscreen_settings();
+            if (ts.is_set()
+                && ts.value().output_id == second_output
+                && ts.value().mapping_mode == mir_touchscreen_mapping_mode_to_output)
+                touchscreen_ready.raise();
+        });
+
+    auto config = mir_connection_create_input_config(client.connection);
+    auto touchscreen = get_mutable_device_with_capabilities(config,
+                                                            mir_input_device_capability_touchscreen|
+                                                            mir_input_device_capability_multitouch);
+    auto touchscreen_config = mir_input_device_get_mutable_touchscreen_config(touchscreen);
+
+    mir_touchscreen_config_set_output_id(touchscreen_config, second_output);
+    mir_touchscreen_config_set_mapping_mode(touchscreen_config, mir_touchscreen_mapping_mode_to_output);
+
+    apply_and_wait_for_completion(
+        client.connection,
+        mir_connection_set_input_config_change_callback,
+        [config](MirConnection* connection)
+        {
+            mir_connection_set_base_input_config(connection, config);
+            mir_input_config_release(config);
+        });
+
+    EXPECT_TRUE(touchscreen_ready.wait_for(10s));
+    ON_CALL(client, handle_input(mt::TouchEvent(expected_x, expected_y)))
+        .WillByDefault(mt::WakeUp(&client.all_events_received));
+    fake_touch_screen->emit_event(mis::a_touch_event()
+                           .at_position({touch_x*scale_to_device_width, touch_y*scale_to_device_height}));
+
+    EXPECT_FALSE(client.all_events_received.wait_for(5s));
 }

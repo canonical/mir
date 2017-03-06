@@ -31,6 +31,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <chrono>
 #include <list>
 
 namespace mt = mir::test;
@@ -48,25 +49,12 @@ struct DefaultInputManagerTest : ::testing::Test
     NiceMock<mtd::MockInputPlatform> platform;
     mir::Fd event_hub_fd{eventfd(0, EFD_CLOEXEC|EFD_NONBLOCK)};
     mir::input::DefaultInputManager input_manager{mt::fake_shared(multiplexer), mt::fake_shared(platform)};
+    std::chrono::seconds const timeout{30};
 
     DefaultInputManagerTest()
     {
         ON_CALL(platform, dispatchable())
             .WillByDefault(Return(mt::fake_shared(platform_dispatchable)));
-    }
-
-    bool wait_for_multiplexer_dispatch()
-    {
-        auto queue = std::make_shared<md::ActionQueue>();
-        auto queue_done = std::make_shared<mt::Signal>();
-        queue->enqueue([queue_done]()
-                       {
-                           queue_done->raise();
-                       });
-        multiplexer.add_watch(queue);
-        bool ret = queue_done->wait_for(std::chrono::seconds{2});
-        multiplexer.remove_watch(queue);
-        return ret;
     }
 };
 
@@ -84,17 +72,6 @@ TEST_F(DefaultInputManagerTest, starts_platforms_on_start)
     EXPECT_CALL(platform, stop()).Times(1);
 }
 
-TEST_F(DefaultInputManagerTest, starts_platforms_after_start)
-{
-    EXPECT_CALL(platform, start()).Times(1);
-    EXPECT_CALL(platform, dispatchable()).Times(2);
-    EXPECT_CALL(platform, stop()).Times(1);
-
-    input_manager.start();
-
-    EXPECT_TRUE(wait_for_multiplexer_dispatch());
-}
-
 TEST_F(DefaultInputManagerTest, stops_platforms_on_stop)
 {
     EXPECT_CALL(platform, stop()).Times(1);
@@ -109,8 +86,6 @@ TEST_F(DefaultInputManagerTest, ignores_spurious_starts)
 
     input_manager.start();
     input_manager.start();
-
-    EXPECT_TRUE(wait_for_multiplexer_dispatch());
 }
 
 TEST_F(DefaultInputManagerTest, ignores_spurious_stops)
@@ -168,14 +143,13 @@ TEST_F(DefaultInputManagerTest, forwards_pause_continue_state_changes_to_platfor
 {
     input_manager.start();
 
-    EXPECT_CALL(platform, pause_for_config());
-
+    mt::Signal paused;
+    EXPECT_CALL(platform, pause_for_config()).WillOnce(WakeUp(&paused));
     input_manager.pause_for_config();
-    wait_for_multiplexer_dispatch();
-    Mock::VerifyAndClearExpectations(&platform);
+    EXPECT_TRUE(paused.wait_for(timeout));
 
-    EXPECT_CALL(platform, continue_after_config());
+    mt::Signal continued;
+    EXPECT_CALL(platform, continue_after_config()).WillOnce(WakeUp(&continued));
     input_manager.continue_after_config();
-    wait_for_multiplexer_dispatch();
-    Mock::VerifyAndClearExpectations(&platform);
+    EXPECT_TRUE(continued.wait_for(timeout));
 }

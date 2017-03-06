@@ -58,7 +58,7 @@ private:
     std::shared_ptr<EGLNativeDisplayType> const native_display;
     MirExtensionAndroidEGLV1 android_types_extension;
     MirExtensionFencedBuffersV1 fence_extension;
-    MirExtensionAndroidBufferV1 buffer_extension;
+    MirExtensionAndroidBufferV2 buffer_extension;
     MirExtensionHardwareBufferStreamV1 hw_stream;
 };
 

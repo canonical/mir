@@ -140,7 +140,6 @@ mir::DefaultServerConfiguration::the_mediating_display_changer()
                 the_session_event_handler_register(),
                 the_server_action_queue(),
                 the_display_configuration_observer(),
-                the_input_region(),
                 the_main_loop());
         });
 

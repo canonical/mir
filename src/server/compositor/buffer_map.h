@@ -39,7 +39,7 @@ public:
     void receive_buffer(graphics::BufferID id) override;
     void send_buffer(graphics::BufferID id) override;
 
-    std::shared_ptr<graphics::Buffer>& operator[](graphics::BufferID) override;
+    std::shared_ptr<graphics::Buffer> get(graphics::BufferID) const override;
     
 private:
     std::mutex mutable mutex;
@@ -54,6 +54,7 @@ private:
     //used to keep strong reference
     Map buffers;
     Map::iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&);
+    Map::const_iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&) const;
 
     //would be better to schedule the async buffer callbacks in the ipc subsystem,
     //instead of driving from within the compositor threads (LP: #1395421)

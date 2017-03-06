@@ -142,7 +142,7 @@ struct StubStreamFactory : public msc::BufferStreamFactory
             {
             } 
 
-            std::shared_ptr<mg::Buffer>& operator[](mg::BufferID) override
+            std::shared_ptr<mg::Buffer> get(mg::BufferID) const override
             {
                 return b;
             }
