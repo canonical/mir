@@ -394,6 +394,7 @@ typedef struct MirInputDevice MirInputDevice;
 typedef struct MirKeyboardConfig MirKeyboardConfig;
 typedef struct MirPointerConfig MirPointerConfig;
 typedef struct MirTouchpadConfig MirTouchpadConfig;
+typedef struct MirTouchscreenConfig MirTouchscreenConfig;
 
 /**
  * MirScreencastParameters is the structure of required information that

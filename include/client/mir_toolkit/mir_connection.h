@@ -327,7 +327,7 @@ void mir_connection_cancel_base_display_configuration_preview(
     MirConnection* connection);
 
 /**
- * Get a display type that can be used for OpenGL ES 2.0 acceleration.
+ * Get a display type that can be used with EGL.
  *   \param [in] connection  The connection
  *   \return                 An EGLNativeDisplayType that the client can use
  */

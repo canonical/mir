@@ -572,6 +572,74 @@ void mir_touchpad_config_set_disable_with_mouse(
 void mir_touchpad_config_set_disable_while_typing(
     MirTouchpadConfig* conf, bool active);
 
+/**
+ * Retrieve a structure containing the touchscreen related config options
+ * of the input device.
+ *
+ * If the input device does not contain a touchscreen, there are no
+ * config options, and the function will return a null pointer.
+ *
+ * \param [in] device   The input device
+ *
+ * \return              The touchscreen config
+ */
+MirTouchscreenConfig const* mir_input_device_get_touchscreen_config(
+    MirInputDevice const* device);
+
+/**
+ * Get the output ID of the display the coordinates of this device will be mapped to.
+ *
+ * This setting is ignored when the mapping mode is set to
+ * mir_touchscreen_mapping_mode_to_display_wall.
+ *
+ * \param [in] device   The touchscreen configuration
+ *
+ * \return              The output id
+ */
+uint32_t mir_touchscreen_config_get_output_id(MirTouchscreenConfig const* device);
+
+/**
+ * Get the mapping mode used for the touchscreen
+ *
+ * \param [in] device   The touchscreen configuration
+ *
+ * \return              The mapping mode
+ */
+enum MirTouchscreenMappingMode mir_touchscreen_config_get_mapping_mode(MirTouchscreenConfig const* device);
+
+/**
+ * Retrieve a mutable structure containing the touchscreen related options
+ * of the input device to change the device configuration.
+ *
+ * If the input device does not contain a touchscreen, there are no
+ * config options, and the function will return a null pointer.
+ *
+ * \param [in] device   The input device
+ *
+ * \return              The touchscreen config
+ */
+MirTouchscreenConfig* mir_input_device_get_mutable_touchscreen_config(
+    MirInputDevice* device);
+
+/**
+ * Set the output ID of the display the coordinates of this device will be mapped to.
+ *
+ * This setting is ignored when the mapping mode is set to
+ * mir_touchscreen_mapping_mode_to_display_wall.
+ *
+ * \param [in] config    The touchscreen configuration
+ * \param [in] output    The output id
+ */
+void mir_touchscreen_config_set_output_id(MirTouchscreenConfig* config, uint32_t output);
+
+/**
+ * Set the mapping mode used for the touchscreen.
+ *
+ * \param [in] config   The touchscreen configuration
+ * \param [in] mode     The mapping mode
+ */
+void mir_touchscreen_config_set_mapping_mode(MirTouchscreenConfig* config, enum MirTouchscreenMappingMode mode);
+
 #ifdef __cplusplus
 }
 #endif
