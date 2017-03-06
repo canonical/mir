@@ -21,7 +21,6 @@
 #include "presentation_chain.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
-#include "mir/require.h"
 #include "connection_surface_map.h"
 
 #pragma GCC diagnostic push
@@ -265,6 +264,8 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
+#if 0
+<<<<<<< TREE
 
 MirPresentationChain* mir_create_presentation_chain(
     MirRenderSurface* surface, MirPresentMode mode)
@@ -284,4 +285,7 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
+=======
+>>>>>>> MERGE-SOURCE
+#endif
 #pragma GCC diagnostic pop

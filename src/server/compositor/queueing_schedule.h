@@ -31,9 +31,9 @@ namespace compositor
 class QueueingSchedule : public Schedule
 {
 public:
-    void schedule(std::shared_ptr<graphics::Buffer> const& buffer);
-    unsigned int num_scheduled();
-    std::shared_ptr<graphics::Buffer> next_buffer();
+    void schedule(std::shared_ptr<graphics::Buffer> const& buffer) override;
+    unsigned int num_scheduled() override;
+    std::shared_ptr<graphics::Buffer> next_buffer() override;
 
 private:
     std::mutex mutable mutex;

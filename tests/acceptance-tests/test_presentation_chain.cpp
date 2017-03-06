@@ -52,8 +52,9 @@ struct Chain
 
     Chain(MirConnection* connection, MirPresentMode mode) :
         rs(mir_connection_create_render_surface_sync(connection, 0, 0)),
-        chain(mir_create_presentation_chain(rs, mode))
+        chain(mir_render_surface_get_presentation_chain(rs))
     {
+        mir_presentation_chain_set_mode(chain, mode);
     }
 
     MirRenderSurface* content()
@@ -68,7 +69,6 @@ struct Chain
 
     ~Chain()
     {
-        mir_presentation_chain_release(chain);
         mir_render_surface_release(rs);
     }
 private:
@@ -354,7 +354,7 @@ TEST_F(PresentationChain, buffers_can_be_flushed)
 TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with_chain)
 {
     auto rs_chain = mir_connection_create_render_surface_sync(connection, 1, 1);
-    auto chain = mir_create_presentation_chain(rs_chain, mir_present_mode_fifo);
+    auto chain = mir_render_surface_get_presentation_chain(rs_chain);
     auto rs_stream = mir_connection_create_render_surface_sync(connection, 1, 1);
     auto stream = mir_render_surface_get_buffer_stream(rs_stream, 25, 12, mir_pixel_format_abgr_8888);
     ASSERT_TRUE(mir_presentation_chain_is_valid(chain));
@@ -385,7 +385,6 @@ TEST_F(PresentationChain, destroying_a_chain_will_return_buffers_associated_with
     mir_window_spec_add_render_surface(spec, rs_stream, size.width.as_int(), size.height.as_int(), 0, 0);
     mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);
-    mir_presentation_chain_release(chain);
     mir_render_surface_release(rs_chain);
     mir_buffer_stream_swap_buffers_sync(stream);
 

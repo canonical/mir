@@ -266,6 +266,7 @@ typedef enum MirPresentMode
     mir_present_mode_mailbox, //same as VK_PRESENT_MODE_MAILBOX_KHR
     mir_present_mode_fifo, //same as VK_PRESENT_MODE_FIFO_KHR
     mir_present_mode_fifo_relaxed, //same as VK_PRESENT_MODE_FIFO_RELAXED_KHR
+    mir_present_mode_num_modes
 } MirPresentMode;
 
 /**
@@ -402,6 +403,7 @@ typedef struct MirInputDevice MirInputDevice;
 typedef struct MirKeyboardConfig MirKeyboardConfig;
 typedef struct MirPointerConfig MirPointerConfig;
 typedef struct MirTouchpadConfig MirTouchpadConfig;
+typedef struct MirTouchscreenConfig MirTouchscreenConfig;
 
 /**
  * MirScreencastParameters is the structure of required information that

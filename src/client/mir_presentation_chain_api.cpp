@@ -102,23 +102,13 @@ void mir_presentation_chain_set_mode(
     MirPresentationChain* chain, MirPresentMode mode)
 try
 {
-    //only one mode at the moment 
     mir::require(chain && mir_connection_present_mode_supported(chain->connection(), mode));
+    if (mode == mir_present_mode_fifo)
+        chain->set_queueing_mode();
+    if (mode == mir_present_mode_mailbox)
+        chain->set_dropping_mode();
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
-
-void mir_presentation_chain_release(MirPresentationChain* chain)
-try
-{
-    mir::require(chain);
-    auto map = chain->connection()->connection_surface_map();
-    map->erase(mir::frontend::BufferStreamId(chain->rpc_id()));
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-

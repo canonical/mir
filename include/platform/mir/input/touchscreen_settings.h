@@ -30,6 +30,11 @@ namespace input
 
 struct TouchscreenSettings
 {
+    TouchscreenSettings() {}
+    TouchscreenSettings(uint32_t output_id, MirTouchscreenMappingMode mode)
+        : output_id{output_id}, mapping_mode{mode}
+    {}
+
     /**
      * Configures the output the input device should map its coordinates to.
      * The value of this setting is only relevant when the mapping mode is

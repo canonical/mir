@@ -39,7 +39,7 @@ public:
     ~MockLibInput() noexcept;
     void wake();
     void setup_device(libinput_device* device, libinput_device_group* group, udev_device* u_dev, char const* name,
-                      unsigned int vendor, unsigned int product);
+                      char const* sysname, unsigned int vendor, unsigned int product);
 
     libinput_event* setup_touch_event(libinput_device* dev, libinput_event_type type, uint64_t event_time, int slot,
                                       float x, float y, float major, float minor, float pressure, float orientation);

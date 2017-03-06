@@ -106,7 +106,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
  * Retrieve a text description of the error. The returned string is owned by
  * the library and remains valid until the render surface or the associated
  * connection has been released.
- *   \param [in] redner_surface  The render surface
+ *   \param [in] render_surface  The render surface
  *   \return              A text description of any error resulting in an
  *                        invalid render surface, or the empty string "" if the
  *                        object is valid.
@@ -145,7 +145,8 @@ MirBufferStream* mir_render_surface_get_buffer_stream(
 __attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
- * Obtain the presentation chain backing a given render surface
+ * Obtain the presentation chain backing a given render surface.
+ * The MirPresentationChain is created in mir_present_mode_fifo submission mode.
  *
  * \return                       The chain contained in the given render surface
  *                               or 'nullptr' if it, or
@@ -154,7 +155,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
  */
 MirPresentationChain* mir_render_surface_get_presentation_chain(
     MirRenderSurface* render_surface)
-__attribute__((deprecated("Use mir_render_surface_create_presentation_chain")));
+__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /** Query whether the server supports a given presentation mode.
  *
@@ -164,17 +165,6 @@ __attribute__((deprecated("Use mir_render_surface_create_presentation_chain")));
  */
 bool mir_connection_present_mode_supported(
     MirConnection* connection, MirPresentMode mode);
-
-/** create a MirPresentationChain, submitting images to the content area
- *  represented by the MirRenderSurface.
- *
- *  \pre    mir_connection_present_mode_supported must indicate that the mode is supported
- *  \param [in] render_surface  The render surface the images will be submitted to.
- *  \param [in] mode            The mode that the buffers will be queued in, see
- *                              description of enum for different modes.
- */ 
-MirPresentationChain* mir_create_presentation_chain(
-    MirRenderSurface* render_surface, MirPresentMode mode);
 
 /** Respecify the submission mode that the MirPresentationChain is operating with.
  *  The buffers currently queued will immediately be requeued according
@@ -186,11 +176,6 @@ MirPresentationChain* mir_create_presentation_chain(
  */
 void mir_presentation_chain_set_mode(
     MirPresentationChain* chain, MirPresentMode mode);
-
-/** Destroy a presentation chain.
- *  \param [in] chain
- */
-void mir_presentation_chain_release(MirPresentationChain* chain);
 
 /**
  * Set the MirWindowSpec to contain a specific cursor.

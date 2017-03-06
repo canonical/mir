@@ -113,7 +113,7 @@ typedef unsigned int MirInputDeviceCapabilities;
  * i.e handheld devices with builtin touchscreens or external graphic tablets or
  * external monitors with touchscreen capabilities.
  */
-enum MirTouchscreenMappingMode
+typedef enum MirTouchscreenMappingMode
 {
     /**
      * Map the device coordinates onto specific output.
@@ -123,7 +123,7 @@ enum MirTouchscreenMappingMode
      * Map the device coordinates onto the whole wall of outputs.
      */
     mir_touchscreen_mapping_mode_to_display_wall
-};
+} MirTouchscreenMappingMode;
 
 
 #ifdef __cplusplus
