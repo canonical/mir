@@ -56,6 +56,9 @@ public:
         mock_egl.provide_egl_extensions();
         mock_gl.provide_gles_extensions();
 
+        ON_CALL(mock_gbm, gbm_device_get_fd(_))
+            .WillByDefault(Return(mock_drm.fake_drm.fd()));
+
         fake_devices.add_standard_device("standard-drm-devices");
     }
 

@@ -128,7 +128,8 @@ public:
         EXPECT_CALL(mock_gbm, gbm_bo_get_device(_))
             .Times(AtLeast(0));
         EXPECT_CALL(mock_gbm, gbm_device_get_fd(_))
-            .Times(AtLeast(0));
+            .Times(AtLeast(0))
+            .WillRepeatedly(Return(mock_drm.fake_drm.fd()));
 
         fake_devices.add_standard_device("standard-drm-devices");
     }

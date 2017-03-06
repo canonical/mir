@@ -116,6 +116,11 @@ void ensure_egl_image_extensions()
         BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support GL_OES_EGL_image extension"));
 }
 
+bool needs_bounce_buffer(mgm::KMSOutput const& destination, gbm_bo* source)
+{
+    return destination.buffer_requires_migration(source);
+}
+
 }
 
 mgm::DisplayBuffer::DisplayBuffer(
@@ -164,6 +169,11 @@ mgm::DisplayBuffer::DisplayBuffer(
     visible_composite_frame = surface.lock_front();
     if (!visible_composite_frame)
         fatal_error("Failed to get frontbuffer");
+
+    if (needs_bounce_buffer(*outputs.front(), visible_composite_frame))
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Hybrid support not implemented yet"}));
+    }
 
     set_crtc(*outputs.front()->fb_for(visible_composite_frame, fb_width, fb_height));
 
