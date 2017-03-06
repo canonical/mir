@@ -72,7 +72,7 @@ void DragAndDrop::signal_when_initiated(MirWindow* /*window*/, MirEvent const* e
 
 TEST_F(DragAndDrop, DISABLED_can_initiate)
 {
-    dnd->begin_drag_and_drop(window, cookie);
+    dnd->request_drag_and_drop(window, cookie);
 
     EXPECT_TRUE(initiated.wait_for(30s));
 }

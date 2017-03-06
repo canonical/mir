@@ -29,16 +29,18 @@ extern "C" {
 typedef struct MirDragAndDropV1
 {
     /**
-     * Begin drag and drop.
+     * Request drag and drop. If the request succeeds a window event with a
+     * "start drag" handle will be received.
+     *
+     * \warning An invalid cookie will terminate the client connection.
      *
      * \param [in] window  The source window
      * \param [in] cookie  A cookie instance obtained from an input event.
-     *                     An invalid cookie will terminate the client connection.
      */
-    void (*begin_drag_and_drop)(MirWindow* window, MirCookie const* cookie);
+    void (*request_drag_and_drop)(MirWindow* window, MirCookie const* cookie);
 
     /**
-     * Retrieve any "start drag" handle associated with the event
+     * Retrieve any "drag & drop" handle associated with the event
      *
      * \param [in] event The event
      * \return           The associated drag handle or NULL
@@ -46,12 +48,12 @@ typedef struct MirDragAndDropV1
     MirBlob* (*start_drag)(MirWindowEvent const* event);
 
     /**
-     * Retrieve any "pointer drag" handle associated with the event.
+     * Retrieve any "drag & drop" handle associated with the event.
      *
      * \param [in] event The event
      * \return           The associated drag handle or NULL
      */
-    MirBlob* (*pointer_drag_handle)(MirPointerEvent const* event);
+    MirBlob* (*pointer_dnd_handle)(MirPointerEvent const* event);
 
 } MirDragAndDropV1;
 
