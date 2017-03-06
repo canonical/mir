@@ -105,6 +105,7 @@ add_library(mirclientobjects OBJECT
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_error.h
   mir_extension_core.cpp
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_extension_core.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/extensions/drag_and_drop.h
 )
 
 # Ensure protobuf C++ headers have been produced before
