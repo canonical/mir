@@ -175,6 +175,8 @@ void mir_screencast_capture_to_buffer(
 /** Capture the contents of the screen to a particular buffer and wait for the
  *  capture to complete.
  *
+ *   \warning   The returned MirError will be valid until the next call
+ *              to mir_screencast_capture_to_buffer or mir_screencast_capture_to_buffer_sync.
  *   \param [in] screencast         The screencast
  *   \param [in] buffer             The buffer
  *   \return                        The error condition
