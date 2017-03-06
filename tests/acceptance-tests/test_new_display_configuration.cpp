@@ -25,7 +25,7 @@
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/observer_registrar.h"
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/doubles/null_platform.h"
 #include "mir/test/doubles/fake_display.h"
 #include "mir/test/doubles/null_display_sync_group.h"
@@ -97,7 +97,7 @@ struct StubAuthorizer : mtd::StubSessionAuthorizer
 };
 }
 
-struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
+struct DisplayConfigurationTest : mtf::ConnectedClientWithAWindow
 {
     class NotifyingConfigurationObserver : public mg::DisplayConfigurationObserver
     {
@@ -172,7 +172,7 @@ struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
     {
         server.override_the_session_authorizer([this] { return mt::fake_shared(stub_authorizer); });
         preset_display(mt::fake_shared(mock_display));
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientWithAWindow::SetUp();
 
         server.the_display_configuration_observer_registrar()->register_interest(observer);
     }

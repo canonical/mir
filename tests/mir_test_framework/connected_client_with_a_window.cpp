@@ -16,13 +16,13 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 
 namespace mtf = mir_test_framework;
 
-void mtf::ConnectedClientWithASurface::SetUp()
+void mtf::ConnectedClientWithAWindow::SetUp()
 {
-    ConnectedClientHeadlessServer::SetUp();
+    ConnectedClientWithAWindow::SetUp();
 
     auto const spec = mir_create_normal_window_spec(
         connection,
@@ -36,7 +36,7 @@ void mtf::ConnectedClientWithASurface::SetUp()
     ASSERT_TRUE(mir_window_is_valid(window));
 }
 
-void mtf::ConnectedClientWithASurface::TearDown()
+void mtf::ConnectedClientWithAWindow::TearDown()
 {
     mir_window_release_sync(window);
     ConnectedClientHeadlessServer::TearDown();
