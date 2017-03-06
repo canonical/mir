@@ -22,7 +22,7 @@ namespace mtf = mir_test_framework;
 
 void mtf::ConnectedClientWithAWindow::SetUp()
 {
-    ConnectedClientWithAWindow::SetUp();
+    ConnectedClientHeadlessServer::SetUp();
 
     auto const spec = mir_create_normal_window_spec(
         connection,
