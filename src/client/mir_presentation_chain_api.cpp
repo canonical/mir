@@ -109,16 +109,3 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
-
-void mir_presentation_chain_release(MirPresentationChain* chain)
-try
-{
-    mir::require(chain);
-    auto map = chain->connection()->connection_surface_map();
-    map->erase(mir::frontend::BufferStreamId(chain->rpc_id()));
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-}
-

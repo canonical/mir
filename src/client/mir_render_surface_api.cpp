@@ -264,21 +264,4 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
-
-MirPresentationChain* mir_create_presentation_chain(
-    MirRenderSurface* surface, MirPresentMode mode)
-try
-{
-    auto connection = connection_map.connection(surface);
-    mir::require(surface && mir_connection_present_mode_supported(connection, mode));
-    auto rs = connection->connection_surface_map()->render_surface(surface);
-    return reinterpret_cast<MirPresentationChain*>(
-        connection->create_chain(rs.get()).get());
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
-}
-
 #pragma GCC diagnostic pop
