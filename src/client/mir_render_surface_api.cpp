@@ -264,28 +264,4 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
-#if 0
-<<<<<<< TREE
-
-MirPresentationChain* mir_create_presentation_chain(
-    MirRenderSurface* surface, MirPresentMode mode)
-try
-{
-    auto connection = connection_map.connection(surface);
-    mir::require(surface && mir_connection_present_mode_supported(connection, mode));
-    auto rs = connection->connection_surface_map()->render_surface(surface);
-    auto chain = connection->create_chain(rs.get());
-    if (mode == mir_present_mode_mailbox)
-        chain->set_dropping_mode();
-    return reinterpret_cast<MirPresentationChain*>(chain.get());
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return nullptr;
-}
-
-=======
->>>>>>> MERGE-SOURCE
-#endif
 #pragma GCC diagnostic pop
