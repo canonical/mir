@@ -80,6 +80,8 @@ public:
      *          unusable for rendering on the original GPU.
      */
     virtual bool buffer_requires_migration(gbm_bo* bo) const = 0;
+
+    virtual int drm_fd() const = 0;
 protected:
     KMSOutput() = default;
     KMSOutput(const KMSOutput&) = delete;

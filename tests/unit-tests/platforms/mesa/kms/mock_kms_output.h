@@ -70,6 +70,7 @@ struct MockKMSOutput : public graphics::mesa::KMSOutput
 
     MOCK_CONST_METHOD3(fb_for, graphics::mesa::FBHandle*(gbm_bo*, uint32_t, uint32_t));
     MOCK_CONST_METHOD1(buffer_requires_migration, bool(gbm_bo*));
+    MOCK_CONST_METHOD0(drm_fd, int());
 };
 
 } // namespace test

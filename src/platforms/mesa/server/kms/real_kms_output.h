@@ -65,11 +65,13 @@ public:
     FBHandle* fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const override;
 
     bool buffer_requires_migration(gbm_bo* bo) const override;
+
+    int drm_fd() const override;
 private:
     bool ensure_crtc();
     void restore_saved_crtc();
 
-    int const drm_fd;
+    int const drm_fd_;
     uint32_t const connector_id;
     std::shared_ptr<PageFlipper> const page_flipper;
 
