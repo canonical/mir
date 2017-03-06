@@ -125,7 +125,7 @@ typedef uint32_t (*MirBufferExtFlags)(MirBuffer* buffer);
  *   \param [in] buffer The buffer
  *   \return            The age of the buffer
  */
-typedef uint64_t (*MirBufferExtAge)(MirBuffer* buffer);
+typedef uint32_t (*MirBufferExtAge)(MirBuffer* buffer);
 
 typedef struct MirExtensionGbmBufferV2
 {

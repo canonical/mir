@@ -248,7 +248,7 @@ catch (...)
     return 0;
 }
 
-uint64_t buffer_age(MirBuffer* b)
+uint32_t buffer_age(MirBuffer* b)
 try
 {
     if (!is_gbm_importable(b))
@@ -259,7 +259,7 @@ try
 }
 catch (...)
 {
-    return INT64_MAX;
+    return 0;
 }
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
