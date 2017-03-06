@@ -25,6 +25,7 @@
 #include "mir/raii.h"
 #include "mir/require.h"
 #include "mir/uncaught.h"
+#include "no_tls_future-inl.h"
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
@@ -155,32 +156,13 @@ catch (std::exception const& ex)
 MirError const* mir_screencast_capture_to_buffer_sync(MirScreencast* screencast, MirBuffer* buffer)
 try
 {
-    class CaptureSync
-    {
-    public:
-        MirError const* wait_for_capture()
-        {
-            std::unique_lock<decltype(mutex)> lk(mutex);
-            cv.wait(lk, [this] { return done; });
-            return rc;
-        }
-        void captured(MirError const* error)
-        {
-            std::unique_lock<decltype(mutex)> lk(mutex);
-            rc = error;
-            done = true;
-            cv.notify_all();
-        }
-    private:
-        std::mutex mutex;
-        std::condition_variable cv;
-        MirError const* rc = nullptr;
-        bool done = false;
-    } capture;
-
+    mir::client::NoTLSPromise<MirError const*> promise;
     mir_screencast_capture_to_buffer(screencast, buffer,
-        [](MirBuffer*, MirError const* e, void* c) { reinterpret_cast<CaptureSync*>(c)->captured(e); }, &capture);
-    return capture.wait_for_capture();
+        [](MirBuffer*, MirError const* e, void* c)
+        {
+            reinterpret_cast<mir::client::NoTLSPromise<MirError const*>*>(c)->set_value(e);
+        }, &promise);
+    return promise.get_future().get();
 }
 catch (std::exception const& ex)
 {

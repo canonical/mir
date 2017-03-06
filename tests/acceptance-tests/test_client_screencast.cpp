@@ -183,3 +183,40 @@ TEST_F(Screencast, can_cast_to_buffer)
     mir_screencast_release_sync(screencast);
     mir_connection_release(connection);
 }
+
+TEST_F(Screencast, can_cast_to_buffer_sync)
+{
+    EXPECT_CALL(mock_authorizer, screencast_is_allowed(_))
+        .WillOnce(Return(true));
+    auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    struct BufferSync
+    {
+        MirBuffer* buffer = nullptr;
+        std::mutex mutex;
+        std::condition_variable cv;
+    } buffer_info;
+
+    mir_connection_allocate_buffer(
+        connection,
+        default_width, default_height, default_pixel_format,
+        [](MirBuffer* b, void* ctxt) {
+            auto info = reinterpret_cast<BufferSync*>(ctxt);
+            std::unique_lock<decltype(info->mutex)> lk(info->mutex);
+            info->buffer = b;
+            info->cv.notify_all(); 
+        }, &buffer_info);
+    std::unique_lock<decltype(buffer_info.mutex)> lk(buffer_info.mutex);
+    ASSERT_TRUE(buffer_info.cv.wait_for(lk, 5s, [&] { return buffer_info.buffer; }));
+
+    MirScreencastSpec* spec = mir_create_screencast_spec(connection);
+    //We have to set nbuffers == 0 now to avoid capturing at startup. Current default is 1.
+    mir_screencast_spec_set_number_of_buffers(spec, 0);
+
+    mir_screencast_spec_set_capture_region(spec, &default_capture_region);
+    auto screencast = mir_screencast_create_sync(spec);
+    mir_screencast_capture_to_buffer_sync(screencast, buffer_info.buffer);
+
+    mir_screencast_release_sync(screencast);
+    mir_connection_release(connection);
+}
