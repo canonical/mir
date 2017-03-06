@@ -223,7 +223,8 @@ bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
             if (!native)
                 BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
             if (native->flags & mir_buffer_flag_can_scanout &&
-                bypass_buffer->size() == geom::Size{fb_width,fb_height})
+                bypass_buffer->size() == geom::Size{fb_width,fb_height} &&
+                !needs_bounce_buffer(*outputs.front(), native->bo))
             {
                 if (auto bufobj = outputs.front()->fb_for(native->bo, fb_width, fb_height))
                 {
