@@ -160,6 +160,27 @@ void mir_screencast_release_sync(
  */
 MirBufferStream* mir_screencast_get_buffer_stream(MirScreencast* screencast);
 
+/** Capture the contents of the screen to a particular buffer.
+ *
+ *   \param [in] screencast         The screencast
+ *   \param [in] buffer             The buffer
+ *   \param [in] available_callback Callback triggered when buffer is available again
+ *   \param [in] available_context  The context for the above callback
+ **/
+void mir_screencast_capture_to_buffer(
+    MirScreencast* screencast,
+    MirBuffer* buffer,
+    MirScreencastBufferCallback available_callback, void* available_context);
+
+/** Capture the contents of the screen to a particular buffer and wait for the
+ *  capture to complete.
+ *
+ *   \param [in] screencast         The screencast
+ *   \param [in] buffer             The buffer
+ *   \return                        The error condition
+ **/
+MirError const* mir_screencast_capture_to_buffer_sync(MirScreencast* screencast, MirBuffer* buffer);
+
 #ifdef __cplusplus
 }
 /**@}*/
