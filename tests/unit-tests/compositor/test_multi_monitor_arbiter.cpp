@@ -39,26 +39,21 @@ struct MockBufferMap : mf::ClientBuffers
     MOCK_METHOD1(remove_buffer, void(mg::BufferID id));
     MOCK_METHOD1(receive_buffer, void(mg::BufferID id));
     MOCK_METHOD1(send_buffer, void(mg::BufferID id));
-    MOCK_METHOD1(at, std::shared_ptr<mg::Buffer>&(mg::BufferID));
     MOCK_CONST_METHOD0(client_owned_buffer_count, size_t());
-    std::shared_ptr<mg::Buffer>& operator[](mg::BufferID id) { return at(id); }
+    MOCK_CONST_METHOD1(get, std::shared_ptr<mg::Buffer>(mg::BufferID));
 };
 
 struct FixedSchedule : mc::Schedule
 {
-    void schedule(std::shared_ptr<mg::Buffer> const&)
+    void schedule(std::shared_ptr<mg::Buffer> const&) override
     {
         throw std::runtime_error("this stub doesnt support this");
     }
-    void cancel(std::shared_ptr<mg::Buffer> const&)
-    {
-        throw std::runtime_error("this stub doesnt support this");
-    }
-    unsigned int num_scheduled()
+    unsigned int num_scheduled() override
     {
         return sched.size() - current;
     }
-    std::shared_ptr<mg::Buffer> next_buffer()
+    std::shared_ptr<mg::Buffer> next_buffer() override
     {
         if (sched.empty() || current == sched.size())
             throw std::runtime_error("no buffer scheduled");

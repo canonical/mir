@@ -24,6 +24,14 @@
 #include <chrono>
 #include <functional>
 
+namespace mir
+{
+namespace input
+{
+class InputDevice;
+}
+}
+
 namespace mir_test_framework
 {
 
@@ -52,6 +60,7 @@ public:
     virtual void emit_touch_sequence(std::function<mir::input::synthesis::TouchParameters(int)> const& generate_parameters,
                                      int count,
                                      std::chrono::duration<double> delay) = 0;
+    virtual void on_new_configuration_do(std::function<void(mir::input::InputDevice const& device)> callback) = 0;
 
     FakeInputDevice(FakeInputDevice const&) = delete;
     FakeInputDevice& operator=(FakeInputDevice const&) = delete;

@@ -143,6 +143,113 @@ char const* mir_input_device_get_name(MirInputDevice const* device);
 char const* mir_input_device_get_unique_id(MirInputDevice const* device);
 
 /**
+ * Retrieve a structure containing the keyboard related config options
+ * of the input device.
+ *
+ * If the input device does not contain keys, there will be no
+ * config options, and the function will return a null pointer.
+ *
+ * \param [in] device   The input device
+ *
+ * \return              The keyboard config
+ */
+MirKeyboardConfig const* mir_input_device_get_keyboard_config(
+    MirInputDevice const* device);
+
+/**
+ * Retrieve the keyboard model of the keymap as a null terminated string.
+ *
+ * \param [in] conf     The keyboard config
+ *
+ * \return              The keyboard model used for the keymap
+ */
+char const* mir_keyboard_config_get_keymap_model(
+    MirKeyboardConfig const* conf);
+
+/**
+ * Retrieve the layout of the keymap as a null terminated string.
+ *
+ * \param [in] conf     The keyboard config
+ *
+ * \return              The keymap layout
+ */
+char const* mir_keyboard_config_get_keymap_layout(
+    MirKeyboardConfig const* conf);
+
+/**
+ * Retrieve the layout of the keymap as a null terminated string.
+ *
+ * \param [in] conf     The keyboard config
+ *
+ * \return              The keymap layout
+ */
+char const* mir_keyboard_config_get_keymap_variant(
+    MirKeyboardConfig const* conf);
+
+/**
+ * Retrieve the options of the keymap as a null terminated string.
+ *
+ * The keymap options are an optional parameter of the keymap selection,
+ * this then indicated as an empty string.
+ *
+ * \param [in] conf     The keyboard config
+ *
+ * \return              The keyboard model
+ */
+char const* mir_keyboard_config_get_keymap_options(
+    MirKeyboardConfig const* conf);
+
+/**
+ * Retrieve a mutable structure containing the keyboard related config options
+ * of the input device.
+ *
+ * If the input device does not contain keys, there will be no
+ * config options, and the function will return a null pointer.
+ *
+ * \param [in] device   The input device
+ *
+ * \return              The keyboard config
+ */
+MirKeyboardConfig* mir_input_device_get_mutable_keyboard_config(
+    MirInputDevice* device);
+
+/**
+ * Set the keyboard model of the keymap as a null terminated string.
+ *
+ * \param [in] conf     The keyboard config
+ * \param [in] model    The keymap keyboard model
+ */
+void mir_keyboard_config_set_keymap_model(
+    MirKeyboardConfig* conf, char const* model);
+
+/**
+ * Set the layout of the keymap as a null terminated string.
+ *
+ * \param [in] conf     The keyboard config
+ * \param [in] layout   The keymap layout
+ */
+void mir_keyboard_config_set_keymap_layout(
+    MirKeyboardConfig* conf, char const* layout);
+
+/**
+ * Set the options of the keymap as a null terminated string.
+ *
+ * \param [in] conf     The keyboard config
+ * \param [in] layout   The keymap options
+ */
+void mir_keyboard_config_set_keymap_options(
+    MirKeyboardConfig* conf, char const* options);
+
+/**
+ * Set the variant of the keymap as a null terminated string.
+ *
+ * \param [in] conf     The keyboard config
+ * \param [in] layout   The keymap variant
+ */
+void mir_keyboard_config_set_keymap_variant(
+    MirKeyboardConfig* conf, char const* variant);
+
+/**
  * Retrieve a structure containing the pointer related config options
  * of the input device.
  *
@@ -464,6 +571,74 @@ void mir_touchpad_config_set_disable_with_mouse(
  */
 void mir_touchpad_config_set_disable_while_typing(
     MirTouchpadConfig* conf, bool active);
+
+/**
+ * Retrieve a structure containing the touchscreen related config options
+ * of the input device.
+ *
+ * If the input device does not contain a touchscreen, there are no
+ * config options, and the function will return a null pointer.
+ *
+ * \param [in] device   The input device
+ *
+ * \return              The touchscreen config
+ */
+MirTouchscreenConfig const* mir_input_device_get_touchscreen_config(
+    MirInputDevice const* device);
+
+/**
+ * Get the output ID of the display the coordinates of this device will be mapped to.
+ *
+ * This setting is ignored when the mapping mode is set to
+ * mir_touchscreen_mapping_mode_to_display_wall.
+ *
+ * \param [in] device   The touchscreen configuration
+ *
+ * \return              The output id
+ */
+uint32_t mir_touchscreen_config_get_output_id(MirTouchscreenConfig const* device);
+
+/**
+ * Get the mapping mode used for the touchscreen
+ *
+ * \param [in] device   The touchscreen configuration
+ *
+ * \return              The mapping mode
+ */
+enum MirTouchscreenMappingMode mir_touchscreen_config_get_mapping_mode(MirTouchscreenConfig const* device);
+
+/**
+ * Retrieve a mutable structure containing the touchscreen related options
+ * of the input device to change the device configuration.
+ *
+ * If the input device does not contain a touchscreen, there are no
+ * config options, and the function will return a null pointer.
+ *
+ * \param [in] device   The input device
+ *
+ * \return              The touchscreen config
+ */
+MirTouchscreenConfig* mir_input_device_get_mutable_touchscreen_config(
+    MirInputDevice* device);
+
+/**
+ * Set the output ID of the display the coordinates of this device will be mapped to.
+ *
+ * This setting is ignored when the mapping mode is set to
+ * mir_touchscreen_mapping_mode_to_display_wall.
+ *
+ * \param [in] config    The touchscreen configuration
+ * \param [in] output    The output id
+ */
+void mir_touchscreen_config_set_output_id(MirTouchscreenConfig* config, uint32_t output);
+
+/**
+ * Set the mapping mode used for the touchscreen.
+ *
+ * \param [in] config   The touchscreen configuration
+ * \param [in] mode     The mapping mode
+ */
+void mir_touchscreen_config_set_mapping_mode(MirTouchscreenConfig* config, enum MirTouchscreenMappingMode mode);
 
 #ifdef __cplusplus
 }

@@ -97,7 +97,7 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
         std::lock_guard<decltype(mutex)> lk(mutex); 
         first_frame_posted = true;
         buffers->receive_buffer(buffer->id());
-        schedule->schedule((*buffers)[buffer->id()]);
+        schedule->schedule(buffers->get(buffer->id()));
         if (!associated_buffers.empty() && (client_owned_buffer_count(lk) == 0))
             drop_policy->swap_now_blocking();
     }
@@ -236,4 +236,19 @@ void mc::Stream::drop_frame()
 {
     if (schedule->num_scheduled() > 1)
         buffers->send_buffer(schedule->next_buffer()->id());
+}
+
+bool mc::Stream::suitable_for_cursor() const
+{
+    if (associated_buffers.empty())
+    {
+        return true;
+    }
+    else
+    {
+        for (auto it : associated_buffers)
+            if (buffers->get(it)->pixel_format() != mir_pixel_format_argb_8888)
+                return false;
+    }
+    return true;
 }
