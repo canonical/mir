@@ -26,7 +26,11 @@
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir/test/doubles/null_display_buffer_compositor_factory.h"
 #include "mir/geometry/size.h"
+#include "mir/graphics/buffer.h"
+#include "mir/graphics/renderable.h"
+#include "mir/compositor/scene_element.h"
 #include "mir/fd.h"
+#include "mir/raii.h"
 
 #include <atomic>
 #include <gtest/gtest.h>
@@ -143,6 +147,41 @@ private:
 
 struct PresentationChain : mtf::ConnectedClientHeadlessServer
 {
+    bool stall_compositor = false;
+    void SetUp()
+    {
+        server.override_the_display_buffer_compositor_factory(
+            [&]
+            {
+                struct StubDBCFactory : mc::DisplayBufferCompositorFactory
+                {
+                    StubDBCFactory(bool& stall_compositor) : stall_compositor(stall_compositor) {}
+
+                    std::unique_ptr<mir::compositor::DisplayBufferCompositor>
+                        create_compositor_for(mir::graphics::DisplayBuffer&) override
+                    {
+                        struct StubDBC : mir::compositor::DisplayBufferCompositor
+                        {
+                            StubDBC(bool& stall_compositor) : stall_compositor(stall_compositor) {}
+
+                            void composite(mir::compositor::SceneElementSequence&& seq) override
+                            {
+                                while (stall_compositor) 
+                                    std::this_thread::yield();
+                                for (auto& s : seq)
+                                    s->renderable()->buffer();
+                            }
+                            bool& stall_compositor;
+                        };
+                        return std::make_unique<StubDBC>(stall_compositor);
+                    }
+                    bool& stall_compositor;
+                };
+                return std::make_unique<StubDBCFactory>(stall_compositor);
+            });
+        mtf::ConnectedClientHeadlessServer::SetUp();
+    }
+
     geom::Size const size {100, 20};
     MirPixelFormat const pf = mir_pixel_format_abgr_8888;
 };
@@ -489,7 +528,7 @@ namespace
 TEST_F(PresentationChain, fifo_looks_correct_from_client_perspective)
 {
     SurfaceWithChainFromStart window(
-        connection, mir_present_mode_fifo,size, pf);
+        connection, mir_present_mode_fifo, size, pf);
 
     int const num_buffers = 5;
 
@@ -508,8 +547,33 @@ TEST_F(PresentationChain, fifo_looks_correct_from_client_perspective)
     EXPECT_FALSE(buffers[4]->is_ready());
 }
 
+TEST_F(PresentationChain, fifo_queues_when_compositor_isnt_consuming)
+{
+    SurfaceWithChainFromStart window(
+        connection, mir_present_mode_fifo, size, pf);
+    int const num_buffers = 5;
+    std::atomic<unsigned int> counter{ 0u };
+    std::array<std::unique_ptr<TrackedBuffer>, num_buffers> buffers;
+    for (auto& buffer : buffers)
+        buffer = std::make_unique<TrackedBuffer>(connection, counter);
+    {
+        auto const stall = mir::raii::paired_calls(
+            [this] { stall_compositor = true; },
+            [this] { stall_compositor = false; });
+        for (auto& b : buffers)
+            b->submit_to(window.chain());
+        for (auto &b : buffers)
+            EXPECT_FALSE(b->is_ready());
+    }
+    for (auto i = 0u; i < buffers.size() - 1; i++)
+        EXPECT_TRUE(buffers[i]->wait_ready(5s));
+}
+
 TEST_F(PresentationChain, mailbox_looks_correct_from_client_perspective)
 {
+    auto const stall = mir::raii::paired_calls(
+        [this] { stall_compositor = true; },
+        [this] { stall_compositor = false; });
     SurfaceWithChainFromStart window(
         connection, mir_present_mode_mailbox, size, pf);
 
@@ -523,11 +587,35 @@ TEST_F(PresentationChain, mailbox_looks_correct_from_client_perspective)
     for(auto i = 0u; i < buffers.size(); i++)
     {
         buffers[i]->submit_to(window.chain());
-        if (i > 1)
+        if (i > 0)
             EXPECT_TRUE(buffers[i-1]->wait_ready(5s));
     }
 
     for(auto i = 0u; i < num_buffers - 1; i++)
         EXPECT_TRUE(buffers[i]->is_ready());
     EXPECT_FALSE(buffers[4]->is_ready());
+}
+
+TEST_F(PresentationChain, fifo_queues_clears_out_on_transition_to_mailbox)
+{
+    SurfaceWithChainFromStart window(
+        connection, mir_present_mode_fifo, size, pf);
+    int const num_buffers = 5;
+    std::atomic<unsigned int> counter{ 0u };
+    std::array<std::unique_ptr<TrackedBuffer>, num_buffers> buffers;
+    for (auto& buffer : buffers)
+        buffer = std::make_unique<TrackedBuffer>(connection, counter);
+
+    auto const stall = mir::raii::paired_calls(
+        [this] { stall_compositor = true; },
+        [this] { stall_compositor = false; });
+    for (auto& b : buffers)
+        b->submit_to(window.chain());
+    for (auto &b : buffers)
+        EXPECT_FALSE(b->is_ready());
+
+    mir_presentation_chain_set_mode(window.chain(), mir_present_mode_mailbox);
+
+    for (auto i = 0u; i < buffers.size() - 1; i++)
+        EXPECT_TRUE(buffers[i]->wait_ready(5s));
 }
