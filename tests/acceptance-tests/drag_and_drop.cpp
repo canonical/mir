@@ -46,6 +46,41 @@ using mir::test::doubles::WrapShellToTrackLatestSurface;
 
 namespace
 {
+class Cookie
+{
+public:
+    Cookie() = default;
+    explicit Cookie(MirCookie const* cookie) : self{cookie, deleter} {}
+
+    operator MirCookie const*() const { return self.get(); }
+
+    void reset() { self.reset(); }
+
+    friend void mir_cookie_release(Cookie const&) = delete;
+
+private:
+    static void deleter(MirCookie const* cookie) { mir_cookie_release(cookie); }
+    std::shared_ptr<MirCookie const> self;
+};
+
+class Blob
+{
+public:
+    Blob() = default;
+    explicit Blob(MirBlob* blob) : self{blob, deleter} {}
+
+    operator MirBlob*() const { return self.get(); }
+
+    void reset() { self.reset(); }
+    void reset(MirBlob* blob) { self.reset(blob, deleter); }
+
+    friend void mir_blob_release(Blob const&) = delete;
+
+private:
+    static void deleter(MirBlob* blob) { mir_blob_release(blob); }
+    std::shared_ptr<MirBlob> self;
+};
+
 struct MouseMoverAndFaker
 {
     void start_dragging_mouse()
@@ -99,7 +134,7 @@ auto SurfaceTracker::latest_surface() -> std::shared_ptr<mir::scene::Surface>
 }
 
 Rectangle const screen_geometry{{0,0}, {800,600}};
-auto const receive_event_timeout = 3s;  // TODO change to 30s before landing
+auto const receive_event_timeout = 3s;  // TODO change to 30s before showing to CI
 
 struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
                      MouseMoverAndFaker, SurfaceTracker
@@ -107,7 +142,6 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
     DragAndDrop() : SurfaceTracker{server} {}
 
     MirDragAndDropV1 const* dnd = nullptr;
-    Signal initiated;
 
     std::shared_ptr<mir::scene::Surface> scene_surface;
 
@@ -131,11 +165,10 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
         mir_test_framework::ConnectedClientWithAWindow::TearDown();
     }
 
-    void signal_when_initiated(MirWindow* window, MirEvent const* event);
-
     void set_window_event_handler(std::function<void(MirWindow* window, MirEvent const* event)> const& handler);
 
-    auto user_initiates_drag() -> MirCookie const*;
+    auto user_initiates_drag() -> Cookie;
+    auto client_requests_drag(Cookie const& cookie) -> Blob;
 
 private:
     void center_mouse() { move_mouse(0.5 * as_displacement(screen_geometry.size)); }
@@ -165,25 +198,9 @@ void DragAndDrop::window_event_handler(MirWindow* window, MirEvent const* event,
     static_cast<DragAndDrop*>(context)->invoke_window_event_handler(window, event);
 }
 
-void DragAndDrop::signal_when_initiated(MirWindow* window, MirEvent const* event)
+auto DragAndDrop::user_initiates_drag() -> Cookie
 {
-    EXPECT_THAT(window, Eq(this->window));
-
-    if (mir_event_get_type(event) != mir_event_type_window)
-        return;
-
-    if (!dnd) return;
-
-    if (auto handle = dnd->start_drag(mir_event_get_window_event(event)))
-    {
-        initiated.raise();
-        mir_blob_release(handle);
-    }
-}
-
-auto DragAndDrop::user_initiates_drag() -> MirCookie const*
-{
-    MirCookie const* cookie = nullptr;
+    Cookie cookie;
     Signal have_cookie;
 
     set_window_event_handler([&](MirWindow*, MirEvent const* event)
@@ -201,28 +218,58 @@ auto DragAndDrop::user_initiates_drag() -> MirCookie const*
             if (mir_pointer_event_action(pointer_event) != mir_pointer_action_button_down)
                 return;
 
-            cookie = mir_input_event_get_cookie(input_event);
+            cookie = Cookie(mir_input_event_get_cookie(input_event));
             have_cookie.raise();
         });
 
     start_dragging_mouse();
 
-    if (!have_cookie.wait_for(receive_event_timeout)) BOOST_THROW_EXCEPTION(std::logic_error("no cookie"));
+    EXPECT_THAT(have_cookie.wait_for(receive_event_timeout), Eq(true));
 
     return cookie;
 }
-}
 
-TEST_F(DragAndDrop, DISABLED_can_initiate)
+auto DragAndDrop::client_requests_drag(Cookie const& cookie) -> Blob
 {
-    MirCookie const* cookie = user_initiates_drag();
+    Blob blob;
+    Signal initiated;
 
-    set_window_event_handler([this](MirWindow* window, MirEvent const* event)
-        { signal_when_initiated(window, event); });
+    set_window_event_handler([&](MirWindow*, MirEvent const* event)
+        {
+            if (mir_event_get_type(event) != mir_event_type_window)
+                return;
 
-    if (!dnd) BOOST_THROW_EXCEPTION(std::logic_error("no dnd extension"));
+            if (!dnd) return;
 
-    dnd->request_drag_and_drop(window, cookie);
+            blob.reset(dnd->start_drag(mir_event_get_window_event(event)));
+
+            if (blob)
+                initiated.raise();
+        });
+
+    EXPECT_THAT(dnd, Ne(nullptr)) << "No Drag and Drop extension";
+
+    if (dnd)
+        dnd->request_drag_and_drop(window, cookie);
 
     EXPECT_TRUE(initiated.wait_for(receive_event_timeout));
+
+    return blob;
+}
+}
+
+TEST_F(DragAndDrop, when_user_initiates_drag_client_receives_cookie)
+{
+    auto const cookie = user_initiates_drag();
+
+    EXPECT_THAT(cookie, Ne(nullptr));
+}
+
+TEST_F(DragAndDrop, DISABLED_when_client_requests_drags_it_receives_handle)
+{
+    auto const cookie = user_initiates_drag();
+
+    auto const handle = client_requests_drag(cookie);
+
+    EXPECT_THAT(handle, Ne(nullptr));
 }
