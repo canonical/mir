@@ -45,7 +45,7 @@ typedef struct MirDragAndDropV1
      * \param [in] event The event
      * \return           The associated drag handle or NULL
      */
-    MirBlob* (*start_drag)(MirWindowEvent const* event);
+    MirBlob* (*start_drag_and_drop)(MirWindowEvent const* event);
 
     /**
      * Retrieve any "drag & drop" handle associated with the event.
@@ -53,7 +53,7 @@ typedef struct MirDragAndDropV1
      * \param [in] event The event
      * \return           The associated drag handle or NULL
      */
-    MirBlob* (*pointer_dnd_handle)(MirPointerEvent const* event);
+    MirBlob* (*pointer_drag_and_drop)(MirPointerEvent const* event);
 
 } MirDragAndDropV1;
 

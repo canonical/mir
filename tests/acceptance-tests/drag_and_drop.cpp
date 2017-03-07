@@ -203,7 +203,7 @@ auto DragAndDrop::client_requests_drag(Cookie const& cookie) -> Blob
 
             if (!dnd) return;
 
-            blob.reset(dnd->start_drag(mir_event_get_window_event(event)));
+            blob.reset(dnd->start_drag_and_drop(mir_event_get_window_event(event)));
 
             if (blob)
                 initiated.raise();
@@ -239,7 +239,7 @@ auto DragAndDrop::handle_from_mouse_move() -> Blob
             EXPECT_THAT(dnd, Ne(nullptr)) << "No Drag and Drop extension";
 
             if (dnd)
-                blob.reset(dnd->pointer_dnd_handle(pointer_event));
+                blob.reset(dnd->pointer_drag_and_drop(pointer_event));
 
             if (blob)
                 have_blob.raise();

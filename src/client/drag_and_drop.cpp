@@ -28,19 +28,19 @@ void request_drag_and_drop(MirWindow* /*window*/, MirCookie const* /*cookie*/)
     // TODO
 }
 
-MirBlob* start_drag(MirWindowEvent const* /*event*/)
+MirBlob* start_drag_and_drop(MirWindowEvent const* /*event*/)
 {
     // TODO
     return nullptr;
 }
 
-MirBlob* pointer_dnd_handle(MirPointerEvent const* /*event*/)
+MirBlob* pointer_drag_and_drop(MirPointerEvent const* /*event*/)
 {
     // TODO
     return nullptr;
 }
 
-MirDragAndDropV1 impl{&request_drag_and_drop, &start_drag, &pointer_dnd_handle};
+MirDragAndDropV1 const impl{&request_drag_and_drop, &start_drag_and_drop, &pointer_drag_and_drop};
 }
 
 MirDragAndDropV1 const* const mir::drag_and_drop::v1 = &impl;
