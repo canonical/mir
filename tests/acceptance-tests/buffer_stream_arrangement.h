@@ -2,7 +2,7 @@
 #ifndef TESTS_ACCEPTANCE_TESTS_BUFFER_STREAM_ARRANGEMENT_H_
 #define TESTS_ACCEPTANCE_TESTS_BUFFER_STREAM_ARRANGEMENT_H_
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/compositor/display_buffer_compositor.h"
@@ -92,7 +92,7 @@ struct OrderTrackingDBCFactory : compositor::DisplayBufferCompositorFactory
     std::shared_ptr<Ordering> const ordering;
 };
 
-struct BufferStreamArrangementBase : mir_test_framework::ConnectedClientWithASurface
+struct BufferStreamArrangementBase : mir_test_framework::ConnectedClientWithAWindow
 {
     void SetUp() override;
     void TearDown() override;

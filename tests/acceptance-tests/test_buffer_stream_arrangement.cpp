@@ -173,7 +173,7 @@ void mt::BufferStreamArrangementBase::SetUp()
             return order_tracker;
         });
 
-    ConnectedClientWithASurface::SetUp();
+    ConnectedClientWithAWindow::SetUp();
     server.the_cursor()->hide();
 
     streams.emplace_back(
@@ -190,7 +190,7 @@ void mt::BufferStreamArrangementBase::SetUp()
 void mt::BufferStreamArrangementBase::TearDown()
 {
     streams.clear();
-    ConnectedClientWithASurface::TearDown();
+    ConnectedClientWithAWindow::TearDown();
 }
 
 typedef mt::BufferStreamArrangementBase BufferStreamArrangement;
