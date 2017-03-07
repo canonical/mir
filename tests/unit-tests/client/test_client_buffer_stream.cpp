@@ -694,6 +694,25 @@ TEST_F(ClientBufferStream, configures_swap_interval)
     bs.set_swap_interval(0);
 }
 
+TEST_F(ClientBufferStream, clientside_vsync_removes_serverside_vsync)
+{
+    mcl::BufferStream bs{
+        nullptr, nullptr, wait_handle, mock_protobuf_server,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
+        response, perf_report, "", size, nbuffers};
+    service_requests_for(mock_protobuf_server.alloc_count);
+
+    mir::protobuf::StreamConfiguration conf;
+    EXPECT_CALL(mock_protobuf_server, configure_buffer_stream(_,_,_))
+        .WillOnce(SaveArgPointee<0>(&conf));
+    EXPECT_FALSE(conf.has_swapinterval());
+    bs.set_swap_interval(1);
+    bs.swap_buffers_sync();
+    EXPECT_TRUE(conf.has_swapinterval());
+    EXPECT_EQ(0, conf.swapinterval());
+}
+
 TEST_F(ClientBufferStream, sets_swap_interval_requested)
 {
     mcl::BufferStream bs{
