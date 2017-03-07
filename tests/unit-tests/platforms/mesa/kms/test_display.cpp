@@ -624,21 +624,6 @@ TEST_F(MesaDisplayTest, DISABLED_constructor_throws_if_egl_khr_image_pixmap_not_
     }, std::runtime_error);
 }
 
-TEST_F(MesaDisplayTest, constructor_throws_if_gl_oes_image_not_supported)
-{
-    using namespace ::testing;
-
-    const char* gl_exts = "GL_OES_texture_npot GL_OES_blend_func_separate";
-
-    EXPECT_CALL(mock_gl, glGetString(GL_EXTENSIONS))
-    .WillOnce(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
-
-    EXPECT_THROW(
-    {
-        auto display = create_display(create_platform());
-    }, std::runtime_error);
-}
-
 TEST_F(MesaDisplayTest, for_each_display_buffer_calls_callback)
 {
     using namespace ::testing;
