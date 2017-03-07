@@ -101,49 +101,13 @@ private:
             mir::input::InputDeviceInfo{"mouse", "mouse-uid", mir::input::DeviceCapability::pointer})};
 };
 
-struct SurfaceTracker
-{
-    auto latest_surface() -> std::shared_ptr<mir::scene::Surface>;
-
-    explicit SurfaceTracker(mir::Server& server);
-
-private:
-    std::weak_ptr<WrapShellToTrackLatestSurface> shell_;
-};
-
-SurfaceTracker::SurfaceTracker(mir::Server& server)
-{
-    using mir::shell::Shell;
-    server.wrap_shell([&](std::shared_ptr<Shell> const& wrapped) -> std::shared_ptr<Shell>
-        {
-            auto const msc = std::make_shared<WrapShellToTrackLatestSurface>(wrapped);
-            shell_ = msc;
-            return msc;
-        });
-}
-
-auto SurfaceTracker::latest_surface() -> std::shared_ptr<mir::scene::Surface>
-{
-    auto const shell = shell_.lock();
-    if (!shell) BOOST_THROW_EXCEPTION(std::logic_error("no shell"));
-
-    auto const result = shell->latest_surface.lock();
-    if (!result) BOOST_THROW_EXCEPTION(std::logic_error("no surface"));
-
-    return result;
-}
-
 Rectangle const screen_geometry{{0,0}, {800,600}};
 auto const receive_event_timeout = 3s;  // TODO change to 30s before showing to CI
 
 struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
-                     MouseMoverAndFaker, SurfaceTracker
+                     MouseMoverAndFaker
 {
-    DragAndDrop() : SurfaceTracker{server} {}
-
     MirDragAndDropV1 const* dnd = nullptr;
-
-    std::shared_ptr<mir::scene::Surface> scene_surface;
 
     void SetUp() override
     {
@@ -154,15 +118,8 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
 
         paint_window();
         mir_window_set_event_handler(window, &window_event_handler, this);
-        scene_surface = latest_surface();
 
         center_mouse();
-    }
-
-    void TearDown() override
-    {
-        scene_surface.reset();
-        mir_test_framework::ConnectedClientWithAWindow::TearDown();
     }
 
     void set_window_event_handler(std::function<void(MirWindow* window, MirEvent const* event)> const& handler);
