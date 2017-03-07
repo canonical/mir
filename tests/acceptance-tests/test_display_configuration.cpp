@@ -22,7 +22,7 @@
 #include "mir/graphics/event_handler_register.h"
 #include "mir/shell/display_configuration_controller.h"
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/doubles/null_platform.h"
 #include "mir/test/doubles/fake_display.h"
 #include "mir/test/doubles/null_display_sync_group.h"
@@ -108,13 +108,13 @@ void wait_for_server_actions_to_finish(mir::ServerActionQueue& server_action_que
 }
 }
 
-struct LegacyDisplayConfigurationTest : mtf::ConnectedClientWithASurface
+struct LegacyDisplayConfigurationTest : mtf::ConnectedClientWithAWindow
 {
     void SetUp() override
     {
         server.override_the_session_authorizer([this] { return mt::fake_shared(stub_authorizer); });
         preset_display(mt::fake_shared(mock_display));
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientWithAWindow::SetUp();
     }
 
     testing::NiceMock<MockDisplay> mock_display;
