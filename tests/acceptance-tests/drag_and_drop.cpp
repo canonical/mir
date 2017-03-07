@@ -28,25 +28,32 @@
 #include <mir_test_framework/fake_input_device.h>
 #include <mir_test_framework/stub_server_platform_factory.h>
 #include <mir/test/doubles/wrap_shell_to_track_latest_surface.h>
+#include <mir/test/event_factory.h>
 #include <mir/test/signal.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <linux/input-event-codes.h>
+
 #include <boost/throw_exception.hpp>
-#include <mir/test/event_factory.h>
 
 using namespace std::chrono_literals;
+using namespace mir::geometry;
 using namespace testing;
-using mir::shell::Shell;
 using mir::test::Signal;
 using mir::test::doubles::WrapShellToTrackLatestSurface;
-using mir::geometry::Displacement;
 
 namespace
 {
 struct MouseMoverAndFaker
 {
+    void start_dragging_mouse()
+    {
+        using namespace mir::input::synthesis;
+        fake_mouse->emit_event(a_button_down_event().of_button(BTN_LEFT));
+    }
+
     void move_mouse(Displacement const& displacement)
     {
         using mir::input::synthesis::a_pointer_event;
@@ -71,6 +78,7 @@ private:
 
 SurfaceTracker::SurfaceTracker(mir::Server& server)
 {
+    using mir::shell::Shell;
     server.wrap_shell([&](std::shared_ptr<Shell> const& wrapped) -> std::shared_ptr<Shell>
         {
             auto const msc = std::make_shared<WrapShellToTrackLatestSurface>(wrapped);
@@ -90,6 +98,9 @@ auto SurfaceTracker::latest_surface() -> std::shared_ptr<mir::scene::Surface>
     return result;
 }
 
+Rectangle const screen_geometry{{0,0}, {800,600}};
+auto const receive_event_timeout = 3s;  // TODO change to 30s before landing
+
 struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
                      MouseMoverAndFaker, SurfaceTracker
 {
@@ -98,28 +109,60 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
     MirDragAndDropV1 const* dnd = nullptr;
     Signal initiated;
 
-    MirCookie* const cookie = nullptr; // TODO get a valid cookie
     std::shared_ptr<mir::scene::Surface> scene_surface;
 
     void SetUp() override
     {
+        initial_display_layout({screen_geometry});
         mir_test_framework::ConnectedClientWithAWindow::SetUp();
 
         dnd = mir_drag_and_drop_v1(connection);
-        ASSERT_THAT(dnd, Ne(nullptr));
 
-        mir_window_set_event_handler(window, &signal_when_initiated, this);
+        paint_window();
+        mir_window_set_event_handler(window, &window_event_handler, this);
         scene_surface = latest_surface();
+
+        center_mouse();
     }
 
-private:
+    void TearDown() override
+    {
+        scene_surface.reset();
+        mir_test_framework::ConnectedClientWithAWindow::TearDown();
+    }
+
     void signal_when_initiated(MirWindow* window, MirEvent const* event);
-    static void signal_when_initiated(MirWindow* window, MirEvent const* event, void* context);
+
+    void set_window_event_handler(std::function<void(MirWindow* window, MirEvent const* event)> const& handler);
+
+    auto user_initiates_drag() -> MirCookie const*;
+
+private:
+    void center_mouse() { move_mouse(0.5 * as_displacement(screen_geometry.size)); }
+    void paint_window() const { mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window)); }
+
+    void invoke_window_event_handler(MirWindow* window, MirEvent const* event)
+    {
+        std::lock_guard<decltype(window_event_handler_mutex)> lock{window_event_handler_mutex};
+        window_event_handler_(window, event);
+    }
+
+    std::mutex window_event_handler_mutex;
+    std::function<void(MirWindow* window, MirEvent const* event)> window_event_handler_ =
+        [](MirWindow*, MirEvent const*) {};
+
+    static void window_event_handler(MirWindow* window, MirEvent const* event, void* context);
 };
 
-void DragAndDrop::signal_when_initiated(MirWindow* window, MirEvent const* event, void* context)
+void DragAndDrop::set_window_event_handler(std::function<void(MirWindow* window, MirEvent const* event)> const& handler)
 {
-    static_cast<DragAndDrop*>(context)->signal_when_initiated(window, event);
+    std::lock_guard<decltype(window_event_handler_mutex)> lock{window_event_handler_mutex};
+    window_event_handler_ = handler;
+}
+
+void DragAndDrop::window_event_handler(MirWindow* window, MirEvent const* event, void* context)
+{
+    static_cast<DragAndDrop*>(context)->invoke_window_event_handler(window, event);
 }
 
 void DragAndDrop::signal_when_initiated(MirWindow* window, MirEvent const* event)
@@ -129,17 +172,57 @@ void DragAndDrop::signal_when_initiated(MirWindow* window, MirEvent const* event
     if (mir_event_get_type(event) != mir_event_type_window)
         return;
 
+    if (!dnd) return;
+
     if (auto handle = dnd->start_drag(mir_event_get_window_event(event)))
     {
         initiated.raise();
         mir_blob_release(handle);
     }
 }
+
+auto DragAndDrop::user_initiates_drag() -> MirCookie const*
+{
+    MirCookie const* cookie = nullptr;
+    Signal have_cookie;
+
+    set_window_event_handler([&](MirWindow*, MirEvent const* event)
+        {
+            if (mir_event_get_type(event) != mir_event_type_input)
+                return;
+
+            auto const input_event = mir_event_get_input_event(event);
+
+            if (mir_input_event_get_type(input_event) != mir_input_event_type_pointer)
+                return;
+
+            auto const pointer_event = mir_input_event_get_pointer_event(input_event);
+
+            if (mir_pointer_event_action(pointer_event) != mir_pointer_action_button_down)
+                return;
+
+            cookie = mir_input_event_get_cookie(input_event);
+            have_cookie.raise();
+        });
+
+    start_dragging_mouse();
+
+    if (!have_cookie.wait_for(receive_event_timeout)) BOOST_THROW_EXCEPTION(std::logic_error("no cookie"));
+
+    return cookie;
+}
 }
 
 TEST_F(DragAndDrop, DISABLED_can_initiate)
 {
+    MirCookie const* cookie = user_initiates_drag();
+
+    set_window_event_handler([this](MirWindow* window, MirEvent const* event)
+        { signal_when_initiated(window, event); });
+
+    if (!dnd) BOOST_THROW_EXCEPTION(std::logic_error("no dnd extension"));
+
     dnd->request_drag_and_drop(window, cookie);
 
-    EXPECT_TRUE(initiated.wait_for(30s));
+    EXPECT_TRUE(initiated.wait_for(receive_event_timeout));
 }
