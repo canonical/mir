@@ -169,6 +169,7 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
 
     auto user_initiates_drag() -> Cookie;
     auto client_requests_drag(Cookie const& cookie) -> Blob;
+    auto handle_from_mouse_move() -> Blob;
 
 private:
     void center_mouse() { move_mouse(0.5 * as_displacement(screen_geometry.size)); }
@@ -218,7 +219,7 @@ auto DragAndDrop::user_initiates_drag() -> Cookie
             if (mir_pointer_event_action(pointer_event) != mir_pointer_action_button_down)
                 return;
 
-            cookie = Cookie(mir_input_event_get_cookie(input_event));
+            cookie = Cookie{mir_input_event_get_cookie(input_event)};
             have_cookie.raise();
         });
 
@@ -256,6 +257,38 @@ auto DragAndDrop::client_requests_drag(Cookie const& cookie) -> Blob
 
     return blob;
 }
+
+auto DragAndDrop::handle_from_mouse_move() -> Blob
+{
+    Blob blob;
+    Signal have_blob;
+
+    set_window_event_handler([&](MirWindow*, MirEvent const* event)
+        {
+            if (mir_event_get_type(event) != mir_event_type_input)
+                return;
+
+            auto const input_event = mir_event_get_input_event(event);
+
+            if (mir_input_event_get_type(input_event) != mir_input_event_type_pointer)
+                return;
+
+            auto const pointer_event = mir_input_event_get_pointer_event(input_event);
+
+            EXPECT_THAT(dnd, Ne(nullptr)) << "No Drag and Drop extension";
+
+            if (dnd)
+                blob.reset(dnd->pointer_dnd_handle(pointer_event));
+
+            if (blob)
+                have_blob.raise();
+        });
+
+    move_mouse({1,1});
+
+    EXPECT_TRUE(have_blob.wait_for(receive_event_timeout));
+    return blob;
+}
 }
 
 TEST_F(DragAndDrop, when_user_initiates_drag_client_receives_cookie)
@@ -272,4 +305,16 @@ TEST_F(DragAndDrop, DISABLED_when_client_requests_drags_it_receives_handle)
     auto const handle = client_requests_drag(cookie);
 
     EXPECT_THAT(handle, Ne(nullptr));
+}
+
+TEST_F(DragAndDrop, DISABLED_during_drag_when_user_moves_mouse_client_receives_handle)
+{
+    auto const cookie = user_initiates_drag();
+
+    auto const handle_from_request = client_requests_drag(cookie);
+
+    auto const handle = handle_from_mouse_move();
+
+    EXPECT_THAT(handle, Ne(nullptr));
+    EXPECT_THAT(handle, Eq(handle_from_request));
 }
