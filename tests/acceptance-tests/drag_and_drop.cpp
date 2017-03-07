@@ -27,7 +27,6 @@
 #include <mir_test_framework/connected_client_with_a_window.h>
 #include <mir_test_framework/fake_input_device.h>
 #include <mir_test_framework/stub_server_platform_factory.h>
-#include <mir/test/doubles/wrap_shell_to_track_latest_surface.h>
 #include <mir/test/event_factory.h>
 #include <mir/test/signal.h>
 
@@ -42,7 +41,6 @@ using namespace std::chrono_literals;
 using namespace mir::geometry;
 using namespace testing;
 using mir::test::Signal;
-using mir::test::doubles::WrapShellToTrackLatestSurface;
 
 namespace
 {
