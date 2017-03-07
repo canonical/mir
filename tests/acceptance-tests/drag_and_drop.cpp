@@ -122,8 +122,6 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
         center_mouse();
     }
 
-    void set_window_event_handler(std::function<void(MirWindow* window, MirEvent const* event)> const& handler);
-
     auto user_initiates_drag() -> Cookie;
     auto client_requests_drag(Cookie const& cookie) -> Blob;
     auto handle_from_mouse_move() -> Blob;
@@ -131,6 +129,7 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
 private:
     void center_mouse() { move_mouse(0.5 * as_displacement(screen_geometry.size)); }
     void paint_window() const { mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window)); }
+    void set_window_event_handler(std::function<void(MirWindow* window, MirEvent const* event)> const& handler);
 
     void invoke_window_event_handler(MirWindow* window, MirEvent const* event)
     {
