@@ -321,8 +321,10 @@ bool me::WindowManager::handle_key_event(MirKeyboardEvent const* kev)
                                  mode_change) % nmodes;
                     }
                 });
-                                  
+
+            if (!rotating) compositor->stop();
             display->configure(*conf);
+            if (!rotating) compositor->start();
             force_redraw();
             return true;
         }
