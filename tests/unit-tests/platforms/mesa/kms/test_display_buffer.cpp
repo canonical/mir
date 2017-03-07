@@ -488,24 +488,6 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
     EXPECT_FALSE(db.overlay(list));
 }
 
-TEST_F(MesaDisplayBufferTest, throws_if_hybrid_output_attempted)
-{
-    ON_CALL(*mock_kms_output, buffer_requires_migration(_))
-        .WillByDefault(Return(true));
-
-    EXPECT_THROW(
-        {
-            graphics::mesa::DisplayBuffer db(
-                graphics::mesa::BypassOption::prohibited,
-                null_display_report(),
-                {mock_kms_output},
-                make_output_surface(),
-                display_area,
-                mir_orientation_normal);
-        },
-        std::runtime_error);
-}
-
 TEST_F(MesaDisplayBufferTest, buffer_requiring_migration_is_ineligable_for_bypass)
 {
     ON_CALL(*mock_kms_output, buffer_requires_migration(Eq(stub_gbm_native_buffer->bo)))

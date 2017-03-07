@@ -28,8 +28,13 @@
 #include "mir/graphics/egl_error.h"
 
 #include <boost/throw_exception.hpp>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 #include MIR_SERVER_GL_H
+#include <GLES2/gl2ext.h>
+#include <drm/drm_fourcc.h>
 
+#include <sstream>
 #include <stdexcept>
 #include <chrono>
 #include <thread>
@@ -105,15 +110,28 @@ mgm::GBMOutputSurface::FrontBuffer::operator bool() const
 namespace
 {
 
-void ensure_egl_image_extensions()
+void require_egl_extensions(std::initializer_list<char const*> extensions)
 {
+    std::stringstream missing_extensions;
+
     std::string ext_string;
     const char* exts = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
     if (exts)
         ext_string = exts;
 
-    if (ext_string.find("GL_OES_EGL_image") == std::string::npos)
-        BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support GL_OES_EGL_image extension"));
+    for (auto extension : extensions)
+    {
+        if (ext_string.find(extension) == std::string::npos)
+        {
+            missing_extensions << "Missing " << extension << std::endl;
+        }
+    }
+
+    if (!missing_extensions.str().empty())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            std::string("Missing required extensions:\n") + missing_extensions.str()));
+    }
 }
 
 bool needs_bounce_buffer(mgm::KMSOutput const& destination, gbm_bo* source)
@@ -121,6 +139,318 @@ bool needs_bounce_buffer(mgm::KMSOutput const& destination, gbm_bo* source)
     return destination.buffer_requires_migration(source);
 }
 
+const GLchar* const vshader =
+    {
+        "attribute vec4 position;\n"
+        "attribute vec2 texcoord;\n"
+        "varying vec2 v_texcoord;\n"
+        "void main() {\n"
+        "   gl_Position = position;\n"
+        "   v_texcoord = texcoord;\n"
+        "}\n"
+    };
+
+const GLchar* const fshader =
+    {
+        "#ifdef GL_ES\n"
+        "precision mediump float;\n"
+        "#endif\n"
+        "uniform sampler2D tex;"
+        "varying vec2 v_texcoord;\n"
+        "void main() {\n"
+        "   gl_FragColor = texture2D(tex, v_texcoord);\n"
+        "}\n"
+    };
+
+class VBO
+{
+public:
+    VBO(void const* data, size_t size)
+    {
+        glGenBuffers(1, &buf_id);
+        glBindBuffer(GL_ARRAY_BUFFER, buf_id);
+        glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
+
+    ~VBO()
+    {
+        glDeleteBuffers(1, &buf_id);
+    }
+
+    void bind()
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, buf_id);
+    }
+
+private:
+    GLuint buf_id;
+};
+
+class EGLBufferCopier
+{
+public:
+    EGLBufferCopier(
+        int drm_fd,
+        uint32_t width,
+        uint32_t height,
+        uint32_t format)
+        : eglCreateImageKHR{
+              reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"))},
+          eglDestroyImageKHR{
+              reinterpret_cast<PFNEGLDESTROYIMAGEKHRPROC>(eglGetProcAddress("eglDestroyImageKHR"))},
+          glEGLImageTargetTexture2DOES{
+              reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))},
+          device{gbm_create_device(drm_fd), &gbm_device_destroy},
+          width{width},
+          height{height},
+          surface{create_scanout_surface(*device, width, height, format)}
+    {
+        require_egl_extensions({
+            "GL_OES_EGL_image",
+            "EGL_KHR_image_base",
+            "EGL_EXT_image_dma_buf_import"
+        });
+
+        EGLint const config_attr[] = {
+            EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+            EGL_RED_SIZE, 5,
+            EGL_GREEN_SIZE, 5,
+            EGL_BLUE_SIZE, 5,
+            EGL_ALPHA_SIZE, 0,
+            EGL_DEPTH_SIZE, 0,
+            EGL_STENCIL_SIZE, 0,
+            EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
+            EGL_NONE
+        };
+
+        static const EGLint required_egl_version_major = 1;
+        static const EGLint required_egl_version_minor = 4;
+
+        EGLint num_egl_configs;
+        EGLConfig egl_config;
+
+        display = eglGetDisplay(static_cast<EGLNativeDisplayType>(device.get()));
+        if (display == EGL_NO_DISPLAY)
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to get EGL display"));
+
+        EGLint major, minor;
+
+        if (eglInitialize(display, &major, &minor) == EGL_FALSE)
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialize EGL display"));
+
+        if ((major < required_egl_version_major) ||
+            (major == required_egl_version_major && minor < required_egl_version_minor))
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Incompatible EGL version"));
+        }
+
+        if (eglChooseConfig(display, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
+            num_egl_configs != 1)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to choose ARGB EGL config"));
+        }
+
+        eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+        static const EGLint context_attr[] = {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
+            EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
+            EGL_NONE
+        };
+
+        context = eglCreateContext(display, egl_config, EGL_NO_CONTEXT, context_attr);
+        if (context == EGL_NO_CONTEXT)
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
+
+        egl_surface = eglCreateWindowSurface(display, egl_config, surface.get(), nullptr);
+        eglMakeCurrent(display, egl_surface, egl_surface, context);
+
+        auto vertex = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertex, 1, &vshader, nullptr);
+        glCompileShader(vertex);
+
+        int compiled;
+        glGetShaderiv (vertex, GL_COMPILE_STATUS, &compiled);
+
+        if (!compiled) {
+            GLchar log[1024];
+
+            glGetShaderInfoLog (vertex, sizeof log - 1, NULL, log);
+            log[sizeof log - 1] = '\0';
+            glDeleteShader (vertex);
+
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error(std::string{"Failed to compile vertex shader:\n"} + log));
+        }
+
+
+        auto fragment = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragment, 1, &fshader, nullptr);
+        glCompileShader(fragment);
+
+        glGetShaderiv (fragment, GL_COMPILE_STATUS, &compiled);
+        if (!compiled) {
+            GLchar log[1024];
+
+            glGetShaderInfoLog (fragment, sizeof log - 1, NULL, log);
+            log[sizeof log - 1] = '\0';
+            glDeleteShader (fragment);
+
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error(std::string{"Failed to compile fragment shader:\n"} + log));
+        }
+
+        prog = glCreateProgram();
+        glAttachShader(prog, vertex);
+        glAttachShader(prog, fragment);
+        glLinkProgram(prog);
+        glGetProgramiv (prog, GL_LINK_STATUS, &compiled);
+        if (!compiled) {
+            GLchar log[1024];
+
+            glGetProgramInfoLog (prog, sizeof log - 1, NULL, log);
+            log[sizeof log - 1] = '\0';
+
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error(std::string{"Failed to link shader prog:\n"} + log));
+        }
+
+        glUseProgram(prog);
+
+        attrpos = glGetAttribLocation(prog, "position");
+        attrtex = glGetAttribLocation(prog, "texcoord");
+        auto unitex = glGetUniformLocation(prog, "tex");
+
+        glGenTextures(1, &tex);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex);
+
+        glUniform1i(unitex, 0);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        static GLfloat const dest_vert[4][2] =
+            { { -1.f, 1.f }, { 1.f, 1.f }, { 1.f, -1.f }, { -1.f, -1.f } };
+        vert_data = std::make_unique<VBO>(dest_vert, sizeof(dest_vert));
+
+        static GLfloat const tex_vert[4][2] =
+            {
+                { 0.f, 0.f }, { 1.f, 0.f }, { 1.f, 1.f }, { 0.f, 1.f },
+            };
+        tex_data = std::make_unique<VBO>(tex_vert, sizeof(tex_vert));
+    }
+
+    EGLBufferCopier(EGLBufferCopier const&) = delete;
+    EGLBufferCopier& operator==(EGLBufferCopier const&) = delete;
+
+    ~EGLBufferCopier()
+    {
+        eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, context);
+        vert_data = nullptr;
+        tex_data = nullptr;
+        eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        eglDestroySurface(display, egl_surface);
+        eglDestroyContext(display, context);
+        eglTerminate(display);
+    }
+
+    mgm::GBMOutputSurface::FrontBuffer copy_front_buffer_from(mgm::GBMOutputSurface::FrontBuffer&& from)
+    {
+        eglMakeCurrent(display, egl_surface, egl_surface, context);
+        mir::Fd const dma_buf{gbm_bo_get_fd(from)};
+
+        glUseProgram(prog);
+
+        EGLint const image_attrs[] = {
+            EGL_WIDTH, static_cast<EGLint>(width),
+            EGL_HEIGHT, static_cast<EGLint>(height),
+            EGL_LINUX_DRM_FOURCC_EXT, DRM_FORMAT_XRGB8888,
+            EGL_DMA_BUF_PLANE0_FD_EXT, static_cast<int>(dma_buf),
+            EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
+            EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<EGLint>(gbm_bo_get_stride(from)),
+            EGL_NONE
+        };
+
+        auto image = eglCreateImageKHR(
+            display,
+            EGL_NO_CONTEXT,
+            EGL_LINUX_DMA_BUF_EXT,
+            nullptr,
+            image_attrs);
+
+        if (image == EGL_NO_IMAGE_KHR)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage from dma_buf"));
+        }
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
+
+        vert_data->bind();
+        glVertexAttribPointer (attrpos, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+        tex_data->bind();
+        glVertexAttribPointer (attrtex, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+        glEnableVertexAttribArray(attrpos);
+        glEnableVertexAttribArray(attrtex);
+
+        GLubyte const idx[] = { 0, 1, 3, 2 };
+        glDrawElements (GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_BYTE, idx);
+
+        if (eglSwapBuffers(display, egl_surface) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to swap bounce buffers"));
+        }
+
+        eglDestroyImageKHR(display, image);
+
+        eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        return mgm::GBMOutputSurface::FrontBuffer(surface.get());
+    }
+
+    private:
+    static mgm::GBMSurfaceUPtr create_scanout_surface(
+        gbm_device& on,
+        uint32_t width,
+        uint32_t height,
+        uint32_t format)
+    {
+        auto* const device = &on;
+
+        return {
+            gbm_surface_create(
+                device,
+                width,
+                height,
+                format,
+                GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING),
+            &gbm_surface_destroy};
+    }
+
+    PFNEGLCREATEIMAGEKHRPROC const eglCreateImageKHR;
+    PFNEGLDESTROYIMAGEKHRPROC const eglDestroyImageKHR;
+    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC const glEGLImageTargetTexture2DOES;
+
+    std::unique_ptr<gbm_device, decltype(&gbm_device_destroy)> const device;
+    uint32_t const width;
+    uint32_t const height;
+    mgm::GBMSurfaceUPtr const surface;
+    EGLDisplay display;
+    EGLContext context;
+    EGLSurface egl_surface;
+    GLuint prog;
+    GLuint tex;
+    GLint attrtex;
+    GLint attrpos;
+    std::unique_ptr<VBO> vert_data;
+    std::unique_ptr<VBO> tex_data;
+};
 }
 
 mgm::DisplayBuffer::DisplayBuffer(
@@ -157,24 +487,34 @@ mgm::DisplayBuffer::DisplayBuffer(
     make_current();
 
     listener->report_successful_egl_make_current_on_construction();
-
-    ensure_egl_image_extensions();
-
+    
     glClear(GL_COLOR_BUFFER_BIT);
 
     surface.swap_buffers();
 
     listener->report_successful_egl_buffer_swap_on_construction();
 
-    visible_composite_frame = surface.lock_front();
-    if (!visible_composite_frame)
+    auto temporary_front = surface.lock_front();
+    if (!temporary_front)
         fatal_error("Failed to get frontbuffer");
 
-    if (needs_bounce_buffer(*outputs.front(), visible_composite_frame))
+    if (needs_bounce_buffer(*outputs.front(), temporary_front))
     {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Hybrid support not implemented yet"}));
+        get_front_buffer = std::bind(
+            std::mem_fn(&EGLBufferCopier::copy_front_buffer_from),
+            std::make_shared<EGLBufferCopier>(
+                outputs.front()->drm_fd(),
+                fb_width,
+                fb_height,
+                GBM_BO_FORMAT_XRGB8888),
+            std::placeholders::_1);
+    }
+    else
+    {
+        get_front_buffer = [](auto&& fb) { return std::move(fb); };
     }
 
+    visible_composite_frame = get_front_buffer(std::move(temporary_front));
     set_crtc(*outputs.front()->fb_for(visible_composite_frame, fb_width, fb_height));
 
     release_current();
@@ -289,7 +629,7 @@ void mgm::DisplayBuffer::post()
     }
     else
     {
-        scheduled_composite_frame = surface.lock_front();
+        scheduled_composite_frame = get_front_buffer(surface.lock_front());
         bufobj = outputs.front()->fb_for(scheduled_composite_frame, fb_width, fb_height);
         if (!bufobj)
             fatal_error("Failed to get front buffer object");
