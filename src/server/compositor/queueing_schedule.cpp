@@ -32,6 +32,13 @@ void mc::QueueingSchedule::schedule(std::shared_ptr<graphics::Buffer> const& buf
     queue.emplace_back(buffer);
 }
 
+std::future<void> mc::QueueingSchedule::schedule_nonblocking(
+    std::shared_ptr<graphics::Buffer> const& buffer)
+{
+    schedule(buffer);
+    return {};
+}
+
 unsigned int mc::QueueingSchedule::num_scheduled()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
