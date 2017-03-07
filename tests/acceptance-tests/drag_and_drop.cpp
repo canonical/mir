@@ -53,6 +53,7 @@ public:
     operator MirCookie const*() const { return self.get(); }
 
     void reset() { self.reset(); }
+    void reset(MirCookie const* cookie) { self.reset(cookie, deleter); }
 
     friend void mir_cookie_release(Cookie const&) = delete;
 
@@ -118,6 +119,12 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
         mir_window_set_event_handler(window, &window_event_handler, this);
 
         center_mouse();
+    }
+
+    void TearDown() override
+    {
+        set_window_event_handler([&](MirWindow*, MirEvent const*) {});
+        mir_test_framework::ConnectedClientWithAWindow::TearDown();
     }
 
     auto user_initiates_drag() -> Cookie;
@@ -249,7 +256,7 @@ TEST_F(DragAndDrop, when_user_initiates_drag_client_receives_cookie)
 {
     auto const cookie = user_initiates_drag();
 
-    EXPECT_THAT(cookie, Ne(nullptr));
+    EXPECT_THAT(cookie, NotNull());
 }
 
 TEST_F(DragAndDrop, DISABLED_when_client_requests_drags_it_receives_handle)
@@ -258,7 +265,7 @@ TEST_F(DragAndDrop, DISABLED_when_client_requests_drags_it_receives_handle)
 
     auto const handle = client_requests_drag(cookie);
 
-    EXPECT_THAT(handle, Ne(nullptr));
+    EXPECT_THAT(handle, NotNull());
 }
 
 TEST_F(DragAndDrop, DISABLED_during_drag_when_user_moves_mouse_client_receives_handle)
@@ -269,6 +276,6 @@ TEST_F(DragAndDrop, DISABLED_during_drag_when_user_moves_mouse_client_receives_h
 
     auto const handle = handle_from_mouse_move();
 
-    EXPECT_THAT(handle, Ne(nullptr));
+    EXPECT_THAT(handle, NotNull());
     EXPECT_THAT(handle, Eq(handle_from_request));
 }

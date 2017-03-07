@@ -49,6 +49,7 @@ add_subdirectory(input)
 add_library(mirclientobjects OBJECT
 
   display_configuration.cpp
+  drag_and_drop.cpp drag_and_drop.h
   error_connections.cpp
   event.cpp
   event_printer.cpp
