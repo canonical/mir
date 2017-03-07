@@ -68,10 +68,6 @@ std::string mir::event_type_to_string(MirEventType t)
 {
     switch (t)
     {
-    case mir_event_type_key:
-        return "mir_event_type_key";
-    case mir_event_type_motion:
-        return "mir_event_type_motion";
     case mir_event_type_window:
         return "mir_event_type_window";
     case mir_event_type_resize:
