@@ -142,8 +142,7 @@ void msh::BasicWindowManager::handle_request_drag_and_drop(
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     if (timestamp >= last_input_event_timestamp)
-//        policy->handle_raise_surface(session, surface);
-        (void)session, (void)surface;   // TODO {arg}
+        policy->handle_request_drag_and_drop(session, surface);
 }
 
 int msh::BasicWindowManager::set_surface_attribute(

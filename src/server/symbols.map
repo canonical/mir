@@ -698,6 +698,7 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.27 {
     mir::shell::CanonicalWindowManagerPolicy::handle_touch_event*;
     mir::shell::CanonicalWindowManagerPolicy::handle_pointer_event*;
     mir::shell::CanonicalWindowManagerPolicy::handle_raise_surface*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
     typeinfo?for?mir::shell::CanonicalWindowManagerPolicy;
     vtable?for?mir::shell::CanonicalWindowManagerPolicy;
     VTT?for?mir::shell::CanonicalWindowManagerPolicy;

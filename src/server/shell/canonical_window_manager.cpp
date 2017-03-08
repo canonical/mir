@@ -583,6 +583,13 @@ void msh::CanonicalWindowManagerPolicy::handle_raise_surface(
     select_active_surface(surface);
 }
 
+void msh::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(
+    std::shared_ptr<ms::Session> const& /*session*/,
+    std::shared_ptr<ms::Surface> const& /*surface*/)
+{
+    // TODO send start_drag_and_drop to surface {arg}
+}
+
 bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
 {
     auto const action = mir_keyboard_event_action(event);

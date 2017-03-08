@@ -107,6 +107,10 @@ public:
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface) = 0;
 
+    virtual void handle_request_drag_and_drop(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface) = 0;
+
     virtual ~WindowManagementPolicy() = default;
     WindowManagementPolicy() = default;
     WindowManagementPolicy(WindowManagementPolicy const&) = delete;
