@@ -82,6 +82,11 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         uint64_t timestamp) override;
 
+    void request_drag_and_drop(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t timestamp) override;
+
     std::shared_ptr<scene::PromptSession> start_prompt_session_for(
         std::shared_ptr<scene::Session> const& session,
         scene::PromptSessionCreationParameters const& params) override;

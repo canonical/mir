@@ -155,7 +155,15 @@ int mtf::ObservantShell::get_surface_attribute(
 void mtf::ObservantShell::raise_surface(
     std::shared_ptr<msc::Session> const& session,
     std::shared_ptr<msc::Surface> const& window,
-    uint64_t timestamp) 
+    uint64_t timestamp)
 {
     return wrapped->raise_surface(session, window, timestamp);
+}
+
+void mtf::ObservantShell::request_drag_and_drop(
+    std::shared_ptr<msc::Session> const& session,
+    std::shared_ptr<msc::Surface> const& window,
+    uint64_t timestamp) 
+{
+    return wrapped->request_drag_and_drop(session, window, timestamp);
 }

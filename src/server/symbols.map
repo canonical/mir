@@ -307,6 +307,7 @@ MIR_SERVER_0.27 {
     mir::shell::ShellWrapper::raise*;
     mir::shell::ShellWrapper::raise_surface*;
     mir::shell::ShellWrapper::remove_display*;
+    mir::shell::ShellWrapper::request_drag_and_drop*;
     mir::shell::ShellWrapper::set_focus_to*;
     mir::shell::ShellWrapper::set_surface_attribute*;
     mir::shell::ShellWrapper::ShellWrapper*;

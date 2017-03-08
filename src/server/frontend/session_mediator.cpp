@@ -1189,8 +1189,7 @@ void mir::frontend::SessionMediator::request_drag_and_drop(mir::protobuf::Reques
     std::vector<uint8_t> cookie_bytes(cookie_string.begin(), cookie_string.end());
     auto const cookie_ptr = cookie_authority->make_cookie(cookie_bytes);
 
-// TODO
-//    shell->request_drag_and_drop(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+    shell->request_drag_and_drop(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
 
     done->Run();
 }
