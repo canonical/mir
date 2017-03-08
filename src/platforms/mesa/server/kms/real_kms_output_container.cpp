@@ -51,10 +51,10 @@ mgm::RealKMSOutputContainer::get_kms_output_for(uint32_t connector_id)
     return output;
 }
 
-void mgm::RealKMSOutputContainer::for_each_output(std::function<void(KMSOutput&)> functor) const
+void mgm::RealKMSOutputContainer::for_each_output(std::function<void(std::shared_ptr<KMSOutput> const&)> functor) const
 {
     for(auto& pair: outputs)
-        functor(*pair.second);
+        functor(pair.second);
 }
 
 void mgm::RealKMSOutputContainer::update_from_hardware_state()

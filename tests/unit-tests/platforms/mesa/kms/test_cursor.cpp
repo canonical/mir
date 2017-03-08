@@ -78,10 +78,10 @@ struct StubKMSOutputContainer : public mgm::KMSOutputContainer
         return outputs[connector_id];
     }
 
-    void for_each_output(std::function<void(mgm::KMSOutput&)> functor) const
+    void for_each_output(std::function<void(std::shared_ptr<mgm::KMSOutput> const&)> functor) const
     {
         for (auto const& pair : outputs)
-            functor(*pair.second);
+            functor(pair.second);
     }
 
     void verify_and_clear_expectations()

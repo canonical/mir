@@ -217,9 +217,9 @@ void mir::graphics::mesa::Cursor::suspend()
 void mir::graphics::mesa::Cursor::clear(std::lock_guard<std::mutex> const&)
 {
     last_set_failed = false;
-    output_container.for_each_output([&](KMSOutput& output)
+    output_container.for_each_output([&](std::shared_ptr<KMSOutput> const& output)
         {
-            if (!output.clear_cursor())
+            if (!output->clear_cursor())
                 last_set_failed = true;
         });
 }
