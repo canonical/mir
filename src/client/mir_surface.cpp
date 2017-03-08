@@ -598,6 +598,23 @@ void MirSurface::raise_surface(MirCookie const* cookie)
         google::protobuf::NewCallback(google::protobuf::DoNothing));
 }
 
+void MirSurface::request_drag_and_drop(MirCookie const* cookie)
+{
+    mp::RequestAuthority authority;
+
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    authority.mutable_surface_id()->set_value(surface->id().value());
+
+    auto const event_cookie = authority.mutable_cookie();
+
+    event_cookie->set_cookie(cookie->cookie().data(), cookie->size());
+
+    server->request_drag_and_drop(
+        &authority,
+        void_response.get(),
+        google::protobuf::NewCallback(google::protobuf::DoNothing));
+}
+
 MirBufferStream* MirSurface::get_buffer_stream()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);

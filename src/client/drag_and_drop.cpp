@@ -19,13 +19,14 @@
 #include "drag_and_drop.h"
 
 #include "mir_toolkit/extensions/drag_and_drop.h"
+#include "mir_surface.h"
 
 namespace
 {
 
-void request_drag_and_drop(MirWindow* /*window*/, MirCookie const* /*cookie*/)
+void request_drag_and_drop(MirWindow* window, MirCookie const* cookie)
 {
-    // TODO
+    window->request_drag_and_drop(cookie);
 }
 
 MirBlob* start_drag_and_drop(MirWindowEvent const* /*event*/)
