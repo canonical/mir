@@ -338,34 +338,9 @@ void mgn::InputPlatform::start()
             {
                 std::lock_guard<std::mutex> lock(devices_guard);
                 if (!devices.empty())
-                {
-                    auto const* device_state = mir_event_get_input_device_state_event(&event);
-                    for (size_t index = 0, end_index = mir_input_device_state_event_device_count(device_state);
-                         index != end_index; ++index)
-                    {
-                        auto it = devices.find(mir_input_device_state_event_device_id(device_state, index));
-                        if (it != end(devices) && it->second->destination)
-                        {
-                            auto dest = it->second->destination;
-                            auto key_count = mir_input_device_state_event_device_pressed_keys_count(device_state, index);
-                            std::vector<uint32_t> scan_codes;
-                            for (uint32_t i = 0; i < key_count; i++)
-                            {
-                                scan_codes.push_back(mir_input_device_state_event_device_pressed_keys_for_index(device_state, index, i));
-                            }
-
-                            dest->key_state(scan_codes);
-                            dest->pointer_state(
-                                mir_input_device_state_event_device_pointer_buttons(device_state, index));
-                        }
-                    }
-
-                    auto& front = begin(devices)->second;
-                    auto device_state_event = front->builder->device_state_event(
-                        mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_x),
-                        mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_y));
-                    front->destination->handle_input(*device_state_event);
-                }
+                    handle_device_state(event);
+                else
+                    early_device_states.push_back(mir::events::clone_event(event));
             }
         });
 }
@@ -421,7 +396,13 @@ void mgn::InputPlatform::update_devices_locked()
     for (auto new_dev : new_devs)
     {
         input_device_registry->add_device(new_dev.first);
-
+    }
+    for (auto const& event : early_device_states)
+    {
+        handle_device_state(*event);
+    }
+    for (auto new_dev : new_devs)
+    {
         auto early_event_queue = unknown_device_events.find(new_dev.second);
         if (early_event_queue != end(unknown_device_events))
         {
@@ -433,6 +414,7 @@ void mgn::InputPlatform::update_devices_locked()
         }
     }
     unknown_device_events.clear();
+    early_device_states.clear();
 }
 
 void mgn::InputPlatform::config_changed()
@@ -460,4 +442,34 @@ void mgn::InputPlatform::continue_after_config()
         changed = false;
     }
     state = started;
+}
+
+void mgn::InputPlatform::handle_device_state(MirEvent const& event)
+{
+    auto const* device_state = mir_event_get_input_device_state_event(&event);
+    for (size_t index = 0, end_index = mir_input_device_state_event_device_count(device_state);
+         index != end_index; ++index)
+    {
+        auto it = devices.find(mir_input_device_state_event_device_id(device_state, index));
+        if (it != end(devices) && it->second->destination)
+        {
+            auto dest = it->second->destination;
+            auto key_count = mir_input_device_state_event_device_pressed_keys_count(device_state, index);
+            std::vector<uint32_t> scan_codes;
+            for (uint32_t i = 0; i < key_count; i++)
+            {
+                scan_codes.push_back(mir_input_device_state_event_device_pressed_keys_for_index(device_state, index, i));
+            }
+
+            dest->key_state(scan_codes);
+            dest->pointer_state(
+                mir_input_device_state_event_device_pointer_buttons(device_state, index));
+        }
+    }
+
+    auto& front = begin(devices)->second;
+    auto device_state_event = front->builder->device_state_event(
+        mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_x),
+        mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_y));
+    front->destination->handle_input(*device_state_event);
 }
