@@ -843,6 +843,7 @@ MIR_SERVER_DETAIL_FOR_PROVING_0.27 {
     mir::shell::BasicWindowManager::handle_keyboard_event*;
     mir::shell::BasicWindowManager::handle_pointer_event*;
     mir::shell::BasicWindowManager::handle_raise_surface*;
+    mir::shell::BasicWindowManager::handle_request_drag_and_drop*;
     mir::shell::BasicWindowManager::handle_touch_event*;
     mir::shell::BasicWindowManager::info_for*;
     mir::shell::BasicWindowManager::modify_surface*;
@@ -860,6 +861,7 @@ MIR_SERVER_DETAIL_FOR_PROVING_0.27 {
     virtual?thunk?to?mir::shell::BasicWindowManager::handle_keyboard_event*;
     virtual?thunk?to?mir::shell::BasicWindowManager::handle_pointer_event*;
     virtual?thunk?to?mir::shell::BasicWindowManager::handle_raise_surface*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::handle_request_drag_and_drop*;
     virtual?thunk?to?mir::shell::BasicWindowManager::handle_touch_event*;
     virtual?thunk?to?mir::shell::BasicWindowManager::modify_surface*;
     virtual?thunk?to?mir::shell::BasicWindowManager::remove_display*;

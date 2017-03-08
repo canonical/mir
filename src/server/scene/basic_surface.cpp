@@ -923,3 +923,8 @@ void ms::BasicSurface::placed_relative(geometry::Rectangle const& placement)
 {
     observers.placed_relative(placement);
 }
+
+void mir::scene::BasicSurface::start_drag_and_drop(std::vector<uint8_t> const& handle)
+{
+    (void)handle;   // TODO {arg}
+}
