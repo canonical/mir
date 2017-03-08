@@ -127,9 +127,9 @@ void set_device(gbm_device* device, void* context)
 
 void allocate_buffer_gbm(
     MirConnection* connection,
-    int width, int height,
-    unsigned int gbm_pixel_format,
-    unsigned int gbm_bo_flags,
+    uint32_t width, uint32_t height,
+    uint32_t gbm_pixel_format,
+    uint32_t gbm_bo_flags,
     MirBufferCallback available_callback, void* available_context)
 {
     auto context = mcl::to_client_context(connection);
@@ -138,11 +138,24 @@ void allocate_buffer_gbm(
         available_callback, available_context); 
 }
 
-MirBuffer* allocate_buffer_gbm_sync(
+void allocate_buffer_gbm_legacy(
     MirConnection* connection,
     int width, int height,
     unsigned int gbm_pixel_format,
-    unsigned int gbm_bo_flags)
+    unsigned int gbm_bo_flags,
+    MirBufferCallback available_callback, void* available_context)
+{
+    allocate_buffer_gbm(
+        connection, static_cast<uint32_t>(width), static_cast<uint32_t>(height),
+        static_cast<uint32_t>(gbm_pixel_format), static_cast<uint32_t>(gbm_bo_flags),
+        available_callback, available_context);
+}
+
+MirBuffer* allocate_buffer_gbm_sync(
+    MirConnection* connection,
+    uint32_t width, uint32_t height,
+    uint32_t gbm_pixel_format,
+    uint32_t gbm_bo_flags)
 try
 {
     struct BufferSync
@@ -248,7 +261,7 @@ catch (...)
     return 0;
 }
 
-uint32_t buffer_age(MirBuffer* b)
+unsigned int buffer_age(MirBuffer* b)
 try
 {
     if (!is_gbm_importable(b))
@@ -291,7 +304,8 @@ mclm::ClientPlatform::ClientPlatform(
       gbm_dev{nullptr},
       drm_extensions{auth_fd_ext, auth_magic_ext},
       mesa_auth{set_device, this},
-      gbm_buffer{allocate_buffer_gbm, allocate_buffer_gbm_sync,
+      gbm_buffer1{allocate_buffer_gbm_legacy},
+      gbm_buffer2{allocate_buffer_gbm, allocate_buffer_gbm_sync,
                  is_gbm_importable, import_fd, buffer_stride, buffer_format, buffer_flags, buffer_age},
       hw_stream{get_hw_stream}
 {
@@ -416,8 +430,10 @@ void* mclm::ClientPlatform::request_interface(char const* extension_name, int ve
         return &drm_extensions;
     if (!strcmp(extension_name, "mir_extension_set_gbm_device") && (version == 1))
         return &mesa_auth;
-    if (!strcmp(extension_name, "mir_extension_gbm_buffer") && (version <= 2))
-        return &gbm_buffer;
+    if (!strcmp(extension_name, "mir_extension_gbm_buffer") && (version == 1))
+        return &gbm_buffer1;
+    if (!strcmp(extension_name, "mir_extension_gbm_buffer") && (version == 2))
+        return &gbm_buffer2;
     if (!strcmp(extension_name, "mir_extension_hardware_buffer_stream") && (version == 1))
         return &hw_stream;
 

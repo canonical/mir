@@ -55,6 +55,15 @@ typedef void (*mir_connection_allocate_buffer_gbm)(
     unsigned int gbm_bo_flags,
     MirBufferCallback available_callback, void* available_context);
 
+/** v2 version of mir_connection_allocate_buffer_gbm, with more accurate types.
+ */
+typedef void (*MirConnectionAllocateBufferGbm)(
+    MirConnection* connection,
+    uint32_t width, uint32_t height,
+    uint32_t gbm_pixel_format,
+    uint32_t gbm_bo_flags,
+    MirBufferCallback available_callback, void* available_context);
+
 typedef struct MirExtensionGbmBufferV1
 {
     mir_connection_allocate_buffer_gbm allocate_buffer_gbm;
@@ -80,9 +89,9 @@ static inline MirExtensionGbmBufferV1 const* mir_extension_gbm_buffer_v1(
  **/
 typedef MirBuffer* (*MirConnectionAllocateBufferGbmSync)(
     MirConnection* connection,
-    int width, int height,
-    unsigned int gbm_pixel_format,
-    unsigned int gbm_bo_flags);
+    uint32_t width, uint32_t height,
+    uint32_t gbm_pixel_format,
+    uint32_t gbm_bo_flags);
 
 /** Check if a MirBuffer is suitable for import via GBM_BO_IMPORT_FD
  * 
@@ -125,11 +134,11 @@ typedef uint32_t (*MirBufferExtFlags)(MirBuffer* buffer);
  *   \param [in] buffer The buffer
  *   \return            The age of the buffer
  */
-typedef uint32_t (*MirBufferExtAge)(MirBuffer* buffer);
+typedef unsigned int (*MirBufferExtAge)(MirBuffer* buffer);
 
 typedef struct MirExtensionGbmBufferV2
 {
-    mir_connection_allocate_buffer_gbm allocate_buffer_gbm;
+    MirConnectionAllocateBufferGbm allocate_buffer_gbm;
     MirConnectionAllocateBufferGbmSync allocate_buffer_gbm_sync;
     MirBufferExtIsGBMImportable is_gbm_importable;
     MirBufferExtFd fd;
