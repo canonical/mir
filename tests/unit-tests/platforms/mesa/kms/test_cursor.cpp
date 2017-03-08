@@ -90,6 +90,10 @@ struct StubKMSOutputContainer : public mgm::KMSOutputContainer
             ::testing::Mock::VerifyAndClearExpectations(pair.second.get());
     }
 
+    void update_from_hardware_state()
+    {
+    }
+
     std::unordered_map<uint32_t,std::shared_ptr<testing::NiceMock<MockKMSOutput>>> outputs;
 };
 

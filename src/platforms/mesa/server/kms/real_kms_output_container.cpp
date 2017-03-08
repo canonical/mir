@@ -18,6 +18,7 @@
 
 #include "real_kms_output_container.h"
 #include "real_kms_output.h"
+#include "kms-utils/drm_mode_resources.h"
 
 namespace mgm = mir::graphics::mesa;
 
@@ -54,4 +55,28 @@ void mgm::RealKMSOutputContainer::for_each_output(std::function<void(KMSOutput&)
 {
     for(auto& pair: outputs)
         functor(*pair.second);
+}
+
+void mgm::RealKMSOutputContainer::update_from_hardware_state()
+{
+    kms::DRMModeResources resources{drm_fd};
+
+    std::unordered_map<uint32_t, std::shared_ptr<KMSOutput>> new_outputs;
+
+    for (auto&& connector : resources.connectors())
+    {
+        if (outputs.count(connector->connector_id))
+        {
+            new_outputs[connector->connector_id] = std::move(outputs[connector->connector_id]);
+        }
+        else
+        {
+            new_outputs[connector->connector_id] = std::make_shared<RealKMSOutput>(
+                drm_fd,
+                std::move(connector),
+                page_flipper);
+        }
+    }
+
+    outputs = new_outputs;
 }

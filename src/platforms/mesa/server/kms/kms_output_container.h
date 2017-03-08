@@ -39,6 +39,10 @@ public:
     virtual std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id) = 0;
     virtual void for_each_output(std::function<void(KMSOutput&)> functor) const = 0;
 
+    /**
+     * Re-probe hardware state and update output list.
+     */
+    virtual void update_from_hardware_state() = 0;
 protected:
     KMSOutputContainer() = default;
     KMSOutputContainer(KMSOutputContainer const&) = delete;

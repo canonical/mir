@@ -36,9 +36,10 @@ class RealKMSOutputContainer : public KMSOutputContainer
 public:
     RealKMSOutputContainer(int drm_fd, std::shared_ptr<PageFlipper> const& page_flipper);
 
-    std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id);
-    void for_each_output(std::function<void(KMSOutput&)> functor) const;
+    std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id) override;
+    void for_each_output(std::function<void(KMSOutput&)> functor) const override;
 
+    void update_from_hardware_state() override;
 private:
     int const drm_fd;
     std::unordered_map<uint32_t,std::shared_ptr<KMSOutput>> outputs;
