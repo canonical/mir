@@ -255,19 +255,15 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
                                 reader_changed.wait(l, [&reader_to_run, id]() { return reader_to_run == id; });
                             }
                         }
-
-                        std::this_thread::yield();
-
-                        trigger_next_reader();
                     }
-                    else
-                    {
+                    // else
                         // Unable to acquire lock? Either some thread has taken an exclusive lock, or
                         // some thread is waiting on an exclusive lock and we're preempted.
                         //
                         // In the latter case we need to let the waiting thread release its shared lock.
-                        trigger_next_reader();
-                    }
+
+                    trigger_next_reader();
+                    std::this_thread::yield();
                 }
             },
             i};
