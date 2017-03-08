@@ -83,7 +83,7 @@ private:
     std::unique_ptr<compositor::FrameDroppingPolicy> drop_policy;
     ScheduleMode schedule_mode;
     std::shared_ptr<Schedule> schedule;
-    std::shared_ptr<frontend::ClientBuffers> buffers;
+    std::shared_ptr<frontend::ClientBuffers> const buffers;
     std::shared_ptr<MultiMonitorArbiter> const arbiter;
     geometry::Size size; 
     MirPixelFormat const pf;
