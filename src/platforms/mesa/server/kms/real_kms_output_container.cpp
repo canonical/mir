@@ -36,7 +36,10 @@ mgm::RealKMSOutputContainer::get_kms_output_for(uint32_t connector_id)
     auto output_iter = outputs.find(connector_id);
     if (output_iter == outputs.end())
     {
-        output = std::make_shared<RealKMSOutput>(drm_fd, connector_id, page_flipper);
+        output = std::make_shared<RealKMSOutput>(
+            drm_fd,
+            kms::get_connector(drm_fd, connector_id),
+            page_flipper);
         outputs[connector_id] = output;
     }
     else

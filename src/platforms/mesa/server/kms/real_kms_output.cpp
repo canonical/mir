@@ -32,20 +32,27 @@ namespace mgm = mg::mesa;
 namespace mgk = mg::kms;
 namespace geom = mir::geometry;
 
-mgm::RealKMSOutput::RealKMSOutput(int drm_fd, uint32_t connector_id,
-                                  std::shared_ptr<PageFlipper> const& page_flipper)
-    : drm_fd{drm_fd}, connector_id{connector_id}, page_flipper{page_flipper},
-      connector(), mode_index{0}, current_crtc(), saved_crtc(),
-      using_saved_crtc{true}, has_cursor_{false},
+mgm::RealKMSOutput::RealKMSOutput(
+    int drm_fd,
+    kms::DRMModeConnectorUPtr&& connector,
+    std::shared_ptr<PageFlipper> const& page_flipper)
+    : drm_fd{drm_fd},
+      page_flipper{page_flipper},
+      connector{std::move(connector)},
+      mode_index{0},
+      current_crtc(),
+      saved_crtc(),
+      using_saved_crtc{true},
+      has_cursor_{false},
       power_mode(mir_power_mode_on)
 {
     reset();
 
     kms::DRMModeResources resources{drm_fd};
 
-    if (connector->encoder_id)
+    if (this->connector->encoder_id)
     {
-        auto encoder = resources.encoder(connector->encoder_id);
+        auto encoder = resources.encoder(this->connector->encoder_id);
         if (encoder->crtc_id)
         {
             saved_crtc = *resources.crtc(encoder->crtc_id);
@@ -65,7 +72,7 @@ void mgm::RealKMSOutput::reset()
     /* Update the connector to ensure we have the latest information */
     try
     {
-        connector = resources.connector(connector_id);
+        connector = resources.connector(connector->connector_id);
     }
     catch (std::exception const& e)
     {
@@ -171,7 +178,7 @@ bool mgm::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
                        mgk::connector_name(connector).c_str());
         return false;
     }
-    return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id, connector_id);
+    return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id, connector->connector_id);
 }
 
 void mgm::RealKMSOutput::wait_for_page_flip()
@@ -285,8 +292,11 @@ void mgm::RealKMSOutput::set_power_mode(MirPowerMode mode)
     if (power_mode != mode)
     {
         power_mode = mode;
-        drmModeConnectorSetProperty(drm_fd, connector_id,
-                                   dpms_enum_id, mode);
+        drmModeConnectorSetProperty(
+            drm_fd,
+            connector->connector_id,
+            dpms_enum_id,
+            mode);
     }
 }
 

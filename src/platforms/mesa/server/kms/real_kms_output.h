@@ -38,8 +38,10 @@ class PageFlipper;
 class RealKMSOutput : public KMSOutput
 {
 public:
-    RealKMSOutput(int drm_fd, uint32_t connector_id,
-                  std::shared_ptr<PageFlipper> const& page_flipper);
+    RealKMSOutput(
+        int drm_fd,
+        kms::DRMModeConnectorUPtr&& connector,
+        std::shared_ptr<PageFlipper> const& page_flipper);
     ~RealKMSOutput();
 
     void reset() override;
@@ -68,7 +70,6 @@ private:
     void restore_saved_crtc();
 
     int const drm_fd;
-    uint32_t const connector_id;
     std::shared_ptr<PageFlipper> const page_flipper;
 
     kms::DRMModeConnectorUPtr connector;
