@@ -48,6 +48,7 @@ struct MockKMSOutput : public graphics::mesa::KMSOutput
 
     MOCK_METHOD1(set_power_mode, void(MirPowerMode));
     MOCK_METHOD1(set_gamma, void(mir::graphics::GammaCurves const&));
+    MOCK_CONST_METHOD1(update_from_hardware_state, void(graphics::DisplayConfigurationOutput&));
 };
 
 } // namespace test

@@ -17,6 +17,7 @@
  */
 
 #include "real_kms_output.h"
+#include "mir/graphics/display_configuration.h"
 #include "page_flipper.h"
 #include "kms-utils/kms_connector.h"
 #include "mir/fatal.h"
@@ -318,4 +319,218 @@ void mgm::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
         mir::log_warning("drmModeCrtcSetGamma failed: %s", strerror(err));
 
     // TODO: return bool in future? Then do what with it?
+}
+
+namespace
+{
+
+bool kms_modes_are_equal(drmModeModeInfo const& info1, drmModeModeInfo const& info2)
+{
+    return (info1.clock == info2.clock &&
+            info1.hdisplay == info2.hdisplay &&
+            info1.hsync_start == info2.hsync_start &&
+            info1.hsync_end == info2.hsync_end &&
+            info1.htotal == info2.htotal &&
+            info1.hskew == info2.hskew &&
+            info1.vdisplay == info2.vdisplay &&
+            info1.vsync_start == info2.vsync_start &&
+            info1.vsync_end == info2.vsync_end &&
+            info1.vtotal == info2.vtotal);
+}
+
+double calculate_vrefresh_hz(drmModeModeInfo const& mode)
+{
+    if (mode.htotal == 0 || mode.vtotal == 0)
+        return 0.0;
+
+    /* mode.clock is in KHz */
+    double hz = (mode.clock * 100000LL /
+                 ((long)mode.htotal * (long)mode.vtotal)
+                ) / 100.0;
+
+    // Actually we don't need floating point at all for this...
+    // TODO: Consider converting our structs to fixed-point ints
+    return hz;
+}
+
+mg::DisplayConfigurationOutputType
+kms_connector_type_to_output_type(uint32_t connector_type)
+{
+    return static_cast<mg::DisplayConfigurationOutputType>(connector_type);
+}
+
+MirSubpixelArrangement kms_subpixel_to_mir_subpixel(uint32_t subpixel)
+{
+    switch (subpixel)
+    {
+        case DRM_MODE_SUBPIXEL_UNKNOWN:
+            return mir_subpixel_arrangement_unknown;
+        case DRM_MODE_SUBPIXEL_HORIZONTAL_RGB:
+            return mir_subpixel_arrangement_horizontal_rgb;
+        case DRM_MODE_SUBPIXEL_HORIZONTAL_BGR:
+            return mir_subpixel_arrangement_horizontal_bgr;
+        case DRM_MODE_SUBPIXEL_VERTICAL_RGB:
+            return mir_subpixel_arrangement_vertical_rgb;
+        case DRM_MODE_SUBPIXEL_VERTICAL_BGR:
+            return mir_subpixel_arrangement_vertical_bgr;
+        case DRM_MODE_SUBPIXEL_NONE:
+            return mir_subpixel_arrangement_none;
+        default:
+            return mir_subpixel_arrangement_unknown;
+    }
+}
+
+std::vector<uint8_t> edid_for_connector(int drm_fd, uint32_t connector_id)
+{
+    std::vector<uint8_t> edid;
+
+    mgk::ObjectProperties connector_props{
+        drm_fd, connector_id, DRM_MODE_OBJECT_CONNECTOR};
+
+    if (connector_props.has_property("EDID"))
+    {
+        /*
+         * We don't technically need the property information here, but query it
+         * anyway so we can detect if our assumptions about DRM behaviour
+         * become invalid.
+         */
+        auto property = mgk::DRMModePropertyUPtr{
+            drmModeGetProperty(drm_fd, connector_props.id_for("EDID")),
+            &drmModeFreeProperty};
+
+        if (!property)
+        {
+            mir::log_warning(
+                "Failed to get EDID property for connector %u: %i (%s)",
+                connector_id,
+                errno,
+                ::strerror(errno));
+            return edid;
+        }
+
+        if (!drm_property_type_is(property.get(), DRM_MODE_PROP_BLOB))
+        {
+            mir::log_warning(
+                "EDID property on connector %u has unexpected type %u",
+                connector_id,
+                property->flags);
+            return edid;
+        }
+
+        // A property ID of 0 means invalid.
+        if (connector_props["EDID"] == 0)
+        {
+            /*
+             * Log a debug message only. This will trigger for broken monitors which
+             * don't provide an EDID, which is not as unusual as you might think...
+             */
+            mir::log_debug("No EDID data available on connector %u", connector_id);
+            return edid;
+        }
+
+        auto blob = drmModeGetPropertyBlob(drm_fd, connector_props["EDID"]);
+
+        if (!blob)
+        {
+            mir::log_warning(
+                "Failed to get EDID property blob for connector %u: %i (%s)",
+                connector_id,
+                errno,
+                ::strerror(errno));
+
+            return edid;
+        }
+
+        edid.reserve(blob->length);
+        edid.insert(edid.begin(),
+                    reinterpret_cast<uint8_t*>(blob->data),
+                    reinterpret_cast<uint8_t*>(blob->data) + blob->length);
+
+        drmModeFreePropertyBlob(blob);
+
+        edid.shrink_to_fit();
+    }
+
+    return edid;
+}
+}
+
+void mgm::RealKMSOutput::update_from_hardware_state(
+    DisplayConfigurationOutput& output) const
+{
+    DisplayConfigurationOutputType const type{
+        kms_connector_type_to_output_type(connector->connector_type)};
+    geom::Size physical_size{connector->mmWidth, connector->mmHeight};
+    bool connected{connector->connection == DRM_MODE_CONNECTED};
+    uint32_t const invalid_mode_index = std::numeric_limits<uint32_t>::max();
+    uint32_t current_mode_index{invalid_mode_index};
+    uint32_t preferred_mode_index{invalid_mode_index};
+    std::vector<DisplayConfigurationMode> modes;
+    std::vector<MirPixelFormat> formats {mir_pixel_format_argb_8888,
+                                         mir_pixel_format_xrgb_8888};
+
+    std::vector<uint8_t> edid;
+    if (connected)
+    {
+        /* Only ask for the EDID on connected outputs. There's obviously no monitor EDID
+         * when there is no monitor connected!
+         */
+        edid = edid_for_connector(drm_fd, connector->connector_id);
+    }
+
+    drmModeModeInfo current_mode_info = drmModeModeInfo();
+    GammaCurves gamma;
+
+    /* Get information about the current mode */
+    if (current_crtc)
+    {
+        current_mode_info = current_crtc->mode;
+
+        if (current_crtc->gamma_size > 0)
+            gamma = mg::LinearGammaLUTs(current_crtc->gamma_size);
+    }
+
+    /* Add all the available modes and find the current and preferred one */
+    for (int m = 0; m < connector->count_modes; m++)
+    {
+        drmModeModeInfo& mode_info = connector->modes[m];
+
+        geom::Size size{mode_info.hdisplay, mode_info.vdisplay};
+
+        double vrefresh_hz = calculate_vrefresh_hz(mode_info);
+
+        modes.push_back({size, vrefresh_hz});
+
+        if (kms_modes_are_equal(mode_info, current_mode_info))
+            current_mode_index = m;
+
+        if ((mode_info.type & DRM_MODE_TYPE_PREFERRED) == DRM_MODE_TYPE_PREFERRED)
+            preferred_mode_index = m;
+    }
+
+    if (current_mode_index != invalid_mode_index)
+    {
+        output.current_mode_index = current_mode_index;
+    }
+    else if (!modes.empty() &&  // If empty retain old current_mode_index!
+             ( output.current_mode_index >= modes.size() ||
+               output.modes[output.current_mode_index] !=
+               modes[output.current_mode_index]))
+    {
+        // current_mode_index is invalid and the definition of the old
+        // current mode has also changed (different display plugged in)
+        // so fall back to the preferred mode...
+        output.current_mode_index = preferred_mode_index;
+    }
+    // else output.current_mode_index is correct and unchanged.
+
+    output.type = type;
+    output.modes = modes;
+    output.preferred_mode_index = preferred_mode_index;
+    output.physical_size_mm = physical_size;
+    output.connected = connected;
+    output.current_format = mir_pixel_format_xrgb_8888;
+    output.subpixel_arrangement = kms_subpixel_to_mir_subpixel(connector->subpixel);
+    output.gamma = gamma;
+    output.edid = edid;
 }

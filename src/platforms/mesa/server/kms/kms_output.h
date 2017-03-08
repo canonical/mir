@@ -32,6 +32,8 @@ namespace mir
 {
 namespace graphics
 {
+class DisplayConfigurationOutput;
+
 namespace mesa
 {
 
@@ -66,6 +68,7 @@ public:
     virtual void set_gamma(GammaCurves const& gamma) = 0;
     virtual Frame last_frame() const = 0;
 
+    virtual void update_from_hardware_state(DisplayConfigurationOutput& to_update) const = 0;
 protected:
     KMSOutput() = default;
     KMSOutput(const KMSOutput&) = delete;
