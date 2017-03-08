@@ -18,7 +18,7 @@
 
 #include "mir/scene/surface.h"
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 
 #include "mir/shell/canonical_window_manager.h"
 
@@ -71,7 +71,7 @@ void signal_state_change(MirWindow*, MirEvent const* event, void* context)
     static_cast<mt::Signal*>(context)->raise();
 }
 
-struct ShellSurfaceConfiguration : mtf::ConnectedClientWithASurface
+struct ShellSurfaceConfiguration : mtf::ConnectedClientWithAWindow
 {
     void SetUp() override
     {
@@ -93,7 +93,7 @@ struct ShellSurfaceConfiguration : mtf::ConnectedClientWithASurface
                 return mock_window_manager;
             });
 
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientWithAWindow::SetUp();
 
         auto const spec = mir_create_window_spec(connection);
         mir_window_spec_set_event_handler(spec, &signal_state_change, &received);

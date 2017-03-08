@@ -269,12 +269,6 @@ private:
                               graphics::Buffer* graphics_buffer,
                               graphics::BufferIpcMsgType msg_type);
 
-    void advance_buffer(
-        BufferStreamId surf_id,
-        BufferStream& buffer_stream,
-        graphics::Buffer* old_buffer,
-        std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete);
-
     std::shared_ptr<graphics::DisplayConfiguration> unpack_and_sanitize_display_configuration(
         protobuf::DisplayConfiguration const*);
 
