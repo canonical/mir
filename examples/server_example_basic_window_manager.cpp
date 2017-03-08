@@ -136,6 +136,17 @@ void me::BasicWindowManager::handle_raise_surface(
         policy->handle_raise_surface(session, surface);
 }
 
+void me::BasicWindowManager::handle_request_drag_and_drop(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<scene::Surface> const& surface,
+    uint64_t timestamp)
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    if (timestamp >= last_input_event_timestamp)
+//        policy->handle_raise_surface(session, surface);
+        (void)session, (void)surface;   // TODO {arg}
+}
+
 int me::BasicWindowManager::set_surface_attribute(
     std::shared_ptr<scene::Session> const& /*session*/,
     std::shared_ptr<scene::Surface> const& surface,

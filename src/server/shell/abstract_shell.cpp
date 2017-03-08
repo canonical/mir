@@ -256,11 +256,7 @@ void msh::AbstractShell::request_drag_and_drop(
     std::shared_ptr<scene::Surface> const& surface,
     uint64_t timestamp)
 {
-    (void)session;
-    (void)surface;
-    (void)timestamp;
-    // TODO
-//    window_manager->request_drag_and_drop(session, surface, timestamp);
+    window_manager->handle_request_drag_and_drop(session, surface, timestamp);
 }
 
 void msh::AbstractShell::focus_next_session()
