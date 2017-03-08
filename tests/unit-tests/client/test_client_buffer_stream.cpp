@@ -705,7 +705,7 @@ TEST_F(ClientBufferStream, clientside_vsync_removes_serverside_vsync)
 
     mir::protobuf::StreamConfiguration conf;
     EXPECT_CALL(mock_protobuf_server, configure_buffer_stream(_,_,_))
-        .WillOnce(SaveArgPointee<0>(&conf));
+        .WillOnce(DoAll(SaveArgPointee<0>(&conf),mtd::RunProtobufClosure()));
     EXPECT_FALSE(conf.has_swapinterval());
     bs.set_swap_interval(1);
     bs.swap_buffers_sync();
