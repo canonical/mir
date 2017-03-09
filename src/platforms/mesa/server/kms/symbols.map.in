@@ -8,3 +8,9 @@
   local:
     *;
 };
+
+# Mesa EGL platform requires this, because madness.
+MIR_MESA_EGL_INTEGRATION {
+  global:
+    mir_server_mesa_egl_native_display_is_valid;
+};
