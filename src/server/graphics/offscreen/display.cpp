@@ -207,3 +207,8 @@ std::unique_ptr<mg::VirtualOutput> mgo::Display::create_virtual_output(int /*wid
 {
     return nullptr;
 }
+
+bool mgo::Display::apply_if_configuration_preserves_display_buffers(mg::DisplayConfiguration const&)
+{
+    return false;
+}

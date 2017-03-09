@@ -106,6 +106,7 @@ public:
     Frame last_frame_on(unsigned output_id) const override;
 
     std::unique_ptr<renderer::gl::Context> create_gl_context() override;
+    bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const& conf) override;
 private:
     detail::EGLDisplayHandle const egl_display;
     SurfacelessEGLContext const egl_context_shared;

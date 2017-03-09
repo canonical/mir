@@ -151,10 +151,6 @@ mir::DefaultServerConfiguration::the_display()
     return display(
         [this]() -> std::shared_ptr<mg::Display>
         {
-            return the_graphics_platform()->create_display(
-                the_display_configuration_policy(),
-                the_gl_config());
-#if 0
             if (the_options()->is_set(options::offscreen_opt))
             {
                 return std::make_shared<mg::offscreen::Display>(
@@ -162,8 +158,10 @@ mir::DefaultServerConfiguration::the_display()
                     the_display_configuration_policy(),
                     the_display_report());
             }
-            else if (the_options()->is_set(options::host_socket_opt))
-#endif
+
+            return the_graphics_platform()->create_display(
+                the_display_configuration_policy(),
+                the_gl_config());
         });
 }
 

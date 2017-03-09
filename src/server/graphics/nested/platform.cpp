@@ -141,3 +141,8 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operatio
 {
     return mir::make_module_ptr<mgn::IpcOperations>(guest_platform->make_ipc_operations());
 }
+
+EGLNativeDisplayType mgn::Platform::egl_native_display() const
+{
+    return guest_platform->egl_native_display();
+}
