@@ -64,19 +64,34 @@ class NestedContext;
  * Interface to platform specific support for graphics operations.
  * \ingroup platform_enablement
  */
-class Platform
+class RenderingPlatform
 {
 public:
-    Platform() = default;
-    Platform(const Platform& p) = delete;
-    Platform& operator=(const Platform& p) = delete;
+    RenderingPlatform() = default;
+    RenderingPlatform(RenderingPlatform const& p) = delete;
+    RenderingPlatform& operator=(RenderingPlatform const& p) = delete;
 
-    virtual ~Platform() = default;
-
+    virtual ~RenderingPlatform() = default;
     /**
      * Creates the buffer allocator subsystem.
      */
     virtual UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() = 0;
+
+    /**
+     * Creates an object capable of doing platform specific processing of buffers
+     * before they are sent or after they are recieved accross IPC
+     */
+    virtual UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const = 0;
+};
+
+class DisplayPlatform
+{
+public:
+    DisplayPlatform() = default;
+    DisplayPlatform(DisplayPlatform const& p) = delete;
+    DisplayPlatform& operator=(DisplayPlatform const& p) = delete;
+
+    virtual ~DisplayPlatform() = default;
 
     /**
      * Creates the display subsystem.
@@ -84,12 +99,17 @@ public:
     virtual UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) = 0;
+};
 
-    /**
-     * Creates an object capable of doing platform specific processing of buffers
-     * before they are sent or after they are recieved accross IPC
-     */
-    virtual UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const = 0;
+class Platform : public DisplayPlatform,
+                 public RenderingPlatform
+{
+public:
+    Platform() = default;
+    Platform(const Platform& p) = delete;
+    Platform& operator=(const Platform& p) = delete;
+
+    virtual ~Platform() = default;
 };
 
 /**
@@ -113,6 +133,8 @@ enum PlatformPriority : uint32_t
                          */
 };
 
+//The host/guest platform concept is soon to be removed. Use CreateRenderingPlatform and
+//CreateDisplayPlatform instead
 typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
@@ -130,6 +152,16 @@ typedef void(*AddPlatformOptions)(
 typedef mir::graphics::PlatformPriority(*PlatformProbe)(mir::options::ProgramOption const& options);
 
 typedef mir::ModuleProperties const*(*DescribeModule)();
+
+typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateDisplayPlatform)(
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mir::graphics::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& logger);
+
+typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateRenderingPlatform)(
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
 }
 }
 
@@ -193,6 +225,16 @@ void add_graphics_platform_options(
 mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& options);
 
 mir::ModuleProperties const* describe_graphics_module();
+
+mir::UniqueModulePtr<mir::graphics::Platform> create_display_platform(
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mir::graphics::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& logger);
+
+mir::UniqueModulePtr<mir::graphics::Platform> create_rendering_platform(
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
