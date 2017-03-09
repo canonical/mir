@@ -768,7 +768,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
             true,
             true,
             geom::Point(),
-            std::numeric_limits<uint32_t>::max(),   // The new state doesn't have a CRT
+            std::numeric_limits<uint32_t>::max(),   // The new state doesn't have a CRTC
                                                     // associated, so doesn't have a current mode.
                                                     // We should mirror the hardware state.
             mir_pixel_format_invalid,
