@@ -806,8 +806,8 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
     });
     EXPECT_EQ(noutputs, output_count);
 
-    // Now simulate a change of monitor with different capabilities where the
-    // old current_mode does not exist. Mir should choose the preferred mode.
+    // Now simulate a change of monitor, with no CRTC attached (and hence no current mode).
+    // The configuration should mirror this state.
     resources.reset();
     resources.add_crtc(crtc_ids[0], modes1[1]);
     resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask_empty);
