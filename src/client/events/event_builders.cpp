@@ -110,6 +110,20 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirWindowAttrib 
     return make_uptr_event(e);
 }
 
+auto mev::make_start_drag_and_drop_event(frontend::SurfaceId const& surface_id, std::vector<uint8_t> const& handle)
+    -> EventUPtr
+{
+    auto e = new_event<MirWindowEvent>();
+
+    e->set_id(surface_id.as_value());
+    e->set_attrib(mir_window_attrib_drag_and_drop_handle);
+    e->set_value(0);
+    e->set_dnd_handle(handle);
+
+    return make_uptr_event(e);
+
+}
+
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id)
 {
     auto e = new_event<MirCloseWindowEvent>();

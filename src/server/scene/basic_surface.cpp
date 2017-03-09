@@ -596,6 +596,7 @@ int ms::BasicSurface::query(MirWindowAttrib attrib) const
         case mir_window_attrib_dpi: return dpi_;
         case mir_window_attrib_visibility: return visibility_;
         case mir_window_attrib_preferred_orientation: return pref_orientation_mode;
+        case mir_window_attrib_drag_and_drop_handle: return 0;
         default: BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                         "attribute."));
     }

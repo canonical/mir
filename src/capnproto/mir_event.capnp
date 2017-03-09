@@ -149,6 +149,7 @@ struct SurfaceEvent
     id @0 :Int32;
     attrib @1 :Attrib;
     value @2 :Int32;
+    dndHandle @3 :List(UInt8);
 
     enum Attrib
     {
@@ -160,8 +161,9 @@ struct SurfaceEvent
         dpi @4;
         visibility @5;
         preferredOrientation @6;
+        startDragAndDrop @7;
         # Must be last
-        surfaceAttrib @7;
+        surfaceAttrib @8;
     }
 }
 

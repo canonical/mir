@@ -432,5 +432,6 @@ MIR_COMMON_0.27 {
       MirInputEvent::window_id*;
       MirKeyboardEvent::set_text*;
       MirKeyboardEvent::text*;
+      MirSurfaceEvent::set_dnd_handle*;
   };
 } MIR_COMMON_0.26;

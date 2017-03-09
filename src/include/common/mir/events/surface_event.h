@@ -33,6 +33,8 @@ struct MirSurfaceEvent : MirEvent
 
     int value() const;
     void set_value(int value);
+
+    void set_dnd_handle(std::vector<uint8_t> const& handle);
 };
 
 #endif /* MIR_COMMON_SURFACE_EVENT_H_ */

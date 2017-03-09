@@ -55,3 +55,10 @@ void MirSurfaceEvent::set_value(int value)
 {
     event.getSurface().setValue(value);
 }
+
+void MirSurfaceEvent::set_dnd_handle(std::vector<uint8_t> const& handle)
+{
+    event.getSurface().initDndHandle(handle.size());
+    event.getSurface().setDndHandle(::kj::ArrayPtr<uint8_t const>{&*begin(handle), &*end(handle)});
+}
+
