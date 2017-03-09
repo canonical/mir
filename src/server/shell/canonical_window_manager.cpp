@@ -590,8 +590,10 @@ void msh::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(
 {
     uuid_t uuid;
     uuid_generate(uuid);
+    std::vector<uint8_t> const handle{std::begin(uuid), std::end(uuid)};
 
-    surface->start_drag_and_drop(std::vector<uint8_t>{std::begin(uuid), std::end(uuid)});
+    surface->start_drag_and_drop(handle);
+    tools->set_drag_and_drop_handle(handle);
 }
 
 bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
