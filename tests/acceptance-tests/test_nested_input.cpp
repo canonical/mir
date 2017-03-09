@@ -570,7 +570,6 @@ TEST_F(NestedInput, pressed_keys_on_vt_switch_are_forgotten)
     mt::Signal devices_ready;
     mt::Signal initial_keys_received;
     mt::Signal keys_without_modifier_received;
-    mt::Signal input_device_state_received_after_resume;
     NiceMock<MockEventFilter> nested_event_filter;
     ON_CALL(nested_event_filter, handle(
             mt::InputDeviceStateEvent()))
@@ -579,7 +578,6 @@ TEST_F(NestedInput, pressed_keys_on_vt_switch_are_forgotten)
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     ExposedSurface client_to_nested(nested_mir.new_connection(), "with_keymap");
 
-    std::cout << "wait for devices_ready" << std::endl;
     ASSERT_TRUE(devices_ready.wait_for(10s));
     nested_mir.get_surface("with_keymap")->set_keymap(MirInputDeviceId{0}, "pc105", "de", "", "");
 
@@ -589,9 +587,7 @@ TEST_F(NestedInput, pressed_keys_on_vt_switch_are_forgotten)
     EXPECT_CALL(client_to_nested, handle_input(mt::KeyOfScanCode(KEY_RIGHTCTRL)))
         .WillOnce(mt::WakeUp(&initial_keys_received));
 
-    std::cout << "wait for client_to_nested " << std::endl;
     ASSERT_TRUE(client_to_nested.ready_to_accept_events.wait_for(10s));
-    std::cout << "wait for keymap_received" << std::endl;
     EXPECT_TRUE(keymap_received.wait_for(10s));
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTALT));
@@ -600,13 +596,7 @@ TEST_F(NestedInput, pressed_keys_on_vt_switch_are_forgotten)
     EXPECT_TRUE(initial_keys_received.wait_for(10s));
 
     display.trigger_pause();
-    std::cout << "trigger resume" << std::endl;
-    //EXPECT_CALL(client_to_nested, handle_device_state(_))
-     //   .WillOnce(mt::WakeUp(&input_device_state_received_after_resume));
     display.trigger_resume();
-    std::cout << "trigger resume" << std::endl;
-
-    //EXPECT_TRUE(input_device_state_received_after_resume.wait_for(10s));
 
     EXPECT_CALL(client_to_nested,
                 handle_input(AllOf(mt::KeyOfScanCode(KEY_A), mt::KeyWithModifiers(mir_input_event_modifier_none))))
