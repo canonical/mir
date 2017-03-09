@@ -95,15 +95,18 @@ catch (std::exception const& ex)
 bool mir_connection_present_mode_supported(
     MirConnection*, MirPresentMode mode)
 {
-    return mode == mir_present_mode_fifo;
+    return mode == mir_present_mode_fifo || mode == mir_present_mode_mailbox;
 }
 
 void mir_presentation_chain_set_mode(
     MirPresentationChain* chain, MirPresentMode mode)
 try
 {
-    //only one mode at the moment 
     mir::require(chain && mir_connection_present_mode_supported(chain->connection(), mode));
+    if (mode == mir_present_mode_fifo)
+        chain->set_queueing_mode();
+    if (mode == mir_present_mode_mailbox)
+        chain->set_dropping_mode();
 }
 catch (std::exception const& ex)
 {
