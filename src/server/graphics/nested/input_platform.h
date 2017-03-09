@@ -58,6 +58,7 @@ private:
     void config_changed();
     void update_devices();
     void update_devices_locked();
+    void handle_device_state(MirEvent const& event);
     struct InputDevice;
     std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<input::InputDeviceRegistry> const input_device_registry;
@@ -70,6 +71,7 @@ private:
     std::unordered_map<MirInputDeviceId, std::shared_ptr<InputDevice>> devices;
     std::unordered_map<MirInputDeviceId, std::vector<std::pair<EventUPtr, mir::geometry::Rectangle>>>
         unknown_device_events;
+    std::vector<EventUPtr> early_device_states;
     enum State
     {
         started, stopped, paused
