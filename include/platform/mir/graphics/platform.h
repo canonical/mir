@@ -153,13 +153,13 @@ typedef mir::graphics::PlatformPriority(*PlatformProbe)(mir::options::ProgramOpt
 
 typedef mir::ModuleProperties const*(*DescribeModule)();
 
-typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateDisplayPlatform)(
+typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
     std::shared_ptr<mir::logging::Logger> const& logger);
 
-typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateRenderingPlatform)(
+typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderingPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
 }
@@ -226,13 +226,13 @@ mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOpt
 
 mir::ModuleProperties const* describe_graphics_module();
 
-mir::UniqueModulePtr<mir::graphics::Platform> create_display_platform(
+mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
     std::shared_ptr<mir::logging::Logger> const& logger);
 
-mir::UniqueModulePtr<mir::graphics::Platform> create_rendering_platform(
+mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
 
