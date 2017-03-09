@@ -320,3 +320,13 @@ void msh::BasicWindowManager::update_event_timestamp(MirTouchEvent const* tev)
     }
 }
 
+void mir::shell::BasicWindowManager::set_drag_and_drop_handle(std::vector<uint8_t> const& handle)
+{
+    focus_controller->set_drag_and_drop_handle(handle);
+}
+
+void mir::shell::BasicWindowManager::clear_drag_and_drop_handle()
+{
+    focus_controller->clear_drag_and_drop_handle();
+}
+

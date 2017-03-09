@@ -65,6 +65,9 @@ public:
 
     virtual void raise_tree(std::shared_ptr<scene::Surface> const& root) = 0;
 
+    virtual void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) = 0;
+    virtual void clear_drag_and_drop_handle() = 0;
+
     virtual ~WindowManagerTools() = default;
     WindowManagerTools() = default;
     WindowManagerTools(WindowManagerTools const&) = delete;
@@ -200,6 +203,9 @@ public:
     auto active_display() -> geometry::Rectangle const override;
 
     void raise_tree(std::shared_ptr<scene::Surface> const& root) override;
+
+    void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) override;
+    void clear_drag_and_drop_handle() override;
 
 private:
     shell::FocusController* const focus_controller;
