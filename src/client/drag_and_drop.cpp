@@ -18,6 +18,8 @@
 
 #include "drag_and_drop.h"
 
+#include "mir/uncaught.h"
+#include "mir/events/surface_event.h"
 #include "mir_toolkit/extensions/drag_and_drop.h"
 #include "mir_surface.h"
 
@@ -25,20 +27,37 @@ namespace
 {
 
 void request_drag_and_drop(MirWindow* window, MirCookie const* cookie)
+try
 {
     window->request_drag_and_drop(cookie);
 }
+catch (std::exception const& e)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(e);
+    abort();
+}
 
-MirBlob* start_drag_and_drop(MirWindowEvent const* /*event*/)
+MirBlob* start_drag_and_drop(MirWindowEvent const* event)
+try
+{
+    return event->dnd_handle();
+}
+catch (std::exception const& e)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(e);
+    abort();
+}
+
+MirBlob* pointer_drag_and_drop(MirPointerEvent const* /*event*/)
+try
 {
     // TODO
     return nullptr;
 }
-
-MirBlob* pointer_drag_and_drop(MirPointerEvent const* /*event*/)
+catch (std::exception const& e)
 {
-    // TODO
-    return nullptr;
+    MIR_LOG_UNCAUGHT_EXCEPTION(e);
+    abort();
 }
 
 MirDragAndDropV1 const impl{&request_drag_and_drop, &start_drag_and_drop, &pointer_drag_and_drop};

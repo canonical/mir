@@ -21,6 +21,8 @@
 
 #include "mir/events/event.h"
 
+typedef struct MirBlob MirBlob;
+
 struct MirSurfaceEvent : MirEvent
 {
     MirSurfaceEvent();
@@ -35,6 +37,7 @@ struct MirSurfaceEvent : MirEvent
     void set_value(int value);
 
     void set_dnd_handle(std::vector<uint8_t> const& handle);
+    MirBlob* dnd_handle() const;
 };
 
 #endif /* MIR_COMMON_SURFACE_EVENT_H_ */

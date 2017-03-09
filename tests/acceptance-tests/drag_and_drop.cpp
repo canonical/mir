@@ -259,7 +259,7 @@ TEST_F(DragAndDrop, when_user_initiates_drag_client_receives_cookie)
     EXPECT_THAT(cookie, NotNull());
 }
 
-TEST_F(DragAndDrop, DISABLED_when_client_requests_drags_it_receives_handle)
+TEST_F(DragAndDrop, when_client_requests_drags_it_receives_handle)
 {
     auto const cookie = user_initiates_drag();
 

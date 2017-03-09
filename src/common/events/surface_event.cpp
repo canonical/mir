@@ -17,6 +17,7 @@
  */
 
 #include "mir/events/surface_event.h"
+#include "mir_blob.h"
 
 // MirSurfaceEvent is a deprecated type, but we need to implement it
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -60,5 +61,35 @@ void MirSurfaceEvent::set_dnd_handle(std::vector<uint8_t> const& handle)
 {
     event.getSurface().initDndHandle(handle.size());
     event.getSurface().setDndHandle(::kj::ArrayPtr<uint8_t const>{&*begin(handle), &*end(handle)});
+}
+
+namespace
+{
+struct MyMirBlob : MirBlob
+{
+
+    size_t size() const override { return data_.size(); }
+    virtual void const* data() const override { return data_.data(); }
+
+    std::vector<uint8_t> data_;
+};
+}
+
+MirBlob* MirSurfaceEvent::dnd_handle() const
+{
+    if (!event.asReader().getSurface().hasDndHandle())
+        return nullptr;
+
+    auto blob = std::make_unique<MyMirBlob>();
+
+    auto reader = event.asReader().getSurface().getDndHandle();
+
+    blob->data_.reserve(reader.size());
+
+    //std::copy(reader.begin(), reader.end(), back_inserter(blob->data_));
+    for (auto p = reader.begin(); p != reader.end(); ++p)
+        blob->data_.push_back(*p);
+
+    return blob.release();
 }
 
