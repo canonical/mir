@@ -22,8 +22,10 @@
 #include "display.h"
 #include "linux_virtual_terminal.h"
 #include "ipc_operations.h"
+#include "nested_authentication.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/native_buffer.h"
+#include "mir/graphics/nested_context.h"
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/udev/wrapper.h"
 
@@ -68,18 +70,49 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_al
     return make_module_ptr<mgm::BufferAllocator>(gbm->device, bypass_option_, mgm::BufferImportMethod::gbm_native_pixmap);
 }
 
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
+{
+    return make_module_ptr<mgm::IpcOperations>(drm);
+}
+
 mir::UniqueModulePtr<mg::Display> mgm::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy, std::shared_ptr<GLConfig> const& gl_config)
 {
     return make_module_ptr<mgm::Display>(drm, gbm, vt, bypass_option_, initial_conf_policy, gl_config, listener);
 }
 
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
-{
-    return make_module_ptr<mgm::IpcOperations>(drm);
-}
-
 mgm::BypassOption mgm::Platform::bypass_option() const
 {
     return bypass_option_;
+}
+
+mgm::GBMPlatform::GBMPlatform(
+    BypassOption bypass_option,
+    std::shared_ptr<mg::NestedContext> const& nested_context) :
+    bypass_option(bypass_option),
+    nested_context(nested_context),
+    gbm{std::make_shared<mgmh::GBMHelper>()}
+{
+    //note, maybe take mesaauthcontetx
+    auto auth = nested_context->auth_extension();
+    if (auth.is_set())
+    {
+        gbm->setup(auth.value()->auth_fd());
+    }
+    else
+    {
+        //throw
+    }
+}
+
+
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GBMPlatform::create_buffer_allocator()
+{
+    return make_module_ptr<mgm::BufferAllocator>(gbm->device, bypass_option, mgm::BufferImportMethod::gbm_native_pixmap);
+}
+
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::GBMPlatform::make_ipc_operations() const
+{
+    return mir::make_module_ptr<mgm::IpcOperations>(
+        std::make_shared<mgm::NestedAuthentication>(nested_context));
 }

@@ -251,3 +251,39 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     return mir::make_module_ptr<mgm::GuestPlatform>(nested_context);
 }
+
+mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
+    std::shared_ptr<mo::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mg::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const&)
+{
+    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
+    // ensure mesa finds the mesa mir-platform symbols
+    auto real_fops = std::make_shared<RealVTFileOperations>();
+    auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
+    auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(
+        real_fops,
+        std::move(real_pops),
+        options->get<int>(vt_option_name),
+        report);
+
+    auto bypass_option = mgm::BypassOption::allowed;
+    if (!options->get<bool>(bypass_option_name))
+        bypass_option = mgm::BypassOption::prohibited;
+
+    return mir::make_module_ptr<mgm::Platform>(
+        report, vt, *emergency_cleanup_registry, bypass_option);
+}
+
+mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::graphics::NestedContext> const& nested_context)
+{
+    mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
+
+    auto bypass_option = mgm::BypassOption::allowed;
+    if (!options->get<bool>(bypass_option_name))
+        bypass_option = mgm::BypassOption::prohibited;
+    return mir::make_module_ptr<mgm::GBMPlatform>(bypass_option, nested_context);
+}

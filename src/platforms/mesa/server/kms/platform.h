@@ -61,6 +61,33 @@ private:
     BypassOption const bypass_option_;
 };
 
+class KMSPlatform : public graphics::DisplayPlatform
+{
+    KMSPlatform(
+        std::shared_ptr<DisplayReport> const& reporter,
+        std::shared_ptr<VirtualTerminal> const& vt,
+        EmergencyCleanupRegistry& emergency_cleanup_registry,
+        BypassOption bypass_option);
+    UniqueModulePtr<graphics::Display> create_display(
+        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<GLConfig> const& gl_config) override;
+};
+
+class GBMPlatform : public graphics::RenderingPlatform
+{
+public:
+    GBMPlatform(
+        BypassOption option,
+        std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
+
+    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+private:
+    BypassOption bypass_option;
+    std::shared_ptr<NestedContext> const nested_context;
+    std::shared_ptr<helpers::GBMHelper> const gbm;
+};
+
 }
 }
 }
