@@ -144,6 +144,12 @@ void ms::SurfaceObservers::input_consumed(MirEvent const* event)
                  { observer->input_consumed(event); });
 }
 
+void ms::SurfaceObservers::start_drag_and_drop(std::vector<uint8_t> const& handle)
+{
+    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+                 { observer->start_drag_and_drop(handle); });
+}
+
 
 struct ms::CursorStreamImageAdapter
 {
@@ -926,5 +932,5 @@ void ms::BasicSurface::placed_relative(geometry::Rectangle const& placement)
 
 void mir::scene::BasicSurface::start_drag_and_drop(std::vector<uint8_t> const& handle)
 {
-    (void)handle;   // TODO {arg}
+    observers.start_drag_and_drop(handle);
 }
