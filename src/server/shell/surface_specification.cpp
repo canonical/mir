@@ -37,6 +37,7 @@ bool msh::SurfaceSpecification::is_empty() const
         !aux_rect.is_set() &&
         !edge_attachment.is_set() &&
         !min_width.is_set() &&
+        !min_height.is_set() &&
         !max_width.is_set() &&
         !max_height.is_set() &&
         !width_inc.is_set() &&
@@ -45,5 +46,6 @@ bool msh::SurfaceSpecification::is_empty() const
         !max_aspect.is_set() &&
         !streams.is_set() &&
         !parent.is_set() &&
-        !input_shape.is_set();
+        !input_shape.is_set() &&
+        !shell_chrome.is_set();
 }
