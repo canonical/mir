@@ -13,6 +13,9 @@ mir (0.26.2-0ubuntu1) UNRELEASED; urgency=medium
         Mir 0.26.1 (LP: #1666372)
       . Don't dereference the end iterator in ms::ApplicationSession::
         surface_after() (LP: #1667645)
+      . [regression] OSK input shaping no longer works correctly (LP: #1669444)
+      . Setting MirWindowSpec parameters always causes window's input_region
+        to be reset (LP: #1670876)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 20 Feb 2017 13:37:13 +0800
 
