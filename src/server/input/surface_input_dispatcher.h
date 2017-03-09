@@ -55,7 +55,6 @@ public:
     void set_focus(std::shared_ptr<input::Surface> const& target) override;
     void clear_focus() override;
 
-    // TODO {arg}
     void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) override;
     void clear_drag_and_drop_handle() override;
 

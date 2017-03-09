@@ -295,6 +295,7 @@ MIR_SERVER_0.27 {
     mir::shell::ShellReport::ShellReport*;
     mir::shell::ShellWrapper::add_display*;
     mir::shell::ShellWrapper::add_prompt_provider_for*;
+    mir::shell::ShellWrapper::clear_drag_and_drop_handle*;
     mir::shell::ShellWrapper::close_session*;
     mir::shell::ShellWrapper::create_surface*;
     mir::shell::ShellWrapper::destroy_surface*;
@@ -312,6 +313,7 @@ MIR_SERVER_0.27 {
     mir::shell::ShellWrapper::set_focus_to*;
     mir::shell::ShellWrapper::set_surface_attribute*;
     mir::shell::ShellWrapper::ShellWrapper*;
+    mir::shell::ShellWrapper::set_drag_and_drop_handle*;
     mir::shell::ShellWrapper::start_prompt_session_for*;
     mir::shell::ShellWrapper::stop_prompt_session*;
     mir::shell::ShellWrapper::surface_at*;

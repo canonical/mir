@@ -157,3 +157,13 @@ void msh::ShellWrapper::raise(SurfaceSet const& surfaces)
 {
     return wrapped->raise(surfaces);
 }
+
+void msh::ShellWrapper::set_drag_and_drop_handle(std::vector<uint8_t> const& handle)
+{
+    wrapped->set_drag_and_drop_handle(handle);
+}
+
+void msh::ShellWrapper::clear_drag_and_drop_handle()
+{
+    clear_drag_and_drop_handle();
+}
