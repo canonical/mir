@@ -150,23 +150,14 @@ void mgo::DisplayBuffer::swap_buffers()
     glFinish();
 }
 
-bool mgo::DisplayBuffer::post_renderables_if_optimizable(RenderableList const&)
+bool mgo::DisplayBuffer::overlay(RenderableList const&)
 {
     return false;
 }
 
-MirOrientation mgo::DisplayBuffer::orientation() const
+glm::mat2 mgo::DisplayBuffer::transformation() const
 {
-    /*
-     * The display buffer's already constructed with rotated dimensions,
-     * so nothing more to do.
-     */
-    return mir_orientation_normal;
-}
-
-MirMirrorMode mgo::DisplayBuffer::mirror_mode() const
-{
-    return mir_mirror_mode_none;
+    return glm::mat2{};
 }
 
 mg::NativeDisplayBuffer* mgo::DisplayBuffer::native_display_buffer()

@@ -66,18 +66,13 @@ public:
                   geometry::Rectangle const& area);
 
     geometry::Rectangle view_area() const override;
+    bool overlay(RenderableList const& renderlist) override;
+    glm::mat2 transformation() const override;
+    NativeDisplayBuffer* native_display_buffer() override;
     void make_current() override;
     void bind() override;
     void release_current() override;
     void swap_buffers() override;
-
-    MirOrientation orientation() const override;
-    MirMirrorMode mirror_mode() const override;
-
-    bool post_renderables_if_optimizable(RenderableList const& renderlist) override; 
-
-    NativeDisplayBuffer* native_display_buffer() override;
-
 private:
     SurfacelessEGLContext const egl_context;
     detail::GLFramebufferObject const fbo;

@@ -22,6 +22,7 @@
 #include "mir/graphics/display.h"
 #include "display_configuration.h"
 #include "mir/graphics/surfaceless_egl_context.h"
+#include "mir/renderer/gl/context_source.h"
 
 #include <mutex>
 #include <vector>
@@ -71,7 +72,9 @@ private:
 
 }
 
-class Display : public graphics::Display
+class Display : public graphics::Display,
+                public graphics::NativeDisplay,
+                public renderer::gl::ContextSource
 {
 public:
     Display(EGLNativeDisplayType egl_native_display,
@@ -96,10 +99,13 @@ public:
     void pause() override;
     void resume() override;
 
-    std::shared_ptr<Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
-    std::unique_ptr<GLContext> create_gl_context() override;
+    std::shared_ptr<Cursor> create_hardware_cursor() override;
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
 
+    NativeDisplay* native_display() override;
+    Frame last_frame_on(unsigned output_id) const override;
+
+    std::unique_ptr<renderer::gl::Context> create_gl_context() override;
 private:
     detail::EGLDisplayHandle const egl_display;
     SurfacelessEGLContext const egl_context_shared;

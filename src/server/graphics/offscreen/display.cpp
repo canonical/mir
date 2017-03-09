@@ -182,15 +182,25 @@ void mgo::Display::resume()
 {
 }
 
-std::shared_ptr<mg::Cursor> mgo::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* initial_image */)
+std::shared_ptr<mg::Cursor> mgo::Display::create_hardware_cursor()
 {
     return {};
 }
 
-std::unique_ptr<mg::GLContext> mgo::Display::create_gl_context()
+std::unique_ptr<mir::renderer::gl::Context> mgo::Display::create_gl_context()
 {
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     return std::make_unique<SurfacelessEGLContext>(egl_display, egl_context_shared);
+}
+
+mg::NativeDisplay* mgo::Display::native_display()
+{
+    return this;
+}
+
+mg::Frame mgo::Display::last_frame_on(unsigned) const
+{
+    return {};
 }
 
 std::unique_ptr<mg::VirtualOutput> mgo::Display::create_virtual_output(int /*width*/, int /*height*/)
