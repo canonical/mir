@@ -288,3 +288,52 @@ TEST_F(InputDeviceHubTest, when_configuration_attempt_fails_observer_is_not_trig
     observer_loop.trigger_server_actions();
     ::testing::Mock::VerifyAndClearExpectations(&mock_observer);
 }
+
+TEST_F(InputDeviceHubTest, restores_device_id_when_device_reappears)
+{
+    std::shared_ptr<mi::Device> dev_ptr;
+
+    ON_CALL(mock_observer, device_added(WithName("mouse"))).WillByDefault(SaveArg<0>(&dev_ptr));
+
+    hub.add_device(mt::fake_shared(mouse));
+    hub.add_observer(mt::fake_shared(mock_observer));
+    observer_loop.trigger_server_actions();
+
+    auto device_id = dev_ptr->id();
+
+    hub.remove_device(mt::fake_shared(mouse));
+    dev_ptr.reset();
+    hub.add_device(mt::fake_shared(mouse));
+    observer_loop.trigger_server_actions();
+
+    ASSERT_THAT(dev_ptr, Ne(nullptr));
+
+    EXPECT_THAT(dev_ptr->id(), Eq(device_id));
+}
+
+TEST_F(InputDeviceHubTest, restores_configuration_when_device_reappears)
+{
+    std::shared_ptr<mi::Device> dev_ptr;
+    MirPointerConfig ptr_config;
+    ptr_config.handedness(mir_pointer_handedness_left);
+    ptr_config.acceleration(mir_pointer_acceleration_adaptive);
+    ptr_config.cursor_acceleration_bias(0.6);
+
+    ON_CALL(mock_observer, device_added(WithName("mouse"))).WillByDefault(SaveArg<0>(&dev_ptr));
+
+    hub.add_device(mt::fake_shared(mouse));
+    hub.add_observer(mt::fake_shared(mock_observer));
+    observer_loop.trigger_server_actions();
+
+    dev_ptr->apply_pointer_configuration(ptr_config);
+
+    hub.remove_device(mt::fake_shared(mouse));
+    dev_ptr.reset();
+    hub.add_device(mt::fake_shared(mouse));
+    observer_loop.trigger_server_actions();
+
+    ASSERT_THAT(dev_ptr, Ne(nullptr));
+
+    EXPECT_THAT(dev_ptr->pointer_configuration().value(), Eq(ptr_config));
+
+}

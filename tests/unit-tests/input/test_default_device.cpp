@@ -18,6 +18,7 @@
 
 #include "src/server/input/default_device.h"
 #include "mir/input/input_device.h"
+#include "mir/input/mir_input_config.h"
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchscreen_config.h"
@@ -57,6 +58,7 @@ struct DefaultDevice : Test
     NiceMock<MockInputDevice> touchscreen;
     NiceMock<mtd::MockKeyMapper> key_mapper;
     std::shared_ptr<md::ActionQueue> queue{std::make_shared<md::ActionQueue>()};
+    std::function<void(mi::Device*)> const change_callback{[](mi::Device*){}};
 
     DefaultDevice()
     {
@@ -180,4 +182,129 @@ TEST_F(DefaultDevice, when_managing_a_keyboard_us_layout_is_set_by_default)
     mi::DefaultDevice dev(device_id, queue, keyboard, mt::fake_shared(key_mapper));
 
     queue->dispatch(md::FdEvent::readable);
+}
+
+TEST_F(DefaultDevice, touchpad_device_can_be_constructed_from_input_config)
+{
+    MirTouchpadConfig const tpd_conf{mir_touchpad_click_mode_finger_count, mir_touchpad_scroll_mode_edge_scroll, 0, false, true, true, true};
+    MirPointerConfig const ptr_conf{mir_pointer_handedness_right, mir_pointer_acceleration_adaptive, 0.5, -1.0, 1.0};
+    MirInputDevice conf(MirInputDeviceId{17}, mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer, "touchpad", "toouchpad-event7");
+    conf.set_touchpad_config(tpd_conf);
+    conf.set_pointer_config(ptr_conf);
+    mi::DefaultDevice dev(conf, queue, touchpad, mt::fake_shared(key_mapper), change_callback);
+
+    EXPECT_EQ(tpd_conf, dev.touchpad_configuration().value());
+    EXPECT_EQ(ptr_conf, dev.pointer_configuration().value());
+}
+
+TEST_F(DefaultDevice, pointer_device_can_be_constructed_from_input_config)
+{
+    MirPointerConfig const ptr_config{mir_pointer_handedness_left, mir_pointer_acceleration_none, 0, 1.0, 1.0};
+    MirInputDevice conf(MirInputDeviceId{11}, mi::DeviceCapability::pointer, "pointer", "pointer-event7");
+    conf.set_pointer_config(ptr_config);
+    mi::DefaultDevice dev(conf, queue, mouse, mt::fake_shared(key_mapper), change_callback);
+
+    EXPECT_EQ(ptr_config, dev.pointer_configuration().value());
+}
+
+TEST_F(DefaultDevice, keyboard_device_can_be_constructed_from_input_config)
+{
+    MirKeyboardConfig const kbd_config{mi::Keymap{"pc104", "dvorak", "", ""}};
+    MirInputDevice conf(MirInputDeviceId{3}, mi::DeviceCapability::keyboard, "keyboard", "keyboard-event3c");
+    conf.set_keyboard_config(kbd_config);
+    mi::DefaultDevice dev(conf, queue, keyboard, mt::fake_shared(key_mapper), change_callback);
+
+    EXPECT_EQ(kbd_config, dev.keyboard_configuration().value());
+}
+
+TEST_F(DefaultDevice, touchscreen_device_can_be_constructed_from_input_config)
+{
+    MirTouchscreenConfig const ts_config{0, mir_touchscreen_mapping_mode_to_display_wall};
+    MirInputDevice conf(MirInputDeviceId{5}, mi::DeviceCapability::touchscreen, "ts", "ts-event7");
+    conf.set_touchscreen_config(ts_config);
+
+    mi::DefaultDevice dev(conf, queue, touchscreen, mt::fake_shared(key_mapper), change_callback);
+
+    EXPECT_EQ(ts_config, dev.touchscreen_configuration().value());
+}
+
+TEST_F(DefaultDevice, device_config_can_be_querried_from_touchpad)
+{
+    MirInputDeviceId const device_id{17};
+    mi::DefaultDevice dev(device_id, queue, touchpad, mt::fake_shared(key_mapper), change_callback);
+
+    auto dev_info = touchpad.get_device_info();
+    MirInputDevice conf(device_id, dev_info.capabilities, dev_info.name, dev_info.unique_id);
+    MirTouchpadConfig const tpd_conf{
+        mir_touchpad_click_mode_finger_count,
+        mir_touchpad_scroll_mode_edge_scroll,
+        0,
+        false,
+        true,
+        true,
+        true};
+    MirPointerConfig const ptr_conf{
+        mir_pointer_handedness_right,
+        mir_pointer_acceleration_adaptive,
+        0.5,
+        -1.0,
+        1.0};
+
+    conf.set_touchpad_config(tpd_conf);
+    conf.set_pointer_config(ptr_conf);
+
+    dev.apply_touchpad_configuration(tpd_conf);
+    dev.apply_pointer_configuration(ptr_conf);
+
+    EXPECT_EQ(conf, dev.config());
+}
+
+TEST_F(DefaultDevice, device_config_can_be_querried_from_pointer_device)
+{
+    MirInputDeviceId const device_id{11};
+    mi::DefaultDevice dev(device_id, queue, mouse, mt::fake_shared(key_mapper), change_callback);
+
+    auto dev_info = mouse.get_device_info();
+    MirInputDevice conf(device_id, dev_info.capabilities, dev_info.name, dev_info.unique_id);
+    MirPointerConfig const ptr_config{
+        mir_pointer_handedness_left,
+        mir_pointer_acceleration_none,
+        0,
+        1.0,
+        1.0};
+
+    conf.set_pointer_config(ptr_config);
+    dev.apply_pointer_configuration(ptr_config);
+
+    EXPECT_EQ(conf, dev.config());
+}
+
+TEST_F(DefaultDevice, device_config_can_be_querried_from_keyboard_device)
+{
+    MirInputDeviceId const device_id{3};
+    mi::DefaultDevice dev(device_id, queue, keyboard, mt::fake_shared(key_mapper), change_callback);
+
+    auto dev_info = keyboard.get_device_info();
+    MirInputDevice conf(device_id, dev_info.capabilities, dev_info.name, dev_info.unique_id);
+    MirKeyboardConfig const kbd_config{mi::Keymap{"pc104", "dvorak", "", ""}};
+
+    conf.set_keyboard_config(kbd_config);
+    dev.apply_keyboard_configuration(kbd_config);
+
+    EXPECT_EQ(kbd_config, dev.keyboard_configuration().value());
+}
+
+TEST_F(DefaultDevice, device_config_can_be_querried_from_touchscreen)
+{
+    MirInputDeviceId const device_id{5};
+    mi::DefaultDevice dev(device_id, queue, touchscreen, mt::fake_shared(key_mapper), change_callback);
+
+    auto dev_info = touchscreen.get_device_info();
+    MirInputDevice conf(device_id, dev_info.capabilities, dev_info.name, dev_info.unique_id);
+    MirTouchscreenConfig const ts_config{0, mir_touchscreen_mapping_mode_to_display_wall};
+
+    conf.set_touchscreen_config(ts_config);
+    dev.apply_touchscreen_configuration(ts_config);
+
+    EXPECT_EQ(ts_config, dev.touchscreen_configuration().value());
 }
