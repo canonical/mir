@@ -104,6 +104,8 @@ struct PointerEvent
 
     buttons @7 :UInt32;
 
+    dndHandle @8 :List(UInt8);
+
     enum PointerAction
     {
        up @0;

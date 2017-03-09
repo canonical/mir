@@ -38,7 +38,7 @@ add_definitions(-DMIR_CLIENT_PLATFORM_PATH="${MIR_CLIENT_PLATFORM_PATH}/")
 add_definitions(-DCLIENT_PLATFORM_VERSION="${MIR_CLIENT_PLATFORM_VERSION}")
 add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mirclient")
 
-set(MIR_CLIENT_SOURCES mir_blob.h)
+set(MIR_CLIENT_SOURCES)
 set(MIR_CLIENT_REFERENCES mircommon)
 
 add_subdirectory(rpc/)

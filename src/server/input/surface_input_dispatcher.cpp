@@ -450,3 +450,15 @@ void mi::SurfaceInputDispatcher::clear_focus()
     set_focus_locked(lg, nullptr);
 }
 
+void mir::input::SurfaceInputDispatcher::set_drag_and_drop_handle(std::vector<uint8_t> const& handle)
+{
+    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    drag_and_drop_handle = handle;
+}
+
+void mir::input::SurfaceInputDispatcher::clear_drag_and_drop_handle()
+{
+    std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    drag_and_drop_handle.clear();
+}
+
