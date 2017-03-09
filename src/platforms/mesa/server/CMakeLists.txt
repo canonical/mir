@@ -7,6 +7,7 @@ endif()
 
 include_directories(
     ${server_common_include_dirs}
+    ${PROJECT_SOURCE_DIR}/include/client
     ${DRM_INCLUDE_DIRS}
 )
 
@@ -19,6 +20,8 @@ add_library(
   gbm_buffer.cpp
   ipc_operations.cpp
   software_buffer.cpp
+  gbm_platform.cpp
+  nested_authentication.cpp
 )
 
 target_link_libraries(

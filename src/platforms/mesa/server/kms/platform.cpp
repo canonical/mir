@@ -85,34 +85,3 @@ mgm::BypassOption mgm::Platform::bypass_option() const
 {
     return bypass_option_;
 }
-
-mgm::GBMPlatform::GBMPlatform(
-    BypassOption bypass_option,
-    std::shared_ptr<mg::NestedContext> const& nested_context) :
-    bypass_option(bypass_option),
-    nested_context(nested_context),
-    gbm{std::make_shared<mgmh::GBMHelper>()}
-{
-    //note, maybe take mesaauthcontetx
-    auto auth = nested_context->auth_extension();
-    if (auth.is_set())
-    {
-        gbm->setup(auth.value()->auth_fd());
-    }
-    else
-    {
-        //throw
-    }
-}
-
-
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GBMPlatform::create_buffer_allocator()
-{
-    return make_module_ptr<mgm::BufferAllocator>(gbm->device, bypass_option, mgm::BufferImportMethod::gbm_native_pixmap);
-}
-
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::GBMPlatform::make_ipc_operations() const
-{
-    return mir::make_module_ptr<mgm::IpcOperations>(
-        std::make_shared<mgm::NestedAuthentication>(nested_context));
-}

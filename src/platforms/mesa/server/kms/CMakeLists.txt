@@ -32,7 +32,6 @@ add_library(
   guest_platform.cpp
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
-  nested_authentication.cpp
   platform.cpp
   real_kms_display_configuration.cpp
   real_kms_output.cpp

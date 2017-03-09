@@ -73,20 +73,6 @@ class KMSPlatform : public graphics::DisplayPlatform
         std::shared_ptr<GLConfig> const& gl_config) override;
 };
 
-class GBMPlatform : public graphics::RenderingPlatform
-{
-public:
-    GBMPlatform(
-        BypassOption option,
-        std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
-
-    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
-    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
-private:
-    BypassOption bypass_option;
-    std::shared_ptr<NestedContext> const nested_context;
-    std::shared_ptr<helpers::GBMHelper> const gbm;
-};
 
 }
 }

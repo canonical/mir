@@ -17,6 +17,7 @@
  */
 
 #include "platform.h"
+#include "gbm_platform.h"
 #include "guest_platform.h"
 #include "linux_virtual_terminal.h"
 #include "mir/options/program_option.h"
