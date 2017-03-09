@@ -271,6 +271,15 @@ bool MirSurface::is_valid(MirSurface* query)
     return false;
 }
 
+void MirSurface::for_each_window(std::function<void(MirSurface &surf)> const& fun)
+{
+    std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
+
+    for (auto const& window : valid_surfaces)
+        fun(*window);
+}
+
+
 void MirSurface::acquired_persistent_id(MirWindowIdCallback callback, void* context)
 {
     if (!persistent_id->has_error())
@@ -804,6 +813,11 @@ MirConnection* MirSurface::connection() const
 std::shared_ptr<FrameClock> MirSurface::get_frame_clock() const
 {
     return frame_clock;
+}
+
+std::shared_ptr<mir::input::receiver::XKBMapper> MirSurface::get_keymapper() const
+{
+    return keymapper;
 }
 
 #pragma GCC diagnostic pop
