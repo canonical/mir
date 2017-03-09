@@ -678,7 +678,8 @@ void mf::SessionMediator::modify_surface(
             id, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} }; 
     }
 
-    mods.input_shape = extract_input_shape_from(&surface_specification);
+    if (surface_specification.input_shape_size() > 0)
+        mods.input_shape = extract_input_shape_from(&surface_specification);
 
     auto const id = mf::SurfaceId(request->surface_id().value());
 
