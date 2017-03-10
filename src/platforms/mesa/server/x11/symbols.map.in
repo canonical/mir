@@ -14,5 +14,4 @@
    create_input_platform;
    probe_input_platform;
    describe_input_module;
-  local: *;
 };
