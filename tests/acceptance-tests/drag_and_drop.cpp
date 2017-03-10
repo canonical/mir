@@ -51,6 +51,7 @@ public:
     explicit Cookie(MirCookie const* cookie) : self{cookie, deleter} {}
 
     operator MirCookie const*() const { return self.get(); }
+    auto get() const -> MirCookie const* { return self.get(); }
 
     void reset() { self.reset(); }
     void reset(MirCookie const* cookie) { self.reset(cookie, deleter); }
@@ -69,6 +70,7 @@ public:
     explicit Blob(MirBlob* blob) : self{blob, deleter} {}
 
     operator MirBlob*() const { return self.get(); }
+    auto get() const -> MirBlob* { return self.get(); }
 
     void reset() { self.reset(); }
     void reset(MirBlob* blob) { self.reset(blob, deleter); }
@@ -101,7 +103,7 @@ private:
 };
 
 Rectangle const screen_geometry{{0,0}, {800,600}};
-auto const receive_event_timeout = 30s;
+auto const receive_event_timeout = 90s;
 
 struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
                      MouseMoverAndFaker
@@ -265,7 +267,7 @@ TEST_F(DragAndDrop, when_user_initiates_drag_client_receives_cookie)
 {
     auto const cookie = user_initiates_drag();
 
-    EXPECT_THAT(cookie, NotNull());
+    EXPECT_THAT(cookie.get(), NotNull());
 }
 
 TEST_F(DragAndDrop, when_client_requests_drags_it_receives_handle)
@@ -274,7 +276,7 @@ TEST_F(DragAndDrop, when_client_requests_drags_it_receives_handle)
 
     auto const handle = client_requests_drag(cookie);
 
-    EXPECT_THAT(handle, NotNull());
+    EXPECT_THAT(handle.get(), NotNull());
 }
 
 TEST_F(DragAndDrop, during_drag_when_user_moves_mouse_client_receives_handle)
@@ -285,6 +287,6 @@ TEST_F(DragAndDrop, during_drag_when_user_moves_mouse_client_receives_handle)
 
     auto const handle = handle_from_mouse_move();
 
-    EXPECT_THAT(handle, NotNull());
-    EXPECT_THAT(handle, BlobContentEq(handle_from_request));
+    EXPECT_THAT(handle.get(), NotNull());
+    EXPECT_THAT(handle.get(), BlobContentEq(handle_from_request.get()));
 }
