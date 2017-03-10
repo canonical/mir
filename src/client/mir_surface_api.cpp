@@ -453,6 +453,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+extern "C" __attribute__((alias("mir_window_spec_set_cursor_name"))) void mir_surface_spec_set_cursor_name();
 void mir_window_spec_set_cursor_name(MirWindowSpec* spec, char const* name)
 try
 {
