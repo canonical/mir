@@ -136,7 +136,7 @@ typedef uint32_t (*MirBufferGbmFlags)(MirBuffer* buffer);
  */
 typedef unsigned int (*MirBufferGbmAge)(MirBuffer* buffer);
 
-typedef struct MirGbmensionGbmBufferV2
+typedef struct MirExtensionGbmBufferV2
 {
     MirConnectionAllocateBufferGbm allocate_buffer_gbm;
     MirConnectionAllocateBufferGbmSync allocate_buffer_gbm_sync;
