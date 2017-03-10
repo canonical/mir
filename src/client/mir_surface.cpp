@@ -77,9 +77,6 @@ void apply_device_state(MirEvent const& event, mi::KeyMapper& keymapper)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
 MirPersistentId::MirPersistentId(std::string const& string_id)
     : string_id{string_id}
 {
