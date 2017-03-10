@@ -838,6 +838,7 @@ MIR_SERVER_DETAIL_FOR_PROVING_0.27 {
     mir::shell::BasicWindowManager::add_session*;
     mir::shell::BasicWindowManager::add_surface*;
     mir::shell::BasicWindowManager::BasicWindowManager*;
+    mir::shell::BasicWindowManager::clear_drag_and_drop_handle*;
     mir::shell::BasicWindowManager::find_session*;
     mir::shell::BasicWindowManager::focused_session*;
     mir::shell::BasicWindowManager::focused_surface*;
@@ -854,6 +855,7 @@ MIR_SERVER_DETAIL_FOR_PROVING_0.27 {
     mir::shell::BasicWindowManager::remove_display*;
     mir::shell::BasicWindowManager::remove_session*;
     mir::shell::BasicWindowManager::remove_surface*;
+    mir::shell::BasicWindowManager::set_drag_and_drop_handle*;
     mir::shell::BasicWindowManager::set_focus_to*;
     mir::shell::BasicWindowManager::set_surface_attribute*;
     mir::shell::BasicWindowManager::surface_at*;
