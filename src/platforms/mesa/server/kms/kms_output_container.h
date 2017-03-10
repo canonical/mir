@@ -36,7 +36,6 @@ class KMSOutputContainer
 public:
     virtual ~KMSOutputContainer() = default;
 
-    virtual std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id) = 0;
     virtual void for_each_output(std::function<void(std::shared_ptr<KMSOutput> const&)> functor) const = 0;
 
     /**

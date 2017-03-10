@@ -68,6 +68,19 @@ public:
     virtual void set_gamma(GammaCurves const& gamma) = 0;
     virtual Frame last_frame() const = 0;
 
+    /**
+     * Re-probe the hardware state of this connector.
+     *
+     * \throws std::system_error if the underlying DRM connector has disappeared.
+     */
+    virtual void refresh_hardware_state() = 0;
+    /**
+     * Translate and copy the cached hardware state into a Mir display configuration object.
+     *
+     * \param [out] to_update   The Mir display configuration object to update with new
+     *                                  hardware state. Only hardware state (modes, dimensions, etc)
+     *                                  is touched.
+     */
     virtual void update_from_hardware_state(DisplayConfigurationOutput& to_update) const = 0;
 protected:
     KMSOutput() = default;

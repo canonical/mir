@@ -29,49 +29,29 @@ mgm::RealKMSOutputContainer::RealKMSOutputContainer(
 {
 }
 
-std::shared_ptr<mgm::KMSOutput>
-mgm::RealKMSOutputContainer::get_kms_output_for(uint32_t connector_id)
-{
-    std::shared_ptr<KMSOutput> output;
-
-    auto output_iter = outputs.find(connector_id);
-    if (output_iter == outputs.end())
-    {
-        output = std::make_shared<RealKMSOutput>(
-            drm_fd,
-            kms::get_connector(drm_fd, connector_id),
-            page_flipper);
-        outputs[connector_id] = output;
-    }
-    else
-    {
-        output = output_iter->second;
-    }
-
-    return output;
-}
-
 void mgm::RealKMSOutputContainer::for_each_output(std::function<void(std::shared_ptr<KMSOutput> const&)> functor) const
 {
-    for(auto& pair: outputs)
-        functor(pair.second);
+    for(auto& output: outputs)
+        functor(output.second);
 }
 
 void mgm::RealKMSOutputContainer::update_from_hardware_state()
 {
     kms::DRMModeResources resources{drm_fd};
 
-    std::unordered_map<uint32_t, std::shared_ptr<KMSOutput>> new_outputs;
+    decltype(outputs) new_outputs;
 
     for (auto&& connector : resources.connectors())
     {
         if (outputs.count(connector->connector_id))
         {
             new_outputs[connector->connector_id] = std::move(outputs[connector->connector_id]);
+            new_outputs[connector->connector_id]->refresh_hardware_state();
         }
         else
         {
-            new_outputs[connector->connector_id] = std::make_shared<RealKMSOutput>(
+            auto const id = connector->connector_id;
+            new_outputs[id] = std::make_shared<RealKMSOutput>(
                 drm_fd,
                 std::move(connector),
                 page_flipper);

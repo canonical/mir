@@ -64,6 +64,7 @@ public:
 
     Frame last_frame() const override;
 
+    void refresh_hardware_state() override;
     void update_from_hardware_state(DisplayConfigurationOutput& output) const override;
 private:
     bool ensure_crtc();

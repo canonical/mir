@@ -783,6 +783,7 @@ TEST_F(MesaDisplayConfigurationTest, does_not_query_drm_unnecesarily)
     fake_devices.emit_device_changed(syspath);
     ASSERT_TRUE(handler_signal.wait_for(10s));
 
-    EXPECT_CALL(mock_drm, drmModeGetConnector(_,_)).Times(1);
+    // It needs to query DRM at least once; we don't really care how many times it does, though.
+    EXPECT_CALL(mock_drm, drmModeGetConnector(_,_)).Times(AtLeast(1));
     display->configuration();
 }

@@ -331,7 +331,23 @@ void mgm::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
     // TODO: return bool in future? Then do what with it?
 }
 
-namespace
+void mgm::RealKMSOutput::refresh_hardware_state()
+{
+    connector = kms::get_connector(drm_fd, connector->connector_id);
+    current_crtc = nullptr;
+
+    if (connector->encoder_id)
+    {
+        auto encoder = kms::get_encoder(drm_fd, connector->encoder_id);
+
+        if (encoder->crtc_id)
+        {
+            current_crtc = kms::get_crtc(drm_fd, encoder->crtc_id);
+        }
+    }
+}
+
+    namespace
 {
 
 bool kms_modes_are_equal(drmModeModeInfo const& info1, drmModeModeInfo const& info2)
@@ -518,28 +534,13 @@ void mgm::RealKMSOutput::update_from_hardware_state(
             preferred_mode_index = m;
     }
 
-    if (current_mode_index != invalid_mode_index)
-    {
-        output.current_mode_index = current_mode_index;
-    }
-    else if (!modes.empty() &&  // If empty retain old current_mode_index!
-             ( output.current_mode_index >= modes.size() ||
-               output.modes[output.current_mode_index] !=
-               modes[output.current_mode_index]))
-    {
-        // current_mode_index is invalid and the definition of the old
-        // current mode has also changed (different display plugged in)
-        // so fall back to the preferred mode...
-        output.current_mode_index = preferred_mode_index;
-    }
-    // else output.current_mode_index is correct and unchanged.
-
     output.type = type;
     output.modes = modes;
     output.preferred_mode_index = preferred_mode_index;
     output.physical_size_mm = physical_size;
     output.connected = connected;
     output.current_format = mir_pixel_format_xrgb_8888;
+    output.current_mode_index = current_mode_index;
     output.subpixel_arrangement = kms_subpixel_to_mir_subpixel(connector->subpixel);
     output.gamma = gamma;
     output.edid = edid;

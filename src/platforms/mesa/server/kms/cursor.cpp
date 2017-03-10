@@ -240,14 +240,13 @@ void mgm::Cursor::for_each_used_output(
     std::function<void(KMSOutput&, geom::Rectangle const&, MirOrientation orientation)> const& f)
 {
     current_configuration->with_current_configuration_do(
-        [this,&f](KMSDisplayConfiguration const& kms_conf)
+        [&f](KMSDisplayConfiguration const& kms_conf)
         {
             kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
             {
                 if (conf_output.used)
                 {
-                    uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
-                    auto output = output_container.get_kms_output_for(connector_id);
+                    auto output = kms_conf.get_output_for(conf_output.id);
 
                     f(*output, conf_output.extents(), conf_output.orientation);
                 }
