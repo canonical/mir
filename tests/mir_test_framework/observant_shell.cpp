@@ -175,6 +175,6 @@ void mtf::ObservantShell::set_drag_and_drop_handle(std::vector<uint8_t> const& h
 
 void mtf::ObservantShell::clear_drag_and_drop_handle()
 {
-    clear_drag_and_drop_handle();
+    wrapped->clear_drag_and_drop_handle();
 }
 
