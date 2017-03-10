@@ -54,6 +54,14 @@ class GraphicBufferAllocator;
 class GLConfig;
 class PlatformIpcOperations;
 class NestedContext;
+class NativeRenderAccess
+{
+protected:
+    NativeRenderAccess() = default;
+    virtual ~NativeRenderAccess() = default;
+    NativeRenderAccess(NativeRenderAccess const&) = delete;
+    NativeRenderAccess& operator=(NativeRenderAccess const&) = delete;
+};
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -92,7 +100,11 @@ public:
      */
     virtual UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const = 0;
 
-    virtual EGLNativeDisplayType egl_native_display() const = 0;
+    /**
+     * Access the native resource[s] used to connect to the rendering backend
+     * for this platform
+     */
+    virtual NativeRenderAccess* native_render_access() = 0;
 };
 
 /**

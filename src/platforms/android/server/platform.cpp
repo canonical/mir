@@ -28,6 +28,7 @@
 #include "sync_fence.h"
 #include "native_buffer.h"
 #include "native_window_report.h"
+#include "surfaceless_egl_context.h"
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
@@ -162,9 +163,14 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operatio
     return mir::make_module_ptr<mga::IpcOperations>();
 }
 
-EGLNativeDisplayType mga::Platform::egl_native_display() const
+mg::NativeDisplay* mga::Platform::native_display()
 {
-    return EGL_DEFAULT_DISPLAY;
+    return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mga::Platform::create_gl_context()
+{
+    return std::make_unique<SurfacelessEGLContext>(EGL_DEFAULT_DISPLAY, EGL_NO_CONTEXT);
 }
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(

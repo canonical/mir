@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_MESA_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "mir/renderer/gl/egl_access.h"
 #include "platform_common.h"
 #include "display_helpers.h"
 
@@ -33,7 +34,9 @@ namespace mesa
 
 class VirtualTerminal;
 class InternalNativeDisplay;
-class Platform : public graphics::Platform
+class Platform : public graphics::Platform,
+                 public graphics::NativeRenderAccess,
+                 public mir::renderer::gl::EGLAccess
 {
 public:
     explicit Platform(std::shared_ptr<DisplayReport> const& reporter,
@@ -49,6 +52,7 @@ public:
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
+    NativeRenderAccess* native_render_access() override;
     EGLNativeDisplayType egl_native_display() const override;
 
     std::shared_ptr<mir::udev::Context> udev;

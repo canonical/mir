@@ -22,6 +22,8 @@
 
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
+#include "mir/graphics/display.h"
+#include "mir/renderer/gl/context_source.h"
 
 namespace mir
 {
@@ -30,7 +32,9 @@ namespace graphics
 namespace X
 {
 
-class GuestPlatform : public graphics::Platform
+class GuestPlatform : public graphics::Platform,
+                      public graphics::NativeDisplay,
+                      public mir::renderer::gl::ContextSource
 {
 public:
     GuestPlatform(std::shared_ptr<NestedContext> const& /*nested_context*/);
@@ -41,7 +45,9 @@ public:
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const&) override;
-    EGLNativeDisplayType egl_native_display() const override;
+
+    NativeDisplay* native_display() override;
+    std::unique_ptr<mir::renderer::gl::Context> create_gl_context() override;
 
 private:
     std::shared_ptr<mir::udev::Context> udev;

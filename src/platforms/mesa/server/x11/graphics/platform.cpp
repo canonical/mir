@@ -20,6 +20,7 @@
 #include "display.h"
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
+#include "surfaceless_egl_context.h"
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -60,7 +61,12 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operatio
     return make_module_ptr<mg::mesa::IpcOperations>(drm);
 }
 
-EGLNativeDisplayType mgx::Platform::egl_native_display() const
+mg::NativeDisplay* mgx::Platform::native_display()
 {
-    return eglGetDisplay(x11_connection.get());
+    return this;
+}
+
+std::unique_ptr<mir::renderer::gl::Context> mgx::Platform::create_gl_context()
+{
+    return std::make_unique<SurfacelessEGLContext>(eglGetDisplay(x11_connection.get()), EGL_NO_CONTEXT);
 }

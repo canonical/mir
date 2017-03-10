@@ -144,5 +144,11 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operatio
 
 EGLNativeDisplayType mgn::Platform::egl_native_display() const
 {
-    return guest_platform->egl_native_display();
+    return EGL_DEFAULT_DISPLAY;
+//    return guest_platform->egl_native_display();
+}
+
+mg::NativeRenderAccess* mgn::Platform::native_render_access()
+{
+    return this;
 }

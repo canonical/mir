@@ -23,6 +23,8 @@
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
 #include "mir/geometry/size.h"
+#include "mir/graphics/display.h"
+#include "mir/renderer/gl/context_source.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -34,7 +36,9 @@ namespace graphics
 namespace X
 {
 
-class Platform : public graphics::Platform
+class Platform : public graphics::Platform,
+                 public graphics::NativeDisplay,
+                 public mir::renderer::gl::ContextSource
 {
 public:
     explicit Platform(std::shared_ptr<::Display> const& conn,
@@ -51,7 +55,9 @@ public:
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
-    EGLNativeDisplayType egl_native_display() const override;
+    NativeDisplay* native_display() override;
+    std::unique_ptr<mir::renderer::gl::Context> create_gl_context() override;
+
 private:
     std::shared_ptr<::Display> const x11_connection;
     std::shared_ptr<mir::udev::Context> udev;
