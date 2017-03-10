@@ -56,12 +56,12 @@ public:
     void reset() { self.reset(); }
     void reset(MirCookie const* cookie) { self.reset(cookie, deleter); }
 
-    friend void mir_cookie_release(Cookie const&) = delete;
-
 private:
     static void deleter(MirCookie const* cookie) { mir_cookie_release(cookie); }
     std::shared_ptr<MirCookie const> self;
 };
+
+void mir_cookie_release(Cookie const&) = delete;
 
 class Blob
 {
@@ -75,12 +75,12 @@ public:
     void reset() { self.reset(); }
     void reset(MirBlob* blob) { self.reset(blob, deleter); }
 
-    friend void mir_blob_release(Blob const&) = delete;
-
 private:
     static void deleter(MirBlob* blob) { mir_blob_release(blob); }
     std::shared_ptr<MirBlob> self;
 };
+
+void mir_blob_release(Blob const&) = delete;
 
 struct MouseMoverAndFaker
 {
