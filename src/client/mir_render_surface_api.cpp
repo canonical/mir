@@ -18,6 +18,7 @@
 
 #include "mir_connection.h"
 #include "render_surface.h"
+#include "presentation_chain.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
 #include "connection_surface_map.h"

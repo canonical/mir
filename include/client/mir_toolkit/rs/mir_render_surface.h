@@ -145,7 +145,8 @@ MirBufferStream* mir_render_surface_get_buffer_stream(
 __attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
- * Obtain the presentation chain backing a given render surface
+ * Obtain the presentation chain backing a given render surface.
+ * The MirPresentationChain is created in mir_present_mode_fifo submission mode.
  *
  * \return                       The chain contained in the given render surface
  *                               or 'nullptr' if it, or
@@ -155,6 +156,26 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
 MirPresentationChain* mir_render_surface_get_presentation_chain(
     MirRenderSurface* render_surface)
 __attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+
+/** Query whether the server supports a given presentation mode.
+ *
+ *  \param [in] connection  The connection
+ *  \param [in] mode        The MirPresentMode
+ *  \return                 True if supported, false if not
+ */
+bool mir_connection_present_mode_supported(
+    MirConnection* connection, MirPresentMode mode);
+
+/** Respecify the submission mode that the MirPresentationChain is operating with.
+ *  The buffers currently queued will immediately be requeued according
+ *  to the new mode.
+ *
+ *  \pre    mir_connection_present_mode_supported must indicate that the mode is supported
+ *  \param [in] chain   The chain
+ *  \param [in] mode    The mode to change to
+ */
+void mir_presentation_chain_set_mode(
+    MirPresentationChain* chain, MirPresentMode mode);
 
 /**
  * Set the MirWindowSpec to contain a specific cursor.
