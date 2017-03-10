@@ -23,7 +23,6 @@
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
 #include "mir/geometry/size.h"
-#include "mir/graphics/display.h"
 #include "mir/renderer/gl/egl_access.h"
 
 #include <X11/Xlib.h>
@@ -57,7 +56,6 @@ public:
 
     NativeRenderAccess* native_render_access() override;
     EGLNativeDisplayType egl_native_display() const override;
-
 private:
     std::shared_ptr<::Display> const x11_connection;
     std::shared_ptr<mir::udev::Context> udev;

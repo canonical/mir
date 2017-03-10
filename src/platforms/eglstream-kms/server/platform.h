@@ -25,7 +25,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/fd.h"
-#include "mir/renderer/gl/context_source.h"
+#include "mir/renderer/gl/egl_access.h"
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -36,7 +36,9 @@ namespace graphics
 {
 namespace eglstream
 {
-class Platform : public graphics::Platform
+class Platform : public graphics::Platform,
+                 public graphics::NativeRenderAccess,
+                 public mir::renderer::gl::EGLAccess
 {
 public:
     Platform(
@@ -54,6 +56,7 @@ public:
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
     NativeRenderAccess* native_render_access() override;
+    EGLNativeDisplayType egl_native_display() const override;
 
 private:
     EGLDisplay display;

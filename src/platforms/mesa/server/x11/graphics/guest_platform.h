@@ -22,7 +22,6 @@
 
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
-#include "mir/graphics/display.h"
 #include "mir/renderer/gl/egl_access.h"
 
 namespace mir

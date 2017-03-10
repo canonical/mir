@@ -52,7 +52,6 @@ add_library(mirplatformgraphicsandroid SHARED
 target_link_libraries(
   mirplatformgraphicsandroid
 
-  server_platform_common
   mirsharedandroid-static
   mirplatform
   ${Boost_PROGRAM_OPTIONS_LIBRARY}

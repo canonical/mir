@@ -21,7 +21,6 @@
 #define MIR_GRAPHICS_PLATFORM_H_
 
 #include <boost/program_options/options_description.hpp>
-#include <EGL/egl.h>
 
 #include "mir/module_properties.h"
 #include "mir/module_deleter.h"
