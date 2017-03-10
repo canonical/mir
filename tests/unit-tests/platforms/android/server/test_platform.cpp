@@ -263,6 +263,7 @@ TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
         std::make_shared<mtd::StubBufferAllocator>(),
         std::make_shared<mtd::StubDisplayBuilder>(),
         mr::null_display_report(),
+        std::make_shared<mga::NullNativeWindowReport>(),
         mga::OverlayOptimization::enabled,
         std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, context));
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, platform.egl_native_display());
