@@ -250,6 +250,15 @@ auto DragAndDrop::handle_from_mouse_move() -> Blob
     EXPECT_TRUE(have_blob.wait_for(receive_event_timeout));
     return blob;
 }
+
+MATCHER_P(BlobContentEq, p, "")
+{
+    if (!arg || !p)
+        return false;
+    if (mir_blob_size(arg) != mir_blob_size(p))
+        return false;
+    return !memcmp(mir_blob_data(arg), mir_blob_data(p), mir_blob_size(p));
+}
 }
 
 TEST_F(DragAndDrop, when_user_initiates_drag_client_receives_cookie)
@@ -277,5 +286,5 @@ TEST_F(DragAndDrop, DISABLED_during_drag_when_user_moves_mouse_client_receives_h
     auto const handle = handle_from_mouse_move();
 
     EXPECT_THAT(handle, NotNull());
-    EXPECT_THAT(handle, Eq(handle_from_request));
+    EXPECT_THAT(handle, BlobContentEq(handle_from_request));
 }
