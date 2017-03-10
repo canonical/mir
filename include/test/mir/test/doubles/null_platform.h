@@ -51,9 +51,9 @@ class NullPlatform : public graphics::Platform
         return mir::make_module_ptr<NullPlatformIpcOperations>();
     }
 
-    EGLNativeDisplayType egl_native_display() const override
+    graphics::NativeRenderAccess* native_render_access() override
     {
-        return EGLNativeDisplayType();
+        return nullptr;
     }
 };
 }

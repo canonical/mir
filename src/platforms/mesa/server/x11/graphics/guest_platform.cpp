@@ -20,7 +20,6 @@
 #include "guest_platform.h"
 #include "ipc_operations.h"
 #include "buffer_allocator.h"
-#include "surfaceless_egl_context.h"
 
 #include "mir/graphics/nested_context.h"
 
@@ -60,12 +59,12 @@ mir::UniqueModulePtr<mg::Display> mgx::GuestPlatform::create_display(
     BOOST_THROW_EXCEPTION(std::runtime_error("Guest platform cannot create display\n"));
 }
 
-mg::NativeDisplay* mgx::GuestPlatform::native_display()
+mg::NativeRenderAccess* mgx::GuestPlatform::native_render_access()
 {
     return this;
 }
 
-std::unique_ptr<mir::renderer::gl::Context> mgx::GuestPlatform::create_gl_context()
+EGLNativeDisplayType mgx::GuestPlatform::egl_native_display() const
 {
-    return std::make_unique<SurfacelessEGLContext>(gbm.device, EGL_NO_CONTEXT);
+    return gbm.device;
 }

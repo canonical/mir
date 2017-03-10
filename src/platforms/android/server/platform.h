@@ -23,7 +23,7 @@
 #include "device_quirks.h"
 #include "overlay_optimization.h"
 #include "mir/graphics/display.h"
-#include "mir/renderer/gl/context_source.h"
+#include "mir/renderer/gl/egl_access.h"
 
 namespace mir
 {
@@ -39,8 +39,8 @@ class CommandStreamSyncFactory;
 class NativeWindowReport;
 
 class Platform : public graphics::Platform,
-                 public graphics::NativeDisplay,
-                 public mir::renderer::gl::ContextSource
+                 public graphics::NativeRenderAccess,
+                 public mir::renderer::gl::EGLAccess
 {
 public:
     Platform(
@@ -57,8 +57,8 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
-    NativeDisplay* native_display() override;
-    std::unique_ptr<mir::renderer::gl::Context> create_gl_context() override;
+    NativeRenderAccess* native_render_access() override;
+    EGLNativeDisplayType egl_native_display() const override;
 
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;

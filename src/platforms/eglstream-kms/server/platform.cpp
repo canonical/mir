@@ -26,7 +26,6 @@
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "native_buffer.h"
-#include "surfaceless_egl_context.h"
 
 #include "mir/graphics/egl_error.h"
 
@@ -162,12 +161,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
     return mir::make_module_ptr<NoIPCOperations>();
 }
 
-mg::NativeDisplay* mge::Platform::native_display()
+mg::NativeRenderAccess* mge::Platform::native_render_access()
 {
-    return this;
-}
-
-std::unique_ptr<mir::renderer::gl::Context> mge::Platform::create_gl_context()
-{
-    return std::make_unique<SurfacelessEGLContext>(display, EGL_NO_CONTEXT);
+    return nullptr;
 }

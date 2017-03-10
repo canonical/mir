@@ -23,7 +23,7 @@
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
 #include "mir/graphics/display.h"
-#include "mir/renderer/gl/context_source.h"
+#include "mir/renderer/gl/egl_access.h"
 
 namespace mir
 {
@@ -33,8 +33,8 @@ namespace X
 {
 
 class GuestPlatform : public graphics::Platform,
-                      public graphics::NativeDisplay,
-                      public mir::renderer::gl::ContextSource
+                      public graphics::NativeRenderAccess,
+                      public mir::renderer::gl::EGLAccess
 {
 public:
     GuestPlatform(std::shared_ptr<NestedContext> const& /*nested_context*/);
@@ -46,8 +46,8 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const&) override;
 
-    NativeDisplay* native_display() override;
-    std::unique_ptr<mir::renderer::gl::Context> create_gl_context() override;
+    NativeRenderAccess* native_render_access() override;
+    EGLNativeDisplayType egl_native_display() const override;
 
 private:
     std::shared_ptr<mir::udev::Context> udev;

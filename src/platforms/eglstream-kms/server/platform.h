@@ -36,9 +36,7 @@ namespace graphics
 {
 namespace eglstream
 {
-class Platform : public graphics::Platform,
-                 public graphics::NativeDisplay,
-                 public renderer::gl::ContextSource
+class Platform : public graphics::Platform
 {
 public:
     Platform(
@@ -55,8 +53,7 @@ public:
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
-    NativeDisplay* native_display() override;
-    std::unique_ptr<mir::renderer::gl::Context> create_gl_context() override;
+    NativeRenderAccess* native_render_access() override;
 
 private:
     EGLDisplay display;
