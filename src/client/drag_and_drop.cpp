@@ -17,10 +17,12 @@
  */
 
 #include "drag_and_drop.h"
+#include "mir_toolkit/extensions/drag_and_drop.h"
 
 #include "mir/uncaught.h"
 #include "mir/events/surface_event.h"
-#include "mir_toolkit/extensions/drag_and_drop.h"
+#include "mir/events/pointer_event.h"
+
 #include "mir_surface.h"
 
 namespace
@@ -48,11 +50,10 @@ catch (std::exception const& e)
     abort();
 }
 
-MirBlob* pointer_drag_and_drop(MirPointerEvent const* /*event*/)
+MirBlob* pointer_drag_and_drop(MirPointerEvent const* event)
 try
 {
-    // TODO
-    return nullptr;
+    return event->dnd_handle();
 }
 catch (std::exception const& e)
 {

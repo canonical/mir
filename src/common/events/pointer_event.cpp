@@ -136,8 +136,8 @@ void MirPointerEvent::set_action(MirPointerAction action)
 
 void MirPointerEvent::set_dnd_handle(std::vector<uint8_t> const& handle)
 {
-    event.getSurface().initDndHandle(handle.size());
-    event.getSurface().setDndHandle(::kj::ArrayPtr<uint8_t const>{&*begin(handle), &*end(handle)});
+    event.getInput().getPointer().initDndHandle(handle.size());
+    event.getInput().getPointer().setDndHandle(::kj::ArrayPtr<uint8_t const>{&*begin(handle), &*end(handle)});
 }
 
 namespace
@@ -154,17 +154,18 @@ struct MyMirBlob : MirBlob
 
 MirBlob* MirPointerEvent::dnd_handle() const
 {
-    if (!event.asReader().getSurface().hasDndHandle())
+    auto const reader = event.asReader().getInput().getPointer();
+
+    if (!reader.hasDndHandle())
         return nullptr;
 
+    auto const dnd_handle = reader.getDndHandle();
+
     auto blob = std::make_unique<MyMirBlob>();
+    blob->data_.reserve(dnd_handle.size());
 
-    auto reader = event.asReader().getSurface().getDndHandle();
-
-    blob->data_.reserve(reader.size());
-
-    //std::copy(reader.begin(), reader.end(), back_inserter(blob->data_));
-    for (auto p = reader.begin(); p != reader.end(); ++p)
+    //std::copy(dnd_handle.begin(), dnd_handle.end(), back_inserter(blob->data_));
+    for (auto p = dnd_handle.begin(); p != dnd_handle.end(); ++p)
         blob->data_.push_back(*p);
 
     return blob.release();

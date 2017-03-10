@@ -464,3 +464,14 @@ void mev::set_window_id(MirEvent& event, int window_id)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Event has no window id."));
     }
 }
+
+void mev::set_drag_and_drop_handle(MirEvent& event, std::vector<uint8_t> const& handle)
+{
+    if (event.type() == mir_event_type_input)
+    {
+        auto const input_event = event.to_input();
+        if (mir_input_event_get_type(input_event) == mir_input_event_type_pointer)
+            const_cast<MirPointerEvent*>(mir_input_event_get_pointer_event(input_event))->set_dnd_handle(handle);
+    }
+}
+

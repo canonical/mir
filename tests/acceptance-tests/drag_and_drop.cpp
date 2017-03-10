@@ -101,7 +101,7 @@ private:
 };
 
 Rectangle const screen_geometry{{0,0}, {800,600}};
-auto const receive_event_timeout = 3s;  // TODO change to 30s before showing to CI
+auto const receive_event_timeout = 30s;
 
 struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
                      MouseMoverAndFaker
@@ -277,7 +277,7 @@ TEST_F(DragAndDrop, when_client_requests_drags_it_receives_handle)
     EXPECT_THAT(handle, NotNull());
 }
 
-TEST_F(DragAndDrop, DISABLED_during_drag_when_user_moves_mouse_client_receives_handle)
+TEST_F(DragAndDrop, during_drag_when_user_moves_mouse_client_receives_handle)
 {
     auto const cookie = user_initiates_drag();
 
