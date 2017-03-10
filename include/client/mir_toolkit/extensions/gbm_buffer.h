@@ -98,7 +98,7 @@ typedef MirBuffer* (*MirConnectionAllocateBufferGbmSync)(
  *   \param [in] buffer The buffer
  *   \return            True if suitable, false if unsuitable
  */
-typedef bool (*MirBufferExtIsGBMImportable)(MirBuffer* buffer);
+typedef bool (*MirBufferIsGbmImportable)(MirBuffer* buffer);
 
 /** Access the fd a MirBuffer suitable for gbm import
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
@@ -106,46 +106,46 @@ typedef bool (*MirBufferExtIsGBMImportable)(MirBuffer* buffer);
  *   \param [in] buffer The buffer
  *   \return            The fd
  */
-typedef int (*MirBufferExtFd)(MirBuffer* buffer);
+typedef int (*MirBufferGbmFd)(MirBuffer* buffer);
 
 /** Get the stride of a MirBuffer
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \param [in] buffer The buffer
  *   \return            The stride of the buffer
  */
-typedef uint32_t (*MirBufferExtStride)(MirBuffer* buffer);
+typedef uint32_t (*MirBufferGbmStride)(MirBuffer* buffer);
 
 /** Get the GBM_FORMAT of a MirBuffer
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \param [in] buffer The buffer
  *   \return            The GBM_FORMAT of the buffer
  */
-typedef uint32_t (*MirBufferExtFormat)(MirBuffer* buffer);
+typedef uint32_t (*MirBufferGbmFormat)(MirBuffer* buffer);
 
 /** Get the gbm_bo_flags of a MirBuffer
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \param [in] buffer The buffer
  *   \return            The gbm_bo_flags of the buffer
  */
-typedef uint32_t (*MirBufferExtFlags)(MirBuffer* buffer);
+typedef uint32_t (*MirBufferGbmFlags)(MirBuffer* buffer);
 
 /** Get the age of a MirBuffer
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \param [in] buffer The buffer
  *   \return            The age of the buffer
  */
-typedef unsigned int (*MirBufferExtAge)(MirBuffer* buffer);
+typedef unsigned int (*MirBufferGbmAge)(MirBuffer* buffer);
 
-typedef struct MirExtensionGbmBufferV2
+typedef struct MirGbmensionGbmBufferV2
 {
     MirConnectionAllocateBufferGbm allocate_buffer_gbm;
     MirConnectionAllocateBufferGbmSync allocate_buffer_gbm_sync;
-    MirBufferExtIsGBMImportable is_gbm_importable;
-    MirBufferExtFd fd;
-    MirBufferExtStride stride;
-    MirBufferExtFormat format;
-    MirBufferExtFlags flags;
-    MirBufferExtAge age;
+    MirBufferIsGbmImportable is_gbm_importable;
+    MirBufferGbmFd fd;
+    MirBufferGbmStride stride;
+    MirBufferGbmFormat format;
+    MirBufferGbmFlags flags;
+    MirBufferGbmAge age;
 } MirExtensionGbmBufferV2;
 
 static inline MirExtensionGbmBufferV2 const* mir_extension_gbm_buffer_v2(
