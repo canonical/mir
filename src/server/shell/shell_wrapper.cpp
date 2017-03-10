@@ -165,5 +165,5 @@ void msh::ShellWrapper::set_drag_and_drop_handle(std::vector<uint8_t> const& han
 
 void msh::ShellWrapper::clear_drag_and_drop_handle()
 {
-    clear_drag_and_drop_handle();
+    wrapped->clear_drag_and_drop_handle();
 }

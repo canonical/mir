@@ -33,7 +33,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include <linux/input-event-codes.h>
+#include <linux/input.h>
 
 #include <boost/throw_exception.hpp>
 
