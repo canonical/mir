@@ -256,11 +256,13 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
                             }
                         }
                     }
-                    // else
+                    else
+                    {
                         // Unable to acquire lock? Either some thread has taken an exclusive lock, or
                         // some thread is waiting on an exclusive lock and we're preempted.
                         //
                         // In the latter case we need to let the waiting thread release its shared lock.
+                    }
 
                     trigger_next_reader();
                     std::this_thread::yield();
