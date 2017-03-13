@@ -19,6 +19,8 @@
 #include "mir/graphics/display_report.h"
 #include "mir/options/option.h"
 #include "platform.h"
+#include "gbm_platform.h"
+#include "platform_common.h"
 #include "guest_platform.h"
 #include "../X11_resources.h"
 #include "mir/module_deleter.h"
@@ -116,4 +118,57 @@ mir::ModuleProperties const* describe_graphics_module()
 {
     mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
+}
+
+mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
+    std::shared_ptr<mo::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
+    std::shared_ptr<mg::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const&)
+{
+    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
+
+    if (!x11_resources.get_conn())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
+
+    auto display_dims_str = options->get<std::string>(x11_displays_option_name);
+    auto pos = display_dims_str.find('x');
+    if (pos == std::string::npos)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Malformed display size option"));
+
+    return mir::make_module_ptr<mgx::Platform>(
+               x11_resources.get_conn(),
+               geom::Size{std::stoi(display_dims_str.substr(0, pos)),
+                          std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))},
+               report
+           );
+#if 0
+    // ensure mesa finds the mesa mir-platform symbols
+    auto real_fops = std::make_shared<RealVTFileOperations>();
+    auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
+    auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(
+        real_fops,
+        std::move(real_pops),
+        options->get<int>(vt_option_name),
+        report);
+
+    auto bypass_option = mgm::BypassOption::allowed;
+    if (!options->get<bool>(bypass_option_name))
+        bypass_option = mgm::BypassOption::prohibited;
+
+    return mir::make_module_ptr<mgm::Platform>(
+        report, vt, *emergency_cleanup_registry, bypass_option);
+#endif
+}
+
+mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
+    std::shared_ptr<mir::options::Option> const& /*options*/,
+    std::shared_ptr<mir::graphics::NestedContext> const& nested_context)
+{
+    mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
+
+//    auto bypass_option = mg::mesa::BypassOption::allowed;
+//    if (!options->get<bool>(bypass_option_name))
+    auto bypass_option = mg::mesa::BypassOption::prohibited;
+    return mir::make_module_ptr<mg::mesa::GBMPlatform>(bypass_option, nested_context);
 }
