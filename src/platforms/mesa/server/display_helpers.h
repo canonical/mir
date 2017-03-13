@@ -102,7 +102,13 @@ class EGLHelper
 {
 public:
     EGLHelper(GLConfig const& gl_config);
+    EGLHelper(
+        GLConfig const& gl_config,
+        GBMHelper const& gbm,
+        gbm_surface* surface,
+        EGLContext shared_context);
     ~EGLHelper() noexcept;
+    EGLHelper(EGLHelper&& from);
 
     EGLHelper(const EGLHelper&) = delete;
     EGLHelper& operator=(const EGLHelper&) = delete;
