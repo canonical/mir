@@ -678,6 +678,28 @@ TEST_F(SessionMediator, arranges_bufferstreams_via_shell)
     mediator.modify_surface(&mods, &null, null_callback.get());
 }
 
+//LP: #1670876
+MATCHER(InputRegionSet, "input region set")
+{
+    return arg.input_shape.is_set();
+}
+TEST_F(SessionMediator, does_not_reset_input_region_if_region_not_set)
+{
+    using namespace testing;
+    mp::Void null;
+    mp::SurfaceModifications mods;
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
+    mods.mutable_surface_id()->set_value(surface_response.id().value());
+    mods.mutable_surface_specification()->set_min_width(1);
+
+    EXPECT_CALL(*shell, modify_surface(_,
+        mf::SurfaceId{surface_response.id().value()}, Not(InputRegionSet())));
+
+    mediator.modify_surface(&mods, &null, null_callback.get());
+}
+
 TEST_F(SessionMediator, allocates_software_buffers_from_the_session)
 {
     using namespace testing;
