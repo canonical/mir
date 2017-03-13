@@ -27,7 +27,7 @@
 
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/signal.h"
 
@@ -98,7 +98,7 @@ static_assert(sizeof(MirSurfaceAttrib) == sizeof(MirWindowAttrib),
     "sizeof(MirSurfaceAttrib) != sizeof(MirWindowAttrib)");
 #pragma GCC diagnostic pop
 
-struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
+struct ClientSurfaceEvents : mtf::ConnectedClientWithAWindow
 {
     MirWindow* other_surface;
 
@@ -173,7 +173,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
             return msc;
         });
 
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientWithAWindow::SetUp();
 
         mir_window_set_event_handler(window, &event_callback, this);
 
@@ -190,7 +190,7 @@ struct ClientSurfaceEvents : mtf::ConnectedClientWithASurface
         mir_window_release_sync(other_surface);
         scene_surface.reset();
 
-        mtf::ConnectedClientWithASurface::TearDown();
+        mtf::ConnectedClientWithAWindow::TearDown();
     }
 
     std::weak_ptr<mtd::WrapShellToTrackLatestSurface> mock_shell;

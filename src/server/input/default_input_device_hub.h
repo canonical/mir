@@ -27,6 +27,7 @@
 #include "mir/input/input_device_hub.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/mir_input_config.h"
+#include "mir/thread_safe_list.h"
 
 #include "mir_toolkit/event.h"
 
@@ -87,7 +88,7 @@ private:
     MirInputDeviceId create_new_device_id();
     std::shared_ptr<Seat> const seat;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
-    std::mutex observer_guard;
+    std::mutex handles_guard;
     std::shared_ptr<ServerActionQueue> const observer_queue;
     std::shared_ptr<dispatch::ActionQueue> const device_queue;
     std::shared_ptr<cookie::Authority> const cookie_authority;
@@ -103,7 +104,8 @@ private:
                          std::shared_ptr<cookie::Authority> const& cookie_authority,
                          std::shared_ptr<DefaultDevice> const& handle);
         void handle_input(MirEvent& event) override;
-        mir::geometry::Rectangle bounding_rectangle() const override;
+        geometry::Rectangle bounding_rectangle() const override;
+        input::OutputInfo output_info(uint32_t output_id) const override;
         bool device_matches(std::shared_ptr<InputDevice> const& dev) const;
         void start(std::shared_ptr<Seat> const& seat);
         void stop();
@@ -124,7 +126,7 @@ private:
     std::vector<std::shared_ptr<Device>> handles;
     MirInputConfig config;
     std::vector<std::unique_ptr<RegisteredDevice>> devices;
-    std::vector<std::shared_ptr<InputDeviceObserver>> observers;
+    ThreadSafeList<std::shared_ptr<InputDeviceObserver>> observers;
     std::mutex changed_devices_guard;
     std::unique_ptr<std::vector<std::shared_ptr<Device>>> changed_devices;
 

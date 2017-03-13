@@ -363,6 +363,53 @@ TEST_F(CustomWindowManagement, apply_low_chrome_to_surface)
     mir_connection_release(connection);
 }
 
+TEST_F(CustomWindowManagement, apply_input_shape_to_surface)
+{
+    start_server();
+
+    auto connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
+
+    int const width{800}, height{600};
+    MirPixelFormat const format{mir_pixel_format_bgr_888};
+    auto surface_spec = mir_create_normal_window_spec(connection, width, height);
+    mir_window_spec_set_pixel_format(surface_spec, format);
+
+    auto window = mir_create_window_sync(surface_spec);
+    mir_window_spec_release(surface_spec);
+
+    surface_spec = mir_create_window_spec(connection);
+
+    mt::Signal received;
+
+    MirRectangle rect{ 0, 0, 100, 101 };
+    mir_window_spec_set_input_shape(surface_spec, &rect, 1);
+
+    auto const check_apply_surface = [&received](
+        std::shared_ptr<ms::Session> const&,
+        std::shared_ptr<ms::Surface> const&,
+        msh::SurfaceSpecification const& spec)
+        {
+            EXPECT_TRUE(spec.input_shape.is_set());
+            received.raise();
+        };
+    EXPECT_CALL(window_manager, modify_surface(_,_,_)).WillOnce(Invoke(check_apply_surface));
+
+    mir_window_apply_spec(window, surface_spec);
+    mir_window_spec_release(surface_spec);
+
+    EXPECT_TRUE(received.wait_for(400ms));
+
+    surface_spec = mir_create_window_spec(connection);
+    mir_window_spec_set_input_shape(surface_spec, nullptr, 0);
+
+    mir_window_apply_spec(window, surface_spec);
+    mir_window_spec_release(surface_spec);
+    EXPECT_TRUE(received.wait_for(400ms));
+
+    mir_window_release_sync(window);
+    mir_connection_release(connection);
+}
+
 TEST_F(CustomWindowManagement, when_the_client_places_a_new_surface_the_request_reaches_the_window_manager)
 {
     int const width{800};

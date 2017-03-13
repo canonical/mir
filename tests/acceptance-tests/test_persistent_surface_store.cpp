@@ -20,7 +20,7 @@
 #include "mir/shell/persistent_surface_store.h"
 
 #include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -36,7 +36,7 @@ using namespace testing;
 
 namespace
 {
-struct TestPersistentSurfaceStore : mtf::ConnectedClientWithASurface
+struct TestPersistentSurfaceStore : mtf::ConnectedClientWithAWindow
 {
     void SetUp() override
     {
@@ -47,13 +47,13 @@ struct TestPersistentSurfaceStore : mtf::ConnectedClientWithASurface
             return msc;
         });
 
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientWithAWindow::SetUp();
     }
 
     void TearDown() override
     {
         shell.reset();
-        mtf::ConnectedClientWithASurface::TearDown();
+        mtf::ConnectedClientWithAWindow::TearDown();
     }
 
     std::shared_ptr<ms::Surface> latest_shell_surface() const

@@ -91,7 +91,7 @@ void mc::BufferMap::receive_buffer(graphics::BufferID id)
         it->second.owner = Owner::server;
 }
 
-std::shared_ptr<mg::Buffer>& mc::BufferMap::operator[](mg::BufferID id)
+std::shared_ptr<mg::Buffer> mc::BufferMap::get(mg::BufferID id) const
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     return checked_buffers_find(id, lk)->second.buffer;
@@ -99,6 +99,15 @@ std::shared_ptr<mg::Buffer>& mc::BufferMap::operator[](mg::BufferID id)
 
 mc::BufferMap::Map::iterator mc::BufferMap::checked_buffers_find(
     mg::BufferID id, std::unique_lock<std::mutex> const&)
+{
+    auto it = buffers.find(id);
+    if (it == buffers.end())
+        BOOST_THROW_EXCEPTION(std::logic_error("cannot find buffer by id"));
+    return it;
+}
+
+mc::BufferMap::Map::const_iterator mc::BufferMap::checked_buffers_find(
+    mg::BufferID id, std::unique_lock<std::mutex> const&) const
 {
     auto it = buffers.find(id);
     if (it == buffers.end())

@@ -47,9 +47,9 @@ public:
     geometry::Size size() const override;
     int max_refresh_rate() const override;
 
-    bool set_crtc(uint32_t fb_id) override;
+    bool set_crtc(FBHandle const& fb) override;
     void clear_crtc() override;
-    bool schedule_page_flip(uint32_t fb_id) override;
+    bool schedule_page_flip(FBHandle const& fb) override;
     void wait_for_page_flip() override;
 
     bool set_cursor(gbm_bo* buffer) override;
@@ -61,6 +61,8 @@ public:
     void set_gamma(GammaCurves const& gamma) override;
 
     Frame last_frame() const override;
+
+    FBHandle* fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const override;
 
 private:
     bool ensure_crtc();
