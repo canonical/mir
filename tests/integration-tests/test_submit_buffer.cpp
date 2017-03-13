@@ -233,7 +233,7 @@ struct StubPlatform : public mg::Platform
         return underlying_platform->create_display(policy, config);
     }
 
-    mg::NativeRenderAccess* native_render_access() override { return nullptr; }
+    mg::NativePlatform* native_platform() override { return nullptr; }
 
     std::shared_ptr<mir::Fd> const last_fd;
     std::shared_ptr<mg::Platform> const underlying_platform;

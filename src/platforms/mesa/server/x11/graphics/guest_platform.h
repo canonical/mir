@@ -32,7 +32,7 @@ namespace X
 {
 
 class GuestPlatform : public graphics::Platform,
-                      public graphics::NativeRenderAccess,
+                      public graphics::NativePlatform,
                       public mir::renderer::gl::EGLAccess
 {
 public:
@@ -45,7 +45,7 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const&) override;
 
-    NativeRenderAccess* native_render_access() override;
+    NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 
 private:

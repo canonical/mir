@@ -53,13 +53,13 @@ class GraphicBufferAllocator;
 class GLConfig;
 class PlatformIpcOperations;
 class NestedContext;
-class NativeRenderAccess
+class NativePlatform
 {
 protected:
-    NativeRenderAccess() = default;
-    virtual ~NativeRenderAccess() = default;
-    NativeRenderAccess(NativeRenderAccess const&) = delete;
-    NativeRenderAccess& operator=(NativeRenderAccess const&) = delete;
+    NativePlatform() = default;
+    virtual ~NativePlatform() = default;
+    NativePlatform(NativePlatform const&) = delete;
+    NativePlatform& operator=(NativePlatform const&) = delete;
 };
 
 /**
@@ -103,7 +103,7 @@ public:
      * Access the native resource[s] used to connect to the rendering backend
      * for this platform
      */
-    virtual NativeRenderAccess* native_render_access() = 0;
+    virtual NativePlatform* native_platform() = 0;
 };
 
 /**

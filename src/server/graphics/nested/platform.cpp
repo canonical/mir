@@ -145,12 +145,12 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operatio
 
 EGLNativeDisplayType mgn::Platform::egl_native_display() const
 {
-    if (auto a = dynamic_cast<mir::renderer::gl::EGLAccess*>(guest_platform->native_render_access()))
+    if (auto a = dynamic_cast<mir::renderer::gl::EGLAccess*>(guest_platform->native_platform()))
         return a->egl_native_display();
     return EGL_NO_DISPLAY;
 }
 
-mg::NativeRenderAccess* mgn::Platform::native_render_access()
+mg::NativePlatform* mgn::Platform::native_platform()
 {
     return this;
 }

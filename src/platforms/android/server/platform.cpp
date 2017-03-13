@@ -162,7 +162,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operatio
     return mir::make_module_ptr<mga::IpcOperations>();
 }
 
-mg::NativeRenderAccess* mga::Platform::native_render_access()
+mg::NativePlatform* mga::Platform::native_platform()
 {
     return this;
 }

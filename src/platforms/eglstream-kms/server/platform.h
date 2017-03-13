@@ -37,7 +37,7 @@ namespace graphics
 namespace eglstream
 {
 class Platform : public graphics::Platform,
-                 public graphics::NativeRenderAccess,
+                 public graphics::NativePlatform,
                  public mir::renderer::gl::EGLAccess
 {
 public:
@@ -55,7 +55,7 @@ public:
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
-    NativeRenderAccess* native_render_access() override;
+    NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 
 private:

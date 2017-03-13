@@ -84,12 +84,12 @@ public:
         return stub_platform->make_ipc_operations();
     }
 
-    mg::NativeRenderAccess* native_render_access() override
+    mg::NativePlatform* native_platform() override
     {
         if (should_throw.at(ExceptionLocation::at_egl_native_display))
             BOOST_THROW_EXCEPTION(std::runtime_error("Exception during egl_native_display"));
 
-        return stub_platform->native_render_access();
+        return stub_platform->native_platform();
     }
 
 private:
