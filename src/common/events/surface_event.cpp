@@ -86,7 +86,7 @@ MirBlob* MirSurfaceEvent::dnd_handle() const
 
     blob->data_.reserve(reader.size());
 
-    //std::copy(reader.begin(), reader.end(), back_inserter(blob->data_));
+    // Can't use std::copy() as the CapnP iterators don't provide an iterator category
     for (auto p = reader.begin(); p != reader.end(); ++p)
         blob->data_.push_back(*p);
 
