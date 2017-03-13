@@ -90,7 +90,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                         std::make_unique<mgn::NestedBufferPlatform>(
                             platform_library, host_connection, the_display_report(), *the_options()),
                         std::make_unique<mgn::NestedDisplayPlatform>(
-                            platform_library, host_connection, the_display_report(), *the_options()));
+                            host_connection, the_display_report(), *the_options()));
                 }
 
                 // fallback to standalone if host socket is unset

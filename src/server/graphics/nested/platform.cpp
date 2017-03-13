@@ -130,15 +130,11 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::NestedBufferPlatform::make_
 }
 
 mgn::NestedDisplayPlatform::NestedDisplayPlatform(
-    std::shared_ptr<mir::SharedLibrary> const& library, 
     std::shared_ptr<mgn::HostConnection> const& connection, 
     std::shared_ptr<mg::DisplayReport> const& display_report,
     mo::Option const& options) :
-    library(library),
     connection(connection),
     display_report(display_report),
-    guest_platform(library->load_function<mg::CreateGuestPlatform>(
-        "create_guest_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION)(display_report, connection)),
     passthrough_option(passthrough_from_options(options))
 {
 }
@@ -148,7 +144,6 @@ mir::UniqueModulePtr<mg::Display> mgn::NestedDisplayPlatform::create_display(
     std::shared_ptr<mg::GLConfig> const& config)
 {
     return mir::make_module_ptr<mgn::Display>(
-        guest_platform,
         connection,
         display_report,
         policy,

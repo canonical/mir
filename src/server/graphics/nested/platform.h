@@ -40,7 +40,6 @@ class NestedDisplayPlatform : public graphics::DisplayPlatform
 {
 public:
     NestedDisplayPlatform(
-        std::shared_ptr<mir::SharedLibrary> const& library, 
         std::shared_ptr<HostConnection> const& connection, 
         std::shared_ptr<DisplayReport> const& display_report,
         options::Option const& options);
@@ -53,7 +52,6 @@ private:
     std::shared_ptr<HostConnection> const connection; 
     std::shared_ptr<DisplayReport> const display_report;
 
-    std::shared_ptr<graphics::Platform> const guest_platform;
     PassthroughOption const passthrough_option;
 };
 
