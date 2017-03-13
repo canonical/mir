@@ -85,12 +85,14 @@ public:
         fake_devices.add_standard_device("standard-drm-devices");
 
         mock_kms_output = std::make_shared<NiceMock<MockKMSOutput>>();
-        ON_CALL(*mock_kms_output, set_crtc(_))
+        ON_CALL(*mock_kms_output, set_crtc_thunk(_))
             .WillByDefault(Return(true));
-        ON_CALL(*mock_kms_output, schedule_page_flip(_))
+        ON_CALL(*mock_kms_output, schedule_page_flip_thunk(_))
             .WillByDefault(Return(true));
         ON_CALL(*mock_kms_output, max_refresh_rate())
             .WillByDefault(Return(mock_refresh_rate));
+        ON_CALL(*mock_kms_output, fb_for(_,_,_))
+            .WillByDefault(Return(reinterpret_cast<FBHandle*>(0x12ad)));
 
         ON_CALL(*mock_bypassable_buffer, size())
             .WillByDefault(Return(display_area.size));
@@ -108,6 +110,18 @@ public:
     }
 
 protected:
+    GBMOutputSurface make_output_surface()
+    {
+        helpers::EGLHelper egl{gl_config};
+        return GBMOutputSurface{
+            drm->fd,
+            GBMSurfaceUPtr{nullptr},
+            static_cast<uint32_t>(width),
+            static_cast<uint32_t>(height),
+            std::move(egl)
+        };
+    }
+
     int const width{56};
     int const height{78};
     mir::geometry::Rectangle const display_area{{12,34}, {width,height}};
@@ -135,15 +149,11 @@ TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)
 {
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
-        {},
-        nullptr,
+        {mock_kms_output},
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     EXPECT_EQ(display_area, db.view_area());
 }
@@ -152,15 +162,11 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_is_held_for_full_frame)
 {
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
         {mock_kms_output},
-        nullptr,
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     auto original_count = mock_bypassable_buffer.use_count();
 
@@ -180,15 +186,11 @@ TEST_F(MesaDisplayBufferTest, predictive_bypass_is_throttled)
 {
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
         {mock_kms_output},
-        nullptr,
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     for (int frame = 0; frame < 5; ++frame)
     {
@@ -210,15 +212,11 @@ TEST_F(MesaDisplayBufferTest, frames_requiring_gl_are_not_throttled)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
         {mock_kms_output},
-        nullptr,
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     for (int frame = 0; frame < 5; ++frame)
     {
@@ -234,15 +232,11 @@ TEST_F(MesaDisplayBufferTest, bypass_buffer_only_referenced_once_by_db)
 {
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
         {mock_kms_output},
-        nullptr,
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     auto original_count = mock_bypassable_buffer.use_count();
 
@@ -259,37 +253,29 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass
 {
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
         {mock_kms_output},
-        nullptr,
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     EXPECT_TRUE(db.overlay(bypassable_list));
 }
 
 TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
 {  // Regression test for LP: #1398296
-    EXPECT_CALL(mock_drm, drmModeAddFB2(_, _, _, _, _, _, _, _, _))
-        .WillOnce(Return(0))    // During the DisplayBuffer constructor
-        .WillOnce(Return(-22))  // Fail first bypass attempt
-        .WillOnce(Return(0));   // Succeed second bypass attempt
+    EXPECT_CALL(*mock_kms_output, fb_for(_,_,_))
+        .WillOnce(Return(reinterpret_cast<FBHandle*>(0xaabb)))  // During the DisplayBuffer constructor
+        .WillOnce(Return(nullptr)) // Fail first bypass attempt
+        .WillOnce(Return(reinterpret_cast<FBHandle*>(0xbbcc))); // Succeed second bypass attempt
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
         {mock_kms_output},
-        nullptr,
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     EXPECT_FALSE(db.overlay(bypassable_list));
     // And then we recover. DRM finds enough resources to AddFB ...
@@ -310,15 +296,11 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_lagging_resize)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
         {mock_kms_output},
-        nullptr,
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     EXPECT_FALSE(db.overlay(list));
 }
@@ -327,15 +309,11 @@ TEST_F(MesaDisplayBufferTest, rotated_cannot_bypass)
 {
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
-        {},
-        nullptr,
+        {mock_kms_output},
+        make_output_surface(),
         display_area,
-        mir_orientation_right,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_right);
 
     EXPECT_FALSE(db.overlay(bypassable_list));
 }
@@ -349,15 +327,11 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_cannot_bypass)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
-        {},
-        nullptr,
+        {mock_kms_output},
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     EXPECT_FALSE(db.overlay(list));
 }
@@ -371,15 +345,11 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
-        {},
-        nullptr,
+        {mock_kms_output},
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     // If you find yourself using gbm_ functions on a Shm buffer then you're
     // asking for a crash (LP: #1493721) ...
@@ -394,119 +364,31 @@ TEST_F(MesaDisplayBufferTest, orientation_not_implemented_internally)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
-        {},
-        nullptr,
+        {mock_kms_output},
+        make_output_surface(),
         display_area,
-        mir_orientation_left,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_left);
 
     EXPECT_EQ(rotate_left, db.transformation());
-}
-
-TEST_F(MesaDisplayBufferTest, normal_rotation_constructs_normal_fb)
-{
-    EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
-        .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB2(_, width, height, _, _, _, _, _, _))
-        .Times(1);
-
-    graphics::mesa::DisplayBuffer db(
-        graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
-        null_display_report(),
-        {},
-        nullptr,
-        display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
-}
-
-TEST_F(MesaDisplayBufferTest, left_rotation_constructs_transposed_fb)
-{
-    EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
-        .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB2(_, height, width, _, _, _, _, _, _))
-        .Times(1);
-
-    graphics::mesa::DisplayBuffer db(
-        graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
-        null_display_report(),
-        {},
-        nullptr,
-        display_area,
-        mir_orientation_left,
-        gl_config,
-        mock_egl.fake_egl_context);
-}
-
-TEST_F(MesaDisplayBufferTest, inverted_rotation_constructs_normal_fb)
-{
-    EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
-        .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB2(_, width, height, _, _, _, _, _, _))
-        .Times(1);
-
-    graphics::mesa::DisplayBuffer db(
-        graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
-        null_display_report(),
-        {},
-        nullptr,
-        display_area,
-        mir_orientation_inverted,
-        gl_config,
-        mock_egl.fake_egl_context);
-}
-
-TEST_F(MesaDisplayBufferTest, right_rotation_constructs_transposed_fb)
-{
-    EXPECT_CALL(mock_gbm, gbm_bo_get_user_data(_))
-        .WillOnce(Return((void*)0));
-    EXPECT_CALL(mock_drm, drmModeAddFB2(_, height, width, _, _, _, _, _, _))
-        .Times(1);
-
-    graphics::mesa::DisplayBuffer db(
-        graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
-        null_display_report(),
-        {},
-        nullptr,
-        display_area,
-        mir_orientation_right,
-        gl_config,
-        mock_egl.fake_egl_context);
 }
 
 TEST_F(MesaDisplayBufferTest, clone_mode_first_flip_flips_but_no_wait)
 {
     // Ensure clone mode can do multiple page flips in parallel without
     // blocking on either (at least till the second post)
-    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip_thunk(_))
         .Times(2);
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
         .Times(0);
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
         {mock_kms_output, mock_kms_output},
-        nullptr,
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     db.swap_buffers();
     db.post();
@@ -514,22 +396,18 @@ TEST_F(MesaDisplayBufferTest, clone_mode_first_flip_flips_but_no_wait)
 
 TEST_F(MesaDisplayBufferTest, single_mode_first_post_flips_with_wait)
 {
-    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip_thunk(_))
         .Times(1);
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
         .Times(1);
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
         {mock_kms_output},
-        nullptr,
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     db.swap_buffers();
     db.post();
@@ -541,26 +419,22 @@ TEST_F(MesaDisplayBufferTest, clone_mode_waits_for_page_flip_on_second_flip)
 
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
         .Times(0);
-    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip_thunk(_))
         .Times(2);
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
         .Times(2);
-    EXPECT_CALL(*mock_kms_output, schedule_page_flip(_))
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip_thunk(_))
         .Times(2);
     EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
         .Times(0);
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
         {mock_kms_output, mock_kms_output},
-        nullptr,
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     db.swap_buffers();
     db.post();
@@ -578,15 +452,11 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_list)
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
         {mock_kms_output},
-        nullptr,
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     EXPECT_FALSE(db.overlay(list));
 }
@@ -607,15 +477,11 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
-        drm,
-        gbm,
         null_display_report(),
         {mock_kms_output},
-        nullptr,
+        make_output_surface(),
         display_area,
-        mir_orientation_normal,
-        gl_config,
-        mock_egl.fake_egl_context);
+        mir_orientation_normal);
 
     EXPECT_FALSE(db.overlay(list));
 }
