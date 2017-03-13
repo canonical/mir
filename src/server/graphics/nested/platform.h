@@ -62,7 +62,7 @@ public:
         std::shared_ptr<mir::SharedLibrary> const& library, 
         std::shared_ptr<HostConnection> const& connection, 
         std::shared_ptr<DisplayReport> const& display_report,
-        options::Option const& options);
+        std::shared_ptr<options::Option> const& options);
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
@@ -71,9 +71,7 @@ private:
     std::shared_ptr<HostConnection> const connection; 
     std::shared_ptr<DisplayReport> const display_report;
 
-    //the concept of guest platform is strange, it only exists to deny creating a
-    //host display in a nested context. It should go away soon.
-    std::shared_ptr<graphics::Platform> const guest_platform;
+    std::shared_ptr<graphics::RenderingPlatform> const rendering_platform;
     PassthroughOption const passthrough_option;
 };
 

@@ -88,7 +88,7 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                     platform_library = std::make_shared<mir::SharedLibrary>(host_connection->graphics_platform_library());
                     return std::make_shared<mgn::Platform>(
                         std::make_unique<mgn::NestedBufferPlatform>(
-                            platform_library, host_connection, the_display_report(), *the_options()),
+                            platform_library, host_connection, the_display_report(), the_options()),
                         std::make_unique<mgn::NestedDisplayPlatform>(
                             host_connection, the_display_report(), *the_options()));
                 }

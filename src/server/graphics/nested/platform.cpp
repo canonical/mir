@@ -50,13 +50,13 @@ mgn::NestedBufferPlatform::NestedBufferPlatform(
     std::shared_ptr<mir::SharedLibrary> const& library, 
     std::shared_ptr<mgn::HostConnection> const& connection, 
     std::shared_ptr<mg::DisplayReport> const& display_report,
-    mo::Option const& options) :
+    std::shared_ptr<mo::Option> const& options) :
     library(library),
     connection(connection),
     display_report(display_report),
-    guest_platform(library->load_function<mg::CreateGuestPlatform>(
-        "create_guest_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION)(display_report, connection)),
-    passthrough_option(passthrough_from_options(options))
+    rendering_platform(library->load_function<mg::CreateRenderingPlatform>(
+        "create_rendering_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION)(options, connection)),
+    passthrough_option(passthrough_from_options(*options))
 {
 }
 
@@ -116,17 +116,17 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::NestedBufferPlatform::crea
     if (connection->supports_passthrough(mg::BufferUsage::software) ||
         connection->supports_passthrough(mg::BufferUsage::hardware))
     {
-        return mir::make_module_ptr<BufferAllocator>(connection, guest_platform->create_buffer_allocator());
+        return mir::make_module_ptr<BufferAllocator>(connection, rendering_platform->create_buffer_allocator());
     }
     else
     {
-        return guest_platform->create_buffer_allocator();
+        return rendering_platform->create_buffer_allocator();
     }
 }
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::NestedBufferPlatform::make_ipc_operations() const
 {
-    return mir::make_module_ptr<mgn::IpcOperations>(guest_platform->make_ipc_operations());
+    return mir::make_module_ptr<mgn::IpcOperations>(rendering_platform->make_ipc_operations());
 }
 
 mgn::NestedDisplayPlatform::NestedDisplayPlatform(
