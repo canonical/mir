@@ -32,6 +32,43 @@ namespace mgm = mg::mesa;
 namespace mgk = mg::kms;
 namespace geom = mir::geometry;
 
+class mgm::FBHandle
+{
+public:
+    FBHandle(gbm_bo* bo, uint32_t drm_fb_id)
+        : bo{bo}, drm_fb_id{drm_fb_id}
+    {
+    }
+
+    ~FBHandle()
+    {
+        if (drm_fb_id)
+        {
+            int drm_fd = gbm_device_get_fd(gbm_bo_get_device(bo));
+            drmModeRmFB(drm_fd, drm_fb_id);
+        }
+    }
+
+    uint32_t get_drm_fb_id() const
+    {
+        return drm_fb_id;
+    }
+
+private:
+    gbm_bo *bo;
+    uint32_t drm_fb_id;
+};
+
+namespace
+{
+void bo_user_data_destroy(gbm_bo* /*bo*/, void *data)
+{
+    auto bufobj = static_cast<mgm::FBHandle*>(data);
+    delete bufobj;
+}
+
+}
+
 mgm::RealKMSOutput::RealKMSOutput(
     int drm_fd,
     kms::DRMModeConnectorUPtr&& connector,
@@ -116,7 +153,7 @@ void mgm::RealKMSOutput::configure(geom::Displacement offset, size_t kms_mode_in
     mode_index = kms_mode_index;
 }
 
-bool mgm::RealKMSOutput::set_crtc(uint32_t fb_id)
+bool mgm::RealKMSOutput::set_crtc(FBHandle const& fb)
 {
     if (!ensure_crtc())
     {
@@ -126,7 +163,7 @@ bool mgm::RealKMSOutput::set_crtc(uint32_t fb_id)
     }
 
     auto ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
-                              fb_id, fb_offset.dx.as_int(), fb_offset.dy.as_int(),
+                              fb.get_drm_fb_id(), fb_offset.dx.as_int(), fb_offset.dy.as_int(),
                               &connector->connector_id, 1,
                               &connector->modes[mode_index]);
     if (ret)
@@ -167,7 +204,7 @@ void mgm::RealKMSOutput::clear_crtc()
     current_crtc = nullptr;
 }
 
-bool mgm::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
+bool mgm::RealKMSOutput::schedule_page_flip(FBHandle const& fb)
 {
     std::unique_lock<std::mutex> lg(power_mutex);
     if (power_mode != mir_power_mode_on)
@@ -178,7 +215,10 @@ bool mgm::RealKMSOutput::schedule_page_flip(uint32_t fb_id)
                        mgk::connector_name(connector).c_str());
         return false;
     }
-    return page_flipper->schedule_flip(current_crtc->crtc_id, fb_id, connector->connector_id);
+    return page_flipper->schedule_flip(
+        current_crtc->crtc_id,
+        fb.get_drm_fb_id(),
+        connector->connector_id);
 }
 
 void mgm::RealKMSOutput::wait_for_page_flip()
@@ -492,12 +532,11 @@ void mgm::RealKMSOutput::update_from_hardware_state(
     uint32_t current_mode_index{invalid_mode_index};
     uint32_t preferred_mode_index{invalid_mode_index};
     std::vector<DisplayConfigurationMode> modes;
-    std::vector<MirPixelFormat> formats {mir_pixel_format_argb_8888,
-                                         mir_pixel_format_xrgb_8888};
+    std::vector<MirPixelFormat> formats{mir_pixel_format_argb_8888,
+                                        mir_pixel_format_xrgb_8888};
 
     std::vector<uint8_t> edid;
-    if (connected)
-    {
+    if (connected) {
         /* Only ask for the EDID on connected outputs. There's obviously no monitor EDID
          * when there is no monitor connected!
          */
@@ -508,8 +547,7 @@ void mgm::RealKMSOutput::update_from_hardware_state(
     GammaCurves gamma;
 
     /* Get information about the current mode */
-    if (current_crtc)
-    {
+    if (current_crtc) {
         current_mode_info = current_crtc->mode;
 
         if (current_crtc->gamma_size > 0)
@@ -517,9 +555,8 @@ void mgm::RealKMSOutput::update_from_hardware_state(
     }
 
     /* Add all the available modes and find the current and preferred one */
-    for (int m = 0; m < connector->count_modes; m++)
-    {
-        drmModeModeInfo& mode_info = connector->modes[m];
+    for (int m = 0; m < connector->count_modes; m++) {
+        drmModeModeInfo &mode_info = connector->modes[m];
 
         geom::Size size{mode_info.hdisplay, mode_info.vdisplay};
 
@@ -544,4 +581,45 @@ void mgm::RealKMSOutput::update_from_hardware_state(
     output.subpixel_arrangement = kms_subpixel_to_mir_subpixel(connector->subpixel);
     output.gamma = gamma;
     output.edid = edid;
+}
+
+mgm::FBHandle* mgm::RealKMSOutput::fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const
+{
+    if (!bo)
+        return nullptr;
+
+    /*
+     * Check if we have already set up this gbm_bo (the gbm implementation is
+     * free to reuse gbm_bos). If so, return the associated FBHandle.
+     */
+    auto bufobj = static_cast<FBHandle*>(gbm_bo_get_user_data(bo));
+    if (bufobj)
+        return bufobj;
+
+    uint32_t fb_id{0};
+    uint32_t handles[4] = {gbm_bo_get_handle(bo).u32, 0, 0, 0};
+    uint32_t strides[4] = {gbm_bo_get_stride(bo), 0, 0, 0};
+    uint32_t offsets[4] = {0, 0, 0, 0};
+
+    auto format = gbm_bo_get_format(bo);
+    /*
+     * Mir might use the old GBM_BO_ enum formats, but KMS and the rest of
+     * the world need fourcc formats, so convert...
+     */
+    if (format == GBM_BO_FORMAT_XRGB8888)
+        format = GBM_FORMAT_XRGB8888;
+    else if (format == GBM_BO_FORMAT_ARGB8888)
+        format = GBM_FORMAT_ARGB8888;
+
+    /* Create a KMS FB object with the gbm_bo attached to it. */
+    auto ret = drmModeAddFB2(drm_fd, width, height, format,
+                             handles, strides, offsets, &fb_id, 0);
+    if (ret)
+        return nullptr;
+
+    /* Create a FBHandle and associate it with the gbm_bo */
+    bufobj = new FBHandle{bo, fb_id};
+    gbm_bo_set_user_data(bo, bufobj, bo_user_data_destroy);
+
+    return bufobj;
 }

@@ -37,6 +37,8 @@ class DisplayConfigurationOutput;
 namespace mesa
 {
 
+class FBHandle;
+
 class KMSOutput
 {
 public:
@@ -54,9 +56,9 @@ public:
      */
     virtual int max_refresh_rate() const = 0;
 
-    virtual bool set_crtc(uint32_t fb_id) = 0;
+    virtual bool set_crtc(FBHandle const& fb) = 0;
     virtual void clear_crtc() = 0;
-    virtual bool schedule_page_flip(uint32_t fb_id) = 0;
+    virtual bool schedule_page_flip(FBHandle const& fb) = 0;
     virtual void wait_for_page_flip() = 0;
 
     virtual bool set_cursor(gbm_bo* buffer) = 0;
@@ -82,6 +84,8 @@ public:
      *                                  is touched.
      */
     virtual void update_from_hardware_state(DisplayConfigurationOutput& to_update) const = 0;
+    virtual FBHandle* fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const = 0;
+
 protected:
     KMSOutput() = default;
     KMSOutput(const KMSOutput&) = delete;
