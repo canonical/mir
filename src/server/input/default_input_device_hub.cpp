@@ -130,29 +130,30 @@ void mi::ExternalInputDeviceHub::Internal::changes_complete()
     std::swap(devices_changed, changed);
     std::swap(devices_removed, removed);
 
-    observer_queue->enqueue(
-        this,
-        [this, added, changed, removed]
-        {
-            observers.for_each([&](std::shared_ptr<InputDeviceObserver> const& observer)
-                {
-                    for (auto const& dev : added)
-                        observer->device_added(dev);
-                    for (auto const& dev : changed)
-                        observer->device_changed(dev);
-                    for (auto const& dev : devices_removed)
-                        observer->device_removed(dev);
-                    observer->changes_complete();
-                });
+    if (!(added.empty() && changed.empty() && removed.empty()))
+        observer_queue->enqueue(
+            this,
+            [this, added, changed, removed]
+            {
+                observers.for_each([&](std::shared_ptr<InputDeviceObserver> const& observer)
+                    {
+                        for (auto const& dev : added)
+                            observer->device_added(dev);
+                        for (auto const& dev : changed)
+                            observer->device_changed(dev);
+                        for (auto const& dev : devices_removed)
+                            observer->device_removed(dev);
+                        observer->changes_complete();
+                    });
 
-            auto end_it = handles.end();
-            for (auto const& dev : devices_removed)
-                end_it = remove(begin(handles), end(handles), dev);
-            if (end_it != handles.end())
-                handles.erase(end_it, end(handles));
-            for (auto const& dev : devices_added)
-                handles.push_back(dev);
-        });
+                auto end_it = handles.end();
+                for (auto const& dev : devices_removed)
+                    end_it = remove(begin(handles), end(handles), dev);
+                if (end_it != handles.end())
+                    handles.erase(end_it, end(handles));
+                for (auto const& dev : devices_added)
+                    handles.push_back(dev);
+            });
 }
 
 mi::DefaultInputDeviceHub::DefaultInputDeviceHub(
