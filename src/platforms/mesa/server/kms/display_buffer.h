@@ -41,26 +41,55 @@ namespace mesa
 {
 
 class Platform;
-class DRMFB;
+class FBHandle;
 class KMSOutput;
+class NativeBuffer;
 
-class GBMFrontBuffer
+class GBMOutputSurface : public renderer::gl::RenderTarget
 {
 public:
-    GBMFrontBuffer(gbm_surface* surface);
-    GBMFrontBuffer();
-    ~GBMFrontBuffer();
+    class FrontBuffer
+    {
+    public:
+        FrontBuffer();
+        ~FrontBuffer();
 
-    GBMFrontBuffer(GBMFrontBuffer&& from);
+        FrontBuffer(FrontBuffer&& from);
 
-    GBMFrontBuffer& operator=(GBMFrontBuffer&& from);
-    GBMFrontBuffer& operator=(std::nullptr_t);
+        FrontBuffer& operator=(FrontBuffer&& from);
+        FrontBuffer& operator=(std::nullptr_t);
 
-    operator gbm_bo*();
-    operator bool() const;
+        operator gbm_bo*();
+        operator bool() const;
+    private:
+        friend class GBMOutputSurface;
+        FrontBuffer(gbm_surface* surface);
+
+        gbm_surface* const surf;
+        gbm_bo* const bo;
+    };
+
+    GBMOutputSurface(
+        int drm_fd,
+        GBMSurfaceUPtr&& surface,
+        uint32_t width,
+        uint32_t height,
+        helpers::EGLHelper&& egl);
+    GBMOutputSurface(GBMOutputSurface&& from);
+
+    // gl::RenderTarget
+    void make_current() override;
+    void release_current() override;
+    void swap_buffers() override;
+    void bind() override;
+
+    FrontBuffer lock_front();
+    void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> const& to);
 private:
-    gbm_surface* const surf;
-    gbm_bo* const bo;
+    int const drm_fd;
+    uint32_t width, height;
+    helpers::EGLHelper egl;
+    GBMSurfaceUPtr surface;
 };
 
 class DisplayBuffer : public graphics::DisplayBuffer,
@@ -70,15 +99,11 @@ class DisplayBuffer : public graphics::DisplayBuffer,
 {
 public:
     DisplayBuffer(BypassOption bypass_options,
-                  std::shared_ptr<helpers::DRMHelper> const& drm,
-                  std::shared_ptr<helpers::GBMHelper> const& gbm,
                   std::shared_ptr<DisplayReport> const& listener,
                   std::vector<std::shared_ptr<KMSOutput>> const& outputs,
-                  GBMSurfaceUPtr surface_gbm,
+                  GBMOutputSurface&& surface_gbm,
                   geometry::Rectangle const& area,
-                  MirOrientation rot,
-                  GLConfig const& gl_config,
-                  EGLContext shared_context);
+                  MirOrientation rot);
     ~DisplayBuffer();
 
     geometry::Rectangle view_area() const override;
@@ -101,30 +126,24 @@ public:
     void wait_for_page_flip();
 
 private:
-    DRMFB* get_drm_fb(GBMFrontBuffer& bo);
-    DRMFB* get_buffer_object(struct gbm_bo *bo);
-    bool schedule_page_flip(DRMFB* bufobj);
-    void set_crtc(DRMFB const*);
+    bool schedule_page_flip(FBHandle const& bufobj);
+    void set_crtc(FBHandle const&);
 
     std::shared_ptr<graphics::Buffer> visible_bypass_frame, scheduled_bypass_frame;
     std::shared_ptr<Buffer> bypass_buf{nullptr};
-    DRMFB* bypass_bufobj{nullptr};
+    FBHandle* bypass_bufobj{nullptr};
     std::shared_ptr<DisplayReport> const listener;
     BypassOption bypass_option;
-    /* DRM helper from mgm::Platform */
-    std::shared_ptr<helpers::DRMHelper> const drm;
-    std::shared_ptr<helpers::GBMHelper> const gbm;
+
     std::vector<std::shared_ptr<KMSOutput>> outputs;
 
     /*
      * Destruction order is important here:
-     *  - The GBM surface depends on EGL
      *  - The GBMFrontBuffers depend on the GBM surface
      */
-    helpers::EGLHelper egl;
-    GBMSurfaceUPtr surface_gbm;
-    GBMFrontBuffer visible_composite_frame;
-    GBMFrontBuffer scheduled_composite_frame;
+    GBMOutputSurface surface;
+    GBMOutputSurface::FrontBuffer visible_composite_frame;
+    GBMOutputSurface::FrontBuffer scheduled_composite_frame;
 
     geometry::Rectangle area;
     uint32_t fb_width, fb_height;
