@@ -20,6 +20,7 @@
 #include "mir_toolkit/mir_buffer.h"
 #include "mir_toolkit/mir_buffer_private.h"
 #include "mir_connection.h"
+#include "connection_surface_map.h"
 #include "buffer.h"
 #include "mir_presentation_chain.h"
 #include "mir/uncaught.h"
@@ -85,6 +86,27 @@ try
 {
     mir::require(chain);
     chain->set_dropping_mode();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+bool mir_connection_present_mode_supported(
+    MirConnection*, MirPresentMode mode)
+{
+    return mode == mir_present_mode_fifo || mode == mir_present_mode_mailbox;
+}
+
+void mir_presentation_chain_set_mode(
+    MirPresentationChain* chain, MirPresentMode mode)
+try
+{
+    mir::require(chain && mir_connection_present_mode_supported(chain->connection(), mode));
+    if (mode == mir_present_mode_fifo)
+        chain->set_queueing_mode();
+    if (mode == mir_present_mode_mailbox)
+        chain->set_dropping_mode();
 }
 catch (std::exception const& ex)
 {
