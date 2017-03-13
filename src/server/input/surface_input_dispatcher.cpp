@@ -289,7 +289,10 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirEvent 
         if (is_gesture_terminator(pev))
         {
             pointer_state.gesture_owner.reset();
+        }
 
+        if (is_gesture_terminator(pev) || !drag_and_drop_handle.empty())
+        {
             auto target = find_target_surface(event_x_y);
 
             if (pointer_state.current_target != target)
