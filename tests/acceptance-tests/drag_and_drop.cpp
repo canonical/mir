@@ -114,18 +114,22 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
     {
         initial_display_layout({screen_geometry});
         mir_test_framework::ConnectedClientWithAWindow::SetUp();
-
         dnd = mir_drag_and_drop_v1(connection);
-
-        paint_window();
         mir_window_set_event_handler(window, &window_event_handler, this);
+
+        create_target_window();
+
+        paint_window(window);
 
         center_mouse();
     }
 
     void TearDown() override
     {
-        set_window_event_handler([&](MirWindow*, MirEvent const*) {});
+        reset_window_event_handler(target_window);
+        reset_window_event_handler(window);
+        mir_window_release_sync(target_window);
+        mir_connection_release(another_connection);
         mir_test_framework::ConnectedClientWithAWindow::TearDown();
     }
 
@@ -135,26 +139,78 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
 
 private:
     void center_mouse() { move_mouse(0.5 * as_displacement(screen_geometry.size)); }
-    void paint_window() const { mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window)); }
-    void set_window_event_handler(std::function<void(MirWindow* window, MirEvent const* event)> const& handler);
+    void paint_window(MirWindow* w);
+    void set_window_event_handler(MirWindow* window, std::function<void(MirEvent const* event)> const& handler);
+    void reset_window_event_handler(MirWindow* window);
+
+    void create_target_window()
+    {
+        another_connection = mir_connect_sync(new_connection().c_str(), "another_connection");
+        auto const spec = mir_create_normal_window_spec(
+            connection, screen_geometry.size.width.as_int(), screen_geometry.size.height.as_int());
+        mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+        mir_window_spec_set_name(spec, "target_window");
+        mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+        mir_window_spec_set_event_handler(spec, &window_event_handler, this);
+
+        target_window = mir_create_window_sync(spec);
+        mir_window_spec_release(spec);
+
+        paint_window(target_window);
+    }
 
     void invoke_window_event_handler(MirWindow* window, MirEvent const* event)
     {
         std::lock_guard<decltype(window_event_handler_mutex)> lock{window_event_handler_mutex};
-        window_event_handler_(window, event);
+        if (window == this->window) window_event_handler_(event);
+        if (window == target_window) target_window_event_handler_(event);
     }
 
     std::mutex window_event_handler_mutex;
-    std::function<void(MirWindow* window, MirEvent const* event)> window_event_handler_ =
-        [](MirWindow*, MirEvent const*) {};
+    std::function<void(MirEvent const* event)> window_event_handler_ = [](MirEvent const*) {};
+    std::function<void(MirEvent const* event)> target_window_event_handler_ = [](MirEvent const*) {};
 
     static void window_event_handler(MirWindow* window, MirEvent const* event, void* context);
+
+    MirConnection* another_connection{nullptr};
+    MirWindow*     target_window{nullptr};
 };
 
-void DragAndDrop::set_window_event_handler(std::function<void(MirWindow* window, MirEvent const* event)> const& handler)
+void DragAndDrop::set_window_event_handler(MirWindow* window, std::function<void(MirEvent const* event)> const& handler)
 {
     std::lock_guard<decltype(window_event_handler_mutex)> lock{window_event_handler_mutex};
-    window_event_handler_ = handler;
+    if (window == this->window) window_event_handler_ = handler;
+    if (window == target_window) target_window_event_handler_ = handler;
+}
+
+void DragAndDrop::reset_window_event_handler(MirWindow* window)
+{
+    if (window == this->window) window_event_handler_ = [](MirEvent const*) {};
+    if (window == target_window) target_window_event_handler_ = [](MirEvent const*) {};
+}
+
+void DragAndDrop::paint_window(MirWindow* w)
+{
+    Signal have_focus;
+
+    set_window_event_handler(w, [&](MirEvent const* event)
+        {
+            if (mir_event_get_type(event) != mir_event_type_window)
+                return;
+
+            auto const window_event = mir_event_get_window_event(event);
+            if (mir_window_event_get_attribute(window_event) != mir_window_attrib_focus)
+                return;
+
+            if (mir_window_event_get_attribute_value(window_event))
+                have_focus.raise();
+        });
+
+    mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(w));
+
+    have_focus.wait_for(receive_event_timeout);
+
+    reset_window_event_handler(w);
 }
 
 void DragAndDrop::window_event_handler(MirWindow* window, MirEvent const* event, void* context)
@@ -167,7 +223,7 @@ auto DragAndDrop::user_initiates_drag() -> Cookie
     Cookie cookie;
     Signal have_cookie;
 
-    set_window_event_handler([&](MirWindow*, MirEvent const* event)
+    set_window_event_handler(window, [&](MirEvent const* event)
         {
             if (mir_event_get_type(event) != mir_event_type_input)
                 return;
@@ -190,6 +246,7 @@ auto DragAndDrop::user_initiates_drag() -> Cookie
 
     EXPECT_THAT(have_cookie.wait_for(receive_event_timeout), Eq(true));
 
+    reset_window_event_handler(window);
     return cookie;
 }
 
@@ -198,7 +255,7 @@ auto DragAndDrop::client_requests_drag(Cookie const& cookie) -> Blob
     Blob blob;
     Signal initiated;
 
-    set_window_event_handler([&](MirWindow*, MirEvent const* event)
+    set_window_event_handler(window, [&](MirEvent const* event)
         {
             if (mir_event_get_type(event) != mir_event_type_window)
                 return;
@@ -218,6 +275,7 @@ auto DragAndDrop::client_requests_drag(Cookie const& cookie) -> Blob
 
     EXPECT_TRUE(initiated.wait_for(receive_event_timeout));
 
+    reset_window_event_handler(window);
     return blob;
 }
 
@@ -226,7 +284,7 @@ auto DragAndDrop::handle_from_mouse_move() -> Blob
     Blob blob;
     Signal have_blob;
 
-    set_window_event_handler([&](MirWindow*, MirEvent const* event)
+    set_window_event_handler(window, [&](MirEvent const* event)
         {
             if (mir_event_get_type(event) != mir_event_type_input)
                 return;
@@ -250,6 +308,8 @@ auto DragAndDrop::handle_from_mouse_move() -> Blob
     move_mouse({1,1});
 
     EXPECT_TRUE(have_blob.wait_for(receive_event_timeout));
+
+    reset_window_event_handler(window);
     return blob;
 }
 
