@@ -131,9 +131,9 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
                        mt::fake_shared(mock_cursor_listener), mt::fake_shared(display_config),
                        mt::fake_shared(key_mapper),           mt::fake_shared(clock),
                        mt::fake_shared(mock_seat_observer)};
-    mi::DefaultInputDeviceHub hub{mt::fake_shared(seat),          mt::fake_shared(multiplexer),
-                                  mt::fake_shared(observer_loop), cookie_authority,
-                                  mt::fake_shared(key_mapper),    mt::fake_shared(mock_status_listener)};
+    mi::DefaultInputDeviceHub hub{mt::fake_shared(seat), mt::fake_shared(multiplexer),
+                                  cookie_authority,      mt::fake_shared(key_mapper),
+                                  mt::fake_shared(mock_status_listener)};
     NiceMock<mtd::MockInputDeviceObserver> mock_observer;
     mi::ConfigChanger changer{
         mt::fake_shared(mock_input_manager),
@@ -179,8 +179,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_posts_events_to_input_dispatche
     hub.add_observer(mt::fake_shared(mock_observer));
     hub.add_device(mt::fake_shared(device));
 
-    observer_loop.trigger_server_actions();
-
     auto event = builder->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0,
                                     KEY_A);
 
@@ -197,8 +195,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, forwards_touch_spots_to_visualizer)
     capture_input_sink(device, sink, builder);
 
     hub.add_device(mt::fake_shared(device));
-
-    observer_loop.trigger_server_actions();
 
     auto touch_event_1 = builder->touch_event(
         arbitrary_timestamp,
@@ -245,7 +241,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_pointer_position)
     capture_input_sink(device, sink, builder);
 
     hub.add_device(mt::fake_shared(device));
-    observer_loop.trigger_server_actions();
     sink->handle_input(
         *builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 10.0f));
     sink->handle_input(
@@ -265,7 +260,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, confines_pointer_movement)
     mi::EventBuilder* builder;
     capture_input_sink(device, sink, builder);
     hub.add_device(mt::fake_shared(device));
-    observer_loop.trigger_server_actions();
 
     sink->handle_input(
         *builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 20.0f));
@@ -296,7 +290,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, forwards_pointer_settings_to_input_device)
 
     hub.add_observer(mt::fake_shared(mock_observer));
     hub.add_device(mt::fake_shared(touchpad));
-    observer_loop.trigger_server_actions();
 
     EXPECT_CALL(touchpad, apply_settings(Matcher<mi::PointerSettings const&>(_)));
 
@@ -312,7 +305,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, forwards_touchpad_settings_to_input_device
 
     hub.add_observer(mt::fake_shared(mock_observer));
     hub.add_device(mt::fake_shared(touchpad));
-    observer_loop.trigger_server_actions();
 
     EXPECT_CALL(touchpad, apply_settings(Matcher<mi::TouchpadSettings const&>(_)));
 
@@ -336,7 +328,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_tracks_modifier)
     hub.add_observer(mt::fake_shared(mock_observer));
     hub.add_device(mt::fake_shared(another_device));
 
-    observer_loop.trigger_server_actions();
 
     const MirInputEventModifiers shift_left = mir_input_event_modifier_shift_left | mir_input_event_modifier_shift;
     auto shift_down =
@@ -372,8 +363,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_unifies_modifier_state_accross_
     hub.add_observer(mt::fake_shared(mock_observer));
     hub.add_device(mt::fake_shared(device));
     hub.add_device(mt::fake_shared(another_device));
-
-    observer_loop.trigger_server_actions();
 
     const MirInputEventModifiers r_alt_modifier = mir_input_event_modifier_alt_right | mir_input_event_modifier_alt;
     auto key =
@@ -423,8 +412,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_reduces_modifier_state_accross_
     const MirInputEventModifiers l_ctrl_modifier = mir_input_event_modifier_ctrl_left | mir_input_event_modifier_ctrl;
     const MirInputEventModifiers combined_modifier = r_alt_modifier | l_ctrl_modifier;
 
-    observer_loop.trigger_server_actions();
-
     auto alt_down = key_event_builder_1->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_RIGHTALT);
     auto ctrl_down = key_event_builder_2->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0, KEY_LEFTCTRL);
     auto ctrl_up = key_event_builder_2->key_event(arbitrary_timestamp, mir_keyboard_action_up, 0, KEY_LEFTCTRL);
@@ -462,8 +449,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_cursor_position_from_multi
     hub.add_device(mt::fake_shared(device));
     hub.add_device(mt::fake_shared(another_device));
 
-    observer_loop.trigger_server_actions();
-
     auto motion_1 =
         mouse_event_builder_1->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0, 0, 23, 20);
     auto motion_2 =
@@ -495,8 +480,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_button_state_from_multiple
     hub.add_device(mt::fake_shared(device));
     hub.add_device(mt::fake_shared(another_device));
 
-    observer_loop.trigger_server_actions();
-
     auto motion_1 =
         mouse_event_builder_1->pointer_event(arbitrary_timestamp, mir_pointer_action_button_down, mir_pointer_button_primary, 0, 0, 0, 0);
     auto motion_2 =
@@ -525,7 +508,6 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_session)
 
     EXPECT_CALL(session, send_input_config(UnorderedElementsAre(DeviceMatches(device.get_device_info()))));
     hub.add_device(mt::fake_shared(device));
-    observer_loop.trigger_server_actions();
 }
 
 TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_session_multiple_devices)
@@ -534,25 +516,21 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_session_multi
     stub_session_container.insert_session(mt::fake_shared(session));
 
     hub.add_device(mt::fake_shared(device));
-    observer_loop.trigger_server_actions();
 
     EXPECT_CALL(session,
                 send_input_config(UnorderedElementsAre(DeviceMatches(device.get_device_info()),
                                                        DeviceMatches(another_device.get_device_info()))));
     hub.add_device(mt::fake_shared(another_device));
-    observer_loop.trigger_server_actions();
 }
 
 TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_sink_removal)
 {
     hub.add_device(mt::fake_shared(device));
     hub.add_device(mt::fake_shared(another_device));
-    observer_loop.trigger_server_actions();
 
     NiceMock<mtd::MockSceneSession> session;
     stub_session_container.insert_session(mt::fake_shared(session));
     EXPECT_CALL(session,
                 send_input_config(UnorderedElementsAre(DeviceMatches(another_device.get_device_info()))));
     hub.remove_device(mt::fake_shared(device));
-    observer_loop.trigger_server_actions();
 }

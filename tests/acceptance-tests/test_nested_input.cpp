@@ -304,6 +304,7 @@ TEST_F(NestedInput, on_add_device_observer_gets_device_added_calls_on_existing_d
 
     nested_hub->add_observer(mock_observer);
     input_device_changes_complete.wait_for(10s);
+    nested_hub->remove_observer(mock_observer);
 }
 
 TEST_F(NestedInput, device_added_on_host_triggeres_nested_device_observer)
