@@ -144,6 +144,12 @@ void ms::SurfaceObservers::input_consumed(MirEvent const* event)
                  { observer->input_consumed(event); });
 }
 
+void ms::SurfaceObservers::start_drag_and_drop(std::vector<uint8_t> const& handle)
+{
+    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+                 { observer->start_drag_and_drop(handle); });
+}
+
 
 struct ms::CursorStreamImageAdapter
 {
@@ -590,6 +596,7 @@ int ms::BasicSurface::query(MirWindowAttrib attrib) const
         case mir_window_attrib_dpi: return dpi_;
         case mir_window_attrib_visibility: return visibility_;
         case mir_window_attrib_preferred_orientation: return pref_orientation_mode;
+        case mir_window_attrib_drag_and_drop_handle: return 0;
         default: BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
                                                         "attribute."));
     }
@@ -922,4 +929,9 @@ MirPointerConfinementState ms::BasicSurface::confine_pointer_state() const
 void ms::BasicSurface::placed_relative(geometry::Rectangle const& placement)
 {
     observers.placed_relative(placement);
+}
+
+void mir::scene::BasicSurface::start_drag_and_drop(std::vector<uint8_t> const& handle)
+{
+    observers.start_drag_and_drop(handle);
 }

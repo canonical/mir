@@ -3,6 +3,8 @@ include(CMakeDependentOption)
 set(
   SOURCES
 
+  drag_and_drop.cpp
+
   # Catch double-free bugs by wrapping close() and abort()ing on EBADF
   strict_close.cpp
 

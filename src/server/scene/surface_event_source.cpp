@@ -101,3 +101,8 @@ void ms::SurfaceEventSource::input_consumed(MirEvent const* event)
     mev::set_window_id(*ev, id.as_value());
     event_sink->handle_event(*ev);
 }
+
+void ms::SurfaceEventSource::start_drag_and_drop(std::vector<uint8_t> const& handle)
+{
+    event_sink->handle_event(*mev::make_start_drag_and_drop_event(id, handle));
+}
