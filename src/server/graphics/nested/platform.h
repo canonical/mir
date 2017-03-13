@@ -35,19 +35,38 @@ class DisplayReport;
 namespace nested
 {
 class HostConnection;
-class Platform : public graphics::Platform
+
+class NestedDisplayPlatform : public graphics::DisplayPlatform
 {
 public:
-    Platform(
+    NestedDisplayPlatform(
+        std::shared_ptr<mir::SharedLibrary> const& library, 
+        std::shared_ptr<HostConnection> const& connection, 
+        std::shared_ptr<DisplayReport> const& display_report,
+        options::Option const& options);
+
+    UniqueModulePtr<graphics::Display> create_display(
+        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<GLConfig> const& gl_config) override;
+private:
+    std::shared_ptr<mir::SharedLibrary> const library; 
+    std::shared_ptr<HostConnection> const connection; 
+    std::shared_ptr<DisplayReport> const display_report;
+
+    std::shared_ptr<graphics::Platform> const guest_platform;
+    PassthroughOption const passthrough_option;
+};
+
+class NestedBufferPlatform : public graphics::RenderingPlatform
+{
+public:
+    NestedBufferPlatform(
         std::shared_ptr<mir::SharedLibrary> const& library, 
         std::shared_ptr<HostConnection> const& connection, 
         std::shared_ptr<DisplayReport> const& display_report,
         options::Option const& options);
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
-    UniqueModulePtr<graphics::Display> create_display(
-        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-        std::shared_ptr<GLConfig> const& gl_config) override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 private:
     std::shared_ptr<mir::SharedLibrary> const library; 
@@ -59,6 +78,23 @@ private:
     std::shared_ptr<graphics::Platform> const guest_platform;
     PassthroughOption const passthrough_option;
 };
+
+class Platform : public graphics::Platform
+{
+public:
+    Platform(
+        std::unique_ptr<NestedBufferPlatform> buffer_platform,
+        std::unique_ptr<NestedDisplayPlatform> display_platform);
+    UniqueModulePtr<graphics::Display> create_display(
+        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<GLConfig> const& gl_config) override;
+    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+private:
+    std::unique_ptr<NestedBufferPlatform> const buffer_platform;
+    std::unique_ptr<NestedDisplayPlatform> const display_platform;
+};
+
 }
 }
 }

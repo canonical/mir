@@ -46,7 +46,7 @@ mgn::PassthroughOption passthrough_from_options(mo::Option const& options)
 }
 }
 
-mgn::Platform::Platform(
+mgn::NestedBufferPlatform::NestedBufferPlatform(
     std::shared_ptr<mir::SharedLibrary> const& library, 
     std::shared_ptr<mgn::HostConnection> const& connection, 
     std::shared_ptr<mg::DisplayReport> const& display_report,
@@ -111,7 +111,7 @@ private:
 };
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::NestedBufferPlatform::create_buffer_allocator()
 {
     if (connection->supports_passthrough(mg::BufferUsage::software) ||
         connection->supports_passthrough(mg::BufferUsage::hardware))
@@ -124,7 +124,26 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_al
     }
 }
 
-mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::NestedBufferPlatform::make_ipc_operations() const
+{
+    return mir::make_module_ptr<mgn::IpcOperations>(guest_platform->make_ipc_operations());
+}
+
+mgn::NestedDisplayPlatform::NestedDisplayPlatform(
+    std::shared_ptr<mir::SharedLibrary> const& library, 
+    std::shared_ptr<mgn::HostConnection> const& connection, 
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    mo::Option const& options) :
+    library(library),
+    connection(connection),
+    display_report(display_report),
+    guest_platform(library->load_function<mg::CreateGuestPlatform>(
+        "create_guest_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION)(display_report, connection)),
+    passthrough_option(passthrough_from_options(options))
+{
+}
+
+mir::UniqueModulePtr<mg::Display> mgn::NestedDisplayPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& policy,
     std::shared_ptr<mg::GLConfig> const& config)
 {
@@ -137,7 +156,27 @@ mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
         passthrough_option);
 }
 
+mgn::Platform::Platform(
+    std::unique_ptr<mgn::NestedBufferPlatform> buffer_platform,
+    std::unique_ptr<mgn::NestedDisplayPlatform> display_platform) :
+    buffer_platform{std::move(buffer_platform)},
+    display_platform{std::move(display_platform)}
+{
+}
+
+mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
+    std::shared_ptr<mg::GLConfig> const& gl_config)
+{
+    return display_platform->create_display(initial_conf_policy, gl_config);
+}
+ 
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator()
+{
+    return buffer_platform->create_buffer_allocator();
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operations() const
 {
-    return mir::make_module_ptr<mgn::IpcOperations>(guest_platform->make_ipc_operations());
+    return buffer_platform->make_ipc_operations();
 }
