@@ -96,6 +96,12 @@ struct MouseMoverAndFaker
         fake_mouse->emit_event(a_pointer_event().with_movement(displacement.dx.as_int(), displacement.dy.as_int()));
     }
 
+    void release_mouse()
+    {
+        using namespace mir::input::synthesis;
+        fake_mouse->emit_event(a_button_up_event().of_button(BTN_LEFT));
+    }
+
 private:
     std::unique_ptr<mir_test_framework::FakeInputDevice> fake_mouse{
         mir_test_framework::add_fake_input_device(
@@ -138,6 +144,7 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
     auto handle_from_mouse_move() -> Blob;
     auto handle_from_mouse_leave() -> Blob;
     auto handle_from_mouse_enter() -> Blob;
+    auto handle_from_mouse_release() -> Blob;
 
 private:
     void center_mouse() { move_mouse(0.5 * as_displacement(screen_geometry.size)); }
@@ -391,6 +398,45 @@ auto DragAndDrop::handle_from_mouse_enter() -> Blob
     return blob;
 }
 
+auto DragAndDrop::handle_from_mouse_release() -> Blob
+{
+    Blob blob;
+    Signal have_blob;
+
+    set_window_event_handler(target_window, [&](MirEvent const* event)
+        {
+            if (mir_event_get_type(event) != mir_event_type_input)
+                return;
+
+            auto const input_event = mir_event_get_input_event(event);
+
+            if (mir_input_event_get_type(input_event) != mir_input_event_type_pointer)
+                return;
+
+            auto const pointer_event = mir_input_event_get_pointer_event(input_event);
+
+            if (mir_pointer_event_action(pointer_event) != mir_pointer_action_button_up)
+                return;
+
+            EXPECT_THAT(dnd, Ne(nullptr)) << "No Drag and Drop extension";
+
+            if (dnd)
+                blob.reset(dnd->pointer_drag_and_drop(pointer_event));
+
+            if (blob)
+                have_blob.raise();
+        });
+
+    move_mouse({1,1});
+    move_mouse(0.5 * as_displacement(surface_size));
+    release_mouse();
+
+    EXPECT_TRUE(have_blob.wait_for(receive_event_timeout));
+
+    reset_window_event_handler(target_window);
+    return blob;
+}
+
 MATCHER_P(BlobContentEq, p, "")
 {
     if (!arg || !p)
@@ -446,6 +492,17 @@ TEST_F(DragAndDrop, when_drag_enters_target_window_enter_event_contains_cookie)
     auto const handle_from_request = client_requests_drag(cookie);
 
     auto const handle = handle_from_mouse_enter();
+
+    EXPECT_THAT(handle.get(), NotNull());
+    EXPECT_THAT(handle.get(), BlobContentEq(handle_from_request.get()));
+}
+
+TEST_F(DragAndDrop, when_drag_releases_target_window_release_event_contains_cookie)
+{
+    auto const cookie = user_initiates_drag();
+    auto const handle_from_request = client_requests_drag(cookie);
+
+    auto const handle = handle_from_mouse_release();
 
     EXPECT_THAT(handle.get(), NotNull());
     EXPECT_THAT(handle.get(), BlobContentEq(handle_from_request.get()));

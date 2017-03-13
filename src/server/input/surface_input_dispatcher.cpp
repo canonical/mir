@@ -286,12 +286,14 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirEvent 
     {
         deliver(pointer_state.gesture_owner, ev, drag_and_drop_handle);
 
-        if (is_gesture_terminator(pev))
+        auto const gesture_terminated = is_gesture_terminator(pev);
+
+        if (gesture_terminated)
         {
             pointer_state.gesture_owner.reset();
         }
 
-        if (is_gesture_terminator(pev) || !drag_and_drop_handle.empty())
+        if (gesture_terminated || !drag_and_drop_handle.empty())
         {
             auto target = find_target_surface(event_x_y);
 
@@ -303,6 +305,9 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirEvent 
                 pointer_state.current_target = target;
                 if (target)
                     send_enter_exit_event(target, pev, mir_pointer_action_enter);
+
+                if (!gesture_terminated)
+                    pointer_state.gesture_owner = target;
             }
         }
 
