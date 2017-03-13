@@ -31,6 +31,7 @@
 
 namespace mo = mir::options;
 namespace mg = mir::graphics;
+namespace mgm = mir::graphics::mesa;
 namespace mx = mir::X;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
@@ -142,23 +143,6 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
                           std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))},
                report
            );
-#if 0
-    // ensure mesa finds the mesa mir-platform symbols
-    auto real_fops = std::make_shared<RealVTFileOperations>();
-    auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
-    auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(
-        real_fops,
-        std::move(real_pops),
-        options->get<int>(vt_option_name),
-        report);
-
-    auto bypass_option = mgm::BypassOption::allowed;
-    if (!options->get<bool>(bypass_option_name))
-        bypass_option = mgm::BypassOption::prohibited;
-
-    return mir::make_module_ptr<mgm::Platform>(
-        report, vt, *emergency_cleanup_registry, bypass_option);
-#endif
 }
 
 mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
@@ -166,9 +150,5 @@ mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform
     std::shared_ptr<mir::graphics::NestedContext> const& nested_context)
 {
     mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
-
-//    auto bypass_option = mg::mesa::BypassOption::allowed;
-//    if (!options->get<bool>(bypass_option_name))
-    auto bypass_option = mg::mesa::BypassOption::prohibited;
-    return mir::make_module_ptr<mg::mesa::GBMPlatform>(bypass_option, nested_context);
+    return mir::make_module_ptr<mgm::GBMPlatform>(mgm::BypassOption::prohibited, nested_context);
 }
