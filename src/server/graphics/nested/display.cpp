@@ -16,7 +16,6 @@
  * Authored by: Eleni Maria Stea <elenimaria.stea@canonical.com>
  */
 
-#include "mir/renderer/gl/context.h"//_source.h"
 #include "display.h"
 #include "nested_display_configuration.h"
 #include "display_buffer.h"
@@ -25,6 +24,7 @@
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/pixel_format_utils.h"
+#include "mir/graphics/surfaceless_egl_context.h"
 #include "mir/graphics/display_configuration_policy.h"
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/gl_config.h"
@@ -127,7 +127,6 @@ EGLContext mgn::detail::EGLDisplayHandle::egl_context() const
 
 std::unique_ptr<mir::renderer::gl::Context> mgn::detail::EGLDisplayHandle::create_gl_context()
 {
-/*
     EGLint const attribs[] =
     {
        EGL_SURFACE_TYPE, EGL_DONT_CARE,
@@ -140,9 +139,7 @@ std::unique_ptr<mir::renderer::gl::Context> mgn::detail::EGLDisplayHandle::creat
        EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
        EGL_NONE
     };
-//    return std::make_unique<SurfacelessEGLContext>(egl_display, attribs, EGL_NO_CONTEXT);
-*/
-    return nullptr;
+    return std::make_unique<SurfacelessEGLContext>(egl_display, attribs, EGL_NO_CONTEXT);
 }
 
 mgn::detail::EGLDisplayHandle::~EGLDisplayHandle() noexcept
