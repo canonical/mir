@@ -16,15 +16,15 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_FRAMEWORK_CONNECTED_CLIENT_WITH_A_SURFACE_H_
-#define MIR_TEST_FRAMEWORK_CONNECTED_CLIENT_WITH_A_SURFACE_H_
+#ifndef MIR_TEST_FRAMEWORK_CONNECTED_CLIENT_WITH_A_WINDOW_H_
+#define MIR_TEST_FRAMEWORK_CONNECTED_CLIENT_WITH_A_WINDOW_H_
 
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir/geometry/size.h"
 
 namespace mir_test_framework
 {
-struct ConnectedClientWithASurface : ConnectedClientHeadlessServer
+struct ConnectedClientWithAWindow : ConnectedClientHeadlessServer
 {
     MirWindow* window{nullptr};
 
@@ -36,4 +36,4 @@ struct ConnectedClientWithASurface : ConnectedClientHeadlessServer
 };
 }
 
-#endif /* MIR_TEST_FRAMEWORK_CONNECTED_CLIENT_WITH_A_SURFACE_H_ */
+#endif /* MIR_TEST_FRAMEWORK_CONNECTED_CLIENT_WITH_A_WINDOW_H_ */

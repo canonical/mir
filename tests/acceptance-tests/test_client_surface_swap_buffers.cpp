@@ -18,7 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/doubles/null_display_buffer_compositor_factory.h"
 #include "mir/test/signal.h"
 #include "mir/compositor/scene_element.h"
@@ -42,7 +42,7 @@ void swap_buffers_callback(MirBufferStream*, void* ctx)
     buffers_swapped->raise();
 }
 
-struct SurfaceSwapBuffers : mtf::ConnectedClientWithASurface
+struct SurfaceSwapBuffers : mtf::ConnectedClientWithAWindow
 {
     void SetUp() override
     {
@@ -51,7 +51,7 @@ struct SurfaceSwapBuffers : mtf::ConnectedClientWithASurface
             return std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
         });
 
-        ConnectedClientWithASurface::SetUp();
+        ConnectedClientWithAWindow::SetUp();
     }
 };
 
@@ -95,7 +95,7 @@ public:
     }
 };
 
-struct SwapBuffersDoesntBlockOnSubmission : mtf::ConnectedClientWithASurface
+struct SwapBuffersDoesntBlockOnSubmission : mtf::ConnectedClientWithAWindow
 {
     unsigned int figure_out_nbuffers()
     {
@@ -120,13 +120,13 @@ struct SwapBuffersDoesntBlockOnSubmission : mtf::ConnectedClientWithASurface
             return std::make_shared<BufferCollectingCompositorFactory>();
         });
 
-        ConnectedClientWithASurface::SetUp();
+        ConnectedClientWithAWindow::SetUp();
         server.the_cursor()->hide();
     }
 
     void TearDown() override
     {
-        ConnectedClientWithASurface::TearDown();
+        ConnectedClientWithAWindow::TearDown();
     }
 
     unsigned int nbuffers = figure_out_nbuffers();

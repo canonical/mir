@@ -41,6 +41,7 @@ namespace mir
 {
 namespace input
 {
+class OutputInfo;
 class InputReport;
 namespace evdev
 {
@@ -77,6 +78,8 @@ private:
     void handle_touch_up(libinput_event_touch* touch);
     void handle_touch_motion(libinput_event_touch* touch);
     void update_device_info();
+    bool is_output_active() const;
+    OutputInfo get_output_info() const;
 
     std::shared_ptr<InputReport> report;
     std::shared_ptr<::libinput> lib;

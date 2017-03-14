@@ -19,7 +19,7 @@
 #include "mir_toolkit/mir_blob.h"
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/display_config_matchers.h"
 
 #include <gmock/gmock.h>
@@ -27,7 +27,7 @@
 
 #include <cstring>
 
-using MirBlobAPI = mir_test_framework::ConnectedClientWithASurface;
+using MirBlobAPI = mir_test_framework::ConnectedClientWithAWindow;
 using mir::test::DisplayConfigMatches;
 
 #pragma GCC diagnostic push

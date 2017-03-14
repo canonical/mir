@@ -104,7 +104,15 @@ public:
             touchpad_settings = settings;
         }
 
-        // TODO Forwars config when mirclient API is there
+        auto touchscreen_config = mir_input_device_get_touchscreen_config(dev);
+        if (touchscreen_config && contains(device_info.capabilities, mi::DeviceCapability::touchscreen))
+        {
+            mi::TouchscreenSettings settings;
+            settings.output_id = mir_touchscreen_config_get_output_id(touchscreen_config);
+            settings.mapping_mode = mir_touchscreen_config_get_mapping_mode(touchscreen_config);
+
+            touchscreen_settings = settings;
+        }
     }
 
     void start(mi::InputSink* destination, mi::EventBuilder* builder) override
@@ -251,7 +259,15 @@ public:
         if (touchscreen_settings.is_set() && touchscreen_settings.value() == new_settings)
             return;
 
-        // TODO update the MirInputConfig..
+        auto ts_conf = mir_input_device_get_mutable_touchscreen_config(device);
+
+        if (ts_conf)
+        {
+            mir_touchscreen_config_set_output_id(ts_conf, new_settings.output_id);
+            mir_touchscreen_config_set_mapping_mode(ts_conf, new_settings.mapping_mode);
+
+            emit_device_change();
+        }
     }
 
     MirInputDeviceId device_id;

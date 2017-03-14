@@ -21,7 +21,6 @@
 #include "mir/test/doubles/mock_input_device.h"
 #include "mir/test/doubles/mock_input_device_observer.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
-#include "mir/test/doubles/mock_input_region.h"
 #include "mir/test/doubles/mock_input_seat.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/mock_key_mapper.h"

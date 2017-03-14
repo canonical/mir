@@ -17,8 +17,10 @@
 
 #include "mir_toolkit/mir_input_device.h"
 #include "mir/input/input_devices.h"
+#include "mir/input/mir_keyboard_config.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_touchscreen_config.h"
 #include "mir/require.h"
 #include "handle_event_exception.h"
 
@@ -74,6 +76,62 @@ char const* mir_input_device_get_name(MirInputDevice const* device) MIR_HANDLE_E
 char const* mir_input_device_get_unique_id(MirInputDevice const* device) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return device->unique_id().c_str();
+})
+
+MirKeyboardConfig const* mir_input_device_get_keyboard_config(MirInputDevice const* device) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    if (device->has_keyboard_config())
+        return &device->keyboard_config();
+
+    return nullptr;
+})
+
+char const* mir_keyboard_config_get_keymap_model(MirKeyboardConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return conf->device_keymap().model.c_str();
+})
+
+char const* mir_keyboard_config_get_keymap_layout(MirKeyboardConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return conf->device_keymap().layout.c_str();
+})
+
+char const* mir_keyboard_config_get_keymap_variant(MirKeyboardConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return conf->device_keymap().variant.c_str();
+})
+
+char const* mir_keyboard_config_get_keymap_options(MirKeyboardConfig const* conf) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return conf->device_keymap().options.c_str();
+})
+
+MirKeyboardConfig* mir_input_device_get_mutable_keyboard_config(MirInputDevice* device) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    if (device->has_keyboard_config())
+        return &device->keyboard_config();
+
+    return nullptr;
+})
+
+void mir_keyboard_config_set_keymap_model(MirKeyboardConfig* conf, char const* model) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    conf->device_keymap().model = model;
+})
+
+void mir_keyboard_config_set_keymap_layout(MirKeyboardConfig* conf, char const* layout) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    conf->device_keymap().layout = layout;
+})
+
+void mir_keyboard_config_set_keymap_variant(MirKeyboardConfig* conf, char const* variant) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    conf->device_keymap().variant = variant;
+})
+
+void mir_keyboard_config_set_keymap_options(MirKeyboardConfig* conf, char const* options) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    conf->device_keymap().options = options;
 })
 
 MirPointerConfig const* mir_input_device_get_pointer_config(MirInputDevice const* device) MIR_HANDLE_EVENT_EXCEPTION(
@@ -224,4 +282,38 @@ void mir_touchpad_config_set_disable_with_mouse(MirTouchpadConfig* conf, bool ac
 void mir_touchpad_config_set_disable_while_typing(MirTouchpadConfig* conf, bool active) MIR_HANDLE_EVENT_EXCEPTION(
 {
     conf->disable_while_typing(active);
+})
+
+MirTouchscreenConfig const* mir_input_device_get_touchscreen_config(MirInputDevice const* device) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    if (device->has_touchscreen_config())
+        return &device->touchscreen_config();
+    return nullptr;
+})
+
+uint32_t mir_touchscreen_config_get_output_id(MirTouchscreenConfig const* config) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return config->output_id();
+})
+
+MirTouchscreenMappingMode mir_touchscreen_config_get_mapping_mode(MirTouchscreenConfig const* config) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return config->mapping_mode();
+})
+
+MirTouchscreenConfig* mir_input_device_get_mutable_touchscreen_config(MirInputDevice* device)  MIR_HANDLE_EVENT_EXCEPTION(
+{
+    if (device->has_touchscreen_config())
+        return &device->touchscreen_config();
+    return nullptr;
+})
+
+void mir_touchscreen_config_set_output_id(MirTouchscreenConfig* config, uint32_t id) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return config->output_id(id);
+})
+
+void mir_touchscreen_config_set_mapping_mode(MirTouchscreenConfig* config, MirTouchscreenMappingMode mode) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return config->mapping_mode(mode);
 })

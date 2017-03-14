@@ -20,7 +20,7 @@
 #include "mir/optional_value.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/null_display_buffer.h"
 #include "mir/test/doubles/null_display_sync_group.h"

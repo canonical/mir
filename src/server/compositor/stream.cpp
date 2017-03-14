@@ -90,6 +90,8 @@ unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mute
 
 void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
+    std::future<void> deferred_io;
+
     if (!buffer)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot submit null buffer"));
 
@@ -97,11 +99,19 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
         std::lock_guard<decltype(mutex)> lk(mutex); 
         first_frame_posted = true;
         buffers->receive_buffer(buffer->id());
-        schedule->schedule((*buffers)[buffer->id()]);
+        deferred_io = schedule->schedule_nonblocking(buffers->get(buffer->id()));
         if (!associated_buffers.empty() && (client_owned_buffer_count(lk) == 0))
             drop_policy->swap_now_blocking();
     }
     observers.frame_posted(1, buffer->size());
+
+    // Ensure that mutex is not locked while we do this (synchronous!) socket
+    // IO. Holding it locked blocks the compositor thread(s) from rendering.
+    if (deferred_io.valid())
+    {
+        // TODO: Throttling of GPU hogs goes here (LP: #1211700, LP: #1665802)
+        deferred_io.wait();
+    }
 }
 
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const& fn)
@@ -247,7 +257,7 @@ bool mc::Stream::suitable_for_cursor() const
     else
     {
         for (auto it : associated_buffers)
-            if ((*buffers)[it]->pixel_format() != mir_pixel_format_argb_8888)
+            if (buffers->get(it)->pixel_format() != mir_pixel_format_argb_8888)
                 return false;
     }
     return true;

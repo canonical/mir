@@ -35,8 +35,8 @@ extern "C" {
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 typedef enum
 {
-    mir_event_type_key,
-    mir_event_type_motion,
+    MIR_DEPRECATED_ENUM(mir_event_type_key, "mir_event_type_input"),     // UNUSED since Mir 0.26
+    MIR_DEPRECATED_ENUM(mir_event_type_motion, "mir_event_type_input"),  // UNUSED since Mir 0.26
     MIR_DEPRECATED_ENUM(mir_event_type_surface, "mir_event_type_window"),
     mir_event_type_window = mir_event_type_surface,
     mir_event_type_resize,

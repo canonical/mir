@@ -170,6 +170,51 @@ mir_create_input_method_window_spec(MirConnection* connection,
                                     int width, int height);
 
 /**
+ * Create a window specification for a gloss window.
+ *
+ * \param [in] connection   Connection the window will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
+ * \return                  A handle that can be passed to mir_create_window() to complete construction.
+ */
+MirWindowSpec*
+mir_create_gloss_window_spec(MirConnection* connection, int width, int height);
+
+/**
+ * Create a window specification for a satellite window.
+ *
+ * \param [in] connection   Connection the window will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
+ * \param [in] parent       A valid parent window.
+ * \return                  A handle that can be passed to mir_create_window() to complete construction.
+ */
+MirWindowSpec*
+mir_create_satellite_window_spec(MirConnection* connection, int width, int height, MirWindow* parent);
+
+/**
+ * Create a window specification for a utility window.
+ *
+ * \param [in] connection   Connection the window will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
+ * \return                  A handle that can be passed to mir_create_window() to complete construction.
+ */
+MirWindowSpec*
+mir_create_utility_window_spec(MirConnection* connection, int width, int height);
+
+/**
+ * Create a window specification for a freestyle window.
+ *
+ * \param [in] connection   Connection the window will be created on
+ * \param [in] width        Requested width. The server is not guaranteed to return a window of this width.
+ * \param [in] height       Requested height. The server is not guaranteed to return a window of this height.
+ * \return                  A handle that can be passed to mir_create_window() to complete construction.
+ */
+MirWindowSpec*
+mir_create_freestyle_window_spec(MirConnection* connection, int width, int height);
+
+/**
  * Create a window specification.
  * This can be used with mir_create_window() to create a window or with
  * mir_window_apply_spec() to change an existing window.
