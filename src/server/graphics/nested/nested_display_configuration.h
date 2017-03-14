@@ -67,7 +67,7 @@ private:
     };
     std::unordered_map<uint32_t, LocalOutputConfig> mutable local_config;
 
-    LocalOutputConfig get_local_config_for(uint32_t output_id) const;
+    LocalOutputConfig get_local_config_for(MirOutput const* output) const;
     void set_local_config_for(uint32_t output_id, LocalOutputConfig const& config);
 };
 

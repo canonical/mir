@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_PLATFORM_H_
 
 #include <boost/program_options/options_description.hpp>
+#include <EGL/egl.h>
 
 #include "mir/module_properties.h"
 #include "mir/module_deleter.h"
@@ -82,6 +83,8 @@ public:
      * before they are sent or after they are recieved accross IPC
      */
     virtual UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const = 0;
+
+    virtual EGLNativeDisplayType egl_native_display() const = 0;
 };
 
 class DisplayPlatform

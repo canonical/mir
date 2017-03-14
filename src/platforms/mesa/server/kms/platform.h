@@ -49,6 +49,8 @@ public:
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
+    EGLNativeDisplayType egl_native_display() const override;
+
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<helpers::DRMHelper> const drm;
     std::shared_ptr<helpers::GBMHelper> const gbm;
@@ -72,7 +74,6 @@ class KMSPlatform : public graphics::DisplayPlatform
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
 };
-
 
 }
 }

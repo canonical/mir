@@ -75,6 +75,11 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operatio
     return make_module_ptr<mgm::IpcOperations>(drm);
 }
 
+EGLNativeDisplayType mgm::Platform::egl_native_display() const
+{
+    return gbm->device;
+}
+
 mir::UniqueModulePtr<mg::Display> mgm::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy, std::shared_ptr<GLConfig> const& gl_config)
 {

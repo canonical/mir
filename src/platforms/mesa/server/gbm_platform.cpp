@@ -21,6 +21,7 @@
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
 #include "nested_authentication.h"
+#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -32,7 +33,6 @@ mgm::GBMPlatform::GBMPlatform(
     nested_context(nested_context),
     gbm{std::make_shared<mgm::helpers::GBMHelper>()}
 {
-    //note, maybe take mesaauthcontetx
     auto auth = nested_context->auth_extension();
     if (auth.is_set())
     {
@@ -40,7 +40,7 @@ mgm::GBMPlatform::GBMPlatform(
     }
     else
     {
-        //throw
+        BOOST_THROW_EXCEPTION(std::logic_error("no authentication fd to make gbm buffers"));
     }
 }
 
@@ -54,4 +54,9 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::GBMPlatform::make_ipc_opera
 {
     return mir::make_module_ptr<mgm::IpcOperations>(
         std::make_shared<mgm::NestedAuthentication>(nested_context));
+}
+
+EGLNativeDisplayType mgm::GBMPlatform::egl_native_display() const
+{
+    return gbm->device;
 }

@@ -52,6 +52,8 @@ public:
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
+    EGLNativeDisplayType egl_native_display() const override;
+
 private:
     EGLDisplay display;
     mir::Fd const drm_node;
