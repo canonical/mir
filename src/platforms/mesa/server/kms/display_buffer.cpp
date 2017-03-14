@@ -515,6 +515,20 @@ mgm::DisplayBuffer::DisplayBuffer(
     }
 
     visible_composite_frame = get_front_buffer(std::move(temporary_front));
+
+    /*
+     * Check that our (possibly bounced) front buffer is usable on *all* the
+     * outputs we've been asked to output on.
+     */
+    for (auto const& output : outputs)
+    {
+        if (output->buffer_requires_migration(visible_composite_frame))
+        {
+            BOOST_THROW_EXCEPTION(std::invalid_argument(
+                "Attempted to create a DisplayBuffer spanning multiple GPU memory domains"));
+        }
+    }
+
     set_crtc(*outputs.front()->fb_for(visible_composite_frame, fb_width, fb_height));
 
     release_current();
