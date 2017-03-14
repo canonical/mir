@@ -487,9 +487,3 @@ void mi::DefaultInputDeviceHub::emit_changed_devices()
             });
     }
 }
-
-std::vector<std::shared_ptr<mi::Device>> mi::DefaultInputDeviceHub::get_device_handles() const
-{
-    std::unique_lock<std::mutex> lock(handles_guard);
-    return handles;
-}

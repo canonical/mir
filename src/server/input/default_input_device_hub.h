@@ -96,10 +96,6 @@ public:
     void remove_observer(std::weak_ptr<InputDeviceObserver> const&) override;
     void for_each_input_device(std::function<void(Device const& device)> const& callback) override;
     void for_each_mutable_input_device(std::function<void(Device& device)> const& callback) override;
-
-    std::shared_ptr<InputDeviceHub> hub_for_external_users();
-    std::vector<std::shared_ptr<Device>> get_device_handles() const;
-
 private:
     void update_spots();
     void add_device_handle(std::shared_ptr<DefaultDevice> const& handle);
