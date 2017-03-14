@@ -47,6 +47,7 @@ char const* const mo::host_socket_opt             = "host-socket";
 char const* const mo::nested_passthrough_opt      = "nested-passthrough";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
+char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt              = "enable-touchspots";
 char const* const mo::fatal_except_opt            = "on-fatal-error-except";
 char const* const mo::debug_opt                   = "debug";
@@ -184,6 +185,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (nested_passthrough_opt, po::value<bool>()->default_value(true),
             "When nested, attempt to pass a client's graphics content directly to the host"
             " to avoid a composition pass")
+        (offscreen_opt,
+            "Render to offscreen buffers instead of the real outputs.")
         (touchspots_opt,
             "Display visualization of touchspots (e.g. for screencasting).")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),

@@ -86,6 +86,7 @@ public:
         std::shared_ptr<GLConfig> const& gl_config) override;
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+    EGLNativeDisplayType egl_native_display() const override;
 private:
     std::unique_ptr<NestedBufferPlatform> const buffer_platform;
     std::unique_ptr<NestedDisplayPlatform> const display_platform;

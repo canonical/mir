@@ -41,6 +41,7 @@ public:
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const&) override;
+    EGLNativeDisplayType egl_native_display() const override;
 
 private:
     std::shared_ptr<mir::udev::Context> udev;
