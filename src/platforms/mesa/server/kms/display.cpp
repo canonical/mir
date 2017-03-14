@@ -39,6 +39,7 @@
 
 #include <stdexcept>
 #include <algorithm>
+#include <unordered_map>
 
 namespace mgm = mir::graphics::mesa;
 namespace mg = mir::graphics;
@@ -96,9 +97,17 @@ mgm::Display::Display(std::shared_ptr<helpers::DRMHelper> const& drm,
       output_container{
           std::make_shared<RealKMSOutputContainer>(
               std::vector<int>{drm->fd},
-              [listener](int drm_fd)
+              [
+                  listener,
+                  flippers = std::unordered_map<int, std::shared_ptr<KMSPageFlipper>>{}
+              ](int drm_fd) mutable
               {
-                  return std::make_shared<KMSPageFlipper>(drm_fd, listener);
+                  auto& flipper = flippers[drm_fd];
+                  if (!flipper)
+                  {
+                      flipper = std::make_shared<KMSPageFlipper>(drm_fd, listener);
+                  }
+                  return flipper;
               })},
       current_display_configuration{output_container},
       dirty_configuration{false},
