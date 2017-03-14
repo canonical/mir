@@ -36,6 +36,7 @@
 #include <linux/input.h>
 
 #include <boost/throw_exception.hpp>
+#include "../../../../../../usr/include/c++/6/atomic"
 
 using namespace std::chrono_literals;
 using namespace mir::geometry;
@@ -145,6 +146,7 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
     auto handle_from_mouse_leave() -> Blob;
     auto handle_from_mouse_enter() -> Blob;
     auto handle_from_mouse_release() -> Blob;
+    auto count_of_handles_when_moving_mouse() -> int;
 
 private:
     void center_mouse();
@@ -470,6 +472,51 @@ auto DragAndDrop::handle_from_mouse_release() -> Blob
     return blob;
 }
 
+auto DragAndDrop::count_of_handles_when_moving_mouse() -> int
+{
+    Signal have_3_events;
+    std::atomic<int> events{0};
+    std::atomic<int> handles{0};
+
+    auto counter = [&](MirEvent const* event)
+        {
+            if (mir_event_get_type(event) != mir_event_type_input)
+                return;
+
+            auto const input_event = mir_event_get_input_event(event);
+
+            if (mir_input_event_get_type(input_event) != mir_input_event_type_pointer)
+                return;
+
+            auto const pointer_event = mir_input_event_get_pointer_event(input_event);
+
+            EXPECT_THAT(dnd, Ne(nullptr)) << "No Drag and Drop extension";
+
+            Blob blob;
+            if (dnd)
+                blob.reset(dnd->pointer_drag_and_drop(pointer_event));
+
+            if (blob)
+                handles.fetch_add(1);
+
+            if (events.fetch_add(1) == 2)
+                have_3_events.raise();
+        };
+
+    set_window_event_handler(window, counter);
+    set_window_event_handler(target_window, counter);
+
+    start_dragging_mouse();
+    move_mouse({1,1});
+    release_mouse();
+
+    EXPECT_TRUE(have_3_events.wait_for(receive_event_timeout));
+
+    reset_window_event_handler(window);
+    reset_window_event_handler(target_window);
+    return handles;
+}
+
 MATCHER_P(BlobContentEq, p, "")
 {
     if (!arg || !p)
@@ -543,4 +590,16 @@ TEST_F(DragAndDrop, when_drag_releases_target_window_release_event_contains_hand
 
     EXPECT_THAT(handle.get(), NotNull());
     EXPECT_THAT(handle.get(), BlobContentEq(handle_from_request.get()));
+}
+
+TEST_F(DragAndDrop, after_drag_finishes_pointer_events_no_longer_contain_handle)
+{
+    auto const cookie = user_initiates_drag();
+    ASSERT_THAT(cookie.get(), NotNull());
+    client_requests_drag(cookie);
+    handle_from_mouse_release();
+
+    server.the_shell()->clear_drag_and_drop_handle();
+
+    EXPECT_THAT(count_of_handles_when_moving_mouse(), Eq(0));
 }
