@@ -54,6 +54,7 @@ extern char const* const composite_delay_opt;
 extern char const* const enable_key_repeat_opt;
 
 extern char const* const name_opt;
+extern char const* const offscreen_opt;
 
 extern char const* const enable_key_repeat_opt;
 

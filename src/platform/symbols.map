@@ -65,6 +65,7 @@ MIRPLATFORM_0.26 {
     mir::options::no_server_socket_opt*;
     mir::options::platform_input_lib*;
     mir::options::off_opt_value*;
+    mir::options::offscreen_opt*;
     mir::options::Option::get*;
     mir::options::Option::is_set*;
     mir::options::Option::operator*;
