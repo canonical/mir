@@ -509,7 +509,7 @@ TEST_F(DragAndDrop, during_drag_when_user_moves_mouse_client_receives_handle)
     EXPECT_THAT(handle.get(), BlobContentEq(handle_from_request.get()));
 }
 
-TEST_F(DragAndDrop, when_drag_moves_from_window_leave_event_contains_cookie)
+TEST_F(DragAndDrop, when_drag_moves_from_window_leave_event_contains_handle)
 {
     auto const cookie = user_initiates_drag();
     ASSERT_THAT(cookie.get(), NotNull());
@@ -521,7 +521,7 @@ TEST_F(DragAndDrop, when_drag_moves_from_window_leave_event_contains_cookie)
     EXPECT_THAT(handle.get(), BlobContentEq(handle_from_request.get()));
 }
 
-TEST_F(DragAndDrop, when_drag_enters_target_window_enter_event_contains_cookie)
+TEST_F(DragAndDrop, when_drag_enters_target_window_enter_event_contains_handle)
 {
     auto const cookie = user_initiates_drag();
     ASSERT_THAT(cookie.get(), NotNull());
@@ -533,7 +533,7 @@ TEST_F(DragAndDrop, when_drag_enters_target_window_enter_event_contains_cookie)
     EXPECT_THAT(handle.get(), BlobContentEq(handle_from_request.get()));
 }
 
-TEST_F(DragAndDrop, when_drag_releases_target_window_release_event_contains_cookie)
+TEST_F(DragAndDrop, when_drag_releases_target_window_release_event_contains_handle)
 {
     auto const cookie = user_initiates_drag();
     ASSERT_THAT(cookie.get(), NotNull());
