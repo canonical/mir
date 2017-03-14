@@ -81,6 +81,7 @@ std::shared_ptr<MirDisplayConfig> mt::build_trivial_configuration()
     output->set_power_mode(mir_power_mode_on);
     output->set_orientation(mir_orientation_normal);
     output->set_edid(valid_edid, sizeof(valid_edid));
+    output->set_subpixel_arrangement(mir_subpixel_arrangement_horizontal_rgb);
 
     return std::make_shared<MirDisplayConfig>(conf);
 }
@@ -121,6 +122,7 @@ std::shared_ptr<MirDisplayConfig> mt::build_non_trivial_configuration()
         output->set_power_mode(mir_power_mode_on);
         output->set_orientation(mir_orientation_normal);
         output->set_edid(valid_edid, sizeof(valid_edid));
+        output->set_subpixel_arrangement(mir_subpixel_arrangement_horizontal_rgb);
     }
 
     return std::make_shared<MirDisplayConfig>(conf);
