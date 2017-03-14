@@ -155,11 +155,13 @@ std::unique_ptr<mt::Alarm> mtd::FakeAlarmFactory::create_alarm(
 void mtd::FakeAlarmFactory::advance_by(mt::Duration step)
 {
     clock->advance_by(step);
-    // Guard against alarms deleting themselves from their callback...
-    auto temp_alarms = alarms;
-    for (auto& alarm : temp_alarms)
+    for (unsigned i = 0u; i < alarms.size();)
     {
-        alarm->time_updated();
+        auto const old_size = alarms.size();
+        alarms[i]->time_updated();
+        // Guard against alarms deleting themselves from their callback...
+        if (alarms.size() == old_size)
+            ++i;
     }
 }
 
