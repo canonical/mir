@@ -147,7 +147,7 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
     auto handle_from_mouse_release() -> Blob;
 
 private:
-    void center_mouse() { move_mouse(0.5 * as_displacement(screen_geometry.size)); }
+    void center_mouse();
     void paint_window(MirWindow* w);
     void set_window_event_handler(MirWindow* window, std::function<void(MirEvent const* event)> const& handler);
     void reset_window_event_handler(MirWindow* window);
@@ -220,6 +220,35 @@ void DragAndDrop::paint_window(MirWindow* w)
     EXPECT_THAT(have_focus.wait_for(receive_event_timeout), Eq(true));
 
     reset_window_event_handler(w);
+}
+
+void DragAndDrop::center_mouse()
+{
+    Signal have_mouseover;
+
+    set_window_event_handler(window, [&](MirEvent const* event)
+        {
+            if (mir_event_get_type(event) != mir_event_type_input)
+                return;
+
+            auto const input_event = mir_event_get_input_event(event);
+
+            if (mir_input_event_get_type(input_event) != mir_input_event_type_pointer)
+                return;
+
+            auto const pointer_event = mir_input_event_get_pointer_event(input_event);
+
+            if (mir_pointer_event_action(pointer_event) != mir_pointer_action_enter)
+                return;
+
+            have_mouseover.raise();
+        });
+
+    move_mouse(0.5 * as_displacement(screen_geometry.size));
+
+    EXPECT_THAT(have_mouseover.wait_for(receive_event_timeout), Eq(true));
+
+    reset_window_event_handler(window);
 }
 
 void DragAndDrop::window_event_handler(MirWindow* window, MirEvent const* event, void* context)
