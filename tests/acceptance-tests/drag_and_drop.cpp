@@ -246,8 +246,9 @@ void DragAndDrop::center_mouse()
 
     move_mouse(0.5 * as_displacement(screen_geometry.size));
 
-// Even if we miss the "mouseover" occasionally, we've probably waited long enough
-// for a mouse-down to reach the window.
+// We miss the "mouseover" occasionally (with valgrind and heavy stress about 1/20).
+// But it isn't essential for the test and we've probably waited long enough
+// for the mouse-down needed by the test to reach the window.
 //    EXPECT_THAT(have_mouseover.wait_for(receive_event_timeout), Eq(true));
     have_mouseover.wait_for(receive_event_timeout);
 
