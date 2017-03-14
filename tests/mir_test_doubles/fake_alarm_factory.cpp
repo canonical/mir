@@ -160,7 +160,7 @@ void mtd::FakeAlarmFactory::advance_by(mt::Duration step)
         auto const old_size = alarms.size();
         alarms[i]->time_updated();
         // Guard against alarms deleting themselves from their callback...
-        if (alarms.size() == old_size)
+        if (alarms.size() >= old_size)
             ++i;
     }
 }
