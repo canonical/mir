@@ -75,7 +75,6 @@ class KMSPlatform : public graphics::DisplayPlatform
         std::shared_ptr<GLConfig> const& gl_config) override;
 };
 
-
 }
 }
 }
