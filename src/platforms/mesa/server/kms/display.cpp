@@ -79,16 +79,27 @@ private:
     mgm::helpers::EGLHelper egl;
 };
 
+std::vector<int> drm_fds_from_drm_helpers(
+    std::vector<std::shared_ptr<mgm::helpers::DRMHelper>> const& helpers)
+{
+    std::vector<int> fds;
+    for (auto const& helper: helpers)
+    {
+        fds.push_back(helper->fd);
+    }
+    return fds;
 }
 
-mgm::Display::Display(std::shared_ptr<helpers::DRMHelper> const& drm,
+}
+
+mgm::Display::Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& drm,
                       std::shared_ptr<helpers::GBMHelper> const& gbm,
                       std::shared_ptr<VirtualTerminal> const& vt,
                       mgm::BypassOption bypass_option,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& listener)
-    : drm(drm),
+    : drm{drm},
       gbm(gbm),
       vt(vt),
       listener(listener),
@@ -96,7 +107,7 @@ mgm::Display::Display(std::shared_ptr<helpers::DRMHelper> const& drm,
       shared_egl{*gl_config},
       output_container{
           std::make_shared<RealKMSOutputContainer>(
-              std::vector<int>{drm->fd},
+              drm_fds_from_drm_helpers(drm),
               [
                   listener,
                   flippers = std::unordered_map<int, std::shared_ptr<KMSPageFlipper>>{}
@@ -207,7 +218,8 @@ void mgm::Display::pause()
     try
     {
         if (auto c = cursor.lock()) c->suspend();
-        drm->drop_master();
+        for (auto& helper : drm)
+            helper->drop_master();
     }
     catch(std::runtime_error const& e)
     {
@@ -220,7 +232,8 @@ void mgm::Display::resume()
 {
     try
     {
-        drm->set_master();
+        for (auto& helper : drm)
+            helper->set_master();
     }
     catch(std::runtime_error const& e)
     {

@@ -64,7 +64,7 @@ class Display : public graphics::Display,
                 public renderer::gl::ContextSource
 {
 public:
-    Display(std::shared_ptr<helpers::DRMHelper> const& drm,
+    Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& drm,
             std::shared_ptr<helpers::GBMHelper> const& gbm,
             std::shared_ptr<VirtualTerminal> const& vt,
             BypassOption bypass_option,
@@ -105,7 +105,7 @@ private:
     void clear_connected_unused_outputs();
 
     mutable std::mutex configuration_mutex;
-    std::shared_ptr<helpers::DRMHelper> const drm;
+    std::vector<std::shared_ptr<helpers::DRMHelper>> const drm;
     std::shared_ptr<helpers::GBMHelper> const gbm;
     std::shared_ptr<VirtualTerminal> const vt;
     std::shared_ptr<DisplayReport> const listener;
