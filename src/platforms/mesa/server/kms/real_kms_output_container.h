@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_MESA_REAL_KMS_OUTPUT_CONTAINER_H_
 
 #include "kms_output_container.h"
-#include <unordered_map>
+#include <vector>
 
 namespace mir
 {
@@ -41,7 +41,7 @@ public:
     void update_from_hardware_state() override;
 private:
     int const drm_fd;
-    std::unordered_map<uint32_t,std::shared_ptr<KMSOutput>> outputs;
+    std::vector<std::shared_ptr<KMSOutput>> outputs;
     std::shared_ptr<PageFlipper> const page_flipper;
 };
 
