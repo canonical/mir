@@ -112,13 +112,12 @@ struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
 
 struct NestedInput : public mtf::HeadlessInProcessServer
 {
-
     void SetUp()
     {
         initial_display_layout(display_geometry);
         mtf::HeadlessInProcessServer::SetUp();
     }
-    
+
     mtd::NestedMockEGL mock_egl;
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
@@ -297,13 +296,12 @@ TEST_F(NestedInput, on_add_device_observer_gets_device_added_calls_on_existing_d
     NestedServerWithMockEventFilter nested_mir{new_connection()};
     auto nested_hub = nested_mir.server.the_input_device_hub();
 
-    EXPECT_CALL(*mock_observer, device_added(_)).Times(1);
-    EXPECT_CALL(*mock_observer, changes_complete())
-        .Times(1)
+    EXPECT_CALL(*mock_observer, device_added(_))
         .WillOnce(mt::WakeUp(&input_device_changes_complete));
 
     nested_hub->add_observer(mock_observer);
     input_device_changes_complete.wait_for(10s);
+    nested_hub->remove_observer(mock_observer);
 }
 
 TEST_F(NestedInput, device_added_on_host_triggeres_nested_device_observer)
@@ -311,15 +309,18 @@ TEST_F(NestedInput, device_added_on_host_triggeres_nested_device_observer)
     NestedServerWithMockEventFilter nested_mir{new_connection()};
     auto nested_hub = nested_mir.server.the_input_device_hub();
 
-    EXPECT_CALL(*mock_observer, changes_complete()).Times(1)
+    // wait until we see the keyboard from the fixture:
+    EXPECT_CALL(*mock_observer, device_added(_)).Times(1)
         .WillOnce(mt::WakeUp(&input_device_changes_complete));
     nested_hub->add_observer(mock_observer);
 
     input_device_changes_complete.wait_for(10s);
     EXPECT_THAT(input_device_changes_complete.raised(), Eq(true));
     input_device_changes_complete.reset();
+    ::testing::Mock::VerifyAndClearExpectations(&mock_observer);
 
-    EXPECT_CALL(*mock_observer, changes_complete())
+    // wait for the fake mouse
+    EXPECT_CALL(*mock_observer, device_added(_)).Times(1)
         .WillOnce(mt::WakeUp(&input_device_changes_complete));
 
     auto mouse = mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer});
