@@ -233,6 +233,8 @@ struct StubPlatform : public mg::Platform
         return underlying_platform->create_display(policy, config);
     }
 
+    EGLNativeDisplayType egl_native_display() const override { return EGL_DEFAULT_DISPLAY; }
+
     std::shared_ptr<mir::Fd> const last_fd;
     std::shared_ptr<mg::Platform> const underlying_platform;
 };

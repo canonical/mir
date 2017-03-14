@@ -23,7 +23,7 @@
 #include "mir/graphics/renderable.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/cursor.h"
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/doubles/null_display_buffer_compositor_factory.h"
 #include "mir/test/signal.h"
 
@@ -131,7 +131,7 @@ private:
     std::shared_ptr<SizeWatcher> const watch;
 };
 
-struct SurfaceScaling : mtf::ConnectedClientWithASurface,
+struct SurfaceScaling : mtf::ConnectedClientWithAWindow,
                         ::testing::WithParamInterface<int>
 {
     SurfaceScaling() :
@@ -145,7 +145,7 @@ struct SurfaceScaling : mtf::ConnectedClientWithASurface,
         {
             return std::make_shared<SizeWatchingDBCompositorFactory>(watch);
         });
-        ConnectedClientWithASurface::SetUp();
+        ConnectedClientWithAWindow::SetUp();
         server.the_cursor()->hide();
 
         watch->wait_for_an_empty_composition();
