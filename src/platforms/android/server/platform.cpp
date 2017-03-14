@@ -120,24 +120,10 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operatio
     return rendering->make_ipc_operations();
 }
 
-#if 0
-mga::Platform::Platform(
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<mga::DisplayComponentFactory> const& display_buffer_builder,
-    std::shared_ptr<mg::DisplayReport> const& display_report,
-    std::shared_ptr<mga::NativeWindowReport> const& native_window_report,
-    mga::OverlayOptimization overlay_option,
-    std::shared_ptr<mga::DeviceQuirks> const& quirks) :
-    buffer_allocator(buffer_allocator),
-    display_buffer_builder(display_buffer_builder),
-    display_report(display_report),
-    quirks(quirks),
-    native_window_report(native_window_report),
-    overlay_option(overlay_option)
+EGLNativeDisplayType mga::Platform::egl_native_display() const
 {
+    return rendering->egl_native_display();
 }
-#endif
-
 
 mga::GrallocPlatform::GrallocPlatform(
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator) :
@@ -186,6 +172,11 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::GrallocPlatform::create_bu
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::GrallocPlatform::make_ipc_operations() const
 {
     return mir::make_module_ptr<mga::IpcOperations>();
+}
+
+EGLNativeDisplayType mga::GrallocPlatform::egl_native_display() const
+{
+    return EGL_DEFAULT_DISPLAY;
 }
 
 mga::HwcPlatform::HwcPlatform(

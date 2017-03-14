@@ -321,6 +321,31 @@ mgmh::EGLHelper::EGLHelper(GLConfig const& gl_config)
 {
 }
 
+mgmh::EGLHelper::EGLHelper(
+    GLConfig const& gl_config,
+    GBMHelper const& gbm,
+    gbm_surface* surface,
+    EGLContext shared_context)
+    : EGLHelper(gl_config)
+{
+    setup(gbm, surface, shared_context);
+}
+
+mgmh::EGLHelper::EGLHelper(EGLHelper&& from)
+    : depth_buffer_bits{from.depth_buffer_bits},
+      stencil_buffer_bits{from.stencil_buffer_bits},
+      egl_display{from.egl_display},
+      egl_config{from.egl_config},
+      egl_context{from.egl_context},
+      egl_surface{from.egl_surface},
+      should_terminate_egl{from.should_terminate_egl}
+{
+    from.should_terminate_egl = false;
+    from.egl_display = EGL_NO_DISPLAY;
+    from.egl_context = EGL_NO_CONTEXT;
+    from.egl_surface = EGL_NO_SURFACE;
+}
+
 void mgmh::EGLHelper::setup(GBMHelper const& gbm)
 {
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);

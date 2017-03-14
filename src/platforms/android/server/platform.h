@@ -45,6 +45,7 @@ public:
 
     UniqueModulePtr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+    EGLNativeDisplayType egl_native_display() const override;
 
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
@@ -87,6 +88,7 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+    EGLNativeDisplayType egl_native_display() const override;
 
 private:
     std::shared_ptr<HwcPlatform> const display;

@@ -17,3 +17,4 @@ add_library(
 )
 
 add_subdirectory(nested/)
+add_subdirectory(offscreen/)
