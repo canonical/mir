@@ -332,8 +332,17 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
 
 void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 {
-    if (rect == viewport)
+    /*
+     * Any change to rect or display_transform requires that we recalculate
+     * everything. Although this may be false economy caching viewport and
+     * display_viewport, compared to removing those fields and just
+     * recalculating every time. Not sure...
+     */
+    if (viewport == rect && viewport_transform == display_transform)
         return;
+
+    viewport = rect;
+    viewport_transform = display_transform;
 
     /*
      * Here we provide a 3D perspective projection with a default 30 degrees
@@ -368,8 +377,6 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
             glm::vec3{-rect.top_left.x.as_int(),
                       -rect.top_left.y.as_int(),
                       0.0f});
-
-    viewport = rect;
 
     /*
      * Letterboxing: Move the glViewport to add black bars in the case that

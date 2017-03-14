@@ -125,6 +125,7 @@ protected:
 private:
     std::unique_ptr<mir::gl::TextureCache> const texture_cache;
     geometry::Rectangle viewport;
+    glm::mat4 viewport_transform;
     glm::mat4 screen_to_gl_coords;
     glm::mat4 display_transform;
     std::vector<mir::gl::Primitive> mutable primitives;
