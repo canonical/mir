@@ -345,6 +345,35 @@ mg::Frame mgm::Display::last_frame_on(unsigned output_id) const
     return output->last_frame();
 }
 
+namespace
+{
+/*
+ * Add output to the grouping, maintaining the invariant that each vector of outputs
+ * is a single GPU memory domain.
+ */
+void add_to_drm_device_group(
+    std::vector<std::vector<std::shared_ptr<mgm::KMSOutput>>>& grouping,
+    std::shared_ptr<mgm::KMSOutput>&& output)
+{
+    for (auto &group : grouping)
+    {
+        /*
+         * We could be smarter about this, but being on the same DRM device is guaranteed
+         * to be in the same GPU memory domain :).
+         */
+        if (group.front()->drm_fd() == output->drm_fd())
+        {
+            group.push_back(std::move(output));
+            break;
+        }
+    }
+    if (output)
+    {
+        grouping.push_back(std::vector<std::shared_ptr<mgm::KMSOutput>>{std::move(output)});
+    }
+}
+}
+
 void mgm::Display::configure_locked(
     mgm::RealKMSDisplayConfiguration const& kms_conf,
     std::lock_guard<std::mutex> const&)
@@ -387,7 +416,8 @@ void mgm::Display::configure_locked(
         [&](OverlappingOutputGroup const& group)
         {
             auto bounding_rect = group.bounding_rectangle();
-            std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
+            // Each vector<KMSOutput> is a single GPU memory domain
+            std::vector<std::vector<std::shared_ptr<KMSOutput>>> kms_output_groups;
             MirOrientation orientation = mir_orientation_normal;
 
             group.for_each_output(
@@ -402,7 +432,7 @@ void mgm::Display::configure_locked(
                     {
                         kms_output->set_power_mode(conf_output.power_mode);
                         kms_output->set_gamma(conf_output.gamma);
-                        kms_outputs.push_back(kms_output);
+                        add_to_drm_device_group(kms_output_groups, std::move(kms_output));
                     }
 
                     /*
@@ -425,28 +455,31 @@ void mgm::Display::configure_locked(
                     std::swap(width, height);
                 }
 
-                auto surface = gbm->create_scanout_surface(width, height);
-                auto const raw_surface = surface.get();
+                for (auto const& group : kms_output_groups)
+                {
+                    auto surface = gbm->create_scanout_surface(width, height);
+                    auto const raw_surface = surface.get();
 
-                std::unique_ptr<DisplayBuffer> db{
-                    new DisplayBuffer{bypass_option,
-                    listener,
-                    kms_outputs,
-                    GBMOutputSurface{
-                        drm->fd,
-                        std::move(surface),
-                        width, height,
-                        helpers::EGLHelper{
-                            *gl_config,
-                            *gbm,
-                            raw_surface,
-                            shared_egl.context()
-                        }
-                    },
-                    bounding_rect,
-                    orientation}};
+                    auto db = std::make_unique<DisplayBuffer>(
+                        bypass_option,
+                        listener,
+                        group,
+                        GBMOutputSurface{
+                            group.front()->drm_fd(),
+                            std::move(surface),
+                            width, height,
+                            helpers::EGLHelper{
+                                *gl_config,
+                                *gbm,
+                                raw_surface,
+                                shared_egl.context()
+                            }
+                        },
+                        bounding_rect,
+                        orientation);
 
-                display_buffers_new.push_back(std::move(db));
+                    display_buffers_new.push_back(std::move(db));
+                }
             }
         });
 
