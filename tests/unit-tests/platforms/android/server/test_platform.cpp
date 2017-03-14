@@ -116,8 +116,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(fake_fence));
 
-    mga::Platform platform(stub_buffer_allocator, stub_display_builder,
-        stub_display_report, anw_report, mga::OverlayOptimization::enabled, quirks);
+    mga::GrallocPlatform platform(stub_buffer_allocator);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -151,8 +150,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_full_ipc_w
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(-1));
 
-    mga::Platform platform(stub_buffer_allocator, stub_display_builder,
-        stub_display_report, anw_report, mga::OverlayOptimization::enabled, quirks);
+    mga::GrallocPlatform platform(stub_buffer_allocator);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -194,8 +192,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_nested)
     EXPECT_CALL(*native_buffer, copy_fence())
         .WillOnce(Return(-1));
 
-    mga::Platform platform(stub_buffer_allocator, stub_display_builder,
-        stub_display_report, anw_report, mga::OverlayOptimization::enabled, quirks);
+    mga::GrallocPlatform platform(stub_buffer_allocator);
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
     int offset = 0;
@@ -232,8 +229,7 @@ TEST_F(PlatformBufferIPCPackaging, test_ipc_data_packed_correctly_for_partial_ip
     using namespace ::testing;
 
     int fake_fence{33};
-    mga::Platform platform(stub_buffer_allocator, stub_display_builder,
-        stub_display_report, anw_report, mga::OverlayOptimization::enabled, quirks);
+    mga::GrallocPlatform platform(stub_buffer_allocator);
     auto ipc_ops = platform.make_ipc_operations();
 
     mtd::MockBufferIpcMessage mock_ipc_msg;
@@ -259,13 +255,7 @@ TEST(AndroidGraphicsPlatform, egl_native_display_is_egl_default_display)
 {
     testing::NiceMock<mtd::MockEGL> mock_egl;
     mtd::NullGLContext context;
-    mga::Platform platform(
-        std::make_shared<mtd::StubBufferAllocator>(),
-        std::make_shared<mtd::StubDisplayBuilder>(),
-        mr::null_display_report(),
-        std::make_shared<mga::NullNativeWindowReport>(),
-        mga::OverlayOptimization::enabled,
-        std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, context));
+    mga::GrallocPlatform platform(std::make_shared<mtd::StubBufferAllocator>());
     EXPECT_EQ(EGL_DEFAULT_DISPLAY, platform.egl_native_display());
 }
 

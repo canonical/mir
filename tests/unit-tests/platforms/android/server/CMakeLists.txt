@@ -20,8 +20,8 @@ list(APPEND ANDROID_UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_hwc_logger.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_server_interpreter.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_pixel_format.cpp
-#  ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
-#  ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_interpreter_buffer_cache.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_native_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_output_builder.cpp
