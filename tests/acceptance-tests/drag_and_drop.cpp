@@ -457,6 +457,7 @@ TEST_F(DragAndDrop, when_user_initiates_drag_client_receives_cookie)
 TEST_F(DragAndDrop, when_client_requests_drags_it_receives_handle)
 {
     auto const cookie = user_initiates_drag();
+    ASSERT_THAT(cookie.get(), NotNull());
 
     auto const handle = client_requests_drag(cookie);
 
@@ -466,7 +467,7 @@ TEST_F(DragAndDrop, when_client_requests_drags_it_receives_handle)
 TEST_F(DragAndDrop, during_drag_when_user_moves_mouse_client_receives_handle)
 {
     auto const cookie = user_initiates_drag();
-
+    ASSERT_THAT(cookie.get(), NotNull());
     auto const handle_from_request = client_requests_drag(cookie);
 
     auto const handle = handle_from_mouse_move();
@@ -478,6 +479,7 @@ TEST_F(DragAndDrop, during_drag_when_user_moves_mouse_client_receives_handle)
 TEST_F(DragAndDrop, when_drag_moves_from_window_leave_event_contains_cookie)
 {
     auto const cookie = user_initiates_drag();
+    ASSERT_THAT(cookie.get(), NotNull());
     auto const handle_from_request = client_requests_drag(cookie);
 
     auto const handle = handle_from_mouse_leave();
@@ -489,6 +491,7 @@ TEST_F(DragAndDrop, when_drag_moves_from_window_leave_event_contains_cookie)
 TEST_F(DragAndDrop, when_drag_enters_target_window_enter_event_contains_cookie)
 {
     auto const cookie = user_initiates_drag();
+    ASSERT_THAT(cookie.get(), NotNull());
     auto const handle_from_request = client_requests_drag(cookie);
 
     auto const handle = handle_from_mouse_enter();
@@ -500,6 +503,7 @@ TEST_F(DragAndDrop, when_drag_enters_target_window_enter_event_contains_cookie)
 TEST_F(DragAndDrop, when_drag_releases_target_window_release_event_contains_cookie)
 {
     auto const cookie = user_initiates_drag();
+    ASSERT_THAT(cookie.get(), NotNull());
     auto const handle_from_request = client_requests_drag(cookie);
 
     auto const handle = handle_from_mouse_release();
