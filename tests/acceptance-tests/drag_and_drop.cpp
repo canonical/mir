@@ -217,7 +217,7 @@ void DragAndDrop::paint_window(MirWindow* w)
 
     mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(w));
 
-    have_focus.wait_for(receive_event_timeout);
+    EXPECT_THAT(have_focus.wait_for(receive_event_timeout), Eq(true));
 
     reset_window_event_handler(w);
 }
