@@ -43,7 +43,7 @@ namespace mi = mir::input;
 
 struct mi::ExternalInputDeviceHub::Internal : InputDeviceObserver
 {
-    Internal(std::shared_ptr<mi::DefaultInputDeviceHub> const& hub,
+    Internal(std::shared_ptr<mi::InputDeviceHub> const& hub,
              std::shared_ptr<ServerActionQueue> const& queue) :
         hub{hub}, observer_queue{queue}
     {}
@@ -52,7 +52,7 @@ struct mi::ExternalInputDeviceHub::Internal : InputDeviceObserver
     void device_removed(std::shared_ptr<Device> const& device) override;
     void changes_complete() override;
 
-    std::weak_ptr<DefaultInputDeviceHub> hub;
+    std::weak_ptr<InputDeviceHub> hub;
     std::shared_ptr<ServerActionQueue> const observer_queue;
     ThreadSafeList<std::shared_ptr<InputDeviceObserver>> observers;
     std::vector<std::shared_ptr<Device>> devices_added;
@@ -61,7 +61,7 @@ struct mi::ExternalInputDeviceHub::Internal : InputDeviceObserver
     std::vector<std::shared_ptr<Device>> handles;
 };
 
-mi::ExternalInputDeviceHub::ExternalInputDeviceHub(std::shared_ptr<mi::DefaultInputDeviceHub> const& hub, std::shared_ptr<mir::ServerActionQueue> const& queue)
+mi::ExternalInputDeviceHub::ExternalInputDeviceHub(std::shared_ptr<mi::InputDeviceHub> const& hub, std::shared_ptr<mir::ServerActionQueue> const& queue)
     : data{std::make_shared<mi::ExternalInputDeviceHub::Internal>(hub, queue)}
 {
     hub->add_observer(data);
@@ -141,17 +141,17 @@ void mi::ExternalInputDeviceHub::Internal::changes_complete()
                             observer->device_added(dev);
                         for (auto const& dev : changed)
                             observer->device_changed(dev);
-                        for (auto const& dev : devices_removed)
+                        for (auto const& dev : removed)
                             observer->device_removed(dev);
                         observer->changes_complete();
                     });
 
                 auto end_it = handles.end();
-                for (auto const& dev : devices_removed)
+                for (auto const& dev : removed)
                     end_it = remove(begin(handles), end(handles), dev);
                 if (end_it != handles.end())
                     handles.erase(end_it, end(handles));
-                for (auto const& dev : devices_added)
+                for (auto const& dev : added)
                     handles.push_back(dev);
             });
 }
@@ -197,7 +197,6 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
         seat->add_device(*handle);
         dev->start(seat);
-
         add_device_handle(handle);
     }
     else

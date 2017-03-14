@@ -30,6 +30,7 @@
 #include "mir/test/doubles/triggered_main_loop.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
+#include "mir/test/fd_utils.h"
 
 #include "mir/dispatch/action_queue.h"
 #include "mir/geometry/rectangles.h"
@@ -104,6 +105,12 @@ struct InputDeviceHubTest : ::testing::Test
                                   }
                                  ));
     }
+
+    void expect_and_execute_multiplexer()
+    {
+        mt::fd_becomes_readable(multiplexer.watch_fd(), 2s);
+        multiplexer.dispatch(mir::dispatch::FdEvent::readable);
+    }
 };
 
 TEST_F(InputDeviceHubTest, input_device_hub_starts_device)
@@ -161,6 +168,7 @@ TEST_F(InputDeviceHubTest, observers_receive_devices_on_add)
     hub.add_device(mt::fake_shared(another_device));
     hub.add_observer(mt::fake_shared(mock_observer));
 
+    expect_and_execute_multiplexer();
     EXPECT_THAT(handle_1,Ne(handle_2));
     EXPECT_THAT(handle_1->unique_id(),Ne(handle_2->unique_id()));
 }
@@ -206,8 +214,13 @@ TEST_F(InputDeviceHubTest, observers_receive_device_changes)
     EXPECT_CALL(mock_observer, changes_complete());
 
     hub.add_observer(mt::fake_shared(mock_observer));
+    expect_and_execute_multiplexer();
+
     hub.add_device(mt::fake_shared(device));
+    expect_and_execute_multiplexer();
+
     hub.remove_device(mt::fake_shared(device));
+    expect_and_execute_multiplexer();
 }
 
 TEST_F(InputDeviceHubTest, emit_ready_to_receive_input_after_first_device_added)
@@ -236,11 +249,13 @@ TEST_F(InputDeviceHubTest, when_pointer_configuration_is_applied_successfully_ob
 
     hub.add_device(mt::fake_shared(mouse));
     hub.add_observer(mt::fake_shared(mock_observer));
+    expect_and_execute_multiplexer();
 
     EXPECT_CALL(mock_observer, device_changed(WithName("mouse")));
     EXPECT_CALL(mock_observer, changes_complete());
 
     dev_ptr->apply_pointer_configuration(pointer_conf);
+    expect_and_execute_multiplexer();
 }
 
 TEST_F(InputDeviceHubTest, when_tpd_configuration_is_applied_successfully_observer_is_triggerd)
@@ -252,11 +267,13 @@ TEST_F(InputDeviceHubTest, when_tpd_configuration_is_applied_successfully_observ
 
     hub.add_device(mt::fake_shared(touchpad));
     hub.add_observer(mt::fake_shared(mock_observer));
+    expect_and_execute_multiplexer();
 
     EXPECT_CALL(mock_observer, device_changed(WithName("tpd")));
     EXPECT_CALL(mock_observer, changes_complete());
 
     dev_ptr->apply_touchpad_configuration(tpd_conf);
+    expect_and_execute_multiplexer();
 }
 
 TEST_F(InputDeviceHubTest, when_configuration_attempt_fails_observer_is_not_triggerd)
@@ -268,10 +285,12 @@ TEST_F(InputDeviceHubTest, when_configuration_attempt_fails_observer_is_not_trig
 
     hub.add_device(mt::fake_shared(mouse));
     hub.add_observer(mt::fake_shared(mock_observer));
+    expect_and_execute_multiplexer();
 
     EXPECT_CALL(mock_observer, device_changed(WithName("mouse"))).Times(0);
     EXPECT_CALL(mock_observer, changes_complete()).Times(0);
 
     try {dev_ptr->apply_touchpad_configuration(tpd_conf); } catch (...) {}
+    expect_and_execute_multiplexer();
     ::testing::Mock::VerifyAndClearExpectations(&mock_observer);
 }

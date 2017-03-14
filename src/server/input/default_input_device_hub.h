@@ -62,7 +62,7 @@ class DefaultInputDeviceHub;
 
 struct ExternalInputDeviceHub : InputDeviceHub
 {
-    ExternalInputDeviceHub(std::shared_ptr<DefaultInputDeviceHub> const& actual_hub,
+    ExternalInputDeviceHub(std::shared_ptr<InputDeviceHub> const& actual_hub,
                            std::shared_ptr<ServerActionQueue> const& observer_queue);
     ~ExternalInputDeviceHub();
 

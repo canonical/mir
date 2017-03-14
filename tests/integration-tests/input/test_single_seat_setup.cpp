@@ -51,6 +51,7 @@
 #include "mir/input/input_device_info.h"
 #include "mir/geometry/rectangles.h"
 #include "mir/test/input_config_matchers.h"
+#include "mir/test/fd_utils.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -151,6 +152,21 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
 
     std::chrono::nanoseconds arbitrary_timestamp;
 
+    void SetUp()
+    {
+        // execute registration of ConfigChanger
+        expect_and_execute_multiplexer();
+    }
+
+    void expect_and_execute_multiplexer(int count = 1)
+    {
+        for (int i = 0; i != count; ++i)
+        {
+            mt::fd_becomes_readable(multiplexer.watch_fd(), 5s);
+            multiplexer.dispatch(mir::dispatch::FdEvent::readable);
+        }
+    }
+
     void capture_input_sink(NiceMock<mtd::MockInputDevice>& dev, mi::InputSink*& sink, mi::EventBuilder*& builder)
     {
         ON_CALL(dev,start(_,_))
@@ -173,10 +189,11 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_posts_events_to_input_dispatche
 
     capture_input_sink(device, sink, builder);
 
-    EXPECT_CALL(mock_observer,device_added(_))
+    EXPECT_CALL(mock_observer, device_added(_))
         .WillOnce(SaveArg<0>(&handle));
 
     hub.add_observer(mt::fake_shared(mock_observer));
+    expect_and_execute_multiplexer(1);
     hub.add_device(mt::fake_shared(device));
 
     auto event = builder->key_event(arbitrary_timestamp, mir_keyboard_action_down, 0,
@@ -289,6 +306,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, forwards_pointer_settings_to_input_device)
     ON_CALL(mock_observer, device_added(_)).WillByDefault(SaveArg<0>(&dev));
 
     hub.add_observer(mt::fake_shared(mock_observer));
+    expect_and_execute_multiplexer();
     hub.add_device(mt::fake_shared(touchpad));
 
     EXPECT_CALL(touchpad, apply_settings(Matcher<mi::PointerSettings const&>(_)));
@@ -304,6 +322,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, forwards_touchpad_settings_to_input_device
     ON_CALL(mock_observer, device_added(_)).WillByDefault(SaveArg<0>(&dev));
 
     hub.add_observer(mt::fake_shared(mock_observer));
+    expect_and_execute_multiplexer();
     hub.add_device(mt::fake_shared(touchpad));
 
     EXPECT_CALL(touchpad, apply_settings(Matcher<mi::TouchpadSettings const&>(_)));
@@ -326,6 +345,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_tracks_modifier)
         .WillOnce(SaveArg<0>(&key_handle));
 
     hub.add_observer(mt::fake_shared(mock_observer));
+    expect_and_execute_multiplexer();
     hub.add_device(mt::fake_shared(another_device));
 
 
@@ -361,6 +381,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_unifies_modifier_state_accross_
         .WillOnce(SaveArg<0>(&key_handle));
 
     hub.add_observer(mt::fake_shared(mock_observer));
+    expect_and_execute_multiplexer();
     hub.add_device(mt::fake_shared(device));
     hub.add_device(mt::fake_shared(another_device));
 
@@ -404,6 +425,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_reduces_modifier_state_accross_
         .WillOnce(SaveArg<0>(&key_handle_2));
 
     hub.add_observer(mt::fake_shared(mock_observer));
+    expect_and_execute_multiplexer();
     hub.add_device(mt::fake_shared(device));
     hub.add_device(mt::fake_shared(another_device));
     hub.add_device(mt::fake_shared(third_device));
