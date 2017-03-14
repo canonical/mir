@@ -44,6 +44,8 @@ public:
         std::shared_ptr<PageFlipper> const& page_flipper);
     ~RealKMSOutput();
 
+    uint32_t id() const override;
+
     void reset() override;
     void configure(geometry::Displacement fb_offset, size_t kms_mode_index) override;
     geometry::Size size() const override;

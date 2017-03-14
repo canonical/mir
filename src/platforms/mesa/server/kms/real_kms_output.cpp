@@ -102,6 +102,11 @@ mgm::RealKMSOutput::~RealKMSOutput()
     restore_saved_crtc();
 }
 
+uint32_t mgm::RealKMSOutput::id() const
+{
+    return connector->connector_id;
+}
+
 void mgm::RealKMSOutput::reset()
 {
     kms::DRMModeResources resources{drm_fd_};

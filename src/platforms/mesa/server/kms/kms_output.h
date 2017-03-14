@@ -26,6 +26,8 @@
 #include "mir/graphics/frame.h"
 #include "mir_toolkit/common.h"
 
+#include "kms-utils/drm_mode_resources.h"
+
 #include <gbm.h>
 
 namespace mir
@@ -44,6 +46,12 @@ class KMSOutput
 public:
     virtual ~KMSOutput() = default;
 
+    /*
+     * I'm not sure that DRM guarantees ID uniqueness in the presence of hotplug/unplug;
+     * this may want to be an opaque class Id + operator== in future.
+     */
+    virtual uint32_t id() const = 0;
+    
     virtual void reset() = 0;
     virtual void configure(geometry::Displacement fb_offset, size_t kms_mode_index) = 0;
     virtual geometry::Size size() const = 0;
@@ -103,7 +111,6 @@ protected:
     KMSOutput(const KMSOutput&) = delete;
     KMSOutput& operator=(const KMSOutput&) = delete;
 };
-
 }
 }
 }
