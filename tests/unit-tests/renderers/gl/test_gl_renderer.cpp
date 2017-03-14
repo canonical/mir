@@ -316,6 +316,21 @@ TEST_F(GLRenderer, swaps_buffers_after_rendering)
     renderer.render(renderable_list);
 }
 
+TEST_F(GLRenderer, setting_unchanged_viewport_avoids_gl_calls)
+{
+    mir::geometry::Rectangle const view_area{{0,0}, {1920,1080}};
+
+    ON_CALL(mock_display_buffer, view_area())
+        .WillByDefault(Return(view_area));
+
+    mrg::Renderer renderer(mock_display_buffer);
+
+    renderer.set_viewport(view_area);
+    EXPECT_CALL(mock_gl, glViewport(_,_,_,_))
+        .Times(0);
+    renderer.set_viewport(view_area);
+}
+
 TEST_F(GLRenderer, sets_viewport_unscaled_exact)
 {
     int const screen_width = 1920;
