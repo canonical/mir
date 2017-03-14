@@ -240,9 +240,11 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
     MockEventFilter nested_event_filter;
     std::atomic<int> num_key_a_events{0};
     auto const increase_key_a_events = [&num_key_a_events] { ++num_key_a_events; };
+    mt::Signal devices_ready;
 
     InSequence seq;
-    EXPECT_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent()));
+    EXPECT_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent()))
+        .WillOnce(DoAll(mt::WakeUp(&devices_ready), Return(true)));
     EXPECT_CALL(nested_event_filter, handle(mt::KeyOfScanCode(KEY_A))).
         Times(AtLeast(1)).
         WillRepeatedly(DoAll(InvokeWithoutArgs(increase_key_a_events), Return(true)));
@@ -254,6 +256,8 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
 
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     ExposedSurface client(nested_mir.new_connection());
+
+    ASSERT_TRUE(devices_ready.wait_for(60s));
 
     // Because we are testing a nested setup, it's difficult to guarantee
     // that the nested framebuffer window (and consenquently the client window
@@ -268,7 +272,7 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
             fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_A));
             return false;
         },
-        std::chrono::seconds{5});
+        std::chrono::seconds{10});
 
     EXPECT_TRUE(dummy_events_received);
 
