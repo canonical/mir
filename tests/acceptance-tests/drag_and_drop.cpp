@@ -36,7 +36,7 @@
 #include <linux/input.h>
 
 #include <boost/throw_exception.hpp>
-#include "../../../../../../usr/include/c++/6/atomic"
+#include <atomic>
 
 using namespace std::chrono_literals;
 using namespace mir::geometry;
