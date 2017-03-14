@@ -189,12 +189,12 @@ catch (...)
     return nullptr;
 }
 
-bool is_gbm_importable(MirBuffer* b)
+bool is_gbm_importable(MirBuffer const* b)
 try
 {
     if (!b)
         return false;
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
     auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
     if (!native)
         return false;
@@ -205,12 +205,12 @@ catch (...)
     return false;
 }
 
-int import_fd(MirBuffer* b)
+int import_fd(MirBuffer const* b)
 try
 {
     if (!is_gbm_importable(b))
         return -1;
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
     auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
     return native->fd[0];
 }
@@ -219,12 +219,12 @@ catch (...)
     return -1;
 }
 
-uint32_t buffer_stride(MirBuffer* b)
+uint32_t buffer_stride(MirBuffer const* b)
 try
 {
     if (!is_gbm_importable(b))
         return 0;
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
     auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
     return native->stride;
 }
@@ -233,12 +233,12 @@ catch (...)
     return 0;
 }
 
-uint32_t buffer_format(MirBuffer* b)
+uint32_t buffer_format(MirBuffer const* b)
 try
 {
     if (!is_gbm_importable(b))
         return 0;
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
     auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
     return native->native_format;
 }
@@ -247,12 +247,12 @@ catch (...)
     return 0;
 }
 
-uint32_t buffer_flags(MirBuffer* b)
+uint32_t buffer_flags(MirBuffer const* b)
 try
 {
     if (!is_gbm_importable(b))
         return 0;
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
     auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
     return native->native_flags;
 }
@@ -261,12 +261,12 @@ catch (...)
     return 0;
 }
 
-unsigned int buffer_age(MirBuffer* b)
+unsigned int buffer_age(MirBuffer const* b)
 try
 {
     if (!is_gbm_importable(b))
         return 0;
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
     auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
     return native->age;
 }

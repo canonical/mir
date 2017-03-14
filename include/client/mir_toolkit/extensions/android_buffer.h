@@ -89,7 +89,7 @@ typedef MirBuffer* (*MirConnectionAllocateBufferAndroidSync)(
  *   \param [in] buffer The buffer
  *   \return            True if suitable, false if unsuitable
  */
-typedef bool (*MirBufferIsAndroidCompatible)(MirBuffer* buffer);
+typedef bool (*MirBufferIsAndroidCompatible)(MirBuffer const* buffer);
 
 /** Access the data from the native_handle_t of the MirBuffer
  *   \warning Take care not to close any of the fds.
@@ -101,7 +101,7 @@ typedef bool (*MirBufferIsAndroidCompatible)(MirBuffer* buffer);
  *   \param [out] data      The data
  */
 typedef void (*MirBufferAndroidNativeHandle)(
-    MirBuffer* buffer,
+    MirBuffer const* buffer,
     int* num_fds, int const** fds,
     int* num_data, int const** data);
 
@@ -111,7 +111,7 @@ typedef void (*MirBufferAndroidNativeHandle)(
  *   \return                The hal_pixel_format of the buffer
  */
 typedef unsigned int (*MirBufferAndroidHalPixelFormat)(
-    MirBuffer* buffer);
+    MirBuffer const* buffer);
 
 /** Access the GRALLOC_USAGE_FLAGS of the buffer
  *   \pre                   The buffer is suitable for android use
@@ -119,7 +119,7 @@ typedef unsigned int (*MirBufferAndroidHalPixelFormat)(
  *   \return                The gralloc_usage of the buffer
  */
 typedef unsigned int (*MirBufferAndroidGrallocUsage)(
-    MirBuffer* buffer);
+    MirBuffer const* buffer);
 
 /** Access the stride in bytes of the buffer
  *   \pre                   The buffer is suitable for android use
@@ -127,7 +127,7 @@ typedef unsigned int (*MirBufferAndroidGrallocUsage)(
  *   \return                The stride of the buffer
  */
 typedef unsigned int (*MirBufferAndroidStride)(
-    MirBuffer* buffer);
+    MirBuffer const* buffer);
 
 /** Increase refcount of the ANativeWindowBuffer
  *   \pre                   The buffer is suitable for android use

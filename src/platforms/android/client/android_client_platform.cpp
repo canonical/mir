@@ -232,18 +232,18 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-ANativeWindowBuffer* to_anwb(MirBuffer* b)
+ANativeWindowBuffer* to_anwb(MirBuffer const* b)
 {
     if (!b)
         std::abort();
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
     auto native = dynamic_cast<mga::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
     if (!native)
         return nullptr;
     return native->anwb();
 }
 
-bool is_android_compatible(MirBuffer* b)
+bool is_android_compatible(MirBuffer const* b)
 try
 {
     return to_anwb(b);
@@ -255,7 +255,7 @@ catch (std::exception const& ex)
 }
 
 void android_native_handle(
-    MirBuffer* b,
+    MirBuffer const* b,
     int* num_fds, int const** fds,
     int* num_data, int const** data)
 try
@@ -277,7 +277,7 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-unsigned int hal_pixel_format(MirBuffer* b)
+unsigned int hal_pixel_format(MirBuffer const* b)
 try
 {
     if (auto anwb = to_anwb(b))
@@ -290,7 +290,7 @@ catch (std::exception const& ex)
     return std::numeric_limits<unsigned int>::max();
 }
 
-unsigned int gralloc_usage(MirBuffer* b)
+unsigned int gralloc_usage(MirBuffer const* b)
 try
 {
     if (auto anwb = to_anwb(b))
@@ -303,7 +303,7 @@ catch (std::exception const& ex)
     return std::numeric_limits<unsigned int>::max();
 }
 
-unsigned int android_stride(MirBuffer* b)
+unsigned int android_stride(MirBuffer const* b)
 try
 {
     if (auto anwb = to_anwb(b))
