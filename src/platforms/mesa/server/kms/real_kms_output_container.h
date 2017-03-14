@@ -34,15 +34,17 @@ class PageFlipper;
 class RealKMSOutputContainer : public KMSOutputContainer
 {
 public:
-    RealKMSOutputContainer(int drm_fd, std::shared_ptr<PageFlipper> const& page_flipper);
+    RealKMSOutputContainer(
+        std::vector<int> const& drm_fds,
+        std::function<std::shared_ptr<PageFlipper>(int drm_fd)> const& construct_page_flipper);
 
     void for_each_output(std::function<void(std::shared_ptr<KMSOutput> const&)> functor) const override;
 
     void update_from_hardware_state() override;
 private:
-    int const drm_fd;
+    std::vector<int> const drm_fds;
     std::vector<std::shared_ptr<KMSOutput>> outputs;
-    std::shared_ptr<PageFlipper> const page_flipper;
+    std::function<std::shared_ptr<PageFlipper>(int drm_fd)> const construct_page_flipper;
 };
 
 }

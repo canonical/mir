@@ -93,8 +93,13 @@ mgm::Display::Display(std::shared_ptr<helpers::DRMHelper> const& drm,
       listener(listener),
       monitor(mir::udev::Context()),
       shared_egl{*gl_config},
-      output_container{std::make_shared<RealKMSOutputContainer>(drm->fd,
-                       std::make_shared<KMSPageFlipper>(drm->fd, listener))},
+      output_container{
+          std::make_shared<RealKMSOutputContainer>(
+              std::vector<int>{drm->fd},
+              [listener](int drm_fd)
+              {
+                  return std::make_shared<KMSPageFlipper>(drm_fd, listener);
+              })},
       current_display_configuration{output_container},
       dirty_configuration{false},
       bypass_option(bypass_option),
