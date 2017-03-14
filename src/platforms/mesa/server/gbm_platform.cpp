@@ -55,3 +55,8 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::GBMPlatform::make_ipc_opera
     return mir::make_module_ptr<mgm::IpcOperations>(
         std::make_shared<mgm::NestedAuthentication>(nested_context));
 }
+
+EGLNativeDisplayType mgm::GBMPlatform::egl_native_display() const
+{
+    return gbm->device;
+}
