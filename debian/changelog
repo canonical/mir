@@ -1,4 +1,57 @@
-mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.26.1+17.04.20170209.1-0ubuntu1) zesty; urgency=medium
+
+  * New upstream release 0.26.1 (https://launchpad.net/mir/+milestone/0.26.1)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI unchanged at 43
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI bumped to 15
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 12
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 6
+      . mircore ABI unchanged at 1
+    - Enhancements:
+      . Support for MirBuffer API that allows for better management of
+        hardware/software buffers.
+      . Support for MirPresentationChain API that allows better control
+        over {de}queueing of individual buffers {from}to the server.
+      . Interim support for MirRenderSurface API that provides a unit of
+        renderable for lower level content such as MirBufferStreams and
+        MirPresentationChains, etc.. MirRenderSurface API is marked
+        deprecated as it (and the relevant entry points) will be renamed to
+        MirSurface before general availability. It will initially be used for
+        revamping support for EGL drivers.
+      . Synchronous version of mir_prompt_session_new_fds_for_prompt_providers()
+        API (mir_prompt_session_new_fds_for_prompt_providers_sync()) added for
+        convenience.
+      . Better name for MirPersistentId-->MirWindowId. MirPersistentId has now
+        been deprecated.
+    - Bugs fixed:
+      . [regression] Unity8 stutters constantly (like half frame rate).
+        (LP: #1661128)
+      . mir 0.26 - spinner loading animation, minimize, maximize too fast.
+        (LP: #1661072)
+      . [regression] Nested server segfaults or rapidly logs exceptions when a
+        fullscreen client starts [in mir_presentation_chain_set_dropping_mode
+        ... std::exception::what: Operation not permitted] (LP: #1661508)
+      . mir_window_request_persistent_id_sync seg faults when called twice.
+        (LP: #1661704)
+      . [regression] Windowed clients of nested servers are all black.
+        (LP: #1661521)
+      . Mir graphics platform ABI broke in series 0.26 but sonames never
+        changed (LP: #1662455)
+      . Fixes for 0.26 changelog.
+      . [regression] mirscreencast hangs during screencast creation. (LP: #1662997)
+      . libmirclient-dev missing build dependency on libmircore-dev. (LP: #1662942)
+      . mir_window_spec_set_cursor_name() doesn't trigger
+        mir::scene::SurfaceObserver::cursor_image_set_to. (LP: #1663197)
+      . [regression] Software clients of nested servers are all black in Mir 0.25.0
+        and later. (LP: #1663062)
+
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Thu, 09 Feb 2017 21:46:32 +0000
+
+mir (0.26.0+17.04.20170126.3-0ubuntu1) zesty; urgency=medium
 
   * New upstream release 0.26.0 (https://launchpad.net/mir/+milestone/0.26.0)
     - ABI summary:
@@ -12,27 +65,26 @@ mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
       . mirinputplatform ABI unchanged at 6
       . mircore ABI unchanged at 1
     - Enhancements:
-      . New/improved toolkit APIs: MirInputConfig and related functions,
-        MirWindow and related functions, DisplayConfig and related functions,
-        MirScreencastSpec and related functions,
-      . Support for configuring input configuration
-      . Introduce toolkit extension mechanism for platform specific APIs.
-      . Toolkit extensions for: mesa_drm_auth, set_gbm_device and
-        window_coordinate_translation
-      . Screencasting to a specific MirBuffer.
-      . Add DisplayConfigurationController::base_configuration() so downstreams
-        can get the base configuration. (Weirdly they can already set it.).
-      . x11 platform: allow adjustable scale parameter.
-      . Added EDID support: client API, server logging and in mirout.
-      . mirout: Add newer attributes only available in the new display
-        config API: scaling factor, subpixel arrangement and form factor.
-      . mirout: Log the orientation and logical size of each output too.
+      . New and improved client APIs: MirInputConfig, MirWindow, DisplayConfig,
+        MirScreencastSpec.
+      . Support for setting the input configuration.
+      . Introduced an extension mechanism for platform-specific APIs.
+      . Support for screencasting to a specific MirBuffer.
+      . Added DisplayConfigurationController::base_configuration() so
+        downstreams can get the base configuration (weirdly they can already
+        set it).
+      . X11 platform: Allow adjustable scale parameter.
+      . Added monitor EDID support to both the client API and server-side.
+      . mirout: Now shows scaling factor, subpixel arrangement, form factor and
+        EDID.
+      . mirout: Can now change the monitor configuration as well as report it.
       . Replace the mir::Server-overridable Reports with Observers.
-      . Add xkbcommon to mirclient.pc Requires.private.
       . Deprecate legacy toolkit APIs that will be removed in Mir 1.0
-      . Introduced 'client-side vsync', which dramatically reduces latency
-        from the client to the screen (particularly for nested servers like
-        Unity8).
+      . Introduced client-side vsync which dramatically reduces latency
+        from the client to the screen, by up to 44ms.
+      . Removed all input resampling logic. We now expect toolkits to do their
+        own, if at all. This reduces input lag by up to 16.9ms, or 8.4ms on
+        average.
     - Bugs fixed:
       . [performance] Restore support for better-than-triple buffering by
         default. (LP: #1240909)
@@ -121,8 +173,11 @@ mir (0.26.0-0ubuntu1) UNRELEASED; urgency=medium
       . [regression] Mir cross-compile to vivid/armhf FTBFS with:
         mock_input_device_hub.h:33:18: error: ‘add_observer’ is not a type
         (LP: #1658605)
+      . Caught exception at Mir/EGL driver boundary (in setSwapInterval) in
+        clients and tests (LP: #1659298)
+      . Support display scaling slider in unity8 (LP: #1645372)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 19 Dec 2016 18:46:28 +0800
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Thu, 26 Jan 2017 23:29:33 +0000
 
 mir (0.25.0+17.04.20161203-0ubuntu1) zesty; urgency=medium
 

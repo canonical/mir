@@ -30,12 +30,16 @@ add_library(
   display.cpp
   display_buffer.cpp
   guest_platform.cpp
+  page_flipper.h
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
   nested_authentication.cpp
   platform.cpp
+  kms_display_configuration.h
   real_kms_display_configuration.cpp
+  kms_output.h
   real_kms_output.cpp
+  kms_output_container.h
   real_kms_output_container.cpp
 )
 

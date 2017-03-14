@@ -59,3 +59,8 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operatio
 {
     return make_module_ptr<mg::mesa::IpcOperations>(drm);
 }
+
+EGLNativeDisplayType mgx::Platform::egl_native_display() const
+{
+    return eglGetDisplay(x11_connection.get());
+}

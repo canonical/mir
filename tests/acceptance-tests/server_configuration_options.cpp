@@ -131,7 +131,7 @@ TEST_F(ServerConfigurationOptions, unknown_command_line_options_are_passed_to_ha
     server.set_command_line(argc, argv);
 
     EXPECT_CALL(*this, command_line_handler(
-        ElementsAre(StrEq("--hello"), StrEq("world"), StrEq("--offscreen"), StrEq("--answer"), StrEq("42"))));
+        ElementsAre(StrEq("--hello"), StrEq("world"), StrEq("--answer"), StrEq("42"))));
 
     server.apply_settings();
 }
