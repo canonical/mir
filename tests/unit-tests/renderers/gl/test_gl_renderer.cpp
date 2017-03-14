@@ -334,8 +334,16 @@ TEST_F(GLRenderer, unchanged_viewport_avoids_gl_calls)
 
 TEST_F(GLRenderer, unchanged_viewport_updates_gl_if_rotated)
 {   // Regression test for LP: #1672269
+    int const screen_width = 1920;
+    int const screen_height = 1080;
     mir::geometry::Rectangle const view_area{{0,0}, {1920,1080}};
 
+    ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_WIDTH,_))
+        .WillByDefault(DoAll(SetArgPointee<3>(screen_width),
+                             Return(EGL_TRUE)));
+    ON_CALL(mock_egl, eglQuerySurface(_,_,EGL_HEIGHT,_))
+        .WillByDefault(DoAll(SetArgPointee<3>(screen_height),
+                             Return(EGL_TRUE)));
     ON_CALL(mock_display_buffer, view_area())
         .WillByDefault(Return(view_area));
 
