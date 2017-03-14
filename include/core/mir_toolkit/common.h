@@ -63,6 +63,7 @@ typedef enum MirSurfaceAttrib
     mir_surface_attrib_dpi,
     mir_surface_attrib_visibility,
     mir_surface_attrib_preferred_orientation,
+    mir_surface_attrib_drag_and_drop_handle,
     /* Must be last */
     mir_surface_attribs
 } MirSurfaceAttrib __attribute__ ((deprecated("use MirWindowAttrib")));
@@ -84,6 +85,7 @@ typedef enum MirWindowAttrib
     mir_window_attrib_dpi,
     mir_window_attrib_visibility,
     mir_window_attrib_preferred_orientation,
+    mir_window_attrib_drag_and_drop_handle,
     /* Must be last */
     mir_window_attribs
 } MirWindowAttrib;

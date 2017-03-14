@@ -54,7 +54,10 @@ public:
     // InputTargeter
     void set_focus(std::shared_ptr<input::Surface> const& target) override;
     void clear_focus() override;
-    
+
+    void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) override;
+    void clear_drag_and_drop_handle() override;
+
 private:
     void device_reset(MirInputDeviceId reset_device_id, std::chrono::nanoseconds when);
     bool dispatch_key(MirEvent const* kev);
@@ -92,6 +95,7 @@ private:
 
     std::mutex dispatcher_mutex;
     std::weak_ptr<input::Surface> focus_surface;
+    std::vector<uint8_t> drag_and_drop_handle;
     bool started;
 };
 

@@ -198,6 +198,10 @@ void mtd::StubSurface::placed_relative(geometry::Rectangle const& /*placement*/)
 {
 }
 
+void mtd::StubSurface::start_drag_and_drop(std::vector<uint8_t> const& /*handle*/)
+{
+}
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class
