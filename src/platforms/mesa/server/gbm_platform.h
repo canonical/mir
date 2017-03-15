@@ -22,6 +22,7 @@
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
 #include "platform_common.h"
+#include "mir/renderer/gl/egl_platform.h"
 
 namespace mir
 {
@@ -29,7 +30,9 @@ namespace graphics
 {
 namespace mesa
 {
-class GBMPlatform : public graphics::RenderingPlatform
+class GBMPlatform : public graphics::RenderingPlatform,
+                    public graphics::NativePlatform,
+                    public renderer::gl::EGLPlatform
 {
 public:
     GBMPlatform(
@@ -38,6 +41,7 @@ public:
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+    NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 private:
     BypassOption bypass_option;

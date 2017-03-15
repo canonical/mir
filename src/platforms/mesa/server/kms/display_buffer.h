@@ -23,6 +23,7 @@
 #include "mir/graphics/display.h"
 #include "mir/renderer/gl/render_target.h"
 #include "display_helpers.h"
+#include "egl_helper.h"
 #include "platform_common.h"
 
 #include <vector>
