@@ -1,5 +1,5 @@
 # We need MIRPLATFORM_ABI in both libmirplatform and the platform implementations.
-set(MIRPLATFORM_ABI 15)
+set(MIRPLATFORM_ABI 16)
 
 # Add the cookie implementation before exposing any APIs
 add_subdirectory(cookie/)
