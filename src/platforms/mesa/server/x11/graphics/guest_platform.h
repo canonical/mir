@@ -22,6 +22,7 @@
 
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
+#undef __GBM__ //display_helpers.h sets __GBM__ platform, here need X11 egl platform defs, and gbm utilities
 #include "mir/renderer/gl/egl_platform.h"
 
 namespace mir
