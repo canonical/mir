@@ -95,7 +95,7 @@ public:
 
     /**
      * Creates an object capable of doing platform specific processing of buffers
-     * before they are sent or after they are recieved accross IPC
+     * before they are sent or after they are received across IPC
      */
     virtual UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const = 0;
 
