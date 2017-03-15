@@ -30,15 +30,12 @@
 #include <gbm.h>
 #pragma GCC diagnostic pop
 
-#include <EGL/egl.h>
 #include <xf86drmMode.h>
 
 namespace mir
 {
 namespace graphics
 {
-class GLConfig;
-
 namespace mesa
 {
 
@@ -96,45 +93,6 @@ public:
     GBMSurfaceUPtr create_scanout_surface(uint32_t width, uint32_t height);
 
     gbm_device* device;
-};
-
-class EGLHelper
-{
-public:
-    EGLHelper(GLConfig const& gl_config);
-    EGLHelper(
-        GLConfig const& gl_config,
-        GBMHelper const& gbm,
-        gbm_surface* surface,
-        EGLContext shared_context);
-    ~EGLHelper() noexcept;
-    EGLHelper(EGLHelper&& from);
-
-    EGLHelper(const EGLHelper&) = delete;
-    EGLHelper& operator=(const EGLHelper&) = delete;
-
-    void setup(GBMHelper const& gbm);
-    void setup(GBMHelper const& gbm, EGLContext shared_context);
-    void setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
-               EGLContext shared_context);
-
-    bool swap_buffers();
-    bool make_current() const;
-    bool release_current() const;
-
-    EGLContext context() { return egl_context; }
-
-    void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)>);
-private:
-    void setup_internal(GBMHelper const& gbm, bool initialize);
-
-    EGLint const depth_buffer_bits;
-    EGLint const stencil_buffer_bits;
-    EGLDisplay egl_display;
-    EGLConfig egl_config;
-    EGLContext egl_context;
-    EGLSurface egl_surface;
-    bool should_terminate_egl;
 };
 
 }
