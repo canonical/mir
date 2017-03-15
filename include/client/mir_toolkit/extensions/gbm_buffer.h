@@ -98,7 +98,7 @@ typedef MirBuffer* (*MirConnectionAllocateBufferGbmSync)(
  *   \param [in] buffer The buffer
  *   \return            True if suitable, false if unsuitable
  */
-typedef bool (*MirBufferIsGbmImportable)(MirBuffer* buffer);
+typedef bool (*MirBufferIsGbmImportable)(MirBuffer const* buffer);
 
 /** Access the fd a MirBuffer suitable for gbm import
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
@@ -106,35 +106,35 @@ typedef bool (*MirBufferIsGbmImportable)(MirBuffer* buffer);
  *   \param [in] buffer The buffer
  *   \return            The fd
  */
-typedef int (*MirBufferGbmFd)(MirBuffer* buffer);
+typedef int (*MirBufferGbmFd)(MirBuffer const* buffer);
 
 /** Get the stride of a MirBuffer
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \param [in] buffer The buffer
  *   \return            The stride of the buffer
  */
-typedef uint32_t (*MirBufferGbmStride)(MirBuffer* buffer);
+typedef uint32_t (*MirBufferGbmStride)(MirBuffer const* buffer);
 
 /** Get the GBM_FORMAT of a MirBuffer
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \param [in] buffer The buffer
  *   \return            The GBM_FORMAT of the buffer
  */
-typedef uint32_t (*MirBufferGbmFormat)(MirBuffer* buffer);
+typedef uint32_t (*MirBufferGbmFormat)(MirBuffer const* buffer);
 
 /** Get the gbm_bo_flags of a MirBuffer
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \param [in] buffer The buffer
  *   \return            The gbm_bo_flags of the buffer
  */
-typedef uint32_t (*MirBufferGbmFlags)(MirBuffer* buffer);
+typedef uint32_t (*MirBufferGbmFlags)(MirBuffer const* buffer);
 
 /** Get the age of a MirBuffer
  *   \pre               The buffer is suitable for GBM_BO_IMPORT_FD
  *   \param [in] buffer The buffer
  *   \return            The age of the buffer
  */
-typedef unsigned int (*MirBufferGbmAge)(MirBuffer* buffer);
+typedef unsigned int (*MirBufferGbmAge)(MirBuffer const* buffer);
 
 typedef struct MirExtensionGbmBufferV2
 {
