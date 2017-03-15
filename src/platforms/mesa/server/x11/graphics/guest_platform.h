@@ -22,6 +22,8 @@
 
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
+#undef __GBM__ //display_helpers.h sets __GBM__ platform, here need X11 egl platform defs, and gbm utilities
+#include "mir/renderer/gl/egl_platform.h"
 
 namespace mir
 {
@@ -30,7 +32,9 @@ namespace graphics
 namespace X
 {
 
-class GuestPlatform : public graphics::Platform
+class GuestPlatform : public graphics::Platform,
+                      public graphics::NativePlatform,
+                      public mir::renderer::gl::EGLPlatform
 {
 public:
     GuestPlatform(std::shared_ptr<NestedContext> const& /*nested_context*/);
@@ -41,6 +45,8 @@ public:
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const&) override;
+
+    NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 
 private:

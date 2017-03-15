@@ -22,6 +22,8 @@
 #include "mir/graphics/platform.h"
 #include "device_quirks.h"
 #include "overlay_optimization.h"
+#include "mir/graphics/display.h"
+#include "mir/renderer/gl/egl_platform.h"
 
 namespace mir
 {
@@ -37,7 +39,9 @@ class CommandStreamSyncFactory;
 class NativeWindowReport;
 
 
-class GrallocPlatform : public graphics::RenderingPlatform
+class GrallocPlatform : public graphics::RenderingPlatform,
+                        public graphics::NativePlatform,
+                        public renderer::gl::EGLPlatform
 {
 public:
     GrallocPlatform(
@@ -45,6 +49,7 @@ public:
 
     UniqueModulePtr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+    NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 
 private:
@@ -63,8 +68,8 @@ public:
         std::shared_ptr<DeviceQuirks> const& quirks);
 
     UniqueModulePtr<Display> create_display(
-        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
-        std::shared_ptr<GLConfig> const& gl_config) override;
+        std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
+        std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
 
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
@@ -76,7 +81,9 @@ private:
     OverlayOptimization const overlay_option;
 };
 
-class Platform : public graphics::Platform
+class Platform : public graphics::Platform,
+                 public graphics::NativePlatform,
+                 public renderer::gl::EGLPlatform
 {
 public:
     Platform(
@@ -88,6 +95,7 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+    NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 
 private:

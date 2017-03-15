@@ -125,6 +125,11 @@ EGLNativeDisplayType mga::Platform::egl_native_display() const
     return rendering->egl_native_display();
 }
 
+mg::NativePlatform* mga::Platform::native_platform()
+{
+    return this;
+}
+
 mga::GrallocPlatform::GrallocPlatform(
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator) :
     buffer_allocator(buffer_allocator)
@@ -172,6 +177,11 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::GrallocPlatform::create_bu
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::GrallocPlatform::make_ipc_operations() const
 {
     return mir::make_module_ptr<mga::IpcOperations>();
+}
+
+mg::NativePlatform* mga::GrallocPlatform::native_platform()
+{
+    return this;
 }
 
 EGLNativeDisplayType mga::GrallocPlatform::egl_native_display() const
