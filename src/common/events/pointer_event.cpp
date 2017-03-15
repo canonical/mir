@@ -164,7 +164,7 @@ MirBlob* MirPointerEvent::dnd_handle() const
     auto blob = std::make_unique<MyMirBlob>();
     blob->data_.reserve(dnd_handle.size());
 
-    //std::copy(dnd_handle.begin(), dnd_handle.end(), back_inserter(blob->data_));
+    // Can't use std::copy() as the CapnP iterators don't provide an iterator category
     for (auto p = dnd_handle.begin(); p != dnd_handle.end(); ++p)
         blob->data_.push_back(*p);
 
