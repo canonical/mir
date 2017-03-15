@@ -25,7 +25,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/fd.h"
-#include "mir/renderer/gl/egl_access.h"
+#include "mir/renderer/gl/egl_platform.h"
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -38,7 +38,7 @@ namespace eglstream
 {
 class Platform : public graphics::Platform,
                  public graphics::NativePlatform,
-                 public mir::renderer::gl::EGLAccess
+                 public mir::renderer::gl::EGLPlatform
 {
 public:
     Platform(

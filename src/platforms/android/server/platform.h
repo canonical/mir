@@ -23,7 +23,7 @@
 #include "device_quirks.h"
 #include "overlay_optimization.h"
 #include "mir/graphics/display.h"
-#include "mir/renderer/gl/egl_access.h"
+#include "mir/renderer/gl/egl_platform.h"
 
 namespace mir
 {
@@ -40,7 +40,7 @@ class NativeWindowReport;
 
 class Platform : public graphics::Platform,
                  public graphics::NativePlatform,
-                 public mir::renderer::gl::EGLAccess
+                 public mir::renderer::gl::EGLPlatform
 {
 public:
     Platform(

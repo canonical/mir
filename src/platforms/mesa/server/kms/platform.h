@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_MESA_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "mir/renderer/gl/egl_access.h"
+#include "mir/renderer/gl/egl_platform.h"
 #include "platform_common.h"
 #include "display_helpers.h"
 
@@ -36,7 +36,7 @@ class VirtualTerminal;
 class InternalNativeDisplay;
 class Platform : public graphics::Platform,
                  public graphics::NativePlatform,
-                 public mir::renderer::gl::EGLAccess
+                 public mir::renderer::gl::EGLPlatform
 {
 public:
     explicit Platform(std::shared_ptr<DisplayReport> const& reporter,

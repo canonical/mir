@@ -22,7 +22,7 @@
 
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
-#include "mir/renderer/gl/egl_access.h"
+#include "mir/renderer/gl/egl_platform.h"
 
 namespace mir
 {
@@ -33,7 +33,7 @@ namespace X
 
 class GuestPlatform : public graphics::Platform,
                       public graphics::NativePlatform,
-                      public mir::renderer::gl::EGLAccess
+                      public mir::renderer::gl::EGLPlatform
 {
 public:
     GuestPlatform(std::shared_ptr<NestedContext> const& /*nested_context*/);

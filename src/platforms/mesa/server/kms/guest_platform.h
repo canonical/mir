@@ -23,7 +23,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
-#include "mir/renderer/gl/egl_access.h"
+#include "mir/renderer/gl/egl_platform.h"
 #include "display_helpers.h"
 
 namespace mir
@@ -36,7 +36,7 @@ class InternalNativeDisplay;
 
 class GuestPlatform : public graphics::Platform,
                       public graphics::NativePlatform,
-                      public mir::renderer::gl::EGLAccess
+                      public mir::renderer::gl::EGLPlatform
 {
 public:
     GuestPlatform(std::shared_ptr<NestedContext> const& nested_context_arg);

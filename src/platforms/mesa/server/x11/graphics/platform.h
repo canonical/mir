@@ -23,7 +23,7 @@
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
 #include "mir/geometry/size.h"
-#include "mir/renderer/gl/egl_access.h"
+#include "mir/renderer/gl/egl_platform.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -37,7 +37,7 @@ namespace X
 
 class Platform : public graphics::Platform,
                  public graphics::NativePlatform,
-                 public mir::renderer::gl::EGLAccess
+                 public mir::renderer::gl::EGLPlatform
 {
 public:
     explicit Platform(std::shared_ptr<::Display> const& conn,

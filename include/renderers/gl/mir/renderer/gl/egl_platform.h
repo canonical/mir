@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_RENDERER_GL_EGL_ACCESS_H_
-#define MIR_RENDERER_GL_EGL_ACCESS_H_
+#ifndef MIR_RENDERER_GL_EGL_PLATFORM_H_
+#define MIR_RENDERER_GL_EGL_PLATFORM_H_
 
 #include <EGL/egl.h>
 
@@ -28,20 +28,20 @@ namespace renderer
 namespace gl
 {
 
-class EGLAccess
+class EGLPlatform
 {
 public:
-    virtual ~EGLAccess() = default;
+    virtual ~EGLPlatform() = default;
     virtual EGLNativeDisplayType egl_native_display() const = 0;
 
 protected:
-    EGLAccess() = default;
-    EGLAccess(EGLAccess const&) = delete;
-    EGLAccess& operator=(EGLAccess const&) = delete;
+    EGLPlatform() = default;
+    EGLPlatform(EGLPlatform const&) = delete;
+    EGLPlatform& operator=(EGLPlatform const&) = delete;
 };
 
 }
 }
 }
 
-#endif
+#endif /* MIR_RENDERER_GL_EGL_PLATFORM_H_ */

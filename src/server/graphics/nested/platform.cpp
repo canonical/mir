@@ -31,7 +31,7 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
-#include "mir/renderer/gl/egl_access.h"
+#include "mir/renderer/gl/egl_platform.h"
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -145,7 +145,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operatio
 
 EGLNativeDisplayType mgn::Platform::egl_native_display() const
 {
-    if (auto a = dynamic_cast<mir::renderer::gl::EGLAccess*>(guest_platform->native_platform()))
+    if (auto a = dynamic_cast<mir::renderer::gl::EGLPlatform*>(guest_platform->native_platform()))
         return a->egl_native_display();
     return EGL_NO_DISPLAY;
 }

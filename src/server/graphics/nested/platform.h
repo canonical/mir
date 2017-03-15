@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_NESTED_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
-#include "mir/renderer/gl/egl_access.h"
+#include "mir/renderer/gl/egl_platform.h"
 #include "passthrough_option.h"
 #include <memory>
 
@@ -38,7 +38,7 @@ namespace nested
 class HostConnection;
 class Platform : public graphics::Platform,
                  public graphics::NativePlatform,
-                 public mir::renderer::gl::EGLAccess
+                 public mir::renderer::gl::EGLPlatform
 {
 public:
     Platform(
