@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_NESTED_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "mir/renderer/gl/egl_platform.h"
 #include "passthrough_option.h"
 #include <memory>
 
@@ -55,7 +56,9 @@ private:
     PassthroughOption const passthrough_option;
 };
 
-class NestedBufferPlatform : public graphics::RenderingPlatform
+class NestedBufferPlatform : public graphics::RenderingPlatform,
+                             public graphics::NativePlatform,
+                             public mir::renderer::gl::EGLPlatform
 {
 public:
     NestedBufferPlatform(
@@ -66,6 +69,8 @@ public:
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+    NativePlatform* native_platform() override;
+    EGLNativeDisplayType egl_native_display() const override;
 private:
     std::shared_ptr<mir::SharedLibrary> const library; 
     std::shared_ptr<HostConnection> const connection; 
@@ -75,7 +80,9 @@ private:
     PassthroughOption const passthrough_option;
 };
 
-class Platform : public graphics::Platform
+class Platform : public graphics::Platform,
+                 public graphics::NativePlatform,
+                 public mir::renderer::gl::EGLPlatform
 {
 public:
     Platform(
@@ -86,6 +93,7 @@ public:
         std::shared_ptr<GLConfig> const& gl_config) override;
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+    NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 private:
     std::unique_ptr<NestedBufferPlatform> const buffer_platform;

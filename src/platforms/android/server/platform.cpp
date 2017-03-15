@@ -162,6 +162,11 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operatio
     return mir::make_module_ptr<mga::IpcOperations>();
 }
 
+mg::NativePlatform* mga::Platform::native_platform()
+{
+    return this;
+}
+
 EGLNativeDisplayType mga::Platform::egl_native_display() const
 {
     return EGL_DEFAULT_DISPLAY;

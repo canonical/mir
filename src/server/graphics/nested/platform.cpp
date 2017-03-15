@@ -31,6 +31,7 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
+#include "mir/renderer/gl/egl_platform.h"
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -129,6 +130,18 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::NestedBufferPlatform::make_
     return mir::make_module_ptr<mgn::IpcOperations>(rendering_platform->make_ipc_operations());
 }
 
+EGLNativeDisplayType mgn::NestedBufferPlatform::egl_native_display() const
+{
+    if (auto a = dynamic_cast<mir::renderer::gl::EGLPlatform*>(rendering_platform->native_platform()))
+        return a->egl_native_display();
+    return EGL_NO_DISPLAY;
+}
+
+mg::NativePlatform* mgn::NestedBufferPlatform::native_platform()
+{
+    return rendering_platform->native_platform();
+}
+
 mgn::NestedDisplayPlatform::NestedDisplayPlatform(
     std::shared_ptr<mgn::HostConnection> const& connection, 
     std::shared_ptr<mg::DisplayReport> const& display_report,
@@ -178,5 +191,10 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operatio
 
 EGLNativeDisplayType mgn::Platform::egl_native_display() const
 {
-    return guest_platform->egl_native_display();
+    return buffer_platform->egl_native_display();
+}
+
+mg::NativePlatform* mgn::Platform::native_platform()
+{
+    return buffer_platform->native_platform();
 }
