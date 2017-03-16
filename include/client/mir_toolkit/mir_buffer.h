@@ -68,7 +68,7 @@ MirBuffer* mir_connection_allocate_buffer_sync(
  *   \param [in] buffer    The buffer
  *   \return               True if the buffer is valid, or false otherwise.
  **/
-bool mir_buffer_is_valid(MirBuffer* buffer);
+bool mir_buffer_is_valid(MirBuffer const* buffer);
 
 /** Retrieve a text description an error associated with a MirBuffer.
  *  The returned string is owned by the library and remains valid until the
@@ -78,7 +78,7 @@ bool mir_buffer_is_valid(MirBuffer* buffer);
  *                         invalid buffer, or the empty string "" if the
  *                         connection is valid.
  **/
-char const *mir_buffer_get_error_message(MirBuffer* buffer);
+char const *mir_buffer_get_error_message(MirBuffer const* buffer);
 
 /**
  * Access the MirBufferPackage
@@ -111,21 +111,21 @@ void mir_buffer_unmap(MirBuffer* buffer);
  *   \param [in] buffer   The buffer
  *   \return              The width of the buffer in pixels
  **/
-unsigned int mir_buffer_get_width(MirBuffer* buffer);
+unsigned int mir_buffer_get_width(MirBuffer const* buffer);
 
 /** Retrieve the height of the buffer in pixels.
  *
  *   \param [in] buffer   The buffer
  *   \return              The height of the buffer in pixels
  **/
-unsigned int mir_buffer_get_height(MirBuffer* buffer);
+unsigned int mir_buffer_get_height(MirBuffer const* buffer);
 
 /** Retrieve the pixel format of the buffer.
  *
  *   \param [in] buffer   The buffer
  *   \return              The pixel format of the buffer
  **/
-MirPixelFormat mir_buffer_get_pixel_format(MirBuffer* buffer);
+MirPixelFormat mir_buffer_get_pixel_format(MirBuffer const* buffer);
 
 /** @} */
 
