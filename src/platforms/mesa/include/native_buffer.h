@@ -34,6 +34,9 @@ namespace mesa
 struct NativeBuffer : graphics::NativeBuffer, MirBufferPackage
 {
     struct gbm_bo *bo;
+    bool is_gbm_buffer;
+    uint32_t native_format;
+    uint32_t native_flags;
 };
 }
 }
