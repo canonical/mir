@@ -370,7 +370,11 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
                       0.0f});
 
     viewport = rect;
+    update_gl_viewport();
+}
 
+void mrg::Renderer::update_gl_viewport()
+{
     /*
      * Letterboxing: Move the glViewport to add black bars in the case that
      * the logical viewport aspect ratio doesn't match the display aspect.
@@ -405,7 +409,12 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 
 void mrg::Renderer::set_output_transform(glm::mat2 const& t)
 {
-    display_transform = glm::mat4(t);
+    auto const new_display_transform = glm::mat4(t);
+    if (new_display_transform != display_transform)
+    {
+        display_transform = new_display_transform;
+        update_gl_viewport();
+    }
 }
 
 void mrg::Renderer::suspend()
