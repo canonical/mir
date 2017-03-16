@@ -35,7 +35,7 @@ namespace mgm = mir::graphics::mesa;
 
 namespace
 {
-std::shared_ptr<mg::MesaAuthExtension> load_extension(mg::NestedContext& context)
+std::shared_ptr<mg::MesaAuthExtension> load_extension(mg::PlatformAuthentication& context)
 {
     auto ext = context.auth_extension();
     if (!ext.is_set())
@@ -45,7 +45,7 @@ std::shared_ptr<mg::MesaAuthExtension> load_extension(mg::NestedContext& context
 }
 
 mgm::NestedAuthentication::NestedAuthentication(
-    std::shared_ptr<NestedContext> const& nested_context) :
+    std::shared_ptr<PlatformAuthentication> const& nested_context) :
     nested_context{nested_context},
     auth_extension(load_extension(*nested_context))
 

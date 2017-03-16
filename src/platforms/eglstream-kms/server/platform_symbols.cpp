@@ -171,7 +171,7 @@ mir::ModuleProperties const* describe_graphics_module()
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::NestedContext> const& /*nested_context*/)
+    std::shared_ptr<mg::PlatformAuthentication> const& /*nested_context*/)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     return nullptr;

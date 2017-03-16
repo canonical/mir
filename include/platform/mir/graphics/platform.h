@@ -52,7 +52,7 @@ class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
 class GLConfig;
 class PlatformIpcOperations;
-class NestedContext;
+class PlatformAuthentication;
 class NativePlatform
 {
 protected:
@@ -157,7 +157,7 @@ typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
 
 typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateGuestPlatform)(
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const& nested_context);
 
 
 typedef void(*AddPlatformOptions)(
@@ -175,7 +175,7 @@ typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatf
 
 typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderingPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const& nested_context);
 }
 }
 
@@ -219,7 +219,7 @@ mir::UniqueModulePtr<mir::graphics::Platform> create_host_platform(
  */
 mir::UniqueModulePtr<mir::graphics::Platform> create_guest_platform(
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const& nested_context);
 
 /**
  * Function prototype used to add platform specific options to the platform-independent server options.
@@ -248,7 +248,7 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
 
 mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
     std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const& nested_context);
 
 #if defined(__clang__)
 #pragma clang diagnostic pop

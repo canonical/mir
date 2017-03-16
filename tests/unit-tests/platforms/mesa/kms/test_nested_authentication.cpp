@@ -40,7 +40,7 @@ namespace
 struct NestedAuthentication : ::testing::Test
 {
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
-    mtd::MockNestedContext mock_nested_context;
+    mtd::MockPlatformAuthentication mock_nested_context;
     std::shared_ptr<mtd::MockMesaExt> mock_ext = std::make_shared<mtd::MockMesaExt>();
     unsigned int const magic{332211};
 };

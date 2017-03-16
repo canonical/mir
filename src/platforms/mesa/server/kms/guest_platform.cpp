@@ -43,7 +43,7 @@ namespace
 //TODO: construction for mclm::ClientPlatform is roundabout/2-step.
 //      Might be better for the extension to be a different way to allocate
 //      MirConnection, but beyond scope of work.
-void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* device)
+void set_guest_gbm_device(mg::PlatformAuthentication& nested_context, gbm_device* device)
 {
     std::string const msg{"Nested Mir failed to set the gbm device."};
     auto ext = nested_context.set_gbm_extension();
@@ -55,7 +55,7 @@ void set_guest_gbm_device(mg::NestedContext& nested_context, gbm_device* device)
 }
 
 mgm::GuestPlatform::GuestPlatform(
-    std::shared_ptr<NestedContext> const& nested_context)
+    std::shared_ptr<PlatformAuthentication> const& nested_context)
     : nested_context{nested_context}
 {
     auto ext = nested_context->auth_extension();

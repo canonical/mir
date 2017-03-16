@@ -31,7 +31,7 @@ namespace mgx = mg::X;
 namespace mgm = mg::mesa;
 
 mgx::GuestPlatform::GuestPlatform(
-    std::shared_ptr<NestedContext> const& /*nested_context*/)
+    std::shared_ptr<PlatformAuthentication> const& /*nested_context*/)
     : udev{std::make_shared<mir::udev::Context>()},
       drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render)}
 {

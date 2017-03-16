@@ -49,7 +49,7 @@ class HostSurface;
 class HostChain;
 class HostSurfaceSpec;
 class NativeBuffer;
-class HostConnection : public NestedContext
+class HostConnection : public PlatformAuthentication
 {
 public:
     virtual ~HostConnection() = default;

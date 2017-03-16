@@ -44,7 +44,7 @@ namespace test
 namespace doubles
 {
 
-struct MockNestedContext : graphics::NestedContext
+struct MockPlatformAuthentication : graphics::PlatformAuthentication
 {
     MOCK_METHOD0(platform_fd_items, std::vector<int>());
     MOCK_METHOD2(platform_operation, graphics::PlatformOperationMessage(

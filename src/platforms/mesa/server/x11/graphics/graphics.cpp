@@ -65,7 +65,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& /*report*/,
-    std::shared_ptr<mg::NestedContext> const& nested_context)
+    std::shared_ptr<mg::PlatformAuthentication> const& nested_context)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     return mir::make_module_ptr<mgx::GuestPlatform>(nested_context);

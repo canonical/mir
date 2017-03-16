@@ -55,10 +55,10 @@ protected:
     SetGbmExtension& operator=(SetGbmExtension const&) = delete;
 };
 
-class NestedContext
+class PlatformAuthentication
 {
 public:
-    virtual ~NestedContext() = default;
+    virtual ~PlatformAuthentication() = default;
 
     //unique_ptr would be nice, but don't want to break mircore
     virtual mir::optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() = 0;
@@ -68,9 +68,9 @@ public:
         unsigned int op, PlatformOperationMessage const& request) = 0;
 
 protected:
-    NestedContext() = default;
-    NestedContext(NestedContext const&) = delete;
-    NestedContext& operator=(NestedContext const&) = delete;
+    PlatformAuthentication() = default;
+    PlatformAuthentication(PlatformAuthentication const&) = delete;
+    PlatformAuthentication& operator=(PlatformAuthentication const&) = delete;
 };
 
 }

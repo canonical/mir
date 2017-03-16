@@ -71,7 +71,7 @@ public:
 protected:
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
-    ::testing::NiceMock<mtd::MockNestedContext> mock_nested_context;
+    ::testing::NiceMock<mtd::MockPlatformAuthentication> mock_nested_context;
     std::shared_ptr<mtd::MockMesaExt> mock_ext = std::make_shared<mtd::MockMesaExt>();
     std::shared_ptr<MockSetGbmExt> mock_gbm_ext = std::make_shared<MockSetGbmExt>();
 };
