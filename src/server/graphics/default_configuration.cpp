@@ -153,10 +153,20 @@ mir::DefaultServerConfiguration::the_display()
         {
             if (the_options()->is_set(options::offscreen_opt))
             {
-                return std::make_shared<mg::offscreen::Display>(
-                    the_graphics_platform()->egl_native_display(),
-                    the_display_configuration_policy(),
-                    the_display_report());
+                if (auto egl_access = dynamic_cast<mir::renderer::gl::EGLPlatform*>(
+                    the_graphics_platform()->native_platform()))
+                {
+                    return std::make_shared<mg::offscreen::Display>(
+                        egl_access->egl_native_display(),
+                        the_display_configuration_policy(),
+                        the_display_report());
+                }
+                else
+                {
+                    BOOST_THROW_EXCEPTION(std::runtime_error(
+                        "underlying rendering platform does not support EGL access."\
+                        " Could not create offscreen display"));
+                }
             }
 
             return the_graphics_platform()->create_display(

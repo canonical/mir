@@ -21,7 +21,6 @@
 #define MIR_GRAPHICS_PLATFORM_H_
 
 #include <boost/program_options/options_description.hpp>
-#include <EGL/egl.h>
 
 #include "mir/module_properties.h"
 #include "mir/module_deleter.h"
@@ -54,6 +53,14 @@ class GraphicBufferAllocator;
 class GLConfig;
 class PlatformIpcOperations;
 class NestedContext;
+class NativePlatform
+{
+protected:
+    NativePlatform() = default;
+    virtual ~NativePlatform() = default;
+    NativePlatform(NativePlatform const&) = delete;
+    NativePlatform& operator=(NativePlatform const&) = delete;
+};
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -92,7 +99,11 @@ public:
      */
     virtual UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const = 0;
 
-    virtual EGLNativeDisplayType egl_native_display() const = 0;
+    /**
+     * Access the native resource[s] used to connect to the rendering backend
+     * for this platform
+     */
+    virtual NativePlatform* native_platform() = 0;
 };
 
 /**
