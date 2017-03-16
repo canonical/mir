@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_NESTED_CONTEXT_H_
-#define MIR_TEST_DOUBLES_MOCK_NESTED_CONTEXT_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_PLATFORM_AUTHENTICATION_H_
+#define MIR_TEST_DOUBLES_MOCK_PLATFORM_AUTHENTICATION_H_
 
-#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/platform_operation_message.h"
 
 namespace mir

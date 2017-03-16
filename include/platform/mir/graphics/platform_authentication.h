@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_NESTED_CONTEXT_H_
-#define MIR_GRAPHICS_NESTED_CONTEXT_H_
+#ifndef MIR_GRAPHICS_PLATFORM_AUTHENTICATION_H_
+#define MIR_GRAPHICS_PLATFORM_AUTHENTICATION_H_
 
 #include "mir/optional_value.h"
 #include "mir/fd.h"
@@ -76,4 +76,4 @@ protected:
 }
 }
 
-#endif /* MIR_GRAPHICS_NESTED_CONTEXT_H_ */
+#endif /* MIR_GRAPHICS_PLATFORM_AUTHENTICATION_H_ */

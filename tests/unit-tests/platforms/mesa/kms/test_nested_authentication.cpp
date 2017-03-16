@@ -16,12 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "src/platforms/mesa/server/kms/nested_authentication.h"
 #include "mir_toolkit/mesa/platform_operation.h"
 #include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/mock_nested_context.h"
+#include "mir/test/doubles/mock_platform_authentication.h"
 #include "mir/test/doubles/mock_mesa_auth_extensions.h"
 #include "mir/test/fake_shared.h"
 #include <gtest/gtest.h>

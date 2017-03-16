@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_authentication.h"
 #include "src/platforms/mesa/server/kms/guest_platform.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/platform_ipc_operations.h"
@@ -29,7 +29,7 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/mock_buffer_ipc_message.h"
 #include "mir/test/doubles/fd_matcher.h"
-#include "mir/test/doubles/mock_nested_context.h"
+#include "mir/test/doubles/mock_platform_authentication.h"
 #include "mir/test/doubles/mock_mesa_auth_extensions.h"
 
 #include <gtest/gtest.h>

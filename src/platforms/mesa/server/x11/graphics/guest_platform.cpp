@@ -21,7 +21,7 @@
 #include "ipc_operations.h"
 #include "buffer_allocator.h"
 
-#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_authentication.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>

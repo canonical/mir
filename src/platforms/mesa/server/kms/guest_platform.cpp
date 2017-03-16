@@ -23,7 +23,7 @@
 #include "ipc_operations.h"
 #include "buffer_allocator.h"
 
-#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir_toolkit/mesa/platform_operation.h"
 #include "mir_toolkit/extensions/set_gbm_device.h"
