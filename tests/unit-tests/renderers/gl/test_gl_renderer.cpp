@@ -358,12 +358,12 @@ TEST_F(GLRenderer, unchanged_viewport_updates_gl_if_rotated)
     mrg::Renderer renderer(mock_display_buffer);
 
     renderer.set_viewport(view_area);
-    glm::mat2 const something_different{0,-1,
-                                        1, 0};
-    renderer.set_output_transform(something_different);
 
     EXPECT_CALL(mock_gl, glViewport(_,_,_,_))
         .Times(1);
+    glm::mat2 const something_different{0,-1,
+                                        1, 0};
+    renderer.set_output_transform(something_different);
     renderer.set_viewport(view_area);
 }
 
