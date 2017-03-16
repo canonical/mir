@@ -17,6 +17,10 @@ mir (0.26.2-0ubuntu1) UNRELEASED; urgency=medium
       . Setting MirWindowSpec parameters always causes window's input_region
         to be reset (LP: #1670876)
       . Subpixel order not included in Mir display information (LP: #1393578)
+      . Presentation chains should support various swap interval modes
+        (LP: #1673533)
+      . Need an extension for GBM buffers to replace
+        mir_buffer_get_buffer_package() (LP: #1673534)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 20 Feb 2017 13:37:13 +0800
 
