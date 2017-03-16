@@ -308,3 +308,26 @@ TEST_F(DefaultDevice, device_config_can_be_querried_from_touchscreen)
 
     EXPECT_EQ(ts_config, dev.touchscreen_configuration().value());
 }
+
+TEST_F(DefaultDevice, disable_queue_ends_config_processing)
+{
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper));
+
+    dev.disable_queue();
+    MirPointerConfig pointer_conf;
+    pointer_conf.cursor_acceleration_bias(1.0);
+
+    EXPECT_CALL(touchpad, apply_settings(Matcher<mi::TouchpadSettings const&>(_))).Times(0);
+    dev.apply_pointer_configuration(pointer_conf);
+}
+
+TEST_F(DefaultDevice, disable_queue_removes_reference_to_queue)
+{
+    std::weak_ptr<md::ActionQueue> ref = queue;
+    mi::DefaultDevice dev(MirInputDeviceId{17}, queue, touchpad, mt::fake_shared(key_mapper));
+    queue.reset();
+
+    EXPECT_THAT(ref.lock(), Ne(nullptr));
+    dev.disable_queue();
+    EXPECT_THAT(ref.lock(), Eq(nullptr));
+}

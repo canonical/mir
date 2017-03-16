@@ -78,6 +78,7 @@ public:
     void apply_touchscreen_configuration(MirTouchscreenConfig const&) override;
 
     MirInputDevice config() const;
+    void disable_queue();
 private:
     void set_pointer_configuration(MirPointerConfig const&);
     void set_touchpad_configuration(MirTouchpadConfig const&);
@@ -92,7 +93,7 @@ private:
     optional_value<TouchpadSettings> touchpad;
     optional_value<MirKeyboardConfig> keyboard;
     optional_value<TouchscreenSettings> touchscreen;
-    std::shared_ptr<dispatch::ActionQueue> const actions;
+    std::shared_ptr<dispatch::ActionQueue> actions;
     std::shared_ptr<KeyMapper> const key_mapper;
     std::function<void(Device*)> device_changed_callback;
     std::mutex mutable config_mutex;
