@@ -134,7 +134,8 @@ mg::DisplayConfigurationOutput mgn::NestedDisplayConfiguration::create_display_o
         local_config.gamma,
         local_config.gamma_supported,
         std::move(edid),
-        {}  // TODO: Requires client API for getting logical size
+        geometry::Size{mir_output_get_logical_width(output),
+                       mir_output_get_logical_height(output)}
     };
 }
 
