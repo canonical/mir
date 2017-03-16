@@ -109,15 +109,13 @@ mgm::GBMOutputSurface::FrontBuffer::operator bool() const
 
 namespace
 {
-
-void require_egl_extensions(std::initializer_list<char const*> extensions)
+void require_extensions(
+    std::initializer_list<char const*> extensions,
+    std::function<std::string()> const& extension_getter)
 {
     std::stringstream missing_extensions;
 
-    std::string ext_string;
-    const char* exts = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
-    if (exts)
-        ext_string = exts;
+    std::string const ext_string = extension_getter();
 
     for (auto extension : extensions)
     {
@@ -132,6 +130,33 @@ void require_egl_extensions(std::initializer_list<char const*> extensions)
         BOOST_THROW_EXCEPTION(std::runtime_error(
             std::string("Missing required extensions:\n") + missing_extensions.str()));
     }
+}
+
+void require_egl_extensions(EGLDisplay dpy, std::initializer_list<char const*> extensions)
+{
+    require_extensions(
+        extensions,
+        [dpy]() -> std::string
+        {
+            char const* maybe_exts = eglQueryString(dpy, EGL_EXTENSIONS);
+            if (maybe_exts)
+                return maybe_exts;
+            return {};
+        });
+}
+
+void require_gl_extensions(std::initializer_list<char const*> extensions)
+{
+    require_extensions(
+        extensions,
+        []() -> std::string
+        {
+            char const *maybe_exts =
+                reinterpret_cast<char const*>(glGetString(GL_EXTENSIONS));
+            if (maybe_exts)
+                return maybe_exts;
+            return {};
+        });
 }
 
 bool needs_bounce_buffer(mgm::KMSOutput const& destination, gbm_bo* source)
@@ -206,10 +231,8 @@ public:
           height{height},
           surface{create_scanout_surface(*device, width, height, format)}
     {
-        require_egl_extensions({
-            "GL_OES_EGL_image",
-            "EGL_KHR_image_base",
-            "EGL_EXT_image_dma_buf_import"
+        require_gl_extensions({
+            "GL_OES_EGL_image"
         });
 
         EGLint const config_attr[] = {
@@ -244,6 +267,13 @@ public:
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("Incompatible EGL version"));
         }
+
+        require_egl_extensions(
+            display,
+            {
+                "EGL_KHR_image_base",
+                "EGL_EXT_image_dma_buf_import"
+            });
 
         if (eglChooseConfig(display, config_attr, &egl_config, 1, &num_egl_configs) == EGL_FALSE ||
             num_egl_configs != 1)

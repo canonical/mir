@@ -24,6 +24,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <vector>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic warning "-Wall"
@@ -62,6 +63,9 @@ public:
     DRMHelper(const DRMHelper &) = delete;
     DRMHelper& operator=(const DRMHelper&) = delete;
 
+    static std::vector<std::shared_ptr<DRMHelper>> open_all_devices(
+        std::shared_ptr<mir::udev::Context> const& udev);
+
     void setup(std::shared_ptr<mir::udev::Context> const& udev);
     mir::Fd authenticated_fd();
     void auth_magic(drm_magic_t magic);
@@ -73,6 +77,8 @@ public:
     DRMNodeToUse const node_to_use;
 
 private:
+    DRMHelper(int fd);
+
     // TODO: This herustic is temporary; should be replaced with
     // handling >1 DRM device.
     int is_appropriate_device(std::shared_ptr<mir::udev::Context> const& udev, mir::udev::Device const& dev);
