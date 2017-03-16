@@ -30,9 +30,6 @@ extern "C" {
 /** Allocate a MirBuffer usable by the android platform.
  *
  *  The callback will be called when the buffer is available for use.
- *  It will be called once when created, and once per every
- *  mir_presentation_chain_submit_buffer.
- *
  *  The buffer can be destroyed via mir_buffer_release().
  *
  *   \note  Not all GRALLOC_USAGE flags or HAL_PIXEL_FORMATs are available.
@@ -66,6 +63,103 @@ static inline MirExtensionAndroidBufferV1 const* mir_extension_android_buffer_v1
         connection, "mir_extension_android_buffer", 1);
 }
 
+/** Allocate a MirBuffer usable by the android platform and
+ *  wait for server response.
+ *
+ *  The callback will be called when the buffer is available for use.
+ *  The buffer can be destroyed via mir_buffer_release().
+ *
+ *   \note  Not all GRALLOC_USAGE flags or HAL_PIXEL_FORMATs are available.
+ *          Be sure to check mir_buffer_is_valid() on the returned buffer.
+ *   \param [in] connection            The connection
+ *   \param [in] width                 Requested buffer width
+ *   \param [in] height                Requested buffer height
+ *   \param [in] hal_pixel_format      The pixel format, one of
+ *                                     Android's HAL_PIXEL_FORMAT*s
+ *   \return                           The buffer
+ */
+typedef MirBuffer* (*MirConnectionAllocateBufferAndroidSync)(
+    MirConnection* connection,
+    int width, int height,
+    unsigned int hal_pixel_format,
+    unsigned int gralloc_usage_flags);
+
+/** Check if a MirBuffer is suitable for android usage
+ * 
+ *   \param [in] buffer The buffer
+ *   \return            True if suitable, false if unsuitable
+ */
+typedef bool (*MirBufferIsAndroidCompatible)(MirBuffer const* buffer);
+
+/** Access the data from the native_handle_t of the MirBuffer
+ *   \warning Take care not to close any of the fds.
+ *   \pre               The buffer is suitable for android use
+ *   \param [in]  buffer    The buffer
+ *   \param [out] num_fds   The number of fds
+ *   \param [out] fds       The fds
+ *   \param [out] num_data  The number of data
+ *   \param [out] data      The data
+ */
+typedef void (*MirBufferAndroidNativeHandle)(
+    MirBuffer const* buffer,
+    int* num_fds, int const** fds,
+    int* num_data, int const** data);
+
+/** Access the HAL_PIXEL_FORMAT of the buffer
+ *   \pre                   The buffer is suitable for android use
+ *   \param [in]  buffer    The buffer
+ *   \return                The hal_pixel_format of the buffer
+ */
+typedef unsigned int (*MirBufferAndroidHalPixelFormat)(
+    MirBuffer const* buffer);
+
+/** Access the GRALLOC_USAGE_FLAGS of the buffer
+ *   \pre                   The buffer is suitable for android use
+ *   \param [in]  buffer    The buffer
+ *   \return                The gralloc_usage of the buffer
+ */
+typedef unsigned int (*MirBufferAndroidGrallocUsage)(
+    MirBuffer const* buffer);
+
+/** Access the stride in bytes of the buffer
+ *   \pre                   The buffer is suitable for android use
+ *   \param [in]  buffer    The buffer
+ *   \return                The stride of the buffer
+ */
+typedef unsigned int (*MirBufferAndroidStride)(
+    MirBuffer const* buffer);
+
+/** Increase refcount of the ANativeWindowBuffer
+ *   \pre                   The buffer is suitable for android use
+ *   \param [in]  buffer    The buffer
+ */
+typedef void (*MirBufferAndroidIncRef)(MirBuffer* buffer);
+
+/** Decrease refcount of the ANativeWindowBuffer
+ *   \pre                   The buffer is suitable for android use
+ *   \param [in]  buffer    The buffer
+ */
+typedef void (*MirBufferAndroidDecRef)(MirBuffer* buffer);
+
+typedef struct MirExtensionAndroidBufferV2
+{
+    mir_connection_allocate_buffer_android allocate_buffer_android;
+    MirConnectionAllocateBufferAndroidSync allocate_buffer_android_sync;
+    MirBufferIsAndroidCompatible is_android_compatible;
+    MirBufferAndroidNativeHandle native_handle;
+    MirBufferAndroidHalPixelFormat hal_pixel_format;
+    MirBufferAndroidGrallocUsage gralloc_usage;
+    MirBufferAndroidStride stride;
+    MirBufferAndroidIncRef inc_ref;
+    MirBufferAndroidDecRef dec_ref;
+} MirExtensionAndroidBufferV2;
+
+static inline MirExtensionAndroidBufferV2 const* mir_extension_android_buffer_v2(
+    MirConnection* connection)
+{
+    return (MirExtensionAndroidBufferV2 const*) mir_connection_request_extension(
+        connection, "mir_extension_android_buffer", 2);
+}
 #ifdef __cplusplus
 }
 #endif

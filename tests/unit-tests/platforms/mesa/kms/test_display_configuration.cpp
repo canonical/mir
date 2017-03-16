@@ -608,7 +608,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             false,
             true,
             geom::Point(),
-            1,  // Ensure current_mode_index is remembered even still
+            std::numeric_limits<uint32_t>::max(),
             mir_pixel_format_invalid,
             mir_power_mode_on,
             mir_orientation_normal,
@@ -722,7 +722,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
     EXPECT_EQ(expected_outputs_after.size(), output_count);
 }
 
-TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
+TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
 {
     using namespace ::testing;
     using namespace std::chrono_literals;
@@ -776,8 +776,9 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
             true,
             true,
             geom::Point(),
-            2,  // current_mode_index changed to preferred as the list of
-                // available modes has also changed
+            std::numeric_limits<uint32_t>::max(),   // The new state doesn't have a CRTC
+                                                    // associated, so doesn't have a current mode.
+                                                    // We should mirror the hardware state.
             mir_pixel_format_invalid,
             mir_power_mode_on,
             mir_orientation_normal,
@@ -814,8 +815,8 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_defaults_to_preferred_mode)
     });
     EXPECT_EQ(noutputs, output_count);
 
-    // Now simulate a change of monitor with different capabilities where the
-    // old current_mode does not exist. Mir should choose the preferred mode.
+    // Now simulate a change of monitor, with no CRTC attached (and hence no current mode).
+    // The configuration should mirror this state.
     resources.reset();
     resources.add_crtc(crtc_ids[0], modes1[1]);
     resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask_empty);

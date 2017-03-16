@@ -25,7 +25,7 @@
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/observer_registrar.h"
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/doubles/null_platform.h"
 #include "mir/test/doubles/fake_display.h"
 #include "mir/test/doubles/null_display_sync_group.h"
@@ -97,7 +97,7 @@ struct StubAuthorizer : mtd::StubSessionAuthorizer
 };
 }
 
-struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
+struct DisplayConfigurationTest : mtf::ConnectedClientWithAWindow
 {
     class NotifyingConfigurationObserver : public mg::DisplayConfigurationObserver
     {
@@ -172,7 +172,7 @@ struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
     {
         server.override_the_session_authorizer([this] { return mt::fake_shared(stub_authorizer); });
         preset_display(mt::fake_shared(mock_display));
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientWithAWindow::SetUp();
 
         server.the_display_configuration_observer_registrar()->register_interest(observer);
     }
@@ -693,6 +693,30 @@ TEST_F(DisplayConfigurationTest, mode_width_and_height_are_independent_of_orient
         }
 
         EXPECT_THAT(received_modes, ContainerEq(modes));
+
+        // But logical size is affected by orientation:
+        auto current_mode = mir_output_get_current_mode(output);
+        ASSERT_TRUE(current_mode);
+        unsigned physical_width = mir_output_mode_get_width(current_mode);
+        unsigned physical_height = mir_output_mode_get_height(current_mode);
+        unsigned logical_width = mir_output_get_logical_width(output);
+        unsigned logical_height = mir_output_get_logical_height(output);
+
+        switch (orientation)
+        {
+        case mir_orientation_normal:
+        case mir_orientation_inverted:
+            EXPECT_EQ(physical_width, logical_width);
+            EXPECT_EQ(physical_height, logical_height);
+            break;
+        case mir_orientation_left:
+        case mir_orientation_right:
+            EXPECT_EQ(physical_height, logical_width);
+            EXPECT_EQ(physical_width, logical_height);
+            break;
+        default:
+            break;
+        }
     }
 
     client.disconnect();

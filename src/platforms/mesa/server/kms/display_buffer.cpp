@@ -25,6 +25,7 @@
 #include "mir/fatal.h"
 #include "mir/log.h"
 #include "native_buffer.h"
+#include "mir/graphics/egl_error.h"
 
 #include <boost/throw_exception.hpp>
 #include MIR_SERVER_GL_H
@@ -38,47 +39,71 @@ namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace geom = mir::geometry;
 
-class mgm::BufferObject
+mgm::GBMOutputSurface::FrontBuffer::FrontBuffer()
+    : surf{nullptr},
+      bo{nullptr}
 {
-public:
-    BufferObject(gbm_surface* surface, gbm_bo* bo, uint32_t drm_fb_id)
-        : surface{surface}, bo{bo}, drm_fb_id{drm_fb_id}
+}
+
+mgm::GBMOutputSurface::FrontBuffer::FrontBuffer(gbm_surface* surface)
+    : surf{surface},
+      bo{gbm_surface_lock_front_buffer(surface)}
+{
+    if (!bo)
     {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to acquire front buffer of gbm_surface"));
+    }
+}
+
+mgm::GBMOutputSurface::FrontBuffer::~FrontBuffer()
+{
+    if (surf)
+    {
+        gbm_surface_release_buffer(surf, bo);
+    }
+}
+
+mgm::GBMOutputSurface::FrontBuffer::FrontBuffer(FrontBuffer&& from)
+    : surf{from.surf},
+      bo{from.bo}
+{
+    const_cast<gbm_surface*&>(from.surf) = nullptr;
+    const_cast<gbm_bo*&>(from.bo) = nullptr;
+}
+
+auto mgm::GBMOutputSurface::FrontBuffer::operator=(FrontBuffer&& from) -> FrontBuffer&
+{
+    if (surf)
+    {
+        gbm_surface_release_buffer(surf, bo);
     }
 
-    ~BufferObject()
-    {
-        if (drm_fb_id)
-        {
-            int drm_fd = gbm_device_get_fd(gbm_bo_get_device(bo));
-            drmModeRmFB(drm_fd, drm_fb_id);
-        }
-    }
+    const_cast<gbm_surface*&>(surf) = from.surf;
+    const_cast<gbm_bo*&>(bo) = from.bo;
 
-    void release() const
-    {
-        gbm_surface_release_buffer(surface, bo);
-    }
+    const_cast<gbm_surface*&>(from.surf) = nullptr;
+    const_cast<gbm_bo*&>(from.bo) = nullptr;
 
-    uint32_t get_drm_fb_id() const
-    {
-        return drm_fb_id;
-    }
+    return *this;
+}
 
-private:
-    gbm_surface *surface;
-    gbm_bo *bo;
-    uint32_t drm_fb_id;
-};
+auto mgm::GBMOutputSurface::FrontBuffer::operator=(std::nullptr_t) -> FrontBuffer&
+{
+    return *this = FrontBuffer{};
+}
+
+mgm::GBMOutputSurface::FrontBuffer::operator gbm_bo*()
+{
+    return bo;
+}
+
+mgm::GBMOutputSurface::FrontBuffer::operator bool() const
+{
+    return (surf != nullptr) && (bo != nullptr);
+}
 
 namespace
 {
-
-void bo_user_data_destroy(gbm_bo* /*bo*/, void *data)
-{
-    auto bufobj = static_cast<mgm::BufferObject*>(data);
-    delete bufobj;
-}
 
 void ensure_egl_image_extensions()
 {
@@ -95,24 +120,15 @@ void ensure_egl_image_extensions()
 
 mgm::DisplayBuffer::DisplayBuffer(
     mgm::BypassOption option,
-    std::shared_ptr<helpers::DRMHelper> const& drm,
-    std::shared_ptr<helpers::GBMHelper> const& gbm,
     std::shared_ptr<DisplayReport> const& listener,
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
-    GBMSurfaceUPtr surface_gbm_param,
+    GBMOutputSurface&& surface_gbm,
     geom::Rectangle const& area,
-    MirOrientation rot,
-    GLConfig const& gl_config,
-    EGLContext shared_context)
-    : visible_composite_frame{nullptr},
-      scheduled_composite_frame{nullptr},
-      listener(listener),
+    MirOrientation rot)
+    : listener(listener),
       bypass_option(option),
-      drm(drm),
-      gbm(gbm),
       outputs(outputs),
-      surface_gbm{std::move(surface_gbm_param)},
-      egl{gl_config},
+      surface{std::move(surface_gbm)},
       area(area),
       transform{mg::transformation(rot)},
       needs_set_crtc{false},
@@ -131,8 +147,6 @@ mgm::DisplayBuffer::DisplayBuffer(
         fb_height = area_height;
     }
 
-    egl.setup(*gbm, surface_gbm.get(), shared_context);
-
     listener->report_successful_setup_of_native_resources();
 
     make_current();
@@ -143,22 +157,21 @@ mgm::DisplayBuffer::DisplayBuffer(
 
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (!egl.swap_buffers())
-        fatal_error("Failed to perform initial surface buffer swap");
+    surface.swap_buffers();
 
     listener->report_successful_egl_buffer_swap_on_construction();
 
-    scheduled_composite_frame = get_front_buffer_object();
-    if (!scheduled_composite_frame)
+    visible_composite_frame = surface.lock_front();
+    if (!visible_composite_frame)
         fatal_error("Failed to get frontbuffer");
 
-    set_crtc(scheduled_composite_frame);
+    set_crtc(*outputs.front()->fb_for(visible_composite_frame, fb_width, fb_height));
 
     release_current();
 
     listener->report_successful_drm_mode_set_crtc_on_construction();
     listener->report_successful_display_construction();
-    egl.report_egl_configuration(
+    surface.report_egl_configuration(
         [&listener] (EGLDisplay disp, EGLConfig cfg)
         {
             listener->report_egl_configuration(disp, cfg);
@@ -167,15 +180,6 @@ mgm::DisplayBuffer::DisplayBuffer(
 
 mgm::DisplayBuffer::~DisplayBuffer()
 {
-    /*
-     * There is no need to destroy visible_composite_frame manually.
-     * It will be destroyed when its gbm_surface gets destroyed.
-     */
-    if (visible_composite_frame)
-        visible_composite_frame->release();
-
-    if (scheduled_composite_frame)
-        scheduled_composite_frame->release();
 }
 
 geom::Rectangle mgm::DisplayBuffer::view_area() const
@@ -211,7 +215,7 @@ bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
             if (native->flags & mir_buffer_flag_can_scanout &&
                 bypass_buffer->size() == geom::Size{fb_width,fb_height})
             {
-                if (auto bufobj = get_buffer_object(native->bo))
+                if (auto bufobj = outputs.front()->fb_for(native->bo, fb_width, fb_height))
                 {
                     bypass_buf = bypass_buffer;
                     bypass_bufobj = bufobj;
@@ -234,13 +238,12 @@ void mgm::DisplayBuffer::for_each_display_buffer(
 
 void mgm::DisplayBuffer::swap_buffers()
 {
-    if (!egl.swap_buffers())
-        fatal_error("Failed to perform buffer swap");
+    surface.swap_buffers();
     bypass_buf = nullptr;
     bypass_bufobj = nullptr;
 }
 
-void mgm::DisplayBuffer::set_crtc(BufferObject const* forced_frame)
+void mgm::DisplayBuffer::set_crtc(FBHandle const& forced_frame)
 {
     for (auto& output : outputs)
     {
@@ -251,7 +254,7 @@ void mgm::DisplayBuffer::set_crtc(BufferObject const* forced_frame)
          * sometimes it's really not there). Xorg often reports similar
          * errors, and it's not fatal.
          */
-        if (!output->set_crtc(forced_frame->get_drm_fb_id()))
+        if (!output->set_crtc(forced_frame))
             mir::log_error("Failed to set DRM CRTC. "
                 "Screen contents may be incomplete. "
                 "Try plugging the monitor in again.");
@@ -268,14 +271,15 @@ void mgm::DisplayBuffer::post()
      */
     wait_for_page_flip();
 
-    mgm::BufferObject *bufobj;
+    mgm::FBHandle *bufobj;
     if (bypass_buf)
     {
         bufobj = bypass_bufobj;
     }
     else
     {
-        bufobj = get_front_buffer_object();
+        scheduled_composite_frame = surface.lock_front();
+        bufobj = outputs.front()->fb_for(scheduled_composite_frame, fb_width, fb_height);
         if (!bufobj)
             fatal_error("Failed to get front buffer object");
     }
@@ -284,7 +288,7 @@ void mgm::DisplayBuffer::post()
      * Try to schedule a page flip as first preference to avoid tearing.
      * [will complete in a background thread]
      */
-    if (!needs_set_crtc && !schedule_page_flip(bufobj))
+    if (!needs_set_crtc && !schedule_page_flip(*bufobj))
         needs_set_crtc = true;
 
     /*
@@ -293,7 +297,7 @@ void mgm::DisplayBuffer::post()
      */
     if (needs_set_crtc)
     {
-        set_crtc(bufobj);
+        set_crtc(*bufobj);
         needs_set_crtc = false;
     }
 
@@ -327,7 +331,6 @@ void mgm::DisplayBuffer::post()
          * making us double-buffered (noticeably less laggy than the triple
          * buffering that clone mode requires).
          */
-        scheduled_composite_frame = bufobj;
         if (outputs.size() == 1)
             wait_for_page_flip();
 
@@ -359,61 +362,7 @@ std::chrono::milliseconds mgm::DisplayBuffer::recommended_sleep() const
     return recommend_sleep;
 }
 
-mgm::BufferObject* mgm::DisplayBuffer::get_front_buffer_object()
-{
-    auto front = gbm_surface_lock_front_buffer(surface_gbm.get());
-    auto ret = get_buffer_object(front);
-
-    if (!ret)
-        gbm_surface_release_buffer(surface_gbm.get(), front);
-
-    return ret;
-}
-
-mgm::BufferObject* mgm::DisplayBuffer::get_buffer_object(
-    struct gbm_bo *bo)
-{
-    if (!bo)
-        return nullptr;
-
-    /*
-     * Check if we have already set up this gbm_bo (the gbm implementation is
-     * free to reuse gbm_bos). If so, return the associated BufferObject.
-     */
-    auto bufobj = static_cast<BufferObject*>(gbm_bo_get_user_data(bo));
-    if (bufobj)
-        return bufobj;
-
-    uint32_t fb_id{0};
-    uint32_t handles[4] = {gbm_bo_get_handle(bo).u32, 0, 0, 0};
-    uint32_t strides[4] = {gbm_bo_get_stride(bo), 0, 0, 0};
-    uint32_t offsets[4] = {0, 0, 0, 0};
-
-    auto format = gbm_bo_get_format(bo);
-    /*
-     * Mir might use the old GBM_BO_ enum formats, but KMS and the rest of
-     * the world need fourcc formats, so convert...
-     */
-    if (format == GBM_BO_FORMAT_XRGB8888)
-        format = GBM_FORMAT_XRGB8888;
-    else if (format == GBM_BO_FORMAT_ARGB8888)
-        format = GBM_FORMAT_ARGB8888;
-
-    /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB2(drm->fd, fb_width, fb_height, format,
-                             handles, strides, offsets, &fb_id, 0);
-    if (ret)
-        return nullptr;
-
-    /* Create a BufferObject and associate it with the gbm_bo */
-    bufobj = new BufferObject{surface_gbm.get(), bo, fb_id};
-    gbm_bo_set_user_data(bo, bufobj, bo_user_data_destroy);
-
-    return bufobj;
-}
-
-
-bool mgm::DisplayBuffer::schedule_page_flip(BufferObject* bufobj)
+bool mgm::DisplayBuffer::schedule_page_flip(FBHandle const& bufobj)
 {
     /*
      * Schedule the current front buffer object for display. Note that
@@ -421,7 +370,7 @@ bool mgm::DisplayBuffer::schedule_page_flip(BufferObject* bufobj)
      */
     for (auto& output : outputs)
     {
-        if (output->schedule_page_flip(bufobj->get_drm_fb_id()))
+        if (output->schedule_page_flip(bufobj))
             page_flips_pending = true;
     }
 
@@ -446,28 +395,24 @@ void mgm::DisplayBuffer::wait_for_page_flip()
         visible_bypass_frame = scheduled_bypass_frame;
         scheduled_bypass_frame = nullptr;
     
-        if (visible_composite_frame)
-            visible_composite_frame->release();
-        visible_composite_frame = scheduled_composite_frame;
+        visible_composite_frame = std::move(scheduled_composite_frame);
         scheduled_composite_frame = nullptr;
     }
 }
 
 void mgm::DisplayBuffer::make_current()
 {
-    if (!egl.make_current())
-    {
-        fatal_error("Failed to make EGL surface current");
-    }
+    surface.make_current();
 }
 
 void mgm::DisplayBuffer::bind()
 {
+    surface.bind();
 }
 
 void mgm::DisplayBuffer::release_current()
 {
-    egl.release_current();
+    surface.release_current();
 }
 
 void mgm::DisplayBuffer::schedule_set_crtc()
@@ -478,4 +423,63 @@ void mgm::DisplayBuffer::schedule_set_crtc()
 mg::NativeDisplayBuffer* mgm::DisplayBuffer::native_display_buffer()
 {
     return this;
+}
+
+mgm::GBMOutputSurface::GBMOutputSurface(
+    int drm_fd,
+    GBMSurfaceUPtr&& surface,
+    uint32_t width,
+    uint32_t height,
+    helpers::EGLHelper&& egl)
+    : drm_fd{drm_fd},
+      width{width},
+      height{height},
+      egl{std::move(egl)},
+      surface{std::move(surface)}
+{
+}
+
+mgm::GBMOutputSurface::GBMOutputSurface(GBMOutputSurface&& from)
+    : drm_fd{from.drm_fd},
+      width{from.width},
+      height{from.height},
+      egl{std::move(from.egl)},
+      surface{std::move(from.surface)}
+{
+}
+
+
+void mgm::GBMOutputSurface::make_current()
+{
+    if (!egl.make_current())
+    {
+        fatal_error("Failed to make EGL surface current");
+    }
+}
+
+void mgm::GBMOutputSurface::release_current()
+{
+    egl.release_current();
+}
+
+void mgm::GBMOutputSurface::swap_buffers()
+{
+    if (!egl.swap_buffers())
+        fatal_error("Failed to perform buffer swap");
+}
+
+void mgm::GBMOutputSurface::bind()
+{
+
+}
+
+auto mgm::GBMOutputSurface::lock_front() -> FrontBuffer
+{
+    return FrontBuffer{surface.get()};
+}
+
+void mgm::GBMOutputSurface::report_egl_configuration(
+    std::function<void(EGLDisplay, EGLConfig)> const& to)
+{
+    egl.report_egl_configuration(to);
 }

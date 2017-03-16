@@ -31,7 +31,7 @@ add_library(mir-public-test-framework OBJECT
   async_server_runner.cpp
   command_line_server_configuration.cpp
   connected_client_headless_server.cpp
-  connected_client_with_a_surface.cpp
+  connected_client_with_a_window.cpp
   declarative_placement_window_manage_policy.cpp
   executable_path.cpp
   headless_in_process_server.cpp
@@ -80,8 +80,6 @@ add_library(mir-test-framework-static STATIC
 )
 
 add_dependencies(mir-test-framework-static GMock)
-
-uses_android_input(mir-protected-test-framework)
 
 target_link_libraries(mir-test-framework-static
 

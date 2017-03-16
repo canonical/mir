@@ -73,8 +73,6 @@ auto mir::DefaultServerConfiguration::the_surface_factory()
         [this]()
         {
             return std::make_shared<ms::SurfaceAllocator>(
-                the_input_channel_factory(),
-                the_input_sender(),
                 the_default_cursor_image(),
                 the_scene_report());
         });
@@ -142,7 +140,6 @@ mir::DefaultServerConfiguration::the_mediating_display_changer()
                 the_session_event_handler_register(),
                 the_server_action_queue(),
                 the_display_configuration_observer(),
-                the_input_region(),
                 the_main_loop());
         });
 

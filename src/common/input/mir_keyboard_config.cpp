@@ -63,6 +63,11 @@ mi::Keymap const& MirKeyboardConfig::device_keymap() const
     return impl->device_keymap;
 }
 
+mi::Keymap& MirKeyboardConfig::device_keymap()
+{
+    return impl->device_keymap;
+}
+
 void MirKeyboardConfig::device_keymap(mi::Keymap const& keymap)
 {
     impl->device_keymap = keymap;

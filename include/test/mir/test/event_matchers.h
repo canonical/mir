@@ -156,6 +156,18 @@ MATCHER_P(KeyOfSymbol, keysym, "")
     return true;
 }
 
+MATCHER_P(KeyWithText, text, "")
+{
+    auto kev = maybe_key_event(to_address(arg));
+    if (kev == nullptr)
+        return false;
+
+    if(strcmp(mir_keyboard_event_key_text(kev), text))
+        return false;
+
+    return true;
+}
+
 MATCHER_P(KeyOfScanCode, code, "")
 {
     auto kev = maybe_key_event(to_address(arg));

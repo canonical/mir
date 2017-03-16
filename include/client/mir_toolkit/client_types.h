@@ -57,6 +57,12 @@ typedef struct MirRenderSurface MirRenderSurface
 __attribute__((deprecated("This type is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
 /**
+ * Opaque structure containing cursor parameterization. Create with mir_cursor* family.
+ * Used with mir_window_configure_cursor.
+ */
+typedef struct MirCursorConfiguration MirCursorConfiguration;
+
+/**
  * Descriptor for an output connection.
  *
  *  Each MirOutput corresponds to a video output. This may be a physical connection on the system,
@@ -254,6 +260,15 @@ typedef enum MirBufferLayout
     mir_buffer_layout_linear  = 1,
 } MirBufferLayout;
 
+typedef enum MirPresentMode
+{
+    mir_present_mode_immediate, //same as VK_PRESENT_MODE_IMMEDIATE_KHR
+    mir_present_mode_mailbox, //same as VK_PRESENT_MODE_MAILBOX_KHR
+    mir_present_mode_fifo, //same as VK_PRESENT_MODE_FIFO_KHR
+    mir_present_mode_fifo_relaxed, //same as VK_PRESENT_MODE_FIFO_RELAXED_KHR
+    mir_present_mode_num_modes
+} MirPresentMode;
+
 /**
  * Retrieved information about a MirWindow. This is most useful for learning
  * how and where to write to a 'mir_buffer_usage_software' surface.
@@ -385,8 +400,10 @@ typedef struct MirRectangle
 
 typedef struct MirInputConfig MirInputConfig;
 typedef struct MirInputDevice MirInputDevice;
+typedef struct MirKeyboardConfig MirKeyboardConfig;
 typedef struct MirPointerConfig MirPointerConfig;
 typedef struct MirTouchpadConfig MirTouchpadConfig;
+typedef struct MirTouchscreenConfig MirTouchscreenConfig;
 
 /**
  * MirScreencastParameters is the structure of required information that

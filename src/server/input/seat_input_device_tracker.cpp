@@ -20,7 +20,6 @@
 #include "seat_input_device_tracker.h"
 #include "mir/input/device.h"
 #include "mir/input/cursor_listener.h"
-#include "mir/input/input_region.h"
 #include "mir/input/input_dispatcher.h"
 #include "mir/input/key_mapper.h"
 #include "mir/input/seat_observer.h"
@@ -45,38 +44,43 @@ namespace geom = mir::geometry;
 mi::SeatInputDeviceTracker::SeatInputDeviceTracker(std::shared_ptr<InputDispatcher> const& dispatcher,
                                                    std::shared_ptr<TouchVisualizer> const& touch_visualizer,
                                                    std::shared_ptr<CursorListener> const& cursor_listener,
-                                                   std::shared_ptr<InputRegion> const& input_region,
                                                    std::shared_ptr<KeyMapper> const& key_mapper,
                                                    std::shared_ptr<time::Clock> const& clock,
                                                    std::shared_ptr<SeatObserver> const& observer)
     : dispatcher{dispatcher}, touch_visualizer{touch_visualizer}, cursor_listener{cursor_listener},
-      input_region{input_region}, key_mapper{key_mapper}, clock{clock}, observer{observer}, buttons{0}
+      key_mapper{key_mapper}, clock{clock}, observer{observer}, buttons{0}
 {
 }
 
 void mi::SeatInputDeviceTracker::add_device(MirInputDeviceId id)
 {
-    device_data[id];
+    {
+        std::lock_guard<std::mutex> lock(device_state_mutex);
+        device_data[id];
+    }
     observer->seat_add_device(id);
 }
 
 void mi::SeatInputDeviceTracker::remove_device(MirInputDeviceId id)
 {
-    auto stored_data = device_data.find(id);
+    {
+        std::lock_guard<std::mutex> lock(device_state_mutex);
+        auto stored_data = device_data.find(id);
 
-    if (stored_data == end(device_data))
-        BOOST_THROW_EXCEPTION(std::logic_error("Modifier for unknown device changed"));
+        if (stored_data == end(device_data))
+            BOOST_THROW_EXCEPTION(std::logic_error("Modifier for unknown device changed"));
 
-    bool state_update_needed = stored_data->second.buttons != 0;
-    bool spot_update_needed = !stored_data->second.spots.empty();
+        bool state_update_needed = stored_data->second.buttons != 0;
+        bool spot_update_needed = !stored_data->second.spots.empty();
 
-    device_data.erase(stored_data);
-    key_mapper->clear_keymap_for_device(id);
+        device_data.erase(stored_data);
+        key_mapper->clear_keymap_for_device(id);
 
-    if (state_update_needed)
-        update_states();
-    if (spot_update_needed)
-        update_spots();
+        if (state_update_needed)
+            update_states();
+        if (spot_update_needed)
+            update_spots();
+    }
 
     observer->seat_remove_device(id);
 }
@@ -85,6 +89,8 @@ void mi::SeatInputDeviceTracker::dispatch(MirEvent &event)
 {
     if (mir_event_get_type(&event) == mir_event_type_input)
     {
+        std::lock_guard<std::mutex> lock(device_state_mutex);
+
         auto input_event = mir_event_get_input_event(&event);
 
         if (filter_input_event(input_event))
@@ -97,7 +103,7 @@ void mi::SeatInputDeviceTracker::dispatch(MirEvent &event)
         if (mir_input_event_type_pointer == mir_input_event_get_type(input_event))
         {
             mev::set_cursor_position(event, cursor_x, cursor_y);
-            mev::set_button_state(event, button_state());
+            mev::set_button_state(event, buttons);
         }
     }
 
@@ -195,11 +201,13 @@ void mi::SeatInputDeviceTracker::update_states()
 
 mir::geometry::Point mi::SeatInputDeviceTracker::cursor_position() const
 {
+    std::lock_guard<std::mutex> lock(device_state_mutex);
     return {cursor_x, cursor_y};
 }
 
 MirPointerButtons mi::SeatInputDeviceTracker::button_state() const
 {
+    std::lock_guard<std::mutex> lock(device_state_mutex);
     return buttons;
 }
 
@@ -221,10 +229,16 @@ void mi::SeatInputDeviceTracker::reset_confinement_regions()
     observer->seat_reset_confinement_regions();
 }
 
+void mi::SeatInputDeviceTracker::update_outputs(geom::Rectangles const& output_regions)
+{
+    std::lock_guard<std::mutex> lg(output_mutex);
+    input_region = output_regions;
+}
+
 void mi::SeatInputDeviceTracker::confine_function(mir::geometry::Point& p) const
 {
     std::lock_guard<std::mutex> lg(region_mutex);
-    input_region->confine(p);
+    input_region.confine(p);
     confined_region.confine(p);
 }
 
@@ -249,6 +263,7 @@ void mi::SeatInputDeviceTracker::update_cursor(MirPointerEvent const* event)
 
 mir::EventUPtr mi::SeatInputDeviceTracker::create_device_state() const
 {
+    std::lock_guard<std::mutex> lock(device_state_mutex);
     std::vector<mev::InputDeviceState> devices;
     devices.reserve(device_data.size());
     for (auto const& item : device_data)
@@ -313,30 +328,39 @@ void mi::SeatInputDeviceTracker::DeviceData::update_scan_codes(MirKeyboardEvent 
 
 void mi::SeatInputDeviceTracker::set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& scan_codes)
 {
-    key_mapper->set_key_state(id, scan_codes);
+    {
+        std::lock_guard<std::mutex> lock(device_state_mutex);
+        key_mapper->set_key_state(id, scan_codes);
 
-    auto device = device_data.find(id);
+        auto device = device_data.find(id);
 
-    if (device != end(device_data))
-        device->second.scan_codes = scan_codes;
+        if (device != end(device_data))
+            device->second.scan_codes = scan_codes;
+    }
 
     observer->seat_set_key_state(id, scan_codes);
 }
 
 void mi::SeatInputDeviceTracker::set_pointer_state(MirInputDeviceId id, MirPointerButtons buttons)
 {
-    auto device = device_data.find(id);
+    {
+        std::lock_guard<std::mutex> lock(device_state_mutex);
+        auto device = device_data.find(id);
 
-    if (device != end(device_data))
-        device->second.update_button_state(buttons);
+        if (device != end(device_data))
+            device->second.update_button_state(buttons);
+    }
 
     observer->seat_set_pointer_state(id, buttons);
 }
 
 void mi::SeatInputDeviceTracker::set_cursor_position(float x, float y)
 {
-    cursor_x = x;
-    cursor_y = y;
+    {
+        std::lock_guard<std::mutex> lock(device_state_mutex);
+        cursor_x = x;
+        cursor_y = y;
+    }
 
     observer->seat_set_cursor_position(x, y);
 }

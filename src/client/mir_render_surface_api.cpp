@@ -18,6 +18,7 @@
 
 #include "mir_connection.h"
 #include "render_surface.h"
+#include "presentation_chain.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
 #include "connection_surface_map.h"
@@ -233,6 +234,22 @@ void mir_window_spec_set_cursor_render_surface(
     auto connection = connection_map.connection(surface);
     auto rs = connection->connection_surface_map()->render_surface(surface);
     spec->rendersurface_cursor = MirWindowSpec::RenderSurfaceCursor{rs->stream_id(), {hotspot_x, hotspot_y}};
+}
+
+MirCursorConfiguration* mir_cursor_configuration_from_render_surface(
+    MirRenderSurface* surface,
+    int hotspot_x, int hotspot_y)
+try
+{
+    mir::require(surface);
+    auto connection = connection_map.connection(surface);
+    auto rs = connection->connection_surface_map()->render_surface(surface);
+    return new MirCursorConfiguration(rs.get(), hotspot_x, hotspot_y);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }
 
 //temporary, until we stop trampolining via the RenderSurfaceToConnectionMap above

@@ -244,6 +244,8 @@ message DisplayOutput {
   optional uint32 gamma_supported = 23;
   optional bytes edid = 24;
   optional string model = 25;
+  optional uint32 logical_width = 26;
+  optional uint32 logical_height = 27;
 }
 
 message Connection {

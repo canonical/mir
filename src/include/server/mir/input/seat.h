@@ -33,6 +33,8 @@ using EventUPtr = std::unique_ptr<MirEvent, void(*)(MirEvent*)>;
 namespace input
 {
 class Device;
+class OutputInfo;
+
 class Seat
 {
 public:
@@ -41,7 +43,6 @@ public:
     virtual void add_device(Device const& device) = 0;
     virtual void remove_device(Device const& device) = 0;
     virtual void dispatch_event(MirEvent& event) = 0;
-    virtual geometry::Rectangle get_rectangle_for(Device const& dev) = 0;
     virtual EventUPtr create_device_state() = 0;
 
     virtual void set_key_state(Device const& dev, std::vector<uint32_t> const& scan_codes) = 0;
@@ -49,6 +50,9 @@ public:
     virtual void set_cursor_position(float cursor_x, float cursor_y) = 0;
     virtual void set_confinement_regions(geometry::Rectangles const& regions) = 0;
     virtual void reset_confinement_regions() = 0;
+
+    virtual geometry::Rectangle bounding_rectangle() const = 0;
+    virtual input::OutputInfo output_info(uint32_t output_id) const = 0;
 private:
     Seat(Seat const&) = delete;
     Seat& operator=(Seat const&) = delete;

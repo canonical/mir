@@ -160,3 +160,13 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
 
     return mir::make_module_ptr<NoIPCOperations>();
 }
+
+mg::NativePlatform* mge::Platform::native_platform()
+{
+    return this;
+}
+
+EGLNativeDisplayType mge::Platform::egl_native_display() const
+{
+    return display;
+}

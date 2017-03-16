@@ -20,6 +20,7 @@
 #include "mir/input/input_device.h"
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/input/mir_pointer_config.h"
+#include "mir/input/mir_touchscreen_config.h"
 #include "mir/test/doubles/mock_key_mapper.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/test/fake_shared.h"
@@ -44,6 +45,8 @@ struct MockInputDevice : public mi::InputDevice
     MOCK_METHOD1(apply_settings, void(mi::PointerSettings const&));
     MOCK_CONST_METHOD0(get_touchpad_settings, mir::optional_value<mi::TouchpadSettings>());
     MOCK_METHOD1(apply_settings, void(mi::TouchpadSettings const&));
+    MOCK_CONST_METHOD0(get_touchscreen_settings, mir::optional_value<mi::TouchscreenSettings>());
+    MOCK_METHOD1(apply_settings, void(mi::TouchscreenSettings const&));
 };
 
 struct DefaultDevice : Test
@@ -51,6 +54,7 @@ struct DefaultDevice : Test
     NiceMock<MockInputDevice> touchpad;
     NiceMock<MockInputDevice> mouse;
     NiceMock<MockInputDevice> keyboard;
+    NiceMock<MockInputDevice> touchscreen;
     NiceMock<mtd::MockKeyMapper> key_mapper;
     std::shared_ptr<md::ActionQueue> queue{std::make_shared<md::ActionQueue>()};
 
@@ -58,23 +62,34 @@ struct DefaultDevice : Test
     {
         using optional_pointer_settings = mir::optional_value<mi::PointerSettings>;
         using optional_touchpad_settings = mir::optional_value<mi::TouchpadSettings>;
+        using optional_touchscreen_settings = mir::optional_value<mi::TouchscreenSettings>;
         ON_CALL(touchpad, get_device_info())
             .WillByDefault(Return(mi::InputDeviceInfo{"name", "unique", mi::DeviceCapability::touchpad|mi::DeviceCapability::pointer}));
         ON_CALL(touchpad, get_pointer_settings())
             .WillByDefault(Return(optional_pointer_settings{mi::PointerSettings{}}));
         ON_CALL(touchpad, get_touchpad_settings())
             .WillByDefault(Return(optional_touchpad_settings{mi::TouchpadSettings{}}));
+        ON_CALL(touchpad, get_touchscreen_settings()).WillByDefault(Return(optional_touchscreen_settings{}));
 
         ON_CALL(mouse, get_device_info())
             .WillByDefault(Return(mi::InputDeviceInfo{"name", "unique", mi::DeviceCapability::pointer}));
         ON_CALL(mouse, get_pointer_settings()).WillByDefault(Return(optional_pointer_settings{mi::PointerSettings{}}));
         ON_CALL(mouse, get_touchpad_settings()).WillByDefault(Return(optional_touchpad_settings{}));
+        ON_CALL(mouse, get_touchscreen_settings()).WillByDefault(Return(optional_touchscreen_settings{}));
 
         ON_CALL(keyboard, get_device_info())
             .WillByDefault(Return(mi::InputDeviceInfo{
                 "name", "unique", mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric}));
         ON_CALL(keyboard, get_pointer_settings()).WillByDefault(Return(optional_pointer_settings{}));
         ON_CALL(keyboard, get_touchpad_settings()).WillByDefault(Return(optional_touchpad_settings{}));
+        ON_CALL(keyboard, get_touchscreen_settings()).WillByDefault(Return(optional_touchscreen_settings{}));
+
+        ON_CALL(touchscreen, get_device_info())
+            .WillByDefault(Return(mi::InputDeviceInfo{"name", "unique", mi::DeviceCapability::touchscreen}));
+        ON_CALL(touchscreen, get_pointer_settings()).WillByDefault(Return(optional_pointer_settings{}));
+        ON_CALL(touchscreen, get_touchpad_settings()).WillByDefault(Return(optional_touchpad_settings{}));
+        ON_CALL(touchscreen, get_touchscreen_settings())
+            .WillByDefault(Return(optional_touchscreen_settings{mi::TouchscreenSettings{}}));
     }
 };
 
@@ -122,6 +137,17 @@ TEST_F(DefaultDevice, accepts_touchpad_and_pointer_config_on_touchpads)
     dev.apply_touchpad_configuration(touch_conf);
     dev.apply_pointer_configuration(pointer_conf);
     queue->dispatch(md::FdEvent::readable);
+    queue->dispatch(md::FdEvent::readable);
+}
+
+TEST_F(DefaultDevice, forwards_touchscreen_config_on_touchscreen)
+{
+    mi::DefaultDevice dev(MirInputDeviceId{23}, queue, touchscreen, mt::fake_shared(key_mapper));
+    MirTouchscreenConfig touchscreen_conf;
+
+    EXPECT_CALL(touchscreen, apply_settings(Matcher<mi::TouchscreenSettings const&>(_)));
+
+    dev.apply_touchscreen_configuration(touchscreen_conf);
     queue->dispatch(md::FdEvent::readable);
 }
 

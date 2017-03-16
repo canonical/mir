@@ -152,60 +152,13 @@ MIR_COMMON_0.25 {
   local: *;
 };
 
-MIR_COMMON_0.25_PRIVATE {
+MIR_COMMON_0.27_PRIVATE {
  global:
-  __android_log_print;
-  systemTime;
   extern "C++" {
-# New functions in Mir 0.16
-      # These symbols are supposed to be "private" (they're under 3rd_party)
-      # but they are used by libmirplatform, libmirclient or libmirserver
-      android::InputChannel::InputChannel*;
-      android::InputChannel::openInputFdPair*;
-      android::InputConsumer::consume*;
-      android::InputConsumer::hasDeferredEvent*;
-      android::InputConsumer::hasPendingBatch*;
-      android::InputConsumer::?InputConsumer*;
-      android::InputConsumer::InputConsumer*;
-      android::InputConsumer::sendFinishedSignal*;
-      android::InputPublisher::?InputPublisher*;
-      android::InputPublisher::InputPublisher*;
-      android::InputPublisher::publishKeyEvent*;
-      android::InputPublisher::publishMotionEvent*;
-      android::InputPublisher::receiveFinishedSignal*;
-      android::IntSet::contains*;
-      android::IntSet::indexOf*;
-      android::IntSet::?IntSet*;
-      android::IntSet::IntSet*;
-      android::IntSet::operator*;
-      android::IntSet::remove*;
-      android::KeyEvent::initialize*;
-      android::MotionEvent::getAxisValue*;
-      android::MotionEvent::getHistoricalAxisValue*;
-      android::MotionEvent::getRawAxisValue*;
-      android::PointerCoords::copyFrom*;
-      android::PointerCoords::getAxisValue*;
-      android::PointerCoords::operator*;
-      android::PointerCoords::setAxisValue*;
-      android::PointerProperties::copyFrom*;
-      android::PointerProperties::operator*;
-      android::RefBase::decStrong*;
-      android::RefBase::incStrong*;
-      android::RefBase::onFirstRef*;
-      android::RefBase::onIncStrongAttempted*;
-      android::RefBase::onLastStrongRef*;
-      android::RefBase::onLastWeakRef*;
-      android::RefBase::?RefBase*;
-      android::RefBase::RefBase*;
-      mir::write_to_log;
-      typeinfo?for?android::RefBase;
-      vtable?for?android::IntSet;
-
 # New functions in Mir 0.19.0
       # These symbols are supposed to be "private" (they're under src/include)
       # but they are used by libmirplatform, libmirclient or libmirserver
       typeinfo?for?mir::time::SteadyClock;
-      typeinfo?for?android::InputChannel;
       mir::detail::libname_impl*;
 
 # New functions in Mir 0.22
@@ -317,13 +270,8 @@ MIR_COMMON_0.25_PRIVATE {
        MirPointerEvent::x*;
        MirPointerEvent::y*;
        MirTouchEvent::MirTouchEvent*;
-       MirTouchEvent::buttons*;
-       MirTouchEvent::set_buttons*;
-       MirTouchEvent::event_time*;
-       MirTouchEvent::set_event_time*;
        MirTouchEvent::pointer_count*;
        MirTouchEvent::set_pointer_count*;
-       MirTouchEvent::pointer_coordinates*;
        MirTouchEvent::id*;
        MirTouchEvent::set_id*;
        MirTouchEvent::x*;
@@ -338,10 +286,6 @@ MIR_COMMON_0.25_PRIVATE {
        MirTouchEvent::set_pressure*;
        MirTouchEvent::orientation*;
        MirTouchEvent::set_orientation*;
-       MirTouchEvent::vscroll*;
-       MirTouchEvent::set_vscroll*;
-       MirTouchEvent::hscroll*;
-       MirTouchEvent::set_hscroll*;
        MirTouchEvent::tool_type*;
        MirTouchEvent::set_tool_type*;
        MirTouchEvent::action*;
@@ -358,7 +302,6 @@ MIR_COMMON_0.25_PRIVATE {
 # New functions in Mir 0.24
       # These symbols are supposed to be "private" (they're under src/include)
       # but they are used by libmirplatform, libmirclient or libmirserver
-       android::InputPublisher::publishEventBuffer*;
        MirEvent::to_input_device_state*;
        MirInputDeviceStateEvent::MirInputDeviceStateEvent*;
        MirInputDeviceStateEvent::device_count*;
@@ -375,7 +318,6 @@ MIR_COMMON_0.25_PRIVATE {
        MirInputDeviceStateEvent::when*;
        mir::time::SteadyClock::now*;
        mir::time::SteadyClock::min_wait_until*;
-       android::MotionEvent::initialize*;
        mir::dispatch::epoll_to_fd_event*;
        mir::dispatch::fd_event_to_epoll*;
 
@@ -480,3 +422,15 @@ MIR_COMMON_0.26 {
       MirEvent::to_window_placement*;
   };
 } MIR_COMMON_0.25;
+
+MIR_COMMON_0.27 {
+ global:
+  extern "C++" {
+      MirInputDeviceStateEvent::set_window_id*;
+      MirInputDeviceStateEvent::window_id*;
+      MirInputEvent::set_window_id*;
+      MirInputEvent::window_id*;
+      MirKeyboardEvent::set_text*;
+      MirKeyboardEvent::text*;
+  };
+} MIR_COMMON_0.26;

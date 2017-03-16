@@ -162,6 +162,16 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operatio
     return mir::make_module_ptr<mga::IpcOperations>();
 }
 
+mg::NativePlatform* mga::Platform::native_platform()
+{
+    return this;
+}
+
+EGLNativeDisplayType mga::Platform::egl_native_display() const
+{
+    return EGL_DEFAULT_DISPLAY;
+}
+
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,

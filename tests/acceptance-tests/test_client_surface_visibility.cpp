@@ -23,7 +23,7 @@
 #include "mir/shell/shell_wrapper.h"
 #include "mir/shell/surface_stack.h"
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/signal.h"
 #include "mir/test/spin_wait.h"
 

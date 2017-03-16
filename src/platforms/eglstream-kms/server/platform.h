@@ -25,6 +25,7 @@
 #include "mir/graphics/display.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/fd.h"
+#include "mir/renderer/gl/egl_platform.h"
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -35,7 +36,9 @@ namespace graphics
 {
 namespace eglstream
 {
-class Platform : public mir::graphics::Platform
+class Platform : public graphics::Platform,
+                 public graphics::NativePlatform,
+                 public mir::renderer::gl::EGLPlatform
 {
 public:
     Platform(
@@ -51,6 +54,9 @@ public:
         std::shared_ptr<GLConfig> const& /*gl_config*/) override;
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+
+    NativePlatform* native_platform() override;
+    EGLNativeDisplayType egl_native_display() const override;
 
 private:
     EGLDisplay display;

@@ -142,7 +142,7 @@ struct StubStreamFactory : public msc::BufferStreamFactory
             {
             } 
 
-            std::shared_ptr<mg::Buffer>& operator[](mg::BufferID) override
+            std::shared_ptr<mg::Buffer> get(mg::BufferID) const override
             {
                 return b;
             }
@@ -232,6 +232,8 @@ struct StubPlatform : public mg::Platform
     {
         return underlying_platform->create_display(policy, config);
     }
+
+    mg::NativePlatform* native_platform() override { return nullptr; }
 
     std::shared_ptr<mir::Fd> const last_fd;
     std::shared_ptr<mg::Platform> const underlying_platform;

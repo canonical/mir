@@ -80,7 +80,8 @@ INSTANTIATE_TEST_CASE_P(
         "constructor",
         "create_buffer_allocator",
         "create_display",
-        "make_ipc_operations"
+        "make_ipc_operations",
+        "egl_native_display"
     ));
 
 using ServerShutdownDeathTest = ServerShutdown;

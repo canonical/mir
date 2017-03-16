@@ -3,9 +3,6 @@ if (NOT UMOCKDEV_FOUND)
   message(FATAL_ERROR "Umockdev not found, cannot build without disabling tests (via MIR_ENABLE_TESTS).")
 endif()
 
-include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
-include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
-
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-Wnull-dereference HAS_W_NULL_DEREFERENCE)
 check_cxx_compiler_flag(-Woverloaded-virtual HAS_W_OVERLOADED_VIRTUAL)

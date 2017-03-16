@@ -266,11 +266,6 @@ if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
   pkg_check_modules(EPOXY REQUIRED epoxy)
 endif()
 
-set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
-set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
-set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
-add_subdirectory(3rd_party/)
-
 set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)
 
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)

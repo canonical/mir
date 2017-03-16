@@ -53,6 +53,14 @@ class GraphicBufferAllocator;
 class GLConfig;
 class PlatformIpcOperations;
 class NestedContext;
+class NativePlatform
+{
+protected:
+    NativePlatform() = default;
+    virtual ~NativePlatform() = default;
+    NativePlatform(NativePlatform const&) = delete;
+    NativePlatform& operator=(NativePlatform const&) = delete;
+};
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -90,6 +98,12 @@ public:
      * before they are sent or after they are recieved accross IPC
      */
     virtual UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const = 0;
+
+    /**
+     * Access the native resource[s] used to connect to the rendering backend
+     * for this platform
+     */
+    virtual NativePlatform* native_platform() = 0;
 };
 
 /**

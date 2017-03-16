@@ -52,17 +52,13 @@ mfd::EventSender::EventSender(
 
 void mfd::EventSender::handle_event(MirEvent const& e)
 {
-    // Limit the types of events we wish to send over protobuf, for now.
-    if (mir_event_get_type(&e) != mir_event_type_input)
-    {
-        // In future we might send multiple events, or insert them into messages
-        // containing other responses, but for now we send them individually.
-        mp::EventSequence seq;
-        mp::Event *ev = seq.add_event();
-        ev->set_raw(mev::serialize_event(e));
+    // In future we might send multiple events, or insert them into messages
+    // containing other responses, but for now we send them individually.
+    mp::EventSequence seq;
+    mp::Event *ev = seq.add_event();
+    ev->set_raw(mev::serialize_event(e));
 
-        send_event_sequence(seq, {});
-    }
+    send_event_sequence(seq, {});
 }
 
 void mfd::EventSender::handle_display_config_change(

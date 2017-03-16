@@ -50,6 +50,8 @@ struct MirInputDeviceStateEvent : MirEvent
     uint32_t device_pressed_keys_count(size_t index) const;
 
     void set_device_states(std::vector<mir::events::InputDeviceState> const& device_states);
+    void set_window_id(int id);
+    int window_id() const;
 };
 
 #endif /* MIR_COMMON_INPUT_DEVICE_STATE_EVENT_H_*/

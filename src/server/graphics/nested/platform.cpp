@@ -31,6 +31,7 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
+#include "mir/renderer/gl/egl_platform.h"
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -75,10 +76,7 @@ public:
 
     std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties) override
     {
-        if (passthrough_candidate(properties.size, properties.usage))
-            return std::make_shared<mgn::Buffer>(connection, properties);
-        else
-            return guest_allocator->alloc_buffer(properties);
+        return guest_allocator->alloc_buffer(properties);
     }
 
     std::shared_ptr<mg::Buffer> alloc_buffer(
@@ -143,4 +141,16 @@ mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operations() const
 {
     return mir::make_module_ptr<mgn::IpcOperations>(guest_platform->make_ipc_operations());
+}
+
+EGLNativeDisplayType mgn::Platform::egl_native_display() const
+{
+    if (auto a = dynamic_cast<mir::renderer::gl::EGLPlatform*>(guest_platform->native_platform()))
+        return a->egl_native_display();
+    return EGL_NO_DISPLAY;
+}
+
+mg::NativePlatform* mgn::Platform::native_platform()
+{
+    return this;
 }

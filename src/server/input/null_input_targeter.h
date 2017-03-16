@@ -25,7 +25,6 @@ namespace mir
 {
 namespace input
 {
-class InputChannel;
 
 struct NullInputTargeter : public shell::InputTargeter
 {

@@ -37,7 +37,8 @@
 #include "mir_toolkit/mir_connection.h"
 #include "mir/uncaught.h"
 #include <EGL/egl.h>
-
+#include <mutex>
+#include <condition_variable>
 #include <boost/throw_exception.hpp>
 
 namespace mcl=mir::client;
@@ -179,11 +180,164 @@ void create_buffer(
     unsigned int hal_pixel_format,
     unsigned int gralloc_usage_flags,
     MirBufferCallback available_callback, void* available_context)
+try
 {
     auto context = mcl::to_client_context(connection);
     context->allocate_buffer(
         mir::geometry::Size{width, height}, hal_pixel_format, gralloc_usage_flags,
         available_callback, available_context); 
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    available_callback(nullptr, available_context);
+}
+
+MirBuffer* create_buffer_sync(
+    MirConnection* connection,
+    int width, int height,
+    unsigned int hal_pixel_format,
+    unsigned int gralloc_usage_flags)
+try
+{
+    struct BufferSync
+    {
+        void set_buffer(MirBuffer* b)
+        {
+            std::unique_lock<decltype(mutex)> lk(mutex);
+            buffer = b;
+            cv.notify_all();
+        }
+
+        MirBuffer* wait_for_buffer()
+        {
+            std::unique_lock<decltype(mutex)> lk(mutex);
+            cv.wait(lk, [this]{ return buffer; });
+            return buffer;
+        }
+    private:
+        std::mutex mutex;
+        std::condition_variable cv;
+        MirBuffer* buffer = nullptr;
+    } sync;
+    
+    create_buffer(connection, width, height, hal_pixel_format, gralloc_usage_flags,
+        [](auto* b, auto* context){ reinterpret_cast<BufferSync*>(context)->set_buffer(b); },
+        &sync);
+    return sync.wait_for_buffer();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+ANativeWindowBuffer* to_anwb(MirBuffer const* b)
+{
+    if (!b)
+        std::abort();
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
+    auto native = dynamic_cast<mga::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    if (!native)
+        return nullptr;
+    return native->anwb();
+}
+
+bool is_android_compatible(MirBuffer const* b)
+try
+{
+    return to_anwb(b);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return false;
+}
+
+void android_native_handle(
+    MirBuffer const* b,
+    int* num_fds, int const** fds,
+    int* num_data, int const** data)
+try
+{
+    auto anwb = to_anwb(b);
+    if (!anwb)
+        BOOST_THROW_EXCEPTION(std::runtime_error("MirBuffer is not android compatible cannot get native handle"));
+    if (!num_fds || !fds || !num_data || !data)
+        std::abort();
+
+    auto handle = anwb->handle;
+    *num_fds = handle->numFds;
+    *num_data = handle->numInts;
+    *fds = handle->data;
+    *data = handle->data + handle->numFds;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+unsigned int hal_pixel_format(MirBuffer const* b)
+try
+{
+    if (auto anwb = to_anwb(b))
+        return anwb->format;
+    BOOST_THROW_EXCEPTION(std::runtime_error("MirBuffer is not android compatible cannot get hal format"));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return std::numeric_limits<unsigned int>::max();
+}
+
+unsigned int gralloc_usage(MirBuffer const* b)
+try
+{
+    if (auto anwb = to_anwb(b))
+        return anwb->usage; 
+    BOOST_THROW_EXCEPTION(std::runtime_error("MirBuffer is not android compatible cannot get usage"));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return std::numeric_limits<unsigned int>::max();
+}
+
+unsigned int android_stride(MirBuffer const* b)
+try
+{
+    if (auto anwb = to_anwb(b))
+        return anwb->stride;
+    BOOST_THROW_EXCEPTION(std::runtime_error("MirBuffer is not android compatible cannot get stride"));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return std::numeric_limits<unsigned int>::max();
+}
+
+void incref(MirBuffer* b)
+try
+{
+    if (auto anwb = to_anwb(b))
+        anwb->incStrong(anwb);
+    BOOST_THROW_EXCEPTION(std::runtime_error("MirBuffer is not android compatible cannot incref"));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+void decref(MirBuffer* b)
+try
+{
+    if (auto anwb = to_anwb(b))
+        anwb->decStrong(anwb);
+    BOOST_THROW_EXCEPTION(std::runtime_error("MirBuffer is not android compatible cannot decref"));
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 #pragma GCC diagnostic push
@@ -210,7 +364,12 @@ mcla::AndroidClientPlatform::AndroidClientPlatform(
     native_display{std::make_shared<EGLNativeDisplayType>(EGL_DEFAULT_DISPLAY)},
     android_types_extension{native_display_type, create_anw, destroy_anw, create_anwb, destroy_anwb},
     fence_extension{get_fence, associate_fence, wait_for_access},
-    buffer_extension{create_buffer},
+    buffer_extension{
+        create_buffer,
+        create_buffer_sync,
+        is_android_compatible,
+        android_native_handle, hal_pixel_format, gralloc_usage, android_stride,
+        incref, decref},
     hw_stream{get_hw_stream}
 {
 }
@@ -301,7 +460,7 @@ void* mcla::AndroidClientPlatform::request_interface(char const* name, int versi
 {
     if (!strcmp(name, "mir_extension_android_egl") && (version == 1))
         return &android_types_extension;
-    if (!strcmp(name, "mir_extension_android_buffer") && (version == 1))
+    if (!strcmp(name, "mir_extension_android_buffer") && (version <= 2))
         return &buffer_extension;
     if (!strcmp(name, "mir_extension_fenced_buffers") && version == 1)
         return &fence_extension;

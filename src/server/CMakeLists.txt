@@ -81,6 +81,7 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirlogging>
   $<TARGET_OBJECTS:mirnullreport>
   $<TARGET_OBJECTS:mirnestedgraphics>
+  $<TARGET_OBJECTS:miroffscreengraphics>
   $<TARGET_OBJECTS:mirthread>
 
   $<TARGET_OBJECTS:mirrenderergl>
@@ -110,6 +111,7 @@ target_link_libraries(mirserver LINK_PUBLIC
   mirprotobuf
   mircookie
 
+  server_platform_common
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}

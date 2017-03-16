@@ -78,12 +78,12 @@ void mtd::MockLibInput::push_back(libinput_event* event)
     wake();
 }
 
-void mtd::MockLibInput::setup_device(libinput_device* dev, libinput_device_group* group, udev_device* u_dev, char const* name, unsigned int vendor, unsigned int product)
+void mtd::MockLibInput::setup_device(libinput_device* dev, libinput_device_group* group, udev_device* u_dev, char const* name, char const* sysname, unsigned int vendor, unsigned int product)
 {
     ON_CALL(*this, libinput_device_get_name(dev))
         .WillByDefault(Return(name));
     ON_CALL(*this, libinput_device_get_sysname(dev))
-        .WillByDefault(Return(name));
+        .WillByDefault(Return(sysname));
     ON_CALL(*this, libinput_device_get_device_group(dev))
         .WillByDefault(Return(group));
     ON_CALL(*this, libinput_device_get_id_product(dev))

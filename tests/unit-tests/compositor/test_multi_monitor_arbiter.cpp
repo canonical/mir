@@ -39,26 +39,27 @@ struct MockBufferMap : mf::ClientBuffers
     MOCK_METHOD1(remove_buffer, void(mg::BufferID id));
     MOCK_METHOD1(receive_buffer, void(mg::BufferID id));
     MOCK_METHOD1(send_buffer, void(mg::BufferID id));
-    MOCK_METHOD1(at, std::shared_ptr<mg::Buffer>&(mg::BufferID));
     MOCK_CONST_METHOD0(client_owned_buffer_count, size_t());
-    std::shared_ptr<mg::Buffer>& operator[](mg::BufferID id) { return at(id); }
+    MOCK_CONST_METHOD1(get, std::shared_ptr<mg::Buffer>(mg::BufferID));
 };
 
 struct FixedSchedule : mc::Schedule
 {
-    void schedule(std::shared_ptr<mg::Buffer> const&)
+    void schedule(std::shared_ptr<mg::Buffer> const&) override
     {
         throw std::runtime_error("this stub doesnt support this");
     }
-    void cancel(std::shared_ptr<mg::Buffer> const&)
+    std::future<void> schedule_nonblocking(
+        std::shared_ptr<mg::Buffer> const&) override
     {
         throw std::runtime_error("this stub doesnt support this");
+        return {};
     }
-    unsigned int num_scheduled()
+    unsigned int num_scheduled() override
     {
         return sched.size() - current;
     }
-    std::shared_ptr<mg::Buffer> next_buffer()
+    std::shared_ptr<mg::Buffer> next_buffer() override
     {
         if (sched.empty() || current == sched.size())
             throw std::runtime_error("no buffer scheduled");
@@ -536,6 +537,23 @@ TEST_F(MultiMonitorArbiter, can_advance_buffer_manually)
 
     auto b3 = arbiter.compositor_acquire(&comp_id1);
     EXPECT_THAT(b3->id(), Eq(buffers[2]->id()));
+}
+
+TEST_F(MultiMonitorArbiter, checks_if_buffer_is_valid_after_clean_onscreen_buffer)
+{
+    int comp_id1{0};
+
+    schedule.set_schedule({buffers[0], buffers[1], buffers[2], buffers[3]});
+
+    arbiter.advance_schedule();
+    arbiter.advance_schedule();
+    arbiter.advance_schedule();
+    arbiter.advance_schedule();
+
+    auto b1 = arbiter.compositor_acquire(&comp_id1);
+
+    EXPECT_THAT(b1->id(), Eq(buffers[3]->id()));
+    EXPECT_THAT(b1->size(), Eq(buffers[3]->size()));
 }
 
 TEST_F(MultiMonitorArbiter, releases_buffer_on_destruction)

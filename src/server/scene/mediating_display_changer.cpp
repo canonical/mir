@@ -38,7 +38,6 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-namespace mi = mir::input;
 namespace mt = mir::time;
 
 namespace
@@ -132,7 +131,6 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<SessionEventHandlerRegister> const& session_event_handler_register,
     std::shared_ptr<ServerActionQueue> const& server_action_queue,
     std::shared_ptr<mg::DisplayConfigurationObserver> const& observer,
-    std::shared_ptr<mi::InputRegion> const& region,
     std::shared_ptr<mt::AlarmFactory> const& alarm_factory)
     : display{display},
       compositor{compositor},
@@ -143,7 +141,6 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
       observer{observer},
       base_configuration_{display->configuration()},
       base_configuration_applied{true},
-      region{region},
       alarm_factory{alarm_factory}
 {
     session_event_handler_register->register_focus_change_handler(
@@ -181,7 +178,6 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
         });
 
     observer->initial_configuration(base_configuration_);
-    update_input_rectangles(*base_configuration_);
 }
 
 void ms::MediatingDisplayChanger::configure(
@@ -461,7 +457,6 @@ void ms::MediatingDisplayChanger::apply_config(
         }
 
         observer->configuration_applied(conf);
-        update_input_rectangles(*conf);
         base_configuration_applied = false;
     }
     catch (std::exception const& e)
@@ -573,13 +568,3 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
         });
 }
 
-void ms::MediatingDisplayChanger::update_input_rectangles(mg::DisplayConfiguration const& config)
-{
-    geometry::Rectangles rectangles;
-    config.for_each_output([&rectangles](mg::DisplayConfigurationOutput const& output) {
-        if (output.used && output.connected && output.power_mode == mir_power_mode_on &&
-            output.current_mode_index < output.modes.size())
-            rectangles.add(geometry::Rectangle(output.top_left, output.modes[output.current_mode_index].size));
-    });
-    region->set_input_rectangles(rectangles);
-}

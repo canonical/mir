@@ -18,11 +18,8 @@
 
 #include "mir/default_server_configuration.h"
 
-#include "android/input_sender.h"
 #include "key_repeat_dispatcher.h"
-#include "display_input_region.h"
 #include "event_filter_chain_dispatcher.h"
-#include "channel_factory.h"
 #include "config_changer.h"
 #include "cursor_controller.h"
 #include "touchspot_controller.h"
@@ -30,7 +27,6 @@
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
 #include "builtin_cursor_images.h"
-#include "null_input_channel_factory.h"
 #include "default_input_device_hub.h"
 #include "default_input_manager.h"
 #include "surface_input_dispatcher.h"
@@ -57,7 +53,6 @@
 #include "mir_toolkit/cursors.h"
 
 namespace mi = mir::input;
-namespace mia = mi::android;
 namespace mr = mir::report;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
@@ -100,15 +95,6 @@ bool is_arale()
 
 }
 
-std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
-{
-    return input_region(
-        []()
-        {
-            return std::make_shared<mi::DisplayInputRegion>();
-        });
-}
-
 std::shared_ptr<mi::CompositeEventFilter>
 mir::DefaultServerConfiguration::the_composite_event_filter()
 {
@@ -127,29 +113,6 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
         {
             std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
             return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_surface_input_dispatcher());
-        });
-}
-
-namespace
-{
-class NullInputSender : public mi::InputSender
-{
-public:
-    virtual void send_event(MirEvent const&, std::shared_ptr<mi::InputChannel> const& ) {}
-};
-
-}
-
-std::shared_ptr<mi::InputSender>
-mir::DefaultServerConfiguration::the_input_sender()
-{
-    return input_sender(
-        [this]() -> std::shared_ptr<mi::InputSender>
-        {
-        if (!the_options()->get<bool>(options::enable_input_opt))
-            return std::make_shared<NullInputSender>();
-        else
-            return std::make_shared<mia::InputSender>(the_scene(), the_main_loop(), the_input_report());
         });
 }
 
@@ -193,15 +156,6 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
                 the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_authority(),
                 enable_repeat, key_repeat_timeout, key_repeat_delay, is_arale());
         });
-}
-
-std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
-{
-    auto const options = the_options();
-    if (!options->get<bool>(options::enable_input_opt))
-        return std::make_shared<mi::NullInputChannelFactory>();
-    else
-        return std::make_shared<mi::ChannelFactory>();
 }
 
 std::shared_ptr<mi::CursorListener>
@@ -333,7 +287,7 @@ std::shared_ptr<mi::Seat> mir::DefaultServerConfiguration::the_seat()
                     the_input_dispatcher(),
                     the_touch_visualizer(),
                     the_cursor_listener(),
-                    the_input_region(),
+                    the_display_configuration_observer_registrar(),
                     the_key_mapper(),
                     the_clock(),
                     the_seat_observer());

@@ -27,6 +27,7 @@
 #include "mir/input/event_builder.h"
 #include "mir/input/pointer_settings.h"
 #include "mir/input/touchpad_settings.h"
+#include "mir/input/touchscreen_settings.h"
 #include "mir/input/device_capability.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
@@ -101,6 +102,16 @@ public:
             settings.middle_mouse_button_emulation = mir_touchpad_config_get_middle_mouse_button_emulation(touchpad_config);
 
             touchpad_settings = settings;
+        }
+
+        auto touchscreen_config = mir_input_device_get_touchscreen_config(dev);
+        if (touchscreen_config && contains(device_info.capabilities, mi::DeviceCapability::touchscreen))
+        {
+            mi::TouchscreenSettings settings;
+            settings.output_id = mir_touchscreen_config_get_output_id(touchscreen_config);
+            settings.mapping_mode = mir_touchscreen_config_get_mapping_mode(touchscreen_config);
+
+            touchscreen_settings = settings;
         }
     }
 
@@ -238,6 +249,27 @@ public:
         }
     }
 
+    mir::optional_value<mi::TouchscreenSettings> get_touchscreen_settings() const override
+    {
+        return touchscreen_settings;
+    }
+
+    void apply_settings(mi::TouchscreenSettings const& new_settings) override
+    {
+        if (touchscreen_settings.is_set() && touchscreen_settings.value() == new_settings)
+            return;
+
+        auto ts_conf = mir_input_device_get_mutable_touchscreen_config(device);
+
+        if (ts_conf)
+        {
+            mir_touchscreen_config_set_output_id(ts_conf, new_settings.output_id);
+            mir_touchscreen_config_set_mapping_mode(ts_conf, new_settings.mapping_mode);
+
+            emit_device_change();
+        }
+    }
+
     MirInputDeviceId device_id;
     MirInputDevice* device{nullptr};
     mi::InputSink* destination{nullptr};
@@ -245,6 +277,7 @@ public:
     mi::InputDeviceInfo device_info;
     mir::optional_value<mi::PointerSettings> pointer_settings;
     mir::optional_value<mi::TouchpadSettings> touchpad_settings;
+    mir::optional_value<mi::TouchscreenSettings> touchscreen_settings;
     std::function<void()> emit_device_change;
 };
 

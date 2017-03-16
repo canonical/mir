@@ -311,6 +311,28 @@ int mir_output_get_position_x(MirOutput const* output);
 int mir_output_get_position_y(MirOutput const* output);
 
 /**
+ * Get the width of the virtual display space occupied by an output.
+ *
+ * This may not be equal to the width of its current mode, for example if
+ * it is rotated or (in future) cloning another output.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The width in logical pixels (not physical screen pixels)
+ */
+unsigned int mir_output_get_logical_width(MirOutput const* output);
+
+/**
+ * Get the height of the virtual display space occupied by an output.
+ *
+ * This may not be equal to the height of its current mode, for example if
+ * it is rotated or (in future) cloning another output.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The height in logical pixels (not physical screen pixels)
+ */
+unsigned int mir_output_get_logical_height(MirOutput const* output);
+
+/**
  * Set the coordinates of the top-left point of the output in the virtual
  * display space.
  *

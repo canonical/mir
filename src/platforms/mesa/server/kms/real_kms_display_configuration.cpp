@@ -304,9 +304,9 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
         auto encoder = resources.encoder(connector.encoder_id);
         if (encoder->crtc_id)
         {
-            current_mode_info = resources.crtc(encoder->crtc_id)->mode;
-
             auto crtc = resources.crtc(encoder->crtc_id);
+            current_mode_info = crtc->mode;
+
             if (crtc->gamma_size > 0)
                 gamma = mg::LinearGammaLUTs(crtc->gamma_size);
         }
@@ -348,22 +348,7 @@ void mgm::RealKMSDisplayConfiguration::add_or_update_output(
     {
         auto& output = *iter;
 
-        if (current_mode_index != invalid_mode_index)
-        {
-            output.current_mode_index = current_mode_index;
-        }
-        else if (!modes.empty() &&  // If empty retain old current_mode_index!
-                 ( output.current_mode_index >= modes.size() ||
-                   output.modes[output.current_mode_index] !=
-                          modes[output.current_mode_index]))
-        {
-            // current_mode_index is invalid and the definition of the old
-            // current mode has also changed (different display plugged in)
-            // so fall back to the preferred mode...
-            output.current_mode_index = preferred_mode_index;
-        }
-        // else output.current_mode_index is correct and unchanged.
-
+        output.current_mode_index = current_mode_index;
         output.modes = modes;
         output.preferred_mode_index = preferred_mode_index;
         output.physical_size_mm = physical_size;

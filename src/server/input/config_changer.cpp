@@ -28,6 +28,7 @@
 #include "mir/input/mir_input_config.h"
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_touchscreen_config.h"
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/client_visible_error.h"
 
@@ -72,6 +73,10 @@ void apply_device_config(MirInputDevice const* config, mi::Device& device)
     if (config->has_touchpad_config() && existing_tpd_conf.is_set())
         device.apply_touchpad_configuration(config->touchpad_config());
 
+    auto existing_ts_conf = device.touchscreen_configuration();
+    if (config->has_touchscreen_config() && existing_ts_conf.is_set())
+        device.apply_touchscreen_configuration(config->touchscreen_config());
+
     auto existing_kbd_conf = device.keyboard_configuration();
     if (config->has_keyboard_config() && existing_kbd_conf.is_set())
         device.apply_keyboard_configuration(config->keyboard_config());
@@ -87,6 +92,10 @@ MirInputDevice get_device_config(mi::Device const& device)
     auto tpd_conf = device.touchpad_configuration();
     if (tpd_conf.is_set())
         cfg.set_touchpad_config(tpd_conf.value());
+
+    auto ts_conf = device.touchscreen_configuration();
+    if (ts_conf.is_set())
+        cfg.set_touchscreen_config(ts_conf.value());
 
     auto kbd_conf = device.keyboard_configuration();
     if (kbd_conf.is_set())

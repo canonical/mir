@@ -103,7 +103,7 @@ mg::DisplayConfigurationOutput mgn::NestedDisplayConfiguration::create_display_o
     auto current_format  = mir_output_get_current_pixel_format(output);
     auto power_mode      = mir_output_get_power_mode(output);
     auto orientation     = mir_output_get_orientation(output);
-    auto local_config    = get_local_config_for(output_id);
+    auto local_config    = get_local_config_for(output);
     uint32_t preferred_index = mir_output_get_preferred_mode_index(output);
     uint32_t current_index   = mir_output_get_current_mode_index(output);
 
@@ -199,13 +199,16 @@ std::unique_ptr<mg::DisplayConfiguration> mgn::NestedDisplayConfiguration::clone
 }
 
 mgn::NestedDisplayConfiguration::LocalOutputConfig
-mgn::NestedDisplayConfiguration::get_local_config_for(uint32_t output_id) const
+mgn::NestedDisplayConfiguration::get_local_config_for(MirOutput const* output) const
 {
     std::lock_guard<std::mutex> lock{local_config_mutex};
 
-    LocalOutputConfig const default_values {1.0f, mir_form_factor_monitor,
-                                            mir_subpixel_arrangement_unknown,
-                                            {}, mir_output_gamma_unsupported};
+    auto const output_id = mir_output_get_id(output);
+
+    LocalOutputConfig const default_values{
+        1.0f, mir_form_factor_monitor,
+        mir_output_get_subpixel_arrangement(output),
+        {}, mir_output_gamma_unsupported};
 
     bool inserted;
     decltype(local_config)::iterator keypair;

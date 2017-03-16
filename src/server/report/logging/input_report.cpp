@@ -18,12 +18,8 @@
 
 #include "input_report.h"
 
-#include "mir/report/legacy_input_report.h"
 #include "mir/logging/logger.h"
 #include "mir/logging/input_timestamp.h"
-
-#include "std/MirLog.h"
-#include <std/Log.h>
 
 #include <linux/input.h>
 
@@ -33,69 +29,6 @@
 
 namespace mrl = mir::report::logging;
 namespace ml = mir::logging;
-namespace mrli = mir::report::legacy_input;
-
-namespace
-{
-char const* const component = "android-input";
-
-class LegacyInputReport;
-
-std::mutex mutex;
-std::shared_ptr<LegacyInputReport> the_legacy_input_report;
-
-class LegacyInputReport
-{
-public:
-    LegacyInputReport(std::shared_ptr<ml::Logger> const& logger) :
-        logger(logger)
-    {
-    }
-
-    void log(int prio, char const* buffer)
-    {
-        switch (prio)
-        {
-        case ANDROID_LOG_UNKNOWN:
-        case ANDROID_LOG_DEFAULT:
-        case ANDROID_LOG_VERBOSE:
-        case ANDROID_LOG_DEBUG:
-            logger->log(ml::Severity::debug, buffer, component);
-            break;
-
-        case ANDROID_LOG_INFO:
-            logger->log(ml::Severity::informational, buffer, component);
-            break;
-
-        case ANDROID_LOG_WARN:
-            logger->log(ml::Severity::warning, buffer, component);
-            break;
-
-        case ANDROID_LOG_ERROR:
-            logger->log(ml::Severity::error, buffer, component);
-        };
-    }
-
-private:
-    std::shared_ptr<ml::Logger> const logger;
-};
-
-void my_write_to_log(int prio, char const* buffer)
-{
-    std::unique_lock<std::mutex> lock(mutex);
-    the_legacy_input_report->log(prio, buffer);
-}
-}
-
-
-void mrli::initialize(std::shared_ptr<ml::Logger> const& logger)
-{
-    std::unique_lock<std::mutex> lock(mutex);
-    ::the_legacy_input_report = std::make_shared<LegacyInputReport>(logger);
-
-    mir::write_to_log = my_write_to_log;
-}
-
 
 mrl::InputReport::InputReport(const std::shared_ptr<ml::Logger>& logger)
     : logger(logger)

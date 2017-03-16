@@ -23,11 +23,19 @@
 
 #include "mir/input/input_device.h"
 #include "mir/input/pointer_settings.h"
+#include "mir/input/touchscreen_settings.h"
 #include "mir/input/input_device_info.h"
 #include "mir/geometry/point.h"
 
+#include <mutex>
+#include <functional>
+
 namespace mir
 {
+namespace input
+{
+class OutputInfo;
+}
 namespace dispatch
 {
 class ActionQueue;
@@ -49,6 +57,7 @@ public:
     void emit_touch_sequence(std::function<mir::input::synthesis::TouchParameters(int)> const& event_generator,
                              int count,
                              std::chrono::duration<double> delay) override;
+    virtual void on_new_configuration_do(std::function<void(mir::input::InputDevice const& device)> callback) override;
 
 private:
     class InputDevice : public mir::input::InputDevice
@@ -73,11 +82,17 @@ private:
         void apply_settings(mir::input::PointerSettings const& settings) override;
         mir::optional_value<mir::input::TouchpadSettings> get_touchpad_settings() const override;
         void apply_settings(mir::input::TouchpadSettings const& settings) override;
+        mir::optional_value<mir::input::TouchscreenSettings> get_touchscreen_settings() const override;
+        void apply_settings(mir::input::TouchscreenSettings const& settings) override;
+        void set_apply_settings_callback(std::function<void(mir::input::InputDevice const&)> const& callback);
 
     private:
         MirPointerAction update_buttons(mir::input::synthesis::EventAction action, MirPointerButton button);
         void update_position(int rel_x, int rel_y);
         void map_touch_coordinates(float& x, float& y);
+        mir::input::OutputInfo get_output_info() const;
+        bool is_output_active() const;
+        void trigger_callback() const;
 
         mir::input::InputSink* sink{nullptr};
         mir::input::EventBuilder* builder{nullptr};
@@ -86,6 +101,9 @@ private:
         mir::geometry::Point pos, scroll;
         MirPointerButtons buttons;
         mir::input::PointerSettings settings;
+        mir::input::TouchscreenSettings touchscreen;
+        mutable std::mutex config_callback_mutex;
+        std::function<void(mir::input::InputDevice const&)> callback;
     };
     std::shared_ptr<mir::dispatch::ActionQueue> queue;
     std::shared_ptr<InputDevice> device;

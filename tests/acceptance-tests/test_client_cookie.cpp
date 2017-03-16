@@ -21,7 +21,7 @@
 #include "mir_test_framework/fake_input_device.h"
 
 #include "mir_test_framework/stub_server_platform_factory.h"
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/spin_wait.h"
 #include "mir/test/signal.h"
 #include "mir/cookie/authority.h"
