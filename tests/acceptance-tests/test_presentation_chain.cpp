@@ -221,6 +221,19 @@ void buffer_callback(MirBuffer* buffer, void* context)
 
 }
 
+TEST_F(PresentationChain, supported_modes)
+{
+    EXPECT_TRUE(mir_connection_present_mode_supported(
+        connection, mir_present_mode_fifo));
+    //TODOs: 
+    EXPECT_FALSE(mir_connection_present_mode_supported(
+        connection, mir_present_mode_fifo_relaxed));
+    EXPECT_FALSE(mir_connection_present_mode_supported(
+        connection, mir_present_mode_mailbox));
+    EXPECT_FALSE(mir_connection_present_mode_supported(
+        connection, mir_present_mode_immediate));
+}
+
 TEST_F(PresentationChain, allocation_calls_callback)
 {
     SurfaceWithChainFromStart window(connection, size, pf);
