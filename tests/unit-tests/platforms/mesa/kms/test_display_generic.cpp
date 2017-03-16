@@ -35,6 +35,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <fcntl.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -45,6 +46,7 @@ class DisplayTestGeneric : public ::testing::Test
 {
 public:
     DisplayTestGeneric()
+        : drm_fd{open(drm_device, 0, 0)}
     {
         using namespace testing;
 
@@ -57,9 +59,14 @@ public:
         mock_gl.provide_gles_extensions();
 
         ON_CALL(mock_gbm, gbm_device_get_fd(_))
-            .WillByDefault(Return(mock_drm.fake_drm.fd()));
+            .WillByDefault(Return(drm_fd));
 
         fake_devices.add_standard_device("standard-drm-devices");
+
+        // Remove all outputs from all but one of the DRM devices we access;
+        // these tests are not set up to test hybrid.
+        mock_drm.reset("/dev/dri/card1");
+        mock_drm.reset("/dev/dri/card2");
     }
 
     std::shared_ptr<mg::Display> create_display()
@@ -79,6 +86,9 @@ public:
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     mtf::UdevEnvironment fake_devices;
+
+    char const* const drm_device = "/dev/dri/card0";
+    int const drm_fd;
 };
 
 #include "../../test_display.h"

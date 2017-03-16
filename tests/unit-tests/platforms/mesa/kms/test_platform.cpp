@@ -97,16 +97,18 @@ TEST_F(MesaGraphicsPlatform, connection_ipc_package)
     int const auth_fd{auth_pipe.read_fd()};
 
     /* First time for master DRM fd, second for authenticated fd */
-    EXPECT_CALL(mock_drm, open(_,_,_))
-        .WillOnce(Return(mock_drm.fake_drm.fd()));
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card0"),_,_));
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card1"),_,_));
+
     EXPECT_CALL(mock_drm, drmOpen(_,_))
         .WillOnce(Return(auth_fd));
 
     /* Expect proper authorization */
     EXPECT_CALL(mock_drm, drmGetMagic(auth_fd,_));
-    EXPECT_CALL(mock_drm, drmAuthMagic(mock_drm.fake_drm.fd(),_));
+    EXPECT_CALL(mock_drm, drmAuthMagic(mtd::IsFdOfDevice("/dev/dri/card0"),_));
 
-    EXPECT_CALL(mock_drm, drmClose(mock_drm.fake_drm.fd()));
+    EXPECT_CALL(mock_drm, drmClose(mtd::IsFdOfDevice("/dev/dri/card0")));
+    EXPECT_CALL(mock_drm, drmClose(mtd::IsFdOfDevice("/dev/dri/card1")));
 
     /* Expect authenticated fd to be closed when package is destroyed */
     EXPECT_CALL(mock_drm, drmClose(auth_fd));
@@ -138,22 +140,6 @@ TEST_F(MesaGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_e
     }
 
     FAIL() << "Expected an exception to be thrown.";
-}
-
-TEST_F(MesaGraphicsPlatform, fails_if_no_resources)
-{
-    using namespace ::testing;
-
-    EXPECT_CALL(mock_drm, drmModeGetResources(_))
-        .Times(Exactly(1))
-        .WillOnce(Return(reinterpret_cast<drmModeRes*>(0)));
-
-    EXPECT_CALL(mock_drm, drmModeFreeResources(_))
-        .Times(Exactly(0));
-
-    EXPECT_THROW({
-        auto platform = create_platform();
-    }, std::runtime_error) << "Expected that c'tor of Platform throws";
 }
 
 namespace
@@ -278,7 +264,9 @@ TEST_F(MesaGraphicsPlatform, releases_drm_on_emergency_cleanup)
         mgm::BypassOption::allowed};
 
     int const success_code = 0;
-    EXPECT_CALL(mock_drm, drmDropMaster(mock_drm.fake_drm.fd()))
+    EXPECT_CALL(mock_drm, drmDropMaster(mtd::IsFdOfDevice("/dev/dri/card0")))
+        .WillOnce(Return(success_code));
+    EXPECT_CALL(mock_drm, drmDropMaster(mtd::IsFdOfDevice("/dev/dri/card1")))
         .WillOnce(Return(success_code));
 
     (*emergency_cleanup_registry.handler)();
@@ -290,6 +278,8 @@ TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
 {
     using namespace testing;
 
+
+
     auto const mock_vt = std::make_shared<mtd::MockVirtualTerminal>();
     StubEmergencyCleanupRegistry emergency_cleanup_registry;
     mgm::Platform platform{
@@ -300,8 +290,8 @@ TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
 
     EXPECT_CALL(*mock_vt, restore())
         .WillOnce(Throw(std::runtime_error("vt restore exception")));
-    EXPECT_CALL(mock_drm, drmDropMaster(mock_drm.fake_drm.fd()))
-        .WillOnce(Throw(std::runtime_error("drm drop master exception")));
+    EXPECT_CALL(mock_drm, drmDropMaster(_))
+        .WillRepeatedly(Throw(std::runtime_error("drm drop master exception")));
 
     (*emergency_cleanup_registry.handler)();
 

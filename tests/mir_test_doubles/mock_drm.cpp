@@ -24,6 +24,7 @@
 #include <stdexcept>
 #include <unistd.h>
 #include <dlfcn.h>
+#include <boost/throw_exception.hpp>
 
 namespace mtd=mir::test::doubles;
 namespace geom = mir::geometry;
@@ -239,25 +240,60 @@ mtd::MockDRM::MockDRM()
     memset(&empty_object_props, 0, sizeof(empty_object_props));
 
     ON_CALL(*this, open(_,_,_))
-    .WillByDefault(Return(fake_drm.fd()));
+        .WillByDefault(
+            WithArg<0>(
+                Invoke(
+                    [this](char const* device_path)
+                    {
+                        auto fd = fake_drms[device_path].fd();
+                        fd_to_drm.insert({fd, fake_drms[device_path]});
+                        return fd;
+                    })));
 
     ON_CALL(*this, drmOpen(_,_))
-    .WillByDefault(Return(fake_drm.fd()));
+        .WillByDefault(
+            InvokeWithoutArgs(
+                [this]()
+                {
+                    auto fd = fake_drms["/dev/dri/card0"].fd();
+                    fd_to_drm.insert({fd, fake_drms["/dev/dri/card0"]});
+                    return fd;
+                }));
 
     ON_CALL(*this, drmClose(_))
-    .WillByDefault(WithArg<0>(Invoke([&](int fd){ return close(fd); })));
+        .WillByDefault(Invoke([](int fd){ return close(fd); }));
 
     ON_CALL(*this, drmModeGetResources(_))
-    .WillByDefault(Return(fake_drm.resources_ptr()));
+        .WillByDefault(
+            Invoke(
+                [this](int fd)
+                {
+                    return fd_to_drm.at(fd).resources_ptr();
+                }));
 
     ON_CALL(*this, drmModeGetCrtc(_, _))
-    .WillByDefault(WithArgs<1>(Invoke(&fake_drm, &FakeDRMResources::find_crtc)));
+        .WillByDefault(
+            Invoke(
+                [this](int fd, uint32_t crtc_id)
+                {
+                    return fd_to_drm.at(fd).find_crtc(crtc_id);
+                }));
 
     ON_CALL(*this, drmModeGetEncoder(_, _))
-    .WillByDefault(WithArgs<1>(Invoke(&fake_drm, &FakeDRMResources::find_encoder)));
+        .WillByDefault(
+            Invoke(
+                [this](int fd, uint32_t encoder_id)
+                {
+                    return fd_to_drm.at(fd).find_encoder(encoder_id);
+                }));
 
     ON_CALL(*this, drmModeGetConnector(_, _))
-    .WillByDefault(WithArgs<1>(Invoke(&fake_drm, &FakeDRMResources::find_connector)));
+        .WillByDefault(
+            Invoke(
+                [this](int fd, uint32_t connector_id)
+                {
+                    return fd_to_drm.at(fd).find_connector(connector_id);
+                }));
 
     ON_CALL(*this, drmModeObjectGetProperties(_, _, _))
         .WillByDefault(Return(&empty_object_props));
@@ -275,6 +311,118 @@ mtd::MockDRM::MockDRM()
 mtd::MockDRM::~MockDRM() noexcept
 {
     global_mock = nullptr;
+}
+
+void mtd::MockDRM::add_crtc(char const *device, uint32_t id, drmModeModeInfo mode)
+{
+    fake_drms[device].add_crtc(id, mode);
+}
+
+void mtd::MockDRM::add_encoder(
+    char const *device,
+    uint32_t encoder_id,
+    uint32_t crtc_id,
+    uint32_t possible_crtcs_mask)
+{
+    fake_drms[device].add_encoder(encoder_id, crtc_id, possible_crtcs_mask);
+}
+
+void mtd::MockDRM::prepare(char const *device)
+{
+    fake_drms[device].prepare();
+}
+
+void mtd::MockDRM::reset(char const *device)
+{
+    fake_drms[device].reset();
+}
+
+void mtd::MockDRM::generate_event_on(char const *device)
+{
+    auto const fd = fake_drms[device].write_fd();
+
+    if (write(fd, "a", 1) != 1)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "Failed to make fake DRM event"));
+    }
+}
+
+void mtd::MockDRM::add_connector(
+    char const *device,
+    uint32_t connector_id,
+    uint32_t type,
+    drmModeConnection connection,
+    uint32_t encoder_id,
+    std::vector<drmModeModeInfo> &modes,
+    std::vector<uint32_t> &possible_encoder_ids,
+    geometry::Size const &physical_size,
+    drmModeSubPixel subpixel_arrangement)
+{
+    fake_drms[device].add_connector(
+        connector_id,
+        type,
+        connection,
+        encoder_id,
+        modes,
+        possible_encoder_ids,
+        physical_size,
+        subpixel_arrangement);
+}
+
+MATCHER_P2(IsFdOfDevice, devname, fds, "")
+{
+    return std::find(
+        fds.begin(),
+        fds.end(),
+        arg) != fds.end();
+}
+
+class mtd::MockDRM::IsFdOfDeviceMatcher : public ::testing::MatcherInterface<int>
+{
+public:
+    IsFdOfDeviceMatcher(char const* device)
+        : device{device}
+    {
+    }
+
+    void DescribeTo(::std::ostream *os) const override
+    {
+
+        *os
+            << "Is an fd of DRM device "
+            << device
+            << " (one of: "
+            << ::testing::PrintToString(fds_for_device(device.c_str()))
+            << ")";
+    }
+
+    bool MatchAndExplain(int x, testing::MatchResultListener *listener) const override
+    {
+        testing::Matcher<std::vector<int>> matcher = testing::Contains(x);
+        return matcher.MatchAndExplain(fds_for_device(device.c_str()), listener);
+    }
+
+private:
+    std::vector<int> fds_for_device(char const* device) const
+    {
+        std::vector<int> device_fds;
+        for (auto const& pair : global_mock->fd_to_drm)
+        {
+            if (&global_mock->fake_drms[device] == &pair.second)
+            {
+                device_fds.push_back(pair.first);
+            }
+        }
+        return device_fds;
+    }
+
+    std::string const device;
+};
+
+testing::Matcher<int> mtd::IsFdOfDevice(char const* device)
+{
+    return ::testing::MakeMatcher(new mtd::MockDRM::IsFdOfDeviceMatcher(device));
 }
 
 int drmOpen(const char *name, const char *busid)

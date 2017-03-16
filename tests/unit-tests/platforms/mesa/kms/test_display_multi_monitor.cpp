@@ -41,6 +41,7 @@
 #include <gmock/gmock.h>
 
 #include <unordered_set>
+#include <fcntl.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -109,6 +110,7 @@ class MesaDisplayMultiMonitorTest : public ::testing::Test
 {
 public:
     MesaDisplayMultiMonitorTest()
+        : drm_fd{open(drm_device, 0, 0)}
     {
         using namespace testing;
 
@@ -129,9 +131,14 @@ public:
             .Times(AtLeast(0));
         EXPECT_CALL(mock_gbm, gbm_device_get_fd(_))
             .Times(AtLeast(0))
-            .WillRepeatedly(Return(mock_drm.fake_drm.fd()));
+            .WillRepeatedly(Return(drm_fd));
 
         fake_devices.add_standard_device("standard-drm-devices");
+
+        // Remove all outputs from all but one of the DRM devices we access;
+        // these tests are not set up to test hybrid.
+        mock_drm.reset("/dev/dri/card1");
+        mock_drm.reset("/dev/dri/card2");
     }
 
     std::shared_ptr<mgm::Platform> create_platform()
@@ -163,8 +170,6 @@ public:
     {
         using fake = mtd::FakeDRMResources;
 
-        mtd::FakeDRMResources& resources(mock_drm.fake_drm);
-
         modes0.clear();
         modes0.push_back(fake::create_mode(1920, 1080, 138500, 2080, 1111, fake::NormalMode));
         modes0.push_back(fake::create_mode(1920, 1080, 148500, 2200, 1125, fake::PreferredMode));
@@ -173,7 +178,7 @@ public:
 
         geom::Size const connector_physical_size_mm{1597, 987};
 
-        resources.reset();
+        mock_drm.reset(drm_device);
 
         uint32_t const crtc_base_id{10};
         uint32_t const encoder_base_id{20};
@@ -186,10 +191,10 @@ public:
             uint32_t const all_crtcs_mask{0xff};
 
             crtc_ids.push_back(crtc_id);
-            resources.add_crtc(crtc_id, drmModeModeInfo());
+            mock_drm.add_crtc(drm_device, crtc_id, drmModeModeInfo());
 
             encoder_ids.push_back(encoder_id);
-            resources.add_encoder(encoder_id, crtc_id, all_crtcs_mask);
+            mock_drm.add_encoder(drm_device, encoder_id, crtc_id, all_crtcs_mask);
         }
 
         for (int i = 0; i < connected; i++)
@@ -197,9 +202,15 @@ public:
             uint32_t const connector_id{connector_base_id + i};
 
             connector_ids.push_back(connector_id);
-            resources.add_connector(connector_id, DRM_MODE_CONNECTOR_VGA,
-                                    DRM_MODE_CONNECTED, encoder_ids[i],
-                                    modes0, encoder_ids, connector_physical_size_mm);
+            mock_drm.add_connector(
+                drm_device,
+                connector_id,
+                DRM_MODE_CONNECTOR_VGA,
+                DRM_MODE_CONNECTED,
+                encoder_ids[i],
+                modes0,
+                encoder_ids,
+                connector_physical_size_mm);
         }
 
         for (int i = 0; i < disconnected; i++)
@@ -207,12 +218,18 @@ public:
             uint32_t const connector_id{connector_base_id + connected + i};
 
             connector_ids.push_back(connector_id);
-            resources.add_connector(connector_id, DRM_MODE_CONNECTOR_VGA,
-                                    DRM_MODE_DISCONNECTED, 0,
-                                    modes_empty, encoder_ids, geom::Size{});
+            mock_drm.add_connector(
+                drm_device,
+                connector_id,
+                DRM_MODE_CONNECTOR_VGA,
+                DRM_MODE_DISCONNECTED,
+                0,
+                modes_empty,
+                encoder_ids,
+                geom::Size{});
         }
 
-        resources.prepare();
+        mock_drm.prepare(drm_device);
     }
 
 
@@ -228,6 +245,9 @@ public:
     std::vector<uint32_t> connector_ids;
 
     mtf::UdevEnvironment fake_devices;
+
+    char const* const drm_device = "/dev/dri/card0";
+    int const drm_fd;
 };
 
 }
@@ -243,7 +263,7 @@ TEST_F(MesaDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
     setup_outputs(num_connected_outputs, num_disconnected_outputs);
 
     /* Create DRM FBs */
-    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+    EXPECT_CALL(mock_drm, drmModeAddFB2(mtd::IsFdOfDevice(drm_device),
                                         _, _, _, _, _, _, _, _))
         .WillRepeatedly(DoAll(SetArgPointee<7>(fb_id), Return(0)));
 
@@ -253,7 +273,7 @@ TEST_F(MesaDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
     for (int i = 0; i < num_connected_outputs; i++)
     {
         crtc_setups += EXPECT_CALL(mock_drm,
-                                   drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                   drmModeSetCrtc(mtd::IsFdOfDevice(drm_device),
                                                   crtc_ids[i], fb_id,
                                                   _, _,
                                                   Pointee(connector_ids[i]),
@@ -264,7 +284,7 @@ TEST_F(MesaDisplayMultiMonitorTest, create_display_sets_all_connected_crtcs)
     /* All crtcs are restored at teardown */
     for (int i = 0; i < num_connected_outputs; i++)
     {
-        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+        EXPECT_CALL(mock_drm, drmModeSetCrtc(mtd::IsFdOfDevice(drm_device),
                                              crtc_ids[i], Ne(fb_id),
                                              _, _,
                                              Pointee(connector_ids[i]),
@@ -339,25 +359,25 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
     setup_outputs(num_connected_outputs, num_disconnected_outputs);
 
     /* Create DRM FBs */
-    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+    EXPECT_CALL(mock_drm, drmModeAddFB2(mtd::IsFdOfDevice(drm_device),
                                         _, _, _, _, _, _, _, _))
         .WillRepeatedly(DoAll(SetArgPointee<7>(fb_id), Return(0)));
 
     /* All crtcs are flipped */
     for (int i = 0; i < num_connected_outputs; i++)
     {
-        EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
+        EXPECT_CALL(mock_drm, drmModePageFlip(mtd::IsFdOfDevice(drm_device),
                                               crtc_ids[i], fb_id,
                                               _, _))
             .Times(2)
             .WillRepeatedly(DoAll(SaveArg<4>(&user_data[i]), Return(0)));
 
         /* Emit fake DRM page-flip events */
-        EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
+        mock_drm.generate_event_on(drm_device);
     }
 
     /* Handle the events properly */
-    EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
+    EXPECT_CALL(mock_drm, drmHandleEvent(mtd::IsFdOfDevice(drm_device), _))
         .Times(num_connected_outputs)
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[0]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[1]), Return(0)))
@@ -427,7 +447,7 @@ TEST_F(MesaDisplayMultiMonitorTest, create_display_uses_different_drm_fbs_for_si
     setup_outputs(num_connected_outputs, num_disconnected_outputs);
 
     /* Create DRM FBs */
-    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+    EXPECT_CALL(mock_drm, drmModeAddFB2(mtd::IsFdOfDevice(drm_device),
                                         _, _, _, _, _, _, _, _))
         .Times(num_connected_outputs)
         .WillRepeatedly(Invoke(&fb_id_container, &FBIDContainer::add_fb2));
@@ -438,7 +458,7 @@ TEST_F(MesaDisplayMultiMonitorTest, create_display_uses_different_drm_fbs_for_si
     for (int i = 0; i < num_connected_outputs; i++)
     {
         crtc_setups += EXPECT_CALL(mock_drm,
-                                   drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                                   drmModeSetCrtc(mtd::IsFdOfDevice(drm_device),
                                                   crtc_ids[i],
                                                   IsValidFB(&fb_id_container),
                                                   _, _,
@@ -450,7 +470,7 @@ TEST_F(MesaDisplayMultiMonitorTest, create_display_uses_different_drm_fbs_for_si
     /* All crtcs are restored at teardown */
     for (int i = 0; i < num_connected_outputs; i++)
     {
-        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+        EXPECT_CALL(mock_drm, drmModeSetCrtc(mtd::IsFdOfDevice(drm_device),
                                              crtc_ids[i], 0,
                                              _, _,
                                              Pointee(connector_ids[i]),
@@ -479,11 +499,11 @@ TEST_F(MesaDisplayMultiMonitorTest, configure_clears_unused_connected_outputs)
     for (int i = 0; i < num_connected_outputs; i++)
     {
         EXPECT_CALL(mock_drm,
-                    drmModeSetCursor(mock_drm.fake_drm.fd(),
+                    drmModeSetCursor(mtd::IsFdOfDevice(drm_device),
                                      crtc_ids[i], 0, 0, 0))
                         .Times(1);
         EXPECT_CALL(mock_drm,
-                    drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                    drmModeSetCrtc(mtd::IsFdOfDevice(drm_device),
                                    crtc_ids[i], 0, 0, 0,
                                    nullptr, 0, nullptr))
                         .Times(1);
@@ -509,7 +529,7 @@ TEST_F(MesaDisplayMultiMonitorTest, configure_clears_unused_connected_outputs)
     for (int i = 0; i < num_connected_outputs; i++)
     {
         EXPECT_CALL(mock_drm,
-                    drmModeSetCrtc(mock_drm.fake_drm.fd(), crtc_ids[i],
+                    drmModeSetCrtc(mtd::IsFdOfDevice(drm_device), crtc_ids[i],
                                    0, _, _, Pointee(connector_ids[i]),
                                    _, _))
                         .Times(1);
@@ -549,7 +569,7 @@ TEST_F(MesaDisplayMultiMonitorTest, resume_clears_unused_connected_outputs)
     for (int i = 0; i < num_connected_outputs; i++)
     {
         EXPECT_CALL(mock_drm,
-                    drmModeSetCrtc(mock_drm.fake_drm.fd(),
+                    drmModeSetCrtc(mtd::IsFdOfDevice(drm_device),
                                    crtc_ids[i], 0, 0, 0,
                                    nullptr, 0, nullptr))
                         .Times(1);
@@ -563,7 +583,7 @@ TEST_F(MesaDisplayMultiMonitorTest, resume_clears_unused_connected_outputs)
     for (int i = 0; i < num_connected_outputs; i++)
     {
         EXPECT_CALL(mock_drm,
-                    drmModeSetCrtc(mock_drm.fake_drm.fd(), crtc_ids[i],
+                    drmModeSetCrtc(mtd::IsFdOfDevice(drm_device), crtc_ids[i],
                                    0, _, _, Pointee(connector_ids[i]),
                                    _, _))
                         .Times(1);
