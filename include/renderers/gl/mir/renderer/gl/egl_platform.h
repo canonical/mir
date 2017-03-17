@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,30 +16,32 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_
-#define MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_
+#ifndef MIR_RENDERER_GL_EGL_PLATFORM_H_
+#define MIR_RENDERER_GL_EGL_PLATFORM_H_
 
-#include <mir_toolkit/mir_native_buffer.h>
-#include "mir/graphics/native_buffer.h"
-
-#include <cstdlib>
-#include <gbm.h>
+#include <EGL/egl.h>
 
 namespace mir
 {
-namespace graphics
+namespace renderer
 {
-namespace mesa
+namespace gl
 {
-struct NativeBuffer : graphics::NativeBuffer, MirBufferPackage
+
+class EGLPlatform
 {
-    struct gbm_bo *bo;
-    bool is_gbm_buffer;
-    uint32_t native_format;
-    uint32_t native_flags;
+public:
+    virtual ~EGLPlatform() = default;
+    virtual EGLNativeDisplayType egl_native_display() const = 0;
+
+protected:
+    EGLPlatform() = default;
+    EGLPlatform(EGLPlatform const&) = delete;
+    EGLPlatform& operator=(EGLPlatform const&) = delete;
 };
+
 }
 }
 }
 
-#endif /* MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_ */
+#endif /* MIR_RENDERER_GL_EGL_PLATFORM_H_ */

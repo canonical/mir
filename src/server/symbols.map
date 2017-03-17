@@ -37,7 +37,6 @@ MIR_SERVER_0.27 {
     mir::frontend::BufferStream::operator*;
     mir::frontend::ClientBuffers::?ClientBuffers*;
     mir::frontend::ClientBuffers::ClientBuffers*;
-    mir::frontend::ClientBuffers::operator*;
     mir::frontend::PromptSession::operator*;
     mir::frontend::PromptSession::?PromptSession*;
     mir::frontend::PromptSession::PromptSession*;
