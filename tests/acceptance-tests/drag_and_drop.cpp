@@ -123,6 +123,7 @@ struct DragAndDrop : mir_test_framework::ConnectedClientWithAWindow,
         mir_test_framework::ConnectedClientWithAWindow::SetUp();
         dnd = mir_drag_and_drop_v1(connection);
         mir_window_set_event_handler(window, &window_event_handler, this);
+        if (dnd) dnd->set_start_drag_and_drop_callback(window, &window_dnd_start_handler, this);
 
         create_target_window();
 
@@ -152,6 +153,7 @@ private:
     void center_mouse();
     void paint_window(MirWindow* w);
     void set_window_event_handler(MirWindow* window, std::function<void(MirEvent const* event)> const& handler);
+    void set_window_dnd_start_handler(MirWindow* window, std::function<void(MirDragAndDropEvent const*)> const& handler);
     void reset_window_event_handler(MirWindow* window);
 
     void create_target_window()
@@ -177,11 +179,19 @@ private:
         if (window == target_window) target_window_event_handler_(event);
     }
 
+    void invoke_window_dnd_start_handler(MirWindow* window, MirDragAndDropEvent const* event)
+    {
+        std::lock_guard<decltype(window_event_handler_mutex)> lock{window_event_handler_mutex};
+        if (window == this->window) window_dnd_start_(event);
+    }
+
     std::mutex window_event_handler_mutex;
+    std::function<void(MirDragAndDropEvent const* event)> window_dnd_start_ = [](MirDragAndDropEvent const*) {};
     std::function<void(MirEvent const* event)> window_event_handler_ = [](MirEvent const*) {};
     std::function<void(MirEvent const* event)> target_window_event_handler_ = [](MirEvent const*) {};
 
     static void window_event_handler(MirWindow* window, MirEvent const* event, void* context);
+    static void window_dnd_start_handler(MirWindow* window, MirDragAndDropEvent const* event, void* context);
 
     MirConnection* another_connection{nullptr};
     MirWindow*     target_window{nullptr};
@@ -193,6 +203,13 @@ void DragAndDrop::set_window_event_handler(MirWindow* window, std::function<void
     if (window == this->window) window_event_handler_ = handler;
     if (window == target_window) target_window_event_handler_ = handler;
 }
+
+void DragAndDrop::set_window_dnd_start_handler(MirWindow* window, std::function<void(MirDragAndDropEvent const*)> const& handler)
+{
+    std::lock_guard<decltype(window_event_handler_mutex)> lock{window_event_handler_mutex};
+    if (window == this->window) window_dnd_start_ = handler;
+}
+
 
 void DragAndDrop::reset_window_event_handler(MirWindow* window)
 {
@@ -262,6 +279,12 @@ void DragAndDrop::window_event_handler(MirWindow* window, MirEvent const* event,
     static_cast<DragAndDrop*>(context)->invoke_window_event_handler(window, event);
 }
 
+void DragAndDrop::window_dnd_start_handler(MirWindow* window, MirDragAndDropEvent const* event, void* context)
+{
+    static_cast<DragAndDrop*>(context)->invoke_window_dnd_start_handler(window, event);
+}
+
+
 auto DragAndDrop::user_initiates_drag() -> Cookie
 {
     Cookie cookie;
@@ -299,14 +322,10 @@ auto DragAndDrop::client_requests_drag(Cookie const& cookie) -> Blob
     Blob blob;
     Signal initiated;
 
-    set_window_event_handler(window, [&](MirEvent const* event)
+    set_window_dnd_start_handler(window, [&](MirDragAndDropEvent const* event)
         {
-            if (mir_event_get_type(event) != mir_event_type_window)
-                return;
-
-            if (!dnd) return;
-
-            blob.reset(dnd->start_drag_and_drop(mir_event_get_window_event(event)));
+            if (dnd)
+                blob.reset(dnd->start_drag_and_drop(event));
 
             if (blob)
                 initiated.raise();

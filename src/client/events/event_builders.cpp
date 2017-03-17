@@ -116,7 +116,7 @@ auto mev::make_start_drag_and_drop_event(frontend::SurfaceId const& surface_id, 
     auto e = new_event<MirWindowEvent>();
 
     e->set_id(surface_id.as_value());
-    e->set_attrib(mir_window_attrib_drag_and_drop_handle);
+    e->set_attrib(mir_window_attribs);
     e->set_value(0);
     e->set_dnd_handle(handle);
 

@@ -26,6 +26,8 @@
 extern "C" {
 #endif
 
+typedef struct MirDragAndDropEvent MirDragAndDropEvent;
+
 typedef struct MirDragAndDropV1
 {
     /**
@@ -40,12 +42,23 @@ typedef struct MirDragAndDropV1
     void (*request_drag_and_drop)(MirWindow* window, MirCookie const* cookie);
 
     /**
-     * Retrieve any "drag & drop" handle associated with the event
+     * Set the drag and drop callback. This receives
+     *
+     * \param [in] window   The window
+     * \param [in] callback The callback function.
+     * \param [in] context  To be passed to callback
+     */
+    void (*set_start_drag_and_drop_callback)(MirWindow* window,
+               void (*callback)(MirWindow* window, MirDragAndDropEvent const* event, void* context),
+               void* context);
+
+    /**
+     * Retrieve any "drag & drop" handle associated with the event.
      *
      * \param [in] event The event
      * \return           The associated drag handle or NULL
      */
-    MirBlob* (*start_drag_and_drop)(MirWindowEvent const* event);
+    MirBlob* (*start_drag_and_drop)(MirDragAndDropEvent const* event);
 
     /**
      * Retrieve any "drag & drop" handle associated with the event.

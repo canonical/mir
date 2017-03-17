@@ -215,8 +215,7 @@ std::map<int, int> MockServerPackageGenerator::sent_surface_attributes = {
     { mir_window_attrib_focus, mir_window_focus_state_focused },
     { mir_window_attrib_dpi, 19 },
     { mir_window_attrib_visibility, mir_window_visibility_exposed },
-    { mir_window_attrib_preferred_orientation, mir_orientation_mode_any },
-    { mir_window_attrib_drag_and_drop_handle, 0 }
+    { mir_window_attrib_preferred_orientation, mir_orientation_mode_any }
 };
 
 class TestConnectionConfiguration : public mcl::DefaultConnectionConfiguration

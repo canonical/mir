@@ -39,10 +39,24 @@ catch (std::exception const& e)
     abort();
 }
 
-MirBlob* start_drag_and_drop(MirWindowEvent const* event)
+void set_start_drag_and_drop_callback(MirWindow* window,
+    void (*callback)(MirWindow* window, MirDragAndDropEvent const* event, void* context),
+    void* context)
 try
 {
-    return event->dnd_handle();
+    window->set_drag_and_drop_start_handler([callback,window,context](MirWindowEvent const* event)
+        { callback(window, reinterpret_cast<MirDragAndDropEvent const*>(event), context); });
+}
+catch (std::exception const& e)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(e);
+    abort();
+}
+
+MirBlob* start_drag_and_drop(MirDragAndDropEvent const* event)
+try
+{
+    return reinterpret_cast<MirWindowEvent const*>(event)->dnd_handle();
 }
 catch (std::exception const& e)
 {
@@ -61,7 +75,11 @@ catch (std::exception const& e)
     abort();
 }
 
-MirDragAndDropV1 const impl{&request_drag_and_drop, &start_drag_and_drop, &pointer_drag_and_drop};
+MirDragAndDropV1 const impl{
+    &request_drag_and_drop,
+    &set_start_drag_and_drop_callback,
+    &start_drag_and_drop,
+    &pointer_drag_and_drop};
 }
 
 MirDragAndDropV1 const* const mir::drag_and_drop::v1 = &impl;
