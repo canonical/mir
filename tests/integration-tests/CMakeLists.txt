@@ -2,7 +2,6 @@ include(CMakeDependentOption)
 
 include_directories(
   ${CMAKE_SOURCE_DIR}
-  ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${PROJECT_SOURCE_DIR}/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/platform
@@ -69,7 +68,6 @@ target_link_libraries(
 
   mircommon
 
-  ${PROTOBUF_LITE_LIBRARIES}
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
