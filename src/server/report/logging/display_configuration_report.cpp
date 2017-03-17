@@ -50,28 +50,28 @@ void mrl::DisplayConfigurationReport::initial_configuration(
     std::shared_ptr<mg::DisplayConfiguration const> const& configuration)
 {
     logger->log(component, severity, "Initial display configuration:");
-    log_configuration(severity, *configuration);
+    log_configuration(severity, configuration);
 }
 
 void mrl::DisplayConfigurationReport::configuration_applied(
     std::shared_ptr<mg::DisplayConfiguration const> const& config)
 {
     logger->log(component, severity, "New display configuration:");
-    log_configuration(severity, *config);
+    log_configuration(severity, config);
 }
 
 void mrl::DisplayConfigurationReport::base_configuration_updated(
     std::shared_ptr<mg::DisplayConfiguration const> const& base_config)
 {
     logger->log(component, severity, "New base display configuration:");
-    log_configuration(severity, *base_config);
+    log_configuration(severity, base_config);
 }
 
 void mrl::DisplayConfigurationReport::session_configuration_applied(std::shared_ptr<mf::Session> const& session,
                                    std::shared_ptr<mg::DisplayConfiguration> const& config)
 {
     logger->log(component, severity, "Session %s applied display configuration", session->name().c_str());
-    log_configuration(severity, *config);
+    log_configuration(severity, config);
 }
 
 void mrl::DisplayConfigurationReport::session_configuration_removed(std::shared_ptr<frontend::Session> const& session)
@@ -84,16 +84,16 @@ void mrl::DisplayConfigurationReport::configuration_failed(
     std::exception const& error)
 {
     logger->log(component, ml::Severity::error, "Failed to apply display configuration:");
-    log_configuration(ml::Severity::error, *attempted);
+    log_configuration(ml::Severity::error, attempted);
     logger->log(component, ml::Severity::error, "Error details:");
     logger->log(component, ml::Severity::error, "%s", boost::diagnostic_information(error).c_str());
 }
 
 void mrl::DisplayConfigurationReport::log_configuration(
     ml::Severity severity,
-    mg::DisplayConfiguration const& configuration) const
+    std::shared_ptr<mg::DisplayConfiguration const> const& configuration) const
 {
-    configuration.for_each_output([this, severity](mg::DisplayConfigurationOutput const& out)
+    configuration->for_each_output([this, severity](mg::DisplayConfigurationOutput const& out)
     {
         auto type = mir::output_type_name(static_cast<unsigned>(out.type));
         int out_id = out.id.as_value();
@@ -192,7 +192,7 @@ void mrl::DisplayConfigurationReport::catastrophic_configuration_error(
 {
     logger->log(component, ml::Severity::critical, "Failed to revert to safe display configuration!");
     logger->log(component, ml::Severity::critical, "Attempted to fall back to configuration:");
-    log_configuration(ml::Severity::critical, *failed_fallback);
+    log_configuration(ml::Severity::critical, failed_fallback);
     logger->log(component, ml::Severity::critical, "Error details:");
     logger->log(component, ml::Severity::critical, "%s", boost::diagnostic_information(error).c_str());
 }
