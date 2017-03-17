@@ -260,6 +260,17 @@ void mgm::Display::resume()
 
 auto mgm::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
 {
+    /*
+     * TODO: Using the hardware cursor in a hybrid-output situation requires making
+     * mgm::Cursor hybrid-aware so it can create a cursor bo on each GPU.
+     *
+     * For a first cut, just disable the hardware cursor on hybrid systems.
+     */
+    if (drm.size() > 1)
+    {
+        return nullptr;
+    }
+
     // There is only one hardware cursor. We do not keep a strong reference to it in the display though,
     // if no other component of Mir is interested (i.e. the input stack does not keep a reference to send
     // position updates) we must be configured not to use a cursor and thusly let it deallocate.
