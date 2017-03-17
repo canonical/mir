@@ -14,11 +14,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
 )
 
-protobuf_generate_cpp(
-  GENERATED_PROTOBUF_SRCS GENERATED_PROTOBUF_HDRS
-  test_protobuf.proto
-)
-
 set(
   INTEGRATION_TESTS_SRCS
   test_focus_selection.cpp
@@ -27,7 +22,6 @@ set(
   test_buffer_scheduling.cpp
   test_client_screencast.cpp
   test_large_messages.cpp
-  test_protobuf.cpp
   test_surfaceloop.cpp
   test_stale_frames.cpp
   test_test_framework.cpp
@@ -42,8 +36,6 @@ set(
   test_server_shutdown.cpp
   test_session.cpp
   session_management.cpp
-  ${GENERATED_PROTOBUF_SRCS}
-  ${GENERATED_PROTOBUF_HDRS}
 )
 
 add_subdirectory(client/)
