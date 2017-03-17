@@ -154,3 +154,31 @@ mg::NativePlatform* mgn::Platform::native_platform()
 {
     return this;
 }
+
+mir::UniqueModulePtr<mg::PlatformAuthentication> mgn::Platform::authentication()
+{
+    class WrappingAuthentication : public mg::PlatformAuthentication
+    {
+    public:
+        WrappingAuthentication(std::shared_ptr<mg::PlatformAuthentication> const& auth) :
+            wrapped(auth)
+        {
+        }
+        mir::optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() override
+        {
+            return wrapped->auth_extension();
+        }
+        mir::optional_value<std::shared_ptr<SetGbmExtension>> set_gbm_extension() override
+        {
+            return wrapped->set_gbm_extension();
+        }
+        mg::PlatformOperationMessage platform_operation(
+            unsigned int op, PlatformOperationMessage const& request) override
+        {
+            return wrapped->platform_operation(op, request);
+        }
+    private:
+        std::shared_ptr<mg::PlatformAuthentication> const wrapped;
+    };
+    return mir::make_module_ptr<WrappingAuthentication>(connection);
+}

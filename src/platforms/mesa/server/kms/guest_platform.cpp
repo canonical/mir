@@ -92,3 +92,32 @@ EGLNativeDisplayType mgm::GuestPlatform::egl_native_display() const
 {
     return gbm.device;
 }
+
+mir::UniqueModulePtr<mg::PlatformAuthentication> mgm::GuestPlatform::authentication()
+{
+    struct NestedAuth : PlatformAuthentication
+    {
+        NestedAuth(std::shared_ptr<PlatformAuthentication> const& auth) :
+            auth(auth)
+        {
+        }
+
+        mir::optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() override
+        {
+            return auth->auth_extension();
+        }
+
+        mir::optional_value<std::shared_ptr<SetGbmExtension>> set_gbm_extension() override
+        {
+            return auth->set_gbm_extension();
+        }
+
+        mg::PlatformOperationMessage platform_operation(
+            unsigned int op, PlatformOperationMessage const& msg) override
+        {
+            return auth->platform_operation(op, msg);
+        }
+        std::shared_ptr<PlatformAuthentication> const auth;
+    };
+    return mir::make_module_ptr<NestedAuth>(nested_context);
+}

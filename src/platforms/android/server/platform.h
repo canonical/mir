@@ -59,6 +59,7 @@ public:
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
+    UniqueModulePtr<PlatformAuthentication> authentication() override;
 
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;

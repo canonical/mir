@@ -21,6 +21,7 @@
 
 #include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/platform_operation_message.h"
+#include <gmock/gmock.h>
 
 namespace mir
 {

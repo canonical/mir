@@ -20,6 +20,7 @@
 #include "display.h"
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
+#include "platform_authentication.h"
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -68,4 +69,9 @@ mg::NativePlatform* mgx::Platform::native_platform()
 EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
     return eglGetDisplay(x11_connection.get());
+}
+
+mir::UniqueModulePtr<mg::PlatformAuthentication> mgx::Platform::authentication()
+{
+    return make_module_ptr<mgm::PlatformAuthentication>(*drm);
 }

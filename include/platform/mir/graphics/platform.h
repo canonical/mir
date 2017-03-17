@@ -113,6 +113,7 @@ public:
     virtual UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) = 0;
+    virtual UniqueModulePtr<PlatformAuthentication> authentication() = 0;
 };
 
 class Platform : public DisplayPlatform,

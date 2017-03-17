@@ -45,6 +45,7 @@ public:
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const&) override;
+    UniqueModulePtr<PlatformAuthentication> authentication() override;
 
     NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;

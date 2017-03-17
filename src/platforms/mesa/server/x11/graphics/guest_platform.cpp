@@ -22,6 +22,7 @@
 #include "buffer_allocator.h"
 
 #include "mir/graphics/platform_authentication.h"
+#include "platform_authentication.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -67,4 +68,9 @@ mg::NativePlatform* mgx::GuestPlatform::native_platform()
 EGLNativeDisplayType mgx::GuestPlatform::egl_native_display() const
 {
     return gbm.device;
+}
+
+mir::UniqueModulePtr<mg::PlatformAuthentication> mgx::GuestPlatform::authentication()
+{
+    return make_module_ptr<mgm::PlatformAuthentication>(*drm);
 }

@@ -309,6 +309,11 @@ struct GuestPlatformAdapter : mg::Platform
         return adaptee->native_platform();
     }
 
+    mir::UniqueModulePtr<mg::PlatformAuthentication> authentication() override
+    {
+        return adaptee->authentication();
+    }
+
     std::shared_ptr<mg::PlatformAuthentication> const context;
     std::shared_ptr<mg::Platform> const adaptee;
 };
