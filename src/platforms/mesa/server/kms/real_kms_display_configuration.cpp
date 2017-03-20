@@ -38,7 +38,8 @@ namespace geom = mir::geometry;
 
 mgm::RealKMSDisplayConfiguration::RealKMSDisplayConfiguration(
     std::shared_ptr<KMSOutputContainer> const& displays)
-    : displays{displays}
+    : displays{displays},
+      card{mg::DisplayConfigurationCardId{0}, 0}
 {
     update();
 }
@@ -168,6 +169,12 @@ void mgm::RealKMSDisplayConfiguration::update()
         });
 
     outputs = new_outputs;
+
+    /*
+     * This is not the true max simultaneous outputs, but it's unclear whether it's possible
+     * to provide a max_simultaneous_outputs value that is useful to clients.
+     */
+    card.max_simultaneous_outputs = outputs.size();
 }
 
 // Compatibility means conf1 can be attained from conf2 (and vice versa)
