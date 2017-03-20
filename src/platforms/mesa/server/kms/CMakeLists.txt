@@ -42,6 +42,8 @@ add_library(
   real_kms_output.cpp
   kms_output_container.h
   real_kms_output_container.cpp
+  egl_helper.h
+  egl_helper.cpp
 )
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in

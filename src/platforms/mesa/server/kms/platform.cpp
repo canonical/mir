@@ -105,6 +105,16 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operatio
     return make_module_ptr<mgm::IpcOperations>(drm.front());
 }
 
+mg::NativePlatform* mgm::Platform::native_platform()
+{
+    return this;
+}
+
+EGLNativeDisplayType mgm::Platform::egl_native_display() const
+{
+    return gbm->device;
+}
+
 mgm::BypassOption mgm::Platform::bypass_option() const
 {
     return bypass_option_;

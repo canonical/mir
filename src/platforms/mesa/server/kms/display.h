@@ -24,6 +24,7 @@
 #include "real_kms_output_container.h"
 #include "real_kms_display_configuration.h"
 #include "display_helpers.h"
+#include "egl_helper.h"
 #include "platform_common.h"
 
 #include <atomic>

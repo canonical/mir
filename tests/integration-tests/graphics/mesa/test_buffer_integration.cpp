@@ -33,11 +33,10 @@
 
 #include "mir_test_framework/testing_server_configuration.h"
 
+#include <EGL/egl.h>
 #include <thread>
 #include <gtest/gtest.h>
 #include <stdexcept>
-
-#include <EGL/egl.h>
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;

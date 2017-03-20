@@ -1022,7 +1022,7 @@ TEST_F(MediatingDisplayChangerTest, confirmed_configuration_doesnt_revert_after_
 
     changer->confirm_base_configuration(mock_session, new_config);
 
-    alarm_factory.advance_smoothly_by(timeout * 100);
+    alarm_factory.advance_smoothly_by(timeout * 2);
     EXPECT_THAT(*applied_config, mt::DisplayConfigMatches(std::cref(*new_config)));
 }
 
