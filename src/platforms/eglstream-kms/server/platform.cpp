@@ -21,10 +21,10 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
+#include "null_authentication.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
-#include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "native_buffer.h"
 
@@ -174,22 +174,5 @@ EGLNativeDisplayType mge::Platform::egl_native_display() const
 
 mir::UniqueModulePtr<mg::PlatformAuthentication> mge::Platform::authentication()
 {
-    class NullAuthentication : public mg::PlatformAuthentication
-    {
-        mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> auth_extension() override
-        {
-            return {};
-        }
-        mir::optional_value<std::shared_ptr<mg::SetGbmExtension>> set_gbm_extension() override
-        {
-            return {};
-        }
-
-        mg::PlatformOperationMessage platform_operation(
-            unsigned int, mg::PlatformOperationMessage const&) override
-        {
-            return mg::PlatformOperationMessage{};
-        }
-    };
-    return mir::make_module_ptr<NullAuthentication>();
+    return mir::make_module_ptr<mg::NullAuthentication>();
 }

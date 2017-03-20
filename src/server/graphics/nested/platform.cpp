@@ -177,6 +177,10 @@ mir::UniqueModulePtr<mg::PlatformAuthentication> mgn::Platform::authentication()
         {
             return wrapped->platform_operation(op, request);
         }
+        mir::optional_value<mir::Fd> drm_fd() override
+        {
+            return wrapped->drm_fd();
+        }
     private:
         std::shared_ptr<mg::PlatformAuthentication> const wrapped;
     };

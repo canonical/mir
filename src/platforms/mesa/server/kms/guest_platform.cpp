@@ -117,6 +117,10 @@ mir::UniqueModulePtr<mg::PlatformAuthentication> mgm::GuestPlatform::authenticat
         {
             return auth->platform_operation(op, msg);
         }
+        mir::optional_value<mir::Fd> drm_fd() override
+        {
+            return {};
+        }
         std::shared_ptr<PlatformAuthentication> const auth;
     };
     return mir::make_module_ptr<NestedAuth>(nested_context);
