@@ -45,9 +45,9 @@ std::shared_ptr<mg::MesaAuthExtension> load_extension(mg::PlatformAuthentication
 }
 
 mgm::NestedAuthentication::NestedAuthentication(
-    std::shared_ptr<PlatformAuthentication> const& nested_context) :
-    nested_context{nested_context},
-    auth_extension(load_extension(*nested_context))
+    std::shared_ptr<PlatformAuthentication> const& platform_authentication) :
+    platform_authentication{platform_authentication},
+    auth_extension(load_extension(*platform_authentication))
 
 {
 }
