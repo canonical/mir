@@ -35,7 +35,6 @@ public:
 private:
     Texture(Texture const&) = delete;
     Texture& operator=(Texture const&) = delete;
-    GLuint generate_id() const;
     GLuint const id;
 };
 }
