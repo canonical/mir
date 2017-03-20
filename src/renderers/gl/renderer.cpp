@@ -212,9 +212,11 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
     for (auto const& r : renderables)
         draw(*r, r->alpha() < 1.0f ? alpha_program : default_program);
 
-    texture_cache->drop_unused();
-
     render_target.swap_buffers();
+
+    // Deleting unused textures only requires the GL context. This clean-up
+    // does not affect screen contents so can happen after swap_buffers...
+    texture_cache->drop_unused();
 }
 
 void mrg::Renderer::draw(mg::Renderable const& renderable,
