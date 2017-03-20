@@ -64,6 +64,7 @@ void mrl::DisplayConfigurationReport::base_configuration_updated(
     std::shared_ptr<mg::DisplayConfiguration const> const& base_config)
 {
     logger->log(component, severity, "New base display configuration:");
+    (void)base_config;
 //    log_configuration(severity, base_config);
 }
 
