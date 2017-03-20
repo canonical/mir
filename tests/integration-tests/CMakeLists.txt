@@ -35,7 +35,6 @@ set(
   test_submit_buffer.cpp
   test_display_info.cpp
   test_display_server_main_loop_events.cpp
-  test_macros.cpp
   test_surface_first_frame_sync.cpp
   test_swapinterval.cpp
   test_server_client_types.cpp
