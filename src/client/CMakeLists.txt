@@ -66,7 +66,6 @@ add_library(mirclientobjects OBJECT
   logging/perf_report.cpp
   default_connection_configuration.cpp
   connection_surface_map.cpp
-  private.cpp
   frame_clock.cpp
   mir_screencast.cpp
   mir_screencast_api.cpp
