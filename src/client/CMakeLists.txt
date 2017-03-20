@@ -82,8 +82,7 @@ add_library(mirclientobjects OBJECT
   mir_buffer_stream_api.cpp
   error_stream.cpp
   error_render_surface.cpp
-  error_chain.cpp
-  buffer.cpp
+        buffer.cpp
   error_buffer.cpp
   mir_render_surface_api.cpp
   render_surface.cpp
