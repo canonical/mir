@@ -201,6 +201,11 @@ mg::NativePlatform* mgn::Platform::native_platform()
 
 mir::UniqueModulePtr<mg::PlatformAuthentication> mgn::Platform::authentication()
 {
+    return display_platform->authentication();
+}
+
+mir::UniqueModulePtr<mg::PlatformAuthentication> mgn::NestedDisplayPlatform::authentication()
+{
     class WrappingAuthentication : public mg::PlatformAuthentication
     {
     public:

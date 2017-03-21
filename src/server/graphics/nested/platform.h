@@ -48,6 +48,8 @@ public:
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
+    UniqueModulePtr<PlatformAuthentication> authentication() override;
+
 private:
     std::shared_ptr<mir::SharedLibrary> const library; 
     std::shared_ptr<HostConnection> const connection; 
