@@ -23,6 +23,7 @@
 #include "display_helpers.h"
 #include "platform_common.h"
 #include "mir/renderer/gl/egl_platform.h"
+#include "buffer_allocator.h"
 
 namespace mir
 {
@@ -37,15 +38,17 @@ class GBMPlatform : public graphics::RenderingPlatform,
 public:
     GBMPlatform(
         BypassOption option,
-        std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
+        BufferImportMethod import_method,
+        std::shared_ptr<graphics::PlatformAuthentication> const& platform_authentication);
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 private:
-    BypassOption bypass_option;
-    std::shared_ptr<PlatformAuthentication> const platform_authentication;
+    BypassOption const bypass_option;
+    BufferImportMethod const import_method;
+    std::shared_ptr<graphics::PlatformAuthentication> const platform_authentication;
     std::shared_ptr<helpers::GBMHelper> const gbm;
 };
 }

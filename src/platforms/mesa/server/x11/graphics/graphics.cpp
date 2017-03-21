@@ -150,5 +150,8 @@ mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform
     std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication)
 {
     mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
-    return mir::make_module_ptr<mgm::GBMPlatform>(mgm::BypassOption::prohibited, platform_authentication);
+    return mir::make_module_ptr<mgm::GBMPlatform>(
+        mgm::BypassOption::prohibited,
+        mgm::BufferImportMethod::dma_buf,
+        platform_authentication);
 }

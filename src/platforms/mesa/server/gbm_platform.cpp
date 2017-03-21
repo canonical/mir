@@ -28,8 +28,10 @@ namespace mgm = mir::graphics::mesa;
 
 mgm::GBMPlatform::GBMPlatform(
     BypassOption bypass_option,
+    BufferImportMethod import_method,
     std::shared_ptr<mg::PlatformAuthentication> const& platform_authentication) :
     bypass_option(bypass_option),
+    import_method(import_method),
     platform_authentication(platform_authentication),
     gbm{std::make_shared<mgm::helpers::GBMHelper>()}
 {
@@ -51,7 +53,7 @@ mgm::GBMPlatform::GBMPlatform(
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GBMPlatform::create_buffer_allocator()
 {
-    return make_module_ptr<mgm::BufferAllocator>(gbm->device, bypass_option, mgm::BufferImportMethod::gbm_native_pixmap);
+    return make_module_ptr<mgm::BufferAllocator>(gbm->device, bypass_option, import_method);
 }
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::GBMPlatform::make_ipc_operations() const
