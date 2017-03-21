@@ -80,7 +80,6 @@ public:
 
 
 private:
-    void update_spots();
     void add_device_handle(std::shared_ptr<DefaultDevice> const& handle);
     void remove_device_handle(MirInputDeviceId id);
     void device_changed(Device* dev);

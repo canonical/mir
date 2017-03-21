@@ -16,6 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include "mir_blob.h"
 #include "display_configuration.h"
 
 #include "mir_toolkit/mir_blob.h"
@@ -24,14 +25,6 @@
 #include "mir/uncaught.h"
 
 namespace mp = mir::protobuf;
-
-struct MirBlob
-{
-    virtual size_t size() const = 0;
-    virtual void const* data() const = 0;
-
-    virtual ~MirBlob() = default;
-};
 
 namespace
 {

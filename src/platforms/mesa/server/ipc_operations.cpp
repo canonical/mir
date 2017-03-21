@@ -20,7 +20,7 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform.h"
-#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/libname.h"
 #include "display_helpers.h"

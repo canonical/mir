@@ -64,12 +64,9 @@ public:
     void continue_after_config() override;
 
 private:
-    void scan_for_devices();
     void device_added(libinput_device* dev);
     void device_removed(libinput_device* dev);
     void process_input_events();
-
-    std::shared_ptr<LibInputDevice> create_device(udev::Device const& dev) const;
 
     std::shared_ptr<InputReport> const report;
     std::shared_ptr<udev::Context> const udev_context;

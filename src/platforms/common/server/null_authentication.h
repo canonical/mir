@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,31 +16,23 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_NESTED_AUTHENTICATION_H_
-#define MIR_GRAPHICS_MESA_NESTED_AUTHENTICATION_H_
-
-#include "drm_authentication.h"
+#ifndef MIR_GRAPHICS_NULL_AUTHENTICATION_H_
+#define MIR_GRAPHICS_NULL_AUTHENTICATION_H_
+#include "mir/graphics/platform_authentication.h"
 
 namespace mir
 {
 namespace graphics
 {
-class PlatformAuthentication;
-class MesaAuthExtension;
-namespace mesa
+
+class NullAuthentication : public graphics::PlatformAuthentication
 {
-class NestedAuthentication : public DRMAuthentication
-{
-public:
-    NestedAuthentication(std::shared_ptr<PlatformAuthentication> const& platform_authentication);
-    void auth_magic(drm_magic_t magic) override;
-    mir::Fd authenticated_fd() override;
-private:
-    std::shared_ptr<PlatformAuthentication> const platform_authentication;
-    std::shared_ptr<MesaAuthExtension> const auth_extension;
+    mir::optional_value<std::shared_ptr<graphics::MesaAuthExtension>> auth_extension() override;
+    mir::optional_value<std::shared_ptr<graphics::SetGbmExtension>> set_gbm_extension() override;
+    graphics::PlatformOperationMessage platform_operation(
+        unsigned int, graphics::PlatformOperationMessage const&) override;
+    mir::optional_value<mir::Fd> drm_fd() override;
 };
 }
 }
-}
-
-#endif /* MIR_GRAPHICS_MESA_NESTED_AUTHENTICATION_H_ */
+#endif /* MIR_GRAPHICS_NULL_AUTHENTICATION_H_ */

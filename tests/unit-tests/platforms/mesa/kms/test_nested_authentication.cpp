@@ -16,12 +16,12 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "src/platforms/mesa/server/nested_authentication.h"
 #include "mir_toolkit/mesa/platform_operation.h"
 #include "mir/test/doubles/mock_drm.h"
-#include "mir/test/doubles/mock_nested_context.h"
+#include "mir/test/doubles/mock_platform_authentication.h"
 #include "mir/test/doubles/mock_mesa_auth_extensions.h"
 #include "mir/test/fake_shared.h"
 #include <gtest/gtest.h>
@@ -40,55 +40,55 @@ namespace
 struct NestedAuthentication : ::testing::Test
 {
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
-    mtd::MockNestedContext mock_nested_context;
+    mtd::MockPlatformAuthentication mock_platform_authentication;
     std::shared_ptr<mtd::MockMesaExt> mock_ext = std::make_shared<mtd::MockMesaExt>();
     unsigned int const magic{332211};
 };
 }
 
-TEST_F(NestedAuthentication, uses_nested_context_for_auth_magic)
+TEST_F(NestedAuthentication, uses_platform_authentication_for_auth_magic)
 {
     int const success_response{0};
 
-    EXPECT_CALL(mock_nested_context, auth_extension())
+    EXPECT_CALL(mock_platform_authentication, auth_extension())
         .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>>{mock_ext}));
     EXPECT_CALL(*mock_ext, auth_magic(magic))
         .WillOnce(Return(success_response));
 
-    mgm::NestedAuthentication auth{mt::fake_shared(mock_nested_context)};
+    mgm::NestedAuthentication auth{mt::fake_shared(mock_platform_authentication)};
     auth.auth_magic(magic);
 }
 
 TEST_F(NestedAuthentication, reports_error_because_of_no_extension)
 {
-    EXPECT_CALL(mock_nested_context, auth_extension())
+    EXPECT_CALL(mock_platform_authentication, auth_extension())
         .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>>{}));
     EXPECT_THROW({
-        mgm::NestedAuthentication auth{mt::fake_shared(mock_nested_context)};
+        mgm::NestedAuthentication auth{mt::fake_shared(mock_platform_authentication)};
     }, std::runtime_error);
 }
 
 TEST_F(NestedAuthentication, reports_errors_during_auth_magic)
 {
     int const error_response{-1};
-    EXPECT_CALL(mock_nested_context, auth_extension())
+    EXPECT_CALL(mock_platform_authentication, auth_extension())
         .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>>{mock_ext}));
     EXPECT_CALL(*mock_ext, auth_magic(magic))
         .WillOnce(Return(error_response));
 
-    mgm::NestedAuthentication auth{mt::fake_shared(mock_nested_context)};
+    mgm::NestedAuthentication auth{mt::fake_shared(mock_platform_authentication)};
     EXPECT_THROW({
         auth.auth_magic(magic);
     }, std::system_error);
 }
 
-TEST_F(NestedAuthentication, uses_nested_context_for_auth_fd)
+TEST_F(NestedAuthentication, uses_platform_authentication_for_auth_fd)
 {
     int const auth_fd{13};
-    EXPECT_CALL(mock_nested_context, auth_extension())
+    EXPECT_CALL(mock_platform_authentication, auth_extension())
         .WillOnce(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>>{mock_ext}));
     EXPECT_CALL(*mock_ext, auth_fd())
         .WillOnce(Return(mir::Fd{mir::IntOwnedFd{auth_fd}}));
-    mgm::NestedAuthentication auth{mt::fake_shared(mock_nested_context)};
+    mgm::NestedAuthentication auth{mt::fake_shared(mock_platform_authentication)};
     EXPECT_THAT(auth.authenticated_fd(), Eq(auth_fd));
 }

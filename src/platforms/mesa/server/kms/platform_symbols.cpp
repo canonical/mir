@@ -247,10 +247,10 @@ mir::ModuleProperties const* describe_graphics_module()
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::NestedContext> const& nested_context)
+    std::shared_ptr<mg::PlatformAuthentication> const& platform_authentication)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
-    return mir::make_module_ptr<mgm::GuestPlatform>(nested_context);
+    return mir::make_module_ptr<mgm::GuestPlatform>(platform_authentication);
 }
 
 mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
@@ -279,12 +279,12 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
 
 mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
     std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<mir::graphics::NestedContext> const& nested_context)
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication)
 {
     mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
 
     auto bypass_option = mgm::BypassOption::allowed;
     if (!options->get<bool>(bypass_option_name))
         bypass_option = mgm::BypassOption::prohibited;
-    return mir::make_module_ptr<mgm::GBMPlatform>(bypass_option, nested_context);
+    return mir::make_module_ptr<mgm::GBMPlatform>(bypass_option, platform_authentication);
 }

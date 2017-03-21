@@ -136,7 +136,6 @@ struct DeviceChangeTracker : mi::InputDeviceObserver
     mi::ConfigChanger& config_changer;
     std::vector<std::shared_ptr<mi::Device>> added;
     std::vector<MirInputDeviceId> removed;
-    bool devices_changed;
 };
 
 }

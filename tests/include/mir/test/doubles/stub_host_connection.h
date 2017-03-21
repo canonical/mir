@@ -192,6 +192,10 @@ public:
     {
         return {};
     }
+    optional_value<mir::Fd> drm_fd()
+    {
+        return {};
+    }
     void* request_interface(char const*, int) { return nullptr; }
 };
 

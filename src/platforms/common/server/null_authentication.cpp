@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,30 +16,27 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_
-#define MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_
+#include "null_authentication.h"
+#include "mir/graphics/platform_operation_message.h"
 
-#include <mir_toolkit/mir_native_buffer.h>
-#include "mir/graphics/native_buffer.h"
+namespace mg = mir::graphics;
 
-#include <cstdlib>
-#include <gbm.h>
-
-namespace mir
+mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> mg::NullAuthentication::auth_extension()
 {
-namespace graphics
-{
-namespace mesa
-{
-struct NativeBuffer : graphics::NativeBuffer, MirBufferPackage
-{
-    struct gbm_bo *bo;
-    bool is_gbm_buffer;
-    uint32_t native_format;
-    uint32_t native_flags;
-};
+    return {};
 }
-}
+mir::optional_value<std::shared_ptr<mg::SetGbmExtension>> mg::NullAuthentication::set_gbm_extension()
+{
+    return {};
 }
 
-#endif /* MIR_GRAPHICS_MESA_NATIVE_BUFFER_H_ */
+mg::PlatformOperationMessage mg::NullAuthentication::platform_operation(
+    unsigned int, mg::PlatformOperationMessage const&)
+{
+    return mg::PlatformOperationMessage{{},{}};
+}
+
+mir::optional_value<mir::Fd> mg::NullAuthentication::drm_fd()
+{
+    return {};
+}

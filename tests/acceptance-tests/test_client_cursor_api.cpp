@@ -82,6 +82,7 @@ public:
     MOCK_METHOD0(cursor_image_removed, void());
     MOCK_METHOD1(placed_relative, void(geom::Rectangle const& placement));
     MOCK_METHOD1(input_consumed, void(MirEvent const*));
+    MOCK_METHOD1(start_drag_and_drop, void(std::vector<uint8_t> const& handle));
 };
 
 

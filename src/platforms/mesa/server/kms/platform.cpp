@@ -22,10 +22,12 @@
 #include "display.h"
 #include "linux_virtual_terminal.h"
 #include "ipc_operations.h"
-#include "nested_authentication.h"
+#include "platform_authentication.h"
 #include "mir/graphics/platform_ipc_operations.h"
+#include "mir/graphics/platform_operation_message.h"
+#include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/native_buffer.h"
-#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_authentication.h"
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/udev/wrapper.h"
 
@@ -94,4 +96,9 @@ mir::UniqueModulePtr<mg::Display> mgm::Platform::create_display(
 mgm::BypassOption mgm::Platform::bypass_option() const
 {
     return bypass_option_;
+}
+
+mir::UniqueModulePtr<mg::PlatformAuthentication> mgm::Platform::authentication()
+{
+    return make_module_ptr<mgm::PlatformAuthentication>(*drm);
 }

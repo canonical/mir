@@ -16,11 +16,12 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_NESTED_CONTEXT_H_
-#define MIR_TEST_DOUBLES_MOCK_NESTED_CONTEXT_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_PLATFORM_AUTHENTICATION_H_
+#define MIR_TEST_DOUBLES_MOCK_PLATFORM_AUTHENTICATION_H_
 
-#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/platform_operation_message.h"
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -44,13 +45,14 @@ namespace test
 namespace doubles
 {
 
-struct MockNestedContext : graphics::NestedContext
+struct MockPlatformAuthentication : graphics::PlatformAuthentication
 {
     MOCK_METHOD0(platform_fd_items, std::vector<int>());
     MOCK_METHOD2(platform_operation, graphics::PlatformOperationMessage(
         unsigned int, graphics::PlatformOperationMessage const&));
     MOCK_METHOD0(auth_extension, optional_value<std::shared_ptr<graphics::MesaAuthExtension>>());
     MOCK_METHOD0(set_gbm_extension, optional_value<std::shared_ptr<graphics::SetGbmExtension>>());
+    MOCK_METHOD0(drm_fd, optional_value<mir::Fd>());
     MOCK_METHOD2(request_interface, void*(char const*, int));
 };
 

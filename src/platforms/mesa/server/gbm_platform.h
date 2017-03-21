@@ -37,7 +37,7 @@ class GBMPlatform : public graphics::RenderingPlatform,
 public:
     GBMPlatform(
         BypassOption option,
-        std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
+        std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
@@ -45,7 +45,7 @@ public:
     EGLNativeDisplayType egl_native_display() const override;
 private:
     BypassOption bypass_option;
-    std::shared_ptr<NestedContext> const nested_context;
+    std::shared_ptr<PlatformAuthentication> const platform_authentication;
     std::shared_ptr<helpers::GBMHelper> const gbm;
 };
 }

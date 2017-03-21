@@ -17,7 +17,7 @@
  */
 
 #include "gbm_platform.h"
-#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_authentication.h"
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
 #include "nested_authentication.h"
@@ -28,13 +28,18 @@ namespace mgm = mir::graphics::mesa;
 
 mgm::GBMPlatform::GBMPlatform(
     BypassOption bypass_option,
-    std::shared_ptr<mg::NestedContext> const& nested_context) :
+    std::shared_ptr<mg::PlatformAuthentication> const& platform_authentication) :
     bypass_option(bypass_option),
-    nested_context(nested_context),
+    platform_authentication(platform_authentication),
     gbm{std::make_shared<mgm::helpers::GBMHelper>()}
 {
-    auto auth = nested_context->auth_extension();
-    if (auth.is_set())
+    auto master = platform_authentication->drm_fd();
+    auto auth = platform_authentication->auth_extension();
+    if (master.is_set())
+    {
+        gbm->setup(master.value());
+    }
+    else if (auth.is_set())
     {
         gbm->setup(auth.value()->auth_fd());
     }
@@ -44,7 +49,6 @@ mgm::GBMPlatform::GBMPlatform(
     }
 }
 
-
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GBMPlatform::create_buffer_allocator()
 {
     return make_module_ptr<mgm::BufferAllocator>(gbm->device, bypass_option, mgm::BufferImportMethod::gbm_native_pixmap);
@@ -53,7 +57,7 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GBMPlatform::create_buffer
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::GBMPlatform::make_ipc_operations() const
 {
     return mir::make_module_ptr<mgm::IpcOperations>(
-        std::make_shared<mgm::NestedAuthentication>(nested_context));
+        std::make_shared<mgm::NestedAuthentication>(platform_authentication));
 }
 
 mg::NativePlatform* mgm::GBMPlatform::native_platform()
