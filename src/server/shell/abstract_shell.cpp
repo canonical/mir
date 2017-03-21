@@ -251,6 +251,14 @@ void msh::AbstractShell::raise_surface(
     window_manager->handle_raise_surface(session, surface, timestamp);
 }
 
+void msh::AbstractShell::request_drag_and_drop(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<scene::Surface> const& surface,
+    uint64_t timestamp)
+{
+    window_manager->handle_request_drag_and_drop(session, surface, timestamp);
+}
+
 void msh::AbstractShell::focus_next_session()
 {
     std::unique_lock<std::mutex> lock(focus_mutex);
@@ -401,3 +409,12 @@ void msh::AbstractShell::raise(SurfaceSet const& surfaces)
     report->surfaces_raised(surfaces);
 }
 
+void msh::AbstractShell::set_drag_and_drop_handle(std::vector<uint8_t> const& handle)
+{
+    input_targeter->set_drag_and_drop_handle(handle);
+}
+
+void msh::AbstractShell::clear_drag_and_drop_handle()
+{
+    input_targeter->clear_drag_and_drop_handle();
+}

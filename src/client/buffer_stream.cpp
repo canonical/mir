@@ -408,12 +408,6 @@ EGLNativeWindowType mcl::BufferStream::egl_native_window()
     return static_cast<EGLNativeWindowType>(egl_native_window_.get());
 }
 
-void mcl::BufferStream::release_cpu_region()
-{
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    secured_region.reset();
-}
-
 std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
 {
     auto buffer = get_current_buffer();

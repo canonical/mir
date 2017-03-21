@@ -49,6 +49,7 @@ add_subdirectory(input)
 add_library(mirclientobjects OBJECT
 
   display_configuration.cpp
+  drag_and_drop.cpp drag_and_drop.h
   error_connections.cpp
   event.cpp
   event_printer.cpp
@@ -82,7 +83,6 @@ add_library(mirclientobjects OBJECT
   mir_buffer_stream_api.cpp
   error_stream.cpp
   error_render_surface.cpp
-  error_chain.cpp
   buffer.cpp
   error_buffer.cpp
   mir_render_surface_api.cpp
@@ -104,6 +104,7 @@ add_library(mirclientobjects OBJECT
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_error.h
   mir_extension_core.cpp
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_extension_core.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/extensions/drag_and_drop.h
 )
 
 # Ensure protobuf C++ headers have been produced before

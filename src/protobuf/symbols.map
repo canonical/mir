@@ -1112,3 +1112,29 @@ MIR_PROTOBUF_0.26 {
     vtable?for?mir::protobuf::PromptSession;
   };
 } MIR_PROTOBUF_0.22;
+
+MIR_PROTOBUF_0.27 {
+ global:
+  extern "C++" {
+    mir::protobuf::RequestAuthority::ByteSize*;
+    mir::protobuf::RequestAuthority::CheckTypeAndMergeFrom*;
+    mir::protobuf::RequestAuthority::Clear*;
+    mir::protobuf::RequestAuthority::CopyFrom*;
+    mir::protobuf::RequestAuthority::default_instance*;
+    mir::protobuf::RequestAuthority::DiscardUnknownFields*;
+    mir::protobuf::RequestAuthority::GetTypeName*;
+    mir::protobuf::RequestAuthority::IsInitialized*;
+    mir::protobuf::RequestAuthority::kCookieFieldNumber*;
+    mir::protobuf::RequestAuthority::kSurfaceIdFieldNumber*;
+    mir::protobuf::RequestAuthority::MergeFrom*;
+    mir::protobuf::RequestAuthority::MergePartialFromCodedStream*;
+    mir::protobuf::RequestAuthority::New*;
+    mir::protobuf::RequestAuthority::?RequestAuthority*;
+    mir::protobuf::RequestAuthority::RequestAuthority*;
+    mir::protobuf::RequestAuthority::SerializeWithCachedSizes*;
+    mir::protobuf::RequestAuthority::Swap*;
+    non-virtual?thunk?to?mir::protobuf::RequestAuthority::?RequestAuthority*;
+    typeinfo?for?mir::protobuf::RequestAuthority;
+    vtable?for?mir::protobuf::RequestAuthority;
+  };
+} MIR_PROTOBUF_0.26;
