@@ -40,7 +40,6 @@
 #include "render_surface.h"
 #include "error_render_surface.h"
 #include "presentation_chain.h"
-#include "error_chain.h"
 #include "logging/perf_report.h"
 #include "lttng/perf_report.h"
 #include "buffer_factory.h"
