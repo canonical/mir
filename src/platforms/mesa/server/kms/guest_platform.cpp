@@ -123,5 +123,5 @@ mir::UniqueModulePtr<mg::PlatformAuthentication> mgm::GuestPlatform::authenticat
         }
         std::shared_ptr<PlatformAuthentication> const auth;
     };
-    return mir::make_module_ptr<NestedAuth>(nested_context);
+    return mir::make_module_ptr<NestedAuth>(platform_authentication);
 }
