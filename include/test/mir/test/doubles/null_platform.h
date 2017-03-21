@@ -59,7 +59,7 @@ class NullPlatform : public graphics::Platform
 
     mir::UniqueModulePtr<graphics::PlatformAuthentication> authentication() override
     {
-        return mir::make_module_ptr<testing::NiceMock<MockPlatformAuthentication>>();
+        return nullptr;
     }
 };
 }
