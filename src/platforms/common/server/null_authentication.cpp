@@ -33,7 +33,7 @@ mir::optional_value<std::shared_ptr<mg::SetGbmExtension>> mg::NullAuthentication
 mg::PlatformOperationMessage mg::NullAuthentication::platform_operation(
     unsigned int, mg::PlatformOperationMessage const&)
 {
-    return mg::PlatformOperationMessage{};
+    return mg::PlatformOperationMessage{{},{}};
 }
 
 mir::optional_value<mir::Fd> mg::NullAuthentication::drm_fd()
