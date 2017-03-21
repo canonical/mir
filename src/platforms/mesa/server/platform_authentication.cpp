@@ -48,7 +48,8 @@ mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> mgm::PlatformAuthent
         {
             try
             {
-                return auth_magic(magic);
+                drm.auth_magic(magic);
+                return 0;
             }
             catch ( std::runtime_error& ) 
             {
