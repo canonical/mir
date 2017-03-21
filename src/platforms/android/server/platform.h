@@ -1,7 +1,4 @@
 /*
-=======
-    std::shared_ptr<mg::DisplayReport> const& display_report,
-    std::shared_ptr<mg::PlatformAuthentication> const&)
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -84,9 +81,7 @@ private:
     OverlayOptimization const overlay_option;
 };
 
-class Platform : public graphics::Platform,
-                 public graphics::NativePlatform,
-                 public renderer::gl::EGLPlatform
+class Platform : public graphics::Platform
 {
 public:
     Platform(
@@ -99,7 +94,6 @@ public:
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativePlatform* native_platform() override;
-    EGLNativeDisplayType egl_native_display() const override;
     UniqueModulePtr<PlatformAuthentication> authentication() override;
 
 private:

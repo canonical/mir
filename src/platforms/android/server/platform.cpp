@@ -127,14 +127,9 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operatio
     return rendering->make_ipc_operations();
 }
 
-EGLNativeDisplayType mga::Platform::egl_native_display() const
-{
-    return rendering->egl_native_display();
-}
-
 mg::NativePlatform* mga::Platform::native_platform()
 {
-    return this;
+    return rendering->native_platform();
 }
 
 mga::GrallocPlatform::GrallocPlatform(
