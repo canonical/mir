@@ -13,6 +13,11 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/include/client
 )
 
+if (GBM_VERSION VERSION_LESS 11)
+  message(WARNING "Hybrid support requires libgbm from Mesa 11.0 or greater. Hybrid setups will not work")
+  add_definitions(-DMIR_NO_HYBRID_SUPPORT)
+endif()
+
 # gbm.h and drm.h have trailing commas at the end of enum definitions
 # This is valid C99, but g++ 4.4 flags it as an error with -pedantic
 string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})

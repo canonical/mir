@@ -258,7 +258,7 @@ endif()
 
 if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
   find_package( PkgConfig )
-  pkg_check_modules( GBM REQUIRED gbm>=11.0.0)
+  pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
 endif()
 
