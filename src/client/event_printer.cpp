@@ -18,6 +18,7 @@
 
 #include "mir/event_printer.h"
 
+#include "mir/events/event_private.h"
 #include "mir/events/surface_placement_event.h"
 #include "mir/logging/input_timestamp.h"
 
@@ -285,12 +286,13 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)
 {
     auto event_time = mir::logging::input_timestamp(std::chrono::nanoseconds(mir_input_event_get_event_time(&event)));
     auto device_id = mir_input_event_get_device_id(&event);
+    auto window_id = event.window_id();
     switch (mir_input_event_get_type(&event))
     {
     case mir_input_event_type_key:
         {
             auto key_event = mir_input_event_get_keyboard_event(&event);
-            return out << "key_event(when=" << event_time << ", from=" << device_id << ", "
+            return out << "key_event(when=" << event_time << ", from=" << device_id << ", window_id=" << window_id << ", "
                 << mir_keyboard_event_action(key_event)
                 << ", code=" << mir_keyboard_event_key_code(key_event)
                 << ", scan=" << mir_keyboard_event_scan_code(key_event) << ", modifiers=" << std::hex
@@ -299,7 +301,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)
     case mir_input_event_type_touch:
         {
             auto touch_event = mir_input_event_get_touch_event(&event);
-            out << "touch_event(when=" << event_time << ", from=" << device_id << ", touch = {";
+            out << "touch_event(when=" << event_time << ", from=" << device_id << ", window_id=" << window_id << ", touch = {";
 
             for (unsigned int index = 0, count = mir_touch_event_point_count(touch_event); index != count; ++index)
                 out << "{id=" << mir_touch_event_id(touch_event, index)
@@ -323,7 +325,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)
                  mir_pointer_button_back, mir_pointer_button_forward})
                 button_state |= mir_pointer_event_button_state(pointer_event, a) ? a : 0;
 
-            return out << "pointer_event(when=" << event_time << ", from=" << device_id << ", "
+            return out << "pointer_event(when=" << event_time << ", from=" << device_id << ", window_id=" << window_id << ", "
                 << mir_pointer_event_action(pointer_event) << ", button_state=" << button_state
                 << ", x=" << mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x)
                 << ", y=" << mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y)
@@ -421,8 +423,10 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowPlacementEvent const& 
 
 std::ostream& mir::operator<<(std::ostream& out, MirInputDeviceStateEvent const& event)
 {
+    auto window_id = event.window_id();
     out << "input_device_state(ts="
         << mir_input_device_state_event_time(&event)
+        << ", window_id=" << window_id
         << ", mod=" << MirInputEventModifier(mir_input_device_state_event_modifiers(&event))
         << ", btns=" << mir_input_device_state_event_pointer_buttons(&event)
         << ", x=" << mir_input_device_state_event_pointer_axis(&event, mir_pointer_axis_x)

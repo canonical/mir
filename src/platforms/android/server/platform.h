@@ -1,4 +1,7 @@
 /*
+=======
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    std::shared_ptr<mg::PlatformAuthentication> const&)
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
@@ -70,12 +73,12 @@ public:
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
+    UniqueModulePtr<PlatformAuthentication> authentication() override;
 
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<DisplayComponentFactory> const display_buffer_builder;
     std::shared_ptr<DisplayReport> const display_report;
-    std::shared_ptr<PlatformIpcOperations> const ipc_operations;
     std::shared_ptr<DeviceQuirks> const quirks;
     std::shared_ptr<NativeWindowReport> const native_window_report;
     OverlayOptimization const overlay_option;
@@ -97,6 +100,7 @@ public:
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
+    UniqueModulePtr<PlatformAuthentication> authentication() override;
 
 private:
     std::shared_ptr<HwcPlatform> const display;

@@ -28,11 +28,13 @@
 #include "sync_fence.h"
 #include "native_buffer.h"
 #include "native_window_report.h"
+#include "null_authentication.h"
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/platform_authentication.h"
 #include "mir/gl/default_program_factory.h"
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
@@ -113,6 +115,11 @@ mir::UniqueModulePtr<mg::Display> mga::Platform::create_display(
     std::shared_ptr<mg::GLConfig> const& gl_config)
 {
     return display->create_display(policy, gl_config);
+}
+
+mir::UniqueModulePtr<mg::PlatformAuthentication> mga::Platform::authentication()
+{
+    return display->authentication();
 }
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operations() const
@@ -214,6 +221,11 @@ mir::UniqueModulePtr<mg::Display> mga::HwcPlatform::create_display(
             display_buffer_builder, program_factory, gl_config, display_report, native_window_report, overlay_option);
 }
 
+mir::UniqueModulePtr<mg::PlatformAuthentication> mga::HwcPlatform::authentication()
+{
+    return mir::make_module_ptr<mg::NullAuthentication>();
+}
+
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
@@ -243,7 +255,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::NestedContext> const&)
+    std::shared_ptr<mg::PlatformAuthentication> const&)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     //TODO: actually allow disabling quirks for guest platform
@@ -287,7 +299,7 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
 
 mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
     std::shared_ptr<mir::options::Option> const&,
-    std::shared_ptr<mir::graphics::NestedContext> const&)
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const&)
 {
     mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
 

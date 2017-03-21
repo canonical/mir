@@ -92,6 +92,12 @@ public:
         return stub_platform->native_platform();
     }
 
+    mir::UniqueModulePtr<mg::PlatformAuthentication> authentication() override
+    {
+        if (should_throw.at(ExceptionLocation::at_authentication))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Exception during egl_native_display"));
+        return stub_platform->authentication();
+    }
 private:
     enum ExceptionLocation : uint32_t
     {
@@ -99,7 +105,8 @@ private:
         at_create_buffer_allocator,
         at_create_display,
         at_make_ipc_operations,
-        at_egl_native_display
+        at_egl_native_display,
+        at_authentication
     };
 
     static std::unordered_map<ExceptionLocation, bool, std::hash<uint32_t>> parse_exception_request(char const* request)
@@ -162,7 +169,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::NestedContext> const&)
+    std::shared_ptr<mg::PlatformAuthentication> const&)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     return mir::make_module_ptr<ExceptionThrowingPlatform>();

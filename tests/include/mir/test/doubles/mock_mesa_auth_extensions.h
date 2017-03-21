@@ -18,7 +18,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_MESA_AUTH_EXTENSIONS_H_
 #define MIR_TEST_DOUBLES_MOCK_MESA_AUTH_EXTENSIONS_H_
 
-#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_authentication.h"
 
 namespace mir
 {

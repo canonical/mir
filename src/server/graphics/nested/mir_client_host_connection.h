@@ -92,6 +92,7 @@ public:
 
     optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() override;
     optional_value<std::shared_ptr<SetGbmExtension>> set_gbm_extension() override;
+    optional_value<mir::Fd> drm_fd() override;
 private:
     void update_input_config(UniqueInputConfig input_config);
     std::mutex surfaces_mutex;
