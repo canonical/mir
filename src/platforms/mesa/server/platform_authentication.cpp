@@ -19,6 +19,7 @@
 #include "platform_authentication.h"
 #include "display_helpers.h"
 #include "mir/graphics/platform_operation_message.h"
+#include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -47,8 +48,7 @@ mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> mgm::PlatformAuthent
         {
             try
             {
-                auth_magic(magic);
-                return 0;
+                return auth_magic(magic);
             }
             catch ( std::runtime_error& ) 
             {
@@ -69,7 +69,7 @@ mir::optional_value<std::shared_ptr<mg::SetGbmExtension>> mgm::PlatformAuthentic
 mg::PlatformOperationMessage mgm::PlatformAuthentication::platform_operation(
     unsigned int, mg::PlatformOperationMessage const&)
 {
-    throw std::runtime_error("");
+    BOOST_THROW_EXCEPTION(std::runtime_error("platform_operation deprecated"));
 }
 
 mir::optional_value<mir::Fd> mgm::PlatformAuthentication::drm_fd()

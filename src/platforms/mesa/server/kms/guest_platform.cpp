@@ -119,7 +119,7 @@ mir::UniqueModulePtr<mg::PlatformAuthentication> mgm::GuestPlatform::authenticat
         }
         mir::optional_value<mir::Fd> drm_fd() override
         {
-            return {};
+            return auth->drm_fd();
         }
         std::shared_ptr<PlatformAuthentication> const auth;
     };
