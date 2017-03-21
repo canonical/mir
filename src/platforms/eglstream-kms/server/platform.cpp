@@ -21,6 +21,7 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
+#include "null_authentication.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
@@ -169,4 +170,9 @@ mg::NativePlatform* mge::Platform::native_platform()
 EGLNativeDisplayType mge::Platform::egl_native_display() const
 {
     return display;
+}
+
+mir::UniqueModulePtr<mg::PlatformAuthentication> mge::Platform::authentication()
+{
+    return mir::make_module_ptr<mg::NullAuthentication>();
 }

@@ -1175,6 +1175,26 @@ void mf::SessionMediator::raise_surface(
     done->Run();
 }
 
+void mir::frontend::SessionMediator::request_drag_and_drop(mir::protobuf::RequestAuthority const* request,
+    mir::protobuf::Void*, google::protobuf::Closure* done)
+{
+    auto const session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto const cookie     = request->cookie();
+    auto const surface_id = request->surface_id();
+
+    auto cookie_string = cookie.cookie();
+
+    std::vector<uint8_t> cookie_bytes(cookie_string.begin(), cookie_string.end());
+    auto const cookie_ptr = cookie_authority->make_cookie(cookie_bytes);
+
+    shell->request_drag_and_drop(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+
+    done->Run();
+}
+
 void mf::SessionMediator::apply_input_configuration(
     mir::protobuf::InputConfigurationRequest const* request,
     mir::protobuf::Void*,
@@ -1253,7 +1273,6 @@ void mf::SessionMediator::destroy_screencast_sessions()
     for (auto const& id : ids_to_untrack)
         screencast_buffer_tracker.remove_session(id);
 }
-
 
 auto mf::detail::PromptSessionStore::insert(std::shared_ptr<PromptSession> const& session) -> PromptSessionId
 {

@@ -28,11 +28,13 @@
 #include "sync_fence.h"
 #include "native_buffer.h"
 #include "native_window_report.h"
+#include "null_authentication.h"
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/platform_authentication.h"
 #include "mir/gl/default_program_factory.h"
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
@@ -172,6 +174,11 @@ EGLNativeDisplayType mga::Platform::egl_native_display() const
     return EGL_DEFAULT_DISPLAY;
 }
 
+mir::UniqueModulePtr<mg::PlatformAuthentication> mga::Platform::authentication()
+{
+    return mir::make_module_ptr<mg::NullAuthentication>();
+}
+
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
@@ -197,7 +204,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& display_report,
-    std::shared_ptr<mg::NestedContext> const&)
+    std::shared_ptr<mg::PlatformAuthentication> const&)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     //TODO: actually allow disabling quirks for guest platform

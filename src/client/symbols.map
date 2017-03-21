@@ -302,19 +302,6 @@ MIR_CLIENT_DETAIL_9 {
     extern "C++" { 
       mir::events::make_event*;
       mir::events::add_touch*;
-      mir::input::android::Lexicon::translate*;
-      mir::input::android::android_modifiers_from_mir*;
-      mir::input::android::mir_modifiers_from_android*;
-      mir::input::android::mir_keyboard_action_from_android*;
-      mir::input::android::android_keyboard_action_from_mir*;
-      mir::input::android::mir_pointer_buttons_from_android*;
-      mir::input::android::android_pointer_buttons_from_mir*;
-      mir::input::android::mir_tool_type_from_android*;
-      mir::input::android::android_tool_type_from_mir*;
-      mir::input::android::mir_pointer_action_from_masked_android*;
-      mir::input::android::mir_touch_action_from_masked_android*;
-      mir::input::android::android_source_id_is_pointer_device*;
-      mir::input::android::extract_android_action_from*;
       mir::client::DefaultConnectionConfiguration::DefaultConnectionConfiguration*;
       mir::client::DefaultConnectionConfiguration::the_surface_map*;
       mir::client::DefaultConnectionConfiguration::the_rpc_channel*;
@@ -344,21 +331,12 @@ MIR_CLIENT_DETAIL_9v18 {
     };
 } MIR_CLIENT_DETAIL_9;
 
-MIR_CLIENT_DETAIL_9v19 {
-  global:
-    extern "C++" { 
-      mir::input::android::android_pointer_action_from_mir*;
-      mir::events::serialize_event*;
-      mir::events::deserialize_event*;
-    };
-} MIR_CLIENT_DETAIL_9v18;
-
 MIR_CLIENT_DETAIL_0.21 {
   global:
     extern "C++" { 
       mir::client::DefaultConnectionConfiguration::the_buffer_factory*;
     };
-} MIR_CLIENT_DETAIL_9v19;
+} MIR_CLIENT_DETAIL_9v18;
 
 MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:
@@ -387,7 +365,7 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_presentation_chain_set_dropping_mode;
   local:
     *;
-} MIR_CLIENT_DETAIL_9v19;
+} MIR_CLIENT_DETAIL_9v18;
 
 MIR_CLIENT_DETAIL_0.24 {
   global:
@@ -604,6 +582,8 @@ MIR_CLIENT_DETAIL_0.27 {  # New functions in Mir 0.27
   global:
     extern "C++" {
       mir::events::set_window_id*;
+      mir::events::make_start_drag_and_drop_event*;
+      mir::events::set_drag_and_drop_handle*;
     };
 } MIR_CLIENT_DETAIL_0.26.1;
 

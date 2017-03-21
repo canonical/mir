@@ -280,7 +280,7 @@ namespace
 struct GuestPlatformAdapter : mg::Platform
 {
     GuestPlatformAdapter(
-        std::shared_ptr<mg::NestedContext> const& context,
+        std::shared_ptr<mg::PlatformAuthentication> const& context,
         std::shared_ptr<mg::Platform> const& adaptee) :
         context(context),
         adaptee(adaptee)
@@ -309,7 +309,12 @@ struct GuestPlatformAdapter : mg::Platform
         return adaptee->native_platform();
     }
 
-    std::shared_ptr<mg::NestedContext> const context;
+    mir::UniqueModulePtr<mg::PlatformAuthentication> authentication() override
+    {
+        return adaptee->authentication();
+    }
+
+    std::shared_ptr<mg::PlatformAuthentication> const context;
     std::shared_ptr<mg::Platform> const adaptee;
 };
 
@@ -355,7 +360,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::NestedContext> const& context)
+    std::shared_ptr<mg::PlatformAuthentication> const& context)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     auto graphics_platform = the_graphics_platform.lock();

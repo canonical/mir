@@ -27,6 +27,7 @@
 
 #include <glm/glm.hpp>
 #include <string>
+#include <vector>
 
 namespace mir
 {
@@ -62,6 +63,7 @@ public:
     virtual void cursor_image_removed() = 0;
     virtual void placed_relative(geometry::Rectangle const& placement) = 0;
     virtual void input_consumed(MirEvent const* event) = 0;
+    virtual void start_drag_and_drop(std::vector<uint8_t> const& handle) = 0;
 
 protected:
     SurfaceObserver() = default;

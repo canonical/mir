@@ -56,10 +56,7 @@ public:
     Buffer(const Buffer&) = delete;
     Buffer& operator=(const Buffer&) = delete;
 private:
-    void pack_native_window_buffer();
 
-    mir::Fd mutable api_user_fence;
- 
     std::shared_ptr<BufferRegistrar> const buffer_registrar;
     std::shared_ptr<graphics::android::NativeBuffer> const native_buffer;
     MirPixelFormat const buffer_pf;

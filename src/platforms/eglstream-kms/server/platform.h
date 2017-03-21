@@ -57,6 +57,7 @@ public:
 
     NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
+    UniqueModulePtr<PlatformAuthentication> authentication() override;
 
 private:
     EGLDisplay display;

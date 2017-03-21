@@ -235,6 +235,11 @@ struct StubPlatform : public mg::Platform
 
     mg::NativePlatform* native_platform() override { return nullptr; }
 
+    mir::UniqueModulePtr<mg::PlatformAuthentication> authentication() override
+    {
+        return underlying_platform->authentication();
+    }
+
     std::shared_ptr<mir::Fd> const last_fd;
     std::shared_ptr<mg::Platform> const underlying_platform;
 };

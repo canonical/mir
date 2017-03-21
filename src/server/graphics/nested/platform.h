@@ -95,6 +95,7 @@ public:
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
+    mir::UniqueModulePtr<PlatformAuthentication> authentication() override;
 private:
     std::unique_ptr<NestedBufferPlatform> const buffer_platform;
     std::unique_ptr<NestedDisplayPlatform> const display_platform;

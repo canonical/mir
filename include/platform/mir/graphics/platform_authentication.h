@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_NESTED_CONTEXT_H_
-#define MIR_GRAPHICS_NESTED_CONTEXT_H_
+#ifndef MIR_GRAPHICS_PLATFORM_AUTHENTICATION_H_
+#define MIR_GRAPHICS_PLATFORM_AUTHENTICATION_H_
 
 #include "mir/optional_value.h"
 #include "mir/fd.h"
@@ -55,25 +55,27 @@ protected:
     SetGbmExtension& operator=(SetGbmExtension const&) = delete;
 };
 
-class NestedContext
+class PlatformAuthentication
 {
 public:
-    virtual ~NestedContext() = default;
+    virtual ~PlatformAuthentication() = default;
 
     //unique_ptr would be nice, but don't want to break mircore
     virtual mir::optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() = 0;
     virtual mir::optional_value<std::shared_ptr<SetGbmExtension>> set_gbm_extension() = 0;
 
+    virtual mir::optional_value<mir::Fd> drm_fd() = 0;
+
     virtual PlatformOperationMessage platform_operation(
         unsigned int op, PlatformOperationMessage const& request) = 0;
 
 protected:
-    NestedContext() = default;
-    NestedContext(NestedContext const&) = delete;
-    NestedContext& operator=(NestedContext const&) = delete;
+    PlatformAuthentication() = default;
+    PlatformAuthentication(PlatformAuthentication const&) = delete;
+    PlatformAuthentication& operator=(PlatformAuthentication const&) = delete;
 };
 
 }
 }
 
-#endif /* MIR_GRAPHICS_NESTED_CONTEXT_H_ */
+#endif /* MIR_GRAPHICS_PLATFORM_AUTHENTICATION_H_ */

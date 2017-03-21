@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License version 3 as
@@ -16,11 +16,17 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/client/private.h"
-#include "mir_connection.h"
+#ifndef MIR_MIR_BLOB_H_H
+#define MIR_MIR_BLOB_H_H
 
-auto mir::client::the_rpc_channel(MirConnection *connection)
--> std::shared_ptr<mir::client::rpc::MirBasicRpcChannel>
+#include <stddef.h>
+
+struct MirBlob
 {
-    return connection->rpc_channel();
-}
+    virtual size_t size() const = 0;
+    virtual void const* data() const = 0;
+
+    virtual ~MirBlob() = default;
+};
+
+#endif //MIR_MIR_BLOB_H_H

@@ -52,7 +52,7 @@ class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
 class GLConfig;
 class PlatformIpcOperations;
-class NestedContext;
+class PlatformAuthentication;
 class NativePlatform
 {
 protected:
@@ -113,6 +113,7 @@ public:
     virtual UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) = 0;
+    virtual UniqueModulePtr<PlatformAuthentication> authentication() = 0;
 };
 
 class Platform : public DisplayPlatform,
@@ -157,7 +158,7 @@ typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
 
 typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateGuestPlatform)(
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
 
 
 typedef void(*AddPlatformOptions)(
@@ -175,7 +176,7 @@ typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatf
 
 typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderingPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
 }
 }
 
@@ -210,7 +211,7 @@ mir::UniqueModulePtr<mir::graphics::Platform> create_host_platform(
  * Function prototype used to return a new guest graphics platform. The guest graphics platform
  * exists alongside the host platform and do not output or control the physical displays
  *
- * \param [in] nested_context the object that contains resources needed from the host platform
+ * \param [in] platform_authentication the object that contains resources needed from the host platform
  * \param [in] report the object to use to report interesting events from the display subsystem
  *
  * This factory function needs to be implemented by each platform.
@@ -219,7 +220,7 @@ mir::UniqueModulePtr<mir::graphics::Platform> create_host_platform(
  */
 mir::UniqueModulePtr<mir::graphics::Platform> create_guest_platform(
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
 
 /**
  * Function prototype used to add platform specific options to the platform-independent server options.
@@ -248,7 +249,7 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
 
 mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
     std::shared_ptr<mir::options::Option> const& options,
-    std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
 
 #if defined(__clang__)
 #pragma clang diagnostic pop
