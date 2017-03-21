@@ -158,6 +158,10 @@ struct StubDisplayServer : public mir::frontend::detail::DisplayServer
         mir::protobuf::RaiseRequest const* /*request*/,
         mir::protobuf::Void* /*response*/,
         google::protobuf::Closure* /*done*/) {}
+    void request_drag_and_drop(
+        mir::protobuf::RequestAuthority const* /*request*/,
+        mir::protobuf::Void* /*response*/,
+        google::protobuf::Closure* /*done*/) {}
     void apply_input_configuration(
         mir::protobuf::InputConfigurationRequest const* /*request*/,
         mir::protobuf::Void* /*response*/,

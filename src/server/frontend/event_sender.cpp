@@ -16,6 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
+#include "event_sender.h"
+#include "mir/events/event.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/graphics/display_configuration.h"
 #include "mir/variable_length_array.h"
@@ -25,8 +27,6 @@
 #include "mir/input/mir_pointer_config.h"
 #include "mir/input/mir_touchpad_config.h"
 #include "mir/input/mir_keyboard_config.h"
-#include "event_sender.h"
-#include "mir/events/serialization.h"
 #include "message_sender.h"
 #include "protobuf_buffer_packer.h"
 
@@ -56,7 +56,7 @@ void mfd::EventSender::handle_event(MirEvent const& e)
     // containing other responses, but for now we send them individually.
     mp::EventSequence seq;
     mp::Event *ev = seq.add_event();
-    ev->set_raw(mev::serialize_event(e));
+    ev->set_raw(MirEvent::serialize(&e));
 
     send_event_sequence(seq, {});
 }

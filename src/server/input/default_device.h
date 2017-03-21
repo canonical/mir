@@ -72,7 +72,6 @@ public:
     optional_value<MirTouchscreenConfig> touchscreen_configuration() const override;
     void apply_touchscreen_configuration(MirTouchscreenConfig const&) override;
 private:
-    void wake_hub_for_device_change();
     MirInputDeviceId const device_id;
     InputDevice& device;
     InputDeviceInfo const info;

@@ -82,6 +82,11 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         uint64_t timestamp) override;
 
+    void request_drag_and_drop(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t timestamp) override;
+
     std::shared_ptr<scene::PromptSession> start_prompt_session_for(
         std::shared_ptr<scene::Session> const& session,
         scene::PromptSessionCreationParameters const& params) override;
@@ -123,6 +128,9 @@ public:
     bool handle(MirEvent const& event) override;
 
     void update_focused_surface_confined_region();
+
+    void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) override;
+    void clear_drag_and_drop_handle() override;
 
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;
