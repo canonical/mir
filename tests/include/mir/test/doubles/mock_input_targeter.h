@@ -35,6 +35,9 @@ struct MockInputTargeter : public shell::InputTargeter
     virtual ~MockInputTargeter() noexcept(true) {}
     MOCK_METHOD1(set_focus, void(std::shared_ptr<input::Surface> const&));
     MOCK_METHOD0(clear_focus, void());
+
+    void set_drag_and_drop_handle(std::vector<uint8_t> const&) override {}
+    void clear_drag_and_drop_handle() override {}
 };
 
 }

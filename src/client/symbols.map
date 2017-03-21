@@ -582,6 +582,8 @@ MIR_CLIENT_DETAIL_0.27 {  # New functions in Mir 0.27
   global:
     extern "C++" {
       mir::events::set_window_id*;
+      mir::events::make_start_drag_and_drop_event*;
+      mir::events::set_drag_and_drop_handle*;
     };
 } MIR_CLIENT_DETAIL_0.26.1;
 

@@ -65,6 +65,9 @@ public:
 
     virtual void raise_tree(std::shared_ptr<scene::Surface> const& root) = 0;
 
+    virtual void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) = 0;
+    virtual void clear_drag_and_drop_handle() = 0;
+
     virtual ~WindowManagerTools() = default;
     WindowManagerTools() = default;
     WindowManagerTools(WindowManagerTools const&) = delete;
@@ -104,6 +107,10 @@ public:
     virtual bool handle_pointer_event(MirPointerEvent const* event) = 0;
 
     virtual void handle_raise_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface) = 0;
+
+    virtual void handle_request_drag_and_drop(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface) = 0;
 
@@ -163,6 +170,11 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         uint64_t timestamp) override;
 
+    void handle_request_drag_and_drop(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t timestamp) override;
+
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& /*session*/,
         std::shared_ptr<scene::Surface> const& surface,
@@ -191,6 +203,9 @@ public:
     auto active_display() -> geometry::Rectangle const override;
 
     void raise_tree(std::shared_ptr<scene::Surface> const& root) override;
+
+    void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) override;
+    void clear_drag_and_drop_handle() override;
 
 private:
     shell::FocusController* const focus_controller;
