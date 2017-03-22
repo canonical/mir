@@ -23,6 +23,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_package.h"
+#include "mir/renderer/gl/egl_platform.h"
 #include "display_helpers.h"
 
 namespace mir
@@ -33,10 +34,12 @@ namespace mesa
 {
 class InternalNativeDisplay; 
 
-class GuestPlatform : public graphics::Platform
+class GuestPlatform : public graphics::Platform,
+                      public graphics::NativePlatform,
+                      public mir::renderer::gl::EGLPlatform
 {
 public:
-    GuestPlatform(std::shared_ptr<NestedContext> const& nested_context_arg);
+    GuestPlatform(std::shared_ptr<PlatformAuthentication> const& platform_authentication_arg);
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
@@ -44,10 +47,12 @@ public:
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
+
+    NativePlatform* native_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 
 private:
-    std::shared_ptr<NestedContext> const nested_context;
+    std::shared_ptr<PlatformAuthentication> const platform_authentication;
     helpers::GBMHelper gbm;
 };
 }

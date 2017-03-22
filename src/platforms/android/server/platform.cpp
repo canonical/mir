@@ -162,6 +162,11 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operatio
     return mir::make_module_ptr<mga::IpcOperations>();
 }
 
+mg::NativePlatform* mga::Platform::native_platform()
+{
+    return this;
+}
+
 EGLNativeDisplayType mga::Platform::egl_native_display() const
 {
     return EGL_DEFAULT_DISPLAY;
@@ -192,7 +197,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& display_report,
-    std::shared_ptr<mg::NestedContext> const&)
+    std::shared_ptr<mg::PlatformAuthentication> const&)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     //TODO: actually allow disabling quirks for guest platform

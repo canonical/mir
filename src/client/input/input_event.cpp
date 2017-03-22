@@ -73,13 +73,6 @@ MirInputEventType mir_input_event_get_type(MirInputEvent const* ev) MIR_HANDLE_E
     return ev->input_type();
 })
 
-int mir_input_event_get_window_id(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    expect_event_type(ev, mir_event_type_input);
-
-    return ev->window_id();
-})
-
 MirInputDeviceId mir_input_event_get_device_id(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     expect_event_type(ev, mir_event_type_input);

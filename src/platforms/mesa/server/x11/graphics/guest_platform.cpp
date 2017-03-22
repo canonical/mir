@@ -21,7 +21,7 @@
 #include "ipc_operations.h"
 #include "buffer_allocator.h"
 
-#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_authentication.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -31,7 +31,7 @@ namespace mgx = mg::X;
 namespace mgm = mg::mesa;
 
 mgx::GuestPlatform::GuestPlatform(
-    std::shared_ptr<NestedContext> const& /*nested_context*/)
+    std::shared_ptr<PlatformAuthentication> const& /*platform_authentication*/)
     : udev{std::make_shared<mir::udev::Context>()},
       drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render)}
 {
@@ -57,6 +57,11 @@ mir::UniqueModulePtr<mg::Display> mgx::GuestPlatform::create_display(
     std::shared_ptr<graphics::GLConfig> const&)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("Guest platform cannot create display\n"));
+}
+
+mg::NativePlatform* mgx::GuestPlatform::native_platform()
+{
+    return this;
 }
 
 EGLNativeDisplayType mgx::GuestPlatform::egl_native_display() const

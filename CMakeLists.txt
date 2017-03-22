@@ -207,7 +207,11 @@ find_package(CapnProto REQUIRED)
 find_package(GLog REQUIRED)
 find_package(GFlags REQUIRED)
 find_package(LTTngUST REQUIRED)
+
 pkg_check_modules(UDEV REQUIRED libudev)
+# Work around libudev-dev bug LP: #1674201 which sets the wrong lib path:
+list(INSERT UDEV_LDFLAGS 0 "-L${MIR_CHROOT}/lib/${TARGET_ARCH}")
+
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 
 include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})

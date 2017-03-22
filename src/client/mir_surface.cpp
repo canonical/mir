@@ -24,6 +24,7 @@
 #include "connection_surface_map.h"
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/mir_blob.h"
 #include "mir/frontend/client_constants.h"
 #include "mir/client_buffer.h"
 #include "mir/mir_buffer_stream.h"
@@ -32,6 +33,7 @@
 #include "mir/cookie/cookie.h"
 #include "mir_cookie.h"
 #include "mir/time/posix_timestamp.h"
+#include "mir/events/surface_event.h"
 
 #include <cassert>
 #include <unistd.h>
@@ -493,7 +495,14 @@ void MirSurface::handle_event(MirEvent& e)
         auto sev = mir_event_get_window_event(&e);
         auto a = mir_window_event_get_attribute(sev);
         if (a < mir_window_attribs)
+        {
             attrib_cache[a] = mir_window_event_get_attribute_value(sev);
+        }
+        else
+        {
+            handle_drag_and_drop_start_callback(sev);
+            return;
+        }
         break;
     }
     case mir_event_type_input:
@@ -596,6 +605,29 @@ void MirSurface::raise_surface(MirCookie const* cookie)
         &raise_request,
         void_response.get(),
         google::protobuf::NewCallback(google::protobuf::DoNothing));
+}
+
+void MirSurface::request_drag_and_drop(MirCookie const* cookie)
+{
+    mp::RequestAuthority authority;
+
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    authority.mutable_surface_id()->set_value(surface->id().value());
+
+    auto const event_cookie = authority.mutable_cookie();
+
+    event_cookie->set_cookie(cookie->cookie().data(), cookie->size());
+
+    server->request_drag_and_drop(
+        &authority,
+        void_response.get(),
+        google::protobuf::NewCallback(google::protobuf::DoNothing));
+}
+
+void MirSurface::set_drag_and_drop_start_handler(std::function<void(MirWindowEvent const*)> const& callback)
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    handle_drag_and_drop_start_callback = callback;
 }
 
 MirBufferStream* MirSurface::get_buffer_stream()
