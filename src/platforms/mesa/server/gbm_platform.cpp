@@ -33,7 +33,8 @@ mgm::GBMPlatform::GBMPlatform(
     bypass_option(bypass_option),
     import_method(import_method),
     platform_authentication(platform_authentication),
-    gbm{std::make_shared<mgm::helpers::GBMHelper>()}
+    gbm{std::make_shared<mgm::helpers::GBMHelper>()},
+    auth{std::make_shared<mgm::NestedAuthentication>(platform_authentication)}
 {
     auto master = platform_authentication->drm_fd();
     auto auth = platform_authentication->auth_extension();
@@ -51,6 +52,21 @@ mgm::GBMPlatform::GBMPlatform(
     }
 }
 
+mgm::GBMPlatform::GBMPlatform(
+    BypassOption bypass_option,
+    BufferImportMethod import_method,
+    std::shared_ptr<mir::udev::Context> const& udev,
+    std::shared_ptr<mgm::helpers::DRMHelper> const& drm) :
+    bypass_option(bypass_option),
+    import_method(import_method),
+    udev(udev),
+    drm(drm),
+    gbm{std::make_shared<mgm::helpers::GBMHelper>()},
+    auth{drm}
+{
+    gbm->setup(*drm);
+}
+
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GBMPlatform::create_buffer_allocator()
 {
     return make_module_ptr<mgm::BufferAllocator>(gbm->device, bypass_option, import_method);
@@ -58,8 +74,7 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GBMPlatform::create_buffer
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::GBMPlatform::make_ipc_operations() const
 {
-    return mir::make_module_ptr<mgm::IpcOperations>(
-        std::make_shared<mgm::NestedAuthentication>(platform_authentication));
+    return make_module_ptr<mg::mesa::IpcOperations>(auth);
 }
 
 mg::NativePlatform* mgm::GBMPlatform::native_platform()

@@ -146,12 +146,13 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
 }
 
 mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
-    std::shared_ptr<mir::options::Option> const& /*options*/,
-    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication)
+    std::shared_ptr<mir::options::Option> const&,
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const&)
 {
     mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
+    auto udev = std::make_shared<mir::udev::Context>();
+    auto drm = std::make_shared<mgm::helpers::DRMHelper>(mgm::helpers::DRMNodeToUse::render);
+    drm->setup(udev);
     return mir::make_module_ptr<mgm::GBMPlatform>(
-        mgm::BypassOption::prohibited,
-        mgm::BufferImportMethod::dma_buf,
-        platform_authentication);
+        mgm::BypassOption::prohibited, mgm::BufferImportMethod::dma_buf, udev, drm);
 }

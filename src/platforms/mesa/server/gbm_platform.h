@@ -39,7 +39,12 @@ public:
     GBMPlatform(
         BypassOption option,
         BufferImportMethod import_method,
-        std::shared_ptr<graphics::PlatformAuthentication> const& platform_authentication);
+        std::shared_ptr<PlatformAuthentication> const& platform_authentication);
+    GBMPlatform(
+        BypassOption bypass_option,
+        BufferImportMethod import_method,
+        std::shared_ptr<mir::udev::Context> const& udev,
+        std::shared_ptr<helpers::DRMHelper> const& drm);
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
@@ -49,7 +54,10 @@ private:
     BypassOption const bypass_option;
     BufferImportMethod const import_method;
     std::shared_ptr<graphics::PlatformAuthentication> const platform_authentication;
+    std::shared_ptr<mir::udev::Context> udev;
+    std::shared_ptr<graphics::mesa::helpers::DRMHelper> drm;
     std::shared_ptr<helpers::GBMHelper> const gbm;
+    std::shared_ptr<DRMAuthentication> const auth;
 };
 }
 }
