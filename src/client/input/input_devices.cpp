@@ -41,6 +41,10 @@ std::unordered_set<MirInputDeviceId> get_removed_devices(MirInputConfig const& o
 }
 }
 
+mi::InputDevices::InputDevices(std::shared_ptr<client::SurfaceMap> const& windows)
+    : windows{windows}
+{
+}
 
 void mi::InputDevices::update_devices(std::string const& config_buffer)
 {
@@ -55,14 +59,13 @@ void mi::InputDevices::update_devices(std::string const& config_buffer)
         stored_callback = callback;
     }
 
-    MirWindow::for_each_window(
-        [&ids](MirWindow const& window)
+    windows->with_all_windows_do(
+        [&ids](MirWindow* window)
         {
-            auto keymapper = window.get_keymapper();
+            auto keymapper = window->get_keymapper();
             for (auto const& id : ids)
                 keymapper->clear_keymap_for_device(id);
-        }
-        );
+        });
 
     if (stored_callback)
         stored_callback();
@@ -79,5 +82,3 @@ void mi::InputDevices::set_change_callback(std::function<void()> const& new_call
     std::unique_lock<std::mutex> lock(devices_access);
     callback = new_callback;
 }
-
-

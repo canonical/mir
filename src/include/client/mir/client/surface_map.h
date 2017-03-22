@@ -43,7 +43,8 @@ public:
     virtual void with_all_streams_do(std::function<void(MirBufferStream*)> const&) const = 0;
     virtual std::shared_ptr<MirBuffer> buffer(int buffer_id) const = 0;
     virtual void insert(int buffer_id, std::shared_ptr<MirBuffer> const& buffer) = 0;
-    virtual void erase(int buffer_id) = 0;  
+    virtual void erase(int buffer_id) = 0;
+    virtual void with_all_windows_do(std::function<void(MirWindow*)> const&) const = 0;
 
 protected:
     virtual ~SurfaceMap() = default;

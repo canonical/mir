@@ -214,7 +214,6 @@ public:
     MirWaitHandle* modify(MirWindowSpec const& changes);
 
     static bool is_valid(MirSurface* query);
-    static void for_each_window(std::function<void(MirSurface &surf)> const& fun);
 
     MirWaitHandle* request_persistent_id(MirWindowIdCallback callback, void* context);
     MirConnection* connection() const;

@@ -271,15 +271,6 @@ bool MirSurface::is_valid(MirSurface* query)
     return false;
 }
 
-void MirSurface::for_each_window(std::function<void(MirSurface &surf)> const& fun)
-{
-    std::lock_guard<decltype(handle_mutex)> lock(handle_mutex);
-
-    for (auto const& window : valid_surfaces)
-        fun(*window);
-}
-
-
 void MirSurface::acquired_persistent_id(MirWindowIdCallback callback, void* context)
 {
     if (!persistent_id->has_error())

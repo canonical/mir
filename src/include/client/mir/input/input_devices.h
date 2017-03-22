@@ -20,6 +20,7 @@
 #define MIR_INPUT_INPUT_DEVICES_H_
 
 #include "mir/input/mir_input_config.h"
+#include "mir/client/surface_map.h"
 
 #include <mutex>
 #include <string>
@@ -32,11 +33,12 @@ namespace input
 class InputDevices
 {
 public:
-    InputDevices() = default;
+    InputDevices(std::shared_ptr<client::SurfaceMap> const& windows);
     void update_devices(std::string const& device_buffer);
     MirInputConfig devices();
     void set_change_callback(std::function<void()> const& callback);
 private:
+    std::shared_ptr<client::SurfaceMap> const windows;
     std::mutex devices_access;
     MirInputConfig configuration;
     std::function<void()> callback;
