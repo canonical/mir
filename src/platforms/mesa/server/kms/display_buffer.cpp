@@ -134,12 +134,6 @@ mgm::DisplayBuffer::DisplayBuffer(
       needs_set_crtc{false},
       page_flips_pending{false}
 {
-    glm::vec2 const& logical_size{area.size.width.as_uint32_t(),
-                                  area.size.height.as_uint32_t()};
-    glm::vec2 physical_size = transformation * logical_size;
-    fb_width = abs(physical_size.x);
-    fb_height = abs(physical_size.y);
-
     listener->report_successful_setup_of_native_resources();
 
     make_current();
@@ -158,7 +152,11 @@ mgm::DisplayBuffer::DisplayBuffer(
     if (!visible_composite_frame)
         fatal_error("Failed to get frontbuffer");
 
-    set_crtc(*outputs.front()->fb_for(visible_composite_frame, fb_width, fb_height));
+    auto const fb_size = surface.size();
+    auto const fb = outputs.front()->fb_for(visible_composite_frame,
+                                            fb_size.width.as_int(),
+                                            fb_size.height.as_int());
+    set_crtc(*fb);
 
     release_current();
 
@@ -205,10 +203,13 @@ bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
             auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(bypass_buffer->native_buffer_handle());
             if (!native)
                 BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
+            auto const fb_size = surface.size();
             if (native->flags & mir_buffer_flag_can_scanout &&
-                bypass_buffer->size() == geom::Size{fb_width,fb_height})
+                bypass_buffer->size() == fb_size)
             {
-                if (auto bufobj = outputs.front()->fb_for(native->bo, fb_width, fb_height))
+                if (auto bufobj = outputs.front()->fb_for(native->bo,
+                       fb_size.width.as_int(), fb_size.height.as_int()))
+
                 {
                     bypass_buf = bypass_buffer;
                     bypass_bufobj = bufobj;
@@ -272,7 +273,9 @@ void mgm::DisplayBuffer::post()
     else
     {
         scheduled_composite_frame = surface.lock_front();
-        bufobj = outputs.front()->fb_for(scheduled_composite_frame, fb_width, fb_height);
+        auto const fb_size = surface.size();
+        bufobj = outputs.front()->fb_for(scheduled_composite_frame,
+            fb_size.width.as_int(), fb_size.height.as_int());
         if (!bufobj)
             fatal_error("Failed to get front buffer object");
     }

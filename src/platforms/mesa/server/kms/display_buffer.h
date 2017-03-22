@@ -86,6 +86,7 @@ public:
 
     FrontBuffer lock_front();
     void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> const& to);
+    geometry::Size size() const { return {width, height}; }
 private:
     int const drm_fd;
     uint32_t width, height;
@@ -147,7 +148,6 @@ private:
     GBMOutputSurface::FrontBuffer scheduled_composite_frame;
 
     geometry::Rectangle area;
-    uint32_t fb_width, fb_height;
     glm::mat2 transform;
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};
