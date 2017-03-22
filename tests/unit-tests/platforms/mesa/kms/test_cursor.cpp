@@ -297,7 +297,7 @@ struct MesaCursorTest : ::testing::Test
 
     size_t const cursor_side{64};
     MesaCursorTest()
-        : cursor{mock_gbm.fake_gbm.device, output_container,
+        : cursor{output_container,
             mt::fake_shared(current_configuration)}
     {
         using namespace ::testing;
@@ -348,7 +348,7 @@ TEST_F(MesaCursorTest, creates_cursor_bo_image)
                                         GBM_FORMAT_ARGB8888,
                                         GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE));
 
-    mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+    mgm::Cursor cursor_tmp{output_container,
         std::make_shared<StubCurrentConfiguration>(output_container)};
 }
 
@@ -356,10 +356,11 @@ TEST_F(MesaCursorTest, queries_received_cursor_size)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_gbm, gbm_bo_get_width(_));
-    EXPECT_CALL(mock_gbm, gbm_bo_get_height(_));
+    // Our standard mock DRM has 2 GPU devices, and we should construct a cursor on both.
+    EXPECT_CALL(mock_gbm, gbm_bo_get_width(_)).Times(2);
+    EXPECT_CALL(mock_gbm, gbm_bo_get_height(_)).Times(2);
 
-    mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+    mgm::Cursor cursor_tmp{output_container,
         std::make_shared<StubCurrentConfiguration>(output_container)};
 }
 
@@ -374,7 +375,7 @@ TEST_F(MesaCursorTest, respects_drm_cap_cursor)
 
     EXPECT_CALL(mock_gbm, gbm_bo_create(_, drm_buffer_size, drm_buffer_size, _, _));
 
-    mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+    mgm::Cursor cursor_tmp{output_container,
                            std::make_shared<StubCurrentConfiguration>(output_container)};
 }
 
@@ -391,7 +392,7 @@ TEST_F(MesaCursorTest, can_force_64x64_cursor)
 
     EXPECT_CALL(mock_gbm, gbm_bo_create(_, 64, 64, _, _));
 
-    mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+    mgm::Cursor cursor_tmp{output_container,
                            std::make_shared<StubCurrentConfiguration>(output_container)};
 }
 
@@ -455,7 +456,7 @@ TEST_F(MesaCursorTest, pads_missing_data_when_buffer_size_differs)
 
     EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, ContainsASingleWhitePixel(width*height), buffer_size_bytes));
 
-    mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+    mgm::Cursor cursor_tmp{output_container,
         std::make_shared<StubCurrentConfiguration>(output_container)};
     cursor_tmp.show(SinglePixelCursorImage());
 }
@@ -492,7 +493,7 @@ TEST_F(MesaCursorTest, clears_cursor_state_on_construction)
     EXPECT_CALL(*output_container.outputs[1], has_cursor()).Times(0);
     EXPECT_CALL(*output_container.outputs[2], has_cursor()).Times(0);
 
-    mgm::Cursor cursor_tmp{mock_gbm.fake_gbm.device, output_container,
+    mgm::Cursor cursor_tmp{output_container,
        std::make_shared<StubCurrentConfiguration>(output_container)};
 
     output_container.verify_and_clear_expectations();
@@ -510,7 +511,7 @@ TEST_F(MesaCursorTest, construction_fails_if_initial_set_fails)
         .WillByDefault(Return(false));
 
     EXPECT_THROW(
-        mgm::Cursor cursor_tmp(mock_gbm.fake_gbm.device, output_container,
+        mgm::Cursor cursor_tmp(output_container,
            std::make_shared<StubCurrentConfiguration>(output_container));
     , std::runtime_error);
 }
