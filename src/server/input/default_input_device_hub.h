@@ -74,6 +74,7 @@ struct ExternalInputDeviceHub : InputDeviceHub
 private:
     struct Internal;
     std::shared_ptr<Internal> data;
+    std::shared_ptr<InputDeviceHub> hub;
 };
 
 class DefaultInputDeviceHub :

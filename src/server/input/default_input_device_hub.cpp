@@ -62,7 +62,7 @@ struct mi::ExternalInputDeviceHub::Internal : InputDeviceObserver
 };
 
 mi::ExternalInputDeviceHub::ExternalInputDeviceHub(std::shared_ptr<mi::InputDeviceHub> const& hub, std::shared_ptr<mir::ServerActionQueue> const& queue)
-    : data{std::make_shared<mi::ExternalInputDeviceHub::Internal>(hub, queue)}
+    : data{std::make_shared<mi::ExternalInputDeviceHub::Internal>(hub, queue)}, hub{hub}
 {
     hub->add_observer(data);
 }
@@ -74,19 +74,15 @@ mi::ExternalInputDeviceHub::~ExternalInputDeviceHub()
 
 void mi::ExternalInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserver> const& observer)
 {
-    auto hub = data->hub.lock();
-    if (hub)
-    {
-        data->observer_queue->enqueue(
-            data.get(),
-            [observer, data = this->data]
-            {
-                for (auto const& item : data->handles)
-                    observer->device_added(item);
-                observer->changes_complete();
-                data->observers.add(observer);
-            });
-    }
+    data->observer_queue->enqueue(
+        data.get(),
+        [observer, data = this->data]
+        {
+            for (auto const& item : data->handles)
+                observer->device_added(item);
+            observer->changes_complete();
+            data->observers.add(observer);
+        });
 }
 
 void mi::ExternalInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserver> const& obs)
@@ -97,17 +93,11 @@ void mi::ExternalInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserv
 
 void mi::ExternalInputDeviceHub::for_each_input_device(std::function<void(Device const& device)> const& callback)
 {
-    auto hub = data->hub.lock();
-    if (!hub)
-        return;
     hub->for_each_input_device(callback);
 }
 
 void mi::ExternalInputDeviceHub::for_each_mutable_input_device(std::function<void(Device& device)> const& callback)
 {
-    auto hub = data->hub.lock();
-    if (!hub)
-        return;
     hub->for_each_mutable_input_device(callback);
 }
 
