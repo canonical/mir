@@ -475,9 +475,10 @@ TEST_P(DisplayFormatSetting, can_get_all_output_format)
     using namespace testing;
 
     auto format = GetParam();
-    mtd::StubDisplayConfig single_format_config(1, {format});
+    auto single_format_config =
+        std::make_shared<mtd::StubDisplayConfig>(1, std::vector<MirPixelFormat>{format});
 
-    apply_config_change_and_wait_for_propagation(mt::fake_shared(single_format_config));
+    apply_config_change_and_wait_for_propagation(single_format_config);
 
     DisplayClient client{new_connection()};
 
@@ -507,9 +508,11 @@ TEST_P(DisplaySubpixelSetting, can_get_all_subpixel_arrangements)
         60.0,
         true,
         subpixel_arrangement};
-    mtd::StubDisplayConfig single_subpixel_config({output});
 
-    apply_config_change_and_wait_for_propagation(mt::fake_shared(single_subpixel_config));
+    auto single_subpixel_config =
+        std::make_shared<mtd::StubDisplayConfig>(std::vector<mg::DisplayConfigurationOutput>{output});
+
+    apply_config_change_and_wait_for_propagation(single_subpixel_config);
 
     DisplayClient client{new_connection()};
 
