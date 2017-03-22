@@ -82,9 +82,7 @@ private:
     OutputInfo get_output_info() const;
 
     std::shared_ptr<InputReport> report;
-    std::shared_ptr<::libinput> lib;
     std::vector<LibInputDevicePtr> devices;
-    std::shared_ptr<dispatch::Dispatchable> dispatchable_fd;
 
     InputSink* sink{nullptr};
     EventBuilder* builder{nullptr};

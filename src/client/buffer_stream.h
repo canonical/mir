@@ -141,10 +141,7 @@ protected:
 private:
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&);
-    void on_scale_set(float scale);
-    void release_cpu_region();
     MirWaitHandle* set_server_swap_interval(int i);
-    void init_swap_interval();
     void wait_for_vsync();
 
     mutable std::mutex mutex; // Protects all members of *this

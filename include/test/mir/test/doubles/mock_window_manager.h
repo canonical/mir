@@ -58,6 +58,7 @@ struct MockWindowManager : shell::WindowManager
     MOCK_METHOD1(handle_pointer_event, bool(MirPointerEvent const*));
 
     MOCK_METHOD3(handle_raise_surface, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, uint64_t));
+    MOCK_METHOD3(handle_request_drag_and_drop, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, uint64_t));
 
     MOCK_METHOD4(set_surface_attribute,
         int(std::shared_ptr<scene::Session> const& session,

@@ -162,6 +162,41 @@ public:
     mtf::UdevEnvironment fake_devices;
 };
 
+MATCHER_P(Unique, scratch_vector, "")
+{
+    if (std::any_of(
+        scratch_vector.begin(),
+        scratch_vector.end(),
+        [&arg](auto const& candidate) { return arg == candidate; }))
+    {
+        return false;
+    }
+    const_cast<typename std::remove_const<scratch_vector_type>::type&>(scratch_vector).push_back(arg);
+    return true;
+}
+
+MATCHER_P(DisplayConfigsAreEquivalent, expected_configs, "")
+{
+    using namespace testing;
+
+    std::vector<mg::DisplayConfigurationOutput> outputs;
+    std::vector<mg::DisplayConfigurationOutputId> output_ids;
+    arg->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+                          {
+                              outputs.push_back(output);
+                              output_ids.push_back(output.id);
+                              outputs.back().id = mg::DisplayConfigurationOutputId{0};
+                          });
+
+
+    Matcher<decltype(outputs)> config_matcher = UnorderedElementsAreArray(expected_configs);
+    std::vector<mg::DisplayConfigurationOutputId> scratch_space;
+    Matcher<decltype(output_ids)> ids_are_unique = Each(Unique(scratch_space));
+
+    return
+        config_matcher.MatchAndExplain(outputs, result_listener) &&
+        ids_are_unique.MatchAndExplain(output_ids, result_listener);
+}
 }
 
 TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
@@ -209,7 +244,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs =
     {
         {
-            mg::DisplayConfigurationOutputId{connector0_id},
+            mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::hdmia,
             {},
@@ -232,7 +267,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             {}
         },
         {
-            mg::DisplayConfigurationOutputId{connector1_id},
+            mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::unknown,
             {},
@@ -255,7 +290,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             {}
         },
         {
-            mg::DisplayConfigurationOutputId{connector2_id},
+            mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::edp,
             {},
@@ -284,16 +319,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
 
     auto conf = display->configuration();
 
-    size_t output_count{0};
-
-    conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
-    {
-        ASSERT_LT(output_count, expected_outputs.size());
-        EXPECT_EQ(expected_outputs[output_count], output) << "output_count: " << output_count;
-        ++output_count;
-    });
-
-    EXPECT_EQ(expected_outputs.size(), output_count);
+    EXPECT_THAT(conf, DisplayConfigsAreEquivalent(expected_outputs));
 }
 
 TEST_F(MesaDisplayConfigurationTest, reads_subpixel_information_correctly)
@@ -445,88 +471,6 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
     }
 }
 
-TEST_F(MesaDisplayConfigurationTest, get_kms_connector_id_returns_correct_id)
-{
-    uint32_t const crtc0_id{10};
-    uint32_t const encoder0_id{20};
-    uint32_t const possible_crtcs_mask_empty{0};
-    std::vector<uint32_t> const connector_ids{30, 31};
-    std::vector<uint32_t> encoder_ids{20};
-
-    /* Set up DRM resources */
-    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
-
-    resources.reset();
-
-    resources.add_crtc(crtc0_id, modes0[1]);
-    resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
-    for (auto id : connector_ids)
-    {
-        resources.add_connector(id, DRM_MODE_CONNECTOR_DVID,
-                                DRM_MODE_CONNECTED, encoder0_id,
-                                modes0, encoder_ids,
-                                geom::Size());
-    }
-
-    resources.prepare();
-
-    /* Test body */
-    auto display = create_display(create_platform());
-
-    std::shared_ptr<mg::DisplayConfiguration> conf = display->configuration();
-    auto const& kms_conf = std::static_pointer_cast<mgm::KMSDisplayConfiguration>(conf);
-
-    size_t output_count{0};
-
-    conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
-    {
-        ASSERT_LT(output_count, connector_ids.size());
-
-        EXPECT_EQ(connector_ids[output_count],
-                  kms_conf->get_kms_connector_id(output.id));
-        ++output_count;
-    });
-}
-
-TEST_F(MesaDisplayConfigurationTest, get_kms_connector_id_throws_on_invalid_id)
-{
-    uint32_t const crtc0_id{10};
-    uint32_t const encoder0_id{20};
-    uint32_t const possible_crtcs_mask_empty{0};
-    std::vector<uint32_t> const connector_ids{30, 31};
-    std::vector<uint32_t> encoder_ids{20};
-
-    /* Set up DRM resources */
-    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
-
-    resources.reset();
-
-    resources.add_crtc(crtc0_id, modes0[1]);
-    resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
-    for (auto id : connector_ids)
-    {
-        resources.add_connector(id, DRM_MODE_CONNECTOR_VGA,
-                                DRM_MODE_CONNECTED, encoder0_id,
-                                modes0, encoder_ids,
-                                geom::Size());
-    }
-
-    resources.prepare();
-
-    /* Test body */
-    auto display = create_display(create_platform());
-
-    std::shared_ptr<mg::DisplayConfiguration> conf = display->configuration();
-    auto const& kms_conf = std::static_pointer_cast<mgm::KMSDisplayConfiguration>(conf);
-
-    EXPECT_THROW({
-        kms_conf->get_kms_connector_id(mg::DisplayConfigurationOutputId{29});
-    }, std::runtime_error);
-    EXPECT_THROW({
-        kms_conf->get_kms_connector_id(mg::DisplayConfigurationOutputId{32});
-    }, std::runtime_error);
-}
-
 TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
 {
     using namespace ::testing;
@@ -548,7 +492,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs_before =
     {
         {
-            mg::DisplayConfigurationOutputId(connector_ids[0]),
+            mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::composite,
             {},
@@ -571,7 +515,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             {}
         },
         {
-            mg::DisplayConfigurationOutputId(connector_ids[1]),
+            mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::vga,
             {},
@@ -598,7 +542,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs_after =
     {
         {
-            mg::DisplayConfigurationOutputId(connector_ids[0]),
+            mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::composite,
             {},
@@ -621,7 +565,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             {}
         },
         {
-            mg::DisplayConfigurationOutputId(connector_ids[1]),
+            mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::vga,
             {},
@@ -671,16 +615,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
 
     auto conf = display->configuration();
 
-    size_t output_count{0};
-
-    conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
-    {
-        ASSERT_LT(output_count, expected_outputs_before.size());
-        EXPECT_EQ(expected_outputs_before[output_count], output) << "output_count: " << output_count;
-        ++output_count;
-    });
-
-    EXPECT_EQ(expected_outputs_before.size(), output_count);
+    EXPECT_THAT(conf, DisplayConfigsAreEquivalent(expected_outputs_before));
 
     /* Reset DRM resources and check again */
     resources.reset();
@@ -710,16 +645,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
 
     conf = display->configuration();
 
-    output_count = 0;
-
-    conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
-    {
-        ASSERT_LT(output_count, expected_outputs_after.size());
-        EXPECT_EQ(expected_outputs_after[output_count], output) << "output_count: " << output_count;
-        ++output_count;
-    });
-
-    EXPECT_EQ(expected_outputs_after.size(), output_count);
+    EXPECT_THAT(conf, DisplayConfigsAreEquivalent(expected_outputs_after));
 }
 
 TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
@@ -734,12 +660,11 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
     geom::Size const connector_physical_sizes_mm_after{512, 642};
     std::vector<uint32_t> possible_encoder_ids_empty;
     uint32_t const possible_crtcs_mask_empty{0};
-    int const noutputs = 1;
 
-    mg::DisplayConfigurationOutput const expected_outputs_before[noutputs] =
+    std::vector<mg::DisplayConfigurationOutput> const expected_outputs_before =
     {
         {
-            mg::DisplayConfigurationOutputId(connector_ids[0]),
+            mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::composite,
             {},
@@ -763,10 +688,10 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
         },
     };
 
-    mg::DisplayConfigurationOutput const expected_outputs_after[noutputs] =
+    std::vector<mg::DisplayConfigurationOutput> const expected_outputs_after =
     {
         {
-            mg::DisplayConfigurationOutputId(connector_ids[0]),
+            mg::DisplayConfigurationOutputId{0},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::composite,
             {},
@@ -806,14 +731,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
 
     auto display = create_display(create_platform());
     auto conf = display->configuration();
-    int output_count = 0;
-    conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
-    {
-        ASSERT_LT(output_count, noutputs);
-        EXPECT_EQ(expected_outputs_before[output_count], output) << "output_count: " << output_count;
-        ++output_count;
-    });
-    EXPECT_EQ(noutputs, output_count);
+    EXPECT_THAT(conf, DisplayConfigsAreEquivalent(expected_outputs_before));
 
     // Now simulate a change of monitor, with no CRTC attached (and hence no current mode).
     // The configuration should mirror this state.
@@ -834,14 +752,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
     ASSERT_TRUE(handler_signal.wait_for(10s));
 
     conf = display->configuration();
-    output_count = 0;
-    conf->for_each_output([&](mg::DisplayConfigurationOutput const& output)
-    {
-        ASSERT_LT(output_count, noutputs);
-        EXPECT_EQ(expected_outputs_after[output_count], output) << "output_count: " << output_count;
-        ++output_count;
-    });
-    EXPECT_EQ(noutputs, output_count);
+    EXPECT_THAT(conf, DisplayConfigsAreEquivalent(expected_outputs_after));
 }
 
 TEST_F(MesaDisplayConfigurationTest, does_not_query_drm_unnecesarily)
@@ -881,6 +792,7 @@ TEST_F(MesaDisplayConfigurationTest, does_not_query_drm_unnecesarily)
     fake_devices.emit_device_changed(syspath);
     ASSERT_TRUE(handler_signal.wait_for(10s));
 
-    EXPECT_CALL(mock_drm, drmModeGetConnector(_,_)).Times(1);
+    // It needs to query DRM at least once; we don't really care how many times it does, though.
+    EXPECT_CALL(mock_drm, drmModeGetConnector(_,_)).Times(AtLeast(1));
     display->configuration();
 }

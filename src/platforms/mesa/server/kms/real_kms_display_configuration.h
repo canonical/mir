@@ -30,13 +30,15 @@ namespace graphics
 {
 namespace mesa
 {
+class KMSOutput;
+class KMSOutputContainer;
 
 class RealKMSDisplayConfiguration : public KMSDisplayConfiguration
 {
 friend bool compatible(RealKMSDisplayConfiguration const& conf1, RealKMSDisplayConfiguration const& conf2);
 
 public:
-    RealKMSDisplayConfiguration(int drm_fd);
+    RealKMSDisplayConfiguration(std::shared_ptr<KMSOutputContainer> const& displays);
     RealKMSDisplayConfiguration(RealKMSDisplayConfiguration const& conf);
     RealKMSDisplayConfiguration& operator=(RealKMSDisplayConfiguration const& conf);
 
@@ -45,18 +47,15 @@ public:
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
     std::unique_ptr<DisplayConfiguration> clone() const override;
 
-    uint32_t get_kms_connector_id(DisplayConfigurationOutputId id) const override;
+    std::shared_ptr<KMSOutput> get_output_for(DisplayConfigurationOutputId id) const override;
     size_t get_kms_mode_index(DisplayConfigurationOutputId id, size_t conf_mode_index) const override;
     void update() override;
 
 private:
-    void add_or_update_output(kms::DRMModeResources const& resources, drmModeConnector const& connector);
-    std::vector<DisplayConfigurationOutput>::iterator find_output_with_id(DisplayConfigurationOutputId id);
-    std::vector<DisplayConfigurationOutput>::const_iterator find_output_with_id(DisplayConfigurationOutputId id) const;
 
-    int drm_fd;
+    std::shared_ptr<KMSOutputContainer> displays;
     DisplayConfigurationCard card;
-    std::vector<DisplayConfigurationOutput> outputs;
+    std::vector<std::pair< DisplayConfigurationOutput, std::shared_ptr<KMSOutput>>> outputs;
 };
 
 bool compatible(RealKMSDisplayConfiguration const& conf1, RealKMSDisplayConfiguration const& conf2);
