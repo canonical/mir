@@ -84,12 +84,12 @@ public:
         return stub_platform->make_ipc_operations();
     }
 
-    EGLNativeDisplayType egl_native_display() const override
+    mg::NativePlatform* native_platform() override
     {
         if (should_throw.at(ExceptionLocation::at_egl_native_display))
             BOOST_THROW_EXCEPTION(std::runtime_error("Exception during egl_native_display"));
 
-        return stub_platform->egl_native_display();
+        return stub_platform->native_platform();
     }
 
 private:
@@ -162,7 +162,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::NestedContext> const&)
+    std::shared_ptr<mg::PlatformAuthentication> const&)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     return mir::make_module_ptr<ExceptionThrowingPlatform>();

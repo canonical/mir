@@ -24,6 +24,7 @@
 #include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/display_layout.h"
 
+#include <uuid/uuid.h>
 #include <linux/input.h>
 #include <csignal>
 
@@ -581,6 +582,18 @@ void msh::CanonicalWindowManagerPolicy::handle_raise_surface(
     std::shared_ptr<ms::Surface> const& surface)
 {
     select_active_surface(surface);
+}
+
+void msh::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(
+    std::shared_ptr<ms::Session> const& /*session*/,
+    std::shared_ptr<ms::Surface> const& surface)
+{
+    uuid_t uuid;
+    uuid_generate(uuid);
+    std::vector<uint8_t> const handle{std::begin(uuid), std::end(uuid)};
+
+    surface->start_drag_and_drop(handle);
+    tools->set_drag_and_drop_handle(handle);
 }
 
 bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)

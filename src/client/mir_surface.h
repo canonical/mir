@@ -200,6 +200,8 @@ public:
     MirWaitHandle* set_preferred_orientation(MirOrientationMode mode);
 
     void raise_surface(MirCookie const* cookie);
+    void request_drag_and_drop(MirCookie const* cookie);
+    void set_drag_and_drop_start_handler(std::function<void(MirWindowEvent const*)> const& callback);
 
     MirWaitHandle* configure_cursor(MirCursorConfiguration const* cursor);
 
@@ -263,6 +265,8 @@ private:
     std::shared_ptr<mir::client::FrameClock> const frame_clock;
 
     std::function<void(MirEvent const*)> handle_event_callback;
+    std::function<void(MirWindowEvent const*)> handle_drag_and_drop_start_callback = [](auto){};
+
     std::shared_ptr<mir::dispatch::ThreadedDispatcher> input_thread;
 
     //a bit batty, but the creation handle has to exist for as long as the MirSurface does,

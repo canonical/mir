@@ -212,9 +212,11 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
     for (auto const& r : renderables)
         draw(*r, r->alpha() < 1.0f ? alpha_program : default_program);
 
-    texture_cache->drop_unused();
-
     render_target.swap_buffers();
+
+    // Deleting unused textures only requires the GL context. This clean-up
+    // does not affect screen contents so can happen after swap_buffers...
+    texture_cache->drop_unused();
 }
 
 void mrg::Renderer::draw(mg::Renderable const& renderable,
@@ -370,12 +372,18 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
                       0.0f});
 
     viewport = rect;
+    update_gl_viewport();
+}
 
+void mrg::Renderer::update_gl_viewport()
+{
     /*
      * Letterboxing: Move the glViewport to add black bars in the case that
      * the logical viewport aspect ratio doesn't match the display aspect.
      * This keeps pixels square. Note "black"-bars are really glClearColor.
      */
+    render_target.ensure_current();
+
     auto transformed_viewport = display_transform *
                                 glm::vec4(viewport.size.width.as_int(),
                                           viewport.size.height.as_int(), 0, 1);
@@ -405,7 +413,12 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 
 void mrg::Renderer::set_output_transform(glm::mat2 const& t)
 {
-    display_transform = glm::mat4(t);
+    auto const new_display_transform = glm::mat4(t);
+    if (new_display_transform != display_transform)
+    {
+        display_transform = new_display_transform;
+        update_gl_viewport();
+    }
 }
 
 void mrg::Renderer::suspend()

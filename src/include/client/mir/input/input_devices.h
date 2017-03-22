@@ -38,7 +38,7 @@ public:
     MirInputConfig devices();
     void set_change_callback(std::function<void()> const& callback);
 private:
-    std::shared_ptr<client::SurfaceMap> const windows;
+    std::weak_ptr<client::SurfaceMap> const windows;
     std::mutex devices_access;
     MirInputConfig configuration;
     std::function<void()> callback;

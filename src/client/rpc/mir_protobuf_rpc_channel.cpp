@@ -34,7 +34,6 @@
 #include "mir/variable_length_array.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
-#include "mir/events/serialization.h"
 #include "mir/events/surface_placement_event.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
@@ -396,7 +395,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
             // But that's a job for later...
             try
             {
-                auto e = mev::deserialize_event(event.raw());
+                auto e = MirEvent::deserialize(event.raw());
                 if (e)
                 {
                     rpc_report->event_parsing_succeeded(*e);

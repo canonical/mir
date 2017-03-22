@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -13,20 +13,35 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/events/serialization.h"
-#include "mir/events/event_private.h"
+#ifndef MIR_RENDERER_GL_EGL_PLATFORM_H_
+#define MIR_RENDERER_GL_EGL_PLATFORM_H_
 
-namespace mev = mir::events;
+#include <EGL/egl.h>
 
-std::string mev::serialize_event(MirEvent const& event)
+namespace mir
 {
-    return MirEvent::serialize(&event);
+namespace renderer
+{
+namespace gl
+{
+
+class EGLPlatform
+{
+public:
+    virtual ~EGLPlatform() = default;
+    virtual EGLNativeDisplayType egl_native_display() const = 0;
+
+protected:
+    EGLPlatform() = default;
+    EGLPlatform(EGLPlatform const&) = delete;
+    EGLPlatform& operator=(EGLPlatform const&) = delete;
+};
+
+}
+}
 }
 
-mir::EventUPtr mev::deserialize_event(std::string const& raw)
-{
-    return MirEvent::deserialize(raw);
-}
+#endif /* MIR_RENDERER_GL_EGL_PLATFORM_H_ */

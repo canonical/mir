@@ -21,7 +21,6 @@
 #define MIR_GRAPHICS_PLATFORM_H_
 
 #include <boost/program_options/options_description.hpp>
-#include <EGL/egl.h>
 
 #include "mir/module_properties.h"
 #include "mir/module_deleter.h"
@@ -53,7 +52,15 @@ class DisplayConfigurationPolicy;
 class GraphicBufferAllocator;
 class GLConfig;
 class PlatformIpcOperations;
-class NestedContext;
+class PlatformAuthentication;
+class NativePlatform
+{
+protected:
+    NativePlatform() = default;
+    virtual ~NativePlatform() = default;
+    NativePlatform(NativePlatform const&) = delete;
+    NativePlatform& operator=(NativePlatform const&) = delete;
+};
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -65,19 +72,40 @@ class NestedContext;
  * Interface to platform specific support for graphics operations.
  * \ingroup platform_enablement
  */
-class Platform
+class RenderingPlatform
 {
 public:
-    Platform() = default;
-    Platform(const Platform& p) = delete;
-    Platform& operator=(const Platform& p) = delete;
+    RenderingPlatform() = default;
+    RenderingPlatform(RenderingPlatform const& p) = delete;
+    RenderingPlatform& operator=(RenderingPlatform const& p) = delete;
 
-    virtual ~Platform() = default;
-
+    virtual ~RenderingPlatform() = default;
     /**
      * Creates the buffer allocator subsystem.
      */
     virtual UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() = 0;
+
+    /**
+     * Creates an object capable of doing platform specific processing of buffers
+     * before they are sent or after they are received across IPC
+     */
+    virtual UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const = 0;
+
+    /**
+     * Access the native resource[s] used to connect to the rendering backend
+     * for this platform
+     */
+    virtual NativePlatform* native_platform() = 0;
+};
+
+class DisplayPlatform
+{
+public:
+    DisplayPlatform() = default;
+    DisplayPlatform(DisplayPlatform const& p) = delete;
+    DisplayPlatform& operator=(DisplayPlatform const& p) = delete;
+
+    virtual ~DisplayPlatform() = default;
 
     /**
      * Creates the display subsystem.
@@ -85,14 +113,17 @@ public:
     virtual UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) = 0;
+};
 
-    /**
-     * Creates an object capable of doing platform specific processing of buffers
-     * before they are sent or after they are recieved accross IPC
-     */
-    virtual UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const = 0;
+class Platform : public DisplayPlatform,
+                 public RenderingPlatform
+{
+public:
+    Platform() = default;
+    Platform(const Platform& p) = delete;
+    Platform& operator=(const Platform& p) = delete;
 
-    virtual EGLNativeDisplayType egl_native_display() const = 0;
+    virtual ~Platform() = default;
 };
 
 /**
@@ -116,6 +147,8 @@ enum PlatformPriority : uint32_t
                          */
 };
 
+//The host/guest platform concept is soon to be removed. Use CreateRenderingPlatform and
+//CreateDisplayPlatform instead
 typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
@@ -124,7 +157,7 @@ typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
 
 typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateGuestPlatform)(
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
 
 
 typedef void(*AddPlatformOptions)(
@@ -133,6 +166,16 @@ typedef void(*AddPlatformOptions)(
 typedef mir::graphics::PlatformPriority(*PlatformProbe)(mir::options::ProgramOption const& options);
 
 typedef mir::ModuleProperties const*(*DescribeModule)();
+
+typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatform)(
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mir::graphics::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& logger);
+
+typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderingPlatform)(
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
 }
 }
 
@@ -167,7 +210,7 @@ mir::UniqueModulePtr<mir::graphics::Platform> create_host_platform(
  * Function prototype used to return a new guest graphics platform. The guest graphics platform
  * exists alongside the host platform and do not output or control the physical displays
  *
- * \param [in] nested_context the object that contains resources needed from the host platform
+ * \param [in] platform_authentication the object that contains resources needed from the host platform
  * \param [in] report the object to use to report interesting events from the display subsystem
  *
  * This factory function needs to be implemented by each platform.
@@ -176,7 +219,7 @@ mir::UniqueModulePtr<mir::graphics::Platform> create_host_platform(
  */
 mir::UniqueModulePtr<mir::graphics::Platform> create_guest_platform(
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::graphics::NestedContext> const& nested_context);
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
 
 /**
  * Function prototype used to add platform specific options to the platform-independent server options.
@@ -196,6 +239,16 @@ void add_graphics_platform_options(
 mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& options);
 
 mir::ModuleProperties const* describe_graphics_module();
+
+mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mir::graphics::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& logger);
+
+mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
 
 #if defined(__clang__)
 #pragma clang diagnostic pop

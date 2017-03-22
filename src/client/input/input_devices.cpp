@@ -59,13 +59,15 @@ void mi::InputDevices::update_devices(std::string const& config_buffer)
         stored_callback = callback;
     }
 
-    windows->with_all_windows_do(
-        [&ids](MirWindow* window)
-        {
-            auto keymapper = window->get_keymapper();
-            for (auto const& id : ids)
-                keymapper->clear_keymap_for_device(id);
-        });
+    auto window_map = windows.lock();
+    if (window_map)
+        window_map->with_all_windows_do(
+            [&ids](MirWindow* window)
+            {
+                auto keymapper = window->get_keymapper();
+                for (auto const& id : ids)
+                    keymapper->clear_keymap_for_device(id);
+            });
 
     if (stored_callback)
         stored_callback();

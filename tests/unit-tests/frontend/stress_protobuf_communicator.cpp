@@ -66,7 +66,6 @@ struct StubProtobufClient
     mir::protobuf::SurfaceParameters surface_parameters;
     mir::protobuf::Surface surface;
     mir::protobuf::Void ignored;
-    mir::protobuf::Connection connection;
 
     void create_surface_done();
     void submit_buffer_done();
