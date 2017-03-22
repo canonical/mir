@@ -116,6 +116,7 @@ public:
     virtual MirPointerConfinementState confine_pointer_state() const = 0;
 
     virtual void placed_relative(geometry::Rectangle const& placement) = 0;
+    virtual void start_drag_and_drop(std::vector<uint8_t> const& handle) = 0;
 };
 }
 }

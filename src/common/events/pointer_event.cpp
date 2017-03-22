@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -16,9 +16,10 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include <boost/throw_exception.hpp>
-
 #include "mir/events/pointer_event.h"
+#include "mir_blob.h"
+
+#include <boost/throw_exception.hpp>
 
 MirPointerEvent::MirPointerEvent()
 {
@@ -131,4 +132,41 @@ MirPointerAction MirPointerEvent::action() const
 void MirPointerEvent::set_action(MirPointerAction action)
 {
     event.getInput().getPointer().setAction(static_cast<mir::capnp::PointerEvent::PointerAction>(action));
+}
+
+void MirPointerEvent::set_dnd_handle(std::vector<uint8_t> const& handle)
+{
+    event.getInput().getPointer().initDndHandle(handle.size());
+    event.getInput().getPointer().setDndHandle(::kj::ArrayPtr<uint8_t const>{&*begin(handle), &*end(handle)});
+}
+
+namespace
+{
+struct MyMirBlob : MirBlob
+{
+
+    size_t size() const override { return data_.size(); }
+    virtual void const* data() const override { return data_.data(); }
+
+    std::vector<uint8_t> data_;
+};
+}
+
+MirBlob* MirPointerEvent::dnd_handle() const
+{
+    auto const reader = event.asReader().getInput().getPointer();
+
+    if (!reader.hasDndHandle())
+        return nullptr;
+
+    auto const dnd_handle = reader.getDndHandle();
+
+    auto blob = std::make_unique<MyMirBlob>();
+    blob->data_.reserve(dnd_handle.size());
+
+    // Can't use std::copy() as the CapnP iterators don't provide an iterator category
+    for (auto p = dnd_handle.begin(); p != dnd_handle.end(); ++p)
+        blob->data_.push_back(*p);
+
+    return blob.release();
 }
