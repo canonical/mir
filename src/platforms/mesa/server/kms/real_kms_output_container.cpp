@@ -18,6 +18,7 @@
 
 #include "real_kms_output_container.h"
 #include "real_kms_output.h"
+#include "kms-utils/drm_mode_resources.h"
 
 namespace mgm = mir::graphics::mesa;
 
@@ -28,27 +29,34 @@ mgm::RealKMSOutputContainer::RealKMSOutputContainer(
 {
 }
 
-std::shared_ptr<mgm::KMSOutput>
-mgm::RealKMSOutputContainer::get_kms_output_for(uint32_t connector_id)
+void mgm::RealKMSOutputContainer::for_each_output(std::function<void(std::shared_ptr<KMSOutput> const&)> functor) const
 {
-    std::shared_ptr<KMSOutput> output;
-
-    auto output_iter = outputs.find(connector_id);
-    if (output_iter == outputs.end())
-    {
-        output = std::make_shared<RealKMSOutput>(drm_fd, connector_id, page_flipper);
-        outputs[connector_id] = output;
-    }
-    else
-    {
-        output = output_iter->second;
-    }
-
-    return output;
+    for(auto& output: outputs)
+        functor(output.second);
 }
 
-void mgm::RealKMSOutputContainer::for_each_output(std::function<void(KMSOutput&)> functor) const
+void mgm::RealKMSOutputContainer::update_from_hardware_state()
 {
-    for(auto& pair: outputs)
-        functor(*pair.second);
+    kms::DRMModeResources resources{drm_fd};
+
+    decltype(outputs) new_outputs;
+
+    for (auto&& connector : resources.connectors())
+    {
+        if (outputs.count(connector->connector_id))
+        {
+            new_outputs[connector->connector_id] = std::move(outputs[connector->connector_id]);
+            new_outputs[connector->connector_id]->refresh_hardware_state();
+        }
+        else
+        {
+            auto const id = connector->connector_id;
+            new_outputs[id] = std::make_shared<RealKMSOutput>(
+                drm_fd,
+                std::move(connector),
+                page_flipper);
+        }
+    }
+
+    outputs = new_outputs;
 }
