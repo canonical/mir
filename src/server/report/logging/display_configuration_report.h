@@ -65,7 +65,7 @@ public:
 private:
     void log_configuration(
         mir::logging::Severity severity,
-        std::shared_ptr<graphics::DisplayConfiguration const> const& configuration) const;
+        graphics::DisplayConfiguration const& configuration) const;
     std::shared_ptr<mir::logging::Logger> const logger;
 };
 }
