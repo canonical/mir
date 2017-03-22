@@ -94,7 +94,6 @@ mga::OverlayOptimization should_use_overlay_optimization(mo::Option const& optio
     else
         return mga::OverlayOptimization::enabled;
 }
-
 }
 
 mga::Platform::Platform(
