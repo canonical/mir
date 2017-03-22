@@ -1,5 +1,6 @@
-mir (0.26.2-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.26.2+17.04.20170322.1-0ubuntu1) zesty; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.26.2 (https://launchpad.net/mir/+milestone/0.26.2)
     - Bugs fixed:
       . EDID does not change when hotplugging a monitor (LP: #1660017)
@@ -23,7 +24,7 @@ mir (0.26.2-0ubuntu1) UNRELEASED; urgency=medium
         mir_buffer_get_buffer_package() (LP: #1673534)
       . Seg fault on detect_fd_leaks (LP: #1661498)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 20 Feb 2017 13:37:13 +0800
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 22 Mar 2017 04:54:19 +0000
 
 mir (0.26.1+17.04.20170209.1-0ubuntu1) zesty; urgency=medium
 
