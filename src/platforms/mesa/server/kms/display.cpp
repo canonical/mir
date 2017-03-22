@@ -30,6 +30,7 @@
 #include "mir/graphics/virtual_output.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_configuration_policy.h"
+#include "mir/graphics/transformation.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/renderer/gl/context.h"
 
@@ -404,12 +405,17 @@ void mgm::Display::configure_locked(
             }
             else
             {
-                uint32_t width = bounding_rect.size.width.as_uint32_t();
-                uint32_t height = bounding_rect.size.height.as_uint32_t();
-                if (orientation == mir_orientation_left || orientation == mir_orientation_right)
-                {
-                    std::swap(width, height);
-                }
+                // TODO in future outputs should emit transformation instead of
+                //      orientation
+                auto const transformation = mg::transformation(orientation);
+
+                glm::vec2 const logical_size{
+                    bounding_rect.size.width.as_uint32_t(),
+                    bounding_rect.size.height.as_uint32_t()};
+
+                auto const physical_size = transformation * logical_size;
+                uint32_t width = abs(physical_size.x);
+                uint32_t height = abs(physical_size.y);
 
                 auto surface = gbm->create_scanout_surface(width, height);
                 auto const raw_surface = surface.get();
@@ -430,7 +436,7 @@ void mgm::Display::configure_locked(
                         }
                     },
                     bounding_rect,
-                    orientation}};
+                    transformation}};
 
                 display_buffers_new.push_back(std::move(db));
             }

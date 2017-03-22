@@ -124,28 +124,21 @@ mgm::DisplayBuffer::DisplayBuffer(
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     GBMOutputSurface&& surface_gbm,
     geom::Rectangle const& area,
-    MirOrientation rot)
+    glm::mat2 const& transformation)
     : listener(listener),
       bypass_option(option),
       outputs(outputs),
       surface{std::move(surface_gbm)},
       area(area),
-      transform{mg::transformation(rot)},
+      transform{transformation},
       needs_set_crtc{false},
       page_flips_pending{false}
 {
-    uint32_t area_width = area.size.width.as_uint32_t();
-    uint32_t area_height = area.size.height.as_uint32_t();
-    if (rot == mir_orientation_left || rot == mir_orientation_right)
-    {
-        fb_width = area_height;
-        fb_height = area_width;
-    }
-    else
-    {
-        fb_width = area_width;
-        fb_height = area_height;
-    }
+    glm::vec2 const& logical_size{area.size.width.as_uint32_t(),
+                                  area.size.height.as_uint32_t()};
+    glm::vec2 physical_size = transformation * logical_size;
+    fb_width = abs(physical_size.x);
+    fb_height = abs(physical_size.y);
 
     listener->report_successful_setup_of_native_resources();
 

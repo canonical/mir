@@ -104,7 +104,7 @@ public:
                   std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                   GBMOutputSurface&& surface_gbm,
                   geometry::Rectangle const& area,
-                  MirOrientation rot);
+                  glm::mat2 const& transformation);
     ~DisplayBuffer();
 
     geometry::Rectangle view_area() const override;
