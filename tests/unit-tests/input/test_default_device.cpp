@@ -228,7 +228,7 @@ TEST_F(DefaultDevice, touchscreen_device_can_be_constructed_from_input_config)
     EXPECT_EQ(ts_config, dev.touchscreen_configuration().value());
 }
 
-TEST_F(DefaultDevice, device_config_can_be_querried_from_touchpad)
+TEST_F(DefaultDevice, device_config_can_be_queried_from_touchpad)
 {
     MirInputDeviceId const device_id{17};
     mi::DefaultDevice dev(device_id, queue, touchpad, mt::fake_shared(key_mapper), change_callback);
@@ -259,7 +259,7 @@ TEST_F(DefaultDevice, device_config_can_be_querried_from_touchpad)
     EXPECT_EQ(conf, dev.config());
 }
 
-TEST_F(DefaultDevice, device_config_can_be_querried_from_pointer_device)
+TEST_F(DefaultDevice, device_config_can_be_queried_from_pointer_device)
 {
     MirInputDeviceId const device_id{11};
     mi::DefaultDevice dev(device_id, queue, mouse, mt::fake_shared(key_mapper), change_callback);
@@ -279,7 +279,7 @@ TEST_F(DefaultDevice, device_config_can_be_querried_from_pointer_device)
     EXPECT_EQ(conf, dev.config());
 }
 
-TEST_F(DefaultDevice, device_config_can_be_querried_from_keyboard_device)
+TEST_F(DefaultDevice, device_config_can_be_queried_from_keyboard_device)
 {
     MirInputDeviceId const device_id{3};
     mi::DefaultDevice dev(device_id, queue, keyboard, mt::fake_shared(key_mapper), change_callback);
@@ -294,7 +294,7 @@ TEST_F(DefaultDevice, device_config_can_be_querried_from_keyboard_device)
     EXPECT_EQ(kbd_config, dev.keyboard_configuration().value());
 }
 
-TEST_F(DefaultDevice, device_config_can_be_querried_from_touchscreen)
+TEST_F(DefaultDevice, device_config_can_be_queried_from_touchscreen)
 {
     MirInputDeviceId const device_id{5};
     mi::DefaultDevice dev(device_id, queue, touchscreen, mt::fake_shared(key_mapper), change_callback);
