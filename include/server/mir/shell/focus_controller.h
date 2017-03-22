@@ -19,8 +19,10 @@
 #ifndef MIR_SHELL_FOCUS_CONTROLLER_H_
 #define MIR_SHELL_FOCUS_CONTROLLER_H_
 
+#include <stddef.h>
 #include <memory>
 #include <set>
+#include <vector>
 
 namespace mir
 {
@@ -53,6 +55,9 @@ public:
     virtual auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> = 0;
 
     virtual void raise(SurfaceSet const& surfaces) = 0;
+
+    virtual void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) = 0;
+    virtual void clear_drag_and_drop_handle() = 0;
 
 protected:
     FocusController() = default;

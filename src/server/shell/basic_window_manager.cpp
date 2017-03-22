@@ -135,6 +135,16 @@ void msh::BasicWindowManager::handle_raise_surface(
         policy->handle_raise_surface(session, surface);
 }
 
+void msh::BasicWindowManager::handle_request_drag_and_drop(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<scene::Surface> const& surface,
+    uint64_t timestamp)
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    if (timestamp >= last_input_event_timestamp)
+        policy->handle_request_drag_and_drop(session, surface);
+}
+
 int msh::BasicWindowManager::set_surface_attribute(
     std::shared_ptr<scene::Session> const& /*session*/,
     std::shared_ptr<scene::Surface> const& surface,
@@ -309,3 +319,14 @@ void msh::BasicWindowManager::update_event_timestamp(MirTouchEvent const* tev)
         }
     }
 }
+
+void mir::shell::BasicWindowManager::set_drag_and_drop_handle(std::vector<uint8_t> const& handle)
+{
+    focus_controller->set_drag_and_drop_handle(handle);
+}
+
+void mir::shell::BasicWindowManager::clear_drag_and_drop_handle()
+{
+    focus_controller->clear_drag_and_drop_handle();
+}
+

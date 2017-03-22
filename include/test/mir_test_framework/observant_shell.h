@@ -96,6 +96,14 @@ struct ObservantShell : mir::shell::Shell
         std::shared_ptr<mir::scene::Surface> const& window,
         uint64_t timestamp) override;
 
+    void request_drag_and_drop(
+        std::shared_ptr<mir::scene::Session> const& session,
+        std::shared_ptr<mir::scene::Surface> const& window,
+        uint64_t timestamp) override;
+
+    void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) override;
+    void clear_drag_and_drop_handle() override;
+
 private:
     std::shared_ptr<mir::shell::Shell> const wrapped;
     std::shared_ptr<mir::scene::SurfaceObserver> const surface_observer;

@@ -25,7 +25,7 @@
 #include "mir_toolkit/mir_presentation_chain.h"
 #include "mir_protobuf.pb.h"
 #include "buffer.h"
-#include <mutex>
+
 #include <memory>
 
 namespace mir
@@ -65,9 +65,6 @@ private:
     std::shared_ptr<AsyncBufferFactory> const mir_buffer_factory;
 
     BufferStreamConfiguration interval_config;
-
-    std::mutex mutex;
-    std::vector<std::unique_ptr<Buffer>> buffers;
 };
 }
 }

@@ -24,7 +24,7 @@ namespace mir
 {
 namespace graphics
 {
-class NestedContext;
+class PlatformAuthentication;
 namespace mesa
 {
 class DRMAuthentication;

@@ -45,7 +45,6 @@ class Renderable;
 /// classes) and controller (SurfaceController) elements of an MVC design.
 namespace scene
 {
-class InputRegistrar;
 class BasicSurface;
 class SceneReport;
 class RenderingTracker;
@@ -110,7 +109,6 @@ private:
 
     RecursiveReadWriteMutex mutable guard;
 
-    std::shared_ptr<InputRegistrar> const input_registrar;
     std::shared_ptr<SceneReport> const report;
 
     std::vector<std::shared_ptr<Surface>> surfaces;
