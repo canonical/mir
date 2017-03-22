@@ -49,6 +49,7 @@ add_library(
   real_kms_output_container.cpp
   egl_helper.h
   egl_helper.cpp
+  mutex.h
 )
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
