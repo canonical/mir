@@ -98,12 +98,16 @@ void mi::ExternalInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserv
 void mi::ExternalInputDeviceHub::for_each_input_device(std::function<void(Device const& device)> const& callback)
 {
     auto hub = data->hub.lock();
+    if (!hub)
+        return;
     hub->for_each_input_device(callback);
 }
 
 void mi::ExternalInputDeviceHub::for_each_mutable_input_device(std::function<void(Device& device)> const& callback)
 {
     auto hub = data->hub.lock();
+    if (!hub)
+        return;
     hub->for_each_mutable_input_device(callback);
 }
 
