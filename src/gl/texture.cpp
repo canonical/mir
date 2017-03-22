@@ -20,6 +20,18 @@
 
 namespace mgl = mir::gl;
 
+namespace
+{
+
+GLuint generate_id()
+{
+    GLuint id;
+    glGenTextures(1, &id);
+    return id;
+}
+
+} // namespace
+
 mgl::Texture::Texture() :
     id(generate_id())
 {
@@ -40,11 +52,4 @@ void mgl::Texture::bind() const
 mgl::Texture::~Texture()
 {
     glDeleteTextures(1, &id);
-}
-
-GLuint mgl::Texture::generate_id() const
-{
-    GLuint id;
-    glGenTextures(1, &id);
-    return id;
 }

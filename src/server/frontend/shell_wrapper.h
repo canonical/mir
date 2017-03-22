@@ -80,6 +80,11 @@ public:
         SurfaceId surface_id,
         uint64_t timestamp) override;
 
+    void request_drag_and_drop(
+        std::shared_ptr<Session> const& session,
+        SurfaceId surface_id,
+        uint64_t timestamp) override;
+
 protected:
     std::shared_ptr<Shell> const wrapped;
 };

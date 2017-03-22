@@ -24,6 +24,7 @@
 #include "real_kms_output_container.h"
 #include "real_kms_display_configuration.h"
 #include "display_helpers.h"
+#include "egl_helper.h"
 #include "platform_common.h"
 
 #include <atomic>
@@ -112,7 +113,7 @@ private:
     mir::udev::Monitor monitor;
     helpers::EGLHelper shared_egl;
     std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
-    mutable RealKMSOutputContainer output_container;
+    std::shared_ptr<KMSOutputContainer> const output_container;
     mutable RealKMSDisplayConfiguration current_display_configuration;
     mutable std::atomic<bool> dirty_configuration;
 

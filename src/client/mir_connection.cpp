@@ -17,6 +17,7 @@
  */
 
 #include "mir_connection.h"
+#include "drag_and_drop.h"
 #include "mir_surface.h"
 #include "mir_prompt_session.h"
 #include "mir_toolkit/extensions/graphics_module.h"
@@ -40,7 +41,6 @@
 #include "render_surface.h"
 #include "error_render_surface.h"
 #include "presentation_chain.h"
-#include "error_chain.h"
 #include "logging/perf_report.h"
 #include "lttng/perf_report.h"
 #include "buffer_factory.h"
@@ -1450,6 +1450,9 @@ void* MirConnection::request_interface(char const* name, int version)
         return &translation_ext.value();
     if (!strcmp(name, "mir_extension_graphics_module") && (version == 1) && graphics_module_extension.is_set())
         return &graphics_module_extension.value();
+
+    if (!strcmp(name, "mir_drag_and_drop") && (version == 1))
+        return const_cast<MirDragAndDropV1*>(mir::drag_and_drop::v1);
 
     return platform->request_interface(name, version);
 }

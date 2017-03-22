@@ -444,6 +444,11 @@ message RaiseRequest {
   required SurfaceId surface_id = 2;
 }
 
+message RequestAuthority {
+  required Cookie cookie = 1;
+  required SurfaceId surface_id = 2;
+}
+
 message InputDevices {
   repeated InputDeviceInfo device_info = 1;
 }
