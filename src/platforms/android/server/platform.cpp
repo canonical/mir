@@ -197,7 +197,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const& display_report,
-    std::shared_ptr<mg::NestedContext> const&)
+    std::shared_ptr<mg::PlatformAuthentication> const&)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     //TODO: actually allow disabling quirks for guest platform

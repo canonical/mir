@@ -37,7 +37,7 @@ class GuestPlatform : public graphics::Platform,
                       public mir::renderer::gl::EGLPlatform
 {
 public:
-    GuestPlatform(std::shared_ptr<NestedContext> const& /*nested_context*/);
+    GuestPlatform(std::shared_ptr<PlatformAuthentication> const& /*platform_authentication*/);
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;

@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/graphics/nested_context.h"
+#include "mir/graphics/platform_authentication.h"
 #include "src/platforms/mesa/server/kms/guest_platform.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/platform_ipc_operations.h"
@@ -29,7 +29,7 @@
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/mock_buffer_ipc_message.h"
 #include "mir/test/doubles/fd_matcher.h"
-#include "mir/test/doubles/mock_nested_context.h"
+#include "mir/test/doubles/mock_platform_authentication.h"
 #include "mir/test/doubles/mock_mesa_auth_extensions.h"
 
 #include <gtest/gtest.h>
@@ -58,11 +58,11 @@ public:
     MesaGuestPlatformTest()
     {
         int fake_fd = 4939;
-        ON_CALL(mock_nested_context, platform_fd_items())
+        ON_CALL(mock_platform_authentication, platform_fd_items())
             .WillByDefault(Return(std::vector<int>{mock_drm.fake_drm.fd()}));
-        ON_CALL(mock_nested_context, set_gbm_extension())
+        ON_CALL(mock_platform_authentication, set_gbm_extension())
             .WillByDefault(Return(mir::optional_value<std::shared_ptr<mg::SetGbmExtension>>{mock_gbm_ext}));
-        ON_CALL(mock_nested_context, auth_extension())
+        ON_CALL(mock_platform_authentication, auth_extension())
             .WillByDefault(Return(mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>>{mock_ext}));
         ON_CALL(*mock_ext, auth_fd())
             .WillByDefault(Return(mir::Fd{mir::IntOwnedFd{fake_fd}}));
@@ -71,32 +71,32 @@ public:
 protected:
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
-    ::testing::NiceMock<mtd::MockNestedContext> mock_nested_context;
+    ::testing::NiceMock<mtd::MockPlatformAuthentication> mock_platform_authentication;
     std::shared_ptr<mtd::MockMesaExt> mock_ext = std::make_shared<mtd::MockMesaExt>();
     std::shared_ptr<MockSetGbmExt> mock_gbm_ext = std::make_shared<MockSetGbmExt>();
 };
 
 }
 
-TEST_F(MesaGuestPlatformTest, auth_fd_is_delegated_to_nested_context)
+TEST_F(MesaGuestPlatformTest, auth_fd_is_delegated_to_platform_authentication)
 {
     int const auth_fd{13};
 
-    EXPECT_CALL(mock_nested_context, set_gbm_extension());
-    EXPECT_CALL(mock_nested_context, auth_extension())
+    EXPECT_CALL(mock_platform_authentication, set_gbm_extension());
+    EXPECT_CALL(mock_platform_authentication, auth_extension())
         .Times(2);
     EXPECT_CALL(*mock_ext, auth_fd())
         .Times(2)
         .WillRepeatedly(Return(mir::Fd{mir::IntOwnedFd{auth_fd}}));
 
-    mgm::GuestPlatform native(mt::fake_shared(mock_nested_context));
+    mgm::GuestPlatform native(mt::fake_shared(mock_platform_authentication));
     auto ipc_ops = native.make_ipc_operations();
     ipc_ops->connection_ipc_package();
 }
 
 TEST_F(MesaGuestPlatformTest, sets_gbm_device_during_initialization)
 {
-    EXPECT_CALL(mock_nested_context, set_gbm_extension());
+    EXPECT_CALL(mock_platform_authentication, set_gbm_extension());
     EXPECT_CALL(*mock_gbm_ext, set_gbm_device(mock_gbm.fake_gbm.device));
-    mgm::GuestPlatform native(mt::fake_shared(mock_nested_context));
+    mgm::GuestPlatform native(mt::fake_shared(mock_platform_authentication));
 }
