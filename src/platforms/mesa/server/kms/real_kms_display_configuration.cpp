@@ -171,7 +171,7 @@ void mgm::RealKMSDisplayConfiguration::update()
             int id = new_outputs.size() + 1;
             mir_config.id = DisplayConfigurationOutputId{id};
 
-            new_outputs.push_back(std::make_pair(mir_config, output));
+            new_outputs.emplace_back(mir_config, output);
         });
 
     outputs = new_outputs;
