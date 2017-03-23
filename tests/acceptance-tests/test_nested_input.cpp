@@ -584,13 +584,13 @@ TEST_F(NestedInput, pressed_keys_on_vt_switch_are_forgotten)
     ExposedSurface client_to_nested(nested_mir.new_connection(), "with_keymap");
 
     ASSERT_TRUE(devices_ready.wait_for(10s));
-    nested_mir.get_surface("with_keymap")->set_keymap(MirInputDeviceId{0}, "pc105", "de", "", "");
-
     EXPECT_CALL(client_to_nested, handle_keymap())
         .WillOnce(mt::WakeUp(&keymap_received));
     EXPECT_CALL(client_to_nested, handle_input(mt::KeyOfScanCode(KEY_RIGHTALT)));
     EXPECT_CALL(client_to_nested, handle_input(mt::KeyOfScanCode(KEY_RIGHTCTRL)))
         .WillOnce(mt::WakeUp(&initial_keys_received));
+
+    nested_mir.get_surface("with_keymap")->set_keymap(MirInputDeviceId{0}, "pc105", "de", "", "");
 
     ASSERT_TRUE(client_to_nested.ready_to_accept_events.wait_for(10s));
     EXPECT_TRUE(keymap_received.wait_for(10s));
