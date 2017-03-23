@@ -444,9 +444,15 @@ message RaiseRequest {
   required SurfaceId surface_id = 2;
 }
 
-message RequestAuthority {
-  required Cookie cookie = 1;
+enum RequestOperation {
+  UNKNOWN = 0;
+  START_DRAG_AND_DROP = 1;
+}
+
+message RequestWithAuthority {
+  required Cookie authority = 1;
   required SurfaceId surface_id = 2;
+  required RequestOperation operation = 3;
 }
 
 message InputDevices {

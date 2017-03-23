@@ -151,8 +151,8 @@ public:
         mir::protobuf::RaiseRequest const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) = 0;
-    virtual void request_drag_and_drop(
-        mir::protobuf::RequestAuthority const* request,
+    virtual void request_operation(
+        mir::protobuf::RequestWithAuthority const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) = 0;
     virtual void apply_input_configuration(

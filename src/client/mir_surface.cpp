@@ -609,17 +609,18 @@ void MirSurface::raise_surface(MirCookie const* cookie)
 
 void MirSurface::request_drag_and_drop(MirCookie const* cookie)
 {
-    mp::RequestAuthority authority;
+    mp::RequestWithAuthority request;
+    request.set_operation(mp::RequestOperation::START_DRAG_AND_DROP);
 
     std::unique_lock<decltype(mutex)> lock(mutex);
-    authority.mutable_surface_id()->set_value(surface->id().value());
+    request.mutable_surface_id()->set_value(surface->id().value());
 
-    auto const event_cookie = authority.mutable_cookie();
+    auto const event_authority = request.mutable_authority();
 
-    event_cookie->set_cookie(cookie->cookie().data(), cookie->size());
+    event_authority->set_cookie(cookie->cookie().data(), cookie->size());
 
-    server->request_drag_and_drop(
-        &authority,
+    server->request_operation(
+        &request,
         void_response.get(),
         google::protobuf::NewCallback(google::protobuf::DoNothing));
 }
