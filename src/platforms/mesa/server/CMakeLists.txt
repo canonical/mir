@@ -5,11 +5,6 @@ if (MIR_BUILD_PLATFORM_MESA_X11)
   add_subdirectory(x11/)
 endif()
 
-if (GBM_VERSION VERSION_LESS 11)
-  message(WARNING "Hybrid support requires libgbm from Mesa 11.0 or greater. Hybrid setups will not work")
-  add_definitions(-DMIR_NO_HYBRID_SUPPORT)
-endif()
-
 include_directories(
     ${server_common_include_dirs}
     ${DRM_INCLUDE_DIRS}
