@@ -28,13 +28,11 @@
 #include "sync_fence.h"
 #include "native_buffer.h"
 #include "native_window_report.h"
-#include "null_authentication.h"
 
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/display_report.h"
-#include "mir/graphics/platform_authentication.h"
 #include "mir/gl/default_program_factory.h"
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
@@ -116,19 +114,19 @@ mir::UniqueModulePtr<mg::Display> mga::Platform::create_display(
     return display->create_display(policy, gl_config);
 }
 
-mir::UniqueModulePtr<mg::PlatformAuthentication> mga::Platform::authentication()
-{
-    return display->authentication();
-}
-
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operations() const
 {
     return rendering->make_ipc_operations();
 }
 
-mg::NativePlatform* mga::Platform::native_platform()
+mg::NativeRenderingPlatform* mga::Platform::native_rendering_platform()
 {
-    return rendering->native_platform();
+    return rendering->native_rendering_platform();
+}
+
+mg::NativeDisplayPlatform* mga::Platform::native_display_platform()
+{
+    return display->native_display_platform();
 }
 
 mga::GrallocPlatform::GrallocPlatform(
@@ -180,7 +178,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::GrallocPlatform::make_ipc_o
     return mir::make_module_ptr<mga::IpcOperations>();
 }
 
-mg::NativePlatform* mga::GrallocPlatform::native_platform()
+mg::NativeRenderingPlatform* mga::GrallocPlatform::native_rendering_platform()
 {
     return this;
 }
@@ -215,9 +213,9 @@ mir::UniqueModulePtr<mg::Display> mga::HwcPlatform::create_display(
             display_buffer_builder, program_factory, gl_config, display_report, native_window_report, overlay_option);
 }
 
-mir::UniqueModulePtr<mg::PlatformAuthentication> mga::HwcPlatform::authentication()
+mg::NativeDisplayPlatform* mga::HwcPlatform::native_display_platform()
 {
-    return mir::make_module_ptr<mg::NullAuthentication>();
+    return nullptr;
 }
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
@@ -263,7 +261,7 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
 
     auto const buffer_allocator = std::make_shared<mga::GraphicBufferAllocator>(sync_factory, quirks);
     //TODO: remove nullptr parameter once platform classes are sorted.
-    //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
+    //      a guest platform cannot create a display anyways, so it doesnt need a display builder
     return mir::make_module_ptr<mga::Platform>(
         nullptr, std::make_shared<mga::GrallocPlatform>(buffer_allocator));
 }

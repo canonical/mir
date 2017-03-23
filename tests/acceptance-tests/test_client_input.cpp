@@ -1578,7 +1578,7 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_can_be_mapped_to_second_output
 
     mt::Signal touchscreen_ready;
     fake_touch_screen->on_new_configuration_do(
-        [&touchscreen_ready, second_output](mi::InputDevice const& dev)
+        [&touchscreen_ready](mi::InputDevice const& dev)
         {
             auto ts = dev.get_touchscreen_settings();
             if (ts.is_set() && ts.value().output_id == second_output)
@@ -1650,7 +1650,7 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_mapped_to_deactivated_output_i
 
     mt::Signal touchscreen_ready;
     fake_touch_screen->on_new_configuration_do(
-        [&touchscreen_ready, second_output](mi::InputDevice const& dev)
+        [&touchscreen_ready](mi::InputDevice const& dev)
         {
             auto ts = dev.get_touchscreen_settings();
             if (ts.is_set()

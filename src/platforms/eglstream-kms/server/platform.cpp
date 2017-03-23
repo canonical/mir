@@ -21,7 +21,6 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
-#include "null_authentication.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
@@ -114,6 +113,11 @@ mir::UniqueModulePtr<mg::Display> mge::Platform::create_display(
     return mir::make_module_ptr<mge::Display>(drm_node, display, configuration_policy, *gl_config);
 }
 
+mg::NativeDisplayPlatform* mge::Platform::native_display_platform()
+{
+    return nullptr;
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operations() const
 {
     class NoIPCOperations : public mg::PlatformIpcOperations
@@ -162,7 +166,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
     return mir::make_module_ptr<NoIPCOperations>();
 }
 
-mg::NativePlatform* mge::Platform::native_platform()
+mg::NativeRenderingPlatform* mge::Platform::native_rendering_platform()
 {
     return this;
 }
@@ -170,9 +174,4 @@ mg::NativePlatform* mge::Platform::native_platform()
 EGLNativeDisplayType mge::Platform::egl_native_display() const
 {
     return display;
-}
-
-mir::UniqueModulePtr<mg::PlatformAuthentication> mge::Platform::authentication()
-{
-    return mir::make_module_ptr<mg::NullAuthentication>();
 }

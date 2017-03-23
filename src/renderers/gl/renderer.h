@@ -123,6 +123,8 @@ protected:
                       Renderer::Program const& prog) const;
 
 private:
+    void update_gl_viewport();
+
     std::unique_ptr<mir::gl::TextureCache> const texture_cache;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords;
