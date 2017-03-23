@@ -322,10 +322,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &DisplayServer::configure_buffer_stream, invocation);
         }
-        else if ("raise_surface" == invocation.method_name())
-        {
-            invoke(this, display_server.get(), &DisplayServer::raise_surface, invocation);
-        }
         else if ("translate_surface_to_screen" == invocation.method_name())
         {
             try

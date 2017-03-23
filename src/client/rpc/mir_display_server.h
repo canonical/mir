@@ -151,10 +151,6 @@ public:
         mir::protobuf::StreamConfiguration const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
-    void raise_surface(
-        mir::protobuf::RaiseRequest const* request,
-        mir::protobuf::Void* response,
-        google::protobuf::Closure* done) override;
     void request_operation(
         mir::protobuf::RequestWithAuthority const* request,
         mir::protobuf::Void* response,
