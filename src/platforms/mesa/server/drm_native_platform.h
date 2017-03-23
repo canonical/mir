@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_PLATFORM_AUTHENTICATION_H_
-#define MIR_GRAPHICS_MESA_PLATFORM_AUTHENTICATION_H_
+#ifndef MIR_GRAPHICS_MESA_DRM_NATIVE_PLATFORM_H_
+#define MIR_GRAPHICS_MESA_DRM_NATIVE_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_authentication.h"
@@ -32,11 +32,11 @@ namespace helpers
 {
 class DRMHelper;
 }
-class PlatformAuthentication : public graphics::NativeDisplayPlatform,
-                               public graphics::PlatformAuthentication
+class DRMNativePlatform : public graphics::NativeDisplayPlatform,
+                          public graphics::PlatformAuthentication
 {
 public:
-    PlatformAuthentication(helpers::DRMHelper&);
+    DRMNativePlatform(helpers::DRMHelper&);
     mir::optional_value<std::shared_ptr<graphics::MesaAuthExtension>> auth_extension() override;
     mir::optional_value<std::shared_ptr<graphics::SetGbmExtension>> set_gbm_extension() override;
     PlatformOperationMessage platform_operation(
@@ -49,4 +49,4 @@ private:
 }
 }
 
-#endif /* MIR_GRAPHICS_MESA_PLATFORM_AUTHENTICATION_H_ */
+#endif /* MIR_GRAPHICS_MESA_DRM_NATIVE_PLATFORM_H_ */

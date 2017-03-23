@@ -53,10 +53,10 @@ void set_guest_gbm_device(mg::PlatformAuthentication& platform_authentication, g
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir failed to set the gbm device."));
 }
 
-struct NestedAuth : mg::NativeDisplayPlatform,
-                    mg::PlatformAuthentication
+struct AuthenticationWrapper : mg::NativeDisplayPlatform,
+                               mg::PlatformAuthentication
 {
-    NestedAuth(std::shared_ptr<PlatformAuthentication> const& auth) :
+    AuthenticationWrapper(std::shared_ptr<PlatformAuthentication> const& auth) :
         auth(auth)
     {
     }
@@ -87,7 +87,7 @@ struct NestedAuth : mg::NativeDisplayPlatform,
 mgm::GuestPlatform::GuestPlatform(
     std::shared_ptr<mg::PlatformAuthentication> const& platform_authentication) :
     platform_authentication{platform_authentication},
-    auth(std::make_shared<NestedAuth>(platform_authentication))
+    auth(std::make_shared<AuthenticationWrapper>(platform_authentication))
 {
     auto ext = platform_authentication->auth_extension();
     if (!ext.is_set())
@@ -128,41 +128,3 @@ EGLNativeDisplayType mgm::GuestPlatform::egl_native_display() const
 {
     return gbm.device;
 }
-
-//    UniqueModulePtr<PlatformAuthentication> authentication() override;
-//=======
-//>>>>>>> MERGE-SOURCE
-/*
-mir::UniqueModulePtr<mg::PlatformAuthentication> mgm::GuestPlatform::authentication()
-{
-    struct NestedAuth : PlatformAuthentication
-    {
-        NestedAuth(std::shared_ptr<PlatformAuthentication> const& auth) :
-            auth(auth)
-        {
-        }
-
-        mir::optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() override
-        {
-            return auth->auth_extension();
-        }
-
-        mir::optional_value<std::shared_ptr<SetGbmExtension>> set_gbm_extension() override
-        {
-            return auth->set_gbm_extension();
-        }
-
-        mg::PlatformOperationMessage platform_operation(
-            unsigned int op, PlatformOperationMessage const& msg) override
-        {
-            return auth->platform_operation(op, msg);
-        }
-        mir::optional_value<mir::Fd> drm_fd() override
-        {
-            return auth->drm_fd();
-        }
-        std::shared_ptr<PlatformAuthentication> const auth;
-    };
-    return mir::make_module_ptr<NestedAuth>(platform_authentication);
-}
-*/

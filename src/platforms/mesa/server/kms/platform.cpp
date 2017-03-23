@@ -22,7 +22,6 @@
 #include "display.h"
 #include "linux_virtual_terminal.h"
 #include "ipc_operations.h"
-#include "platform_authentication.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/platform_authentication.h"
@@ -63,8 +62,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                 if (auto const drm = weak_drm.lock())
                     try { drm->drop_master(); } catch (...) {}
             }));
-
-    auth = std::make_unique<mgm::PlatformAuthentication>(*drm);
+    native_platform = std::make_unique<mgm::DRMNativePlatform>(*drm);
 }
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator()
@@ -80,7 +78,7 @@ mir::UniqueModulePtr<mg::Display> mgm::Platform::create_display(
 
 mg::NativeDisplayPlatform* mgm::Platform::native_display_platform()
 {
-    return auth.get();
+    return native_platform.get();
 }
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const

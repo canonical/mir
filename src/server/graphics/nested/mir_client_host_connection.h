@@ -25,6 +25,7 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/cursor_image.h"
+#include "mir/graphics/platform.h"
 #include "mir/recursive_read_write_mutex.h"
 
 #include <string>

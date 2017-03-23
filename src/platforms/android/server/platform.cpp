@@ -33,7 +33,6 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/display_report.h"
-#include "mir/graphics/platform_authentication.h"
 #include "mir/gl/default_program_factory.h"
 #include "mir/options/option.h"
 #include "mir/options/configuration.h"
