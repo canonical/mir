@@ -157,6 +157,11 @@ mir::UniqueModulePtr<mg::Display> mga::Platform::create_display(
             display_buffer_builder, program_factory, gl_config, display_report, native_window_report, overlay_option);
 }
 
+mg::NativeDisplayPlatform* mga::Platform::native_display_platform()
+{
+    return nullptr;
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operations() const
 {
     return mir::make_module_ptr<mga::IpcOperations>();

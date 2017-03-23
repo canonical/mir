@@ -74,6 +74,11 @@ mir::UniqueModulePtr<mg::Display> mgm::Platform::create_display(
     return make_module_ptr<mgm::Display>(drm, gbm, vt, bypass_option_, initial_conf_policy, gl_config, listener);
 }
 
+mg::NativeDisplayPlatform* mgm::Platform::native_display_platform()
+{
+    return nullptr;
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
 {
     return make_module_ptr<mgm::IpcOperations>(drm);

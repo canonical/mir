@@ -113,6 +113,11 @@ mir::UniqueModulePtr<mg::Display> mge::Platform::create_display(
     return mir::make_module_ptr<mge::Display>(drm_node, display, configuration_policy, *gl_config);
 }
 
+mg::NativeDisplayPlatform* mge::Platform::native_display_platform()
+{
+    return nullptr;
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operations() const
 {
     class NoIPCOperations : public mg::PlatformIpcOperations

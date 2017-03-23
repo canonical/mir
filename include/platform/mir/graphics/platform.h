@@ -98,6 +98,15 @@ public:
     virtual NativeRenderingPlatform* native_rendering_platform() = 0;
 };
 
+class NativeDisplayPlatform
+{
+protected:
+    NativeDisplayPlatform() = default;
+    virtual ~NativeDisplayPlatform() = default;
+    NativeDisplayPlatform(NativeDisplayPlatform const&) = delete;
+    NativeDisplayPlatform& operator=(NativeDisplayPlatform const&) = delete;
+};
+
 class DisplayPlatform
 {
 public:
@@ -113,6 +122,11 @@ public:
     virtual UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) = 0;
+
+    /**
+     * Access the platform-specific resource[s] from the display.
+     */
+    virtual NativeDisplayPlatform* native_display_platform() = 0;
 };
 
 class Platform : public DisplayPlatform,

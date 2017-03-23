@@ -138,6 +138,11 @@ mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
         passthrough_option);
 }
 
+mg::NativeDisplayPlatform* mgn::Platform::native_display_platform()
+{
+    return nullptr;
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operations() const
 {
     return mir::make_module_ptr<mgn::IpcOperations>(guest_platform->make_ipc_operations());
