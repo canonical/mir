@@ -43,16 +43,14 @@ namespace mi = mir::input;
 
 struct mi::ExternalInputDeviceHub::Internal : InputDeviceObserver
 {
-    Internal(std::shared_ptr<mi::InputDeviceHub> const& hub,
-             std::shared_ptr<ServerActionQueue> const& queue) :
-        hub{hub}, observer_queue{queue}
+    Internal(std::shared_ptr<ServerActionQueue> const& queue) :
+        observer_queue{queue}
     {}
     void device_added(std::shared_ptr<Device> const& device) override;
     void device_changed(std::shared_ptr<Device> const& device) override;
     void device_removed(std::shared_ptr<Device> const& device) override;
     void changes_complete() override;
 
-    std::weak_ptr<InputDeviceHub> hub;
     std::shared_ptr<ServerActionQueue> const observer_queue;
     ThreadSafeList<std::shared_ptr<InputDeviceObserver>> observers;
     std::vector<std::shared_ptr<Device>> devices_added;
@@ -62,7 +60,7 @@ struct mi::ExternalInputDeviceHub::Internal : InputDeviceObserver
 };
 
 mi::ExternalInputDeviceHub::ExternalInputDeviceHub(std::shared_ptr<mi::InputDeviceHub> const& hub, std::shared_ptr<mir::ServerActionQueue> const& queue)
-    : data{std::make_shared<mi::ExternalInputDeviceHub::Internal>(hub, queue)}, hub{hub}
+    : data{std::make_shared<mi::ExternalInputDeviceHub::Internal>(queue)}, hub{hub}
 {
     hub->add_observer(data);
 }
@@ -88,7 +86,8 @@ void mi::ExternalInputDeviceHub::add_observer(std::shared_ptr<InputDeviceObserve
 void mi::ExternalInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserver> const& obs)
 {
     auto observer = obs.lock();
-    data->observers.remove(observer);
+    if (observer)
+        data->observers.remove(observer);
 }
 
 void mi::ExternalInputDeviceHub::for_each_input_device(std::function<void(Device const& device)> const& callback)
