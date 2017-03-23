@@ -144,10 +144,9 @@ void mgm::RealKMSDisplayConfiguration::update()
 {
     decltype(outputs) new_outputs;
 
-    int counter = 0;
     displays->update_from_hardware_state();
     displays->for_each_output(
-        [this, &new_outputs, &counter](auto const& output) mutable
+        [this, &new_outputs](auto const& output) mutable
         {
             DisplayConfigurationOutput mir_config;
 
@@ -169,8 +168,8 @@ void mgm::RealKMSDisplayConfiguration::update()
             }
 
             output->update_from_hardware_state(mir_config);
-            counter++;
-            mir_config.id = DisplayConfigurationOutputId{counter};
+            int id = new_outputs.size() + 1;
+            mir_config.id = DisplayConfigurationOutputId{id};
 
             new_outputs.push_back(std::make_pair(mir_config, output));
         });
