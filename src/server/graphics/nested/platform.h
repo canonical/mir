@@ -37,7 +37,7 @@ namespace nested
 {
 class HostConnection;
 class Platform : public graphics::Platform,
-                 public graphics::NativePlatform,
+                 public graphics::NativeRenderingPlatform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
@@ -51,10 +51,11 @@ public:
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
+    NativeDisplayPlatform* native_display_platform() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
-    NativePlatform* native_platform() override;
+    NativeRenderingPlatform* native_rendering_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
-    mir::UniqueModulePtr<PlatformAuthentication> authentication() override;
+
 private:
     std::shared_ptr<mir::SharedLibrary> const library; 
     std::shared_ptr<HostConnection> const connection; 

@@ -77,12 +77,17 @@ mir::UniqueModulePtr<mg::Display> mgm::Platform::create_display(
     return make_module_ptr<mgm::Display>(drm, gbm, vt, bypass_option_, initial_conf_policy, gl_config, listener);
 }
 
+mg::NativeDisplayPlatform* mgm::Platform::native_display_platform()
+{
+    return nullptr;
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
 {
     return make_module_ptr<mgm::IpcOperations>(drm);
 }
 
-mg::NativePlatform* mgm::Platform::native_platform()
+mg::NativeRenderingPlatform* mgm::Platform::native_rendering_platform()
 {
     return this;
 }
@@ -97,7 +102,9 @@ mgm::BypassOption mgm::Platform::bypass_option() const
     return bypass_option_;
 }
 
+#if 0
 mir::UniqueModulePtr<mg::PlatformAuthentication> mgm::Platform::authentication()
 {
     return make_module_ptr<mgm::PlatformAuthentication>(*drm);
 }
+#endif

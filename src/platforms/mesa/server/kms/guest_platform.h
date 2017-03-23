@@ -35,7 +35,7 @@ namespace mesa
 class InternalNativeDisplay; 
 
 class GuestPlatform : public graphics::Platform,
-                      public graphics::NativePlatform,
+                      public graphics::NativeRenderingPlatform,
                       public mir::renderer::gl::EGLPlatform
 {
 public:
@@ -47,9 +47,9 @@ public:
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
-    UniqueModulePtr<PlatformAuthentication> authentication() override;
+    NativeDisplayPlatform* native_display_platform() override;
 
-    NativePlatform* native_platform() override;
+    NativeRenderingPlatform* native_rendering_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 
 private:

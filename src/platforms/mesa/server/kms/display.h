@@ -113,7 +113,7 @@ private:
     mir::udev::Monitor monitor;
     helpers::EGLHelper shared_egl;
     std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
-    mutable RealKMSOutputContainer output_container;
+    std::shared_ptr<KMSOutputContainer> const output_container;
     mutable RealKMSDisplayConfiguration current_display_configuration;
     mutable std::atomic<bool> dirty_configuration;
 

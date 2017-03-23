@@ -60,7 +60,12 @@ mir::UniqueModulePtr<mg::Display> mgx::GuestPlatform::create_display(
     BOOST_THROW_EXCEPTION(std::runtime_error("Guest platform cannot create display\n"));
 }
 
-mg::NativePlatform* mgx::GuestPlatform::native_platform()
+mg::NativeDisplayPlatform* mgx::GuestPlatform::native_display_platform()
+{
+    return nullptr;
+}
+
+mg::NativeRenderingPlatform* mgx::GuestPlatform::native_rendering_platform()
 {
     return this;
 }
@@ -70,7 +75,9 @@ EGLNativeDisplayType mgx::GuestPlatform::egl_native_display() const
     return gbm.device;
 }
 
+#if 0
 mir::UniqueModulePtr<mg::PlatformAuthentication> mgx::GuestPlatform::authentication()
 {
     return make_module_ptr<mgm::PlatformAuthentication>(*drm);
 }
+#endif

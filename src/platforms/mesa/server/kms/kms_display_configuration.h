@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_MESA_KMS_DISPLAY_CONFIGURATION_H_
 
 #include "mir/graphics/display_configuration.h"
+#include <memory>
 
 namespace mir
 {
@@ -27,15 +28,17 @@ namespace graphics
 {
 namespace mesa
 {
+class KMSOutput;
 
 class DRMModeResources;
 
 class KMSDisplayConfiguration : public DisplayConfiguration
 {
 public:
-    virtual uint32_t get_kms_connector_id(DisplayConfigurationOutputId id) const = 0;
-    virtual size_t get_kms_mode_index(DisplayConfigurationOutputId id,
-                                      size_t conf_mode_index) const = 0;
+    virtual std::shared_ptr<KMSOutput> get_output_for(DisplayConfigurationOutputId id) const = 0;
+    virtual size_t get_kms_mode_index(
+        DisplayConfigurationOutputId id,
+        size_t conf_mode_index) const = 0;
     virtual void update() = 0;
 };
 
