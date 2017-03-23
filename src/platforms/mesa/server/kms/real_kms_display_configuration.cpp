@@ -98,7 +98,7 @@ std::unique_ptr<mg::DisplayConfiguration> mgm::RealKMSDisplayConfiguration::clon
 std::shared_ptr<mgm::KMSOutput> mgm::RealKMSDisplayConfiguration::get_output_for(
     DisplayConfigurationOutputId id) const
 {
-    return outputs.at(id.as_value()).second;
+    return outputs.at(id.as_value() - 1).second;
 }
 
 size_t mgm::RealKMSDisplayConfiguration::get_kms_mode_index(
@@ -109,7 +109,7 @@ size_t mgm::RealKMSDisplayConfiguration::get_kms_mode_index(
     {
         BOOST_THROW_EXCEPTION(std::invalid_argument("Request for KMS mode index of invalid output ID"));
     }
-    if (conf_mode_index > outputs[id.as_value()].first.modes.size())
+    if (conf_mode_index > outputs[id.as_value() - 1].first.modes.size())
     {
         BOOST_THROW_EXCEPTION(std::invalid_argument("Request for out-of-bounds KMS mode index"));
     }
@@ -163,8 +163,8 @@ void mgm::RealKMSDisplayConfiguration::update()
             }
 
             output->update_from_hardware_state(mir_config);
-            mir_config.id = DisplayConfigurationOutputId{counter};
             counter++;
+            mir_config.id = DisplayConfigurationOutputId{counter};
 
             new_outputs.push_back(std::make_pair(mir_config, output));
         });
