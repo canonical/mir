@@ -22,6 +22,7 @@
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
+#include "platform_authentication.h"
 #include "mir/geometry/size.h"
 #include "mir/renderer/gl/egl_platform.h"
 
@@ -64,6 +65,7 @@ private:
     std::shared_ptr<DisplayReport> const report;
     mesa::helpers::GBMHelper gbm;
     mir::geometry::Size const size;
+    std::unique_ptr<graphics::mesa::PlatformAuthentication> auth;
 };
 
 }

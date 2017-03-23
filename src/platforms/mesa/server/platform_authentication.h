@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_MESA_PLATFORM_AUTHENTICATION_H_
 #define MIR_GRAPHICS_MESA_PLATFORM_AUTHENTICATION_H_
 
+#include "mir/graphics/platform.h"
 #include "mir/graphics/platform_authentication.h"
 
 namespace mir
@@ -31,7 +32,8 @@ namespace helpers
 {
 class DRMHelper;
 }
-class PlatformAuthentication : public graphics::PlatformAuthentication
+class PlatformAuthentication : public graphics::NativeDisplayPlatform,
+                               public graphics::PlatformAuthentication
 {
 public:
     PlatformAuthentication(helpers::DRMHelper&);

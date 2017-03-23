@@ -24,7 +24,6 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/null_platform_ipc_operations.h"
-#include "mir/test/doubles/mock_platform_authentication.h"
 
 namespace mir
 {
@@ -61,7 +60,6 @@ class NullPlatform : public graphics::Platform
     {
         return nullptr;
     }
-
 };
 }
 }

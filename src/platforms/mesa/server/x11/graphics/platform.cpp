@@ -41,6 +41,7 @@ mgx::Platform::Platform(std::shared_ptr<::Display> const& conn,
 
     drm->setup(udev);
     gbm.setup(*drm);
+    auth = std::make_unique<mgm::PlatformAuthentication>(*drm);
 }
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_allocator()
@@ -58,7 +59,7 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
 
 mg::NativeDisplayPlatform* mgx::Platform::native_display_platform()
 {
-    return nullptr;
+    return auth.get();
 }
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
@@ -75,10 +76,3 @@ EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
     return eglGetDisplay(x11_connection.get());
 }
-
-#if 0
-mir::UniqueModulePtr<mg::PlatformAuthentication> mgx::Platform::authentication()
-{
-    return make_module_ptr<mgm::PlatformAuthentication>(*drm);
-}
-#endif

@@ -20,6 +20,8 @@
 #define MIR_GRAPHICS_MESA_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/platform_authentication.h"
+#include "platform_authentication.h"
 #include "mir/renderer/gl/egl_platform.h"
 #include "platform_common.h"
 #include "display_helpers.h"
@@ -33,7 +35,7 @@ namespace mesa
 {
 
 class VirtualTerminal;
-class InternalNativeDisplay;
+class PlatformAuthentication;
 class Platform : public graphics::Platform,
                  public graphics::NativeRenderingPlatform,
                  public mir::renderer::gl::EGLPlatform
@@ -66,6 +68,7 @@ public:
     BypassOption bypass_option() const;
 private:
     BypassOption const bypass_option_;
+    std::unique_ptr<PlatformAuthentication> auth;
 };
 
 }

@@ -64,6 +64,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                     try { drm->drop_master(); } catch (...) {}
             }));
 
+    auth = std::make_unique<mgm::PlatformAuthentication>(*drm);
 }
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator()
@@ -79,7 +80,7 @@ mir::UniqueModulePtr<mg::Display> mgm::Platform::create_display(
 
 mg::NativeDisplayPlatform* mgm::Platform::native_display_platform()
 {
-    return nullptr;
+    return auth.get();
 }
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
@@ -101,10 +102,3 @@ mgm::BypassOption mgm::Platform::bypass_option() const
 {
     return bypass_option_;
 }
-
-#if 0
-mir::UniqueModulePtr<mg::PlatformAuthentication> mgm::Platform::authentication()
-{
-    return make_module_ptr<mgm::PlatformAuthentication>(*drm);
-}
-#endif
