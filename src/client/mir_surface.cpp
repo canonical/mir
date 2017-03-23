@@ -600,7 +600,7 @@ void MirSurface::request_drag_and_drop(MirCookie const* cookie)
     request_operation(cookie, mp::RequestOperation::START_DRAG_AND_DROP);
 }
 
-void MirSurface::request_operation(MirCookie const* cookie, mir::protobuf::RequestOperation const& operation) const
+void MirSurface::request_operation(MirCookie const* cookie, mir::protobuf::RequestOperation operation) const
 {
     mir::protobuf::RequestWithAuthority request;
     request.set_operation(operation);
