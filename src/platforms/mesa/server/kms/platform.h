@@ -35,7 +35,7 @@ namespace mesa
 class VirtualTerminal;
 class InternalNativeDisplay;
 class Platform : public graphics::Platform,
-                 public graphics::NativePlatform,
+                 public graphics::NativeRenderingPlatform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
@@ -52,7 +52,7 @@ public:
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
-    NativePlatform* native_platform() override;
+    NativeRenderingPlatform* native_rendering_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 
     std::shared_ptr<mir::udev::Context> udev;

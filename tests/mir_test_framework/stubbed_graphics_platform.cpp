@@ -304,9 +304,9 @@ struct GuestPlatformAdapter : mg::Platform
         return adaptee->create_display(initial_conf_policy, gl_config);
     }
 
-    mg::NativePlatform* native_platform() override
+    mg::NativeRenderingPlatform* native_rendering_platform() override
     {
-        return adaptee->native_platform();
+        return adaptee->native_rendering_platform();
     }
 
     std::shared_ptr<mg::PlatformAuthentication> const context;

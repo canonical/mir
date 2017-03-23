@@ -36,7 +36,7 @@ namespace X
 {
 
 class Platform : public graphics::Platform,
-                 public graphics::NativePlatform,
+                 public graphics::NativeRenderingPlatform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
@@ -54,7 +54,7 @@ public:
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
-    NativePlatform* native_platform() override;
+    NativeRenderingPlatform* native_rendering_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 private:
     std::shared_ptr<::Display> const x11_connection;

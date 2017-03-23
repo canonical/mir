@@ -51,7 +51,7 @@ class NullPlatform : public graphics::Platform
         return mir::make_module_ptr<NullPlatformIpcOperations>();
     }
 
-    graphics::NativePlatform* native_platform() override
+    graphics::NativeRenderingPlatform* native_rendering_platform() override
     {
         return nullptr;
     }

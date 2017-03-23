@@ -53,13 +53,13 @@ class GraphicBufferAllocator;
 class GLConfig;
 class PlatformIpcOperations;
 class PlatformAuthentication;
-class NativePlatform
+class NativeRenderingPlatform
 {
 protected:
-    NativePlatform() = default;
-    virtual ~NativePlatform() = default;
-    NativePlatform(NativePlatform const&) = delete;
-    NativePlatform& operator=(NativePlatform const&) = delete;
+    NativeRenderingPlatform() = default;
+    virtual ~NativeRenderingPlatform() = default;
+    NativeRenderingPlatform(NativeRenderingPlatform const&) = delete;
+    NativeRenderingPlatform& operator=(NativeRenderingPlatform const&) = delete;
 };
 
 /**
@@ -95,7 +95,7 @@ public:
      * Access the native resource[s] used to connect to the rendering backend
      * for this platform
      */
-    virtual NativePlatform* native_platform() = 0;
+    virtual NativeRenderingPlatform* native_rendering_platform() = 0;
 };
 
 class DisplayPlatform

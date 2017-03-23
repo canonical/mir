@@ -161,7 +161,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
     return mir::make_module_ptr<NoIPCOperations>();
 }
 
-mg::NativePlatform* mge::Platform::native_platform()
+mg::NativeRenderingPlatform* mge::Platform::native_rendering_platform()
 {
     return this;
 }

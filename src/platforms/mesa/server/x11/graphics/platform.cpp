@@ -60,7 +60,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operatio
     return make_module_ptr<mg::mesa::IpcOperations>(drm);
 }
 
-mg::NativePlatform* mgx::Platform::native_platform()
+mg::NativeRenderingPlatform* mgx::Platform::native_rendering_platform()
 {
     return this;
 }

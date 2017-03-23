@@ -79,7 +79,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operatio
     return make_module_ptr<mgm::IpcOperations>(drm);
 }
 
-mg::NativePlatform* mgm::Platform::native_platform()
+mg::NativeRenderingPlatform* mgm::Platform::native_rendering_platform()
 {
     return this;
 }

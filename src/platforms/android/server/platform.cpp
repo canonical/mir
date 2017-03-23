@@ -162,7 +162,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operatio
     return mir::make_module_ptr<mga::IpcOperations>();
 }
 
-mg::NativePlatform* mga::Platform::native_platform()
+mg::NativeRenderingPlatform* mga::Platform::native_rendering_platform()
 {
     return this;
 }
@@ -210,7 +210,7 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
         sync_factory = std::make_shared<mga::NullCommandStreamSyncFactory>();
 
     //TODO: remove nullptr parameter once platform classes are sorted.
-    //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
+    //      mg::NativeRenderingPlatform cannot create a display anyways, so it doesnt need a  display builder
     auto const buffer_allocator = std::make_shared<mga::GraphicBufferAllocator>(sync_factory, quirks);
     return mir::make_module_ptr<mga::Platform>(
         buffer_allocator, nullptr, display_report,
