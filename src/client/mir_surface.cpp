@@ -592,34 +592,28 @@ MirWaitHandle* MirSurface::set_preferred_orientation(MirOrientationMode mode)
 
 void MirSurface::raise_surface(MirCookie const* cookie)
 {
-    mp::RaiseRequest raise_request;
-
-    std::unique_lock<decltype(mutex)> lock(mutex);
-    raise_request.mutable_surface_id()->set_value(surface->id().value());
-
-    auto const event_cookie = raise_request.mutable_cookie();
-
-    event_cookie->set_cookie(cookie->cookie().data(), cookie->size());
-
-    server->raise_surface(
-        &raise_request,
-        void_response.get(),
-        google::protobuf::NewCallback(google::protobuf::DoNothing));
+    request_operation(cookie, mp::RequestOperation::MAKE_ACTIVE);
 }
 
 void MirSurface::request_drag_and_drop(MirCookie const* cookie)
 {
-    mp::RequestAuthority authority;
+    request_operation(cookie, mp::RequestOperation::START_DRAG_AND_DROP);
+}
+
+void MirSurface::request_operation(MirCookie const* cookie, mir::protobuf::RequestOperation operation) const
+{
+    mir::protobuf::RequestWithAuthority request;
+    request.set_operation(operation);
 
     std::unique_lock<decltype(mutex)> lock(mutex);
-    authority.mutable_surface_id()->set_value(surface->id().value());
+    request.mutable_surface_id()->set_value(surface->id().value());
 
-    auto const event_cookie = authority.mutable_cookie();
+    auto const event_authority = request.mutable_authority();
 
-    event_cookie->set_cookie(cookie->cookie().data(), cookie->size());
+    event_authority->set_cookie(cookie->cookie().data(), cookie->size());
 
-    server->request_drag_and_drop(
-        &authority,
+    server->request_operation(
+        &request,
         void_response.get(),
         google::protobuf::NewCallback(google::protobuf::DoNothing));
 }
