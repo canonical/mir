@@ -168,8 +168,7 @@ void mgm::RealKMSDisplayConfiguration::update()
             }
 
             output->update_from_hardware_state(mir_config);
-            int id = new_outputs.size() + 1;
-            mir_config.id = DisplayConfigurationOutputId{id};
+            mir_config.id = DisplayConfigurationOutputId{int(new_outputs.size() + 1)};
 
             new_outputs.emplace_back(mir_config, output);
         });
