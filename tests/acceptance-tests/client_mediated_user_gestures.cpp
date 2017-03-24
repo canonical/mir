@@ -140,6 +140,9 @@ struct ClientMediatedUserGestures : mir_test_framework::ConnectedClientWithAWind
         mir_test_framework::ConnectedClientWithAWindow::TearDown();
     }
 
+    auto user_initiates_gesture() -> Cookie;
+
+private:
     void center_mouse();
     void paint_window();
     void set_window_event_handler(std::function<void(MirEvent const* event)> const& handler);
@@ -229,4 +232,43 @@ void ClientMediatedUserGestures::center_mouse()
 
     reset_window_event_handler();
 }
+
+auto ClientMediatedUserGestures::user_initiates_gesture() -> Cookie
+{
+    Cookie cookie;
+    Signal have_cookie;
+
+    set_window_event_handler([&](MirEvent const* event)
+        {
+            if (mir_event_get_type(event) != mir_event_type_input)
+                return;
+
+            auto const input_event = mir_event_get_input_event(event);
+
+            if (mir_input_event_get_type(input_event) != mir_input_event_type_pointer)
+                return;
+
+            auto const pointer_event = mir_input_event_get_pointer_event(input_event);
+
+            if (mir_pointer_event_action(pointer_event) != mir_pointer_action_button_down)
+                return;
+
+            cookie = Cookie{mir_input_event_get_cookie(input_event)};
+            have_cookie.raise();
+        });
+
+    start_dragging_mouse();
+
+    EXPECT_THAT(have_cookie.wait_for(receive_event_timeout), Eq(true));
+
+    reset_window_event_handler();
+    return cookie;
+}
+}
+
+TEST_F(ClientMediatedUserGestures, when_user_initiates_gesture_client_receives_cookie)
+{
+    auto const cookie = user_initiates_gesture();
+
+    EXPECT_THAT(cookie.get(), NotNull());
 }
