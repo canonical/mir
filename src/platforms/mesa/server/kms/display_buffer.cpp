@@ -199,9 +199,8 @@ bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
             auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(bypass_buffer->native_buffer_handle());
             if (!native)
                 BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
-            auto const fb_size = surface.size();
             if (native->flags & mir_buffer_flag_can_scanout &&
-                bypass_buffer->size() == fb_size)
+                bypass_buffer->size() == surface.size())
             {
                 if (auto bufobj = outputs.front()->fb_for(native->bo))
                 {
