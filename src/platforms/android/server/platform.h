@@ -39,7 +39,7 @@ class CommandStreamSyncFactory;
 class NativeWindowReport;
 
 class Platform : public graphics::Platform,
-                 public graphics::NativePlatform,
+                 public graphics::NativeRenderingPlatform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
@@ -56,10 +56,10 @@ public:
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
+    NativeDisplayPlatform* native_display_platform() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
-    NativePlatform* native_platform() override;
+    NativeRenderingPlatform* native_rendering_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
-    UniqueModulePtr<PlatformAuthentication> authentication() override;
 
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;

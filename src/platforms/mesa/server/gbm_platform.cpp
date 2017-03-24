@@ -77,7 +77,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::GBMPlatform::make_ipc_opera
     return make_module_ptr<mg::mesa::IpcOperations>(auth);
 }
 
-mg::NativePlatform* mgm::GBMPlatform::native_platform()
+mg::NativeRenderingPlatform* mgm::GBMPlatform::native_rendering_platform()
 {
     return this;
 }

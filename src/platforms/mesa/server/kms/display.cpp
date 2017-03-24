@@ -93,9 +93,9 @@ mgm::Display::Display(std::shared_ptr<helpers::DRMHelper> const& drm,
       listener(listener),
       monitor(mir::udev::Context()),
       shared_egl{*gl_config},
-      output_container{drm->fd,
-                       std::make_shared<KMSPageFlipper>(drm->fd, listener)},
-      current_display_configuration{drm->fd},
+      output_container{std::make_shared<RealKMSOutputContainer>(drm->fd,
+                       std::make_shared<KMSPageFlipper>(drm->fd, listener))},
+      current_display_configuration{output_container},
       dirty_configuration{false},
       bypass_option(bypass_option),
       gl_config{gl_config}
@@ -261,7 +261,7 @@ auto mgm::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
         try
         {
             locked_cursor = std::make_shared<Cursor>(gbm->device,
-                              output_container,
+                              *output_container,
                               std::make_shared<KMSCurrentConfiguration>(*this));
         }
         catch (std::runtime_error const&)
@@ -287,8 +287,7 @@ void mgm::Display::clear_connected_unused_outputs()
         if (conf_output.connected &&
             (!conf_output.used || (conf_output.power_mode != mir_power_mode_on)))
         {
-            uint32_t const connector_id = current_display_configuration.get_kms_connector_id(conf_output.id);
-            auto kms_output = output_container.get_kms_output_for(connector_id);
+            auto kms_output = current_display_configuration.get_output_for(conf_output.id);
 
             kms_output->clear_crtc();
             kms_output->set_power_mode(conf_output.power_mode);
@@ -327,7 +326,8 @@ bool mgm::Display::apply_if_configuration_preserves_display_buffers(
 
 mg::Frame mgm::Display::last_frame_on(unsigned output_id) const
 {
-    auto output = output_container.get_kms_output_for(output_id);
+    auto output = current_display_configuration.get_output_for(
+        DisplayConfigurationOutputId{static_cast<int>(output_id)});
     return output->last_frame();
 }
 
@@ -359,8 +359,7 @@ void mgm::Display::configure_locked(
         kms_conf.for_each_output(
             [&](DisplayConfigurationOutput const& conf_output)
             {
-                uint32_t const connector_id = current_display_configuration.get_kms_connector_id(conf_output.id);
-                auto kms_output = output_container.get_kms_output_for(connector_id);
+                auto kms_output = current_display_configuration.get_output_for(conf_output.id);
                 kms_output->clear_cursor();
                 kms_output->reset();
             });
@@ -380,8 +379,7 @@ void mgm::Display::configure_locked(
             group.for_each_output(
                 [&](DisplayConfigurationOutput const& conf_output)
                 {
-                    uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
-                    auto kms_output = output_container.get_kms_output_for(connector_id);
+                    auto kms_output = current_display_configuration.get_output_for(conf_output.id);
 
                     auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
                                                                   conf_output.current_mode_index);

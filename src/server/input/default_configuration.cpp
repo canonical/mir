@@ -301,7 +301,12 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
 
 std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_device_hub()
 {
-    return the_default_input_device_hub();
+    return input_device_hub(
+        [this]()
+        {
+            return std::make_shared<mi::ExternalInputDeviceHub>(the_default_input_device_hub(),
+               the_main_loop());
+        });
 }
 
 std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_default_input_device_hub()
@@ -314,7 +319,6 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
            auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
                the_seat(),
                the_input_reading_multiplexer(),
-               the_main_loop(),
                the_cookie_authority(),
                the_key_mapper(),
                the_server_status_listener());
@@ -359,7 +363,7 @@ mir::DefaultServerConfiguration::the_input_configuration_changer()
     return input_configuration_changer(
         [this]()
         {
-            return std::make_shared<mi::ConfigChanger>(the_input_manager(), the_input_device_hub(), the_session_container(), the_session_event_handler_register());
+            return std::make_shared<mi::ConfigChanger>(the_input_manager(), the_default_input_device_hub(), the_session_container(), the_session_event_handler_register());
         }
         );
 }

@@ -21,7 +21,7 @@ add_library(
   software_buffer.cpp
   gbm_platform.cpp
   nested_authentication.cpp
-  platform_authentication.cpp
+  drm_native_platform.cpp
 )
 
 target_link_libraries(

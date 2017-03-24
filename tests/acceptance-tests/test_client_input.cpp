@@ -343,12 +343,13 @@ struct TestClientInput : mtf::HeadlessInProcessServer
                     devices_available.raise();
             });
 
-        server.the_input_device_hub()->add_observer(counter);
+        auto hub = server.the_input_device_hub();
+        hub->add_observer(counter);
 
         devices_available.wait_for(5s);
         ASSERT_THAT(counter->count_devices, Eq(expected_number_of_input_devices));
 
-        server.the_input_device_hub()->remove_observer(counter);
+        hub->remove_observer(counter);
     }
 
     MirInputDevice const* get_device_with_capabilities(MirInputConfig const* config, MirInputDeviceCapabilities caps)
@@ -1578,7 +1579,7 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_can_be_mapped_to_second_output
 
     mt::Signal touchscreen_ready;
     fake_touch_screen->on_new_configuration_do(
-        [&touchscreen_ready, second_output](mi::InputDevice const& dev)
+        [&touchscreen_ready](mi::InputDevice const& dev)
         {
             auto ts = dev.get_touchscreen_settings();
             if (ts.is_set() && ts.value().output_id == second_output)
@@ -1650,7 +1651,7 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_mapped_to_deactivated_output_i
 
     mt::Signal touchscreen_ready;
     fake_touch_screen->on_new_configuration_do(
-        [&touchscreen_ready, second_output](mi::InputDevice const& dev)
+        [&touchscreen_ready](mi::InputDevice const& dev)
         {
             auto ts = dev.get_touchscreen_settings();
             if (ts.is_set()

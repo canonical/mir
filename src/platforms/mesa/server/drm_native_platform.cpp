@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "platform_authentication.h"
+#include "drm_native_platform.h"
 #include "display_helpers.h"
 #include "mir/graphics/platform_operation_message.h"
 #include <boost/throw_exception.hpp>
@@ -24,12 +24,12 @@
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 
-mgm::PlatformAuthentication::PlatformAuthentication(mgm::helpers::DRMHelper& drm) :
+mgm::DRMNativePlatform::DRMNativePlatform(mgm::helpers::DRMHelper& drm) :
     drm(drm)
 {
 }
 
-mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> mgm::PlatformAuthentication::auth_extension()
+mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> mgm::DRMNativePlatform::auth_extension()
 {
     class DRMAuth : public MesaAuthExtension
     {
@@ -62,18 +62,18 @@ mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> mgm::PlatformAuthent
     return {std::make_shared<DRMAuth>(drm)};
 }
 
-mir::optional_value<std::shared_ptr<mg::SetGbmExtension>> mgm::PlatformAuthentication::set_gbm_extension()
+mir::optional_value<std::shared_ptr<mg::SetGbmExtension>> mgm::DRMNativePlatform::set_gbm_extension()
 {
     return {};
 }
 
-mg::PlatformOperationMessage mgm::PlatformAuthentication::platform_operation(
+mg::PlatformOperationMessage mgm::DRMNativePlatform::platform_operation(
     unsigned int, mg::PlatformOperationMessage const&)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error("platform_operation deprecated"));
 }
 
-mir::optional_value<mir::Fd> mgm::PlatformAuthentication::drm_fd()
+mir::optional_value<mir::Fd> mgm::DRMNativePlatform::drm_fd()
 {
     return {mir::Fd(IntOwnedFd{drm.fd})};
 }

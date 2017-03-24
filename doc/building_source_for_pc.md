@@ -22,7 +22,7 @@ to get them is to use the packaging build dependencies:
 
 Then, in the project directory:
 
-    $ sudo mk-build-deps --install --tool "apt-get -y" --build-dep debian/control
+    $ sudo mk-build-deps -i
 
 
 Building Mir
