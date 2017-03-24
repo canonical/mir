@@ -309,13 +309,6 @@ MirWaitHandle* MirSurface::request_persistent_id(MirWindowIdCallback callback, v
     return &persistent_id_wait_handle;
 }
 
-/* todo: all these conversion functions are a bit of a kludge, probably
-         better to have a more developed MirPixelFormat that can handle this */
-MirPixelFormat MirSurface::convert_ipc_pf_to_geometry(gp::int32 pf) const
-{
-    return static_cast<MirPixelFormat>(pf);
-}
-
 MirWaitHandle* MirSurface::configure_cursor(MirCursorConfiguration const* cursor)
 {
     mp::CursorSetting setting;
