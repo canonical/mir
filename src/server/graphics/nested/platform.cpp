@@ -132,14 +132,14 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::NestedBufferPlatform::make_
 
 EGLNativeDisplayType mgn::NestedBufferPlatform::egl_native_display() const
 {
-    if (auto a = dynamic_cast<mir::renderer::gl::EGLPlatform*>(rendering_platform->native_platform()))
+    if (auto a = dynamic_cast<mir::renderer::gl::EGLPlatform*>(rendering_platform->native_rendering_platform()))
         return a->egl_native_display();
     return EGL_NO_DISPLAY;
 }
 
-mg::NativePlatform* mgn::NestedBufferPlatform::native_platform()
+mg::NativeRenderingPlatform* mgn::NestedBufferPlatform::native_rendering_platform()
 {
-    return rendering_platform->native_platform();
+    return rendering_platform->native_rendering_platform();
 }
 
 mgn::NestedDisplayPlatform::NestedDisplayPlatform(
@@ -164,6 +164,11 @@ mir::UniqueModulePtr<mg::Display> mgn::NestedDisplayPlatform::create_display(
         passthrough_option);
 }
 
+mg::NativeDisplayPlatform* mgn::NestedDisplayPlatform::native_display_platform()
+{
+    return connection.get();
+}
+
 mgn::Platform::Platform(
     std::unique_ptr<mgn::NestedBufferPlatform> buffer_platform,
     std::unique_ptr<mgn::NestedDisplayPlatform> display_platform) :
@@ -184,54 +189,17 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_al
     return buffer_platform->create_buffer_allocator();
 }
 
+mg::NativeDisplayPlatform* mgn::Platform::native_display_platform()
+{
+    return display_platform->native_display_platform();
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operations() const
 {
     return buffer_platform->make_ipc_operations();
 }
 
-EGLNativeDisplayType mgn::Platform::egl_native_display() const
+mg::NativeRenderingPlatform* mgn::Platform::native_rendering_platform()
 {
-    return buffer_platform->egl_native_display();
-}
-
-mg::NativePlatform* mgn::Platform::native_platform()
-{
-    return buffer_platform->native_platform();
-}
-
-mir::UniqueModulePtr<mg::PlatformAuthentication> mgn::Platform::authentication()
-{
-    return display_platform->authentication();
-}
-
-mir::UniqueModulePtr<mg::PlatformAuthentication> mgn::NestedDisplayPlatform::authentication()
-{
-    class WrappingAuthentication : public mg::PlatformAuthentication
-    {
-    public:
-        WrappingAuthentication(std::shared_ptr<mg::PlatformAuthentication> const& auth) :
-            wrapped(auth)
-        {
-        }
-        mir::optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() override
-        {
-            return wrapped->auth_extension();
-        }
-        mir::optional_value<std::shared_ptr<SetGbmExtension>> set_gbm_extension() override
-        {
-            return wrapped->set_gbm_extension();
-        }
-        mg::PlatformOperationMessage platform_operation(
-            unsigned int op, PlatformOperationMessage const& request) override
-        {
-            return wrapped->platform_operation(op, request);
-        }
-        mir::optional_value<mir::Fd> drm_fd() override
-        {
-            return wrapped->drm_fd();
-        }
-    private:
-        std::shared_ptr<mg::PlatformAuthentication> const wrapped;
-    };
-    return mir::make_module_ptr<WrappingAuthentication>(connection);
+    return buffer_platform->native_rendering_platform();
 }

@@ -54,7 +54,6 @@ target_link_libraries(
 
   mirsharedandroid-static
   mirplatform
-  server_platform_common
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
   ${LIBHARDWARE_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}

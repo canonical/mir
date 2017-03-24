@@ -48,7 +48,7 @@ public:
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
-    UniqueModulePtr<PlatformAuthentication> authentication() override;
+    NativeDisplayPlatform* native_display_platform() override;
 
 private:
     std::shared_ptr<mir::SharedLibrary> const library; 
@@ -59,7 +59,7 @@ private:
 };
 
 class NestedBufferPlatform : public graphics::RenderingPlatform,
-                             public graphics::NativePlatform,
+                             public graphics::NativeRenderingPlatform,
                              public mir::renderer::gl::EGLPlatform
 {
 public:
@@ -71,7 +71,7 @@ public:
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
-    NativePlatform* native_platform() override;
+    NativeRenderingPlatform* native_rendering_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 private:
     std::shared_ptr<mir::SharedLibrary> const library; 
@@ -82,9 +82,7 @@ private:
     PassthroughOption const passthrough_option;
 };
 
-class Platform : public graphics::Platform,
-                 public graphics::NativePlatform,
-                 public mir::renderer::gl::EGLPlatform
+class Platform : public graphics::Platform
 {
 public:
     Platform(
@@ -93,11 +91,11 @@ public:
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
+    NativeDisplayPlatform* native_display_platform() override;
+
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
-    NativePlatform* native_platform() override;
-    EGLNativeDisplayType egl_native_display() const override;
-    mir::UniqueModulePtr<PlatformAuthentication> authentication() override;
+    NativeRenderingPlatform* native_rendering_platform() override;
 private:
     std::unique_ptr<NestedBufferPlatform> const buffer_platform;
     std::unique_ptr<NestedDisplayPlatform> const display_platform;
