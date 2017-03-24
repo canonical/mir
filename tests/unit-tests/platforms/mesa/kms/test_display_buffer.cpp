@@ -360,7 +360,7 @@ TEST_F(MesaDisplayBufferTest, fullscreen_software_buffer_not_used_as_gbm_bo)
 
 TEST_F(MesaDisplayBufferTest, transformation_not_implemented_internally)
 {
-    auto const rotate_left{transformation(mir_orientation_left)};
+    glm::mat2 const rotate_left = transformation(mir_orientation_left);
 
     graphics::mesa::DisplayBuffer db(
         graphics::mesa::BypassOption::allowed,
