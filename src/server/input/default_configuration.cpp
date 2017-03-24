@@ -150,7 +150,8 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
             std::chrono::milliseconds const key_repeat_delay{50};
 
             auto const options = the_options();
-            auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
+            auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt) &&
+                !options->is_set(options::host_socket_opt);
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
                 the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_authority(),
@@ -323,7 +324,7 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
                the_key_mapper(),
                the_server_status_listener());
 
-           if (key_repeater && !the_options()->is_set(options::host_socket_opt))
+           if (key_repeater)
                key_repeater->set_input_device_hub(hub);
            return hub;
        });
