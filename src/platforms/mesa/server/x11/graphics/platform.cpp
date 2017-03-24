@@ -55,12 +55,17 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
                                          report);
 }
 
+mg::NativeDisplayPlatform* mgx::Platform::native_display_platform()
+{
+    return nullptr;
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
 {
     return make_module_ptr<mg::mesa::IpcOperations>(drm);
 }
 
-mg::NativePlatform* mgx::Platform::native_platform()
+mg::NativeRenderingPlatform* mgx::Platform::native_rendering_platform()
 {
     return this;
 }
