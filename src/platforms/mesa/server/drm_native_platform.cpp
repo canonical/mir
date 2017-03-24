@@ -77,3 +77,12 @@ mir::optional_value<mir::Fd> mgm::DRMNativePlatform::drm_fd()
 {
     return {mir::Fd(IntOwnedFd{drm.fd})};
 }
+
+mgm::DRMNativePlatformAuthFactory::DRMNativePlatformAuthFactory(helpers::DRMHelper& drm) : drm(drm)
+{
+}
+
+mir::UniqueModulePtr<mg::PlatformAuthentication> mgm::DRMNativePlatformAuthFactory::create_platform_authentication()
+{
+    return make_module_ptr<mgm::DRMNativePlatform>(drm); 
+}
