@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_NESTED_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/platform_authentication.h"
 #include "mir/renderer/gl/egl_platform.h"
 #include "passthrough_option.h"
 #include <memory>
@@ -37,7 +38,9 @@ namespace nested
 {
 class HostConnection;
 
-class NestedDisplayPlatform : public graphics::DisplayPlatform
+class NestedDisplayPlatform : public graphics::DisplayPlatform,
+                              public graphics::NativeDisplayPlatform,
+                              public graphics::PlatformAuthenticationFactory
 {
 public:
     NestedDisplayPlatform(
@@ -49,6 +52,7 @@ public:
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
     NativeDisplayPlatform* native_display_platform() override;
+    UniqueModulePtr<PlatformAuthentication> create_platform_authentication() override;
 
 private:
     std::shared_ptr<mir::SharedLibrary> const library; 

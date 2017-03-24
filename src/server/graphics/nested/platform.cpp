@@ -166,7 +166,40 @@ mir::UniqueModulePtr<mg::Display> mgn::NestedDisplayPlatform::create_display(
 
 mg::NativeDisplayPlatform* mgn::NestedDisplayPlatform::native_display_platform()
 {
-    return connection.get();
+    return this;
+}
+
+mir::UniqueModulePtr<mg::PlatformAuthentication> mgn::NestedDisplayPlatform::create_platform_authentication()
+{
+    struct AuthenticationWrapper : mg::PlatformAuthentication
+    {
+        AuthenticationWrapper(std::shared_ptr<PlatformAuthentication> const& auth) :
+            auth(auth)
+        {
+        }
+
+        mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> auth_extension() override
+        {
+            return auth->auth_extension();
+        }
+
+        mir::optional_value<std::shared_ptr<mg::SetGbmExtension>> set_gbm_extension() override
+        {
+            return auth->set_gbm_extension();
+        }
+
+        mg::PlatformOperationMessage platform_operation(
+            unsigned int op, mg::PlatformOperationMessage const& msg) override
+        {
+            return auth->platform_operation(op, msg);
+        }
+        mir::optional_value<mir::Fd> drm_fd() override
+        {
+            return auth->drm_fd();
+        }
+        std::shared_ptr<mg::PlatformAuthentication> const auth;
+    };
+    return make_module_ptr<AuthenticationWrapper>(connection);
 }
 
 mgn::Platform::Platform(
