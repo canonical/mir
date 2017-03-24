@@ -25,6 +25,7 @@
 #include "mir/input/input_sink.h"
 #include "mir/input/seat.h"
 #include "mir/input/input_device_hub.h"
+#include "mir/input/input_device_observer.h"
 #include "mir/input/input_device_info.h"
 #include "mir/input/mir_input_config.h"
 #include "mir/thread_safe_list.h"
@@ -57,13 +58,32 @@ class InputDeviceObserver;
 class DefaultDevice;
 class Seat;
 class KeyMapper;
+class DefaultInputDeviceHub;
 
-class DefaultInputDeviceHub : public InputDeviceRegistry, public InputDeviceHub
+struct ExternalInputDeviceHub : InputDeviceHub
+{
+    ExternalInputDeviceHub(std::shared_ptr<InputDeviceHub> const& actual_hub,
+                           std::shared_ptr<ServerActionQueue> const& observer_queue);
+    ~ExternalInputDeviceHub();
+
+    void add_observer(std::shared_ptr<InputDeviceObserver> const&) override;
+    void remove_observer(std::weak_ptr<InputDeviceObserver> const&) override;
+    void for_each_input_device(std::function<void(Device const& device)> const& callback) override;
+    void for_each_mutable_input_device(std::function<void(Device& device)> const& callback) override;
+
+private:
+    struct Internal;
+    std::shared_ptr<Internal> data;
+    std::shared_ptr<InputDeviceHub> hub;
+};
+
+class DefaultInputDeviceHub :
+    public InputDeviceRegistry,
+    public InputDeviceHub
 {
 public:
     DefaultInputDeviceHub(std::shared_ptr<Seat> const& seat,
                           std::shared_ptr<dispatch::MultiplexingDispatchable> const& input_multiplexer,
-                          std::shared_ptr<ServerActionQueue> const& observer_queue,
                           std::shared_ptr<cookie::Authority> const& cookie_authority,
                           std::shared_ptr<KeyMapper> const& key_mapper,
                           std::shared_ptr<ServerStatusListener> const& server_status_listener);
@@ -77,18 +97,16 @@ public:
     void remove_observer(std::weak_ptr<InputDeviceObserver> const&) override;
     void for_each_input_device(std::function<void(Device const& device)> const& callback) override;
     void for_each_mutable_input_device(std::function<void(Device& device)> const& callback) override;
-
-
 private:
     void add_device_handle(std::shared_ptr<DefaultDevice> const& handle);
     void remove_device_handle(MirInputDeviceId id);
     void device_changed(Device* dev);
     void emit_changed_devices();
     MirInputDeviceId create_new_device_id();
+
     std::shared_ptr<Seat> const seat;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
-    std::mutex handles_guard;
-    std::shared_ptr<ServerActionQueue> const observer_queue;
+    std::mutex mutable handles_guard;
     std::shared_ptr<dispatch::ActionQueue> const device_queue;
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<KeyMapper> const key_mapper;
