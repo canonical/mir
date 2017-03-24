@@ -60,6 +60,23 @@ mi::DefaultDevice::DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::
 {
 }
 
+mi::DefaultDevice::DefaultDevice(MirInputDevice const& config,
+                                 std::shared_ptr<dispatch::ActionQueue> const& actions,
+                                 InputDevice& device,
+                                 std::shared_ptr<KeyMapper> const& key_mapper,
+                                 std::function<void(Device*)> const& callback)
+    : DefaultDevice(config.id(), actions, device, key_mapper, callback)
+{
+    if (config.has_touchpad_config())
+        set_touchpad_configuration(config.touchpad_config());
+    if (config.has_keyboard_config())
+        set_keyboard_configuration(config.keyboard_config());
+    if (config.has_pointer_config())
+        set_pointer_configuration(config.pointer_config());
+    if (config.has_touchscreen_config())
+        set_touchscreen_configuration(config.touchscreen_config());
+}
+
 mi::DeviceCapabilities mi::DefaultDevice::capabilities() const
 {
     return info.capabilities;
@@ -117,6 +134,12 @@ void mi::DefaultDevice::apply_pointer_configuration(MirPointerConfig const& conf
     if (conf.cursor_acceleration_bias() < -1.0 || conf.cursor_acceleration_bias() > 1.0)
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cursor acceleration bias out of range"));
 
+    set_pointer_configuration(conf);
+    device_changed_callback(this);
+}
+
+void mi::DefaultDevice::set_pointer_configuration(MirPointerConfig const& conf)
+{
     PointerSettings settings;
     settings.handedness = conf.handedness();
     settings.acceleration = conf.acceleration();
@@ -133,7 +156,6 @@ void mi::DefaultDevice::apply_pointer_configuration(MirPointerConfig const& conf
                      {
                          dev->apply_settings(settings);
                      });
-    device_changed_callback(this);
 }
 
 void mi::DefaultDevice::apply_touchpad_configuration(MirTouchpadConfig const& conf)
@@ -148,6 +170,12 @@ void mi::DefaultDevice::apply_touchpad_configuration(MirTouchpadConfig const& co
         conf.button_down_scroll_button() == mi::no_scroll_button)
         BOOST_THROW_EXCEPTION(std::invalid_argument("No scroll button configured"));
 
+    set_touchpad_configuration(conf);
+    device_changed_callback(this);
+}
+
+void mi::DefaultDevice::set_touchpad_configuration(MirTouchpadConfig const& conf)
+{
     TouchpadSettings settings;
     settings.click_mode= conf.click_mode();
     settings.scroll_mode = conf.scroll_mode();
@@ -166,7 +194,6 @@ void mi::DefaultDevice::apply_touchpad_configuration(MirTouchpadConfig const& co
                      {
                          dev->apply_settings(settings);
                      });
-    device_changed_callback(this);
 }
 
 mir::optional_value<MirKeyboardConfig> mi::DefaultDevice::keyboard_configuration() const
@@ -180,15 +207,18 @@ void mi::DefaultDevice::apply_keyboard_configuration(MirKeyboardConfig const& co
     if (!contains(info.capabilities, mi::DeviceCapability::keyboard))
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a keyboard configuration"));
 
-    {
-        std::lock_guard<std::mutex> lock(config_mutex);
-        if (keyboard.value().device_keymap() != conf.device_keymap())
-            keyboard = conf;
-        else
-            return;
-    }
-    key_mapper->set_keymap_for_device(device_id, conf.device_keymap());
+    set_keyboard_configuration(conf);
     device_changed_callback(this);
+}
+
+void mi::DefaultDevice::set_keyboard_configuration(MirKeyboardConfig const& conf)
+{
+    std::lock_guard<std::mutex> lock(config_mutex);
+    if (keyboard.value().device_keymap() != conf.device_keymap())
+        keyboard = conf;
+    else
+        return;
+    key_mapper->set_keymap_for_device(device_id, conf.device_keymap());
 }
 
 mir::optional_value<MirTouchscreenConfig> mi::DefaultDevice::touchscreen_configuration() const
@@ -206,6 +236,12 @@ void mi::DefaultDevice::apply_touchscreen_configuration(MirTouchscreenConfig con
     if (!touchscreen.is_set())
         BOOST_THROW_EXCEPTION(std::invalid_argument("Cannot apply a touchscreen configuration"));
 
+    set_touchscreen_configuration(config);
+    device_changed_callback(this);
+}
+
+void mi::DefaultDevice::set_touchscreen_configuration(MirTouchscreenConfig const& config)
+{
     TouchscreenSettings settings;
     settings.output_id = config.output_id();
     settings.mapping_mode = config.mapping_mode();
@@ -216,5 +252,27 @@ void mi::DefaultDevice::apply_touchscreen_configuration(MirTouchscreenConfig con
                      {
                          dev->apply_settings(settings);
                      });
-    device_changed_callback(this);
+}
+
+MirInputDevice mi::DefaultDevice::config() const
+{
+    auto stored_dev = MirInputDevice(
+        id(),
+        capabilities(),
+        name(),
+        unique_id());
+    auto pointer_conf = pointer_configuration();
+    if (pointer_conf.is_set())
+        stored_dev.set_pointer_config(pointer_conf.value());
+    auto touchpad_conf = touchpad_configuration();
+    if (touchpad_conf.is_set())
+        stored_dev.set_touchpad_config(touchpad_conf.value());
+    auto keyboard_conf = keyboard_configuration();
+    if (keyboard_conf.is_set())
+        stored_dev.set_keyboard_config(keyboard_conf.value());
+    auto touchscreen_conf = touchscreen_configuration();
+    if (touchscreen_conf.is_set())
+        stored_dev.set_touchscreen_config(touchscreen_conf.value());
+
+    return stored_dev;
 }
