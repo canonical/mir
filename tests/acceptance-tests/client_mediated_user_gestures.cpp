@@ -67,29 +67,6 @@ private:
 
 void mir_cookie_release(Cookie const&) = delete;
 
-class Blob
-{
-public:
-    Blob() = default;
-
-    explicit Blob(MirBlob* blob) : self{blob, deleter} {}
-
-    operator MirBlob*() const { return self.get(); }
-
-    auto get() const -> MirBlob* { return self.get(); }
-
-    void reset() { self.reset(); }
-
-    void reset(MirBlob* blob) { self.reset(blob, deleter); }
-
-private:
-    static void deleter(MirBlob* blob) { mir_blob_release(blob); }
-
-    std::shared_ptr<MirBlob> self;
-};
-
-void mir_blob_release(Blob const&) = delete;
-
 struct MouseMoverAndFaker
 {
     void start_dragging_mouse()
