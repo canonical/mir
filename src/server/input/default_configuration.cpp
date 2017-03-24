@@ -150,6 +150,7 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
             std::chrono::milliseconds const key_repeat_delay{50};
 
             auto const options = the_options();
+            // lp:1675357: Disable generation of key repeat events on nested servers
             auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt) &&
                 !options->is_set(options::host_socket_opt);
 
@@ -324,6 +325,8 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
                the_key_mapper(),
                the_server_status_listener());
 
+           // lp:1675357: KeyRepeatDispatcher must be informed about removed input devices, otherwise
+           // pressed keys get repeated indefinitely
            if (key_repeater)
                key_repeater->set_input_device_hub(hub);
            return hub;
