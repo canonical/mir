@@ -99,15 +99,16 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     if (it == end(devices))
     {
         auto id = create_new_device_id();
-        auto handle = std::make_shared<DefaultDevice>(id, device_queue, *device, key_mapper);
+        auto queue = std::make_shared<dispatch::ActionQueue>();
+        auto handle = std::make_shared<DefaultDevice>(id, queue, *device, key_mapper);
         // send input device info to observer loop..
         devices.push_back(std::make_unique<RegisteredDevice>(
-            device, id, input_dispatchable, cookie_authority, handle));
+            device, handle->id(), queue, cookie_authority, handle));
 
         auto const& dev = devices.back();
 
         seat->add_device(*handle);
-        dev->start(seat);
+        dev->start(seat, input_dispatchable);
 
         // pass input device handle to observer loop..
         observer_queue->enqueue(this,
@@ -115,7 +116,6 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
                                 {
                                     add_device_handle(handle);
                                 });
-
     }
     else
     {
@@ -140,7 +140,7 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
                 if (seat)
                 {
                     seat->remove_device(*item->handle);
-                    item->stop();
+                    item->stop(input_dispatchable);
                 }
                 // send input device info to observer queue..
                 observer_queue->enqueue(
@@ -166,14 +166,14 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
 mi::DefaultInputDeviceHub::RegisteredDevice::RegisteredDevice(
     std::shared_ptr<InputDevice> const& dev,
     MirInputDeviceId device_id,
-    std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+    std::shared_ptr<dispatch::ActionQueue> const& queue,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
     std::shared_ptr<mi::DefaultDevice> const& handle)
     : handle(handle),
       device_id(device_id),
       cookie_authority(cookie_authority),
       device(dev),
-      multiplexer(multiplexer)
+      queue(queue)
 {
 }
 
@@ -206,17 +206,23 @@ bool mi::DefaultInputDeviceHub::RegisteredDevice::device_matches(std::shared_ptr
     return dev == device;
 }
 
-void mi::DefaultInputDeviceHub::RegisteredDevice::start(std::shared_ptr<Seat> const& seat)
+void mi::DefaultInputDeviceHub::RegisteredDevice::start(std::shared_ptr<Seat> const& seat, std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer)
 {
+    multiplexer->add_watch(queue);
+
     this->seat = seat;
     builder = std::make_unique<DefaultEventBuilder>(device_id, cookie_authority, seat);
     device->start(this, builder.get());
 }
 
-void mi::DefaultInputDeviceHub::RegisteredDevice::stop()
+void mi::DefaultInputDeviceHub::RegisteredDevice::stop(std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer)
 {
+    multiplexer->remove_watch(queue);
+    handle->disable_queue();
+
     device->stop();
     seat = nullptr;
+    queue.reset();
     builder.reset();
 }
 

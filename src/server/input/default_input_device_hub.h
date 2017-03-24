@@ -90,6 +90,7 @@ private:
     void device_changed(Device* dev);
     void emit_changed_devices();
     MirInputDeviceId create_new_device_id();
+
     std::shared_ptr<Seat> const seat;
     std::shared_ptr<frontend::EventSink> const sink;
     std::shared_ptr<dispatch::MultiplexingDispatchable> const input_dispatchable;
@@ -105,14 +106,14 @@ private:
     public:
         RegisteredDevice(std::shared_ptr<InputDevice> const& dev,
                          MirInputDeviceId dev_id,
-                         std::shared_ptr<dispatch::MultiplexingDispatchable> const& multiplexer,
+                         std::shared_ptr<dispatch::ActionQueue> const& multiplexer,
                          std::shared_ptr<cookie::Authority> const& cookie_authority,
                          std::shared_ptr<DefaultDevice> const& handle);
         void handle_input(MirEvent& event) override;
         mir::geometry::Rectangle bounding_rectangle() const override;
         bool device_matches(std::shared_ptr<InputDevice> const& dev) const;
-        void start(std::shared_ptr<Seat> const& seat);
-        void stop();
+        void start(std::shared_ptr<Seat> const& seat, std::shared_ptr<dispatch::MultiplexingDispatchable> const& dispatchable);
+        void stop(std::shared_ptr<dispatch::MultiplexingDispatchable> const& dispatchable);
         MirInputDeviceId id();
         std::shared_ptr<Seat> seat;
         const std::shared_ptr<DefaultDevice> handle;
@@ -124,7 +125,7 @@ private:
         std::unique_ptr<DefaultEventBuilder> builder;
         std::shared_ptr<cookie::Authority> cookie_authority;
         std::shared_ptr<InputDevice> const device;
-        std::shared_ptr<dispatch::MultiplexingDispatchable> const multiplexer;
+        std::shared_ptr<dispatch::ActionQueue> queue;
     };
 
     std::vector<std::shared_ptr<Device>> handles;

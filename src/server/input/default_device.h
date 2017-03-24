@@ -29,6 +29,7 @@
 #include "mir/optional_value.h"
 
 #include <memory>
+#include <mutex>
 
 namespace mir
 {
@@ -58,6 +59,7 @@ public:
     void apply_touchpad_configuration(MirTouchpadConfig const&) override;
     optional_value<MirKeyboardConfig> keyboard_configuration() const override;
     void apply_keyboard_configuration(MirKeyboardConfig const&) override;
+    void disable_queue();
 private:
     MirInputDeviceId const device_id;
     InputDevice& device;
@@ -65,8 +67,9 @@ private:
     optional_value<PointerSettings> pointer;
     optional_value<TouchpadSettings> touchpad;
     optional_value<MirKeyboardConfig> keyboard;
-    std::shared_ptr<dispatch::ActionQueue> const actions;
+    std::shared_ptr<dispatch::ActionQueue> actions;
     std::shared_ptr<KeyMapper> const key_mapper;
+    std::mutex mutable config_mutex;
 };
 
 }

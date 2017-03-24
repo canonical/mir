@@ -236,3 +236,21 @@ TEST_F(InputDeviceHubTest, emit_stop_receiving_input_after_last_device_added)
     observer_loop.trigger_server_actions();
 }
 
+TEST_F(InputDeviceHubTest, no_device_config_action_after_device_removal)
+{
+    std::shared_ptr<mi::Device> dev_ptr;
+    MirPointerConfig ptr_config;
+    ptr_config.cursor_acceleration_bias(0.5);
+
+    ON_CALL(mock_observer, device_added(WithName("mouse"))).WillByDefault(SaveArg<0>(&dev_ptr));
+
+    hub.add_device(mt::fake_shared(mouse));
+    hub.add_observer(mt::fake_shared(mock_observer));
+    observer_loop.trigger_server_actions();
+
+    EXPECT_CALL(mouse, apply_settings(Matcher<mi::PointerSettings const&>(_))).Times(0);
+
+    dev_ptr->apply_pointer_configuration(ptr_config);
+    hub.remove_device(mt::fake_shared(mouse));
+    observer_loop.trigger_server_actions();
+}
