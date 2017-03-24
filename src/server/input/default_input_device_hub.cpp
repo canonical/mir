@@ -180,11 +180,10 @@ void mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
 
     if (it == end(devices))
     {
-        auto id = create_new_device_id();
-        auto handle = std::make_shared<DefaultDevice>(id, device_queue, *device, key_mapper, [this](Device *d){device_changed(d);});
+        auto handle = restore_or_create_device(*device);
         // send input device info to observer loop..
         devices.push_back(std::make_unique<RegisteredDevice>(
-            device, id, input_dispatchable, cookie_authority, handle));
+            device, handle->id(), input_dispatchable, cookie_authority, handle));
 
         auto const& dev = devices.back();
         add_device_handle(handle);
@@ -211,6 +210,7 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
         {
             if (item->device_matches(device))
             {
+                store_device_config(*item->handle);
                 auto seat = item->seat;
                 if (seat)
                 {
@@ -479,4 +479,53 @@ void mi::DefaultInputDeviceHub::emit_changed_devices()
                 observer->changes_complete();
             });
     }
+}
+
+void mi::DefaultInputDeviceHub::store_device_config(mi::DefaultDevice const& dev)
+{
+    std::lock_guard<std::mutex> lock(stored_configurations_guard);
+    stored_devices.push_back(dev.config());
+}
+
+mir::optional_value<MirInputDevice>
+mi::DefaultInputDeviceHub::get_stored_device_config(std::string const& id)
+{
+    mir::optional_value<MirInputDevice> optional_config;
+    std::lock_guard<std::mutex> lock(stored_configurations_guard);
+    auto pos = remove_if(
+        begin(stored_devices),
+        end(stored_devices),
+        [&optional_config,id](auto const& handle)
+        {
+            if (id == handle.unique_id())
+            {
+                optional_config = handle;
+                return true;
+            }
+            return false;
+        });
+    stored_devices.erase(pos, end(stored_devices));
+
+    return optional_config;
+}
+
+std::shared_ptr<mi::DefaultDevice>
+mi::DefaultInputDeviceHub::restore_or_create_device(mi::InputDevice& device)
+{
+    auto device_config = get_stored_device_config(device.get_device_info().unique_id);
+
+    if (device_config.is_set())
+        return std::make_shared<DefaultDevice>(
+            device_config.value(),
+            device_queue,
+            device,
+            key_mapper,
+            [this](Device *d){device_changed(d);});
+    else
+        return std::make_shared<DefaultDevice>(
+            create_new_device_id(),
+            device_queue,
+            device,
+            key_mapper,
+            [this](Device *d){device_changed(d);});
 }
