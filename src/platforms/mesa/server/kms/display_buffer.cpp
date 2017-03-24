@@ -152,11 +152,7 @@ mgm::DisplayBuffer::DisplayBuffer(
     if (!visible_composite_frame)
         fatal_error("Failed to get frontbuffer");
 
-    auto const fb_size = surface.size();
-    auto const fb = outputs.front()->fb_for(visible_composite_frame,
-                                            fb_size.width.as_int(),
-                                            fb_size.height.as_int());
-    set_crtc(*fb);
+    set_crtc(*outputs.front()->fb_for(visible_composite_frame));
 
     release_current();
 
@@ -207,9 +203,7 @@ bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
             if (native->flags & mir_buffer_flag_can_scanout &&
                 bypass_buffer->size() == fb_size)
             {
-                if (auto bufobj = outputs.front()->fb_for(native->bo,
-                       fb_size.width.as_int(), fb_size.height.as_int()))
-
+                if (auto bufobj = outputs.front()->fb_for(native->bo))
                 {
                     bypass_buf = bypass_buffer;
                     bypass_bufobj = bufobj;
@@ -273,9 +267,7 @@ void mgm::DisplayBuffer::post()
     else
     {
         scheduled_composite_frame = surface.lock_front();
-        auto const fb_size = surface.size();
-        bufobj = outputs.front()->fb_for(scheduled_composite_frame,
-            fb_size.width.as_int(), fb_size.height.as_int());
+        bufobj = outputs.front()->fb_for(scheduled_composite_frame);
         if (!bufobj)
             fatal_error("Failed to get front buffer object");
     }
