@@ -168,10 +168,5 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
 
 mg::NativeRenderingPlatform* mge::Platform::native_rendering_platform()
 {
-    return this;
-}
-
-EGLNativeDisplayType mge::Platform::egl_native_display() const
-{
-    return display;
+    return nullptr;
 }
