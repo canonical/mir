@@ -150,12 +150,13 @@ void mi::DefaultDevice::set_pointer_configuration(MirPointerConfig const& conf)
     {
         std::lock_guard<std::mutex> lock(config_mutex);
         pointer = settings;
+        if (!actions) // device is disabled
+            return;
+        actions->enqueue([settings = std::move(settings), dev=&device]
+                         {
+                             dev->apply_settings(settings);
+                         });
     }
-
-    actions->enqueue([settings = std::move(settings), dev=&device]
-                     {
-                         dev->apply_settings(settings);
-                     });
 }
 
 void mi::DefaultDevice::apply_touchpad_configuration(MirTouchpadConfig const& conf)
@@ -188,12 +189,13 @@ void mi::DefaultDevice::set_touchpad_configuration(MirTouchpadConfig const& conf
     {
         std::lock_guard<std::mutex> lock(config_mutex);
         touchpad = settings;
+        if (!actions) // device is disabled
+            return;
+        actions->enqueue([settings = std::move(settings), dev=&device]
+                         {
+                             dev->apply_settings(settings);
+                         });
     }
-
-    actions->enqueue([settings = std::move(settings), dev=&device]
-                     {
-                         dev->apply_settings(settings);
-                     });
 }
 
 mir::optional_value<MirKeyboardConfig> mi::DefaultDevice::keyboard_configuration() const
@@ -214,6 +216,8 @@ void mi::DefaultDevice::apply_keyboard_configuration(MirKeyboardConfig const& co
 void mi::DefaultDevice::set_keyboard_configuration(MirKeyboardConfig const& conf)
 {
     std::lock_guard<std::mutex> lock(config_mutex);
+    if (!actions) // device is disabled
+        return;
     if (keyboard.value().device_keymap() != conf.device_keymap())
         keyboard = conf;
     else
@@ -246,12 +250,17 @@ void mi::DefaultDevice::set_touchscreen_configuration(MirTouchscreenConfig const
     settings.output_id = config.output_id();
     settings.mapping_mode = config.mapping_mode();
 
-    touchscreen = settings;
+    {
+        std::lock_guard<std::mutex> lock(config_mutex);
+        touchscreen = settings;
 
-    actions->enqueue([settings = std::move(settings), dev=&device]
-                     {
-                         dev->apply_settings(settings);
-                     });
+        if (!actions) // device is disabled
+            return;
+        actions->enqueue([settings = std::move(settings), dev=&device]
+                         {
+                             dev->apply_settings(settings);
+                         });
+    }
 }
 
 MirInputDevice mi::DefaultDevice::config() const
@@ -275,4 +284,10 @@ MirInputDevice mi::DefaultDevice::config() const
         stored_dev.set_touchscreen_config(touchscreen_conf.value());
 
     return stored_dev;
+}
+
+void mi::DefaultDevice::disable_queue()
+{
+    std::lock_guard<std::mutex> lock(config_mutex);
+    actions.reset();
 }

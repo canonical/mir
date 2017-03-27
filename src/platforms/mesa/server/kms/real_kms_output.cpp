@@ -583,7 +583,7 @@ void mgm::RealKMSOutput::update_from_hardware_state(
     output.edid = edid;
 }
 
-mgm::FBHandle* mgm::RealKMSOutput::fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const
+mgm::FBHandle* mgm::RealKMSOutput::fb_for(gbm_bo* bo) const
 {
     if (!bo)
         return nullptr;
@@ -610,6 +610,9 @@ mgm::FBHandle* mgm::RealKMSOutput::fb_for(gbm_bo* bo, uint32_t width, uint32_t h
         format = GBM_FORMAT_XRGB8888;
     else if (format == GBM_BO_FORMAT_ARGB8888)
         format = GBM_FORMAT_ARGB8888;
+
+    auto const width = gbm_bo_get_width(bo);
+    auto const height = gbm_bo_get_height(bo);
 
     /* Create a KMS FB object with the gbm_bo attached to it. */
     auto ret = drmModeAddFB2(drm_fd, width, height, format,
