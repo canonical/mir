@@ -399,16 +399,17 @@ void mgm::Display::configure_locked(
                     orientation = conf_output.orientation;
                 });
 
+            // TODO in future outputs should emit transformation instead of
+            //      orientation
+            auto const transformation = mg::transformation(orientation);
+
             if (comp)
             {
-                display_buffers[group_idx++]->set_orientation(orientation, bounding_rect);
+                display_buffers[group_idx++]->set_transformation(transformation,
+                                                                 bounding_rect);
             }
             else
             {
-                // TODO in future outputs should emit transformation instead of
-                //      orientation
-                auto const transformation = mg::transformation(orientation);
-
                 glm::vec2 const logical_size{
                     bounding_rect.size.width.as_uint32_t(),
                     bounding_rect.size.height.as_uint32_t()};

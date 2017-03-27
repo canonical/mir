@@ -123,7 +123,7 @@ public:
     glm::mat2 transformation() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
-    void set_orientation(MirOrientation const rot, geometry::Rectangle const& a);
+    void set_transformation(glm::mat2 const& t, geometry::Rectangle const& a);
     void schedule_set_crtc();
     void wait_for_page_flip();
 

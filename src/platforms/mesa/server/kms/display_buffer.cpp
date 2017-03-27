@@ -179,9 +179,9 @@ glm::mat2 mgm::DisplayBuffer::transformation() const
     return transform;
 }
 
-void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rectangle const& a)
+void mgm::DisplayBuffer::set_transformation(glm::mat2 const& t, geometry::Rectangle const& a)
 {
-    transform = mg::transformation(rot);
+    transform = t;
     area = a;
 }
 
