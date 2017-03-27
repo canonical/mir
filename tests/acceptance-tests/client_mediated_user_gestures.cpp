@@ -257,11 +257,3 @@ TEST_F(ClientMediatedUserGestures, when_client_initiates_move_nothing_bad_happen
 
     mir_window_request_user_move(window, cookie);
 }
-
-// TODO extend this test when server side implemented
-TEST_F(ClientMediatedUserGestures, when_client_initiates_resize_nothing_bad_happens)
-{
-    auto const cookie = user_initiates_gesture();
-
-    mir_window_request_user_resize(window, cookie);
-}
