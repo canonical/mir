@@ -1179,13 +1179,24 @@ void mir::frontend::SessionMediator::request_operation(
         break;
 
     case mir::protobuf::RequestOperation::MAKE_ACTIVE:
-        shell->raise_surface(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::activate);
         break;
 
     case mir::protobuf::RequestOperation::USER_MOVE:
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::move);
         break;
 
     case mir::protobuf::RequestOperation::USER_RESIZE:
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::resize);
         break;
 
     default:

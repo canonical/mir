@@ -75,11 +75,6 @@ public:
         SurfaceId surface_id,
         MirWindowAttrib attrib) override;
 
-    void raise_surface(
-        std::shared_ptr<Session> const& session,
-        SurfaceId surface_id,
-        uint64_t timestamp) override;
-
     void request_operation(
         std::shared_ptr<Session> const& session,
         SurfaceId surface_id,
