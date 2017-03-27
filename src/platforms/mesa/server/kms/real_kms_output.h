@@ -67,7 +67,7 @@ public:
     void refresh_hardware_state() override;
     void update_from_hardware_state(DisplayConfigurationOutput& output) const override;
 
-    FBHandle* fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const override;
+    FBHandle* fb_for(gbm_bo* bo) const override;
 private:
     bool ensure_crtc();
     void restore_saved_crtc();
