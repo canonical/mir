@@ -63,9 +63,11 @@ public:
 struct NestedDisplay : testing::Test
 {
     std::unique_ptr<mgn::Display> create_nested_display(
+        std::shared_ptr<mg::Platform> const& platform,
         std::shared_ptr<mg::GLConfig> const& gl_config)
     {
         auto nested_display_raw = new mgn::Display{
+            platform,
             std::make_shared<SingleDisplayHostConnection>(),
             mt::fake_shared(null_display_report),
             mt::fake_shared(default_conf_policy),
@@ -80,6 +82,8 @@ struct NestedDisplay : testing::Test
     mir::report::null::DisplayReport null_display_report;
     mg::CloneDisplayConfigurationPolicy default_conf_policy;
     mtd::StubGLConfig stub_gl_config;
+    std::shared_ptr<mtd::NullPlatform> null_platform{
+        std::make_shared<mtd::NullPlatform>()};
 };
 
 }
@@ -110,7 +114,9 @@ TEST_F(NestedDisplay, respects_gl_config)
                         SetArgPointee<4>(1),
                         Return(EGL_TRUE)));
 
-    auto const nested_display = create_nested_display(mt::fake_shared(mock_gl_config));
+    auto const nested_display = create_nested_display(
+        null_platform,
+        mt::fake_shared(mock_gl_config));
 }
 
 TEST_F(NestedDisplay, has_alpha_channel)
@@ -128,7 +134,9 @@ TEST_F(NestedDisplay, has_alpha_channel)
                         SetArgPointee<4>(1),
                         Return(EGL_TRUE)));
 
-    auto const nested_display = create_nested_display(mt::fake_shared(stub_gl_config));
+    auto const nested_display = create_nested_display(
+        null_platform,
+        mt::fake_shared(stub_gl_config));
 }
 
 TEST_F(NestedDisplay, does_not_change_host_display_configuration_at_construction)
@@ -140,27 +148,31 @@ TEST_F(NestedDisplay, does_not_change_host_display_configuration_at_construction
     EXPECT_CALL(host_connection, apply_display_config(_))
         .Times(0);
 
-    auto const nested_display = create_nested_display(mt::fake_shared(stub_gl_config));
+    auto const nested_display = create_nested_display(
+        null_platform,
+        mt::fake_shared(stub_gl_config));
 }
 
-#if 0
 // Regression test for LP: #1372276
 TEST_F(NestedDisplay, keeps_platform_alive)
 {
     using namespace testing;
 
-    auto const nested_display = create_nested_display(mt::fake_shared(stub_gl_config));
+    auto const nested_display = create_nested_display(
+        null_platform,
+        mt::fake_shared(stub_gl_config));
 
     std::weak_ptr<mtd::NullPlatform> weak_platform = null_platform;
     null_platform.reset();
 
     EXPECT_FALSE(weak_platform.expired());
 }
-#endif
 
 TEST_F(NestedDisplay, never_enables_predictive_bypass)
 {   // This test can be removed after it's implemented (after nested bypass)
-    auto const nested_display = create_nested_display(mt::fake_shared(stub_gl_config));
+    auto const nested_display = create_nested_display(
+        null_platform,
+        mt::fake_shared(stub_gl_config));
 
     int groups = 0;
     nested_display->for_each_display_sync_group(
@@ -181,7 +193,9 @@ TEST_F(NestedDisplay, makes_context_current_on_creation_and_releases_on_destruct
     EXPECT_CALL(mock_egl,
                 eglMakeCurrent(_, EGL_NO_SURFACE, EGL_NO_SURFACE, Ne(EGL_NO_CONTEXT)));
 
-    auto const nested_display = create_nested_display(mt::fake_shared(stub_gl_config));
+    auto const nested_display = create_nested_display(
+        null_platform,
+        mt::fake_shared(stub_gl_config));
 
     Mock::VerifyAndClearExpectations(&mock_egl);
     EXPECT_CALL(mock_egl,
@@ -225,7 +239,9 @@ TEST_F(NestedDisplay, shared_context_uses_matching_egl_attributes)
                     _,_,_))
         .Times(AtLeast(1));
 
-    auto const nested_display = create_nested_display(mt::fake_shared(mock_gl_config));
+    auto const nested_display = create_nested_display(
+        null_platform,
+        mt::fake_shared(mock_gl_config));
 
     auto dummy_context = nested_display->create_gl_context();
 }
@@ -234,7 +250,9 @@ TEST_F(NestedDisplay, preserves_framebuffers_for_metadata_changes)
 {
     using namespace testing;
 
-    auto display = create_nested_display(mt::fake_shared(stub_gl_config));
+    auto display = create_nested_display(
+        null_platform,
+        mt::fake_shared(stub_gl_config));
 
     auto conf = display->configuration();
 
@@ -297,6 +315,7 @@ TEST_F(NestedDisplay, changing_output_does_not_preserve_framebuffers)
 
 
     auto display = std::make_unique<mgn::Display>(
+        null_platform,
         std::make_shared<MultiDisplayHostConnection>(),
         mt::fake_shared(null_display_report),
         mt::fake_shared(default_conf_policy),

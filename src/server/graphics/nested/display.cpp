@@ -215,11 +215,13 @@ std::vector<mg::DisplayConfigurationOutput> calculate_best_outputs(
 }
 
 mgn::Display::Display(
+    std::shared_ptr<mg::RenderingPlatform> const& platform,
     std::shared_ptr<HostConnection> const& connection,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
     std::shared_ptr<mg::GLConfig> const& gl_config,
     PassthroughOption passthrough_option) :
+    platform{platform},
     connection{connection},
     display_report{display_report},
     egl_display{connection->egl_native_display(), gl_config},

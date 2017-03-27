@@ -144,9 +144,11 @@ mg::NativeRenderingPlatform* mgn::NestedBufferPlatform::native_rendering_platfor
 }
 
 mgn::NestedDisplayPlatform::NestedDisplayPlatform(
+    std::shared_ptr<graphics::RenderingPlatform> const& platform,
     std::shared_ptr<mgn::HostConnection> const& connection, 
     std::shared_ptr<mg::DisplayReport> const& display_report,
     mo::Option const& options) :
+    platform(platform),
     connection(connection),
     display_report(display_report),
     passthrough_option(passthrough_from_options(options))
@@ -158,6 +160,7 @@ mir::UniqueModulePtr<mg::Display> mgn::NestedDisplayPlatform::create_display(
     std::shared_ptr<mg::GLConfig> const& config)
 {
     return mir::make_module_ptr<mgn::Display>(
+        platform,
         connection,
         display_report,
         policy,
@@ -176,7 +179,7 @@ mir::UniqueModulePtr<mg::PlatformAuthentication> mgn::NestedDisplayPlatform::cre
 }
 
 mgn::Platform::Platform(
-    std::unique_ptr<mgn::NestedBufferPlatform> buffer_platform,
+    std::shared_ptr<mgn::NestedBufferPlatform> buffer_platform,
     std::unique_ptr<mgn::NestedDisplayPlatform> display_platform) :
     buffer_platform{std::move(buffer_platform)},
     display_platform{std::move(display_platform)}

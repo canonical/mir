@@ -44,6 +44,7 @@ class NestedDisplayPlatform : public graphics::DisplayPlatform,
 {
 public:
     NestedDisplayPlatform(
+        std::shared_ptr<graphics::RenderingPlatform> const& platform,
         std::shared_ptr<HostConnection> const& connection, 
         std::shared_ptr<DisplayReport> const& display_report,
         options::Option const& options);
@@ -55,7 +56,7 @@ public:
     UniqueModulePtr<PlatformAuthentication> create_platform_authentication() override;
 
 private:
-    std::shared_ptr<mir::SharedLibrary> const library; 
+    std::shared_ptr<graphics::RenderingPlatform> const platform;
     std::shared_ptr<HostConnection> const connection; 
     std::shared_ptr<DisplayReport> const display_report;
 
@@ -90,7 +91,7 @@ class Platform : public graphics::Platform
 {
 public:
     Platform(
-        std::unique_ptr<NestedBufferPlatform> buffer_platform,
+        std::shared_ptr<NestedBufferPlatform> buffer_platform,
         std::unique_ptr<NestedDisplayPlatform> display_platform);
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
@@ -101,7 +102,7 @@ public:
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativeRenderingPlatform* native_rendering_platform() override;
 private:
-    std::unique_ptr<NestedBufferPlatform> const buffer_platform;
+    std::shared_ptr<NestedBufferPlatform> const buffer_platform;
     std::unique_ptr<NestedDisplayPlatform> const display_platform;
 };
 

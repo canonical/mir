@@ -87,11 +87,12 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                     auto const host_connection = the_host_connection();
 
                     platform_library = std::make_shared<mir::SharedLibrary>(host_connection->graphics_platform_library());
+                    auto buffer_platform = std::make_shared<mgn::NestedBufferPlatform>(
+                        platform_library, host_connection, the_display_report(), the_options());
                     return std::make_shared<mgn::Platform>(
-                        std::make_unique<mgn::NestedBufferPlatform>(
-                            platform_library, host_connection, the_display_report(), the_options()),
+                        buffer_platform,
                         std::make_unique<mgn::NestedDisplayPlatform>(
-                            host_connection, the_display_report(), *the_options()));
+                            buffer_platform, host_connection, the_display_report(), *the_options()));
                 }
 
                 // fallback to standalone if host socket is unset
