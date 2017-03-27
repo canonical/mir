@@ -87,10 +87,17 @@ public:
         SurfaceId surface_id,
         uint64_t timestamp) = 0;
 
-    virtual void request_drag_and_drop(
+    enum class UserRequest
+    {
+        drag_and_drop,
+        move,
+        resize
+    };
+
+    virtual void request_operation(
         std::shared_ptr<Session> const& session,
-        SurfaceId surface_id,
-        uint64_t timestamp) = 0;
+        SurfaceId surface_id, uint64_t timestamp,
+        UserRequest request) = 0;
 
 protected:
     Shell() = default;

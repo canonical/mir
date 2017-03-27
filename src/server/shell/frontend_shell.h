@@ -92,10 +92,11 @@ struct FrontendShell : mf::Shell
         mf::SurfaceId surface_id,
         uint64_t timestamp) override;
 
-    void request_drag_and_drop(
+    void request_operation(
         std::shared_ptr<mf::Session> const& session,
         mf::SurfaceId surface_id,
-        uint64_t timestamp) override;
+        uint64_t timestamp,
+        UserRequest request) override;
 };
 }
 }

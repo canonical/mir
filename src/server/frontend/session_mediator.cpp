@@ -1172,11 +1172,20 @@ void mir::frontend::SessionMediator::request_operation(
     switch (request->operation())
     {
     case mir::protobuf::RequestOperation::START_DRAG_AND_DROP:
-        shell->request_drag_and_drop(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::drag_and_drop);
         break;
 
     case mir::protobuf::RequestOperation::MAKE_ACTIVE:
         shell->raise_surface(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+        break;
+
+    case mir::protobuf::RequestOperation::USER_MOVE:
+        break;
+
+    case mir::protobuf::RequestOperation::USER_RESIZE:
         break;
 
     default:

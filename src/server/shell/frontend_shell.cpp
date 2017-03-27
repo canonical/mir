@@ -158,12 +158,22 @@ void msh::FrontendShell::raise_surface(
     wrapped->raise_surface(scene_session, surface, timestamp);
 }
 
-void msh::FrontendShell::request_drag_and_drop(
+void msh::FrontendShell::request_operation(
     std::shared_ptr<mf::Session> const& session,
     mf::SurfaceId surface_id,
-    uint64_t timestamp)
+    uint64_t timestamp,
+    UserRequest request)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
     auto const surface = scene_session->surface(surface_id);
-    wrapped->request_drag_and_drop(scene_session, surface, timestamp);
+
+    switch (request)
+    {
+    case UserRequest::drag_and_drop:
+        wrapped->request_drag_and_drop(scene_session, surface, timestamp);
+        break;
+
+    default:
+        break;
+    }
 }
