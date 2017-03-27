@@ -439,14 +439,18 @@ message Cookie {
   required bytes cookie = 1;
 }
 
-message RaiseRequest {
-  required Cookie cookie = 1;
-  required SurfaceId surface_id = 2;
+enum RequestOperation {
+  UNKNOWN = 0;
+  START_DRAG_AND_DROP = 1;
+  MAKE_ACTIVE = 2;
+  USER_MOVE = 3;
+  USER_RESIZE = 4;
 }
 
-message RequestAuthority {
-  required Cookie cookie = 1;
+message RequestWithAuthority {
+  required Cookie authority = 1;
   required SurfaceId surface_id = 2;
+  required RequestOperation operation = 3;
 }
 
 message InputDevices {

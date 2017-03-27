@@ -200,6 +200,8 @@ public:
     MirWaitHandle* set_preferred_orientation(MirOrientationMode mode);
 
     void raise_surface(MirCookie const* cookie);
+    void request_user_move(MirCookie const* cookie);
+    void request_user_resize(MirCookie const* cookie);
     void request_drag_and_drop(MirCookie const* cookie);
     void set_drag_and_drop_start_handler(std::function<void(MirWindowEvent const*)> const& callback);
 
@@ -229,6 +231,7 @@ private:
     void on_configured();
     void on_cursor_configured();
     void acquired_persistent_id(MirWindowIdCallback callback, void* context);
+    void request_operation(MirCookie const* cookie, mir::protobuf::RequestOperation operation) const;
 
     mir::client::rpc::DisplayServer* const server{nullptr};
     mir::client::rpc::DisplayServerDebug* const debug{nullptr};
@@ -274,7 +277,6 @@ private:
     MirPixelFormat format;
     MirBufferUsage usage;
     uint32_t output_id;
-
 };
 
 #pragma GCC diagnostic pop
