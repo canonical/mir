@@ -331,3 +331,11 @@ TEST_F(DefaultDevice, disable_queue_removes_reference_to_queue)
     dev.disable_queue();
     EXPECT_THAT(ref.lock(), Eq(nullptr));
 }
+
+TEST_F(DefaultDevice, keyboard_device_can_be_constructed_from_input_config_with_broken_config)
+{
+    MirKeyboardConfig const kbd_config{mi::Keymap{"pc104", "trial", "error", ""}};
+    MirInputDevice conf(MirInputDeviceId{3}, mi::DeviceCapability::keyboard, "keyboard", "keyboard-event3c");
+    conf.set_keyboard_config(kbd_config);
+    EXPECT_NO_THROW(mi::DefaultDevice dev(conf, queue, keyboard, mt::fake_shared(key_mapper), change_callback));
+}
