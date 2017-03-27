@@ -36,7 +36,7 @@ public:
     void auth_magic(drm_magic_t magic) override;
     mir::Fd authenticated_fd() override;
 private:
-    std::shared_ptr<PlatformAuthentication> const platform_authentication;
+    std::shared_ptr<graphics::PlatformAuthentication> const platform_authentication;
     std::shared_ptr<MesaAuthExtension> const auth_extension;
 };
 }
