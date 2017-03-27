@@ -67,29 +67,6 @@ private:
 
 void mir_cookie_release(Cookie const&) = delete;
 
-class Blob
-{
-public:
-    Blob() = default;
-
-    explicit Blob(MirBlob* blob) : self{blob, deleter} {}
-
-    operator MirBlob*() const { return self.get(); }
-
-    auto get() const -> MirBlob* { return self.get(); }
-
-    void reset() { self.reset(); }
-
-    void reset(MirBlob* blob) { self.reset(blob, deleter); }
-
-private:
-    static void deleter(MirBlob* blob) { mir_blob_release(blob); }
-
-    std::shared_ptr<MirBlob> self;
-};
-
-void mir_blob_release(Blob const&) = delete;
-
 struct MouseMoverAndFaker
 {
     void start_dragging_mouse()
@@ -279,12 +256,4 @@ TEST_F(ClientMediatedUserGestures, when_client_initiates_move_nothing_bad_happen
     auto const cookie = user_initiates_gesture();
 
     mir_window_request_user_move(window, cookie);
-}
-
-// TODO extend this test when server side implemented
-TEST_F(ClientMediatedUserGestures, when_client_initiates_resize_nothing_bad_happens)
-{
-    auto const cookie = user_initiates_gesture();
-
-    mir_window_request_user_resize(window, cookie);
 }
