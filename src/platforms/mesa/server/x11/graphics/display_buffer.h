@@ -53,7 +53,7 @@ public:
             EGLContext const shared_context,
             std::shared_ptr<AtomicFrame> const& f,
             std::shared_ptr<DisplayReport> const& r,
-            MirOrientation const o,
+            glm::mat2 const& trans,
             GLConfig const& gl_config);
 
     geometry::Rectangle view_area() const override;
@@ -75,7 +75,6 @@ public:
 private:
     geometry::Size const size;
     std::shared_ptr<DisplayReport> const report;
-    MirOrientation orientation_;
     glm::mat2 transform;
     helpers::EGLHelper egl;
     std::shared_ptr<AtomicFrame> const last_frame;

@@ -35,12 +35,11 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                   EGLContext const shared_context,
                                   std::shared_ptr<AtomicFrame> const& f,
                                   std::shared_ptr<DisplayReport> const& r,
-                                  MirOrientation const o,
+                                  glm::mat2 const& trans,
                                   GLConfig const& gl_config)
                                   : size{sz},
                                     report{r},
-                                    orientation_{o},
-                                    transform{mg::transformation(o)},
+                                    transform{trans},
                                     egl{gl_config},
                                     last_frame{f},
                                     eglGetSyncValues{nullptr}
@@ -85,14 +84,14 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
 {
-    switch (orientation_)
-    {
-    case mir_orientation_left:
-    case mir_orientation_right:
-        return {{0,0}, {size.height.as_int(), size.width.as_int()}};
-    default:
-        return {{0,0}, size};
-    }
+    glm::vec2 const physical_size{size.width.as_int(),
+                                  size.height.as_int()};
+
+    auto const logical_size = transform * physical_size;
+
+    geom::Size const view_area_size{abs(logical_size.x),
+                                    abs(logical_size.y)};
+    return {{0,0}, view_area_size};
 }
 
 void mgx::DisplayBuffer::make_current()
@@ -161,8 +160,7 @@ glm::mat2 mgx::DisplayBuffer::transformation() const
 
 void mgx::DisplayBuffer::set_orientation(MirOrientation const new_orientation)
 {
-    orientation_ = new_orientation;
-    transform = mg::transformation(orientation_);
+    transform = mg::transformation(new_orientation);
 }
 
 mg::NativeDisplayBuffer* mgx::DisplayBuffer::native_display_buffer()

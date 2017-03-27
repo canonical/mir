@@ -23,6 +23,7 @@
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/atomic_frame.h"
+#include "mir/graphics/transformation.h"
 #include "display_configuration.h"
 #include "display.h"
 #include "display_buffer.h"
@@ -258,7 +259,7 @@ mgx::Display::Display(::Display* x_dpy,
                          shared_egl.context(),
                          last_frame,
                          report,
-                         orientation,
+                         mg::transformation(orientation),
                          *gl_config);
 
     shared_egl.make_current();
