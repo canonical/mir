@@ -90,35 +90,6 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mir::logging::Logger> const&) 
 {
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
-
-    int device_count{0};
-    if (eglQueryDevicesEXT(0, nullptr, &device_count) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query device count with eglQueryDevicesEXT"));
-    }
-
-    auto devices = std::make_unique<EGLDeviceEXT[]>(device_count);
-    if (eglQueryDevicesEXT(device_count, devices.get(), &device_count) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to get device list with eglQueryDevicesEXT"));
-    }
-
-    auto device = std::find_if(devices.get(), devices.get() + device_count,
-        [](EGLDeviceEXT device)
-        {
-            auto device_extensions = eglQueryDeviceStringEXT(device, EGL_EXTENSIONS);
-            if (device_extensions)
-            {
-                return strstr(device_extensions, "EGL_EXT_device_drm") != NULL;
-            }
-            return false;
-        });
-
-    if (device == (devices.get() + device_count))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Couldn't find EGLDeviceEXT supporting EGL_EXT_device_drm?"));
-    }
-
     return mir::make_module_ptr<mge::DisplayPlatform>(find_device());
 }
 
