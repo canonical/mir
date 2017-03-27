@@ -138,6 +138,11 @@ mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
         passthrough_option);
 }
 
+mg::NativeDisplayPlatform* mgn::Platform::native_display_platform()
+{
+    return connection.get();
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operations() const
 {
     return mir::make_module_ptr<mgn::IpcOperations>(guest_platform->make_ipc_operations());
@@ -145,44 +150,12 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operatio
 
 EGLNativeDisplayType mgn::Platform::egl_native_display() const
 {
-    if (auto a = dynamic_cast<mir::renderer::gl::EGLPlatform*>(guest_platform->native_platform()))
+    if (auto a = dynamic_cast<mir::renderer::gl::EGLPlatform*>(guest_platform->native_rendering_platform()))
         return a->egl_native_display();
     return EGL_NO_DISPLAY;
 }
 
-mg::NativePlatform* mgn::Platform::native_platform()
+mg::NativeRenderingPlatform* mgn::Platform::native_rendering_platform()
 {
     return this;
-}
-
-mir::UniqueModulePtr<mg::PlatformAuthentication> mgn::Platform::authentication()
-{
-    class WrappingAuthentication : public mg::PlatformAuthentication
-    {
-    public:
-        WrappingAuthentication(std::shared_ptr<mg::PlatformAuthentication> const& auth) :
-            wrapped(auth)
-        {
-        }
-        mir::optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() override
-        {
-            return wrapped->auth_extension();
-        }
-        mir::optional_value<std::shared_ptr<SetGbmExtension>> set_gbm_extension() override
-        {
-            return wrapped->set_gbm_extension();
-        }
-        mg::PlatformOperationMessage platform_operation(
-            unsigned int op, PlatformOperationMessage const& request) override
-        {
-            return wrapped->platform_operation(op, request);
-        }
-        mir::optional_value<mir::Fd> drm_fd() override
-        {
-            return wrapped->drm_fd();
-        }
-    private:
-        std::shared_ptr<mg::PlatformAuthentication> const wrapped;
-    };
-    return mir::make_module_ptr<WrappingAuthentication>(connection);
 }

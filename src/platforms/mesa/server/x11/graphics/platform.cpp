@@ -20,7 +20,6 @@
 #include "display.h"
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
-#include "platform_authentication.h"
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -41,6 +40,7 @@ mgx::Platform::Platform(std::shared_ptr<::Display> const& conn,
 
     drm->setup(udev);
     gbm.setup(*drm);
+    native_platform = std::make_unique<mgm::DRMNativePlatform>(*drm);
 }
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_allocator()
@@ -56,12 +56,17 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
                                          report);
 }
 
+mg::NativeDisplayPlatform* mgx::Platform::native_display_platform()
+{
+    return native_platform.get();
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgx::Platform::make_ipc_operations() const
 {
     return make_module_ptr<mg::mesa::IpcOperations>(drm);
 }
 
-mg::NativePlatform* mgx::Platform::native_platform()
+mg::NativeRenderingPlatform* mgx::Platform::native_rendering_platform()
 {
     return this;
 }
@@ -69,9 +74,4 @@ mg::NativePlatform* mgx::Platform::native_platform()
 EGLNativeDisplayType mgx::Platform::egl_native_display() const
 {
     return eglGetDisplay(x11_connection.get());
-}
-
-mir::UniqueModulePtr<mg::PlatformAuthentication> mgx::Platform::authentication()
-{
-    return make_module_ptr<mgm::PlatformAuthentication>(*drm);
 }

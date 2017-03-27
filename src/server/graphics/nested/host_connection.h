@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
+#include "mir/graphics/platform.h"
 #include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/geometry/rectangle.h"
@@ -49,7 +50,8 @@ class HostSurface;
 class HostChain;
 class HostSurfaceSpec;
 class NativeBuffer;
-class HostConnection : public PlatformAuthentication
+class HostConnection : public NativeDisplayPlatform,
+                       public PlatformAuthentication
 {
 public:
     virtual ~HostConnection() = default;

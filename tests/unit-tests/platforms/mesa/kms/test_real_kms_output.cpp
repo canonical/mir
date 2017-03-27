@@ -135,19 +135,6 @@ public:
 
 }
 
-TEST_F(RealKMSOutputTest, construction_queries_connector)
-{
-    using namespace testing;
-
-    setup_outputs_connected_crtc();
-
-    EXPECT_CALL(mock_drm, drmModeGetConnector(_,connector_ids[0]))
-        .Times(1);
-
-    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(null_page_flipper)};
-}
-
 TEST_F(RealKMSOutputTest, operations_use_existing_crtc)
 {
     using namespace testing;
@@ -177,10 +164,12 @@ TEST_F(RealKMSOutputTest, operations_use_existing_crtc)
             .Times(1);
     }
 
-    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper)};
+    mgm::RealKMSOutput output{
+        mock_drm.fake_drm.fd(),
+        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo, 1920, 1024);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     EXPECT_TRUE(output.schedule_page_flip(*fb));
@@ -217,10 +206,12 @@ TEST_F(RealKMSOutputTest, operations_use_possible_crtc)
 
     append_fb_id(fb_id);
 
-    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper)};
+    mgm::RealKMSOutput output{
+        mock_drm.fake_drm.fd(),
+        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo, 1920, 756);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     EXPECT_TRUE(output.schedule_page_flip(*fb));
@@ -252,16 +243,18 @@ TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
         EXPECT_CALL(mock_drm, drmModeSetCrtc(_, _, _, _, _, _, _, _))
             .Times(0);
     }
+
     append_fb_id(fb_id);
 
     mgm::RealKMSOutput output{
         mock_drm.fake_drm.fd(),
-        connector_ids[0],
+        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo, 1280, 1024);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_FALSE(output.set_crtc(*fb));
+
     EXPECT_NO_THROW({
         EXPECT_FALSE(output.schedule_page_flip(*fb));
     });
@@ -276,8 +269,10 @@ TEST_F(RealKMSOutputTest, clear_crtc_gets_crtc_if_none_is_current)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper)};
+    mgm::RealKMSOutput output{
+        mock_drm.fake_drm.fd(),
+        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        mt::fake_shared(mock_page_flipper)};
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
         .Times(1)
@@ -302,8 +297,10 @@ TEST_F(RealKMSOutputTest, clear_crtc_does_not_throw_if_no_crtc_is_found)
 
     resources.prepare();
 
-    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper)};
+    mgm::RealKMSOutput output{
+        mock_drm.fake_drm.fd(),
+        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        mt::fake_shared(mock_page_flipper)};
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, _, 0, 0, 0, nullptr, 0, nullptr))
         .Times(0);
@@ -321,10 +318,12 @@ TEST_F(RealKMSOutputTest, cursor_move_permission_failure_is_non_fatal)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper)};
+    mgm::RealKMSOutput output{
+        mock_drm.fake_drm.fd(),
+        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo, 1292, 222);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     EXPECT_NO_THROW({
@@ -347,10 +346,12 @@ TEST_F(RealKMSOutputTest, cursor_set_permission_failure_is_non_fatal)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper)};
+    mgm::RealKMSOutput output{
+        mock_drm.fake_drm.fd(),
+        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo, 1292, 222);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     struct gbm_bo *dummy = reinterpret_cast<struct gbm_bo*>(0x1234567);
@@ -374,10 +375,12 @@ TEST_F(RealKMSOutputTest, has_no_cursor_if_no_hardware_support)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper)};
+    mgm::RealKMSOutput output{
+        mock_drm.fake_drm.fd(),
+        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo, 1292, 222);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     struct gbm_bo *dummy = reinterpret_cast<struct gbm_bo*>(0x1234567);
@@ -393,8 +396,10 @@ TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper)};
+    mgm::RealKMSOutput output{
+        mock_drm.fake_drm.fd(),
+        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        mt::fake_shared(mock_page_flipper)};
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
         .Times(1)
@@ -413,8 +418,10 @@ TEST_F(RealKMSOutputTest, drm_set_gamma)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper)};
+    mgm::RealKMSOutput output{
+        mock_drm.fake_drm.fd(),
+        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        mt::fake_shared(mock_page_flipper)};
 
     mg::GammaCurves gamma{{1}, {2}, {3}};
 
@@ -427,7 +434,7 @@ TEST_F(RealKMSOutputTest, drm_set_gamma)
 
     append_fb_id(fb_id);
 
-    auto fb = output.fb_for(fake_bo, 1292, 222);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
 
@@ -442,8 +449,10 @@ TEST_F(RealKMSOutputTest, drm_set_gamma_failure_does_not_throw)
 
     setup_outputs_connected_crtc();
 
-    mgm::RealKMSOutput output{mock_drm.fake_drm.fd(), connector_ids[0],
-                              mt::fake_shared(mock_page_flipper)};
+    mgm::RealKMSOutput output{
+        mock_drm.fake_drm.fd(),
+        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        mt::fake_shared(mock_page_flipper)};
 
     mg::GammaCurves gamma{{1}, {2}, {3}};
 
@@ -456,7 +465,7 @@ TEST_F(RealKMSOutputTest, drm_set_gamma_failure_does_not_throw)
 
     append_fb_id(fb_id);
 
-    auto fb = output.fb_for(fake_bo, 1292, 222);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
 

@@ -24,7 +24,6 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/test/doubles/null_display.h"
 #include "mir/test/doubles/null_platform_ipc_operations.h"
-#include "mir/test/doubles/mock_platform_authentication.h"
 
 namespace mir
 {
@@ -47,17 +46,17 @@ class NullPlatform : public graphics::Platform
         return mir::make_module_ptr<NullDisplay>();
     }
 
+    graphics::NativeDisplayPlatform* native_display_platform() override
+    {
+        return nullptr;
+    }
+
     mir::UniqueModulePtr<graphics::PlatformIpcOperations> make_ipc_operations() const override
     {
         return mir::make_module_ptr<NullPlatformIpcOperations>();
     }
 
-    graphics::NativePlatform* native_platform() override
-    {
-        return nullptr;
-    }
-
-    mir::UniqueModulePtr<graphics::PlatformAuthentication> authentication() override
+    graphics::NativeRenderingPlatform* native_rendering_platform() override
     {
         return nullptr;
     }

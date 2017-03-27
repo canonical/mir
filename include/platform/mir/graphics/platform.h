@@ -53,13 +53,13 @@ class GraphicBufferAllocator;
 class GLConfig;
 class PlatformIpcOperations;
 class PlatformAuthentication;
-class NativePlatform
+class NativeRenderingPlatform
 {
 protected:
-    NativePlatform() = default;
-    virtual ~NativePlatform() = default;
-    NativePlatform(NativePlatform const&) = delete;
-    NativePlatform& operator=(NativePlatform const&) = delete;
+    NativeRenderingPlatform() = default;
+    virtual ~NativeRenderingPlatform() = default;
+    NativeRenderingPlatform(NativeRenderingPlatform const&) = delete;
+    NativeRenderingPlatform& operator=(NativeRenderingPlatform const&) = delete;
 };
 
 /**
@@ -95,7 +95,16 @@ public:
      * Access the native resource[s] used to connect to the rendering backend
      * for this platform
      */
-    virtual NativePlatform* native_platform() = 0;
+    virtual NativeRenderingPlatform* native_rendering_platform() = 0;
+};
+
+class NativeDisplayPlatform
+{
+protected:
+    NativeDisplayPlatform() = default;
+    virtual ~NativeDisplayPlatform() = default;
+    NativeDisplayPlatform(NativeDisplayPlatform const&) = delete;
+    NativeDisplayPlatform& operator=(NativeDisplayPlatform const&) = delete;
 };
 
 class DisplayPlatform
@@ -113,7 +122,11 @@ public:
     virtual UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) = 0;
-    virtual UniqueModulePtr<PlatformAuthentication> authentication() = 0;
+
+    /**
+     * Access the platform-specific resource[s] from the display.
+     */
+    virtual NativeDisplayPlatform* native_display_platform() = 0;
 };
 
 class Platform : public DisplayPlatform,

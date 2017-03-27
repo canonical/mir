@@ -22,7 +22,6 @@
 #include "display.h"
 #include "linux_virtual_terminal.h"
 #include "ipc_operations.h"
-#include "platform_authentication.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/platform_authentication.h"
@@ -63,7 +62,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                 if (auto const drm = weak_drm.lock())
                     try { drm->drop_master(); } catch (...) {}
             }));
-
+    native_platform = std::make_unique<mgm::DRMNativePlatform>(*drm);
 }
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::Platform::create_buffer_allocator()
@@ -77,12 +76,17 @@ mir::UniqueModulePtr<mg::Display> mgm::Platform::create_display(
     return make_module_ptr<mgm::Display>(drm, gbm, vt, bypass_option_, initial_conf_policy, gl_config, listener);
 }
 
+mg::NativeDisplayPlatform* mgm::Platform::native_display_platform()
+{
+    return native_platform.get();
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
 {
     return make_module_ptr<mgm::IpcOperations>(drm);
 }
 
-mg::NativePlatform* mgm::Platform::native_platform()
+mg::NativeRenderingPlatform* mgm::Platform::native_rendering_platform()
 {
     return this;
 }
@@ -95,9 +99,4 @@ EGLNativeDisplayType mgm::Platform::egl_native_display() const
 mgm::BypassOption mgm::Platform::bypass_option() const
 {
     return bypass_option_;
-}
-
-mir::UniqueModulePtr<mg::PlatformAuthentication> mgm::Platform::authentication()
-{
-    return make_module_ptr<mgm::PlatformAuthentication>(*drm);
 }
