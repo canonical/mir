@@ -300,7 +300,7 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
     });
 
     orientation = o;
-    display_buffer->set_orientation(orientation);
+    display_buffer->set_transformation(mg::transformation(orientation));
     scale = new_scale;
 }
 

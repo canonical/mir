@@ -62,7 +62,7 @@ public:
     void swap_buffers() override;
     void bind() override;
     bool overlay(RenderableList const& renderlist) override;
-    void set_orientation(MirOrientation const new_orientation);
+    void set_transformation(glm::mat2 const&);
 
     void for_each_display_buffer(
         std::function<void(graphics::DisplayBuffer&)> const& f) override;

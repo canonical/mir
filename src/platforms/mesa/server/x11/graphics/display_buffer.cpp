@@ -158,9 +158,9 @@ glm::mat2 mgx::DisplayBuffer::transformation() const
     return transform;
 }
 
-void mgx::DisplayBuffer::set_orientation(MirOrientation const new_orientation)
+void mgx::DisplayBuffer::set_transformation(glm::mat2 const& t)
 {
-    transform = mg::transformation(new_orientation);
+    transform = t;
 }
 
 mg::NativeDisplayBuffer* mgx::DisplayBuffer::native_display_buffer()
