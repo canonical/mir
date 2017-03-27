@@ -55,7 +55,9 @@ private:
 
     std::shared_ptr<KMSOutputContainer> displays;
     DisplayConfigurationCard card;
-    std::vector<std::pair< DisplayConfigurationOutput, std::shared_ptr<KMSOutput>>> outputs;
+    typedef std::pair<DisplayConfigurationOutput, std::shared_ptr<KMSOutput>> Output;
+    Output const& output(DisplayConfigurationOutputId id) const;
+    std::vector<Output> outputs;
 };
 
 bool compatible(RealKMSDisplayConfiguration const& conf1, RealKMSDisplayConfiguration const& conf2);

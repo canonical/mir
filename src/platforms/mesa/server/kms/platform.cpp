@@ -100,12 +100,17 @@ mir::UniqueModulePtr<mg::Display> mgm::Platform::create_display(
         listener);
 }
 
+mg::NativeDisplayPlatform* mgm::Platform::native_display_platform()
+{
+    return nullptr;
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgm::Platform::make_ipc_operations() const
 {
     return make_module_ptr<mgm::IpcOperations>(drm.front());
 }
 
-mg::NativePlatform* mgm::Platform::native_platform()
+mg::NativeRenderingPlatform* mgm::Platform::native_rendering_platform()
 {
     return this;
 }

@@ -272,6 +272,7 @@ endif()
 
 if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
   pkg_check_modules(EPOXY REQUIRED epoxy)
+  pkg_check_modules(DRM REQUIRED libdrm)
 endif()
 
 set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)

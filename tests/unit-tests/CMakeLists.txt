@@ -135,8 +135,6 @@ target_link_libraries(
   mirclient-static
   mirclientlttng-static
 
-  mirsharedmesa-static
-
   mir-test-static
   mir-test-framework-static
 
@@ -149,6 +147,14 @@ target_link_libraries(
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
+
+if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11 OR MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+  target_link_libraries(
+    mir_unit_tests
+
+    mirsharedmesa-static
+  )
+endif (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11 OR MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
 
 mir_add_wrapped_executable(mir_umock_unit_tests
   ${UMOCK_UNIT_TEST_SOURCES}

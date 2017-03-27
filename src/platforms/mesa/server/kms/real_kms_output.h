@@ -69,7 +69,7 @@ public:
     void refresh_hardware_state() override;
     void update_from_hardware_state(DisplayConfigurationOutput& output) const override;
 
-    FBHandle* fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const override;
+    FBHandle* fb_for(gbm_bo* bo) const override;
 
     bool buffer_requires_migration(gbm_bo* bo) const override;
     int drm_fd() const override;
