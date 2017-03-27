@@ -340,3 +340,22 @@ TEST_F(InputDeviceHubTest, restores_configuration_when_device_reappears)
 
     EXPECT_THAT(dev_ptr->pointer_configuration().value(), Eq(ptr_config));
 }
+
+TEST_F(InputDeviceHubTest, no_device_config_action_after_device_removal)
+{
+    std::shared_ptr<mi::Device> dev_ptr;
+    MirPointerConfig ptr_config;
+    ptr_config.cursor_acceleration_bias(0.5);
+
+    ON_CALL(mock_observer, device_added(WithName("mouse"))).WillByDefault(SaveArg<0>(&dev_ptr));
+
+    hub.add_device(mt::fake_shared(mouse));
+    hub.add_observer(mt::fake_shared(mock_observer));
+    expect_and_execute_multiplexer();
+
+    EXPECT_CALL(mouse, apply_settings(Matcher<mi::PointerSettings const&>(_))).Times(0);
+
+    dev_ptr->apply_pointer_configuration(ptr_config);
+    hub.remove_device(mt::fake_shared(mouse));
+    expect_and_execute_multiplexer();
+}
