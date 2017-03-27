@@ -31,15 +31,13 @@ namespace geom=mir::geometry;
 
 mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                   Window const win,
-                                  geom::Size const sz,
+                                  geometry::Size const& view_area_size,
                                   EGLContext const shared_context,
                                   std::shared_ptr<AtomicFrame> const& f,
                                   std::shared_ptr<DisplayReport> const& r,
-                                  glm::mat2 const& trans,
                                   GLConfig const& gl_config)
-                                  : size{sz},
-                                    report{r},
-                                    transform{trans},
+                                  : report{r},
+                                    area{{0,0},view_area_size},
                                     egl{gl_config},
                                     last_frame{f},
                                     eglGetSyncValues{nullptr}
@@ -84,14 +82,7 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
 {
-    glm::vec2 const physical_size{size.width.as_int(),
-                                  size.height.as_int()};
-
-    auto const logical_size = transform * physical_size;
-
-    geom::Size const view_area_size{abs(logical_size.x),
-                                    abs(logical_size.y)};
-    return {{0,0}, view_area_size};
+    return area;
 }
 
 void mgx::DisplayBuffer::make_current()
@@ -156,6 +147,11 @@ void mgx::DisplayBuffer::bind()
 glm::mat2 mgx::DisplayBuffer::transformation() const
 {
     return transform;
+}
+
+void mgx::DisplayBuffer::set_view_area(geom::Rectangle const& a)
+{
+    area = a;
 }
 
 void mgx::DisplayBuffer::set_transformation(glm::mat2 const& t)
