@@ -36,12 +36,10 @@ namespace graphics
 {
 namespace eglstream
 {
-#if 0
+
 class RenderingPlatform : public graphics::RenderingPlatform
 {
 public:
-    RenderingPlatform();
-
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativeRenderingPlatform* native_rendering_platform() override;
@@ -56,15 +54,18 @@ public:
         std::shared_ptr<DisplayConfigurationPolicy> const& /*initial_conf_policy*/,
         std::shared_ptr<GLConfig> const& /*gl_config*/) override;
     NativeDisplayPlatform* native_display_platform() override;
+
+private:
+    EGLDisplay display;
+    mir::Fd const drm_node;
 };
-#endif
+
 class Platform : public graphics::Platform
 {
 public:
     Platform(
-        EGLDeviceEXT device,
-        std::shared_ptr<EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
-        std::shared_ptr<DisplayReport> const& /*report*/);
+        std::shared_ptr<RenderingPlatform> const&,
+        std::shared_ptr<DisplayPlatform> const&);
     ~Platform() = default;
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
@@ -79,8 +80,8 @@ public:
     NativeRenderingPlatform* native_rendering_platform() override;
 
 private:
-    EGLDisplay display;
-    mir::Fd const drm_node;
+    std::shared_ptr<RenderingPlatform> const rendering;
+    std::shared_ptr<DisplayPlatform> const display;
 };
 }
 }

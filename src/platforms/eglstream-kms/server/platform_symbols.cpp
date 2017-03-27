@@ -38,13 +38,58 @@ namespace mg = mir::graphics;
 namespace mo = mir::options;
 namespace mge = mir::graphics::eglstream;
 
+EGLDeviceEXT find_device()
+{
+    int device_count{0};
+    if (eglQueryDevicesEXT(0, nullptr, &device_count) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query device count with eglQueryDevicesEXT"));
+    }
+
+    auto devices = std::make_unique<EGLDeviceEXT[]>(device_count);
+    if (eglQueryDevicesEXT(device_count, devices.get(), &device_count) != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to get device list with eglQueryDevicesEXT"));
+    }
+
+    auto device = std::find_if(devices.get(), devices.get() + device_count,
+        [](EGLDeviceEXT device)
+        {
+            auto device_extensions = eglQueryDeviceStringEXT(device, EGL_EXTENSIONS);
+            if (device_extensions)
+            {
+                return strstr(device_extensions, "EGL_EXT_device_drm") != NULL;
+            }
+            return false;
+        });
+
+    if (device == (devices.get() + device_count))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Couldn't find EGLDeviceEXT supporting EGL_EXT_device_drm?"));
+    }
+    return device;
+
+}
+
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const&,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
-    std::shared_ptr<mg::DisplayReport> const& report,
-    std::shared_ptr<mir::logging::Logger> const& /*logger*/)
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const&, 
+    std::shared_ptr<mg::DisplayReport> const&, 
+    std::shared_ptr<mir::logging::Logger> const&)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
+    return mir::make_module_ptr<mge::Platform>(
+        std::make_shared<mge::RenderingPlatform>(),
+        std::make_shared<mge::DisplayPlatform>(find_device()));
+}
+
+mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
+    std::shared_ptr<mo::Option> const&, 
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
+    std::shared_ptr<mg::DisplayReport> const&, 
+    std::shared_ptr<mir::logging::Logger> const&) 
+{
+    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
 
     int device_count{0};
     if (eglQueryDevicesEXT(0, nullptr, &device_count) != EGL_TRUE)
@@ -74,7 +119,15 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
         BOOST_THROW_EXCEPTION(std::runtime_error("Couldn't find EGLDeviceEXT supporting EGL_EXT_device_drm?"));
     }
 
-    return mir::make_module_ptr<mge::Platform>(*device, emergency_cleanup_registry, report);
+    return mir::make_module_ptr<mge::DisplayPlatform>(find_device());
+}
+
+mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
+    std::shared_ptr<mir::options::Option> const&,
+    std::shared_ptr<mg::PlatformAuthentication> const&)
+{
+    mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
+    return mir::make_module_ptr<mge::RenderingPlatform>();
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& /*config*/)
