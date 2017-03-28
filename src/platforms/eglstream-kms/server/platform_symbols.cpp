@@ -67,8 +67,7 @@ EGLDeviceEXT find_device()
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Couldn't find EGLDeviceEXT supporting EGL_EXT_device_drm?"));
     }
-    return device;
-
+    return *device;
 }
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
