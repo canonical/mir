@@ -125,20 +125,30 @@ TEST_F(DisplayBuffer, defaults_to_no_transformation)
 
 TEST_F(DisplayBuffer, rotation_transposes_dimensions_and_reports_correctly)
 {
-    geom::Size const transposed{display_size.height.as_int(), display_size.width.as_int()};
+    geom::Rectangle const transposed{area.top_left, {area.size.height.as_int(),
+                                                     area.size.width.as_int()}};
     EXPECT_EQ(display_size, db.view_area().size);
     EXPECT_EQ(db.transformation(), rotate_none);
     db.configure(mir_power_mode_on, mir_orientation_inverted, area);
 
+    /*
+     * Note that it's the output that transposes its extents() dimensions
+     * now (which is consistent with all other platforms), and not the
+     * DisplayBuffer class that calculates the transformation. So this test
+     * has lost some of its strength, but it's also now testing a function
+     * which contains no logic (only returns what it's given). So there's not
+     * much to test anyway...
+     */
+
     EXPECT_EQ(display_size, db.view_area().size);
     EXPECT_EQ(db.transformation(), rotate_inverted);
-    db.configure(mir_power_mode_on, mir_orientation_left, area);
+    db.configure(mir_power_mode_on, mir_orientation_left, transposed);
 
-    EXPECT_EQ(transposed, db.view_area().size);
+    EXPECT_EQ(transposed, db.view_area());
     EXPECT_EQ(db.transformation(), rotate_left);
-    db.configure(mir_power_mode_on, mir_orientation_right, area);
+    db.configure(mir_power_mode_on, mir_orientation_right, transposed);
 
-    EXPECT_EQ(transposed, db.view_area().size);
+    EXPECT_EQ(transposed, db.view_area());
     EXPECT_EQ(db.transformation(), rotate_right);
 }
 
