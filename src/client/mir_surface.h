@@ -221,6 +221,7 @@ public:
     MirConnection* connection() const;
 
     std::shared_ptr<mir::client::FrameClock> get_frame_clock() const;
+    std::shared_ptr<mir::input::receiver::XKBMapper> get_keymapper() const;
 
 private:
     std::mutex mutable mutex; // Protects all members of *this
