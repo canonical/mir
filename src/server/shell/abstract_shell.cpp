@@ -163,11 +163,14 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
 
     if (modifications.cursor_image.is_set())
     {
-        surface->set_cursor_image(modifications.cursor_image.value());
-    }
-    else
-    {
-        surface->set_cursor_image({});
+        if (modifications.cursor_image.value() == nullptr)
+        {
+            surface->set_cursor_image({});
+        }
+        else
+        {
+            surface->set_cursor_image(modifications.cursor_image.value());
+        }
     }
 
     if (modifications.stream_cursor.is_set())

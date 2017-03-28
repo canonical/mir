@@ -641,10 +641,16 @@ void mf::SessionMediator::modify_surface(
             surface_specification.max_aspect().height()
         };
 
-    if (surface_specification.has_cursor_name() &&
-        surface_specification.cursor_name() != mir_disabled_cursor_name)
+    if (surface_specification.has_cursor_name())
     {
-        mods.cursor_image = cursor_images->image(surface_specification.cursor_name(), mi::default_cursor_size);
+        if (surface_specification.cursor_name() == mir_disabled_cursor_name)
+        {
+            mods.cursor_image = nullptr;
+        }
+        else
+        {
+            mods.cursor_image = cursor_images->image(surface_specification.cursor_name(), mi::default_cursor_size);
+        }
     }
 
     if (surface_specification.has_cursor_id() &&
