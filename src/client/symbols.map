@@ -174,13 +174,11 @@ MIR_CLIENT_9.1 {  # New functions in Mir 0.15
     mir_surface_spec_attach_to_foreign_parent;
     mir_surface_spec_set_input_shape;
     mir_connection_get_egl_pixel_format;
-  local: *;
 } MIR_CLIENT_9;
 
 MIR_CLIENT_9.2 {  # New functions in Mir 0.16
   global:
     mir_surface_spec_set_event_handler;
-  local: *;
 } MIR_CLIENT_9.1;
 
 MIR_CLIENT_9v17 {
@@ -204,8 +202,6 @@ MIR_CLIENT_9v18 {
     mir_buffer_stream_get_error_message;
     mir_surface_output_event_get_output_id;
     mir_connection_set_base_display_config;
-  local:
-    *;
 } MIR_CLIENT_9v17;
 
 MIR_CLIENT_9v19 {
@@ -265,8 +261,6 @@ MIR_CLIENT_0.21 {
     mir_output_mode_get_height;
     mir_output_mode_get_refresh_rate;
     mir_output_mode_get_width;
-  local:
-    *;
 } MIR_CLIENT_9v19;
 
 MIR_CLIENT_0.22 {  # New functions in Mir 0.22
@@ -318,7 +312,7 @@ MIR_CLIENT_DETAIL_9 {
       typeinfo?for?mir::client::DefaultConnectionConfiguration;
       vtable?for?mir::client::DefaultConnectionConfiguration;
       mir::operator???std::ostream???Mir*
-    }; 
+    };
 };
 
 MIR_CLIENT_DETAIL_9v18 {
@@ -363,8 +357,6 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_buffer_get_egl_image_parameters;
     mir_presentation_chain_set_queueing_mode;
     mir_presentation_chain_set_dropping_mode;
-  local:
-    *;
 } MIR_CLIENT_DETAIL_9v18;
 
 MIR_CLIENT_DETAIL_0.24 {
@@ -600,6 +592,7 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
     mir_input_device_get_mutable_keyboard_config;
     mir_input_device_get_mutable_touchscreen_config;
     mir_input_device_get_touchscreen_config;
+    mir_input_event_get_event;
     mir_keyboard_config_get_keymap_layout;
     mir_keyboard_config_get_keymap_model;
     mir_keyboard_config_get_keymap_options;
