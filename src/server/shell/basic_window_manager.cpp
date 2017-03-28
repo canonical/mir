@@ -145,6 +145,20 @@ void msh::BasicWindowManager::handle_request_drag_and_drop(
         policy->handle_request_drag_and_drop(session, surface);
 }
 
+void msh::BasicWindowManager::handle_request_move(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<scene::Surface> const& surface,
+    uint64_t timestamp)
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    if (timestamp >= last_input_event_timestamp)
+    {
+//        policy->handle_request_move(session, surface);
+        (void)session;
+        (void)surface;
+    }
+}
+
 int msh::BasicWindowManager::set_surface_attribute(
     std::shared_ptr<scene::Session> const& /*session*/,
     std::shared_ptr<scene::Surface> const& surface,

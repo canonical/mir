@@ -171,6 +171,10 @@ void msh::FrontendShell::request_operation(
         wrapped->request_drag_and_drop(scene_session, surface, timestamp);
         break;
 
+    case UserRequest::move:
+        wrapped->request_move(scene_session, surface, timestamp);
+        break;
+
     default:
         break;
     }

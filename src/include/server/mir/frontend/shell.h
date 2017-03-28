@@ -87,7 +87,6 @@ public:
         drag_and_drop,
         move,
         activate,
-        resize
     };
 
     virtual void request_operation(

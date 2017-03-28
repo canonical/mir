@@ -168,6 +168,14 @@ void mtf::ObservantShell::request_drag_and_drop(
     return wrapped->request_drag_and_drop(session, window, timestamp);
 }
 
+void mtf::ObservantShell::request_move(
+    std::shared_ptr<msc::Session> const& session,
+    std::shared_ptr<msc::Surface> const& window,
+    uint64_t timestamp)
+{
+    return wrapped->request_move(session, window, timestamp);
+}
+
 void mtf::ObservantShell::set_drag_and_drop_handle(std::vector<uint8_t> const& handle)
 {
     wrapped->set_drag_and_drop_handle(handle);

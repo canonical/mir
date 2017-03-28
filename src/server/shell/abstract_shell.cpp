@@ -259,6 +259,18 @@ void msh::AbstractShell::request_drag_and_drop(
     window_manager->handle_request_drag_and_drop(session, surface, timestamp);
 }
 
+void msh::AbstractShell::request_move(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<scene::Surface> const& surface,
+    uint64_t timestamp)
+{
+    (void)session;
+    (void)surface;
+    (void)timestamp;
+
+    // TODO{arg}
+}
+
 void msh::AbstractShell::focus_next_session()
 {
     std::unique_lock<std::mutex> lock(focus_mutex);
