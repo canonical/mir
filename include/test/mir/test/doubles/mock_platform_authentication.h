@@ -21,6 +21,7 @@
 
 #include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/platform_operation_message.h"
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -51,6 +52,7 @@ struct MockPlatformAuthentication : graphics::PlatformAuthentication
         unsigned int, graphics::PlatformOperationMessage const&));
     MOCK_METHOD0(auth_extension, optional_value<std::shared_ptr<graphics::MesaAuthExtension>>());
     MOCK_METHOD0(set_gbm_extension, optional_value<std::shared_ptr<graphics::SetGbmExtension>>());
+    MOCK_METHOD0(drm_fd, optional_value<mir::Fd>());
     MOCK_METHOD2(request_interface, void*(char const*, int));
 };
 

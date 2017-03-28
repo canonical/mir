@@ -64,6 +64,8 @@ public:
     virtual mir::optional_value<std::shared_ptr<MesaAuthExtension>> auth_extension() = 0;
     virtual mir::optional_value<std::shared_ptr<SetGbmExtension>> set_gbm_extension() = 0;
 
+    virtual mir::optional_value<mir::Fd> drm_fd() = 0;
+
     virtual PlatformOperationMessage platform_operation(
         unsigned int op, PlatformOperationMessage const& request) = 0;
 

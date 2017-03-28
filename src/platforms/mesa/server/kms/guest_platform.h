@@ -32,14 +32,14 @@ namespace graphics
 {
 namespace mesa
 {
-class InternalNativeDisplay; 
+class PlatformAuthentication;
 
 class GuestPlatform : public graphics::Platform,
                       public graphics::NativeRenderingPlatform,
                       public mir::renderer::gl::EGLPlatform
 {
 public:
-    GuestPlatform(std::shared_ptr<PlatformAuthentication> const& platform_authentication_arg);
+    GuestPlatform(std::shared_ptr<graphics::PlatformAuthentication> const& platform_authentication_arg);
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
@@ -53,7 +53,8 @@ public:
     EGLNativeDisplayType egl_native_display() const override;
 
 private:
-    std::shared_ptr<PlatformAuthentication> const platform_authentication;
+    std::shared_ptr<graphics::PlatformAuthentication> const platform_authentication;
+    std::shared_ptr<graphics::NativeDisplayPlatform> auth;
     helpers::GBMHelper gbm;
 };
 }
