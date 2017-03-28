@@ -30,6 +30,7 @@
 #include "mir/graphics/virtual_output.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/transformation.h"
 #include "mir/renderer/gl/render_target.h"
 #include "mir/renderer/gl/context.h"
 
@@ -124,7 +125,8 @@ public:
         : dpy{dpy},
           ctx{create_context(dpy, config, ctx)},
           layer{output.output_layer()},
-          view_area_{output.extents()}
+          view_area_{output.extents()},
+          transform{mg::transformation(output.orientation)}
     {
         EGLint const stream_attribs[] = {
             EGL_STREAM_FIFO_LENGTH_KHR, 1,
@@ -202,7 +204,7 @@ public:
 
     glm::mat2 transformation() const override
     {
-        return {};
+        return transform;
     }
 
     mir::graphics::NativeDisplayBuffer* native_display_buffer() override
@@ -234,6 +236,7 @@ private:
     EGLContext ctx;
     EGLOutputLayerEXT layer;
     mir::geometry::Rectangle const view_area_;
+    glm::mat2 const transform;
     EGLStreamKHR output_stream;
     EGLSurface surface;
 };
