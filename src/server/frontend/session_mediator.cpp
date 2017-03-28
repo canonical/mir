@@ -1153,36 +1153,15 @@ void mf::SessionMediator::configure_buffer_stream(
     done->Run();
 }
 
-void mf::SessionMediator::raise_surface(
-    mir::protobuf::RaiseRequest const* request,
-    mir::protobuf::Void*,
-    google::protobuf::Closure* done)
-{
-    auto const session = weak_session.lock();
-    if (!session)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-    auto const cookie     = request->cookie();
-    auto const surface_id = request->surface_id();
-
-    auto cookie_string = cookie.cookie();
-
-    std::vector<uint8_t> cookie_bytes(cookie_string.begin(), cookie_string.end());
-    auto const cookie_ptr = cookie_authority->make_cookie(cookie_bytes);
-
-    shell->raise_surface(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
-
-    done->Run();
-}
-
-void mir::frontend::SessionMediator::request_drag_and_drop(mir::protobuf::RequestAuthority const* request,
+void mir::frontend::SessionMediator::request_operation(
+    mir::protobuf::RequestWithAuthority const* request,
     mir::protobuf::Void*, google::protobuf::Closure* done)
 {
     auto const session = weak_session.lock();
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    auto const cookie     = request->cookie();
+    auto const cookie     = request->authority();
     auto const surface_id = request->surface_id();
 
     auto cookie_string = cookie.cookie();
@@ -1190,7 +1169,19 @@ void mir::frontend::SessionMediator::request_drag_and_drop(mir::protobuf::Reques
     std::vector<uint8_t> cookie_bytes(cookie_string.begin(), cookie_string.end());
     auto const cookie_ptr = cookie_authority->make_cookie(cookie_bytes);
 
-    shell->request_drag_and_drop(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+    switch (request->operation())
+    {
+    case mir::protobuf::RequestOperation::START_DRAG_AND_DROP:
+        shell->request_drag_and_drop(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+        break;
+
+    case mir::protobuf::RequestOperation::MAKE_ACTIVE:
+        shell->raise_surface(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+        break;
+
+    default:
+        break;
+    }
 
     done->Run();
 }

@@ -245,12 +245,8 @@ public:
         mir::protobuf::StreamConfiguration const* request,
         mir::protobuf::Void*,
         google::protobuf::Closure* done) override;
-    void raise_surface(
-        mir::protobuf::RaiseRequest const* request,
-        mir::protobuf::Void*,
-        google::protobuf::Closure* done) override;
-    void request_drag_and_drop(
-        mir::protobuf::RequestAuthority const* request,
+    void request_operation(
+        mir::protobuf::RequestWithAuthority const* request,
         mir::protobuf::Void*,
         google::protobuf::Closure* done) override;
     void apply_input_configuration(

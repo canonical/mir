@@ -305,9 +305,9 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::stop_prompt_session, invocation);
         }
-        else if ("request_drag_and_drop" == invocation.method_name())
+        else if ("request_operation" == invocation.method_name())
         {
-            invoke(this, display_server.get(), &protobuf::DisplayServer::request_drag_and_drop, invocation);
+            invoke(this, display_server.get(), &protobuf::DisplayServer::request_operation, invocation);
         }
         else if ("disconnect" == invocation.method_name())
         {
@@ -321,10 +321,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("configure_buffer_stream" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::configure_buffer_stream, invocation);
-        }
-        else if ("raise_surface" == invocation.method_name())
-        {
-            invoke(this, display_server.get(), &DisplayServer::raise_surface, invocation);
         }
         else if ("translate_surface_to_screen" == invocation.method_name())
         {
