@@ -124,7 +124,7 @@ public:
         : dpy{dpy},
           ctx{create_context(dpy, config, ctx)},
           layer{output.output_layer()},
-          view_area_{output.top_left, output.size()}
+          view_area_{output.extents()}
     {
         EGLint const stream_attribs[] = {
             EGL_STREAM_FIFO_LENGTH_KHR, 1,
@@ -153,8 +153,8 @@ public:
         };
 
         EGLint const surface_attribs[] = {
-            EGL_WIDTH, output.size().width.as_int(),
-            EGL_HEIGHT, output.size().height.as_int(),
+            EGL_WIDTH, view_area_.size.width.as_int(),
+            EGL_HEIGHT, view_area_.size.height.as_int(),
             EGL_NONE,
         };
         surface = eglCreateStreamProducerSurfaceKHR(dpy, config, output_stream, surface_attribs);
