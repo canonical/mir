@@ -830,4 +830,9 @@ std::shared_ptr<FrameClock> MirSurface::get_frame_clock() const
     return frame_clock;
 }
 
+std::shared_ptr<mir::input::receiver::XKBMapper> MirSurface::get_keymapper() const
+{
+    return keymapper;
+}
+
 #pragma GCC diagnostic pop
