@@ -1091,6 +1091,11 @@ MATCHER(CursorImageIsSetNotNull, "cursor configuration match")
     EXPECT_THAT(arg.cursor_image.value(), testing::Ne(nullptr));
     return !(::testing::Test::HasFailure());
 }
+MATCHER(CursorImageIsUnset, "cursor configuration match")
+{
+    return arg.cursor_image.is_set() == false;
+}
+
 
 TEST_F(SessionMediator, arranges_cursors_via_shell)
 {
@@ -1133,6 +1138,20 @@ TEST_F(SessionMediator, arranges_named_cursors_via_shell)
 
     ASSERT_THAT(cursor_data.begin(), Ne(cursor_data.end()));
     spec->set_cursor_name(cursor_data.begin()->name);
+    mediator.modify_surface(&mods, &null, null_callback.get());
+}
+
+TEST_F(SessionMediator, disabled_cursor_returns_null_image)
+{
+    mp::Void null;
+    mp::SurfaceModifications mods;
+    auto spec = mods.mutable_surface_specification();
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
+    spec->set_cursor_name("none");
+
+    EXPECT_CALL(*shell, modify_surface(_,
+        mf::SurfaceId{surface_response.id().value()}, CursorImageIsUnset()));
     mediator.modify_surface(&mods, &null, null_callback.get());
 }
 
