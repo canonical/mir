@@ -81,7 +81,7 @@ struct DisplayBuffer : public ::testing::Test
         new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, top_left)};
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle{
         std::make_shared<testing::NiceMock<mtd::MockFBBundle>>(display_size)};
-    MirOrientation orientation{mir_orientation_normal};
+    glm::mat2 const transformation;
     mga::DisplayBuffer db{
         mga::DisplayName::primary,
         std::unique_ptr<mga::LayerList>(
@@ -91,7 +91,7 @@ struct DisplayBuffer : public ::testing::Test
         native_window,
         *gl_context,
         stub_program_factory,
-        orientation,
+        transformation,
         top_left,
         mga::OverlayOptimization::enabled};
 
@@ -127,15 +127,15 @@ TEST_F(DisplayBuffer, rotation_transposes_dimensions_and_reports_correctly)
     geom::Size const transposed{display_size.height.as_int(), display_size.width.as_int()};
     EXPECT_EQ(display_size, db.view_area().size);
     EXPECT_EQ(db.transformation(), rotate_none);
-    db.configure(mir_power_mode_on, mir_orientation_inverted, top_left);
+    db.configure(mir_power_mode_on, rotate_inverted, top_left);
 
     EXPECT_EQ(display_size, db.view_area().size);
     EXPECT_EQ(db.transformation(), rotate_inverted);
-    db.configure(mir_power_mode_on, mir_orientation_left, top_left);
+    db.configure(mir_power_mode_on, rotate_left, top_left);
 
     EXPECT_EQ(transposed, db.view_area().size);
     EXPECT_EQ(db.transformation(), rotate_left);
-    db.configure(mir_power_mode_on, mir_orientation_right, top_left);
+    db.configure(mir_power_mode_on, rotate_right, top_left);
 
     EXPECT_EQ(transposed, db.view_area().size);
     EXPECT_EQ(db.transformation(), rotate_right);
@@ -179,7 +179,7 @@ TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
         native_window,
         *gl_context,
         stub_program_factory,
-        orientation,
+        transformation,
         top_left,
         mga::OverlayOptimization::enabled};
     }
@@ -208,7 +208,7 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
             native_window,
             *gl_context,
             stub_program_factory,
-            orientation,
+            transformation,
             top_left,
             mga::OverlayOptimization::enabled);
     }, std::runtime_error);
@@ -223,7 +223,7 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
             native_window,
             *gl_context,
             stub_program_factory,
-            orientation,
+            transformation,
             top_left,
             mga::OverlayOptimization::enabled);
     }, std::runtime_error);
@@ -269,10 +269,10 @@ TEST_F(DisplayBuffer, notifies_list_that_content_is_cleared)
 {
     EXPECT_CALL(*mock_display_device, content_cleared())
         .Times(3);
-    db.configure(mir_power_mode_off, mir_orientation_normal, top_left);
-    db.configure(mir_power_mode_suspend, mir_orientation_normal, top_left);
-    db.configure(mir_power_mode_standby, mir_orientation_normal, top_left);
-    db.configure(mir_power_mode_on, mir_orientation_normal, top_left);
+    db.configure(mir_power_mode_off, {}, top_left);
+    db.configure(mir_power_mode_suspend, {}, top_left);
+    db.configure(mir_power_mode_standby, {}, top_left);
+    db.configure(mir_power_mode_on, {}, top_left);
 }
 
 TEST_F(DisplayBuffer, reject_list_if_option_disabled)
@@ -291,7 +291,7 @@ TEST_F(DisplayBuffer, reject_list_if_option_disabled)
         native_window,
         *gl_context,
         stub_program_factory,
-        orientation,
+        transformation,
         top_left,
         mga::OverlayOptimization::disabled);
 
@@ -343,7 +343,7 @@ TEST_F(DisplayBuffer, reports_position_correctly)
     geom::Displacement offset{100, 100};
 
     EXPECT_THAT(db.view_area().top_left, Eq(origin));
-    db.configure(mir_power_mode_on, orientation, offset);
+    db.configure(mir_power_mode_on, transformation, offset);
     EXPECT_THAT(db.view_area().top_left, Eq(geom::Point{origin + offset}));
 }
 
@@ -358,8 +358,8 @@ TEST_F(DisplayBuffer, rejects_lists_if_db_is_rotated)
         std::make_shared<mtd::StubRenderable>(
             std::make_shared<mtd::StubBuffer>(std::make_shared<mtd::StubAndroidNativeBuffer>()))};
 
-    db.configure(mir_power_mode_on, mir_orientation_inverted, geom::Displacement{0,0});
+    db.configure(mir_power_mode_on, rotate_inverted, geom::Displacement{0,0});
     EXPECT_FALSE(db.overlay(renderlist));
-    db.configure(mir_power_mode_on, mir_orientation_normal, geom::Displacement{0,0});
+    db.configure(mir_power_mode_on, {}, geom::Displacement{0,0});
     EXPECT_TRUE(db.overlay(renderlist));
 }
