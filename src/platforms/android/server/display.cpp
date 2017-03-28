@@ -22,6 +22,7 @@
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
+#include "mir/graphics/transformation.h"
 #include "display.h"
 #include "virtual_output.h"
 #include "display_component_factory.h"
@@ -133,7 +134,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
         native_window,
         gl_context,
         *gl_program_factory,
-        config.orientation,
+        mg::transformation(config.orientation),
         displacement,
         overlay_option));
 }
@@ -403,15 +404,17 @@ void mga::Display::configure_locked(
             geom::Displacement offset(output.top_left - origin);
             config[output.id].top_left = output.top_left;
 
+            auto const transform = mg::transformation(output.orientation);
+
             if (config.primary().id == output.id)
             {
                 power_mode(mga::DisplayName::primary, *hwc_config, config.primary(), output.power_mode);
-                displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation, offset);
+                displays.configure(mga::DisplayName::primary, output.power_mode, transform, offset);
             }
             else if (config.external().id == output.id && config.external().connected)
             {
                 power_mode(mga::DisplayName::external, *hwc_config, config.external(), output.power_mode);
-                displays.configure(mga::DisplayName::external, output.power_mode, output.orientation, offset);
+                displays.configure(mga::DisplayName::external, output.power_mode, transform, offset);
             }
         });
 }

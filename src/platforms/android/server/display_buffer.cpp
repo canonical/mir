@@ -40,7 +40,7 @@ mga::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<ANativeWindow> const& native_window,
     mga::GLContext const& shared_gl_context,
     mgl::ProgramFactory const& program_factory,
-    MirOrientation orientation,
+    glm::mat2 const& transform,
     geom::Displacement offset,
     mga::OverlayOptimization overlay_option)
     : display_name(display_name),
@@ -51,8 +51,7 @@ mga::DisplayBuffer::DisplayBuffer(
       gl_context{shared_gl_context, fb_bundle, native_window},
       overlay_program{program_factory, gl_context, geom::Rectangle{{0,0},fb_bundle->fb_size()}},
       overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
-      orientation_{orientation},
-      transform{mg::transformation(orientation)},
+      transform{transform},
       offset_from_origin{offset},
       power_mode_{mir_power_mode_on}
 {
@@ -61,14 +60,16 @@ mga::DisplayBuffer::DisplayBuffer(
 geom::Rectangle mga::DisplayBuffer::view_area() const
 {
     auto const& size = fb_bundle->fb_size();
-    int width = size.width.as_int();
-    int height = size.height.as_int();
 
-    if (orientation_ == mir_orientation_left || orientation_ == mir_orientation_right)
-        std::swap(width, height);
+    glm::vec2 const physical_size{size.width.as_int(), size.height.as_int()};
+
+    // We could eliminate this inverse() (the only one in the source tree) by
+    // passing the extents in from the output:
+    auto const untransformed = glm::inverse(transform) * physical_size;
+    geom::Size const logical_size{abs(untransformed.x), abs(untransformed.y)};
 
     geom::Point origin;
-    return {origin + offset_from_origin, {width,height}};
+    return {origin + offset_from_origin, logical_size};
 }
 
 void mga::DisplayBuffer::make_current()
@@ -115,14 +116,15 @@ glm::mat2 mga::DisplayBuffer::transformation() const
     return transform;
 }
 
-void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation, geom::Displacement offset)
+void mga::DisplayBuffer::configure(MirPowerMode power_mode,
+                                   glm::mat2 const& trans,
+                                   geom::Displacement offset)
 {
     power_mode_ = power_mode;
     offset_from_origin = offset;
     if (power_mode_ != mir_power_mode_on)
         display_device->content_cleared();
-    orientation_ = orientation;
-    transform = mg::transformation(orientation_);
+    transform = trans;
 }
 
 mga::DisplayContents mga::DisplayBuffer::contents()
