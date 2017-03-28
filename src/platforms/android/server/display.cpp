@@ -404,7 +404,7 @@ void mga::Display::configure_locked(
             geom::Displacement offset(output.top_left - origin);
             config[output.id].top_left = output.top_left;
 
-            auto const transform = mg::transformation(output.orientation);
+            auto const& transform = mg::transformation(output.orientation);
 
             if (config.primary().id == output.id)
             {
