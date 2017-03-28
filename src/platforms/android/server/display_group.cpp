@@ -75,12 +75,12 @@ bool mga::DisplayGroup::display_present(DisplayName name) const
 }
 
 void mga::DisplayGroup::configure(
-    DisplayName name, MirPowerMode mode, glm::mat2 const& transform, geom::Displacement offset)
+    DisplayName name, MirPowerMode mode, glm::mat2 const& transform, geom::Rectangle const& view_area)
 {
     std::unique_lock<decltype(guard)> lk(guard);
     auto it = dbs.find(name);
     if (it != dbs.end())
-        it->second->configure(mode, transform, offset);
+        it->second->configure(mode, transform, view_area);
 }
 
 void mga::DisplayGroup::post()

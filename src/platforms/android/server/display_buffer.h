@@ -56,7 +56,7 @@ public:
         GLContext const& shared_gl_context,
         gl::ProgramFactory const& program_factory,
         glm::mat2 const& transform,
-        geometry::Displacement offset,
+        geometry::Rectangle area,
         OverlayOptimization overlay_option);
 
     geometry::Rectangle view_area() const override;
@@ -69,7 +69,7 @@ public:
     glm::mat2 transformation() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
-    void configure(MirPowerMode power_mode, glm::mat2 const& trans, geometry::Displacement) override;
+    void configure(MirPowerMode power_mode, glm::mat2 const& trans, geometry::Rectangle const&) override;
     DisplayContents contents() override;
     MirPowerMode power_mode() const override;
 private:
@@ -82,7 +82,7 @@ private:
     HWCFallbackGLRenderer overlay_program;
     bool overlay_enabled;
     glm::mat2 transform;
-    geometry::Displacement offset_from_origin;
+    geometry::Rectangle area;
     MirPowerMode power_mode_;
 };
 

@@ -77,6 +77,7 @@ struct DisplayBuffer : public ::testing::Test
     geom::Size const display_size{433,232};
     double const refresh_rate{60.0};
     geom::Displacement top_left{0,0};
+    geom::Rectangle const area{{0,0}, display_size};
     std::unique_ptr<mga::LayerList> list{
         new mga::LayerList(std::make_shared<mga::IntegerSourceCrop>(), {}, top_left)};
     std::shared_ptr<mtd::MockFBBundle> mock_fb_bundle{
@@ -92,7 +93,7 @@ struct DisplayBuffer : public ::testing::Test
         *gl_context,
         stub_program_factory,
         transformation,
-        top_left,
+        area,
         mga::OverlayOptimization::enabled};
 
 };
@@ -124,20 +125,30 @@ TEST_F(DisplayBuffer, defaults_to_no_transformation)
 
 TEST_F(DisplayBuffer, rotation_transposes_dimensions_and_reports_correctly)
 {
-    geom::Size const transposed{display_size.height.as_int(), display_size.width.as_int()};
+    geom::Rectangle const transposed{area.top_left, {area.size.height.as_int(),
+                                                     area.size.width.as_int()}};
     EXPECT_EQ(display_size, db.view_area().size);
     EXPECT_EQ(db.transformation(), rotate_none);
-    db.configure(mir_power_mode_on, rotate_inverted, top_left);
+    db.configure(mir_power_mode_on, rotate_inverted, area);
+
+    /*
+     * Note that it's the output that transposes its extents() dimensions
+     * now (which is consistent with all other platforms), and not the
+     * DisplayBuffer class that calculates the transformation. So this test
+     * has lost some of its strength, but it's also now testing a function
+     * which contains no logic (only returns what it's given). So there's not
+     * much to test anyway...
+     */
 
     EXPECT_EQ(display_size, db.view_area().size);
     EXPECT_EQ(db.transformation(), rotate_inverted);
-    db.configure(mir_power_mode_on, rotate_left, top_left);
+    db.configure(mir_power_mode_on, rotate_left, transposed);
 
-    EXPECT_EQ(transposed, db.view_area().size);
+    EXPECT_EQ(transposed, db.view_area());
     EXPECT_EQ(db.transformation(), rotate_left);
-    db.configure(mir_power_mode_on, rotate_right, top_left);
+    db.configure(mir_power_mode_on, rotate_right, transposed);
 
-    EXPECT_EQ(transposed, db.view_area().size);
+    EXPECT_EQ(transposed, db.view_area());
     EXPECT_EQ(db.transformation(), rotate_right);
 }
 
@@ -180,7 +191,7 @@ TEST_F(DisplayBuffer, creates_egl_context_from_shared_context)
         *gl_context,
         stub_program_factory,
         transformation,
-        top_left,
+        area,
         mga::OverlayOptimization::enabled};
     }
     
@@ -209,7 +220,7 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
             *gl_context,
             stub_program_factory,
             transformation,
-            top_left,
+            area,
             mga::OverlayOptimization::enabled);
     }, std::runtime_error);
 
@@ -224,7 +235,7 @@ TEST_F(DisplayBuffer, fails_on_egl_resource_creation)
             *gl_context,
             stub_program_factory,
             transformation,
-            top_left,
+            area,
             mga::OverlayOptimization::enabled);
     }, std::runtime_error);
 }
@@ -269,10 +280,10 @@ TEST_F(DisplayBuffer, notifies_list_that_content_is_cleared)
 {
     EXPECT_CALL(*mock_display_device, content_cleared())
         .Times(3);
-    db.configure(mir_power_mode_off, {}, top_left);
-    db.configure(mir_power_mode_suspend, {}, top_left);
-    db.configure(mir_power_mode_standby, {}, top_left);
-    db.configure(mir_power_mode_on, {}, top_left);
+    db.configure(mir_power_mode_off, {}, area);
+    db.configure(mir_power_mode_suspend, {}, area);
+    db.configure(mir_power_mode_standby, {}, area);
+    db.configure(mir_power_mode_on, {}, area);
 }
 
 TEST_F(DisplayBuffer, reject_list_if_option_disabled)
@@ -292,7 +303,7 @@ TEST_F(DisplayBuffer, reject_list_if_option_disabled)
         *gl_context,
         stub_program_factory,
         transformation,
-        top_left,
+        area,
         mga::OverlayOptimization::disabled);
 
     EXPECT_FALSE(db.overlay(renderlist)); 
@@ -339,12 +350,14 @@ TEST_F(DisplayBuffer, rejects_commit_if_list_doesnt_need_commit)
 TEST_F(DisplayBuffer, reports_position_correctly)
 {
     using namespace testing;
-    geom::Point origin;
-    geom::Displacement offset{100, 100};
+    geom::Displacement const offset{100, 100};
+    geom::Point const top_left_point = area.top_left;
+    geom::Point const offset_top_left_point = top_left_point + offset;
 
-    EXPECT_THAT(db.view_area().top_left, Eq(origin));
-    db.configure(mir_power_mode_on, transformation, offset);
-    EXPECT_THAT(db.view_area().top_left, Eq(geom::Point{origin + offset}));
+    EXPECT_THAT(db.view_area().top_left, Eq(top_left_point));
+    db.configure(mir_power_mode_on, transformation,
+                 {offset_top_left_point, area.size});
+    EXPECT_THAT(db.view_area().top_left, Eq(offset_top_left_point));
 }
 
 //lp: #1485070. Could alternitvely rotate all the renderables, once rotation is supported
@@ -358,8 +371,8 @@ TEST_F(DisplayBuffer, rejects_lists_if_db_is_rotated)
         std::make_shared<mtd::StubRenderable>(
             std::make_shared<mtd::StubBuffer>(std::make_shared<mtd::StubAndroidNativeBuffer>()))};
 
-    db.configure(mir_power_mode_on, rotate_inverted, geom::Displacement{0,0});
+    db.configure(mir_power_mode_on, rotate_inverted, area);
     EXPECT_FALSE(db.overlay(renderlist));
-    db.configure(mir_power_mode_on, {}, geom::Displacement{0,0});
+    db.configure(mir_power_mode_on, rotate_none, area);
     EXPECT_TRUE(db.overlay(renderlist));
 }

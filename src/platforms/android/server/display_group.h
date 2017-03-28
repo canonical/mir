@@ -54,7 +54,7 @@ public:
 
     void add(DisplayName name, std::unique_ptr<ConfigurableDisplayBuffer> buffer);
     void remove(DisplayName name);
-    void configure(DisplayName name, MirPowerMode, glm::mat2 const&, geometry::Displacement);
+    void configure(DisplayName name, MirPowerMode, glm::mat2 const&, geometry::Rectangle const&);
     bool display_present(DisplayName name) const;
 
 private:

@@ -41,7 +41,7 @@ mga::DisplayBuffer::DisplayBuffer(
     mga::GLContext const& shared_gl_context,
     mgl::ProgramFactory const& program_factory,
     glm::mat2 const& transform,
-    geom::Displacement offset,
+    geom::Rectangle area,
     mga::OverlayOptimization overlay_option)
     : display_name(display_name),
       layer_list(std::move(layer_list)),
@@ -52,24 +52,14 @@ mga::DisplayBuffer::DisplayBuffer(
       overlay_program{program_factory, gl_context, geom::Rectangle{{0,0},fb_bundle->fb_size()}},
       overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
       transform{transform},
-      offset_from_origin{offset},
+      area{area},
       power_mode_{mir_power_mode_on}
 {
 }
 
 geom::Rectangle mga::DisplayBuffer::view_area() const
 {
-    auto const& size = fb_bundle->fb_size();
-
-    glm::vec2 const physical_size{size.width.as_int(), size.height.as_int()};
-
-    // We could eliminate this inverse() (the only one in the source tree) by
-    // passing the extents in from the output:
-    auto const untransformed = glm::inverse(transform) * physical_size;
-    geom::Size const logical_size{abs(untransformed.x), abs(untransformed.y)};
-
-    geom::Point origin;
-    return {origin + offset_from_origin, logical_size};
+    return area;
 }
 
 void mga::DisplayBuffer::make_current()
@@ -90,7 +80,7 @@ bool mga::DisplayBuffer::overlay(RenderableList const& renderlist)
         transform != no_transformation)
         return false;
 
-    layer_list->update_list(renderlist, offset_from_origin);
+    layer_list->update_list(renderlist, area.top_left - geom::Point());
 
     bool needs_commit{false};
     for (auto& layer : *layer_list)
@@ -101,7 +91,7 @@ bool mga::DisplayBuffer::overlay(RenderableList const& renderlist)
 
 void mga::DisplayBuffer::swap_buffers()
 {
-    layer_list->update_list({}, offset_from_origin);
+    layer_list->update_list({}, area.top_left - geom::Point());
     //HWC 1.0 cannot call eglSwapBuffers() on the display context
     if (display_device->can_swap_buffers())
         gl_context.swap_buffers();
@@ -118,10 +108,10 @@ glm::mat2 mga::DisplayBuffer::transformation() const
 
 void mga::DisplayBuffer::configure(MirPowerMode power_mode,
                                    glm::mat2 const& trans,
-                                   geom::Displacement offset)
+                                   geom::Rectangle const& a)
 {
     power_mode_ = power_mode;
-    offset_from_origin = offset;
+    area = a;
     if (power_mode_ != mir_power_mode_on)
         display_device->content_cleared();
     transform = trans;
@@ -129,7 +119,7 @@ void mga::DisplayBuffer::configure(MirPowerMode power_mode,
 
 mga::DisplayContents mga::DisplayBuffer::contents()
 {
-    return mga::DisplayContents{display_name, *layer_list, offset_from_origin, gl_context, overlay_program};
+    return mga::DisplayContents{display_name, *layer_list, area.top_left - geom::Point(), gl_context, overlay_program};
 }
 
 MirPowerMode mga::DisplayBuffer::power_mode() const
