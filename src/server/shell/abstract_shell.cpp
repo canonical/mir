@@ -264,11 +264,7 @@ void msh::AbstractShell::request_move(
     std::shared_ptr<scene::Surface> const& surface,
     uint64_t timestamp)
 {
-    (void)session;
-    (void)surface;
-    (void)timestamp;
-
-    // TODO{arg}
+    window_manager->handle_request_move(session, surface, timestamp);
 }
 
 void msh::AbstractShell::focus_next_session()
