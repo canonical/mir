@@ -77,17 +77,9 @@ endif()
 # The following tests use still files we have chosen not to support in the public API
 # TODO update these "throwback" tests to rely only on the public APIs
 
-#  # uses BasicWindowManager<>
-#  set_source_files_properties(test_client_cursor_api.cpp PROPERTIES COMPILE_FLAGS
-#          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/server")
-#
   # uses UsingClientPlatform
   set_source_files_properties(test_client_library_errors.cpp PROPERTIES COMPILE_FLAGS
           "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
-
-#  # uses CanonicalWindowManager
-#  set_source_files_properties(test_shell_control_of_surface_configuration.cpp PROPERTIES COMPILE_FLAGS
-#          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/server")
 
   # uses src/include/common/mir/protobuf/protocol_version.h
   set_source_files_properties(test_client_library.cpp PROPERTIES COMPILE_FLAGS
