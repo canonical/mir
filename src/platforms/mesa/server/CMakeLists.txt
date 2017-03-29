@@ -19,6 +19,7 @@ add_library(
   gbm_buffer.cpp
   ipc_operations.cpp
   software_buffer.cpp
+  drm_native_platform.cpp
 )
 
 target_link_libraries(

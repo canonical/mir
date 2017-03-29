@@ -41,7 +41,7 @@ public:
 
     std::shared_ptr<mgx::GuestPlatform> create_guest_platform()
     {
-        return std::make_shared<mgx::GuestPlatform>(nullptr);
+        return std::make_shared<mgx::GuestPlatform>();
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;

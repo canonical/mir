@@ -52,11 +52,42 @@ void set_guest_gbm_device(mg::PlatformAuthentication& platform_authentication, g
     else
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir failed to set the gbm device."));
 }
+
+struct AuthenticationWrapper : mg::NativeDisplayPlatform,
+                               mg::PlatformAuthentication
+{
+    AuthenticationWrapper(std::shared_ptr<PlatformAuthentication> const& auth) :
+        auth(auth)
+    {
+    }
+
+    mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> auth_extension() override
+    {
+        return auth->auth_extension();
+    }
+
+    mir::optional_value<std::shared_ptr<mg::SetGbmExtension>> set_gbm_extension() override
+    {
+        return auth->set_gbm_extension();
+    }
+
+    mg::PlatformOperationMessage platform_operation(
+        unsigned int op, mg::PlatformOperationMessage const& msg) override
+    {
+        return auth->platform_operation(op, msg);
+    }
+    mir::optional_value<mir::Fd> drm_fd() override
+    {
+        return auth->drm_fd();
+    }
+    std::shared_ptr<mg::PlatformAuthentication> const auth;
+};
 }
 
 mgm::GuestPlatform::GuestPlatform(
-    std::shared_ptr<PlatformAuthentication> const& platform_authentication)
-    : platform_authentication{platform_authentication}
+    std::shared_ptr<mg::PlatformAuthentication> const& platform_authentication) :
+    platform_authentication{platform_authentication},
+    auth(std::make_shared<AuthenticationWrapper>(platform_authentication))
 {
     auto ext = platform_authentication->auth_extension();
     if (!ext.is_set())
@@ -85,7 +116,7 @@ mir::UniqueModulePtr<mg::Display> mgm::GuestPlatform::create_display(
 
 mg::NativeDisplayPlatform* mgm::GuestPlatform::native_display_platform()
 {
-    return nullptr;
+    return auth.get();
 }
 
 mg::NativeRenderingPlatform* mgm::GuestPlatform::native_rendering_platform()
