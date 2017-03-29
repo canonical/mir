@@ -97,10 +97,10 @@ void mrl::DisplayConfigurationReport::log_configuration(
     {
         auto type = mir::output_type_name(static_cast<unsigned>(out.type));
         int out_id = out.id.as_value();
-        char const indent[] = "      ";
+        char const indent[] = ". |_ ";
 
         logger->log(component, severity,
-                    "  Output %d: %s %s",
+                    "* Output %d: %s %s",
                     out_id, type,
                     !out.connected ? "disconnected" :
                                      out.used ? "connected, used" :
