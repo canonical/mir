@@ -946,11 +946,13 @@ TEST_F(SessionMediator, sanitizes_base_display_configuration_before_setting)
 
 TEST_F(SessionMediator, raise_with_invalid_cookie_throws)
 {
-    mp::RaiseRequest raise_request;
+    mp::RequestWithAuthority raise_request;
+    raise_request.set_operation(mp::RequestOperation::MAKE_ACTIVE);
+
     mediator.connect(&connect_parameters, &connection, null_callback.get());
 
     EXPECT_THROW({
-        mediator.raise_surface(&raise_request, &void_response, null_callback.get());
+        mediator.request_operation(&raise_request, &void_response, null_callback.get());
     }, mir::cookie::SecurityCheckError);
 }
 

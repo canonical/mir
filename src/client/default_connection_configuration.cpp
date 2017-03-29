@@ -118,9 +118,9 @@ std::shared_ptr<mir::input::InputDevices>
 mcl::DefaultConnectionConfiguration::the_input_devices()
 {
     return input_devices(
-        []
+        [this]
         {
-            return std::make_shared<mir::input::InputDevices>();
+            return std::make_shared<mir::input::InputDevices>(the_surface_map());
         });
 }
 
