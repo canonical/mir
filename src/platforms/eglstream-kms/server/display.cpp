@@ -155,8 +155,8 @@ public:
         };
 
         EGLint const surface_attribs[] = {
-            EGL_WIDTH, view_area_.size.width.as_int(),
-            EGL_HEIGHT, view_area_.size.height.as_int(),
+            EGL_WIDTH, output.size().width.as_int(),
+            EGL_HEIGHT, output.size().height.as_int(),
             EGL_NONE,
         };
         surface = eglCreateStreamProducerSurfaceKHR(dpy, config, output_stream, surface_attribs);
