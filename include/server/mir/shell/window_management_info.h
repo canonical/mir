@@ -65,6 +65,7 @@ struct SurfaceInfo
     std::vector <std::weak_ptr<scene::Surface>> children;
     std::shared_ptr <scene::Surface> titlebar;
     frontend::SurfaceId titlebar_id;
+    frontend::BufferStreamId titlebar_stream_id;
     bool is_titlebar = false;
     geometry::Width min_width;
     geometry::Height min_height;
@@ -77,8 +78,7 @@ struct SurfaceInfo
     mir::optional_value<graphics::DisplayConfigurationOutputId> output_id;
     mir::optional_value<MirPointerConfinementState> confine_pointer;
 
-    void init_titlebar(std::shared_ptr <scene::Surface> const& surface);
-
+    void init_titlebar(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface);
     void paint_titlebar(int intensity);
 
 private:

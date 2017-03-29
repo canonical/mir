@@ -19,7 +19,7 @@
 #ifndef MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 #define MIR_EXAMPLE_BASIC_WINDOW_MANAGER_H_
 
-#include "server_example_window_management_info.h"
+#include "mir/shell/window_management_info.h"
 
 #include "mir/geometry/rectangles.h"
 #include "mir/shell/abstract_shell.h"
@@ -36,6 +36,8 @@ namespace mir
 namespace examples
 {
 using shell::SurfaceSet;
+using shell::SurfaceInfo;
+using shell::SessionInfo;
 
 /// The interface through which the policy instructs the controller.
 /// These functions assume that the BasicWindowManager data structures can be accessed freely.
