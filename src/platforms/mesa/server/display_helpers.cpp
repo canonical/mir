@@ -372,7 +372,7 @@ mgm::GBMSurfaceUPtr mgmh::GBMHelper::create_scanout_surface(
 #ifdef MIR_NO_HYBRID_SUPPORT
         BOOST_THROW_EXCEPTION((
             std::runtime_error{
-                "Mir built without hybrid support, but configuration requries hybrid outputs.\n"
+                "Mir built without hybrid support, but configuration requires hybrid outputs.\n"
                 "This will not work unless Mir is rebuilt against Mesa >= 11.0"}
             ));
 #else

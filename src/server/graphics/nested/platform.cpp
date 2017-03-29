@@ -138,6 +138,11 @@ mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
         passthrough_option);
 }
 
+mg::NativeDisplayPlatform* mgn::Platform::native_display_platform()
+{
+    return connection.get();
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operations() const
 {
     return mir::make_module_ptr<mgn::IpcOperations>(guest_platform->make_ipc_operations());
@@ -145,12 +150,12 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operatio
 
 EGLNativeDisplayType mgn::Platform::egl_native_display() const
 {
-    if (auto a = dynamic_cast<mir::renderer::gl::EGLPlatform*>(guest_platform->native_platform()))
+    if (auto a = dynamic_cast<mir::renderer::gl::EGLPlatform*>(guest_platform->native_rendering_platform()))
         return a->egl_native_display();
     return EGL_NO_DISPLAY;
 }
 
-mg::NativePlatform* mgn::Platform::native_platform()
+mg::NativeRenderingPlatform* mgn::Platform::native_rendering_platform()
 {
     return this;
 }

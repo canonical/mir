@@ -60,7 +60,8 @@ TEST_F(TestInputDeviceHub, calls_observers_with_changes_complete_on_registry)
     EXPECT_CALL(observer, changes_complete())
         .WillOnce(mt::WakeUp(&observer_registered));
 
-    server.the_input_device_hub()->add_observer(mt::fake_shared(observer));
+    auto device_hub = server.the_input_device_hub();
+    device_hub->add_observer(mt::fake_shared(observer));
     observer_registered.wait_for(std::chrono::seconds{4});
 }
 
@@ -75,7 +76,8 @@ TEST_F(TestInputDeviceHub, notifies_input_device_observer_about_available_device
     EXPECT_CALL(observer, changes_complete())
         .WillOnce(mt::WakeUp(&callbacks_received));
 
-    server.the_input_device_hub()->add_observer(mt::fake_shared(observer));
+    auto device_hub = server.the_input_device_hub();
+    device_hub->add_observer(mt::fake_shared(observer));
     observer_registered.wait_for(std::chrono::seconds{4});
 
     keep_on_living = mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid", mir::input::DeviceCapability::keyboard});

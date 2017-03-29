@@ -92,7 +92,7 @@ public:
      *                                  is touched.
      */
     virtual void update_from_hardware_state(DisplayConfigurationOutput& to_update) const = 0;
-    virtual FBHandle* fb_for(gbm_bo* bo, uint32_t width, uint32_t height) const = 0;
+    virtual FBHandle* fb_for(gbm_bo* bo) const = 0;
 
     /**
      * Check whether buffer need to be migrated to GPU-private memory for display.

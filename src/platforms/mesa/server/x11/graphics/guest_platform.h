@@ -24,6 +24,7 @@
 #include "display_helpers.h"
 #undef __GBM__ //display_helpers.h sets __GBM__ platform, here need X11 egl platform defs, and gbm utilities
 #include "mir/renderer/gl/egl_platform.h"
+#include "drm_native_platform.h"
 
 namespace mir
 {
@@ -33,11 +34,11 @@ namespace X
 {
 
 class GuestPlatform : public graphics::Platform,
-                      public graphics::NativePlatform,
+                      public graphics::NativeRenderingPlatform,
                       public mir::renderer::gl::EGLPlatform
 {
 public:
-    GuestPlatform(std::shared_ptr<PlatformAuthentication> const& /*platform_authentication*/);
+    GuestPlatform();
 
     UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
@@ -45,14 +46,16 @@ public:
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const&) override;
+    NativeDisplayPlatform* native_display_platform() override;
 
-    NativePlatform* native_platform() override;
+    NativeRenderingPlatform* native_rendering_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 
 private:
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<graphics::mesa::helpers::DRMHelper> const drm;
     graphics::mesa::helpers::GBMHelper gbm;
+    std::unique_ptr<graphics::mesa::DRMNativePlatform> native_platform;
 };
 
 }

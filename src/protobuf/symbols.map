@@ -1116,25 +1116,26 @@ MIR_PROTOBUF_0.26 {
 MIR_PROTOBUF_0.27 {
  global:
   extern "C++" {
-    mir::protobuf::RequestAuthority::ByteSize*;
-    mir::protobuf::RequestAuthority::CheckTypeAndMergeFrom*;
-    mir::protobuf::RequestAuthority::Clear*;
-    mir::protobuf::RequestAuthority::CopyFrom*;
-    mir::protobuf::RequestAuthority::default_instance*;
-    mir::protobuf::RequestAuthority::DiscardUnknownFields*;
-    mir::protobuf::RequestAuthority::GetTypeName*;
-    mir::protobuf::RequestAuthority::IsInitialized*;
-    mir::protobuf::RequestAuthority::kCookieFieldNumber*;
-    mir::protobuf::RequestAuthority::kSurfaceIdFieldNumber*;
-    mir::protobuf::RequestAuthority::MergeFrom*;
-    mir::protobuf::RequestAuthority::MergePartialFromCodedStream*;
-    mir::protobuf::RequestAuthority::New*;
-    mir::protobuf::RequestAuthority::?RequestAuthority*;
-    mir::protobuf::RequestAuthority::RequestAuthority*;
-    mir::protobuf::RequestAuthority::SerializeWithCachedSizes*;
-    mir::protobuf::RequestAuthority::Swap*;
-    non-virtual?thunk?to?mir::protobuf::RequestAuthority::?RequestAuthority*;
-    typeinfo?for?mir::protobuf::RequestAuthority;
-    vtable?for?mir::protobuf::RequestAuthority;
+    mir::protobuf::RequestOperation_IsValid*;
+    mir::protobuf::RequestWithAuthority::ByteSize*;
+    mir::protobuf::RequestWithAuthority::CheckTypeAndMergeFrom*;
+    mir::protobuf::RequestWithAuthority::Clear*;
+    mir::protobuf::RequestWithAuthority::CopyFrom*;
+    mir::protobuf::RequestWithAuthority::default_instance*;
+    mir::protobuf::RequestWithAuthority::DiscardUnknownFields*;
+    mir::protobuf::RequestWithAuthority::GetTypeName*;
+    mir::protobuf::RequestWithAuthority::IsInitialized*;
+    mir::protobuf::RequestWithAuthority::kCookieFieldNumber*;
+    mir::protobuf::RequestWithAuthority::kSurfaceIdFieldNumber*;
+    mir::protobuf::RequestWithAuthority::MergeFrom*;
+    mir::protobuf::RequestWithAuthority::MergePartialFromCodedStream*;
+    mir::protobuf::RequestWithAuthority::New*;
+    mir::protobuf::RequestWithAuthority::?RequestWithAuthority*;
+    mir::protobuf::RequestWithAuthority::RequestWithAuthority*;
+    mir::protobuf::RequestWithAuthority::SerializeWithCachedSizes*;
+    mir::protobuf::RequestWithAuthority::Swap*;
+    non-virtual?thunk?to?mir::protobuf::RequestWithAuthority::?RequestWithAuthority*;
+    typeinfo?for?mir::protobuf::RequestWithAuthority;
+    vtable?for?mir::protobuf::RequestWithAuthority;
   };
 } MIR_PROTOBUF_0.26;

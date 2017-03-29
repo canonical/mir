@@ -384,6 +384,7 @@ protected:
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::SurfaceInputDispatcher>    surface_input_dispatcher;
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub;
+    CachedPtr<input::InputDeviceHub>    input_device_hub;
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<shell::InputTargeter> input_targeter;

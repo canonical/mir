@@ -221,6 +221,7 @@ public:
     MirConnection* connection() const;
 
     std::shared_ptr<mir::client::FrameClock> get_frame_clock() const;
+    std::shared_ptr<mir::input::receiver::XKBMapper> get_keymapper() const;
 
 private:
     std::mutex mutable mutex; // Protects all members of *this
@@ -229,7 +230,7 @@ private:
     void on_configured();
     void on_cursor_configured();
     void acquired_persistent_id(MirWindowIdCallback callback, void* context);
-    MirPixelFormat convert_ipc_pf_to_geometry(google::protobuf::int32 pf) const;
+    void request_operation(MirCookie const* cookie, mir::protobuf::RequestOperation operation) const;
 
     mir::client::rpc::DisplayServer* const server{nullptr};
     mir::client::rpc::DisplayServerDebug* const debug{nullptr};
@@ -275,7 +276,6 @@ private:
     MirPixelFormat format;
     MirBufferUsage usage;
     uint32_t output_id;
-
 };
 
 #pragma GCC diagnostic pop

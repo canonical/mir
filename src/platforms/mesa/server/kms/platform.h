@@ -20,6 +20,8 @@
 #define MIR_GRAPHICS_MESA_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/platform_authentication.h"
+#include "drm_native_platform.h"
 #include "mir/renderer/gl/egl_platform.h"
 #include "platform_common.h"
 #include "display_helpers.h"
@@ -33,9 +35,8 @@ namespace mesa
 {
 
 class VirtualTerminal;
-class InternalNativeDisplay;
 class Platform : public graphics::Platform,
-                 public graphics::NativePlatform,
+                 public graphics::NativeRenderingPlatform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
@@ -49,10 +50,11 @@ public:
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
+    NativeDisplayPlatform* native_display_platform() override;
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
-    NativePlatform* native_platform() override;
+    NativeRenderingPlatform* native_rendering_platform() override;
     EGLNativeDisplayType egl_native_display() const override;
 
     std::shared_ptr<mir::udev::Context> udev;
@@ -65,6 +67,7 @@ public:
     BypassOption bypass_option() const;
 private:
     BypassOption const bypass_option_;
+    std::unique_ptr<DRMNativePlatform> native_platform;
 };
 
 }

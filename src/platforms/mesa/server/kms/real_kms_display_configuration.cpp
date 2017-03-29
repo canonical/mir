@@ -95,10 +95,16 @@ std::unique_ptr<mg::DisplayConfiguration> mgm::RealKMSDisplayConfiguration::clon
     return std::make_unique<RealKMSDisplayConfiguration>(*this);
 }
 
+mgm::RealKMSDisplayConfiguration::Output const&
+mgm::RealKMSDisplayConfiguration::output(DisplayConfigurationOutputId id) const
+{
+    return outputs.at(id.as_value() - 1);
+}
+
 std::shared_ptr<mgm::KMSOutput> mgm::RealKMSDisplayConfiguration::get_output_for(
     DisplayConfigurationOutputId id) const
 {
-    return outputs.at(id.as_value()).second;
+    return output(id).second;
 }
 
 size_t mgm::RealKMSDisplayConfiguration::get_kms_mode_index(
@@ -109,7 +115,7 @@ size_t mgm::RealKMSDisplayConfiguration::get_kms_mode_index(
     {
         BOOST_THROW_EXCEPTION(std::invalid_argument("Request for KMS mode index of invalid output ID"));
     }
-    if (conf_mode_index > outputs[id.as_value()].first.modes.size())
+    if (conf_mode_index > output(id).first.modes.size())
     {
         BOOST_THROW_EXCEPTION(std::invalid_argument("Request for out-of-bounds KMS mode index"));
     }
@@ -138,10 +144,9 @@ void mgm::RealKMSDisplayConfiguration::update()
 {
     decltype(outputs) new_outputs;
 
-    int counter = 0;
     displays->update_from_hardware_state();
     displays->for_each_output(
-        [this, &new_outputs, &counter](auto const& output) mutable
+        [this, &new_outputs](auto const& output) mutable
         {
             DisplayConfigurationOutput mir_config;
 
@@ -163,10 +168,9 @@ void mgm::RealKMSDisplayConfiguration::update()
             }
 
             output->update_from_hardware_state(mir_config);
-            mir_config.id = DisplayConfigurationOutputId{counter};
-            counter++;
+            mir_config.id = DisplayConfigurationOutputId{int(new_outputs.size() + 1)};
 
-            new_outputs.push_back(std::make_pair(mir_config, output));
+            new_outputs.emplace_back(mir_config, output);
         });
 
     outputs = new_outputs;

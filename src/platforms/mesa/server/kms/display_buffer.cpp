@@ -559,7 +559,7 @@ mgm::DisplayBuffer::DisplayBuffer(
         }
     }
 
-    set_crtc(*outputs.front()->fb_for(visible_composite_frame, fb_width, fb_height));
+    set_crtc(*outputs.front()->fb_for(visible_composite_frame));
 
     release_current();
 
@@ -610,7 +610,7 @@ bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
                 bypass_buffer->size() == geom::Size{fb_width,fb_height} &&
                 !needs_bounce_buffer(*outputs.front(), native->bo))
             {
-                if (auto bufobj = outputs.front()->fb_for(native->bo, fb_width, fb_height))
+                if (auto bufobj = outputs.front()->fb_for(native->bo))
                 {
                     bypass_buf = bypass_buffer;
                     bypass_bufobj = bufobj;
@@ -674,7 +674,7 @@ void mgm::DisplayBuffer::post()
     else
     {
         scheduled_composite_frame = get_front_buffer(surface.lock_front());
-        bufobj = outputs.front()->fb_for(scheduled_composite_frame, fb_width, fb_height);
+        bufobj = outputs.front()->fb_for(scheduled_composite_frame);
         if (!bufobj)
             fatal_error("Failed to get front buffer object");
     }

@@ -19,7 +19,7 @@
 #include "mir_protobuf_rpc_channel.h"
 #include "rpc_report.h"
 
-#include "../surface_map.h"
+#include "mir/client/surface_map.h"
 #include "../buffer.h"
 #include "../presentation_chain.h"
 #include "../buffer_factory.h"
