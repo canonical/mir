@@ -42,12 +42,13 @@ namespace md = mir::dispatch;
 
 mir::test::TestProtobufClient::TestProtobufClient(std::string socket_file, int timeout_ms) :
     rpc_report(std::make_shared<testing::NiceMock<doubles::MockRpcReport>>()),
+    surface_map{std::make_shared<mir::client::ConnectionSurfaceMap>()},
     channel(mclr::make_rpc_channel(
         socket_file,
-        std::make_shared<mir::client::ConnectionSurfaceMap>(),
+        surface_map,
         std::make_shared<mir::client::BufferFactory>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
-        std::make_shared<mir::input::InputDevices>(),
+        std::make_shared<mir::input::InputDevices>(surface_map),
         rpc_report,
         std::make_shared<mir::client::LifecycleControl>(),
         std::make_shared<mir::client::AtomicCallback<int32_t>>(),
