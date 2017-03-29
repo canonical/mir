@@ -130,6 +130,8 @@ protected:
         shell::FocusController* focus_controller,
         std::unique_ptr<WindowManagementPolicy> policy);
 
+    ~BasicWindowManager();
+
 public:
     using typename WindowManagerTools::SurfaceInfoMap;
     using typename WindowManagerTools::SessionInfoMap;
@@ -222,10 +224,12 @@ private:
     geometry::Rectangles displays;
     geometry::Point cursor;
     uint64_t last_input_event_timestamp{0};
+    MirEvent const* last_input_event{nullptr};
 
     void update_event_timestamp(MirKeyboardEvent const* kev);
     void update_event_timestamp(MirPointerEvent const* pev);
     void update_event_timestamp(MirTouchEvent const* tev);
+    void update_event_timestamp(MirInputEvent const* iev);
 };
 
 /// A policy based window manager. This exists to initialize BasicWindowManager and
