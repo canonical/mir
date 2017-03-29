@@ -140,7 +140,7 @@ mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
 
 mg::NativeDisplayPlatform* mgn::Platform::native_display_platform()
 {
-    return nullptr;
+    return connection.get();
 }
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operations() const

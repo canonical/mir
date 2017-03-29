@@ -743,6 +743,11 @@ T auth(std::function<void(AuthRequest<T>*)> const& f)
 }
 }
 
+mir::optional_value<mir::Fd> mgn::MirClientHostConnection::drm_fd()
+{
+    return {};
+}
+
 mir::optional_value<std::shared_ptr<mir::graphics::MesaAuthExtension>>
 mgn::MirClientHostConnection::auth_extension()
 {

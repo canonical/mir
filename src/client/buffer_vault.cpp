@@ -18,10 +18,10 @@
 
 #include "mir/client_buffer_factory.h"
 #include "mir/client_buffer.h"
+#include "mir/client/surface_map.h"
 #include "buffer_vault.h"
 #include "buffer.h"
 #include "buffer_factory.h"
-#include "surface_map.h"
 #include "mir_protobuf.pb.h"
 #include "protobuf_to_native_buffer.h"
 #include "connection_surface_map.h"
