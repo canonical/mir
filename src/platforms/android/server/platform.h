@@ -38,12 +38,28 @@ class DisplayComponentFactory;
 class CommandStreamSyncFactory;
 class NativeWindowReport;
 
-class Platform : public graphics::Platform,
-                 public graphics::NativeRenderingPlatform,
-                 public mir::renderer::gl::EGLPlatform
+
+class GrallocPlatform : public graphics::RenderingPlatform,
+                        public graphics::NativeRenderingPlatform,
+                        public renderer::gl::EGLPlatform
 {
 public:
-    Platform(
+    GrallocPlatform(
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator);
+
+    UniqueModulePtr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+    NativeRenderingPlatform* native_rendering_platform() override;
+    EGLNativeDisplayType egl_native_display() const override;
+
+private:
+    std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
+};
+
+class HwcPlatform : public graphics::DisplayPlatform
+{
+public:
+    HwcPlatform(
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<DisplayComponentFactory> const& display_buffer_builder,
         std::shared_ptr<DisplayReport> const& display_report,
@@ -51,15 +67,10 @@ public:
         OverlayOptimization overlay_option,
         std::shared_ptr<DeviceQuirks> const& quirks);
 
-    /* From Platform */
-    UniqueModulePtr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
     NativeDisplayPlatform* native_display_platform() override;
-    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
-    NativeRenderingPlatform* native_rendering_platform() override;
-    EGLNativeDisplayType egl_native_display() const override;
 
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
@@ -68,7 +79,26 @@ private:
     std::shared_ptr<DeviceQuirks> const quirks;
     std::shared_ptr<NativeWindowReport> const native_window_report;
     OverlayOptimization const overlay_option;
+};
 
+class Platform : public graphics::Platform
+{
+public:
+    Platform(
+        std::shared_ptr<HwcPlatform> const& display,
+        std::shared_ptr<GrallocPlatform> const& rendering);
+
+    UniqueModulePtr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<Display> create_display(
+        std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
+        std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
+    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+    NativeRenderingPlatform* native_rendering_platform() override;
+    NativeDisplayPlatform* native_display_platform() override;
+
+private:
+    std::shared_ptr<HwcPlatform> const display;
+    std::shared_ptr<GrallocPlatform> const rendering;
 };
 
 }
