@@ -9,6 +9,7 @@ mir (0.26.3-0ubuntu1) UNRELEASED; urgency=medium
       . Please transition to Boost 1.62 (LP: #1675138)
       . Mir sending key repeat events continually to nested shell after VT
         switch (causes Unity8 lockup for a while) (LP: #1675357)
+      . mir_demo_standalone_render_overlays fails to link (LP: #1677239)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 30 Mar 2017 11:43:28 +0800
 
