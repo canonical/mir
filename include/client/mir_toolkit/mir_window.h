@@ -738,6 +738,15 @@ MirOrientation mir_window_get_orientation(MirWindow* window);
 void mir_window_raise(MirWindow* window, MirCookie const* cookie);
 
 /**
+ * Informs the window manager that the user is moving the window.
+ *
+ * \param [in] window  The window to move
+ * \param [in] cookie  A cookie instance obtained from an input event.
+ *                     An invalid cookie will terminate the client connection.
+ */
+void mir_window_request_user_move(MirWindow* window, MirCookie const* cookie);
+
+/**
  * Get the type (purpose) of a window.
  *   \param [in] window   The window to query
  *   \return              The type of the window

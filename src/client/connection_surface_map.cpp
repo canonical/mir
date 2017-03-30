@@ -136,3 +136,10 @@ std::shared_ptr<MirRenderSurface> mcl::ConnectionSurfaceMap::render_surface(void
         BOOST_THROW_EXCEPTION(std::runtime_error("could not find render surface"));
 }
 #pragma GCC diagnostic pop
+
+void mcl::ConnectionSurfaceMap::with_all_windows_do(std::function<void(MirWindow*)> const& fn) const
+{
+    std::shared_lock<decltype(stream_guard)> lk(guard);
+    for(auto const& window : surfaces)
+        fn(window.second.get());
+}
