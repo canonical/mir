@@ -1138,6 +1138,20 @@ TEST_F(SessionMediator, arranges_named_cursors_via_shell)
     mediator.modify_surface(&mods, &null, null_callback.get());
 }
 
+TEST_F(SessionMediator, disabled_cursor_returns_null_image)
+{
+    mp::Void null;
+    mp::SurfaceModifications mods;
+    auto spec = mods.mutable_surface_specification();
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
+    spec->set_cursor_name("none");
+
+    EXPECT_CALL(*shell, modify_surface(_,
+        mf::SurfaceId{surface_response.id().value()}, CursorImageIsSetNull()));
+    mediator.modify_surface(&mods, &null, null_callback.get());
+}
+
 TEST_F(SessionMediator, screencast_to_buffer_looks_up_and_fills_appropriate_buffer)
 {
     mp::Void null;

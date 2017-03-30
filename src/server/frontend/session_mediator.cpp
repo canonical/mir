@@ -65,6 +65,7 @@
 #include "protobuf_input_converter.h"
 
 #include "mir_toolkit/client_types.h"
+#include "mir_toolkit/cursors.h"
 
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -642,7 +643,14 @@ void mf::SessionMediator::modify_surface(
 
     if (surface_specification.has_cursor_name())
     {
-        mods.cursor_image = cursor_images->image(surface_specification.cursor_name(), mi::default_cursor_size);
+        if (surface_specification.cursor_name() == mir_disabled_cursor_name)
+        {
+            mods.cursor_image = nullptr;
+        }
+        else
+        {
+            mods.cursor_image = cursor_images->image(surface_specification.cursor_name(), mi::default_cursor_size);
+        }
     }
 
     if (surface_specification.has_cursor_id() &&
@@ -652,7 +660,7 @@ void mf::SessionMediator::modify_surface(
         mf::BufferStreamId id{surface_specification.cursor_id().value()};
         throw_if_unsuitable_for_cursor(*session->get_buffer_stream(id));
         mods.stream_cursor = msh::StreamCursor{
-            id, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} }; 
+            id, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} };
     }
 
     if (surface_specification.input_shape_size() > 0)
