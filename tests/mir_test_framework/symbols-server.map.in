@@ -3,6 +3,8 @@
     add_graphics_platform_options;
     create_host_platform;
     create_guest_platform;
+    create_display_platform;
+    create_rendering_platform;
     probe_graphics_platform;
     describe_graphics_module;
 };
