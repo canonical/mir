@@ -443,6 +443,7 @@ enum RequestOperation {
   UNKNOWN = 0;
   START_DRAG_AND_DROP = 1;
   MAKE_ACTIVE = 2;
+  USER_MOVE = 3;
 }
 
 message RequestWithAuthority {
