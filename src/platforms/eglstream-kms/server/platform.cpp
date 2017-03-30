@@ -52,10 +52,7 @@ char const* drm_node_for_device(EGLDeviceEXT device)
 }
 }
 
-mge::Platform::Platform(
-    EGLDeviceEXT device,
-    std::shared_ptr<EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
-    std::shared_ptr<DisplayReport> const& /*report*/)
+mge::DisplayPlatform::DisplayPlatform(EGLDeviceEXT device)
     : display{EGL_NO_DISPLAY},
       drm_node{open(drm_node_for_device(device), O_RDWR | O_CLOEXEC)}
 {
@@ -101,24 +98,28 @@ mge::Platform::Platform(
     }
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::Platform::create_buffer_allocator()
-{
-    return mir::make_module_ptr<mge::BufferAllocator>();
-}
-
-mir::UniqueModulePtr<mg::Display> mge::Platform::create_display(
+mir::UniqueModulePtr<mg::Display> mge::DisplayPlatform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& configuration_policy,
     std::shared_ptr<GLConfig> const& gl_config)
 {
     return mir::make_module_ptr<mge::Display>(drm_node, display, configuration_policy, *gl_config);
 }
 
-mg::NativeDisplayPlatform* mge::Platform::native_display_platform()
+mg::NativeDisplayPlatform* mge::DisplayPlatform::native_display_platform()
 {
     return nullptr;
 }
 
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operations() const
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_buffer_allocator()
+{
+    return mir::make_module_ptr<mge::BufferAllocator>();
+}
+
+mg::NativeRenderingPlatform* mge::RenderingPlatform::native_rendering_platform()
+{
+    return nullptr;
+}
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::RenderingPlatform::make_ipc_operations() const
 {
     class NoIPCOperations : public mg::PlatformIpcOperations
     {
@@ -166,12 +167,37 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operatio
     return mir::make_module_ptr<NoIPCOperations>();
 }
 
-mg::NativeRenderingPlatform* mge::Platform::native_rendering_platform()
+mge::Platform::Platform(
+    std::shared_ptr<RenderingPlatform> const& rendering,
+    std::shared_ptr<DisplayPlatform> const& display) :
+    rendering(rendering),
+    display(display)
 {
-    return this;
 }
 
-EGLNativeDisplayType mge::Platform::egl_native_display() const
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::Platform::create_buffer_allocator()
 {
-    return display;
+    return rendering->create_buffer_allocator();
+}
+
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operations() const
+{
+    return rendering->make_ipc_operations();
+}
+
+mg::NativeRenderingPlatform* mge::Platform::native_rendering_platform()
+{
+    return rendering->native_rendering_platform();
+}
+
+mir::UniqueModulePtr<mg::Display> mge::Platform::create_display(
+    std::shared_ptr<DisplayConfigurationPolicy> const& policy,
+    std::shared_ptr<GLConfig> const& config)
+{
+    return display->create_display(policy, config);
+}
+
+mg::NativeDisplayPlatform* mge::Platform::native_display_platform()
+{
+    return display->native_display_platform();
 }
