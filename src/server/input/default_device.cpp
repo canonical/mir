@@ -32,7 +32,6 @@
 
 namespace mi = mir::input;
 
-
 mi::DefaultDevice::DefaultDevice(MirInputDeviceId id,
                                  std::shared_ptr<dispatch::ActionQueue> const& actions,
                                  InputDevice& device,
@@ -77,7 +76,7 @@ mi::DefaultDevice::DefaultDevice(MirInputDevice const& config,
                 set_pointer_configuration(config.pointer_config()));
     ATTEMPT(if (config.has_touchscreen_config())
                 set_touchscreen_configuration(config.touchscreen_config()));
-#undef ATTMPT
+#undef ATTEMPT
 }
 
 mi::DeviceCapabilities mi::DefaultDevice::capabilities() const
