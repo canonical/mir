@@ -243,6 +243,11 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
     return reinterpret_cast<MirPointerEvent const*>(ev);
 })
 
+MirEvent const* mir_input_event_get_event(MirInputEvent const* event)
+{
+    return event;
+}
+
 MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* pev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return pev->modifiers();
