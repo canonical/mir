@@ -33,20 +33,6 @@ public:
     PlatformOperationMessage platform_operation(
         unsigned int op, PlatformOperationMessage const& msg) override;
     mir::optional_value<Fd> drm_fd() override;
-/*    {
-    }
-    {
-        return auth->auth_extension();
-    }
-    {
-        return auth->set_gbm_extension();
-    }
-    {
-        return auth->platform_operation(op, msg);
-    }
-    {
-        return auth->drm_fd();
-    }*/
 private:
     std::shared_ptr<PlatformAuthentication> const auth;
 };
