@@ -270,7 +270,6 @@ TEST_F(ClientMediatedUserGestures, when_user_initiates_gesture_client_receives_c
     EXPECT_THAT(cookie.get(), NotNull());
 }
 
-// TODO extend this test when server side implemented
 TEST_F(ClientMediatedUserGestures, when_client_initiates_move_window_manager_handles_request)
 {
     auto const cookie = user_initiates_gesture();
