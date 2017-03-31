@@ -168,6 +168,9 @@ void mf::SessionMediator::connect(
     auto extensions = ipc_operations->extensions();
     for ( auto const& ext : extensions )
     {
+        if (ext.version.empty()) //malformed plugin, ignore
+            continue;
+
         auto e = response->add_extension();
         e->set_name(ext.name);
         for(auto const& v : ext.version)
