@@ -70,6 +70,8 @@ private:
 
 void mir_cookie_release(Cookie const&) = delete;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct MockWindowManager : mir::shell::CanonicalWindowManager
 {
     using mir::shell::CanonicalWindowManager::CanonicalWindowManager;
@@ -77,6 +79,7 @@ struct MockWindowManager : mir::shell::CanonicalWindowManager
     MOCK_METHOD3(handle_request_move,
         void(std::shared_ptr<mir::scene::Session> const&, std::shared_ptr<mir::scene::Surface> const&, uint64_t));
 };
+#pragma GCC diagnostic pop
 
 struct MouseMoverAndFaker
 {

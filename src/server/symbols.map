@@ -802,6 +802,7 @@ MIR_SERVER_0.27 {
     virtual?thunk?to?mir::shell::AbstractShell::setting_focus_to*;
     virtual?thunk?to?mir::shell::AbstractShell::start_prompt_session_for*;
     virtual?thunk?to?mir::shell::AbstractShell::stop_prompt_session*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::?BasicWindowManager*;
     virtual?thunk?to?mir::shell::BasicWindowManager::add_display*;
     virtual?thunk?to?mir::shell::BasicWindowManager::add_session*;
     virtual?thunk?to?mir::shell::BasicWindowManager::add_surface*;
