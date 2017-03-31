@@ -31,16 +31,13 @@ namespace geom=mir::geometry;
 
 mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                   Window const win,
-                                  geom::Size const sz,
+                                  geometry::Size const& view_area_size,
                                   EGLContext const shared_context,
                                   std::shared_ptr<AtomicFrame> const& f,
                                   std::shared_ptr<DisplayReport> const& r,
-                                  MirOrientation const o,
                                   GLConfig const& gl_config)
-                                  : size{sz},
-                                    report{r},
-                                    orientation_{o},
-                                    transform{mg::transformation(o)},
+                                  : report{r},
+                                    area{{0,0},view_area_size},
                                     egl{gl_config},
                                     last_frame{f},
                                     eglGetSyncValues{nullptr}
@@ -85,14 +82,7 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
 
 geom::Rectangle mgx::DisplayBuffer::view_area() const
 {
-    switch (orientation_)
-    {
-    case mir_orientation_left:
-    case mir_orientation_right:
-        return {{0,0}, {size.height.as_int(), size.width.as_int()}};
-    default:
-        return {{0,0}, size};
-    }
+    return area;
 }
 
 void mgx::DisplayBuffer::make_current()
@@ -159,10 +149,14 @@ glm::mat2 mgx::DisplayBuffer::transformation() const
     return transform;
 }
 
-void mgx::DisplayBuffer::set_orientation(MirOrientation const new_orientation)
+void mgx::DisplayBuffer::set_view_area(geom::Rectangle const& a)
 {
-    orientation_ = new_orientation;
-    transform = mg::transformation(orientation_);
+    area = a;
+}
+
+void mgx::DisplayBuffer::set_transformation(glm::mat2 const& t)
+{
+    transform = t;
 }
 
 mg::NativeDisplayBuffer* mgx::DisplayBuffer::native_display_buffer()
