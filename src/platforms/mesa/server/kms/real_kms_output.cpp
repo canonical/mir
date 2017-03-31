@@ -392,7 +392,7 @@ void mgm::RealKMSOutput::refresh_hardware_state()
     }
 }
 
-    namespace
+namespace
 {
 
 bool kms_modes_are_equal(drmModeModeInfo const& info1, drmModeModeInfo const& info2)
