@@ -602,7 +602,10 @@ void MirConnection::connected(MirConnectedCallback callback, void * context)
         for ( auto i = 0; i < connect_result->extension().size(); i++)
         {
             auto& ex = connect_result->extension(i);
-            extensions.push_back({ex.name(), ex.version()});
+            std::vector<int> versions;
+            for ( auto j = 0; j < connect_result->extension(i).version().size(); j++ )
+                versions.push_back(connect_result->extension(i).version(j));
+            extensions.push_back({ex.name(), versions});
         }
 
 //            extensions = connect_result->extension();
@@ -1456,8 +1459,12 @@ void* MirConnection::request_interface(char const* name, int version)
 
     auto support = std::find_if(extensions.begin(), extensions.end(),
         [&](auto& e) {
-            printf("EEE %s %i vs %s %i\n", e.name.c_str(), e.version, name, version);
-            return e.name == std::string{name} && e.version == version;
+            bool found = false;
+            for (auto& v : e.version)
+                if (v == version) found = true;
+
+//            printf("EEE %s %i vs %s %i\n", e.name.c_str(), e.version, name, version);
+            return e.name == std::string{name} && found;
         });
     if (support == extensions.end())
     {
@@ -1470,10 +1477,11 @@ void* MirConnection::request_interface(char const* name, int version)
     }
 
     printf("req %s %i\n", name, version);
-    for (auto const& ex : extensions)
-    {
-        printf("EEEEE %s v%i\n", ex.name.c_str(), ex.version);
-    }
+    //for (auto const& ex : extensions)
+   // {
+//        printf("EEEEE %s ",
+//        printf(v%i\n", ex.name.c_str(), ex.version);
+   // }
     //printf("INTERFACE REQUESTED %s, server reports %s\n", name, extensions.c_str());
 
     if (!strcmp(name, "mir_extension_window_coordinate_translation") && (version == 1) && translation_ext.is_set())

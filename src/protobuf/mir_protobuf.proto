@@ -250,8 +250,8 @@ message DisplayOutput {
 
 message Extension
 {
-    optional string name = 1;
-    optional sint32 version = 2;
+  optional string name = 1;
+  repeated sint32 version = 2;
 }
 
 message Connection {

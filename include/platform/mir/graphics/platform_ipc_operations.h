@@ -38,7 +38,7 @@ struct PlatformOperationMessage;
 struct ExtensionDescription
 {
     std::string name;
-    int version;
+    std::vector<int> version;
 };
 
 class PlatformIpcOperations

@@ -381,7 +381,7 @@ private:
     struct Extension
     {
         std::string name;
-        int version;
+        std::vector<int> version;
     };
     std::vector<Extension> extensions;
 };
