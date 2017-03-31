@@ -132,8 +132,14 @@ void log_drm_details(std::vector<std::shared_ptr<mgm::helpers::DRMHelper>> const
             drmGetVersion(device->fd),
             &drmFreeVersion};
 
+        auto device_name = std::unique_ptr<char, decltype(&free)>{
+            drmGetDeviceNameFromFd(device->fd),
+            &free
+        };
+
         mir::log_info(
-            "Using driver %s [%s] (%i.%i.%i %s)",
+            "%s: using driver %s [%s] (version: %i.%i.%i driver date: %s)",
+            device_name.get(),
             version->name,
             version->desc,
             version->version_major,
@@ -145,13 +151,13 @@ void log_drm_details(std::vector<std::shared_ptr<mgm::helpers::DRMHelper>> const
         for (auto const& connector : resources.connectors())
         {
             mir::log_info(
-                "Output: %s %s",
+                "\tOutput: %s (%s)",
                 mg::kms::connector_name(connector).c_str(),
                 describe_connection_status(*connector));
             for (auto i = 0; i < connector->count_modes; ++i)
             {
                 mir::log_info(
-                    "\t raw mode: %i×%i@%.2f",
+                    "\t\tMode: %i×%i@%.2f",
                     connector->modes[i].hdisplay,
                     connector->modes[i].vdisplay,
                     calculate_vrefresh_hz(connector->modes[i]));
