@@ -49,6 +49,7 @@ char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
 char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt              = "enable-touchspots";
+char const* const mo::cursor_opt                  = "cursor";
 char const* const mo::fatal_except_opt            = "on-fatal-error-except";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::composite_delay_opt         = "composite-delay";
@@ -189,6 +190,9 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Render to offscreen buffers instead of the real outputs.")
         (touchspots_opt,
             "Display visualization of touchspots (e.g. for screencasting).")
+        (cursor_opt,
+            po::value<std::string>()->default_value("auto"),
+            "Cursor (mouse pointer) to use [{auto,software}]")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
         (fatal_except_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
