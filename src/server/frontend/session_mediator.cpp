@@ -164,6 +164,15 @@ void mf::SessionMediator::connect(
     connection_context.handle_client_connect(session);
 
     auto ipc_package = ipc_operations->connection_ipc_package();
+
+    auto extensions = ipc_operations->extensions();
+    for ( auto& ext : extensions )
+    {
+        auto e = response->add_extension();
+        e->set_name(ext.name);
+        e->set_version(ext.version);
+    }
+
     auto platform = response->mutable_platform();
 
     for (auto& data : ipc_package->ipc_data)

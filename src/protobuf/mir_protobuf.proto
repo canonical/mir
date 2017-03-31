@@ -248,6 +248,12 @@ message DisplayOutput {
   optional uint32 logical_height = 27;
 }
 
+message Extension
+{
+    optional string name = 1;
+    optional sint32 version = 2;
+}
+
 message Connection {
   optional Platform platform = 1;
 //  optional DisplayInfo display_info = 2;
@@ -257,7 +263,7 @@ message Connection {
   optional InputDevices input_devices = 6;
   optional string input_configuration = 7;
   optional bool coordinate_translation_present = 8; 
-  optional string extension = 9;
+  repeated Extension extension = 9;
 
   optional string error = 127;
   optional StructuredError structured_error = 128;

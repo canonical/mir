@@ -377,6 +377,13 @@ private:
     int const nbuffers;
     mir::optional_value<MirExtensionWindowCoordinateTranslationV1> translation_ext;
     mir::optional_value<MirExtensionGraphicsModuleV1> graphics_module_extension;
+
+    struct Extension
+    {
+        std::string name;
+        int version;
+    };
+    std::vector<Extension> extensions;
 };
 
 #endif /* MIR_CLIENT_MIR_CONNECTION_H_ */

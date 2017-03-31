@@ -35,6 +35,12 @@ class Buffer;
 class BufferIpcMessage;
 struct PlatformOperationMessage;
 
+struct ExtensionDescription
+{
+    std::string name;
+    int version;
+};
+
 class PlatformIpcOperations
 {
 public:
@@ -79,7 +85,7 @@ public:
     virtual PlatformOperationMessage platform_operation(
         unsigned int const opcode, PlatformOperationMessage const& message) = 0; 
 
-    virtual std::string extensions() const = 0;
+    virtual std::vector<ExtensionDescription> extensions() const = 0;
 
 protected:
     PlatformIpcOperations() = default;

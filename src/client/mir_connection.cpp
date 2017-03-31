@@ -599,6 +599,14 @@ void MirConnection::connected(MirConnectedCallback callback, void * context)
             graphics_module_extension = MirExtensionGraphicsModuleV1 { get_graphics_module };
         }
 
+        for ( auto i = 0; i < connect_result->extension().size(); i++)
+        {
+            auto& ex = connect_result->extension(i);
+            extensions.push_back({ex.name(), ex.version()});
+        }
+
+//            extensions = connect_result->extension();
+
         /*
          * We need to create the client platform after the connection has been
          * established, to ensure that the client platform has access to all
@@ -1445,6 +1453,28 @@ void* MirConnection::request_interface(char const* name, int version)
 {
     if (!platform)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot query extensions before connecting to server"));
+
+    auto support = std::find_if(extensions.begin(), extensions.end(),
+        [&](auto& e) {
+            printf("EEE %s %i vs %s %i\n", e.name.c_str(), e.version, name, version);
+            return e.name == std::string{name} && e.version == version;
+        });
+    if (support == extensions.end())
+    {
+        printf("NOT FOUND\n");
+        return nullptr;
+    }
+    else
+    {
+        printf("FOUND\n");
+    }
+
+    printf("req %s %i\n", name, version);
+    for (auto const& ex : extensions)
+    {
+        printf("EEEEE %s v%i\n", ex.name.c_str(), ex.version);
+    }
+    //printf("INTERFACE REQUESTED %s, server reports %s\n", name, extensions.c_str());
 
     if (!strcmp(name, "mir_extension_window_coordinate_translation") && (version == 1) && translation_ext.is_set())
         return &translation_ext.value();

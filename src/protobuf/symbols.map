@@ -1139,3 +1139,10 @@ MIR_PROTOBUF_0.27 {
     vtable?for?mir::protobuf::RequestWithAuthority;
   };
 } MIR_PROTOBUF_0.26;
+
+MIR_PROTOBUF_0.28 {
+ global:
+  extern "C++" {
+ * 
+  };
+} MIR_PROTOBUF_0.27;

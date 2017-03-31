@@ -156,7 +156,7 @@ std::shared_ptr<mg::PlatformIPCPackage> mgm::IpcOperations::connection_ipc_packa
     return std::make_shared<MesaPlatformIPCPackage>(drm->authenticated_fd());
 }
 
-std::string mgm::IpcOperations::extensions() const
+std::vector<mg::ExtensionDescription> mgm::IpcOperations::extensions() const
 {
-    return "";
+    return {};
 }
