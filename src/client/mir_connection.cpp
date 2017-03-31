@@ -1484,9 +1484,9 @@ void* MirConnection::request_interface(char const* name, int version)
    // }
     //printf("INTERFACE REQUESTED %s, server reports %s\n", name, extensions.c_str());
 
-    if (!strcmp(name, "mir_extension_window_coordinate_translation") && (version == 1) && translation_ext.is_set())
+    if (!strcmp(name, "mir_extension_window_coordinate_translation") && (version == 1))
         return &translation_ext.value();
-    if (!strcmp(name, "mir_extension_graphics_module") && (version == 1) && graphics_module_extension.is_set())
+    if (!strcmp(name, "mir_extension_graphics_module") && (version == 1))
         return &graphics_module_extension.value();
 
     if (!strcmp(name, "mir_drag_and_drop") && (version == 1))

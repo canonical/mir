@@ -166,16 +166,6 @@ void mf::SessionMediator::connect(
     auto ipc_package = ipc_operations->connection_ipc_package();
 
     auto extensions = ipc_operations->extensions();
-    for ( auto const& ext : extensions )
-    {
-        if (ext.version.empty()) //malformed plugin, ignore
-            continue;
-
-        auto e = response->add_extension();
-        e->set_name(ext.name);
-        for(auto const& v : ext.version)
-            e->add_version(v);
-    }
 
     auto platform = response->mutable_platform();
 
@@ -187,6 +177,7 @@ void mf::SessionMediator::connect(
 
     if (auto const graphics_module = ipc_package->graphics_module)
     {
+        extensions.push_back(mg::ExtensionDescription{"mir_extension_graphics_module", {1}});
         auto const module = platform->mutable_graphics_module();
 
         module->set_name(graphics_module->name);
@@ -207,7 +198,19 @@ void mf::SessionMediator::connect(
 
     resource_cache->save_resource(response, ipc_package);
 
-    response->set_coordinate_translation_present(translator->translation_supported());
+    if (translator->translation_supported())
+        extensions.push_back(mg::ExtensionDescription{"mir_extension_window_coordinate_translation", {1}});
+
+    for ( auto const& ext : extensions )
+    {
+        if (ext.version.empty()) //malformed plugin, ignore
+            continue;
+        auto e = response->add_extension();
+        e->set_name(ext.name);
+        for(auto const& v : ext.version)
+            e->add_version(v);
+    }
+
 
     done->Run();
 }
