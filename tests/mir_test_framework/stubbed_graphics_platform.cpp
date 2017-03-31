@@ -320,6 +320,7 @@ struct GuestPlatformAdapter : mg::Platform
 
 std::weak_ptr<mg::Platform> the_graphics_platform{};
 std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
+bool flavor_enabled = true;
 }
 
 #if defined(__clang__)
@@ -387,4 +388,9 @@ extern "C" void set_next_display_rects(
 extern "C" void set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display)
 {
     display_preset = display;
+}
+
+extern "C" void disable_flavors()
+{
+    flavor_enabled = false;
 }
