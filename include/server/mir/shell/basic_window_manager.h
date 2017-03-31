@@ -232,6 +232,8 @@ private:
     void update_event_timestamp(MirInputEvent const* iev);
 } __attribute__((deprecated("Use libmiral instead")));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /// A policy based window manager. This exists to initialize BasicWindowManager and
 /// the WMPolicy (in an awkward manner).
 /// TODO revisit this initialization sequence.
@@ -259,6 +261,7 @@ private:
             new WMPolicy(this, std::forward<PolicyArgs>(policy_args)...));
     }
 } __attribute__((deprecated("Use libmiral instead")));
+#pragma GCC diagnostic pop
 }
 }
 
