@@ -39,6 +39,7 @@ public:
     PlatformOperationMessage platform_operation(
         unsigned int const opcode,
         PlatformOperationMessage const& message) override;
+    std::string extensions() const override;
 private:
     std::shared_ptr<DRMAuthentication> const drm;
 };

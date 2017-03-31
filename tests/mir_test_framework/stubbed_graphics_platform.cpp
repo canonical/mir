@@ -50,6 +50,7 @@ namespace mtf = mir_test_framework;
 namespace
 {
 
+bool flavor_enabled = true;
 struct WrappingDisplay : mg::Display
 {
     WrappingDisplay(std::shared_ptr<mg::Display> const& display) : display{display} {}
@@ -238,6 +239,14 @@ class StubIpcOps : public mg::PlatformIpcOperations
 
         return reply;
     }
+
+    std::string extensions() const override
+    {
+        if (flavor_enabled)
+            return "mir_extension_favorite_flavor";
+        else
+            return "";
+    }
 };
 }
 
@@ -320,7 +329,6 @@ struct GuestPlatformAdapter : mg::Platform
 
 std::weak_ptr<mg::Platform> the_graphics_platform{};
 std::unique_ptr<std::vector<geom::Rectangle>> chosen_display_rects;
-bool flavor_enabled = true;
 }
 
 #if defined(__clang__)

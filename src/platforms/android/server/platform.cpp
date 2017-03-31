@@ -166,7 +166,7 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::GrallocPlatform::create_bu
         {
             return allocator->alloc_software_buffer(size, format);
         }
-    
+
         std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
     };
 

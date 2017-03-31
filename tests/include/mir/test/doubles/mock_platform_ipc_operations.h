@@ -45,6 +45,7 @@ struct MockPlatformIpcOperations : public graphics::PlatformIpcOperations
     MOCK_METHOD0(connection_ipc_package, std::shared_ptr<graphics::PlatformIPCPackage>());
     MOCK_METHOD2(platform_operation, graphics::PlatformOperationMessage(
         unsigned int const, graphics::PlatformOperationMessage const&));
+    MOCK_CONST_METHOD0(extensions, std::string());
 };
 }
 }

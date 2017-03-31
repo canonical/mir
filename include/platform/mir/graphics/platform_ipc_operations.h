@@ -79,6 +79,8 @@ public:
     virtual PlatformOperationMessage platform_operation(
         unsigned int const opcode, PlatformOperationMessage const& message) = 0; 
 
+    virtual std::string extensions() const = 0;
+
 protected:
     PlatformIpcOperations() = default;
     PlatformIpcOperations(PlatformIpcOperations const&) = delete;

@@ -46,6 +46,11 @@ class NullPlatformIpcOperations : public graphics::PlatformIpcOperations
     {
         return graphics::PlatformOperationMessage();
     }
+
+    std::string extensions() const override
+    {
+        return "";
+    }
 };
 }
 }
