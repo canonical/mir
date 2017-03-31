@@ -155,6 +155,9 @@ public:
     MOCK_METHOD6(drmModeCrtcSetGamma, int(int fd, uint32_t crtc_id, uint32_t size,
                                           uint16_t* red, uint16_t* green, uint16_t* blue));
 
+    MOCK_METHOD1(drmGetVersion, drmVersionPtr(int));
+    MOCK_METHOD1(drmFreeVersion, void(drmVersionPtr));
+
 
     void add_crtc(
         char const* device,

@@ -307,6 +307,20 @@ mtd::MockDRM::MockDRM()
 
     ON_CALL(*this, drmFreeBusid(_))
     .WillByDefault(WithArg<0>(Invoke([&](const char* busid){ free(const_cast<char*>(busid)); })));
+
+    static drmVersion const version{
+        1,
+        2,
+        3,
+        static_cast<int>(strlen("mock_driver")),
+        const_cast<char*>("mock_driver"),
+        static_cast<int>(strlen("1 Jan 1970")),
+        const_cast<char*>("1 Jan 1970"),
+        static_cast<int>(strlen("Not really a driver")),
+        const_cast<char*>("Not really a driver")
+    };
+    ON_CALL(*this, drmGetVersion(_))
+        .WillByDefault(Return(const_cast<drmVersionPtr>(&version)));
 }
 
 mtd::MockDRM::~MockDRM() noexcept
@@ -509,6 +523,16 @@ void drmModeFreeProperty(drmModePropertyPtr ptr)
 int drmGetCap(int fd, uint64_t capability, uint64_t *value)
 {
     return global_mock->drmGetCap(fd, capability, value);
+}
+
+drmVersionPtr drmGetVersion(int fd)
+{
+    return global_mock->drmGetVersion(fd);
+}
+
+void drmFreeVersion(drmVersionPtr version)
+{
+    return global_mock->drmFreeVersion(version);
 }
 
 int drmSetClientCap(int fd, uint64_t capability, uint64_t value)

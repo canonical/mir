@@ -37,6 +37,11 @@
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
+#define MIR_LOG_COMPONENT "mesa-kms"
+#include "mir/log.h"
+#include "kms-utils/drm_mode_resources.h"
+#include "kms-utils/kms_connector.h"
+
 #include <stdexcept>
 #include <algorithm>
 #include <unordered_map>
@@ -90,6 +95,71 @@ std::vector<int> drm_fds_from_drm_helpers(
     return fds;
 }
 
+double calculate_vrefresh_hz(drmModeModeInfo const& mode)
+{
+    if (mode.htotal == 0 || mode.vtotal == 0)
+        return 0.0;
+
+    /* mode.clock is in KHz */
+    double hz = (mode.clock * 100000LL /
+                 ((long)mode.htotal * (long)mode.vtotal)
+                ) / 100.0;
+
+    return hz;
+}
+
+char const* describe_connection_status(drmModeConnector const& connection)
+{
+    switch (connection.connection)
+    {
+    case DRM_MODE_CONNECTED:
+        return "connected";
+    case DRM_MODE_DISCONNECTED:
+        return "disconnected";
+    case DRM_MODE_UNKNOWNCONNECTION:
+        return "UNKNOWN";
+    default:
+        return "<Unexpected connection value>";
+    }
+}
+
+void log_drm_details(std::vector<std::shared_ptr<mgm::helpers::DRMHelper>> const& drm)
+{
+    mir::log_info("DRM device details:");
+    for (auto const& device : drm)
+    {
+        auto version = std::unique_ptr<drmVersion, decltype(&drmFreeVersion)>{
+            drmGetVersion(device->fd),
+            &drmFreeVersion};
+
+        mir::log_info(
+            "Using driver %s [%s] (%i.%i.%i %s)",
+            version->name,
+            version->desc,
+            version->version_major,
+            version->version_minor,
+            version->version_patchlevel,
+            version->date);
+
+        mg::kms::DRMModeResources resources{device->fd};
+        for (auto const& connector : resources.connectors())
+        {
+            mir::log_info(
+                "Output: %s %s",
+                mg::kms::connector_name(connector).c_str(),
+                describe_connection_status(*connector));
+            for (auto i = 0; i < connector->count_modes; ++i)
+            {
+                mir::log_info(
+                    "\t raw mode: %i×%i@%.2f",
+                    connector->modes[i].hdisplay,
+                    connector->modes[i].vdisplay,
+                    calculate_vrefresh_hz(connector->modes[i]));
+            }
+        }
+    }
+}
+
 }
 
 mgm::Display::Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& drm,
@@ -131,6 +201,8 @@ mgm::Display::Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& dr
 
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
     monitor.enable();
+
+    log_drm_details(drm);
 
     initial_conf_policy->apply_to(current_display_configuration);
 
