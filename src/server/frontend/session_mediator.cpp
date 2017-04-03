@@ -116,7 +116,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
-    std::shared_ptr<mf::InputConfigurationChanger> const& input_changer) :
+    std::shared_ptr<mf::InputConfigurationChanger> const& input_changer,
+    std::vector<mir::ExtensionDescription> const& extensions) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -133,7 +134,8 @@ mf::SessionMediator::SessionMediator(
     translator{translator},
     anr_detector{anr_detector},
     cookie_authority(cookie_authority),
-    input_changer(input_changer)
+    input_changer(input_changer),
+    extensions(extensions)
 {
 }
 
@@ -165,8 +167,6 @@ void mf::SessionMediator::connect(
 
     auto ipc_package = ipc_operations->connection_ipc_package();
 
-    auto extensions = ipc_operations->extensions();
-
     auto platform = response->mutable_platform();
 
     for (auto& data : ipc_package->ipc_data)
@@ -177,7 +177,6 @@ void mf::SessionMediator::connect(
 
     if (auto const graphics_module = ipc_package->graphics_module)
     {
-        extensions.push_back(mir::ExtensionDescription{"mir_extension_graphics_module", {1}});
         auto const module = platform->mutable_graphics_module();
 
         module->set_name(graphics_module->name);
@@ -198,9 +197,6 @@ void mf::SessionMediator::connect(
 
     resource_cache->save_resource(response, ipc_package);
 
-    if (translator->translation_supported())
-        extensions.push_back(mir::ExtensionDescription{"mir_extension_window_coordinate_translation", {1}});
-
     for ( auto const& ext : extensions )
     {
         if (ext.version.empty()) //malformed plugin, ignore
@@ -210,7 +206,6 @@ void mf::SessionMediator::connect(
         for(auto const& v : ext.version)
             e->add_version(v);
     }
-
 
     done->Run();
 }
