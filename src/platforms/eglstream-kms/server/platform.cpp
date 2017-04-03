@@ -162,7 +162,7 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::RenderingPlatform::make_ipc
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{"No platform operations implemented"});
         }
-        std::vector<mg::ExtensionDescription> extensions() const override
+        std::vector<mir::ExtensionDescription> extensions() const override
         {
             return {};
         }

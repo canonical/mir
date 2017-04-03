@@ -19,6 +19,7 @@
 #ifndef MIR_GRAPHICS_PLATFORM_IPC_OPERATIONS_H_
 #define MIR_GRAPHICS_PLATFORM_IPC_OPERATIONS_H_
 
+#include "mir/extension_description.h"
 #include "platform_ipc_package.h"
 #include <memory>
 
@@ -34,12 +35,6 @@ enum class BufferIpcMsgType
 class Buffer;
 class BufferIpcMessage;
 struct PlatformOperationMessage;
-
-struct ExtensionDescription
-{
-    std::string name;
-    std::vector<int> version;
-};
 
 class PlatformIpcOperations
 {

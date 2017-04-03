@@ -91,7 +91,7 @@ mg::PlatformOperationMessage mgn::IpcOperations::platform_operation(
     return ipc_operations->platform_operation(opcode, message);
 }
 
-std::vector<mg::ExtensionDescription> mgn::IpcOperations::extensions() const
+std::vector<mir::ExtensionDescription> mgn::IpcOperations::extensions() const
 {
     return {};
 }

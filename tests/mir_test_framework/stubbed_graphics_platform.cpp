@@ -240,7 +240,7 @@ class StubIpcOps : public mg::PlatformIpcOperations
         return reply;
     }
 
-    std::vector<mg::ExtensionDescription> extensions() const override
+    std::vector<mir::ExtensionDescription> extensions() const override
     {
         if (flavor_enabled)
             return {

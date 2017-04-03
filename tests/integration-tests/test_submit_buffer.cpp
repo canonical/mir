@@ -202,7 +202,7 @@ struct StubBufferPacker : public mg::PlatformIpcOperations
         return underlying_ops->platform_operation(opcode, msg);
     }
 
-    std::vector<mg::ExtensionDescription> extensions() const override
+    std::vector<mir::ExtensionDescription> extensions() const override
     {
         return underlying_ops->extensions();
     }

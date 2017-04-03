@@ -177,7 +177,7 @@ void mf::SessionMediator::connect(
 
     if (auto const graphics_module = ipc_package->graphics_module)
     {
-        extensions.push_back(mg::ExtensionDescription{"mir_extension_graphics_module", {1}});
+        extensions.push_back(mir::ExtensionDescription{"mir_extension_graphics_module", {1}});
         auto const module = platform->mutable_graphics_module();
 
         module->set_name(graphics_module->name);
@@ -199,7 +199,7 @@ void mf::SessionMediator::connect(
     resource_cache->save_resource(response, ipc_package);
 
     if (translator->translation_supported())
-        extensions.push_back(mg::ExtensionDescription{"mir_extension_window_coordinate_translation", {1}});
+        extensions.push_back(mir::ExtensionDescription{"mir_extension_window_coordinate_translation", {1}});
 
     for ( auto const& ext : extensions )
     {
