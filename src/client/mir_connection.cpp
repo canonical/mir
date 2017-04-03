@@ -608,8 +608,6 @@ void MirConnection::connected(MirConnectedCallback callback, void * context)
             extensions.push_back({ex.name(), versions});
         }
 
-//            extensions = connect_result->extension();
-
         /*
          * We need to create the client platform after the connection has been
          * established, to ensure that the client platform has access to all

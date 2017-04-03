@@ -30,6 +30,15 @@ struct ClientExtensions : mtf::ConnectedClientHeadlessServer
 {
 };
 
+struct ClientExtensionsDisabled : mtf::ConnectedClientHeadlessServer
+{
+    void SetUp() override
+    {
+        mtf::disable_flavors();
+        mtf::ConnectedClientHeadlessServer::SetUp();
+    }
+};
+
 TEST_F(ClientExtensions, can_load_an_extension)
 {
     auto ext = mir_extension_favorite_flavor_v1(connection);
@@ -63,15 +72,8 @@ TEST_F(ClientExtensions, gives_nullptr_on_errors)
         connection, "pancake", 8), Eq(nullptr));
 }
 
-TEST_F(ClientExtensions, queries_for_extensions)
+TEST_F(ClientExtensionsDisabled, queries_for_extensions)
 {
     auto ext = mir_extension_favorite_flavor_v1(connection);
-    EXPECT_THAT(ext, Ne(nullptr));
-    mir_connection_release(connection);
-
-    mtf::disable_flavors();
-
-    connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
-    ext = mir_extension_favorite_flavor_v1(connection);
     EXPECT_THAT(ext, Eq(nullptr));
 }

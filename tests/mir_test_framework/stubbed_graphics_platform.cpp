@@ -318,12 +318,18 @@ struct GuestPlatformAdapter : mg::Platform
     std::vector<mir::ExtensionDescription> extensions() const override
     {
         if (flavor_enabled)
+        {
+            printf("ext on\n");
             return {
                 { std::string{"mir_extension_favorite_flavor"}, {1, 9} },
                 { std::string{"mir_extension_animal_names"}, {1} }
             };
+        }
         else
+        {
+            printf("no ext\n");
             return { { std::string{"mir_extension_animal_names"}, {1} } };
+        }
     }
 
     std::shared_ptr<mg::PlatformAuthentication> const context;
