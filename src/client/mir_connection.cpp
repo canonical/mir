@@ -1446,17 +1446,13 @@ void* MirConnection::request_interface(char const* name, int version)
     if (!platform)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot query extensions before connecting to server"));
 
-    printf("REQUEST INTERFOC\n");
     auto supported = std::find_if(extensions.begin(), extensions.end(),
         [&](auto& e) {
             return e.name == std::string{name} &&
                 std::find(e.version.begin(), e.version.end(), version) != e.version.end();
         });
     if (supported == extensions.end())
-    {
-        printf("NOT %s\n", name);
         return nullptr;
-    }
 
     if (!strcmp(name, "mir_extension_window_coordinate_translation") && (version == 1) && translation_ext.is_set())
         return &translation_ext.value();
