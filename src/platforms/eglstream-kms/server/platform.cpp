@@ -110,6 +110,11 @@ mg::NativeDisplayPlatform* mge::DisplayPlatform::native_display_platform()
     return nullptr;
 }
 
+std::vector<mir::ExtensionDescription> mge::DisplayPlatform::extensions() const
+{
+    return {};
+}
+
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_buffer_allocator()
 {
     return mir::make_module_ptr<mge::BufferAllocator>();
@@ -162,10 +167,6 @@ mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::RenderingPlatform::make_ipc
         {
             BOOST_THROW_EXCEPTION(std::runtime_error{"No platform operations implemented"});
         }
-        std::vector<mir::ExtensionDescription> extensions() const override
-        {
-            return {};
-        }
     };
 
     return mir::make_module_ptr<NoIPCOperations>();
@@ -204,4 +205,9 @@ mir::UniqueModulePtr<mg::Display> mge::Platform::create_display(
 mg::NativeDisplayPlatform* mge::Platform::native_display_platform()
 {
     return display->native_display_platform();
+}
+
+std::vector<mir::ExtensionDescription> mge::Platform::extensions() const
+{
+    return display->extensions();
 }

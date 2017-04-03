@@ -71,6 +71,7 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
     NativeDisplayPlatform* native_display_platform() override;
+    std::vector<mir::ExtensionDescription> extensions() const override;
 
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
@@ -95,6 +96,7 @@ public:
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativeRenderingPlatform* native_rendering_platform() override;
     NativeDisplayPlatform* native_display_platform() override;
+    std::vector<mir::ExtensionDescription> extensions() const override;
 
 private:
     std::shared_ptr<HwcPlatform> const display;

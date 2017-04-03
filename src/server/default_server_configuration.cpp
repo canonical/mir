@@ -236,7 +236,7 @@ std::vector<mir::ExtensionDescription> mir::DefaultServerConfiguration::the_exte
 {
     //why not from plat directly?
     auto ipc_ops = the_graphics_platform()->make_ipc_operations();
-    auto extensions = ipc_ops->extensions();
+    auto extensions = the_graphics_platform()->extensions();
     if (the_coordinate_translator()->translation_supported())
         extensions.push_back(mir::ExtensionDescription{"mir_extension_window_coordinate_translation", {1}});
     //have to pushback

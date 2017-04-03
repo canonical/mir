@@ -100,3 +100,8 @@ mgm::BypassOption mgm::Platform::bypass_option() const
 {
     return bypass_option_;
 }
+
+std::vector<mir::ExtensionDescription> mgm::Platform::extensions() const
+{
+    return {};
+}

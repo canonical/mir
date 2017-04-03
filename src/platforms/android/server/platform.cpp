@@ -129,6 +129,11 @@ mg::NativeDisplayPlatform* mga::Platform::native_display_platform()
     return display->native_display_platform();
 }
 
+std::vector<mir::ExtensionDescription> mga::Platform::extensions() const
+{
+    return display->extensions();
+}
+
 mga::GrallocPlatform::GrallocPlatform(
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator) :
     buffer_allocator(buffer_allocator)
@@ -350,4 +355,9 @@ mir::ModuleProperties const* describe_graphics_module()
 {
     mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
+}
+
+std::vector<mir::ExtensionDescription> mga::HwcPlatform::extensions() const
+{
+    return {};
 }

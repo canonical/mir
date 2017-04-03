@@ -35,7 +35,6 @@ public:
     std::shared_ptr<PlatformIPCPackage> connection_ipc_package() override;
     PlatformOperationMessage platform_operation(
         unsigned int const opcode, PlatformOperationMessage const& message) override;
-    std::vector<ExtensionDescription> extensions() const override;
 };
 }
 }

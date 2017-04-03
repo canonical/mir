@@ -239,17 +239,6 @@ class StubIpcOps : public mg::PlatformIpcOperations
 
         return reply;
     }
-
-    std::vector<mir::ExtensionDescription> extensions() const override
-    {
-        if (flavor_enabled)
-            return {
-                { std::string{"mir_extension_favorite_flavor"}, {1, 9} },
-                { std::string{"mir_extension_animal_names"}, {1} }
-            };
-        else
-            return { { std::string{"mir_extension_animal_names"}, {1} } };
-    }
 };
 }
 
@@ -324,6 +313,17 @@ struct GuestPlatformAdapter : mg::Platform
     mg::NativeDisplayPlatform* native_display_platform() override
     {
         return adaptee->native_display_platform();
+    }
+
+    std::vector<mir::ExtensionDescription> extensions() const override
+    {
+        if (flavor_enabled)
+            return {
+                { std::string{"mir_extension_favorite_flavor"}, {1, 9} },
+                { std::string{"mir_extension_animal_names"}, {1} }
+            };
+        else
+            return { { std::string{"mir_extension_animal_names"}, {1} } };
     }
 
     std::shared_ptr<mg::PlatformAuthentication> const context;

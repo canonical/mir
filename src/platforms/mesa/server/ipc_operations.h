@@ -39,7 +39,6 @@ public:
     PlatformOperationMessage platform_operation(
         unsigned int const opcode,
         PlatformOperationMessage const& message) override;
-    std::vector<ExtensionDescription> extensions() const override;
 private:
     std::shared_ptr<DRMAuthentication> const drm;
 };

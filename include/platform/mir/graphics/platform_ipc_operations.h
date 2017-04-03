@@ -19,7 +19,6 @@
 #ifndef MIR_GRAPHICS_PLATFORM_IPC_OPERATIONS_H_
 #define MIR_GRAPHICS_PLATFORM_IPC_OPERATIONS_H_
 
-#include "mir/extension_description.h"
 #include "platform_ipc_package.h"
 #include <memory>
 
@@ -79,8 +78,6 @@ public:
      */
     virtual PlatformOperationMessage platform_operation(
         unsigned int const opcode, PlatformOperationMessage const& message) = 0; 
-
-    virtual std::vector<ExtensionDescription> extensions() const = 0;
 
 protected:
     PlatformIpcOperations() = default;

@@ -95,8 +95,3 @@ mg::PlatformOperationMessage mga::IpcOperations::platform_operation(
 {
     BOOST_THROW_EXCEPTION(std::invalid_argument("android platform does not support any platform operations"));
 }
-
-std::vector<mir::ExtensionDescription> mga::IpcOperations::extensions() const
-{
-    return {};
-}

@@ -71,3 +71,8 @@ EGLNativeDisplayType mgx::GuestPlatform::egl_native_display() const
 {
     return gbm.device;
 }
+
+std::vector<mir::ExtensionDescription> mgx::GuestPlatform::extensions() const
+{
+    return {};
+}
