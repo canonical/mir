@@ -1143,6 +1143,24 @@ MIR_PROTOBUF_0.27 {
 MIR_PROTOBUF_0.28 {
  global:
   extern "C++" {
- * 
+    typeinfo?for?mir::protobuf::Extension;
+    vtable?for?mir::protobuf::Extension;
+    mir::protobuf::Extension::MergePartialFromCodedStream*;
+    mir::protobuf::Extension::Extension*;
+    mir::protobuf::Extension::ByteSize*;
+    mir::protobuf::Extension::GetTypeName*;
+    mir::protobuf::Extension::?Extension*;
+    mir::protobuf::Extension::New*;
+    mir::protobuf::Extension::default_instance*;
+    mir::protobuf::Extension::SerializeWithCachedSizes*;
+    mir::protobuf::Extension::Clear*;
+    mir::protobuf::Extension::IsInitialized*;
+    mir::protobuf::Extension::CopyFrom*;
+    mir::protobuf::Extension::MergeFrom*;
+    mir::protobuf::Extension::kVersionFieldNumber*;
+    mir::protobuf::Extension::CheckTypeAndMergeFrom*;
+    mir::protobuf::Extension::Swap*;
+    mir::protobuf::Extension::kNameFieldNumber*;
+    mir::protobuf::Extension::DiscardUnknownFields*;
   };
 } MIR_PROTOBUF_0.27;
