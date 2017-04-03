@@ -41,6 +41,8 @@
 #include "mir/default_configuration.h"
 #include "mir/scene/null_prompt_session_listener.h"
 #include "default_emergency_cleanup.h"
+#include "mir/graphics/platform.h"
+#include "mir/scene/coordinate_translator.h"
 
 #include <type_traits>
 
@@ -229,23 +231,11 @@ auto mir::DefaultServerConfiguration::the_logger()
         });
 }
 
-#include "mir/graphics/platform.h"
-#include "mir/graphics/platform_ipc_operations.h"
-#include "mir/scene/coordinate_translator.h"
 std::vector<mir::ExtensionDescription> mir::DefaultServerConfiguration::the_extensions()
 {
-    //why not from plat directly?
     auto extensions = the_graphics_platform()->extensions();
+    extensions.push_back(mir::ExtensionDescription{"mir_drag_and_drop", { 1 } });
     if (the_coordinate_translator()->translation_supported())
         extensions.push_back(mir::ExtensionDescription{"mir_extension_window_coordinate_translation", {1}});
-    //have to pushback
-    auto ipc_ops = the_graphics_platform()->make_ipc_operations();
-    auto ipc_package = ipc_ops->connection_ipc_package();
-    if (auto const graphics_module = ipc_package->graphics_module)
-    {
-        extensions.push_back(mir::ExtensionDescription{"mir_extension_graphics_module", {1}});
-    }
-//    if (
-//        extensions.push_back(mir::ExtensionDescription{"mir_extension_graphics_module", {1}});
     return extensions;
 }

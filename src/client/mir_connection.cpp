@@ -1455,41 +1455,22 @@ void* MirConnection::request_interface(char const* name, int version)
     if (!platform)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot query extensions before connecting to server"));
 
-    auto support = std::find_if(extensions.begin(), extensions.end(),
+    auto supported = std::find_if(extensions.begin(), extensions.end(),
         [&](auto& e) {
-            bool found = false;
-            for (auto& v : e.version)
-                if (v == version) found = true;
-
-//            printf("EEE %s %i vs %s %i\n", e.name.c_str(), e.version, name, version);
-            return e.name == std::string{name} && found;
+            return e.name == std::string{name} &&
+                std::find(e.version.begin(), e.version.end(), version) != e.version.end();
         });
-    if (support == extensions.end())
-    {
-        printf("NOT FOUND\n");
+    if (supported == extensions.end())
         return nullptr;
-    }
-    else
-    {
-        printf("FOUND\n");
-    }
-
-    printf("req %s %i\n", name, version);
-    //for (auto const& ex : extensions)
-   // {
-//        printf("EEEEE %s ",
-//        printf(v%i\n", ex.name.c_str(), ex.version);
-   // }
-    //printf("INTERFACE REQUESTED %s, server reports %s\n", name, extensions.c_str());
 
     if (!strcmp(name, "mir_extension_window_coordinate_translation") && (version == 1))
         return &translation_ext.value();
-    if (!strcmp(name, "mir_extension_graphics_module") && (version == 1))
-        return &graphics_module_extension.value();
-
     if (!strcmp(name, "mir_drag_and_drop") && (version == 1))
         return const_cast<MirDragAndDropV1*>(mir::drag_and_drop::v1);
 
+    //this extension should move to the platform plugin.
+    if (!strcmp(name, "mir_extension_graphics_module") && (version == 1))
+        return &graphics_module_extension.value();
     return platform->request_interface(name, version);
 }
 
