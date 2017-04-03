@@ -22,6 +22,7 @@
 #include "nested_authentication.h"
 #include "ipc_operations.h"
 #include "buffer_allocator.h"
+#include "mesa_extensions.h"
 
 #include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/platform_operation_message.h"
@@ -131,5 +132,5 @@ EGLNativeDisplayType mgm::GuestPlatform::egl_native_display() const
 
 std::vector<mir::ExtensionDescription> mgm::GuestPlatform::extensions() const
 {
-    return {};
+    return mgm::mesa_extensions();
 }

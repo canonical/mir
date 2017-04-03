@@ -20,6 +20,7 @@
 #include "display.h"
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
+#include "mesa_extensions.h"
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -78,5 +79,5 @@ EGLNativeDisplayType mgx::Platform::egl_native_display() const
 
 std::vector<mir::ExtensionDescription> mgx::Platform::extensions() const
 {
-    return {};
+    return mgm::mesa_extensions();
 }

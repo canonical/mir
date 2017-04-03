@@ -235,11 +235,11 @@ auto mir::DefaultServerConfiguration::the_logger()
 std::vector<mir::ExtensionDescription> mir::DefaultServerConfiguration::the_extensions()
 {
     //why not from plat directly?
-    auto ipc_ops = the_graphics_platform()->make_ipc_operations();
     auto extensions = the_graphics_platform()->extensions();
     if (the_coordinate_translator()->translation_supported())
         extensions.push_back(mir::ExtensionDescription{"mir_extension_window_coordinate_translation", {1}});
     //have to pushback
+    auto ipc_ops = the_graphics_platform()->make_ipc_operations();
     auto ipc_package = ipc_ops->connection_ipc_package();
     if (auto const graphics_module = ipc_package->graphics_module)
     {

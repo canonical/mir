@@ -298,7 +298,7 @@ private:
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<InputConfigurationChanger> const input_changer;
-    std::vector<mir::ExtensionDescription> const& extensions;
+    std::vector<mir::ExtensionDescription> const extensions;
 
     ScreencastBufferTracker screencast_buffer_tracker;
 

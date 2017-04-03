@@ -20,6 +20,7 @@
 #include "guest_platform.h"
 #include "ipc_operations.h"
 #include "buffer_allocator.h"
+#include "mesa_extensions.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -74,5 +75,5 @@ EGLNativeDisplayType mgx::GuestPlatform::egl_native_display() const
 
 std::vector<mir::ExtensionDescription> mgx::GuestPlatform::extensions() const
 {
-    return {};
+    return mgm::mesa_extensions();
 }

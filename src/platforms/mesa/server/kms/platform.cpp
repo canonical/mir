@@ -28,6 +28,7 @@
 #include "mir/graphics/native_buffer.h"
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/udev/wrapper.h"
+#include "mesa_extensions.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -103,5 +104,5 @@ mgm::BypassOption mgm::Platform::bypass_option() const
 
 std::vector<mir::ExtensionDescription> mgm::Platform::extensions() const
 {
-    return {};
+    return mgm::mesa_extensions();
 }

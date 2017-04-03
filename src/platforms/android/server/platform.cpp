@@ -171,7 +171,7 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::GrallocPlatform::create_bu
         {
             return allocator->alloc_software_buffer(size, format);
         }
-
+    
         std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
     };
 
@@ -359,5 +359,12 @@ mir::ModuleProperties const* describe_graphics_module()
 
 std::vector<mir::ExtensionDescription> mga::HwcPlatform::extensions() const
 {
-    return {};
+    return
+    {
+        { "mir_extension_android_buffer", { 1, 2 } },
+        { "mir_extension_android_egl", { 1 } },
+        { "mir_extension_fenced_buffers", { 1 } },
+        { "mir_extension_graphics_module", { 1 } },
+        { "mir_extension_hardware_buffer_stream", { 1 } }
+    };
 }

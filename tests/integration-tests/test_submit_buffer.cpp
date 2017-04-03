@@ -201,7 +201,6 @@ struct StubBufferPacker : public mg::PlatformIpcOperations
     {
         return underlying_ops->platform_operation(opcode, msg);
     }
-
 private:
     std::shared_ptr<mir::Fd> const last_fd;
     std::shared_ptr<mg::PlatformIpcOperations> const underlying_ops;
