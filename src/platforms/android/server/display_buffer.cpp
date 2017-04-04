@@ -40,7 +40,7 @@ mga::DisplayBuffer::DisplayBuffer(
     std::shared_ptr<ANativeWindow> const& native_window,
     mga::GLContext const& shared_gl_context,
     mgl::ProgramFactory const& program_factory,
-    MirOrientation orientation,
+    glm::mat2 const& transform,
     geom::Rectangle area,
     mga::OverlayOptimization overlay_option)
     : display_name(display_name),
@@ -51,8 +51,7 @@ mga::DisplayBuffer::DisplayBuffer(
       gl_context{shared_gl_context, fb_bundle, native_window},
       overlay_program{program_factory, gl_context, geom::Rectangle{{0,0},fb_bundle->fb_size()}},
       overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
-      orientation_{orientation},
-      transform{mg::transformation(orientation)},
+      transform{transform},
       area{area},
       power_mode_{mir_power_mode_on}
 {
@@ -107,14 +106,15 @@ glm::mat2 mga::DisplayBuffer::transformation() const
     return transform;
 }
 
-void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation, geom::Rectangle const& a)
+void mga::DisplayBuffer::configure(MirPowerMode power_mode,
+                                   glm::mat2 const& trans,
+                                   geom::Rectangle const& a)
 {
     power_mode_ = power_mode;
     area = a;
     if (power_mode_ != mir_power_mode_on)
         display_device->content_cleared();
-    orientation_ = orientation;
-    transform = mg::transformation(orientation_);
+    transform = trans;
 }
 
 mga::DisplayContents mga::DisplayBuffer::contents()
