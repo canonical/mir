@@ -708,6 +708,33 @@ TEST_F(ClientCursor, from_a_surface_config_is_applied)
     expect_client_shutdown();
 }
 
+TEST_F(ClientCursor, from_a_surface_is_applied)
+{
+    client_geometries[client_name_1] =
+        geom::Rectangle{{0, 0}, {1, 1}};
+
+    SurfaceCursorClient client{new_connection(), client_name_1};
+
+    {
+        InSequence seq;
+        EXPECT_CALL(cursor, show(_)).Times(2);
+        EXPECT_CALL(cursor, show(_)).Times(1)
+            .WillOnce(mt::WakeUp(&expectations_satisfied));
+    }
+
+    mt::Signal cursor_image_set;
+
+    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+        .WillRepeatedly(mt::WakeUp(&cursor_image_set));
+
+    client.configure_cursor();
+
+    EXPECT_TRUE(cursor_image_set.wait_for(timeout));
+
+    expectations_satisfied.wait_for(60s);
+    expect_client_shutdown();
+}
+
 namespace
 {
 // The nested server fixture we use is using the 'CanonicalWindowManager' which will place

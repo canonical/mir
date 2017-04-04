@@ -86,13 +86,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-//TODO: accept other pixel format types
-void throw_if_unsuitable_for_cursor(mf::BufferStream& stream)
-{
-    if (stream.pixel_format() != mir_pixel_format_argb_8888)
-        BOOST_THROW_EXCEPTION(std::logic_error("Only argb8888 buffer streams may currently be attached to the cursor"));
-}
-
 mg::GammaCurve convert_string_to_gamma_curve(std::string const& str_bytes)
 {
     mg::GammaCurve out(str_bytes.size() / (sizeof(mg::GammaCurve::value_type) / sizeof(char)));
@@ -658,7 +651,9 @@ void mf::SessionMediator::modify_surface(
         surface_specification.has_hotspot_y())
     {
         mf::BufferStreamId id{surface_specification.cursor_id().value()};
-        throw_if_unsuitable_for_cursor(*session->get_buffer_stream(id));
+        auto stream = session->get_buffer_stream(id);
+        if (!stream->suitable_for_cursor())
+            BOOST_THROW_EXCEPTION(std::logic_error("Cursor buffer streams must have mir_pixel_format_argb_8888 format"));
         mods.stream_cursor = msh::StreamCursor{
             id, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} };
     }
