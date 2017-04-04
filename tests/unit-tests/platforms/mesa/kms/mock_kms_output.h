@@ -38,6 +38,7 @@ namespace test
 
 struct MockKMSOutput : public graphics::mesa::KMSOutput
 {
+    MOCK_CONST_METHOD0(id, uint32_t());
     MOCK_METHOD0(reset, void());
     MOCK_METHOD2(configure, void(geometry::Displacement, size_t));
     MOCK_CONST_METHOD0(size, geometry::Size());
@@ -72,6 +73,8 @@ struct MockKMSOutput : public graphics::mesa::KMSOutput
     MOCK_CONST_METHOD1(update_from_hardware_state, void(graphics::DisplayConfigurationOutput&));
 
     MOCK_CONST_METHOD1(fb_for, graphics::mesa::FBHandle*(gbm_bo*));
+    MOCK_CONST_METHOD1(buffer_requires_migration, bool(gbm_bo*));
+    MOCK_CONST_METHOD0(drm_fd, int());
 };
 
 } // namespace test

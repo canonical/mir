@@ -23,6 +23,7 @@
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include <unordered_map>
 
 namespace mir
 {
@@ -154,12 +155,45 @@ public:
     MOCK_METHOD6(drmModeCrtcSetGamma, int(int fd, uint32_t crtc_id, uint32_t size,
                                           uint16_t* red, uint16_t* green, uint16_t* blue));
 
-    FakeDRMResources fake_drm;
+    MOCK_METHOD1(drmGetVersion, drmVersionPtr(int));
+    MOCK_METHOD1(drmFreeVersion, void(drmVersionPtr));
+
+
+    void add_crtc(
+        char const* device,
+        uint32_t id,
+        drmModeModeInfo mode);
+    void add_encoder(
+        char const* device,
+        uint32_t encoder_id,
+        uint32_t crtc_id,
+        uint32_t possible_crtcs_mask);
+    void add_connector(
+        char const* device,
+        uint32_t connector_id,
+        uint32_t type,
+        drmModeConnection connection,
+        uint32_t encoder_id,
+        std::vector<drmModeModeInfo>& modes,
+        std::vector<uint32_t>& possible_encoder_ids,
+        geometry::Size const& physical_size,
+        drmModeSubPixel subpixel_arrangement = DRM_MODE_SUBPIXEL_UNKNOWN);
+
+    void prepare(char const* device);
+    void reset(char const* device);
+
+    void generate_event_on(char const* device);
+
+    class IsFdOfDeviceMatcher;
+    friend class IsFdOfDeviceMatcher;
 
 private:
+    std::unordered_map<std::string, FakeDRMResources> fake_drms;
+    std::unordered_map<int, FakeDRMResources&> fd_to_drm;
     drmModeObjectProperties empty_object_props;
 };
 
+testing::Matcher<int> IsFdOfDevice(char const* device);
 }
 }
 }
