@@ -41,7 +41,7 @@ mga::DisplayBuffer::DisplayBuffer(
     mga::GLContext const& shared_gl_context,
     mgl::ProgramFactory const& program_factory,
     MirOrientation orientation,
-    geom::Displacement offset,
+    geom::Rectangle area,
     mga::OverlayOptimization overlay_option)
     : display_name(display_name),
       layer_list(std::move(layer_list)),
@@ -53,22 +53,14 @@ mga::DisplayBuffer::DisplayBuffer(
       overlay_enabled{overlay_option == mga::OverlayOptimization::enabled},
       orientation_{orientation},
       transform{mg::transformation(orientation)},
-      offset_from_origin{offset},
+      area{area},
       power_mode_{mir_power_mode_on}
 {
 }
 
 geom::Rectangle mga::DisplayBuffer::view_area() const
 {
-    auto const& size = fb_bundle->fb_size();
-    int width = size.width.as_int();
-    int height = size.height.as_int();
-
-    if (orientation_ == mir_orientation_left || orientation_ == mir_orientation_right)
-        std::swap(width, height);
-
-    geom::Point origin;
-    return {origin + offset_from_origin, {width,height}};
+    return area;
 }
 
 void mga::DisplayBuffer::make_current()
@@ -89,7 +81,7 @@ bool mga::DisplayBuffer::overlay(RenderableList const& renderlist)
         transform != no_transformation)
         return false;
 
-    layer_list->update_list(renderlist, offset_from_origin);
+    layer_list->update_list(renderlist, area.top_left - geom::Point());
 
     bool needs_commit{false};
     for (auto& layer : *layer_list)
@@ -100,7 +92,7 @@ bool mga::DisplayBuffer::overlay(RenderableList const& renderlist)
 
 void mga::DisplayBuffer::swap_buffers()
 {
-    layer_list->update_list({}, offset_from_origin);
+    layer_list->update_list({}, area.top_left - geom::Point());
     //HWC 1.0 cannot call eglSwapBuffers() on the display context
     if (display_device->can_swap_buffers())
         gl_context.swap_buffers();
@@ -115,10 +107,10 @@ glm::mat2 mga::DisplayBuffer::transformation() const
     return transform;
 }
 
-void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation, geom::Displacement offset)
+void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orientation, geom::Rectangle const& a)
 {
     power_mode_ = power_mode;
-    offset_from_origin = offset;
+    area = a;
     if (power_mode_ != mir_power_mode_on)
         display_device->content_cleared();
     orientation_ = orientation;
@@ -127,7 +119,7 @@ void mga::DisplayBuffer::configure(MirPowerMode power_mode, MirOrientation orien
 
 mga::DisplayContents mga::DisplayBuffer::contents()
 {
-    return mga::DisplayContents{display_name, *layer_list, offset_from_origin, gl_context, overlay_program};
+    return mga::DisplayContents{display_name, *layer_list, area.top_left - geom::Point(), gl_context, overlay_program};
 }
 
 MirPowerMode mga::DisplayBuffer::power_mode() const
