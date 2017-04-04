@@ -86,7 +86,7 @@ class Platform : public graphics::Platform
 {
 public:
     Platform(
-        std::shared_ptr<HwcPlatform> const& display,
+        std::shared_ptr<DisplayPlatform> const& display,
         std::shared_ptr<GrallocPlatform> const& rendering);
 
     UniqueModulePtr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
@@ -99,7 +99,7 @@ public:
     std::vector<mir::ExtensionDescription> extensions() const override;
 
 private:
-    std::shared_ptr<HwcPlatform> const display;
+    std::shared_ptr<DisplayPlatform> const display;
     std::shared_ptr<GrallocPlatform> const rendering;
 };
 
