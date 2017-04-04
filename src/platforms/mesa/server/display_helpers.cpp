@@ -20,8 +20,13 @@
 #include "drm_close_threadsafe.h"
 
 #include "kms-utils/drm_mode_resources.h"
+#include "mir/graphics/gl_config.h"
+#include "mir/graphics/egl_error.h"
 
 #include "mir/udev/wrapper.h"
+
+#define MIR_LOG_COMPONENT "mesa-kms"
+#include "mir/log.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -31,6 +36,7 @@
 #include <stdexcept>
 #include <xf86drm.h>
 #include <fcntl.h>
+#include <vector>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -39,6 +45,69 @@ namespace mgmh = mir::graphics::mesa::helpers;
 /*************
  * DRMHelper *
  *************/
+
+std::vector<std::shared_ptr<mgmh::DRMHelper>>
+mgmh::DRMHelper::open_all_devices(std::shared_ptr<mir::udev::Context> const& udev)
+{
+    int tmp_fd = -1;
+    int error = ENODEV; //Default error is "there are no DRM devices"
+
+    mir::udev::Enumerator devices(udev);
+    devices.match_subsystem("drm");
+    devices.match_sysname("card[0-9]");
+
+    devices.scan_devices();
+
+    std::vector<std::shared_ptr<DRMHelper>> opened_devices;
+
+    for(auto& device : devices)
+    {
+        // If directly opening the DRM device is good enough for X it's good enough for us!
+        tmp_fd = open(device.devnode(), O_RDWR | O_CLOEXEC);
+        if (tmp_fd < 0)
+        {
+            error = errno;
+            mir::log_warning(
+                "Failed to open DRM device node %s: %i (%s)",
+                device.devnode(),
+                error,
+                strerror(error));
+            continue;
+        }
+
+        // Check that the drm device is usable by setting the interface version we use (1.4)
+        drmSetVersion sv;
+        sv.drm_di_major = 1;
+        sv.drm_di_minor = 4;
+        sv.drm_dd_major = -1;     /* Don't care */
+        sv.drm_dd_minor = -1;     /* Don't care */
+
+        if ((error = -drmSetInterfaceVersion(tmp_fd, &sv)))
+        {
+            close(tmp_fd);
+            mir::log_warning(
+                "Failed to set DRM interface version on device %s: %i (%s)",
+                device.devnode(),
+                error,
+                strerror(error));
+            tmp_fd = -1;
+            continue;
+        }
+
+        // Can't use make_shared with the private constructor.
+        opened_devices.push_back(std::shared_ptr<DRMHelper>{new DRMHelper{tmp_fd}});
+        mir::log_info("Using DRM device %s", device.devnode());
+        tmp_fd = -1;
+    }
+
+    if (opened_devices.size() == 0)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{error, std::system_category(), "Error opening DRM device"}));
+    }
+
+    return opened_devices;
+}
 
 void mgmh::DRMHelper::setup(std::shared_ptr<mir::udev::Context> const& udev)
 {
@@ -158,6 +227,12 @@ void mgmh::DRMHelper::set_master() const
                 std::runtime_error("Failed to set DRM master"))
                     << boost::errinfo_errno(errno));
     }
+}
+
+mgmh::DRMHelper::DRMHelper(int fd)
+    : fd{fd},
+      node_to_use{DRMNodeToUse::card}
+{
 }
 
 int mgmh::DRMHelper::is_appropriate_device(std::shared_ptr<mir::udev::Context> const& udev, mir::udev::Device const& drm_device)
@@ -285,11 +360,29 @@ void mgmh::GBMHelper::setup(int drm_fd)
             std::runtime_error("Failed to create GBM device"));
 }
 
-mgm::GBMSurfaceUPtr mgmh::GBMHelper::create_scanout_surface(uint32_t width, uint32_t height)
+mgm::GBMSurfaceUPtr mgmh::GBMHelper::create_scanout_surface(
+    uint32_t width,
+    uint32_t height,
+    bool sharable)
 {
+    auto format_flags = GBM_BO_USE_RENDERING | GBM_BO_USE_SCANOUT;
+
+    if (sharable)
+    {
+#ifdef MIR_NO_HYBRID_SUPPORT
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{
+                "Mir built without hybrid support, but configuration requires hybrid outputs.\n"
+                "This will not work unless Mir is rebuilt against Mesa >= 11.0"}
+            ));
+#else
+        format_flags |= GBM_BO_USE_LINEAR;
+#endif
+    }
+
     auto surface_raw = gbm_surface_create(device, width, height,
                                           GBM_BO_FORMAT_XRGB8888,
-                                          GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
+                                          format_flags);
 
     auto gbm_surface_deleter = [](gbm_surface *p) { if (p) gbm_surface_destroy(p); };
     GBMSurfaceUPtr surface{surface_raw, gbm_surface_deleter};

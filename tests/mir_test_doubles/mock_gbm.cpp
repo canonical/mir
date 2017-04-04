@@ -182,3 +182,8 @@ struct gbm_bo* gbm_bo_import(struct gbm_device* device, uint32_t type, void* dat
 {
     return global_mock->gbm_bo_import(device, type, data, flags);
 }
+
+int gbm_bo_get_fd(gbm_bo* bo)
+{
+    return global_mock->gbm_bo_get_fd(bo);
+}

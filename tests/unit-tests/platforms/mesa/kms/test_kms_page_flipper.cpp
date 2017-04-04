@@ -32,6 +32,7 @@
 #include <unordered_set>
 
 #include <sys/time.h>
+#include <fcntl.h>
 
 namespace mg  = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -45,12 +46,17 @@ class KMSPageFlipperTest : public ::testing::Test
 {
 public:
     KMSPageFlipperTest()
-        : page_flipper{mock_drm.fake_drm.fd(), mt::fake_shared(report)}
+    : drm_fd{open(drm_device, 0, 0)},
+      page_flipper{drm_fd, mt::fake_shared(report)}
     {
     }
 
     testing::NiceMock<mtd::MockDisplayReport> report;
     testing::NiceMock<mtd::MockDRM> mock_drm;
+
+    char const* const drm_device = "/dev/dri/card0";
+    int const drm_fd;
+
     mgm::KMSPageFlipper page_flipper;
 };
 
@@ -73,8 +79,7 @@ TEST_F(KMSPageFlipperTest, schedule_flip_calls_drm_page_flip)
     uint32_t const fb_id{101};
     uint32_t const connector_id{345};
 
-    EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
-                                          crtc_id, fb_id, _, _))
+    EXPECT_CALL(mock_drm, drmModePageFlip(drm_fd, crtc_id, fb_id, _, _))
         .Times(1);
 
     page_flipper.schedule_flip(crtc_id, fb_id, connector_id);
@@ -88,8 +93,7 @@ TEST_F(KMSPageFlipperTest, double_schedule_flip_throws)
     uint32_t const fb_id{101};
     uint32_t const connector_id{345};
 
-    EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
-                                          crtc_id, fb_id, _, _))
+    EXPECT_CALL(mock_drm, drmModePageFlip(drm_fd, crtc_id, fb_id, _, _))
         .Times(1);
 
     page_flipper.schedule_flip(crtc_id, fb_id, connector_id);
@@ -108,19 +112,18 @@ TEST_F(KMSPageFlipperTest, wait_for_flip_handles_drm_event)
     uint32_t const connector_id{345};
     void* user_data{nullptr};
 
-    EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
-                                          crtc_id, fb_id, _, _))
+    EXPECT_CALL(mock_drm, drmModePageFlip(drm_fd, crtc_id, fb_id, _, _))
         .Times(1)
         .WillOnce(DoAll(SaveArg<4>(&user_data), Return(0)));
 
-    EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
+    EXPECT_CALL(mock_drm, drmHandleEvent(drm_fd, _))
         .Times(1)
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
 
     page_flipper.schedule_flip(crtc_id, fb_id, connector_id);
 
     /* Fake a DRM event */
-    EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
+    mock_drm.generate_event_on(drm_device);
 
     page_flipper.wait_for_flip(crtc_id);
 }
@@ -142,7 +145,7 @@ TEST_F(KMSPageFlipperTest, wait_for_flip_reports_vsync)
     EXPECT_CALL(report, report_vsync(connector_id, _));
 
     page_flipper.schedule_flip(crtc_id, fb_id, connector_id);
-    EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
+    mock_drm.generate_event_on(drm_device);
     page_flipper.wait_for_flip(crtc_id);
 }
 
@@ -170,8 +173,7 @@ TEST_F(KMSPageFlipperTest, failure_in_wait_for_flip_throws)
     uint32_t const connector_id{345};
     void* user_data{nullptr};
 
-    EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
-                                          crtc_id, fb_id, _, _))
+    EXPECT_CALL(mock_drm, drmModePageFlip(drm_fd, crtc_id, fb_id, _, _))
         .Times(1)
         .WillOnce(DoAll(SaveArg<4>(&user_data), Return(0)));
 
@@ -181,7 +183,7 @@ TEST_F(KMSPageFlipperTest, failure_in_wait_for_flip_throws)
     page_flipper.schedule_flip(crtc_id, fb_id, connector_id);
 
     /* Cause a failure in wait_for_flip */
-    close(mock_drm.fake_drm.fd());
+    close(drm_fd);
 
     EXPECT_THROW({
         page_flipper.wait_for_flip(crtc_id);
@@ -198,14 +200,13 @@ TEST_F(KMSPageFlipperTest, wait_for_flips_interleaved)
     uint32_t const connector_ids[flips] = {23, 45, 67};
     void* user_data[flips] = {nullptr, nullptr, nullptr};
 
-    EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
-                                          _, fb_id, _, _))
+    EXPECT_CALL(mock_drm, drmModePageFlip(drm_fd, _, fb_id, _, _))
         .Times(3)
         .WillOnce(DoAll(SaveArg<4>(&user_data[0]), Return(0)))
         .WillOnce(DoAll(SaveArg<4>(&user_data[1]), Return(0)))
         .WillOnce(DoAll(SaveArg<4>(&user_data[2]), Return(0)));
 
-    EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
+    EXPECT_CALL(mock_drm, drmHandleEvent(drm_fd, _))
         .Times(3)
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[1]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[2]), Return(0)))
@@ -215,7 +216,9 @@ TEST_F(KMSPageFlipperTest, wait_for_flips_interleaved)
         page_flipper.schedule_flip(crtc_ids[i], fb_id, connector_ids[i]);
 
     /* Fake 3 DRM events */
-    EXPECT_EQ(flips, write(mock_drm.fake_drm.write_fd(), "abc", 3));
+    mock_drm.generate_event_on(drm_device);
+    mock_drm.generate_event_on(drm_device);
+    mock_drm.generate_event_on(drm_device);
 
     for (auto crtc_id : crtc_ids)
         page_flipper.wait_for_flip(crtc_id);
@@ -283,7 +286,7 @@ TEST_F(KMSPageFlipperTest, threads_switch_worker)
     std::vector<std::thread> page_flipping_threads;
     std::thread::id tid;
 
-    EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(), _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModePageFlip(drm_fd, _, _, _, _))
         .Times(2)
         .WillOnce(DoAll(SaveArg<4>(&user_data[worker_index]), Return(0)))
         .WillOnce(DoAll(SaveArg<4>(&user_data[other_index]), Return(0)));
@@ -292,7 +295,7 @@ TEST_F(KMSPageFlipperTest, threads_switch_worker)
      * The first event releases the original worker, hence we expect that
      * then the other thread will become the worker.
      */
-    EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
+    EXPECT_CALL(mock_drm, drmHandleEvent(drm_fd, _))
         .Times(2)
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[worker_index]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[other_index]), Return(0)));
@@ -320,7 +323,7 @@ TEST_F(KMSPageFlipperTest, threads_switch_worker)
     EXPECT_EQ(page_flipping_threads[worker_index].get_id(), tid);
 
     /* Fake a DRM event */
-    EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
+    mock_drm.generate_event_on(drm_device);
 
     page_flipping_threads[worker_index].join();
 
@@ -332,7 +335,7 @@ TEST_F(KMSPageFlipperTest, threads_switch_worker)
     }
 
     /* Fake another DRM event to unblock the remaining thread */
-    EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
+    mock_drm.generate_event_on(drm_device);
 
     page_flipping_threads[other_index].join();
 }
@@ -349,7 +352,7 @@ TEST_F(KMSPageFlipperTest, threads_worker_notifies_non_worker)
     std::vector<std::thread> page_flipping_threads;
     std::thread::id tid;
 
-    EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(), _, _, _, _))
+    EXPECT_CALL(mock_drm, drmModePageFlip(drm_fd, _, _, _, _))
         .Times(2)
         .WillOnce(DoAll(SaveArg<4>(&user_data[worker_index]), Return(0)))
         .WillOnce(DoAll(SaveArg<4>(&user_data[other_index]), Return(0)));
@@ -358,7 +361,7 @@ TEST_F(KMSPageFlipperTest, threads_worker_notifies_non_worker)
      * The first event releases the non-worker thread, hence we expect that
      * original worker not change.
      */
-    EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
+    EXPECT_CALL(mock_drm, drmHandleEvent(drm_fd, _))
         .Times(2)
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[other_index]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[worker_index]), Return(0)));
@@ -386,7 +389,7 @@ TEST_F(KMSPageFlipperTest, threads_worker_notifies_non_worker)
     EXPECT_EQ(page_flipping_threads[worker_index].get_id(), tid);
 
     /* Fake a DRM event */
-    EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
+    mock_drm.generate_event_on(drm_device);
 
     /* Wait for the non-worker thread to exit */
     page_flipping_threads[other_index].join();
@@ -396,7 +399,7 @@ TEST_F(KMSPageFlipperTest, threads_worker_notifies_non_worker)
               page_flipper.debug_get_worker_tid());
 
     /* Fake another DRM event to unblock the remaining thread */
-    EXPECT_EQ(1, write(mock_drm.fake_drm.write_fd(), "a", 1));
+    mock_drm.generate_event_on(drm_device);
 
     page_flipping_threads[worker_index].join();
 }
@@ -515,7 +518,7 @@ ACTION_P(InvokePageFlipHandlerWithPendingData, counter)
     counter->add_handle_event(crtc_id);
 }
 
-ACTION_P2(AddPageFlipEvent, counter, write_drm_fd)
+ACTION_P2(AddPageFlipEvent, counter, generate_event_functor)
 {
     uint32_t const crtc_id{arg0};
     void* const user_data{arg1};
@@ -523,7 +526,7 @@ ACTION_P2(AddPageFlipEvent, counter, write_drm_fd)
     /* Record this call */
     counter->add_flip(crtc_id, user_data);
     /* Add an event to the drm event queue */
-    EXPECT_EQ(1, write(write_drm_fd, "a", 1));
+    generate_event_functor();
 }
 
 }
@@ -537,11 +540,19 @@ TEST_F(KMSPageFlipperTest, threads_concurrent_page_flips_dont_deadlock)
     std::vector<std::thread> page_flipping_threads;
     PageFlipCounter counter;
 
-    EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(), _, _, _, _))
-        .WillRepeatedly(DoAll(WithArgs<1,4>(AddPageFlipEvent(&counter, mock_drm.fake_drm.write_fd())),
-                              Return(0)));
+    EXPECT_CALL(mock_drm, drmModePageFlip(drm_fd, _, _, _, _))
+        .WillRepeatedly(
+            DoAll(
+                WithArgs<1,4>(
+                    AddPageFlipEvent(
+                        &counter,
+                        [this]()
+                        {
+                            mock_drm.generate_event_on(drm_device);
+                        })),
+                Return(0)));
 
-    EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
+    EXPECT_CALL(mock_drm, drmHandleEvent(drm_fd, _))
         .WillRepeatedly(DoAll(InvokePageFlipHandlerWithPendingData(&counter),
                               Return(0)));
 

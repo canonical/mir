@@ -55,8 +55,8 @@ public:
         std::shared_ptr<ANativeWindow> const& native_window,
         GLContext const& shared_gl_context,
         gl::ProgramFactory const& program_factory,
-        MirOrientation orientation,
-        geometry::Displacement offset,
+        glm::mat2 const& transform,
+        geometry::Rectangle area,
         OverlayOptimization overlay_option);
 
     geometry::Rectangle view_area() const override;
@@ -69,7 +69,7 @@ public:
     glm::mat2 transformation() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
-    void configure(MirPowerMode power_mode, MirOrientation orientation, geometry::Displacement) override;
+    void configure(MirPowerMode power_mode, glm::mat2 const& trans, geometry::Rectangle const&) override;
     DisplayContents contents() override;
     MirPowerMode power_mode() const override;
 private:
@@ -81,9 +81,8 @@ private:
     FramebufferGLContext gl_context;
     HWCFallbackGLRenderer overlay_program;
     bool overlay_enabled;
-    MirOrientation orientation_;
     glm::mat2 transform;
-    geometry::Displacement offset_from_origin;
+    geometry::Rectangle area;
     MirPowerMode power_mode_;
 };
 

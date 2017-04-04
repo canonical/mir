@@ -31,7 +31,7 @@ namespace mir
 {
 namespace input
 {
-class InputDeviceInfo;
+struct InputDeviceInfo;
 }
 }
 

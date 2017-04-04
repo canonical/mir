@@ -59,7 +59,7 @@ public:
     EGLNativeDisplayType egl_native_display() const override;
 
     std::shared_ptr<mir::udev::Context> udev;
-    std::shared_ptr<helpers::DRMHelper> const drm;
+    std::vector<std::shared_ptr<helpers::DRMHelper>> const drm;
     std::shared_ptr<helpers::GBMHelper> const gbm;
 
     std::shared_ptr<DisplayReport> const listener;

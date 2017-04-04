@@ -63,7 +63,7 @@ TEST_F(X11GuestPlatformTest, failure_to_create_gbm_device_results_in_an_error)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_gbm, gbm_create_device(mock_drm.fake_drm.fd()))
+    EXPECT_CALL(mock_gbm, gbm_create_device(_))
         .WillRepeatedly(Return(nullptr));
 
     EXPECT_THROW({ create_guest_platform(); }, std::exception);

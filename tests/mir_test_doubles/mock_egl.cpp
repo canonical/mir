@@ -156,7 +156,7 @@ void mtd::MockEGL::provide_egl_extensions()
 {
     using namespace testing;
 
-    const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_KHR_image_pixmap";
+    const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_KHR_image_pixmap EGL_EXT_image_dma_buf_import";
     ON_CALL(*this, eglQueryString(_,EGL_EXTENSIONS))
         .WillByDefault(Return(egl_exts));
 }
