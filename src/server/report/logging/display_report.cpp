@@ -90,6 +90,14 @@ void mrl::DisplayReport::report_vt_switch_back_failure()
 
 void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig config)
 {
+    std::string extensions { eglQueryString(disp, EGL_EXTENSIONS) };
+    logger->log(ml::Severity::informational, "Display EGL Extensions: " + extensions, component());
+
+    std::string client_extensions(eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS));
+    logger->log(ml::Severity::informational, "EGL_EXT_client_extensions: " + client_extensions, component());
+    if (client_extensions.empty())
+        eglGetError();
+
     #define STRMACRO(X) {#X, X}
     struct {std::string name; EGLint val;} egl_string_mapping [] =
     {
