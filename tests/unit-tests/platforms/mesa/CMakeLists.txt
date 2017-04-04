@@ -5,7 +5,8 @@ include_directories(
 
 add_subdirectory(kms-utils/)
 
-if (MIR_BUILD_PLATFORM_MESA_KMS)
+if (MIR_BUILD_PLATFORM_MESA_KMS AND
+    (GBM_VERSION VERSION_GREATER 11.0.0))
   add_subdirectory(kms/)
 endif()
 

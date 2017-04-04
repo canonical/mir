@@ -26,6 +26,8 @@
 #include "mir/graphics/frame.h"
 #include "mir_toolkit/common.h"
 
+#include "kms-utils/drm_mode_resources.h"
+
 #include <gbm.h>
 
 namespace mir
@@ -44,6 +46,12 @@ class KMSOutput
 public:
     virtual ~KMSOutput() = default;
 
+    /*
+     * I'm not sure that DRM guarantees ID uniqueness in the presence of hotplug/unplug;
+     * this may want to be an opaque class Id + operator== in future.
+     */
+    virtual uint32_t id() const = 0;
+    
     virtual void reset() = 0;
     virtual void configure(geometry::Displacement fb_offset, size_t kms_mode_index) = 0;
     virtual geometry::Size size() const = 0;
@@ -86,12 +94,23 @@ public:
     virtual void update_from_hardware_state(DisplayConfigurationOutput& to_update) const = 0;
     virtual FBHandle* fb_for(gbm_bo* bo) const = 0;
 
+    /**
+     * Check whether buffer need to be migrated to GPU-private memory for display.
+     *
+     * \param [in] bo   GBM buffer to test
+     * \return  True if buffer must be migrated to display-private memory in order to be displayed.
+     *          If this method returns true the caller should probably copy it to a new buffer before
+     *          calling fb_for(buffer), as acquiring a FBHandle to the buffer will likely make it
+     *          unusable for rendering on the original GPU.
+     */
+    virtual bool buffer_requires_migration(gbm_bo* bo) const = 0;
+
+    virtual int drm_fd() const = 0;
 protected:
     KMSOutput() = default;
     KMSOutput(const KMSOutput&) = delete;
     KMSOutput& operator=(const KMSOutput&) = delete;
 };
-
 }
 }
 }

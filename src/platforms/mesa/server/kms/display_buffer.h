@@ -53,19 +53,18 @@ public:
     {
     public:
         FrontBuffer();
-        ~FrontBuffer();
-
+        FrontBuffer(gbm_surface* surface);
         FrontBuffer(FrontBuffer&& from);
+
+        ~FrontBuffer();
 
         FrontBuffer& operator=(FrontBuffer&& from);
         FrontBuffer& operator=(std::nullptr_t);
 
         operator gbm_bo*();
         operator bool() const;
-    private:
-        friend class GBMOutputSurface;
-        FrontBuffer(gbm_surface* surface);
 
+    private:
         gbm_surface* const surf;
         gbm_bo* const bo;
     };
@@ -145,6 +144,8 @@ private:
     GBMOutputSurface surface;
     GBMOutputSurface::FrontBuffer visible_composite_frame;
     GBMOutputSurface::FrontBuffer scheduled_composite_frame;
+
+    std::function<GBMOutputSurface::FrontBuffer(GBMOutputSurface::FrontBuffer&&)> get_front_buffer;
 
     geometry::Rectangle area;
     uint32_t fb_width, fb_height;

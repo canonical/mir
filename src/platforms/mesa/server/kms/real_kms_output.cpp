@@ -73,7 +73,7 @@ mgm::RealKMSOutput::RealKMSOutput(
     int drm_fd,
     kms::DRMModeConnectorUPtr&& connector,
     std::shared_ptr<PageFlipper> const& page_flipper)
-    : drm_fd{drm_fd},
+    : drm_fd_{drm_fd},
       page_flipper{page_flipper},
       connector{std::move(connector)},
       mode_index{0},
@@ -85,7 +85,7 @@ mgm::RealKMSOutput::RealKMSOutput(
 {
     reset();
 
-    kms::DRMModeResources resources{drm_fd};
+    kms::DRMModeResources resources{drm_fd_};
 
     if (this->connector->encoder_id)
     {
@@ -102,9 +102,14 @@ mgm::RealKMSOutput::~RealKMSOutput()
     restore_saved_crtc();
 }
 
+uint32_t mgm::RealKMSOutput::id() const
+{
+    return connector->connector_id;
+}
+
 void mgm::RealKMSOutput::reset()
 {
-    kms::DRMModeResources resources{drm_fd};
+    kms::DRMModeResources resources{drm_fd_};
 
     /* Update the connector to ensure we have the latest information */
     try
@@ -119,7 +124,7 @@ void mgm::RealKMSOutput::reset()
     // TODO: What if we can't locate the DPMS property?
     for (int i = 0; i < connector->count_props; i++)
     {
-        auto prop = drmModeGetProperty(drm_fd, connector->props[i]);
+        auto prop = drmModeGetProperty(drm_fd_, connector->props[i]);
         if (prop && (prop->flags & DRM_MODE_PROP_ENUM)) {
             if (!strcmp(prop->name, "DPMS"))
             {
@@ -162,7 +167,7 @@ bool mgm::RealKMSOutput::set_crtc(FBHandle const& fb)
         return false;
     }
 
-    auto ret = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
+    auto ret = drmModeSetCrtc(drm_fd_, current_crtc->crtc_id,
                               fb.get_drm_fb_id(), fb_offset.dx.as_int(), fb_offset.dy.as_int(),
                               &connector->connector_id, 1,
                               &connector->modes[mode_index]);
@@ -193,7 +198,7 @@ void mgm::RealKMSOutput::clear_crtc()
         return;
     }
 
-    auto result = drmModeSetCrtc(drm_fd, current_crtc->crtc_id,
+    auto result = drmModeSetCrtc(drm_fd_, current_crtc->crtc_id,
                                  0, 0, 0, nullptr, 0, nullptr);
     if (result)
     {
@@ -247,7 +252,7 @@ bool mgm::RealKMSOutput::set_cursor(gbm_bo* buffer)
     {
         has_cursor_ = true;
         result = drmModeSetCursor(
-                drm_fd,
+                drm_fd_,
                 current_crtc->crtc_id,
                 gbm_bo_get_handle(buffer).u32,
                 gbm_bo_get_width(buffer),
@@ -266,7 +271,7 @@ void mgm::RealKMSOutput::move_cursor(geometry::Point destination)
 {
     if (current_crtc)
     {
-        if (auto result = drmModeMoveCursor(drm_fd, current_crtc->crtc_id,
+        if (auto result = drmModeMoveCursor(drm_fd_, current_crtc->crtc_id,
                                             destination.x.as_uint32_t(),
                                             destination.y.as_uint32_t()))
         {
@@ -281,7 +286,7 @@ bool mgm::RealKMSOutput::clear_cursor()
     int result = 0;
     if (current_crtc)
     {
-        result = drmModeSetCursor(drm_fd, current_crtc->crtc_id, 0, 0, 0);
+        result = drmModeSetCursor(drm_fd_, current_crtc->crtc_id, 0, 0, 0);
 
         if (result)
             mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)",
@@ -307,7 +312,7 @@ bool mgm::RealKMSOutput::ensure_crtc()
     if (connector->connection != DRM_MODE_CONNECTED)
         return false;
 
-    current_crtc = mgk::find_crtc_for_connector(drm_fd, connector);
+    current_crtc = mgk::find_crtc_for_connector(drm_fd_, connector);
 
 
     return (current_crtc != nullptr);
@@ -317,7 +322,7 @@ void mgm::RealKMSOutput::restore_saved_crtc()
 {
     if (!using_saved_crtc)
     {
-        drmModeSetCrtc(drm_fd, saved_crtc.crtc_id, saved_crtc.buffer_id,
+        drmModeSetCrtc(drm_fd_, saved_crtc.crtc_id, saved_crtc.buffer_id,
                        saved_crtc.x, saved_crtc.y,
                        &connector->connector_id, 1, &saved_crtc.mode);
 
@@ -333,7 +338,7 @@ void mgm::RealKMSOutput::set_power_mode(MirPowerMode mode)
     {
         power_mode = mode;
         drmModeConnectorSetProperty(
-            drm_fd,
+            drm_fd_,
             connector->connector_id,
             dpms_enum_id,
             mode);
@@ -357,7 +362,7 @@ void mgm::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
     }
 
     int ret = drmModeCrtcSetGamma(
-        drm_fd,
+        drm_fd_,
         current_crtc->crtc_id,
         gamma.red.size(),
         const_cast<uint16_t*>(gamma.red.data()),
@@ -373,21 +378,21 @@ void mgm::RealKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 
 void mgm::RealKMSOutput::refresh_hardware_state()
 {
-    connector = kms::get_connector(drm_fd, connector->connector_id);
+    connector = kms::get_connector(drm_fd_, connector->connector_id);
     current_crtc = nullptr;
 
     if (connector->encoder_id)
     {
-        auto encoder = kms::get_encoder(drm_fd, connector->encoder_id);
+        auto encoder = kms::get_encoder(drm_fd_, connector->encoder_id);
 
         if (encoder->crtc_id)
         {
-            current_crtc = kms::get_crtc(drm_fd, encoder->crtc_id);
+            current_crtc = kms::get_crtc(drm_fd_, encoder->crtc_id);
         }
     }
 }
 
-    namespace
+namespace
 {
 
 bool kms_modes_are_equal(drmModeModeInfo const& info1, drmModeModeInfo const& info2)
@@ -540,7 +545,7 @@ void mgm::RealKMSOutput::update_from_hardware_state(
         /* Only ask for the EDID on connected outputs. There's obviously no monitor EDID
          * when there is no monitor connected!
          */
-        edid = edid_for_connector(drm_fd, connector->connector_id);
+        edid = edid_for_connector(drm_fd_, connector->connector_id);
     }
 
     drmModeModeInfo current_mode_info = drmModeModeInfo();
@@ -615,7 +620,7 @@ mgm::FBHandle* mgm::RealKMSOutput::fb_for(gbm_bo* bo) const
     auto const height = gbm_bo_get_height(bo);
 
     /* Create a KMS FB object with the gbm_bo attached to it. */
-    auto ret = drmModeAddFB2(drm_fd, width, height, format,
+    auto ret = drmModeAddFB2(drm_fd_, width, height, format,
                              handles, strides, offsets, &fb_id, 0);
     if (ret)
         return nullptr;
@@ -625,4 +630,21 @@ mgm::FBHandle* mgm::RealKMSOutput::fb_for(gbm_bo* bo) const
     gbm_bo_set_user_data(bo, bufobj, bo_user_data_destroy);
 
     return bufobj;
+}
+
+bool mgm::RealKMSOutput::buffer_requires_migration(gbm_bo* bo) const
+{
+    /*
+     * It's possible that some devices will not require migration -
+     * Intel GPUs can obviously scanout from main memory, as can USB outputs such as
+     * DisplayLink.
+     *
+     * For a first go, just say that *every* device scans out of GPU-private memory.
+     */
+    return gbm_device_get_fd(gbm_bo_get_device(bo)) != drm_fd_;
+}
+
+int mgm::RealKMSOutput::drm_fd() const
+{
+    return drm_fd_;
 }
