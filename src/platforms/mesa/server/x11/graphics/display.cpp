@@ -23,6 +23,7 @@
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/atomic_frame.h"
+#include "mir/graphics/transformation.h"
 #include "display_configuration.h"
 #include "display.h"
 #include "display_buffer.h"
@@ -258,7 +259,6 @@ mgx::Display::Display(::Display* x_dpy,
                          shared_egl.context(),
                          last_frame,
                          report,
-                         orientation,
                          *gl_config);
 
     shared_egl.make_current();
@@ -291,15 +291,18 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
 
     MirOrientation o = mir_orientation_normal;
     float new_scale = scale;
+    geom::Rectangle logical_area;
 
     new_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
         o = conf_output.orientation;
         new_scale = conf_output.scale;
+        logical_area = conf_output.extents();
     });
 
     orientation = o;
-    display_buffer->set_orientation(orientation);
+    display_buffer->set_view_area(logical_area);
+    display_buffer->set_transformation(mg::transformation(orientation));
     scale = new_scale;
 }
 

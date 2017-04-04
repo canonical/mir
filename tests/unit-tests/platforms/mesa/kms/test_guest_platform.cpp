@@ -36,6 +36,7 @@
 #include <gmock/gmock.h>
 
 #include <cstring>
+#include <fcntl.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -56,10 +57,11 @@ class MesaGuestPlatformTest : public ::testing::Test
 {
 public:
     MesaGuestPlatformTest()
+        : drm_fd{open(drm_device, 0, 0)}
     {
         int fake_fd = 4939;
         ON_CALL(mock_platform_authentication, platform_fd_items())
-            .WillByDefault(Return(std::vector<int>{mock_drm.fake_drm.fd()}));
+            .WillByDefault(Return(std::vector<int>{drm_fd}));
         ON_CALL(mock_platform_authentication, set_gbm_extension())
             .WillByDefault(Return(mir::optional_value<std::shared_ptr<mg::SetGbmExtension>>{mock_gbm_ext}));
         ON_CALL(mock_platform_authentication, auth_extension())
@@ -74,6 +76,8 @@ protected:
     ::testing::NiceMock<mtd::MockPlatformAuthentication> mock_platform_authentication;
     std::shared_ptr<mtd::MockMesaExt> mock_ext = std::make_shared<mtd::MockMesaExt>();
     std::shared_ptr<MockSetGbmExt> mock_gbm_ext = std::make_shared<MockSetGbmExt>();
+    char const* const drm_device = "/dev/dri/card0";
+    int const drm_fd;
 };
 
 }
