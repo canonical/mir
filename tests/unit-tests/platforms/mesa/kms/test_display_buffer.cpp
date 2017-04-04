@@ -93,6 +93,8 @@ public:
             .WillByDefault(Return(mock_refresh_rate));
         ON_CALL(*mock_kms_output, fb_for(_))
             .WillByDefault(Return(reinterpret_cast<FBHandle*>(0x12ad)));
+        ON_CALL(*mock_kms_output, buffer_requires_migration(_))
+            .WillByDefault(Return(false));
 
         ON_CALL(*mock_bypassable_buffer, size())
             .WillByDefault(Return(display_area.size));
@@ -486,3 +488,18 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
     EXPECT_FALSE(db.overlay(list));
 }
 
+TEST_F(MesaDisplayBufferTest, buffer_requiring_migration_is_ineligable_for_bypass)
+{
+    ON_CALL(*mock_kms_output, buffer_requires_migration(Eq(stub_gbm_native_buffer->bo)))
+        .WillByDefault(Return(true));
+
+    graphics::mesa::DisplayBuffer db(
+        graphics::mesa::BypassOption::allowed,
+        null_display_report(),
+        {mock_kms_output},
+        make_output_surface(),
+        display_area,
+        mir_orientation_normal);
+
+    EXPECT_FALSE(db.overlay(bypassable_list));
+}

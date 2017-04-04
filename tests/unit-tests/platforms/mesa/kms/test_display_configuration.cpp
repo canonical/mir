@@ -44,6 +44,7 @@
 #include <gtest/gtest.h>
 
 #include <stdexcept>
+#include <fcntl.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -92,21 +93,30 @@ class MesaDisplayConfigurationTest : public ::testing::Test
 {
 public:
     MesaDisplayConfigurationTest()
+        : drm_fd{open(drm_device, 0, 0)}
     {
         using namespace testing;
 
         /* Needed for display start-up */
-        ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
-        .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
-                             SetArgPointee<4>(1),
-                             Return(EGL_TRUE)));
+        ON_CALL(mock_egl, eglChooseConfig(_, _, _, 1, _))
+            .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                                 SetArgPointee<4>(1),
+                                 Return(EGL_TRUE)));
 
         mock_egl.provide_egl_extensions();
         mock_gl.provide_gles_extensions();
 
+        ON_CALL(mock_gbm, gbm_device_get_fd(_))
+            .WillByDefault(Return(drm_fd));
+
         setup_sample_modes();
 
         fake_devices.add_standard_device("standard-drm-devices");
+
+        // Remove all outputs from all but one of the DRM devices we access;
+        // these tests are not set up to test hybrid.
+        mock_drm.reset("/dev/dri/card1");
+        mock_drm.reset("/dev/dri/card2");
     }
 
     std::shared_ptr<mg::Platform> create_platform()
@@ -160,6 +170,9 @@ public:
     std::vector<drmModeModeInfo> modes_empty;
 
     mtf::UdevEnvironment fake_devices;
+
+    char const* const drm_device = "/dev/dri/card0";
+    int const drm_fd;
 };
 
 MATCHER_P(Unique, scratch_vector, "")
@@ -217,29 +230,53 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
     std::vector<uint32_t> possible_encoder_ids_empty;
     uint32_t const possible_crtcs_mask_empty{0};
 
-    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
+    mock_drm.reset(drm_device);
 
-    resources.reset();
+    mock_drm.add_crtc(
+        drm_device,
+        crtc0_id,
+        modes0[1]);
 
-    resources.add_crtc(crtc0_id, modes0[1]);
+    mock_drm.add_encoder(
+        drm_device,
+        encoder0_id,
+        crtc0_id,
+        possible_crtcs_mask_empty);
+    mock_drm.add_encoder(
+        drm_device,
+        encoder1_id,
+        invalid_id,
+        possible_crtcs_mask_empty);
 
-    resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
-    resources.add_encoder(encoder1_id, invalid_id, possible_crtcs_mask_empty);
+    mock_drm.add_connector(
+        drm_device,
+        connector0_id,
+        DRM_MODE_CONNECTOR_HDMIA,
+        DRM_MODE_CONNECTED,
+        encoder0_id,
+        modes0,
+        possible_encoder_ids_empty,
+        connector0_physical_size_mm);
+    mock_drm.add_connector(
+        drm_device,
+        connector1_id,
+        DRM_MODE_CONNECTOR_Unknown,
+        DRM_MODE_DISCONNECTED,
+        invalid_id,
+        modes_empty,
+        possible_encoder_ids_empty,
+        connector1_physical_size_mm);
+    mock_drm.add_connector(
+        drm_device,
+        connector2_id,
+        DRM_MODE_CONNECTOR_eDP,
+        DRM_MODE_DISCONNECTED,
+        encoder1_id,
+        modes_empty,
+        possible_encoder_ids_empty,
+        connector2_physical_size_mm);
 
-    resources.add_connector(connector0_id, DRM_MODE_CONNECTOR_HDMIA,
-                            DRM_MODE_CONNECTED, encoder0_id,
-                            modes0, possible_encoder_ids_empty,
-                            connector0_physical_size_mm);
-    resources.add_connector(connector1_id, DRM_MODE_CONNECTOR_Unknown,
-                            DRM_MODE_DISCONNECTED, invalid_id,
-                            modes_empty, possible_encoder_ids_empty,
-                            connector1_physical_size_mm);
-    resources.add_connector(connector2_id, DRM_MODE_CONNECTOR_eDP,
-                            DRM_MODE_DISCONNECTED, encoder1_id,
-                            modes_empty, possible_encoder_ids_empty,
-                            connector2_physical_size_mm);
-
-    resources.prepare();
+    mock_drm.prepare(drm_device);
 
     std::vector<mg::DisplayConfigurationOutput> const expected_outputs =
     {
@@ -331,8 +368,6 @@ TEST_F(MesaDisplayConfigurationTest, reads_subpixel_information_correctly)
     std::vector<uint32_t> possible_encoder_ids_empty;
     uint32_t const possible_crtcs_mask_empty{0};
 
-    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
-
     struct TestData
     {
         drmModeSubPixel drm_subpixel;
@@ -350,19 +385,31 @@ TEST_F(MesaDisplayConfigurationTest, reads_subpixel_information_correctly)
     for (auto& data : test_data)
     {
 
-        resources.reset();
+        mock_drm.reset(drm_device);
 
-        resources.add_crtc(crtc0_id, modes0[1]);
+        mock_drm.add_crtc(
+            drm_device,
+            crtc0_id,
+            modes0[1]);
 
-        resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
+        mock_drm.add_encoder(
+            drm_device,
+            encoder0_id,
+            crtc0_id,
+            possible_crtcs_mask_empty);
 
-        resources.add_connector(connector0_id, DRM_MODE_CONNECTOR_HDMIA,
-                                DRM_MODE_CONNECTED, encoder0_id,
-                                modes0, possible_encoder_ids_empty,
-                                connector0_physical_size_mm,
-                                data.drm_subpixel);
+        mock_drm.add_connector(
+            drm_device,
+            connector0_id,
+            DRM_MODE_CONNECTOR_HDMIA,
+            DRM_MODE_CONNECTED,
+            encoder0_id,
+            modes0,
+            possible_encoder_ids_empty,
+            connector0_physical_size_mm,
+            data.drm_subpixel);
 
-        resources.prepare();
+        mock_drm.prepare(drm_device);
 
         /* Test body */
         auto display = create_display(create_platform());
@@ -395,21 +442,31 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
     std::vector<uint32_t> possible_encoder_ids_empty;
     uint32_t const possible_crtcs_mask_empty{0};
 
-    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
+    mock_drm.reset(drm_device);
 
-    resources.reset();
+    mock_drm.add_crtc(
+        drm_device,
+        crtc0_id,
+        modes0[1]);
 
-    resources.add_crtc(crtc0_id, modes0[1]);
+    mock_drm.add_encoder(
+        drm_device,
+        encoder0_id,
+        crtc0_id,
+        possible_crtcs_mask_empty);
 
-    resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
+    mock_drm.add_connector(
+        drm_device,
+        connector0_id,
+        DRM_MODE_CONNECTOR_HDMIA,
+        DRM_MODE_CONNECTED,
+        encoder0_id,
+        modes0,
+        possible_encoder_ids_empty,
+        connector0_physical_size_mm,
+        DRM_MODE_SUBPIXEL_NONE);
 
-    resources.add_connector(connector0_id, DRM_MODE_CONNECTOR_HDMIA,
-                            DRM_MODE_CONNECTED, encoder0_id,
-                            modes0, possible_encoder_ids_empty,
-                            connector0_physical_size_mm,
-                            DRM_MODE_SUBPIXEL_NONE);
-
-    resources.prepare();
+    mock_drm.prepare(drm_device);
 
     struct TestData
     {
@@ -431,19 +488,31 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
     for (auto& data : test_data)
     {
 
-        resources.reset();
+        mock_drm.reset(drm_device);
 
-        resources.add_crtc(crtc0_id, modes0[1]);
+        mock_drm.add_crtc(
+            drm_device,
+            crtc0_id,
+            modes0[1]);
 
-        resources.add_encoder(encoder0_id, crtc0_id, possible_crtcs_mask_empty);
+        mock_drm.add_encoder(
+            drm_device,
+            encoder0_id,
+            crtc0_id,
+            possible_crtcs_mask_empty);
 
-        resources.add_connector(connector0_id, DRM_MODE_CONNECTOR_HDMIA,
-                                DRM_MODE_CONNECTED, encoder0_id,
-                                modes0, possible_encoder_ids_empty,
-                                connector0_physical_size_mm,
-                                data.drm_subpixel);
+        mock_drm.add_connector(
+            drm_device,
+            connector0_id,
+            DRM_MODE_CONNECTOR_HDMIA,
+            DRM_MODE_CONNECTED,
+            encoder0_id,
+            modes0,
+            possible_encoder_ids_empty,
+            connector0_physical_size_mm,
+            data.drm_subpixel);
 
-        resources.prepare();
+        mock_drm.prepare(drm_device);
 
         mt::Signal handler_signal;
         MainLoop ml;
@@ -583,26 +652,54 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
     };
 
     /* Set up DRM resources and check */
-    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
-    auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
+    auto const syspath = fake_devices.add_device(
+        "drm",
+        "card2",
+        NULL,
+        {},
+        {
+            "DEVTYPE", "drm_minor",
+            "DEVNAME", "/dev/dri/card2"
+        });
 
-    resources.reset();
+    mock_drm.reset(drm_device);
 
-    resources.add_crtc(crtc_ids[0], modes0[1]);
+    mock_drm.add_crtc(
+        drm_device,
+        crtc_ids[0],
+        modes0[1]);
 
-    resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask_empty);
-    resources.add_encoder(encoder_ids[1], invalid_id, possible_crtcs_mask_empty);
+    mock_drm.add_encoder(
+        drm_device,
+        encoder_ids[0],
+        crtc_ids[0],
+        possible_crtcs_mask_empty);
+    mock_drm.add_encoder(
+        drm_device,
+        encoder_ids[1],
+        invalid_id,
+        possible_crtcs_mask_empty);
 
-    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
-                            DRM_MODE_CONNECTED, encoder_ids[0],
-                            modes0, possible_encoder_ids_empty,
-                            connector_physical_sizes_mm_before[0]);
-    resources.add_connector(connector_ids[1], DRM_MODE_CONNECTOR_VGA,
-                            DRM_MODE_DISCONNECTED, invalid_id,
-                            modes_empty, possible_encoder_ids_empty,
-                            connector_physical_sizes_mm_before[1]);
+    mock_drm.add_connector(
+        drm_device,
+        connector_ids[0],
+        DRM_MODE_CONNECTOR_Composite,
+        DRM_MODE_CONNECTED,
+        encoder_ids[0],
+        modes0,
+        possible_encoder_ids_empty,
+        connector_physical_sizes_mm_before[0]);
+    mock_drm.add_connector(
+        drm_device,
+        connector_ids[1],
+        DRM_MODE_CONNECTOR_VGA,
+        DRM_MODE_DISCONNECTED,
+        invalid_id,
+        modes_empty,
+        possible_encoder_ids_empty,
+        connector_physical_sizes_mm_before[1]);
 
-    resources.prepare();
+    mock_drm.prepare(drm_device);
 
     auto display = create_display(create_platform());
 
@@ -611,23 +708,44 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
     EXPECT_THAT(conf, DisplayConfigsAreEquivalent(expected_outputs_before));
 
     /* Reset DRM resources and check again */
-    resources.reset();
+    mock_drm.reset(drm_device);
 
-    resources.add_crtc(crtc_ids[1], modes0[1]);
+    mock_drm.add_crtc(
+        drm_device,
+        crtc_ids[1],
+        modes0[1]);
 
-    resources.add_encoder(encoder_ids[0], invalid_id, possible_crtcs_mask_empty);
-    resources.add_encoder(encoder_ids[1], crtc_ids[1], possible_crtcs_mask_empty);
+    mock_drm.add_encoder(
+        drm_device,
+        encoder_ids[0],
+        invalid_id,
+        possible_crtcs_mask_empty);
+    mock_drm.add_encoder(
+        drm_device,
+        encoder_ids[1],
+        crtc_ids[1],
+        possible_crtcs_mask_empty);
 
-    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
-                            DRM_MODE_DISCONNECTED, invalid_id,
-                            modes_empty, possible_encoder_ids_empty,
-                            connector_physical_sizes_mm_after[0]);
-    resources.add_connector(connector_ids[1], DRM_MODE_CONNECTOR_VGA,
-                            DRM_MODE_CONNECTED, encoder_ids[1],
-                            modes0, possible_encoder_ids_empty,
-                            connector_physical_sizes_mm_after[1]);
+    mock_drm.add_connector(
+        drm_device,
+        connector_ids[0],
+        DRM_MODE_CONNECTOR_Composite,
+        DRM_MODE_DISCONNECTED,
+        invalid_id,
+        modes_empty,
+        possible_encoder_ids_empty,
+        connector_physical_sizes_mm_after[0]);
+    mock_drm.add_connector(
+        drm_device,
+        connector_ids[1],
+        DRM_MODE_CONNECTOR_VGA,
+        DRM_MODE_CONNECTED,
+        encoder_ids[1],
+        modes0,
+        possible_encoder_ids_empty,
+        connector_physical_sizes_mm_after[1]);
 
-    resources.prepare();
+    mock_drm.prepare(drm_device);
 
     /* Fake a device change so display can fetch updated configuration*/
     MainLoop ml;
@@ -708,17 +826,36 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
         },
     };
 
-    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
-    auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
+    auto const syspath = fake_devices.add_device(
+        "drm",
+        "card2",
+        NULL,
+        {},
+        {
+            "DEVTYPE", "drm_minor",
+            "DEVNAME", "/dev/dri/card2"
+        });
 
-    resources.reset();
-    resources.add_crtc(crtc_ids[0], modes0[1]);
-    resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask_empty);
-    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
-                            DRM_MODE_CONNECTED, encoder_ids[0],
-                            modes0, possible_encoder_ids_empty,
-                            connector_physical_sizes_mm_before);
-    resources.prepare();
+    mock_drm.reset(drm_device);
+    mock_drm.add_crtc(
+        drm_device,
+        crtc_ids[0],
+        modes0[1]);
+    mock_drm.add_encoder(
+        drm_device,
+        encoder_ids[0],
+        crtc_ids[0],
+        possible_crtcs_mask_empty);
+    mock_drm.add_connector(
+        drm_device,
+        connector_ids[0],
+        DRM_MODE_CONNECTOR_Composite,
+        DRM_MODE_CONNECTED,
+        encoder_ids[0],
+        modes0,
+        possible_encoder_ids_empty,
+        connector_physical_sizes_mm_before);
+    mock_drm.prepare(drm_device);
 
     auto display = create_display(create_platform());
     auto conf = display->configuration();
@@ -726,15 +863,31 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
 
     // Now simulate a change of monitor, with no CRTC attached (and hence no current mode).
     // The configuration should mirror this state.
-    resources.reset();
-    resources.add_crtc(crtc_ids[0], modes1[1]);
-    resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask_empty);
-    resources.add_encoder(encoder_ids[1], 0, possible_crtcs_mask_empty);
-    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
-                            DRM_MODE_CONNECTED, encoder_ids[1],
-                            modes1, possible_encoder_ids_empty,
-                            connector_physical_sizes_mm_after);
-    resources.prepare();
+    mock_drm.reset(drm_device);
+    mock_drm.add_crtc(
+        drm_device,
+        crtc_ids[0],
+        modes1[1]);
+    mock_drm.add_encoder(
+        drm_device,
+        encoder_ids[0],
+        crtc_ids[0],
+        possible_crtcs_mask_empty);
+    mock_drm.add_encoder(
+        drm_device,
+        encoder_ids[1],
+        0,
+        possible_crtcs_mask_empty);
+    mock_drm.add_connector(
+        drm_device,
+        connector_ids[0],
+        DRM_MODE_CONNECTOR_Composite,
+        DRM_MODE_CONNECTED,
+        encoder_ids[1],
+        modes1,
+        possible_encoder_ids_empty,
+        connector_physical_sizes_mm_after);
+    mock_drm.prepare(drm_device);
 
     MainLoop ml;
     mt::Signal handler_signal;
@@ -758,17 +911,36 @@ TEST_F(MesaDisplayConfigurationTest, does_not_query_drm_unnecesarily)
     std::vector<uint32_t> possible_encoder_ids_empty;
 
     uint32_t const possible_crtcs_mask_empty{0};
-    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
-    resources.reset();
-    resources.add_crtc(crtc_id, modes0[1]);
-    resources.add_encoder(encoder_id, crtc_id, possible_crtcs_mask_empty);
-    resources.add_connector(connector_id, DRM_MODE_CONNECTOR_Composite,
-                            DRM_MODE_CONNECTED, encoder_id,
-                            modes0, possible_encoder_ids_empty,
-                            connector_physical_sizes_mm);
-    resources.prepare();
+    mock_drm.reset(drm_device);
+    mock_drm.add_crtc(
+        drm_device,
+        crtc_id,
+        modes0[1]);
+    mock_drm.add_encoder(
+        drm_device,
+        encoder_id,
+        crtc_id,
+        possible_crtcs_mask_empty);
+    mock_drm.add_connector(
+        drm_device,
+        connector_id,
+        DRM_MODE_CONNECTOR_Composite,
+        DRM_MODE_CONNECTED,
+        encoder_id,
+        modes0,
+        possible_encoder_ids_empty,
+        connector_physical_sizes_mm);
+    mock_drm.prepare(drm_device);
 
-    auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
+    auto const syspath = fake_devices.add_device(
+        "drm",
+        "card2",
+        NULL,
+        {},
+        {
+            "DEVTYPE", "drm_minor",
+            "DEVNAME", "/dev/dri/card2"
+        });
 
     auto display = create_display(create_platform());
 

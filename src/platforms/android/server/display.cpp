@@ -22,6 +22,7 @@
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/graphics/egl_resources.h"
+#include "mir/graphics/transformation.h"
 #include "display.h"
 #include "virtual_output.h"
 #include "display_component_factory.h"
@@ -116,7 +117,6 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
     mg::DisplayConfigurationOutput const& config,
     std::shared_ptr<mgl::ProgramFactory> const& gl_program_factory,
     mga::PbufferGLContext const& gl_context,
-    geom::Displacement displacement,
     std::shared_ptr<mga::NativeWindowReport> const& report,
     mga::OverlayOptimization overlay_option)
 {
@@ -133,8 +133,8 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
         native_window,
         gl_context,
         *gl_program_factory,
-        config.orientation,
-        displacement,
+        mg::transformation(config.orientation),
+        config.extents(),
         overlay_option));
 }
 }
@@ -173,7 +173,6 @@ mga::Display::Display(
             config.primary(),
             gl_program_factory,
             gl_context,
-            geom::Displacement{0,0},
             native_window_report,
             overlay_option),
             [this] { on_hotplug(); }), //Recover from exception by forcing a configuration change
@@ -192,7 +191,6 @@ mga::Display::Display(
                 config.external(),
                 gl_program_factory,
                 gl_context,
-                geom::Displacement{0,0},
                 native_window_report,
                 overlay_option));
     }
@@ -384,7 +382,6 @@ void mga::Display::configure_locked(
                 config.external(),
                 gl_program_factory,
                 gl_context,
-                config.external().top_left - origin,
                 native_window_report,
                 overlay_option));
     if ((!config.external().connected) && displays.display_present(mga::DisplayName::external))
@@ -399,19 +396,19 @@ void mga::Display::configure_locked(
             config[output.id].orientation = output.orientation;
             config[output.id].form_factor = output.form_factor;
             config[output.id].scale = output.scale;
-
-            geom::Displacement offset(output.top_left - origin);
             config[output.id].top_left = output.top_left;
+
+            auto const& transform = mg::transformation(output.orientation);
 
             if (config.primary().id == output.id)
             {
                 power_mode(mga::DisplayName::primary, *hwc_config, config.primary(), output.power_mode);
-                displays.configure(mga::DisplayName::primary, output.power_mode, output.orientation, offset);
+                displays.configure(mga::DisplayName::primary, output.power_mode, transform, output.extents());
             }
             else if (config.external().id == output.id && config.external().connected)
             {
                 power_mode(mga::DisplayName::external, *hwc_config, config.external(), output.power_mode);
-                displays.configure(mga::DisplayName::external, output.power_mode, output.orientation, offset);
+                displays.configure(mga::DisplayName::external, output.power_mode, transform, output.extents());
             }
         });
 }

@@ -183,6 +183,8 @@ mir::DefaultServerConfiguration::the_cursor()
         {
             std::shared_ptr<mg::Cursor> primary_cursor;
 
+            auto cursor_choice = the_options()->get<std::string>(options::cursor_opt);
+
             if (the_options()->is_set(options::host_socket_opt))
             {
                 mir::log_info("Using nested cursor");
@@ -190,7 +192,8 @@ mir::DefaultServerConfiguration::the_cursor()
                     the_host_connection(),
                     the_default_cursor_image());
             }
-            else if ((primary_cursor = the_display()->create_hardware_cursor()))
+            else if (cursor_choice != "software" &&
+                     (primary_cursor = the_display()->create_hardware_cursor()))
             {
                 mir::log_info("Using hardware cursor");
             }
