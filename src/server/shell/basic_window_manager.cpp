@@ -159,7 +159,8 @@ void msh::BasicWindowManager::handle_request_move(
     std::lock_guard<decltype(mutex)> lock(mutex);
     if (timestamp >= last_input_event_timestamp)
     {
-//        policy->handle_request_move(session, surface);
+        // When we reintegrate with miral::BasicWindowManager this is where we
+        // will ask the policy to to handle the move.
         (void)session;
         (void)surface;
     }
