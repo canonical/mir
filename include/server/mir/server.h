@@ -270,6 +270,9 @@ public:
     /// Sets an override functor for creating the input dispatcher.
     void override_the_input_dispatcher(Builder<input::InputDispatcher> const& input_dispatcher_builder);
 
+    /// Sets an override functor for creating the input targeter.
+    void override_the_input_targeter(Builder<shell::InputTargeter> const& input_targeter_builder);
+
     /// Sets an override functor for creating the logger.
     void override_the_logger(Builder<logging::Logger> const& logger_builder);
 
