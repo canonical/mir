@@ -201,6 +201,8 @@ MirWindow *make_window(MirConnection *connection, std::string const& client_name
     mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
 
     event_handler.wait_for_window_to_become_focused_and_exposed();
+    mir_window_set_event_handler(window, nullptr, nullptr);
+
     return window;
 }
 
