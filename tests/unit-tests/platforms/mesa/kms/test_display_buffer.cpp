@@ -499,7 +499,7 @@ TEST_F(MesaDisplayBufferTest, buffer_requiring_migration_is_ineligable_for_bypas
         {mock_kms_output},
         make_output_surface(),
         display_area,
-        mir_orientation_normal);
+        {});
 
     EXPECT_FALSE(db.overlay(bypassable_list));
 }
