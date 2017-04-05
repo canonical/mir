@@ -34,6 +34,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <atomic>
 #include <condition_variable>
 #include <chrono>
 #include <mutex>
@@ -654,5 +655,91 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
     EXPECT_THAT(mir_window_output_event_get_refresh_rate(window_event),
                 Eq(current_mode[id].vrefresh_hz));
 
+    mir_window_release_sync(window);
+}
+
+struct WrapShellCreatingFixedSizeSurfaces : public mir::shell::ShellWrapper
+{
+    WrapShellCreatingFixedSizeSurfaces(std::shared_ptr<msh::Shell> const& wrapped, int width, int height)
+    : ShellWrapper(wrapped),
+      surface_width(width),
+      surface_height(height)
+    {
+    }
+
+    mir::frontend::SurfaceId create_surface(
+        std::shared_ptr <mir::scene::Session> const& session,
+        mir::scene::SurfaceCreationParameters const& orig_params,
+        std::shared_ptr<mir::frontend::EventSink> const& sink) override
+    {
+        auto params = orig_params;
+        params.size = {surface_width, surface_height};
+        auto const window = mir::shell::ShellWrapper::create_surface(session, params, sink);
+        return window;
+    }
+
+    int surface_width;
+    int surface_height;
+};
+
+struct ClientSurfaceCreationResizeEvent : public mtf::ConnectedClientHeadlessServer
+{
+    void SetUp() override
+    {
+        server.wrap_shell([&](std::shared_ptr<msh::Shell> const& wrapped)
+            -> std::shared_ptr<msh::Shell>
+            {
+                return std::make_shared<WrapShellCreatingFixedSizeSurfaces>(wrapped, surface_width, surface_height);
+            });
+
+        mtf::ConnectedClientHeadlessServer::SetUp();
+    }
+
+    int const surface_width = 200;
+    int const surface_height = 200;
+};
+
+TEST_F(ClientSurfaceCreationResizeEvent, receives_resize_event_during_creation)
+{
+    struct Context
+    {
+        std::atomic<bool> resize_event_received{false};
+        std::atomic<int> width{0};
+        std::atomic<int> height{0};
+        mt::Signal received;
+    } context;
+
+    auto callback = [](MirWindow*, MirEvent const* ev, void* ctx)
+    {
+        auto context = reinterpret_cast<Context *>(ctx);
+        auto type = mir_event_get_type(ev);
+        if (mir_event_type_resize == type)
+        {
+            auto resize_event = mir_event_get_resize_event(ev);
+            context->resize_event_received = true;
+            context->width = mir_resize_event_get_width(resize_event);
+            context->height = mir_resize_event_get_height(resize_event);
+            context->received.raise();
+        }
+    };
+
+    int const width = 100;
+    int const height = 100;
+
+    ASSERT_THAT(width, Ne(surface_width));
+    ASSERT_THAT(height, Ne(surface_height));
+
+    auto spec = mir_create_normal_window_spec(connection, width, height);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+    mir_window_spec_set_event_handler(spec, callback, &context);
+
+    auto window = mir_create_window_sync(spec);
+
+    EXPECT_TRUE(context.received.wait_for(std::chrono::seconds{30}));
+    EXPECT_TRUE(context.resize_event_received);
+    EXPECT_THAT(context.width, Eq(surface_width));
+    EXPECT_THAT(context.height, Eq(surface_width));
+
+    mir_window_spec_release(spec);
     mir_window_release_sync(window);
 }
