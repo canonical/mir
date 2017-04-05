@@ -946,11 +946,13 @@ TEST_F(SessionMediator, sanitizes_base_display_configuration_before_setting)
 
 TEST_F(SessionMediator, raise_with_invalid_cookie_throws)
 {
-    mp::RaiseRequest raise_request;
+    mp::RequestWithAuthority raise_request;
+    raise_request.set_operation(mp::RequestOperation::MAKE_ACTIVE);
+
     mediator.connect(&connect_parameters, &connection, null_callback.get());
 
     EXPECT_THROW({
-        mediator.raise_surface(&raise_request, &void_response, null_callback.get());
+        mediator.request_operation(&raise_request, &void_response, null_callback.get());
     }, mir::cookie::SecurityCheckError);
 }
 
@@ -1133,6 +1135,20 @@ TEST_F(SessionMediator, arranges_named_cursors_via_shell)
 
     ASSERT_THAT(cursor_data.begin(), Ne(cursor_data.end()));
     spec->set_cursor_name(cursor_data.begin()->name);
+    mediator.modify_surface(&mods, &null, null_callback.get());
+}
+
+TEST_F(SessionMediator, disabled_cursor_returns_null_image)
+{
+    mp::Void null;
+    mp::SurfaceModifications mods;
+    auto spec = mods.mutable_surface_specification();
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
+    spec->set_cursor_name("none");
+
+    EXPECT_CALL(*shell, modify_surface(_,
+        mf::SurfaceId{surface_response.id().value()}, CursorImageIsSetNull()));
     mediator.modify_surface(&mods, &null, null_callback.get());
 }
 

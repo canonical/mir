@@ -213,6 +213,7 @@ void DragAndDrop::set_window_dnd_start_handler(MirWindow* window, std::function<
 
 void DragAndDrop::reset_window_event_handler(MirWindow* window)
 {
+    std::lock_guard<decltype(window_event_handler_mutex)> lock{window_event_handler_mutex};
     if (window == this->window) window_event_handler_ = [](MirEvent const*) {};
     if (window == target_window) target_window_event_handler_ = [](MirEvent const*) {};
 }

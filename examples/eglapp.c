@@ -209,24 +209,6 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
     }
 }
 
-static MirOutput const* find_active_output(
-    MirDisplayConfig const* conf)
-{
-    size_t num_outputs = mir_display_config_get_num_outputs(conf);
-
-    for (size_t i = 0; i < num_outputs; i++)
-    {
-        MirOutput const* output = mir_display_config_get_output(conf, i);
-        MirOutputConnectionState state = mir_output_get_connection_state(output);
-        if (state == mir_output_connection_state_connected && mir_output_is_enabled(output))
-        {
-            return output;
-        }
-    }
-
-    return NULL;
-}
-
 static void show_help(struct mir_eglapp_arg const* const* arg_lists)
 {
     int const indent = 2, desc_offset = 2;
@@ -465,43 +447,13 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     }
     printf("Using pixel format %d.\n", pixel_format);
 
-    /* eglapps are interested in the screen size, so
-       use mir_connection_create_display_config */
-    MirDisplayConfig* display_config =
-        mir_connection_create_display_configuration(connection);
-
-    MirOutput const* output = find_active_output(display_config);
-
-    if (output == NULL)
-    {
-        printf("No active outputs found.\n");
-        return 0;
-    }
-
-    MirOutputMode const* mode = mir_output_get_current_mode(output);
-
-    int pos_x = mir_output_get_position_x(output);
-    int pos_y = mir_output_get_position_y(output);
-
-    int mode_width  = mir_output_mode_get_width(mode);
-    int mode_height = mir_output_mode_get_height(mode);
-
-    printf("Current active output is %dx%d %+d%+d\n",
-        mode_width, mode_height,
-        pos_x, pos_y);
-
-    if (fullscreen)  /* TODO: Use window states for this */
-    {
-        *width  = mode_width;
-        *height = mode_height;
-    }
-
-    mir_display_config_release(display_config);
-
     MirWindowSpec *spec =
         mir_create_normal_window_spec(connection, *width, *height);
 
     CHECK(spec != NULL, "Can't create a window spec");
+
+    if (fullscreen)
+        mir_window_spec_set_state(spec, mir_window_state_fullscreen);
 
     if (new_egl)
     {

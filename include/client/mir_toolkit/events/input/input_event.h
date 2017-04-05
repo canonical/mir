@@ -152,6 +152,14 @@ bool mir_input_event_has_cookie(MirInputEvent const* ev);
  */
 MirCookie const* mir_input_event_get_cookie(MirInputEvent const* ev);
 
+/**
+ * Retrieve the MirEvent associated with a given input event.
+ *
+ * \param[in] event The input event
+ * \return          The MirEvent
+ */
+MirEvent const* mir_input_event_get_event(MirInputEvent const* event);
+
 #ifdef __cplusplus
 }
 /**@}*/

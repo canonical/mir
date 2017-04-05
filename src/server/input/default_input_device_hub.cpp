@@ -377,7 +377,7 @@ void mi::DefaultInputDeviceHub::add_device_handle(std::shared_ptr<DefaultDevice>
         handles.push_back(handle);
     }
 
-    observers.for_each([&handle, this](std::shared_ptr<InputDeviceObserver> const& observer)
+    observers.for_each([&handle](std::shared_ptr<InputDeviceObserver> const& observer)
         {
             observer->device_added(handle);
             observer->changes_complete();
