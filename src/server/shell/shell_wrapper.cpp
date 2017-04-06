@@ -128,6 +128,14 @@ void msh::ShellWrapper::request_drag_and_drop(
     wrapped->request_drag_and_drop(session, surface, timestamp);
 }
 
+void msh::ShellWrapper::request_move(
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface,
+    uint64_t timestamp)
+{
+    wrapped->request_move(session, surface, timestamp);
+}
+
 void msh::ShellWrapper::add_display(geometry::Rectangle const& area)
 {
     wrapped->add_display(area);

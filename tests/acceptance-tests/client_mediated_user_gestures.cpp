@@ -22,12 +22,14 @@
 #include <mir/geometry/displacement.h>
 #include <mir/input/input_device_info.h>
 #include <mir/input/device_capability.h>
+#include <mir/shell/canonical_window_manager.h>
 #include <mir/shell/shell.h>
 
 #include <mir_test_framework/connected_client_with_a_window.h>
 #include <mir_test_framework/fake_input_device.h>
 #include <mir_test_framework/stub_server_platform_factory.h>
 #include <mir/test/event_factory.h>
+#include <mir/test/fake_shared.h>
 #include <mir/test/signal.h>
 
 #include <gmock/gmock.h>
@@ -40,6 +42,7 @@
 using namespace std::chrono_literals;
 using namespace mir::geometry;
 using namespace testing;
+using mir::test::fake_shared;
 using mir::test::Signal;
 
 namespace
@@ -66,6 +69,17 @@ private:
 };
 
 void mir_cookie_release(Cookie const&) = delete;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+struct MockWindowManager : mir::shell::CanonicalWindowManager
+{
+    using mir::shell::CanonicalWindowManager::CanonicalWindowManager;
+
+    MOCK_METHOD3(handle_request_move,
+        void(std::shared_ptr<mir::scene::Session> const&, std::shared_ptr<mir::scene::Surface> const&, uint64_t));
+};
+#pragma GCC diagnostic pop
 
 struct MouseMoverAndFaker
 {
@@ -103,6 +117,12 @@ struct ClientMediatedUserGestures : mir_test_framework::ConnectedClientWithAWind
     void SetUp() override
     {
         initial_display_layout({screen_geometry});
+        server.override_the_window_manager_builder([this](mir::shell::FocusController* focus_controller)
+            {
+                return window_manager =
+                    std::make_shared<MockWindowManager>(focus_controller, server.the_shell_display_layout());
+            });
+
         mir_test_framework::ConnectedClientWithAWindow::SetUp();
         mir_window_set_event_handler(window, &window_event_handler, this);
 
@@ -114,10 +134,13 @@ struct ClientMediatedUserGestures : mir_test_framework::ConnectedClientWithAWind
     void TearDown() override
     {
         reset_window_event_handler();
+        window_manager.reset();
         mir_test_framework::ConnectedClientWithAWindow::TearDown();
     }
 
     auto user_initiates_gesture() -> Cookie;
+
+    std::shared_ptr<MockWindowManager> window_manager;
 
 private:
     void center_mouse();
@@ -250,10 +273,13 @@ TEST_F(ClientMediatedUserGestures, when_user_initiates_gesture_client_receives_c
     EXPECT_THAT(cookie.get(), NotNull());
 }
 
-// TODO extend this test when server side implemented
-TEST_F(ClientMediatedUserGestures, when_client_initiates_move_nothing_bad_happens)
+TEST_F(ClientMediatedUserGestures, when_client_initiates_move_window_manager_handles_request)
 {
     auto const cookie = user_initiates_gesture();
+    Signal have_request;
+    EXPECT_CALL(*window_manager, handle_request_move(_, _, _)).WillOnce(InvokeWithoutArgs([&]{ have_request.raise(); }));
 
     mir_window_request_user_move(window, cookie);
+
+    EXPECT_THAT(have_request.wait_for(receive_event_timeout), Eq(true));
 }

@@ -275,7 +275,10 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
 
         server.override_the_window_manager_builder([this](msh::FocusController* focus_controller)
             {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                 using PlacementWindowManager = msh::WindowManagerConstructor<mtf::DeclarativePlacementWindowManagerPolicy>;
+#pragma GCC diagnostic pop
                 return std::make_shared<PlacementWindowManager>(
                     focus_controller,
                     client_geometries,
