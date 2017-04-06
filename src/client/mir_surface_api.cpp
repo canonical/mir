@@ -39,6 +39,8 @@ namespace mcl = mir::client;
 
 namespace
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirWaitHandle* mir_configure_cursor_helper(MirWindow* window, MirCursorConfiguration const* cursor)
 {
     MirWaitHandle *result = nullptr;
@@ -56,6 +58,7 @@ MirWaitHandle* mir_configure_cursor_helper(MirWindow* window, MirCursorConfigura
     return result;
 }
 }
+#pragma GCC diagnostic pop
 
 MirWindowSpec*
 mir_create_normal_window_spec(MirConnection* connection,

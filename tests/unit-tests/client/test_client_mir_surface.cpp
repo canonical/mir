@@ -513,7 +513,10 @@ TEST_F(MirClientSurfaceTest, configure_cursor_wait_handle_really_blocks)
 
     EXPECT_GE(std::chrono::steady_clock::now(), expected_end);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_cursor_configuration_destroy(cursor_config);
+#pragma GCC diagnostic pop
 }
 
 TEST_F(MirClientSurfaceTest, configure_wait_handle_really_blocks)

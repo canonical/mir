@@ -60,7 +60,8 @@ __attribute__((deprecated("This type is slated for rename due to MirRenderSurfac
  * Opaque structure containing cursor parameterization. Create with mir_cursor* family.
  * Used with mir_window_configure_cursor.
  */
-typedef struct MirCursorConfiguration MirCursorConfiguration;
+typedef struct MirCursorConfiguration MirCursorConfiguration
+    __attribute__((deprecated("Use mir_window_spec_set_cursor_name/mir_window_spec_set_cursor_render_surface instead")));
 
 /**
  * Descriptor for an output connection.

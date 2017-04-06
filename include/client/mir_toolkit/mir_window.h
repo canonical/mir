@@ -792,13 +792,17 @@ int mir_window_get_dpi(MirWindow* window);
 /**
  * Choose the cursor state for a window: whether a cursor is shown,
  * and which cursor if so.
+ *    \deprecated Users should use mir_window_spec_set_cursor_name/mir_window_spec_set_cursor_render_surface
  *    \param [in] window     The window to operate on
  *    \param [in] parameters The configuration parameters obtained
  *                           from mir_cursor* family of functions.
  *
  */
-void mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* parameters);
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+void mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* parameters)
+    __attribute__((deprecated("Use mir_window_spec_set_cursor_name/mir_window_spec_set_cursor_render_surface instead")));
+#pragma GCC diagnostic pop
 /**
  * Request to set the preferred orientations of a window.
  * The request may be rejected by the server; to check wait on the
