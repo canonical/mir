@@ -112,11 +112,11 @@ void mg::OverlappingOutputGrouping::add_output(DisplayConfigurationOutput const&
             {
                 /*
                  * Prevent grouping of outputs when they have differing
-                 * orientations. It's safer to assume the hardware can't
+                 * transformations. It's safer to assume the hardware can't
                  * handle it for now... until proven otherwise.
                  */
                 if (conf_o.extents().overlaps(rect_output) &&
-                    conf_o.orientation == conf_output.orientation)
+                    conf_o.transformation() == conf_output.transformation())
                     found_overlap = true;
             });
 

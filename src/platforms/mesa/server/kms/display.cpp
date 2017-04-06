@@ -540,7 +540,7 @@ void mgm::Display::configure_locked(
 
                     /*
                      * Presently OverlappingOutputGroup guarantees all grouped
-                     * outputs have the same transformation. (TODO?)
+                     * outputs have the same transformation.
                      */
                     transformation = conf_output.transformation();
                 });
