@@ -26,6 +26,7 @@
 #include "mir/input/mir_input_config.h"
 #include "mir/input/input_device.h"
 #include "mir/input/touchscreen_settings.h"
+#include <mir/raii.h>
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
@@ -344,12 +345,13 @@ struct TestClientInput : mtf::HeadlessInProcessServer
             });
 
         auto hub = server.the_input_device_hub();
-        hub->add_observer(counter);
+
+        auto const register_counter = mir::raii::paired_calls(
+            [&]{ hub->add_observer(counter); },
+            [&]{ hub->remove_observer(counter); });
 
         devices_available.wait_for(5s);
         ASSERT_THAT(counter->count_devices, Eq(expected_number_of_input_devices));
-
-        hub->remove_observer(counter);
     }
 
     MirInputDevice const* get_device_with_capabilities(MirInputConfig const* config, MirInputDeviceCapabilities caps)
