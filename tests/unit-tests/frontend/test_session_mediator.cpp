@@ -279,7 +279,8 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<NullCoordinateTranslator>(),
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
-            mt::fake_shared(mock_input_config_changer)}
+            mt::fake_shared(mock_input_config_changer),
+            {}}
     {
         using namespace ::testing;
 
@@ -309,7 +310,7 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<NullCoordinateTranslator>(),
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
-            mt::fake_shared(mock_input_config_changer));
+            mt::fake_shared(mock_input_config_changer), std::vector<mir::ExtensionDescription>{});
     }
 
     std::shared_ptr<mf::SessionMediator> create_session_mediator_with_screencast(
@@ -324,7 +325,7 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<NullCoordinateTranslator>(),
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
-            mt::fake_shared(mock_input_config_changer));
+            mt::fake_shared(mock_input_config_changer), std::vector<mir::ExtensionDescription>{});
     }
 
     MockConnector connector;
@@ -382,7 +383,7 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         std::make_shared<NullCoordinateTranslator>(),
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
-        mt::fake_shared(mock_input_config_changer)};
+        mt::fake_shared(mock_input_config_changer), {}};
 
     EXPECT_THAT(connects_handled_count, Eq(0));
 
@@ -860,7 +861,7 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         std::make_shared<NullCoordinateTranslator>(),
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
-        mt::fake_shared(mock_input_config_changer)};
+        mt::fake_shared(mock_input_config_changer), {}};
 
     ON_CALL(*shell, create_surface( _, _, _))
         .WillByDefault(

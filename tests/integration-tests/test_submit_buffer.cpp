@@ -235,6 +235,7 @@ struct StubPlatform : public mg::Platform
 
     mg::NativeRenderingPlatform* native_rendering_platform() override { return nullptr; }
     mg::NativeDisplayPlatform* native_display_platform() override { return nullptr; }
+    std::vector<mir::ExtensionDescription> extensions() const override { return {}; }
 
     std::shared_ptr<mir::Fd> const last_fd;
     std::shared_ptr<mg::Platform> const underlying_platform;

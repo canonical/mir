@@ -159,3 +159,8 @@ mg::NativeRenderingPlatform* mgn::Platform::native_rendering_platform()
 {
     return this;
 }
+
+std::vector<mir::ExtensionDescription> mgn::Platform::extensions() const
+{
+    return guest_platform->extensions();
+}

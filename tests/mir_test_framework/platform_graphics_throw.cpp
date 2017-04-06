@@ -100,6 +100,11 @@ public:
         return stub_platform->native_display_platform();
     }
 
+    std::vector<mir::ExtensionDescription> extensions() const
+    {
+        return {};
+    }
+
 private:
     enum ExceptionLocation : uint32_t
     {
