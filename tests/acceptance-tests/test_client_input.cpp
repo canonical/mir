@@ -348,7 +348,7 @@ struct TestClientInput : mtf::HeadlessInProcessServer
 
         auto const register_counter = mir::raii::paired_calls(
             [&]{ hub->add_observer(counter); },
-            [&]{ hub->remove_observer(counter); std::this_thread::sleep_for(200ms); });
+            [&]{ hub->remove_observer(counter); });
 
         devices_available.wait_for(5s);
         ASSERT_THAT(counter->count_devices, Eq(expected_number_of_input_devices));
