@@ -186,6 +186,26 @@ struct WindowReadyHandler
     mir::test::Signal window_focused_and_exposed;
 };
 
+MirWindow *make_window(MirConnection *connection, std::string const& client_name)
+{
+    auto spec = mir_create_normal_window_spec(connection, 1, 1);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+    mir_window_spec_set_name(spec, client_name.c_str());
+
+    WindowReadyHandler event_handler;
+    mir_window_spec_set_event_handler(spec, WindowReadyHandler::callback, &event_handler);
+
+    auto const window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
+
+    mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
+
+    event_handler.wait_for_window_to_become_focused_and_exposed();
+    mir_window_set_event_handler(window, nullptr, nullptr);
+
+    return window;
+}
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct MirSurfaceDeleter
@@ -196,23 +216,20 @@ struct MirSurfaceDeleter
 using RenderSurface = std::unique_ptr<MirRenderSurface, MirSurfaceDeleter>;
 #pragma GCC diagnostic pop
 
-struct MirWindowDeleter
-{
-    void operator()(MirWindow *window) { mir_window_release_sync(window); }
-};
-
-using Window = std::unique_ptr<MirWindow, MirWindowDeleter>;
-
 struct CursorClient
 {
     CursorClient(std::string const& connect_string, std::string const& client_name)
-        : connection(mir_connect_sync(connect_string.c_str(), client_name.c_str()))
+        : connection(mir_connect_sync(connect_string.c_str(), client_name.c_str())),
+          window(make_window(connection, client_name))
     {
     }
 
     virtual ~CursorClient()
     {
-        mir_connection_release(connection);
+        if (window)
+            mir_window_release_sync(window);
+        if (connection)
+            mir_connection_release(connection);
     }
 
     RenderSurface make_surface()
@@ -224,35 +241,11 @@ struct CursorClient
 #pragma GCC diagnostic pop
     }
 
-    Window make_window()
-    {
-        auto spec = mir_create_normal_window_spec(connection, 1, 1);
-        mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-        mir_window_spec_set_name(spec, "Client Cursor Test");
 
-        WindowReadyHandler event_handler;
-        mir_window_spec_set_event_handler(spec, WindowReadyHandler::callback, &event_handler);
-
-        Window window{mir_create_window_sync(spec)};
-        mir_window_spec_release(spec);
-
-        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window.get()));
-
-        event_handler.wait_for_window_to_become_focused_and_exposed();
-        mir_window_set_event_handler(window.get(), nullptr, nullptr);
-
-        return window;
-    }
-
-    void run()
-    {
-        auto window = make_window();
-        configure_cursor(window.get());
-    }
-
-    virtual void configure_cursor(MirWindow *window) = 0;
+    virtual void configure_cursor() = 0;
 
     MirConnection* connection{nullptr};
+    MirWindow *window{nullptr};
 
     int const hotspot_x{1};
     int const hotspot_y{1};
@@ -346,7 +339,7 @@ struct DisabledCursorClient : CursorClient
 {
     using CursorClient::CursorClient;
 
-    void configure_cursor(MirWindow* window) override
+    void configure_cursor() override
     {
         CursorConfiguration conf{mir_disabled_cursor_name};
         conf.apply(window);
@@ -364,7 +357,7 @@ struct NamedCursorClient : CursorClient
     {
     }
 
-    void configure_cursor(MirWindow* window) override
+    void configure_cursor() override
     {
         CursorConfiguration conf{cursor_name};
         conf.apply(window);
@@ -377,7 +370,7 @@ struct ChangingCursorClient : NamedCursorClient
 {
     using NamedCursorClient::NamedCursorClient;
 
-    void configure_cursor(MirWindow* window) override
+    void configure_cursor() override
     {
         CursorConfiguration conf1{cursor_name};
         CursorConfiguration conf2{mir_disabled_cursor_name};
@@ -391,7 +384,7 @@ struct BufferStreamClient : CursorClient
 {
     using CursorClient::CursorClient;
 
-    void configure_cursor(MirWindow* window) override
+    void configure_cursor() override
     {
         BufferStream stream{connection};
         CursorConfiguration conf{stream, hotspot_x, hotspot_y};
@@ -407,7 +400,7 @@ struct SurfaceCursorConfigClient : CursorClient
 {
     using CursorClient::CursorClient;
 
-    void configure_cursor(MirWindow* window) override
+    void configure_cursor() override
     {
         auto surface = make_surface();
         BufferStream stream{surface};
@@ -424,7 +417,7 @@ struct SurfaceCursorConfigClient : CursorClient
 struct SurfaceCursorClient : CursorClient
 {
     using CursorClient::CursorClient;
-    void configure_cursor(MirWindow* window) override
+    void configure_cursor() override
     {
         auto surface = make_surface();
         BufferStream stream{surface};
@@ -514,7 +507,7 @@ TEST_F(ClientCursor, can_be_disabled)
         .WillOnce(mt::WakeUp(&wait));
 
     DisabledCursorClient client{new_connection(), client_name_1};
-    client.run();
+    client.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
 
@@ -540,7 +533,7 @@ TEST_F(ClientCursor, is_restored_when_leaving_surface)
         .WillOnce(mt::WakeUp(&wait));
 
     DisabledCursorClient client{new_connection(), client_name_1};
-    client.run();
+    client.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
 
@@ -571,7 +564,7 @@ TEST_F(ClientCursor, is_changed_when_crossing_surface_boundaries)
         .WillOnce(mt::WakeUp(&wait));
 
     NamedCursorClient client_1{new_connection(), client_name_1, client_cursor_1};
-    client_1.run();
+    client_1.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
     wait.reset();
@@ -581,7 +574,7 @@ TEST_F(ClientCursor, is_changed_when_crossing_surface_boundaries)
         .WillOnce(mt::WakeUp(&wait));
 
     NamedCursorClient client_2{new_connection(), client_name_2, client_cursor_2};
-    client_2.run();
+    client_2.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
 
@@ -612,7 +605,7 @@ TEST_F(ClientCursor, of_topmost_window_is_applied)
         .WillOnce(mt::WakeUp(&wait));
 
     NamedCursorClient client_1{new_connection(), client_name_1, client_cursor_1};
-    client_1.run();
+    client_1.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
     wait.reset();
@@ -622,7 +615,7 @@ TEST_F(ClientCursor, of_topmost_window_is_applied)
         .WillOnce(mt::WakeUp(&wait));
 
     NamedCursorClient client_2{new_connection(), client_name_2, client_cursor_2};
-    client_2.run();
+    client_2.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
 
@@ -654,7 +647,7 @@ TEST_F(ClientCursor, is_applied_without_cursor_motion)
     EXPECT_CALL(cursor, hide())
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
-    client.run();
+    client.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
 
@@ -677,14 +670,18 @@ TEST_F(ClientCursor, from_buffer_stream_is_applied)
             .WillOnce(mt::WakeUp(&expectations_satisfied));
     }
 
-    mt::Signal wait;
+    mt::Signal cursor_image_set;
 
-    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
-        .WillRepeatedly(mt::WakeUp(&wait));
+    {
+        InSequence seq;
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_)).Times(2);
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+            .WillOnce(mt::WakeUp(&cursor_image_set));
+    }
 
-    client.run();
+    client.configure_cursor();
 
-    EXPECT_TRUE(wait.wait_for(timeout));
+    EXPECT_TRUE(cursor_image_set.wait_for(timeout));
 
     expectations_satisfied.wait_for(60s);
 
@@ -700,17 +697,21 @@ TEST_F(ClientCursor, from_a_surface_config_is_applied)
 
     {
         InSequence seq;
-        EXPECT_CALL(cursor, show(_)).Times(3);
+        EXPECT_CALL(cursor, show(_)).Times(2);
         EXPECT_CALL(cursor, show(_)).Times(1)
             .WillOnce(mt::WakeUp(&expectations_satisfied));
     }
 
     mt::Signal cursor_image_set;
 
-    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
-        .WillRepeatedly(mt::WakeUp(&cursor_image_set));
+    {
+        InSequence seq;
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_)).Times(2);
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+            .WillOnce(mt::WakeUp(&cursor_image_set));
+    }
 
-    client.run();
+    client.configure_cursor();
 
     EXPECT_TRUE(cursor_image_set.wait_for(timeout));
 
@@ -728,17 +729,21 @@ TEST_F(ClientCursor, from_a_surface_is_applied)
 
     {
         InSequence seq;
-        EXPECT_CALL(cursor, show(_)).Times(3);
+        EXPECT_CALL(cursor, show(_)).Times(2);
         EXPECT_CALL(cursor, show(_)).Times(1)
             .WillOnce(mt::WakeUp(&expectations_satisfied));
     }
 
     mt::Signal cursor_image_set;
 
-    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
-        .WillRepeatedly(mt::WakeUp(&cursor_image_set));
+    {
+        InSequence seq;
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_)).Times(2);
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+            .WillOnce(mt::WakeUp(&cursor_image_set));
+    }
 
-    client.run();
+    client.configure_cursor();
 
     EXPECT_TRUE(cursor_image_set.wait_for(timeout));
 
@@ -755,7 +760,7 @@ struct FullscreenDisabledCursorClient : CursorClient
 {
     using CursorClient::CursorClient;
 
-    void configure_cursor(MirWindow *window) override
+    void configure_cursor() override
     {
         // Workaround race condition (lp:1525003). I've tried, but I've not
         // found a better way to ensure that the host Mir server is "ready"
@@ -787,7 +792,7 @@ TEST_F(ClientCursor, passes_through_nested_server)
             .Times(1)
             .WillOnce(mt::WakeUp(&wait));
 
-        client.run();
+        client.configure_cursor();
 
         EXPECT_TRUE(wait.wait_for(timeout));
 
