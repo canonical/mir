@@ -824,10 +824,13 @@ int mir_window_get_dpi(MirWindow* window)
     return dpi;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* cursor)
 {
     mir_configure_cursor_helper(window, cursor);
 }
+#pragma GCC diagnostic pop
 
 void mir_window_set_preferred_orientation(MirWindow* window, MirOrientationMode mode)
 try
