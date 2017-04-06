@@ -133,7 +133,7 @@ std::unique_ptr<mga::ConfigurableDisplayBuffer> create_display_buffer(
         native_window,
         gl_context,
         *gl_program_factory,
-        mg::transformation(config.orientation),
+        config.transformation(),
         config.extents(),
         overlay_option));
 }
@@ -398,7 +398,7 @@ void mga::Display::configure_locked(
             config[output.id].scale = output.scale;
             config[output.id].top_left = output.top_left;
 
-            auto const& transform = mg::transformation(output.orientation);
+            auto const& transform = output.transformation();
 
             if (config.primary().id == output.id)
             {
