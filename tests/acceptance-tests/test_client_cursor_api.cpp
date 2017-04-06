@@ -54,10 +54,12 @@ namespace mt = mir::test;
 namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
 
+using namespace testing;
+using namespace std::chrono_literals;
+
 namespace
 {
 
-std::chrono::seconds const timeout{5};
 class MockSurfaceObserver : public msc::SurfaceObserver
 {
 public:
@@ -118,7 +120,7 @@ struct NamedCursorImages : public mi::CursorImages
     {
         if (name == "none")
             return nullptr;
-    
+
        return std::make_shared<NamedCursorImage>(name);
     }
 };
@@ -141,92 +143,204 @@ MATCHER_P(CursorNamed, name, "")
     return cursor_is_named(arg, name);
 }
 
+struct WindowReadyHandler
+{
+    static void callback(MirWindow*, MirEvent const* event, void* context)
+    {
+        auto handler = reinterpret_cast<WindowReadyHandler *>(context);
+        handler->handle_event(event);
+    }
+
+    void handle_event(MirEvent const* event)
+    {
+        auto type = mir_event_get_type(event);
+        if (type != mir_event_type_window)
+            return;
+
+        auto window_event = mir_event_get_window_event(event);
+        auto const attrib = mir_window_event_get_attribute(window_event);
+        auto const value = mir_window_event_get_attribute_value(window_event);
+
+        if (attrib == mir_window_attrib_visibility && value == mir_window_visibility_exposed)
+        {
+            window_exposed = true;
+        }
+
+        if (attrib == mir_window_attrib_focus && value == mir_window_focus_state_focused)
+        {
+            window_focused = true;
+        }
+
+        if (window_exposed && window_focused)
+            window_focused_and_exposed.raise();
+    }
+
+    void wait_for_window_to_become_focused_and_exposed()
+    {
+        if (!window_focused_and_exposed.wait_for(30s))
+            throw std::runtime_error("Timed out waiting for window to be focused and exposed");
+    }
+
+    bool window_exposed{false};
+    bool window_focused{false};
+    mir::test::Signal window_focused_and_exposed;
+};
+
+MirWindow *make_window(MirConnection *connection, std::string const& client_name)
+{
+    auto spec = mir_create_normal_window_spec(connection, 1, 1);
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+    mir_window_spec_set_name(spec, client_name.c_str());
+
+    WindowReadyHandler event_handler;
+    mir_window_spec_set_event_handler(spec, WindowReadyHandler::callback, &event_handler);
+
+    auto const window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
+
+    mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
+
+    event_handler.wait_for_window_to_become_focused_and_exposed();
+    mir_window_set_event_handler(window, nullptr, nullptr);
+
+    return window;
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+struct MirSurfaceDeleter
+{
+    void operator()(MirRenderSurface *surface) { mir_render_surface_release(surface); }
+};
+
+using RenderSurface = std::unique_ptr<MirRenderSurface, MirSurfaceDeleter>;
+#pragma GCC diagnostic pop
+
 struct CursorClient
 {
     CursorClient(std::string const& connect_string, std::string const& client_name)
-        : connect_string{connect_string}, client_name{client_name}
+        : connection(mir_connect_sync(connect_string.c_str(), client_name.c_str())),
+          window(make_window(connection, client_name))
     {
     }
 
     virtual ~CursorClient()
     {
-        teardown.raise();
-        if (client_thread.joinable())
-            client_thread.join();
+        if (window)
+            mir_window_release_sync(window);
+        if (connection)
+            mir_connection_release(connection);
     }
 
-    void run()
+    RenderSurface make_surface()
     {
-        mir::test::Signal setup_done;
-
-        client_thread = std::thread{
-            [this,&setup_done]
-            {
-                connection =
-                    mir_connect_sync(connect_string.c_str(), client_name.c_str());
-
-                auto spec = mir_create_normal_window_spec(connection, 1, 1);
-                mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-                mir_window_spec_set_name(spec, client_name.c_str());
-                auto const window = mir_create_window_sync(spec);
-                mir_window_spec_release(spec);
-
-                mir_buffer_stream_swap_buffers_sync(
-                    mir_window_get_buffer_stream(window));
-
-                wait_for_surface_to_become_focused_and_exposed(window);
-
-                setup_cursor(window);
-
-                setup_done.raise();
-
-                teardown.wait_for(std::chrono::seconds{10});
-                mir_window_release_sync(window);
-                mir_connection_release(connection);
-            }};
-
-        setup_done.wait_for(std::chrono::seconds{5});
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        RenderSurface surface{mir_connection_create_render_surface_sync(connection, 24, 24)};
+        return surface;
+#pragma GCC diagnostic pop
     }
 
-    virtual void setup_cursor(MirWindow*)
+
+    virtual void configure_cursor() = 0;
+
+    MirConnection* connection{nullptr};
+    MirWindow *window{nullptr};
+
+    int const hotspot_x{1};
+    int const hotspot_y{1};
+
+};
+
+struct CursorWindowSpec
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    CursorWindowSpec(MirConnection *connection, RenderSurface const& surface, int hotspot_x, int hotspot_y)
+    : spec(mir_create_window_spec(connection))
     {
+        mir_window_spec_set_cursor_render_surface(spec, surface.get(), hotspot_x, hotspot_y);
     }
+#pragma GCC diagnostic pop
 
-    void wait_for_surface_to_become_focused_and_exposed(MirWindow* window)
+    ~CursorWindowSpec()
     {
-        bool success = mt::spin_wait_for_condition_or_timeout(
-            [window]
-            {
-                return mir_window_get_visibility(window) == mir_window_visibility_exposed &&
-                    mir_window_get_focus_state(window) == mir_window_focus_state_focused;
-            },
-            std::chrono::seconds{5});
-
-        if (!success)
-            throw std::runtime_error("Timeout waiting for window to become focused and exposed");
+        mir_window_spec_release(spec);
     }
 
-    std::string const connect_string;
-    std::string const client_name;
+    void apply(MirWindow *window)
+    {
+        mir_window_apply_spec(window, spec);
+    }
+    MirWindowSpec * const spec;
+};
 
-    MirConnection* connection;
+struct BufferStream
+{
+    BufferStream(MirConnection *connection)
+     : stream_owned{true},
+       stream{mir_connection_create_buffer_stream_sync(connection, 24, 24, mir_pixel_format_argb_8888,mir_buffer_usage_software)}
+    {}
 
-    std::thread client_thread;
-    mir::test::Signal teardown;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    BufferStream(RenderSurface const& surface)
+     : stream_owned(false),
+       stream{mir_render_surface_get_buffer_stream(surface.get(), 24, 24, mir_pixel_format_argb_8888)}
+    {}
+#pragma GCC diagnostic pop
+
+    ~BufferStream()
+    {
+        if (stream_owned)
+            mir_buffer_stream_release_sync(stream);
+    }
+
+    void swap_buffers()
+    {
+        mir_buffer_stream_swap_buffers_sync(stream);
+    }
+
+    bool stream_owned;
+    MirBufferStream *stream;
+};
+
+struct CursorConfiguration
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    CursorConfiguration(std::string const& name)
+     : conf(mir_cursor_configuration_from_name(name.c_str())) {}
+    CursorConfiguration(const char * name)
+     : conf(mir_cursor_configuration_from_name(name)) {}
+    CursorConfiguration(RenderSurface const& surface, int hotspot_x, int hotspot_y)
+     : conf(mir_cursor_configuration_from_render_surface(surface.get(), hotspot_x, hotspot_y)) {}
+    CursorConfiguration(BufferStream const& stream, int hotspot_x, int hotspot_y)
+     : conf(mir_cursor_configuration_from_buffer_stream(stream.stream, hotspot_x, hotspot_y)) {}
+#pragma GCC diagnostic pop
+
+    ~CursorConfiguration()
+    {
+        if (conf)
+            mir_cursor_configuration_destroy(conf);
+    }
+
+    void apply(MirWindow *window)
+    {
+        mir_window_configure_cursor(window, conf);
+    }
+
+    MirCursorConfiguration * conf;
 };
 
 struct DisabledCursorClient : CursorClient
 {
     using CursorClient::CursorClient;
 
-    void setup_cursor(MirWindow* window) override
+    void configure_cursor() override
     {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
-#pragma GCC diagnostic pop
-        mir_window_configure_cursor(window, conf);
-        mir_cursor_configuration_destroy(conf);
+        CursorConfiguration conf{mir_disabled_cursor_name};
+        conf.apply(window);
     }
 };
 
@@ -241,30 +355,92 @@ struct NamedCursorClient : CursorClient
     {
     }
 
-    void setup_cursor(MirWindow* window) override
+    void configure_cursor() override
     {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        auto conf = mir_cursor_configuration_from_name(cursor_name.c_str());
-#pragma GCC diagnostic pop
-        mir_window_configure_cursor(window, conf);
-        mir_cursor_configuration_destroy(conf);
+        CursorConfiguration conf{cursor_name};
+        conf.apply(window);
     }
 
     std::string const cursor_name;
 };
 
-struct TestClientCursorAPI : mtf::HeadlessInProcessServer
+struct ChangingCursorClient : NamedCursorClient
+{
+    using NamedCursorClient::NamedCursorClient;
+
+    void configure_cursor() override
+    {
+        CursorConfiguration conf1{cursor_name};
+        CursorConfiguration conf2{mir_disabled_cursor_name};
+
+        conf1.apply(window);
+        conf2.apply(window);
+    }
+};
+
+struct BufferStreamClient : CursorClient
+{
+    using CursorClient::CursorClient;
+
+    void configure_cursor() override
+    {
+        BufferStream stream{connection};
+        CursorConfiguration conf{stream, hotspot_x, hotspot_y};
+
+        stream.swap_buffers();
+        conf.apply(window);
+        stream.swap_buffers();
+        stream.swap_buffers();
+    }
+};
+
+struct SurfaceCursorConfigClient : CursorClient
+{
+    using CursorClient::CursorClient;
+
+    void configure_cursor() override
+    {
+        auto surface = make_surface();
+        BufferStream stream{surface};
+        CursorConfiguration conf{surface, hotspot_x, hotspot_y};
+        stream.swap_buffers();
+
+        conf.apply(window);
+
+        stream.swap_buffers();
+        stream.swap_buffers();
+    }
+};
+
+struct SurfaceCursorClient : CursorClient
+{
+    using CursorClient::CursorClient;
+    void configure_cursor() override
+    {
+        auto surface = make_surface();
+        BufferStream stream{surface};
+
+        stream.swap_buffers();
+
+        CursorWindowSpec spec{connection, surface, hotspot_x, hotspot_y};
+        spec.apply(window);
+
+        stream.swap_buffers();
+        stream.swap_buffers();
+    }
+};
+
+struct ClientCursor : mtf::HeadlessInProcessServer
 {
     // mtf::add_fake_input_device needs this library to be loaded each test, for the tests
     mtf::TemporaryEnvironmentValue input_lib{"MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str()};
-    ::testing::NiceMock<MockCursor> cursor;
-    std::shared_ptr<::testing::NiceMock<MockSurfaceObserver>> mock_surface_observer =
-        std::make_shared<::testing::NiceMock<MockSurfaceObserver>>();
+    NiceMock<MockCursor> cursor;
+    std::shared_ptr<NiceMock<MockSurfaceObserver>> mock_surface_observer =
+        std::make_shared<NiceMock<MockSurfaceObserver>>();
 
     mtf::SurfaceGeometries client_geometries;
 
-    TestClientCursorAPI()
+    ClientCursor()
     {
         mock_egl.provide_egl_extensions();
         mock_egl.provide_stub_platform_buffer_swapping();
@@ -293,7 +469,6 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
 
     void expect_client_shutdown()
     {
-        using namespace testing;
         Mock::VerifyAndClearExpectations(&cursor);
 
         // Client shutdown
@@ -312,7 +487,8 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
         mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
         };
 
-    ::testing::NiceMock<mtd::MockEGL> mock_egl;
+    NiceMock<mtd::MockEGL> mock_egl;
+    std::chrono::seconds const timeout{5s};
 };
 
 }
@@ -320,10 +496,8 @@ struct TestClientCursorAPI : mtf::HeadlessInProcessServer
 // In this set we create a 1x1 client window at the point (1,0). The client requests to disable the cursor
 // over this window. Since the cursor starts at (0,0) we when we move the cursor by (1,0) thus causing it
 // to enter the bounds of the first window, we should observe it being disabled.
-TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
+TEST_F(ClientCursor, can_be_disabled)
 {
-    using namespace ::testing;
-
     client_geometries[client_name_1] =
         geom::Rectangle{{1, 0}, {1, 1}};
 
@@ -334,7 +508,7 @@ TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
         .WillOnce(mt::WakeUp(&wait));
 
     DisabledCursorClient client{new_connection(), client_name_1};
-    client.run();
+    client.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
 
@@ -343,15 +517,13 @@ TEST_F(TestClientCursorAPI, client_may_disable_cursor_over_surface)
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
 
-    expectations_satisfied.wait_for(std::chrono::seconds{5});
+    expectations_satisfied.wait_for(timeout);
 
     expect_client_shutdown();
 }
 
-TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
+TEST_F(ClientCursor, is_restored_when_leaving_surface)
 {
-    using namespace ::testing;
-
     client_geometries[client_name_1] =
         geom::Rectangle{{1, 0}, {1, 1}};
 
@@ -362,7 +534,7 @@ TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
         .WillOnce(mt::WakeUp(&wait));
 
     DisabledCursorClient client{new_connection(), client_name_1};
-    client.run();
+    client.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
 
@@ -374,15 +546,13 @@ TEST_F(TestClientCursorAPI, cursor_restored_when_leaving_surface)
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(2, 0));
 
-    expectations_satisfied.wait_for(std::chrono::seconds{5});
+    expectations_satisfied.wait_for(timeout);
 
     expect_client_shutdown();
 }
 
-TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
+TEST_F(ClientCursor, is_changed_when_crossing_surface_boundaries)
 {
-    using namespace ::testing;
-
     client_geometries[client_name_1] =
         geom::Rectangle{{1, 0}, {1, 1}};
     client_geometries[client_name_2] =
@@ -395,7 +565,7 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
         .WillOnce(mt::WakeUp(&wait));
 
     NamedCursorClient client_1{new_connection(), client_name_1, client_cursor_1};
-    client_1.run();
+    client_1.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
     wait.reset();
@@ -405,7 +575,7 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
         .WillOnce(mt::WakeUp(&wait));
 
     NamedCursorClient client_2{new_connection(), client_name_2, client_cursor_2};
-    client_2.run();
+    client_2.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
 
@@ -417,15 +587,13 @@ TEST_F(TestClientCursorAPI, cursor_changed_when_crossing_surface_boundaries)
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
 
-    expectations_satisfied.wait_for(std::chrono::seconds{5});
+    expectations_satisfied.wait_for(timeout);
 
     expect_client_shutdown();
 }
 
-TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
+TEST_F(ClientCursor, of_topmost_window_is_applied)
 {
-    using namespace ::testing;
-
     client_geometries[client_name_1] =
         geom::Rectangle{{1, 0}, {1, 1}};
     client_geometries[client_name_2] =
@@ -438,7 +606,7 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
         .WillOnce(mt::WakeUp(&wait));
 
     NamedCursorClient client_1{new_connection(), client_name_1, client_cursor_1};
-    client_1.run();
+    client_1.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
     wait.reset();
@@ -448,7 +616,7 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
         .WillOnce(mt::WakeUp(&wait));
 
     NamedCursorClient client_2{new_connection(), client_name_2, client_cursor_2};
-    client_2.run();
+    client_2.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
 
@@ -457,35 +625,13 @@ TEST_F(TestClientCursorAPI, cursor_request_taken_from_top_surface)
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(1, 0));
 
-    expectations_satisfied.wait_for(std::chrono::seconds{5});
+    expectations_satisfied.wait_for(timeout);
 
     expect_client_shutdown();
 }
 
-TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
+TEST_F(ClientCursor, is_applied_without_cursor_motion)
 {
-    using namespace ::testing;
-
-    struct ChangingCursorClient : NamedCursorClient
-    {
-        using NamedCursorClient::NamedCursorClient;
-
-        void setup_cursor(MirWindow* window) override
-        {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-            auto conf1 = mir_cursor_configuration_from_name(cursor_name.c_str());
-            auto conf2 = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
-#pragma GCC diagnostic pop
-
-            mir_window_configure_cursor(window, conf1);
-            mir_window_configure_cursor(window, conf2);
-
-            mir_cursor_configuration_destroy(conf1);
-            mir_cursor_configuration_destroy(conf2);
-        }
-    };
-
     client_geometries[client_name_1] =
         geom::Rectangle{{0, 0}, {1, 1}};
 
@@ -502,45 +648,17 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_without_cursor_motion)
     EXPECT_CALL(cursor, hide())
         .WillOnce(mt::WakeUp(&expectations_satisfied));
 
-    client.run();
+    client.configure_cursor();
 
     EXPECT_TRUE(wait.wait_for(timeout));
 
-    expectations_satisfied.wait_for(std::chrono::seconds{5});
+    expectations_satisfied.wait_for(timeout);
 
     expect_client_shutdown();
 }
 
-TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
+TEST_F(ClientCursor, from_buffer_stream_is_applied)
 {
-    using namespace ::testing;
-    
-    static int hotspot_x = 1, hotspot_y = 1;
-
-    struct BufferStreamClient : CursorClient
-    {
-        using CursorClient::CursorClient;
-
-        void setup_cursor(MirWindow* window) override
-        {
-            auto stream = mir_connection_create_buffer_stream_sync(
-                connection, 24, 24, mir_pixel_format_argb_8888,
-                mir_buffer_usage_software);
-            auto conf = mir_cursor_configuration_from_buffer_stream(stream, hotspot_x, hotspot_y);
-
-            mir_buffer_stream_swap_buffers_sync(stream);
-
-            mir_window_configure_cursor(window, conf);
-            
-            mir_cursor_configuration_destroy(conf);            
-            
-            mir_buffer_stream_swap_buffers_sync(stream);
-            mir_buffer_stream_swap_buffers_sync(stream);
-
-            mir_buffer_stream_release_sync(stream);
-        }
-    };
-
     client_geometries[client_name_1] =
         geom::Rectangle{{0, 0}, {1, 1}};
 
@@ -553,93 +671,53 @@ TEST_F(TestClientCursorAPI, cursor_request_applied_from_buffer_stream)
             .WillOnce(mt::WakeUp(&expectations_satisfied));
     }
 
-    mt::Signal wait;
+    mt::Signal cursor_image_set;
 
-    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
-        .WillRepeatedly(mt::WakeUp(&wait));
+    {
+        InSequence seq;
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_)).Times(2);
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+            .WillOnce(mt::WakeUp(&cursor_image_set));
+    }
 
-    client.run();
+    client.configure_cursor();
 
-    EXPECT_TRUE(wait.wait_for(timeout));
+    EXPECT_TRUE(cursor_image_set.wait_for(timeout));
 
-    expectations_satisfied.wait_for(std::chrono::seconds{500});
+    expectations_satisfied.wait_for(60s);
 
     expect_client_shutdown();
 }
 
-TEST_F(TestClientCursorAPI, cursor_request_applied_from_surface)
+TEST_F(ClientCursor, from_a_surface_config_is_applied)
 {
-    using namespace ::testing;
-
-    static int hotspot_x = 1, hotspot_y = 1;
-
     client_geometries[client_name_1] =
         geom::Rectangle{{0, 0}, {1, 1}};
 
+    SurfaceCursorConfigClient client{new_connection(), client_name_1};
+
     {
         InSequence seq;
-        EXPECT_CALL(cursor, show(_)).Times(3);
+        EXPECT_CALL(cursor, show(_)).Times(2);
         EXPECT_CALL(cursor, show(_)).Times(1)
             .WillOnce(mt::WakeUp(&expectations_satisfied));
     }
 
-    mt::Signal wait;
+    mt::Signal cursor_image_set;
 
-    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
-        .WillRepeatedly(mt::WakeUp(&wait));
+    {
+        InSequence seq;
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_)).Times(2);
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+            .WillOnce(mt::WakeUp(&cursor_image_set));
+    }
 
-    auto connection =
-        mir_connect_sync(new_connection().c_str(), client_name_1.c_str());
-    auto spec = mir_create_normal_window_spec(connection, 1, 1);
-    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-    mir_window_spec_set_name(spec, client_name_1.c_str());
-    auto const window = mir_create_window_sync(spec);
-    mir_window_spec_release(spec);
+    client.configure_cursor();
 
-    mir_buffer_stream_swap_buffers_sync(
-        mir_window_get_buffer_stream(window));
+    EXPECT_TRUE(cursor_image_set.wait_for(timeout));
 
-    auto ret = mt::spin_wait_for_condition_or_timeout(
-        [window]
-        {
-            return mir_window_get_visibility(window) == mir_window_visibility_exposed &&
-                mir_window_get_focus_state(window) == mir_window_focus_state_focused;
-        },
-        std::chrono::seconds{5});
+    expectations_satisfied.wait_for(60s);
 
-    if (!ret)
-        throw std::runtime_error("Timeout waiting for window to become focused and exposed");
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    auto surface =
-        mir_connection_create_render_surface_sync(connection, 24, 24);
-    auto stream =
-        mir_render_surface_get_buffer_stream(surface, 24, 24, mir_pixel_format_argb_8888);
-    auto conf =
-        mir_cursor_configuration_from_render_surface(surface, hotspot_x, hotspot_y);
-#pragma GCC diagnostic pop
-
-    mir_buffer_stream_swap_buffers_sync(stream);
-
-    mir_window_configure_cursor(window, conf);
-
-    mir_cursor_configuration_destroy(conf);
-
-    mir_buffer_stream_swap_buffers_sync(stream);
-    mir_buffer_stream_swap_buffers_sync(stream);
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_render_surface_release(surface);
-#pragma GCC diagnostic pop
-
-    mir_window_release_sync(window);
-    mir_connection_release(connection);
-
-    EXPECT_TRUE(wait.wait_for(timeout));
-
-    expectations_satisfied.wait_for(std::chrono::seconds{5});
     expect_client_shutdown();
 }
 
@@ -652,29 +730,23 @@ struct FullscreenDisabledCursorClient : CursorClient
 {
     using CursorClient::CursorClient;
 
-    void setup_cursor(MirWindow* window) override
+    void configure_cursor() override
     {
         // Workaround race condition (lp:1525003). I've tried, but I've not
         // found a better way to ensure that the host Mir server is "ready"
         // for the test logic. - alan_g
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        std::this_thread::sleep_for(20ms);
 
         mir_window_set_state(window, mir_window_state_fullscreen);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        auto conf = mir_cursor_configuration_from_name(mir_disabled_cursor_name);
-#pragma GCC diagnostic pop
-        mir_window_configure_cursor(window, conf);
-        mir_cursor_configuration_destroy(conf);
+        CursorConfiguration conf{mir_disabled_cursor_name};
+        conf.apply(window);
     }
 };
 
 }
 
-TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
+TEST_F(ClientCursor, passes_through_nested_server)
 {
-    using namespace ::testing;
-
     mtf::HeadlessNestedServerRunner nested_mir(new_connection());
     nested_mir.start_server();
 
@@ -690,13 +762,13 @@ TEST_F(TestClientCursorAPI, cursor_passed_through_nested_server)
             .Times(1)
             .WillOnce(mt::WakeUp(&wait));
 
-        client.run();
+        client.configure_cursor();
 
         EXPECT_TRUE(wait.wait_for(timeout));
 
-        expectations_satisfied.wait_for(std::chrono::seconds{60});
+        expectations_satisfied.wait_for(60s);
         expect_client_shutdown();
     }
-    
+
     nested_mir.stop_server();
 }
