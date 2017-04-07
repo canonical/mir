@@ -39,6 +39,8 @@ using namespace std::literals::chrono_literals;
 
 namespace
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct MockWindowManager : msh::CanonicalWindowManager
 {
     using msh::CanonicalWindowManager::CanonicalWindowManager;
@@ -57,6 +59,7 @@ struct MockWindowManager : msh::CanonicalWindowManager
         return msh::CanonicalWindowManager::set_surface_attribute(session, surface, attrib, value);
     }
 };
+#pragma GCC diagnostic pop
 
 void signal_state_change(MirWindow*, MirEvent const* event, void* context)
 {

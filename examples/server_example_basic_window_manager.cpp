@@ -144,6 +144,14 @@ void me::BasicWindowManager::handle_request_drag_and_drop(
     // Not supported in example servers
 }
 
+void me::BasicWindowManager::handle_request_move(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& /*surface*/,
+    uint64_t /*timestamp*/)
+{
+    // Not supported in example servers
+}
+
 int me::BasicWindowManager::set_surface_attribute(
     std::shared_ptr<scene::Session> const& /*session*/,
     std::shared_ptr<scene::Surface> const& surface,

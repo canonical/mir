@@ -112,7 +112,8 @@ struct ConfigChanger : Test
     ms::BroadcastingSessionEventSink session_event_sink;
 
     mi::ConfigChanger changer{mt::fake_shared(mock_input_manager), mt::fake_shared(hub),
-                              mt::fake_shared(stub_session_container), mt::fake_shared(session_event_sink)};
+                              mt::fake_shared(stub_session_container), mt::fake_shared(session_event_sink),
+                              mt::fake_shared(hub)};
 
     auto get_full_device_conf(MirInputDeviceId id,
                               mi::DeviceCapabilities caps,

@@ -99,18 +99,8 @@ int mf::ShellWrapper::get_surface_attribute(
     return wrapped->get_surface_attribute(session, surface_id, attrib);
 }
 
-void mf::ShellWrapper::raise_surface(
-    std::shared_ptr<Session> const& session,
-    SurfaceId surface_id,
-    uint64_t timestamp)
+void mf::ShellWrapper::request_operation(
+    std::shared_ptr<Session> const& session, SurfaceId surface_id, uint64_t timestamp, UserRequest request)
 {
-    wrapped->raise_surface(session, surface_id, timestamp);
-}
-
-void mf::ShellWrapper::request_drag_and_drop(
-    std::shared_ptr<Session> const& session,
-    SurfaceId surface_id,
-    uint64_t timestamp)
-{
-    wrapped->request_drag_and_drop(session, surface_id, timestamp);
+    wrapped->request_operation(session, surface_id, timestamp, request);
 }
