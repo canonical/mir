@@ -130,6 +130,8 @@ protected:
         shell::FocusController* focus_controller,
         std::unique_ptr<WindowManagementPolicy> policy);
 
+    ~BasicWindowManager();
+
 public:
     using typename WindowManagerTools::SurfaceInfoMap;
     using typename WindowManagerTools::SessionInfoMap;
@@ -171,6 +173,11 @@ public:
         uint64_t timestamp) override;
 
     void handle_request_drag_and_drop(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t timestamp) override;
+
+    void handle_request_move(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<scene::Surface> const& surface,
         uint64_t timestamp) override;
@@ -217,12 +224,16 @@ private:
     geometry::Rectangles displays;
     geometry::Point cursor;
     uint64_t last_input_event_timestamp{0};
+    MirEvent const* last_input_event{nullptr};
 
     void update_event_timestamp(MirKeyboardEvent const* kev);
     void update_event_timestamp(MirPointerEvent const* pev);
     void update_event_timestamp(MirTouchEvent const* tev);
-};
+    void update_event_timestamp(MirInputEvent const* iev);
+} __attribute__((deprecated("Use libmiral instead")));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /// A policy based window manager. This exists to initialize BasicWindowManager and
 /// the WMPolicy (in an awkward manner).
 /// TODO revisit this initialization sequence.
@@ -249,7 +260,8 @@ private:
         return std::unique_ptr<WMPolicy>(
             new WMPolicy(this, std::forward<PolicyArgs>(policy_args)...));
     }
-};
+} __attribute__((deprecated("Use libmiral instead")));
+#pragma GCC diagnostic pop
 }
 }
 

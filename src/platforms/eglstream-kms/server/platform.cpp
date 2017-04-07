@@ -110,6 +110,14 @@ mg::NativeDisplayPlatform* mge::DisplayPlatform::native_display_platform()
     return nullptr;
 }
 
+std::vector<mir::ExtensionDescription> mge::DisplayPlatform::extensions() const
+{
+    return
+    {
+        { "mir_extension_graphics_module", { 1 } }
+    };
+}
+
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_buffer_allocator()
 {
     return mir::make_module_ptr<mge::BufferAllocator>();
@@ -200,4 +208,9 @@ mir::UniqueModulePtr<mg::Display> mge::Platform::create_display(
 mg::NativeDisplayPlatform* mge::Platform::native_display_platform()
 {
     return display->native_display_platform();
+}
+
+std::vector<mir::ExtensionDescription> mge::Platform::extensions() const
+{
+    return display->extensions();
 }

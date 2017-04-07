@@ -71,6 +71,7 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationPolicy> const&,
         std::shared_ptr<graphics::GLConfig> const& /*gl_config*/) override;
     NativeDisplayPlatform* native_display_platform() override;
+    std::vector<mir::ExtensionDescription> extensions() const override;
 
 private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
@@ -85,7 +86,7 @@ class Platform : public graphics::Platform
 {
 public:
     Platform(
-        std::shared_ptr<HwcPlatform> const& display,
+        std::shared_ptr<DisplayPlatform> const& display,
         std::shared_ptr<GrallocPlatform> const& rendering);
 
     UniqueModulePtr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
@@ -95,9 +96,10 @@ public:
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativeRenderingPlatform* native_rendering_platform() override;
     NativeDisplayPlatform* native_display_platform() override;
+    std::vector<mir::ExtensionDescription> extensions() const override;
 
 private:
-    std::shared_ptr<HwcPlatform> const display;
+    std::shared_ptr<DisplayPlatform> const display;
     std::shared_ptr<GrallocPlatform> const rendering;
 };
 

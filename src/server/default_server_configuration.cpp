@@ -41,6 +41,8 @@
 #include "mir/default_configuration.h"
 #include "mir/scene/null_prompt_session_listener.h"
 #include "default_emergency_cleanup.h"
+#include "mir/graphics/platform.h"
+#include "mir/scene/coordinate_translator.h"
 
 #include <type_traits>
 
@@ -227,4 +229,13 @@ auto mir::DefaultServerConfiguration::the_logger()
         {
             return std::make_shared<ml::DumbConsoleLogger>();
         });
+}
+
+std::vector<mir::ExtensionDescription> mir::DefaultServerConfiguration::the_extensions()
+{
+    auto extensions = the_graphics_platform()->extensions();
+    extensions.push_back(mir::ExtensionDescription{"mir_drag_and_drop", { 1 } });
+    if (the_coordinate_translator()->translation_supported())
+        extensions.push_back(mir::ExtensionDescription{"mir_extension_window_coordinate_translation", {1}});
+    return extensions;
 }

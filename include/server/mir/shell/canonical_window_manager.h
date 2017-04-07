@@ -19,7 +19,7 @@
 #ifndef MIR_SHELL_CANONICAL_WINDOW_MANAGER_H_
 #define MIR_SHELL_CANONICAL_WINDOW_MANAGER_H_
 
-#include "basic_window_manager.h"
+#include "mir/shell/basic_window_manager.h"
 
 #include "mir/geometry/displacement.h"
 
@@ -122,7 +122,11 @@ private:
     std::weak_ptr<scene::Surface> active_surface_;
 };
 
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 using CanonicalWindowManager = WindowManagerConstructor<CanonicalWindowManagerPolicy>;
+#pragma GCC diagnostic pop
 }
 }
 
