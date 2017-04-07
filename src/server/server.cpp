@@ -91,6 +91,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(gl_config)\
     MACRO(host_lifecycle_event_listener)\
     MACRO(input_dispatcher)\
+    MACRO(input_targeter)\
     MACRO(logger)\
     MACRO(prompt_session_listener)\
     MACRO(prompt_session_manager)\

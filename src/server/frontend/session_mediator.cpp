@@ -86,13 +86,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-//TODO: accept other pixel format types
-void throw_if_unsuitable_for_cursor(mf::BufferStream& stream)
-{
-    if (stream.pixel_format() != mir_pixel_format_argb_8888)
-        BOOST_THROW_EXCEPTION(std::logic_error("Only argb8888 buffer streams may currently be attached to the cursor"));
-}
-
 mg::GammaCurve convert_string_to_gamma_curve(std::string const& str_bytes)
 {
     mg::GammaCurve out(str_bytes.size() / (sizeof(mg::GammaCurve::value_type) / sizeof(char)));
@@ -116,7 +109,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
-    std::shared_ptr<mf::InputConfigurationChanger> const& input_changer) :
+    std::shared_ptr<mf::InputConfigurationChanger> const& input_changer,
+    std::vector<mir::ExtensionDescription> const& extensions) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -133,7 +127,8 @@ mf::SessionMediator::SessionMediator(
     translator{translator},
     anr_detector{anr_detector},
     cookie_authority(cookie_authority),
-    input_changer(input_changer)
+    input_changer(input_changer),
+    extensions(extensions)
 {
 }
 
@@ -194,7 +189,15 @@ void mf::SessionMediator::connect(
 
     resource_cache->save_resource(response, ipc_package);
 
-    response->set_coordinate_translation_present(translator->translation_supported());
+    for ( auto const& ext : extensions )
+    {
+        if (ext.version.empty()) //malformed plugin, ignore
+            continue;
+        auto e = response->add_extension();
+        e->set_name(ext.name);
+        for(auto const& v : ext.version)
+            e->add_version(v);
+    }
 
     done->Run();
 }
@@ -658,7 +661,9 @@ void mf::SessionMediator::modify_surface(
         surface_specification.has_hotspot_y())
     {
         mf::BufferStreamId id{surface_specification.cursor_id().value()};
-        throw_if_unsuitable_for_cursor(*session->get_buffer_stream(id));
+        auto stream = session->get_buffer_stream(id);
+        if (!stream->suitable_for_cursor())
+            BOOST_THROW_EXCEPTION(std::logic_error("Cursor buffer streams must have mir_pixel_format_argb_8888 format"));
         mods.stream_cursor = msh::StreamCursor{
             id, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} };
     }
@@ -1180,11 +1185,24 @@ void mir::frontend::SessionMediator::request_operation(
     switch (request->operation())
     {
     case mir::protobuf::RequestOperation::START_DRAG_AND_DROP:
-        shell->request_drag_and_drop(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::drag_and_drop);
         break;
 
     case mir::protobuf::RequestOperation::MAKE_ACTIVE:
-        shell->raise_surface(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::activate);
+        break;
+
+    case mir::protobuf::RequestOperation::USER_MOVE:
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::move);
         break;
 
     default:

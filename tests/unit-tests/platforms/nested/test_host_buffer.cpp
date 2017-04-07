@@ -93,6 +93,20 @@ public:
     }
 };
 
+struct ServerTool : mt::StubServerTool
+{
+    virtual void connect(
+        mir::protobuf::ConnectParameters const* request,
+        mir::protobuf::Connection* connect_msg,
+        google::protobuf::Closure* done) override
+    {
+        auto ext = connect_msg->add_extension();
+        ext->add_version(1);
+        ext->set_name("mir_extension_fenced_buffers");
+        mt::StubServerTool::connect(request, connect_msg, done);
+    }
+};
+
 struct HostBuffer : Test
 {
     HostBuffer()
@@ -105,7 +119,7 @@ struct HostBuffer : Test
     }
 
     std::string const socket { "./test_sock" };
-    std::shared_ptr<mt::StubServerTool> const server_tool = std::make_shared<mt::StubServerTool>();
+    std::shared_ptr<mt::StubServerTool> const server_tool = std::make_shared<ServerTool>();
     std::shared_ptr<mt::TestProtobufServer> test_server;
     std::shared_ptr<TestConnectionConfiguration> config;
 };

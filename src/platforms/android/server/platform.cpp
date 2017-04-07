@@ -95,7 +95,7 @@ mga::OverlayOptimization should_use_overlay_optimization(mo::Option const& optio
 }
 
 mga::Platform::Platform(
-    std::shared_ptr<HwcPlatform> const& display,
+    std::shared_ptr<DisplayPlatform> const& display,
     std::shared_ptr<GrallocPlatform> const& rendering) :
     display(display),
     rendering(rendering)
@@ -127,6 +127,11 @@ mg::NativeRenderingPlatform* mga::Platform::native_rendering_platform()
 mg::NativeDisplayPlatform* mga::Platform::native_display_platform()
 {
     return display->native_display_platform();
+}
+
+std::vector<mir::ExtensionDescription> mga::Platform::extensions() const
+{
+    return display->extensions();
 }
 
 mga::GrallocPlatform::GrallocPlatform(
@@ -245,6 +250,21 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
          std::make_shared<mga::GrallocPlatform>(allocator));
 }
 
+namespace
+{
+std::vector<mir::ExtensionDescription> extensions() 
+{
+    return
+    {
+        { "mir_extension_android_buffer", { 1, 2 } },
+        { "mir_extension_android_egl", { 1 } },
+        { "mir_extension_fenced_buffers", { 1 } },
+        { "mir_extension_graphics_module", { 1 } },
+        { "mir_extension_hardware_buffer_stream", { 1 } }
+    };
+}
+}
+
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::PlatformAuthentication> const&)
@@ -260,10 +280,26 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
         sync_factory = std::make_shared<mga::NullCommandStreamSyncFactory>();
 
     auto const buffer_allocator = std::make_shared<mga::GraphicBufferAllocator>(sync_factory, quirks);
-    //TODO: remove nullptr parameter once platform classes are sorted.
-    //      a guest platform cannot create a display anyways, so it doesnt need a display builder
+
+    struct GuestDisplayPlatform : mg::DisplayPlatform
+    {
+        mir::UniqueModulePtr<mg::Display> create_display(
+            std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
+            std::shared_ptr<mg::GLConfig> const&) override
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("cannot create mga::Display from nested server"));
+        }
+        mg::NativeDisplayPlatform* native_display_platform() override
+        {
+            return nullptr;
+        }
+        std::vector<mir::ExtensionDescription> extensions() const override
+        {
+            return ::extensions();
+        }
+    };
     return mir::make_module_ptr<mga::Platform>(
-        nullptr, std::make_shared<mga::GrallocPlatform>(buffer_allocator));
+        std::make_shared<GuestDisplayPlatform>(), std::make_shared<mga::GrallocPlatform>(buffer_allocator));
 }
 
 mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
@@ -350,4 +386,9 @@ mir::ModuleProperties const* describe_graphics_module()
 {
     mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
+}
+
+std::vector<mir::ExtensionDescription> mga::HwcPlatform::extensions() const
+{
+    return ::extensions();
 }

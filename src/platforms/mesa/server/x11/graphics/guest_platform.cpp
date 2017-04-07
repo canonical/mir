@@ -20,6 +20,7 @@
 #include "guest_platform.h"
 #include "ipc_operations.h"
 #include "buffer_allocator.h"
+#include "mesa_extensions.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -70,4 +71,9 @@ mg::NativeRenderingPlatform* mgx::GuestPlatform::native_rendering_platform()
 EGLNativeDisplayType mgx::GuestPlatform::egl_native_display() const
 {
     return gbm.device;
+}
+
+std::vector<mir::ExtensionDescription> mgx::GuestPlatform::extensions() const
+{
+    return mgm::mesa_extensions();
 }

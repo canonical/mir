@@ -77,6 +77,13 @@ void mtf::set_next_preset_display(std::shared_ptr<mir::graphics::Display> const&
     display_setter(display);
 }
 
+void mtf::disable_flavors()
+{
+    ensure_platform_library();
+    auto disable = platform_graphics_lib->load_function<void(*)()>("disable_flavors");
+    disable();
+}
+
 mir::UniqueModulePtr<mtf::FakeInputDevice> mtf::add_fake_input_device(mir::input::InputDeviceInfo const& info)
 {
     ensure_platform_library();

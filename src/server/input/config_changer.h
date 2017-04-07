@@ -47,7 +47,8 @@ public:
     ConfigChanger(std::shared_ptr<InputManager> const& input_manager,
                   std::shared_ptr<InputDeviceHub> const& devices,
                   std::shared_ptr<scene::SessionContainer> const& session_container,
-                  std::shared_ptr<scene::SessionEventHandlerRegister> const& session_event_handler_register);
+                  std::shared_ptr<scene::SessionEventHandlerRegister> const& session_event_handler_register,
+                  std::shared_ptr<InputDeviceHub> const& devices_wrapper);
     ~ConfigChanger();
     MirInputConfig base_configuration() override;
     void configure(std::shared_ptr<frontend::Session> const&, MirInputConfig &&) override;
@@ -66,6 +67,8 @@ private:
     std::shared_ptr<InputDeviceHub> const devices;
     std::shared_ptr<scene::SessionContainer> const session_container;
     std::shared_ptr<scene::SessionEventHandlerRegister> const session_event_handler_register;
+    // needs to be owned (but not used) in Mir, where better?
+    std::shared_ptr<InputDeviceHub> const devices_wrapper_DO_NOT_USE;
     std::shared_ptr<InputDeviceObserver> const device_observer;
     bool base_configuration_applied;
 

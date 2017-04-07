@@ -18,6 +18,7 @@
 
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/stub_platform_extension.h"
+#include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_toolkit/mir_extension_core.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -27,6 +28,15 @@ using namespace testing;
 
 struct ClientExtensions : mtf::ConnectedClientHeadlessServer
 {
+};
+
+struct ClientExtensionsDisabled : mtf::ConnectedClientHeadlessServer
+{
+    void SetUp() override
+    {
+        mtf::disable_flavors();
+        mtf::ConnectedClientHeadlessServer::SetUp();
+    }
 };
 
 TEST_F(ClientExtensions, can_load_an_extension)
@@ -60,4 +70,10 @@ TEST_F(ClientExtensions, gives_nullptr_on_errors)
         connection, "mir_extension_animal_names", made_up_version), Eq(nullptr));
     EXPECT_THAT(mir_connection_request_extension(
         connection, "pancake", 8), Eq(nullptr));
+}
+
+TEST_F(ClientExtensionsDisabled, queries_for_extensions)
+{
+    auto ext = mir_extension_favorite_flavor_v1(connection);
+    EXPECT_THAT(ext, Eq(nullptr));
 }

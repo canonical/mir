@@ -87,7 +87,27 @@ void mi::ExternalInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserv
 {
     auto observer = obs.lock();
     if (observer)
-        data->observers.remove(observer);
+    {
+        std::mutex mutex;
+        std::condition_variable cv;
+        std::unique_lock<decltype(mutex)> lock{mutex};
+        bool removed{false};
+
+        data->observer_queue->enqueue(
+            data.get(),
+            [&,this]
+            {
+                // Unless remove() is on the same thread as add() external synchronization would be needed
+                data->observers.remove(observer);
+
+                std::lock_guard<decltype(mutex)> lock{mutex};
+                removed = true;
+                cv.notify_one();
+            });
+
+        // Before returning wait for the remove - otherwise notifications can still happen
+        cv.wait(lock, [&] { return removed; });
+    }
 }
 
 void mi::ExternalInputDeviceHub::for_each_input_device(std::function<void(Device const& device)> const& callback)

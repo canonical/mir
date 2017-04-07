@@ -53,6 +53,8 @@ struct MockBufferStream : public compositor::BufferStream
             .WillByDefault(testing::Return(mir_pixel_format_abgr_8888));
         ON_CALL(*this, stream_size())
             .WillByDefault(testing::Return(geometry::Size{0,0}));
+        ON_CALL(*this, suitable_for_cursor())
+            .WillByDefault(testing::Return(true));
     }
     std::shared_ptr<StubBuffer> buffer { std::make_shared<StubBuffer>() };
     MOCK_METHOD1(acquire_client_buffer, void(std::function<void(graphics::Buffer* buffer)>));

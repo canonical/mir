@@ -29,6 +29,7 @@
 #include "mir/graphics/platform_authentication.h"
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/udev/wrapper.h"
+#include "mesa_extensions.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
@@ -127,4 +128,9 @@ EGLNativeDisplayType mgm::Platform::egl_native_display() const
 mgm::BypassOption mgm::Platform::bypass_option() const
 {
     return bypass_option_;
+}
+
+std::vector<mir::ExtensionDescription> mgm::Platform::extensions() const
+{
+    return mgm::mesa_extensions();
 }
