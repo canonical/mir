@@ -139,13 +139,15 @@ private:
 
     /*
      * Destruction order is important here:
-     *  - The GBMFrontBuffers depend on the GBM surface
+     *  - The GBMFrontBuffers depend on *either*:
+     *  i)  The GBMOutputSurface, or
+     *  ii) The EGLBufferCopier hidden inside get_front_buffer
      */
+    std::function<GBMOutputSurface::FrontBuffer(GBMOutputSurface::FrontBuffer&&)> get_front_buffer;
     GBMOutputSurface surface;
+
     GBMOutputSurface::FrontBuffer visible_composite_frame;
     GBMOutputSurface::FrontBuffer scheduled_composite_frame;
-
-    std::function<GBMOutputSurface::FrontBuffer(GBMOutputSurface::FrontBuffer&&)> get_front_buffer;
 
     geometry::Rectangle area;
     uint32_t fb_width, fb_height;
