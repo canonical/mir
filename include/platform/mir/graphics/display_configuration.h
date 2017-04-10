@@ -27,6 +27,8 @@
 #include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
 
+#include <glm/glm.hpp>
+
 #include <functional>
 #include <vector>
 #include <memory>
@@ -137,6 +139,12 @@ struct DisplayConfigurationOutput
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
     bool valid() const;
+
+    /**
+     * The transformation required to map this output's logical view area
+     * (returned by extents()) on to the output's current mode.
+     */
+    glm::mat2 transformation() const;
 };
 
 /**

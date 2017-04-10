@@ -489,29 +489,16 @@ mgm::DisplayBuffer::DisplayBuffer(
     std::vector<std::shared_ptr<KMSOutput>> const& outputs,
     GBMOutputSurface&& surface_gbm,
     geom::Rectangle const& area,
-    MirOrientation rot)
+    glm::mat2 const& transformation)
     : listener(listener),
       bypass_option(option),
       outputs(outputs),
       surface{std::move(surface_gbm)},
       area(area),
-      transform{mg::transformation(rot)},
+      transform{transformation},
       needs_set_crtc{false},
       page_flips_pending{false}
 {
-    uint32_t area_width = area.size.width.as_uint32_t();
-    uint32_t area_height = area.size.height.as_uint32_t();
-    if (rot == mir_orientation_left || rot == mir_orientation_right)
-    {
-        fb_width = area_height;
-        fb_height = area_width;
-    }
-    else
-    {
-        fb_width = area_width;
-        fb_height = area_height;
-    }
-
     listener->report_successful_setup_of_native_resources();
 
     make_current();
@@ -534,8 +521,8 @@ mgm::DisplayBuffer::DisplayBuffer(
             std::mem_fn(&EGLBufferCopier::copy_front_buffer_from),
             std::make_shared<EGLBufferCopier>(
                 outputs.front()->drm_fd(),
-                fb_width,
-                fb_height,
+                surface.size().width.as_int(),
+                surface.size().height.as_int(),
                 GBM_BO_FORMAT_XRGB8888),
             std::placeholders::_1);
     }
@@ -586,9 +573,9 @@ glm::mat2 mgm::DisplayBuffer::transformation() const
     return transform;
 }
 
-void mgm::DisplayBuffer::set_orientation(MirOrientation const rot, geometry::Rectangle const& a)
+void mgm::DisplayBuffer::set_transformation(glm::mat2 const& t, geometry::Rectangle const& a)
 {
-    transform = mg::transformation(rot);
+    transform = t;
     area = a;
 }
 
@@ -607,7 +594,7 @@ bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
             if (!native)
                 BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
             if (native->flags & mir_buffer_flag_can_scanout &&
-                bypass_buffer->size() == geom::Size{fb_width,fb_height} &&
+                bypass_buffer->size() == surface.size() &&
                 !needs_bounce_buffer(*outputs.front(), native->bo))
             {
                 if (auto bufobj = outputs.front()->fb_for(native->bo))

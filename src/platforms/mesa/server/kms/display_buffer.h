@@ -85,6 +85,7 @@ public:
 
     FrontBuffer lock_front();
     void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> const& to);
+    geometry::Size size() const { return {width, height}; }
 private:
     int const drm_fd;
     uint32_t width, height;
@@ -103,7 +104,7 @@ public:
                   std::vector<std::shared_ptr<KMSOutput>> const& outputs,
                   GBMOutputSurface&& surface_gbm,
                   geometry::Rectangle const& area,
-                  MirOrientation rot);
+                  glm::mat2 const& transformation);
     ~DisplayBuffer();
 
     geometry::Rectangle view_area() const override;
@@ -121,7 +122,7 @@ public:
     glm::mat2 transformation() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
-    void set_orientation(MirOrientation const rot, geometry::Rectangle const& a);
+    void set_transformation(glm::mat2 const& t, geometry::Rectangle const& a);
     void schedule_set_crtc();
     void wait_for_page_flip();
 
@@ -150,7 +151,6 @@ private:
     GBMOutputSurface::FrontBuffer scheduled_composite_frame;
 
     geometry::Rectangle area;
-    uint32_t fb_width, fb_height;
     glm::mat2 transform;
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};

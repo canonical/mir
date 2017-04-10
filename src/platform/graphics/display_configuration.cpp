@@ -18,6 +18,7 @@
 
 #include "mir/graphics/display_configuration.h"
 #include "mir/output_type_names.h"
+#include "mir/graphics/transformation.h"
 
 #include <ostream>
 #include <algorithm>
@@ -246,6 +247,12 @@ mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
     return custom_logical_size.is_set() ?
            mir::geometry::Rectangle(top_left, custom_logical_size.value()) :
            extents_of(modes, current_mode_index, orientation, top_left);
+}
+
+glm::mat2 mg::DisplayConfigurationOutput::transformation() const
+{
+    // TODO: Scaling will go in here later
+    return mg::transformation(orientation);
 }
 
 bool mg::DisplayConfigurationOutput::valid() const

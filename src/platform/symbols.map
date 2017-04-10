@@ -159,3 +159,10 @@ MIRPLATFORM_0.27 {
   };
  local: *;
 };
+
+MIRPLATFORM_0.28 {
+ global:
+  extern "C++" {
+    mir::graphics::DisplayConfigurationOutput::transformation*;
+  };
+} MIRPLATFORM_0.27;
