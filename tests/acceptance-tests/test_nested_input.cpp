@@ -22,6 +22,10 @@
 #include "mir/input/event_filter.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/input/mir_input_config.h"
+#include "mir/shell/shell_wrapper.h"
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
+#include "mir/graphics/event_handler_register.h"
 
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
@@ -30,6 +34,7 @@
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/doubles/nested_mock_egl.h"
 #include "mir/test/doubles/mock_input_device_observer.h"
+#include "mir/test/doubles/fake_display.h"
 #include "mir/test/event_factory.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
@@ -48,6 +53,7 @@ namespace mi = mir::input;
 namespace mis = mi::synthesis;
 
 namespace mt = mir::test;
+namespace mg = mir::graphics;
 namespace mtd = mt::doubles;
 namespace mtf = mir_test_framework;
 
@@ -56,6 +62,71 @@ using namespace std::chrono_literals;
 
 namespace
 {
+
+struct SurfaceTrackingShell : mir::shell::ShellWrapper
+{
+    SurfaceTrackingShell(
+        std::shared_ptr<mir::shell::Shell> wrapped_shell)
+        : ShellWrapper{wrapped_shell}, wrapped_shell{wrapped_shell}
+    {}
+
+    mir::frontend::SurfaceId create_surface(
+        std::shared_ptr<mir::scene::Session> const& session,
+        mir::scene::SurfaceCreationParameters const& params,
+        std::shared_ptr<mir::frontend::EventSink> const& sink) override
+    {
+        auto surface_id = wrapped_shell->create_surface(session, params, sink);
+
+        tracked_surfaces[session->name()] =  TrackedSurface{session, surface_id};
+
+        return surface_id;
+    }
+
+    std::shared_ptr<mir::scene::Surface> get_surface(std::string const& session_name)
+    {
+        if (end(tracked_surfaces) == tracked_surfaces.find(session_name))
+            return nullptr;
+        TrackedSurface & tracked_surface = tracked_surfaces[session_name];
+        auto session = tracked_surface.session.lock();
+        if (!session)
+            return nullptr;
+        return session->surface(tracked_surface.surface);
+    }
+
+    struct TrackedSurface
+    {
+        std::weak_ptr<mir::scene::Session> session;
+        mir::frontend::SurfaceId surface;
+    };
+    std::unordered_map<std::string, TrackedSurface> tracked_surfaces;
+    std::shared_ptr<mir::shell::Shell> wrapped_shell;
+};
+
+struct Display : mtd::FakeDisplay
+{
+    using mtd::FakeDisplay::FakeDisplay;
+
+    void register_pause_resume_handlers(
+                     mg::EventHandlerRegister&,
+                     mg::DisplayPauseHandler const& pause_handler,
+                     mg::DisplayResumeHandler const& resume_handler) override
+    {
+        pause_function = pause_handler;
+        resume_function = resume_handler;
+    }
+
+    void trigger_pause()
+    {
+        pause_function();
+    }
+    void trigger_resume()
+    {
+        resume_function();
+    }
+    std::function<bool()> pause_function{[](){return false;}};
+    std::function<bool()> resume_function{[](){return false;}};
+};
+
 size_t get_index_of(MirInputConfig const* config, std::string const& id)
 {
     for (size_t i = 0, e = mir_input_config_device_count(config);i != e;++i)
@@ -75,11 +146,11 @@ bool contains(MirInputConfig const* config, std::string const& id)
 struct MockEventFilter : public mi::EventFilter
 {
     // Work around GMock wanting to know how to construct MirEvent
-    MOCK_METHOD1(handle, bool(MirEvent const*));
+    MOCK_METHOD1(handle, void(MirEvent const*));
     bool handle(MirEvent const& ev)
     {
         handle(&ev);
-        return true;
+        return false;
     }
 };
 
@@ -94,7 +165,15 @@ struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
                                     std::shared_ptr<MockEventFilter> const& event_filter)
         : mtf::HeadlessNestedServerRunner(connection_string), mock_event_filter{event_filter}
     {
-        server.the_composite_event_filter()->append(mock_event_filter);
+        server.the_composite_event_filter()->prepend(mock_event_filter);
+        server.wrap_shell(
+            [this](std::shared_ptr<mir::shell::Shell> const& wrapped)
+            {
+                surfaces = std::make_shared<SurfaceTrackingShell>(wrapped);
+                return surfaces;
+            });
+
+
         start_server();
     }
     NestedServerWithMockEventFilter(std::string const& connection_string)
@@ -107,18 +186,27 @@ struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
         stop_server();
     }
 
+    std::shared_ptr<mir::scene::Surface> get_surface(std::string const& name)
+    {
+        return surfaces->get_surface(name);
+    }
+    std::shared_ptr<SurfaceTrackingShell> surfaces;
     std::shared_ptr<MockEventFilter> const mock_event_filter;
 };
 
 struct NestedInput : public mtf::HeadlessInProcessServer
 {
+    Display display{display_geometry};
+    NestedInput()
+    {
+        preset_display(mt::fake_shared(display));
+    }
 
     void SetUp()
     {
-        initial_display_layout(display_geometry);
         mtf::HeadlessInProcessServer::SetUp();
     }
-    
+
     mtd::NestedMockEGL mock_egl;
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
@@ -144,10 +232,10 @@ struct ExposedSurface
 {
 public:
     using UniqueInputConfig = std::unique_ptr<MirInputConfig , void(*)(MirInputConfig const*)>;
-    ExposedSurface(std::string const& connect_string)
+    ExposedSurface(std::string const& connect_string, std::string const& session_name = "ExposedSurface")
     {
         // Ensure the nested server posts a frame
-        connection = mir_connect_sync(connect_string.c_str(), __PRETTY_FUNCTION__);
+        connection = mir_connect_sync(connect_string.c_str(), session_name.c_str());
 
         mir_connection_set_input_config_change_callback(
             connection,
@@ -164,6 +252,8 @@ public:
     }
 
     MOCK_METHOD1(handle_input, void(MirEvent const*));
+    MOCK_METHOD1(handle_device_state, void(MirEvent const*));
+    MOCK_METHOD0(handle_keymap, void());
 
     void handle_window_event(MirWindowEvent const* event)
     {
@@ -178,7 +268,12 @@ public:
             mir_window_focus_state_focused == value)
             focused = true;
 
-        if (exposed && focused)
+        test_and_raise();
+    }
+
+    void test_and_raise()
+    {
+        if (exposed && focused && input_device_state_received)
             ready_to_accept_events.raise();
     }
 
@@ -208,8 +303,17 @@ public:
             client->handle_window_event(window_event);
 
         }
+        if (type == mir_event_type_keymap)
+            client->handle_keymap();
         if (type == mir_event_type_input)
             client->handle_input(ev);
+        if (type == mir_event_type_input_device_state)
+        {
+            client->input_device_state_received = true;
+            client->test_and_raise();
+            client->handle_device_state(ev);
+        }
+
     }
 
     static void null_event_handler(MirWindow*, MirEvent const*, void*) {};
@@ -230,6 +334,7 @@ private:
     MirWindow *window;
     bool exposed{false};
     bool focused{false};
+    bool input_device_state_received = false;
     std::function<void(MirInputConfig const* confg)> input_config{[](MirInputConfig const*){}};
 };
 
@@ -244,15 +349,14 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
 
     InSequence seq;
     EXPECT_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent()))
-        .WillOnce(DoAll(mt::WakeUp(&devices_ready), Return(true)));
+        .WillOnce(mt::WakeUp(&devices_ready));
     EXPECT_CALL(nested_event_filter, handle(mt::KeyOfScanCode(KEY_A))).
         Times(AtLeast(1)).
-        WillRepeatedly(DoAll(InvokeWithoutArgs(increase_key_a_events), Return(true)));
+        WillRepeatedly(InvokeWithoutArgs(increase_key_a_events));
 
     EXPECT_CALL(nested_event_filter, handle(mt::KeyOfScanCode(KEY_RIGHTSHIFT))).
         Times(2).
-        WillOnce(Return(true)).
-        WillOnce(DoAll(mt::WakeUp(&all_events_received), Return(true)));
+        WillOnce(mt::WakeUp(&all_events_received));
 
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     ExposedSurface client(nested_mir.new_connection());
@@ -301,13 +405,12 @@ TEST_F(NestedInput, on_add_device_observer_gets_device_added_calls_on_existing_d
     NestedServerWithMockEventFilter nested_mir{new_connection()};
     auto nested_hub = nested_mir.server.the_input_device_hub();
 
-    EXPECT_CALL(*mock_observer, device_added(_)).Times(1);
-    EXPECT_CALL(*mock_observer, changes_complete())
-        .Times(1)
+    EXPECT_CALL(*mock_observer, device_added(_))
         .WillOnce(mt::WakeUp(&input_device_changes_complete));
 
     nested_hub->add_observer(mock_observer);
     input_device_changes_complete.wait_for(10s);
+    nested_hub->remove_observer(mock_observer);
 }
 
 TEST_F(NestedInput, device_added_on_host_triggeres_nested_device_observer)
@@ -315,15 +418,18 @@ TEST_F(NestedInput, device_added_on_host_triggeres_nested_device_observer)
     NestedServerWithMockEventFilter nested_mir{new_connection()};
     auto nested_hub = nested_mir.server.the_input_device_hub();
 
-    EXPECT_CALL(*mock_observer, changes_complete()).Times(1)
+    // wait until we see the keyboard from the fixture:
+    EXPECT_CALL(*mock_observer, device_added(_)).Times(1)
         .WillOnce(mt::WakeUp(&input_device_changes_complete));
     nested_hub->add_observer(mock_observer);
 
     input_device_changes_complete.wait_for(10s);
     EXPECT_THAT(input_device_changes_complete.raised(), Eq(true));
     input_device_changes_complete.reset();
+    ::testing::Mock::VerifyAndClearExpectations(&mock_observer);
 
-    EXPECT_CALL(*mock_observer, changes_complete())
+    // wait for the fake mouse
+    EXPECT_CALL(*mock_observer, device_added(_)).Times(1)
         .WillOnce(mt::WakeUp(&input_device_changes_complete));
 
     auto mouse = mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer});
@@ -347,7 +453,7 @@ TEST_F(NestedInput, on_input_device_state_nested_server_emits_input_device_state
         .WillOnce(mt::WakeUp(&client_to_host_event_received));
     EXPECT_CALL(nested_event_filter,
                 handle(mt::DeviceStateWithPressedKeys(std::vector<uint32_t>({KEY_LEFTALT, KEY_TAB}))))
-        .WillOnce(DoAll(mt::WakeUp(&client_to_nested_event_received), Return(true)));
+        .WillOnce(mt::WakeUp(&client_to_nested_event_received));
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_LEFTALT));
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_TAB));
@@ -366,12 +472,12 @@ TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_in_nested_server_are_accu
     mt::Signal devices_ready;
     mt::Signal event_received;
     EXPECT_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent()))
-        .WillOnce(DoAll(mt::WakeUp(&devices_ready), Return(true)));
+        .WillOnce(mt::WakeUp(&devices_ready));
 
     EXPECT_CALL(nested_event_filter,
                 handle(AllOf(mt::PointerEventWithPosition(initial_movement_x, initial_movement_y),
                              mt::PointerEventWithDiff(initial_movement_x, initial_movement_y))))
-        .WillOnce(DoAll(mt::WakeUp(&event_received), Return(true)));
+        .WillOnce(mt::WakeUp(&event_received));
 
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     ExposedSurface client_to_nested_mir(nested_mir.new_connection());
@@ -387,7 +493,7 @@ TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_in_nested_server_are_accu
     EXPECT_CALL(nested_event_filter,
                 handle(AllOf(mt::PointerEventWithPosition(initial_movement_x + second_movement_x, initial_movement_y + second_movement_y),
                              mt::PointerEventWithDiff(second_movement_x, second_movement_y))))
-        .WillOnce(DoAll(mt::WakeUp(&event_received), Return(true)));
+        .WillOnce(mt::WakeUp(&event_received));
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(second_movement_x, second_movement_y));
     ASSERT_TRUE(event_received.wait_for(60s));
@@ -409,11 +515,11 @@ TEST_F(NestedInputWithMouse, mouse_pointer_position_is_in_sync_with_host_server)
 
     EXPECT_CALL(nested_event_filter, handle(
             mt::DeviceStateWithPosition(initial_x, initial_y)))
-        .WillOnce(DoAll(mt::WakeUp(&devices_ready), Return(true)));
+        .WillOnce(mt::WakeUp(&devices_ready));
     EXPECT_CALL(nested_event_filter,
                 handle(AllOf(mt::PointerEventWithPosition(final_x, final_y),
                              mt::PointerEventWithDiff(x[2], y[2]))))
-        .WillOnce(DoAll(mt::WakeUp(&event_received), Return(true)));
+        .WillOnce(mt::WakeUp(&event_received));
 
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     ExposedSurface client_to_nested_mir(nested_mir.new_connection());
@@ -463,3 +569,44 @@ TEST_F(NestedInput, nested_clients_can_change_host_device_configurations)
     EXPECT_THAT(mir_pointer_config_get_acceleration_bias(ptr_conf), acceleration_bias);
 }
 
+TEST_F(NestedInput, pressed_keys_on_vt_switch_are_forgotten)
+{
+    mt::Signal keymap_received;
+    mt::Signal devices_ready;
+    mt::Signal initial_keys_received;
+    mt::Signal keys_without_modifier_received;
+    NiceMock<MockEventFilter> nested_event_filter;
+    ON_CALL(nested_event_filter, handle(
+            mt::InputDeviceStateEvent()))
+        .WillByDefault(mt::WakeUp(&devices_ready));
+
+    NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
+    ExposedSurface client_to_nested(nested_mir.new_connection(), "with_keymap");
+
+    ASSERT_TRUE(devices_ready.wait_for(10s));
+    EXPECT_CALL(client_to_nested, handle_keymap())
+        .WillOnce(mt::WakeUp(&keymap_received));
+    EXPECT_CALL(client_to_nested, handle_input(mt::KeyOfScanCode(KEY_RIGHTALT)));
+    EXPECT_CALL(client_to_nested, handle_input(mt::KeyOfScanCode(KEY_RIGHTCTRL)))
+        .WillOnce(mt::WakeUp(&initial_keys_received));
+
+    nested_mir.get_surface("with_keymap")->set_keymap(MirInputDeviceId{0}, "pc105", "de", "", "");
+
+    ASSERT_TRUE(client_to_nested.ready_to_accept_events.wait_for(10s));
+    EXPECT_TRUE(keymap_received.wait_for(10s));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTALT));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTCTRL));
+
+    EXPECT_TRUE(initial_keys_received.wait_for(10s));
+
+    display.trigger_pause();
+    display.trigger_resume();
+
+    EXPECT_CALL(client_to_nested,
+                handle_input(AllOf(mt::KeyOfScanCode(KEY_A), mt::KeyWithModifiers(mir_input_event_modifier_none))))
+        .WillOnce(mt::WakeUp(&keys_without_modifier_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_A));
+    EXPECT_TRUE(keys_without_modifier_received.wait_for(10s));
+}

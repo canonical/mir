@@ -22,6 +22,7 @@
 #include "nested_authentication.h"
 #include "ipc_operations.h"
 #include "buffer_allocator.h"
+#include "mesa_extensions.h"
 
 #include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/platform_operation_message.h"
@@ -52,11 +53,42 @@ void set_guest_gbm_device(mg::PlatformAuthentication& platform_authentication, g
     else
         BOOST_THROW_EXCEPTION(std::runtime_error("Nested Mir failed to set the gbm device."));
 }
+
+struct AuthenticationWrapper : mg::NativeDisplayPlatform,
+                               mg::PlatformAuthentication
+{
+    AuthenticationWrapper(std::shared_ptr<PlatformAuthentication> const& auth) :
+        auth(auth)
+    {
+    }
+
+    mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> auth_extension() override
+    {
+        return auth->auth_extension();
+    }
+
+    mir::optional_value<std::shared_ptr<mg::SetGbmExtension>> set_gbm_extension() override
+    {
+        return auth->set_gbm_extension();
+    }
+
+    mg::PlatformOperationMessage platform_operation(
+        unsigned int op, mg::PlatformOperationMessage const& msg) override
+    {
+        return auth->platform_operation(op, msg);
+    }
+    mir::optional_value<mir::Fd> drm_fd() override
+    {
+        return auth->drm_fd();
+    }
+    std::shared_ptr<mg::PlatformAuthentication> const auth;
+};
 }
 
 mgm::GuestPlatform::GuestPlatform(
-    std::shared_ptr<PlatformAuthentication> const& platform_authentication)
-    : platform_authentication{platform_authentication}
+    std::shared_ptr<mg::PlatformAuthentication> const& platform_authentication) :
+    platform_authentication{platform_authentication},
+    auth(std::make_shared<AuthenticationWrapper>(platform_authentication))
 {
     auto ext = platform_authentication->auth_extension();
     if (!ext.is_set())
@@ -83,7 +115,12 @@ mir::UniqueModulePtr<mg::Display> mgm::GuestPlatform::create_display(
     BOOST_THROW_EXCEPTION(std::runtime_error("mgm::GuestPlatform cannot create display\n"));
 }
 
-mg::NativePlatform* mgm::GuestPlatform::native_platform()
+mg::NativeDisplayPlatform* mgm::GuestPlatform::native_display_platform()
+{
+    return auth.get();
+}
+
+mg::NativeRenderingPlatform* mgm::GuestPlatform::native_rendering_platform()
 {
     return this;
 }
@@ -91,4 +128,9 @@ mg::NativePlatform* mgm::GuestPlatform::native_platform()
 EGLNativeDisplayType mgm::GuestPlatform::egl_native_display() const
 {
     return gbm.device;
+}
+
+std::vector<mir::ExtensionDescription> mgm::GuestPlatform::extensions() const
+{
+    return mgm::mesa_extensions();
 }

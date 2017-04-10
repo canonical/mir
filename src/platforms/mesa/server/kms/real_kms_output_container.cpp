@@ -16,6 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
+#include <algorithm>
 #include "real_kms_output_container.h"
 #include "real_kms_output.h"
 #include "kms-utils/drm_mode_resources.h"
@@ -23,40 +24,60 @@
 namespace mgm = mir::graphics::mesa;
 
 mgm::RealKMSOutputContainer::RealKMSOutputContainer(
-    int drm_fd, std::shared_ptr<PageFlipper> const& page_flipper)
-    : drm_fd{drm_fd},
-      page_flipper{page_flipper}
+    std::vector<int> const& drm_fds,
+    std::function<std::shared_ptr<PageFlipper>(int)> const& construct_page_flipper)
+    : drm_fds{drm_fds},
+      construct_page_flipper{construct_page_flipper}
 {
 }
 
 void mgm::RealKMSOutputContainer::for_each_output(std::function<void(std::shared_ptr<KMSOutput> const&)> functor) const
 {
     for(auto& output: outputs)
-        functor(output.second);
+        functor(output);
 }
 
 void mgm::RealKMSOutputContainer::update_from_hardware_state()
 {
-    kms::DRMModeResources resources{drm_fd};
-
     decltype(outputs) new_outputs;
 
-    for (auto&& connector : resources.connectors())
+    for (auto drm_fd : drm_fds)
     {
-        if (outputs.count(connector->connector_id))
-        {
-            new_outputs[connector->connector_id] = std::move(outputs[connector->connector_id]);
-            new_outputs[connector->connector_id]->refresh_hardware_state();
-        }
-        else
-        {
-            auto const id = connector->connector_id;
-            new_outputs[id] = std::make_shared<RealKMSOutput>(
-                drm_fd,
-                std::move(connector),
-                page_flipper);
-        }
-    }
+        kms::DRMModeResources resources{drm_fd};
 
+
+        for (auto &&connector : resources.connectors())
+        {
+            // Caution: O(n²) here, but n is the number of outputs, so should
+            // conservatively be << 100.
+            auto existing_output = std::find_if(
+                outputs.begin(),
+                outputs.end(),
+                [&connector, drm_fd](auto const &candidate)
+                {
+                    return
+                        connector->connector_id == candidate->id() &&
+                        drm_fd == candidate->drm_fd();
+                });
+
+            if (existing_output != outputs.end())
+            {
+                // We could drop this down to O(n) by being smarter about moving out
+                // of the outputs vector.
+                //
+                // That's a bit of a faff, so just do the simple thing for now.
+                new_outputs.push_back(*existing_output);
+                new_outputs.back()->refresh_hardware_state();
+            }
+            else
+            {
+                new_outputs.push_back(std::make_shared<RealKMSOutput>(
+                    drm_fd,
+                    std::move(connector),
+                    construct_page_flipper(drm_fd)));
+            }
+        }
+
+    }
     outputs = new_outputs;
 }

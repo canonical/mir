@@ -65,6 +65,7 @@
 #include "protobuf_input_converter.h"
 
 #include "mir_toolkit/client_types.h"
+#include "mir_toolkit/cursors.h"
 
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -85,13 +86,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-//TODO: accept other pixel format types
-void throw_if_unsuitable_for_cursor(mf::BufferStream& stream)
-{
-    if (stream.pixel_format() != mir_pixel_format_argb_8888)
-        BOOST_THROW_EXCEPTION(std::logic_error("Only argb8888 buffer streams may currently be attached to the cursor"));
-}
-
 mg::GammaCurve convert_string_to_gamma_curve(std::string const& str_bytes)
 {
     mg::GammaCurve out(str_bytes.size() / (sizeof(mg::GammaCurve::value_type) / sizeof(char)));
@@ -115,7 +109,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
-    std::shared_ptr<mf::InputConfigurationChanger> const& input_changer) :
+    std::shared_ptr<mf::InputConfigurationChanger> const& input_changer,
+    std::vector<mir::ExtensionDescription> const& extensions) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -132,7 +127,8 @@ mf::SessionMediator::SessionMediator(
     translator{translator},
     anr_detector{anr_detector},
     cookie_authority(cookie_authority),
-    input_changer(input_changer)
+    input_changer(input_changer),
+    extensions(extensions)
 {
 }
 
@@ -193,7 +189,15 @@ void mf::SessionMediator::connect(
 
     resource_cache->save_resource(response, ipc_package);
 
-    response->set_coordinate_translation_present(translator->translation_supported());
+    for ( auto const& ext : extensions )
+    {
+        if (ext.version.empty()) //malformed plugin, ignore
+            continue;
+        auto e = response->add_extension();
+        e->set_name(ext.name);
+        for(auto const& v : ext.version)
+            e->add_version(v);
+    }
 
     done->Run();
 }
@@ -642,7 +646,14 @@ void mf::SessionMediator::modify_surface(
 
     if (surface_specification.has_cursor_name())
     {
-        mods.cursor_image = cursor_images->image(surface_specification.cursor_name(), mi::default_cursor_size);
+        if (surface_specification.cursor_name() == mir_disabled_cursor_name)
+        {
+            mods.cursor_image = nullptr;
+        }
+        else
+        {
+            mods.cursor_image = cursor_images->image(surface_specification.cursor_name(), mi::default_cursor_size);
+        }
     }
 
     if (surface_specification.has_cursor_id() &&
@@ -650,9 +661,11 @@ void mf::SessionMediator::modify_surface(
         surface_specification.has_hotspot_y())
     {
         mf::BufferStreamId id{surface_specification.cursor_id().value()};
-        throw_if_unsuitable_for_cursor(*session->get_buffer_stream(id));
+        auto stream = session->get_buffer_stream(id);
+        if (!stream->suitable_for_cursor())
+            BOOST_THROW_EXCEPTION(std::logic_error("Cursor buffer streams must have mir_pixel_format_argb_8888 format"));
         mods.stream_cursor = msh::StreamCursor{
-            id, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} }; 
+            id, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} };
     }
 
     if (surface_specification.input_shape_size() > 0)
@@ -1153,36 +1166,15 @@ void mf::SessionMediator::configure_buffer_stream(
     done->Run();
 }
 
-void mf::SessionMediator::raise_surface(
-    mir::protobuf::RaiseRequest const* request,
-    mir::protobuf::Void*,
-    google::protobuf::Closure* done)
-{
-    auto const session = weak_session.lock();
-    if (!session)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
-
-    auto const cookie     = request->cookie();
-    auto const surface_id = request->surface_id();
-
-    auto cookie_string = cookie.cookie();
-
-    std::vector<uint8_t> cookie_bytes(cookie_string.begin(), cookie_string.end());
-    auto const cookie_ptr = cookie_authority->make_cookie(cookie_bytes);
-
-    shell->raise_surface(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
-
-    done->Run();
-}
-
-void mir::frontend::SessionMediator::request_drag_and_drop(mir::protobuf::RequestAuthority const* request,
+void mir::frontend::SessionMediator::request_operation(
+    mir::protobuf::RequestWithAuthority const* request,
     mir::protobuf::Void*, google::protobuf::Closure* done)
 {
     auto const session = weak_session.lock();
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    auto const cookie     = request->cookie();
+    auto const cookie     = request->authority();
     auto const surface_id = request->surface_id();
 
     auto cookie_string = cookie.cookie();
@@ -1190,7 +1182,32 @@ void mir::frontend::SessionMediator::request_drag_and_drop(mir::protobuf::Reques
     std::vector<uint8_t> cookie_bytes(cookie_string.begin(), cookie_string.end());
     auto const cookie_ptr = cookie_authority->make_cookie(cookie_bytes);
 
-    shell->request_drag_and_drop(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+    switch (request->operation())
+    {
+    case mir::protobuf::RequestOperation::START_DRAG_AND_DROP:
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::drag_and_drop);
+        break;
+
+    case mir::protobuf::RequestOperation::MAKE_ACTIVE:
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::activate);
+        break;
+
+    case mir::protobuf::RequestOperation::USER_MOVE:
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::move);
+        break;
+
+    default:
+        break;
+    }
 
     done->Run();
 }

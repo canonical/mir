@@ -95,22 +95,52 @@ mga::OverlayOptimization should_use_overlay_optimization(mo::Option const& optio
 }
 
 mga::Platform::Platform(
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
-    std::shared_ptr<mga::DisplayComponentFactory> const& display_buffer_builder,
-    std::shared_ptr<mg::DisplayReport> const& display_report,
-    std::shared_ptr<mga::NativeWindowReport> const& native_window_report,
-    mga::OverlayOptimization overlay_option,
-    std::shared_ptr<mga::DeviceQuirks> const& quirks) :
-    buffer_allocator(buffer_allocator),
-    display_buffer_builder(display_buffer_builder),
-    display_report(display_report),
-    quirks(quirks),
-    native_window_report(native_window_report),
-    overlay_option(overlay_option)
+    std::shared_ptr<DisplayPlatform> const& display,
+    std::shared_ptr<GrallocPlatform> const& rendering) :
+    display(display),
+    rendering(rendering)
 {
 }
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_allocator()
+{
+    return rendering->create_buffer_allocator();
+}
+
+mir::UniqueModulePtr<mg::Display> mga::Platform::create_display(
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const& policy,
+    std::shared_ptr<mg::GLConfig> const& gl_config)
+{
+    return display->create_display(policy, gl_config);
+}
+
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operations() const
+{
+    return rendering->make_ipc_operations();
+}
+
+mg::NativeRenderingPlatform* mga::Platform::native_rendering_platform()
+{
+    return rendering->native_rendering_platform();
+}
+
+mg::NativeDisplayPlatform* mga::Platform::native_display_platform()
+{
+    return display->native_display_platform();
+}
+
+std::vector<mir::ExtensionDescription> mga::Platform::extensions() const
+{
+    return display->extensions();
+}
+
+mga::GrallocPlatform::GrallocPlatform(
+    std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator) :
+    buffer_allocator(buffer_allocator)
+{
+}
+
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::GrallocPlatform::create_buffer_allocator()
 {
     struct WrappingGraphicsBufferAllocator : mg::GraphicBufferAllocator
     {
@@ -148,28 +178,49 @@ mir::UniqueModulePtr<mg::GraphicBufferAllocator> mga::Platform::create_buffer_al
     return make_module_ptr<WrappingGraphicsBufferAllocator>(buffer_allocator);
 }
 
-mir::UniqueModulePtr<mg::Display> mga::Platform::create_display(
-        std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
-        std::shared_ptr<mg::GLConfig> const& gl_config)
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::GrallocPlatform::make_ipc_operations() const
+{
+    return mir::make_module_ptr<mga::IpcOperations>();
+}
+
+mg::NativeRenderingPlatform* mga::GrallocPlatform::native_rendering_platform()
+{
+    return this;
+}
+
+EGLNativeDisplayType mga::GrallocPlatform::egl_native_display() const
+{
+    return EGL_DEFAULT_DISPLAY;
+}
+
+mga::HwcPlatform::HwcPlatform(
+    std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
+    std::shared_ptr<mga::DisplayComponentFactory> const& display_buffer_builder,
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    std::shared_ptr<mga::NativeWindowReport> const& native_window_report,
+    mga::OverlayOptimization overlay_option,
+    std::shared_ptr<mga::DeviceQuirks> const& quirks) :
+    buffer_allocator(buffer_allocator),
+    display_buffer_builder(display_buffer_builder),
+    display_report(display_report),
+    quirks(quirks),
+    native_window_report(native_window_report),
+    overlay_option(overlay_option)
+{
+}
+
+mir::UniqueModulePtr<mg::Display> mga::HwcPlatform::create_display(
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
+    std::shared_ptr<mg::GLConfig> const& gl_config)
 {
     auto const program_factory = std::make_shared<mir::gl::DefaultProgramFactory>();
     return mir::make_module_ptr<mga::Display>(
             display_buffer_builder, program_factory, gl_config, display_report, native_window_report, overlay_option);
 }
 
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mga::Platform::make_ipc_operations() const
+mg::NativeDisplayPlatform* mga::HwcPlatform::native_display_platform()
 {
-    return mir::make_module_ptr<mga::IpcOperations>();
-}
-
-mg::NativePlatform* mga::Platform::native_platform()
-{
-    return this;
-}
-
-EGLNativeDisplayType mga::Platform::egl_native_display() const
-{
-    return EGL_DEFAULT_DISPLAY;
+    return nullptr;
 }
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
@@ -188,15 +239,34 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     auto component_factory = std::make_shared<mga::HalComponentFactory>(
         display_resource_factory, hwc_report, quirks);
 
-    return mir::make_module_ptr<mga::Platform>(
-        component_factory->the_buffer_allocator(),
+    auto allocator = component_factory->the_buffer_allocator();
+    auto display = std::make_shared<mga::HwcPlatform>(
+        allocator,
         component_factory, display_report,
         make_native_window_report(*options, logger),
         overlay_option, quirks);
+
+    return mir::make_module_ptr<mga::Platform>(display,
+         std::make_shared<mga::GrallocPlatform>(allocator));
+}
+
+namespace
+{
+std::vector<mir::ExtensionDescription> extensions() 
+{
+    return
+    {
+        { "mir_extension_android_buffer", { 1, 2 } },
+        { "mir_extension_android_egl", { 1 } },
+        { "mir_extension_fenced_buffers", { 1 } },
+        { "mir_extension_graphics_module", { 1 } },
+        { "mir_extension_hardware_buffer_stream", { 1 } }
+    };
+}
 }
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
-    std::shared_ptr<mg::DisplayReport> const& display_report,
+    std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mg::PlatformAuthentication> const&)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
@@ -209,13 +279,68 @@ mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     else
         sync_factory = std::make_shared<mga::NullCommandStreamSyncFactory>();
 
-    //TODO: remove nullptr parameter once platform classes are sorted.
-    //      mg::NativePlatform cannot create a display anyways, so it doesnt need a  display builder
     auto const buffer_allocator = std::make_shared<mga::GraphicBufferAllocator>(sync_factory, quirks);
+
+    struct GuestDisplayPlatform : mg::DisplayPlatform
+    {
+        mir::UniqueModulePtr<mg::Display> create_display(
+            std::shared_ptr<mg::DisplayConfigurationPolicy> const&,
+            std::shared_ptr<mg::GLConfig> const&) override
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("cannot create mga::Display from nested server"));
+        }
+        mg::NativeDisplayPlatform* native_display_platform() override
+        {
+            return nullptr;
+        }
+        std::vector<mir::ExtensionDescription> extensions() const override
+        {
+            return ::extensions();
+        }
+    };
     return mir::make_module_ptr<mga::Platform>(
-        buffer_allocator, nullptr, display_report,
-        std::make_shared<mga::NullNativeWindowReport>(),
-        mga::OverlayOptimization::disabled, quirks);
+        std::make_shared<GuestDisplayPlatform>(), std::make_shared<mga::GrallocPlatform>(buffer_allocator));
+}
+
+mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
+    std::shared_ptr<mir::graphics::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& logger)
+{
+    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
+    auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{}, *options);
+    auto hwc_report = make_hwc_report(*options);
+    auto overlay_option = should_use_overlay_optimization(*options);
+    hwc_report->report_overlay_optimization(overlay_option);
+    auto display_resource_factory = std::make_shared<mga::ResourceFactory>();
+
+    auto component_factory = std::make_shared<mga::HalComponentFactory>(
+        display_resource_factory, hwc_report, quirks);
+
+    return mir::make_module_ptr<mga::HwcPlatform>(
+        component_factory->the_buffer_allocator(),
+        component_factory, report,
+        make_native_window_report(*options, logger),
+        overlay_option, quirks);
+}
+
+mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
+    std::shared_ptr<mir::options::Option> const&,
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const&)
+{
+    mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
+
+    auto quirks = std::make_shared<mga::DeviceQuirks>(mga::PropertiesOps{});
+
+    std::shared_ptr<mga::CommandStreamSyncFactory> sync_factory;
+    if (quirks->working_egl_sync())
+        sync_factory = std::make_shared<mga::EGLSyncFactory>();
+    else
+        sync_factory = std::make_shared<mga::NullCommandStreamSyncFactory>();
+
+    auto const buffer_allocator = std::make_shared<mga::GraphicBufferAllocator>(sync_factory, quirks);
+    return mir::make_module_ptr<mga::GrallocPlatform>(buffer_allocator);
 }
 
 void add_graphics_platform_options(
@@ -261,4 +386,9 @@ mir::ModuleProperties const* describe_graphics_module()
 {
     mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
+}
+
+std::vector<mir::ExtensionDescription> mga::HwcPlatform::extensions() const
+{
+    return ::extensions();
 }

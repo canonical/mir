@@ -279,7 +279,8 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<NullCoordinateTranslator>(),
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
-            mt::fake_shared(mock_input_config_changer)}
+            mt::fake_shared(mock_input_config_changer),
+            {}}
     {
         using namespace ::testing;
 
@@ -309,7 +310,7 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<NullCoordinateTranslator>(),
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
-            mt::fake_shared(mock_input_config_changer));
+            mt::fake_shared(mock_input_config_changer), std::vector<mir::ExtensionDescription>{});
     }
 
     std::shared_ptr<mf::SessionMediator> create_session_mediator_with_screencast(
@@ -324,7 +325,7 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<NullCoordinateTranslator>(),
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
-            mt::fake_shared(mock_input_config_changer));
+            mt::fake_shared(mock_input_config_changer), std::vector<mir::ExtensionDescription>{});
     }
 
     MockConnector connector;
@@ -382,7 +383,7 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         std::make_shared<NullCoordinateTranslator>(),
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
-        mt::fake_shared(mock_input_config_changer)};
+        mt::fake_shared(mock_input_config_changer), {}};
 
     EXPECT_THAT(connects_handled_count, Eq(0));
 
@@ -860,7 +861,7 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         std::make_shared<NullCoordinateTranslator>(),
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
-        mt::fake_shared(mock_input_config_changer)};
+        mt::fake_shared(mock_input_config_changer), {}};
 
     ON_CALL(*shell, create_surface( _, _, _))
         .WillByDefault(
@@ -946,11 +947,13 @@ TEST_F(SessionMediator, sanitizes_base_display_configuration_before_setting)
 
 TEST_F(SessionMediator, raise_with_invalid_cookie_throws)
 {
-    mp::RaiseRequest raise_request;
+    mp::RequestWithAuthority raise_request;
+    raise_request.set_operation(mp::RequestOperation::MAKE_ACTIVE);
+
     mediator.connect(&connect_parameters, &connection, null_callback.get());
 
     EXPECT_THROW({
-        mediator.raise_surface(&raise_request, &void_response, null_callback.get());
+        mediator.request_operation(&raise_request, &void_response, null_callback.get());
     }, mir::cookie::SecurityCheckError);
 }
 
@@ -1133,6 +1136,20 @@ TEST_F(SessionMediator, arranges_named_cursors_via_shell)
 
     ASSERT_THAT(cursor_data.begin(), Ne(cursor_data.end()));
     spec->set_cursor_name(cursor_data.begin()->name);
+    mediator.modify_surface(&mods, &null, null_callback.get());
+}
+
+TEST_F(SessionMediator, disabled_cursor_returns_null_image)
+{
+    mp::Void null;
+    mp::SurfaceModifications mods;
+    auto spec = mods.mutable_surface_specification();
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
+    spec->set_cursor_name("none");
+
+    EXPECT_CALL(*shell, modify_surface(_,
+        mf::SurfaceId{surface_response.id().value()}, CursorImageIsSetNull()));
     mediator.modify_surface(&mods, &null, null_callback.get());
 }
 

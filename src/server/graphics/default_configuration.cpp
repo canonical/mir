@@ -154,7 +154,7 @@ mir::DefaultServerConfiguration::the_display()
             if (the_options()->is_set(options::offscreen_opt))
             {
                 if (auto egl_access = dynamic_cast<mir::renderer::gl::EGLPlatform*>(
-                    the_graphics_platform()->native_platform()))
+                    the_graphics_platform()->native_rendering_platform()))
                 {
                     return std::make_shared<mg::offscreen::Display>(
                         egl_access->egl_native_display(),
@@ -183,6 +183,8 @@ mir::DefaultServerConfiguration::the_cursor()
         {
             std::shared_ptr<mg::Cursor> primary_cursor;
 
+            auto cursor_choice = the_options()->get<std::string>(options::cursor_opt);
+
             if (the_options()->is_set(options::host_socket_opt))
             {
                 mir::log_info("Using nested cursor");
@@ -190,7 +192,8 @@ mir::DefaultServerConfiguration::the_cursor()
                     the_host_connection(),
                     the_default_cursor_image());
             }
-            else if ((primary_cursor = the_display()->create_hardware_cursor()))
+            else if (cursor_choice != "software" &&
+                     (primary_cursor = the_display()->create_hardware_cursor()))
             {
                 mir::log_info("Using hardware cursor");
             }

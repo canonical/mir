@@ -50,6 +50,7 @@ namespace mtf = mir_test_framework;
 namespace
 {
 
+bool flavor_enabled = true;
 struct WrappingDisplay : mg::Display
 {
     WrappingDisplay(std::shared_ptr<mg::Display> const& display) : display{display} {}
@@ -304,9 +305,30 @@ struct GuestPlatformAdapter : mg::Platform
         return adaptee->create_display(initial_conf_policy, gl_config);
     }
 
-    mg::NativePlatform* native_platform() override
+    mg::NativeRenderingPlatform* native_rendering_platform() override
     {
-        return adaptee->native_platform();
+        return adaptee->native_rendering_platform();
+    }
+
+    mg::NativeDisplayPlatform* native_display_platform() override
+    {
+        return adaptee->native_display_platform();
+    }
+
+    std::vector<mir::ExtensionDescription> extensions() const override
+    {
+        std::vector<mir::ExtensionDescription> ext
+        {
+            { "mir_extension_gbm_buffer", { 1, 2 } },
+            { "mir_extension_fenced_buffers", { 1 } },
+            { "mir_extension_hardware_buffer_stream", { 1 } },
+            { "mir_extension_graphics_module", { 1 } },
+            { "mir_extension_animal_names", {1} }
+        };
+        if (flavor_enabled)
+            ext.push_back({ std::string{"mir_extension_favorite_flavor"}, {1, 9} });
+
+        return ext;
     }
 
     std::shared_ptr<mg::PlatformAuthentication> const context;
@@ -382,4 +404,9 @@ extern "C" void set_next_display_rects(
 extern "C" void set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display)
 {
     display_preset = display;
+}
+
+extern "C" void disable_flavors()
+{
+    flavor_enabled = false;
 }

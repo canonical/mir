@@ -33,7 +33,11 @@
 
 namespace mir
 {
-namespace client { namespace rpc {class MirBasicRpcChannel;}}
+namespace client
+{
+class SurfaceMap;
+namespace rpc {class MirBasicRpcChannel;}
+}
 namespace dispatch
 {
 class ThreadedDispatcher;
@@ -49,6 +53,7 @@ struct TestProtobufClient
     TestProtobufClient(std::string socket_file, int timeout_ms);
 
     std::shared_ptr<doubles::MockRpcReport> rpc_report;
+    std::shared_ptr<mir::client::SurfaceMap> surface_map;
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     std::shared_ptr<dispatch::ThreadedDispatcher> eventloop;
     mir::client::rpc::DisplayServer display_server;

@@ -184,7 +184,16 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
     char** action_end = actionv + actionc;
     for (char** action = actionv; action < action_end; ++action)
     {
-        if (!strcmp(*action, "output"))
+        if (!strcmp(*action, "--"))
+        {
+            /*
+             * -- is the only dash option which will and must occur near the
+             * end of the command line. So we need to not misinterpret that
+             * as a command.
+             */
+            return true;
+        }
+        else if (!strcmp(*action, "output"))
         {
             int output_id;
             if (++action < action_end && 1 == sscanf(*action, "%d", &output_id))

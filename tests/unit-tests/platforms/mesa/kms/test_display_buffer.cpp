@@ -91,8 +91,10 @@ public:
             .WillByDefault(Return(true));
         ON_CALL(*mock_kms_output, max_refresh_rate())
             .WillByDefault(Return(mock_refresh_rate));
-        ON_CALL(*mock_kms_output, fb_for(_,_,_))
+        ON_CALL(*mock_kms_output, fb_for(_))
             .WillByDefault(Return(reinterpret_cast<FBHandle*>(0x12ad)));
+        ON_CALL(*mock_kms_output, buffer_requires_migration(_))
+            .WillByDefault(Return(false));
 
         ON_CALL(*mock_bypassable_buffer, size())
             .WillByDefault(Return(display_area.size));
@@ -264,7 +266,7 @@ TEST_F(MesaDisplayBufferTest, normal_orientation_with_bypassable_list_can_bypass
 
 TEST_F(MesaDisplayBufferTest, failed_bypass_falls_back_gracefully)
 {  // Regression test for LP: #1398296
-    EXPECT_CALL(*mock_kms_output, fb_for(_,_,_))
+    EXPECT_CALL(*mock_kms_output, fb_for(_))
         .WillOnce(Return(reinterpret_cast<FBHandle*>(0xaabb)))  // During the DisplayBuffer constructor
         .WillOnce(Return(nullptr)) // Fail first bypass attempt
         .WillOnce(Return(reinterpret_cast<FBHandle*>(0xbbcc))); // Succeed second bypass attempt
@@ -486,3 +488,18 @@ TEST_F(MesaDisplayBufferTest, skips_bypass_because_of_incompatible_bypass_buffer
     EXPECT_FALSE(db.overlay(list));
 }
 
+TEST_F(MesaDisplayBufferTest, buffer_requiring_migration_is_ineligable_for_bypass)
+{
+    ON_CALL(*mock_kms_output, buffer_requires_migration(Eq(stub_gbm_native_buffer->bo)))
+        .WillByDefault(Return(true));
+
+    graphics::mesa::DisplayBuffer db(
+        graphics::mesa::BypassOption::allowed,
+        null_display_report(),
+        {mock_kms_output},
+        make_output_surface(),
+        display_area,
+        mir_orientation_normal);
+
+    EXPECT_FALSE(db.overlay(bypassable_list));
+}

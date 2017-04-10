@@ -29,6 +29,7 @@
 
 #include "mir/test/doubles/mock_input_device_hub.h"
 #include "mir/test/doubles/mock_input_manager.h"
+#include "mir/test/doubles/mock_device.h"
 #include "mir/test/doubles/mock_scene_session.h"
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/doubles/stub_session_container.h"
@@ -47,34 +48,6 @@ using namespace ::testing;
 namespace
 {
 
-struct MockDevice : mir::input::Device
-{
-    MockDevice(MirInputDeviceId id, mi::DeviceCapabilities caps, std::string const& name, std::string const& unique_id)
-    {
-        ON_CALL(*this, id()).WillByDefault(Return(id));
-        ON_CALL(*this, name()).WillByDefault(Return(name));
-        ON_CALL(*this, unique_id()).WillByDefault(Return(unique_id));
-        ON_CALL(*this, capabilities()).WillByDefault(Return(caps));
-        ON_CALL(*this, pointer_configuration()).WillByDefault(Return(MirPointerConfig{}));
-        ON_CALL(*this, keyboard_configuration()).WillByDefault(Return(MirKeyboardConfig{}));
-        ON_CALL(*this, touchpad_configuration()).WillByDefault(Return(MirTouchpadConfig{}));
-        ON_CALL(*this, touchscreen_configuration()).WillByDefault(Return(MirTouchscreenConfig{}));
-    }
-
-    MOCK_CONST_METHOD0(id, MirInputDeviceId());
-    MOCK_CONST_METHOD0(capabilities, mir::input::DeviceCapabilities());
-    MOCK_CONST_METHOD0(name, std::string());
-    MOCK_CONST_METHOD0(unique_id, std::string());
-    MOCK_CONST_METHOD0(pointer_configuration, mir::optional_value<MirPointerConfig>());
-    MOCK_CONST_METHOD0(touchpad_configuration, mir::optional_value<MirTouchpadConfig>());
-    MOCK_CONST_METHOD0(keyboard_configuration, mir::optional_value<MirKeyboardConfig>());
-    MOCK_CONST_METHOD0(touchscreen_configuration, mir::optional_value<MirTouchscreenConfig>());
-    MOCK_METHOD1(apply_pointer_configuration, void(MirPointerConfig const&));
-    MOCK_METHOD1(apply_touchpad_configuration, void(MirTouchpadConfig const&));
-    MOCK_METHOD1(apply_keyboard_configuration, void(MirKeyboardConfig const&));
-    MOCK_METHOD1(apply_touchscreen_configuration, void(MirTouchscreenConfig const&));
-};
-
 struct FakeInputDeviceHub : mir::input::InputDeviceHub
 {
     std::shared_ptr<mi::InputDeviceObserver> observer;
@@ -86,8 +59,8 @@ struct FakeInputDeviceHub : mir::input::InputDeviceHub
                                         mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric |
                                         mi::DeviceCapability::touchscreen;
 
-    NiceMock<MockDevice> first_device{first_id, caps, first, first};
-    NiceMock<MockDevice> second_device{second_id, caps, second, second};
+    NiceMock<mtd::MockDevice> first_device{first_id, caps, first, first};
+    NiceMock<mtd::MockDevice> second_device{second_id, caps, second, second};
     std::vector<std::shared_ptr<mir::input::Device>> active_devices;
 
     void add_observer(std::shared_ptr<mi::InputDeviceObserver> const& obs) override
@@ -139,7 +112,8 @@ struct ConfigChanger : Test
     ms::BroadcastingSessionEventSink session_event_sink;
 
     mi::ConfigChanger changer{mt::fake_shared(mock_input_manager), mt::fake_shared(hub),
-                              mt::fake_shared(stub_session_container), mt::fake_shared(session_event_sink)};
+                              mt::fake_shared(stub_session_container), mt::fake_shared(session_event_sink),
+                              mt::fake_shared(hub)};
 
     auto get_full_device_conf(MirInputDeviceId id,
                               mi::DeviceCapabilities caps,

@@ -23,6 +23,7 @@
 #include "screencast_buffer_tracker.h"
 #include "protobuf_ipc_factory.h"
 
+#include "mir/extension_description.h"
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/buffer_stream_id.h"
@@ -122,7 +123,8 @@ public:
         std::shared_ptr<scene::CoordinateTranslator> const& translator,
         std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
         std::shared_ptr<cookie::Authority> const& cookie_authority,
-        std::shared_ptr<InputConfigurationChanger> const& input_changer
+        std::shared_ptr<InputConfigurationChanger> const& input_changer,
+        std::vector<mir::ExtensionDescription> const& extensions
         );
 
     ~SessionMediator() noexcept;
@@ -245,12 +247,8 @@ public:
         mir::protobuf::StreamConfiguration const* request,
         mir::protobuf::Void*,
         google::protobuf::Closure* done) override;
-    void raise_surface(
-        mir::protobuf::RaiseRequest const* request,
-        mir::protobuf::Void*,
-        google::protobuf::Closure* done) override;
-    void request_drag_and_drop(
-        mir::protobuf::RequestAuthority const* request,
+    void request_operation(
+        mir::protobuf::RequestWithAuthority const* request,
         mir::protobuf::Void*,
         google::protobuf::Closure* done) override;
     void apply_input_configuration(
@@ -300,6 +298,7 @@ private:
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<InputConfigurationChanger> const input_changer;
+    std::vector<mir::ExtensionDescription> const extensions;
 
     ScreencastBufferTracker screencast_buffer_tracker;
 

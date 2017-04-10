@@ -19,6 +19,7 @@
 #define MIR_DEFAULT_SERVER_CONFIGURATION_H_
 
 #include "mir/cached_ptr.h"
+#include "mir/extension_description.h"
 #include "mir/server_configuration.h"
 #include "mir/shell/window_manager_builder.h"
 
@@ -384,6 +385,7 @@ protected:
     CachedPtr<input::InputManager>    input_manager;
     CachedPtr<input::SurfaceInputDispatcher>    surface_input_dispatcher;
     CachedPtr<input::DefaultInputDeviceHub>    default_input_device_hub;
+    CachedPtr<input::InputDeviceHub>    input_device_hub;
     CachedPtr<dispatch::MultiplexingDispatchable> input_reading_multiplexer;
     CachedPtr<input::InputDispatcher> input_dispatcher;
     CachedPtr<shell::InputTargeter> input_targeter;
@@ -467,6 +469,7 @@ private:
     auto initialise_reports() -> std::shared_ptr<report::Reports>;
 
     CachedPtr<shell::detail::FrontendShell> frontend_shell;
+    std::vector<mir::ExtensionDescription> the_extensions();
 };
 }
 

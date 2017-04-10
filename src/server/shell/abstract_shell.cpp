@@ -163,7 +163,14 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
 
     if (modifications.cursor_image.is_set())
     {
-        surface->set_cursor_image(modifications.cursor_image.value());
+        if (modifications.cursor_image.value() == nullptr)
+        {
+            surface->set_cursor_image({});
+        }
+        else
+        {
+            surface->set_cursor_image(modifications.cursor_image.value());
+        }
     }
 
     if (modifications.stream_cursor.is_set())
@@ -257,6 +264,14 @@ void msh::AbstractShell::request_drag_and_drop(
     uint64_t timestamp)
 {
     window_manager->handle_request_drag_and_drop(session, surface, timestamp);
+}
+
+void msh::AbstractShell::request_move(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<scene::Surface> const& surface,
+    uint64_t timestamp)
+{
+    window_manager->handle_request_move(session, surface, timestamp);
 }
 
 void msh::AbstractShell::focus_next_session()

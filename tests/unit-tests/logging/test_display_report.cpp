@@ -28,6 +28,7 @@
 namespace ml  = mir::logging;
 namespace mrl = mir::report::logging;
 namespace mtd = mir::test::doubles;
+using namespace testing;
 
 namespace
 {
@@ -41,7 +42,9 @@ public:
 struct DisplayReport : public testing::Test
 {
     std::shared_ptr<MockLogger> logger{std::make_shared<MockLogger>()};
-    mtd::MockEGL mock_egl;
+    testing::NiceMock<mtd::MockEGL> mock_egl;
+    EGLDisplay disp = reinterpret_cast<EGLDisplay>(9);
+    EGLConfig config = reinterpret_cast<EGLConfig>(8);
 };
 
 char const* const component = "graphics";
@@ -95,18 +98,22 @@ std::string egl_string_mapping [] =
 
 TEST_F(DisplayReport, eglconfig)
 {
-    using namespace testing;
-    EGLDisplay disp = reinterpret_cast<EGLDisplay>(9);
-    EGLConfig config = reinterpret_cast<EGLConfig>(8);
     int dummy_value = 7;
+    auto ext_str = "EGL_EXT_imaginary";
+    auto client_ext_str = "EGL_EXT_oil_platform";
+
+    EXPECT_CALL(mock_egl, eglQueryString(disp, EGL_EXTENSIONS)).WillOnce(Return(ext_str));
+    EXPECT_CALL(mock_egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS)).WillOnce(Return(client_ext_str));
     EXPECT_CALL(mock_egl, eglGetConfigAttrib(disp, config,_,_))
         .Times(AnyNumber())
         .WillRepeatedly(DoAll(SetArgPointee<3>(dummy_value),Return(EGL_TRUE)));
 
     EXPECT_CALL(*logger, log(
-        ml::Severity::informational,
-        "Display EGL Configuration:",
-        component));
+        ml::Severity::informational, "Display EGL Extensions: " + std::string{ext_str}, component));
+    EXPECT_CALL(*logger, log(
+        ml::Severity::informational, "EGL_EXT_client_extensions: " + std::string{client_ext_str}, component));
+    EXPECT_CALL(*logger, log(
+        ml::Severity::informational, "Display EGL Configuration:", component));
     for(auto &i : egl_string_mapping)
     {
         EXPECT_CALL(*logger, log(
@@ -119,9 +126,17 @@ TEST_F(DisplayReport, eglconfig)
     report.report_egl_configuration(disp, config);
 }
 
+TEST_F(DisplayReport, eglconfig_clears_eglerror_when_there_are_no_extensions)
+{
+    EXPECT_CALL(mock_egl, eglQueryString(disp, EGL_EXTENSIONS)).WillOnce(Return(nullptr));
+    EXPECT_CALL(mock_egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS)).WillOnce(Return(nullptr));
+    EXPECT_CALL(mock_egl, eglGetError());
+    mrl::DisplayReport report(logger);
+    report.report_egl_configuration(disp, config);
+}
+
 TEST_F(DisplayReport, reports_vsync)
 {
-    using namespace testing;
     std::chrono::nanoseconds const nanos_per_frame{16666666};
     std::string const interval_str{"interval 16.666ms"};
     unsigned int display1_id {1223};
@@ -149,7 +164,6 @@ TEST_F(DisplayReport, reports_vsync)
 
 TEST_F(DisplayReport, reports_vsync_steady_interval_despite_missed_frames)
 {
-    using namespace testing;
     int const hz = 60;
     std::string const interval_str{"interval 16.666ms (60.00Hz)"};
     unsigned const id{123};

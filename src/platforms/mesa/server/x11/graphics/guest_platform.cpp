@@ -20,8 +20,7 @@
 #include "guest_platform.h"
 #include "ipc_operations.h"
 #include "buffer_allocator.h"
-
-#include "mir/graphics/platform_authentication.h"
+#include "mesa_extensions.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
@@ -30,13 +29,13 @@ namespace mg = mir::graphics;
 namespace mgx = mg::X;
 namespace mgm = mg::mesa;
 
-mgx::GuestPlatform::GuestPlatform(
-    std::shared_ptr<PlatformAuthentication> const& /*platform_authentication*/)
+mgx::GuestPlatform::GuestPlatform()
     : udev{std::make_shared<mir::udev::Context>()},
       drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render)}
 {
     drm->setup(udev);
     gbm.setup(*drm);
+    native_platform = std::make_unique<mgm::DRMNativePlatform>(*drm);
 }
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgx::GuestPlatform::create_buffer_allocator()
@@ -59,7 +58,12 @@ mir::UniqueModulePtr<mg::Display> mgx::GuestPlatform::create_display(
     BOOST_THROW_EXCEPTION(std::runtime_error("Guest platform cannot create display\n"));
 }
 
-mg::NativePlatform* mgx::GuestPlatform::native_platform()
+mg::NativeDisplayPlatform* mgx::GuestPlatform::native_display_platform()
+{
+    return native_platform.get();
+}
+
+mg::NativeRenderingPlatform* mgx::GuestPlatform::native_rendering_platform()
 {
     return this;
 }
@@ -67,4 +71,9 @@ mg::NativePlatform* mgx::GuestPlatform::native_platform()
 EGLNativeDisplayType mgx::GuestPlatform::egl_native_display() const
 {
     return gbm.device;
+}
+
+std::vector<mir::ExtensionDescription> mgx::GuestPlatform::extensions() const
+{
+    return mgm::mesa_extensions();
 }

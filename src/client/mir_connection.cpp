@@ -587,16 +587,16 @@ void MirConnection::connected(MirConnectedCallback callback, void * context)
 
         connect_done = true;
 
-        if (connect_result->has_coordinate_translation_present() &&
-            connect_result->coordinate_translation_present())
-        {
-            translation_ext = MirExtensionWindowCoordinateTranslationV1{ translate_coordinates };
-        }
+        translation_ext = MirExtensionWindowCoordinateTranslationV1{ translate_coordinates };
+        graphics_module_extension = MirExtensionGraphicsModuleV1 { get_graphics_module };
 
-        if (connect_result->has_platform() &&
-            connect_result->platform().has_graphics_module())
+        for ( auto i = 0; i < connect_result->extension().size(); i++)
         {
-            graphics_module_extension = MirExtensionGraphicsModuleV1 { get_graphics_module };
+            auto& ex = connect_result->extension(i);
+            std::vector<int> versions;
+            for ( auto j = 0; j < connect_result->extension(i).version().size(); j++ )
+                versions.push_back(connect_result->extension(i).version(j));
+            extensions.push_back({ex.name(), versions});
         }
 
         /*
@@ -1446,14 +1446,22 @@ void* MirConnection::request_interface(char const* name, int version)
     if (!platform)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot query extensions before connecting to server"));
 
+    auto supported = std::find_if(extensions.begin(), extensions.end(),
+        [&](auto& e) {
+            return e.name == std::string{name} &&
+                std::find(e.version.begin(), e.version.end(), version) != e.version.end();
+        });
+    if (supported == extensions.end())
+        return nullptr;
+
     if (!strcmp(name, "mir_extension_window_coordinate_translation") && (version == 1) && translation_ext.is_set())
         return &translation_ext.value();
-    if (!strcmp(name, "mir_extension_graphics_module") && (version == 1) && graphics_module_extension.is_set())
-        return &graphics_module_extension.value();
-
     if (!strcmp(name, "mir_drag_and_drop") && (version == 1))
         return const_cast<MirDragAndDropV1*>(mir::drag_and_drop::v1);
 
+    //this extension should move to the platform plugin.
+    if (!strcmp(name, "mir_extension_graphics_module") && (version == 1))
+        return &graphics_module_extension.value();
     return platform->request_interface(name, version);
 }
 

@@ -29,6 +29,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <fcntl.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -59,7 +60,8 @@ class RealKMSOutputTest : public ::testing::Test
 {
 public:
     RealKMSOutputTest()
-        : invalid_id{0}, crtc_ids{10, 11},
+        : drm_fd{open(drm_device, 0, 0)},
+          invalid_id{0}, crtc_ids{10, 11},
           encoder_ids{20, 21}, connector_ids{30, 21},
           possible_encoder_ids1{encoder_ids[0]},
           possible_encoder_ids2{encoder_ids[0], encoder_ids[1]}
@@ -73,40 +75,77 @@ public:
 
     void setup_outputs_connected_crtc()
     {
-        mtd::FakeDRMResources& resources(mock_drm.fake_drm);
         uint32_t const possible_crtcs_mask{0x1};
 
-        resources.reset();
+        mock_drm.reset(drm_device);
 
-        resources.add_crtc(crtc_ids[0], drmModeModeInfo());
-        resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask);
-        resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_VGA,
-                                DRM_MODE_CONNECTED, encoder_ids[0],
-                                modes_empty, possible_encoder_ids1, geom::Size());
+        mock_drm.add_crtc(
+            drm_device,
+            crtc_ids[0],
+            drmModeModeInfo());
+        mock_drm.add_encoder(
+            drm_device,
+            encoder_ids[0],
+            crtc_ids[0],
+            possible_crtcs_mask);
+        mock_drm.add_connector(
+            drm_device,
+            connector_ids[0],
+            DRM_MODE_CONNECTOR_VGA,
+            DRM_MODE_CONNECTED,
+            encoder_ids[0],
+            modes_empty,
+            possible_encoder_ids1,
+            geom::Size());
 
-        resources.prepare();
+        mock_drm.prepare(drm_device);
     }
 
     void setup_outputs_no_connected_crtc()
     {
-        mtd::FakeDRMResources& resources(mock_drm.fake_drm);
         uint32_t const possible_crtcs_mask1{0x1};
         uint32_t const possible_crtcs_mask_all{0x3};
 
-        resources.reset();
+        mock_drm.reset(drm_device);
 
-        resources.add_crtc(crtc_ids[0], drmModeModeInfo());
-        resources.add_crtc(crtc_ids[1], drmModeModeInfo());
-        resources.add_encoder(encoder_ids[0], crtc_ids[0], possible_crtcs_mask1);
-        resources.add_encoder(encoder_ids[1], invalid_id, possible_crtcs_mask_all);
-        resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_Composite,
-                                DRM_MODE_CONNECTED, invalid_id,
-                                modes_empty, possible_encoder_ids2, geom::Size());
-        resources.add_connector(connector_ids[1], DRM_MODE_CONNECTOR_DVIA,
-                                DRM_MODE_CONNECTED, encoder_ids[0],
-                                modes_empty, possible_encoder_ids2, geom::Size());
+        mock_drm.add_crtc(
+            drm_device,
+            crtc_ids[0],
+            drmModeModeInfo());
+        mock_drm.add_crtc(
+            drm_device,
+            crtc_ids[1],
+            drmModeModeInfo());
+        mock_drm.add_encoder(
+            drm_device,
+            encoder_ids[0],
+            crtc_ids[0],
+            possible_crtcs_mask1);
+        mock_drm.add_encoder(
+            drm_device,
+            encoder_ids[1],
+            invalid_id,
+            possible_crtcs_mask_all);
+        mock_drm.add_connector(
+            drm_device,
+            connector_ids[0],
+            DRM_MODE_CONNECTOR_Composite,
+            DRM_MODE_CONNECTED,
+            invalid_id,
+            modes_empty,
+            possible_encoder_ids2,
+            geom::Size());
+        mock_drm.add_connector(
+            drm_device,
+            connector_ids[1],
+            DRM_MODE_CONNECTOR_DVIA,
+            DRM_MODE_CONNECTED,
+            encoder_ids[0],
+            modes_empty,
+            possible_encoder_ids2,
+            geom::Size());
 
-        resources.prepare();
+        mock_drm.prepare(drm_device);
     }
 
     void append_fb_id(uint32_t fb_id)
@@ -122,8 +161,11 @@ public:
     testing::NiceMock<mtd::MockGBM> mock_gbm;
     MockPageFlipper mock_page_flipper;
     NullPageFlipper null_page_flipper;
-
     std::vector<drmModeModeInfo> modes_empty;
+
+    char const* const drm_device = "/dev/dri/card0";
+    int const drm_fd;
+
     gbm_bo* const fake_bo{reinterpret_cast<gbm_bo*>(0x123ba)};
     uint32_t const invalid_id;
     std::vector<uint32_t> const crtc_ids;
@@ -165,11 +207,11 @@ TEST_F(RealKMSOutputTest, operations_use_existing_crtc)
     }
 
     mgm::RealKMSOutput output{
-        mock_drm.fake_drm.fd(),
-        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        drm_fd,
+        mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo, 1920, 1024);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     EXPECT_TRUE(output.schedule_page_flip(*fb));
@@ -207,11 +249,11 @@ TEST_F(RealKMSOutputTest, operations_use_possible_crtc)
     append_fb_id(fb_id);
 
     mgm::RealKMSOutput output{
-        mock_drm.fake_drm.fd(),
-        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        drm_fd,
+        mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo, 1920, 756);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     EXPECT_TRUE(output.schedule_page_flip(*fb));
@@ -247,11 +289,11 @@ TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
     append_fb_id(fb_id);
 
     mgm::RealKMSOutput output{
-        mock_drm.fake_drm.fd(),
-        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        drm_fd,
+        mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo, 1280, 1024);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_FALSE(output.set_crtc(*fb));
 
@@ -270,8 +312,8 @@ TEST_F(RealKMSOutputTest, clear_crtc_gets_crtc_if_none_is_current)
     setup_outputs_connected_crtc();
 
     mgm::RealKMSOutput output{
-        mock_drm.fake_drm.fd(),
-        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        drm_fd,
+        mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
@@ -285,21 +327,30 @@ TEST_F(RealKMSOutputTest, clear_crtc_does_not_throw_if_no_crtc_is_found)
 {
     using namespace testing;
 
-    mtd::FakeDRMResources& resources(mock_drm.fake_drm);
     uint32_t const possible_crtcs_mask_empty{0x0};
 
-    resources.reset();
+    mock_drm.reset(drm_device);
 
-    resources.add_encoder(encoder_ids[0], invalid_id, possible_crtcs_mask_empty);
-    resources.add_connector(connector_ids[0], DRM_MODE_CONNECTOR_VGA,
-                            DRM_MODE_CONNECTED, encoder_ids[0],
-                            modes_empty, possible_encoder_ids1, geom::Size());
+    mock_drm.add_encoder(
+        drm_device,
+        encoder_ids[0],
+        invalid_id,
+        possible_crtcs_mask_empty);
+    mock_drm.add_connector(
+        drm_device,
+        connector_ids[0],
+        DRM_MODE_CONNECTOR_VGA,
+        DRM_MODE_CONNECTED,
+        encoder_ids[0],
+        modes_empty,
+        possible_encoder_ids1,
+        geom::Size());
 
-    resources.prepare();
+    mock_drm.prepare(drm_device);
 
     mgm::RealKMSOutput output{
-        mock_drm.fake_drm.fd(),
-        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        drm_fd,
+        mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, _, 0, 0, 0, nullptr, 0, nullptr))
@@ -319,11 +370,11 @@ TEST_F(RealKMSOutputTest, cursor_move_permission_failure_is_non_fatal)
     setup_outputs_connected_crtc();
 
     mgm::RealKMSOutput output{
-        mock_drm.fake_drm.fd(),
-        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        drm_fd,
+        mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo, 1292, 222);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     EXPECT_NO_THROW({
@@ -347,11 +398,11 @@ TEST_F(RealKMSOutputTest, cursor_set_permission_failure_is_non_fatal)
     setup_outputs_connected_crtc();
 
     mgm::RealKMSOutput output{
-        mock_drm.fake_drm.fd(),
-        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        drm_fd,
+        mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo, 1292, 222);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     struct gbm_bo *dummy = reinterpret_cast<struct gbm_bo*>(0x1234567);
@@ -376,11 +427,11 @@ TEST_F(RealKMSOutputTest, has_no_cursor_if_no_hardware_support)
     setup_outputs_connected_crtc();
 
     mgm::RealKMSOutput output{
-        mock_drm.fake_drm.fd(),
-        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        drm_fd,
+        mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
-    auto fb = output.fb_for(fake_bo, 1292, 222);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
     struct gbm_bo *dummy = reinterpret_cast<struct gbm_bo*>(0x1234567);
@@ -397,8 +448,8 @@ TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails)
     setup_outputs_connected_crtc();
 
     mgm::RealKMSOutput output{
-        mock_drm.fake_drm.fd(),
-        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        drm_fd,
+        mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
@@ -419,13 +470,13 @@ TEST_F(RealKMSOutputTest, drm_set_gamma)
     setup_outputs_connected_crtc();
 
     mgm::RealKMSOutput output{
-        mock_drm.fake_drm.fd(),
-        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        drm_fd,
+        mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
     mg::GammaCurves gamma{{1}, {2}, {3}};
 
-    EXPECT_CALL(mock_drm, drmModeCrtcSetGamma(mock_drm.fake_drm.fd(), crtc_ids[0],
+    EXPECT_CALL(mock_drm, drmModeCrtcSetGamma(drm_fd, crtc_ids[0],
                                               gamma.red.size(),
                                               const_cast<uint16_t*>(gamma.red.data()),
                                               const_cast<uint16_t*>(gamma.green.data()),
@@ -434,7 +485,7 @@ TEST_F(RealKMSOutputTest, drm_set_gamma)
 
     append_fb_id(fb_id);
 
-    auto fb = output.fb_for(fake_bo, 1292, 222);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
 
@@ -450,13 +501,13 @@ TEST_F(RealKMSOutputTest, drm_set_gamma_failure_does_not_throw)
     setup_outputs_connected_crtc();
 
     mgm::RealKMSOutput output{
-        mock_drm.fake_drm.fd(),
-        mg::kms::get_connector(mock_drm.fake_drm.fd(), connector_ids[0]),
+        drm_fd,
+        mg::kms::get_connector(drm_fd, connector_ids[0]),
         mt::fake_shared(mock_page_flipper)};
 
     mg::GammaCurves gamma{{1}, {2}, {3}};
 
-    EXPECT_CALL(mock_drm, drmModeCrtcSetGamma(mock_drm.fake_drm.fd(), crtc_ids[0],
+    EXPECT_CALL(mock_drm, drmModeCrtcSetGamma(drm_fd, crtc_ids[0],
                                               gamma.red.size(),
                                               const_cast<uint16_t*>(gamma.red.data()),
                                               const_cast<uint16_t*>(gamma.green.data()),
@@ -465,7 +516,7 @@ TEST_F(RealKMSOutputTest, drm_set_gamma_failure_does_not_throw)
 
     append_fb_id(fb_id);
 
-    auto fb = output.fb_for(fake_bo, 1292, 222);
+    auto fb = output.fb_for(fake_bo);
 
     EXPECT_TRUE(output.set_crtc(*fb));
 

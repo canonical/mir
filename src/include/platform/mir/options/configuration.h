@@ -47,9 +47,9 @@ extern char const* const host_socket_opt;
 extern char const* const nested_passthrough_opt;
 extern char const* const frontend_threads_opt;
 extern char const* const touchspots_opt;
+extern char const* const cursor_opt;
 extern char const* const fatal_except_opt;
 extern char const* const debug_opt;
-extern char const* const nbuffers_opt;
 extern char const* const composite_delay_opt;
 extern char const* const enable_key_repeat_opt;
 

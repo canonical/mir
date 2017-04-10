@@ -144,11 +144,13 @@ mi::ConfigChanger::ConfigChanger(
     std::shared_ptr<InputManager> const& manager,
     std::shared_ptr<InputDeviceHub> const& devices,
     std::shared_ptr<scene::SessionContainer> const& session_container,
-    std::shared_ptr<scene::SessionEventHandlerRegister> const& session_event_handler_register)
+    std::shared_ptr<scene::SessionEventHandlerRegister> const& session_event_handler_register,
+    std::shared_ptr<InputDeviceHub> const& devices_wrapper)
     : input_manager{manager},
       devices{devices},
       session_container{session_container},
       session_event_handler_register{session_event_handler_register},
+      devices_wrapper_DO_NOT_USE{devices_wrapper},
       device_observer(std::make_shared<DeviceChangeTracker>(*this)),
       base_configuration_applied(true)
 {

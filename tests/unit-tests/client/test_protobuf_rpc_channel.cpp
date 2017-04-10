@@ -19,7 +19,6 @@
 #include "src/client/rpc/mir_protobuf_rpc_channel.h"
 #include "src/client/rpc/stream_transport.h"
 #include "src/client/rpc/mir_display_server.h"
-#include "src/client/surface_map.h"
 #include "src/client/display_configuration.h"
 #include "src/client/rpc/null_rpc_report.h"
 #include "src/client/lifecycle_control.h"
@@ -29,6 +28,7 @@
 #include "mir/variable_length_array.h"
 #include "mir_protobuf.pb.h"
 #include "mir_protobuf_wire.pb.h"
+#include "mir/client/surface_map.h"
 #include "mir/input/input_devices.h"
 
 #include "mir/test/doubles/null_client_event_sink.h"
@@ -67,7 +67,9 @@ struct MockSurfaceMap : mcl::SurfaceMap
     MOCK_METHOD2(insert, void(int, std::shared_ptr<mcl::MirBuffer> const&));
     MOCK_METHOD2(insert, void(mir::frontend::BufferStreamId, std::shared_ptr<MirPresentationChain> const&));
     MOCK_METHOD1(erase, void(int));
-}; 
+    MOCK_CONST_METHOD1(with_all_windows_do,
+        void(std::function<void(MirWindow*)> const&));
+};
  
 class StubSurfaceMap : public mcl::SurfaceMap
 {
@@ -94,6 +96,9 @@ public:
     {
     }
     void erase(int) override
+    {
+    }
+    void with_all_windows_do(std::function<void(MirWindow*)> const&) const override
     {
     }
 };
@@ -235,12 +240,13 @@ public:
     MirProtobufRpcChannelTest()
         : transport{new testing::NiceMock<MockStreamTransport>},
           lifecycle{std::make_shared<mcl::LifecycleControl>()},
+          surface_map{std::make_shared<StubSurfaceMap>()},
           channel{new mclr::MirProtobufRpcChannel{
                   std::unique_ptr<MockStreamTransport>{transport},
-                  std::make_shared<StubSurfaceMap>(),
+                  surface_map,
                   std::make_shared<mcl::BufferFactory>(),
                   std::make_shared<mcl::DisplayConfiguration>(),
-                  std::make_shared<mir::input::InputDevices>(),
+                  std::make_shared<mir::input::InputDevices>(surface_map),
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
@@ -251,6 +257,7 @@ public:
 
     MockStreamTransport* transport;
     std::shared_ptr<mcl::LifecycleControl> lifecycle;
+    std::shared_ptr<mcl::SurfaceMap> surface_map;
     std::shared_ptr<mclr::MirProtobufRpcChannel> channel;
     mtd::MockMirBufferStream stream;
 };
@@ -395,7 +402,7 @@ TEST_F(MirProtobufRpcChannelTest, notifies_streams_of_disconnect)
                   stream_map,
                   std::make_shared<mcl::BufferFactory>(),
                   std::make_shared<mcl::DisplayConfiguration>(),
-                  std::make_shared<mir::input::InputDevices>(),
+                  std::make_shared<mir::input::InputDevices>(stream_map),
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
@@ -745,7 +752,7 @@ TEST_F(MirProtobufRpcChannelTest, creates_buffer_if_not_in_map)
                   stream_map,
                   mock_buffer_factory,
                   std::make_shared<mcl::DisplayConfiguration>(),
-                  std::make_shared<mir::input::InputDevices>(),
+                  std::make_shared<mir::input::InputDevices>(stream_map),
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
@@ -780,7 +787,7 @@ TEST_F(MirProtobufRpcChannelTest, reuses_buffer_if_in_map)
                   stream_map,
                   mock_buffer_factory,
                   std::make_shared<mcl::DisplayConfiguration>(),
-                  std::make_shared<mir::input::InputDevices>(),
+                  std::make_shared<mir::input::InputDevices>(stream_map),
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),
@@ -813,7 +820,7 @@ TEST_F(MirProtobufRpcChannelTest, sends_incoming_buffer_to_stream_if_stream_id_p
                   stream_map,
                   mock_buffer_factory,
                   std::make_shared<mcl::DisplayConfiguration>(),
-                  std::make_shared<mir::input::InputDevices>(),
+                  std::make_shared<mir::input::InputDevices>(stream_map),
                   std::make_shared<mclr::NullRpcReport>(),
                   lifecycle,
                   std::make_shared<mir::client::PingHandler>(),

@@ -53,19 +53,18 @@ public:
     {
     public:
         FrontBuffer();
-        ~FrontBuffer();
-
+        FrontBuffer(gbm_surface* surface);
         FrontBuffer(FrontBuffer&& from);
+
+        ~FrontBuffer();
 
         FrontBuffer& operator=(FrontBuffer&& from);
         FrontBuffer& operator=(std::nullptr_t);
 
         operator gbm_bo*();
         operator bool() const;
-    private:
-        friend class GBMOutputSurface;
-        FrontBuffer(gbm_surface* surface);
 
+    private:
         gbm_surface* const surf;
         gbm_bo* const bo;
     };
@@ -140,9 +139,13 @@ private:
 
     /*
      * Destruction order is important here:
-     *  - The GBMFrontBuffers depend on the GBM surface
+     *  - The GBMFrontBuffers depend on *either*:
+     *  i)  The GBMOutputSurface, or
+     *  ii) The EGLBufferCopier hidden inside get_front_buffer
      */
+    std::function<GBMOutputSurface::FrontBuffer(GBMOutputSurface::FrontBuffer&&)> get_front_buffer;
     GBMOutputSurface surface;
+
     GBMOutputSurface::FrontBuffer visible_composite_frame;
     GBMOutputSurface::FrontBuffer scheduled_composite_frame;
 
