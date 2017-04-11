@@ -350,7 +350,8 @@ public:
         static EGLint const context_attribs[] = {
             EGL_CONTEXT_CLIENT_VERSION, 2,
             EGL_NONE };
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto native_display =
             reinterpret_cast<EGLNativeDisplayType>(
                 mir_connection_get_egl_native_display(connection));
@@ -358,7 +359,7 @@ public:
         auto native_window =
             reinterpret_cast<EGLNativeWindowType>(
                 mir_buffer_stream_get_egl_native_window(buffer_stream));
-
+#pragma GCC diagnostic pop
         egl_display = eglGetDisplay(native_display);
 
         eglInitialize(egl_display, nullptr, nullptr);

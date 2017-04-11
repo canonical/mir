@@ -30,6 +30,8 @@ namespace mir
 {
 namespace client
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 class ClientBufferFactory;
 class AsyncBufferFactory
 {
@@ -128,6 +130,7 @@ private:
     };
     std::vector<std::unique_ptr<AllocationRequest>> allocation_requests;
 };
+#pragma GCC diagnostic pop
 }
 }
 #endif /* MIR_CLIENT_MIR_BUFFER_FACTORY_H_ */

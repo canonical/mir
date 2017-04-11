@@ -54,7 +54,8 @@ struct ClientLogging : ConnectedClientHeadlessServer
     }
 };
 } // namespace
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientLogging, reports_performance)
 {
     auto spec = mir_create_normal_window_spec(connection, 123, 456);
@@ -144,3 +145,4 @@ TEST_F(ClientLogging, reports_performance)
 
     mir_window_release_sync(window);
 }
+#pragma GCC diagnostic pop

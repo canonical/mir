@@ -209,10 +209,11 @@ TEST_F(SurfaceFirstFrameSync, surface_not_rendered_until_buffer_is_pushed)
      * all before we reach this point.
      */
     EXPECT_EQ(0, number_of_executed_render_operations());
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_buffer_stream_swap_buffers_sync(
         mir_window_get_buffer_stream(window));
-
+#pragma GCC diagnostic pop
     /* After submitting the buffer we should get some render operations */
     mir::test::spin_wait_for_condition_or_timeout(
         [this] { return number_of_executed_render_operations() > 0; },

@@ -478,6 +478,8 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage)
 try
 {
@@ -488,6 +490,7 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
+#pragma GCC diagnostic pop
 
 void mir_window_spec_set_streams(MirWindowSpec* spec, MirBufferStreamInfo* streams, unsigned int size)
 try
@@ -674,10 +677,13 @@ char const* mir_window_get_error_message(MirWindow* window)
     return window->get_error_message();
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void mir_window_get_parameters(MirWindow* window, MirWindowParameters* parameters)
 {
     *parameters = window->get_parameters();
 }
+#pragma GCC diagnostic pop
 
 MirOrientation mir_window_get_orientation(MirWindow* window)
 {

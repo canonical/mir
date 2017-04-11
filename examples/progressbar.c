@@ -184,7 +184,10 @@ static void copy_region(const MirGraphicsRegion *dest,
 static void redraw(MirWindow *window, const MirGraphicsRegion *canvas)
 {
     MirGraphicsRegion backbuffer;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferStream *bs = mir_window_get_buffer_stream(window);
+#pragma GCC diagnostic pop
 
     mir_buffer_stream_get_graphics_region(bs, &backbuffer);
     clear_region(&backbuffer, background);
@@ -257,7 +260,10 @@ int main(int argc, char *argv[])
         mir_connection_release(conn);
         return 1;
     }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, pixel_format);
+#pragma GCC diagnostic pop
     {
         char name[128];
         snprintf(name, sizeof(name)-1, "Progress Bars (%dHz)", hz);
@@ -265,8 +271,10 @@ int main(int argc, char *argv[])
         mir_window_spec_set_name(spec, name);
     }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
-
+#pragma GCC diagnostic pop
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 

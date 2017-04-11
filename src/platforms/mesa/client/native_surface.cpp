@@ -41,9 +41,12 @@ static int advance_buffer_static(MirMesaEGLNativeSurface* surface,
     return s->advance_buffer(buffer_package);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 static int get_parameters_static(MirMesaEGLNativeSurface* surface,
                                   MirWindowParameters* surface_parameters)
 {
+#pragma GCC diagnostic pop
     auto s = static_cast<mclm::NativeSurface*>(surface);
     return s->get_parameters(surface_parameters);
 }
@@ -94,6 +97,8 @@ catch (std::exception const& e)
     return MIR_MESA_FALSE;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 int mclm::NativeSurface::get_parameters(MirWindowParameters* surface_parameters)
 try
 {
@@ -107,6 +112,7 @@ catch (std::exception const& e)
     MIR_LOG_DRIVER_BOUNDARY_EXCEPTION(e);
     return MIR_MESA_FALSE;
 }
+#pragma GCC diagnostic pop
 
 int mclm::NativeSurface::set_swapinterval(int interval)
 try

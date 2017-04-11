@@ -535,14 +535,20 @@ struct ClientWithAPaintedSurface : virtual Client
         Client(nested_mir),
         window(mtf::make_surface(connection, size, format))
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
+#pragma GCC diagnostic pop
     }
 
     ClientWithAPaintedSurface(NestedMirRunner& nested_mir) :
         Client(nested_mir),
         window(mtf::make_any_surface(connection))
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
+#pragma GCC diagnostic pop
     }
 
     ~ClientWithAPaintedSurface()
@@ -562,6 +568,8 @@ struct ClientWithAPaintedSurface : virtual Client
     MirWindow* window;
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct ClientWithAPaintedSurfaceAndABufferStream : virtual Client, ClientWithAPaintedSurface
 {
     ClientWithAPaintedSurfaceAndABufferStream(NestedMirRunner& nested_mir) :
@@ -584,8 +592,6 @@ struct ClientWithAPaintedSurfaceAndABufferStream : virtual Client, ClientWithAPa
     MirBufferStream* const buffer_stream;
 };
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct ClientWithAPaintedWindowAndASurface : virtual Client, ClientWithAPaintedSurface
 {
     ClientWithAPaintedWindowAndASurface(NestedMirRunner& nested_mir) :
@@ -684,8 +690,10 @@ TEST_F(NestedServer, client_sees_set_scaling_factor)
     Client client{nested_mir};
 
     auto spec = mir_create_normal_window_spec(client.connection, 800, 600);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-
+#pragma GCC diagnostic pop
     mt::Signal surface_event_received;
     mir_window_spec_set_event_handler(spec, [](MirWindow*, MirEvent const* event, void* ctx)
         {
@@ -786,7 +794,10 @@ TEST_F(NestedServerWithTwoDisplays, posts_when_scene_has_visible_changes)
             .WillOnce(InvokeWithoutArgs([]{}))
             .WillOnce(InvokeWithoutArgs([&] { wait.raise(); }));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
+#pragma GCC diagnostic pop
 
         wait.wait_for(timeout);
         Mock::VerifyAndClearExpectations(mock_session_mediator_report.get());

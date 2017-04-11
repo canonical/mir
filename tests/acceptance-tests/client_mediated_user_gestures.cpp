@@ -193,8 +193,11 @@ void ClientMediatedUserGestures::paint_window()
                 have_focus.raise();
         });
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
-
+#pragma GCC diagnostic pop
+    
     EXPECT_THAT(have_focus.wait_for(receive_event_timeout), Eq(true));
 
     reset_window_event_handler();

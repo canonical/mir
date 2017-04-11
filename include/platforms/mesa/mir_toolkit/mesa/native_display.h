@@ -48,8 +48,11 @@ struct MirMesaEGLNativeSurface
     int (*surface_set_swapinterval)(MirMesaEGLNativeSurface* surface, int interval);
     int (*surface_advance_buffer)(MirMesaEGLNativeSurface* surface,
                                   MirBufferPackage* buffer_package);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     int (*surface_get_parameters)(MirMesaEGLNativeSurface* surface,
                                   MirWindowParameters* surface_parameters);
+#pragma GCC diagnostic pop
 };
 
 #ifdef __cplusplus

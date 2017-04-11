@@ -55,6 +55,8 @@ mf::BufferStreamId mcl::RenderSurface::stream_id() const
     return mf::BufferStreamId(protobuf_bs->id().value());
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirBufferStream* mcl::RenderSurface::get_buffer_stream(
     int width, int height,
     MirPixelFormat format,
@@ -69,8 +71,10 @@ MirBufferStream* mcl::RenderSurface::get_buffer_stream(
                                                                       height,
                                                                       this,
                                                                       *protobuf_bs);
+
     if (buffer_usage == mir_buffer_usage_hardware)
     {
+#pragma GCC diagnostic pop
         platform->use_egl_native_window(
             wrapped_native_window, dynamic_cast<EGLNativeSurface*>(stream_from_id.get()));
     }

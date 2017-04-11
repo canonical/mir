@@ -529,9 +529,12 @@ void mir_window_spec_set_placement(MirWindowSpec*      spec,
 void mir_window_spec_set_cursor_name(MirWindowSpec* spec, char const* name);
 
 /**
- * \note To be deprecated soon. Only for enabling other deprecations.
  *
  * Set the requested pixel format.
+ * \deprecated There will be no default stream associated with a window anymore. Instead create a
+ *             MirRenderSurface and either set the pixel format through EGL (for EGL based rendering) or
+ *             by allocating a cpu accessible buffer through mir_connection_allocate_buffer or
+ *             mir_render_surface_get_buffer_stream
  * \param [in] spec     Specification to mutate
  * \param [in] format   Requested pixel format
  *
@@ -539,12 +542,14 @@ void mir_window_spec_set_cursor_name(MirWindowSpec* spec, char const* name);
  *          If the server is unable to create a window with this pixel format at
  *          the point mir_create_window() is called it will instead return an invalid window.
  */
-void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format);
+void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format)
+    __attribute__((deprecated("Use mir_connection_allocate_buffer/mir_render_surface_get_buffer_stream instead")));
 
 /**
  * \note To be deprecated soon. Only for enabling other deprecations.
  *
  * Set the requested buffer usage.
+ * \deprecated There will be no default stream associated with a window anymore. MirBufferUsage is no longer applicable.
  * \param [in] spec     Specification to mutate
  * \param [in] usage    Requested buffer usage
  *
@@ -552,10 +557,12 @@ void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format
  *          If the server is unable to create a window with this buffer usage at
  *          the point mir_create_window() is called it will instead return an invalid window.
  */
-void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage);
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage)
+    __attribute__((deprecated("No longer applicable, use mir_render_surface apis")));
+#pragma GCC diagnostic pop
 /**
- * \note To be deprecated soon. Waiting for mir_window_spec_set_render_surfaces() to land.
  *
  * Set the streams associated with the spec.
  * streams[0] is the bottom-most stream, and streams[size-1] is the topmost.
@@ -565,6 +572,7 @@ void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage)
  * but is in the list will be associated with the window.
  * Streams set a displacement from the top-left corner of the window.
  *
+ * \deprecated Use mir_window_spec_add_render_surface
  * \warning disassociating streams from the window will not release() them.
  * \warning It is wiser to arrange the streams within the bounds of the
  *          window the spec is applied to. Shells can define their own
@@ -576,7 +584,8 @@ void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage)
  */
 void mir_window_spec_set_streams(MirWindowSpec* spec,
                                  MirBufferStreamInfo* streams,
-                                 unsigned int num_streams);
+                                 unsigned int num_streams)
+    __attribute__((deprecated("Use mir_window_spec_add_render_surface instead")));
 
 /**
  * Set the MirWindowSpec to display content contained in a render surface
@@ -691,7 +700,7 @@ void mir_window_set_event_handler(MirWindow* window,
  * Retrieve the primary MirBufferStream associated with a window (to advance buffers,
  * obtain EGLNativeWindow, etc...)
  *
- *   \deprecated Users should use mir_window_spec_set_streams() to arrange
+ *   \deprecated Users should use mir_window_spec_add_render_surface() to arrange
  *               the content of a window, instead of relying on a stream
  *               being created by default.
  *   \warning If the window was created with, or modified to have a
@@ -700,8 +709,8 @@ void mir_window_set_event_handler(MirWindow* window,
  *            be removed, and this function will return NULL.
  *   \param[in] window The window
  */
-MirBufferStream* mir_window_get_buffer_stream(MirWindow* window);
-
+MirBufferStream* mir_window_get_buffer_stream(MirWindow* window)
+    __attribute__((deprecated("Use mir_window_spec_set_cursor_name/mir_window_spec_set_cursor_render_surface instead")));
 /**
  * Retrieve a text description of the error. The returned string is owned by
  * the library and remains valid until the window or the associated
@@ -715,11 +724,17 @@ char const* mir_window_get_error_message(MirWindow* window);
 
 /**
  * Get a window's parameters.
- *   \pre                     The window is valid
- *   \param [in]  window      The window
- *   \param [out] parameters  Structure to be populated
+ *  \deprecated Use mir_window getters or listen for state change events instead
+ *  \pre                     The window is valid
+ *  \param [in]  window      The window
+ *  \param [out] parameters  Structure to be populated
  */
-void mir_window_get_parameters(MirWindow* window, MirWindowParameters* parameters);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+void mir_window_get_parameters(MirWindow* window, MirWindowParameters* parameters)
+    __attribute__((deprecated("Use mir_window_get_xxx apis or listen to state/attribute change events instead")));
+#pragma GCC diagnostic pop
+
 
 /**
  * Get the orientation of a window.
