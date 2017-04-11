@@ -305,10 +305,11 @@ struct BufferStream
     MirBufferStream *stream;
 };
 
-struct CursorConfiguration
-{
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+struct CursorConfiguration
+{
+
     CursorConfiguration(std::string const& name)
      : conf(mir_cursor_configuration_from_name(name.c_str())) {}
     CursorConfiguration(const char * name)
@@ -317,7 +318,7 @@ struct CursorConfiguration
      : conf(mir_cursor_configuration_from_render_surface(surface.get(), hotspot_x, hotspot_y)) {}
     CursorConfiguration(BufferStream const& stream, int hotspot_x, int hotspot_y)
      : conf(mir_cursor_configuration_from_buffer_stream(stream.stream, hotspot_x, hotspot_y)) {}
-#pragma GCC diagnostic pop
+
 
     ~CursorConfiguration()
     {
@@ -332,6 +333,7 @@ struct CursorConfiguration
 
     MirCursorConfiguration * conf;
 };
+#pragma GCC diagnostic pop
 
 struct DisabledCursorClient : CursorClient
 {
