@@ -73,7 +73,10 @@ struct SurfaceModifications : mtf::ConnectedClientWithAWindow
         scene_surface->add_observer(mt::fake_shared(surface_observer));
 
         // Swap buffers to ensure window is visible for event based tests
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
+#pragma GCC diagnostic pop
     }
 
     void generate_alt_click_at(Point const& click_position)

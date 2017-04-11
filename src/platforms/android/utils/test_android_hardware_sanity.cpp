@@ -117,17 +117,22 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_cpu)
 
     auto const spec = mir_create_normal_window_spec(
         connection, test_width, test_height);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+#pragma GCC diagnostic pop
     auto const window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     EXPECT_THAT(window, IsValid());
     MirGraphicsRegion graphics_region;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_buffer_stream_get_graphics_region(mir_window_get_buffer_stream(window), &graphics_region);
     draw_pattern.draw(graphics_region);
     mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
-
+#pragma GCC diagnostic pop
     auto scene = runner->config.the_scene();
     auto seq = scene->scene_elements_for(this);
     ASSERT_THAT(seq, testing::SizeIs(1));
@@ -166,23 +171,30 @@ TEST_F(AndroidMirDiagnostics, client_can_draw_with_gpu)
         EGL_NONE };
     EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto native_display = mir_connection_get_egl_native_display(connection);
+#pragma GCC diagnostic pop
     auto egl_display = eglGetDisplay(native_display);
     eglInitialize(egl_display, &major, &minor);
     eglChooseConfig(egl_display, attribs, &egl_config, 1, &n);
 
     eglGetConfigAttrib(egl_display, egl_config, EGL_NATIVE_VISUAL_ID, &visual_id);
     auto const spec = mir_create_normal_window_spec(connection, test_width, test_height);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, select_format_for_visual_id(visual_id));
-
+#pragma GCC diagnostic pop
     auto const mir_surface = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     EXPECT_THAT(mir_surface, IsValid());
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto native_window = static_cast<EGLNativeWindowType>(
         mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(mir_surface)));
-
+#pragma GCC diagnostic pop
     egl_surface = eglCreateWindowSurface(egl_display, egl_config, native_window, NULL);
     context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, context_attribs);
     eglMakeCurrent(egl_display, egl_surface, egl_surface, context);

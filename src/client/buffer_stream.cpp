@@ -65,7 +65,8 @@ public:
         platform(platform)
     {
     }
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     void allocate_buffer(geom::Size size, MirPixelFormat format, int usage) override
     {
         mp::BufferAllocation request;
@@ -88,7 +89,7 @@ public:
         server.allocate_buffers(&request, protobuf_void.get(),
             google::protobuf::NewCallback(Requests::ignore_response, protobuf_void));
     }
-
+#pragma GCC diagnostic pop
     void free_buffer(int buffer_id) override
     {
         mp::BufferRelease request;
@@ -418,6 +419,8 @@ std::shared_ptr<mcl::MemoryRegion> mcl::BufferStream::secure_for_cpu_write()
     return secured_region;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /* mcl::EGLNativeSurface interface for EGLNativeWindow integration */
 MirWindowParameters mcl::BufferStream::get_parameters() const
 {
@@ -431,6 +434,7 @@ MirWindowParameters mcl::BufferStream::get_parameters() const
         static_cast<MirBufferUsage>(protobuf_bs->buffer_usage()),
         mir_display_output_id_invalid};
 }
+#pragma GCC diagnostic pop
 
 void mcl::BufferStream::wait_for_vsync()
 {

@@ -68,7 +68,12 @@ void mcl::ErrorBuffer::received(MirBufferPackage const&) THROW_EXCEPTION
 std::shared_ptr<mcl::ClientBuffer> mcl::ErrorBuffer::client_buffer() const THROW_EXCEPTION
 MirGraphicsRegion mcl::ErrorBuffer::map_region() THROW_EXCEPTION
 void mcl::ErrorBuffer::unmap_region() THROW_EXCEPTION
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirBufferUsage mcl::ErrorBuffer::buffer_usage() const THROW_EXCEPTION
+#pragma GCC diagnostic pop
+
 MirPixelFormat mcl::ErrorBuffer::pixel_format() const THROW_EXCEPTION
 geom::Size mcl::ErrorBuffer::size() const THROW_EXCEPTION
 void mcl::ErrorBuffer::increment_age() THROW_EXCEPTION

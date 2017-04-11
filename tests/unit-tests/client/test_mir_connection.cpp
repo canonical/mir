@@ -85,6 +85,8 @@ struct MockAsyncBufferFactory : mcl::AsyncBufferFactory
 {
     MOCK_METHOD1(cancel_requests_with_context, void(void*));
     MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::MirBuffer>(mp::Buffer const&));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MOCK_METHOD7(expect_buffer, void(
         std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
         MirConnection* connection,
@@ -93,6 +95,7 @@ struct MockAsyncBufferFactory : mcl::AsyncBufferFactory
         MirBufferUsage usage,
         MirBufferCallback cb,
         void* cb_context));
+#pragma GCC diagnostic pop
     MOCK_METHOD7(expect_buffer, void(
         std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
         MirConnection* connection,
@@ -216,7 +219,10 @@ struct MockClientPlatform : public mcl::ClientPlatform
     MOCK_CONST_METHOD2(get_egl_pixel_format, MirPixelFormat(EGLDisplay, EGLConfig));
     MOCK_METHOD2(request_interface, void*(char const*, int));
     MOCK_CONST_METHOD1(native_format_for, uint32_t(MirPixelFormat));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MOCK_CONST_METHOD2(native_flags_for, uint32_t(MirBufferUsage, mir::geometry::Size));
+#pragma GCC diagnostic pop
     mcl::ClientContext* client_context = nullptr;
 };
 

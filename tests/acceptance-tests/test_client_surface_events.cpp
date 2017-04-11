@@ -425,7 +425,10 @@ TEST_F(ClientSurfaceEvents, focused_window_receives_unfocus_event_on_release)
         &focus_received);
 
     // Swap buffers to get the window into the scene so it can be focused.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto buffer_stream = mir_window_get_buffer_stream(window);
+#pragma GCC diagnostic pop
     mir_buffer_stream_swap_buffers_sync(buffer_stream);
 
     ASSERT_TRUE(focus_received.wait_for(10s));
@@ -469,7 +472,10 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
         &focus_received);
 
     // Swap buffers to get the window into the scene so it can be focused.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto buffer_stream = mir_window_get_buffer_stream(window);
+#pragma GCC diagnostic pop
     mir_buffer_stream_swap_buffers_sync(buffer_stream);
 
     ASSERT_TRUE(focus_received.wait_for(10s));
@@ -489,8 +495,10 @@ TEST_F(ClientSurfaceEvents, unfocused_window_does_not_receive_unfocus_event_on_r
 
     // Add a new window that will take focus.
     auto focus_grabbing_surface = mtf::make_any_surface(connection);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(focus_grabbing_surface));
-
+#pragma GCC diagnostic pop
     ASSERT_TRUE(unfocus_received.wait_for(10s));
 
     unfocus_received.reset();
@@ -547,7 +555,10 @@ TEST_F(ClientSurfaceStartupEvents, receives_event_sent_during_surface_constructi
     mt::Signal done;
 
     auto spec = mir_create_normal_window_spec(connection, 100, 100);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+#pragma GCC diagnostic pop
     mir_window_spec_set_event_handler(spec, &raise_signal_on_close_event, &done);
 
     auto window = mir_create_window_sync(spec);
@@ -639,7 +650,10 @@ TEST_F(ClientSurfaceEvents, surface_receives_output_event_on_creation)
     EventContext context;
 
     auto spec = mir_create_normal_window_spec(connection, 640, 480);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+#pragma GCC diagnostic pop
     mir_window_spec_set_event_handler(spec, &surface_output_capturing_callback, &context);
     auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
@@ -730,7 +744,10 @@ TEST_F(ClientSurfaceCreationResizeEvent, receives_resize_event_during_creation)
     ASSERT_THAT(height, Ne(surface_height));
 
     auto spec = mir_create_normal_window_spec(connection, width, height);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+#pragma GCC diagnostic pop
     mir_window_spec_set_event_handler(spec, callback, &context);
 
     auto window = mir_create_window_sync(spec);

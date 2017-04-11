@@ -39,7 +39,10 @@ MirWindow* mtf::make_any_surface(MirConnection *connection)
 MirWindow* mtf::make_any_surface(MirConnection *connection, MirWindowEventCallback callback, void* context)
 {
     auto spec = mir_create_normal_window_spec(connection, width, height);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, format);
+#pragma GCC diagnostic pop
     mir_window_spec_set_event_handler(spec, callback, context);
     auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
@@ -57,7 +60,10 @@ MirWindow* mtf::make_surface(
 {
 
     auto spec = mir_create_normal_window_spec(connection, size.width.as_int(), size.height.as_int());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, f);
+#pragma GCC diagnostic pop
     auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 

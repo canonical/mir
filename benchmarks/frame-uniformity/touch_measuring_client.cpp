@@ -29,6 +29,8 @@ namespace mt = mir::test;
 namespace
 {
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirWindow *create_window(MirConnection *connection)
 {
     MirPixelFormat pixel_format;
@@ -73,6 +75,7 @@ void collect_input_and_frame_timing(MirWindow *surface, mt::Barrier& client_read
         results->record_frame_time(std::chrono::high_resolution_clock::now());
     }
 }
+#pragma GCC diagnostic pop
 
 }
 

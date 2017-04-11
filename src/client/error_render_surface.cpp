@@ -54,11 +54,14 @@ bool mcl::ErrorRenderSurface::valid() const
     return false;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirBufferStream* mcl::ErrorRenderSurface::get_buffer_stream(
     int /*width*/, int /*height*/,
     MirPixelFormat /*format*/,
     MirBufferUsage /*buffer_usage*/)
 {
+#pragma GCC diagnostic pop
     BOOST_THROW_EXCEPTION(std::runtime_error(error));
 }
 

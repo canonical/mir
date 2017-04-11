@@ -133,9 +133,9 @@ private:
     {
         auto spec = mir_create_normal_window_spec(
             connection, size.width.as_int(), size.height.as_int());
-        mir_window_spec_set_pixel_format(spec, pf);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+        mir_window_spec_set_pixel_format(spec, pf);
         mir_window_spec_add_render_surface(
             spec, chain.content(), size.width.as_int(), size.height.as_int(), 0, 0);
 #pragma GCC diagnostic pop

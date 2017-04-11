@@ -86,7 +86,10 @@ struct SurfacePlacement : mtf::ConnectedClientHeadlessServer
     MirWindow* create_normal_surface(int width, int height, Specifier const& specifier) const
     {
         auto const spec = mir_create_normal_window_spec(connection, width, height);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_window_spec_set_pixel_format(spec, pixel_format);
+#pragma GCC diagnostic pop
 
         specifier(spec);
 
@@ -479,8 +482,11 @@ TEST_P(UnparentedSurface, small_window_is_optically_centered_on_first_display)
             mir_window_spec_set_type(spec, GetParam());
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
             mir_window_spec_set_pixel_format(spec, pixel_format);
             mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+#pragma GCC diagnostic pop
         });
 
     auto const shell_surface = latest_shell_surface();
@@ -540,8 +546,11 @@ TEST_P(ParentedSurface, small_window_is_optically_centered_on_parent)
             mir_window_spec_set_type(spec, GetParam());
             mir_window_spec_set_width(spec, width);
             mir_window_spec_set_height(spec, height);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
             mir_window_spec_set_pixel_format(spec, pixel_format);
             mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+#pragma GCC diagnostic pop
             mir_window_spec_set_parent(spec, parent);
         });
 

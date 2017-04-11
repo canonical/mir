@@ -62,9 +62,10 @@ TEST_F(SurfaceSwapBuffers, does_not_block_when_surface_is_not_composited)
     for (int i = 0; i != 10; ++i)
     {
         mt::Signal buffers_swapped;
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_swap_buffers(mir_window_get_buffer_stream(window), swap_buffers_callback, &buffers_swapped);
-
+#pragma GCC diagnostic pop
         /*
          * ASSERT instead of EXPECT, since if we continue we will block in future
          * mir client calls (e.g mir_connection_release).
@@ -136,6 +137,9 @@ struct SwapBuffersDoesntBlockOnSubmission : mtf::ConnectedClientWithAWindow
 //LP: #1584784
 TEST_F(SwapBuffersDoesntBlockOnSubmission, can_swap_nbuffers_times_without_blocking)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     for (auto i = 0u; i != nbuffers; ++i)
         mir_buffer_stream_swap_buffers(mir_window_get_buffer_stream(window), nullptr, nullptr);
+#pragma GCC diagnostic pop
 }

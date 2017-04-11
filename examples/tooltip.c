@@ -97,6 +97,8 @@ static MirPixelFormat select_pixel_format(MirConnection* connection)
     return pixel_format;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 static MirWindow* create_tooltip(MirConnection* const connection, MirWindow* const parent, const MirPixelFormat format)
 {
     MirRectangle zone = { 0, 0, 10, 10 };
@@ -156,3 +158,4 @@ static MirWindow* create_tooltip(MirConnection* const connection, MirWindow* con
 
     return tooltip;
 }
+#pragma GCC diagnostic pop

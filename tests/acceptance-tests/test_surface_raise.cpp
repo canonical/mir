@@ -66,12 +66,13 @@ struct RaiseSurfaces : mtf::ConnectedClientHeadlessServer
         mir_window_spec_set_event_handler(spec, &cookie_capturing_callback, this);
         mir_window_apply_spec(surface2, spec);
         mir_window_spec_release(spec);
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_swap_buffers_sync(
             mir_window_get_buffer_stream(surface1));
         mir_buffer_stream_swap_buffers_sync(
             mir_window_get_buffer_stream(surface2));
-
+#pragma GCC diagnostic pop
         bool surface_fullscreen = mt::spin_wait_for_condition_or_timeout(
             [this]
             {
