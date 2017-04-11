@@ -153,7 +153,6 @@ static_assert(
 static_assert(sizeof(MirSurfaceVisibility) == sizeof(MirWindowVisibility),
     "sizeof(MirSurfaceVisibility) != sizeof(MirWindowVisibility)");
 
-
 struct ClientLibrary : mtf::HeadlessInProcessServer
 {
     std::set<MirWindow*> surfaces;
@@ -240,8 +239,6 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
     {
         for (int i = 0; i < 10; i++)
         {
-
-
             mir_wait_for_one(mir_surface_set_state(surf,
                                             mir_surface_state_maximized));
             mir_wait_for_one(mir_surface_set_state(surf,
@@ -250,7 +247,6 @@ struct ClientLibrary : mtf::HeadlessInProcessServer
                                             mir_surface_state_fullscreen));
             mir_wait_for_one(mir_surface_set_state(surf,
                                             mir_surface_state_minimized));
-
         }
     }
 };
@@ -348,8 +344,6 @@ TEST_F(ClientLibrary, reports_error_when_protobuf_protocol_much_too_new)
     mir_connection_release(connection);
 }
 
-
-
 TEST_F(ClientLibrary, creates_surface)
 {
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
@@ -379,15 +373,11 @@ TEST_F(ClientLibrary, creates_surface)
     mir_connection_release(connection);
 }
 
-
 TEST_F(ClientLibrary, shutdown_race_is_resolved_safely)
 {   // An attempt at a regression test for race LP: #1653658
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     auto const spec = mir_create_normal_window_spec(connection, 123, 456);
-
-
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
@@ -403,18 +393,13 @@ TEST_F(ClientLibrary, can_set_surface_state)
 
     auto const spec =
         mir_create_normal_window_spec(connection, 640, 480);
-
-
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-
 
     window = mir_create_window_sync(spec);
 
     mir_window_spec_release(spec);
 
     EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_restored));
-
-
 
     mir_wait_for(mir_surface_set_state(window, mir_surface_state_fullscreen));
     EXPECT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
@@ -437,7 +422,6 @@ TEST_F(ClientLibrary, can_set_surface_state)
         ASSERT_THAT(mir_surface_get_state(window), Eq(mir_surface_state_fullscreen));
     }
 
-
     mir_window_release_sync(window);
     mir_connection_release(connection);
 }
@@ -449,8 +433,6 @@ TEST_F(ClientLibrary, can_set_pointer_confinement)
     int const height = 480;
     auto const format = mir_pixel_format_abgr_8888;
     auto const spec = mir_create_normal_window_spec(connection, width, height);
-
-
     mir_window_spec_set_pixel_format(spec, format);
 
     mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window);
@@ -471,10 +453,7 @@ TEST_F(ClientLibrary, can_set_surface_min_width)
     int const height = 480;
     auto const format = mir_pixel_format_abgr_8888;
     auto const spec = mir_create_normal_window_spec(connection, width, height);
-
-
     mir_window_spec_set_pixel_format(spec, format);
-
 
     int const min_width = 480;
     mir_window_spec_set_min_width(spec, min_width);
@@ -495,10 +474,7 @@ TEST_F(ClientLibrary, can_set_surface_min_height)
     int const height = 480;
     auto const format = mir_pixel_format_abgr_8888;
     auto const spec = mir_create_normal_window_spec(connection, width, height);
-
-
     mir_window_spec_set_pixel_format(spec, format);
-
 
     int const min_height = 480;
     mir_window_spec_set_min_height(spec, min_height);
@@ -519,10 +495,7 @@ TEST_F(ClientLibrary, can_set_surface_max_width)
     int const height = 480;
     auto const format = mir_pixel_format_abgr_8888;
     auto const spec = mir_create_normal_window_spec(connection, width, height);
-
-
     mir_window_spec_set_pixel_format(spec, format);
-
 
     int const max_width = 1024;
     mir_window_spec_set_max_width(spec, max_width);
@@ -543,10 +516,7 @@ TEST_F(ClientLibrary, can_set_surface_max_height)
     int const height = 480;
     auto const format = mir_pixel_format_abgr_8888;
     auto const spec = mir_create_normal_window_spec(connection, width, height);
-
-
     mir_window_spec_set_pixel_format(spec, format);
-
 
     int const max_height = 1024;
     mir_window_spec_set_max_height(spec, max_height);
@@ -567,10 +537,7 @@ TEST_F(ClientLibrary, min_size_respected_when_placing_surface)
     int const height = 4800;
     auto const format = mir_pixel_format_abgr_8888;
     auto const spec = mir_create_normal_window_spec(connection, width, height);
-
-
     mir_window_spec_set_pixel_format(spec, format);
-
 
     int const min_width = 4800;
     int const min_height = 3200;
@@ -579,7 +546,6 @@ TEST_F(ClientLibrary, min_size_respected_when_placing_surface)
     mir_window_spec_set_min_height(spec, min_height);
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
-
 
     auto const buffer_stream = mir_window_get_buffer_stream(window);
 
@@ -597,10 +563,7 @@ TEST_F(ClientLibrary, receives_surface_dpi_value)
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     auto const spec = mir_create_normal_window_spec(connection, 640, 480);
-
-
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-
 
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
@@ -617,16 +580,12 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     auto const spec = mir_create_normal_window_spec(connection, 1280, 1024);
-
-
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
-
 
     window = mir_create_window_sync(spec);
 
     MirNativeBuffer *native;
-
 
     auto bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_get_current_buffer(bs, &native);
@@ -641,7 +600,6 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
 
     window = mir_create_window_sync(spec);
 
-
     bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_get_current_buffer(bs, &native);
 
@@ -649,17 +607,13 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     mir_buffer_stream_swap_buffers_sync(bs);
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
     mir_window_release_sync(window);
-
 
     mir_window_spec_set_width(spec, 800);
     mir_window_spec_set_height(spec, 600);
 
-
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
 
-
     window = mir_create_window_sync(spec);
-
 
     bs = mir_window_get_buffer_stream(window);
     mir_buffer_stream_get_current_buffer(bs, &native);
@@ -668,8 +622,6 @@ TEST_F(ClientLibrary, surface_scanout_flag_toggles)
     mir_buffer_stream_swap_buffers_sync(bs);
     EXPECT_FALSE(native->flags & mir_buffer_flag_can_scanout);
     mir_window_release_sync(window);
-
-
 
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
@@ -692,8 +644,6 @@ TEST_F(ClientLibrary, gets_buffer_dimensions)
 
     auto const spec =
         mir_create_normal_window_spec(connection, 0, 0);
-
-
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
 
@@ -710,7 +660,6 @@ TEST_F(ClientLibrary, gets_buffer_dimensions)
         mir_window_spec_set_height(spec, size.height);
 
         window = mir_create_window_sync(spec);
-
 
         auto bs = mir_window_get_buffer_stream(window);
 
@@ -738,10 +687,7 @@ TEST_F(ClientLibrary, creates_multiple_surfaces)
     int const n_surfaces = 13;
     size_t old_surface_count = 0;
 
-
-
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
-
 
     auto const spec =
         mir_create_normal_window_spec(connection, 640, 480);
@@ -777,15 +723,11 @@ TEST_F(ClientLibrary, creates_multiple_surfaces)
 
 TEST_F(ClientLibrary, client_library_accesses_and_advances_buffers)
 {
-
-
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
-
 
     window = mtf::make_any_surface(connection);
 
     buffers = 0;
-
 
     mir_wait_for(mir_buffer_stream_swap_buffers(mir_window_get_buffer_stream(window), swap_buffers_callback, this));
 
@@ -804,7 +746,6 @@ TEST_F(ClientLibrary, fully_synchronous_client)
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
     window = mtf::make_any_surface(connection);
-
 
     mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
 
@@ -845,14 +786,10 @@ TEST_F(ClientLibrary, accesses_platform_package)
 {
     using namespace testing;
 
-
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
-
 
     MirPlatformPackage platform_package;
     ::memset(&platform_package, -1, sizeof(platform_package));
-
-
 
     mir_connection_get_platform(connection, &platform_package);
 
@@ -863,10 +800,7 @@ TEST_F(ClientLibrary, accesses_platform_package)
 
 TEST_F(ClientLibrary, accesses_display_info)
 {
-
-
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
-
 
     auto configuration = mir_connection_create_display_configuration(connection);
     ASSERT_THAT(configuration, NotNull());
@@ -890,10 +824,7 @@ TEST_F(ClientLibrary, accesses_display_info)
 
 TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
 {
-
-
     mir_wait_for(mir_connect(new_connection().c_str(), __PRETTY_FUNCTION__, connection_callback, this));
-
 
     auto const surf_one = mtf::make_any_surface(connection);
     auto const surf_two = mtf::make_any_surface(connection);
@@ -902,7 +833,6 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
     ASSERT_THAT(surf_two, NotNull());
 
     buffers = 0;
-
 
     // StubDisplayConfiguration is set to 60Hz and we now actually honour
     // that. So to avoid 1024 frames taking 17 seconds or so...
@@ -957,7 +887,6 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)
     MirPixelFormat const format{mir_pixel_format_bgr_888};
     auto surface_spec = mir_create_normal_window_spec(connection, width, height);
 
-
     mir_window_spec_set_pixel_format(surface_spec, format);
 
     auto window = mir_create_window_sync(surface_spec);
@@ -985,7 +914,6 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
     MirPixelFormat const format{mir_pixel_format_xbgr_8888};
     auto surface_spec = mir_create_normal_window_spec(connection, width, height);
 
-
     mir_window_spec_set_pixel_format(surface_spec, format);
 
     window = mir_create_window_sync(surface_spec);
@@ -994,7 +922,6 @@ TEST_F(ClientLibrary, create_simple_normal_surface_from_spec_async)
     EXPECT_THAT(window, IsValid());
 
     MirNativeBuffer* native_buffer;
-
 
     mir_buffer_stream_get_current_buffer(
         mir_window_get_buffer_stream(window), &native_buffer);

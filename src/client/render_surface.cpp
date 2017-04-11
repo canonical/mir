@@ -71,7 +71,6 @@ MirBufferStream* mcl::RenderSurface::get_buffer_stream(
                                                                       height,
                                                                       this,
                                                                       *protobuf_bs);
-
     if (buffer_usage == mir_buffer_usage_hardware)
     {
 #pragma GCC diagnostic pop

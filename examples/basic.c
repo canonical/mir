@@ -143,7 +143,6 @@ int demo_client(const char* server, int buffer_swap_count)
         {
             ///\internal [get_current_buffer_tag]
             MirNativeBuffer* buffer_package = NULL;
-
             mir_buffer_stream_get_current_buffer(bs, &buffer_package);
 #pragma GCC diagnostic pop
             assert(buffer_package != NULL);

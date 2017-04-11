@@ -66,7 +66,6 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-
 MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,

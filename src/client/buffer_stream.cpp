@@ -79,7 +79,6 @@ public:
         {
             buf_params->set_native_format(platform->native_format_for(format));
             buf_params->set_flags(platform->native_flags_for(static_cast<MirBufferUsage>(usage), size));
-
         }
         else
         {
