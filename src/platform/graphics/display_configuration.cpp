@@ -251,8 +251,21 @@ mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
 
 glm::mat2 mg::DisplayConfigurationOutput::transformation() const
 {
-    // TODO: Scaling will go in here later
-    return mg::transformation(orientation);
+    auto rot = mg::transformation(orientation);
+
+    if (!custom_logical_size.is_set())
+        return rot;
+
+    auto const& physical_size = extents_of(modes, current_mode_index,
+                                           orientation, top_left).size;
+    auto const& logical_size = custom_logical_size.value();
+
+    float scale_x = static_cast<float>(physical_size.width.as_int()) /
+                    logical_size.width.as_int();
+    float scale_y = static_cast<float>(physical_size.height.as_int()) /
+                    logical_size.height.as_int();
+
+    return glm::mat2(scale_x, 0, 0, scale_y) * rot;
 }
 
 bool mg::DisplayConfigurationOutput::valid() const
@@ -268,6 +281,13 @@ bool mg::DisplayConfigurationOutput::valid() const
     auto nmodes = modes.size();
     if (current_mode_index >= nmodes)
         return false;
+
+    if (custom_logical_size.is_set())
+    {
+        auto const& logical_size = custom_logical_size.value();
+        if (!logical_size.width.as_int() || !logical_size.height.as_int())
+            return false;
+    }
 
     return true;
 }

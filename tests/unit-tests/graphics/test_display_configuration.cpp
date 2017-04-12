@@ -287,6 +287,36 @@ TEST(DisplayConfiguration, output_extents_uses_current_mode)
     EXPECT_EQ(out.modes[out.current_mode_index].size, out.extents().size);
 }
 
+TEST(DisplayConfiguration, output_extents_are_customizable)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    geom::Size const custom_size{1234, 9876};
+    out.custom_logical_size = custom_size;
+
+    EXPECT_EQ(custom_size, out.extents().size);
+}
+
+TEST(DisplayConfiguration, custom_size_causes_scaling)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    auto const& physical_size = out.modes[out.current_mode_index].size;
+
+    geom::Size const logical_size{1234, 9876};
+    out.custom_logical_size = logical_size;
+
+    auto const& observed = out.transformation();
+    glm::mat2 const expected{static_cast<float>(physical_size.width.as_int()) /
+                             logical_size.width.as_int(),
+                             0,
+                             0,
+                             static_cast<float>(physical_size.height.as_int()) /
+                             logical_size.height.as_int()};
+
+    EXPECT_EQ(expected, observed);
+}
+
 TEST(DisplayConfiguration, output_extents_rotates_with_orientation)
 {
     mg::DisplayConfigurationOutput out = tmpl_output;
@@ -327,6 +357,23 @@ TEST(DisplayConfiguration, used_and_disconnected_invalid)
     out.used = true;
     out.connected = false;
 
+    EXPECT_FALSE(out.valid());
+}
+
+TEST(DisplayConfiguration, only_nonzero_custom_sizes_are_valid)
+{
+    mg::DisplayConfigurationOutput out = tmpl_output;
+
+    out.custom_logical_size = {12, 34};
+    EXPECT_TRUE(out.valid());
+
+    out.custom_logical_size = {0, 56};
+    EXPECT_FALSE(out.valid());
+
+    out.custom_logical_size = {78, 0};
+    EXPECT_FALSE(out.valid());
+
+    out.custom_logical_size = {0, 0};
     EXPECT_FALSE(out.valid());
 }
 
