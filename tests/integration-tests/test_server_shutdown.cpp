@@ -93,15 +93,21 @@ struct ClientWithSurface
 
     void swap_sync()
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_swap_buffers_sync(
             mir_window_get_buffer_stream(window));
+#pragma GCC diagnostic pop
     }
 
     void swap_async()
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_swap_buffers(
             mir_window_get_buffer_stream(window),
             null_buffer_stream_callback, nullptr);
+#pragma GCC diagnostic pop
     }
 
     MirConnection* const connection;

@@ -158,6 +158,8 @@ private:
 
     void create_target_window()
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         another_connection = mir_connect_sync(new_connection().c_str(), "another_connection");
         auto const spec = mir_create_normal_window_spec(
             connection, screen_geometry.size.width.as_int(), screen_geometry.size.height.as_int());
@@ -165,6 +167,7 @@ private:
         mir_window_spec_set_name(spec, "target_window");
         mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
         mir_window_spec_set_event_handler(spec, &window_event_handler, this);
+#pragma GCC diagnostic pop
 
         target_window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
@@ -234,9 +237,10 @@ void DragAndDrop::paint_window(MirWindow* w)
             if (mir_window_event_get_attribute_value(window_event))
                 have_focus.raise();
         });
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(w));
-
+#pragma GCC diagnostic pop
     EXPECT_THAT(have_focus.wait_for(receive_event_timeout), Eq(true));
 
     reset_window_event_handler(w);

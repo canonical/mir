@@ -61,6 +61,8 @@ typedef struct MirDemoState
 } MirDemoState;
 ///\internal [MirDemoState_tag]
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 int demo_client(const char* server, int buffer_swap_count)
 {
     MirDemoState mcd;
@@ -142,6 +144,7 @@ int demo_client(const char* server, int buffer_swap_count)
             ///\internal [get_current_buffer_tag]
             MirNativeBuffer* buffer_package = NULL;
             mir_buffer_stream_get_current_buffer(bs, &buffer_package);
+#pragma GCC diagnostic pop
             assert(buffer_package != NULL);
             MirGraphicsRegion graphics_region;
             mir_buffer_stream_get_graphics_region(bs, &graphics_region);

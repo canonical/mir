@@ -340,6 +340,8 @@ static MirOutput const* find_active_output(
     return NULL;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 int main(int argc, char *argv[])
 {
     static const Color background = {180, 180, 150, 255};
@@ -514,3 +516,4 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+#pragma GCC diagnostic pop

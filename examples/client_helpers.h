@@ -60,8 +60,10 @@ private:
         bool prefer_alpha,
         bool hardware);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     std::unique_ptr<MirBufferStream, decltype(&mir_buffer_stream_release_sync)> const stream;
-
+#pragma GCC diagnostic pop
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;
 };

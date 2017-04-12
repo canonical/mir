@@ -114,7 +114,10 @@ EGLDisplay future_driver_eglGetDisplay(MirConnection* connection)
     info->eglDestroyImageKHR = (PFNEGLDESTROYIMAGEKHRPROC) eglGetProcAddress("eglDestroyImageKHR");
     info->glEGLImageTargetTexture2DOES =
         (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC) eglGetProcAddress("glEGLImageTargetTexture2DOES");
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return eglGetDisplay(mir_connection_get_egl_native_display(connection));
+#pragma GCC diagnostic pop
 }
 
 EGLBoolean future_driver_eglTerminate(EGLDisplay display)

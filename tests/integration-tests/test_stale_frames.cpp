@@ -292,8 +292,10 @@ TEST_P(StaleFrames, are_dropped_when_restarting_compositor)
     std::set<mg::BufferID> stale_buffers;
 
     stale_buffers.emplace(mir_debug_window_current_buffer_id(window));
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto bs = mir_window_get_buffer_stream(window);
+#pragma GCC diagnostic pop
     mir_buffer_stream_set_swapinterval(bs, GetParam());
     mir_buffer_stream_swap_buffers_sync(bs);
 
@@ -321,8 +323,10 @@ TEST_P(StaleFrames, only_fresh_frames_are_used_after_restarting_compositor)
     using namespace testing;
 
     stop_compositor();
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto bs = mir_window_get_buffer_stream(window);
+#pragma GCC diagnostic pop
     mir_buffer_stream_set_swapinterval(bs, GetParam());
     mir_buffer_stream_swap_buffers_sync(bs);
     mir_buffer_stream_swap_buffers_sync(bs);

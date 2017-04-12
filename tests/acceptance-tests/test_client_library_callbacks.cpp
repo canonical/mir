@@ -154,11 +154,11 @@ TEST_F(ClientLibraryCallbacks, swap_buffers_callback_is_called_before_wait_handl
 {
     connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
     window = mtf::make_any_surface(connection);
-
-    auto const wh = mir_buffer_stream_swap_buffers(
-        mir_window_get_buffer_stream(window), swap_buffers_callback, this);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    auto const wh = mir_buffer_stream_swap_buffers(
+        mir_window_get_buffer_stream(window), swap_buffers_callback, this);
+
     mir_wait_for(wh);
 #pragma GCC diagnostic pop
 

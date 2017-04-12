@@ -29,11 +29,15 @@
 extern "C" {
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 /**
  * Release resources assosciated with cursor parameters
  *     \param [in] parameters The operand
  */
-void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters);
+void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters)
+__attribute__((deprecated("MirCursorConfiguration is deprecated")));
 
 /**
  * Returns a new MirCursorConfiguration representing a named cursor
@@ -46,15 +50,14 @@ void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters);
  *    \return A cursor parameters object which must be passed
  *            to_mir_cursor_configuration_destroy
  */
-/// @cond
-__attribute__ ((deprecated))
-/// @endcond
-MirCursorConfiguration *mir_cursor_configuration_from_name(char const* name);
+MirCursorConfiguration *mir_cursor_configuration_from_name(char const* name)
+__attribute__((deprecated("Use mir_window_spec_set_cursor_name instead")));
 
 /**
  * Returns a new cursor configuration tied to a given buffer stream.
  * If the configuration is successfully applied buffers from the stream will be used 
  * to fill the system cursor.
+ *    \deprecated Users should use mir_window_spec_set_cursor_render_surface.
  *    \param [in] stream      The buffer stream
  *    \param [in] hotspot_x The x-coordinate to use as the cursor's hotspot.
  *    \param [in] hotspot_y The y-coordinate to use as the cursor's hotspot.
@@ -62,8 +65,10 @@ MirCursorConfiguration *mir_cursor_configuration_from_name(char const* name);
  *            to_mir_cursor_configuration_destroy
  */
 MirCursorConfiguration *mir_cursor_configuration_from_buffer_stream(MirBufferStream const* stream, int hotspot_x,
-    int hotspot_y);
+    int hotspot_y)
+__attribute__((deprecated("Use mir_window_spec_set_cursor_render_surface instead")));
 
+#pragma GCC diagnostic pop
 #ifdef __cplusplus
 }
 /**@}*/

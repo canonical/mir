@@ -101,7 +101,8 @@ static void shutdown(int signum)
     }
 }
 
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 int main(int argc, char* argv[])
 {
     MirConnection *connection = 0;
@@ -196,3 +197,4 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+#pragma GCC diagnostic pop

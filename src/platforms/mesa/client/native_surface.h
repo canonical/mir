@@ -35,7 +35,10 @@ public:
     explicit NativeSurface(EGLNativeSurface*);
 
     int advance_buffer(MirBufferPackage* buffer_package);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     int get_parameters(MirWindowParameters* surface_parameters);
+#pragma GCC diagnostic pop
     int set_swapinterval(int interval);
     void use_native_surface(EGLNativeSurface* native_surface);
 

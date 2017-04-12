@@ -60,7 +60,8 @@ __attribute__((deprecated("This type is slated for rename due to MirRenderSurfac
  * Opaque structure containing cursor parameterization. Create with mir_cursor* family.
  * Used with mir_window_configure_cursor.
  */
-typedef struct MirCursorConfiguration MirCursorConfiguration;
+typedef struct MirCursorConfiguration MirCursorConfiguration
+    __attribute__((deprecated("Use mir_window_spec_set_cursor_name/mir_window_spec_set_cursor_render_surface instead")));
 
 /**
  * Descriptor for an output connection.
@@ -185,7 +186,7 @@ typedef enum MirBufferUsage
 {
     mir_buffer_usage_hardware = 1,
     mir_buffer_usage_software
-} MirBufferUsage;
+} MirBufferUsage __attribute__((deprecated("No longer applicable when using MirRenderSurface")));
 
 /**
  * MirWindowParameters is the structure of minimum required information that
@@ -197,7 +198,11 @@ typedef struct MirSurfaceParameters
     int width;
     int height;
     MirPixelFormat pixel_format;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferUsage buffer_usage;
+#pragma GCC diagnostic pop
+
     /**
      * The id of the output to place the surface in.
      *
@@ -207,7 +212,7 @@ typedef struct MirSurfaceParameters
      * use the value mir_display_output_id_invalid.
      */
     uint32_t output_id;
-} MirSurfaceParameters __attribute__((deprecated("Use MirWindowParameters instead")));
+} MirSurfaceParameters __attribute__((deprecated("Use mir_window_get apis or listen for attribute events instead")));
 
 enum { mir_platform_package_max = 32 };
 
@@ -576,7 +581,8 @@ __attribute__((deprecated("Use MirWindowIdCallback instead")));
 typedef void (*MirRenderSurfaceCallback)(MirRenderSurface*, void* context)
 __attribute__((deprecated("This type is slated for rename due to MirRenderSurface-->MirSurface transition")));
 
-typedef MirSurfaceParameters MirWindowParameters;
+typedef MirSurfaceParameters MirWindowParameters
+__attribute__((deprecated("Use mir_window_get_xxx apis or listen for attribute events instead")));
 
 #pragma GCC diagnostic pop
 

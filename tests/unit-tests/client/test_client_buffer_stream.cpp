@@ -107,10 +107,13 @@ struct StubClientPlatform : public mcl::ClientPlatform
     {
         return 0u;
     }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const override
     {
         return 0u;
     }
+#pragma GCC diagnostic pop
 
     static EGLNativeWindowType egl_native_window;
     std::shared_ptr<mcl::ClientBufferFactory> const buffer_factory;
@@ -170,9 +173,11 @@ struct ClientBufferStream : TestWithParam<bool>
         ON_CALL(mock_factory, create_buffer(_,An<geom::Size>(),_))
             .WillByDefault(Return(std::make_shared<mtd::NullClientBuffer>()));
     }
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mp::BufferStream a_protobuf_buffer_stream(MirPixelFormat format, MirBufferUsage usage)
     {
+#pragma GCC diagnostic pop
         mp::BufferStream protobuf_bs;
         mp::BufferStreamId bs_id;
         
@@ -221,8 +226,10 @@ struct ClientBufferStream : TestWithParam<bool>
     testing::NiceMock<mtd::MockProtobufServer> mock_protobuf_server;
 
     MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferUsage const default_buffer_usage = mir_buffer_usage_hardware;
-
+#pragma GCC diagnostic pop
     std::shared_ptr<mcl::PerfReport> const perf_report = std::make_shared<mcl::NullPerfReport>();
 
     MirBufferPackage buffer_package = a_buffer_package();

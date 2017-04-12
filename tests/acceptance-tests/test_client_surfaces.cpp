@@ -61,7 +61,8 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
     testing::NiceMock<mtd::MockWindowManager> window_manager;
 };
 }
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientSurfaces, are_created_with_correct_size)
 {
     int width_1 = 640, height_1 = 480, width_2 = 1600, height_2 = 1200;
@@ -338,8 +339,7 @@ TEST_F(ClientSurfaces, can_be_renamed)
     mir_window_release_sync(window);
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 {
     using namespace testing;

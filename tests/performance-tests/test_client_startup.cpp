@@ -70,7 +70,10 @@ MirWindow* make_surface(MirConnection* connection)
     auto format = find_pixel_format(connection);
 
     auto spec = mir_create_normal_window_spec(connection, 720, 1280);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, format);
+#pragma GCC diagnostic pop
     auto window = mir_create_window_sync(spec);
 
     mir_window_spec_release(spec);
@@ -92,7 +95,10 @@ TEST_F(ClientStartupPerformance, create_surface_and_swap)
 
     auto conn = create_connection();
     auto window = make_surface(conn);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto stream  = mir_window_get_buffer_stream(window);
+#pragma GCC diagnostic pop
     if (!mir_buffer_stream_is_valid(stream))
     {
         std::string error_msg{"Could not get buffer stream from window: "};
