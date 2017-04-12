@@ -1273,6 +1273,12 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
         dest.gamma = {convert_string_to_gamma_curve(src.gamma_red()),
                       convert_string_to_gamma_curve(src.gamma_green()),
                       convert_string_to_gamma_curve(src.gamma_blue())};
+
+        if (src.has_logical_width() && src.has_logical_height())
+        {
+            dest.custom_logical_size = {src.logical_width(),
+                                        src.logical_height()};
+        }
     });
 
     return config;
