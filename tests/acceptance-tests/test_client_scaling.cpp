@@ -160,10 +160,12 @@ TEST_P(SurfaceScaling, compositor_sees_size_different_when_scaled)
 {
     using namespace std::literals::chrono_literals;
     auto scale = 2.0f;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto stream = mir_window_get_buffer_stream(window);
     mir_buffer_stream_set_swapinterval(stream, GetParam());
     mir_buffer_stream_set_scale(stream, scale);
-
+#pragma GCC diagnostic pop
     mir_buffer_stream_swap_buffers_sync(stream);
 
     int frames = 0;

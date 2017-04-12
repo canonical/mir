@@ -206,7 +206,10 @@ int main(int argc, char* argv[])
     me::Connection connection{socket, "Multiple MirBufferStream example"};
 
     me::NormalWindow window{connection, 200, 200, true, false};
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferStream* surface_stream = mir_window_get_buffer_stream(window);
+#pragma GCC diagnostic pop
     int topSize = 100, dTopSize = 2;
     auto top = std::make_unique<me::BufferStream>(connection, topSize, topSize, true, false);
     me::BufferStream bottom(connection, 50, 50, true, false);
@@ -275,8 +278,10 @@ int main(int argc, char* argv[])
         fill_stream_with(surface_stream, baseColour, 0, 0, 128);
         fill_stream_with(bottom, 0, 0, bottomColour, 128);
         fill_stream_with(*top, 0, topColour, 0, 128);
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_window_spec_set_streams(spec, arrangement.data(), arrangement.size());
+#pragma GCC diagnostic pop
         mir_buffer_stream_swap_buffers_sync(surface_stream);
         mir_buffer_stream_swap_buffers_sync(bottom);
         mir_buffer_stream_swap_buffers_sync(*top);

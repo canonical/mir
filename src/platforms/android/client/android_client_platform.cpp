@@ -474,7 +474,10 @@ uint32_t mcla::AndroidClientPlatform::native_format_for(MirPixelFormat format) c
     return mga::to_android_format(format);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 uint32_t mcla::AndroidClientPlatform::native_flags_for(MirBufferUsage usage, mir::geometry::Size) const
 {
+#pragma GCC diagnostic pop
     return mga::convert_to_android_usage(static_cast<mir::graphics::BufferUsage>(usage));
 }

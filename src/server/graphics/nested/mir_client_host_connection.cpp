@@ -353,8 +353,11 @@ mgn::MirClientHostConnection::~MirClientHostConnection()
 
 EGLNativeDisplayType mgn::MirClientHostConnection::egl_native_display()
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return reinterpret_cast<EGLNativeDisplayType>(
         mir_connection_get_egl_native_display(mir_connection));
+#pragma GCC diagnostic pop
 }
 
 auto mgn::MirClientHostConnection::create_display_config()
@@ -397,6 +400,8 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
             properties.size.height.as_int()),
         mir_window_spec_release);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferUsage usage = (properties.usage == mg::BufferUsage::hardware) ?
         mir_buffer_usage_hardware : mir_buffer_usage_software; 
 
@@ -406,6 +411,7 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
     mir_window_spec_set_fullscreen_on_output(spec.get(), output_id);
     MirBufferStreamInfo info { stream->handle(), displacement.dx.as_int(), displacement.dy.as_int() };
     mir_window_spec_set_streams(spec.get(), &info, 1);
+#pragma GCC diagnostic pop
 
     auto surf = std::shared_ptr<MirClientHostSurface>(
         new MirClientHostSurface(mir_connection, spec.get()),

@@ -38,7 +38,8 @@
 static char const *socket_file = NULL;
 static EGLDisplay disp;
 
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void create_and_run_scroll_surface(MirConnection *connection)
 {
     /* egl setup */
@@ -193,6 +194,6 @@ int main(int argc, char* argv[])
 
     return 0;
 }
-
+#pragma GCC diagnostic pop
 
 

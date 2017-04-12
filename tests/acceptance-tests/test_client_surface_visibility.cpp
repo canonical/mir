@@ -109,9 +109,12 @@ MirWindow* create_surface(MirConnection* connection, const char* name, geom::Siz
 {
     auto const spec = mir_create_normal_window_spec(
         connection, size.width.as_int(), size.height.as_int());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_bgr_888);
     mir_window_spec_set_name(spec, name);
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware);
+#pragma GCC diagnostic pop
     mir_window_spec_set_event_handler(spec, &event_callback, &mock_callback);
     auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
@@ -162,7 +165,10 @@ private:
             mir_window_visibility_exposed,
             [this]
             {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                 mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
+#pragma GCC diagnostic pop
             });
 
         // GMock is behaving strangely, checking expectations after they

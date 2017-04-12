@@ -189,7 +189,10 @@ struct WindowReadyHandler
 MirWindow *make_window(MirConnection *connection, std::string const& client_name)
 {
     auto spec = mir_create_normal_window_spec(connection, 1, 1);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+#pragma GCC diagnostic pop
     mir_window_spec_set_name(spec, client_name.c_str());
 
     WindowReadyHandler event_handler;
@@ -198,8 +201,10 @@ MirWindow *make_window(MirConnection *connection, std::string const& client_name
     auto const window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
-
+#pragma GCC diagnostic pop
     event_handler.wait_for_window_to_become_focused_and_exposed();
     mir_window_set_event_handler(window, nullptr, nullptr);
 
@@ -275,6 +280,8 @@ struct CursorWindowSpec
     MirWindowSpec * const spec;
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct BufferStream
 {
     BufferStream(MirConnection *connection)
@@ -282,13 +289,10 @@ struct BufferStream
        stream{mir_connection_create_buffer_stream_sync(connection, 24, 24, mir_pixel_format_argb_8888,mir_buffer_usage_software)}
     {}
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     BufferStream(RenderSurface const& surface)
      : stream_owned(false),
        stream{mir_render_surface_get_buffer_stream(surface.get(), 24, 24, mir_pixel_format_argb_8888)}
     {}
-#pragma GCC diagnostic pop
 
     ~BufferStream()
     {
@@ -304,11 +308,13 @@ struct BufferStream
     bool stream_owned;
     MirBufferStream *stream;
 };
+#pragma GCC diagnostic pop
 
-struct CursorConfiguration
-{
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+struct CursorConfiguration
+{
+
     CursorConfiguration(std::string const& name)
      : conf(mir_cursor_configuration_from_name(name.c_str())) {}
     CursorConfiguration(const char * name)
@@ -317,7 +323,7 @@ struct CursorConfiguration
      : conf(mir_cursor_configuration_from_render_surface(surface.get(), hotspot_x, hotspot_y)) {}
     CursorConfiguration(BufferStream const& stream, int hotspot_x, int hotspot_y)
      : conf(mir_cursor_configuration_from_buffer_stream(stream.stream, hotspot_x, hotspot_y)) {}
-#pragma GCC diagnostic pop
+
 
     ~CursorConfiguration()
     {
@@ -332,6 +338,7 @@ struct CursorConfiguration
 
     MirCursorConfiguration * conf;
 };
+#pragma GCC diagnostic pop
 
 struct DisabledCursorClient : CursorClient
 {

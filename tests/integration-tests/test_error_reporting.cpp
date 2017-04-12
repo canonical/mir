@@ -130,8 +130,10 @@ TEST_F(ErrorReporting, c_api_returns_surface_creation_error)
     ASSERT_THAT(connection, IsValid());
 
     auto const spec = mir_create_normal_window_spec(connection, 640, 480);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-
+#pragma GCC diagnostic pop
     auto const window  = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 

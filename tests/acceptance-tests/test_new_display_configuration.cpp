@@ -261,6 +261,8 @@ struct SimpleClient
     SimpleClient(std::string const& mir_test_socket) :
         mir_test_socket{mir_test_socket} {}
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     void connect()
     {
         connection = mir_connect_sync(mir_test_socket.c_str(), __PRETTY_FUNCTION__);
@@ -276,7 +278,7 @@ struct SimpleClient
         if (!ready_to_accept_events.raised())
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
     }
-
+#pragma GCC diagnostic pop
     static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<SimpleClient*>(context);

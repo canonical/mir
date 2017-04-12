@@ -445,8 +445,12 @@ uint32_t mclm::ClientPlatform::native_format_for(MirPixelFormat format) const
     return mgm::mir_format_to_gbm_format(format);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 uint32_t mclm::ClientPlatform::native_flags_for(MirBufferUsage, mir::geometry::Size size) const
 {
+#pragma GCC diagnostic pop
+
     uint32_t bo_flags{GBM_BO_USE_RENDERING};
     if (size.width.as_uint32_t() >= 800 && size.height.as_uint32_t() >= 600)
         bo_flags |= GBM_BO_USE_SCANOUT;

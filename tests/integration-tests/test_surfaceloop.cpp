@@ -141,7 +141,10 @@ struct SurfaceLoop : mtf::BasicClientServerFixture<BufferCounterConfig>
     {
         mtf::BasicClientServerFixture<BufferCounterConfig>::SetUp();
         surface_spec = mir_create_normal_window_spec(connection, 640, 480);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_window_spec_set_pixel_format(surface_spec, mir_pixel_format_abgr_8888);
+#pragma GCC diagnostic pop
     }
 
     void TearDown() override

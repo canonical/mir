@@ -52,7 +52,10 @@ struct StubClientPlatform : public mir::client::ClientPlatform
     MirNativeBuffer* convert_native_buffer(mir::graphics::NativeBuffer* buf) const override;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
     uint32_t native_format_for(MirPixelFormat) const override;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const override;
+#pragma GCC diagnostic pop
 
     mir::client::ClientContext* const context;
     MirBufferPackage mutable native_buffer;

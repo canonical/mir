@@ -223,8 +223,11 @@ uint32_t mtf::StubClientPlatform::native_format_for(MirPixelFormat) const
     return 0u;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 uint32_t mtf::StubClientPlatform::native_flags_for(MirBufferUsage usage, mir::geometry::Size) const
 {
+#pragma GCC diagnostic pop
     return static_cast<uint32_t>(usage);
 }
 

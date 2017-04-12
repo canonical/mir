@@ -72,6 +72,8 @@ public:
             {
                 return nullptr;
             }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
             void expect_buffer(
                 std::shared_ptr<mcl::ClientBufferFactory> const&, 
                 MirConnection* conn, mir::geometry::Size,
@@ -81,6 +83,7 @@ public:
                     buffer = std::make_shared<mcl::Buffer>(cb, ctx, 1, nullptr, conn, usage);
                 cb(reinterpret_cast<MirBuffer*>(buffer.get()), ctx);
             }
+#pragma GCC diagnostic pop
             void expect_buffer(
                 std::shared_ptr<mcl::ClientBufferFactory> const&,
                 MirConnection*, mir::geometry::Size, uint32_t, uint32_t,
