@@ -328,21 +328,25 @@ void mir_connection_cancel_base_display_configuration_preview(
 
 /**
  * Get a display type that can be used with EGL.
+ *   \deprecated Use MirConnection * as the native display instead
  *   \param [in] connection  The connection
  *   \return                 An EGLNativeDisplayType that the client can use
  */
-MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection);
+MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection)
+__attribute__((deprecated("Use MirConnection * as the native display instead")));
 
 /**
  * Get the exact MirPixelFormat to use in creating a surface for a chosen
  * EGLConfig.
+ *   \deprecated Use EGL directly, the EGL implementation will now set correct pixel format"
  *   \param [in] connection  The connection
  *   \param [in] egldisplay  The EGLDisplay for the given config
  *   \param [in] eglconfig   The EGLConfig you have chosen to use
  *   \return                 The MirPixelFormat to use in surface creation
  */
 MirPixelFormat mir_connection_get_egl_pixel_format(
-    MirConnection *connection, void *egldisplay, void *eglconfig);
+    MirConnection *connection, void *egldisplay, void *eglconfig)
+__attribute__((deprecated("Use EGL directly, the EGL implementation will now set correct pixel format")));
 
 /**
  * Get the list of possible formats that a surface can be created with.

@@ -45,8 +45,10 @@ struct MockMirBuffer : client::MirBuffer
     MOCK_CONST_METHOD0(client_buffer, std::shared_ptr<client::ClientBuffer>());
     MOCK_METHOD0(map_region, MirGraphicsRegion());
     MOCK_METHOD0(unmap_region, void());
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MOCK_CONST_METHOD0(buffer_usage, MirBufferUsage());
+#pragma GCC diagnostic pop
     MOCK_CONST_METHOD0(pixel_format, MirPixelFormat());
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(allocating_connection, MirConnection*());

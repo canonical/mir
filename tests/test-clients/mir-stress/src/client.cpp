@@ -58,6 +58,8 @@ bool UnacceleratedClient::connect(std::string unique_name, const char* socket_fi
     return true;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 bool UnacceleratedClient::create_surface()
 {
     auto display_configuration = mir_connection_create_display_configuration(connection_);
@@ -83,6 +85,7 @@ bool UnacceleratedClient::create_surface()
 
     return true;
 }
+#pragma GCC diagnostic pop
 
 void UnacceleratedClient::release_surface()
 {

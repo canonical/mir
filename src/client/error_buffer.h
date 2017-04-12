@@ -39,7 +39,10 @@ public:
     std::shared_ptr<ClientBuffer> client_buffer() const override;
     MirGraphicsRegion map_region() override;
     void unmap_region() override;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferUsage buffer_usage() const override;
+#pragma GCC diagnostic pop
     MirPixelFormat pixel_format() const override;
     geometry::Size size() const override;
     MirConnection* allocating_connection() const override;

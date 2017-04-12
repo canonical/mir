@@ -179,7 +179,10 @@ struct Client
                 mir_connection_get_error_message(connection)});
         }
         auto spec = mir_create_normal_window_spec(connection, surface_width, surface_height);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+#pragma GCC diagnostic pop
         mir_window_spec_set_event_handler(spec, handle_event, this);
         mir_window_spec_set_name(spec, name.c_str());
         window = mir_create_window_sync(spec);
@@ -188,9 +191,11 @@ struct Client
             BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a window: "}+
                 mir_window_get_error_message(window)});
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_swap_buffers_sync(
             mir_window_get_buffer_stream(window));
-
+#pragma GCC diagnostic pop
         ready_to_accept_events.wait_for(4s);
         if (!ready_to_accept_events.raised())
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));

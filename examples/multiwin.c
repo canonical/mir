@@ -164,8 +164,10 @@ static void clear_region(const MirGraphicsRegion *region, const Color *color)
 static void draw_window(Window *win)
 {
     MirGraphicsRegion region;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferStream *bs = mir_window_get_buffer_stream(win->window);
-
+#pragma GCC diagnostic pop
     mir_buffer_stream_get_graphics_region(bs, &region);
     clear_region(&region, &win->fill);
     mir_buffer_stream_swap_buffers_sync(bs);
@@ -251,8 +253,11 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, pixel_format);
     mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+#pragma GCC diagnostic pop
     mir_window_spec_set_name(spec, "red");
 
     win[0].window = mir_create_window_sync(spec);

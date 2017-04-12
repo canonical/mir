@@ -113,13 +113,19 @@ struct SwapInterval : mtf::BasicClientServerFixture<ServerConfig>
     {
         mtf::BasicClientServerFixture<ServerConfig>::SetUp();
         window = mtf::make_any_surface(connection);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         stream = mir_connection_create_buffer_stream_sync(
             connection, 10, 10, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware);
+#pragma GCC diagnostic pop
     }
 
     void TearDown()
     {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_release_sync(stream);
+#pragma GCC diagnostic pop
         mir_window_release_sync(window);
         mtf::BasicClientServerFixture<ServerConfig>::TearDown();
     }

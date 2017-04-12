@@ -188,8 +188,12 @@ TEST_F(Screencast, gets_valid_egl_native_window)
     ASSERT_NE(nullptr, screencast);
     ASSERT_TRUE(mir_screencast_is_valid(screencast));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto egl_native_window =
         mir_buffer_stream_get_egl_native_window(mir_screencast_get_buffer_stream(screencast));
+#pragma GCC diagnostic pop
+
     EXPECT_NE(MirEGLNativeWindowType(), egl_native_window);
 
     mir_screencast_spec_release(spec);

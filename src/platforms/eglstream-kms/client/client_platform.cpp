@@ -91,7 +91,10 @@ uint32_t mcle::ClientPlatform::native_format_for(MirPixelFormat) const
     BOOST_THROW_EXCEPTION(std::runtime_error{"no buffer support"});
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 uint32_t mcle::ClientPlatform::native_flags_for(MirBufferUsage, mir::geometry::Size) const
 {
+#pragma GCC diagnostic pop
     BOOST_THROW_EXCEPTION(std::runtime_error{"no buffer support"});
 }

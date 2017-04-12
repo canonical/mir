@@ -285,8 +285,10 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
         std::unique_ptr<MirWindowSpec, decltype(del)> spec(
             mir_create_normal_window_spec(connection, 100, 100),
             del);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_window_spec_set_pixel_format(spec.get(), mir_pixel_format_abgr_8888);
-
+#pragma GCC diagnostic pop
         visible_surface = std::make_unique<mtf::VisibleSurface>(spec.get());
         surface =  *visible_surface;
 
@@ -315,7 +317,10 @@ struct ClientLatency : mtf::ConnectedClientHeadlessServer
 
 TEST_F(ClientLatency, average_swap_buffers_sync_latency_is_one_frame)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto stream = mir_window_get_buffer_stream(surface);
+#pragma GCC diagnostic pop
     auto const deadline = steady_clock::now() + 60s;
 
     while (stats.frames_composited() < test_frames &&
@@ -338,7 +343,10 @@ TEST_F(ClientLatency, average_swap_buffers_sync_latency_is_one_frame)
 
 TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto stream = mir_window_get_buffer_stream(surface);
+#pragma GCC diagnostic pop
     auto const deadline = steady_clock::now() + 60s;
 
     while (stats.frames_composited() < test_frames &&
@@ -357,7 +365,10 @@ TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
 
 TEST_F(ClientLatency, dropping_latency_is_closer_to_zero_than_one)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto stream = mir_window_get_buffer_stream(surface);
+#pragma GCC diagnostic pop
     mir_buffer_stream_set_swapinterval(stream, 0);
     stats.swap_interval = 0;
     auto const deadline = steady_clock::now() + 60s;
@@ -381,7 +392,10 @@ TEST_F(ClientLatency, dropping_latency_is_closer_to_zero_than_one)
 
 TEST_F(ClientLatency, average_async_swap_latency_is_less_than_nbuffers)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto stream = mir_window_get_buffer_stream(surface);
+#pragma GCC diagnostic pop
     auto const deadline = steady_clock::now() + 60s;
 
     while (stats.frames_composited() < test_frames &&
@@ -407,7 +421,10 @@ TEST_F(ClientLatency, average_async_swap_latency_is_less_than_nbuffers)
 
 TEST_F(ClientLatency, max_async_swap_latency_is_limited_to_nbuffers)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto stream = mir_window_get_buffer_stream(surface);
+#pragma GCC diagnostic pop
     auto const deadline = steady_clock::now() + 60s;
 
     while (stats.frames_composited() < test_frames &&
@@ -429,7 +446,10 @@ TEST_F(ClientLatency, max_async_swap_latency_is_limited_to_nbuffers)
 
 TEST_F(ClientLatency, async_swap_dropping_latency_is_closer_to_zero_than_one)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto stream = mir_window_get_buffer_stream(surface);
+#pragma GCC diagnostic pop
     mir_buffer_stream_set_swapinterval(stream, 0);
     stats.swap_interval = 0;
     auto const deadline = steady_clock::now() + 60s;
@@ -459,7 +479,10 @@ TEST_F(ClientLatency, throttled_input_rate_yields_lower_latency)
     int const throttled_input_rate = refresh_rate * 3 / 4;
     microseconds const input_interval(1000000/throttled_input_rate);
     auto next_input_event = high_resolution_clock::now();
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto stream = mir_window_get_buffer_stream(surface);
+#pragma GCC diagnostic pop
     auto const deadline = steady_clock::now() + 60s;
 
     while (stats.frames_composited() < test_frames &&

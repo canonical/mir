@@ -690,11 +690,14 @@ struct MockBufferFactory : mcl::AsyncBufferFactory
 {
     MOCK_METHOD1(cancel_requests_with_context, void(void*));
     MOCK_METHOD1(generate_buffer, std::unique_ptr<mcl::MirBuffer>(mir::protobuf::Buffer const&));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MOCK_METHOD7(expect_buffer, void(
         std::shared_ptr<mcl::ClientBufferFactory> const&,
         MirConnection*,
         mir::geometry::Size, MirPixelFormat, MirBufferUsage,
         MirBufferCallback, void*));
+#pragma GCC diagnostic pop
     MOCK_METHOD7(expect_buffer, void(
         std::shared_ptr<mcl::ClientBufferFactory> const&,
         MirConnection*, mir::geometry::Size, uint32_t, uint32_t,
@@ -733,11 +736,14 @@ TEST_F(MirProtobufRpcChannelTest, creates_buffer_if_not_in_map)
     int buffer_id(3);
     auto stream_map = std::make_shared<MockSurfaceMap>();
     auto mock_buffer_factory = std::make_shared<MockBufferFactory>();
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     EXPECT_CALL(*mock_buffer_factory, generate_buffer(_))
         .WillOnce(InvokeWithoutArgs([&]{
             return std::make_unique<mcl::Buffer>(
                 buffer_cb, nullptr, buffer_id, nullptr, nullptr, mir_buffer_usage_software);
             }));
+#pragma GCC diagnostic pop
     EXPECT_CALL(*stream_map, insert(buffer_id, _));
 
     auto transport = std::make_unique<NiceMock<MockStreamTransport>>();
@@ -769,7 +775,10 @@ TEST_F(MirProtobufRpcChannelTest, reuses_buffer_if_in_map)
     auto stream_map = std::make_shared<MockSurfaceMap>();
     auto mock_buffer_factory = std::make_shared<MockBufferFactory>();
     auto mock_client_buffer = std::make_shared<mtd::MockClientBuffer>();
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto buf = std::make_shared<mcl::Buffer>(buffer_cb, nullptr, buffer_id, mock_client_buffer, nullptr, mir_buffer_usage_software);
+#pragma GCC diagnostic pop
     EXPECT_CALL(*stream_map, buffer(buffer_id)).Times(1)
        .WillOnce(Return(buf));
     EXPECT_CALL(*mock_client_buffer, update_from(_))
@@ -804,7 +813,10 @@ TEST_F(MirProtobufRpcChannelTest, sends_incoming_buffer_to_stream_if_stream_id_p
     auto stream_map = std::make_shared<MockSurfaceMap>();
     auto mock_buffer_factory = std::make_shared<MockBufferFactory>();
     auto mock_client_buffer = std::make_shared<mtd::MockClientBuffer>();
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto buf = std::make_shared<mcl::Buffer>(buffer_cb, nullptr, buffer_id, mock_client_buffer, nullptr, mir_buffer_usage_software);
+#pragma GCC diagnostic pop
     EXPECT_CALL(*stream_map, stream(mir::frontend::BufferStreamId{stream_id}))
         .Times(1);
 

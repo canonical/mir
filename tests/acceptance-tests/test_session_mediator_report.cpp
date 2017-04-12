@@ -159,7 +159,10 @@ TEST_F(SessionMediatorReportTest, session_submit_buffer_called)
     connect_client();
 
     auto const window = mtf::make_any_surface(connection);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto const buffer_stream = mir_window_get_buffer_stream(window);
+#pragma GCC diagnostic pop
     mir_buffer_stream_swap_buffers_sync(buffer_stream);
     mir_window_release_sync(window);
     EXPECT_TRUE(report_received->wait_for(10s));
@@ -198,9 +201,11 @@ TEST_F(SessionMediatorReportTest, session_create_and_release_buffer_stream_calle
     auto report_received = std::make_shared<mt::Signal>();
     ON_CALL(*report, session_create_buffer_stream_called(_))
         .WillByDefault(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto const buffer_stream = mir_connection_create_buffer_stream_sync(connection,
         640, 480, mir_pixel_format_abgr_8888, mir_buffer_usage_software);
+#pragma GCC diagnostic pop
     EXPECT_TRUE(report_received->wait_for(10s));
 
     report_received->reset();
@@ -208,6 +213,9 @@ TEST_F(SessionMediatorReportTest, session_create_and_release_buffer_stream_calle
     ON_CALL(*report, session_release_buffer_stream_called(_))
         .WillByDefault(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_buffer_stream_release_sync(buffer_stream);
+#pragma GCC diagnostic pop
     EXPECT_TRUE(report_received->wait_for(10s));
 }

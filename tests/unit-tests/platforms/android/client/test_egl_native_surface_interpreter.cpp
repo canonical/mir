@@ -37,6 +37,8 @@ namespace geom=mir::geometry;
 namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct MockMirSurface : public mcl::EGLNativeSurface
 {
     MockMirSurface(MirWindowParameters params) :
@@ -83,6 +85,7 @@ protected:
     MirWindowParameters surf_params;
     std::shared_ptr<mtd::MockClientBuffer> mock_client_buffer;
 };
+#pragma GCC diagnostic pop
 
 TEST_F(AndroidInterpreter, gets_buffer_via_the_surface_on_request)
 {
@@ -244,9 +247,11 @@ TEST_F(AndroidInterpreter, request_to_set_buffer_count_sets_cache_size)
 TEST_F(AndroidInterpreter, returns_proper_usage_bits_based_on_surface)
 {
     using namespace testing;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirWindowParameters const software = { "", 1, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_software, 0 };
     MirWindowParameters const hardware = { "", 1, 2, mir_pixel_format_abgr_8888, mir_buffer_usage_hardware, 0 };
-
+#pragma GCC diagnostic pop
     testing::NiceMock<MockMirSurface> mock_surface{surf_params};
     mcla::EGLNativeSurfaceInterpreter interpreter(mock_surface);
 

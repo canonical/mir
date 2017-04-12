@@ -26,6 +26,8 @@
 namespace mcl = mir::client;
 namespace geom = mir::geometry;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 mcl::BufferFactory::AllocationRequest::AllocationRequest(
     std::shared_ptr<mcl::ClientBufferFactory> const& native_buffer_factory,
     MirConnection* connection,
@@ -67,6 +69,7 @@ void mcl::BufferFactory::expect_buffer(
     allocation_requests.emplace_back(
         std::make_unique<AllocationRequest>(factory, connection, size, format, usage, cb, cb_context));
 }
+#pragma GCC diagnostic pop
 
 void mcl::BufferFactory::expect_buffer(
     std::shared_ptr<mcl::ClientBufferFactory> const& factory,
@@ -105,7 +108,10 @@ std::unique_ptr<mcl::MirBuffer> mcl::BufferFactory::generate_buffer(mir::protobu
     {
         auto factory = (*request_it)->native_buffer_factory;
         std::shared_ptr<mcl::ClientBuffer> client_buffer;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         auto usage = mir_buffer_usage_hardware;
+#pragma GCC diagnostic pop
         if ((*request_it)->native_request.is_set())
         {
             auto& req = (*request_it)->native_request.value();

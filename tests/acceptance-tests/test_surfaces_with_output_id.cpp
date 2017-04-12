@@ -134,7 +134,10 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
                 static_cast<int>(width) - 1,
                 static_cast<int>(height) + 1),
             del);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_window_spec_set_pixel_format(spec.get(), mir_pixel_format_abgr_8888);
+#pragma GCC diagnostic pop
         mir_window_spec_set_fullscreen_on_output(spec.get(), mir_output_get_id(output));
         return std::make_shared<mtf::VisibleSurface>(spec.get());
     }
@@ -151,7 +154,10 @@ struct SurfacesWithOutputId : mtf::ConnectedClientHeadlessServer
                 static_cast<int>(width),
                 static_cast<int>(height)),
             del);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_window_spec_set_pixel_format(spec.get(), mir_pixel_format_abgr_8888);
+#pragma GCC diagnostic pop
         mir_window_spec_set_fullscreen_on_output(spec.get(), mir_output_get_id(output));
         return std::make_shared<mtf::VisibleSurface>(spec.get());
     }
