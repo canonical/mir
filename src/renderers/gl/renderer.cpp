@@ -392,6 +392,8 @@ void mrg::Renderer::update_gl_viewport()
     auto dpy = eglGetCurrentDisplay();
     auto surf = eglGetCurrentSurface(EGL_DRAW);
     EGLint buf_width = 0, buf_height = 0;
+    fprintf(stderr, "Viewport is %.1f x %.1f\n",
+            viewport_width, viewport_height);
 
     if (viewport_width > 0.0f && viewport_height > 0.0f &&
         eglQuerySurface(dpy, surf, EGL_WIDTH, &buf_width) && buf_width > 0 &&
@@ -408,6 +410,8 @@ void mrg::Renderer::update_gl_viewport()
         GLint offset_y = (buf_height - reduced_height) / 2;
 
         glViewport(offset_x, offset_y, reduced_width, reduced_height);
+        fprintf(stderr, "glViewPort(%+d%+d %dx%d)\n",
+                offset_x, offset_y, reduced_width, reduced_height);
     }
 }
 
@@ -417,6 +421,8 @@ void mrg::Renderer::set_output_transform(glm::mat2 const& t)
     if (new_display_transform != display_transform)
     {
         display_transform = new_display_transform;
+        fprintf(stderr, "Set output transform [%.1f %.1f %.1f %.1f]\n",
+                t[0][0], t[0][1], t[1][0], t[1][1]);
         update_gl_viewport();
     }
 }
