@@ -70,6 +70,7 @@ static char const* subpixel_name(MirSubpixelArrangement s)
         "HBGR",
         "VRGB",
         "VBGR",
+        "none"
     };
     return ((unsigned)s < sizeof(name)/sizeof(name[0])) ? name[s]
                                                         : "out-of-range";
