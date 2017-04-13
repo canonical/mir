@@ -405,6 +405,22 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
                 }
             }
         }
+        else if (!strcmp(*action, "fake"))
+        {
+            if (++action >= action_end)
+            {
+                fprintf(stderr, "Missing parameter after `%s'\n", action[-1]);
+                return false;
+            }
+            unsigned w, h;
+            if (2 != sscanf(*action, "%ux%u", &w, &h))
+            {
+                fprintf(stderr, "Invalid fake resolution `%s'\n", *action);
+                return false;
+            }
+            for (int t = 0; t < targets; ++t)
+                mir_output_set_logical_size(target[t], w, h);
+        }
         else
         {
             fprintf(stderr, "Unrecognized action `%s'\n", *action);
@@ -469,6 +485,7 @@ int main(int argc, char *argv[])
                            "    rotate (normal | inverted | left | right)\n"
                            "    place +X+Y\n"
                            "    mode (WIDTHxHEIGHT | preferred) [rate HZ]\n"
+                           "    fake WIDTHxHEIGHT\n"
                            "    rate HZ\n"
                            , argv[0]);
                     return 0;
