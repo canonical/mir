@@ -30,6 +30,7 @@
 #include "mir/graphics/virtual_output.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_configuration_policy.h"
+#include "mir/graphics/transformation.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/renderer/gl/context.h"
 
@@ -544,18 +545,24 @@ void mgm::Display::configure_locked(
                     orientation = conf_output.orientation;
                 });
 
+            // TODO in future outputs should emit transformation instead of
+            //      orientation
+            auto const transformation = mg::transformation(orientation);
+
             if (comp)
             {
-                display_buffers[group_idx++]->set_orientation(orientation, bounding_rect);
+                display_buffers[group_idx++]->set_transformation(transformation,
+                                                                 bounding_rect);
             }
             else
             {
-                uint32_t width = bounding_rect.size.width.as_uint32_t();
-                uint32_t height = bounding_rect.size.height.as_uint32_t();
-                if (orientation == mir_orientation_left || orientation == mir_orientation_right)
-                {
-                    std::swap(width, height);
-                }
+                glm::vec2 const logical_size{
+                    bounding_rect.size.width.as_uint32_t(),
+                    bounding_rect.size.height.as_uint32_t()};
+
+                auto const physical_size = transformation * logical_size;
+                uint32_t width = abs(physical_size.x);
+                uint32_t height = abs(physical_size.y);
 
                 for (auto const& group : kms_output_groups)
                 {
@@ -585,7 +592,7 @@ void mgm::Display::configure_locked(
                             }
                         },
                         bounding_rect,
-                        orientation);
+                        transformation);
 
                     display_buffers_new.push_back(std::move(db));
                 }
