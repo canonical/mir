@@ -261,6 +261,19 @@ unsigned int mir_output_get_logical_height(MirOutput const* output)
     return output->logical_height();
 }
 
+void mir_output_set_logical_size(MirOutput* output, unsigned w, unsigned h)
+{
+    if (w)
+        output->set_logical_width(w);
+    else
+        output->clear_logical_width();
+
+    if (h)
+        output->set_logical_height(h);
+    else
+        output->clear_logical_height();
+}
+
 void mir_output_set_position(MirOutput* output, int x, int y)
 {
     output->set_position_x(x);

@@ -333,6 +333,20 @@ unsigned int mir_output_get_logical_width(MirOutput const* output);
 unsigned int mir_output_get_logical_height(MirOutput const* output);
 
 /**
+ * Set the logical size of the virtual display space occupied by an output.
+ * By default this is the dimensions of the output's current mode, but you
+ * can now set it to an arbitrary size and the compositor will scale
+ * accordingly.
+ *
+ * \param [in] output  The output to modify
+ * \param [in] w       The width in logical view area pixels, or zero to
+ *                     revert to the current display mode dimensions.
+ * \param [in] h       The height in logical view area pixels, or zero to
+ *                     revert to the current display mode dimensions.
+ */
+void mir_output_set_logical_size(MirOutput* output, unsigned w, unsigned h);
+
+/**
  * Set the coordinates of the top-left point of the output in the virtual
  * display space.
  *
