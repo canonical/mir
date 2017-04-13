@@ -1276,8 +1276,13 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
 
         if (src.has_logical_width() && src.has_logical_height())
         {
-            dest.custom_logical_size = {src.logical_width(),
-                                        src.logical_height()};
+            int w = src.logical_width();
+            int h = src.logical_height();
+
+            if (w && h)
+                dest.custom_logical_size = {w, h};
+            else if (dest.custom_logical_size.is_set())
+                (void)dest.custom_logical_size.consume();
         }
     });
 
