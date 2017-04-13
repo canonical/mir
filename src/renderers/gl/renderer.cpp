@@ -334,6 +334,12 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
 
 void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 {
+    fprintf(stderr, "set_viewport %+d%+d %dx%d\n",
+            rect.top_left.x.as_int(),
+            rect.top_left.y.as_int(),
+            rect.size.width.as_int(),
+            rect.size.height.as_int());
+
     if (rect == viewport)
         return;
 
@@ -417,12 +423,12 @@ void mrg::Renderer::update_gl_viewport()
 
 void mrg::Renderer::set_output_transform(glm::mat2 const& t)
 {
+    fprintf(stderr, "set_output_transform [%.1f %.1f %.1f %.1f]\n",
+            t[0][0], t[0][1], t[1][0], t[1][1]);
     auto const new_display_transform = glm::mat4(t);
     if (new_display_transform != display_transform)
     {
         display_transform = new_display_transform;
-        fprintf(stderr, "Set output transform [%.1f %.1f %.1f %.1f]\n",
-                t[0][0], t[0][1], t[1][0], t[1][1]);
         update_gl_viewport();
     }
 }
