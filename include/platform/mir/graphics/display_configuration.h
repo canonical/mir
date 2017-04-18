@@ -138,8 +138,12 @@ struct DisplayConfigurationOutput
     bool valid() const;
 
     /**
-     * The transformation required to map this output's logical view area
-     * (returned by extents()) on to the output's current mode.
+     * The additional transformation (if any) that this output must undergo
+     * to appear correctly on screen, including rotation (orientation),
+     * inversion and skew.
+     *   Note that scaling and translation are not part of this transformation
+     * matrix because those are already built in to the extents() rectangle
+     * for the renderer to use in compositing.
      */
     glm::mat2 transformation() const;
 };

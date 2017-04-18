@@ -249,7 +249,6 @@ mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
 
 glm::mat2 mg::DisplayConfigurationOutput::transformation() const
 {
-    // TODO: Scaling will go in here later
     return mg::transformation(orientation);
 }
 
