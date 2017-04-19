@@ -297,26 +297,6 @@ TEST(DisplayConfiguration, output_extents_are_customizable)
     EXPECT_EQ(custom_size, out.extents().size);
 }
 
-TEST(DisplayConfiguration, custom_size_causes_scaling)
-{
-    mg::DisplayConfigurationOutput out = tmpl_output;
-
-    auto const& physical_size = out.modes[out.current_mode_index].size;
-
-    geom::Size const logical_size{1234, 9876};
-    out.custom_logical_size = logical_size;
-
-    auto const& observed = out.transformation();
-    glm::mat2 const expected{static_cast<float>(physical_size.width.as_int()) /
-                             logical_size.width.as_int(),
-                             0,
-                             0,
-                             static_cast<float>(physical_size.height.as_int()) /
-                             logical_size.height.as_int()};
-
-    EXPECT_EQ(expected, observed);
-}
-
 TEST(DisplayConfiguration, output_extents_rotates_with_orientation)
 {
     mg::DisplayConfigurationOutput out = tmpl_output;
