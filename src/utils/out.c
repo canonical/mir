@@ -397,6 +397,8 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
                 if (set_mode)
                 {
                     mir_output_set_current_mode(target[t], set_mode);
+                    /* Clear the fake mode when a real one is getting set. */
+                    mir_output_set_logical_size(target[t], 0, 0);
                 }
                 else
                 {
