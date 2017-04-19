@@ -398,13 +398,15 @@ void mrg::Renderer::update_gl_viewport()
     auto dpy = eglGetCurrentDisplay();
     auto surf = eglGetCurrentSurface(EGL_DRAW);
     EGLint buf_width = 0, buf_height = 0;
-    fprintf(stderr, "vv: Viewport is %.1f x %.1f\n",
+    fprintf(stderr, "vv: rotated view area is %.1f x %.1f\n",
             viewport_width, viewport_height);
 
     if (viewport_width > 0.0f && viewport_height > 0.0f &&
         eglQuerySurface(dpy, surf, EGL_WIDTH, &buf_width) && buf_width > 0 &&
         eglQuerySurface(dpy, surf, EGL_HEIGHT, &buf_height) && buf_height > 0)
     {
+        fprintf(stderr, "vv: EGL surface is %dx%d\n",
+                buf_width, buf_height);
         GLint reduced_width = buf_width, reduced_height = buf_height;
         // if viewport_aspect_ratio >= buf_aspect_ratio
         if (viewport_width * buf_height >= buf_width * viewport_height)
