@@ -119,6 +119,19 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput c
 
     out << "\tscale: " << val.scale << std::endl;
     out << "\tform factor: " << as_string(val.form_factor) << std::endl;
+
+    out << "\tcustom logical size: ";
+    if (val.custom_logical_size.is_set())
+    {
+        auto const& size = val.custom_logical_size.value();
+        out << size.width.as_int() << "x" << size.height.as_int();
+    }
+    else
+    {
+        out << "not set";
+    }
+    out << std::endl;
+
     out << "\torientation: " << val.orientation << '\n';
     out << "}" << std::endl;
 
