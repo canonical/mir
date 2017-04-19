@@ -488,6 +488,8 @@ void mgm::Display::configure_locked(
         compatible(kms_conf, current_display_configuration)};
     std::vector<std::unique_ptr<DisplayBuffer>> display_buffers_new;
 
+    fprintf(stderr, "vv: comp = %s\n", comp?"Yes, compatible":"Not compatible");
+
     if (!comp)
     {
         /*
@@ -559,6 +561,11 @@ void mgm::Display::configure_locked(
                 auto const physical_size = transformation * logical_size;
                 uint32_t width = abs(physical_size.x);
                 uint32_t height = abs(physical_size.y);
+                fprintf(stderr, "vv: bounding rect %ux%u  phys %ux%u\n",
+                        (unsigned)bounding_rect.size.width.as_uint32_t(),
+                        (unsigned)bounding_rect.size.height.as_uint32_t(),
+                        (unsigned)width,
+                        (unsigned)height);
 
                 for (auto const& group : kms_output_groups)
                 {
