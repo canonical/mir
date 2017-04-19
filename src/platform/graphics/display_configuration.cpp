@@ -173,6 +173,7 @@ bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                (val1.orientation == val2.orientation) &&
                (val1.current_mode_index == val2.current_mode_index) &&
                (val1.modes.size() == val2.modes.size()) &&
+               (val1.custom_logical_size == val2.custom_logical_size) &&
                (val1.scale == val2.scale) &&
                (val1.form_factor == val2.form_factor)};
 
