@@ -1279,6 +1279,8 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
             int w = src.logical_width();
             int h = src.logical_height();
 
+            fprintf(stderr, "vv: SessionMediator at logical %dx%d\n", w, h);
+
             if (w && h)
                 dest.custom_logical_size = {w, h};
             else if (dest.custom_logical_size.is_set())
