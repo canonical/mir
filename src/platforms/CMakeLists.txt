@@ -66,10 +66,6 @@ if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
     add_subdirectory(mesa/)
 endif()
 
-if (MIR_BUILD_PLATFORM_ANDROID)
-  add_subdirectory(android/)
-endif()
-
 if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
   add_subdirectory(eglstream-kms)
 endif()

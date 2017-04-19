@@ -37,7 +37,7 @@ def get_file_location(node):
             return node.attributes['file'].value
     if debug: print 'no location in:', node
     return None
-    
+
 def has_element(node, tagname):
     for node in node.childNodes:
         if node.nodeType == node.ELEMENT_NODE and node.tagName in tagname:
@@ -51,7 +51,7 @@ def concat_text_from_tags(parent, tagnames):
     rc = []
     for tag in tagnames : rc.append(get_text_for_element(parent, tag))
     return ''.join(rc)
-    
+
 def print_location(node):
     print ' ', 'location', '=', get_file_location(node)
 
@@ -63,8 +63,7 @@ def get_attribs(node):
 
 def is_file_publishable(file_location):
     return file_location.startswith('include/') \
-           or 'build/src' in file_location \
-           or 'src/common/input/android/' in file_location
+           or 'build/src' in file_location
 
 # Special cases for publishing anyway:
 publish_special_cases = {
@@ -110,7 +109,7 @@ def find_physical_component(location_file):
         found = element in ['include', 'src']
     if debug: print 'no component in:', location_file
     return None
-    
+
 def mapped_physical_component(location_file):
     location = find_physical_component(location_file)
     return 'mir' + location
@@ -118,11 +117,11 @@ def mapped_physical_component(location_file):
 def parse_member_def(context_name, node, is_class):
     library = mapped_physical_component(get_file_location(node))
     (kind, static, prot) = get_attribs(node)
-    
+
     if kind in ['enum', 'typedef']: return
     if has_element(node, ['templateparamlist']): return
     if kind in ['function'] and node.attributes['inline'].value == 'yes': return
-    
+
     name = concat_text_from_tags(node, ['name'])
     if name in ['__attribute__']:
         if debug: print '  ignoring doxygen mis-parsing:', concat_text_from_tags(node, ['argsstring'])
@@ -142,9 +141,9 @@ def parse_member_def(context_name, node, is_class):
         if is_function: publish = node.attributes['virt'].value == 'virtual'
         else: publish =  False
 
-    if publish and has_element(node, ['argsstring']): 
+    if publish and has_element(node, ['argsstring']):
         publish = not get_text_for_element(node, 'argsstring').endswith('=0')
-    
+
     if is_function: print_debug_info(node, ['kind', 'prot', 'static', 'virt'])
     else: print_debug_info(node, ['kind', 'prot', 'static'])
     if debug: print '  is_class:', is_class
@@ -152,25 +151,25 @@ def parse_member_def(context_name, node, is_class):
     if is_function and node.attributes['virt'].value == 'virtual': report(library, publish, 'non-virtual?thunk?to?'+symbol+'*')
 
 def parse_compound_defs(xmldoc):
-    compounddefs = xmldoc.getElementsByTagName('compounddef') 
+    compounddefs = xmldoc.getElementsByTagName('compounddef')
     for node in compounddefs:
         kind = node.attributes['kind'].value
 
         if kind in ['page', 'file', 'example', 'union']: continue
 
-        if kind in ['group']: 
-            for member in node.getElementsByTagName('memberdef') : 
+        if kind in ['group']:
+            for member in node.getElementsByTagName('memberdef') :
                 parse_member_def(None, member, False)
             continue
 
-        if kind in ['namespace']: 
+        if kind in ['namespace']:
             symbol = concat_text_from_tags(node, ['compoundname'])
-            for member in node.getElementsByTagName('memberdef') : 
+            for member in node.getElementsByTagName('memberdef') :
                 parse_member_def(symbol, member, False)
             continue
-        
+
         file = get_file_location(node)
-        if debug: print '  from file:', file 
+        if debug: print '  from file:', file
         if '/examples/' in file or '/test/' in file or '[generated]' in file or '[STL]' in file:
             continue
 
@@ -178,11 +177,11 @@ def parse_compound_defs(xmldoc):
 
         library = mapped_physical_component(file)
         symbol = concat_text_from_tags(node, ['compoundname'])
-        
+
         file_location = get_file_location(node)
         publish = is_file_publishable(file_location)
 
-        if publish: 
+        if publish:
             if kind in ['class', 'struct']:
                 prot =  node.attributes['prot'].value
                 publish = prot != 'private'
@@ -190,8 +189,8 @@ def parse_compound_defs(xmldoc):
                 report(library, publish, 'vtable?for?' + symbol)
                 report(library, publish, 'typeinfo?for?' + symbol)
 
-        if publish: 
-            for member in node.getElementsByTagName('memberdef') : 
+        if publish:
+            for member in node.getElementsByTagName('memberdef') :
                 parse_member_def(symbol, member, kind in ['class', 'struct'])
 
 if __name__ == "__main__":

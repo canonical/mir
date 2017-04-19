@@ -110,9 +110,6 @@ std::string print_evdev_code(int type, int code)
         PRINT_EV_ENUM(code, ABS_MT_TRACKING_ID);
         PRINT_EV_ENUM(code, ABS_MT_PRESSURE);
         PRINT_EV_ENUM(code, ABS_MT_DISTANCE);
-        // input.h from android doesn't have these even though modern kernels do.
-        //        PRINT_EV_ENUM(code, ABS_MT_TOOL_X);
-        //        PRINT_EV_ENUM(code, ABS_MT_TOOL_Y);
     }
     return std::to_string(code);
 }

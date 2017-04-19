@@ -41,9 +41,6 @@ public:
 
     std::shared_ptr<graphics::Platform> the_graphics_platform() override;
     std::shared_ptr<renderer::RendererFactory> the_renderer_factory() override;
-    // We override the_input_manager in the default server configuration
-    // to avoid starting and stopping the full android input stack for tests
-    // which do not leverage input.
     std::shared_ptr<input::InputManager> the_input_manager() override;
     std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
 
