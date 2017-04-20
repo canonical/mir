@@ -34,7 +34,7 @@ target_link_libraries(frame_uniformity_test_client
   mirserver
   mirclient
   mirplatform
-  
+
   mir-test-assist
 
   # needed for fake_event_hub_server_configuration.h (which relies on private APIs)
@@ -45,7 +45,6 @@ target_link_libraries(frame_uniformity_test_client
 
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
+  ${GMOCK_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
