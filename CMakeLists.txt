@@ -174,10 +174,10 @@ add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 # Default to KMS backend, but build all of them
 set(
   MIR_PLATFORM
-  mesa-kms;android;mesa-x11;eglstream-kms
+  mesa-kms;mesa-x11;eglstream-kms
   CACHE
   STRING
-  "a list of graphics backends to build (options are 'mesa-kms', 'android', 'mesa-x11', or 'eglstream-kms')"
+  "a list of graphics backends to build (options are 'mesa-kms', 'mesa-x11', or 'eglstream-kms')"
 )
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
@@ -187,9 +187,6 @@ option(MIR_ENABLE_TESTS "Build tests" ON)
 foreach(platform IN LISTS MIR_PLATFORM)
   if (platform STREQUAL "mesa-kms")
     set(MIR_BUILD_PLATFORM_MESA_KMS TRUE)
-  endif()
-  if (platform STREQUAL "android")
-     set(MIR_BUILD_PLATFORM_ANDROID TRUE)
   endif()
   if (platform STREQUAL "mesa-x11")
      set(MIR_BUILD_PLATFORM_MESA_X11 TRUE)
@@ -252,11 +249,6 @@ else()
   message(FATAL_ERROR "Invalid MIR_SERVER_LIBGL value ${MIR_SERVER_LIBGL}")
 endif()
 
-if (MIR_BUILD_PLATFORM_ANDROID)
-  find_package(AndroidProperties REQUIRED)
-  find_package(LibHardware REQUIRED)
-endif()
-
 if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
@@ -275,9 +267,6 @@ endif()
 set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)
 
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
-macro(uses_android_input _target_name)
-  set_property(TARGET ${_target_name} APPEND_STRING PROPERTY COMPILE_FLAGS "${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
-endmacro()
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 

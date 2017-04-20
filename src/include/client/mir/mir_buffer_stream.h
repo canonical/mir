@@ -40,7 +40,7 @@
  * technically EGL-platform dependent, which is awkward because we support
  * multiple EGL platforms.
  *
- * On both the Mesa and the Android EGL platforms EGLNativeWindow is a
+ * On the Mesa platform EGLNativeWindow is a
  * pointer or a uintptr_t.
  *
  * In practise EGLNativeWindowType is always a typedef to a pointer-ish, but

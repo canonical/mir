@@ -64,13 +64,6 @@ if (MIR_BUILD_PLATFORM_MESA_KMS)
   )
 endif()
 
-if (MIR_BUILD_PLATFORM_ANDROID)
-  include_directories(SYSTEM ${ANDROID_HEADERS_INCLUDE_DIRS})
-  list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
-    ${CMAKE_CURRENT_SOURCE_DIR}/mock_android_hw.cpp
-  )
-endif()
-
 # We don't want LTO objects in a published archive (libmir-test-assist.a)
 string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
 string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})

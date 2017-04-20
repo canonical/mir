@@ -110,7 +110,6 @@ you need to know to get it working, and also to prevent your existing X server
 from dying at the same time.
 
  - \ref using_mir_on_pc
- - \ref using_mir_on_android
 
 You can configure Mir to provide runtime information helpful for debugging
 by enabling component reports:
