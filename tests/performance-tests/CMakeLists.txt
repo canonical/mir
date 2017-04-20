@@ -5,9 +5,6 @@ install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_performance_tests
   DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-if (MIR_TEST_PLATFORM STREQUAL "android")
-  add_definitions(-DANDROID)
-endif()
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
   add_definitions(-DMESA_KMS)
 endif()

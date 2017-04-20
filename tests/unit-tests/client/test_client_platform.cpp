@@ -24,10 +24,6 @@
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/stub_platform_helpers.h"
 
-#ifdef MIR_BUILD_PLATFORM_ANDROID
-#include "mir/test/doubles/mock_android_hw.h"
-#endif
-
 #include "mir/client_platform_factory.h"
 
 #include "mir/shared_library.h"
@@ -83,31 +79,12 @@ struct ClientPlatformTest : public ::testing::TestWithParam<ClientPlatformTraits
     }
 
     testing::NiceMock<mtd::MockClientContext> context;
-#ifdef MIR_BUILD_PLATFORM_ANDROID
-    testing::NiceMock<mtd::HardwareAccessMock> hw_access_mock;
-#endif
     mir::SharedLibrary const server_platform_library;
     mir::SharedLibrary const platform_library;
     mcl::CreateClientPlatform const create_client_platform;
     mcl::ClientPlatformProbe const probe;
     MirPlatformPackage const* (* const server_description)();
 };
-
-#ifdef MIR_BUILD_PLATFORM_ANDROID
-ClientPlatformTraits const android_platform{"graphics-android",
-                                            "android",
-                                            [](MirPlatformPackage& pkg)
-                                            {
-                                                ::memset(&pkg, 0, sizeof(pkg));
-                                            },
-                                            mir_platform_type_android
-                                           };
-
-INSTANTIATE_TEST_CASE_P(Android,
-                        ClientPlatformTest,
-                        ::testing::Values(&android_platform));
-
-#endif
 
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS)
 ClientPlatformTraits const mesa_kms_platform{
