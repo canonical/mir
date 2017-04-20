@@ -238,11 +238,10 @@ mir::geometry::Rectangle extents_of(
     MirOrientation orientation,
     mir::geometry::Point top_left)
 {
-    mir::geometry::Size size;
+    if (current_mode_index >= modes.size())
+        return mir::geometry::Rectangle();
 
-    if (current_mode_index < modes.size())
-        size = modes[current_mode_index].size;
-    // else we will at least return a usable top_left with no size
+    auto const& size = modes[current_mode_index].size;
 
     if (orientation == mir_orientation_normal ||
         orientation == mir_orientation_inverted)
