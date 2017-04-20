@@ -158,8 +158,10 @@ public:
     mf::BufferStreamId const stream_id;
     std::shared_ptr<compositor::BufferStream> const stream;
 private:
-    mg::Buffer* old_buffer{nullptr};
     mf::Session& session;
+
+    graphics::BufferID working_buffer;
+    graphics::BufferID submitted_buffer;
 
     void destroy();
     void attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y);
@@ -204,8 +206,11 @@ void WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, 
         stream->drop_old_buffers();
     }
 
-    auto const mir_buffer_id = session.create_buffer(stream->stream_size(), mir_pixel_format_argb_8888);
-    auto const mir_buffer = session.get_buffer(mir_buffer_id);
+    std::swap(working_buffer, submitted_buffer);
+
+    if (!working_buffer.as_value())
+        working_buffer = session.create_buffer(stream->stream_size(), mir_pixel_format_argb_8888);
+    auto const mir_buffer = session.get_buffer(working_buffer);
 
     auto const shm_size = wl_shm_buffer_get_height(shm_buffer) *
                           wl_shm_buffer_get_stride(shm_buffer) * 4;
