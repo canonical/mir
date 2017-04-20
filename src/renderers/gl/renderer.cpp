@@ -425,12 +425,6 @@ void mrg::Renderer::update_gl_viewport()
 
 void mrg::Renderer::set_output_transform(glm::mat2 const& t)
 {
-    /*
-     * FIXME: Returning here fixes double-scaling problems.
-     *        We need to clarify that by providing a viewport, the scaling and
-     *        translation has already been done. Thus it should not be repeated
-     *        in the output transformation.
-     */
     auto const new_display_transform = glm::mat4(t);
     if (new_display_transform != display_transform)
     {
