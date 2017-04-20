@@ -182,6 +182,17 @@ public:
         for (int i = 0; i < mir_display_config_get_num_outputs(config); i++)
         {
             auto const client_output = mir_display_config_get_output(config, i);
+
+            mir::optional_value<geom::Size> custom_logical_size;
+            if (mir_output_has_custom_logical_size(client_output))
+            {
+                custom_logical_size =
+                {
+                    mir_output_get_logical_width(client_output),
+                    mir_output_get_logical_height(client_output)
+                };
+            }
+
             mg::DisplayConfigurationOutput display_output
                 {
                     mg::DisplayConfigurationOutputId(mir_output_get_id(client_output)),
@@ -206,9 +217,7 @@ public:
                     {},
                     mir_output_gamma_unsupported,
                     {},
-                    // TODO client function for getting customized flag?
-                    geom::Size{mir_output_get_logical_width(client_output),
-                               mir_output_get_logical_height(client_output)}
+                    custom_logical_size
                 };
 
             /* Modes */

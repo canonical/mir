@@ -614,5 +614,6 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27
 
 MIR_CLIENT_0.28 {  # New functions in Mir 0.28
   global:
+    mir_output_has_custom_logical_size;
     mir_output_set_logical_size;
 } MIR_CLIENT_0.27;

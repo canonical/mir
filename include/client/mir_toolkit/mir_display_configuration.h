@@ -346,6 +346,15 @@ unsigned int mir_output_get_logical_height(MirOutput const* output);
  */
 void mir_output_set_logical_size(MirOutput* output, unsigned w, unsigned h);
 
+/*
+ * Determine if the logical size of an output is user-customized or just
+ * automatically calculated.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     Whether the logical output size has been user-customized.
+ */
+bool mir_output_has_custom_logical_size(MirOutput const* output);
+
 /**
  * Set the coordinates of the top-left point of the output in the virtual
  * display space.
