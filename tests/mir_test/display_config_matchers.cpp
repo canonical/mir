@@ -52,6 +52,15 @@ public:
         for (int i = 0; i < protobuf_config.display_output_size(); i++)
         {
             auto const& protobuf_output = protobuf_config.display_output(i);
+
+            mir::optional_value<geom::Size> custom_logical_size;
+            if (protobuf_output.has_logical_width() &&
+                protobuf_output.has_logical_height())
+            {
+                custom_logical_size = {protobuf_output.logical_width(),
+                                       protobuf_output.logical_height()};
+            }
+
             mg::DisplayConfigurationOutput display_output
             {
                 mg::DisplayConfigurationOutputId(protobuf_output.output_id()),
@@ -76,7 +85,7 @@ public:
                 {},
                 mir_output_gamma_unsupported,
                 {},
-                {}
+                custom_logical_size
             };
 
             /* Modes */
@@ -195,7 +204,8 @@ public:
                     {},
                     mir_output_gamma_unsupported,
                     {},
-                    {}
+                    geom::Size{mir_output_get_logical_width(client_output),
+                               mir_output_get_logical_height(client_output)}
                 };
 
             /* Modes */
