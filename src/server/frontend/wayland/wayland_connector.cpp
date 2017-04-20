@@ -35,8 +35,6 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/display_configuration.h"
 
-#include "mir/input/input_sender.h"
-
 #include "../../scene/global_event_sender.h"
 #include "../../scene/mediating_display_changer.h"
 
@@ -55,6 +53,7 @@
 #include <mir/log.h>
 
 #include "mir/fd.h"
+#include "../../../platforms/common/server/shm_buffer.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -150,7 +149,8 @@ public:
         uint32_t id)
         : Surface(client, parent, id),
           stream_id{create_buffer_stream(session)},
-          stream{std::dynamic_pointer_cast<mc::BufferStream>(session.get_buffer_stream(stream_id))}
+          stream{std::dynamic_pointer_cast<mc::BufferStream>(session.get_buffer_stream(stream_id))},
+          session{session}
     {
         mir::log_info("Created WlSurface");
     }
@@ -159,6 +159,7 @@ public:
     std::shared_ptr<compositor::BufferStream> const stream;
 private:
     mg::Buffer* old_buffer{nullptr};
+    mf::Session& session;
 
     void destroy();
     void attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y);
@@ -203,17 +204,19 @@ void WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, 
         stream->drop_old_buffers();
     }
 
-    stream->swap_buffers(old_buffer, [this, shm_buffer, &buffer](mg::Buffer* new_buffer)
-    {
-        auto const shm_size = wl_shm_buffer_get_height(shm_buffer) *
-            wl_shm_buffer_get_stride(shm_buffer) * 4;
-        auto const data = reinterpret_cast<uint8_t const*>(wl_shm_buffer_get_data(shm_buffer));
-        new_buffer->write(data, shm_size);
-        old_buffer = new_buffer;
-        wl_shm_buffer_end_access(shm_buffer);
+    auto const mir_buffer_id = session.create_buffer(stream->stream_size(), mir_pixel_format_argb_8888);
+    auto const mir_buffer = session.get_buffer(mir_buffer_id);
 
-        wl_buffer_send_release(*buffer);
-    });
+    auto const shm_size = wl_shm_buffer_get_height(shm_buffer) *
+                          wl_shm_buffer_get_stride(shm_buffer) * 4;
+    auto const data = reinterpret_cast<uint8_t const*>(wl_shm_buffer_get_data(shm_buffer));
+
+    dynamic_cast<mir::graphics::common::ShmBuffer&>(*mir_buffer).write(data, shm_size);
+    wl_shm_buffer_end_access(shm_buffer);
+
+    wl_buffer_send_release(*buffer);
+
+    stream->submit_buffer(mir_buffer);
 }
 
 void WlSurface::damage(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -457,6 +460,8 @@ public:
             }
             break;
         }
+        case mir_pointer_actions:
+            break;
         }
     }
 
@@ -678,51 +683,51 @@ void WlApplication::connect(wl_client* client, wl_resource* resource, const std:
         [shell = this->shell](auto session) { shell->close_session(session); });
 }
 
-class SurfaceInputSink : public mir::input::InputSender
-{
-public:
-    SurfaceInputSink(WlSeat* seat, wl_client* client, wl_resource* target)
-        : seat{seat},
-          client{client},
-          target{target}
-    {
-    }
-
-    void send_event(
-        MirEvent const& event,
-        std::shared_ptr<input::InputChannel> const& channel) override;
-
-private:
-    WlSeat* const seat;
-    wl_client* const client;
-    wl_resource* const target;
-};
-
-void SurfaceInputSink::send_event(
-    MirEvent const& event, std::shared_ptr<input::InputChannel> const& /* channel */)
-{
-    switch (mir_event_get_type(&event))
-    {
-    case mir_event_type_input:
-    {
-        auto input_event = mir_event_get_input_event(&event);
-        switch (mir_input_event_get_type(input_event))
-        {
-        case mir_input_event_type_key:
-            seat->acquire_keyboard_reference(client).handle_event(input_event, target);
-            break;
-        case mir_input_event_type_pointer:
-            seat->acquire_pointer_reference(client).handle_event(input_event, target);
-            break;
-        case mir_input_event_type_touch:
-            seat->acquire_touch_reference(client).handle_event(input_event, target);
-            break;
-        }
-    }
-    default:
-        break;
-    }
-}
+//class SurfaceInputSink : public mir::input::InputSender
+//{
+//public:
+//    SurfaceInputSink(WlSeat* seat, wl_client* client, wl_resource* target)
+//        : seat{seat},
+//          client{client},
+//          target{target}
+//    {
+//    }
+//
+//    void send_event(
+//        MirEvent const& event,
+//        std::shared_ptr<input::InputChannel> const& channel) override;
+//
+//private:
+//    WlSeat* const seat;
+//    wl_client* const client;
+//    wl_resource* const target;
+//};
+//
+//void SurfaceInputSink::send_event(
+//    MirEvent const& event, std::shared_ptr<input::InputChannel> const& /* channel */)
+//{
+//    switch (mir_event_get_type(&event))
+//    {
+//    case mir_event_type_input:
+//    {
+//        auto input_event = mir_event_get_input_event(&event);
+//        switch (mir_input_event_get_type(input_event))
+//        {
+//        case mir_input_event_type_key:
+//            seat->acquire_keyboard_reference(client).handle_event(input_event, target);
+//            break;
+//        case mir_input_event_type_pointer:
+//            seat->acquire_pointer_reference(client).handle_event(input_event, target);
+//            break;
+//        case mir_input_event_type_touch:
+//            seat->acquire_touch_reference(client).handle_event(input_event, target);
+//            break;
+//        }
+//    }
+//    default:
+//        break;
+//    }
+//}
 
 class MirSurface
 {
@@ -831,7 +836,7 @@ void WlShell::as_normal_window(
         .of_size(my_little_surface->stream->stream_size())
         .of_buffer_usage(mg::BufferUsage::software)
         .of_pixel_format(mir_pixel_format_argb_8888)
-        .of_type(mir_surface_type_normal)
+        .of_type(mir_window_type_normal)
         .with_buffer_stream(my_little_surface->stream_id);
 
     auto const internal_id = shell->create_surface(
