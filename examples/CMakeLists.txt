@@ -308,3 +308,11 @@ mir_add_wrapped_executable(mir_demo_client_chain_jumping_buffers
 target_link_libraries(mir_demo_client_chain_jumping_buffers
   mirclient
 )
+
+include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
+
+mir_add_wrapped_executable(mir_demo_client_wayland wayland_client.c $<TARGET_OBJECTS:mirwaylandclient>)
+target_link_libraries(mir_demo_client_wayland
+
+  ${WAYLAND_CLIENT_LIBRARIES}
+)
