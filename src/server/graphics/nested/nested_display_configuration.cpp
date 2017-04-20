@@ -113,6 +113,13 @@ mg::DisplayConfigurationOutput mgn::NestedDisplayConfiguration::create_display_o
     if (edid_size && edid_start)
         edid.assign(edid_start, edid_start+edid_size);
 
+    mir::optional_value<geometry::Size> custom_logical_size;
+    if (mir_output_has_custom_logical_size(output))
+    {
+        custom_logical_size = {mir_output_get_logical_width(output),
+                               mir_output_get_logical_height(output)};
+    }
+
     return mg::DisplayConfigurationOutput{
         DisplayConfigurationOutputId(output_id),
         DisplayConfigurationCardId(0), // Information not around
@@ -134,8 +141,7 @@ mg::DisplayConfigurationOutput mgn::NestedDisplayConfiguration::create_display_o
         local_config.gamma,
         local_config.gamma_supported,
         std::move(edid),
-        geometry::Size{mir_output_get_logical_width(output),
-                       mir_output_get_logical_height(output)}
+        custom_logical_size
     };
 }
 
