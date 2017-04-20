@@ -947,7 +947,9 @@ TEST_F(DisplayConfigurationTest, client_can_set_logical_size)
     {
         auto output =
             mir_display_config_get_mutable_output(client_config.get(), i);
+        EXPECT_FALSE(mir_output_has_custom_logical_size(output));
         mir_output_set_logical_size(output, (i+1)*123, (i+3)*345);
+        ASSERT_TRUE(mir_output_has_custom_logical_size(output));
     }
 
     DisplayConfigMatchingContext context;
