@@ -177,6 +177,10 @@ private:
 
 void WlSurface::destroy()
 {
+    if (submitted_buffer.as_value()) session.destroy_buffer(submitted_buffer);
+    submitted_buffer = {};
+    if (working_buffer.as_value()) session.destroy_buffer(working_buffer);
+    working_buffer = {};
     delete this;
 }
 
@@ -204,6 +208,10 @@ void WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, 
     {
         stream->resize({wl_shm_buffer_get_height(shm_buffer), wl_shm_buffer_get_width(shm_buffer)});
         stream->drop_old_buffers();
+        if (submitted_buffer.as_value()) session.destroy_buffer(submitted_buffer);
+        submitted_buffer = {};
+        if (working_buffer.as_value()) session.destroy_buffer(working_buffer);
+        working_buffer = {};
     }
 
     std::swap(working_buffer, submitted_buffer);
