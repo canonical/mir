@@ -1108,13 +1108,14 @@ class OutputManager
 public:
     OutputManager(
         wl_display* display,
-        std::shared_ptr<ms::GlobalEventSender> const& hotplug_sink,
+        std::shared_ptr<ms::GlobalEventSender> const& /*hotplug_sink*/,
         mf::DisplayChanger& display_config)
         : display{display}
     {
-        hotplug_sink->subscribe_to_display_events(std::bind(&OutputManager::handle_configuration_change, this, std::placeholders::_1));
-
-        display_config.active_configuration()->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
+//        hotplug_sink->subscribe_to_display_events(std::bind(&OutputManager::handle_configuration_change, this, std::placeholders::_1));
+//
+//        display_config.active_configuration()->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
+        display_config.base_configuration()->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
     }
 
 private:
