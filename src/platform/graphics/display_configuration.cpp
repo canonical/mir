@@ -182,17 +182,11 @@ bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                (val1.preferred_mode_index == val2.preferred_mode_index) &&
                (val1.connected == val2.connected) &&
                (val1.used == val2.used) &&
-               // Redundant: (val1.top_left == val2.top_left) &&
+               (val1.top_left == val2.top_left) &&
                (val1.orientation == val2.orientation) &&
                (val1.current_mode_index == val2.current_mode_index) &&
                (val1.modes.size() == val2.modes.size()) &&
-               /*
-                * We don't care where the logical size has come from...
-                *   (val1.custom_logical_size == val2.custom_logical_size) &&
-                * As it might be explicitly set or implicitly calculated,
-                * compare extents instead...
-                */
-               (val1.extents() == val2.extents()) &&
+               (val1.custom_logical_size == val2.custom_logical_size) &&
                (val1.scale == val2.scale) &&
                (val1.form_factor == val2.form_factor)};
 
