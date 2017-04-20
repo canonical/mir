@@ -181,15 +181,15 @@ TEST_F(ClientExtensions, can_update_fences)
         .InSequence(seq);
 
 
-    ASSERT_THAT(extension, Ne(nullptr)); 
-    ASSERT_THAT(extension->associate_fence, Ne(nullptr)); 
+    ASSERT_THAT(extension, Ne(nullptr));
+    ASSERT_THAT(extension->associate_fence, Ne(nullptr));
     extension->associate_fence(mir_buffer, fake_fence, mir_read_write);
     extension->associate_fence(mir_buffer, fake_fence, mir_read);
 }
 
 TEST_F(ClientExtensions, updating_fences_with_invalid_resets_fence)
 {
-    ASSERT_THAT(extension, Ne(nullptr)); 
+    ASSERT_THAT(extension, Ne(nullptr));
     ASSERT_THAT(extension->associate_fence, Ne(nullptr));
     extension->associate_fence(mir_buffer, mir::Fd::invalid, mir_read_write);
 }
@@ -198,15 +198,15 @@ TEST_F(ClientExtensions, can_retreive_fences)
 {
     EXPECT_CALL(*mock_native_buffer, fence())
         .WillOnce(Return(fake_fence));
-    
-    ASSERT_THAT(extension, Ne(nullptr)); 
+
+    ASSERT_THAT(extension, Ne(nullptr));
     ASSERT_THAT(extension->get_fence, Ne(nullptr));
     EXPECT_THAT(extension->get_fence(mir_buffer), Eq(fake_fence));
 }
 
 TEST_F(ClientExtensions, can_wait_fence)
 {
-    ASSERT_THAT(extension, Ne(nullptr)); 
+    ASSERT_THAT(extension, Ne(nullptr));
     ASSERT_THAT(extension->wait_for_access, Ne(nullptr));
 }
 
@@ -355,7 +355,7 @@ TEST_F(AndroidClientPlatformTest, can_access_buffer_properties)
         EXPECT_THAT(fds[i], Eq(native->data[i]));
     for (auto i = 0; i < nints; i++)
         EXPECT_THAT(data[i], Eq(native->data[i + nfds]));
-    EXPECT_THAT(ext->hal_pixel_format(b), Eq(stub_buffer->stub_anwb.format));
-    EXPECT_THAT(ext->gralloc_usage(b), Eq(stub_buffer->stub_anwb.usage));
-    EXPECT_THAT(ext->stride(b), Eq(stub_buffer->stub_anwb.stride));
+    EXPECT_THAT((int)ext->hal_pixel_format(b), Eq(stub_buffer->stub_anwb.format));
+    EXPECT_THAT((int)ext->gralloc_usage(b), Eq(stub_buffer->stub_anwb.usage));
+    EXPECT_THAT((int)ext->stride(b), Eq(stub_buffer->stub_anwb.stride));
 }

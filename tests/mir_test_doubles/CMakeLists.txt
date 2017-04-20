@@ -94,7 +94,7 @@ target_link_libraries(mir-test-doubles-static
   mirserver
 
   ${Boost_LIBRARIES}
-  ${GMOCK_LIBRARY}
+  ${GMOCK_LIBRARIES}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
@@ -112,7 +112,7 @@ target_link_libraries(
   mir-test-doubles-platform-static
 
   -ldl
-  ${GMOCK_LIBRARY}
+  ${GMOCK_LIBRARIES}
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )

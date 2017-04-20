@@ -83,11 +83,11 @@ add_dependencies(mir-test-framework-static GMock)
 
 target_link_libraries(mir-test-framework-static
 
+  mirserver
   mirclient
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
+  ${GMOCK_LIBRARIES}
   ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
@@ -118,7 +118,7 @@ set_target_properties(
 
 add_library(
   mir-test-input-framework OBJECT
-  
+
   stub_input.cpp
   fake_input_device_impl.cpp
   stub_input_platform.cpp
@@ -175,7 +175,7 @@ add_library(
 )
 
 target_link_libraries(
-  mirplatformgraphicsthrow 
+  mirplatformgraphicsthrow
 
   mirplatform
 )
