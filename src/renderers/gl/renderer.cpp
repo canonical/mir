@@ -337,12 +337,6 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
     if (rect == viewport)
         return;
 
-    fprintf(stderr, "vv: set_viewport %+d%+d %dx%d\n",
-            rect.top_left.x.as_int(),
-            rect.top_left.y.as_int(),
-            rect.size.width.as_int(),
-            rect.size.height.as_int());
-
     /*
      * Here we provide a 3D perspective projection with a default 30 degrees
      * vertical field of view. This projection matrix is carefully designed
@@ -398,15 +392,11 @@ void mrg::Renderer::update_gl_viewport()
     auto dpy = eglGetCurrentDisplay();
     auto surf = eglGetCurrentSurface(EGL_DRAW);
     EGLint buf_width = 0, buf_height = 0;
-    fprintf(stderr, "vv: rotated view area is %.1f x %.1f\n",
-            viewport_width, viewport_height);
 
     if (viewport_width > 0.0f && viewport_height > 0.0f &&
         eglQuerySurface(dpy, surf, EGL_WIDTH, &buf_width) && buf_width > 0 &&
         eglQuerySurface(dpy, surf, EGL_HEIGHT, &buf_height) && buf_height > 0)
     {
-        fprintf(stderr, "vv: EGL surface is %dx%d\n",
-                buf_width, buf_height);
         GLint reduced_width = buf_width, reduced_height = buf_height;
         // if viewport_aspect_ratio >= buf_aspect_ratio
         if (viewport_width * buf_height >= buf_width * viewport_height)
@@ -418,8 +408,6 @@ void mrg::Renderer::update_gl_viewport()
         GLint offset_y = (buf_height - reduced_height) / 2;
 
         glViewport(offset_x, offset_y, reduced_width, reduced_height);
-        fprintf(stderr, "vv: glViewPort(%+d%+d %dx%d)\n",
-                offset_x, offset_y, reduced_width, reduced_height);
     }
 }
 
@@ -428,8 +416,6 @@ void mrg::Renderer::set_output_transform(glm::mat2 const& t)
     auto const new_display_transform = glm::mat4(t);
     if (new_display_transform != display_transform)
     {
-        fprintf(stderr, "vv: set_output_transform [%.1f %.1f %.1f %.1f]\n",
-                t[0][0], t[0][1], t[1][0], t[1][1]);
         display_transform = new_display_transform;
         update_gl_viewport();
     }
