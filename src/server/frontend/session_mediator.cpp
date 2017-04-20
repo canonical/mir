@@ -1274,17 +1274,18 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
                       convert_string_to_gamma_curve(src.gamma_green()),
                       convert_string_to_gamma_curve(src.gamma_blue())};
 
-        if (src.has_logical_width() && src.has_logical_height())
+        if (src.has_custom_logical_size())
         {
-            int w = src.logical_width();
-            int h = src.logical_height();
-
-            fprintf(stderr, "vv: SessionMediator at logical %dx%d\n", w, h);
-
-            if (w && h)
-                dest.custom_logical_size = {w, h};
-            else if (dest.custom_logical_size.is_set())
-                (void)dest.custom_logical_size.consume();
+            if (!src.custom_logical_size())
+            {   // User has explicitly removed logical size customization
+                if (dest.custom_logical_size.is_set())
+                    (void)dest.custom_logical_size.consume();
+            }
+            else if (src.has_logical_width() && src.has_logical_height())
+            {   // User has explicitly set a logical size customization
+                dest.custom_logical_size = {src.logical_width(),
+                                            src.logical_height()};
+            }
         }
     });
 

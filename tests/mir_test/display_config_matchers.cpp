@@ -54,7 +54,9 @@ public:
             auto const& protobuf_output = protobuf_config.display_output(i);
 
             mir::optional_value<geom::Size> custom_logical_size;
-            if (protobuf_output.has_logical_width() &&
+            if (protobuf_output.has_custom_logical_size() &&
+                protobuf_output.custom_logical_size() &&
+                protobuf_output.has_logical_width() &&
                 protobuf_output.has_logical_height())
             {
                 custom_logical_size = {protobuf_output.logical_width(),
@@ -204,6 +206,7 @@ public:
                     {},
                     mir_output_gamma_unsupported,
                     {},
+                    // TODO client function for getting customized flag?
                     geom::Size{mir_output_get_logical_width(client_output),
                                mir_output_get_logical_height(client_output)}
                 };
