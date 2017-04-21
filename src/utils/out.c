@@ -407,7 +407,7 @@ static bool modify(MirDisplayConfig* conf, int actionc, char** actionv)
                 }
             }
         }
-        else if (!strcmp(*action, "fake"))
+        else if (!strcmp(*action, "fakemode"))
         {
             if (++action >= action_end)
             {
@@ -487,7 +487,7 @@ int main(int argc, char *argv[])
                            "    rotate (normal | inverted | left | right)\n"
                            "    place +X+Y\n"
                            "    mode (WIDTHxHEIGHT | preferred) [rate HZ]\n"
-                           "    fake WIDTHxHEIGHT\n"
+                           "    fakemode WIDTHxHEIGHT\n"
                            "    rate HZ\n"
                            , argv[0]);
                     return 0;
