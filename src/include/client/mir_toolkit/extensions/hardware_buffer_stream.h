@@ -28,8 +28,7 @@ extern "C" {
 #endif
 
 //This extension should probably not be published.
-//Android can allocate a hardware-capable ANativeWindow from the AndroidEgl extension,
-//and mesa's egl will use MirPresentationChain + MirBuffer, so there's no need
+//Mesa's egl will use MirPresentationChain + MirBuffer, so there's no need
 //for a 'hardware' buffer stream publicly.
 //Internally, its useful in playground/ and the nested server until we switch upstream
 //driver stacks to the mir egl platform. 

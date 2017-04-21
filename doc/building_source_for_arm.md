@@ -12,7 +12,7 @@ on the device. Although this will usually be significantly slower than using a
 desktop. On the armhf or arm64 target device just follow these steps:
 
        $ mk-build-deps --install --tool "apt-get -y" --build-dep debian/control
-       $ cmake .. -DMIR_PLATFORM=android
+       $ cmake ..
        $ make
        $ make install
 

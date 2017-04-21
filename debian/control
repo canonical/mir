@@ -23,9 +23,6 @@ Build-Depends: cmake,
                libglm-dev,
                libprotobuf-dev,
                pkg-config,
-               android-headers-23,
-               libhardware-dev [i386 amd64 armhf arm64],
-               libandroid-properties-dev [i386 amd64 armhf arm64],
                libgoogle-glog-dev,
                liblttng-ust-dev,
                libxkbcommon-dev (>= 0.5),
@@ -295,18 +292,6 @@ Description: Display Server for Ubuntu - stress tests and other test tools
  .
  Contains a tool for stress testing the Mir display server
 
-Package: mir-android-diagnostics
-Architecture: i386 amd64 armhf arm64
-Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-Recommends: mir-demos,
-Description: Display Server for Ubuntu - android platform diagnostics utility
- Mir is a display server running on linux systems, with a focus on efficiency,
- robust operation and a well-defined driver model.
- .
- Contains a tool for checking the graphics components of android devices.
-
 Package: libmircore1
 Section: libs
 Architecture: linux-any
@@ -362,20 +347,6 @@ Description: Display server for Ubuntu - platform library for KMS Mesa
  Contains the shared libraries required for the Mir server to interact with
  the hardware platform using the Mesa drivers.
 
-Package: mir-platform-graphics-android13
-Section: libs
-Architecture: i386 amd64 armhf arm64
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-Description: Display server for Ubuntu - platform library for Android
- Mir is a display server running on linux systems, with a focus on efficiency,
- robust operation and a well-defined driver model.
- .
- Contains the shared libraries required for the Mir server to interact with
- the hardware platform using the Android drivers.
-
 Package: mir-platform-input-evdev7
 Section: libs
 Architecture: linux-any
@@ -418,20 +389,6 @@ Description: Display server for Ubuntu - client platform library for Mesa develo
  Contains header files required to use the platform specific capabilities of
  the Mir Mesa backend.
 
-Package: mir-client-platform-android5
-Section: libs
-Architecture: i386 amd64 armhf arm64
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends},
-         ${shlibs:Depends}
-Description: Display server for Ubuntu - client platform library for Android
- Mir is a display server running on linux systems, with a focus on efficiency,
- robust operation and a well-defined driver model.
- .
- Contains the shared libraries required for the Mir clients to interact with
- the underlying hardware platform using the Android drivers.
-
 Package: mir-graphics-drivers-desktop
 Section: libs
 Architecture: linux-any
@@ -448,22 +405,6 @@ Description: Display server for Ubuntu - desktop driver metapackage
  .
  This package depends on a full set of graphics drivers for traditional desktop
  systems.
-
-Package: mir-graphics-drivers-android
-Section: libs
-Architecture: i386 amd64 armhf arm64
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: ${misc:Depends},
-         mir-platform-graphics-android13,
-         mir-client-platform-android5,
-         mir-platform-input-evdev7,
-Description: Display server for Ubuntu - android driver metapackage
- Mir is a display server running on linux systems, with a focus on efficiency,
- robust operation and a well-defined driver model.
- .
- This package depends on a full set of graphics drivers for running Mir on top
- of an existing Android driver stack.
 
 Package: libmircookie2
 Section: libs

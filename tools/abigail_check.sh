@@ -9,37 +9,27 @@ declare -A abi_var_for=(\
     ["mirplatform"]="MIRPLATFORM_ABI" \
     ["mirserver"]="MIRSERVER_ABI" \
     ["mircookie"]="MIRCOOKIE_ABI" \
-    ["mirclientplatformandroid"]="MIR_CLIENT_PLATFORM_ABI" \
     ["mirclientplatformmesa"]="MIR_CLIENT_PLATFORM_ABI" \
-    ["mirplatformgraphicsandroid"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" \
     ["mirplatformgraphicsmesakms"]="MIR_SERVER_GRAPHICS_PLATFORM_ABI" \
     ["mirplatforminputevdev"]="MIR_SERVER_INPUT_PLATFORM_ABI" )
 
 declare -A libtype=(\
-    ["mirclientplatformandroid"]="plugin-client" \
     ["mirclientplatformmesa"]="plugin-client" \
-    ["mirplatformgraphicsandroid"]="plugin" \
     ["mirplatformgraphicsmesakms"]="plugin" \
     ["mirplatforminputevdev"]="plugin" )
 
 declare -A package_name=(\
-    ["mirclientplatformandroid"]="mir-client-platform-android" \
     ["mirclientplatformmesa"]="mir-client-platform-mesa" \
-    ["mirplatformgraphicsandroid"]="mir-platform-graphics-android" \
     ["mirplatformgraphicsmesakms"]="mir-platform-graphics-mesa-kms" \
     ["mirplatforminputevdev"]="mir-platform-input-evdev" )
 
 declare -A libsoname=(\
-    ["mirclientplatformandroid"]="mir/client-platform/android" \
     ["mirclientplatformmesa"]="mir/client-platform/mesa" \
-    ["mirplatformgraphicsandroid"]="mir/server-platform/graphics-android" \
     ["mirplatformgraphicsmesakms"]="mir/server-platform/graphics-mesa-kms" \
     ["mirplatforminputevdev"]="mir/server-platform/input-evdev" )
 
 declare -A buildsoname=(\
-    ["mirclientplatformandroid"]="client-modules/android" \
     ["mirclientplatformmesa"]="client-modules/mesa" \
-    ["mirplatformgraphicsandroid"]="server-modules/graphics-android" \
     ["mirplatformgraphicsmesakms"]="server-modules/graphics-mesa-kms" \
     ["mirplatforminputevdev"]="server-modules/input-evdev" )
 
