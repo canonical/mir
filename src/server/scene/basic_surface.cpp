@@ -37,7 +37,7 @@
 #include <algorithm>
 
 #include <string.h> // memcpy
-//#define USE_ANDROID_INPUT
+
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace msh = mir::shell;

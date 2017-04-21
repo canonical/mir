@@ -146,13 +146,6 @@ MIRPLATFORM_0.27 {
     mir::udev::Monitor::process_events*;
     mir::udev::operator*;
 
-    # Android input platform symbols
-    android::getAbsAxisUsage*;
-    android::getInputDeviceConfigurationFilePathByDeviceIdentifier*;
-    android::isEligibleBuiltInKeyboard*;
-    __android_log_assert;
-    __android_log_print;
-
     mir::graphics::AtomicFrame::load*;
     mir::graphics::AtomicFrame::store*;
     mir::graphics::AtomicFrame::increment*

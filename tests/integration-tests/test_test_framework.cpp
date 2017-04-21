@@ -108,7 +108,7 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
         << "Client hung" << std::endl;
 
     // Investigation revealed we leak a differing number of fds (3, 0) on
-    // Mesa/Android over the entire lifetime of the client library. So we
+    // Mesa over the entire lifetime of the client library. So we
     // verify here only that we don't leak any FDs beyond those created up to
     // the lifetime of the first window.
     //

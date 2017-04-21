@@ -52,13 +52,6 @@ void populate_valid_mesa_platform_package(MirPlatformPackage& pkg)
 }
 #endif
 
-#if defined(MIR_BUILD_PLATFORM_ANDROID)
-void populate_valid_android_platform_package(MirPlatformPackage& pkg)
-{
-    memset(&pkg, 0, sizeof(pkg));
-}
-#endif
-
 #if defined(MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
 void populate_valid_eglstream_platform_package(MirPlatformPackage& pkg)
 {
@@ -121,11 +114,6 @@ all_available_fixtures()
         std::make_pair<std::string, ModuleContext>(
             "mesa-x11", { "mesa", "server-mesa-x11", &populate_valid_mesa_platform_package }));
 #endif
-#ifdef MIR_BUILD_PLATFORM_ANDROID
-    modules.emplace(
-        std::make_pair<std::string, ModuleContext>(
-            "android", { "android", "graphics-android", &populate_valid_android_platform_package }));
-#endif
 #if defined(MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
     modules.emplace(
         std::make_pair<std::string, ModuleContext>(
@@ -182,7 +170,7 @@ TEST(ProbingClientPlatformFactory, ThrowsErrorWhenNoPlatformPluginProbesSuccessf
                            {
                                ::memset(&pkg, 0, sizeof(MirPlatformPackage));
                                // Mock up a platform package that looks nothing like
-                               // either an Android or Mesa package
+                               // a Mesa package
                                pkg.fd_items = 0xdeadbeef;
                                pkg.data_items = -23;
                            }));
@@ -323,26 +311,6 @@ TEST(ProbingClientPlatformFactory, DISABLED_CreatesEglstreamPlatformOnEglstreamK
 
     auto platform = factory.create_client_platform(&context);
     EXPECT_EQ(mir_platform_type_eglstream, platform->platform_type());
-}
-
-#ifdef MIR_BUILD_PLATFORM_ANDROID
-TEST(ProbingClientPlatformFactory, CreatesAndroidPlatformWhenAppropriate)
-#else
-TEST(ProbingClientPlatformFactory, DISABLED_CreatesAndroidPlatformWhenAppropriate)
-#endif
-{
-    using namespace testing;
-
-    mir::client::ProbingClientPlatformFactory factory(
-        mir::report::null_shared_library_prober_report(),
-        all_available_modules(),
-        {}, nullptr);
-
-    NiceMock<mtd::MockClientContext> context;
-    all_available_fixtures().at("android").setup_context(context);
-
-    auto platform = factory.create_client_platform(&context);
-    EXPECT_EQ(mir_platform_type_android, platform->platform_type());
 }
 
 TEST(ProbingClientPlatformFactory, IgnoresNonClientPlatformModules)
