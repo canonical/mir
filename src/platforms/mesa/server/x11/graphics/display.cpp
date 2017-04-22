@@ -289,12 +289,14 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
             std::logic_error("Invalid or inconsistent display configuration"));
     }
 
+    glm::mat2 trans;
     MirOrientation o = mir_orientation_normal;
     float new_scale = scale;
     geom::Rectangle logical_area;
 
     new_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
+        trans = conf_output.transformation();
         o = conf_output.orientation;
         new_scale = conf_output.scale;
         logical_area = conf_output.extents();
@@ -302,7 +304,7 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
 
     orientation = o;
     display_buffer->set_view_area(logical_area);
-    display_buffer->set_transformation(mg::transformation(orientation));
+    display_buffer->set_transformation(trans);
     scale = new_scale;
 }
 
