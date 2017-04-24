@@ -28,7 +28,7 @@
 
 #if MIR_ENABLE_DEPRECATIONS
     #define MIR_FOR_REMOVAL_IN_VERSION_1(message)\
-    MIR_FOR_REMOVAL_IN_VERSION_1(message)
+    __attribute__((deprecated(message)))
 #else
     #define MIR_FOR_REMOVAL_IN_VERSION_1(message)
 #endif
