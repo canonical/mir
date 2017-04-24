@@ -20,6 +20,7 @@
 
 #include <mir_toolkit/common.h>
 #include <mir_toolkit/client_types.h>
+#include <mir_toolkit/deprecations.h>
 
 /**
  * Opaque structure containing cursor parameterization. Create with mir_cursor* family.
@@ -53,7 +54,7 @@ void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters);
  *            to_mir_cursor_configuration_destroy
  */
 /// @cond
-__attribute__ ((deprecated))
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_window_spec_set_cursor_name()")
 /// @endcond
 MirCursorConfiguration *mir_cursor_configuration_from_name(char const* name);
 

@@ -20,6 +20,7 @@
 
 #include <mir_toolkit/mir_native_buffer.h>
 #include <mir_toolkit/client_types.h>
+#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 /**
@@ -141,7 +142,8 @@ void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream);
  *                            mir_platform_type_gbm
  */
 /// @cond
-__attribute__ ((deprecated))
+MIR_FOR_REMOVAL_IN_VERSION_1("To identify the graphics platform use mir_connection_get_graphics_module(). \n"
+                             "To safely interpret the buffer contents use mir_buffer_stream_get_graphics_region()")
 /// @endcond
 MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream *stream);
 

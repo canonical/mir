@@ -215,7 +215,7 @@ enum { mir_platform_package_max = 32 };
  * \todo This should be removed from the public API at the next API break.
  */
 #ifndef __cplusplus
-__attribute__ ((deprecated))
+MIR_FOR_REMOVAL_IN_VERSION_1("Use of this type is inherently non-portable")
 #endif
 typedef enum MirPlatformType
 {

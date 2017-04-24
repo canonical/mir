@@ -196,7 +196,7 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* event
  * \return           The associated MirCloseSurfaceEvent
  */
 /// @cond
-__attribute__ ((deprecated))
+MIR_FOR_REMOVAL_IN_VERSION_1("Use of this function is pointless as there is no way to use the return value")
 /// @endcond
 MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* event);
 #pragma GCC diagnostic pop
@@ -224,7 +224,7 @@ MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
  * \return           The associated MirInputConfigurationEvent
  */
 /// @cond
-__attribute__((deprecated))
+MIR_FOR_REMOVAL_IN_VERSION_1("Input devices and changes to the input devices are indicated via the MirInputConfigCallback")
 /// @endcond
 MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* event);
 #pragma GCC diagnostic pop
