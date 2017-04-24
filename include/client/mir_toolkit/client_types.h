@@ -23,6 +23,7 @@
 
 #include <mir_toolkit/events/event.h>
 #include <mir_toolkit/common.h>
+#include <mir_toolkit/deprecations.h>
 
 #include <stddef.h>
 
@@ -38,15 +39,15 @@ extern "C" {
 typedef void* MirEGLNativeWindowType;
 typedef void* MirEGLNativeDisplayType;
 typedef struct MirConnection MirConnection;
-typedef struct MirSurface MirSurface __attribute__((deprecated("Use MirWindow instead")));
+typedef struct MirSurface MirSurface MIR_FOR_REMOVAL_IN_VERSION_1("Use MirWindow instead");
 typedef struct MirSurface MirWindow;
-typedef struct MirSurfaceSpec MirSurfaceSpec __attribute__((deprecated("Use MirWindowSpec instead")));
+typedef struct MirSurfaceSpec MirSurfaceSpec MIR_FOR_REMOVAL_IN_VERSION_1("Use MirWindowSpec instead");
 typedef struct MirSurfaceSpec MirWindowSpec;
 typedef struct MirScreencast MirScreencast;
 typedef struct MirScreencastSpec MirScreencastSpec;
 typedef struct MirPromptSession MirPromptSession;
 typedef struct MirBufferStream MirBufferStream;
-typedef struct MirPersistentId MirPersistentId __attribute((deprecated("Use MirWindowId instead")));
+typedef struct MirPersistentId MirPersistentId MIR_FOR_REMOVAL_IN_VERSION_1("Use MirWindowId instead");
 typedef struct MirPersistentId MirWindowId;
 typedef struct MirBlob MirBlob;
 typedef struct MirDisplayConfig MirDisplayConfig;
@@ -54,7 +55,7 @@ typedef struct MirError MirError;
 typedef struct MirPresentationChain MirPresentationChain;
 typedef struct MirBuffer MirBuffer;
 typedef struct MirRenderSurface MirRenderSurface
-__attribute__((deprecated("This type is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_FOR_REMOVAL_IN_VERSION_1("This type is slated for rename due to MirRenderSurface-->MirSurface transition");
 
 /**
  * Descriptor for an output connection.
@@ -82,7 +83,7 @@ typedef struct MirPlatformMessage MirPlatformMessage;
 typedef void (*MirConnectedCallback)(
     MirConnection *connection, void *client_context);
 typedef MirConnectedCallback mir_connected_callback
-    __attribute__((deprecated("Use MirConnectedCallback instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirConnectedCallback instead");
 
 /**
  * Callback to be passed when calling window functions :
@@ -102,7 +103,7 @@ typedef void (*MirWindowCallback)(MirWindow *window, void *client_context);
 typedef void (*MirBufferStreamCallback)(
     MirBufferStream *stream, void *client_context);
 typedef MirBufferStreamCallback mir_buffer_stream_callback
-    __attribute__((deprecated("Use MirBufferStreamCallback instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirBufferStreamCallback instead");
 
 /**
  * Callback for handling of window events.
@@ -124,7 +125,7 @@ typedef void (*MirWindowEventCallback)(
 typedef void (*MirLifecycleEventCallback)(
     MirConnection* connection, MirLifecycleState state, void* context);
 typedef MirLifecycleEventCallback mir_lifecycle_event_callback
-    __attribute__((deprecated("Use MirLifecycleEventCallback instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirLifecycleEventCallback instead");
 
 /**
  * Callback called when the server pings for responsiveness testing.
@@ -136,7 +137,7 @@ typedef MirLifecycleEventCallback mir_lifecycle_event_callback
 typedef void (*MirPingEventCallback)(
     MirConnection* connection, int32_t serial, void* context);
 typedef MirPingEventCallback mir_ping_event_callback
-    __attribute__((deprecated("Use MirPingEventCallback instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirPingEventCallback instead");
 
 /**
  * Callback called when a display config change has occurred
@@ -147,7 +148,7 @@ typedef MirPingEventCallback mir_ping_event_callback
 typedef void (*MirDisplayConfigCallback)(
     MirConnection* connection, void* context);
 typedef MirDisplayConfigCallback mir_display_config_callback
-    __attribute__((deprecated("Use MirDisplayConfigCallback instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirDisplayConfigCallback instead");
 
 /**
  * Callback called when a request for client file descriptors completes
@@ -162,7 +163,7 @@ typedef MirDisplayConfigCallback mir_display_config_callback
 typedef void (*MirClientFdCallback)(
     MirPromptSession *prompt_session, size_t count, int const* fds, void* context);
 typedef MirClientFdCallback mir_client_fd_callback
-    __attribute__((deprecated("Use MirClientFdCallback instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirClientFdCallback instead");
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -201,7 +202,7 @@ typedef struct MirSurfaceParameters
      * use the value mir_display_output_id_invalid.
      */
     uint32_t output_id;
-} MirSurfaceParameters __attribute__((deprecated("Use MirWindowParameters instead")));
+} MirSurfaceParameters MIR_FOR_REMOVAL_IN_VERSION_1("Use MirWindowParameters instead");
 
 enum { mir_platform_package_max = 32 };
 
@@ -429,7 +430,7 @@ typedef struct MirScreencastParameters
 typedef void (*MirScreencastCallback)(
     MirScreencast *screencast, void *client_context);
 typedef MirScreencastCallback mir_screencast_callback
-    __attribute__((deprecated("Use MirScreencastCallback instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirScreencastCallback instead");
 
 /**
  * Callback member of MirPromptSession for handling of prompt sessions.
@@ -439,7 +440,7 @@ typedef MirScreencastCallback mir_screencast_callback
 typedef void (*MirPromptSessionCallback)(
     MirPromptSession* prompt_provider, void* context);
 typedef MirPromptSessionCallback mir_prompt_session_callback
-    __attribute__((deprecated("Use MirPromptSessionCallback instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirPromptSessionCallback instead");
 
 /**
  * Callback member of MirPromptSession for handling of prompt sessions events.
@@ -452,7 +453,7 @@ typedef void (*MirPromptSessionStateChangeCallback)(
     void* context);
 typedef MirPromptSessionStateChangeCallback
         mir_prompt_session_state_change_callback
-    __attribute__((deprecated("Use MirPromptSessionStateChangeCallback instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirPromptSessionStateChangeCallback instead");
 
 /**
  * Callback called when a platform operation completes.
@@ -467,7 +468,7 @@ typedef MirPromptSessionStateChangeCallback
 typedef void (*MirPlatformOperationCallback)(
     MirConnection* connection, MirPlatformMessage* reply, void* context);
 typedef MirPlatformOperationCallback mir_platform_operation_callback
-    __attribute__((deprecated("Use MirPlatformOperationCallback instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirPlatformOperationCallback instead");
 
 /**
  * Callback called when a change of input devices has occurred
@@ -479,7 +480,7 @@ typedef MirPlatformOperationCallback mir_platform_operation_callback
 typedef void (*MirInputConfigCallback)(
     MirConnection* connection, void* context);
 typedef MirInputConfigCallback mir_input_config_callback
-    __attribute__((deprecated("Use MirInputConfigCallback instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirInputConfigCallback instead");
 
 typedef void (*MirBufferCallback)(MirBuffer*, void* context);
 
@@ -539,24 +540,24 @@ typedef enum MirInputConfigurationError {
 typedef void (*MirErrorCallback)(
     MirConnection* connection, MirError const* error, void* context);
 typedef MirErrorCallback mir_error_callback
-    __attribute__((deprecated("Use MirErrorCallback instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirErrorCallback instead");
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
 typedef void (*mir_surface_callback)(MirSurface *surface, void *client_context)
-__attribute__((deprecated("Use MirWindowCallback instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use MirWindowCallback instead");
 
 typedef void (*mir_surface_event_callback)(
     MirSurface* surface, MirEvent const* event, void* context)
-__attribute__((deprecated("Use MirWindowEventCallback instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use MirWindowEventCallback instead");
 
 typedef void (*mir_surface_id_callback)(
     MirSurface* surface, MirPersistentId* id, void* context)
-__attribute__((deprecated("Use MirWindowIdCallback instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use MirWindowIdCallback instead");
 
 typedef void (*MirRenderSurfaceCallback)(MirRenderSurface*, void* context)
-__attribute__((deprecated("This type is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_FOR_REMOVAL_IN_VERSION_1("This type is slated for rename due to MirRenderSurface-->MirSurface transition");
 
 typedef MirSurfaceParameters MirWindowParameters;
 

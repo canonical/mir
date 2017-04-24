@@ -21,6 +21,7 @@
 #define MIR_TOOLKIT_MIR_RENDER_SURFACE_H_
 
 #include <mir_toolkit/client_types.h>
+#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 /**
@@ -49,7 +50,7 @@ void mir_connection_create_render_surface(
     int width, int height,
     MirRenderSurfaceCallback callback,
     void* context)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
 
 /**
  * Create a render surface and wait for the result
@@ -64,7 +65,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
 MirRenderSurface* mir_connection_create_render_surface_sync(
     MirConnection* connection,
     int width, int height)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
 
 /**
  * Get the size of the MirRenderSurface
@@ -76,7 +77,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
 void mir_render_surface_get_size(
     MirRenderSurface* render_surface,
     int* width, int* height)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
 
 /**
  * Set the size of the MirRenderSurface
@@ -88,7 +89,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
 void mir_render_surface_set_size(
     MirRenderSurface* render_surface,
     int width, int height)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
 
 /**
  * Test for a valid render surface
@@ -100,7 +101,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
  */
 bool mir_render_surface_is_valid(
     MirRenderSurface* render_surface)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
 
 /**
  * Retrieve a text description of the error. The returned string is owned by
@@ -113,7 +114,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
  */
 char const *mir_render_surface_get_error_message(
     MirRenderSurface* render_surface)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
 
 /**
  * Release the specified render surface
@@ -122,7 +123,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
  */
 void mir_render_surface_release(
     MirRenderSurface* render_surface)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
 
 /**
  * Obtain the buffer stream backing a given render surface.
@@ -142,7 +143,7 @@ MirBufferStream* mir_render_surface_get_buffer_stream(
     MirRenderSurface* render_surface,
     int width, int height,
     MirPixelFormat format)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
 
 /**
  * Obtain the presentation chain backing a given render surface.
@@ -155,7 +156,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
  */
 MirPresentationChain* mir_render_surface_get_presentation_chain(
     MirRenderSurface* render_surface)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
 
 /** Query whether the server supports a given presentation mode.
  *
@@ -189,7 +190,7 @@ void mir_window_spec_set_cursor_render_surface(
     MirWindowSpec* spec,
     MirRenderSurface* render_surface,
     int hotspot_x, int hotspot_y)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
 
 #pragma GCC diagnostic pop
 

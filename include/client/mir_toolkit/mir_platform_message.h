@@ -19,6 +19,7 @@
 #define MIR_TOOLKIT_MIR_PLATFORM_MESSAGE_H_
 
 #include <sys/types.h>
+#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 /**
@@ -51,7 +52,7 @@ typedef struct
  *   \param [in] opcode    The platform message opcode
  *   \return               The created MirPlatformMessage
  */
-__attribute__((deprecated("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")))
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")
 MirPlatformMessage* mir_platform_message_create(unsigned int opcode);
 
 /**
@@ -59,7 +60,7 @@ MirPlatformMessage* mir_platform_message_create(unsigned int opcode);
  *
  *   \param [in] message   The MirPlatformMessage
  */
-__attribute__((deprecated("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")))
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")
 void mir_platform_message_release(MirPlatformMessage const* message);
 
 /**
@@ -71,7 +72,7 @@ void mir_platform_message_release(MirPlatformMessage const* message);
  *   \param [in] data       Pointer to the data
  *   \param [in] data_size  The size of the data in bytes
  */
-__attribute__((deprecated("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")))
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")
 void mir_platform_message_set_data(MirPlatformMessage* message, void const* data, size_t data_size);
 
 /**
@@ -89,7 +90,7 @@ void mir_platform_message_set_data(MirPlatformMessage* message, void const* data
  *   \param [in] fds       Pointer to the array of fds
  *   \param [in] num_fds   The number of fds
  */
-__attribute__((deprecated("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")))
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")
 void mir_platform_message_set_fds(MirPlatformMessage* message, int const* fds, size_t num_fds);
 
 /**
@@ -98,7 +99,7 @@ void mir_platform_message_set_fds(MirPlatformMessage* message, int const* fds, s
  *   \param [in] message   The MirPlatformMessage
  *   \return               The opcode
  */
-__attribute__((deprecated("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")))
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")
 unsigned int mir_platform_message_get_opcode(MirPlatformMessage const* message);
 
 /**
@@ -111,7 +112,7 @@ unsigned int mir_platform_message_get_opcode(MirPlatformMessage const* message);
  *   \param [in] message   The MirPlatformMessage
  *   \return               The data
  */
-__attribute__((deprecated("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")))
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")
 MirPlatformMessageData mir_platform_message_get_data(MirPlatformMessage const* message);
 
 /**
@@ -128,7 +129,7 @@ MirPlatformMessageData mir_platform_message_get_data(MirPlatformMessage const* m
  *   \param [in] message   The MirPlatformMessage
  *   \return               The fds
  */
-__attribute__((deprecated("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")))
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_extension_mesa_drm_auth or mir_extension_set_gbm_device")
 MirPlatformMessageFds mir_platform_message_get_fds(MirPlatformMessage const* message);
 
 #ifdef __cplusplus
