@@ -15,6 +15,13 @@ mir (0.26.3-0ubuntu1) UNRELEASED; urgency=medium
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 30 Mar 2017 11:43:28 +0800
 
+mir (0.26.2+17.04.20170322.1-0ubuntu2) zesty; urgency=medium
+
+  [ Mattia Rizzolo ]
+  * Patch the code to use unversioned runtime boost libraries (LP: #1675138).
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Fri, 24 Mar 2017 22:58:36 +0100
+
 mir (0.26.2+17.04.20170322.1-0ubuntu1) zesty; urgency=medium
 
   [ Daniel van Vugt ]
