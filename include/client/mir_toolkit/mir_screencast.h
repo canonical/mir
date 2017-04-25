@@ -18,6 +18,7 @@
 #define MIR_TOOLKIT_MIR_SCREENCAST_H_
 
 #include <mir_toolkit/client_types.h>
+#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 /**
@@ -143,7 +144,7 @@ char const *mir_screencast_get_error_message(MirScreencast *screencast);
 MirScreencast* mir_connection_create_screencast_sync(
     MirConnection* connection,
     MirScreencastParameters* parameters)
-__attribute__ ((deprecated("use mir_screencast_create_sync instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_screencast_create_sync instead");
 
 /**
  * Release the specified screencast.
