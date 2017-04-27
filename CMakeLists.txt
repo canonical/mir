@@ -15,14 +15,14 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-set(CMAKE_GCOV gcov)
-
-project(Mir)
-
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 
 cmake_policy(SET CMP0015 NEW)
 cmake_policy(SET CMP0022 NEW)
+
+set(CMAKE_GCOV gcov)
+
+project(Mir)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
