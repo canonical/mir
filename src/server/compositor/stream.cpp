@@ -210,14 +210,6 @@ void mc::Stream::disassociate_buffer(mg::BufferID id)
 void mc::Stream::set_scale(float)
 {
 }
-<<<<<<< TREE
-=======
-
-void mc::Stream::drop_frame()
-{
-    if (schedule->num_scheduled() > 1)
-        buffers->send_buffer(schedule->next_buffer()->id());
-}
 
 bool mc::Stream::suitable_for_cursor() const
 {
@@ -233,4 +225,3 @@ bool mc::Stream::suitable_for_cursor() const
     }
     return true;
 }
->>>>>>> MERGE-SOURCE
