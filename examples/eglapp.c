@@ -478,12 +478,12 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     if (output_id != mir_display_output_id_invalid)
         mir_window_spec_set_fullscreen_on_output(spec, output_id);
 
-    mir_window_spec_set_event_handler(spec, mir_eglapp_handle_event, NULL);
-
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     CHECK(mir_window_is_valid(window), "Can't create a window");
+
+    mir_window_set_event_handler(window, mir_eglapp_handle_event, NULL);
 
     spec = mir_create_window_spec(connection);
     mir_window_spec_set_cursor_name(spec, cursor_name);
