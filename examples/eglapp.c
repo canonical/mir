@@ -38,6 +38,7 @@ static EGLDisplay egldisplay;
 static EGLSurface eglsurface;
 static volatile sig_atomic_t running = 0;
 static double refresh_rate = 0.0;
+static int new_width = 0, new_height = 0; /* Server may change these in init */
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -186,8 +187,8 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
          */
         {
             MirResizeEvent const* resize = mir_event_get_resize_event(ev);
-            int const new_width = mir_resize_event_get_width(resize);
-            int const new_height = mir_resize_event_get_height(resize);
+            new_width = mir_resize_event_get_width(resize);
+            new_height = mir_resize_event_get_height(resize);
 
             printf("Resized to %dx%d\n", new_width, new_height);
             if (surface)
@@ -478,12 +479,19 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     if (output_id != mir_display_output_id_invalid)
         mir_window_spec_set_fullscreen_on_output(spec, output_id);
 
+    mir_window_spec_set_event_handler(spec, mir_eglapp_handle_event, NULL);
+
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
     CHECK(mir_window_is_valid(window), "Can't create a window");
 
-    mir_window_set_event_handler(window, mir_eglapp_handle_event, NULL);
+    /*
+     * The server may resize during creation (since r4150) so get the actual
+     * latest dimensions the app is starting with...
+     */
+    if (new_width) *width = new_width;
+    if (new_height) *height = new_height;
 
     spec = mir_create_window_spec(connection);
     mir_window_spec_set_cursor_name(spec, cursor_name);
