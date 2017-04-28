@@ -23,6 +23,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/input/mir_input_config.h"
 #include "mir/client_visible_error.h"
 
 #include <gmock/gmock.h>
@@ -51,14 +52,12 @@ struct MockSceneSession : public scene::Session
     MOCK_CONST_METHOD0(name, std::string());
     MOCK_CONST_METHOD0(process_id, pid_t());
 
-    MOCK_METHOD0(drop_outstanding_requests, void());
-
     MOCK_METHOD0(hide, void());
     MOCK_METHOD0(show, void());
 
     MOCK_METHOD1(send_display_config, void(graphics::DisplayConfiguration const&));
     MOCK_METHOD1(send_error, void(ClientVisibleError const&));
-    MOCK_METHOD1(send_input_device_change, void(std::vector<std::shared_ptr<mir::input::Device>> const&));
+    MOCK_METHOD1(send_input_config, void(MirInputConfig const&));
     MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirWindowAttrib, int));
 
     MOCK_METHOD1(set_lifecycle_state, void(MirLifecycleState state));
@@ -76,6 +75,8 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD1(destroy_surface, void (std::weak_ptr<scene::Surface> const&));
 
     MOCK_METHOD1(create_buffer, graphics::BufferID(graphics::BufferProperties const&));
+    MOCK_METHOD3(create_buffer, graphics::BufferID(geometry::Size, uint32_t, uint32_t));
+    MOCK_METHOD2(create_buffer, graphics::BufferID(geometry::Size, MirPixelFormat));
     MOCK_METHOD1(destroy_buffer, void(graphics::BufferID));
     MOCK_METHOD1(get_buffer, std::shared_ptr<graphics::Buffer>(graphics::BufferID));
 };

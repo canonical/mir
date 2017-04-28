@@ -199,7 +199,8 @@ struct InputEvents : testing::Test
         if (!success)
             throw std::runtime_error("Timeout waiting for window to become focused and exposed");
     }
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirSurfaceUPtr create_surface_with_input_handler(
         MirConnection* connection,
         MockInputHandler* handler)
@@ -209,12 +210,12 @@ struct InputEvents : testing::Test
         mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
         auto spec = mir_create_normal_window_spec(connection, 640, 480);
         mir_window_spec_set_pixel_format(spec, pixel_format);
+        mir_window_spec_set_event_handler(spec, handle_input, handler);
         auto const window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
         if (!mir_window_is_valid(window))
             throw std::runtime_error("Failed to create MirWindow");
 
-        mir_window_set_event_handler(window, handle_input, handler);
         mir_buffer_stream_swap_buffers_sync(
             mir_window_get_buffer_stream(window));
 
@@ -222,7 +223,7 @@ struct InputEvents : testing::Test
 
         return MirSurfaceUPtr(window, mir_window_release_sync);
     }
-
+#pragma GCC diagnostic pop
     static int const key_down = 1;
     static int const key_up = 0;
 

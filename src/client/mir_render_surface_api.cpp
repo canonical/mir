@@ -18,10 +18,13 @@
 
 #include "mir_connection.h"
 #include "render_surface.h"
+#include "presentation_chain.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
 #include "connection_surface_map.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 namespace
 {
 class RenderSurfaceResult
@@ -62,7 +65,7 @@ public:
         connections[render_surface_key] = connection;
     }
 
-    void erase(MirRenderSurface* render_surface_key)
+    void erase(void* render_surface_key)
     {
         std::lock_guard<decltype(guard)> lk(guard);
         auto conn_it = connections.find(render_surface_key);
@@ -70,7 +73,7 @@ public:
             connections.erase(conn_it);
     }
 
-    MirConnection* connection(MirRenderSurface* render_surface_key) const
+    MirConnection* connection(void* render_surface_key) const
     {
         std::shared_lock<decltype(guard)> lk(guard);
         auto const it = connections.find(render_surface_key);
@@ -81,7 +84,7 @@ public:
     }
 private:
     std::shared_timed_mutex mutable guard;
-    std::unordered_map<MirRenderSurface*, MirConnection*> connections;
+    std::unordered_map<void*, MirConnection*> connections;
 };
 
 RenderSurfaceToConnectionMap connection_map;
@@ -90,7 +93,7 @@ RenderSurfaceToConnectionMap connection_map;
 void mir_connection_create_render_surface(
     MirConnection* connection,
     int width, int height,
-    mir_render_surface_callback callback,
+    MirRenderSurfaceCallback callback,
     void* context)
 try
 {
@@ -118,7 +121,7 @@ try
     mir_connection_create_render_surface(
         connection,
         width, height,
-        reinterpret_cast<mir_render_surface_callback>(set_result),
+        reinterpret_cast<MirRenderSurfaceCallback>(set_result),
         &result);
     return result.wait_for_result();
 }
@@ -156,7 +159,7 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return "Unknown error";
+    return ex.what();
 }
 
 void mir_render_surface_release(
@@ -176,14 +179,13 @@ catch (std::exception const& ex)
 MirBufferStream* mir_render_surface_get_buffer_stream(
     MirRenderSurface* render_surface,
     int width, int height,
-    MirPixelFormat format,
-    MirBufferUsage usage)
+    MirPixelFormat format)
 try
 {
     mir::require(render_surface);
     auto connection = connection_map.connection(render_surface);
     auto rs = connection->connection_surface_map()->render_surface(render_surface);
-    return rs->get_buffer_stream(width, height, format, usage);
+    return rs->get_buffer_stream(width, height, format, mir_buffer_usage_software);
 }
 catch (std::exception const& ex)
 {
@@ -224,7 +226,7 @@ void mir_render_surface_set_size(MirRenderSurface* render_surface, int width, in
     rs->set_size({width, height});
 }
 
-void mir_surface_spec_set_cursor_render_surface(
+void mir_window_spec_set_cursor_render_surface(
     MirWindowSpec* spec,
     MirRenderSurface* surface,
     int hotspot_x, int hotspot_y)
@@ -233,3 +235,33 @@ void mir_surface_spec_set_cursor_render_surface(
     auto rs = connection->connection_surface_map()->render_surface(surface);
     spec->rendersurface_cursor = MirWindowSpec::RenderSurfaceCursor{rs->stream_id(), {hotspot_x, hotspot_y}};
 }
+
+MirCursorConfiguration* mir_cursor_configuration_from_render_surface(
+    MirRenderSurface* surface,
+    int hotspot_x, int hotspot_y)
+try
+{
+    mir::require(surface);
+    auto connection = connection_map.connection(surface);
+    auto rs = connection->connection_surface_map()->render_surface(surface);
+    return new MirCursorConfiguration(rs.get(), hotspot_x, hotspot_y);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+
+//temporary, until we stop trampolining via the RenderSurfaceToConnectionMap above
+MirRenderSurface* mir::client::render_surface_lookup(void* key)
+try
+{
+    auto connection = connection_map.connection(key);
+    return connection->connection_surface_map()->render_surface(key).get();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
+}
+#pragma GCC diagnostic pop

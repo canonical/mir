@@ -39,6 +39,10 @@ static EGLSurface eglsurface;
 static volatile sig_atomic_t running = 0;
 static double refresh_rate = 0.0;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+static MirRenderSurface* surface;
+
 #define CHECK(_cond, _err) \
     if (!(_cond)) \
     { \
@@ -50,6 +54,11 @@ void mir_eglapp_cleanup(void)
 {
     eglMakeCurrent(egldisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglTerminate(egldisplay);
+    if (surface)
+    {
+        mir_render_surface_release(surface);
+        surface = NULL;
+    }
     mir_window_release_sync(window);
     window = NULL;
     mir_connection_release(connection);
@@ -177,9 +186,18 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
          */
         {
             MirResizeEvent const* resize = mir_event_get_resize_event(ev);
-            printf("Resized to %dx%d\n",
-                   mir_resize_event_get_width(resize),
-                   mir_resize_event_get_height(resize));
+            int const new_width = mir_resize_event_get_width(resize);
+            int const new_height = mir_resize_event_get_height(resize);
+
+            printf("Resized to %dx%d\n", new_width, new_height);
+            if (surface)
+            {
+                mir_render_surface_set_size(surface, new_width, new_height);
+                MirWindowSpec* spec = mir_create_window_spec(connection);
+                mir_window_spec_add_render_surface(spec, surface, new_width, new_height, 0, 0);
+                mir_window_apply_spec(window, spec);
+                mir_window_spec_release(spec);
+            }
         }
         break;
     case mir_event_type_close_window:
@@ -189,24 +207,6 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
     default:
         break;
     }
-}
-
-static MirOutput const* find_active_output(
-    MirDisplayConfig const* conf)
-{
-    size_t num_outputs = mir_display_config_get_num_outputs(conf);
-
-    for (size_t i = 0; i < num_outputs; i++)
-    {
-        MirOutput const* output = mir_display_config_get_output(conf, i);
-        MirOutputConnectionState state = mir_output_get_connection_state(output);
-        if (state == mir_output_connection_state_connected && mir_output_is_enabled(output))
-        {
-            return output;
-        }
-    }
-
-    return NULL;
 }
 
 static void show_help(struct mir_eglapp_arg const* const* arg_lists)
@@ -334,7 +334,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     char const* dims = NULL;
     char const* cursor_name = mir_default_cursor_name;
     unsigned int rgb_bits = 8;
-    mir_eglapp_bool help = 0, no_vsync = 0, quiet = 0;
+    mir_eglapp_bool help = 0, no_vsync = 0, quiet = 0, new_egl = 0;
     mir_eglapp_bool fullscreen = !*width || !*height;
 
     struct mir_eglapp_arg const default_args[] =
@@ -350,6 +350,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
         {"-o <id>", "%u", &output_id, "Force placement on output monitor ID"},
         {"-q", "!", &quiet, "Quiet mode (no messages output)"},
         {"-s <width>x<height>", "=", &dims, "Force window size"},
+        {"-r", "!", &new_egl, "Use new EGL (must have new EGL backend installed)"},
         {"--", "$", NULL, "Ignore all arguments that follow"},
         {NULL, NULL, NULL, NULL}
     };
@@ -393,8 +394,18 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     connection = mir_connect_sync(mir_socket, appname);
     CHECK(mir_connection_is_valid(connection), "Can't get connection");
 
-    egldisplay = eglGetDisplay(
-                    mir_connection_get_egl_native_display(connection));
+    if (new_egl)
+    {
+        printf("Using the new EGL driver - program will crash if your EGL"
+               " driver does not support the new EGL backend.\n");
+        egldisplay = eglGetDisplay(connection);
+    }
+    else
+    {
+        printf("Using the legacy EGL driver.\n");
+        egldisplay = eglGetDisplay(
+                        mir_connection_get_egl_native_display(connection));
+    }
     CHECK(egldisplay != EGL_NO_DISPLAY, "Can't eglGetDisplay");
 
     ok = eglInitialize(egldisplay, NULL, NULL);
@@ -436,45 +447,25 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     }
     printf("Using pixel format %d.\n", pixel_format);
 
-    /* eglapps are interested in the screen size, so
-       use mir_connection_create_display_config */
-    MirDisplayConfig* display_config =
-        mir_connection_create_display_configuration(connection);
-
-    MirOutput const* output = find_active_output(display_config);
-
-    if (output == NULL)
-    {
-        printf("No active outputs found.\n");
-        return 0;
-    }
-
-    MirOutputMode const* mode = mir_output_get_current_mode(output);
-
-    int pos_x = mir_output_get_position_x(output);
-    int pos_y = mir_output_get_position_y(output);
-
-    int mode_width  = mir_output_mode_get_width(mode);
-    int mode_height = mir_output_mode_get_height(mode);
-
-    printf("Current active output is %dx%d %+d%+d\n",
-        mode_width, mode_height,
-        pos_x, pos_y);
-
-    if (fullscreen)  /* TODO: Use surface states for this */
-    {
-        *width  = mode_width;
-        *height = mode_height;
-    }
-
-    mir_display_config_release(display_config);
-
     MirWindowSpec *spec =
         mir_create_normal_window_spec(connection, *width, *height);
 
     CHECK(spec != NULL, "Can't create a window spec");
 
-    mir_window_spec_set_pixel_format(spec, pixel_format);
+    if (fullscreen)
+        mir_window_spec_set_state(spec, mir_window_state_fullscreen);
+
+    if (new_egl)
+    {
+        surface = mir_connection_create_render_surface_sync(connection, *width, *height);
+        CHECK(mir_render_surface_is_valid(surface), "could not create surface");
+        CHECK(mir_render_surface_get_error_message(surface), "");
+        mir_window_spec_add_render_surface(spec, surface, *width, *height, 0, 0);
+    }
+    else
+    {
+        mir_window_spec_set_pixel_format(spec, pixel_format);
+    }
 
     char const* name = argv[0];
     for (char const* p = name; *p; p++)
@@ -499,8 +490,18 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);
 
-    eglsurface = eglCreateWindowSurface(egldisplay, eglconfig,
-        (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(window)), NULL);
+    if (new_egl)
+    {
+        eglsurface = eglCreateWindowSurface(egldisplay,
+                                            eglconfig,
+                                            (EGLNativeWindowType)surface,
+                                            NULL);
+    }
+    else
+    {
+        eglsurface = eglCreateWindowSurface(egldisplay, eglconfig,
+            (EGLNativeWindowType)mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(window)), NULL);
+    }
     
     CHECK(eglsurface != EGL_NO_SURFACE, "eglCreateWindowSurface failed");
 
@@ -521,6 +522,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
 
     return 1;
 }
+#pragma GCC diagnostic pop
 
 struct MirConnection* mir_eglapp_native_connection()
 {

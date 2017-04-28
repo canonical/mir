@@ -19,7 +19,6 @@ If you just want to try out mir, or write client applications, then the easiest
 way is to use the pre-built packages:
 
  - \ref installing_prebuilt_on_pc
- - \ref installing_prebuilt_on_android
 
 ### Building and installing from source
 
@@ -40,7 +39,6 @@ Using Mir
 ---------
 
  - \ref using_mir_on_pc
- - \ref using_mir_on_android
  - \ref demo_shell_controls
  - \ref demo_server
 
@@ -64,11 +62,6 @@ Please file bug reports at: https://bugs.launchpad.net/mir
 The Mir development mailing list can be found at: https://lists.ubuntu.com/mailman/listinfo/Mir-devel
 
 The Mir coding guidelines are [here](cppguide/index.html).
-
-Learn about Mir
-----------------
-Android technical info:
- - \ref android_technical_details
 
 Writing client applications
 ---------------------------
@@ -106,7 +99,6 @@ Working on Mir code
 
  - \ref md_README  "Mir Read me"
  - \ref md_HACKING "Mir hacking guide"
- - \subpage android_new_device_bringup "New android device bringup" 
  - \ref component_reports
  - \ref dso_versioning_guide
  - \ref abi_compatibility_tools

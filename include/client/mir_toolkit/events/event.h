@@ -35,42 +35,47 @@ extern "C" {
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 typedef enum
 {
-    mir_event_type_key,
-    mir_event_type_motion,
-    mir_event_type_surface, /* __attribute__ ((deprecated("use mir_event_type_window instead"))), */
+    MIR_DEPRECATED_ENUM(mir_event_type_key, "mir_event_type_input"),     // UNUSED since Mir 0.26
+    MIR_DEPRECATED_ENUM(mir_event_type_motion, "mir_event_type_input"),  // UNUSED since Mir 0.26
+    MIR_DEPRECATED_ENUM(mir_event_type_surface, "mir_event_type_window"),
     mir_event_type_window = mir_event_type_surface,
     mir_event_type_resize,
     mir_event_type_prompt_session_state_change,
     mir_event_type_orientation,
-    mir_event_type_close_surface, /*__attribute__ ((deprecated("use mir_event_type_close_window instead"))), */
+    MIR_DEPRECATED_ENUM(mir_event_type_close_surface, "mir_event_type_close_window"),
     mir_event_type_close_window = mir_event_type_close_surface,
     /* Type for new style input event will be returned from mir_event_get_type
        when old style event type was mir_event_type_key or mir_event_type_motion */
     mir_event_type_input,
     mir_event_type_keymap,
-    mir_event_type_input_configuration, /*  __attribute__ ((deprecated("use the input config change callback and mir_event_type_input_device_state instead"))), */
-    mir_event_type_surface_output, /* __attribute__ ((deprecated("use mir_event_type_window_output instead"))), */
+    MIR_DEPRECATED_ENUM(mir_event_type_input_configuration, "mir_connection_set_input_config_change_callback and mir_event_type_input_device_state"),
+    MIR_DEPRECATED_ENUM(mir_event_type_surface_output, "mir_event_type_window_output"),
     mir_event_type_window_output = mir_event_type_surface_output,
     mir_event_type_input_device_state,
-    mir_event_type_surface_placement, /*__attribute__ ((deprecated("use mir_event_type_window_placement instead"))), */
+    MIR_DEPRECATED_ENUM(mir_event_type_surface_placement, "mir_event_type_window_placement"),
     mir_event_type_window_placement = mir_event_type_surface_placement,
 } MirEventType;
 #pragma GCC diagnostic pop
 
-typedef struct MirSurfaceEvent MirSurfaceEvent; /* __attribute__ ((deprecated("use MirWindowEvent instead"))); */
+typedef struct MirSurfaceEvent MirSurfaceEvent
+    __attribute__ ((deprecated("use MirWindowEvent instead")));
 typedef struct MirSurfaceEvent MirWindowEvent;
 typedef struct MirResizeEvent MirResizeEvent;
 typedef struct MirPromptSessionEvent MirPromptSessionEvent;
 typedef struct MirOrientationEvent MirOrientationEvent;
-typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent; /* __attribute__ ((deprecated("use MirCloseWindowEvent instead"))); */
+typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent
+    __attribute__ ((deprecated("use MirCloseWindowEvent instead")));
 typedef struct MirCloseSurfaceEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
-typedef struct MirInputConfigurationEvent MirInputConfigurationEvent /* __attribute__ ((deprecated("Use MirInputDeviceStateEvent and the MirInputConfig callback instead")))*/;
-typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent; /* __attribute__ ((deprecated("use MirWindowOutputEvent instead"))); */
+typedef struct MirInputConfigurationEvent MirInputConfigurationEvent 
+    __attribute__ ((deprecated("Use MirInputDeviceStateEvent and the MirInputConfig callback instead")));
+typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent
+    __attribute__ ((deprecated("use MirWindowOutputEvent instead")));
 typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
-typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent; /* __attribute__ ((deprecated("use MirWindowPlacementEvent instead"))); */
+typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent
+    __attribute__ ((deprecated("use MirWindowPlacementEvent instead")));
 typedef struct MirSurfacePlacementEvent MirWindowPlacementEvent;
 
 typedef struct MirCookie MirCookie;
@@ -130,8 +135,8 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* event);
  * \param [in] event The event
  * \return           The associated MirSurfaceEvent
  */
-MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* event);
-/* __attribute__ ((deprecated("use mir_event_get_window_event instead"))); */
+MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* event)
+__attribute__ ((deprecated("use mir_event_get_window_event instead")));
 
 /**
  * Retrieve the MirWindowEvent associated with a MirEvent of
@@ -173,6 +178,9 @@ MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* 
  */
 MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* event);
 
+// Ignore use of deprecate MirCloseSurfaceEvent typedef in deprecated function (for now)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /**
  * Retrieve the MirCloseSurfaceEvent associated with a MirEvent of
  * type mir_event_type_close_surface. The event is a request to close
@@ -190,6 +198,7 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* event
 __attribute__ ((deprecated))
 /// @endcond
 MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* event);
+#pragma GCC diagnostic pop
 
 /**
  * Retrieve the MirKeymapEvent associated with a MirEvent of
@@ -201,13 +210,15 @@ MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* ev
  */
 MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /**
  * Retrieve the MirInputConfig associated with a MirEvent of
  * type mir_event_type_input_configuration. The event signifies that the
  * input device configuration has changed.
  *
  * \deprecated Input devices and changes to the input devices are indicated
- * via the mir_input_config_change_callback
+ * via the MirInputConfigCallback
  * \param [in] event The event
  * \return           The associated MirInputConfigurationEvent
  */
@@ -215,6 +226,7 @@ MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
 __attribute__((deprecated))
 /// @endcond
 MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* event);
+#pragma GCC diagnostic pop
 
 /**
  * Retrieve the MirSurfaceOutputEvent associated with a MirEvent of type

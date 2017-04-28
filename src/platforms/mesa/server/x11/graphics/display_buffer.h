@@ -49,11 +49,10 @@ public:
     DisplayBuffer(
             ::Display* const x_dpy,
             Window const win,
-            geometry::Size const sz,
+            geometry::Size const& view_area_size,
             EGLContext const shared_context,
             std::shared_ptr<AtomicFrame> const& f,
             std::shared_ptr<DisplayReport> const& r,
-            MirOrientation const o,
             GLConfig const& gl_config);
 
     geometry::Rectangle view_area() const override;
@@ -62,21 +61,21 @@ public:
     void swap_buffers() override;
     void bind() override;
     bool overlay(RenderableList const& renderlist) override;
-    void set_orientation(MirOrientation const new_orientation);
+    void set_view_area(geometry::Rectangle const& a);
+    void set_transformation(glm::mat2 const& t);
 
     void for_each_display_buffer(
         std::function<void(graphics::DisplayBuffer&)> const& f) override;
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
-    MirOrientation orientation() const override;
-    MirMirrorMode mirror_mode() const override;
+    glm::mat2 transformation() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
 private:
-    geometry::Size const size;
     std::shared_ptr<DisplayReport> const report;
-    MirOrientation orientation_;
+    geometry::Rectangle area;
+    glm::mat2 transform;
     helpers::EGLHelper egl;
     std::shared_ptr<AtomicFrame> const last_frame;
 

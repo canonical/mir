@@ -28,8 +28,6 @@ add_library(exampleserverconfig STATIC
   server_example_input_filter.cpp
   server_example_host_lifecycle_event.cpp
   server_example_window_management.cpp
-  server_example_window_management_info.cpp
-  server_example_window_management_info.h
   server_example_custom_compositor.cpp
   server_example_adorning_compositor.cpp
   server_example_cursor_images.cpp
@@ -283,4 +281,30 @@ target_link_libraries(mir_demo_client_multistream
   mirclient
   eglapp
   ${Boost_LIBRARIES}
+)
+
+mir_add_wrapped_executable(mir_demo_client_render_surface
+  render_surface.cpp
+)
+
+target_link_libraries(mir_demo_client_render_surface
+  mirclient
+  eglapp
+)
+
+mir_add_wrapped_executable(mir_demo_client_prerendered_frames
+  prerendered_frames.c
+)
+
+target_link_libraries(mir_demo_client_prerendered_frames
+  mirclient
+  m
+)
+
+mir_add_wrapped_executable(mir_demo_client_chain_jumping_buffers
+  chain_jumping_buffers.c
+)
+
+target_link_libraries(mir_demo_client_chain_jumping_buffers
+  mirclient
 )

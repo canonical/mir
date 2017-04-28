@@ -20,7 +20,6 @@
 #define MIR_TEST_DOUBLES_STUB_SCENE_SURFACE_H_
 
 #include "mir/scene/surface.h"
-#include "mir/test/doubles/stub_input_channel.h"
 
 #include <memory>
 #include <gmock/gmock.h>
@@ -36,19 +35,7 @@ class StubSceneSurface :
     public mir::scene::Surface
 {
 public:
-    std::shared_ptr<StubInputChannel> channel;
-    int fd;
     mir::input::InputReceptionMode input_mode{mir::input::InputReceptionMode::normal};
-
-    StubSceneSurface(int fd)
-        : channel(std::make_shared<StubInputChannel>(fd)), fd(fd)
-    {
-    }
-
-    std::shared_ptr<mir::input::InputChannel> input_channel() const override
-    {
-        return channel;
-    }
 
     mir::input::InputReceptionMode reception_mode() const override
     {
@@ -91,8 +78,6 @@ public:
 
     void request_client_surface_close() override {}
 
-    bool supports_input() const override { return true;}
-    int client_input_fd() const override { return fd;}
     int configure(MirWindowAttrib, int) override { return 0; }
     int query(MirWindowAttrib) const override { return 0; }
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const&) {}
@@ -109,6 +94,7 @@ public:
     void set_confine_pointer_state(MirPointerConfinementState /*state*/) override {}
     MirPointerConfinementState confine_pointer_state() const override { return {}; }
     void placed_relative(geometry::Rectangle const& /*placement*/) override {}
+    void start_drag_and_drop(std::vector<uint8_t> const& /*handle*/) override {}
 };
 
 }

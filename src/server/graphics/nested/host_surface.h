@@ -37,7 +37,7 @@ public:
     virtual ~HostSurface() = default;
 
     virtual EGLNativeWindowType egl_native_window() = 0;
-    virtual void set_event_handler(mir_window_event_callback cb,
+    virtual void set_event_handler(MirWindowEventCallback cb,
                                    void* context) = 0;
     virtual void apply_spec(HostSurfaceSpec&) = 0;
 protected:

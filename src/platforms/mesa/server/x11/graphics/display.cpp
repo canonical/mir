@@ -23,6 +23,7 @@
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/atomic_frame.h"
+#include "mir/graphics/transformation.h"
 #include "display_configuration.h"
 #include "display.h"
 #include "display_buffer.h"
@@ -258,7 +259,6 @@ mgx::Display::Display(::Display* x_dpy,
                          shared_egl.context(),
                          last_frame,
                          report,
-                         orientation,
                          *gl_config);
 
     shared_egl.make_current();
@@ -289,17 +289,22 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
             std::logic_error("Invalid or inconsistent display configuration"));
     }
 
+    glm::mat2 trans;
     MirOrientation o = mir_orientation_normal;
     float new_scale = scale;
+    geom::Rectangle logical_area;
 
     new_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
+        trans = conf_output.transformation();
         o = conf_output.orientation;
         new_scale = conf_output.scale;
+        logical_area = conf_output.extents();
     });
 
     orientation = o;
-    display_buffer->set_orientation(orientation);
+    display_buffer->set_view_area(logical_area);
+    display_buffer->set_transformation(trans);
     scale = new_scale;
 }
 
@@ -326,7 +331,7 @@ void mgx::Display::resume()
     BOOST_THROW_EXCEPTION(std::runtime_error("'Display::resume()' not yet supported on x11 platform"));
 }
 
-auto mgx::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /* initial_image */) -> std::shared_ptr<Cursor>
+auto mgx::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
 {
     return nullptr;
 }

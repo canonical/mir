@@ -19,6 +19,7 @@
 #ifndef MIR_FRONTEND_DEFAULT_IPC_FACTORY_H_
 #define MIR_FRONTEND_DEFAULT_IPC_FACTORY_H_
 
+#include "mir/extension_description.h"
 #include "protobuf_ipc_factory.h"
 
 namespace mir
@@ -35,7 +36,6 @@ class GraphicBufferAllocator;
 namespace input
 {
 class CursorImages;
-class InputDeviceHub;
 }
 
 namespace scene
@@ -52,6 +52,7 @@ class DisplayChanger;
 class Screencast;
 class SessionAuthorizer;
 class EventSinkFactory;
+class InputConfigurationChanger;
 
 class DefaultIpcFactory : public ProtobufIpcFactory
 {
@@ -68,7 +69,8 @@ public:
         std::shared_ptr<scene::CoordinateTranslator> const& translator,
         std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
         std::shared_ptr<cookie::Authority> const& cookie_authority,
-        std::shared_ptr<input::InputDeviceHub> const& seat);
+        std::shared_ptr<InputConfigurationChanger> const& input_Changer,
+        std::vector<mir::ExtensionDescription> const& extensions);
 
     std::shared_ptr<detail::DisplayServer> make_ipc_server(
         SessionCredentials const &creds,
@@ -88,7 +90,8 @@ public:
         std::shared_ptr<MessageSender> const& message_sender,
         std::shared_ptr<Screencast> const& effective_screencast,
         ConnectionContext const& connection_context,
-        std::shared_ptr<input::CursorImages> const& cursor_images);
+        std::shared_ptr<input::CursorImages> const& cursor_images,
+        std::shared_ptr<InputConfigurationChanger> const& input_changer);
 
 private:
     std::shared_ptr<Shell> const shell;
@@ -104,7 +107,8 @@ private:
     std::shared_ptr<scene::CoordinateTranslator> const translator;
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
     std::shared_ptr<cookie::Authority> const cookie_authority;
-    std::shared_ptr<input::InputDeviceHub> const hub;
+    std::shared_ptr<InputConfigurationChanger> const input_changer;
+    std::vector<mir::ExtensionDescription> const extensions;
 };
 }
 }

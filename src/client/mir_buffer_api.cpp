@@ -37,16 +37,50 @@ void mir_connection_allocate_buffer(
     MirConnection* connection, 
     int width, int height,
     MirPixelFormat format,
-    MirBufferUsage usage,
-    mir_buffer_callback cb, void* context)
+    MirBufferCallback cb, void* context)
 try
 {
     mir::require(connection);
-    connection->allocate_buffer(mir::geometry::Size{width, height}, format, usage, cb, context);
+    connection->allocate_buffer(mir::geometry::Size{width, height}, format, cb, context);
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+
+MirBuffer* mir_connection_allocate_buffer_sync(
+    MirConnection* connection, 
+    int width, int height,
+    MirPixelFormat format)
+try
+{
+    mir::require(connection);
+
+    struct BufferInfo
+    {
+        MirBuffer* buffer = nullptr;
+        std::mutex mutex;
+        std::condition_variable cv;
+    } info;
+    connection->allocate_buffer(mir::geometry::Size{width, height}, format,
+        [](MirBuffer* buffer, void* c)
+        {
+            mir::require(buffer);
+            mir::require(c);
+            auto context = reinterpret_cast<BufferInfo*>(c);
+            std::unique_lock<decltype(context->mutex)> lk(context->mutex);
+            context->buffer = buffer;
+            context->cv.notify_all();
+        }, &info);
+
+    std::unique_lock<decltype(info.mutex)> lk(info.mutex);
+    info.cv.wait(lk, [&]{ return info.buffer; });
+    return info.buffer;
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return nullptr;
 }
 
 void ignore(MirBuffer*, void*){}
@@ -95,11 +129,11 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-unsigned int mir_buffer_get_width(MirBuffer* b)
+unsigned int mir_buffer_get_width(MirBuffer const* b)
 try
 {
     mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
     return buffer->size().width.as_uint32_t();
 }
 catch (std::exception const& ex)
@@ -108,11 +142,11 @@ catch (std::exception const& ex)
     return 0;
 }
 
-unsigned int mir_buffer_get_height(MirBuffer* b)
+unsigned int mir_buffer_get_height(MirBuffer const* b)
 try
 {
     mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
     return buffer->size().height.as_uint32_t();
 }
 catch (std::exception const& ex)
@@ -121,11 +155,11 @@ catch (std::exception const& ex)
     return 0;
 }
 
-MirPixelFormat mir_buffer_get_pixel_format(MirBuffer* b)
+MirPixelFormat mir_buffer_get_pixel_format(MirBuffer const* b)
 try
 {
     mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
     return buffer->pixel_format();
 }
 catch (std::exception const& ex)
@@ -134,23 +168,10 @@ catch (std::exception const& ex)
     return mir_pixel_format_invalid;
 }
 
-MirBufferUsage mir_buffer_get_buffer_usage(MirBuffer* b)
+bool mir_buffer_is_valid(MirBuffer const* b)
 try
 {
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
-    return buffer->buffer_usage();
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return mir_buffer_usage_hardware;
-}
-
-bool mir_buffer_is_valid(MirBuffer* b)
-try
-{
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
     return buffer->valid();
 }
 catch (std::exception const& ex)
@@ -159,29 +180,16 @@ catch (std::exception const& ex)
     return false;
 }
 
-char const *mir_buffer_get_error_message(MirBuffer* b)
+char const *mir_buffer_get_error_message(MirBuffer const* b)
 try
 {
-    auto buffer = reinterpret_cast<mcl::MirBuffer*>(b);
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
     return buffer->error_message();
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return "MirBuffer: unknown error";
-}
-
-void mir_buffer_set_callback(
-    MirBuffer* b, mir_buffer_callback available_callback, void* available_context)
-try
-{
-    mir::require(b);
-    auto buffer = reinterpret_cast<mcl::Buffer*>(b);
-    buffer->set_callback(available_callback, available_context);
-}
-catch (std::exception const& ex)
-{
-    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
 MirBufferPackage* mir_buffer_get_buffer_package(MirBuffer* b)

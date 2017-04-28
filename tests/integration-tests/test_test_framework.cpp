@@ -78,7 +78,7 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
     mir::test::Signal connection_released;
 
     unsigned fd_count_after_one_surface_lifetime = 0;
-               
+
     mir::test::AutoJoinThread t{
         [&]
         {
@@ -103,13 +103,12 @@ TEST_F(DemoInProcessServerWithStubClientPlatform, surface_creation_does_not_leak
             connection_released.raise();
 
         }};
-    
 
-    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{10}))
+    EXPECT_TRUE(connection_released.wait_for(std::chrono::seconds{60}))
         << "Client hung" << std::endl;
 
     // Investigation revealed we leak a differing number of fds (3, 0) on
-    // Mesa/Android over the entire lifetime of the client library. So we
+    // Mesa over the entire lifetime of the client library. So we
     // verify here only that we don't leak any FDs beyond those created up to
     // the lifetime of the first window.
     //

@@ -22,7 +22,6 @@
 #include "mir/scene/surface.h"
 #include "mir/basic_observers.h"
 #include "mir/scene/surface_observers.h"
-#include "mir/input/validator.h"
 
 #include "mir/geometry/rectangle.h"
 
@@ -49,8 +48,6 @@ class Buffer;
 }
 namespace input
 {
-class InputChannel;
-class InputSender;
 class Surface;
 }
 namespace scene
@@ -66,8 +63,6 @@ public:
         geometry::Rectangle rect,
         MirPointerConfinementState state,
         std::list<scene::StreamInfo> const& streams,
-        std::shared_ptr<input::InputChannel> const& input_channel,
-        std::shared_ptr<input::InputSender> const& sender,
         std::shared_ptr<graphics::CursorImage> const& cursor_image,
         std::shared_ptr<SceneReport> const& report);
 
@@ -77,8 +72,6 @@ public:
         std::weak_ptr<Surface> const& parent,
         MirPointerConfinementState state,
         std::list<scene::StreamInfo> const& streams,
-        std::shared_ptr<input::InputChannel> const& input_channel,
-        std::shared_ptr<input::InputSender> const& sender,
         std::shared_ptr<graphics::CursorImage> const& cursor_image,
         std::shared_ptr<SceneReport> const& report);
 
@@ -95,9 +88,6 @@ public:
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
     void set_streams(std::list<scene::StreamInfo> const& streams) override;
 
-    bool supports_input() const override;
-    int client_input_fd() const override;
-    std::shared_ptr<input::InputChannel> input_channel() const override;
     input::InputReceptionMode reception_mode() const override;
     void set_reception_mode(input::InputReceptionMode mode) override;
 
@@ -149,6 +139,7 @@ public:
     void set_confine_pointer_state(MirPointerConfinementState state) override;
     MirPointerConfinementState confine_pointer_state() const override;
     void placed_relative(geometry::Rectangle const& placement) override;
+    void start_drag_and_drop(std::vector<uint8_t> const& handle) override;
 
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
@@ -170,8 +161,6 @@ private:
     input::InputReceptionMode input_mode;
     std::vector<geometry::Rectangle> custom_input_rectangles;
     std::shared_ptr<compositor::BufferStream> const surface_buffer_stream;
-    std::shared_ptr<input::InputChannel> const server_input_channel;
-    std::shared_ptr<input::InputSender> const input_sender;
     std::shared_ptr<graphics::CursorImage> cursor_image_;
     std::shared_ptr<SceneReport> const report;
     std::weak_ptr<Surface> const parent_;
@@ -188,8 +177,6 @@ private:
     MirPointerConfinementState confine_pointer_state_ = mir_pointer_unconfined;
 
     std::unique_ptr<CursorStreamImageAdapter> const cursor_stream_adapter;
-
-    input::Validator input_validator;
 };
 
 }

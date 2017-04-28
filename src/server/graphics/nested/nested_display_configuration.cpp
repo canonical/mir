@@ -103,9 +103,15 @@ mg::DisplayConfigurationOutput mgn::NestedDisplayConfiguration::create_display_o
     auto current_format  = mir_output_get_current_pixel_format(output);
     auto power_mode      = mir_output_get_power_mode(output);
     auto orientation     = mir_output_get_orientation(output);
-    auto local_config    = get_local_config_for(output_id);
+    auto local_config    = get_local_config_for(output);
     uint32_t preferred_index = mir_output_get_preferred_mode_index(output);
     uint32_t current_index   = mir_output_get_current_mode_index(output);
+
+    std::vector<uint8_t> edid;
+    auto edid_size = mir_output_get_edid_size(output);
+    auto edid_start = mir_output_get_edid(output);
+    if (edid_size && edid_start)
+        edid.assign(edid_start, edid_start+edid_size);
 
     return mg::DisplayConfigurationOutput{
         DisplayConfigurationOutputId(output_id),
@@ -127,7 +133,7 @@ mg::DisplayConfigurationOutput mgn::NestedDisplayConfiguration::create_display_o
         local_config.subpixel_arrangement,
         local_config.gamma,
         local_config.gamma_supported,
-        {}
+        std::move(edid)
     };
 }
 
@@ -192,13 +198,16 @@ std::unique_ptr<mg::DisplayConfiguration> mgn::NestedDisplayConfiguration::clone
 }
 
 mgn::NestedDisplayConfiguration::LocalOutputConfig
-mgn::NestedDisplayConfiguration::get_local_config_for(uint32_t output_id) const
+mgn::NestedDisplayConfiguration::get_local_config_for(MirOutput const* output) const
 {
     std::lock_guard<std::mutex> lock{local_config_mutex};
 
-    LocalOutputConfig const default_values {1.0f, mir_form_factor_monitor,
-                                            mir_subpixel_arrangement_unknown,
-                                            {}, mir_output_gamma_unsupported};
+    auto const output_id = mir_output_get_id(output);
+
+    LocalOutputConfig const default_values{
+        1.0f, mir_form_factor_monitor,
+        mir_output_get_subpixel_arrangement(output),
+        {}, mir_output_gamma_unsupported};
 
     bool inserted;
     decltype(local_config)::iterator keypair;

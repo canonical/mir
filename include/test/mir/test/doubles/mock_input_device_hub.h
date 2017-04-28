@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_MOCK_INPUT_DEVICE_HUB_H_
 
 #include "mir/input/input_device_hub.h"
+#include <gmock/gmock.h>
 
 namespace mir
 {
@@ -33,7 +34,7 @@ struct MockInputDeviceHub : input::InputDeviceHub
     MOCK_METHOD1(add_observer, void(std::shared_ptr<input::InputDeviceObserver> const&));
     MOCK_METHOD1(remove_observer, void(std::weak_ptr<input::InputDeviceObserver> const&));
     MOCK_METHOD1(for_each_input_device, void(std::function<void(input::Device const&)> const&));
-
+    MOCK_METHOD1(for_each_mutable_input_device, void(std::function<void(input::Device&)> const&));
 };
 
 }

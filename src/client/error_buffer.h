@@ -30,7 +30,7 @@ class ErrorBuffer : public MirBuffer
 public:
     ErrorBuffer(
         std::string const& error_msg, int buffer_id,
-        mir_buffer_callback cb, void* context, MirConnection* connection);
+        MirBufferCallback cb, void* context, MirConnection* connection);
 
     int rpc_id() const override;
     void submitted() override;
@@ -39,19 +39,22 @@ public:
     std::shared_ptr<ClientBuffer> client_buffer() const override;
     MirGraphicsRegion map_region() override;
     void unmap_region() override;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferUsage buffer_usage() const override;
+#pragma GCC diagnostic pop
     MirPixelFormat pixel_format() const override;
     geometry::Size size() const override;
     MirConnection* allocating_connection() const override;
     void increment_age() override;
-    void set_callback(mir_buffer_callback callback, void* context) override;
+    void set_callback(MirBufferCallback callback, void* context) override;
 
     bool valid() const override;
     char const* error_message() const override;
 private:
     std::string const error_msg;
     int const buffer_id;
-    mir_buffer_callback const cb;
+    MirBufferCallback const cb;
     void* const cb_context;
     MirConnection* connection;
 };

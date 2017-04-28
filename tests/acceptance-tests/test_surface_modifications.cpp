@@ -21,7 +21,7 @@
 #include "mir/scene/null_surface_observer.h"
 
 #include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/signal.h"
 
@@ -39,6 +39,8 @@ namespace mtd = mir::test::doubles;
 using namespace mir::geometry;
 using namespace testing;
 
+using namespace std::literals::chrono_literals;
+
 namespace
 {
 class MockSurfaceObserver : public ms::NullSurfaceObserver
@@ -49,7 +51,7 @@ public:
     MOCK_METHOD1(hidden_set_to, void(bool));
 };
 
-struct SurfaceModifications : mtf::ConnectedClientWithASurface
+struct SurfaceModifications : mtf::ConnectedClientWithAWindow
 {
     SurfaceModifications() { add_to_environment("MIR_SERVER_ENABLE_INPUT", "OFF"); }
 
@@ -64,14 +66,17 @@ struct SurfaceModifications : mtf::ConnectedClientWithASurface
             return msc;
         });
 
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientWithAWindow::SetUp();
 
         shell_surface = shell->latest_surface;
         auto const scene_surface = shell_surface.lock();
         scene_surface->add_observer(mt::fake_shared(surface_observer));
 
         // Swap buffers to ensure window is visible for event based tests
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
+#pragma GCC diagnostic pop
     }
 
     void generate_alt_click_at(Point const& click_position)
@@ -569,11 +574,19 @@ TEST_P(SurfaceStateCase, set_state_affects_surface_visibility)
     auto const initial_state = GetParam().from;
     auto const new_state = GetParam().to;
 
-    EXPECT_CALL(surface_observer, hidden_set_to(is_visible(initial_state)));
-    EXPECT_CALL(surface_observer, hidden_set_to(is_visible(new_state)));
+    mt::Signal received_initial_state;
+    mt::Signal received_new_state;
 
-    mir_wait_for(mir_window_set_state(window, initial_state));
-    mir_wait_for(mir_window_set_state(window, new_state));
+    EXPECT_CALL(surface_observer, hidden_set_to(is_visible(initial_state)))
+        .WillOnce(InvokeWithoutArgs([&]{ received_initial_state.raise(); }));
+    EXPECT_CALL(surface_observer, hidden_set_to(is_visible(new_state)))
+        .WillOnce(InvokeWithoutArgs([&]{ received_new_state.raise(); }));
+
+    mir_window_set_state(window, initial_state);
+    mir_window_set_state(window, new_state);
+
+    received_initial_state.wait_for(400ms);
+    received_new_state.wait_for(400ms);
 }
 
 INSTANTIATE_TEST_CASE_P(SurfaceModifications, SurfaceStateCase,

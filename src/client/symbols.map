@@ -174,13 +174,11 @@ MIR_CLIENT_9.1 {  # New functions in Mir 0.15
     mir_surface_spec_attach_to_foreign_parent;
     mir_surface_spec_set_input_shape;
     mir_connection_get_egl_pixel_format;
-  local: *;
 } MIR_CLIENT_9;
 
 MIR_CLIENT_9.2 {  # New functions in Mir 0.16
   global:
     mir_surface_spec_set_event_handler;
-  local: *;
 } MIR_CLIENT_9.1;
 
 MIR_CLIENT_9v17 {
@@ -204,8 +202,6 @@ MIR_CLIENT_9v18 {
     mir_buffer_stream_get_error_message;
     mir_surface_output_event_get_output_id;
     mir_connection_set_base_display_config;
-  local:
-    *;
 } MIR_CLIENT_9v17;
 
 MIR_CLIENT_9v19 {
@@ -265,8 +261,6 @@ MIR_CLIENT_0.21 {
     mir_output_mode_get_height;
     mir_output_mode_get_refresh_rate;
     mir_output_mode_get_width;
-  local:
-    *;
 } MIR_CLIENT_9v19;
 
 MIR_CLIENT_0.22 {  # New functions in Mir 0.22
@@ -302,19 +296,6 @@ MIR_CLIENT_DETAIL_9 {
     extern "C++" { 
       mir::events::make_event*;
       mir::events::add_touch*;
-      mir::input::android::Lexicon::translate*;
-      mir::input::android::android_modifiers_from_mir*;
-      mir::input::android::mir_modifiers_from_android*;
-      mir::input::android::mir_keyboard_action_from_android*;
-      mir::input::android::android_keyboard_action_from_mir*;
-      mir::input::android::mir_pointer_buttons_from_android*;
-      mir::input::android::android_pointer_buttons_from_mir*;
-      mir::input::android::mir_tool_type_from_android*;
-      mir::input::android::android_tool_type_from_mir*;
-      mir::input::android::mir_pointer_action_from_masked_android*;
-      mir::input::android::mir_touch_action_from_masked_android*;
-      mir::input::android::android_source_id_is_pointer_device*;
-      mir::input::android::extract_android_action_from*;
       mir::client::DefaultConnectionConfiguration::DefaultConnectionConfiguration*;
       mir::client::DefaultConnectionConfiguration::the_surface_map*;
       mir::client::DefaultConnectionConfiguration::the_rpc_channel*;
@@ -331,7 +312,7 @@ MIR_CLIENT_DETAIL_9 {
       typeinfo?for?mir::client::DefaultConnectionConfiguration;
       vtable?for?mir::client::DefaultConnectionConfiguration;
       mir::operator???std::ostream???Mir*
-    }; 
+    };
 };
 
 MIR_CLIENT_DETAIL_9v18 {
@@ -344,44 +325,18 @@ MIR_CLIENT_DETAIL_9v18 {
     };
 } MIR_CLIENT_DETAIL_9;
 
-MIR_CLIENT_DETAIL_9v19 {
-  global:
-    extern "C++" { 
-      mir::input::android::android_pointer_action_from_mir*;
-      mir::events::serialize_event*;
-      mir::events::deserialize_event*;
-    };
-} MIR_CLIENT_DETAIL_9v18;
-
 MIR_CLIENT_DETAIL_0.21 {
   global:
     extern "C++" { 
       mir::client::DefaultConnectionConfiguration::the_buffer_factory*;
     };
-} MIR_CLIENT_DETAIL_9v19;
+} MIR_CLIENT_DETAIL_9v18;
 
 MIR_CLIENT_DETAIL_private_buffer_semantics {
   global:
-    mir_buffer_map;
-    mir_buffer_unmap;
-    mir_buffer_set_callback;
-    mir_buffer_release;
-    mir_connection_create_presentation_chain_sync;
-    mir_presentation_chain_is_valid;
-    mir_presentation_chain_get_error_message;
-    mir_connection_create_presentation_chain;
-    mir_connection_allocate_buffer;
-    mir_presentation_chain_submit_buffer;
-    mir_presentation_chain_release;
-    mir_surface_spec_add_presentation_chain;
-    mir_surface_spec_add_buffer_stream;
-    mir_buffer_get_width;
-    mir_buffer_get_height;
-    mir_buffer_get_pixel_format;
-    mir_buffer_get_buffer_usage;
-    mir_buffer_is_valid;
-    mir_buffer_get_error_message;
-    mir_buffer_get_buffer_package;
+    # These functions will be republished under a different
+    # name as a result of the MirRenderSurface-->MirSurface
+    # renaming transition.
     mir_connection_create_render_surface;
     mir_connection_create_render_surface_sync;
     mir_render_surface_get_buffer_stream;
@@ -391,16 +346,18 @@ MIR_CLIENT_DETAIL_private_buffer_semantics {
     mir_render_surface_get_size;
     mir_render_surface_set_size;
     mir_render_surface_release;
-    mir_surface_spec_add_render_surface;
+    mir_connection_present_mode_supported;
+    mir_presentation_chain_set_mode;
+    mir_window_spec_add_render_surface;
+    mir_window_spec_set_cursor_render_surface;
+    mir_cursor_configuration_from_render_surface;
 
     #private functions needed temporarily by nested passthrough
     #should not be published along with the rest of the NBS symbols
     mir_buffer_get_egl_image_parameters;
     mir_presentation_chain_set_queueing_mode;
     mir_presentation_chain_set_dropping_mode;
-  local:
-    *;
-} MIR_CLIENT_DETAIL_9v19;
+} MIR_CLIENT_DETAIL_9v18;
 
 MIR_CLIENT_DETAIL_0.24 {
   global:
@@ -464,14 +421,30 @@ MIR_CLIENT_DETAIL_0.25 {
     };
 } MIR_CLIENT_DETAIL_0.24;
 
+MIR_CLIENT_DETAIL_0.26 {
+  global:
+    extern "C++" {
+        mir::client::to_client_context*;
+    };
+} MIR_CLIENT_DETAIL_0.25;
+
+MIR_CLIENT_DETAIL_0.26.1 {
+  global:
+    extern "C++" {
+        mir::client::render_surface_lookup*;
+    };
+} MIR_CLIENT_DETAIL_0.26;
+
 MIR_CLIENT_0.26 {  # New functions in Mir 0.26
   global:
+    mir_input_config_release;
     mir_input_device_get_mutable_pointer_config;
     mir_input_device_get_mutable_touchpad_config;
     mir_input_device_get_pointer_config;
     mir_input_device_get_touchpad_config;
     mir_output_get_edid;
     mir_output_get_edid_size;
+    mir_output_set_scale_factor;
     mir_pointer_config_get_acceleration;
     mir_pointer_config_get_acceleration_bias;
     mir_pointer_config_get_handedness;
@@ -482,8 +455,6 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_pointer_config_set_handedness;
     mir_pointer_config_set_horizontal_scroll_scale;
     mir_pointer_config_set_vertical_scroll_scale;
-    mir_surface_spec_set_cursor_name;
-    mir_surface_spec_set_cursor_render_surface;
     mir_touchpad_config_get_button_down_scroll_button;
     mir_touchpad_config_get_click_modes;
     mir_touchpad_config_get_disable_while_typing;
@@ -573,3 +544,70 @@ MIR_CLIENT_0.26 {  # New functions in Mir 0.26
     mir_window_request_persistent_id;
     mir_window_request_persistent_id_sync;
 } MIR_CLIENT_0.25;
+
+MIR_CLIENT_0.26.1 { # New functions in Mir 0.26.1
+  global:
+    mir_buffer_map;
+    mir_buffer_unmap;
+    mir_buffer_release;
+    mir_presentation_chain_is_valid;
+    mir_presentation_chain_get_error_message;
+    mir_connection_allocate_buffer;
+    mir_connection_allocate_buffer_sync;
+    mir_presentation_chain_submit_buffer;
+    mir_prompt_session_new_fds_for_prompt_providers_sync;
+    mir_buffer_get_width;
+    mir_buffer_get_height;
+    mir_buffer_get_pixel_format;
+    mir_buffer_is_valid;
+    mir_buffer_get_error_message;
+    mir_buffer_get_buffer_package;
+    mir_window_id_release;
+    mir_window_id_is_valid;
+    mir_window_id_as_string;
+    mir_window_id_from_string;
+    mir_window_request_window_id;
+    mir_window_request_window_id_sync;
+} MIR_CLIENT_0.26;
+
+MIR_CLIENT_DETAIL_0.27 {  # New functions in Mir 0.27
+  global:
+    extern "C++" {
+      mir::events::set_window_id*;
+      mir::events::make_start_drag_and_drop_event*;
+      mir::events::set_drag_and_drop_handle*;
+    };
+} MIR_CLIENT_DETAIL_0.26.1;
+
+MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
+  global:
+    mir_connection_apply_session_input_config;
+    mir_connection_set_base_input_config;
+    mir_create_freestyle_window_spec;
+    mir_create_gloss_window_spec;
+    mir_create_satellite_window_spec;
+    mir_create_utility_window_spec;
+    mir_get_client_api_version;
+    mir_input_device_get_keyboard_config;
+    mir_input_device_get_mutable_keyboard_config;
+    mir_input_device_get_mutable_touchscreen_config;
+    mir_input_device_get_touchscreen_config;
+    mir_input_event_get_event;
+    mir_keyboard_config_get_keymap_layout;
+    mir_keyboard_config_get_keymap_model;
+    mir_keyboard_config_get_keymap_options;
+    mir_keyboard_config_get_keymap_variant;
+    mir_keyboard_config_set_keymap_layout;
+    mir_keyboard_config_set_keymap_model;
+    mir_keyboard_config_set_keymap_options;
+    mir_keyboard_config_set_keymap_variant;
+    mir_keyboard_event_key_text;
+    mir_output_get_logical_height;
+    mir_output_get_logical_width;
+    mir_window_request_user_move;
+    mir_window_request_user_resize;
+    mir_touchscreen_config_get_mapping_mode;
+    mir_touchscreen_config_get_output_id;
+    mir_touchscreen_config_set_mapping_mode;
+    mir_touchscreen_config_set_output_id;
+} MIR_CLIENT_0.26.1;

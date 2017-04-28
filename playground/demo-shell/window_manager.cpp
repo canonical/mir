@@ -198,7 +198,6 @@ void me::WindowManager::resize(scene::Surface& surf,
 
 bool me::WindowManager::handle_key_event(MirKeyboardEvent const* kev)
 {
-    // TODO: Fix android configuration and remove static hack ~racarr
     static bool display_off = false;
 
     if (mir_keyboard_event_action(kev) != mir_keyboard_action_down)
@@ -298,7 +297,6 @@ bool me::WindowManager::handle_key_event(MirKeyboardEvent const* kev)
         
         if (rotating || mode_change || preferred_mode)
         {
-            compositor->stop();
             auto conf = display->configuration();
             conf->for_each_output(
                 [&](mg::UserDisplayConfigurationOutput& output) -> void
@@ -322,9 +320,11 @@ bool me::WindowManager::handle_key_event(MirKeyboardEvent const* kev)
                                  mode_change) % nmodes;
                     }
                 });
-                                  
+
+            if (!rotating) compositor->stop();
             display->configure(*conf);
-            compositor->start();
+            if (!rotating) compositor->start();
+            force_redraw();
             return true;
         }
     }

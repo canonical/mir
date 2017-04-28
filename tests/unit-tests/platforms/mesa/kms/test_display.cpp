@@ -27,6 +27,7 @@
 #include "mir/time/steady_clock.h"
 #include "mir/glib_main_loop.h"
 #include "mir/fatal.h"
+#include "src/platforms/common/server/kms-utils/drm_mode_resources.h"
 
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
@@ -55,6 +56,7 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+#include <fcntl.h>
 
 namespace mg=mir::graphics;
 namespace mgm=mir::graphics::mesa;
@@ -80,7 +82,8 @@ class MesaDisplayTest : public ::testing::Test
 public:
     MesaDisplayTest() :
         mock_report{std::make_shared<testing::NiceMock<mtd::MockDisplayReport>>()},
-        null_report{mr::null_display_report()}
+        null_report{mr::null_display_report()},
+        drm_fd{open(drm_device, 0, 0)}
     {
         using namespace testing;
         ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
@@ -95,11 +98,16 @@ public:
          * the MockGBM destructor, and which are not handled by NiceMock<>.
          */
         EXPECT_CALL(mock_gbm, gbm_bo_get_device(_))
-        .Times(AtLeast(0));
+            .Times(AtLeast(0));
         EXPECT_CALL(mock_gbm, gbm_device_get_fd(_))
-        .Times(AtLeast(0));
+            .Times(AtLeast(0))
+            .WillRepeatedly(Return(drm_fd));
 
         fake_devices.add_standard_device("standard-drm-devices");
+
+        // Our standard mock devices have 2 DRM devices; kill all the outputs on
+        // the second one, so we don't try to test hybrid (for now)
+        mock_drm.reset("/dev/dri/card1");
     }
 
     std::shared_ptr<mgm::Platform> create_platform()
@@ -145,14 +153,14 @@ public:
             .Times(Exactly(1))
             .WillOnce(Return(fake.bo_handle2));
 
-        EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+        EXPECT_CALL(mock_drm, drmModeAddFB2(drm_fd,
                                             _, _, _,
                                             Pointee(fake.bo_handle1.u32),
                                             _, _, _, _))
             .Times(Exactly(1))
             .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id1), Return(0)));
 
-        EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+        EXPECT_CALL(mock_drm, drmModeAddFB2(drm_fd,
                                             _, _, _,
                                             Pointee(fake.bo_handle2.u32),
                                             _, _, _, _))
@@ -162,26 +170,27 @@ public:
 
     uint32_t get_connected_connector_id()
     {
-        auto drm_res = mock_drm.fake_drm.resources_ptr();
+        mg::kms::DRMModeResources resources{drm_fd};
 
-        for (int i = 0; i < drm_res->count_connectors; i++)
-        {
-            auto connector = mock_drm.fake_drm.find_connector(drm_res->connectors[i]);
-            if (connector->connection == DRM_MODE_CONNECTED)
-                return connector->connector_id;
-        }
+        int connected_id = 0;
+        resources.for_each_connector(
+            [&connected_id](auto const& connector)
+            {
+                if (connector->connection == DRM_MODE_CONNECTED)
+                    connected_id = connector->connector_id;
+            });
 
-        return 0;
+        return connected_id;
     }
 
     uint32_t get_connected_crtc_id()
     {
         auto connector_id = get_connected_connector_id();
-        auto connector = mock_drm.fake_drm.find_connector(connector_id);
+        auto connector = mg::kms::get_connector(drm_fd, connector_id);
 
         if (connector)
         {
-            auto encoder = mock_drm.fake_drm.find_encoder(connector->encoder_id);
+            auto encoder = mg::kms::get_encoder(drm_fd, connector->encoder_id);
             if (encoder)
                 return encoder->crtc_id;
         }
@@ -217,6 +226,9 @@ public:
     std::shared_ptr<testing::NiceMock<mtd::MockDisplayReport>> const mock_report;
     std::shared_ptr<mg::DisplayReport> const null_report;
     mtf::UdevEnvironment fake_devices;
+
+    char const* const drm_device = "/dev/dri/card0";
+    int const drm_fd;
 };
 
 }
@@ -256,7 +268,7 @@ TEST_F(MesaDisplayTest, create_display)
         .WillOnce(Return(fake.bo_handle1));
 
     /* Create a a DRM FB with the DRM buffer attached */
-    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+    EXPECT_CALL(mock_drm, drmModeAddFB2(drm_fd,
                                        _, _, _,
                                        Pointee(fake.bo_handle1.u32),
                                        _, _, _, _))
@@ -264,14 +276,14 @@ TEST_F(MesaDisplayTest, create_display)
         .WillOnce(DoAll(SetArgPointee<7>(fake.fb_id1), Return(0)));
 
     /* Display the DRM FB (first expectation is for cleanup) */
-    EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+    EXPECT_CALL(mock_drm, drmModeSetCrtc(drm_fd,
                                          crtc_id, Ne(fake.fb_id1),
                                          _, _,
                                          Pointee(connector_id),
                                          _, _))
         .Times(AtLeast(0));
 
-    EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+    EXPECT_CALL(mock_drm, drmModeSetCrtc(drm_fd,
                                          crtc_id, fake.fb_id1,
                                          _, _,
                                          Pointee(connector_id),
@@ -291,7 +303,7 @@ TEST_F(MesaDisplayTest, reset_crtc_on_destruction)
     uint32_t const fb_id{66};
 
     /* Create DRM FBs */
-    EXPECT_CALL(mock_drm, drmModeAddFB2(mock_drm.fake_drm.fd(),
+    EXPECT_CALL(mock_drm, drmModeAddFB2(drm_fd,
                                         _, _, _, _, _, _, _, _))
         .WillRepeatedly(DoAll(SetArgPointee<7>(fb_id), Return(0)));
 
@@ -300,7 +312,7 @@ TEST_F(MesaDisplayTest, reset_crtc_on_destruction)
         InSequence s;
 
         /* crtc is set */
-        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+        EXPECT_CALL(mock_drm, drmModeSetCrtc(drm_fd,
                                              crtc_id, fb_id,
                                              _, _,
                                              Pointee(connector_id),
@@ -308,7 +320,7 @@ TEST_F(MesaDisplayTest, reset_crtc_on_destruction)
             .Times(AtLeast(1));
 
         /* crtc is reset */
-        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+        EXPECT_CALL(mock_drm, drmModeSetCrtc(drm_fd,
                                              crtc_id, Ne(fb_id),
                                              _, _,
                                              Pointee(connector_id),
@@ -325,7 +337,10 @@ TEST_F(MesaDisplayTest, create_display_drm_failure)
 
     EXPECT_CALL(mock_drm, open(_,_,_))
         .Times(AtLeast(1))
-        .WillRepeatedly(Return(-1));
+        .WillRepeatedly(
+            DoAll(
+                InvokeWithoutArgs([]() { errno = ENODEV; }),
+                Return(-1)));
 
     EXPECT_CALL(mock_drm, drmClose(_))
         .Times(Exactly(0));
@@ -351,8 +366,9 @@ TEST_F(MesaDisplayTest, create_display_kms_failure)
     EXPECT_CALL(mock_drm, drmModeFreeResources(_))
         .Times(Exactly(0));
 
+    // There are 2 DRM device nodes in our mock environment.
     EXPECT_CALL(mock_drm, drmClose(_))
-        .Times(Exactly(1));
+        .Times(Exactly(2));
 
     EXPECT_THROW({
         auto display = create_display(platform);
@@ -371,7 +387,7 @@ TEST_F(MesaDisplayTest, create_display_gbm_failure)
         .Times(Exactly(0));
 
     EXPECT_CALL(mock_drm, drmClose(_))
-        .Times(Exactly(1));
+        .Times(Exactly(2));
 
     EXPECT_THROW({
         auto platform = create_platform();
@@ -381,9 +397,9 @@ TEST_F(MesaDisplayTest, create_display_gbm_failure)
 namespace
 {
 
-ACTION_P(QueuePageFlipEvent, write_drm_fd)
+ACTION_P(QueuePageFlipEvent, mock_drm)
 {
-    EXPECT_EQ(1, write(write_drm_fd, "a", 1));
+    static_cast<mtd::MockDRM&>(mock_drm).generate_event_on("/dev/dri/card0");
 }
 
 ACTION_P(InvokePageFlipHandler, param)
@@ -410,24 +426,26 @@ TEST_F(MesaDisplayTest, post_update)
         InSequence s;
 
         /* Flip the new FB */
-        EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
+        EXPECT_CALL(mock_drm, drmModePageFlip(drm_fd,
                                               crtc_id,
                                               fake.fb_id2,
                                               _, _))
             .Times(Exactly(1))
-            .WillOnce(DoAll(QueuePageFlipEvent(mock_drm.fake_drm.write_fd()),
+            .WillOnce(DoAll(QueuePageFlipEvent(std::ref(mock_drm)),
                             SaveArg<4>(&user_data),
                             Return(0)));
 
         /* Handle the flip event */
-        EXPECT_CALL(mock_drm, drmHandleEvent(mock_drm.fake_drm.fd(), _))
+        EXPECT_CALL(mock_drm, drmHandleEvent(drm_fd, _))
             .Times(1)
             .WillOnce(DoAll(InvokePageFlipHandler(&user_data), Return(0)));
 
-        /* Release last_flipped_bufobj (at destruction time) */
+        // The initially-visible buffer will be released when the pageflip completes,
+        // replacing it.
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo1))
             .Times(Exactly(1));
-        /* Release scheduled_bufobj (at destruction time) */
+
+        /* Release scheduled_composite_frame (at destruction time) */
         EXPECT_CALL(mock_gbm, gbm_surface_release_buffer(mock_gbm.fake_gbm.surface, fake.bo2))
             .Times(Exactly(1));
     }
@@ -453,7 +471,7 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
     setup_post_update_expectations();
 
     // clear_crtc happens at some stage. Not interesting.
-    EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+    EXPECT_CALL(mock_drm, drmModeSetCrtc(drm_fd,
                                          crtc_id, 0,
                                          _, _, _, _, _))
         .WillOnce(Return(0));
@@ -463,13 +481,13 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
 
         // DisplayBuffer construction paints an empty screen.
         // That's probably less than ideal but we've always had it that way.
-        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+        EXPECT_CALL(mock_drm, drmModeSetCrtc(drm_fd,
                                              crtc_id, fake.fb_id1,
                                              _, _, _, _, _))
             .WillOnce(Return(0));
 
         // New FB flip failure
-        EXPECT_CALL(mock_drm, drmModePageFlip(mock_drm.fake_drm.fd(),
+        EXPECT_CALL(mock_drm, drmModePageFlip(drm_fd,
                                               crtc_id,
                                               fake.fb_id2,
                                               _, _))
@@ -477,7 +495,7 @@ TEST_F(MesaDisplayTest, post_update_flip_failure)
             .WillOnce(Return(-1));
 
         // Expect fallback to blitting
-        EXPECT_CALL(mock_drm, drmModeSetCrtc(mock_drm.fake_drm.fd(),
+        EXPECT_CALL(mock_drm, drmModeSetCrtc(drm_fd,
                                              crtc_id, fake.fb_id2,
                                              _, _, _, _, _))
             .WillOnce(Return(0));
@@ -621,21 +639,6 @@ TEST_F(MesaDisplayTest, DISABLED_constructor_throws_if_egl_khr_image_pixmap_not_
     }, std::runtime_error);
 }
 
-TEST_F(MesaDisplayTest, constructor_throws_if_gl_oes_image_not_supported)
-{
-    using namespace ::testing;
-
-    const char* gl_exts = "GL_OES_texture_npot GL_OES_blend_func_separate";
-
-    EXPECT_CALL(mock_gl, glGetString(GL_EXTENSIONS))
-    .WillOnce(Return(reinterpret_cast<const GLubyte*>(gl_exts)));
-
-    EXPECT_THROW(
-    {
-        auto display = create_display(create_platform());
-    }, std::runtime_error);
-}
-
 TEST_F(MesaDisplayTest, for_each_display_buffer_calls_callback)
 {
     using namespace ::testing;
@@ -675,8 +678,8 @@ TEST_F(MesaDisplayTest, pause_drops_drm_master)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_drm, drmDropMaster(mock_drm.fake_drm.fd()))
-        .Times(1);
+    EXPECT_CALL(mock_drm, drmDropMaster(_))
+        .Times(2);
 
     auto display = create_display(create_platform());
 
@@ -687,8 +690,8 @@ TEST_F(MesaDisplayTest, resume_sets_drm_master)
 {
     using namespace testing;
 
-    EXPECT_CALL(mock_drm, drmSetMaster(mock_drm.fake_drm.fd()))
-        .Times(1);
+    EXPECT_CALL(mock_drm, drmSetMaster(_))
+        .Times(2);
 
     auto display = create_display(create_platform());
 
@@ -756,7 +759,7 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
 
     display->register_configuration_change_handler(
         ml,
-        [&call_count, &ml, &done]()
+        [&call_count, &done]()
         {
             if (++call_count == expected_call_count)
             {
@@ -886,8 +889,10 @@ TEST_F(MesaDisplayTest, can_change_configuration_metadata_without_invalidating_d
 
     EXPECT_TRUE(display->apply_if_configuration_preserves_display_buffers(*config));
 
+    glm::mat2 const rotate_inverted(-1, 0,
+                                     0,-1);
     for (auto display_buffer : initial_display_buffer_references)
     {
-        EXPECT_THAT(display_buffer->orientation(), Eq(mir_orientation_inverted));
+        EXPECT_THAT(display_buffer->transformation(), Eq(rotate_inverted));
     }
 }

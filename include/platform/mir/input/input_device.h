@@ -39,6 +39,7 @@ class EventBuilder;
 
 class PointerSettings;
 class TouchpadSettings;
+class TouchscreenSettings;
 
 /**
  * Represents an input device.
@@ -65,6 +66,9 @@ public:
 
     virtual optional_value<TouchpadSettings> get_touchpad_settings() const = 0;
     virtual void apply_settings(TouchpadSettings const&) = 0;
+
+    virtual optional_value<TouchscreenSettings> get_touchscreen_settings() const = 0;
+    virtual void apply_settings(TouchscreenSettings const&) = 0;
 protected:
     InputDevice(InputDevice const&) = delete;
     InputDevice& operator=(InputDevice const&) = delete;

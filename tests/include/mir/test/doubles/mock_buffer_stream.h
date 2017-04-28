@@ -53,6 +53,8 @@ struct MockBufferStream : public compositor::BufferStream
             .WillByDefault(testing::Return(mir_pixel_format_abgr_8888));
         ON_CALL(*this, stream_size())
             .WillByDefault(testing::Return(geometry::Size{0,0}));
+        ON_CALL(*this, suitable_for_cursor())
+            .WillByDefault(testing::Return(true));
     }
     std::shared_ptr<StubBuffer> buffer { std::make_shared<StubBuffer>() };
     MOCK_METHOD1(acquire_client_buffer, void(std::function<void(graphics::Buffer* buffer)>));
@@ -69,7 +71,6 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD1(allow_framedropping, void(bool));
     MOCK_CONST_METHOD0(framedropping, bool());
 
-    MOCK_METHOD0(drop_outstanding_requests, void());
     MOCK_CONST_METHOD1(buffers_ready_for_compositor, int(void const*));
     MOCK_METHOD0(drop_old_buffers, void());
     MOCK_METHOD0(drop_client_requests, void());
@@ -81,6 +82,8 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD1(disassociate_buffer, void(graphics::BufferID));
     MOCK_METHOD1(associate_buffer, void(graphics::BufferID));
     MOCK_METHOD1(set_scale, void(float));
+    MOCK_CONST_METHOD0(suitable_for_cursor, bool());
+
 };
 }
 }

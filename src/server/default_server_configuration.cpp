@@ -41,6 +41,8 @@
 #include "mir/default_configuration.h"
 #include "mir/scene/null_prompt_session_listener.h"
 #include "default_emergency_cleanup.h"
+#include "mir/graphics/platform.h"
+#include "mir/scene/coordinate_translator.h"
 
 #include <type_traits>
 
@@ -88,7 +90,7 @@ std::shared_ptr<ms::SessionListener>
 mir::DefaultServerConfiguration::the_session_listener()
 {
     return session_listener(
-        [this]
+        []
         {
             return std::make_shared<ms::NullSessionListener>();
         });
@@ -98,7 +100,7 @@ std::shared_ptr<ms::PromptSessionListener>
 mir::DefaultServerConfiguration::the_prompt_session_listener()
 {
     return prompt_session_listener(
-        [this]
+        []
         {
             return std::make_shared<ms::NullPromptSessionListener>();
         });
@@ -133,6 +135,17 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         {
             return true;
         }
+
+        bool configure_input_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+
+        bool set_base_input_configuration_is_allowed(mf::SessionCredentials const& /* creds */) override
+        {
+            return true;
+        }
+
     };
     return session_authorizer(
         [&]()
@@ -212,8 +225,17 @@ auto mir::DefaultServerConfiguration::the_logger()
     -> std::shared_ptr<ml::Logger>
 {
     return logger(
-        [this]() -> std::shared_ptr<ml::Logger>
+        []() -> std::shared_ptr<ml::Logger>
         {
             return std::make_shared<ml::DumbConsoleLogger>();
         });
+}
+
+std::vector<mir::ExtensionDescription> mir::DefaultServerConfiguration::the_extensions()
+{
+    auto extensions = the_graphics_platform()->extensions();
+    extensions.push_back(mir::ExtensionDescription{"mir_drag_and_drop", { 1 } });
+    if (the_coordinate_translator()->translation_supported())
+        extensions.push_back(mir::ExtensionDescription{"mir_extension_window_coordinate_translation", {1}});
+    return extensions;
 }

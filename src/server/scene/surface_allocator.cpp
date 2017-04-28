@@ -19,7 +19,6 @@
 #include "surface_allocator.h"
 #include "mir/scene/buffer_stream_factory.h"
 #include "mir/compositor/buffer_stream.h"
-#include "mir/input/input_channel_factory.h"
 #include "basic_surface.h"
 
 namespace geom=mir::geometry;
@@ -30,12 +29,8 @@ namespace msh=mir::shell;
 namespace mi=mir::input;
 
 ms::SurfaceAllocator::SurfaceAllocator(
-    std::shared_ptr<input::InputChannelFactory> const& input_factory,
-    std::shared_ptr<input::InputSender> const& input_sender,
     std::shared_ptr<mg::CursorImage> const& default_cursor_image,
     std::shared_ptr<SceneReport> const& report) :
-    input_factory(input_factory),
-    input_sender(input_sender),
     default_cursor_image(default_cursor_image),
     report(report)
 {
@@ -45,7 +40,6 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
     std::list<ms::StreamInfo> const& streams,
     SurfaceCreationParameters const& params)
 {
-    auto input_channel = input_factory->make_input_channel();
     auto confine = params.confine_pointer.is_set() ? params.confine_pointer.value() : mir_pointer_unconfined;
     auto const surface = std::make_shared<BasicSurface>(
         params.name,
@@ -53,8 +47,6 @@ std::shared_ptr<ms::Surface> ms::SurfaceAllocator::create_surface(
         params.parent,
         confine,
         streams,
-        input_channel,
-        input_sender,
         default_cursor_image,
         report);
 

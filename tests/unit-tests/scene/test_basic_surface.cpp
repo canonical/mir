@@ -29,8 +29,6 @@
 
 #include "mir/test/doubles/stub_cursor_image.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
-#include "mir/test/doubles/mock_input_sender.h"
-#include "mir/test/doubles/stub_input_sender.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/fake_shared.h"
 
@@ -86,8 +84,6 @@ struct BasicSurfaceTest : public testing::Test
     void const* compositor_id{nullptr};
     std::shared_ptr<ms::LegacySurfaceChangeNotification> observer =
         std::make_shared<ms::LegacySurfaceChangeNotification>(mock_change_cb, [this](int){mock_change_cb();});
-    std::shared_ptr<mi::InputSender> const stub_input_sender = std::make_shared<mtd::StubInputSender>();
-    testing::NiceMock<mtd::MockInputSender> mock_sender;
     std::list<ms::StreamInfo> streams { { mock_buffer_stream, {}, {} } };
 
     ms::BasicSurface surface{
@@ -95,8 +91,6 @@ struct BasicSurfaceTest : public testing::Test
         rect,
         mir_pointer_unconfined,
         streams,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_input_sender,
         std::shared_ptr<mg::CursorImage>(),
         report};
 
@@ -131,7 +125,6 @@ TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
                 name, rect, mir_pointer_unconfined,
                 std::list<ms::StreamInfo> {
                     { std::make_shared<testing::NiceMock<mtd::MockBufferStream>>(), {}, {} } },
-                std::shared_ptr<mi::InputChannel>(), stub_input_sender,
                 std::shared_ptr<mg::CursorImage>(), report);
         for (auto& renderable : surface->generate_renderables(this))
             ids.insert(renderable->id());
@@ -150,7 +143,6 @@ TEST_F(BasicSurfaceTest, id_never_invalid)
     {
         surface = std::make_unique<ms::BasicSurface>(
                 name, rect, mir_pointer_unconfined, streams,
-                std::shared_ptr<mi::InputChannel>(), stub_input_sender,
                 std::shared_ptr<mg::CursorImage>(), report);
 
         for (auto& renderable : surface->generate_renderables(this))
@@ -274,8 +266,6 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
         rect,
         mir_pointer_unconfined,
         streams,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_input_sender,
         std::shared_ptr<mg::CursorImage>(),
         report};
 
@@ -314,8 +304,6 @@ TEST_F(BasicSurfaceTest, default_region_is_surface_rectangle)
         geom::Rectangle{pt, one_by_one},
         mir_pointer_unconfined,
         streams,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_input_sender,
         std::shared_ptr<mg::CursorImage>(),
         report};
 
@@ -355,8 +343,6 @@ TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
         geom::Rectangle{{0,0}, {100,100}},
         mir_pointer_unconfined,
         streams,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_input_sender,
         std::shared_ptr<mg::CursorImage>(),
         report};
 
@@ -495,8 +481,6 @@ TEST_F(BasicSurfaceTest, stores_parent)
         parent,
         mir_pointer_unconfined,
         streams,
-        std::shared_ptr<mi::InputChannel>(),
-        stub_input_sender,
         std::shared_ptr<mg::CursorImage>(),
         report};
 
@@ -671,25 +655,6 @@ TEST_F(BasicSurfaceTest, notifies_about_cursor_image_removal)
 
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_cursor_image({});
-}
-
-TEST_F(BasicSurfaceTest, calls_send_event_on_consume)
-{
-    using namespace ::testing;
-
-    ms::BasicSurface surface{
-        name,
-        rect,
-        mir_pointer_unconfined,
-        streams,
-        std::shared_ptr<mi::InputChannel>(),
-        mt::fake_shared(mock_sender),
-        nullptr,
-        report};
-
-    EXPECT_CALL(mock_sender, send_event(_,_));
-
-    surface.consume(mev::make_event(mir_prompt_session_state_started).get());
 }
 
 TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)

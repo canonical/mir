@@ -83,8 +83,11 @@ TEST_F(ServerDisconnect, is_detected_by_client)
 
         while (!signalled.load() && clock::now() < time_limit)
         {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
             mir_buffer_stream_swap_buffers_sync(
                 mir_window_get_buffer_stream(window));
+#pragma GCC diagnostic pop
         }
 
         mir_window_release_sync(window);
@@ -119,15 +122,18 @@ TEST_F(ServerDisconnect, doesnt_stop_client_calling_API_functions)
 
             create_surface.exec([&] {
                 auto spec = mir_create_normal_window_spec(connection, 800, 600);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                 mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
+#pragma GCC diagnostic pop
                 window = mir_create_window_sync(spec);
                 mir_window_spec_release(spec);
             });
 
             configure_display.exec([&] {
-                auto config = mir_connection_create_display_config(connection);
-                mir_wait_for(mir_connection_apply_display_config(connection, config));
-                mir_display_config_destroy(config);
+                auto config = mir_connection_create_display_configuration(connection);
+                mir_connection_apply_session_display_config(connection, config);
+                mir_display_config_release(config);
             });
 
             disconnect.exec([&] {

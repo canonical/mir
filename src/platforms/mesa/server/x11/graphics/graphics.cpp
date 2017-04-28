@@ -64,11 +64,11 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 }
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
-    std::shared_ptr<mg::DisplayReport> const& /*report*/,
-    std::shared_ptr<mg::NestedContext> const& nested_context)
+    std::shared_ptr<mg::DisplayReport> const&,
+    std::shared_ptr<mg::PlatformAuthentication> const&)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
-    return mir::make_module_ptr<mgx::GuestPlatform>(nested_context);
+    return mir::make_module_ptr<mgx::GuestPlatform>();
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)

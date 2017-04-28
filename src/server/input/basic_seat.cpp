@@ -19,29 +19,147 @@
 
 #include "basic_seat.h"
 #include "mir/input/device.h"
-#include "mir/input/input_region.h"
+#include "mir/input/input_sink.h"
+#include "mir/graphics/display_configuration_observer.h"
+#include "mir/graphics/display_configuration.h"
+#include "mir/graphics/transformation.h"
+#include "mir/geometry/rectangle.h"
+#include "mir/geometry/point.h"
+#include "mir/geometry/size.h"
+#include "mir_toolkit/common.h"
 
 #include <algorithm>
+#include <array>
 
 namespace mi = mir::input;
 namespace mf = mir::frontend;
+namespace mg = mir::graphics;
+namespace geom = mir::geometry;
+
+struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
+{
+    OutputTracker(SeatInputDeviceTracker& tracker)
+        : input_state_tracker{tracker}
+    {
+    }
+
+    void update_outputs(mg::DisplayConfiguration const& conf)
+    {
+        std::lock_guard<std::mutex> lock(output_mutex);
+        outputs.clear();
+        geom::Rectangles output_rectangles;
+        conf.for_each_output(
+            [this, &output_rectangles](mg::DisplayConfigurationOutput const& output)
+            {
+                if (!output.used || !output.connected)
+                    return;
+                if (!output.valid() || (output.current_mode_index >= output.modes.size()))
+                    return;
+
+                // TODO make the decision whether display that is used but powered off should emit
+                // touch screen events in a policy
+                bool active = output.power_mode == mir_power_mode_on;
+
+                auto output_size = output.modes[output.current_mode_index].size;
+                auto width = output_size.width.as_int();
+                auto height = output_size.height.as_int();
+                OutputInfo::Matrix output_matrix{{
+                    1.0f, 0.0f, float(output.top_left.x.as_int()),
+                    0.0f, 1.0f, float(output.top_left.y.as_int())}};
+
+                switch(output.orientation)
+                {
+                case mir_orientation_left:
+                    output_matrix[3] = -1;
+                    output_matrix[5] += width;
+                    break;
+                case mir_orientation_right:
+                    output_matrix[1] = -1;
+                    output_matrix[2] += height;
+                    break;
+                case mir_orientation_inverted:
+                    output_matrix[0] = -1;
+                    output_matrix[2] += width;
+                    output_matrix[4] = -1;
+                    output_matrix[5] += height;
+                default:
+                    break;
+                }
+                if (active)
+                    output_rectangles.add(output.extents());
+                outputs.insert(std::make_pair(output.id.as_value(), OutputInfo{active, output_size, output_matrix}));
+            });
+        input_state_tracker.update_outputs(output_rectangles);
+        bounding_rectangle = output_rectangles.bounding_rectangle();
+    }
+
+    void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+    {
+        update_outputs(*config.get());
+    }
+
+    void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+    {
+        update_outputs(*config.get());
+    }
+
+    void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const&) override
+    {}
+
+    void session_configuration_applied(std::shared_ptr<mf::Session> const&,
+        std::shared_ptr<mg::DisplayConfiguration> const&) override
+    {}
+
+    void session_configuration_removed(std::shared_ptr<mf::Session> const&) override
+    {}
+
+    void configuration_failed(
+        std::shared_ptr<mg::DisplayConfiguration const> const&,
+        std::exception const&) override
+    {}
+
+    void catastrophic_configuration_error(
+        std::shared_ptr<mg::DisplayConfiguration const> const&,
+        std::exception const&) override
+    {}
+
+    geom::Rectangle get_bounding_rectangle() const
+    {
+        std::lock_guard<std::mutex> lock(output_mutex);
+        return bounding_rectangle;
+    }
+
+    mi::OutputInfo get_output_info(uint32_t output) const
+    {
+        std::lock_guard<std::mutex> lock(output_mutex);
+        auto pos = outputs.find(output);
+        if (pos != end(outputs))
+            return pos->second;
+        return OutputInfo{};
+    }
+private:
+    mutable std::mutex output_mutex;
+    mi::SeatInputDeviceTracker& input_state_tracker;
+    std::unordered_map<uint32_t, mi::OutputInfo> outputs;
+    geom::Rectangle bounding_rectangle;
+};
 
 mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
                          std::shared_ptr<mi::TouchVisualizer> const& touch_visualizer,
                          std::shared_ptr<mi::CursorListener> const& cursor_listener,
-                         std::shared_ptr<mi::InputRegion> const& input_region,
+                         std::shared_ptr<Registrar> const& registrar,
                          std::shared_ptr<mi::KeyMapper> const& key_mapper,
                          std::shared_ptr<time::Clock> const& clock,
                          std::shared_ptr<mi::SeatObserver> const& observer) :
       input_state_tracker{dispatcher,
                           touch_visualizer,
                           cursor_listener,
-                          input_region,
                           key_mapper,
                           clock,
                           observer},
-      input_region{input_region}
+      output_tracker{std::make_shared<OutputTracker>(input_state_tracker)}
 {
+    registrar->register_interest(output_tracker);
 }
 
 void mi::BasicSeat::add_device(input::Device const& device)
@@ -59,13 +177,14 @@ void mi::BasicSeat::dispatch_event(MirEvent& event)
     input_state_tracker.dispatch(event);
 }
 
-mir::geometry::Rectangle mi::BasicSeat::get_rectangle_for(input::Device const&)
+geom::Rectangle mi::BasicSeat::bounding_rectangle() const
 {
-    // TODO: With knowledge of the outputs attached to this seat and the output the given input
-    // device is associated this method should only return the rectangle of that output. For now
-    // we rely on the existing workaround in DisplayInputRegion::bounding_rectangle() which
-    // assumes that only the first output may have a touch screen associated to it.
-    return input_region->bounding_rectangle();
+    return output_tracker->get_bounding_rectangle();
+}
+
+mi::OutputInfo mi::BasicSeat::output_info(uint32_t output_id) const
+{
+    return output_tracker->get_output_info(output_id);
 }
 
 mir::EventUPtr mi::BasicSeat::create_device_state()
@@ -88,7 +207,7 @@ void mi::BasicSeat::set_cursor_position(float cursor_x, float cursor_y)
     input_state_tracker.set_cursor_position(cursor_x, cursor_y);
 }
 
-void mi::BasicSeat::set_confinement_regions(geometry::Rectangles const& regions)
+void mi::BasicSeat::set_confinement_regions(geom::Rectangles const& regions)
 {
     input_state_tracker.set_confinement_regions(regions);
 }
@@ -97,3 +216,4 @@ void mi::BasicSeat::reset_confinement_regions()
 {
     input_state_tracker.reset_confinement_regions();
 }
+

@@ -17,6 +17,11 @@ configure_file(
   @ONLY
 )
 
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/version.h.in
+  ${PROJECT_SOURCE_DIR}/include/client/mir_toolkit/version.h
+)
+
 include_directories(
   ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
@@ -44,6 +49,7 @@ add_subdirectory(input)
 add_library(mirclientobjects OBJECT
 
   display_configuration.cpp
+  drag_and_drop.cpp drag_and_drop.h
   error_connections.cpp
   event.cpp
   event_printer.cpp
@@ -61,7 +67,6 @@ add_library(mirclientobjects OBJECT
   logging/perf_report.cpp
   default_connection_configuration.cpp
   connection_surface_map.cpp
-  private.cpp
   frame_clock.cpp
   mir_screencast.cpp
   mir_screencast_api.cpp
@@ -78,7 +83,6 @@ add_library(mirclientobjects OBJECT
   mir_buffer_stream_api.cpp
   error_stream.cpp
   error_render_surface.cpp
-  error_chain.cpp
   buffer.cpp
   error_buffer.cpp
   mir_render_surface_api.cpp
@@ -100,6 +104,7 @@ add_library(mirclientobjects OBJECT
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_error.h
   mir_extension_core.cpp
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_extension_core.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/extensions/drag_and_drop.h
 )
 
 # Ensure protobuf C++ headers have been produced before

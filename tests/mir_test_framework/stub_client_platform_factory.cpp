@@ -56,6 +56,25 @@ int get_fence(MirBuffer*)
     return -1;
 }
 
+void allocate_buffer(
+    MirConnection* connection, int width, int height, unsigned int pf, unsigned int flags, MirBufferCallback cb, void* cb_context)
+{
+    auto context = mcl::to_client_context(connection);
+    context->allocate_buffer(
+        mir::geometry::Size{width, height}, pf, flags, cb, cb_context);
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+MirBufferStream* get_stream(
+    MirRenderSurface* rs,
+    int width, int height,
+    MirPixelFormat format)
+{
+    return mir_render_surface_get_buffer_stream(rs, width, height, format);
+}
+#pragma GCC diagnostic pop
+
 void throw_exception_if_requested(
     std::unordered_map<mtf::FailurePoint, std::exception_ptr, std::hash<int>> const& fail_at,
     mtf::FailurePoint here)
@@ -80,6 +99,8 @@ mtf::StubClientPlatform::StubClientPlatform(
     flavor_ext_9{favorite_flavor_9},
     animal_ext{animal_name},
     fence_ext{get_fence, nullptr, nullptr},
+    buffer_ext{allocate_buffer},
+    stream_ext{get_stream},
     fail_at{std::move(fail_at)}
 {
     throw_exception_if_requested(this->fail_at, FailurePoint::create_client_platform);
@@ -117,6 +138,17 @@ std::shared_ptr<mir::client::ClientBufferFactory> mtf::StubClientPlatform::creat
             return std::make_shared<mtd::StubClientBuffer>(package, size, pf,
                 std::make_shared<mtf::NativeBuffer>(properties));
         }
+
+        std::shared_ptr<mcl::ClientBuffer> create_buffer(
+            std::shared_ptr<MirBufferPackage> const& package, uint32_t, uint32_t) override
+        {
+            mir::graphics::BufferUsage usage = mir::graphics::BufferUsage::hardware;
+            geom::Size size {package->width, package->height};
+            auto pf = mir_pixel_format_abgr_8888;
+            mir::graphics::BufferProperties properties { size, pf, usage }; 
+            return std::make_shared<mtd::StubClientBuffer>(package, size, pf,
+                std::make_shared<mtf::NativeBuffer>(properties));
+        }
     };
     return std::make_shared<StubPlatformBufferFactory>();
 }
@@ -128,8 +160,9 @@ void mtf::StubClientPlatform::use_egl_native_window(std::shared_ptr<void> /*nati
 std::shared_ptr<void> mtf::StubClientPlatform::create_egl_native_window(mir::client::EGLNativeSurface* surface)
 {
     throw_exception_if_requested(this->fail_at, FailurePoint::create_egl_native_window);
-
-    return std::shared_ptr<void>{surface ? surface : reinterpret_cast<void*>(0xBEEFBABE), [](void*){}};
+    if (surface)
+        return std::shared_ptr<void>{surface, [](void*){}};
+    return std::make_shared<int>(332);
 }
 
 std::shared_ptr<EGLNativeDisplayType> mtf::StubClientPlatform::create_egl_native_display()
@@ -178,7 +211,24 @@ void* mtf::StubClientPlatform::request_interface(char const* name, int version)
         return &animal_ext;
     if (!strcmp(name, "mir_extension_fenced_buffers") && (version == 1))
         return &fence_ext;
+    if (!strcmp(name, "mir_extension_gbm_buffer") && (version == 1))
+        return &buffer_ext;
+    if (!strcmp(name, "mir_extension_hardware_buffer_stream") && (version == 1))
+        return &stream_ext;
     return nullptr;
+}
+
+uint32_t mtf::StubClientPlatform::native_format_for(MirPixelFormat) const
+{
+    return 0u;
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+uint32_t mtf::StubClientPlatform::native_flags_for(MirBufferUsage usage, mir::geometry::Size) const
+{
+#pragma GCC diagnostic pop
+    return static_cast<uint32_t>(usage);
 }
 
 std::shared_ptr<mcl::ClientPlatform>

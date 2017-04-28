@@ -23,6 +23,7 @@
 #include "screencast_buffer_tracker.h"
 #include "protobuf_ipc_factory.h"
 
+#include "mir/extension_description.h"
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/buffer_stream_id.h"
@@ -51,7 +52,6 @@ class GraphicBufferAllocator;
 namespace input
 {
 class CursorImages;
-class InputDeviceHub;
 }
 
 namespace scene
@@ -76,6 +76,7 @@ class DisplayChanger;
 class Screencast;
 class PromptSession;
 class BufferStream;
+class InputConfigurationChanger;
 
 namespace detail
 {
@@ -122,7 +123,8 @@ public:
         std::shared_ptr<scene::CoordinateTranslator> const& translator,
         std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
         std::shared_ptr<cookie::Authority> const& cookie_authority,
-        std::shared_ptr<input::InputDeviceHub> const& hub
+        std::shared_ptr<InputConfigurationChanger> const& input_changer,
+        std::vector<mir::ExtensionDescription> const& extensions
         );
 
     ~SessionMediator() noexcept;
@@ -245,9 +247,17 @@ public:
         mir::protobuf::StreamConfiguration const* request,
         mir::protobuf::Void*,
         google::protobuf::Closure* done) override;
-    void raise_surface(
-        mir::protobuf::RaiseRequest const* request,
+    void request_operation(
+        mir::protobuf::RequestWithAuthority const* request,
         mir::protobuf::Void*,
+        google::protobuf::Closure* done) override;
+    void apply_input_configuration(
+        mir::protobuf::InputConfigurationRequest const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
+    void set_base_input_configuration(
+        mir::protobuf::InputConfigurationRequest const* request,
+        mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
 
     // TODO: Split this into a separate thing
@@ -260,12 +270,6 @@ private:
     void pack_protobuf_buffer(protobuf::Buffer& protobuf_buffer,
                               graphics::Buffer* graphics_buffer,
                               graphics::BufferIpcMsgType msg_type);
-
-    void advance_buffer(
-        BufferStreamId surf_id,
-        BufferStream& buffer_stream,
-        graphics::Buffer* old_buffer,
-        std::function<void(graphics::Buffer*, graphics::BufferIpcMsgType)> complete);
 
     std::shared_ptr<graphics::DisplayConfiguration> unpack_and_sanitize_display_configuration(
         protobuf::DisplayConfiguration const*);
@@ -293,7 +297,8 @@ private:
     std::shared_ptr<scene::CoordinateTranslator> const translator;
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const anr_detector;
     std::shared_ptr<cookie::Authority> const cookie_authority;
-    std::shared_ptr<input::InputDeviceHub> const hub;
+    std::shared_ptr<InputConfigurationChanger> const input_changer;
+    std::vector<mir::ExtensionDescription> const extensions;
 
     ScreencastBufferTracker screencast_buffer_tracker;
 

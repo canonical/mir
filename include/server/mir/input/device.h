@@ -29,6 +29,7 @@
 class MirPointerConfig;
 class MirTouchpadConfig;
 class MirKeyboardConfig;
+class MirTouchscreenConfig;
 
 namespace mir
 {
@@ -53,6 +54,9 @@ public:
 
     virtual optional_value<MirKeyboardConfig> keyboard_configuration() const = 0;
     virtual void apply_keyboard_configuration(MirKeyboardConfig const&) = 0;
+
+    virtual optional_value<MirTouchscreenConfig> touchscreen_configuration() const = 0;
+    virtual void apply_touchscreen_configuration(MirTouchscreenConfig const&) = 0;
 private:
     Device(Device const&) = delete;
     Device& operator=(Device const&) = delete;

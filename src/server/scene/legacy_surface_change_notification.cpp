@@ -104,3 +104,11 @@ void ms::LegacySurfaceChangeNotification::renamed(char const*)
 {
     notify_scene_change();
 }
+
+void ms::LegacySurfaceChangeNotification::input_consumed(MirEvent const*)
+{
+}
+
+void ms::LegacySurfaceChangeNotification::start_drag_and_drop(std::vector<uint8_t> const& /*handle*/)
+{
+}

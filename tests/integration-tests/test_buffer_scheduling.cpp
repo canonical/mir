@@ -217,7 +217,7 @@ struct StubEventSink : public mf::EventSink
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(mg::DisplayConfiguration const&) {}
     void handle_error(mir::ClientVisibleError const&) {}
-    void handle_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const&) {}
+    void handle_input_config_change(MirInputConfig const&) {}
     void send_ping(int32_t) {}
 
     std::shared_ptr<StubIpcSystem> ipc;
@@ -335,7 +335,7 @@ struct ScheduledProducer : ProducerSystem
     }
     ~ScheduledProducer()
     {
-        ipc->on_client_bound_transfer([this](mp::BufferRequest&){});
+        ipc->on_client_bound_transfer([](mp::BufferRequest&){});
     }
 
     bool can_produce()
@@ -483,7 +483,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
                 if (!submit_stream)
                     return;
                 mg::BufferID id{static_cast<unsigned int>(buffer.buffer_id())};
-                submit_stream->submit_buffer((*map)[id]);
+                submit_stream->submit_buffer(map->get(id));
             });
         ipc->on_allocate(
             [this](geom::Size sz)

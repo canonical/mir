@@ -87,10 +87,12 @@ char const* mcl::PresentationChain::error_msg() const
 
 void mcl::PresentationChain::set_dropping_mode()
 {
-    mir_wait_for(interval_config.set_swap_interval(0));
+    if (auto wh = interval_config.set_swap_interval(0))
+        wh->wait_for_all();
 }
 
 void mcl::PresentationChain::set_queueing_mode()
 {
-    mir_wait_for(interval_config.set_swap_interval(1));
+    if (auto wh = interval_config.set_swap_interval(1))
+        wh->wait_for_all();
 }

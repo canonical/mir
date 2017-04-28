@@ -52,6 +52,7 @@ struct KeyboardEvent
         down @1;
         repeat @2;
     }
+    text @3 :Text;
 }
 
 struct TouchScreenEvent
@@ -103,6 +104,8 @@ struct PointerEvent
 
     buttons @7 :UInt32;
 
+    dndHandle @8 :List(UInt8);
+
     enum PointerAction
     {
        up @0;
@@ -126,6 +129,8 @@ struct InputEvent
        touch @5 : TouchScreenEvent;
        pointer @6 : PointerEvent;
     }
+
+    windowId @7 :Int32;
 }
 
 struct InputConfigurationEvent
@@ -146,6 +151,7 @@ struct SurfaceEvent
     id @0 :Int32;
     attrib @1 :Attrib;
     value @2 :Int32;
+    dndHandle @3 :List(UInt8);
 
     enum Attrib
     {
@@ -157,8 +163,9 @@ struct SurfaceEvent
         dpi @4;
         visibility @5;
         preferredOrientation @6;
+        startDragAndDrop @7;
         # Must be last
-        surfaceAttrib @7;
+        surfaceAttrib @8;
     }
 }
 
@@ -235,6 +242,8 @@ struct InputDeviceStateEvent
         pressedKeys @1 :List(UInt32);
         buttons @2 :UInt32;
     }
+
+    windowId @6 :Int32;
 }
 
 struct SurfacePlacementEvent

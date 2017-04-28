@@ -44,40 +44,6 @@ namespace mgl = mir::gl;
 namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
-namespace
-{
-float cos_for(MirOrientation orientation)
-{
-    switch(orientation)
-    {
-    case mir_orientation_normal:
-        return 1.0f;
-    case mir_orientation_inverted:
-        return -1.0f;
-    case mir_orientation_left:
-    case mir_orientation_right:
-        return 0.0f;
-    default:
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation"));
-    }
-}
-
-float sine_for(MirOrientation orientation)
-{
-    switch(orientation)
-    {
-    case mir_orientation_left:
-        return 1.0f;
-    case mir_orientation_right:
-        return -1.0f;
-    case mir_orientation_normal:
-    case mir_orientation_inverted:
-        return 0.0f;
-    default:
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation"));
-    }
-}
-}
 mrg::CurrentRenderTarget::CurrentRenderTarget(mg::DisplayBuffer* display_buffer)
     : render_target{
         dynamic_cast<renderer::gl::RenderTarget*>(display_buffer->native_display_buffer())}
@@ -170,9 +136,7 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
       clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
-      texture_cache(mgl::DefaultProgramFactory().create_texture_cache()),
-      orientation(mir_orientation_normal),
-      mirror_mode(mir_mirror_mode_none)
+      texture_cache(mgl::DefaultProgramFactory().create_texture_cache())
 {
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     EGLDisplay disp = eglGetCurrentDisplay();
@@ -248,9 +212,11 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
     for (auto const& r : renderables)
         draw(*r, r->alpha() < 1.0f ? alpha_program : default_program);
 
-    texture_cache->drop_unused();
-
     render_target.swap_buffers();
+
+    // Deleting unused textures only requires the GL context. This clean-up
+    // does not affect screen contents so can happen after swap_buffers...
+    texture_cache->drop_unused();
 }
 
 void mrg::Renderer::draw(mg::Renderable const& renderable,
@@ -406,30 +372,53 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
                       0.0f});
 
     viewport = rect;
+    update_gl_viewport();
 }
 
-void mrg::Renderer::set_output_transform(MirOrientation new_orientation, MirMirrorMode new_mirror_mode)
+void mrg::Renderer::update_gl_viewport()
 {
-    if (new_orientation == orientation && new_mirror_mode == mirror_mode)
-        return;
+    /*
+     * Letterboxing: Move the glViewport to add black bars in the case that
+     * the logical viewport aspect ratio doesn't match the display aspect.
+     * This keeps pixels square. Note "black"-bars are really glClearColor.
+     */
+    render_target.ensure_current();
 
-    GLfloat const cos = cos_for(new_orientation);
-    GLfloat const sin = sine_for(new_orientation);
+    auto transformed_viewport = display_transform *
+                                glm::vec4(viewport.size.width.as_int(),
+                                          viewport.size.height.as_int(), 0, 1);
+    auto viewport_width = fabs(transformed_viewport[0]);
+    auto viewport_height = fabs(transformed_viewport[1]);
+    auto dpy = eglGetCurrentDisplay();
+    auto surf = eglGetCurrentSurface(EGL_DRAW);
+    EGLint buf_width = 0, buf_height = 0;
 
-    glm::mat2 rotation_matrix(cos, sin, -sin, cos);
-    glm::mat2 mirror_matrix;
-    if (new_mirror_mode == mir_mirror_mode_horizontal)
+    if (viewport_width > 0.0f && viewport_height > 0.0f &&
+        eglQuerySurface(dpy, surf, EGL_WIDTH, &buf_width) && buf_width > 0 &&
+        eglQuerySurface(dpy, surf, EGL_HEIGHT, &buf_height) && buf_height > 0)
     {
-        mirror_matrix[0][0] = -1.0f;
-    }
-    else if (new_mirror_mode == mir_mirror_mode_vertical)
-    {
-        mirror_matrix[1][1] = -1.0f;
-    }
+        GLint reduced_width = buf_width, reduced_height = buf_height;
+        // if viewport_aspect_ratio >= buf_aspect_ratio
+        if (viewport_width * buf_height >= buf_width * viewport_height)
+            reduced_height = buf_width * viewport_height / viewport_width;
+        else
+            reduced_width = buf_height * viewport_width / viewport_height;
 
-    display_transform = glm::mat4(mirror_matrix*rotation_matrix);
-    orientation = new_orientation;
-    mirror_mode = new_mirror_mode;
+        GLint offset_x = (buf_width - reduced_width) / 2;
+        GLint offset_y = (buf_height - reduced_height) / 2;
+
+        glViewport(offset_x, offset_y, reduced_width, reduced_height);
+    }
+}
+
+void mrg::Renderer::set_output_transform(glm::mat2 const& t)
+{
+    auto const new_display_transform = glm::mat4(t);
+    if (new_display_transform != display_transform)
+    {
+        display_transform = new_display_transform;
+        update_gl_viewport();
+    }
 }
 
 void mrg::Renderer::suspend()

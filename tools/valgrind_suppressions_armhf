@@ -34,14 +34,6 @@
     obj:/lib/arm-linux-gnueabihf/ld-2.*.so
 }
 
-# Android libs
-
-{
-    android_cond
-    Memcheck:Cond
-    obj:/android/system/*.so
-}
-
 # libc
 
 {

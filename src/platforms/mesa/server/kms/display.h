@@ -24,6 +24,7 @@
 #include "real_kms_output_container.h"
 #include "real_kms_display_configuration.h"
 #include "display_helpers.h"
+#include "egl_helper.h"
 #include "platform_common.h"
 
 #include <atomic>
@@ -64,7 +65,7 @@ class Display : public graphics::Display,
                 public renderer::gl::ContextSource
 {
 public:
-    Display(std::shared_ptr<helpers::DRMHelper> const& drm,
+    Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& drm,
             std::shared_ptr<helpers::GBMHelper> const& gbm,
             std::shared_ptr<VirtualTerminal> const& vt,
             BypassOption bypass_option,
@@ -93,7 +94,7 @@ public:
     void pause() override;
     void resume() override;
 
-    std::shared_ptr<graphics::Cursor> create_hardware_cursor(std::shared_ptr<CursorImage> const& initial_image) override;
+    std::shared_ptr<graphics::Cursor> create_hardware_cursor() override;
     std::unique_ptr<VirtualOutput> create_virtual_output(int width, int height) override;
     NativeDisplay* native_display() override;
 
@@ -105,14 +106,14 @@ private:
     void clear_connected_unused_outputs();
 
     mutable std::mutex configuration_mutex;
-    std::shared_ptr<helpers::DRMHelper> const drm;
+    std::vector<std::shared_ptr<helpers::DRMHelper>> const drm;
     std::shared_ptr<helpers::GBMHelper> const gbm;
     std::shared_ptr<VirtualTerminal> const vt;
     std::shared_ptr<DisplayReport> const listener;
     mir::udev::Monitor monitor;
     helpers::EGLHelper shared_egl;
     std::vector<std::unique_ptr<DisplayBuffer>> display_buffers;
-    mutable RealKMSOutputContainer output_container;
+    std::shared_ptr<KMSOutputContainer> const output_container;
     mutable RealKMSDisplayConfiguration current_display_configuration;
     mutable std::atomic<bool> dirty_configuration;
 

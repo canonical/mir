@@ -26,8 +26,6 @@
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/compositor/stream.h"
-#include "mir/input/input_channel_factory.h"
-#include "mir/test/doubles/stub_input_channel.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir/test/doubles/stub_buffer_stream_factory.h"
@@ -71,35 +69,6 @@ MATCHER_P(SceneElementForStream, stream, "")
     return arg->renderable()->id() == stream.get();
 }
 
-struct StubInputChannelFactory : public mi::InputChannelFactory
-{
-    std::shared_ptr<mi::InputChannel> make_input_channel()
-    {
-        return std::make_shared<mtd::StubInputChannel>();
-    }
-};
-
-struct StubInputChannel : public mi::InputChannel
-{
-    StubInputChannel(int server_fd, int client_fd)
-        : s_fd(server_fd),
-          c_fd(client_fd)
-    {
-    }
-
-    int client_fd() const
-    {
-        return c_fd;
-    }
-    int server_fd() const
-    {
-        return s_fd;
-    }
-
-    int const s_fd;
-    int const c_fd;
-};
-
 struct MockCallback
 {
     MOCK_METHOD0(call, void());
@@ -128,8 +97,6 @@ struct SurfaceStack : public ::testing::Test
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { stub_buffer_stream1, {}, {} } },
-            std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mir::input::InputSender>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
 
@@ -138,8 +105,6 @@ struct SurfaceStack : public ::testing::Test
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { stub_buffer_stream2, {}, {} } },
-            std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mir::input::InputSender>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
 
@@ -149,8 +114,6 @@ struct SurfaceStack : public ::testing::Test
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { stub_buffer_stream3, {}, {} } },
-            std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mir::input::InputSender>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
 
@@ -160,8 +123,6 @@ struct SurfaceStack : public ::testing::Test
             geom::Rectangle{{},{}},
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
-            std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mir::input::InputSender>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
         invisible_stub_surface->set_hidden(true);
@@ -275,8 +236,6 @@ TEST_F(SurfaceStack, decor_name_is_surface_name)
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
-        std::shared_ptr<mir::input::InputChannel>(),
-        std::shared_ptr<mir::input::InputSender>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
     stack.add_surface(surface, default_params.input_mode);
@@ -304,8 +263,6 @@ TEST_F(SurfaceStack, gets_surface_renames)
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
-        std::shared_ptr<mir::input::InputChannel>(),
-        std::shared_ptr<mir::input::InputSender>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
     stack.add_surface(surface, default_params.input_mode);
@@ -334,7 +291,7 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
 
     struct StubBuffers : mtd::StubClientBuffers
     {
-        std::shared_ptr<mg::Buffer>& operator[](mg::BufferID) override
+        std::shared_ptr<mg::Buffer> get(mg::BufferID) const override
         {
             return buffer;
         }
@@ -349,8 +306,6 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { stream, {}, {} } },
-        std::shared_ptr<mir::input::InputChannel>(),
-        std::shared_ptr<mir::input::InputSender>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
     stack.add_surface(surface, default_params.input_mode);
@@ -384,8 +339,6 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_occluded_surfaces)
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { stream, {}, {} } },
-        std::shared_ptr<mir::input::InputChannel>(),
-        std::shared_ptr<mir::input::InputSender>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
 
@@ -418,8 +371,6 @@ TEST_F(SurfaceStack, scene_doesnt_count_pending_frames_from_partially_exposed_su
         geom::Rectangle{{},{}},
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { stream, {}, {} } },
-        std::shared_ptr<mir::input::InputChannel>(),
-        std::shared_ptr<mir::input::InputSender>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
 
@@ -532,8 +483,6 @@ TEST_F(SurfaceStack, generate_elementelements)
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
-            std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mir::input::InputSender>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
         
@@ -717,8 +666,6 @@ TEST_F(SurfaceStack, scene_elements_hold_snapshot_of_positioning_info)
             geom::Rectangle{geom::Point{3 * i, 4 * i},geom::Size{1 * i, 2 * i}},
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
-            std::shared_ptr<mir::input::InputChannel>(),
-            std::shared_ptr<mir::input::InputSender>(),
             std::shared_ptr<mg::CursorImage>(),
             report);
 
@@ -750,8 +697,6 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { mock_stream, {}, {} } },
-        std::shared_ptr<mir::input::InputChannel>(),
-        std::shared_ptr<mir::input::InputSender>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
         stack.add_surface(surface, default_params.input_mode);
@@ -780,8 +725,6 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
         geom::Rectangle{geom::Point{3, 4},geom::Size{1, 2}},
         mir_pointer_unconfined,
         std::list<ms::StreamInfo> { { mock_stream, {}, {} } },
-        std::shared_ptr<mir::input::InputChannel>(),
-        std::shared_ptr<mir::input::InputSender>(),
         std::shared_ptr<mg::CursorImage>(),
         report);
         stack.add_surface(surface, default_params.input_mode);
@@ -803,8 +746,6 @@ struct MockConfigureSurface : public ms::BasicSurface
             {{},{}},
             mir_pointer_unconfined,
             std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
-            {},
-            {},
             {},
             mir::report::null_scene_report())
     {
@@ -1046,7 +987,7 @@ TEST_F(SurfaceStack, scene_observers_notified_of_generic_scene_change)
     stack.emit_scene_changed();
 }
 
-TEST_F(SurfaceStack, only_enumerates_exposed_input_surfaces)
+TEST_F(SurfaceStack, for_each_enumerates_all_input_surfaces)
 {
     using namespace ::testing;
 
@@ -1064,7 +1005,7 @@ TEST_F(SurfaceStack, only_enumerates_exposed_input_surfaces)
     };
 
     stack.for_each(count_exposed_surfaces);
-    EXPECT_THAT(num_exposed_surfaces, Eq(1));
+    EXPECT_THAT(num_exposed_surfaces, Eq(3));
 }
 
 using namespace ::testing;

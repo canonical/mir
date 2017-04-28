@@ -34,6 +34,10 @@ public:
     virtual ~HostStream() = default;
 
     virtual MirBufferStream* handle() const = 0;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    virtual MirRenderSurface* rs() const = 0;
+#pragma GCC diagnostic pop
     virtual EGLNativeWindowType egl_native_window() const = 0;
 protected:
     HostStream() = default;

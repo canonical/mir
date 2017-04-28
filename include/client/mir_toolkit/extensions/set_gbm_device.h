@@ -30,12 +30,13 @@ struct gbm_device;
 //Set the gbm device used by the client
 //  \param [in] device    The gbm_device.
 //  \param [in] context   The context to set the gbm device.
-typedef void (*set_gbm_dev)(struct gbm_device*, void* const context);
-struct MirExtensionSetGbmDeviceV1
+typedef void (*MirSetGbmDevice)(struct gbm_device*, void* const context);
+typedef struct MirExtensionSetGbmDeviceV1
 {
-    set_gbm_dev set_gbm_device;
+    MirSetGbmDevice set_gbm_device;
     void* const context;
-};
+} MirExtensionSetGbmDeviceV1;
+
 //legacy compatibility
 typedef MirExtensionSetGbmDeviceV1 MirExtensionSetGbmDevice;
 

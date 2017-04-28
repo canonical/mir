@@ -63,6 +63,7 @@ public:
     void clear_all_keymaps() override;
     void map_event(MirEvent& event) override;
     MirInputEventModifiers modifiers() const override;
+    MirInputEventModifiers device_modifiers(MirInputDeviceId di) const override;
 
 protected:
     XKBMapper(XKBMapper const&) = delete;
@@ -79,7 +80,8 @@ private:
     {
         ComposeState(XKBComposeTablePtr const& table);
         void update_and_map(MirEvent& event);
-        xkb_keysym_t update_state(xkb_keysym_t mapped_key, MirKeyboardAction action);
+        xkb_keysym_t update_state(xkb_keysym_t mapped_key, MirKeyboardAction action, std::string& text);
+    private:
         XKBComposeStatePtr state;
         std::unordered_set<xkb_keysym_t> consumed_keys;
         mir::optional_value<std::tuple<xkb_keysym_t,xkb_keysym_t>> last_composed_key;
@@ -89,8 +91,14 @@ private:
     {
         explicit XkbMappingState(std::shared_ptr<xkb_keymap> const& keymap);
         void set_key_state(std::vector<uint32_t> const& key_state);
+
         bool update_and_map(MirEvent& event, ComposeState* compose_state);
-        xkb_keysym_t update_state(uint32_t scan_code, MirKeyboardAction direction, ComposeState* compose_state);
+        xkb_keysym_t update_state(uint32_t scan_code, MirKeyboardAction direction, ComposeState* compose_state, std::string& text);
+        MirInputEventModifiers modifiers() const;
+    private:
+        void press_modifier(MirInputEventModifiers mod);
+        void release_modifier(MirInputEventModifiers mod);
+
         std::shared_ptr<xkb_keymap> const keymap;
         XKBStatePtr state;
         MirInputEventModifiers modifier_state{0};

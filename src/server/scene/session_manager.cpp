@@ -18,7 +18,7 @@
 
 #include "session_manager.h"
 #include "application_session.h"
-#include "session_container.h"
+#include "mir/scene/session_container.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/session.h"
 #include "mir/scene/session_listener.h"
@@ -130,8 +130,6 @@ void ms::SessionManager::unset_focus()
 void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
 {
     auto scene_session = std::dynamic_pointer_cast<Session>(session);
-
-    scene_session->drop_outstanding_requests();
 
     anr_detector->unregister_session(session.get());
 

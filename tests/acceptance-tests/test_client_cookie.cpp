@@ -21,7 +21,7 @@
 #include "mir_test_framework/fake_input_device.h"
 
 #include "mir_test_framework/stub_server_platform_factory.h"
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/spin_wait.h"
 #include "mir/test/signal.h"
 #include "mir/cookie/authority.h"
@@ -59,14 +59,18 @@ public:
 
         // Need fullscreen for the cursor events
         auto const spec = mir_create_normal_window_spec(connection, 100, 100);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+#pragma GCC diagnostic pop
         mir_window_spec_set_fullscreen_on_output(spec, 1);
         mir_window_spec_set_event_handler(spec, &cookie_capturing_callback, this);
         window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
-
+#pragma GCC diagnostic pop
         ready_to_accept_events.wait_for(max_wait);
         if (!ready_to_accept_events.raised())
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));

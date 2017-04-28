@@ -40,6 +40,7 @@ struct MirKeyboardConfig
     MirKeyboardConfig& operator=(MirKeyboardConfig const& other);
 
     mir::input::Keymap const& device_keymap() const;
+    mir::input::Keymap& device_keymap();
     void device_keymap(mir::input::Keymap const& );
 
     bool operator==(MirKeyboardConfig const& rhs) const;

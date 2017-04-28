@@ -40,7 +40,7 @@
  * technically EGL-platform dependent, which is awkward because we support
  * multiple EGL platforms.
  *
- * On both the Mesa and the Android EGL platforms EGLNativeWindow is a
+ * On the Mesa platform EGLNativeWindow is a
  * pointer or a uintptr_t.
  *
  * In practise EGLNativeWindowType is always a typedef to a pointer-ish, but
@@ -77,7 +77,11 @@ struct MirBufferStream
 public:
     virtual ~MirBufferStream() = default;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     virtual MirWindowParameters get_parameters() const = 0;
+#pragma GCC diagnostic pop
+
     virtual std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() = 0;
     virtual uint32_t get_current_buffer_id() = 0;
     virtual EGLNativeWindowType egl_native_window() = 0;
@@ -102,7 +106,10 @@ public:
     virtual MirWaitHandle* set_scale(float) = 0;
     virtual char const* get_error_message() const = 0;
     virtual MirConnection* connection() const = 0;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     virtual MirRenderSurface* render_surface() const = 0;
+#pragma GCC diagnostic pop
 
     virtual void buffer_available(mir::protobuf::Buffer const& buffer) = 0;
     virtual void buffer_unavailable() = 0;

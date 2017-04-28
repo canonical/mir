@@ -25,6 +25,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <fcntl.h>
 
 namespace mtd = mir::test::doubles;
 namespace mgk = mir::graphics::kms;
@@ -35,30 +36,37 @@ TEST(KMSConnectorHelper, finds_compatible_crtc_for_connectors)
 {
     using namespace testing;
     NiceMock<mtd::MockDRM> drm;
-
-    auto& resources = drm.fake_drm;
+    char const* const drm_device = "/dev/dri/card0";
 
     std::array<uint32_t, 3> const crtc_ids = {{21, 25, 30}};
     std::array<uint32_t, 3> const encoder_ids = {{3, 5, 7}};
     std::array<uint32_t, 3> const connector_id = {{9, 10, 11}};
 
-    resources.reset();
+    drm.reset(drm_device);
     // Add a bunch of CRTCs
     for (auto id : crtc_ids)
     {
-        resources.add_crtc(id, drmModeModeInfo());
+        drm.add_crtc(drm_device, id, drmModeModeInfo());
     }
     // Add an encoder that can only drive any CRTC...
-    resources.add_encoder(encoder_ids[0], 0, 1 << 0 | 1 << 1 | 1 << 2);
+    drm.add_encoder(drm_device, encoder_ids[0], 0, 1 << 0 | 1 << 1 | 1 << 2);
     // ...and one that can only drive the third...
-    resources.add_encoder(encoder_ids[1], 0, 1 << 2);
+    drm.add_encoder(drm_device, encoder_ids[1], 0, 1 << 2);
     // ...and one that can only drive the second two...
-    resources.add_encoder(encoder_ids[2], 0, 1 << 1 | 1 << 2);
+    drm.add_encoder(drm_device, encoder_ids[2], 0, 1 << 1 | 1 << 2);
 
-    std::vector<drmModeModeInfo> modes{resources.create_mode(1200, 1600, 138500, 1400, 1800, mtd::FakeDRMResources::ModePreference::PreferredMode)};
+    std::vector<drmModeModeInfo> modes{
+        mtd::FakeDRMResources::create_mode(
+            1200,
+            1600,
+            138500,
+            1400,
+            1800,
+            mtd::FakeDRMResources::ModePreference::PreferredMode)};
     // Finally, add a connector that can only be driven by any encoder...
     std::vector<uint32_t> any_encoder{encoder_ids.begin(), encoder_ids.end()};
-    resources.add_connector(
+    drm.add_connector(
+        drm_device,
         connector_id[0],
         DRM_MODE_CONNECTOR_VGA,
         DRM_MODE_CONNECTED,
@@ -69,7 +77,8 @@ TEST(KMSConnectorHelper, finds_compatible_crtc_for_connectors)
 
     // ...then one that can only be driven by the third...
     std::vector<uint32_t> third_encoder{encoder_ids[2]};
-    resources.add_connector(
+    drm.add_connector(
+        drm_device,
         connector_id[1],
         DRM_MODE_CONNECTOR_VGA,
         DRM_MODE_CONNECTED,
@@ -80,7 +89,8 @@ TEST(KMSConnectorHelper, finds_compatible_crtc_for_connectors)
 
     // ...and finally one that can only be driven by the second...
     std::vector<uint32_t> second_encoder{encoder_ids[1]};
-    resources.add_connector(
+    drm.add_connector(
+        drm_device,
         connector_id[2],
         DRM_MODE_CONNECTOR_VGA,
         DRM_MODE_CONNECTED,
@@ -89,21 +99,23 @@ TEST(KMSConnectorHelper, finds_compatible_crtc_for_connectors)
         second_encoder,
         mir::geometry::Size{300, 200});
 
-    resources.prepare();
+    drm.prepare(drm_device);
+
+    auto const drm_fd = open(drm_device, 0, 0);
 
     auto crtc = mgk::find_crtc_for_connector(
-        resources.fd(),
-        mgk::get_connector(resources.fd(), connector_id[0]));
+        drm_fd,
+        mgk::get_connector(drm_fd, connector_id[0]));
     EXPECT_THAT(crtc->crtc_id, AnyOf(crtc_ids[0], crtc_ids[1], crtc_ids[2]));
 
     crtc = mgk::find_crtc_for_connector(
-        resources.fd(),
-        mgk::get_connector(resources.fd(), connector_id[1]));
+        drm_fd,
+        mgk::get_connector(drm_fd, connector_id[1]));
     EXPECT_THAT(crtc->crtc_id, AnyOf(crtc_ids[1], crtc_ids[2]));
 
     crtc = mgk::find_crtc_for_connector(
-        resources.fd(),
-        mgk::get_connector(resources.fd(), connector_id[2]));
+        drm_fd,
+        mgk::get_connector(drm_fd, connector_id[2]));
     EXPECT_THAT(crtc->crtc_id, Eq(crtc_ids[2]));
 }
 
@@ -111,30 +123,38 @@ TEST(KMSConnectorHelper, ignores_currently_used_encoders)
 {
     using namespace testing;
     NiceMock<mtd::MockDRM> drm;
-
-    auto& resources = drm.fake_drm;
+    char const* const drm_device = "/dev/dri/card0";
+    int const drm_fd = open(drm_device, 0, 0);
 
     std::array<uint32_t, 2> const crtc_ids = {{21, 25}};
     std::array<uint32_t, 2> const encoder_ids = {{3, 5}};
     std::array<uint32_t, 2> const connector_id = {{9, 10}};
 
-    resources.reset();
-    auto boring_mode = resources.create_mode(1200, 1600, 138500, 1400, 1800, mtd::FakeDRMResources::ModePreference::PreferredMode);
+    drm.reset(drm_device);
+    auto boring_mode =
+        mtd::FakeDRMResources::create_mode(
+            1200,
+            1600,
+            138500,
+            1400,
+            1800,
+            mtd::FakeDRMResources::ModePreference::PreferredMode);
     // Add an active CRTC...
-    resources.add_crtc(crtc_ids[0], boring_mode);
+    drm.add_crtc(drm_device, crtc_ids[0], boring_mode);
     // ...and an inactive one.
-    resources.add_crtc(crtc_ids[1], drmModeModeInfo());
+    drm.add_crtc(drm_device, crtc_ids[1], drmModeModeInfo());
 
     // Add an encoder hooked up to the active CRTC
-    resources.add_encoder(encoder_ids[0], crtc_ids[0], 1 << 0 | 1 << 1);
+    drm.add_encoder(drm_device, encoder_ids[0], crtc_ids[0], 1 << 0 | 1 << 1);
     // ...and one not connected to anything
-    resources.add_encoder(encoder_ids[1], 0, 1 << 0 | 1 << 1);
+    drm.add_encoder(drm_device, encoder_ids[1], 0, 1 << 0 | 1 << 1);
 
     std::vector<drmModeModeInfo> modes{boring_mode};
     std::vector<uint32_t> any_encoder{encoder_ids.begin(), encoder_ids.end()};
 
     // Finally, a connector hooked up to a CRTC-encoder
-    resources.add_connector(
+    drm.add_connector(
+        drm_device,
         connector_id[0],
         DRM_MODE_CONNECTOR_VGA,
         DRM_MODE_CONNECTED,
@@ -144,7 +164,8 @@ TEST(KMSConnectorHelper, ignores_currently_used_encoders)
         mir::geometry::Size{300, 200});
 
     // ... and one not hooked up to anything
-    resources.add_connector(
+    drm.add_connector(
+        drm_device,
         connector_id[1],
         DRM_MODE_CONNECTOR_VGA,
         DRM_MODE_CONNECTED,
@@ -153,11 +174,11 @@ TEST(KMSConnectorHelper, ignores_currently_used_encoders)
         any_encoder,
         mir::geometry::Size{300, 200});
 
-    resources.prepare();
+    drm.prepare(drm_device);
 
     auto crtc = mgk::find_crtc_for_connector(
-        resources.fd(),
-        mgk::get_connector(resources.fd(), connector_id[1]));
+        drm_fd,
+        mgk::get_connector(drm_fd, connector_id[1]));
     EXPECT_THAT(crtc->crtc_id, Eq(crtc_ids[1]));
 }
 
@@ -165,30 +186,39 @@ TEST(KMSConnectorHelper, returns_current_crtc_if_it_exists)
 {
     using namespace testing;
     NiceMock<mtd::MockDRM> drm;
+    char const* const drm_device = "/dev/dri/card0";
+    int const drm_fd = open(drm_device, 0, 0);
 
-    auto& resources = drm.fake_drm;
 
     std::array<uint32_t, 2> const crtc_ids = {{21, 25}};
     std::array<uint32_t, 2> const encoder_ids = {{3, 5}};
     std::array<uint32_t, 2> const connector_id = {{9, 10}};
 
-    resources.reset();
-    auto boring_mode = resources.create_mode(1200, 1600, 138500, 1400, 1800, mtd::FakeDRMResources::ModePreference::PreferredMode);
+    drm.reset(drm_device);
+    auto boring_mode =
+        mtd::FakeDRMResources::create_mode(
+            1200,
+            1600,
+            138500,
+            1400,
+            1800,
+            mtd::FakeDRMResources::ModePreference::PreferredMode);
     // Add an active CRTC...
-    resources.add_crtc(crtc_ids[0], boring_mode);
+    drm.add_crtc(drm_device, crtc_ids[0], boring_mode);
     // ...and an inactive one.
-    resources.add_crtc(crtc_ids[1], drmModeModeInfo());
+    drm.add_crtc(drm_device, crtc_ids[1], drmModeModeInfo());
 
     // Add an encoder hooked up to the active CRTC
-    resources.add_encoder(encoder_ids[0], crtc_ids[0], 1 << 0 | 1 << 1);
+    drm.add_encoder(drm_device, encoder_ids[0], crtc_ids[0], 1 << 0 | 1 << 1);
     // ...and one not connected to anything
-    resources.add_encoder(encoder_ids[1], 0, 1 << 0 | 1 << 1);
+    drm.add_encoder(drm_device, encoder_ids[1], 0, 1 << 0 | 1 << 1);
 
     std::vector<drmModeModeInfo> modes{boring_mode};
     std::vector<uint32_t> any_encoder{encoder_ids.begin(), encoder_ids.end()};
 
     // Finally, a connector hooked up to a CRTC-encoder
-    resources.add_connector(
+    drm.add_connector(
+        drm_device,
         connector_id[0],
         DRM_MODE_CONNECTOR_VGA,
         DRM_MODE_CONNECTED,
@@ -198,7 +228,8 @@ TEST(KMSConnectorHelper, returns_current_crtc_if_it_exists)
         mir::geometry::Size{300, 200});
 
     // ... and one not hooked up to anything
-    resources.add_connector(
+    drm.add_connector(
+        drm_device,
         connector_id[1],
         DRM_MODE_CONNECTOR_VGA,
         DRM_MODE_CONNECTED,
@@ -207,10 +238,10 @@ TEST(KMSConnectorHelper, returns_current_crtc_if_it_exists)
         any_encoder,
         mir::geometry::Size{300, 200});
 
-    resources.prepare();
+    drm.prepare(drm_device);
 
     auto crtc = mgk::find_crtc_for_connector(
-        resources.fd(),
-        mgk::get_connector(resources.fd(), connector_id[0]));
+        drm_fd,
+        mgk::get_connector(drm_fd, connector_id[0]));
     EXPECT_THAT(crtc->crtc_id, Eq(crtc_ids[0]));
 }

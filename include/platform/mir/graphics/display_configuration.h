@@ -26,6 +26,8 @@
 #include "mir/graphics/gamma_curves.h"
 #include "mir_toolkit/common.h"
 
+#include <glm/glm.hpp>
+
 #include <functional>
 #include <vector>
 #include <memory>
@@ -134,6 +136,16 @@ struct DisplayConfigurationOutput
         current mode and orientation (rotation) */
     geometry::Rectangle extents() const;
     bool valid() const;
+
+    /**
+     * The additional transformation (if any) that this output must undergo
+     * to appear correctly on screen, including rotation (orientation),
+     * inversion and skew.
+     *   Note that scaling and translation are not part of this transformation
+     * matrix because those are already built in to the extents() rectangle
+     * for the renderer to use in compositing.
+     */
+    glm::mat2 transformation() const;
 };
 
 /**

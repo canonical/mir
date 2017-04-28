@@ -305,6 +305,10 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::stop_prompt_session, invocation);
         }
+        else if ("request_operation" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::request_operation, invocation);
+        }
         else if ("disconnect" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::disconnect, invocation);
@@ -317,10 +321,6 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("configure_buffer_stream" == invocation.method_name())
         {
             invoke(this, display_server.get(), &DisplayServer::configure_buffer_stream, invocation);
-        }
-        else if ("raise_surface" == invocation.method_name())
-        {
-            invoke(this, display_server.get(), &DisplayServer::raise_surface, invocation);
         }
         else if ("translate_surface_to_screen" == invocation.method_name())
         {
@@ -355,6 +355,14 @@ bool mfd::ProtobufMessageProcessor::dispatch(
         else if ("cancel_base_display_configuration_preview" == invocation.method_name())
         {
             invoke(this, display_server.get(), &protobuf::DisplayServer::cancel_base_display_configuration_preview, invocation);
+        }
+        else if ("apply_input_configuration" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::apply_input_configuration, invocation);
+        }
+        else if ("set_base_input_configuration" == invocation.method_name())
+        {
+            invoke(this, display_server.get(), &protobuf::DisplayServer::set_base_input_configuration, invocation);
         }
         else
         {

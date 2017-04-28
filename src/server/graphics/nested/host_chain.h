@@ -19,8 +19,6 @@
 #ifndef MIR_GRAPHICS_NESTED_HOST_CHAIN_H_
 #define MIR_GRAPHICS_NESTED_HOST_CHAIN_H_
 
-#include "mir_toolkit/client_types_nbs.h"
-
 namespace mir
 {
 namespace graphics
@@ -41,6 +39,10 @@ public:
     virtual void submit_buffer(NativeBuffer&) = 0;
     virtual void set_submission_mode(SubmissionMode mode) = 0;
     virtual MirPresentationChain* handle() = 0;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    virtual MirRenderSurface* rs() const = 0;
+#pragma GCC diagnostic pop
 protected:
     HostChain() = default;
     HostChain(HostChain const&) = delete;

@@ -22,7 +22,9 @@
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/platform.h"
 #include "display_helpers.h"
+#include "drm_native_platform.h"
 #include "mir/geometry/size.h"
+#include "mir/renderer/gl/egl_platform.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -34,7 +36,9 @@ namespace graphics
 namespace X
 {
 
-class Platform : public graphics::Platform
+class Platform : public graphics::Platform,
+                 public graphics::NativeRenderingPlatform,
+                 public mir::renderer::gl::EGLPlatform
 {
 public:
     explicit Platform(std::shared_ptr<::Display> const& conn,
@@ -48,9 +52,13 @@ public:
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
+    std::vector<ExtensionDescription> extensions() const override;
+    NativeDisplayPlatform* native_display_platform() override;
 
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
+    NativeRenderingPlatform* native_rendering_platform() override;
+    EGLNativeDisplayType egl_native_display() const override;
 private:
     std::shared_ptr<::Display> const x11_connection;
     std::shared_ptr<mir::udev::Context> udev;
@@ -58,6 +66,7 @@ private:
     std::shared_ptr<DisplayReport> const report;
     mesa::helpers::GBMHelper gbm;
     mir::geometry::Size const size;
+    std::unique_ptr<mesa::DRMNativePlatform> native_platform;
 };
 
 }

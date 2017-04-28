@@ -46,6 +46,8 @@ public:
     void renamed(char const* name) override;
     void cursor_image_removed() override;
     void placed_relative(geometry::Rectangle const& placement) override;
+    void input_consumed(MirEvent const* event) override;
+    void start_drag_and_drop(std::vector<uint8_t> const& handle) override;
 
 protected:
     NullSurfaceObserver(NullSurfaceObserver const&) = delete;

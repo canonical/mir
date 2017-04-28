@@ -147,6 +147,44 @@ TEST(NestedDisplayConfiguration, non_trivial_configuration_can_be_configured)
         });
 }
 
+TEST(NestedDisplayConfiguration, includes_host_edid)
+{
+    auto host_conf = mt::build_trivial_configuration();
+    auto const output = mir_display_config_get_output(host_conf.get(), 0);
+    auto edid_start = mir_output_get_edid(output);
+    auto edid_size = mir_output_get_edid_size(output);
+
+    ASSERT_NE(nullptr, edid_start);
+    ASSERT_NE(0, edid_size);
+
+    std::vector<uint8_t> host_edid(edid_start, edid_start+edid_size);
+
+    mgn::NestedDisplayConfiguration nested_conf(host_conf);
+    int matches = 0;
+    nested_conf.for_each_output([&](mg::DisplayConfigurationOutput const& output)
+        {
+            ASSERT_EQ(host_edid, output.edid);
+            ++matches;
+        });
+    EXPECT_NE(0, matches);
+}
+
+TEST(NestedDisplayConfiguration, includes_host_subpixel_arrangement)
+{
+    auto host_conf = mt::build_trivial_configuration();
+    auto const output = mir_display_config_get_output(host_conf.get(), 0);
+    auto host_subpixel = mir_output_get_subpixel_arrangement(output);
+
+    mgn::NestedDisplayConfiguration nested_conf(host_conf);
+    int matches = 0;
+    nested_conf.for_each_output([&](mg::DisplayConfigurationOutput const& output)
+        {
+            ASSERT_EQ(host_subpixel, output.subpixel_arrangement);
+            ++matches;
+        });
+    EXPECT_NE(0, matches);
+}
+
 TEST(NestedDisplayConfiguration, clone_matches_original_configuration)
 {
     mgn::NestedDisplayConfiguration config(mt::build_non_trivial_configuration());

@@ -1055,6 +1055,8 @@ MIR_PROTOBUF_0.26 {
     mir::protobuf::TouchpadConfiguration::TouchpadConfiguration*;
     mir::protobuf::TouchpadConfiguration::?TouchpadConfiguration*;
     mir::protobuf::TouchpadConfiguration::default_instance_;
+    mir::protobuf::InputConfigurationRequest::InputConfigurationRequest*;
+    mir::protobuf::InputConfigurationRequest::?InputConfigurationRequest*;
     mir::protobuf::PointerConfiguration::?PointerConfiguration*;
     mir::protobuf::InputDeviceInfo::CopyFrom*;
     mir::protobuf::InputDevices::Clear*;
@@ -1110,3 +1112,55 @@ MIR_PROTOBUF_0.26 {
     vtable?for?mir::protobuf::PromptSession;
   };
 } MIR_PROTOBUF_0.22;
+
+MIR_PROTOBUF_0.27 {
+ global:
+  extern "C++" {
+    mir::protobuf::RequestOperation_IsValid*;
+    mir::protobuf::RequestWithAuthority::ByteSize*;
+    mir::protobuf::RequestWithAuthority::CheckTypeAndMergeFrom*;
+    mir::protobuf::RequestWithAuthority::Clear*;
+    mir::protobuf::RequestWithAuthority::CopyFrom*;
+    mir::protobuf::RequestWithAuthority::default_instance*;
+    mir::protobuf::RequestWithAuthority::DiscardUnknownFields*;
+    mir::protobuf::RequestWithAuthority::GetTypeName*;
+    mir::protobuf::RequestWithAuthority::IsInitialized*;
+    mir::protobuf::RequestWithAuthority::kCookieFieldNumber*;
+    mir::protobuf::RequestWithAuthority::kSurfaceIdFieldNumber*;
+    mir::protobuf::RequestWithAuthority::MergeFrom*;
+    mir::protobuf::RequestWithAuthority::MergePartialFromCodedStream*;
+    mir::protobuf::RequestWithAuthority::New*;
+    mir::protobuf::RequestWithAuthority::?RequestWithAuthority*;
+    mir::protobuf::RequestWithAuthority::RequestWithAuthority*;
+    mir::protobuf::RequestWithAuthority::SerializeWithCachedSizes*;
+    mir::protobuf::RequestWithAuthority::Swap*;
+    non-virtual?thunk?to?mir::protobuf::RequestWithAuthority::?RequestWithAuthority*;
+    typeinfo?for?mir::protobuf::RequestWithAuthority;
+    vtable?for?mir::protobuf::RequestWithAuthority;
+  };
+} MIR_PROTOBUF_0.26;
+
+MIR_PROTOBUF_0.28 {
+ global:
+  extern "C++" {
+    typeinfo?for?mir::protobuf::Extension;
+    vtable?for?mir::protobuf::Extension;
+    mir::protobuf::Extension::MergePartialFromCodedStream*;
+    mir::protobuf::Extension::Extension*;
+    mir::protobuf::Extension::ByteSize*;
+    mir::protobuf::Extension::GetTypeName*;
+    mir::protobuf::Extension::?Extension*;
+    mir::protobuf::Extension::New*;
+    mir::protobuf::Extension::default_instance*;
+    mir::protobuf::Extension::SerializeWithCachedSizes*;
+    mir::protobuf::Extension::Clear*;
+    mir::protobuf::Extension::IsInitialized*;
+    mir::protobuf::Extension::CopyFrom*;
+    mir::protobuf::Extension::MergeFrom*;
+    mir::protobuf::Extension::kVersionFieldNumber*;
+    mir::protobuf::Extension::CheckTypeAndMergeFrom*;
+    mir::protobuf::Extension::Swap*;
+    mir::protobuf::Extension::kNameFieldNumber*;
+    mir::protobuf::Extension::DiscardUnknownFields*;
+  };
+} MIR_PROTOBUF_0.27;

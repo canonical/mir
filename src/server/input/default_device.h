@@ -25,10 +25,13 @@
 #include "mir/input/input_device_info.h"
 #include "mir/input/pointer_settings.h"
 #include "mir/input/touchpad_settings.h"
+#include "mir/input/touchscreen_settings.h"
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/optional_value.h"
 
 #include <memory>
+#include <functional>
+#include <mutex>
 
 namespace mir
 {
@@ -41,12 +44,25 @@ namespace input
 
 class KeyMapper;
 class InputDevice;
+class DefaultInputDeviceHub;
 
 class DefaultDevice : public Device
 {
 public:
-    DefaultDevice(MirInputDeviceId id, std::shared_ptr<dispatch::ActionQueue> const& actions,
-                  InputDevice& device, std::shared_ptr<KeyMapper> const& key_mapper);
+    DefaultDevice(MirInputDeviceId id,
+                  std::shared_ptr<dispatch::ActionQueue> const& actions,
+                  InputDevice& device,
+                  std::shared_ptr<KeyMapper> const& key_mapper);
+    DefaultDevice(MirInputDeviceId id,
+                  std::shared_ptr<dispatch::ActionQueue> const& actions,
+                  InputDevice& device,
+                  std::shared_ptr<KeyMapper> const& key_mapper,
+                  std::function<void(Device*)> const& change_callback);
+    DefaultDevice(MirInputDevice const& config,
+                  std::shared_ptr<dispatch::ActionQueue> const& actions,
+                  InputDevice& device,
+                  std::shared_ptr<KeyMapper> const& key_mapper,
+                  std::function<void(Device*)> const& change_callback);
     MirInputDeviceId id() const override;
     DeviceCapabilities capabilities() const override;
     std::string name() const override;
@@ -58,15 +74,29 @@ public:
     void apply_touchpad_configuration(MirTouchpadConfig const&) override;
     optional_value<MirKeyboardConfig> keyboard_configuration() const override;
     void apply_keyboard_configuration(MirKeyboardConfig const&) override;
+    optional_value<MirTouchscreenConfig> touchscreen_configuration() const override;
+    void apply_touchscreen_configuration(MirTouchscreenConfig const&) override;
+
+    MirInputDevice config() const;
+    void disable_queue();
 private:
+    void set_pointer_configuration(MirPointerConfig const&);
+    void set_touchpad_configuration(MirTouchpadConfig const&);
+    void set_keyboard_configuration(MirKeyboardConfig const&);
+    void set_touchscreen_configuration(MirTouchscreenConfig const&);
+
+    void wake_hub_for_device_change();
     MirInputDeviceId const device_id;
     InputDevice& device;
     InputDeviceInfo const info;
     optional_value<PointerSettings> pointer;
     optional_value<TouchpadSettings> touchpad;
     optional_value<MirKeyboardConfig> keyboard;
-    std::shared_ptr<dispatch::ActionQueue> const actions;
+    optional_value<TouchscreenSettings> touchscreen;
+    std::shared_ptr<dispatch::ActionQueue> actions;
     std::shared_ptr<KeyMapper> const key_mapper;
+    std::function<void(Device*)> device_changed_callback;
+    std::mutex mutable config_mutex;
 };
 
 }

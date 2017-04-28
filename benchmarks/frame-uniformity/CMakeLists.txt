@@ -10,18 +10,10 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${PROJECT_SOURCE_DIR}/src/include/common
   ${PROJECT_SOURCE_DIR}
-  ${MIR_ANDROID_INCLUDE_DIRECTORIES}
-  ${MIR_3RD_PARTY_INCLUDE_DIRECTORIES}
 
   # needed for fake_event_hub_server_configuration.h (which relies on private APIs)
   ${PROJECT_SOURCE_DIR}/tests/include/
 )
-
-# We use mir-test-{doubles,framework}, which builds differently based on
-# the primary test platform.
-if (MIR_TEST_PLATFORM STREQUAL "android")
-    add_definitions(-DANDROID)
-endif()
 
 mir_add_wrapped_executable(frame_uniformity_test_client NOINSTALL
   touch_measuring_client.cpp
@@ -51,5 +43,3 @@ target_link_libraries(frame_uniformity_test_client
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
-
-uses_android_input(frame_uniformity_test_client)

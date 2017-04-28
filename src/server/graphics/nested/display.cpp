@@ -363,10 +363,10 @@ void mgn::Display::resume()
     // No need to do anything
 }
 
-auto mgn::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& /*initial_image*/) -> std::shared_ptr<mg::Cursor>
+auto mgn::Display::create_hardware_cursor() -> std::shared_ptr<mg::Cursor>
 {
     BOOST_THROW_EXCEPTION(std::logic_error("Initialization loop: we already need the Cursor when creating the Display"));
-    // So we can't do this: return std::make_shared<Cursor>(connection, initial_image);
+    // So we can't do this: return std::make_shared<Cursor>(connection);
 }
 
 std::unique_ptr<mg::VirtualOutput> mgn::Display::create_virtual_output(int /*width*/, int /*height*/)
@@ -399,7 +399,7 @@ bool mgn::Display::apply_if_configuration_preserves_display_buffers(
                 if (!std::any_of(
                     new_outputs.begin(),
                     new_outputs.end(),
-                [id = existing_output.first](auto const&output) { return output.id == id; }))
+                [&existing_output](auto const& output) { return output.id == existing_output.first; }))
                 {
                     // At least one of the existing outputs isn't used in the ne
                     return false;

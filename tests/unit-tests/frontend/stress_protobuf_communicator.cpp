@@ -59,13 +59,13 @@ struct StubProtobufClient
     StubProtobufClient(std::string socket_file, int timeout_ms);
 
     std::shared_ptr<mir::client::rpc::RpcReport> rpc_report;
+    std::shared_ptr<mir::client::SurfaceMap> surface_map;
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     mir::client::rpc::DisplayServer display_server;
     mir::protobuf::ConnectParameters connect_parameters;
     mir::protobuf::SurfaceParameters surface_parameters;
     mir::protobuf::Surface surface;
     mir::protobuf::Void ignored;
-    mir::protobuf::Connection connection;
 
     void create_surface_done();
     void submit_buffer_done();
@@ -163,12 +163,13 @@ StubProtobufClient::StubProtobufClient(
     std::string socket_file,
     int timeout_ms) :
     rpc_report(std::make_shared<mir::client::rpc::NullRpcReport>()),
+    surface_map(std::make_shared<mir::client::ConnectionSurfaceMap>()),
     channel(mir::client::rpc::make_rpc_channel(
         socket_file,
-        std::make_shared<mir::client::ConnectionSurfaceMap>(),
+        surface_map,
         std::make_shared<mir::client::BufferFactory>(),
         std::make_shared<mir::client::DisplayConfiguration>(),
-        std::make_shared<mir::input::InputDevices>(),
+        std::make_shared<mir::input::InputDevices>(surface_map),
         rpc_report,
         std::make_shared<mir::client::LifecycleControl>(),
         std::make_shared<mir::client::PingHandler>(),

@@ -1,4 +1,4 @@
-MIR_SERVER_0.26 {
+MIR_SERVER_0.27 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -73,8 +73,6 @@ MIR_SERVER_0.26 {
     mir::input::EventFilter::?EventFilter*;
     mir::input::EventFilter::EventFilter*;
     mir::input::EventFilter::operator*;
-    mir::input::InputChannel::InputChannel*;
-    mir::input::InputChannel::operator*;
     mir::input::InputDeviceHub::?InputDeviceHub*;
     mir::input::InputDeviceHub::InputDeviceHub*;
     mir::input::InputDeviceHub::operator*;
@@ -121,6 +119,7 @@ MIR_SERVER_0.26 {
     mir::scene::NullSurfaceObserver::cursor_image_set_to*;
     mir::scene::NullSurfaceObserver::frame_posted*;
     mir::scene::NullSurfaceObserver::hidden_set_to*;
+    mir::scene::NullSurfaceObserver::input_consumed*;
     mir::scene::NullSurfaceObserver::keymap_changed*;
     mir::scene::NullSurfaceObserver::moved_to*;
     mir::scene::NullSurfaceObserver::?NullSurfaceObserver*;
@@ -131,6 +130,7 @@ MIR_SERVER_0.26 {
     mir::scene::NullSurfaceObserver::reception_mode_set_to*;
     mir::scene::NullSurfaceObserver::renamed*;
     mir::scene::NullSurfaceObserver::resized_to*;
+    mir::scene::NullSurfaceObserver::start_drag_and_drop*;
     mir::scene::NullSurfaceObserver::transformation_set_to*;
     mir::scene::Observer::?Observer*;
     mir::scene::Observer::Observer*;
@@ -252,6 +252,7 @@ MIR_SERVER_0.26 {
     mir::shell::AbstractShell::AbstractShell*;
     mir::shell::AbstractShell::add_display*;
     mir::shell::AbstractShell::add_prompt_provider_for*;
+    mir::shell::AbstractShell::clear_drag_and_drop_handle*;
     mir::shell::AbstractShell::close_session*;
     mir::shell::AbstractShell::create_surface*;
     mir::shell::AbstractShell::destroy_surface*;
@@ -265,12 +266,56 @@ MIR_SERVER_0.26 {
     mir::shell::AbstractShell::raise*;
     mir::shell::AbstractShell::raise_surface*;
     mir::shell::AbstractShell::remove_display*;
+    mir::shell::AbstractShell::request_drag_and_drop*;
+    mir::shell::AbstractShell::request_move*;
+    mir::shell::AbstractShell::set_drag_and_drop_handle*;
     mir::shell::AbstractShell::set_focus_to*;
     mir::shell::AbstractShell::set_surface_attribute*;
     mir::shell::AbstractShell::start_prompt_session_for*;
     mir::shell::AbstractShell::stop_prompt_session*;
     mir::shell::AbstractShell::surface_at*;
     mir::shell::AbstractShell::update_focused_surface_confined_region*;
+    mir::shell::BasicWindowManager::active_display*;
+    mir::shell::BasicWindowManager::add_display*;
+    mir::shell::BasicWindowManager::add_session*;
+    mir::shell::BasicWindowManager::add_surface*;
+    mir::shell::BasicWindowManager::?BasicWindowManager*;
+    mir::shell::BasicWindowManager::BasicWindowManager*;
+    mir::shell::BasicWindowManager::clear_drag_and_drop_handle*;
+    mir::shell::BasicWindowManager::find_session*;
+    mir::shell::BasicWindowManager::focused_session*;
+    mir::shell::BasicWindowManager::focused_surface*;
+    mir::shell::BasicWindowManager::focus_next_session*;
+    mir::shell::BasicWindowManager::forget*;
+    mir::shell::BasicWindowManager::handle_keyboard_event*;
+    mir::shell::BasicWindowManager::handle_pointer_event*;
+    mir::shell::BasicWindowManager::handle_raise_surface*;
+    mir::shell::BasicWindowManager::handle_request_drag_and_drop*;
+    mir::shell::BasicWindowManager::handle_request_move*;
+    mir::shell::BasicWindowManager::handle_touch_event*;
+    mir::shell::BasicWindowManager::info_for*;
+    mir::shell::BasicWindowManager::modify_surface*;
+    mir::shell::BasicWindowManager::raise_tree*;
+    mir::shell::BasicWindowManager::remove_display*;
+    mir::shell::BasicWindowManager::remove_session*;
+    mir::shell::BasicWindowManager::remove_surface*;
+    mir::shell::BasicWindowManager::set_drag_and_drop_handle*;
+    mir::shell::BasicWindowManager::set_focus_to*;
+    mir::shell::BasicWindowManager::set_surface_attribute*;
+    mir::shell::BasicWindowManager::surface_at*;
+    mir::shell::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_delete_surface*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_displays_updated*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_keyboard_event*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_modify_surface*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_new_surface*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_place_new_surface*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_pointer_event*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_raise_surface*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;
+    mir::shell::CanonicalWindowManagerPolicy::handle_touch_event*;
     mir::shell::DisplayConfigurationController::?DisplayConfigurationController*;
     mir::shell::DisplayConfigurationController::DisplayConfigurationController*;
     mir::shell::DisplayConfigurationController::operator*;
@@ -295,6 +340,7 @@ MIR_SERVER_0.26 {
     mir::shell::ShellReport::ShellReport*;
     mir::shell::ShellWrapper::add_display*;
     mir::shell::ShellWrapper::add_prompt_provider_for*;
+    mir::shell::ShellWrapper::clear_drag_and_drop_handle*;
     mir::shell::ShellWrapper::close_session*;
     mir::shell::ShellWrapper::create_surface*;
     mir::shell::ShellWrapper::destroy_surface*;
@@ -308,12 +354,25 @@ MIR_SERVER_0.26 {
     mir::shell::ShellWrapper::raise*;
     mir::shell::ShellWrapper::raise_surface*;
     mir::shell::ShellWrapper::remove_display*;
+    mir::shell::ShellWrapper::request_drag_and_drop*;
+    mir::shell::ShellWrapper::request_move*;
+    mir::shell::ShellWrapper::set_drag_and_drop_handle*;
     mir::shell::ShellWrapper::set_focus_to*;
     mir::shell::ShellWrapper::set_surface_attribute*;
     mir::shell::ShellWrapper::ShellWrapper*;
     mir::shell::ShellWrapper::start_prompt_session_for*;
     mir::shell::ShellWrapper::stop_prompt_session*;
     mir::shell::ShellWrapper::surface_at*;
+    mir::shell::SurfaceInfo::can_be_active*;
+    mir::shell::SurfaceInfo::can_morph_to*;
+    mir::shell::SurfaceInfo::constrain_resize*;
+    mir::shell::SurfaceInfo::init_titlebar*;
+    mir::shell::SurfaceInfo::is_visible*;
+    mir::shell::SurfaceInfo::must_have_parent*;
+    mir::shell::SurfaceInfo::must_not_have_parent*;
+    mir::shell::SurfaceInfo::needs_titlebar*;
+    mir::shell::SurfaceInfo::paint_titlebar*;
+    mir::shell::SurfaceInfo::SurfaceInfo*;
     mir::shell::SurfaceReadyObserver::frame_posted*;
     mir::shell::SurfaceReadyObserver::?SurfaceReadyObserver*;
     mir::shell::SurfaceReadyObserver::SurfaceReadyObserver*;
@@ -332,6 +391,8 @@ MIR_SERVER_0.26 {
     mir::shell::SystemCompositorWindowManager::handle_keyboard_event*;
     mir::shell::SystemCompositorWindowManager::handle_pointer_event*;
     mir::shell::SystemCompositorWindowManager::handle_raise_surface*;
+    mir::shell::SystemCompositorWindowManager::handle_request_drag_and_drop*;
+    mir::shell::SystemCompositorWindowManager::handle_request_move*;
     mir::shell::SystemCompositorWindowManager::handle_touch_event*;
     mir::shell::SystemCompositorWindowManager::modify_surface*;
     mir::shell::SystemCompositorWindowManager::on_session_added*;
@@ -342,7 +403,13 @@ MIR_SERVER_0.26 {
     mir::shell::SystemCompositorWindowManager::remove_surface*;
     mir::shell::SystemCompositorWindowManager::set_surface_attribute*;
     mir::shell::SystemCompositorWindowManager::SystemCompositorWindowManager*;
+    mir::shell::WindowManagementPolicy::operator*;
+    mir::shell::WindowManagementPolicy::?WindowManagementPolicy*;
+    mir::shell::WindowManagementPolicy::WindowManagementPolicy*;
     mir::shell::WindowManager::operator*;
+    mir::shell::WindowManagerTools::operator*;
+    mir::shell::WindowManagerTools::?WindowManagerTools*;
+    mir::shell::WindowManagerTools::WindowManagerTools*;
     mir::shell::WindowManager::?WindowManager*;
     mir::shell::WindowManager::WindowManager*;
     mir::terminate_with_current_exception*;
@@ -398,6 +465,7 @@ MIR_SERVER_0.26 {
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::cursor_image_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::frame_posted*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::hidden_set_to*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::input_consumed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::keymap_changed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::moved_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::?NullSurfaceObserver*;
@@ -406,6 +474,7 @@ MIR_SERVER_0.26 {
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::reception_mode_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::renamed*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::resized_to*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::start_drag_and_drop*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::transformation_set_to*;
     non-virtual?thunk?to?mir::scene::Observer::?Observer*;
     non-virtual?thunk?to?mir::scene::PromptSessionListener::?PromptSessionListener*;
@@ -418,6 +487,7 @@ MIR_SERVER_0.26 {
     non-virtual?thunk?to?mir::ServerStatusListener::?ServerStatusListener*;
     non-virtual?thunk?to?mir::shell::AbstractShell::add_display*;
     non-virtual?thunk?to?mir::shell::AbstractShell::add_prompt_provider_for*;
+    non-virtual?thunk?to?mir::shell::AbstractShell::clear_drag_and_drop_handle*;
     non-virtual?thunk?to?mir::shell::AbstractShell::close_session*;
     non-virtual?thunk?to?mir::shell::AbstractShell::create_surface*;
     non-virtual?thunk?to?mir::shell::AbstractShell::destroy_surface*;
@@ -431,11 +501,52 @@ MIR_SERVER_0.26 {
     non-virtual?thunk?to?mir::shell::AbstractShell::raise*;
     non-virtual?thunk?to?mir::shell::AbstractShell::raise_surface*;
     non-virtual?thunk?to?mir::shell::AbstractShell::remove_display*;
+    non-virtual?thunk?to?mir::shell::AbstractShell::request_drag_and_drop*;
+    non-virtual?thunk?to?mir::shell::AbstractShell::request_move*;
+    non-virtual?thunk?to?mir::shell::AbstractShell::set_drag_and_drop_handle*;
     non-virtual?thunk?to?mir::shell::AbstractShell::set_focus_to*;
     non-virtual?thunk?to?mir::shell::AbstractShell::set_surface_attribute*;
     non-virtual?thunk?to?mir::shell::AbstractShell::start_prompt_session_for*;
     non-virtual?thunk?to?mir::shell::AbstractShell::stop_prompt_session*;
     non-virtual?thunk?to?mir::shell::AbstractShell::surface_at*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::active_display*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::add_display*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::add_session*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::add_surface*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::clear_drag_and_drop_handle*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::find_session*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::focused_session*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::focused_surface*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::focus_next_session*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::forget*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::handle_keyboard_event*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::handle_pointer_event*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::handle_raise_surface*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::handle_request_drag_and_drop*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::handle_request_move*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::handle_touch_event*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::info_for*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::modify_surface*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::raise_tree*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::remove_display*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::remove_session*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::remove_surface*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::set_drag_and_drop_handle*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::set_focus_to*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::set_surface_attribute*;
+    non-virtual?thunk?to?mir::shell::BasicWindowManager::surface_at*;
+    non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_delete_surface*;
+    non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_displays_updated*;
+    non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_keyboard_event*;
+    non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_modify_surface*;
+    non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_new_surface*;
+    non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_place_new_surface*;
+    non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_pointer_event*;
+    non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_raise_surface*;
+    non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
+    non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
+    non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;
+    non-virtual?thunk?to?mir::shell::CanonicalWindowManagerPolicy::handle_touch_event*;
     non-virtual?thunk?to?mir::shell::DisplayConfigurationController::?DisplayConfigurationController*;
     non-virtual?thunk?to?mir::shell::DisplayLayout::?DisplayLayout*;
     non-virtual?thunk?to?mir::shell::FocusController::?FocusController*;
@@ -445,6 +556,7 @@ MIR_SERVER_0.26 {
     non-virtual?thunk?to?mir::shell::ShellReport::?ShellReport*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::add_display*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::add_prompt_provider_for*;
+    non-virtual?thunk?to?mir::shell::ShellWrapper::clear_drag_and_drop_handle*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::close_session*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::create_surface*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::destroy_surface*;
@@ -458,6 +570,9 @@ MIR_SERVER_0.26 {
     non-virtual?thunk?to?mir::shell::ShellWrapper::raise*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::raise_surface*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::remove_display*;
+    non-virtual?thunk?to?mir::shell::ShellWrapper::request_drag_and_drop*;
+    non-virtual?thunk?to?mir::shell::ShellWrapper::request_move*;
+    non-virtual?thunk?to?mir::shell::ShellWrapper::set_drag_and_drop_handle*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::set_focus_to*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::set_surface_attribute*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::start_prompt_session_for*;
@@ -475,6 +590,8 @@ MIR_SERVER_0.26 {
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_keyboard_event*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_pointer_event*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_raise_surface*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_request_drag_and_drop*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_request_move*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_touch_event*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::modify_surface*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::on_session_added*;
@@ -484,6 +601,8 @@ MIR_SERVER_0.26 {
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::remove_session*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::remove_surface*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::set_surface_attribute*;
+    non-virtual?thunk?to?mir::shell::WindowManagementPolicy::?WindowManagementPolicy*;
+    non-virtual?thunk?to?mir::shell::WindowManagerTools::?WindowManagerTools*;
     non-virtual?thunk?to?mir::shell::WindowManager::?WindowManager*;
     non-virtual?thunk?to?mir::time::Alarm::?Alarm*;
     non-virtual?thunk?to?mir::time::AlarmFactory::?AlarmFactory*;
@@ -513,7 +632,6 @@ MIR_SERVER_0.26 {
     typeinfo?for?mir::input::CursorListener;
     typeinfo?for?mir::input::Device;
     typeinfo?for?mir::input::EventFilter;
-    typeinfo?for?mir::input::InputChannel;
     typeinfo?for?mir::input::InputDeviceHub;
     typeinfo?for?mir::input::InputDeviceObserver;
     typeinfo?for?mir::input::InputDispatcher;
@@ -549,6 +667,8 @@ MIR_SERVER_0.26 {
     typeinfo?for?mir::ServerActionQueue;
     typeinfo?for?mir::ServerStatusListener;
     typeinfo?for?mir::shell::AbstractShell;
+    typeinfo?for?mir::shell::BasicWindowManager;
+    typeinfo?for?mir::shell::CanonicalWindowManagerPolicy;
     typeinfo?for?mir::shell::DisplayConfigurationController;
     typeinfo?for?mir::shell::DisplayLayout;
     typeinfo?for?mir::shell::FocusController;
@@ -556,18 +676,22 @@ MIR_SERVER_0.26 {
     typeinfo?for?mir::shell::InputTargeter;
     typeinfo?for?mir::shell::PersistentSurfaceStore;
     typeinfo?for?mir::shell::PersistentSurfaceStore::Id;
+    typeinfo?for?mir::shell::SessionInfo;
     typeinfo?for?mir::shell::Shell;
     typeinfo?for?mir::shell::ShellReport;
     typeinfo?for?mir::shell::ShellWrapper;
     typeinfo?for?mir::shell::StreamCursor;
     typeinfo?for?mir::shell::StreamSpecification;
     typeinfo?for?mir::shell::SurfaceAspectRatio;
+    typeinfo?for?mir::shell::SurfaceInfo;
     typeinfo?for?mir::shell::SurfaceReadyObserver;
     typeinfo?for?mir::shell::SurfaceSpecification;
     typeinfo?for?mir::shell::SurfaceStack;
     typeinfo?for?mir::shell::SurfaceStackWrapper;
     typeinfo?for?mir::shell::SystemCompositorWindowManager;
+    typeinfo?for?mir::shell::WindowManagementPolicy;
     typeinfo?for?mir::shell::WindowManager;
+    typeinfo?for?mir::shell::WindowManagerTools;
     typeinfo?for?mir::time::Alarm;
     typeinfo?for?mir::time::AlarmFactory;
     vtable?for?mir::compositor::Compositor;
@@ -596,7 +720,6 @@ MIR_SERVER_0.26 {
     vtable?for?mir::input::CursorListener;
     vtable?for?mir::input::Device;
     vtable?for?mir::input::EventFilter;
-    vtable?for?mir::input::InputChannel;
     vtable?for?mir::input::InputDeviceHub;
     vtable?for?mir::input::InputDeviceObserver;
     vtable?for?mir::input::InputDispatcher;
@@ -632,6 +755,8 @@ MIR_SERVER_0.26 {
     vtable?for?mir::ServerActionQueue;
     vtable?for?mir::ServerStatusListener;
     vtable?for?mir::shell::AbstractShell;
+    vtable?for?mir::shell::BasicWindowManager;
+    vtable?for?mir::shell::CanonicalWindowManagerPolicy;
     vtable?for?mir::shell::DisplayConfigurationController;
     vtable?for?mir::shell::DisplayLayout;
     vtable?for?mir::shell::FocusController;
@@ -639,18 +764,22 @@ MIR_SERVER_0.26 {
     vtable?for?mir::shell::InputTargeter;
     vtable?for?mir::shell::PersistentSurfaceStore;
     vtable?for?mir::shell::PersistentSurfaceStore::Id;
+    vtable?for?mir::shell::SessionInfo;
     vtable?for?mir::shell::Shell;
     vtable?for?mir::shell::ShellReport;
     vtable?for?mir::shell::ShellWrapper;
     vtable?for?mir::shell::StreamCursor;
     vtable?for?mir::shell::StreamSpecification;
     vtable?for?mir::shell::SurfaceAspectRatio;
+    vtable?for?mir::shell::SurfaceInfo;
     vtable?for?mir::shell::SurfaceReadyObserver;
     vtable?for?mir::shell::SurfaceSpecification;
     vtable?for?mir::shell::SurfaceStack;
     vtable?for?mir::shell::SurfaceStackWrapper;
     vtable?for?mir::shell::SystemCompositorWindowManager;
+    vtable?for?mir::shell::WindowManagementPolicy;
     vtable?for?mir::shell::WindowManager;
+    vtable?for?mir::shell::WindowManagerTools;
     vtable?for?mir::time::Alarm;
     vtable?for?mir::time::AlarmFactory;
 
@@ -673,6 +802,21 @@ MIR_SERVER_0.26 {
     virtual?thunk?to?mir::shell::AbstractShell::setting_focus_to*;
     virtual?thunk?to?mir::shell::AbstractShell::start_prompt_session_for*;
     virtual?thunk?to?mir::shell::AbstractShell::stop_prompt_session*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::?BasicWindowManager*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::add_display*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::add_session*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::add_surface*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::handle_keyboard_event*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::handle_pointer_event*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::handle_raise_surface*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::handle_request_drag_and_drop*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::handle_request_move*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::handle_touch_event*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::modify_surface*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::remove_display*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::remove_session*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::remove_surface*;
+    virtual?thunk?to?mir::shell::BasicWindowManager::set_surface_attribute*;
     virtual?thunk?to?mir::shell::ShellWrapper::add_display*;
     virtual?thunk?to?mir::shell::ShellWrapper::handle*;
     virtual?thunk?to?mir::shell::ShellWrapper::remove_display*;
@@ -681,31 +825,12 @@ MIR_SERVER_0.26 {
 };
 
 # these symbols are needed by the "throwback" tests and mir_proving_server but are not intended to be public
-MIR_SERVER_DETAIL_FOR_TESTING_0.26 {
+MIR_SERVER_DETAIL_FOR_TESTING_0.27 {
  global:
   extern "C++" {
-    mir::shell::CanonicalWindowManagerPolicy::handle_set_state*;
-    mir::shell::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_session_info_updated*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_place_new_surface*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_modify_surface*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_new_surface*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_delete_surface*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_displays_updated*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_displays_updated*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_keyboard_event*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_touch_event*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_pointer_event*;
-    mir::shell::CanonicalWindowManagerPolicy::handle_raise_surface*;
-    typeinfo?for?mir::shell::CanonicalWindowManagerPolicy;
-    vtable?for?mir::shell::CanonicalWindowManagerPolicy;
-    VTT?for?mir::shell::CanonicalWindowManagerPolicy;
-
     mir::DefaultServerConfiguration::clock*;
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
     mir::DefaultServerConfiguration::new_ipc_factory*;
-    mir::DefaultServerConfiguration::the_android_input_dispatcher*;
     mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
     mir::DefaultServerConfiguration::the_buffer_stream_factory*;
@@ -743,22 +868,19 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.26 {
     mir::DefaultServerConfiguration::the_graphics_platform*;
     mir::DefaultServerConfiguration::the_host_connection*;
     mir::DefaultServerConfiguration::the_host_lifecycle_event_listener*;
-    mir::DefaultServerConfiguration::the_input_channel_factory*;
+    mir::DefaultServerConfiguration::the_input_configuration_changer*;
     mir::DefaultServerConfiguration::the_input_device_hub*;
     mir::DefaultServerConfiguration::the_input_device_registry*;
     mir::DefaultServerConfiguration::the_input_dispatcher*;
     mir::DefaultServerConfiguration::the_new_input_dispatcher*;
     mir::DefaultServerConfiguration::the_input_manager*;
     mir::DefaultServerConfiguration::the_input_reading_multiplexer*;
-    mir::DefaultServerConfiguration::the_input_region*;
     mir::DefaultServerConfiguration::the_input_registrar*;
     mir::DefaultServerConfiguration::the_input_report*;
     mir::DefaultServerConfiguration::the_input_scene*;
-    mir::DefaultServerConfiguration::the_input_sender*;
     mir::DefaultServerConfiguration::the_input_target_enumerator*;
     mir::DefaultServerConfiguration::the_input_targeter*;
     mir::DefaultServerConfiguration::the_input_translator*;
-    mir::DefaultServerConfiguration::the_legacy_input_dispatchable*;
     mir::DefaultServerConfiguration::the_logger*;
     mir::DefaultServerConfiguration::the_main_loop*;
     mir::DefaultServerConfiguration::the_mediating_display_changer*;
@@ -811,10 +933,10 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.26 {
 
     mir::run_mir*;
   };
-} MIR_SERVER_0.26;
+} MIR_SERVER_0.27;
 
 # these symbols are needed by mir_proving_server but are not intended to be public
-MIR_SERVER_DETAIL_FOR_PROVING_0.26 {
+MIR_SERVER_DETAIL_FOR_PROVING_0.27 {
  global:
   extern "C++" {
     mir::renderer::gl::ProgramFamily::add_program*;
@@ -831,43 +953,5 @@ MIR_SERVER_DETAIL_FOR_PROVING_0.26 {
     mir::renderer::gl::Renderer::vshader;
     typeinfo?for?mir::renderer::gl::Renderer;
     vtable?for?mir::renderer::gl::Renderer;
-
-    mir::shell::BasicWindowManager::active_display*;
-    mir::shell::BasicWindowManager::add_display*;
-    mir::shell::BasicWindowManager::add_session*;
-    mir::shell::BasicWindowManager::add_surface*;
-    mir::shell::BasicWindowManager::BasicWindowManager*;
-    mir::shell::BasicWindowManager::find_session*;
-    mir::shell::BasicWindowManager::focused_session*;
-    mir::shell::BasicWindowManager::focused_surface*;
-    mir::shell::BasicWindowManager::focus_next_session*;
-    mir::shell::BasicWindowManager::forget*;
-    mir::shell::BasicWindowManager::handle_keyboard_event*;
-    mir::shell::BasicWindowManager::handle_pointer_event*;
-    mir::shell::BasicWindowManager::handle_raise_surface*;
-    mir::shell::BasicWindowManager::handle_touch_event*;
-    mir::shell::BasicWindowManager::info_for*;
-    mir::shell::BasicWindowManager::modify_surface*;
-    mir::shell::BasicWindowManager::raise_tree*;
-    mir::shell::BasicWindowManager::remove_display*;
-    mir::shell::BasicWindowManager::remove_session*;
-    mir::shell::BasicWindowManager::remove_surface*;
-    mir::shell::BasicWindowManager::set_focus_to*;
-    mir::shell::BasicWindowManager::set_surface_attribute*;
-    mir::shell::BasicWindowManager::surface_at*;
-    typeinfo?for?mir::shell::BasicWindowManager;
-    virtual?thunk?to?mir::shell::BasicWindowManager::add_display*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::add_session*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::add_surface*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::handle_keyboard_event*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::handle_pointer_event*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::handle_raise_surface*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::handle_touch_event*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::modify_surface*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::remove_display*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::remove_session*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::remove_surface*;
-    virtual?thunk?to?mir::shell::BasicWindowManager::set_surface_attribute*;
-    VTT?for?mir::shell::BasicWindowManager;
   };
-} MIR_SERVER_DETAIL_FOR_TESTING_0.26;
+} MIR_SERVER_DETAIL_FOR_TESTING_0.27;

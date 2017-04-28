@@ -22,7 +22,6 @@
 #include "rpc/make_rpc_channel.h"
 #include "rpc/null_rpc_report.h"
 #include "mir/logging/logger.h"
-#include "mir/input/input_platform.h"
 #include "mir/input/input_devices.h"
 #include "mir/input/null_input_receiver_report.h"
 #include "logging/rpc_report.h"
@@ -115,23 +114,13 @@ mcl::DefaultConnectionConfiguration::the_client_platform_factory()
         });
 }
 
-std::shared_ptr<mir::input::receiver::InputPlatform>
-mcl::DefaultConnectionConfiguration::the_input_platform()
-{
-    return input_platform(
-        [this]
-        {
-            return mir::input::receiver::InputPlatform::create(the_input_receiver_report());
-        });
-}
-
 std::shared_ptr<mir::input::InputDevices>
 mcl::DefaultConnectionConfiguration::the_input_devices()
 {
     return input_devices(
-        []
+        [this]
         {
-            return std::make_shared<mir::input::InputDevices>();
+            return std::make_shared<mir::input::InputDevices>(the_surface_map());
         });
 }
 
@@ -241,7 +230,7 @@ std::shared_ptr<mir::SharedLibraryProberReport> mir::client::DefaultConnectionCo
 std::shared_ptr<mir::client::AsyncBufferFactory> mir::client::DefaultConnectionConfiguration::the_buffer_factory()
 {
     return async_buffer_factory(
-        [this] () -> std::shared_ptr<mir::client::AsyncBufferFactory>
+        [] () -> std::shared_ptr<mir::client::AsyncBufferFactory>
         {
             return std::make_shared<mir::client::BufferFactory>();
         });

@@ -18,7 +18,6 @@
 
 #include "mir_test_framework/input_testing_server_configuration.h"
 
-#include "mir/input/input_channel.h"
 #include "mir/input/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/frontend/session.h"
@@ -87,9 +86,4 @@ std::shared_ptr<mi::InputManager> mtf::InputTestingServerConfiguration::the_inpu
 std::shared_ptr<mi::InputDispatcher> mtf::InputTestingServerConfiguration::the_input_dispatcher()
 {
     return DefaultServerConfiguration::the_input_dispatcher();
-}
-
-std::shared_ptr<mi::InputSender> mtf::InputTestingServerConfiguration::the_input_sender()
-{
-    return DefaultServerConfiguration::the_input_sender();
 }

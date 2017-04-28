@@ -25,6 +25,7 @@
 
 #include <sstream>
 #include <boost/throw_exception.hpp>
+#include <unordered_set>
 
 namespace mi = mir::input;
 namespace mev = mir::events;
@@ -59,8 +60,16 @@ MirInputEventModifiers xkb_key_code_to_modifier(xkb_keysym_t key)
     case XKB_KEY_Super_R: return mir_input_event_modifier_meta_right;
     case XKB_KEY_Caps_Lock: return mir_input_event_modifier_caps_lock;
     case XKB_KEY_Scroll_Lock: return mir_input_event_modifier_scroll_lock;
+    case XKB_KEY_Num_Lock: return mir_input_event_modifier_num_lock;
     default: return MirInputEventModifiers{0};
     }
+}
+
+bool is_toggle_modifier(MirInputEventModifiers key)
+{
+    return key == mir_input_event_modifier_caps_lock ||
+        key == mir_input_event_modifier_scroll_lock ||
+        key == mir_input_event_modifier_num_lock;
 }
 
 MirInputEventModifiers expand_modifiers(MirInputEventModifiers modifiers)
@@ -167,7 +176,7 @@ void mircv::XKBMapper::update_modifier()
         MirInputEventModifiers new_modifier = 0;
         for (auto const& mapping_state : device_mapping)
         {
-            new_modifier |= mapping_state.second->modifier_state;
+            new_modifier |= mapping_state.second->modifiers();
         }
 
         modifier_state = new_modifier;
@@ -284,6 +293,16 @@ MirInputEventModifiers mircv::XKBMapper::modifiers() const
     return mir_input_event_modifier_none;
 }
 
+MirInputEventModifiers mircv::XKBMapper::device_modifiers(MirInputDeviceId id) const
+{
+    std::lock_guard<std::mutex> lg(guard);
+
+    auto it = device_mapping.find(id);
+    if (it == end(device_mapping))
+        return mir_input_event_modifier_none;
+    return expand_modifiers(it->second->modifiers());
+}
+
 mircv::XKBMapper::XkbMappingState::XkbMappingState(std::shared_ptr<xkb_keymap> const& keymap)
     : keymap{keymap}, state{make_unique_state(this->keymap.get())}
 {
@@ -293,8 +312,22 @@ void mircv::XKBMapper::XkbMappingState::set_key_state(std::vector<uint32_t> cons
 {
     state = make_unique_state(keymap.get());
     modifier_state = mir_input_event_modifier_none;
+    std::unordered_set<uint32_t> pressed_codes;
+    std::string t;
     for (uint32_t scan_code : key_state)
-        update_state(to_xkb_scan_code(scan_code), mir_keyboard_action_down, nullptr);
+    {
+        bool already_pressed = pressed_codes.count(scan_code) > 0;
+
+        update_state(to_xkb_scan_code(scan_code),
+                     (already_pressed) ? mir_keyboard_action_up : mir_keyboard_action_down,
+                     nullptr,
+                     t);
+
+        if (already_pressed)
+            pressed_codes.erase(scan_code);
+        else
+            pressed_codes.insert(scan_code);
+    }
 }
 
 bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event, mircv::XKBMapper::ComposeState* compose_state)
@@ -302,8 +335,12 @@ bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event, mircv::X
     auto& key_ev = *event.to_input()->to_keyboard();
     uint32_t xkb_scan_code = to_xkb_scan_code(key_ev.scan_code());
     auto old_state = modifier_state;
+    std::string key_text;
+    xkb_keysym_t key_sym;
+    key_sym = update_state(xkb_scan_code, key_ev.action(), compose_state, key_text);
 
-    key_ev.set_key_code(update_state(xkb_scan_code, key_ev.action(), compose_state));
+    key_ev.set_key_code(key_sym);
+    key_ev.set_text(key_text.c_str());
     // TODO we should also indicate effective/consumed modifier state to properly
     // implement short cuts with keys that are only reachable via modifier keys
     key_ev.set_modifiers(expand_modifiers(modifier_state));
@@ -311,26 +348,43 @@ bool mircv::XKBMapper::XkbMappingState::update_and_map(MirEvent& event, mircv::X
     return old_state != modifier_state;
 }
 
-xkb_keysym_t mircv::XKBMapper::XkbMappingState::update_state(uint32_t scan_code, MirKeyboardAction action, mircv::XKBMapper::ComposeState* compose_state)
+xkb_keysym_t mircv::XKBMapper::XkbMappingState::update_state(uint32_t scan_code, MirKeyboardAction action, mircv::XKBMapper::ComposeState* compose_state, std::string& text)
 {
     auto key_sym = xkb_state_key_get_one_sym(state.get(), scan_code);
     auto mod_change = xkb_key_code_to_modifier(key_sym);
 
+    if(action == mir_keyboard_action_down || action == mir_keyboard_action_repeat)
+    {
+        char buffer[7];
+        // scan code? really? not keysym?
+        xkb_state_key_get_utf8(state.get(), scan_code, buffer, sizeof(buffer));
+        text = buffer;
+    }
+
     if (compose_state)
-        key_sym = compose_state->update_state(key_sym, action);
+        key_sym = compose_state->update_state(key_sym, action, text);
 
     if (action == mir_keyboard_action_up)
     {
         xkb_state_update_key(state.get(), scan_code, XKB_KEY_UP);
-        modifier_state = modifier_state & ~mod_change;
+        // TODO get the modifier state from xkbcommon and apply it
+        // for all other modifiers manually track them here:
+        release_modifier(mod_change);
     }
     else if (action == mir_keyboard_action_down)
     {
         xkb_state_update_key(state.get(), scan_code, XKB_KEY_DOWN);
-        modifier_state = modifier_state | mod_change;
+        // TODO get the modifier state from xkbcommon and apply it
+        // for all other modifiers manually track them here:
+        press_modifier(mod_change);
     }
 
     return key_sym;
+}
+
+MirInputEventModifiers mircv::XKBMapper::XkbMappingState::modifiers() const
+{
+    return modifier_state;
 }
 
 mircv::XKBMapper::ComposeState* mircv::XKBMapper::get_compose_state(MirInputDeviceId id)
@@ -365,25 +419,31 @@ void mircv::XKBMapper::ComposeState::update_and_map(MirEvent& event)
 
     auto const key_sym = key_ev.key_code();
     auto const action = key_ev.action();
-    key_ev.set_key_code(update_state(key_sym, action));
+    std::string text;
+    key_ev.set_key_code(update_state(key_sym, action, text));
+    key_ev.set_text(text.c_str());
 }
 
-xkb_keysym_t mircv::XKBMapper::ComposeState::update_state(xkb_keysym_t mapped_key, MirKeyboardAction action)
+xkb_keysym_t mircv::XKBMapper::ComposeState::update_state(xkb_keysym_t mapped_key, MirKeyboardAction action, std::string& mapped_text)
 {
     // the state machine only cares about downs
     if (action == mir_keyboard_action_down)
     {
         if (xkb_compose_state_feed(state.get(), mapped_key) == XKB_COMPOSE_FEED_ACCEPTED)
         {
-            auto result =  xkb_compose_state_get_status(state.get());
+            auto result = xkb_compose_state_get_status(state.get());
             if (result == XKB_COMPOSE_COMPOSED)
             {
+                char buffer[7];
+                xkb_compose_state_get_utf8(state.get(), buffer, sizeof(buffer));
+                mapped_text = buffer;
                 auto composed_key_sym = xkb_compose_state_get_one_sym(state.get());
                 last_composed_key = std::make_tuple(mapped_key, composed_key_sym);
                 return composed_key_sym;
             }
             else if (result == XKB_COMPOSE_COMPOSING)
             {
+                mapped_text = "";
                 consumed_keys.insert(mapped_key);
                 return XKB_KEY_NoSymbol;
             }
@@ -400,13 +460,40 @@ xkb_keysym_t mircv::XKBMapper::ComposeState::update_state(xkb_keysym_t mapped_ke
             mapped_key == std::get<0>(last_composed_key.value()))
         {
             if (action == mir_keyboard_action_up)
+            {
+                mapped_text = "";
                 return std::get<1>(last_composed_key.consume());
+            }
             else
+            {
+                // on repeat get the text of the compose state
+                char buffer[7];
+                xkb_compose_state_get_utf8(state.get(), buffer, sizeof(buffer));
+                mapped_text = buffer;
                 return std::get<1>(last_composed_key.value());
+            }
         }
         if (consumed_keys.erase(mapped_key))
+        {
+            mapped_text = "";
             return XKB_KEY_NoSymbol;
+        }
     }
 
     return mapped_key;
+}
+
+
+void mircv::XKBMapper::XkbMappingState::press_modifier(MirInputEventModifiers mod)
+{
+    if (is_toggle_modifier(mod))
+        modifier_state ^= mod;
+    else
+        modifier_state |= mod;
+}
+
+void mircv::XKBMapper::XkbMappingState::release_modifier(MirInputEventModifiers mod)
+{
+    if (!is_toggle_modifier(mod))
+        modifier_state &= ~mod;
 }

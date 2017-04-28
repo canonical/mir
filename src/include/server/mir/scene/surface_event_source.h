@@ -50,6 +50,8 @@ public:
     void keymap_changed(MirInputDeviceId id, std::string const& model, std::string const& layout,
                         std::string const& variant, std::string const& options) override;
     void placed_relative(geometry::Rectangle const& placement) override;
+    void input_consumed(MirEvent const* event) override;
+    void start_drag_and_drop(std::vector<uint8_t> const& handle) override;
 
 private:
     frontend::SurfaceId const id;

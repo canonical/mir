@@ -20,7 +20,7 @@
 #define MIR_GRAPHICS_MESA_REAL_KMS_OUTPUT_CONTAINER_H_
 
 #include "kms_output_container.h"
-#include <unordered_map>
+#include <vector>
 
 namespace mir
 {
@@ -34,15 +34,17 @@ class PageFlipper;
 class RealKMSOutputContainer : public KMSOutputContainer
 {
 public:
-    RealKMSOutputContainer(int drm_fd, std::shared_ptr<PageFlipper> const& page_flipper);
+    RealKMSOutputContainer(
+        std::vector<int> const& drm_fds,
+        std::function<std::shared_ptr<PageFlipper>(int drm_fd)> const& construct_page_flipper);
 
-    std::shared_ptr<KMSOutput> get_kms_output_for(uint32_t connector_id);
-    void for_each_output(std::function<void(KMSOutput&)> functor) const;
+    void for_each_output(std::function<void(std::shared_ptr<KMSOutput> const&)> functor) const override;
 
+    void update_from_hardware_state() override;
 private:
-    int const drm_fd;
-    std::unordered_map<uint32_t,std::shared_ptr<KMSOutput>> outputs;
-    std::shared_ptr<PageFlipper> const page_flipper;
+    std::vector<int> const drm_fds;
+    std::vector<std::shared_ptr<KMSOutput>> outputs;
+    std::function<std::shared_ptr<PageFlipper>(int drm_fd)> const construct_page_flipper;
 };
 
 }

@@ -18,7 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/doubles/null_display_buffer_compositor_factory.h"
 #include "mir/test/signal.h"
 #include "mir/compositor/scene_element.h"
@@ -42,7 +42,7 @@ void swap_buffers_callback(MirBufferStream*, void* ctx)
     buffers_swapped->raise();
 }
 
-struct SurfaceSwapBuffers : mtf::ConnectedClientWithASurface
+struct SurfaceSwapBuffers : mtf::ConnectedClientWithAWindow
 {
     void SetUp() override
     {
@@ -51,7 +51,7 @@ struct SurfaceSwapBuffers : mtf::ConnectedClientWithASurface
             return std::make_shared<mtd::NullDisplayBufferCompositorFactory>();
         });
 
-        ConnectedClientWithASurface::SetUp();
+        ConnectedClientWithAWindow::SetUp();
     }
 };
 
@@ -62,9 +62,10 @@ TEST_F(SurfaceSwapBuffers, does_not_block_when_surface_is_not_composited)
     for (int i = 0; i != 10; ++i)
     {
         mt::Signal buffers_swapped;
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_swap_buffers(mir_window_get_buffer_stream(window), swap_buffers_callback, &buffers_swapped);
-
+#pragma GCC diagnostic pop
         /*
          * ASSERT instead of EXPECT, since if we continue we will block in future
          * mir client calls (e.g mir_connection_release).
@@ -95,7 +96,7 @@ public:
     }
 };
 
-struct SwapBuffersDoesntBlockOnSubmission : mtf::ConnectedClientWithASurface
+struct SwapBuffersDoesntBlockOnSubmission : mtf::ConnectedClientWithAWindow
 {
     unsigned int figure_out_nbuffers()
     {
@@ -120,13 +121,13 @@ struct SwapBuffersDoesntBlockOnSubmission : mtf::ConnectedClientWithASurface
             return std::make_shared<BufferCollectingCompositorFactory>();
         });
 
-        ConnectedClientWithASurface::SetUp();
+        ConnectedClientWithAWindow::SetUp();
         server.the_cursor()->hide();
     }
 
     void TearDown() override
     {
-        ConnectedClientWithASurface::TearDown();
+        ConnectedClientWithAWindow::TearDown();
     }
 
     unsigned int nbuffers = figure_out_nbuffers();
@@ -136,6 +137,9 @@ struct SwapBuffersDoesntBlockOnSubmission : mtf::ConnectedClientWithASurface
 //LP: #1584784
 TEST_F(SwapBuffersDoesntBlockOnSubmission, can_swap_nbuffers_times_without_blocking)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     for (auto i = 0u; i != nbuffers; ++i)
         mir_buffer_stream_swap_buffers(mir_window_get_buffer_stream(window), nullptr, nullptr);
+#pragma GCC diagnostic pop
 }

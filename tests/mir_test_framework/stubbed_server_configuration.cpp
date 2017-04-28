@@ -26,7 +26,6 @@
 
 #include "mir/test/doubles/stub_display_buffer.h"
 #include "mir/test/doubles/stub_renderer.h"
-#include "mir/test/doubles/stub_input_sender.h"
 
 #include "mir/renderer/renderer_factory.h"
 #include "src/server/input/null_input_manager.h"
@@ -122,16 +121,6 @@ std::shared_ptr<msh::InputTargeter> mtf::StubbedServerConfiguration::the_input_t
         return DefaultServerConfiguration::the_input_targeter();
     else
         return std::make_shared<mi::NullInputTargeter>();
-}
-
-std::shared_ptr<mi::InputSender> mtf::StubbedServerConfiguration::the_input_sender()
-{
-    auto options = the_options();
-
-    if (options->get<bool>("tests-use-real-input"))
-        return DefaultServerConfiguration::the_input_sender();
-    else
-        return std::make_shared<mtd::StubInputSender>();
 }
 
 std::shared_ptr<mg::Cursor> mtf::StubbedServerConfiguration::the_cursor()

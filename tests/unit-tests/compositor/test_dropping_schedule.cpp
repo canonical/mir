@@ -38,9 +38,8 @@ struct MockBufferMap : mf::ClientBuffers
     MOCK_METHOD1(remove_buffer, void(mg::BufferID id));
     MOCK_METHOD1(send_buffer, void(mg::BufferID id));
     MOCK_METHOD1(receive_buffer, void(mg::BufferID id));
-    MOCK_METHOD1(at, std::shared_ptr<mg::Buffer>&(mg::BufferID));
     MOCK_CONST_METHOD0(client_owned_buffer_count, size_t());
-    std::shared_ptr<mg::Buffer>& operator[](mg::BufferID id) { return at(id); }
+    MOCK_CONST_METHOD1(get, std::shared_ptr<mg::Buffer>(mg::BufferID));
 };
 
 struct DroppingSchedule : Test
@@ -83,6 +82,31 @@ TEST_F(DroppingSchedule, drops_excess_buffers)
  
     for(auto i = 0u; i < num_buffers; i++)
         schedule.schedule(buffers[i]);
+
+    auto queue = drain_queue();
+    ASSERT_THAT(queue, SizeIs(1));
+    EXPECT_THAT(queue[0]->id(), Eq(buffers[4]->id()));
+}
+
+TEST_F(DroppingSchedule, nonblocking_schedule_avoids_socket_io)
+{
+    for (auto i = 0u; i < num_buffers; i++)
+    {
+        EXPECT_CALL(mock_client_buffers, send_buffer(_))
+            .Times(0);
+
+        auto deferred_io = schedule.schedule_nonblocking(buffers[i]);
+
+        testing::Mock::VerifyAndClearExpectations(&mock_client_buffers);
+        if (i > 0)
+        {
+            EXPECT_CALL(mock_client_buffers, send_buffer(buffers[i-1]->id()))
+                .Times(1);
+            ASSERT_TRUE(deferred_io.valid());
+            deferred_io.wait();
+            testing::Mock::VerifyAndClearExpectations(&mock_client_buffers);
+        }
+    }
 
     auto queue = drain_queue();
     ASSERT_THAT(queue, SizeIs(1));

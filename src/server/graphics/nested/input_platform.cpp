@@ -27,6 +27,7 @@
 #include "mir/input/event_builder.h"
 #include "mir/input/pointer_settings.h"
 #include "mir/input/touchpad_settings.h"
+#include "mir/input/touchscreen_settings.h"
 #include "mir/input/device_capability.h"
 #include "mir/dispatch/action_queue.h"
 #include "mir/events/event_builders.h"
@@ -56,7 +57,8 @@ mgn::UniqueInputConfig make_empty_config()
 struct mgn::InputPlatform::InputDevice : mi::InputDevice
 {
 public:
-    InputDevice(MirInputDevice const* dev)
+    InputDevice(MirInputDevice* dev, std::function<void()> config_change)
+        : emit_device_change{config_change}
     {
         update(dev);
     }
@@ -66,12 +68,51 @@ public:
         return device_id;
     }
 
-    void update(MirInputDevice const* dev)
+    void update(MirInputDevice* dev)
     {
+        device = dev;
         device_id = mir_input_device_get_id(dev);
         device_info.name = mir_input_device_get_name(dev);
         device_info.unique_id = mir_input_device_get_unique_id(dev);
         device_info.capabilities = mi::DeviceCapabilities(mir_input_device_get_capabilities(dev));
+
+        auto pointer_config = mir_input_device_get_pointer_config(dev);
+        if (pointer_config && contains(device_info.capabilities, mi::DeviceCapability::pointer))
+        {
+            mi::PointerSettings settings;
+            settings.handedness = mir_pointer_config_get_handedness(pointer_config);
+            settings.cursor_acceleration_bias = mir_pointer_config_get_acceleration_bias(pointer_config);
+            settings.acceleration = mir_pointer_config_get_acceleration(pointer_config);
+            settings.horizontal_scroll_scale = mir_pointer_config_get_horizontal_scroll_scale(pointer_config);
+            settings.vertical_scroll_scale = mir_pointer_config_get_vertical_scroll_scale(pointer_config);
+
+            pointer_settings = settings;
+        }
+
+        auto touchpad_config = mir_input_device_get_touchpad_config(dev);
+        if (touchpad_config && contains(device_info.capabilities, mi::DeviceCapability::touchpad))
+        {
+            mi::TouchpadSettings settings;
+            settings.click_mode = mir_touchpad_config_get_click_modes(touchpad_config);
+            settings.scroll_mode = mir_touchpad_config_get_scroll_modes(touchpad_config);
+            settings.button_down_scroll_button = mir_touchpad_config_get_button_down_scroll_button(touchpad_config);
+            settings.tap_to_click = mir_touchpad_config_get_tap_to_click(touchpad_config);
+            settings.disable_while_typing = mir_touchpad_config_get_disable_while_typing(touchpad_config);
+            settings.disable_with_mouse = mir_touchpad_config_get_disable_with_mouse(touchpad_config);
+            settings.middle_mouse_button_emulation = mir_touchpad_config_get_middle_mouse_button_emulation(touchpad_config);
+
+            touchpad_settings = settings;
+        }
+
+        auto touchscreen_config = mir_input_device_get_touchscreen_config(dev);
+        if (touchscreen_config && contains(device_info.capabilities, mi::DeviceCapability::touchscreen))
+        {
+            mi::TouchscreenSettings settings;
+            settings.output_id = mir_touchscreen_config_get_output_id(touchscreen_config);
+            settings.mapping_mode = mir_touchscreen_config_get_mapping_mode(touchscreen_config);
+
+            touchscreen_settings = settings;
+        }
     }
 
     void start(mi::InputSink* destination, mi::EventBuilder* builder) override
@@ -163,9 +204,23 @@ public:
         return pointer_settings;
     }
 
-    void apply_settings(mi::PointerSettings const&) override
+    void apply_settings(mi::PointerSettings const& new_settings) override
     {
-        // TODO no C API for that 
+        if (pointer_settings.is_set() && pointer_settings.value() == new_settings)
+            return;
+
+        auto ptr_conf = mir_input_device_get_mutable_pointer_config(device);
+
+        if (ptr_conf)
+        {
+            mir_pointer_config_set_acceleration(ptr_conf, new_settings.acceleration);
+            mir_pointer_config_set_acceleration_bias(ptr_conf, new_settings.cursor_acceleration_bias);
+            mir_pointer_config_set_handedness(ptr_conf, new_settings.handedness);
+            mir_pointer_config_set_vertical_scroll_scale(ptr_conf, new_settings.vertical_scroll_scale);
+            mir_pointer_config_set_horizontal_scroll_scale(ptr_conf, new_settings.horizontal_scroll_scale);
+
+            emit_device_change();
+        }
     }
 
     mir::optional_value<mi::TouchpadSettings> get_touchpad_settings() const override
@@ -173,17 +228,57 @@ public:
         return touchpad_settings;
     }
 
-    void apply_settings(mi::TouchpadSettings const&) override
+    void apply_settings(mi::TouchpadSettings const& new_settings) override
     {
-        // no c api for that
+        if (touchpad_settings.is_set() && touchpad_settings.value() == new_settings)
+            return;
+
+        auto tpd_conf = mir_input_device_get_mutable_touchpad_config(device);
+
+        if (tpd_conf)
+        {
+            mir_touchpad_config_set_click_modes(tpd_conf, new_settings.click_mode);
+            mir_touchpad_config_set_scroll_modes(tpd_conf, new_settings.scroll_mode);
+            mir_touchpad_config_set_button_down_scroll_button(tpd_conf, new_settings.button_down_scroll_button);
+            mir_touchpad_config_set_tap_to_click(tpd_conf, new_settings.tap_to_click);
+            mir_touchpad_config_set_disable_with_mouse(tpd_conf, new_settings.disable_with_mouse);
+            mir_touchpad_config_set_disable_while_typing(tpd_conf, new_settings.disable_while_typing);
+            mir_touchpad_config_set_middle_mouse_button_emulation(tpd_conf, new_settings.middle_mouse_button_emulation);
+
+            emit_device_change();
+        }
+    }
+
+    mir::optional_value<mi::TouchscreenSettings> get_touchscreen_settings() const override
+    {
+        return touchscreen_settings;
+    }
+
+    void apply_settings(mi::TouchscreenSettings const& new_settings) override
+    {
+        if (touchscreen_settings.is_set() && touchscreen_settings.value() == new_settings)
+            return;
+
+        auto ts_conf = mir_input_device_get_mutable_touchscreen_config(device);
+
+        if (ts_conf)
+        {
+            mir_touchscreen_config_set_output_id(ts_conf, new_settings.output_id);
+            mir_touchscreen_config_set_mapping_mode(ts_conf, new_settings.mapping_mode);
+
+            emit_device_change();
+        }
     }
 
     MirInputDeviceId device_id;
+    MirInputDevice* device{nullptr};
     mi::InputSink* destination{nullptr};
     mi::EventBuilder* builder{nullptr};
     mi::InputDeviceInfo device_info;
     mir::optional_value<mi::PointerSettings> pointer_settings;
     mir::optional_value<mi::TouchpadSettings> touchpad_settings;
+    mir::optional_value<mi::TouchscreenSettings> touchscreen_settings;
+    std::function<void()> emit_device_change;
 };
 
 
@@ -201,6 +296,7 @@ std::shared_ptr<mir::dispatch::Dispatchable> mgn::InputPlatform::dispatchable()
 
 void mgn::InputPlatform::start()
 {
+    state = started;
     {
         std::lock_guard<std::mutex> lock(devices_guard);
         input_config = connection->create_input_device_config();
@@ -286,6 +382,7 @@ void mgn::InputPlatform::stop()
         input_device_registry->remove_device(device.second);
 
     devices.clear();
+    state = stopped;
 }
 
 void mgn::InputPlatform::update_devices()
@@ -301,7 +398,7 @@ void mgn::InputPlatform::update_devices_locked()
     auto config_ptr = input_config.get();
     for (size_t i = 0, e = mir_input_config_device_count(config_ptr); i!=e; ++i)
     {
-        auto dev = mir_input_config_get_device(config_ptr, i);
+        auto dev = mir_input_config_get_mutable_device(config_ptr, i);
         auto const id = mir_input_device_get_id(dev);
         auto it = deleted.find(id);
         if (it != end(deleted))
@@ -312,7 +409,9 @@ void mgn::InputPlatform::update_devices_locked()
         }
         else
         {
-            new_devs.emplace_back(std::make_shared<InputDevice>(dev), id);
+            new_devs.emplace_back(
+                std::make_shared<InputDevice>(dev, [this]() { config_changed(); }),
+                id);
             devices[id] = new_devs.back().first;
         }
     }
@@ -334,4 +433,31 @@ void mgn::InputPlatform::update_devices_locked()
         }
     }
     unknown_device_events.clear();
+}
+
+void mgn::InputPlatform::config_changed()
+{
+    if (state != paused)
+    {
+        connection->apply_input_configuration(input_config.get());
+    }
+    else
+    {
+        changed = true;
+    }
+}
+
+void mgn::InputPlatform::pause_for_config()
+{
+    state = paused;
+}
+
+void mgn::InputPlatform::continue_after_config()
+{
+    if (changed)
+    {
+        connection->apply_input_configuration(input_config.get());
+        changed = false;
+    }
+    state = started;
 }

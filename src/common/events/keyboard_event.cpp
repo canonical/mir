@@ -55,4 +55,12 @@ void MirKeyboardEvent::set_scan_code(int32_t scan_code)
     event.getInput().getKey().setScanCode(scan_code);
 }
 
+char const* MirKeyboardEvent::text() const
+{
+    return event.asReader().getInput().getKey().getText().cStr();
+}
 
+void MirKeyboardEvent::set_text(char const* str)
+{
+    event.getInput().getKey().setText(str);
+}

@@ -75,12 +75,14 @@ struct ScreencastStream : Test
 {
     ScreencastStream()
     {
-        ON_CALL(mock_factory, create_buffer(_,_,_))
+        ON_CALL(mock_factory, create_buffer(_,An<geom::Size>(),_))
             .WillByDefault(Return(std::make_shared<mtd::NullClientBuffer>()));
     }
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mp::BufferStream a_protobuf_buffer_stream(MirPixelFormat format, MirBufferUsage usage, MirBufferPackage const& package)
     {
+#pragma GCC diagnostic pop
         mp::BufferStream protobuf_bs;
         mp::BufferStreamId bs_id;
         
@@ -100,8 +102,10 @@ struct ScreencastStream : Test
     testing::NiceMock<mtd::MockProtobufServer> mock_protobuf_server;
 
     MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferUsage const default_buffer_usage = mir_buffer_usage_hardware;
-
+#pragma GCC diagnostic pop
     MirBufferPackage buffer_package = a_buffer_package();
     geom::Size size{buffer_package.width, buffer_package.height};
     mp::BufferStream response = a_protobuf_buffer_stream(
@@ -168,6 +172,12 @@ TEST_F(ScreencastStream, exception_does_not_leave_wait_handle_hanging)
                 throw std::runtime_error("monkey wrench");
             else
                 return nullptr;
+        }
+
+        std::shared_ptr<mcl::ClientBuffer> create_buffer(
+            std::shared_ptr<MirBufferPackage> const&, uint32_t, uint32_t)
+        {
+            return create_buffer(nullptr, geom::Size{0,0}, mir_pixel_format_invalid);
         }
 
         void start_failing()

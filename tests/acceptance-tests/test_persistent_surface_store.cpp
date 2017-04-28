@@ -20,7 +20,7 @@
 #include "mir/shell/persistent_surface_store.h"
 
 #include "mir/test/doubles/wrap_shell_to_track_latest_surface.h"
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -36,7 +36,7 @@ using namespace testing;
 
 namespace
 {
-struct TestPersistentSurfaceStore : mtf::ConnectedClientWithASurface
+struct TestPersistentSurfaceStore : mtf::ConnectedClientWithAWindow
 {
     void SetUp() override
     {
@@ -47,13 +47,13 @@ struct TestPersistentSurfaceStore : mtf::ConnectedClientWithASurface
             return msc;
         });
 
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientWithAWindow::SetUp();
     }
 
     void TearDown() override
     {
         shell.reset();
-        mtf::ConnectedClientWithASurface::TearDown();
+        mtf::ConnectedClientWithAWindow::TearDown();
     }
 
     std::shared_ptr<ms::Surface> latest_shell_surface() const
@@ -68,6 +68,8 @@ private:
 };
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(TestPersistentSurfaceStore, server_and_client_persistent_id_matches)
 {
     auto const shell_server_surface = latest_shell_surface();
@@ -82,3 +84,4 @@ TEST_F(TestPersistentSurfaceStore, server_and_client_persistent_id_matches)
 
     mir_persistent_id_release(client_surface_id);
 }
+#pragma GCC diagnostic pop

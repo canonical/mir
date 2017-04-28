@@ -37,10 +37,6 @@ std::string mtd::StubSession::name() const
     return {};
 }
 
-void mtd::StubSession::drop_outstanding_requests()
-{
-}
-
 pid_t mtd::StubSession::process_id() const
 {
     return pid;
@@ -143,11 +139,21 @@ void mtd::StubSession::destroy_surface(std::weak_ptr<scene::Surface> const& /*su
 {
 }
 
-void mtd::StubSession::send_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& /*devices*/)
+void mtd::StubSession::send_input_config(MirInputConfig const& /*config*/)
 {
 }
 
 mir::graphics::BufferID mtd::StubSession::create_buffer(mir::graphics::BufferProperties const&)
+{
+    return mir::graphics::BufferID(3);
+}
+
+mir::graphics::BufferID mtd::StubSession::create_buffer(mir::geometry::Size, uint32_t, uint32_t)
+{
+    return mir::graphics::BufferID(3);
+}
+
+mir::graphics::BufferID mtd::StubSession::create_buffer(mir::geometry::Size, MirPixelFormat)
 {
     return mir::graphics::BufferID(3);
 }

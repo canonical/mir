@@ -71,8 +71,10 @@ public:
         mir::client::rpc::DisplayServer& server,
         std::shared_ptr<ClientPlatform> const& native_window_factory,
         mir::protobuf::BufferStream const& protobuf_bs);
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirWindowParameters get_parameters() const override;
+#pragma GCC diagnostic pop
     MirWaitHandle* swap_buffers(std::function<void()> const& done) override;
     std::shared_ptr<mir::client::ClientBuffer> get_current_buffer() override;
     uint32_t get_current_buffer_id() override;
@@ -100,7 +102,10 @@ public:
     MirWaitHandle* set_scale(float scale) override;
     char const* get_error_message() const override;
     MirConnection* connection() const override;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirRenderSurface* render_surface() const override;
+#pragma GCC diagnostic pop
 
 private:
     void process_buffer(protobuf::Buffer const& buffer);

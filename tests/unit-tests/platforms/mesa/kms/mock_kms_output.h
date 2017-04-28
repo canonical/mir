@@ -24,30 +24,57 @@
 
 namespace mir
 {
+
+namespace graphics
+{
+namespace mesa
+{
+class DRMFB;
+}
+}
+
 namespace test
 {
 
 struct MockKMSOutput : public graphics::mesa::KMSOutput
 {
+    MOCK_CONST_METHOD0(id, uint32_t());
     MOCK_METHOD0(reset, void());
     MOCK_METHOD2(configure, void(geometry::Displacement, size_t));
     MOCK_CONST_METHOD0(size, geometry::Size());
     MOCK_CONST_METHOD0(max_refresh_rate, int());
 
-    MOCK_METHOD1(set_crtc, bool(uint32_t));
+    bool set_crtc(graphics::mesa::FBHandle const& fb) override
+    {
+        return set_crtc_thunk(&fb);
+    }
+
+    MOCK_METHOD1(set_crtc_thunk, bool(graphics::mesa::FBHandle const*));
     MOCK_METHOD0(clear_crtc, void());
-    MOCK_METHOD1(schedule_page_flip, bool(uint32_t));
+
+    bool schedule_page_flip(graphics::mesa::FBHandle const& fb) override
+    {
+        return schedule_page_flip_thunk(&fb);
+    }
+    MOCK_METHOD1(schedule_page_flip_thunk, bool(graphics::mesa::FBHandle const*));
     MOCK_METHOD0(wait_for_page_flip, void());
 
     MOCK_CONST_METHOD0(last_frame, graphics::Frame());
 
-    MOCK_METHOD1(set_cursor, void(gbm_bo*));
+    MOCK_METHOD1(set_cursor, bool(gbm_bo*));
     MOCK_METHOD1(move_cursor, void(geometry::Point));
-    MOCK_METHOD0(clear_cursor, void());
+    MOCK_METHOD0(clear_cursor, bool());
     MOCK_CONST_METHOD0(has_cursor, bool());
 
     MOCK_METHOD1(set_power_mode, void(MirPowerMode));
     MOCK_METHOD1(set_gamma, void(mir::graphics::GammaCurves const&));
+
+    MOCK_METHOD0(refresh_hardware_state, void());
+    MOCK_CONST_METHOD1(update_from_hardware_state, void(graphics::DisplayConfigurationOutput&));
+
+    MOCK_CONST_METHOD1(fb_for, graphics::mesa::FBHandle*(gbm_bo*));
+    MOCK_CONST_METHOD1(buffer_requires_migration, bool(gbm_bo*));
+    MOCK_CONST_METHOD0(drm_fd, int());
 };
 
 } // namespace test

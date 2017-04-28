@@ -59,7 +59,8 @@ void mir_display_config_release(MirDisplayConfig* config);
  *               supportable at this time.
  */
 int mir_display_config_get_max_simultaneous_outputs(
-    MirDisplayConfig const* config);
+    MirDisplayConfig const* config)
+    __attribute__((deprecated("Not accurate in Mir 0.26 and later. May be removed in future.")));
 
 /**
  * Get the number of outputs available in this display configuration.
@@ -266,7 +267,8 @@ MirOutputType mir_output_get_type(MirOutput const* output);
  * \param [in]  type  The MirDisplayOutputType to describe.
  * \returns           The name of the output type.
  */
-char const* mir_display_output_type_name(MirDisplayOutputType type);
+char const* mir_display_output_type_name(MirDisplayOutputType type)
+__attribute__((deprecated("use mir_output_type_name instead")));
 
 /**
  * Get the textual name of an output type.
@@ -307,6 +309,28 @@ int mir_output_get_position_x(MirOutput const* output);
  *              virtual display space.
  */
 int mir_output_get_position_y(MirOutput const* output);
+
+/**
+ * Get the width of the virtual display space occupied by an output.
+ *
+ * This may not be equal to the width of its current mode, for example if
+ * it is rotated or (in future) cloning another output.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The width in logical pixels (not physical screen pixels)
+ */
+unsigned int mir_output_get_logical_width(MirOutput const* output);
+
+/**
+ * Get the height of the virtual display space occupied by an output.
+ *
+ * This may not be equal to the height of its current mode, for example if
+ * it is rotated or (in future) cloning another output.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     The height in logical pixels (not physical screen pixels)
+ */
+unsigned int mir_output_get_logical_height(MirOutput const* output);
 
 /**
  * Set the coordinates of the top-left point of the output in the virtual
@@ -530,6 +554,17 @@ void mir_output_set_gamma(MirOutput* client_output,
                           uint16_t const* green,
                           uint16_t const* blue,
                           uint32_t  size);
+
+/**
+ * Set the scale-factor of a display
+ *
+ * The scale-factor specifies the conversion between logical pixels and physical
+ * pixels on this output. See mir_output_get_scale_factor for further details.
+ *
+ * \param [in]  output  The MirOutput to modify
+ * \param [in]  scale   The scale factor
+ */
+void mir_output_set_scale_factor(MirOutput* output, float scale);
 
 /**
  * Get the raw EDID data of a display.

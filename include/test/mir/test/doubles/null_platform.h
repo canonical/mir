@@ -46,9 +46,24 @@ class NullPlatform : public graphics::Platform
         return mir::make_module_ptr<NullDisplay>();
     }
 
+    graphics::NativeDisplayPlatform* native_display_platform() override
+    {
+        return nullptr;
+    }
+
     mir::UniqueModulePtr<graphics::PlatformIpcOperations> make_ipc_operations() const override
     {
         return mir::make_module_ptr<NullPlatformIpcOperations>();
+    }
+
+    graphics::NativeRenderingPlatform* native_rendering_platform() override
+    {
+        return nullptr;
+    }
+
+    std::vector<ExtensionDescription> extensions() const override
+    {
+        return {};
     }
 };
 }

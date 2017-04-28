@@ -201,3 +201,17 @@ void msh::SystemCompositorWindowManager::handle_raise_surface(
     uint64_t /*timestamp*/)
 {
 }
+
+void msh::SystemCompositorWindowManager::handle_request_drag_and_drop(
+    std::shared_ptr<ms::Session> const& /*session*/,
+    std::shared_ptr<ms::Surface> const& /*surface*/,
+    uint64_t /*timestamp*/)
+{
+}
+
+void msh::SystemCompositorWindowManager::handle_request_move(
+    std::shared_ptr<ms::Session> const& /*session*/,
+    std::shared_ptr<ms::Surface> const& /*surface*/,
+    uint64_t /*timestamp*/)
+{
+}

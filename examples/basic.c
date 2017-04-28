@@ -17,6 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
+#include "mir_toolkit/extensions/graphics_module.h"
 
 #include <assert.h>
 #include <string.h>
@@ -60,14 +61,8 @@ typedef struct MirDemoState
 } MirDemoState;
 ///\internal [MirDemoState_tag]
 
-///\internal [Callback_tag]
-// Callback to update MirDemoState on connection
-static void connection_callback(MirConnection *new_connection, void *context)
-{
-    ((MirDemoState*)context)->connection = new_connection;
-}
-///\internal [Callback_tag]
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 int demo_client(const char* server, int buffer_swap_count)
 {
     MirDemoState mcd;
@@ -77,8 +72,7 @@ int demo_client(const char* server, int buffer_swap_count)
     puts("Starting");
 
     ///\internal [connect_tag]
-    // Call mir_connect and wait for callback to complete.
-    mir_wait_for(mir_connect(server, __FILE__, connection_callback, &mcd));
+    mcd.connection = mir_connect_sync(server, __FILE__);
     puts("Connected");
     ///\internal [connect_tag]
 
@@ -93,21 +87,13 @@ int demo_client(const char* server, int buffer_swap_count)
         return 1;
     }
 
-    // We can query information about the platform we're running on
-    {
-        MirPlatformPackage platform_package;
-        platform_package.data_items = -1;
-        platform_package.fd_items = -1;
-
-        mir_connection_get_platform(mcd.connection, &platform_package);
-        assert(0 <= platform_package.data_items);
-        assert(0 <= platform_package.fd_items);
-    }
-
     {
         MirModuleProperties properties = { NULL, -1, -1, -1, NULL };
 
-        mir_connection_get_graphics_module(mcd.connection, &properties);
+        MirExtensionGraphicsModuleV1 const* ext = mir_extension_graphics_module_v1(mcd.connection);
+        assert(ext);
+
+        ext->graphics_module(mcd.connection, &properties);
 
         assert(NULL != properties.name);
         assert(0 <= properties.major_version);
@@ -158,6 +144,7 @@ int demo_client(const char* server, int buffer_swap_count)
             ///\internal [get_current_buffer_tag]
             MirNativeBuffer* buffer_package = NULL;
             mir_buffer_stream_get_current_buffer(bs, &buffer_package);
+#pragma GCC diagnostic pop
             assert(buffer_package != NULL);
             MirGraphicsRegion graphics_region;
             mir_buffer_stream_get_graphics_region(bs, &graphics_region);

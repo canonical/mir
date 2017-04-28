@@ -18,8 +18,15 @@
 
 #include "mir/input/input_device_info.h"
 #include "mir/input/event_filter.h"
+#include "mir/input/keymap.h"
 #include "mir/input/composite_event_filter.h"
+#include "mir/scene/session.h"
+#include "mir/scene/surface.h"
 #include "mir/input/mir_touchpad_config.h"
+#include "mir/input/mir_input_config.h"
+#include "mir/input/input_device.h"
+#include "mir/input/touchscreen_settings.h"
+#include <mir/raii.h>
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/fake_input_device.h"
@@ -30,6 +37,8 @@
 #include "mir/test/spin_wait.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/event_factory.h"
+#include "mir/test/fake_shared.h"
+#include "mir/test/doubles/stub_session_authorizer.h"
 
 #include "mir/input/input_device_observer.h"
 #include "mir/input/input_device_hub.h"
@@ -42,22 +51,41 @@
 #include <linux/input.h>
 
 #include <condition_variable>
+#include <unordered_map>
 #include <chrono>
+#include <atomic>
 #include <mutex>
 
 namespace mi = mir::input;
 namespace mt = mir::test;
 namespace ms = mir::scene;
+namespace mf = mir::frontend;
 namespace mis = mir::input::synthesis;
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 namespace geom = mir::geometry;
 
 using namespace std::chrono_literals;
 using namespace testing;
-using namespace std::chrono_literals;
 
 namespace
 {
+
+struct StubAuthorizer : mtd::StubSessionAuthorizer
+{
+    bool configure_input_is_allowed(mf::SessionCredentials const&) override
+    {
+        return allow_configure_input;
+    }
+
+    bool set_base_input_configuration_is_allowed(mf::SessionCredentials const&) override
+    {
+        return allow_set_base_input_configuration;
+    }
+
+    std::atomic<bool> allow_configure_input{true};
+    std::atomic<bool> allow_set_base_input_configuration{true};
+};
 
 struct MockEventFilter : public mi::EventFilter
 {
@@ -70,6 +98,22 @@ struct MockEventFilter : public mi::EventFilter
     }
 };
 
+
+template<typename SetCallback, typename Apply>
+void apply_and_wait_for_completion(MirConnection* connection, SetCallback set_callback, Apply apply)
+{
+    mt::Signal change_complete;
+    set_callback(connection,
+                 [](MirConnection*, void* context)
+                 {
+                     static_cast<mt::Signal*>(context)->raise(); 
+                 },
+                 &change_complete
+                );
+    apply(connection);
+    ASSERT_TRUE(change_complete.wait_for(10s));
+}
+
 const int surface_width = 100;
 const int surface_height = 100;
 
@@ -77,12 +121,52 @@ void null_event_handler(MirWindow*, MirEvent const*, void*)
 {
 }
 
+struct SurfaceTrackingShell : mir::shell::ShellWrapper
+{
+    SurfaceTrackingShell(
+        std::shared_ptr<mir::shell::Shell> wrapped_shell)
+        : ShellWrapper{wrapped_shell}, wrapped_shell{wrapped_shell}
+    {}
+
+    mir::frontend::SurfaceId create_surface(
+        std::shared_ptr<mir::scene::Session> const& session,
+        mir::scene::SurfaceCreationParameters const& params,
+        std::shared_ptr<mir::frontend::EventSink> const& sink) override
+    {
+        auto surface_id = wrapped_shell->create_surface(session, params, sink);
+
+        tracked_surfaces[session->name()] =  TrackedSurface{session, surface_id};
+
+        return surface_id;
+    }
+
+    std::shared_ptr<mir::scene::Surface> get_surface(std::string const& session_name)
+    {
+        if (end(tracked_surfaces) == tracked_surfaces.find(session_name))
+            return nullptr;
+        TrackedSurface & tracked_surface = tracked_surfaces[session_name];
+        auto session = tracked_surface.session.lock();
+        if (!session)
+            return nullptr;
+        return session->surface(tracked_surface.surface);
+    }
+
+    struct TrackedSurface
+    {
+        std::weak_ptr<mir::scene::Session> session;
+        mir::frontend::SurfaceId surface;
+    };
+    std::unordered_map<std::string, TrackedSurface> tracked_surfaces;
+    std::shared_ptr<mir::shell::Shell> wrapped_shell;
+};
+
 struct Client
 {
     MirWindow* window{nullptr};
 
     MOCK_METHOD1(handle_input, void(MirEvent const*));
     MOCK_METHOD1(handle_keymap, void(MirEvent const*));
+    MOCK_METHOD1(handle_input_device_state, void(MirEvent const*));
 
     Client(std::string const& con, std::string const& name)
     {
@@ -95,7 +179,11 @@ struct Client
                 mir_connection_get_error_message(connection)});
         }
         auto spec = mir_create_normal_window_spec(connection, surface_width, surface_height);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+#pragma GCC diagnostic pop
+        mir_window_spec_set_event_handler(spec, handle_event, this);
         mir_window_spec_set_name(spec, name.c_str());
         window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
@@ -103,10 +191,11 @@ struct Client
             BOOST_THROW_EXCEPTION(std::runtime_error{std::string{"Failed creating a window: "}+
                 mir_window_get_error_message(window)});
 
-        mir_window_set_event_handler(window, handle_event, this);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_buffer_stream_swap_buffers_sync(
             mir_window_get_buffer_stream(window));
-
+#pragma GCC diagnostic pop
         ready_to_accept_events.wait_for(4s);
         if (!ready_to_accept_events.raised())
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
@@ -125,30 +214,43 @@ struct Client
             mir_window_focus_state_focused == value)
             focused = true;
 
-        if (exposed && focused)
+        test_and_raise();
+    }
+
+    void test_and_raise()
+    {
+        if (exposed && focused && input_device_state_received)
             ready_to_accept_events.raise();
     }
 
     static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<Client*>(context);
+        std::lock_guard<std::mutex> lock(client->client_status);
         auto type = mir_event_get_type(ev);
         if (type == mir_event_type_window)
         {
             auto window_event = mir_event_get_window_event(ev);
             client->handle_window_event(window_event);
-
         }
         if (type == mir_event_type_input)
             client->handle_input(ev);
         if (type == mir_event_type_keymap)
             client->handle_keymap(ev);
+        if (type == mir_event_type_input_device_state)
+        {
+            client->input_device_state_received = true;
+            client->test_and_raise();
+            client->handle_input_device_state(ev);
+        }
     }
     ~Client()
     {
         // Remove the event handler to avoid handling spurious events unrelated
         // to the tests (e.g. pointer leave events when the window is destroyed),
         // which can cause test expectations to fail.
+        mir_connection_set_input_config_change_callback(connection, [](MirConnection*, void*){}, nullptr);
+
         mir_window_set_event_handler(window, null_event_handler, nullptr);
         mir_window_release_sync(window);
         mir_connection_release(connection);
@@ -158,6 +260,8 @@ struct Client
     mir::test::Signal all_events_received;
     bool exposed = false;
     bool focused = false;
+    bool input_device_state_received = false;
+    std::mutex client_status;
 };
 
 struct DeviceCounter : mi::InputDeviceObserver
@@ -193,15 +297,23 @@ struct TestClientInput : mtf::HeadlessInProcessServer
             [this](std::shared_ptr<mir::shell::Shell> const& wrapped)
             {
                 shell = std::make_shared<mtf::PlacementApplyingShell>(wrapped, input_regions, positions);
-                return shell;
+                surfaces = std::make_shared<SurfaceTrackingShell>(shell);
+                return surfaces;
             });
+        server.override_the_session_authorizer([this] { return mt::fake_shared(stub_authorizer); });
 
         HeadlessInProcessServer::SetUp();
 
         positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
     }
 
+    std::shared_ptr<mir::scene::Surface> get_surface(std::string const& name)
+    {
+        return surfaces->get_surface(name);
+    }
+
     std::shared_ptr<mtf::PlacementApplyingShell> shell;
+    std::shared_ptr<SurfaceTrackingShell> surfaces;
     std::string const keyboard_name = "keyboard";
     std::string const keyboard_unique_id = "keyboard-uid";
     std::string const mouse_name = "mouse";
@@ -220,6 +332,7 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     std::string second{"second"};
     mtf::ClientInputRegions input_regions;
     mtf::ClientPositions positions;
+    StubAuthorizer stub_authorizer;
     geom::Rectangle screen_geometry{{0,0}, {1000,800}};
     std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
     mt::Signal devices_available;
@@ -236,12 +349,14 @@ struct TestClientInput : mtf::HeadlessInProcessServer
                     devices_available.raise();
             });
 
-        server.the_input_device_hub()->add_observer(counter);
+        auto hub = server.the_input_device_hub();
+
+        auto const register_counter = mir::raii::paired_calls(
+            [&]{ hub->add_observer(counter); },
+            [&]{ hub->remove_observer(counter); });
 
         devices_available.wait_for(5s);
         ASSERT_THAT(counter->count_devices, Eq(expected_number_of_input_devices));
-
-        server.the_input_device_hub()->remove_observer(counter);
     }
 
     MirInputDevice const* get_device_with_capabilities(MirInputConfig const* config, MirInputDeviceCapabilities caps)
@@ -264,6 +379,35 @@ struct TestClientInput : mtf::HeadlessInProcessServer
                 return dev;
         }
         return nullptr;
+    }
+};
+
+struct TestClientInputWithTwoScreens : TestClientInput
+{
+    geom::Rectangle second_screen{{1000,0}, {200,400}};
+
+    int const width{second_screen.size.width.as_int()};
+    int const height{second_screen.size.height.as_int()};
+    float const touch_range = mtf::FakeInputDevice::maximum_touch_axis_value - mtf::FakeInputDevice::minimum_touch_axis_value + 1;
+    float const scale_to_device_width = touch_range / width;
+    float const scale_to_device_height = touch_range / height;
+
+    void SetUp() override
+    {
+        initial_display_layout({screen_geometry, second_screen});
+
+        server.wrap_shell(
+            [this](std::shared_ptr<mir::shell::Shell> const& wrapped)
+            {
+                shell = std::make_shared<mtf::PlacementApplyingShell>(wrapped, input_regions, positions);
+                return shell;
+            });
+
+        HeadlessInProcessServer::SetUp();
+
+        // make surface span over both outputs to test coordinates mapped into second ouput:
+        positions[first] =
+            geom::Rectangle{{0, 0}, {second_screen.bottom_right().x.as_int(), second_screen.bottom_right().y.as_int()}};
     }
 };
 
@@ -844,7 +988,7 @@ TEST_F(TestClientInput, client_input_config_request_receives_all_attached_device
             break;
 
         std::this_thread::sleep_for(10ms);
-        mir_input_config_destroy(config);
+        mir_input_config_release(config);
         config = mir_connection_create_input_config(con);
     }
 
@@ -858,7 +1002,7 @@ TEST_F(TestClientInput, client_input_config_request_receives_all_attached_device
                                         uint32_t(mir_input_device_capability_touchscreen |
                                                  mir_input_device_capability_multitouch)));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
     mir_connection_release(con);
 }
 
@@ -889,7 +1033,7 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_addition)
     EXPECT_THAT(config, ADeviceMatches(touchpad, touchpad_uid, uint32_t(mir_input_device_capability_touchpad |
                                                                          mir_input_device_capability_pointer)));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
@@ -911,7 +1055,119 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_removal)
 
     auto config = mir_connection_create_input_config(a_client.connection);
     EXPECT_THAT(mir_input_config_device_count(config), Eq(2u));
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
+}
+
+TEST_F(TestClientInput, key_event_contains_text_to_append)
+{
+    Client a_client(new_connection(), first);
+
+    EXPECT_CALL(a_client, handle_input(mt::KeyWithText("x")))
+        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_X));
+    a_client.all_events_received.wait_for(10s);
+}
+
+TEST_F(TestClientInput, key_event_text_applies_shift_modifiers)
+{
+    Client a_client(new_connection(), first);
+
+    EXPECT_CALL(a_client, handle_input(AllOf(mt::KeyWithText(""), mt::KeyOfSymbol(XKB_KEY_Shift_L))));
+    EXPECT_CALL(a_client, handle_input(mt::KeyWithText("W")))
+        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_LEFTSHIFT));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_W));
+    a_client.all_events_received.wait_for(10s);
+}
+
+TEST_F(TestClientInput, on_ctrl_c_key_event_text_is_end_of_text)
+{
+    Client a_client(new_connection(), first);
+
+    EXPECT_CALL(a_client, handle_input(AllOf(mt::KeyWithText(""), mt::KeyOfSymbol(XKB_KEY_Control_R))));
+    EXPECT_CALL(a_client, handle_input(mt::KeyWithText("\003")))
+        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTCTRL));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_C));
+    a_client.all_events_received.wait_for(10s);
+}
+
+TEST_F(TestClientInput, num_lock_is_off_on_startup)
+{
+    Client a_client(new_connection(), first);
+
+    EXPECT_CALL(a_client, handle_input(mt::KeyOfSymbol(XKB_KEY_KP_Left)))
+        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_KP4));
+    a_client.all_events_received.wait_for(10s);
+}
+
+TEST_F(TestClientInput, keeps_num_lock_state_after_focus_change)
+{
+    Client first_client(new_connection(), first);
+
+    {
+        Client second_client(new_connection(), second);
+        EXPECT_CALL(second_client, handle_input(mt::KeyDownEvent()));
+        EXPECT_CALL(second_client, handle_input(mt::KeyUpEvent()))
+            .WillOnce(mt::WakeUp(&second_client.all_events_received));
+
+        fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_NUMLOCK));
+        fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_NUMLOCK));
+
+        second_client.all_events_received.wait_for(10s);
+    }
+
+    EXPECT_CALL(first_client, handle_input(mt::KeyOfSymbol(XKB_KEY_KP_4)))
+        .WillOnce(mt::WakeUp(&first_client.all_events_received));
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_KP4));
+    first_client.all_events_received.wait_for(10s);
+}
+
+TEST_F(TestClientInput, reestablishes_num_lock_state_in_client_with_surface_keymap)
+{
+    Client a_client_with_keymap(new_connection(), first);
+
+    mir::test::Signal keymap_received;
+    mir::test::Signal device_state_received;
+
+    EXPECT_CALL(a_client_with_keymap, handle_keymap(_))
+        .WillOnce(mt::WakeUp(&keymap_received));
+    EXPECT_CALL(a_client_with_keymap,
+                handle_input_device_state(
+                    mt::DeviceStateWithPressedKeys(std::vector<uint32_t>{KEY_NUMLOCK, KEY_NUMLOCK})))
+        .WillOnce(mt::WakeUp(&device_state_received));
+
+    get_surface(first)->set_keymap(MirInputDeviceId{0}, "pc105", "de", "", "");
+    keymap_received.wait_for(4s);
+
+    {
+        Client a_client(new_connection(), second);
+
+        EXPECT_CALL(a_client, handle_input(mt::KeyDownEvent()));
+        EXPECT_CALL(a_client, handle_input(mt::KeyUpEvent()));
+        EXPECT_CALL(a_client, handle_input(AllOf(mt::KeyDownEvent(),mt::KeyOfSymbol(XKB_KEY_KP_4))));
+        EXPECT_CALL(a_client, handle_input(AllOf(mt::KeyUpEvent(),mt::KeyOfSymbol(XKB_KEY_KP_4))))
+            .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+        fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_NUMLOCK));
+        fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_NUMLOCK));
+        fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_KP4));
+        fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_KP4));
+
+        a_client.all_events_received.wait_for(10s);
+    }
+    device_state_received.wait_for(4s);
+    EXPECT_CALL(a_client_with_keymap, handle_input(mt::KeyOfSymbol(XKB_KEY_KP_4)))
+        .WillOnce(mt::WakeUp(&a_client_with_keymap.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_KP4));
+
+    a_client_with_keymap.all_events_received.wait_for(10s);
 }
 
 TEST_F(TestClientInput, initial_mouse_configuration_can_be_querried)
@@ -929,7 +1185,7 @@ TEST_F(TestClientInput, initial_mouse_configuration_can_be_querried)
     EXPECT_THAT(mir_pointer_config_get_vertical_scroll_scale(pointer_config), Eq(1.0));
     EXPECT_THAT(mir_pointer_config_get_horizontal_scroll_scale(pointer_config), Eq(1.0));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, no_touchpad_config_on_mouse)
@@ -941,7 +1197,7 @@ TEST_F(TestClientInput, no_touchpad_config_on_mouse)
     auto mouse = get_device_with_capabilities(config, mir_input_device_capability_pointer);
 
     EXPECT_THAT(mir_input_device_get_touchpad_config(mouse), Eq(nullptr));
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, pointer_config_is_mutable)
@@ -963,7 +1219,7 @@ TEST_F(TestClientInput, pointer_config_is_mutable)
     EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
     EXPECT_THAT(mir_pointer_config_get_acceleration_bias(pointer_config), Eq(1.0));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, touchpad_config_can_be_querried)
@@ -992,7 +1248,7 @@ TEST_F(TestClientInput, touchpad_config_can_be_querried)
     EXPECT_THAT(mir_touchpad_config_get_disable_with_mouse(touchpad_config), Eq(default_configuration.disable_with_mouse()));
     EXPECT_THAT(mir_touchpad_config_get_disable_while_typing(touchpad_config), Eq(default_configuration.disable_while_typing()));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
 TEST_F(TestClientInput, touchpad_config_is_mutable)
@@ -1029,7 +1285,411 @@ TEST_F(TestClientInput, touchpad_config_is_mutable)
     EXPECT_THAT(mir_touchpad_config_get_disable_with_mouse(touchpad_config), Eq(true));
     EXPECT_THAT(mir_touchpad_config_get_disable_while_typing(touchpad_config), Eq(false));
 
-    mir_input_config_destroy(config);
+    mir_input_config_release(config);
 }
 
+TEST_F(TestClientInput, clients_can_apply_changed_input_configuration)
+{
+    wait_for_input_devices();
 
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    auto pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
+    auto increased_acceleration = 0.7f;
+
+    mir_pointer_config_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
+    mir_pointer_config_set_acceleration_bias(pointer_config, increased_acceleration);
+
+    apply_and_wait_for_completion(
+        a_client.connection,
+        mir_connection_set_input_config_change_callback,
+        [config](MirConnection* connection)
+        {
+            mir_connection_apply_session_input_config(connection, config);
+            mir_input_config_release(config);
+        });
+
+    config = mir_connection_create_input_config(a_client.connection);
+    mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
+
+    EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
+    EXPECT_THAT(mir_pointer_config_get_acceleration_bias(pointer_config), Eq(increased_acceleration));
+    mir_input_config_release(config);
+}
+
+TEST_F(TestClientInput, keyboard_config_can_be_querried)
+{
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto keyboard = get_mutable_device_with_capabilities(
+        config, mir_input_device_capability_keyboard | mir_input_device_capability_alpha_numeric);
+    ASSERT_THAT(keyboard, Ne(nullptr));
+    auto keyboard_config = mir_input_device_get_keyboard_config(keyboard);
+
+    EXPECT_THAT(mir_keyboard_config_get_keymap_model(keyboard_config), StrEq("pc105+inet"));
+    EXPECT_THAT(mir_keyboard_config_get_keymap_layout(keyboard_config), StrEq("us"));
+    EXPECT_THAT(mir_keyboard_config_get_keymap_variant(keyboard_config), StrEq(""));
+    EXPECT_THAT(mir_keyboard_config_get_keymap_options(keyboard_config), StrEq(""));
+
+    mir_input_config_release(config);
+}
+
+TEST_F(TestClientInput, keyboard_config_is_mutable)
+{
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto keyboard = get_mutable_device_with_capabilities(
+        config, mir_input_device_capability_keyboard | mir_input_device_capability_alpha_numeric);
+    ASSERT_THAT(keyboard, Ne(nullptr));
+    auto keyboard_config = mir_input_device_get_mutable_keyboard_config(keyboard);
+
+    mir_keyboard_config_set_keymap_model(keyboard_config, "pc104");
+    mir_keyboard_config_set_keymap_layout(keyboard_config, "fr");
+    mir_keyboard_config_set_keymap_variant(keyboard_config, "alt");
+    mir_keyboard_config_set_keymap_options(keyboard_config, "compose:ralt");
+
+    EXPECT_THAT(mir_keyboard_config_get_keymap_model(keyboard_config), StrEq("pc104"));
+    EXPECT_THAT(mir_keyboard_config_get_keymap_layout(keyboard_config), StrEq("fr"));
+    EXPECT_THAT(mir_keyboard_config_get_keymap_variant(keyboard_config), StrEq("alt"));
+    EXPECT_THAT(mir_keyboard_config_get_keymap_options(keyboard_config), StrEq("compose:ralt"));
+
+    mir_input_config_release(config);
+}
+
+TEST_F(TestClientInput, keyboard_config_can_be_changed)
+{
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto keyboard = get_mutable_device_with_capabilities(
+        config, mir_input_device_capability_keyboard | mir_input_device_capability_alpha_numeric);
+    ASSERT_THAT(keyboard, Ne(nullptr));
+
+    auto keyboard_config = mir_input_device_get_mutable_keyboard_config(keyboard);
+
+    mir_keyboard_config_set_keymap_layout(keyboard_config, "de");
+
+    mt::Signal changes_complete;
+    mir_connection_set_input_config_change_callback(
+        a_client.connection,
+        [](MirConnection*, void* context)
+        {
+            static_cast<mt::Signal*>(context)->raise();
+        },
+        &changes_complete
+        );
+    mir_connection_apply_session_input_config(a_client.connection, config);
+    mir_input_config_release(config);
+
+    EXPECT_TRUE(changes_complete.wait_for(10s));
+    EXPECT_CALL(a_client, handle_input(mt::KeyOfSymbol(XKB_KEY_y)))
+        .WillOnce(mt::WakeUp(&a_client.all_events_received));
+
+    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_Z));
+
+    EXPECT_TRUE(a_client.all_events_received.wait_for(10s));
+}
+
+TEST_F(TestClientInput, unfocused_client_can_change_base_configuration)
+{
+    wait_for_input_devices();
+
+    Client unfocused_client(new_connection(), first);
+    Client focused_client(new_connection(), second);
+    auto config = mir_connection_create_input_config(unfocused_client.connection);
+    auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    auto pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
+
+    mir_pointer_config_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
+
+    apply_and_wait_for_completion(
+        unfocused_client.connection,
+        mir_connection_set_input_config_change_callback,
+        [config](MirConnection* connection)
+        {
+            mir_connection_set_base_input_config(connection, config);
+            mir_input_config_release(config);
+        });
+
+    config = mir_connection_create_input_config(unfocused_client.connection);
+    mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
+
+    EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
+    mir_input_config_release(config);
+}
+
+TEST_F(TestClientInput, unfocused_client_cannot_change_input_configuration)
+{
+    wait_for_input_devices();
+
+    Client unfocused_client(new_connection(), first);
+    Client focused_client(new_connection(), second);
+    auto config = mir_connection_create_input_config(unfocused_client.connection);
+    auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    auto pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
+
+    mir_pointer_config_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
+
+    mt::Signal expect_no_changes;
+    mir_connection_set_input_config_change_callback(
+        unfocused_client.connection,
+        [](MirConnection*, void* context)
+        {
+            static_cast<mt::Signal*>(context)->raise();
+        },
+        &expect_no_changes
+        );
+    mir_connection_apply_session_input_config(unfocused_client.connection, config);
+    mir_input_config_release(config);
+
+    EXPECT_FALSE(expect_no_changes.wait_for(1s));
+    mir_connection_set_input_config_change_callback(unfocused_client.connection, [](MirConnection*, void*){}, nullptr);
+}
+
+TEST_F(TestClientInput, focused_client_can_change_base_configuration)
+{
+    wait_for_input_devices();
+
+    Client focused_client(new_connection(), second);
+    auto config = mir_connection_create_input_config(focused_client.connection);
+    auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    auto pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
+
+    mir_pointer_config_set_acceleration(pointer_config, mir_pointer_acceleration_adaptive);
+
+    apply_and_wait_for_completion(
+        focused_client.connection,
+        mir_connection_set_input_config_change_callback,
+        [config](MirConnection* connection)
+        {
+            mir_connection_set_base_input_config(connection, config);
+            mir_input_config_release(config);
+        });
+
+    config = mir_connection_create_input_config(focused_client.connection);
+    mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
+
+    EXPECT_THAT(mir_pointer_config_get_acceleration(pointer_config), Eq(mir_pointer_acceleration_adaptive));
+    mir_input_config_release(config);
+}
+
+TEST_F(TestClientInput, set_base_configuration_for_unauthorized_client_fails)
+{
+    wait_for_input_devices();
+    stub_authorizer.allow_set_base_input_configuration = false;
+
+    Client unauthed_client(new_connection(), second);
+    auto config = mir_connection_create_input_config(unauthed_client.connection);
+
+    mt::Signal wait_for_error;
+    mir_connection_set_error_callback(
+        unauthed_client.connection,
+        [](MirConnection*, MirError const* error, void* context)
+        {
+            if (mir_error_get_domain(error) == mir_error_domain_input_configuration &&
+                mir_error_get_code(error) == mir_input_configuration_error_base_configuration_unauthorized)
+                static_cast<mt::Signal*>(context)->raise();
+        },
+        &wait_for_error);
+    mir_connection_set_base_input_config(unauthed_client.connection, config);
+    mir_input_config_release(config);
+
+    EXPECT_TRUE(wait_for_error.wait_for(10s));
+}
+
+TEST_F(TestClientInput, set_configuration_for_unauthorized_client_fails)
+{
+    wait_for_input_devices();
+    stub_authorizer.allow_configure_input = false;
+
+    Client unauthed_client(new_connection(), second);
+    auto config = mir_connection_create_input_config(unauthed_client.connection);
+
+    mt::Signal wait_for_error;
+    mir_connection_set_error_callback(
+        unauthed_client.connection,
+        [](MirConnection*, MirError const* error, void* context)
+        {
+            if (mir_error_get_domain(error) == mir_error_domain_input_configuration &&
+                mir_error_get_code(error) == mir_input_configuration_error_unauthorized)
+                static_cast<mt::Signal*>(context)->raise();
+        },
+        &wait_for_error);
+    mir_connection_apply_session_input_config(unauthed_client.connection, config);
+    mir_input_config_release(config);
+
+    EXPECT_TRUE(wait_for_error.wait_for(10s));
+}
+
+TEST_F(TestClientInput, error_callback_triggered_on_wrong_configuration)
+{
+    wait_for_input_devices();
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
+    auto pointer_config = mir_input_device_get_mutable_pointer_config(mouse);
+
+    float out_of_range = 3.0f;
+    mir_pointer_config_set_acceleration_bias(pointer_config, out_of_range);
+
+    mt::Signal wait_for_error;
+    mir_connection_set_error_callback(
+        a_client.connection,
+        [](MirConnection*, MirError const* error, void* context)
+        {
+            if (mir_error_get_domain(error) == mir_error_domain_input_configuration &&
+                mir_error_get_code(error) == mir_input_configuration_error_rejected_by_driver)
+                static_cast<mt::Signal*>(context)->raise();
+        },
+        &wait_for_error);
+    mir_connection_apply_session_input_config(a_client.connection, config);
+    mir_input_config_release(config);
+
+    EXPECT_TRUE(wait_for_error.wait_for(10s));
+}
+
+TEST_F(TestClientInput, touchscreen_config_is_mutable)
+{
+    wait_for_input_devices();
+
+    Client a_client(new_connection(), first);
+    auto config = mir_connection_create_input_config(a_client.connection);
+    auto touchscreen = get_mutable_device_with_capabilities(config,
+                                                 mir_input_device_capability_touchscreen|
+                                                 mir_input_device_capability_multitouch);
+    ASSERT_THAT(touchscreen, Ne(nullptr));
+
+    auto touchscreen_config = mir_input_device_get_mutable_touchscreen_config(touchscreen);
+
+    mir_touchscreen_config_set_output_id(touchscreen_config, 4);
+    mir_touchscreen_config_set_mapping_mode(touchscreen_config, mir_touchscreen_mapping_mode_to_display_wall);
+
+    EXPECT_THAT(mir_touchscreen_config_get_mapping_mode(touchscreen_config), Eq(mir_touchscreen_mapping_mode_to_display_wall));
+    EXPECT_THAT(mir_touchscreen_config_get_output_id(touchscreen_config), Eq(4));
+
+    mir_input_config_release(config);
+}
+
+TEST_F(TestClientInputWithTwoScreens, touchscreen_can_be_mapped_to_second_output)
+{
+    wait_for_input_devices();
+    uint32_t const second_output = 2;
+    int const touch_x = 10;
+    int const touch_y = 10;
+
+    int const expected_x = touch_x + second_screen.top_left.x.as_int();
+    int const expected_y = touch_y + second_screen.top_left.y.as_int();
+
+    mt::Signal touchscreen_ready;
+    fake_touch_screen->on_new_configuration_do(
+        [&touchscreen_ready](mi::InputDevice const& dev)
+        {
+            auto ts = dev.get_touchscreen_settings();
+            if (ts.is_set() && ts.value().output_id == second_output)
+                touchscreen_ready.raise();
+        });
+
+    Client client(new_connection(), first);
+    auto config = mir_connection_create_input_config(client.connection);
+    auto touchscreen = get_mutable_device_with_capabilities(config,
+                                                            mir_input_device_capability_touchscreen|
+                                                            mir_input_device_capability_multitouch);
+    auto touchscreen_config = mir_input_device_get_mutable_touchscreen_config(touchscreen);
+    mir_touchscreen_config_set_output_id(touchscreen_config, second_output);
+    mir_touchscreen_config_set_mapping_mode(touchscreen_config, mir_touchscreen_mapping_mode_to_output);
+
+    apply_and_wait_for_completion(
+        client.connection,
+        mir_connection_set_input_config_change_callback,
+        [config](MirConnection* connection)
+        {
+            mir_connection_set_base_input_config(connection, config);
+            mir_input_config_release(config);
+        });
+
+    EXPECT_TRUE(touchscreen_ready.wait_for(10s));
+    EXPECT_CALL(client, handle_input(mt::TouchEvent(expected_x, expected_y)))
+        .WillOnce(mt::WakeUp(&client.all_events_received));
+    fake_touch_screen->emit_event(mis::a_touch_event()
+                           .at_position({touch_x*scale_to_device_width, touch_y*scale_to_device_height}));
+
+    EXPECT_TRUE(client.all_events_received.wait_for(10s));
+}
+
+TEST_F(TestClientInputWithTwoScreens, touchscreen_mapped_to_deactivated_output_is_filtered_out)
+{
+    wait_for_input_devices();
+    uint32_t const second_output = 2;
+    int const touch_x = 10;
+    int const touch_y = 10;
+
+    int const expected_x = second_screen.top_left.x.as_int() + touch_x;
+    int const expected_y = second_screen.top_left.y.as_int() + touch_y;
+
+    Client client(new_connection(), first);
+    auto display_config = mir_connection_create_display_configuration(client.connection);
+    auto second_output_ptr = mir_display_config_get_mutable_output(display_config, 1);
+    mir_output_set_power_mode(second_output_ptr, mir_power_mode_off);
+
+    apply_and_wait_for_completion(
+        client.connection,
+        mir_connection_set_display_config_change_callback,
+        [display_config](MirConnection* con)
+        {
+            mir_connection_preview_base_display_configuration(con, display_config, 10);
+        });
+
+    apply_and_wait_for_completion(
+        client.connection,
+        mir_connection_set_display_config_change_callback,
+        [display_config](MirConnection* con)
+        {
+            mir_connection_confirm_base_display_configuration(con, display_config);
+            mir_display_config_release(display_config);
+        });
+
+    display_config = mir_connection_create_display_configuration(client.connection);
+    ASSERT_THAT(mir_output_get_power_mode(mir_display_config_get_output(display_config, 1)), Eq(mir_power_mode_off));
+    mir_display_config_release(display_config);
+
+    mt::Signal touchscreen_ready;
+    fake_touch_screen->on_new_configuration_do(
+        [&touchscreen_ready](mi::InputDevice const& dev)
+        {
+            auto ts = dev.get_touchscreen_settings();
+            if (ts.is_set()
+                && ts.value().output_id == second_output
+                && ts.value().mapping_mode == mir_touchscreen_mapping_mode_to_output)
+                touchscreen_ready.raise();
+        });
+
+    auto config = mir_connection_create_input_config(client.connection);
+    auto touchscreen = get_mutable_device_with_capabilities(config,
+                                                            mir_input_device_capability_touchscreen|
+                                                            mir_input_device_capability_multitouch);
+    auto touchscreen_config = mir_input_device_get_mutable_touchscreen_config(touchscreen);
+
+    mir_touchscreen_config_set_output_id(touchscreen_config, second_output);
+    mir_touchscreen_config_set_mapping_mode(touchscreen_config, mir_touchscreen_mapping_mode_to_output);
+
+    apply_and_wait_for_completion(
+        client.connection,
+        mir_connection_set_input_config_change_callback,
+        [config](MirConnection* connection)
+        {
+            mir_connection_set_base_input_config(connection, config);
+            mir_input_config_release(config);
+        });
+
+    EXPECT_TRUE(touchscreen_ready.wait_for(10s));
+    ON_CALL(client, handle_input(mt::TouchEvent(expected_x, expected_y)))
+        .WillByDefault(mt::WakeUp(&client.all_events_received));
+    fake_touch_screen->emit_event(mis::a_touch_event()
+                           .at_position({touch_x*scale_to_device_width, touch_y*scale_to_device_height}));
+
+    EXPECT_FALSE(client.all_events_received.wait_for(5s));
+}

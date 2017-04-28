@@ -2,7 +2,7 @@
 #ifndef TESTS_ACCEPTANCE_TESTS_BUFFER_STREAM_ARRANGEMENT_H_
 #define TESTS_ACCEPTANCE_TESTS_BUFFER_STREAM_ARRANGEMENT_H_
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/compositor/display_buffer_compositor.h"
@@ -29,10 +29,6 @@ bool operator==(mir::test::RelativeRectangle const& a, mir::test::RelativeRectan
 
 struct Stream
 {
-    Stream(MirConnection* connection,
-        geometry::Size physical_size,
-        geometry::Rectangle position);
-    ~Stream();
     MirBufferStream* handle() const;
     geometry::Point position();
     geometry::Size logical_size();
@@ -41,9 +37,19 @@ struct Stream
     void swap_buffers();
     Stream(Stream const&) = delete;
     Stream& operator=(Stream const&) = delete;
-private:
-    MirBufferStream* stream;
+protected:
+    Stream(geometry::Rectangle, std::function<MirBufferStream*()> const& create_stream);
+    MirPixelFormat an_available_format(MirConnection* connection);
     geometry::Rectangle const position_;
+    MirBufferStream* stream;
+};
+
+struct LegacyStream : Stream
+{
+    LegacyStream(MirConnection* connection,
+        geometry::Size physical_size,
+        geometry::Rectangle position);
+    ~LegacyStream();
 };
 
 struct Ordering
@@ -86,7 +92,7 @@ struct OrderTrackingDBCFactory : compositor::DisplayBufferCompositorFactory
     std::shared_ptr<Ordering> const ordering;
 };
 
-struct BufferStreamArrangementBase : mir_test_framework::ConnectedClientWithASurface
+struct BufferStreamArrangementBase : mir_test_framework::ConnectedClientWithAWindow
 {
     void SetUp() override;
     void TearDown() override;

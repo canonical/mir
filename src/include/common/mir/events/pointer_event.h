@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -20,6 +20,8 @@
 #define MIR_COMMON_POINTER_EVENT_H_
 
 #include "mir/events/input_event.h"
+
+typedef struct MirBlob MirBlob;
 
 struct MirPointerEvent : MirInputEvent
 {
@@ -60,6 +62,9 @@ struct MirPointerEvent : MirInputEvent
 
     MirPointerButtons buttons() const;
     void set_buttons(MirPointerButtons buttons);
+
+    void set_dnd_handle(std::vector<uint8_t> const& handle);
+    MirBlob* dnd_handle() const;
 private:
 };
 

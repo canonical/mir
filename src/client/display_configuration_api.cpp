@@ -113,7 +113,7 @@ char const* mir_output_get_model(MirOutput const* output)
 
 int mir_display_config_get_max_simultaneous_outputs(MirDisplayConfig const* config)
 {
-    return config->display_card(0).max_simultaneous_outputs();
+    return mir_display_config_get_num_outputs(config);
 }
 
 int mir_output_get_id(MirOutput const* output)
@@ -251,6 +251,16 @@ int mir_output_get_position_y(MirOutput const* output)
     return output->position_y();
 }
 
+unsigned int mir_output_get_logical_width(MirOutput const* output)
+{
+    return output->logical_width();
+}
+
+unsigned int mir_output_get_logical_height(MirOutput const* output)
+{
+    return output->logical_height();
+}
+
 void mir_output_set_position(MirOutput* output, int x, int y)
 {
     output->set_position_x(x);
@@ -355,6 +365,11 @@ try
 } catch (std::exception const& e) {
     MIR_LOG_UNCAUGHT_EXCEPTION(e);
     abort();
+}
+
+void mir_output_set_scale_factor(MirOutput* output, float scale)
+{
+    output->set_scale_factor(scale);
 }
 
 MirFormFactor mir_output_get_form_factor(MirOutput const* output)

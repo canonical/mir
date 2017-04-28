@@ -50,6 +50,7 @@ namespace mtf = mir_test_framework;
 namespace
 {
 
+bool flavor_enabled = true;
 struct WrappingDisplay : mg::Display
 {
     WrappingDisplay(std::shared_ptr<mg::Display> const& display) : display{display} {}
@@ -94,9 +95,9 @@ struct WrappingDisplay : mg::Display
     {
         display->resume();
     }
-    std::shared_ptr<mg::Cursor> create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& initial_image) override
+    std::shared_ptr<mg::Cursor> create_hardware_cursor() override
     {
-        return display->create_hardware_cursor(initial_image);
+        return display->create_hardware_cursor();
     }
     std::unique_ptr<mg::VirtualOutput> create_virtual_output(int width, int height) override
     {
@@ -128,6 +129,20 @@ class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
         return std::make_shared<mtd::StubBuffer>(
             std::make_shared<mtf::NativeBuffer>(properties), properties,
             mir::geometry::Stride{ properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)});
+    }
+
+    std::shared_ptr<mg::Buffer> alloc_software_buffer(geom::Size sz, MirPixelFormat pf) override
+    {
+        if (sz.width == geom::Width{0} || sz.height == geom::Height{0})
+            BOOST_THROW_EXCEPTION(std::runtime_error("invalid size"));
+        return mtd::StubBufferAllocator::alloc_software_buffer(sz, pf);
+    }
+
+    std::shared_ptr<mg::Buffer> alloc_buffer(geom::Size sz, uint32_t pf, uint32_t flags) override
+    {
+        if (sz.width == geom::Width{0} || sz.height == geom::Height{0})
+            BOOST_THROW_EXCEPTION(std::runtime_error("invalid size"));
+        return mtd::StubBufferAllocator::alloc_buffer(sz, pf, flags);
     }
 };
 
@@ -266,7 +281,7 @@ namespace
 struct GuestPlatformAdapter : mg::Platform
 {
     GuestPlatformAdapter(
-        std::shared_ptr<mg::NestedContext> const& context,
+        std::shared_ptr<mg::PlatformAuthentication> const& context,
         std::shared_ptr<mg::Platform> const& adaptee) :
         context(context),
         adaptee(adaptee)
@@ -290,7 +305,33 @@ struct GuestPlatformAdapter : mg::Platform
         return adaptee->create_display(initial_conf_policy, gl_config);
     }
 
-    std::shared_ptr<mg::NestedContext> const context;
+    mg::NativeRenderingPlatform* native_rendering_platform() override
+    {
+        return adaptee->native_rendering_platform();
+    }
+
+    mg::NativeDisplayPlatform* native_display_platform() override
+    {
+        return adaptee->native_display_platform();
+    }
+
+    std::vector<mir::ExtensionDescription> extensions() const override
+    {
+        std::vector<mir::ExtensionDescription> ext
+        {
+            { "mir_extension_gbm_buffer", { 1, 2 } },
+            { "mir_extension_fenced_buffers", { 1 } },
+            { "mir_extension_hardware_buffer_stream", { 1 } },
+            { "mir_extension_graphics_module", { 1 } },
+            { "mir_extension_animal_names", {1} }
+        };
+        if (flavor_enabled)
+            ext.push_back({ std::string{"mir_extension_favorite_flavor"}, {1, 9} });
+
+        return ext;
+    }
+
+    std::shared_ptr<mg::PlatformAuthentication> const context;
     std::shared_ptr<mg::Platform> const adaptee;
 };
 
@@ -336,7 +377,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::NestedContext> const& context)
+    std::shared_ptr<mg::PlatformAuthentication> const& context)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     auto graphics_platform = the_graphics_platform.lock();
@@ -363,4 +404,9 @@ extern "C" void set_next_display_rects(
 extern "C" void set_next_preset_display(std::shared_ptr<mir::graphics::Display> const& display)
 {
     display_preset = display;
+}
+
+extern "C" void disable_flavors()
+{
+    flavor_enabled = false;
 }

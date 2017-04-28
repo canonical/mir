@@ -22,6 +22,7 @@
 #include <stdexcept>
 
 namespace mtf = mir_test_framework;
+using namespace std::literals::string_literals;
 
 namespace 
 {
@@ -35,13 +36,34 @@ MirWindow* mtf::make_any_surface(MirConnection *connection)
     return mtf::make_surface(connection, mir::geometry::Size{width, height}, format);
 }
 
+MirWindow* mtf::make_any_surface(MirConnection *connection, MirWindowEventCallback callback, void* context)
+{
+    auto spec = mir_create_normal_window_spec(connection, width, height);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    mir_window_spec_set_pixel_format(spec, format);
+#pragma GCC diagnostic pop
+    mir_window_spec_set_event_handler(spec, callback, context);
+    auto window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
+
+    if (!mir_window_is_valid(window))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{"Failed to create window: "s + mir_window_get_error_message(window)}));
+    }
+    return window;
+}
+
 MirWindow* mtf::make_surface(
     MirConnection *connection, mir::geometry::Size size, MirPixelFormat f)
 {
-    using namespace std::literals::string_literals;
 
     auto spec = mir_create_normal_window_spec(connection, size.width.as_int(), size.height.as_int());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, f);
+#pragma GCC diagnostic pop
     auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 

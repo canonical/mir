@@ -44,15 +44,17 @@ public:
     virtual std::shared_ptr<ClientBuffer> client_buffer() const = 0;
     virtual MirGraphicsRegion map_region() = 0;
     virtual void unmap_region() = 0;
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     virtual MirBufferUsage buffer_usage() const = 0;
+#pragma GCC diagnostic pop
     virtual MirPixelFormat pixel_format() const = 0;
     virtual geometry::Size size() const = 0;
     virtual MirConnection* allocating_connection() const = 0;
     virtual void increment_age() = 0;
     virtual bool valid() const = 0;
     virtual char const* error_message() const = 0;
-    virtual void set_callback(mir_buffer_callback callback, void* context) = 0;
+    virtual void set_callback(MirBufferCallback callback, void* context) = 0;
 protected:
     MirBuffer() = default;
     MirBuffer(MirBuffer const&) = delete;

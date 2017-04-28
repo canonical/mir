@@ -20,12 +20,14 @@
 #define MIR_CLIENT_CLIENT_CONTEXT_H_
 
 #include "mir_toolkit/client_types.h"
+#include "mir/mir_render_surface.h"
+#include "mir/geometry/size.h"
 
 namespace mir
 {
 namespace client
 {
-
+class MirBuffer;
 class ClientContext
 {
 public:
@@ -35,13 +37,22 @@ public:
     virtual void populate_graphics_module(MirModuleProperties& graphics_module) = 0;
     virtual MirWaitHandle* platform_operation(
         MirPlatformMessage const* request,
-        mir_platform_operation_callback callback, void* context) = 0;
+        MirPlatformOperationCallback callback, void* context) = 0;
+    virtual void allocate_buffer(
+        mir::geometry::Size size, MirPixelFormat format,
+        MirBufferCallback callback, void* context) = 0;
+    virtual void allocate_buffer(
+        mir::geometry::Size size, uint32_t native_format, uint32_t native_flags,
+        MirBufferCallback callback, void* context) = 0;
+    virtual void release_buffer(mir::client::MirBuffer* buffer) = 0;
 
 protected:
     ClientContext() = default;
     ClientContext(const ClientContext&) = delete;
     ClientContext& operator=(const ClientContext&) = delete;
 };
+
+ClientContext* to_client_context(MirConnection*);
 
 }
 }

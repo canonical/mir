@@ -62,10 +62,13 @@ bool parent_field_matches(ms::SurfaceCreationParameters const& params,
 
 MATCHER_P(MatchesRequired, spec, "")
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return spec->width == arg.size.width.as_int() &&
            spec->height == arg.size.height.as_int() &&
            spec->pixel_format == arg.pixel_format &&
            spec->buffer_usage == static_cast<MirBufferUsage>(arg.buffer_usage);
+#pragma GCC diagnostic pop
 }
 
 MATCHER_P(MatchesOptional, spec, "")
@@ -184,7 +187,10 @@ TEST_F(ClientMirSurface, as_menu_sends_correct_params)
     auto spec_deleter = [](MirWindowSpec* spec) {mir_window_spec_release(spec);};
     auto spec_temp = mir_create_menu_window_spec(connection, 640, 480,
         parent.get(), &attachment_rect, edge);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec_temp, mir_pixel_format_abgr_8888);
+#pragma GCC diagnostic pop
     std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> menu_spec{
         spec_temp,
         spec_deleter
@@ -208,7 +214,10 @@ TEST_F(ClientMirSurface, as_tip_sends_correct_params)
     auto spec_deleter = [](MirWindowSpec* spec) {mir_window_spec_release(spec);};
     auto spec_temp = mir_create_tip_window_spec(connection, 640, 480,
         parent.get(), &placement_hint, mir_edge_attachment_vertical);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec_temp, mir_pixel_format_abgr_8888);
+#pragma GCC diagnostic pop
     std::unique_ptr<MirWindowSpec, decltype(spec_deleter)> tooltip_spec{
         spec_temp,
         spec_deleter
@@ -230,8 +239,10 @@ TEST_F(ClientMirSurface, as_dialog_sends_correct_params)
     };
 
     ASSERT_THAT(dialog_spec, NotNull());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(dialog_spec.get(), mir_pixel_format_abgr_8888);
-
+#pragma GCC diagnostic pop
     EXPECT_CALL(*mock_shell, create_surface(_, AllOf(IsADialog(), NoParentSet()),_));
     create_surface(dialog_spec.get());
 }
@@ -249,8 +260,10 @@ TEST_F(ClientMirSurface, as_modal_dialog_sends_correct_params)
     };
 
     ASSERT_THAT(dialog_spec, NotNull());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(dialog_spec.get(), mir_pixel_format_abgr_8888);
-
+#pragma GCC diagnostic pop
     EXPECT_CALL(*mock_shell, create_surface(_, AllOf(IsADialog(), HasParent(parent.get())),_));
     create_surface(dialog_spec.get());
 }

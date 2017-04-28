@@ -136,6 +136,11 @@ MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* kev)
     return kev->modifiers();
 })
 
+char const* mir_keyboard_event_key_text(MirKeyboardEvent const* kev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return kev->text();
+})
+
 /* Touch event accessors */
 
 MirInputEventModifiers mir_touch_event_modifiers(MirTouchEvent const* tev) MIR_HANDLE_EVENT_EXCEPTION(
@@ -237,6 +242,11 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
 
     return reinterpret_cast<MirPointerEvent const*>(ev);
 })
+
+MirEvent const* mir_input_event_get_event(MirInputEvent const* event)
+{
+    return event;
+}
 
 MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* pev) MIR_HANDLE_EVENT_EXCEPTION(
 {

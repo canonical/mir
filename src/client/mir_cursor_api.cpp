@@ -43,16 +43,30 @@ extern "C" char const* const mir_vsplit_resize_cursor_name = "row-resize";
 extern "C" char const* const mir_hsplit_resize_cursor_name = "col-resize";
 extern "C" char const* const mir_crosshair_cursor_name = "crosshair";
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 MirCursorConfiguration::MirCursorConfiguration(char const* name) :
     name{name ? name : std::string()},
-    stream(nullptr)   
+    stream(nullptr),
+    surface(nullptr)
 {
 }
 
 MirCursorConfiguration::MirCursorConfiguration(MirBufferStream const* stream, int hotspot_x, int hotspot_y) :
     stream(stream),
     hotspot_x(hotspot_x),
-    hotspot_y(hotspot_y)
+    hotspot_y(hotspot_y),
+    surface(nullptr)
+{
+}
+
+
+MirCursorConfiguration::MirCursorConfiguration(MirRenderSurface const* surface, int hotspot_x, int hotspot_y) :
+    stream(nullptr),
+    hotspot_x(hotspot_x),
+    hotspot_y(hotspot_y),
+    surface(surface)
 {
 }
 
@@ -87,3 +101,4 @@ MirCursorConfiguration* mir_cursor_configuration_from_buffer_stream(MirBufferStr
         return nullptr;
     }
 }
+#pragma GCC diagnostic pop

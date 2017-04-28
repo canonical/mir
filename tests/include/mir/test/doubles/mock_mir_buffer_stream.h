@@ -32,9 +32,11 @@ namespace doubles
 
 struct MockMirBufferStream : public MirBufferStream
 {
-    MOCK_METHOD2(release, MirWaitHandle*(mir_buffer_stream_callback, void*));
-    
+    MOCK_METHOD2(release, MirWaitHandle*(MirBufferStreamCallback, void*));
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MOCK_CONST_METHOD0(get_parameters, MirWindowParameters());
+#pragma GCC diagnostic pop
     MOCK_METHOD0(get_current_buffer, std::shared_ptr<client::ClientBuffer>());
     MOCK_METHOD0(get_current_buffer_id, uint32_t());
     MOCK_METHOD0(egl_native_window, EGLNativeWindowType());
@@ -57,7 +59,10 @@ struct MockMirBufferStream : public MirBufferStream
     MOCK_METHOD1(set_scale, MirWaitHandle*(float));
     MOCK_CONST_METHOD0(get_error_message, char const*(void));
     MOCK_CONST_METHOD0(connection, MirConnection*());
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MOCK_CONST_METHOD0(render_surface, MirRenderSurface*());
+#pragma GCC diagnostic pop
 };
 
 }

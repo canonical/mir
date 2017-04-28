@@ -31,6 +31,7 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
+#include "mir/renderer/gl/egl_platform.h"
 
 namespace mg = mir::graphics;
 namespace mgn = mir::graphics::nested;
@@ -75,10 +76,24 @@ public:
 
     std::shared_ptr<mg::Buffer> alloc_buffer(mg::BufferProperties const& properties) override
     {
-        if (passthrough_candidate(properties.size))
-            return std::make_shared<mgn::Buffer>(connection, properties);
+        return guest_allocator->alloc_buffer(properties);
+    }
+
+    std::shared_ptr<mg::Buffer> alloc_buffer(
+        mir::geometry::Size size, uint32_t native_format, uint32_t native_flags) override
+    {
+        if (passthrough_candidate(size, mg::BufferUsage::hardware))
+            return std::make_shared<mgn::Buffer>(connection, size, native_format, native_flags);
         else
-            return guest_allocator->alloc_buffer(properties);
+            return guest_allocator->alloc_buffer(size, native_format, native_flags);
+    }
+
+    std::shared_ptr<mg::Buffer> alloc_software_buffer(mir::geometry::Size size, MirPixelFormat format) override
+    {
+        if (passthrough_candidate(size, mg::BufferUsage::software))
+            return std::make_shared<mgn::Buffer>(connection, size, format);
+        else
+            return guest_allocator->alloc_software_buffer(size, format);
     }
 
     std::vector<MirPixelFormat> supported_pixel_formats() override
@@ -87,9 +102,10 @@ public:
     }
 
 private:
-    bool passthrough_candidate(mir::geometry::Size size)
+    bool passthrough_candidate(mir::geometry::Size size, mg::BufferUsage usage)
     {
-        return (size.width >= mir::geometry::Width{480}) && (size.height >= mir::geometry::Height{480});
+        return connection->supports_passthrough(usage) &&
+            (size.width >= mir::geometry::Width{480}) && (size.height >= mir::geometry::Height{480});
     }
     std::shared_ptr<mgn::HostConnection> const connection;
     std::shared_ptr<mg::GraphicBufferAllocator> const guest_allocator;
@@ -98,7 +114,8 @@ private:
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator()
 {
-    if (connection->supports_passthrough())
+    if (connection->supports_passthrough(mg::BufferUsage::software) ||
+        connection->supports_passthrough(mg::BufferUsage::hardware))
     {
         return mir::make_module_ptr<BufferAllocator>(connection, guest_platform->create_buffer_allocator());
     }
@@ -121,7 +138,29 @@ mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
         passthrough_option);
 }
 
+mg::NativeDisplayPlatform* mgn::Platform::native_display_platform()
+{
+    return connection.get();
+}
+
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operations() const
 {
     return mir::make_module_ptr<mgn::IpcOperations>(guest_platform->make_ipc_operations());
+}
+
+EGLNativeDisplayType mgn::Platform::egl_native_display() const
+{
+    if (auto a = dynamic_cast<mir::renderer::gl::EGLPlatform*>(guest_platform->native_rendering_platform()))
+        return a->egl_native_display();
+    return EGL_NO_DISPLAY;
+}
+
+mg::NativeRenderingPlatform* mgn::Platform::native_rendering_platform()
+{
+    return this;
+}
+
+std::vector<mir::ExtensionDescription> mgn::Platform::extensions() const
+{
+    return guest_platform->extensions();
 }

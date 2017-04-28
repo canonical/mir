@@ -103,6 +103,17 @@ struct StubClientPlatform : public mcl::ClientPlatform
     {
         return nullptr;
     }
+    uint32_t native_format_for(MirPixelFormat) const override
+    {
+        return 0u;
+    }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const override
+    {
+        return 0u;
+    }
+#pragma GCC diagnostic pop
 
     static EGLNativeWindowType egl_native_window;
     std::shared_ptr<mcl::ClientBufferFactory> const buffer_factory;
@@ -159,12 +170,14 @@ struct ClientBufferStream : TestWithParam<bool>
 {
     ClientBufferStream()
     {
-        ON_CALL(mock_factory, create_buffer(_,_,_))
+        ON_CALL(mock_factory, create_buffer(_,An<geom::Size>(),_))
             .WillByDefault(Return(std::make_shared<mtd::NullClientBuffer>()));
     }
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mp::BufferStream a_protobuf_buffer_stream(MirPixelFormat format, MirBufferUsage usage)
     {
+#pragma GCC diagnostic pop
         mp::BufferStream protobuf_bs;
         mp::BufferStreamId bs_id;
         
@@ -213,8 +226,10 @@ struct ClientBufferStream : TestWithParam<bool>
     testing::NiceMock<mtd::MockProtobufServer> mock_protobuf_server;
 
     MirPixelFormat const default_pixel_format = mir_pixel_format_argb_8888;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferUsage const default_buffer_usage = mir_buffer_usage_hardware;
-
+#pragma GCC diagnostic pop
     std::shared_ptr<mcl::PerfReport> const perf_report = std::make_shared<mcl::NullPerfReport>();
 
     MirBufferPackage buffer_package = a_buffer_package();
@@ -297,7 +312,7 @@ TEST_F(ClientBufferStream, protobuf_requirements)
 
 TEST_F(ClientBufferStream, uses_buffer_message_from_server)
 {
-    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),An<geom::Size>(),_))
         .WillOnce(Return(std::make_shared<mtd::NullClientBuffer>()));
     mcl::BufferStream bs(
         nullptr, nullptr, wait_handle, mock_protobuf_server,
@@ -374,10 +389,10 @@ TEST_F(ClientBufferStream, returns_current_client_buffer)
     auto protobuf_bs = a_protobuf_buffer_stream(default_pixel_format, default_buffer_usage);
     
     Sequence seq;
-    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package_1),_,_))
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package_1),An<geom::Size>(),_))
         .InSequence(seq)
         .WillOnce(Return(client_buffer_1));
-    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package_2),_,_))
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package_2),An<geom::Size>(),_))
         .InSequence(seq)
         .WillOnce(Return(client_buffer_2));
 
@@ -440,7 +455,7 @@ TEST_F(ClientBufferStream, map_graphics_region)
     NiceMock<mtd::MockClientBuffer> mock_client_buffer;
     ON_CALL(mock_client_buffer, size())
         .WillByDefault(Return(size));
-    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),An<geom::Size>(),_))
         .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
 
     mcl::BufferStream bs(
@@ -462,7 +477,7 @@ TEST_F(ClientBufferStream, maps_graphics_region_only_once_per_swapbuffers)
     NiceMock<mtd::MockClientBuffer> mock_client_buffer;
     ON_CALL(mock_client_buffer, size())
         .WillByDefault(Return(size));
-    ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),An<geom::Size>(),_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     mcl::BufferStream bs(
         nullptr, nullptr, wait_handle, mock_protobuf_server,
@@ -560,7 +575,7 @@ TEST_F(ClientBufferStream, receives_unsolicited_buffer)
     NiceMock<mtd::MockClientBuffer> second_mock_client_buffer;
     ON_CALL(second_mock_client_buffer, size())
         .WillByDefault(Return(size));
-    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    EXPECT_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),An<geom::Size>(),_))
         .WillOnce(Return(mt::fake_shared(mock_client_buffer)));
 
     mcl::BufferStream bs(
@@ -574,7 +589,7 @@ TEST_F(ClientBufferStream, receives_unsolicited_buffer)
     another_buffer_package.set_buffer_id(id);
     another_buffer_package.set_width(size.width.as_int());
     another_buffer_package.set_height(size.height.as_int());
-    EXPECT_CALL(mock_factory, create_buffer(_,_,_))
+    EXPECT_CALL(mock_factory, create_buffer(_,An<geom::Size>(),_))
         .WillOnce(Return(mt::fake_shared(second_mock_client_buffer)));
     EXPECT_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillOnce(mtd::RunProtobufClosure());
@@ -591,7 +606,7 @@ TEST_F(ClientBufferStream, waiting_client_can_unblock_on_shutdown)
     NiceMock<mtd::MockClientBuffer> mock_client_buffer;
     ON_CALL(mock_client_buffer, size())
         .WillByDefault(Return(size));
-    ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),_,_))
+    ON_CALL(mock_factory, create_buffer(BufferPackageMatches(buffer_package),An<geom::Size>(),_))
         .WillByDefault(Return(mt::fake_shared(mock_client_buffer)));
     ON_CALL(mock_protobuf_server, submit_buffer(_,_,_))
         .WillByDefault(mtd::RunProtobufClosure());
@@ -686,6 +701,25 @@ TEST_F(ClientBufferStream, configures_swap_interval)
     bs.set_swap_interval(0);
 }
 
+TEST_F(ClientBufferStream, clientside_vsync_removes_serverside_vsync)
+{
+    mcl::BufferStream bs{
+        nullptr, nullptr, wait_handle, mock_protobuf_server,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
+        response, perf_report, "", size, nbuffers};
+    service_requests_for(mock_protobuf_server.alloc_count);
+
+    mir::protobuf::StreamConfiguration conf;
+    EXPECT_CALL(mock_protobuf_server, configure_buffer_stream(_,_,_))
+        .WillOnce(DoAll(SaveArgPointee<0>(&conf),mtd::RunProtobufClosure()));
+    EXPECT_FALSE(conf.has_swapinterval());
+    bs.set_swap_interval(1);
+    bs.swap_buffers_sync();
+    EXPECT_TRUE(conf.has_swapinterval());
+    EXPECT_EQ(0, conf.swapinterval());
+}
+
 TEST_F(ClientBufferStream, sets_swap_interval_requested)
 {
     mcl::BufferStream bs{
@@ -733,7 +767,7 @@ TEST_P(ClientBufferStream, returns_correct_surface_parameters_with_nondefault_fo
 {
     auto format = mir_pixel_format_bgr_888;
     response.set_pixel_format(format);
-    EXPECT_CALL(mock_factory, create_buffer(_,_,format))
+    EXPECT_CALL(mock_factory, create_buffer(_,_,TypedEq<MirPixelFormat>(format)))
         .WillRepeatedly(Return(std::make_shared<mtd::NullClientBuffer>()));
     mcl::BufferStream bs(
         nullptr, nullptr, wait_handle, mock_protobuf_server,
@@ -747,7 +781,7 @@ TEST_P(ClientBufferStream, returns_correct_surface_parameters_with_nondefault_fo
 
 TEST_F(ClientBufferStream, keeps_accurate_buffer_id)
 {
-    ON_CALL(mock_factory, create_buffer(_,_,_))
+    ON_CALL(mock_factory, create_buffer(_,An<geom::Size>(),_))
         .WillByDefault(Return(std::make_shared<mtd::NullClientBuffer>(size)));
     mcl::BufferStream stream(
         nullptr, nullptr, wait_handle, mock_protobuf_server,
@@ -785,4 +819,15 @@ TEST_F(ClientBufferStream, can_cycle_through_available_buffers_without_waiting)
         bs.get_current_buffer();
         bs.swap_buffers([&count]{ count++;});
     }
+}
+
+TEST_F(ClientBufferStream, ignores_interval_request_when_interval_is_already_correct_value)
+{
+    mcl::BufferStream bs{
+        nullptr, nullptr, wait_handle, mock_protobuf_server,
+        std::make_shared<StubClientPlatform>(mt::fake_shared(stub_factory)),
+        map, factory,
+        response, perf_report, "", size, nbuffers};
+    bs.request_and_wait_for_configure(mir_window_attrib_swapinterval, 1);
+    bs.request_and_wait_for_configure(mir_window_attrib_swapinterval, 1);
 }

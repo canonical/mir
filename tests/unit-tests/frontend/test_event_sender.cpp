@@ -167,7 +167,7 @@ TEST_F(EventSender, sends_noninput_events)
     event_sender.handle_event(*resize_ev);
 }
 
-TEST_F(EventSender, never_sends_input_events)
+TEST_F(EventSender, sends_input_events)
 {
     using namespace testing;
 
@@ -175,7 +175,7 @@ TEST_F(EventSender, never_sends_input_events)
                               0, 0, MirInputEventModifiers());
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
-        .Times(0);
+        .Times(1);
     event_sender.handle_event(*ev);
 }
 
@@ -196,44 +196,46 @@ TEST_F(EventSender, sends_input_devices)
 {
     using namespace testing;
 
-    std::vector<std::shared_ptr<mi::Device>> devices{
-        std::make_shared<StubDevice>(3, mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad, "touchpad",
-                                     "5352"),
-        std::make_shared<StubDevice>(23, mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric,
-                                     "keybaord", "7853")};
+    MirInputDevice tpd(3, mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad, "touchpad", "5352");
+    MirInputDevice kbd(23, mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric, "keyboard",
+                                "5352");
+
+    MirInputConfig devices;
+    devices.add_device_config(tpd);
+    devices.add_device_config(kbd);
 
     auto msg_validator = make_validator(
         [&devices](auto const& seq)
         {
             auto received_input_config = mi::deserialize_input_config(seq.input_configuration());
-            EXPECT_THAT(received_input_config, mt::InputConfigurationMatches(devices));
+            EXPECT_THAT(received_input_config, Eq(devices));
         });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1)
         .WillOnce(Invoke(msg_validator));
 
-    event_sender.handle_input_device_change(devices);
+    event_sender.handle_input_config_change(devices);
 }
 
 TEST_F(EventSender, sends_empty_sequence_of_devices)
 {
     using namespace testing;
 
-    std::vector<std::shared_ptr<mi::Device>> devices;
+    MirInputConfig empty;
 
     auto msg_validator = make_validator(
-        [&devices](auto const& seq)
+        [&empty](auto const& seq)
         {
             auto received_input_config = mi::deserialize_input_config(seq.input_configuration());
-            EXPECT_THAT(received_input_config, mt::InputConfigurationMatches(devices));
+            EXPECT_THAT(received_input_config, Eq(empty));
         });
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1)
         .WillOnce(Invoke(msg_validator));
 
-    event_sender.handle_input_device_change(devices);
+    event_sender.handle_input_config_change(empty);
 }
 
 TEST_F(EventSender, can_send_error_buffer)

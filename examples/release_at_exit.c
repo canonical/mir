@@ -27,12 +27,6 @@
 static MirConnection *connection = 0;
 static MirWindow* window = 0;
 
-static void connection_callback(MirConnection *new_connection, void *context)
-{
-    (void)context;
-    connection = new_connection;
-}
-
 static void close_connection()
 {
     if (connection)
@@ -46,15 +40,17 @@ void demo_client(const char* server)
 {
     atexit(&close_connection);
 
-    mir_wait_for(mir_connect(server, __FILE__, connection_callback, NULL));
+    connection = mir_connect_sync(server, __FILE__);
     assert(mir_connection_is_valid(connection));
 
     MirPixelFormat pixel_format;
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
     MirWindowSpec *spec = mir_create_normal_window_spec(connection, 640, 480);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, pixel_format);
-
+#pragma GCC diagnostic pop
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 

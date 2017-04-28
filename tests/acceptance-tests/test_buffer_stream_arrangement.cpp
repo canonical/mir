@@ -33,15 +33,12 @@ namespace mt = mir::test;
 namespace geom = mir::geometry;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
-namespace
-{
-MirPixelFormat an_available_format(MirConnection* connection)
+MirPixelFormat mt::Stream::an_available_format(MirConnection* connection)
 {
     MirPixelFormat format{mir_pixel_format_invalid};
     unsigned int valid_formats{0};
     mir_connection_get_available_surface_formats(connection, &format, 1, &valid_formats);
     return format;
-}
 }
 
 mt::RelativeRectangle::RelativeRectangle(
@@ -61,21 +58,34 @@ bool mt::operator==(mt::RelativeRectangle const& a, mt::RelativeRectangle const&
         (a.physical_size == b.physical_size);
 }
 
-mt::Stream::Stream(MirConnection* connection,
-    geom::Size physical_size,
-    geom::Rectangle position) :
-    stream(mir_connection_create_buffer_stream_sync(
-        connection,
-        physical_size.width.as_int(),
-        physical_size.height.as_int(),
-        an_available_format(connection),
-        mir_buffer_usage_hardware)),
-    position_{position}
+mt::Stream::Stream(
+    geometry::Rectangle position,
+    std::function<MirBufferStream*()> const& create_stream) :
+    position_{position},
+    stream(create_stream())
 {
     swap_buffers();
 }
 
-mt::Stream::~Stream()
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+mt::LegacyStream::LegacyStream(MirConnection* connection,
+    geom::Size physical_size,
+    geom::Rectangle position) :
+    Stream(position,
+        [&] {
+            return mir_connection_create_buffer_stream_sync(
+                connection,
+                physical_size.width.as_int(),
+                physical_size.height.as_int(),
+                an_available_format(connection),
+                mir_buffer_usage_hardware);
+            })
+{
+    swap_buffers();
+}
+
+mt::LegacyStream::~LegacyStream()
 {
     mir_buffer_stream_release_sync(stream);
 }
@@ -165,24 +175,24 @@ void mt::BufferStreamArrangementBase::SetUp()
             return order_tracker;
         });
 
-    ConnectedClientWithASurface::SetUp();
+    ConnectedClientWithAWindow::SetUp();
     server.the_cursor()->hide();
 
     streams.emplace_back(
-        std::make_unique<Stream>(connection, surface_size, geom::Rectangle{geom::Point{0,0}, surface_size}));
+        std::make_unique<LegacyStream>(connection, surface_size, geom::Rectangle{geom::Point{0,0}, surface_size}));
     int const additional_streams{3};
     for (auto i = 0; i < additional_streams; i++)
     {
         geom::Size size{30 * i + 1, 40* i + 1};
         geom::Point position{i * 2, i * 3};
-        streams.emplace_back(std::make_unique<Stream>(connection, size, geom::Rectangle{position, size}));
+        streams.emplace_back(std::make_unique<LegacyStream>(connection, size, geom::Rectangle{position, size}));
     }
 }
 
 void mt::BufferStreamArrangementBase::TearDown()
 {
     streams.clear();
-    ConnectedClientWithASurface::TearDown();
+    ConnectedClientWithAWindow::TearDown();
 }
 
 typedef mt::BufferStreamArrangementBase BufferStreamArrangement;
@@ -213,7 +223,6 @@ TEST_F(BufferStreamArrangement, can_be_specified_when_creating_surface)
     mir_window_spec_release(spec);
     EXPECT_TRUE(mir_window_is_valid(window)) << mir_window_get_error_message(window);
 }
-
 
 TEST_F(BufferStreamArrangement, arrangements_are_applied)
 {
@@ -289,3 +298,4 @@ TEST_F(BufferStreamArrangement, when_non_default_streams_are_set_surface_get_str
 
     EXPECT_THAT(mir_window_get_buffer_stream(window), Eq(nullptr));
 }
+#pragma GCC diagnostic pop

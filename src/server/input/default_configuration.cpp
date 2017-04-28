@@ -18,18 +18,15 @@
 
 #include "mir/default_server_configuration.h"
 
-#include "android/input_sender.h"
 #include "key_repeat_dispatcher.h"
-#include "display_input_region.h"
 #include "event_filter_chain_dispatcher.h"
-#include "channel_factory.h"
+#include "config_changer.h"
 #include "cursor_controller.h"
 #include "touchspot_controller.h"
 #include "null_input_manager.h"
 #include "null_input_dispatcher.h"
 #include "null_input_targeter.h"
 #include "builtin_cursor_images.h"
-#include "null_input_channel_factory.h"
 #include "default_input_device_hub.h"
 #include "default_input_manager.h"
 #include "surface_input_dispatcher.h"
@@ -56,57 +53,12 @@
 #include "mir_toolkit/cursors.h"
 
 namespace mi = mir::input;
-namespace mia = mi::android;
 namespace mr = mir::report;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace mgn = mg::nested;
 namespace msh = mir::shell;
 namespace md = mir::dispatch;
-
-namespace
-{
-
-bool is_arale()
-{
-#ifdef __ARM_EABI__
-    try
-    {
-        auto const android_properties = "libandroid-properties.so.1";
-        auto const arale_device_name = "arale";
-        int const property_value_max = 92;
-
-        mir::SharedLibrary android_properties_lib(android_properties);
-        int (*property_get)(char const*, char*, char const*) = nullptr;
-        property_get = android_properties_lib.load_function<decltype(property_get)>("property_get");
-
-        char default_value[] = "";
-        char value[property_value_max];
-
-        if (property_get == nullptr)
-            return false;
-
-        property_get("ro.product.device", value, default_value);
-
-        return std::strcmp(arale_device_name, value) == 0;
-    }
-    catch(...)
-    {
-    }
-#endif
-    return false;
-}
-
-}
-
-std::shared_ptr<mi::InputRegion> mir::DefaultServerConfiguration::the_input_region()
-{
-    return input_region(
-        [this]()
-        {
-            return std::make_shared<mi::DisplayInputRegion>();
-        });
-}
 
 std::shared_ptr<mi::CompositeEventFilter>
 mir::DefaultServerConfiguration::the_composite_event_filter()
@@ -126,29 +78,6 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
         {
             std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
             return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_surface_input_dispatcher());
-        });
-}
-
-namespace
-{
-class NullInputSender : public mi::InputSender
-{
-public:
-    virtual void send_event(MirEvent const&, std::shared_ptr<mi::InputChannel> const& ) {}
-};
-
-}
-
-std::shared_ptr<mi::InputSender>
-mir::DefaultServerConfiguration::the_input_sender()
-{
-    return input_sender(
-        [this]() -> std::shared_ptr<mi::InputSender>
-        {
-        if (!the_options()->get<bool>(options::enable_input_opt))
-            return std::make_shared<NullInputSender>();
-        else
-            return std::make_shared<mia::InputSender>(the_scene(), the_main_loop(), the_input_report());
         });
 }
 
@@ -186,21 +115,14 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
             std::chrono::milliseconds const key_repeat_delay{50};
 
             auto const options = the_options();
-            auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
+            // lp:1675357: Disable generation of key repeat events on nested servers
+            auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt) &&
+                !options->is_set(options::host_socket_opt);
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
                 the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_authority(),
-                enable_repeat, key_repeat_timeout, key_repeat_delay, is_arale());
+                enable_repeat, key_repeat_timeout, key_repeat_delay, false);
         });
-}
-
-std::shared_ptr<mi::InputChannelFactory> mir::DefaultServerConfiguration::the_input_channel_factory()
-{
-    auto const options = the_options();
-    if (!options->get<bool>(options::enable_input_opt))
-        return std::make_shared<mi::NullInputChannelFactory>();
-    else
-        return std::make_shared<mi::ChannelFactory>();
 }
 
 std::shared_ptr<mi::CursorListener>
@@ -259,7 +181,7 @@ std::shared_ptr<mi::CursorImages>
 mir::DefaultServerConfiguration::the_cursor_images()
 {
     return cursor_images(
-        [this]() -> std::shared_ptr<mi::CursorImages>
+        []() -> std::shared_ptr<mi::CursorImages>
         {
             return std::make_shared<mi::BuiltinCursorImages>();
         });
@@ -316,7 +238,7 @@ std::shared_ptr<mir::dispatch::MultiplexingDispatchable>
 mir::DefaultServerConfiguration::the_input_reading_multiplexer()
 {
     return input_reading_multiplexer(
-        [this]() -> std::shared_ptr<mir::dispatch::MultiplexingDispatchable>
+        []() -> std::shared_ptr<mir::dispatch::MultiplexingDispatchable>
         {
             return std::make_shared<mir::dispatch::MultiplexingDispatchable>();
         }
@@ -332,7 +254,7 @@ std::shared_ptr<mi::Seat> mir::DefaultServerConfiguration::the_seat()
                     the_input_dispatcher(),
                     the_touch_visualizer(),
                     the_cursor_listener(),
-                    the_input_region(),
+                    the_display_configuration_observer_registrar(),
                     the_key_mapper(),
                     the_clock(),
                     the_seat_observer());
@@ -346,7 +268,12 @@ std::shared_ptr<mi::InputDeviceRegistry> mir::DefaultServerConfiguration::the_in
 
 std::shared_ptr<mi::InputDeviceHub> mir::DefaultServerConfiguration::the_input_device_hub()
 {
-    return the_default_input_device_hub();
+    return input_device_hub(
+        [this]()
+        {
+            return std::make_shared<mi::ExternalInputDeviceHub>(the_default_input_device_hub(),
+               the_main_loop());
+        });
 }
 
 std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_default_input_device_hub()
@@ -357,15 +284,15 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
            auto input_dispatcher = the_input_dispatcher();
            auto key_repeater = std::dynamic_pointer_cast<mi::KeyRepeatDispatcher>(input_dispatcher);
            auto hub = std::make_shared<mi::DefaultInputDeviceHub>(
-               the_global_event_sink(),
                the_seat(),
                the_input_reading_multiplexer(),
-               the_main_loop(),
                the_cookie_authority(),
                the_key_mapper(),
                the_server_status_listener());
 
-           if (key_repeater && !the_options()->is_set(options::host_socket_opt))
+           // lp:1675357: KeyRepeatDispatcher must be informed about removed input devices, otherwise
+           // pressed keys get repeated indefinitely
+           if (key_repeater)
                key_repeater->set_input_device_hub(hub);
            return hub;
        });
@@ -374,7 +301,7 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
 std::shared_ptr<mi::KeyMapper> mir::DefaultServerConfiguration::the_key_mapper()
 {
     return key_mapper(
-       [this]()
+       []()
        {
            return std::make_shared<mi::receiver::XKBMapper>();
        });
@@ -397,4 +324,17 @@ mir::DefaultServerConfiguration::the_seat_observer_registrar()
         {
             return std::make_shared<mi::SeatObserverMultiplexer>(default_executor);
         });
+}
+
+std::shared_ptr<mir::frontend::InputConfigurationChanger>
+mir::DefaultServerConfiguration::the_input_configuration_changer()
+{
+    return input_configuration_changer(
+        [this]()
+        {
+            return std::make_shared<mi::ConfigChanger>(
+                the_input_manager(), the_default_input_device_hub(), the_session_container(),
+                the_session_event_handler_register(), the_input_device_hub());
+        }
+        );
 }

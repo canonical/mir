@@ -49,7 +49,10 @@ struct PresentationChain : Test
     MirConnection* connection {reinterpret_cast<MirConnection*>(this)};
     geom::Size size {100, 200};
     MirPixelFormat format = mir_pixel_format_abgr_8888;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferUsage usage = mir_buffer_usage_software;
+#pragma GCC diagnostic pop
     mtd::MockProtobufServer mock_server;
     int buffer_id {4312};
     mp::Buffer ipc_buf;
@@ -125,4 +128,18 @@ TEST_F(PresentationChain, double_submission_throws)
     EXPECT_THROW({
         chain.submit_buffer(&buffer);
     }, std::logic_error);
+}
+
+TEST_F(PresentationChain, double_interval_configure_is_ok)
+{
+    mcl::PresentationChain chain(
+        connection, rpc_id, mock_server,
+        std::make_shared<mtd::StubClientBufferFactory>(),
+        std::make_shared<mcl::BufferFactory>());
+    EXPECT_NO_THROW({
+        chain.set_dropping_mode();
+        chain.set_dropping_mode();
+        chain.set_queueing_mode();
+        chain.set_queueing_mode();
+    });
 }

@@ -22,7 +22,6 @@
 #include "mir/input/xkb_mapper.h"
 #include "mir/test/doubles/mock_input_device.h"
 #include "mir/test/doubles/mock_input_dispatcher.h"
-#include "mir/test/doubles/mock_input_region.h"
 #include "mir/test/doubles/mock_cursor_listener.h"
 #include "mir/test/doubles/mock_touch_visualizer.h"
 #include "mir/test/doubles/mock_input_seat.h"
@@ -53,7 +52,6 @@ struct SeatInputDeviceTracker : ::testing::Test
 {
     mi::EventBuilder* builder;
     Nice<mtd::MockInputDispatcher> mock_dispatcher;
-    Nice<mtd::MockInputRegion> mock_region;
     Nice<mtd::MockCursorListener> mock_cursor_listener;
     Nice<mtd::MockTouchVisualizer> mock_visualizer;
     Nice<mtd::MockInputSeat> mock_seat;
@@ -70,8 +68,7 @@ struct SeatInputDeviceTracker : ::testing::Test
     mi::receiver::XKBMapper mapper;
     mi::SeatInputDeviceTracker tracker{
         mt::fake_shared(mock_dispatcher), mt::fake_shared(mock_visualizer), mt::fake_shared(mock_cursor_listener),
-        mt::fake_shared(mock_region),     mt::fake_shared(mapper),          mt::fake_shared(clock),
-        mt::fake_shared(mock_seat_report)};
+        mt::fake_shared(mapper),          mt::fake_shared(clock),           mt::fake_shared(mock_seat_report)};
 
     std::chrono::nanoseconds arbitrary_timestamp;
 };

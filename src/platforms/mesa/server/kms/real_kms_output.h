@@ -38,23 +38,27 @@ class PageFlipper;
 class RealKMSOutput : public KMSOutput
 {
 public:
-    RealKMSOutput(int drm_fd, uint32_t connector_id,
-                  std::shared_ptr<PageFlipper> const& page_flipper);
+    RealKMSOutput(
+        int drm_fd,
+        kms::DRMModeConnectorUPtr&& connector,
+        std::shared_ptr<PageFlipper> const& page_flipper);
     ~RealKMSOutput();
+
+    uint32_t id() const override;
 
     void reset() override;
     void configure(geometry::Displacement fb_offset, size_t kms_mode_index) override;
     geometry::Size size() const override;
     int max_refresh_rate() const override;
 
-    bool set_crtc(uint32_t fb_id) override;
+    bool set_crtc(FBHandle const& fb) override;
     void clear_crtc() override;
-    bool schedule_page_flip(uint32_t fb_id) override;
+    bool schedule_page_flip(FBHandle const& fb) override;
     void wait_for_page_flip() override;
 
-    void set_cursor(gbm_bo* buffer) override;
+    bool set_cursor(gbm_bo* buffer) override;
     void move_cursor(geometry::Point destination) override;
-    void clear_cursor() override;
+    bool clear_cursor() override;
     bool has_cursor() const override;
 
     void set_power_mode(MirPowerMode mode) override;
@@ -62,12 +66,18 @@ public:
 
     Frame last_frame() const override;
 
+    void refresh_hardware_state() override;
+    void update_from_hardware_state(DisplayConfigurationOutput& output) const override;
+
+    FBHandle* fb_for(gbm_bo* bo) const override;
+
+    bool buffer_requires_migration(gbm_bo* bo) const override;
+    int drm_fd() const override;
 private:
     bool ensure_crtc();
     void restore_saved_crtc();
 
-    int const drm_fd;
-    uint32_t const connector_id;
+    int const drm_fd_;
     std::shared_ptr<PageFlipper> const page_flipper;
 
     kms::DRMModeConnectorUPtr connector;

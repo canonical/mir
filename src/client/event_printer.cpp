@@ -18,6 +18,7 @@
 
 #include "mir/event_printer.h"
 
+#include "mir/events/event_private.h"
 #include "mir/events/surface_placement_event.h"
 #include "mir/logging/input_timestamp.h"
 
@@ -130,6 +131,8 @@ std::ostream& mir::operator<<(std::ostream& out, MirOrientation orientation)
     }
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 std::ostream& mir::operator<<(std::ostream& out, MirSurfaceAttrib attribute)
 {
     switch (attribute)
@@ -146,22 +149,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceAttrib attribute)
     }
 }
 
-std::ostream& mir::operator<<(std::ostream& out, MirWindowAttrib attribute)
-{
-    switch (attribute)
-    {
-    PRINT(mir_window_attrib,type);
-    PRINT(mir_window_attrib,dpi);
-    PRINT(mir_window_attrib,focus);
-    PRINT(mir_window_attrib,state);
-    PRINT(mir_window_attrib,visibility);
-    PRINT(mir_window_attrib,swapinterval);
-    PRINT(mir_window_attrib,preferred_orientation);
-    default:
-        return out << static_cast<int>(attribute) << "<INVALID>";
-    }
-}
-
 std::ostream& mir::operator<<(std::ostream& out, MirSurfaceFocusState state)
 {
     switch (state)
@@ -173,34 +160,12 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceFocusState state)
     }
 }
 
-std::ostream& mir::operator<<(std::ostream& out, MirWindowFocusState state)
-{
-    switch (state)
-    {
-    PRINT(mir_window_focus_state,focused);
-    PRINT(mir_window_focus_state,unfocused);
-    default:
-        return out << static_cast<int>(state) << "<INVALID>";
-    }
-}
-
 std::ostream& mir::operator<<(std::ostream& out, MirSurfaceVisibility state)
 {
     switch (state)
     {
     PRINT(mir_surface_visibility,exposed);
     PRINT(mir_surface_visibility,occluded);
-    default:
-        return out << static_cast<int>(state) << "<INVALID>";
-    }
-}
-
-std::ostream& mir::operator<<(std::ostream& out, MirWindowVisibility state)
-{
-    switch (state)
-    {
-    PRINT(mir_window_visibility,exposed);
-    PRINT(mir_window_visibility,occluded);
     default:
         return out << static_cast<int>(state) << "<INVALID>";
     }
@@ -224,6 +189,62 @@ std::ostream& mir::operator<<(std::ostream& out, MirSurfaceType type)
     }
 }
 
+std::ostream& mir::operator<<(std::ostream& out, MirSurfaceState state)
+{
+    switch (state)
+    {
+    PRINT(mir_surface_state,unknown);
+    PRINT(mir_surface_state,restored);
+    PRINT(mir_surface_state,minimized);
+    PRINT(mir_surface_state,maximized);
+    PRINT(mir_surface_state,vertmaximized);
+    PRINT(mir_surface_state,fullscreen);
+    PRINT(mir_surface_state,horizmaximized);
+    PRINT(mir_surface_state,hidden);
+    default:
+        return out << static_cast<int>(state) << "<INVALID>";
+    }
+}
+#pragma GCC diagnostic pop
+
+std::ostream& mir::operator<<(std::ostream& out, MirWindowAttrib attribute)
+{
+    switch (attribute)
+    {
+    PRINT(mir_window_attrib,type);
+    PRINT(mir_window_attrib,dpi);
+    PRINT(mir_window_attrib,focus);
+    PRINT(mir_window_attrib,state);
+    PRINT(mir_window_attrib,visibility);
+    PRINT(mir_window_attrib,swapinterval);
+    PRINT(mir_window_attrib,preferred_orientation);
+    default:
+        return out << static_cast<int>(attribute) << "<INVALID>";
+    }
+}
+
+std::ostream& mir::operator<<(std::ostream& out, MirWindowFocusState state)
+{
+    switch (state)
+    {
+    PRINT(mir_window_focus_state,focused);
+    PRINT(mir_window_focus_state,unfocused);
+    default:
+        return out << static_cast<int>(state) << "<INVALID>";
+    }
+}
+
+std::ostream& mir::operator<<(std::ostream& out, MirWindowVisibility state)
+{
+    switch (state)
+    {
+    PRINT(mir_window_visibility,exposed);
+    PRINT(mir_window_visibility,occluded);
+    default:
+        return out << static_cast<int>(state) << "<INVALID>";
+    }
+}
+
 std::ostream& mir::operator<<(std::ostream& out, MirWindowType type)
 {
     switch (type)
@@ -239,23 +260,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowType type)
     PRINT(mir_window_type,tip);
     default:
         return out << static_cast<int>(type) << "<INVALID>";
-    }
-}
-
-std::ostream& mir::operator<<(std::ostream& out, MirSurfaceState state)
-{
-    switch (state)
-    {
-    PRINT(mir_surface_state,unknown);
-    PRINT(mir_surface_state,restored);
-    PRINT(mir_surface_state,minimized);
-    PRINT(mir_surface_state,maximized);
-    PRINT(mir_surface_state,vertmaximized);
-    PRINT(mir_surface_state,fullscreen);
-    PRINT(mir_surface_state,horizmaximized);
-    PRINT(mir_surface_state,hidden);
-    default:
-        return out << static_cast<int>(state) << "<INVALID>";
     }
 }
 
@@ -282,12 +286,13 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)
 {
     auto event_time = mir::logging::input_timestamp(std::chrono::nanoseconds(mir_input_event_get_event_time(&event)));
     auto device_id = mir_input_event_get_device_id(&event);
+    auto window_id = event.window_id();
     switch (mir_input_event_get_type(&event))
     {
     case mir_input_event_type_key:
         {
             auto key_event = mir_input_event_get_keyboard_event(&event);
-            return out << "key_event(when=" << event_time << ", from=" << device_id << ", "
+            return out << "key_event(when=" << event_time << ", from=" << device_id << ", window_id=" << window_id << ", "
                 << mir_keyboard_event_action(key_event)
                 << ", code=" << mir_keyboard_event_key_code(key_event)
                 << ", scan=" << mir_keyboard_event_scan_code(key_event) << ", modifiers=" << std::hex
@@ -296,7 +301,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)
     case mir_input_event_type_touch:
         {
             auto touch_event = mir_input_event_get_touch_event(&event);
-            out << "touch_event(when=" << event_time << ", from=" << device_id << ", touch = {";
+            out << "touch_event(when=" << event_time << ", from=" << device_id << ", window_id=" << window_id << ", touch = {";
 
             for (unsigned int index = 0, count = mir_touch_event_point_count(touch_event); index != count; ++index)
                 out << "{id=" << mir_touch_event_id(touch_event, index)
@@ -320,7 +325,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)
                  mir_pointer_button_back, mir_pointer_button_forward})
                 button_state |= mir_pointer_event_button_state(pointer_event, a) ? a : 0;
 
-            return out << "pointer_event(when=" << event_time << ", from=" << device_id << ", "
+            return out << "pointer_event(when=" << event_time << ", from=" << device_id << ", window_id=" << window_id << ", "
                 << mir_pointer_event_action(pointer_event) << ", button_state=" << button_state
                 << ", x=" << mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x)
                 << ", y=" << mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y)
@@ -396,6 +401,16 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowEvent const& event)
     return out << ')';
 }
 
+std::ostream& mir::operator<<(std::ostream& out, MirWindowOutputEvent const& event)
+{
+    return out << "window_output_event({"
+               << mir_window_output_event_get_dpi(&event) << ", "
+               << mir_window_output_event_get_form_factor(&event) << ", "
+               << mir_window_output_event_get_scale(&event) << ", "
+               << mir_window_output_event_get_refresh_rate(&event) << ", "
+               << mir_window_output_event_get_output_id(&event) << "})";
+}
+
 std::ostream& mir::operator<<(std::ostream& out, MirWindowPlacementEvent const& event)
 {
     auto const& placement = event.placement();
@@ -408,8 +423,10 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowPlacementEvent const& 
 
 std::ostream& mir::operator<<(std::ostream& out, MirInputDeviceStateEvent const& event)
 {
+    auto window_id = event.window_id();
     out << "input_device_state(ts="
         << mir_input_device_state_event_time(&event)
+        << ", window_id=" << window_id
         << ", mod=" << MirInputEventModifier(mir_input_device_state_event_modifiers(&event))
         << ", btns=" << mir_input_device_state_event_pointer_buttons(&event)
         << ", x=" << mir_input_device_state_event_pointer_axis(&event, mir_pointer_axis_x)
@@ -444,14 +461,15 @@ std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
     auto type = mir_event_get_type(&event);
     switch (type)
     {
-        PRINT_EVENT(surface);
+        PRINT_EVENT(window);
         PRINT_EVENT(resize);
         PRINT_EVENT(orientation);
         PRINT_EVENT(close_surface);
         PRINT_EVENT(input);
         PRINT_EVENT(input_device_state);
         PRINT_EVENT(keymap);
-        PRINT_EVENT(surface_placement);
+        PRINT_EVENT(window_placement);
+        PRINT_EVENT(window_output);
     case mir_event_type_prompt_session_state_change:
         return out << *mir_event_get_prompt_session_event(&event);
     default:

@@ -21,6 +21,7 @@
 #include "host_stream.h"
 #include "host_chain.h"
 #include "host_surface_spec.h"
+#include "host_buffer.h"
 #include "native_buffer.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/mir_extension_core.h"
@@ -31,9 +32,12 @@
 #include "mir_toolkit/mir_extension_core.h"
 #include "mir_toolkit/mir_buffer_private.h"
 #include "mir_toolkit/mir_presentation_chain.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 #include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_toolkit/extensions/android_buffer.h"
 #include "mir_toolkit/extensions/gbm_buffer.h"
+#include "mir_toolkit/extensions/graphics_module.h"
+#include "mir_toolkit/extensions/hardware_buffer_stream.h"
 #include "mir/raii.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir/graphics/cursor_image.h"
@@ -66,7 +70,7 @@ namespace
 {
 mgn::UniqueInputConfig make_input_config(MirConnection* con)
 {
-    return mgn::UniqueInputConfig(mir_connection_create_input_config(con), mir_input_config_destroy);
+    return mgn::UniqueInputConfig(mir_connection_create_input_config(con), mir_input_config_release);
 }
 
 void display_config_callback_thunk(MirConnection* /*connection*/, void* context)
@@ -100,6 +104,8 @@ void copy_image(MirGraphicsRegion const& g, mg::CursorImage const& image)
     }
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 class MirClientHostSurface : public mgn::HostSurface
 {
 public:
@@ -134,7 +140,7 @@ public:
             mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(mir_surface)));
     }
 
-    void set_event_handler(mir_window_event_callback cb, void* context) override
+    void set_event_handler(MirWindowEventCallback cb, void* context) override
     {
         mir_window_set_event_handler(mir_surface, cb, context);
     }
@@ -158,7 +164,8 @@ public:
 
             if (image_width != g.width || image_height != g.height)
             {
-                mir_buffer_stream_release_sync(cursor);
+                mir_render_surface_release(surface);
+                surface = nullptr;
                 cursor = nullptr;
             }
         }
@@ -167,12 +174,12 @@ public:
 
         if (new_cursor)
         {
-            cursor = mir_connection_create_buffer_stream_sync(
+            surface = mir_connection_create_render_surface_sync(
                 mir_connection,
-                image_width,
-                image_height,
-                cursor_pixel_format,
-                mir_buffer_usage_software);
+                image_width, image_height);
+
+            cursor = mir_render_surface_get_buffer_stream(
+                surface, image_width, image_height, cursor_pixel_format);
 
             mir_buffer_stream_get_graphics_region(cursor, &g);
         }
@@ -185,8 +192,8 @@ public:
         {
             cursor_hotspot = image.hotspot();
 
-            auto conf = mir_cursor_configuration_from_buffer_stream(
-                cursor, cursor_hotspot.dx.as_int(), cursor_hotspot.dy.as_int());
+            auto conf =
+                mir_cursor_configuration_from_render_surface(surface, 0, 0);
 
             mir_window_configure_cursor(mir_surface, conf);
             mir_cursor_configuration_destroy(conf);
@@ -195,7 +202,12 @@ public:
 
     void hide_cursor()
     {
-        if (cursor) { mir_buffer_stream_release_sync(cursor); cursor = nullptr; }
+        if (cursor)
+        {
+            mir_render_surface_release(surface);
+            surface = nullptr;
+            cursor = nullptr;
+        }
 
         auto spec = mir_create_window_spec(mir_connection);
         mir_window_spec_set_cursor_name(spec, mir_disabled_cursor_name);
@@ -208,24 +220,23 @@ private:
     MirWindow* const mir_surface;
     MirBufferStream* cursor{nullptr};
     mir::geometry::Displacement cursor_hotspot;
+    MirRenderSurface* surface{nullptr};
 };
 
 class MirClientHostStream : public mgn::HostStream
 {
 public:
     MirClientHostStream(MirConnection* connection, mg::BufferProperties const& properties) :
-        stream(mir_connection_create_buffer_stream_sync(connection,
-            properties.size.width.as_int(), properties.size.height.as_int(),
-            properties.format,
-            (properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software))
+        render_surface(mir_connection_create_render_surface_sync(connection,
+            properties.size.width.as_int(), properties.size.height.as_int())),
+        stream(get_appropriate_stream(connection, render_surface, properties))
     {
     }
 
     ~MirClientHostStream()
     {
-        mir_buffer_stream_release_sync(stream);
+        mir_render_surface_release(render_surface);
     }
-
     EGLNativeWindowType egl_native_window() const override
     {
         return reinterpret_cast<EGLNativeWindowType>(mir_buffer_stream_get_egl_native_window(stream));
@@ -235,9 +246,35 @@ public:
     {
         return stream;
     }
+
+    MirRenderSurface* rs() const override
+    {
+        return render_surface;
+    }
+
 private:
+    MirBufferStream* get_appropriate_stream(
+        MirConnection* connection, MirRenderSurface* rs, mg::BufferProperties const& props)
+    {
+        if (props.usage == mg::BufferUsage::software)
+        {
+            return mir_render_surface_get_buffer_stream(
+                rs, props.size.width.as_int(), props.size.height.as_int(), props.format);
+        }
+        else
+        {
+            auto ext = mir_extension_hardware_buffer_stream_v1(connection);
+            if (!ext)
+                BOOST_THROW_EXCEPTION(std::runtime_error("no hardware streams available on platform"));
+            return ext->get_hardware_buffer_stream(
+                rs, props.size.width.as_int(), props.size.height.as_int(), props.format);
+        }
+    }
+
+    MirRenderSurface* const render_surface;
     MirBufferStream* const stream;
 };
+#pragma GCC diagnostic pop
 
 }
 
@@ -314,17 +351,13 @@ mgn::MirClientHostConnection::~MirClientHostConnection()
     mir_connection_release(mir_connection);
 }
 
-std::vector<int> mgn::MirClientHostConnection::platform_fd_items()
-{
-    MirPlatformPackage pkg;
-    mir_connection_get_platform(mir_connection, &pkg);
-    return std::vector<int>(pkg.fd, pkg.fd + pkg.fd_items);
-}
-
 EGLNativeDisplayType mgn::MirClientHostConnection::egl_native_display()
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return reinterpret_cast<EGLNativeDisplayType>(
         mir_connection_get_egl_native_display(mir_connection));
+#pragma GCC diagnostic pop
 }
 
 auto mgn::MirClientHostConnection::create_display_config()
@@ -367,6 +400,8 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
             properties.size.height.as_int()),
         mir_window_spec_release);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferUsage usage = (properties.usage == mg::BufferUsage::hardware) ?
         mir_buffer_usage_hardware : mir_buffer_usage_software; 
 
@@ -376,6 +411,7 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
     mir_window_spec_set_fullscreen_on_output(spec.get(), output_id);
     MirBufferStreamInfo info { stream->handle(), displacement.dx.as_int(), displacement.dy.as_int() };
     mir_window_spec_set_streams(spec.get(), &info, 1);
+#pragma GCC diagnostic pop
 
     auto surf = std::shared_ptr<MirClientHostSurface>(
         new MirClientHostSurface(mir_connection, spec.get()),
@@ -470,7 +506,11 @@ auto mgn::MirClientHostConnection::graphics_platform_library() -> std::string
 {
     MirModuleProperties properties = { nullptr, 0, 0, 0, nullptr };
 
-    mir_connection_get_graphics_module(mir_connection, &properties);
+    auto ext = mir_extension_graphics_module_v1(mir_connection);
+    if (!ext)
+        BOOST_THROW_EXCEPTION(std::runtime_error("No graphics_module extension present"));
+
+    ext->graphics_module(mir_connection, &properties);
 
     if (properties.filename == nullptr)
     {
@@ -510,20 +550,30 @@ std::unique_ptr<mgn::HostStream> mgn::MirClientHostConnection::create_stream(
     return std::make_unique<MirClientHostStream>(mir_connection, properties);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct Chain : mgn::HostChain
 {
     Chain(MirConnection* connection) :
-        chain(mir_connection_create_presentation_chain_sync(connection))
+        render_surface(mir_connection_create_render_surface_sync(connection, 0, 0)),
+        chain(mir_render_surface_get_presentation_chain(render_surface))
     {
     }
     ~Chain()
     {
-        mir_presentation_chain_release(chain);
+        mir_render_surface_release(render_surface);
+    }
+
+    static void buffer_available(MirBuffer* buffer, void* context)
+    {
+        auto host_buffer = static_cast<mgn::NativeBuffer*>(context);
+        host_buffer->available(buffer);
     }
 
     void submit_buffer(mgn::NativeBuffer& buffer) override
     {
-        mir_presentation_chain_submit_buffer(chain, buffer.client_handle());
+        mir_presentation_chain_submit_buffer(chain, buffer.client_handle(),
+                    buffer_available, &buffer);
     }
 
     void set_submission_mode(mgn::SubmissionMode mode) override
@@ -538,9 +588,17 @@ struct Chain : mgn::HostChain
     {
         return chain;
     }
+
+    MirRenderSurface* rs() const override
+    {
+        return render_surface;
+    }
+
 private:
+    MirRenderSurface* const render_surface;
     MirPresentationChain* chain;
 };
+#pragma GCC diagnostic pop
 
 std::unique_ptr<mgn::HostChain> mgn::MirClientHostConnection::create_chain() const
 {
@@ -566,178 +624,6 @@ mgn::GraphicsRegion::~GraphicsRegion()
 
 namespace
 {
-class HostBuffer : public mgn::NativeBuffer
-{
-public:
-    HostBuffer(MirConnection* mir_connection, mg::BufferProperties const& properties) :
-        fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
-    {
-        mir_connection_allocate_buffer(
-            mir_connection,
-            properties.size.width.as_int(),
-            properties.size.height.as_int(),
-            properties.format,
-            (properties.usage == mg::BufferUsage::hardware) ? mir_buffer_usage_hardware : mir_buffer_usage_software,
-            buffer_available, this);
-        std::unique_lock<std::mutex> lk(mut);
-        cv.wait(lk, [&]{ return handle; });
-        if (!mir_buffer_is_valid(handle))
-        {
-            mir_buffer_release(handle);
-            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
-        }
-    }
-
-    HostBuffer(MirConnection* mir_connection, geom::Size size, MirPixelFormat format) :
-        fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
-    {
-        mir_connection_allocate_buffer(
-            mir_connection,
-            size.width.as_int(),
-            size.height.as_int(),
-            format,
-            mir_buffer_usage_software,
-            buffer_available, this);
-        std::unique_lock<std::mutex> lk(mut);
-        cv.wait(lk, [&]{ return handle; });
-        if (!mir_buffer_is_valid(handle))
-        {
-            mir_buffer_release(handle);
-            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
-        }
-    }
-
-    HostBuffer(MirConnection* mir_connection,
-        MirExtensionGbmBufferV1 const* ext,
-        geom::Size size, unsigned int native_pf, unsigned int native_flags) :
-        fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
-    {
-        ext->allocate_buffer_gbm(
-            mir_connection, size.width.as_int(), size.height.as_int(), native_pf, native_flags,
-            buffer_available, this);
-        std::unique_lock<std::mutex> lk(mut);
-        cv.wait(lk, [&]{ return handle; });
-        if (!mir_buffer_is_valid(handle))
-        {
-            mir_buffer_release(handle);
-            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
-        }
-    }
-
-    HostBuffer(MirConnection* mir_connection,
-        MirExtensionAndroidBufferV1 const* ext,
-        geom::Size size, unsigned int native_pf, unsigned int native_flags) :
-        fence_extensions(mir_extension_fenced_buffers_v1(mir_connection))
-    {
-        ext->allocate_buffer_android(
-            mir_connection, size.width.as_int(), size.height.as_int(), native_pf, native_flags,
-            buffer_available, this);
-        std::unique_lock<std::mutex> lk(mut);
-        cv.wait(lk, [&]{ return handle; });
-        if (!mir_buffer_is_valid(handle))
-        {
-            mir_buffer_release(handle);
-            BOOST_THROW_EXCEPTION(std::runtime_error("could not allocate MirBuffer"));
-        }
-    }
-
-    ~HostBuffer()
-    {
-        mir_buffer_release(handle);
-    }
-
-    void sync(MirBufferAccess access, std::chrono::nanoseconds ns) override
-    {
-        if (fence_extensions && fence_extensions->wait_for_access)
-            fence_extensions->wait_for_access(handle, access, ns.count());
-    }
-
-    MirBuffer* client_handle() const override
-    {
-        return handle;
-    }
-
-    std::unique_ptr<mgn::GraphicsRegion> get_graphics_region() override
-    {
-        return std::make_unique<mgn::GraphicsRegion>(handle);
-    }
-
-    geom::Size size() const override
-    {
-        return { mir_buffer_get_width(handle), mir_buffer_get_height(handle) };
-    }
-
-    MirPixelFormat format() const override
-    {
-        return mir_buffer_get_pixel_format(handle);
-    }
-
-    std::tuple<EGLenum, EGLClientBuffer, EGLint*> egl_image_creation_hints() const override
-    {
-        EGLenum type;
-        EGLClientBuffer client_buffer = nullptr;;
-        EGLint* attrs = nullptr;
-        // TODO: check return value
-        mir_buffer_get_egl_image_parameters(handle, &type, &client_buffer, &attrs);
-        
-        return std::tuple<EGLenum, EGLClientBuffer, EGLint*>{type, client_buffer, attrs};
-    }
-
-    static void buffer_available(MirBuffer* buffer, void* context)
-    {
-        auto host_buffer = static_cast<HostBuffer*>(context);
-        host_buffer->available(buffer);
-    }
-
-    void available(MirBuffer* buffer)
-    {
-        std::unique_lock<std::mutex> lk(mut);
-        if (!handle)
-        {
-            handle = buffer;
-            cv.notify_all();
-        }
-
-        auto g = f;
-        lk.unlock();
-        if (g)
-            g();
-    }
-
-    void on_ownership_notification(std::function<void()> const& fn) override
-    {
-        std::unique_lock<std::mutex> lk(mut);
-        f = fn;
-    }
-
-    MirBufferPackage* package() const override
-    {
-       return mir_buffer_get_buffer_package(handle);
-    }
-
-    void set_fence(mir::Fd fd) override
-    {
-        if (fence_extensions && fence_extensions->associate_fence)
-            fence_extensions->associate_fence(handle, fd, mir_read_write);
-    }
-
-    mir::Fd fence() const override
-    {
-        if (fence_extensions && fence_extensions->get_fence)
-            return mir::Fd{fence_extensions->get_fence(handle)};
-        else
-            return mir::Fd{mir::Fd::invalid};
-    }
-
-private:
-    MirExtensionFencedBuffersV1 const* fence_extensions = nullptr;
-
-    std::function<void()> f;
-    MirBuffer* handle = nullptr;
-    std::mutex mut;
-    std::condition_variable cv;
-};
-
 class SurfaceSpec : public mgn::HostSurfaceSpec
 {
 public:
@@ -751,19 +637,24 @@ public:
         mir_window_spec_release(spec);
     }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     void add_chain(mgn::HostChain& chain, geom::Displacement disp, geom::Size size) override
     {
-        mir_surface_spec_add_presentation_chain(
-            spec, size.width.as_int(), size.height.as_int(),
-            disp.dx.as_int(), disp.dy.as_int(), chain.handle());
+        mir_window_spec_add_render_surface(
+            spec, chain.rs(),
+            size.width.as_int(), size.height.as_int(),
+            disp.dx.as_int(), disp.dy.as_int());
     }
 
     void add_stream(mgn::HostStream& stream, geom::Displacement disp, geom::Size size) override
     {
-        mir_surface_spec_add_buffer_stream(spec,
-            disp.dx.as_int(), disp.dy.as_int(),
-            size.width.as_int(), size.height.as_int(), stream.handle());
+        mir_window_spec_add_render_surface(
+            spec, stream.rs(),
+            size.width.as_int(), size.height.as_int(),
+            disp.dx.as_int(), disp.dy.as_int());
     }
+#pragma GCC diagnostic pop
 
     MirWindowSpec* handle() override
     {
@@ -777,13 +668,13 @@ private:
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     mg::BufferProperties const& properties)
 {
-    return std::make_shared<HostBuffer>(mir_connection, properties);
+    return std::make_shared<mgn::HostBuffer>(mir_connection, properties);
 }
 
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
     geom::Size size, MirPixelFormat format)
 {
-    return std::make_shared<HostBuffer>(mir_connection, size, format);
+    return std::make_shared<mgn::HostBuffer>(mir_connection, size, format);
 }
 
 std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
@@ -791,12 +682,12 @@ std::shared_ptr<mgn::NativeBuffer> mgn::MirClientHostConnection::create_buffer(
 {
     if (auto ext = mir_extension_gbm_buffer_v1(mir_connection))
     {
-        return std::make_shared<HostBuffer>(mir_connection, ext, size, native_format, native_flags);
+        return std::make_shared<mgn::HostBuffer>(mir_connection, ext, size, native_format, native_flags);
     }
 
     if (auto ext = mir_extension_android_buffer_v1(mir_connection))
     {
-        return std::make_shared<HostBuffer>(mir_connection, ext, size, native_format, native_flags);
+        return std::make_shared<mgn::HostBuffer>(mir_connection, ext, size, native_format, native_flags);
     }
 
     BOOST_THROW_EXCEPTION(std::runtime_error("could not create hardware buffer"));
@@ -807,13 +698,15 @@ std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surfa
     return std::make_unique<SurfaceSpec>(mir_connection);
 }
 
-bool mgn::MirClientHostConnection::supports_passthrough()
+bool mgn::MirClientHostConnection::supports_passthrough(mg::BufferUsage)
 {
-    auto buffer = create_buffer(geom::Size{1, 1} , mir_pixel_format_abgr_8888);
-    auto hints = buffer->egl_image_creation_hints();
-    if (std::get<1>(hints) == nullptr && std::get<2>(hints) == nullptr)
-        return false;
-    return true;
+    return mir_extension_android_buffer_v1(mir_connection) || 
+           mir_extension_gbm_buffer_v1(mir_connection);
+}
+
+void mgn::MirClientHostConnection::apply_input_configuration(MirInputConfig const* config)
+{
+    mir_connection_apply_session_input_config(mir_connection, config);
 }
 
 namespace
@@ -854,6 +747,11 @@ T auth(std::function<void(AuthRequest<T>*)> const& f)
     req->cv.wait(lk, [&]{ return req->set; });
     return req->rc;
 }
+}
+
+mir::optional_value<mir::Fd> mgn::MirClientHostConnection::drm_fd()
+{
+    return {};
 }
 
 mir::optional_value<std::shared_ptr<mir::graphics::MesaAuthExtension>>

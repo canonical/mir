@@ -17,7 +17,7 @@
  */
 
 #include "mir_toolkit/mir_client_library.h"
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor_factory.h"
 #include "mir/compositor/scene_element.h"
@@ -102,7 +102,7 @@ private:
     std::shared_ptr<CompositionTracker> const tracker;
 };
 
-struct DisplayBufferCompositorOverride : mtf::ConnectedClientWithASurface
+struct DisplayBufferCompositorOverride : mtf::ConnectedClientWithAWindow
 {
     void SetUp() override
     {
@@ -112,11 +112,11 @@ struct DisplayBufferCompositorOverride : mtf::ConnectedClientWithASurface
             return std::make_shared<CustomDBCFactory>(tracker);
         });
 
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientWithAWindow::SetUp();
     }
     void TearDown() override
     {
-        mtf::ConnectedClientWithASurface::TearDown();
+        mtf::ConnectedClientWithAWindow::TearDown();
     }
 protected:
     std::shared_ptr<CompositionTracker> const tracker{std::make_shared<CompositionTracker>()};
@@ -125,8 +125,11 @@ protected:
 
 TEST_F(DisplayBufferCompositorOverride, composite_called_with_surface)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirWindowParameters surface_params;
     mir_window_get_parameters(window, &surface_params);
     mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
+#pragma GCC diagnostic pop
     EXPECT_TRUE(tracker->wait_until_surface_is_rendered_with_size({surface_params.width, surface_params.height}));
 }

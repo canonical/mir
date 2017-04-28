@@ -47,7 +47,9 @@ char const* const mo::host_socket_opt             = "host-socket";
 char const* const mo::nested_passthrough_opt      = "nested-passthrough";
 char const* const mo::frontend_threads_opt        = "ipc-thread-pool";
 char const* const mo::name_opt                    = "name";
+char const* const mo::offscreen_opt               = "offscreen";
 char const* const mo::touchspots_opt              = "enable-touchspots";
+char const* const mo::cursor_opt                  = "cursor";
 char const* const mo::fatal_except_opt            = "on-fatal-error-except";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::composite_delay_opt         = "composite-delay";
@@ -174,7 +176,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "How to handle the SharedLibraryProber report. [{log,lttng,off}]")
         (shell_report_opt, po::value<std::string>()->default_value(off_opt_value),
          "How to handle the Shell report. [{log,off}]")
-        (composite_delay_opt, po::value<int>()->default_value(-1),
+        (composite_delay_opt, po::value<int>()->default_value(0),
             "Compositor frame delay in milliseconds (how long to wait for new "
             "frames from clients before compositing). Higher values result in "
             "lower latency but risk causing frame skipping. "
@@ -184,8 +186,13 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (nested_passthrough_opt, po::value<bool>()->default_value(true),
             "When nested, attempt to pass a client's graphics content directly to the host"
             " to avoid a composition pass")
+        (offscreen_opt,
+            "Render to offscreen buffers instead of the real outputs.")
         (touchspots_opt,
             "Display visualization of touchspots (e.g. for screencasting).")
+        (cursor_opt,
+            po::value<std::string>()->default_value("auto"),
+            "Cursor (mouse pointer) to use [{auto,software}]")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
         (fatal_except_opt, "On \"fatal error\" conditions [e.g. drivers behaving "

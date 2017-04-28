@@ -3,6 +3,9 @@ include(CMakeDependentOption)
 set(
   SOURCES
 
+  client_mediated_user_gestures.cpp
+  drag_and_drop.cpp
+
   # Catch double-free bugs by wrapping close() and abort()ing on EBADF
   strict_close.cpp
 
@@ -74,35 +77,14 @@ endif()
 # The following tests use still files we have chosen not to support in the public API
 # TODO update these "throwback" tests to rely only on the public APIs
 
-  # uses BasicWindowManager<>
-  set_source_files_properties(test_client_cursor_api.cpp PROPERTIES COMPILE_FLAGS
-          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/server")
-
   # uses UsingClientPlatform
   set_source_files_properties(test_client_library_errors.cpp PROPERTIES COMPILE_FLAGS
           "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
-
-  # uses CanonicalWindowManager
-  set_source_files_properties(test_shell_control_of_surface_configuration.cpp PROPERTIES COMPILE_FLAGS
-          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/server")
 
   # uses src/include/common/mir/protobuf/protocol_version.h
   set_source_files_properties(test_client_library.cpp PROPERTIES COMPILE_FLAGS
           "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
 # END "throwbacks"
-
-# BEGIN "staging"
-# The following tests use files we do not yet support in the public API
-# TODO update the public APIs
-  set_source_files_properties(test_presentation_chain.cpp PROPERTIES COMPILE_FLAGS
-          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
-
-  set_source_files_properties(test_render_surface.cpp PROPERTIES COMPILE_FLAGS
-          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
-
-  set_source_files_properties(test_buffer_stream_arrangement1.cpp PROPERTIES COMPILE_FLAGS
-          "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/client")
-# END "staging"
 
 mir_add_wrapped_executable(
   mir_acceptance_tests

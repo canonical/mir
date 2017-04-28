@@ -75,10 +75,11 @@ public:
         SurfaceId surface_id,
         MirWindowAttrib attrib) override;
 
-    void raise_surface(
+    void request_operation(
         std::shared_ptr<Session> const& session,
         SurfaceId surface_id,
-        uint64_t timestamp) override;
+        uint64_t timestamp,
+        UserRequest request) override;
 
 protected:
     std::shared_ptr<Shell> const wrapped;

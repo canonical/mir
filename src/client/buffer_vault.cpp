@@ -18,10 +18,10 @@
 
 #include "mir/client_buffer_factory.h"
 #include "mir/client_buffer.h"
+#include "mir/client/surface_map.h"
 #include "buffer_vault.h"
 #include "buffer.h"
 #include "buffer_factory.h"
-#include "surface_map.h"
 #include "mir_protobuf.pb.h"
 #include "protobuf_to_native_buffer.h"
 #include "connection_surface_map.h"
@@ -79,9 +79,6 @@ mcl::BufferVault::BufferVault(
 
 mcl::BufferVault::~BufferVault()
 {
-    if (disconnected_)
-        return;
-
     buffer_factory->cancel_requests_with_context(this);
     std::unique_lock<std::mutex> lk(mutex);
     for (auto& it : buffers)
@@ -92,7 +89,8 @@ mcl::BufferVault::~BufferVault()
             auto buffer = map->buffer(it.first);
             buffer->set_callback(ignore_buffer, nullptr);
         } 
-        free_buffer(it.first);
+        if (!disconnected_)
+            free_buffer(it.first);
     }
     catch (...)
     {
@@ -101,8 +99,11 @@ mcl::BufferVault::~BufferVault()
 
 void mcl::BufferVault::alloc_buffer(geom::Size size, MirPixelFormat format, int usage)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     buffer_factory->expect_buffer(platform_factory, nullptr, size, format, static_cast<MirBufferUsage>(usage),
         incoming_buffer, this);
+#pragma GCC diagnostic pop
     server_requests->allocate_buffer(size, format, usage);
 }
 

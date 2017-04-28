@@ -23,6 +23,7 @@
 #include "mir/graphics/display.h"
 #include "mir/renderer/gl/render_target.h"
 #include "display_helpers.h"
+#include "egl_helper.h"
 #include "platform_common.h"
 
 #include <vector>
@@ -41,8 +42,56 @@ namespace mesa
 {
 
 class Platform;
-class BufferObject;
+class FBHandle;
 class KMSOutput;
+class NativeBuffer;
+
+class GBMOutputSurface : public renderer::gl::RenderTarget
+{
+public:
+    class FrontBuffer
+    {
+    public:
+        FrontBuffer();
+        FrontBuffer(gbm_surface* surface);
+        FrontBuffer(FrontBuffer&& from);
+
+        ~FrontBuffer();
+
+        FrontBuffer& operator=(FrontBuffer&& from);
+        FrontBuffer& operator=(std::nullptr_t);
+
+        operator gbm_bo*();
+        operator bool() const;
+
+    private:
+        gbm_surface* const surf;
+        gbm_bo* const bo;
+    };
+
+    GBMOutputSurface(
+        int drm_fd,
+        GBMSurfaceUPtr&& surface,
+        uint32_t width,
+        uint32_t height,
+        helpers::EGLHelper&& egl);
+    GBMOutputSurface(GBMOutputSurface&& from);
+
+    // gl::RenderTarget
+    void make_current() override;
+    void release_current() override;
+    void swap_buffers() override;
+    void bind() override;
+
+    FrontBuffer lock_front();
+    void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> const& to);
+    geometry::Size size() const { return {width, height}; }
+private:
+    int const drm_fd;
+    uint32_t width, height;
+    helpers::EGLHelper egl;
+    GBMSurfaceUPtr surface;
+};
 
 class DisplayBuffer : public graphics::DisplayBuffer,
                       public graphics::DisplaySyncGroup,
@@ -51,15 +100,11 @@ class DisplayBuffer : public graphics::DisplayBuffer,
 {
 public:
     DisplayBuffer(BypassOption bypass_options,
-                  std::shared_ptr<helpers::DRMHelper> const& drm,
-                  std::shared_ptr<helpers::GBMHelper> const& gbm,
                   std::shared_ptr<DisplayReport> const& listener,
                   std::vector<std::shared_ptr<KMSOutput>> const& outputs,
-                  GBMSurfaceUPtr surface_gbm,
+                  GBMOutputSurface&& surface_gbm,
                   geometry::Rectangle const& area,
-                  MirOrientation rot,
-                  GLConfig const& gl_config,
-                  EGLContext shared_context);
+                  glm::mat2 const& transformation);
     ~DisplayBuffer();
 
     geometry::Rectangle view_area() const override;
@@ -74,36 +119,39 @@ public:
     void post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
-    MirOrientation orientation() const override;
-    MirMirrorMode mirror_mode() const override;
+    glm::mat2 transformation() const override;
     NativeDisplayBuffer* native_display_buffer() override;
 
-    void set_orientation(MirOrientation const rot, geometry::Rectangle const& a);
+    void set_transformation(glm::mat2 const& t, geometry::Rectangle const& a);
     void schedule_set_crtc();
     void wait_for_page_flip();
 
 private:
-    BufferObject* get_front_buffer_object();
-    BufferObject* get_buffer_object(struct gbm_bo *bo);
-    bool schedule_page_flip(BufferObject* bufobj);
-    void set_crtc(BufferObject const*);
+    bool schedule_page_flip(FBHandle const& bufobj);
+    void set_crtc(FBHandle const&);
 
-    BufferObject* visible_composite_frame;
-    BufferObject* scheduled_composite_frame;
     std::shared_ptr<graphics::Buffer> visible_bypass_frame, scheduled_bypass_frame;
     std::shared_ptr<Buffer> bypass_buf{nullptr};
-    BufferObject* bypass_bufobj{nullptr};
+    FBHandle* bypass_bufobj{nullptr};
     std::shared_ptr<DisplayReport> const listener;
     BypassOption bypass_option;
-    /* DRM helper from mgm::Platform */
-    std::shared_ptr<helpers::DRMHelper> const drm;
-    std::shared_ptr<helpers::GBMHelper> const gbm;
+
     std::vector<std::shared_ptr<KMSOutput>> outputs;
-    GBMSurfaceUPtr surface_gbm;
-    helpers::EGLHelper egl;
+
+    /*
+     * Destruction order is important here:
+     *  - The GBMFrontBuffers depend on *either*:
+     *  i)  The GBMOutputSurface, or
+     *  ii) The EGLBufferCopier hidden inside get_front_buffer
+     */
+    std::function<GBMOutputSurface::FrontBuffer(GBMOutputSurface::FrontBuffer&&)> get_front_buffer;
+    GBMOutputSurface surface;
+
+    GBMOutputSurface::FrontBuffer visible_composite_frame;
+    GBMOutputSurface::FrontBuffer scheduled_composite_frame;
+
     geometry::Rectangle area;
-    uint32_t fb_width, fb_height;
-    MirOrientation rotation;
+    glm::mat2 transform;
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};
     bool page_flips_pending;

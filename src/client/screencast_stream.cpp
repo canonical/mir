@@ -169,6 +169,8 @@ void mcl::ScreencastStream::screencast_buffer_received(std::function<void()> don
     screencast_wait_handle.result_received();
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirWindowParameters mcl::ScreencastStream::get_parameters() const
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
@@ -180,6 +182,7 @@ MirWindowParameters mcl::ScreencastStream::get_parameters() const
         static_cast<MirBufferUsage>(protobuf_bs->buffer_usage()),
         mir_display_output_id_invalid};
 }
+#pragma GCC diagnostic pop
 
 void mcl::ScreencastStream::swap_buffers_sync()
 {
@@ -244,10 +247,13 @@ MirConnection* mcl::ScreencastStream::connection() const
     return connection_;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirRenderSurface* mcl::ScreencastStream::render_surface() const
 {
     return nullptr;
 }
+#pragma GCC diagnostic pop
 
 void mcl::ScreencastStream::set_buffer_cache_size(unsigned int)
 {

@@ -47,6 +47,7 @@
 #include "mir/frontend/screencast.h"
 #include "mir/frontend/prompt_session.h"
 #include "mir/frontend/buffer_stream.h"
+#include "mir/frontend/input_configuration_changer.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/mir_input_config.h"
 #include "mir/input/mir_input_config_serialization.h"
@@ -64,6 +65,7 @@
 #include "protobuf_input_converter.h"
 
 #include "mir_toolkit/client_types.h"
+#include "mir_toolkit/cursors.h"
 
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -84,13 +86,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-//TODO: accept other pixel format types
-void throw_if_unsuitable_for_cursor(mf::BufferStream& stream)
-{
-    if (stream.pixel_format() != mir_pixel_format_argb_8888)
-        BOOST_THROW_EXCEPTION(std::logic_error("Only argb8888 buffer streams may currently be attached to the cursor"));
-}
-
 mg::GammaCurve convert_string_to_gamma_curve(std::string const& str_bytes)
 {
     mg::GammaCurve out(str_bytes.size() / (sizeof(mg::GammaCurve::value_type) / sizeof(char)));
@@ -114,7 +109,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<scene::CoordinateTranslator> const& translator,
     std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
-    std::shared_ptr<mir::input::InputDeviceHub> const& hub) :
+    std::shared_ptr<mf::InputConfigurationChanger> const& input_changer,
+    std::vector<mir::ExtensionDescription> const& extensions) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -131,7 +127,8 @@ mf::SessionMediator::SessionMediator(
     translator{translator},
     anr_detector{anr_detector},
     cookie_authority(cookie_authority),
-    hub(hub)
+    input_changer(input_changer),
+    extensions(extensions)
 {
 }
 
@@ -185,33 +182,22 @@ void mf::SessionMediator::connect(
     auto protobuf_config = response->mutable_display_configuration();
     mfd::pack_protobuf_display_configuration(*protobuf_config, *display_config);
 
-    MirInputConfig temp;
-    hub->for_each_input_device(
-        [&temp](auto const& dev)
-        {
-            MirInputDevice conf(dev.id(), dev.capabilities(), dev.name(), dev.unique_id());
-            auto ptr_conf = dev.pointer_configuration();
-            auto tpd_conf = dev.touchpad_configuration();
-            auto kbd_conf = dev.keyboard_configuration();
-
-            if (ptr_conf.is_set())
-                conf.set_pointer_config(ptr_conf.value());
-            if (tpd_conf.is_set())
-                conf.set_touchpad_config(tpd_conf.value());
-            if (kbd_conf.is_set())
-                conf.set_keyboard_config(kbd_conf.value());
-
-            temp.add_device_config(conf);
-        });
-
-    response->set_input_configuration(mi::serialize_input_config(temp));
+    response->set_input_configuration(mi::serialize_input_config(input_changer->base_configuration()));
 
     for (auto pf : surface_pixel_formats)
         response->add_surface_pixel_format(static_cast<::google::protobuf::uint32>(pf));
 
     resource_cache->save_resource(response, ipc_package);
 
-    response->set_coordinate_translation_present(translator->translation_supported());
+    for ( auto const& ext : extensions )
+    {
+        if (ext.version.empty()) //malformed plugin, ignore
+            continue;
+        auto e = response->add_extension();
+        e->set_name(ext.name);
+        for(auto const& v : ext.version)
+            e->add_version(v);
+    }
 
     done->Run();
 }
@@ -367,9 +353,6 @@ void mf::SessionMediator::create_surface(
     response->set_pixel_format(request->pixel_format());
     response->set_buffer_usage(request->buffer_usage());
 
-    if (surface->supports_input())
-        response->add_fd(surface->client_input_fd());
-    
     for (unsigned int i = 0; i < mir_window_attribs; i++)
     {
         auto setting = response->add_attributes();
@@ -426,12 +409,32 @@ void mf::SessionMediator::allocate_buffers(
     for (auto i = 0; i < request->buffer_requests().size(); i++)
     {
         auto const& req = request->buffer_requests(i);
-        mg::BufferProperties properties(
-            geom::Size{req.width(), req.height()},
-            static_cast<MirPixelFormat>(req.pixel_format()),
-           static_cast<mg::BufferUsage>(req.buffer_usage()));
 
-        auto id = session->create_buffer(properties);
+        mg::BufferID id;
+        if (req.has_flags() && req.has_native_format())
+        {
+            id = session->create_buffer({req.width(), req.height()}, req.native_format(), req.flags());
+        }
+        else if (req.has_buffer_usage() && req.has_pixel_format())
+        {
+            auto const usage = static_cast<mg::BufferUsage>(req.buffer_usage());
+            geom::Size const size{req.width(), req.height()};
+            auto const pf = static_cast<MirPixelFormat>(req.pixel_format());
+            if (usage == mg::BufferUsage::software)
+            {
+                id = session->create_buffer(size, pf); 
+            }
+            else
+            {
+                //legacy route, server-selected pf and usage
+                id = session->create_buffer(mg::BufferProperties{size, pf, mg::BufferUsage::hardware});
+            }
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid buffer request"));
+        }
+
         if (request->has_id())
         {
             auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
@@ -643,7 +646,14 @@ void mf::SessionMediator::modify_surface(
 
     if (surface_specification.has_cursor_name())
     {
-        mods.cursor_image = cursor_images->image(surface_specification.cursor_name(), mi::default_cursor_size);
+        if (surface_specification.cursor_name() == mir_disabled_cursor_name)
+        {
+            mods.cursor_image = nullptr;
+        }
+        else
+        {
+            mods.cursor_image = cursor_images->image(surface_specification.cursor_name(), mi::default_cursor_size);
+        }
     }
 
     if (surface_specification.has_cursor_id() &&
@@ -651,12 +661,15 @@ void mf::SessionMediator::modify_surface(
         surface_specification.has_hotspot_y())
     {
         mf::BufferStreamId id{surface_specification.cursor_id().value()};
-        throw_if_unsuitable_for_cursor(*session->get_buffer_stream(id));
+        auto stream = session->get_buffer_stream(id);
+        if (!stream->suitable_for_cursor())
+            BOOST_THROW_EXCEPTION(std::logic_error("Cursor buffer streams must have mir_pixel_format_argb_8888 format"));
         mods.stream_cursor = msh::StreamCursor{
-            id, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} }; 
+            id, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} };
     }
 
-    mods.input_shape = extract_input_shape_from(&surface_specification);
+    if (surface_specification.input_shape_size() > 0)
+        mods.input_shape = extract_input_shape_from(&surface_specification);
 
     auto const id = mf::SurfaceId(request->surface_id().value());
 
@@ -810,6 +823,7 @@ void mf::SessionMediator::create_screencast(
 
     protobuf_screencast->mutable_screencast_id()->set_value(
         screencast_session_id.as_value());
+    protobuf_screencast->mutable_buffer_stream()->set_pixel_format(pixel_format);
     protobuf_screencast->mutable_buffer_stream()->mutable_id()->set_value(
         screencast_session_id.as_value());
 
@@ -950,7 +964,8 @@ void mf::SessionMediator::configure_cursor(
         auto hotspot = geom::Displacement{cursor_request->hotspot_x(), cursor_request->hotspot_y()};
         auto stream = session->get_buffer_stream(stream_id);
 
-        throw_if_unsuitable_for_cursor(*stream);
+        if (!stream->suitable_for_cursor())
+            BOOST_THROW_EXCEPTION(std::logic_error("Cursor buffer streams must have mir_pixel_format_argb_8888 format"));
 
         surface->set_cursor_stream(stream, hotspot);
     }
@@ -1151,16 +1166,15 @@ void mf::SessionMediator::configure_buffer_stream(
     done->Run();
 }
 
-void mf::SessionMediator::raise_surface(
-    mir::protobuf::RaiseRequest const* request,
-    mir::protobuf::Void*,
-    google::protobuf::Closure* done)
+void mir::frontend::SessionMediator::request_operation(
+    mir::protobuf::RequestWithAuthority const* request,
+    mir::protobuf::Void*, google::protobuf::Closure* done)
 {
     auto const session = weak_session.lock();
     if (!session)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    auto const cookie     = request->cookie();
+    auto const cookie     = request->authority();
     auto const surface_id = request->surface_id();
 
     auto cookie_string = cookie.cookie();
@@ -1168,7 +1182,62 @@ void mf::SessionMediator::raise_surface(
     std::vector<uint8_t> cookie_bytes(cookie_string.begin(), cookie_string.end());
     auto const cookie_ptr = cookie_authority->make_cookie(cookie_bytes);
 
-    shell->raise_surface(session, mf::SurfaceId{surface_id.value()}, cookie_ptr->timestamp());
+    switch (request->operation())
+    {
+    case mir::protobuf::RequestOperation::START_DRAG_AND_DROP:
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::drag_and_drop);
+        break;
+
+    case mir::protobuf::RequestOperation::MAKE_ACTIVE:
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::activate);
+        break;
+
+    case mir::protobuf::RequestOperation::USER_MOVE:
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::move);
+        break;
+
+    default:
+        break;
+    }
+
+    done->Run();
+}
+
+void mf::SessionMediator::apply_input_configuration(
+    mir::protobuf::InputConfigurationRequest const* request,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
+{
+    auto const session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto conf = mi::deserialize_input_config(request->input_configuration());
+    input_changer->configure(session, std::move(conf));
+
+    done->Run();
+}
+
+void mf::SessionMediator::set_base_input_configuration(
+    mir::protobuf::InputConfigurationRequest const* request,
+    mir::protobuf::Void*,
+    google::protobuf::Closure* done)
+{
+    auto const session = weak_session.lock();
+    if (!session)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
+
+    auto conf = mi::deserialize_input_config(request->input_configuration());
+    input_changer->set_base_configuration(std::move(conf));
 
     done->Run();
 }
@@ -1199,6 +1268,7 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
                 static_cast<MirPixelFormat>(src.current_format());
         dest.power_mode = static_cast<MirPowerMode>(src.power_mode());
         dest.orientation = static_cast<MirOrientation>(src.orientation());
+        dest.scale = src.scale_factor();
 
         dest.gamma = {convert_string_to_gamma_curve(src.gamma_red()),
                       convert_string_to_gamma_curve(src.gamma_green()),
@@ -1220,7 +1290,6 @@ void mf::SessionMediator::destroy_screencast_sessions()
     for (auto const& id : ids_to_untrack)
         screencast_buffer_tracker.remove_session(id);
 }
-
 
 auto mf::detail::PromptSessionStore::insert(std::shared_ptr<PromptSession> const& session) -> PromptSessionId
 {

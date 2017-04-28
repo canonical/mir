@@ -37,8 +37,11 @@ struct MirEvent
     MirInputEvent* to_input();
     MirInputEvent const* to_input() const;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirInputConfigurationEvent* to_input_configuration();
     MirInputConfigurationEvent const* to_input_configuration() const;
+#pragma GCC diagnostic pop
 
     MirWindowEvent* to_surface();
     MirWindowEvent const* to_surface() const;
@@ -52,19 +55,20 @@ struct MirEvent
     MirOrientationEvent* to_orientation();
     MirOrientationEvent const* to_orientation() const;
 
-    MirCloseSurfaceEvent* to_close_surface();
-    MirCloseSurfaceEvent const* to_close_surface() const;
+    MirCloseWindowEvent* to_close_window();
+    MirCloseWindowEvent const* to_close_window() const;
 
     MirKeymapEvent* to_keymap();
     MirKeymapEvent const* to_keymap() const;
 
-    MirSurfaceOutputEvent* to_surface_output();
-    MirSurfaceOutputEvent const* to_surface_output() const;
+    MirWindowOutputEvent* to_window_output();
+    MirWindowOutputEvent const* to_window_output() const;
 
     MirInputDeviceStateEvent* to_input_device_state();
     MirInputDeviceStateEvent const* to_input_device_state() const;
 
-    MirSurfacePlacementEvent const* to_surface_placement() const;
+    MirWindowPlacementEvent* to_window_placement();
+    MirWindowPlacementEvent const* to_window_placement() const;
 
     static mir::EventUPtr deserialize(std::string const& bytes);
     static std::string serialize(MirEvent const* event);

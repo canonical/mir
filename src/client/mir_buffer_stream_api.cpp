@@ -47,13 +47,13 @@ void assign_result(void* result, void** context)
 
 }
 
-
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage buffer_usage,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void *context)
 try
 {
@@ -74,7 +74,7 @@ try
 {
     MirBufferStream *stream = nullptr;
     mir_connection_create_buffer_stream(connection, width, height, format, buffer_usage,
-        reinterpret_cast<mir_buffer_stream_callback>(assign_result), &stream)->wait_for_all();
+        reinterpret_cast<MirBufferStreamCallback>(assign_result), &stream)->wait_for_all();
     return stream;
 }
 catch (std::exception const& ex)
@@ -82,10 +82,11 @@ catch (std::exception const& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
 }
+#pragma GCC diagnostic pop
 
 MirWaitHandle* mir_buffer_stream_release(
     MirBufferStream* buffer_stream,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void* context)
 {
     auto connection = buffer_stream->connection();
@@ -94,7 +95,10 @@ MirWaitHandle* mir_buffer_stream_release(
 
 void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_buffer_stream_release(buffer_stream, nullptr, nullptr)->wait_for_all();
+#pragma GCC diagnostic pop
 }
 
 void mir_buffer_stream_get_current_buffer(MirBufferStream* buffer_stream, MirNativeBuffer** buffer_package_out)
@@ -109,7 +113,7 @@ catch (std::exception const& ex)
 
 MirWaitHandle* mir_buffer_stream_swap_buffers(
     MirBufferStream* buffer_stream,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void* context)
 try
 {
@@ -203,7 +207,10 @@ catch (std::exception const& ex)
 
 void mir_buffer_stream_set_scale_sync(MirBufferStream* opaque_stream, float scale)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     auto wh = mir_buffer_stream_set_scale(opaque_stream, scale);
+#pragma GCC diagnostic pop
     if (wh)
         wh->wait_for_all();
 }

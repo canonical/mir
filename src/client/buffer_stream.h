@@ -77,6 +77,8 @@ public:
     BufferStream(
         mir::client::rpc::DisplayServer& server,
         std::weak_ptr<SurfaceMap> const& map);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     BufferStream(
         MirConnection* connection,
         MirRenderSurface* render_surface,
@@ -89,6 +91,7 @@ public:
         std::shared_ptr<PerfReport> const& perf_report,
         std::string const& surface_name,
         geometry::Size ideal_size, size_t nbuffers);
+#pragma GCC diagnostic pop
 
     virtual ~BufferStream();
 
@@ -107,7 +110,10 @@ public:
     std::shared_ptr<MemoryRegion> secure_for_cpu_write() override;
 
     // mcl::EGLNativeSurface interface
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirWindowParameters get_parameters() const override;
+#pragma GCC diagnostic pop
     void swap_buffers_sync() override;
 
     void request_and_wait_for_configure(MirWindowAttrib attrib, int) override;
@@ -126,7 +132,10 @@ public:
     MirWaitHandle* set_scale(float scale) override;
     char const* get_error_message() const override;
     MirConnection* connection() const override;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirRenderSurface* render_surface() const override;
+#pragma GCC diagnostic pop
 
 protected:
     BufferStream(BufferStream const&) = delete;
@@ -135,10 +144,7 @@ protected:
 private:
     void process_buffer(protobuf::Buffer const& buffer);
     void process_buffer(protobuf::Buffer const& buffer, std::unique_lock<std::mutex>&);
-    void on_scale_set(float scale);
-    void release_cpu_region();
     MirWaitHandle* set_server_swap_interval(int i);
-    void init_swap_interval();
     void wait_for_vsync();
 
     mutable std::mutex mutex; // Protects all members of *this
@@ -167,7 +173,10 @@ private:
     std::shared_ptr<MirWaitHandle> creation_wait_handle;
     std::weak_ptr<SurfaceMap> const map;
     std::shared_ptr<AsyncBufferFactory> const factory;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirRenderSurface* render_surface_;
+#pragma GCC diagnostic pop
 
     std::unordered_set<MirWindow*> users;
     std::shared_ptr<FrameClock> frame_clock;

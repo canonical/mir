@@ -53,8 +53,6 @@ public:
     {
     }
 
-    std::vector<int> platform_fd_items() override { return {}; }
-
     EGLNativeDisplayType egl_native_display() override { return {}; }
 
     std::shared_ptr<MirDisplayConfig> create_display_config() override
@@ -95,7 +93,7 @@ public:
 
     graphics::nested::UniqueInputConfig create_input_device_config() override
     {
-        return graphics::nested::UniqueInputConfig(new MirInputConfig, mir_input_config_destroy);
+        return graphics::nested::UniqueInputConfig(new MirInputConfig, mir_input_config_release);
     }
 
     void set_input_device_change_callback(std::function<void(graphics::nested::UniqueInputConfig)> const&) override
@@ -112,6 +110,10 @@ public:
     {
         struct NullStream : graphics::nested::HostStream
         {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+            MirRenderSurface* rs() const override { return nullptr; }
+#pragma GCC diagnostic pop
             MirBufferStream* handle() const override { return nullptr; }
             EGLNativeWindowType egl_native_window() const override { return 0; }
         };
@@ -122,6 +124,10 @@ public:
     {
         struct NullHostChain : graphics::nested::HostChain
         {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+            MirRenderSurface* rs() const override { return nullptr; }
+#pragma GCC diagnostic pop
             void submit_buffer(graphics::nested::NativeBuffer&) override {}
             MirPresentationChain* handle() override { return nullptr; }
             void set_submission_mode(graphics::nested::SubmissionMode) override {}
@@ -133,7 +139,7 @@ public:
     {
     public:
         EGLNativeWindowType egl_native_window() override { return {}; }
-        void set_event_handler(mir_window_event_callback, void*) override {}
+        void set_event_handler(MirWindowEventCallback, void*) override {}
         void apply_spec(graphics::nested::HostSurfaceSpec&) override {}
     };
     std::shared_ptr<graphics::nested::HostSurface> const surface;
@@ -171,15 +177,22 @@ public:
         }; 
         return std::make_unique<NullSpec>();
     }
-    bool supports_passthrough()
+    bool supports_passthrough(graphics::BufferUsage)
     {
         return true;
+    }
+    void apply_input_configuration(MirInputConfig const*)
+    {
     }
     optional_value<std::shared_ptr<graphics::MesaAuthExtension>> auth_extension()
     {
         return {};
     }
     optional_value<std::shared_ptr<graphics::SetGbmExtension>> set_gbm_extension()
+    {
+        return {};
+    }
+    optional_value<mir::Fd> drm_fd()
     {
         return {};
     }
@@ -196,6 +209,7 @@ struct MockHostConnection : StubHostConnection
         (std::shared_ptr<graphics::nested::HostStream> const&, geometry::Displacement,
          graphics::BufferProperties, char const*, uint32_t));
     MOCK_METHOD2(request_interface, void*(char const*, int));
+    MOCK_METHOD1(apply_input_configuration, void(MirInputConfig const*));
 
     void emit_input_event(MirEvent const& event, mir::geometry::Rectangle const& source_frame)
     {

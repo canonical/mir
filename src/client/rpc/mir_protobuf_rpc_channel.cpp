@@ -19,7 +19,7 @@
 #include "mir_protobuf_rpc_channel.h"
 #include "rpc_report.h"
 
-#include "../surface_map.h"
+#include "mir/client/surface_map.h"
 #include "../buffer.h"
 #include "../presentation_chain.h"
 #include "../buffer_factory.h"
@@ -34,12 +34,12 @@
 #include "mir/variable_length_array.h"
 #include "mir/events/event_builders.h"
 #include "mir/events/event_private.h"
-#include "mir/events/serialization.h"
 #include "mir/events/surface_placement_event.h"
 
 #include "mir_protobuf.pb.h"  // For Buffer frig
 #include "mir_protobuf_wire.pb.h"
 
+#include "mir/event_printer.h"
 #include <boost/bind.hpp>
 #include <boost/throw_exception.hpp>
 #include <endian.h>
@@ -197,6 +197,7 @@ void mclr::MirProtobufRpcChannel::call_method(
     google::protobuf::MessageLite* response,
     google::protobuf::Closure* complete)
 {
+    std::lock_guard<std::mutex> lk(discard_mutex);
     if (discard)
     {
        /*
@@ -210,6 +211,9 @@ void mclr::MirProtobufRpcChannel::call_method(
            complete->Run();
        return;
     }
+
+    if (method_name == "disconnect")
+        discard = true;
 
     // Only send message when details saved for handling response
     std::vector<mir::Fd> fds;
@@ -244,6 +248,7 @@ void mclr::MirProtobufRpcChannel::call_method(
 
 void mclr::MirProtobufRpcChannel::discard_future_calls()
 {
+    std::unique_lock<decltype(discard_mutex)> lk(discard_mutex);
     discard = true;
 }
 
@@ -390,46 +395,53 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
             // But that's a job for later...
             try
             {
-                auto e = mev::deserialize_event(event.raw());
+                auto e = MirEvent::deserialize(event.raw());
                 if (e)
                 {
                     rpc_report->event_parsing_succeeded(*e);
 
-                    int surface_id = 0;
-                    bool is_surface_event = true;
+                    int window_id = 0;
+                    bool is_window_event = true;
 
                     switch (e->type())
                     {
                     case mir_event_type_window:
-                        surface_id = e->to_surface()->id();
+                        window_id = e->to_surface()->id();
                         break;
                     case mir_event_type_resize:
-                        surface_id = e->to_resize()->surface_id();
+                        window_id = e->to_resize()->surface_id();
                         break;
                     case mir_event_type_orientation:
-                        surface_id = e->to_orientation()->surface_id();
+                        window_id = e->to_orientation()->surface_id();
                         break;
                     case mir_event_type_close_window:
-                        surface_id = e->to_close_surface()->surface_id();
+                        window_id = e->to_close_window()->surface_id();
                         break;
                     case mir_event_type_keymap:
-                        surface_id = e->to_keymap()->surface_id();
+                        window_id = e->to_keymap()->surface_id();
                         break;
                     case mir_event_type_window_output:
-                        surface_id = e->to_surface_output()->surface_id();
+                        window_id = e->to_window_output()->surface_id();
                         break;
                     case mir_event_type_window_placement:
-                        surface_id = e->to_surface_placement()->id();
+                        window_id = e->to_window_placement()->id();
+                        break;
+                    case mir_event_type_input:
+                        window_id = e->to_input()->window_id();
+                        break;
+                    case mir_event_type_input_device_state:
+                        window_id = e->to_input_device_state()->window_id();
                         break;
                     default:
-                        is_surface_event = false;
+                        is_window_event = false;
                         event_sink->handle_event(*e);
                     }
 
-                    if (is_surface_event)
+                    if (is_window_event)
                         if (auto map = surface_map.lock())
-                            if (auto surf = map->surface(mf::SurfaceId(surface_id)))
+                            if (auto surf = map->surface(mf::SurfaceId(window_id)))
                                 surf->handle_event(*e);
+
                 }
             }
             catch(...)

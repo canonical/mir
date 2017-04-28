@@ -42,6 +42,11 @@ public:
     std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() override;
     MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const override;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
+    uint32_t native_format_for(MirPixelFormat) const override;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const override;
+#pragma GCC diagnostic pop
 };
 
 }

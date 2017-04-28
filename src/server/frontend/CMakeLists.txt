@@ -1,6 +1,8 @@
 set(
   FRONTEND_SOURCES
 
+  authorizing_input_config_changer.cpp
+  authorizing_input_config_changer.h
   connection_context.cpp
   no_prompt_shell.cpp
   session_mediator.cpp
@@ -31,6 +33,7 @@ set(
   screencast_buffer_tracker.cpp
   session_mediator_observer_multiplexer.cpp
   session_mediator_observer_multiplexer.h
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/shell.h
 )
 
 add_library(

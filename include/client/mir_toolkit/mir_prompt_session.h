@@ -41,7 +41,7 @@ extern "C" {
 MirPromptSession *mir_connection_create_prompt_session_sync(
     MirConnection* connection,
     pid_t application_pid,
-    mir_prompt_session_state_change_callback state_change_callback,
+    MirPromptSessionStateChangeCallback state_change_callback,
     void *context);
 
 /**
@@ -61,9 +61,26 @@ MirPromptSession *mir_connection_create_prompt_session_sync(
 MirWaitHandle* mir_prompt_session_new_fds_for_prompt_providers(
     MirPromptSession *prompt_session,
     unsigned int no_of_fds,
-    mir_client_fd_callback callback,
+    MirClientFdCallback callback,
     void * context);
 
+/**
+ * Allocate some FDs for prompt providers to connect on
+ *
+ * Prompt helpers need to allocate connection FDs it will pass to
+ * prompt providers to use when connecting to the server. The server can
+ * then associate them with the prompt session.
+ *
+ *   \warning This API is tentative until the implementation of prompt sessions is complete
+ *   \param [in] prompt_session  The prompt session
+ *   \param [in] no_of_fds       The number of fds to allocate
+ *   \param [out] fds            An int array of at least size no_of_fds
+ *   \return                     The number of fds actually allocated
+ */
+size_t mir_prompt_session_new_fds_for_prompt_providers_sync(
+    MirPromptSession *prompt_session,
+    unsigned int no_of_fds,
+    int* fds);
 /**
  * Stop and release the specified prompt session
  *   \param [in] prompt_session  The prompt session

@@ -84,13 +84,36 @@ public:
         return stub_platform->make_ipc_operations();
     }
 
+    mg::NativeRenderingPlatform* native_rendering_platform() override
+    {
+        if (should_throw.at(ExceptionLocation::at_native_rendering_platform))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Exception during egl_native_display"));
+
+        return stub_platform->native_rendering_platform();
+    }
+
+    mg::NativeDisplayPlatform* native_display_platform() override
+    {
+        if (should_throw.at(ExceptionLocation::at_native_display_platform))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Exception during egl_native_display"));
+
+        return stub_platform->native_display_platform();
+    }
+
+    std::vector<mir::ExtensionDescription> extensions() const
+    {
+        return {};
+    }
+
 private:
     enum ExceptionLocation : uint32_t
     {
         at_constructor,
         at_create_buffer_allocator,
         at_create_display,
-        at_make_ipc_operations
+        at_make_ipc_operations,
+        at_native_rendering_platform,
+        at_native_display_platform,
     };
 
     static std::unordered_map<ExceptionLocation, bool, std::hash<uint32_t>> parse_exception_request(char const* request)
@@ -104,6 +127,10 @@ private:
             static_cast<bool>(strstr(request, "create_display"));
         requested_exceptions[ExceptionLocation::at_make_ipc_operations] =
             static_cast<bool>(strstr(request, "make_ipc_operations"));
+        requested_exceptions[ExceptionLocation::at_native_rendering_platform] =
+            static_cast<bool>(strstr(request, "native_rendering_platform"));
+        requested_exceptions[ExceptionLocation::at_native_display_platform] =
+            static_cast<bool>(strstr(request, "native_display_platform"));
 
         return requested_exceptions;
     };
@@ -151,7 +178,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::NestedContext> const&)
+    std::shared_ptr<mg::PlatformAuthentication> const&)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
     return mir::make_module_ptr<ExceptionThrowingPlatform>();

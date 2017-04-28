@@ -18,7 +18,7 @@
 
 #include "mir/scene/surface.h"
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 
 #include "mir/shell/canonical_window_manager.h"
 
@@ -26,15 +26,21 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <mir/test/signal.h>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
+namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 using namespace ::testing;
 
+using namespace std::literals::chrono_literals;
+
 namespace
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 struct MockWindowManager : msh::CanonicalWindowManager
 {
     using msh::CanonicalWindowManager::CanonicalWindowManager;
@@ -53,8 +59,22 @@ struct MockWindowManager : msh::CanonicalWindowManager
         return msh::CanonicalWindowManager::set_surface_attribute(session, surface, attrib, value);
     }
 };
+#pragma GCC diagnostic pop
 
-struct ShellSurfaceConfiguration : mtf::ConnectedClientWithASurface
+void signal_state_change(MirWindow*, MirEvent const* event, void* context)
+{
+    if (mir_event_get_type(event) != mir_event_type_window)
+        return;
+
+    auto const window_event = mir_event_get_window_event(event);
+
+    if (mir_window_event_get_attribute(window_event) != mir_window_attrib_state)
+        return;
+
+    static_cast<mt::Signal*>(context)->raise();
+}
+
+struct ShellSurfaceConfiguration : mtf::ConnectedClientWithAWindow
 {
     void SetUp() override
     {
@@ -76,10 +96,16 @@ struct ShellSurfaceConfiguration : mtf::ConnectedClientWithASurface
                 return mock_window_manager;
             });
 
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientWithAWindow::SetUp();
+
+        auto const spec = mir_create_window_spec(connection);
+        mir_window_spec_set_event_handler(spec, &signal_state_change, &received);
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
     }
 
     std::shared_ptr<MockWindowManager> mock_window_manager;
+    mt::Signal received;
 };
 }
 
@@ -88,8 +114,9 @@ TEST_F(ShellSurfaceConfiguration, the_window_manager_is_notified_of_attribute_ch
     EXPECT_CALL(*mock_window_manager,
         set_surface_attribute(_, _, mir_window_attrib_state, Eq(mir_window_state_maximized)));
 
-    mir_wait_for(mir_window_set_state(window, mir_window_state_maximized));
+    mir_window_set_state(window, mir_window_state_maximized);
 
+    EXPECT_TRUE(received.wait_for(400ms));
     EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_maximized));
 }
 
@@ -109,7 +136,8 @@ TEST_F(ShellSurfaceConfiguration, the_window_manager_may_interfere_with_attribut
         set_surface_attribute(_, _, mir_window_attrib_state, Eq(mir_window_state_maximized)))
         .WillOnce(Invoke(set_to_vertmax));
 
-    mir_wait_for(mir_window_set_state(window, mir_window_state_maximized));
+    mir_window_set_state(window, mir_window_state_maximized);
 
+    EXPECT_TRUE(received.wait_for(400ms));
     EXPECT_THAT(mir_window_get_state(window), Eq(mir_window_state_vertmaximized));
 }

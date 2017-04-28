@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 3,
@@ -21,6 +21,8 @@
 
 #include "mir/events/event.h"
 
+typedef struct MirBlob MirBlob;
+
 struct MirSurfaceEvent : MirEvent
 {
     MirSurfaceEvent();
@@ -33,6 +35,9 @@ struct MirSurfaceEvent : MirEvent
 
     int value() const;
     void set_value(int value);
+
+    void set_dnd_handle(std::vector<uint8_t> const& handle);
+    MirBlob* dnd_handle() const;
 };
 
 #endif /* MIR_COMMON_SURFACE_EVENT_H_ */

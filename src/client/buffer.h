@@ -37,12 +37,15 @@ class MemoryRegion;
 class Buffer : public MirBuffer
 {
 public:
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     Buffer(
-        mir_buffer_callback cb, void* context,
+        MirBufferCallback cb, void* context,
         int buffer_id,
         std::shared_ptr<ClientBuffer> const& buffer,
         MirConnection* connection,
         MirBufferUsage usage);
+#pragma GCC diagnostic pop
 
     int rpc_id() const override;
 
@@ -54,7 +57,10 @@ public:
     MirGraphicsRegion map_region() override;
     void unmap_region() override;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferUsage buffer_usage() const override;
+#pragma GCC diagnostic pop
     MirPixelFormat pixel_format() const override;
     geometry::Size size() const override;
 
@@ -63,7 +69,7 @@ public:
     void increment_age() override;
     bool valid() const override;
     char const* error_message() const override;
-    void set_callback(mir_buffer_callback callback, void* context) override;
+    void set_callback(MirBufferCallback callback, void* context) override;
 private:
     int const buffer_id;
     std::shared_ptr<ClientBuffer> const buffer;
@@ -74,7 +80,10 @@ private:
     bool owned;
     std::shared_ptr<MemoryRegion> mapped_region;
     MirConnection* const connection;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferUsage const usage;
+#pragma GCC diagnostic pop
 };
 }
 }

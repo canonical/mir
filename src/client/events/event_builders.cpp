@@ -85,6 +85,8 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, geom::Size const
     return make_uptr_event(e);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value)
 {
     auto e = new_event<MirSurfaceEvent>();
@@ -95,16 +97,31 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirSurfaceAttrib
 
     return make_uptr_event(e);
 }
+#pragma GCC diagnostic pop
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirWindowAttrib attribute, int value)
 {
-    auto e = new_event<MirSurfaceEvent>();
+    auto e = new_event<MirWindowEvent>();
 
     e->set_id(surface_id.as_value());
     e->set_attrib(attribute);
     e->set_value(value);
 
     return make_uptr_event(e);
+}
+
+auto mev::make_start_drag_and_drop_event(frontend::SurfaceId const& surface_id, std::vector<uint8_t> const& handle)
+    -> EventUPtr
+{
+    auto e = new_event<MirWindowEvent>();
+
+    e->set_id(surface_id.as_value());
+    e->set_attrib(mir_window_attribs);
+    e->set_value(0);
+    e->set_dnd_handle(handle);
+
+    return make_uptr_event(e);
+
 }
 
 mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id)
@@ -124,7 +141,7 @@ mir::EventUPtr mev::make_event(
     MirFormFactor form_factor,
     uint32_t output_id)
 {
-    auto e = new_event<MirSurfaceOutputEvent>();
+    auto e = new_event<MirWindowOutputEvent>();
 
     e->set_surface_id(surface_id.as_value());
     e->set_dpi(dpi);
@@ -138,7 +155,7 @@ mir::EventUPtr mev::make_event(
 
 mir::EventUPtr mev::make_event(frontend::SurfaceId const& surface_id, geometry::Rectangle placement)
 {
-    auto e = new_event<MirSurfacePlacementEvent>();
+    auto e = new_event<MirWindowPlacementEvent>();
 
     e->set_id(surface_id.as_value());
     e->set_placement({
@@ -342,6 +359,8 @@ mir::EventUPtr mev::make_event(mf::SurfaceId const& surface_id, MirInputDeviceId
     return ep;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 mir::EventUPtr mev::make_event(MirInputConfigurationAction action, MirInputDeviceId id, std::chrono::nanoseconds time)
 {
     auto e = new_event<MirInputConfigurationEvent>();
@@ -352,6 +371,7 @@ mir::EventUPtr mev::make_event(MirInputConfigurationAction action, MirInputDevic
 
     return make_uptr_event(e);
 }
+#pragma GCC diagnostic pop
 
 mir::EventUPtr mev::make_event(std::chrono::nanoseconds timestamp,
                                MirPointerButtons pointer_buttons,
@@ -408,3 +428,50 @@ mir::EventUPtr mev::make_event(MirInputDeviceId device_id, std::chrono::nanoseco
     auto e = new_event<MirTouchEvent>(device_id, timestamp, cookie, modifiers, contacts);
     return make_uptr_event(e);
 }
+
+void mev::set_window_id(MirEvent& event, int window_id)
+{
+    switch (event.type())
+    {
+    case mir_event_type_input:
+        event.to_input()->set_window_id(window_id);
+        break;
+    case mir_event_type_input_device_state:
+        event.to_input_device_state()->set_window_id(window_id);
+        break;
+    case mir_event_type_window:
+        event.to_surface()->set_id(window_id);
+        break;
+    case mir_event_type_resize:
+        event.to_resize()->set_surface_id(window_id);
+        break;
+    case mir_event_type_orientation:
+        event.to_orientation()->set_surface_id(window_id);
+        break;
+    case mir_event_type_close_window:
+        event.to_close_window()->set_surface_id(window_id);
+        break;
+    case mir_event_type_keymap:
+        event.to_keymap()->set_surface_id(window_id);
+        break;
+    case mir_event_type_window_output:
+        event.to_window_output()->set_surface_id(window_id);
+        break;
+    case mir_event_type_window_placement:
+        event.to_window_placement()->set_id(window_id);
+        break;
+    default:
+        BOOST_THROW_EXCEPTION(std::invalid_argument("Event has no window id."));
+    }
+}
+
+void mev::set_drag_and_drop_handle(MirEvent& event, std::vector<uint8_t> const& handle)
+{
+    if (event.type() == mir_event_type_input)
+    {
+        auto const input_event = event.to_input();
+        if (mir_input_event_get_type(input_event) == mir_input_event_type_pointer)
+            const_cast<MirPointerEvent*>(mir_input_event_get_pointer_event(input_event))->set_dnd_handle(handle);
+    }
+}
+

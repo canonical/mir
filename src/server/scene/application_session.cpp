@@ -235,6 +235,9 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
     if (next == surfaces.end())
         next = std::find_if(begin(surfaces), current, can_take_focus);
 
+    if (next == end(surfaces))
+        return {};
+
     return next->second;
 }
 
@@ -283,15 +286,6 @@ pid_t ms::ApplicationSession::process_id() const
     return pid;
 }
 
-void ms::ApplicationSession::drop_outstanding_requests()
-{
-    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
-    for (auto& stream : streams)
-    {
-        stream.second->drop_outstanding_requests();
-    }
-}
-
 void ms::ApplicationSession::hide()
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
@@ -338,9 +332,9 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
     }
 }
 
-void ms::ApplicationSession::send_input_device_change(std::vector<std::shared_ptr<mir::input::Device>> const& devices)
+void ms::ApplicationSession::send_input_config(MirInputConfig const& config)
 {
-    event_sink->handle_input_device_change(devices);
+    event_sink->handle_input_config_change(config);
 }
 
 void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
@@ -392,7 +386,6 @@ void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
     if (stream_it == streams.end())
         BOOST_THROW_EXCEPTION(std::runtime_error("cannot destroy stream: Invalid BufferStreamId"));
 
-    stream_it->second->drop_outstanding_requests();
     streams.erase(stream_it);
 }
 
@@ -449,6 +442,33 @@ mg::BufferID ms::ApplicationSession::create_buffer(mg::BufferProperties const& p
     }
 }
 
+mg::BufferID ms::ApplicationSession::create_buffer(mir::geometry::Size size, MirPixelFormat format)
+{
+    try
+    {
+        return buffers->add_buffer(gralloc->alloc_software_buffer(size, format));
+    }
+    catch (std::exception& e)
+    {
+        event_sink->error_buffer(size, format, e.what());
+        throw;
+    }
+}
+
+mg::BufferID ms::ApplicationSession::create_buffer(
+    mir::geometry::Size size, uint32_t native_format, uint32_t native_flags)
+{
+    try
+    {
+        return buffers->add_buffer(gralloc->alloc_buffer(size, native_format, native_flags));
+    }
+    catch (std::exception& e)
+    {
+        event_sink->error_buffer(size, static_cast<MirPixelFormat>(native_format), e.what());
+        throw;
+    }
+}
+
 void ms::ApplicationSession::destroy_buffer(mg::BufferID id)
 {
     buffers->remove_buffer(id);
@@ -456,7 +476,7 @@ void ms::ApplicationSession::destroy_buffer(mg::BufferID id)
 
 std::shared_ptr<mg::Buffer> ms::ApplicationSession::get_buffer(mg::BufferID id)
 {
-    return (*buffers)[id];
+    return buffers->get(id);
 }
 
 void ms::ApplicationSession::send_error(mir::ClientVisibleError const& error)

@@ -3,9 +3,6 @@ if (NOT UMOCKDEV_FOUND)
   message(FATAL_ERROR "Umockdev not found, cannot build without disabling tests (via MIR_ENABLE_TESTS).")
 endif()
 
-include_directories(${MIR_3RD_PARTY_INCLUDE_DIRECTORIES})
-include_directories(${MIR_ANDROID_INCLUDE_DIRECTORIES})
-
 include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-Wnull-dereference HAS_W_NULL_DEREFERENCE)
 check_cxx_compiler_flag(-Woverloaded-virtual HAS_W_OVERLOADED_VIRTUAL)
@@ -28,16 +25,16 @@ endif()
 if (HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
   # INSTANTIATE_TEST_CASE_P hits this like a slice of lemon wrapped around a large gold brick.
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
+else()
+  # GCC is a bit less flexible than clang and needs a bigger hammer...
+  if (NOT MIR_USE_PRECOMPILED_HEADERS)
+    # Work around the Google Test headers not being C++11 friendly (LP: #1658604)
+    string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+  endif()
 endif()
 
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-lto")
-
-if (MIR_BUILD_PLATFORM_ANDROID)
-  #avoid complaints about poor quality android headers
-  include_directories(SYSTEM ${LIBHARDWARE_INCLUDE_DIRS})
-  add_definitions(-DMIR_BUILD_PLATFORM_ANDROID)
-endif()
 
 if (MIR_BUILD_PLATFORM_MESA_KMS)
   add_definitions(-DMIR_BUILD_PLATFORM_MESA_KMS)

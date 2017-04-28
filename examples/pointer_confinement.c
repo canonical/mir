@@ -219,11 +219,10 @@ int main(int argc, char* argv[])
     spec = mir_create_window_spec(mir_eglapp_native_connection());
     mir_window_spec_set_pointer_confinement(spec, mir_pointer_confined_to_window);
 
+    // Hide cursor
+    mir_window_spec_set_cursor_name(spec, mir_disabled_cursor_name);
     mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);
-
-    // Hide cursor
-    mir_window_configure_cursor(window, NULL);
 
     glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
 

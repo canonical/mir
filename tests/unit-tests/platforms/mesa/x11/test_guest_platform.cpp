@@ -41,7 +41,7 @@ public:
 
     std::shared_ptr<mgx::GuestPlatform> create_guest_platform()
     {
-        return std::make_shared<mgx::GuestPlatform>(nullptr);
+        return std::make_shared<mgx::GuestPlatform>();
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
@@ -63,7 +63,7 @@ TEST_F(X11GuestPlatformTest, failure_to_create_gbm_device_results_in_an_error)
 {
     using namespace ::testing;
 
-    EXPECT_CALL(mock_gbm, gbm_create_device(mock_drm.fake_drm.fd()))
+    EXPECT_CALL(mock_gbm, gbm_create_device(_))
         .WillRepeatedly(Return(nullptr));
 
     EXPECT_THROW({ create_guest_platform(); }, std::exception);

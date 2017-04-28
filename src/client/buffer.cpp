@@ -21,9 +21,10 @@
 #include <boost/throw_exception.hpp>
 
 namespace mcl = mir::client;
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 mcl::Buffer::Buffer(
-    mir_buffer_callback cb, void* context,
+    MirBufferCallback cb, void* context,
     int buffer_id,
     std::shared_ptr<ClientBuffer> const& buffer,
     MirConnection* connection,
@@ -36,6 +37,7 @@ mcl::Buffer::Buffer(
     usage(usage)
 {
 }
+#pragma GCC diagnostic pop
 
 int mcl::Buffer::rpc_id() const
 {
@@ -101,8 +103,11 @@ MirConnection* mcl::Buffer::allocating_connection() const
     return connection;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirBufferUsage mcl::Buffer::buffer_usage() const
 {
+#pragma GCC diagnostic pop
     return usage;
 }
 
@@ -135,7 +140,7 @@ char const* mcl::Buffer::error_message() const
     return "";
 }
 
-void mcl::Buffer::set_callback(mir_buffer_callback callback, void* context)
+void mcl::Buffer::set_callback(MirBufferCallback callback, void* context)
 {
     cb.set_callback([&, callback, context]{ (*callback)(reinterpret_cast<::MirBuffer*>(this), context); });
 }

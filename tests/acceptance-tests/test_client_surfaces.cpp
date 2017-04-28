@@ -61,7 +61,8 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
     testing::NiceMock<mtd::MockWindowManager> window_manager;
 };
 }
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientSurfaces, are_created_with_correct_size)
 {
     int width_1 = 640, height_1 = 480, width_2 = 1600, height_2 = 1200;
@@ -248,6 +249,63 @@ TEST_F(ClientSurfaces, can_be_input_methods)
     mir_window_release_sync(im);
 }
 
+TEST_F(ClientSurfaces, can_be_gloss)
+{
+    auto spec = mir_create_gloss_window_spec(connection, 640, 480);
+    ASSERT_THAT(spec, NotNull());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+
+    auto window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
+    EXPECT_EQ(mir_window_get_type(window), mir_window_type_gloss);
+
+    mir_window_release_sync(window);
+}
+
+TEST_F(ClientSurfaces, can_be_satellite)
+{
+    auto parent = mtf::make_any_surface(connection);
+    auto spec = mir_create_satellite_window_spec(connection, 640, 480, parent);
+    ASSERT_THAT(spec, NotNull());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+
+    auto window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
+
+    EXPECT_EQ(mir_window_get_type(window), mir_window_type_satellite);
+
+    mir_window_release_sync(window);
+    mir_window_release_sync(parent);
+}
+
+TEST_F(ClientSurfaces, can_be_utility)
+{
+    auto spec = mir_create_utility_window_spec(connection, 640, 480);
+    ASSERT_THAT(spec, NotNull());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+
+    auto window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
+
+    EXPECT_EQ(mir_window_get_type(window), mir_window_type_utility);
+
+    mir_window_release_sync(window);
+}
+
+TEST_F(ClientSurfaces, can_be_freestyle)
+{
+    auto spec = mir_create_freestyle_window_spec(connection, 640, 480);
+    ASSERT_THAT(spec, NotNull());
+    mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
+
+    auto window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
+
+    EXPECT_EQ(mir_window_get_type(window), mir_window_type_freestyle);
+
+    mir_window_release_sync(window);
+}
+
 TEST_F(ClientSurfaces, can_be_renamed)
 {
     auto spec = mir_create_normal_window_spec(connection, 123, 456);
@@ -280,6 +338,7 @@ TEST_F(ClientSurfaces, can_be_renamed)
 
     mir_window_release_sync(window);
 }
+
 
 TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 {
@@ -332,3 +391,4 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 
     mir_connection_release(im_connection);
 }
+#pragma GCC diagnostic pop

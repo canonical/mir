@@ -61,7 +61,7 @@ mtd::MockEGL::MockEGL()
       fake_egl_surface((EGLSurface) 0xa034),
       fake_egl_context((EGLContext) 0xbeef),
       fake_egl_image((EGLImageKHR) 0x1234),
-      fake_visual_id(1) //HAL_PIXEL_FORMAT_RGBA on android
+      fake_visual_id(1)
 {
     using namespace testing;
     assert(global_mock_egl == NULL && "Only one mock object per process is allowed");
@@ -156,7 +156,7 @@ void mtd::MockEGL::provide_egl_extensions()
 {
     using namespace testing;
 
-    const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_KHR_image_pixmap";
+    const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_KHR_image_pixmap EGL_EXT_image_dma_buf_import";
     ON_CALL(*this, eglQueryString(_,EGL_EXTENSIONS))
         .WillByDefault(Return(egl_exts));
 }

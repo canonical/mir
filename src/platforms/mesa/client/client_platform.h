@@ -22,6 +22,7 @@
 #include "mir_toolkit/extensions/mesa_drm_auth.h"
 #include "mir_toolkit/extensions/set_gbm_device.h"
 #include "mir_toolkit/extensions/gbm_buffer.h"
+#include "mir_toolkit/extensions/hardware_buffer_stream.h"
 
 struct gbm_device;
 
@@ -54,6 +55,11 @@ public:
     MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const override;
     MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const override;
     void set_gbm_device(gbm_device*);
+    uint32_t native_format_for(MirPixelFormat) const override;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const override;
+#pragma GCC diagnostic pop
 
 private:
     ClientContext* const context;
@@ -62,7 +68,9 @@ private:
     gbm_device* gbm_dev;
     MirExtensionMesaDRMAuthV1 drm_extensions;
     MirExtensionSetGbmDeviceV1 mesa_auth;
-    MirExtensionGbmBufferV1 gbm_buffer;
+    MirExtensionGbmBufferV1 gbm_buffer1;
+    MirExtensionGbmBufferV2 gbm_buffer2;
+    MirExtensionHardwareBufferStreamV1 hw_stream;
 };
 
 }

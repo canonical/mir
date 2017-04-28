@@ -25,6 +25,7 @@
 #include "mir/input/event_builder.h"
 #include "mir/input/input_device.h"
 #include "mir/input/input_device_info.h"
+#include "mir/input/touchscreen_settings.h"
 #include "mir/geometry/point.h"
 
 #include <vector>
@@ -40,6 +41,7 @@ namespace mir
 {
 namespace input
 {
+class OutputInfo;
 class InputReport;
 namespace evdev
 {
@@ -58,6 +60,8 @@ public:
     void apply_settings(PointerSettings const&) override;
     optional_value<TouchpadSettings> get_touchpad_settings() const override;
     void apply_settings(TouchpadSettings const&) override;
+    optional_value<TouchscreenSettings> get_touchscreen_settings() const override;
+    void apply_settings(TouchscreenSettings const&) override;
 
     void process_event(libinput_event* event);
     ::libinput_device* device() const;
@@ -74,11 +78,11 @@ private:
     void handle_touch_up(libinput_event_touch* touch);
     void handle_touch_motion(libinput_event_touch* touch);
     void update_device_info();
+    bool is_output_active() const;
+    OutputInfo get_output_info() const;
 
     std::shared_ptr<InputReport> report;
-    std::shared_ptr<::libinput> lib;
     std::vector<LibInputDevicePtr> devices;
-    std::shared_ptr<dispatch::Dispatchable> dispatchable_fd;
 
     InputSink* sink{nullptr};
     EventBuilder* builder{nullptr};
@@ -88,6 +92,7 @@ private:
     MirPointerButtons button_state;
     double vertical_scroll_scale{1.0};
     double horizontal_scroll_scale{1.0};
+    mir::optional_value<TouchscreenSettings> touchscreen;
 
     struct ContactData
     {

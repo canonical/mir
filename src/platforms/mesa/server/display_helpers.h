@@ -24,21 +24,19 @@
 
 #include <cstddef>
 #include <memory>
+#include <vector>
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic warning "-Wall"
 #include <gbm.h>
 #pragma GCC diagnostic pop
 
-#include <EGL/egl.h>
 #include <xf86drmMode.h>
 
 namespace mir
 {
 namespace graphics
 {
-class GLConfig;
-
 namespace mesa
 {
 
@@ -62,6 +60,9 @@ public:
     DRMHelper(const DRMHelper &) = delete;
     DRMHelper& operator=(const DRMHelper&) = delete;
 
+    static std::vector<std::shared_ptr<DRMHelper>> open_all_devices(
+        std::shared_ptr<mir::udev::Context> const& udev);
+
     void setup(std::shared_ptr<mir::udev::Context> const& udev);
     mir::Fd authenticated_fd();
     void auth_magic(drm_magic_t magic);
@@ -73,6 +74,8 @@ public:
     DRMNodeToUse const node_to_use;
 
 private:
+    DRMHelper(int fd);
+
     // TODO: This herustic is temporary; should be replaced with
     // handling >1 DRM device.
     int is_appropriate_device(std::shared_ptr<mir::udev::Context> const& udev, mir::udev::Device const& dev);
@@ -93,42 +96,9 @@ public:
 
     void setup(const DRMHelper& drm);
     void setup(int drm_fd);
-    GBMSurfaceUPtr create_scanout_surface(uint32_t width, uint32_t height);
+    GBMSurfaceUPtr create_scanout_surface(uint32_t width, uint32_t height, bool sharable);
 
     gbm_device* device;
-};
-
-class EGLHelper
-{
-public:
-    EGLHelper(GLConfig const& gl_config);
-    ~EGLHelper() noexcept;
-
-    EGLHelper(const EGLHelper&) = delete;
-    EGLHelper& operator=(const EGLHelper&) = delete;
-
-    void setup(GBMHelper const& gbm);
-    void setup(GBMHelper const& gbm, EGLContext shared_context);
-    void setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
-               EGLContext shared_context);
-
-    bool swap_buffers();
-    bool make_current() const;
-    bool release_current() const;
-
-    EGLContext context() { return egl_context; }
-
-    void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)>);
-private:
-    void setup_internal(GBMHelper const& gbm, bool initialize);
-
-    EGLint const depth_buffer_bits;
-    EGLint const stencil_buffer_bits;
-    EGLDisplay egl_display;
-    EGLConfig egl_config;
-    EGLContext egl_context;
-    EGLSurface egl_surface;
-    bool should_terminate_egl;
 };
 
 }

@@ -24,6 +24,7 @@
 #include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/display_layout.h"
 
+#include <uuid/uuid.h>
 #include <linux/input.h>
 #include <csignal>
 
@@ -413,26 +414,6 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
     {
         surface->set_confine_pointer_state(modifications.confine_pointer.value());
     }
-
-    if (modifications.cursor_image.is_set())
-    {
-        surface->set_cursor_image(modifications.cursor_image.value());        
-    }
-
-    if (modifications.stream_cursor.is_set())
-    {
-        auto stream_id = modifications.stream_cursor.value().stream_id;
-        if (stream_id != mir::frontend::BufferStreamId{-1})
-        {
-            auto hotspot = modifications.stream_cursor.value().hotspot;
-            auto stream = session->get_buffer_stream(modifications.stream_cursor.value().stream_id);
-            surface->set_cursor_stream(stream, hotspot);
-        }
-        else
-        {
-            surface->set_cursor_image({});
-        }
-    }
 }
 
 void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms::Session> const& session, std::weak_ptr<ms::Surface> const& surface)
@@ -601,6 +582,18 @@ void msh::CanonicalWindowManagerPolicy::handle_raise_surface(
     std::shared_ptr<ms::Surface> const& surface)
 {
     select_active_surface(surface);
+}
+
+void msh::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(
+    std::shared_ptr<ms::Session> const& /*session*/,
+    std::shared_ptr<ms::Surface> const& surface)
+{
+    uuid_t uuid;
+    uuid_generate(uuid);
+    std::vector<uint8_t> const handle{std::begin(uuid), std::end(uuid)};
+
+    surface->start_drag_and_drop(handle);
+    tools->set_drag_and_drop_handle(handle);
 }
 
 bool msh::CanonicalWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)

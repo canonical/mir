@@ -56,6 +56,7 @@ char const *mir_buffer_stream_get_error_message(MirBufferStream *buffer_stream);
  * with mir_cursor_configuration_from_buffer_stream, 
  * in order to post images to the system cursor.
  *
+ * \deprecated Use mir_render_surface_get_buffer_stream instead
  * \param [in] connection     A valid connection
  * \param [in] width          Requested buffer width
  * \param [in] height         Requested buffer height
@@ -70,12 +71,16 @@ char const *mir_buffer_stream_get_error_message(MirBufferStream *buffer_stream);
  *
  * \return                    A handle that can be supplied to mir_wait_for
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage buffer_usage,
-    mir_buffer_stream_callback callback,
-    void* context);
+    MirBufferStreamCallback callback,
+    void* context)
+__attribute__ ((deprecated("Use mir_render_surface_get_buffer_stream instead")));
+#pragma GCC diagnostic pop
 
 /**
  * Create a new buffer stream unattached to a surface and wait for the result. 
@@ -83,6 +88,7 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
  * mir_cursor_configuration_from_buffer_stream in order to post images 
  * to the system cursor.
  *
+ * \deprecated Use mir_render_surface_get_buffer_stream instead
  * \param [in] connection       A valid connection
  * \param [in] width            Requested buffer width
  * \param [in] height           Requested buffer height
@@ -93,14 +99,19 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
  * \return                      The new buffer stream. This is guaranteed non-null, 
  *                              but may be invalid in the case of error.
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connection,
     int width, int height,
     MirPixelFormat format,
-    MirBufferUsage buffer_usage);
-
+    MirBufferUsage buffer_usage)
+__attribute__ ((deprecated("Use mir_render_surface_get_buffer_stream instead")));
+#pragma GCC diagnostic pop
 /**
  * Release the supplied stream and any associated buffer. The returned wait
  * handle remains valid until the connection to the server is released.
+ *
+ *   \deprecated A stream obtained through mir_render_surface_get_buffer_stream does not need to be released.
  *   \warning callback could be called from another thread. You must do any
  *            locking appropriate to protect your data accessed in the
  *            callback.
@@ -112,15 +123,18 @@ MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connect
  */
 MirWaitHandle *mir_buffer_stream_release(
     MirBufferStream * buffer_stream,
-    mir_buffer_stream_callback callback,
-    void *context);
+    MirBufferStreamCallback callback,
+    void *context)
+__attribute__ ((deprecated));
 
 /**
  * Release the specified buffer stream like in mir,_buffer_stream_release(), 
  * but also wait for the operation to complete.
+ *   \deprecated A stream obtained through mir_render_surface_get_buffer_stream does not need to be released.
  *   \param [in] buffer_stream  The buffer stream to be released
  */
-void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream);
+void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
+__attribute__ ((deprecated));
 
 /**
  * Get the underlying platform type so the buffer obtained in "raw"
@@ -140,19 +154,19 @@ void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream);
  *   \return                  One of mir_platform_type_android or 
  *                            mir_platform_type_gbm
  */
-/// @cond
-__attribute__ ((deprecated))
-/// @endcond
-MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream *stream);
+MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream *stream)
+    __attribute__ ((deprecated));
 
 /**
  * Retrieve the current buffer in "raw" representation.
+ *   \deprecated Use platform specific platform extensions instead
  *   \pre                         The buffer stream is valid
  *   \param [in]  buffer_stream   The buffer stream
  *   \param [out] buffer_package  Structure to be populated
  */
 void mir_buffer_stream_get_current_buffer(MirBufferStream *buffer_stream,
-    MirNativeBuffer **buffer_package);
+    MirNativeBuffer **buffer_package)
+__attribute__ ((deprecated("Use platform specific buffer extensions instead")));
 
 /**
  * Advance a buffer stream's buffer. The returned handle remains valid until the
@@ -169,7 +183,7 @@ void mir_buffer_stream_get_current_buffer(MirBufferStream *buffer_stream,
  */
 MirWaitHandle *mir_buffer_stream_swap_buffers(
     MirBufferStream *buffer_stream,
-    mir_buffer_stream_callback callback,
+    MirBufferStreamCallback callback,
     void *context);
 
 /**
@@ -195,18 +209,22 @@ bool mir_buffer_stream_get_graphics_region(
 
 /**
  * Retrieve a window type which may be used by EGL.
+ *   \deprecated Use MirRenderSurface *as the window type
  *   \param [in] buffer_stream The buffer stream
  *   \return                   An EGLNativeWindowType that the client can use
  */
-MirEGLNativeWindowType mir_buffer_stream_get_egl_native_window(MirBufferStream *buffer_stream);
+MirEGLNativeWindowType mir_buffer_stream_get_egl_native_window(MirBufferStream *buffer_stream)
+__attribute__ ((deprecated("Use MirRenderSurface *as the window type")));
 
 /**
  * Set the scale associated with all buffers in the stream
+ * \deprecated
  * \param [in] buffer_stream The buffer stream
  * \param [in] scale         The scale
  * \return                  A handle that can be passed to mir_wait_for
  */
-MirWaitHandle *mir_buffer_stream_set_scale(MirBufferStream* buffer_stream, float scale);
+MirWaitHandle *mir_buffer_stream_set_scale(MirBufferStream* buffer_stream, float scale)
+__attribute__ ((deprecated));
 
 /**
  * Set the scale as in mir_buffer_stream_set_scale(), but also wait for the
@@ -214,7 +232,8 @@ MirWaitHandle *mir_buffer_stream_set_scale(MirBufferStream* buffer_stream, float
  * \param [in] buffer_stream The buffer stream
  * \param [in] scale         The scale
  */
-void mir_buffer_stream_set_scale_sync(MirBufferStream* buffer_stream, float scale);
+void mir_buffer_stream_set_scale_sync(MirBufferStream* buffer_stream, float scale)
+__attribute__ ((deprecated));
 
 /**
  * Set the swapinterval for the stream.

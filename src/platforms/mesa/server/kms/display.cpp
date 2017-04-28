@@ -30,6 +30,7 @@
 #include "mir/graphics/virtual_output.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/display_configuration_policy.h"
+#include "mir/graphics/transformation.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/renderer/gl/context.h"
 
@@ -37,8 +38,14 @@
 #include <boost/exception/get_error_info.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
+#define MIR_LOG_COMPONENT "mesa-kms"
+#include "mir/log.h"
+#include "kms-utils/drm_mode_resources.h"
+#include "kms-utils/kms_connector.h"
+
 #include <stdexcept>
 #include <algorithm>
+#include <unordered_map>
 
 namespace mgm = mir::graphics::mesa;
 namespace mg = mir::graphics;
@@ -78,24 +85,119 @@ private:
     mgm::helpers::EGLHelper egl;
 };
 
+std::vector<int> drm_fds_from_drm_helpers(
+    std::vector<std::shared_ptr<mgm::helpers::DRMHelper>> const& helpers)
+{
+    std::vector<int> fds;
+    for (auto const& helper: helpers)
+    {
+        fds.push_back(helper->fd);
+    }
+    return fds;
 }
 
-mgm::Display::Display(std::shared_ptr<helpers::DRMHelper> const& drm,
+double calculate_vrefresh_hz(drmModeModeInfo const& mode)
+{
+    if (mode.htotal == 0 || mode.vtotal == 0)
+        return 0.0;
+
+    /* mode.clock is in KHz */
+    double hz = (mode.clock * 100000LL /
+                 ((long)mode.htotal * (long)mode.vtotal)
+                ) / 100.0;
+
+    return hz;
+}
+
+char const* describe_connection_status(drmModeConnector const& connection)
+{
+    switch (connection.connection)
+    {
+    case DRM_MODE_CONNECTED:
+        return "connected";
+    case DRM_MODE_DISCONNECTED:
+        return "disconnected";
+    case DRM_MODE_UNKNOWNCONNECTION:
+        return "UNKNOWN";
+    default:
+        return "<Unexpected connection value>";
+    }
+}
+
+void log_drm_details(std::vector<std::shared_ptr<mgm::helpers::DRMHelper>> const& drm)
+{
+    mir::log_info("DRM device details:");
+    for (auto const& device : drm)
+    {
+        auto version = std::unique_ptr<drmVersion, decltype(&drmFreeVersion)>{
+            drmGetVersion(device->fd),
+            &drmFreeVersion};
+
+        auto device_name = std::unique_ptr<char, decltype(&free)>{
+            drmGetDeviceNameFromFd(device->fd),
+            &free
+        };
+
+        mir::log_info(
+            "%s: using driver %s [%s] (version: %i.%i.%i driver date: %s)",
+            device_name.get(),
+            version->name,
+            version->desc,
+            version->version_major,
+            version->version_minor,
+            version->version_patchlevel,
+            version->date);
+
+        mg::kms::DRMModeResources resources{device->fd};
+        for (auto const& connector : resources.connectors())
+        {
+            mir::log_info(
+                "\tOutput: %s (%s)",
+                mg::kms::connector_name(connector).c_str(),
+                describe_connection_status(*connector));
+            for (auto i = 0; i < connector->count_modes; ++i)
+            {
+                mir::log_info(
+                    "\t\tMode: %i×%i@%.2f",
+                    connector->modes[i].hdisplay,
+                    connector->modes[i].vdisplay,
+                    calculate_vrefresh_hz(connector->modes[i]));
+            }
+        }
+    }
+}
+
+}
+
+mgm::Display::Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& drm,
                       std::shared_ptr<helpers::GBMHelper> const& gbm,
                       std::shared_ptr<VirtualTerminal> const& vt,
                       mgm::BypassOption bypass_option,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& listener)
-    : drm(drm),
+    : drm{drm},
       gbm(gbm),
       vt(vt),
       listener(listener),
       monitor(mir::udev::Context()),
       shared_egl{*gl_config},
-      output_container{drm->fd,
-                       std::make_shared<KMSPageFlipper>(drm->fd, listener)},
-      current_display_configuration{drm->fd},
+      output_container{
+          std::make_shared<RealKMSOutputContainer>(
+              drm_fds_from_drm_helpers(drm),
+              [
+                  listener,
+                  flippers = std::unordered_map<int, std::shared_ptr<KMSPageFlipper>>{}
+              ](int drm_fd) mutable
+              {
+                  auto& flipper = flippers[drm_fd];
+                  if (!flipper)
+                  {
+                      flipper = std::make_shared<KMSPageFlipper>(drm_fd, listener);
+                  }
+                  return flipper;
+              })},
+      current_display_configuration{output_container},
       dirty_configuration{false},
       bypass_option(bypass_option),
       gl_config{gl_config}
@@ -106,6 +208,8 @@ mgm::Display::Display(std::shared_ptr<helpers::DRMHelper> const& drm,
 
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
     monitor.enable();
+
+    log_drm_details(drm);
 
     initial_conf_policy->apply_to(current_display_configuration);
 
@@ -193,7 +297,8 @@ void mgm::Display::pause()
     try
     {
         if (auto c = cursor.lock()) c->suspend();
-        drm->drop_master();
+        for (auto& helper : drm)
+            helper->drop_master();
     }
     catch(std::runtime_error const& e)
     {
@@ -206,7 +311,8 @@ void mgm::Display::resume()
 {
     try
     {
-        drm->set_master();
+        for (auto& helper : drm)
+            helper->set_master();
     }
     catch(std::runtime_error const& e)
     {
@@ -231,8 +337,19 @@ void mgm::Display::resume()
     if (auto c = cursor.lock()) c->resume();
 }
 
-auto mgm::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const& initial_image) -> std::shared_ptr<graphics::Cursor>
+auto mgm::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
 {
+    /*
+     * TODO: Using the hardware cursor in a hybrid-output situation requires making
+     * mgm::Cursor hybrid-aware so it can create a cursor bo on each GPU.
+     *
+     * For a first cut, just disable the hardware cursor on hybrid systems.
+     */
+    if (drm.size() > 1)
+    {
+        return nullptr;
+    }
+
     // There is only one hardware cursor. We do not keep a strong reference to it in the display though,
     // if no other component of Mir is interested (i.e. the input stack does not keep a reference to send
     // position updates) we must be configured not to use a cursor and thusly let it deallocate.
@@ -261,9 +378,8 @@ auto mgm::Display::create_hardware_cursor(std::shared_ptr<mg::CursorImage> const
         try
         {
             locked_cursor = std::make_shared<Cursor>(gbm->device,
-                              output_container,
-                              std::make_shared<KMSCurrentConfiguration>(*this),
-                              initial_image);
+                              *output_container,
+                              std::make_shared<KMSCurrentConfiguration>(*this));
         }
         catch (std::runtime_error const&)
         {
@@ -288,8 +404,7 @@ void mgm::Display::clear_connected_unused_outputs()
         if (conf_output.connected &&
             (!conf_output.used || (conf_output.power_mode != mir_power_mode_on)))
         {
-            uint32_t const connector_id = current_display_configuration.get_kms_connector_id(conf_output.id);
-            auto kms_output = output_container.get_kms_output_for(connector_id);
+            auto kms_output = current_display_configuration.get_output_for(conf_output.id);
 
             kms_output->clear_crtc();
             kms_output->set_power_mode(conf_output.power_mode);
@@ -328,8 +443,38 @@ bool mgm::Display::apply_if_configuration_preserves_display_buffers(
 
 mg::Frame mgm::Display::last_frame_on(unsigned output_id) const
 {
-    auto output = output_container.get_kms_output_for(output_id);
+    auto output = current_display_configuration.get_output_for(
+        DisplayConfigurationOutputId{static_cast<int>(output_id)});
     return output->last_frame();
+}
+
+namespace
+{
+/*
+ * Add output to the grouping, maintaining the invariant that each vector of outputs
+ * is a single GPU memory domain.
+ */
+void add_to_drm_device_group(
+    std::vector<std::vector<std::shared_ptr<mgm::KMSOutput>>>& grouping,
+    std::shared_ptr<mgm::KMSOutput>&& output)
+{
+    for (auto &group : grouping)
+    {
+        /*
+         * We could be smarter about this, but being on the same DRM device is guaranteed
+         * to be in the same GPU memory domain :).
+         */
+        if (group.front()->drm_fd() == output->drm_fd())
+        {
+            group.push_back(std::move(output));
+            break;
+        }
+    }
+    if (output)
+    {
+        grouping.push_back(std::vector<std::shared_ptr<mgm::KMSOutput>>{std::move(output)});
+    }
+}
 }
 
 void mgm::Display::configure_locked(
@@ -360,8 +505,7 @@ void mgm::Display::configure_locked(
         kms_conf.for_each_output(
             [&](DisplayConfigurationOutput const& conf_output)
             {
-                uint32_t const connector_id = current_display_configuration.get_kms_connector_id(conf_output.id);
-                auto kms_output = output_container.get_kms_output_for(connector_id);
+                auto kms_output = current_display_configuration.get_output_for(conf_output.id);
                 kms_output->clear_cursor();
                 kms_output->reset();
             });
@@ -375,14 +519,14 @@ void mgm::Display::configure_locked(
         [&](OverlappingOutputGroup const& group)
         {
             auto bounding_rect = group.bounding_rectangle();
-            std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
-            MirOrientation orientation = mir_orientation_normal;
+            // Each vector<KMSOutput> is a single GPU memory domain
+            std::vector<std::vector<std::shared_ptr<KMSOutput>>> kms_output_groups;
+            glm::mat2 transformation;
 
             group.for_each_output(
                 [&](DisplayConfigurationOutput const& conf_output)
                 {
-                    uint32_t const connector_id = kms_conf.get_kms_connector_id(conf_output.id);
-                    auto kms_output = output_container.get_kms_output_for(connector_id);
+                    auto kms_output = current_display_configuration.get_output_for(conf_output.id);
 
                     auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
                                                                   conf_output.current_mode_index);
@@ -391,44 +535,63 @@ void mgm::Display::configure_locked(
                     {
                         kms_output->set_power_mode(conf_output.power_mode);
                         kms_output->set_gamma(conf_output.gamma);
-                        kms_outputs.push_back(kms_output);
+                        add_to_drm_device_group(kms_output_groups, std::move(kms_output));
                     }
 
                     /*
-                    * Presently OverlappingOutputGroup guarantees all grouped
-                    * outputs have the same orientation.
-                    */
-                    orientation = conf_output.orientation;
+                     * Presently OverlappingOutputGroup guarantees all grouped
+                     * outputs have the same transformation.
+                     */
+                    transformation = conf_output.transformation();
                 });
 
             if (comp)
             {
-                display_buffers[group_idx++]->set_orientation(orientation, bounding_rect);
+                display_buffers[group_idx++]->set_transformation(transformation,
+                                                                 bounding_rect);
             }
             else
             {
-                uint32_t width = bounding_rect.size.width.as_uint32_t();
-                uint32_t height = bounding_rect.size.height.as_uint32_t();
-                if (orientation == mir_orientation_left || orientation == mir_orientation_right)
+                glm::vec2 const logical_size{
+                    bounding_rect.size.width.as_uint32_t(),
+                    bounding_rect.size.height.as_uint32_t()};
+
+                auto const physical_size = transformation * logical_size;
+                uint32_t width = abs(physical_size.x);
+                uint32_t height = abs(physical_size.y);
+
+                for (auto const& group : kms_output_groups)
                 {
-                    std::swap(width, height);
+                    /*
+                     * In a hybrid setup a scanout surface needs to be allocated differently if it
+                     * needs to be able to be shared across GPUs. This likely reduces performance.
+                     *
+                     * As a first cut, assume every scanout buffer in a hybrid setup might need
+                     * to be shared.
+                     */
+                    auto surface = gbm->create_scanout_surface(width, height, drm.size() != 1);
+                    auto const raw_surface = surface.get();
+
+                    auto db = std::make_unique<DisplayBuffer>(
+                        bypass_option,
+                        listener,
+                        group,
+                        GBMOutputSurface{
+                            group.front()->drm_fd(),
+                            std::move(surface),
+                            width, height,
+                            helpers::EGLHelper{
+                                *gl_config,
+                                *gbm,
+                                raw_surface,
+                                shared_egl.context()
+                            }
+                        },
+                        bounding_rect,
+                        transformation);
+
+                    display_buffers_new.push_back(std::move(db));
                 }
-
-                auto surface = gbm->create_scanout_surface(width, height);
-
-                std::unique_ptr<DisplayBuffer> db{
-                    new DisplayBuffer{bypass_option,
-                    drm,
-                    gbm,
-                    listener,
-                    kms_outputs,
-                    std::move(surface),
-                    bounding_rect,
-                    orientation,
-                    *gl_config,
-                    shared_egl.context()}};
-
-                display_buffers_new.push_back(std::move(db));
             }
         });
 

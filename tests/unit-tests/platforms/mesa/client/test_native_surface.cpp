@@ -51,8 +51,10 @@ public:
             .WillByDefault(Return(
                 mt::fake_shared(native_buffer)));
     }
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirWindowParameters surf_params;
+#pragma GCC diagnostic pop
     const char* error_msg = "thrown as part of test";
     mg::mesa::NativeBuffer native_buffer;
     testing::NiceMock<mtd::MockClientBuffer> mock_buffer;
@@ -62,7 +64,10 @@ public:
 
 TEST_F(MesaClientNativeSurfaceTest, basic_parameters)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirWindowParameters params;
+#pragma GCC diagnostic pop
     EXPECT_EQ(MIR_MESA_TRUE, native_surface.surface_get_parameters(&native_surface, &params));
     EXPECT_EQ(surf_params.width, params.width);
     EXPECT_EQ(surf_params.height, params.height);
@@ -139,8 +144,10 @@ TEST_F(MesaClientNativeSurfaceTest, returns_error_on_get_parameters_failure)
 
     EXPECT_CALL(mock_surface, get_parameters())
         .WillOnce(Throw(std::runtime_error(error_msg)));
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirWindowParameters surface_params;
+#pragma GCC diagnostic pop
     EXPECT_EQ(MIR_MESA_FALSE, native_surface.get_parameters(&surface_params));
 }
 
@@ -157,8 +164,10 @@ TEST_F(MesaClientNativeSurfaceTest, returns_error_on_set_swap_interval_failure)
 TEST_F(MesaClientNativeSurfaceTest, null_native_surface_returns_error)
 {
     using namespace testing;
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirWindowParameters params;
+#pragma GCC diagnostic pop
     MirBufferPackage buffer_package;
 
     mclg::NativeSurface null_native_surface{nullptr};
@@ -174,8 +183,10 @@ TEST_F(MesaClientNativeSurfaceTest, null_native_surface_returns_error)
 TEST_F(MesaClientNativeSurfaceTest, native_surface_after_null_returns_success)
 {
     using namespace testing;
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirWindowParameters params;
+#pragma GCC diagnostic pop
     MirBufferPackage buffer_package;
 
     mclg::NativeSurface native_surface{nullptr};

@@ -51,6 +51,8 @@ me::Connection::operator MirConnection*()
     return connection;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 me::BufferStream::BufferStream(
     Connection& connection,
     unsigned int width,
@@ -172,6 +174,7 @@ me::Context::Context(Connection& connection, MirWindow* window, int swap_interva
     make_current();
     eglSwapInterval(display.disp, swap_interval);
 }
+#pragma GCC diagnostic pop
 
 void me::Context::make_current()
 {

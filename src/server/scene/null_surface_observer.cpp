@@ -40,3 +40,5 @@ void ms::NullSurfaceObserver::keymap_changed(MirInputDeviceId /* id */, std::str
 void ms::NullSurfaceObserver::renamed(char const*) {}
 void ms::NullSurfaceObserver::cursor_image_removed() {}
 void ms::NullSurfaceObserver::placed_relative(geometry::Rectangle const& /*placement*/)  {}
+void ms::NullSurfaceObserver::input_consumed(MirEvent const* /*event*/)  {}
+void ms::NullSurfaceObserver::start_drag_and_drop(std::vector<uint8_t> const& /*handle*/)  {}

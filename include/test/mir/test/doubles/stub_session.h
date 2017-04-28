@@ -37,8 +37,6 @@ struct StubSession : scene::Session
 
     std::string name() const override;
 
-    void drop_outstanding_requests() override;
-
     pid_t process_id() const override;
 
     void take_snapshot(scene::SnapshotCallback const& snapshot_taken) override;
@@ -89,9 +87,11 @@ struct StubSession : scene::Session
 
     void destroy_surface(std::weak_ptr<scene::Surface> const& surface) override;
 
-    void send_input_device_change(std::vector<std::shared_ptr<input::Device>> const& devices) override;
+    void send_input_config(MirInputConfig const& config) override;
 
     graphics::BufferID create_buffer(graphics::BufferProperties const& properties) override;
+    graphics::BufferID create_buffer(geometry::Size, MirPixelFormat) override;
+    graphics::BufferID create_buffer(geometry::Size, uint32_t native_format, uint32_t native_flags) override;
     void destroy_buffer(graphics::BufferID) override;
     std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) override;
 

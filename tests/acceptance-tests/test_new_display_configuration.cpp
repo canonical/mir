@@ -25,7 +25,7 @@
 #include "mir/graphics/display_configuration_observer.h"
 #include "mir/observer_registrar.h"
 
-#include "mir_test_framework/connected_client_with_a_surface.h"
+#include "mir_test_framework/connected_client_with_a_window.h"
 #include "mir/test/doubles/null_platform.h"
 #include "mir/test/doubles/fake_display.h"
 #include "mir/test/doubles/null_display_sync_group.h"
@@ -97,7 +97,7 @@ struct StubAuthorizer : mtd::StubSessionAuthorizer
 };
 }
 
-struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
+struct DisplayConfigurationTest : mtf::ConnectedClientWithAWindow
 {
     class NotifyingConfigurationObserver : public mg::DisplayConfigurationObserver
     {
@@ -172,7 +172,7 @@ struct DisplayConfigurationTest : mtf::ConnectedClientWithASurface
     {
         server.override_the_session_authorizer([this] { return mt::fake_shared(stub_authorizer); });
         preset_display(mt::fake_shared(mock_display));
-        mtf::ConnectedClientWithASurface::SetUp();
+        mtf::ConnectedClientWithAWindow::SetUp();
 
         server.the_display_configuration_observer_registrar()->register_interest(observer);
     }
@@ -261,6 +261,8 @@ struct SimpleClient
     SimpleClient(std::string const& mir_test_socket) :
         mir_test_socket{mir_test_socket} {}
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     void connect()
     {
         connection = mir_connect_sync(mir_test_socket.c_str(), __PRETTY_FUNCTION__);
@@ -276,7 +278,7 @@ struct SimpleClient
         if (!ready_to_accept_events.raised())
             BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for window to become focused and exposed"));
     }
-
+#pragma GCC diagnostic pop
     static void handle_event(MirWindow*, MirEvent const* ev, void* context)
     {
         auto const client = static_cast<SimpleClient*>(context);
@@ -475,9 +477,10 @@ TEST_P(DisplayFormatSetting, can_get_all_output_format)
     using namespace testing;
 
     auto format = GetParam();
-    mtd::StubDisplayConfig single_format_config(1, {format});
+    auto single_format_config =
+        std::make_shared<mtd::StubDisplayConfig>(1, std::vector<MirPixelFormat>{format});
 
-    apply_config_change_and_wait_for_propagation(mt::fake_shared(single_format_config));
+    apply_config_change_and_wait_for_propagation(single_format_config);
 
     DisplayClient client{new_connection()};
 
@@ -507,9 +510,11 @@ TEST_P(DisplaySubpixelSetting, can_get_all_subpixel_arrangements)
         60.0,
         true,
         subpixel_arrangement};
-    mtd::StubDisplayConfig single_subpixel_config({output});
 
-    apply_config_change_and_wait_for_propagation(mt::fake_shared(single_subpixel_config));
+    auto single_subpixel_config =
+        std::make_shared<mtd::StubDisplayConfig>(std::vector<mg::DisplayConfigurationOutput>{output});
+
+    apply_config_change_and_wait_for_propagation(single_subpixel_config);
 
     DisplayClient client{new_connection()};
 
@@ -693,6 +698,30 @@ TEST_F(DisplayConfigurationTest, mode_width_and_height_are_independent_of_orient
         }
 
         EXPECT_THAT(received_modes, ContainerEq(modes));
+
+        // But logical size is affected by orientation:
+        auto current_mode = mir_output_get_current_mode(output);
+        ASSERT_TRUE(current_mode);
+        unsigned physical_width = mir_output_mode_get_width(current_mode);
+        unsigned physical_height = mir_output_mode_get_height(current_mode);
+        unsigned logical_width = mir_output_get_logical_width(output);
+        unsigned logical_height = mir_output_get_logical_height(output);
+
+        switch (orientation)
+        {
+        case mir_orientation_normal:
+        case mir_orientation_inverted:
+            EXPECT_EQ(physical_width, logical_width);
+            EXPECT_EQ(physical_height, logical_height);
+            break;
+        case mir_orientation_left:
+        case mir_orientation_right:
+            EXPECT_EQ(physical_height, logical_width);
+            EXPECT_EQ(physical_width, logical_height);
+            break;
+        default:
+            break;
+        }
     }
 
     client.disconnect();
@@ -860,6 +889,51 @@ TEST_F(DisplayConfigurationTest, client_sees_server_set_scale_factor)
 
     client.disconnect();
 }
+
+TEST_F(DisplayConfigurationTest, client_can_set_scale_factor)
+{
+    DisplayClient client{new_connection()};
+
+    client.connect();
+
+    auto client_config = client.get_base_config();
+    auto const scale_factor = 1.5f;
+
+    for (int i = 0; i < mir_display_config_get_num_outputs(client_config.get()); ++i)
+    {
+        auto output = mir_display_config_get_mutable_output(client_config.get(), i);
+
+        mir_output_set_scale_factor(output, scale_factor + 0.25f*i);
+    }
+
+    DisplayConfigMatchingContext context;
+    context.matcher = [c = client_config.get()](MirDisplayConfig* conf)
+        {
+            EXPECT_THAT(conf, mt::DisplayConfigMatches(c));
+        };
+
+    mir_connection_set_display_config_change_callback(
+        client.connection,
+        &new_display_config_matches,
+        &context);
+
+    mir_connection_preview_base_display_configuration(client.connection, client_config.get(), 10);
+
+    EXPECT_TRUE(context.done.wait_for(std::chrono::seconds{5}));
+
+    mir_connection_confirm_base_display_configuration(client.connection, client_config.get());
+
+    std::shared_ptr<mg::DisplayConfiguration> current_config = server.the_display()->configuration();
+    current_config->for_each_output(
+        [scale_factor, output_num = 0](mg::UserDisplayConfigurationOutput& output) mutable
+        {
+            EXPECT_THAT(output.scale, Eq(scale_factor + output_num * 0.25f));
+            ++output_num;
+        });
+
+    client.disconnect();
+}
+
 
 TEST_F(DisplayConfigurationTest, client_sees_server_set_form_factor)
 {
@@ -1454,7 +1528,7 @@ TEST_F(DisplayConfigurationTest, unauthorised_client_receives_error)
     auto config = client.get_base_config();
 
     ErrorValidator validator;
-    validator.validate = [&config](MirError const* error)
+    validator.validate = [](MirError const* error)
         {
             EXPECT_THAT(mir_error_get_domain(error), Eq(mir_error_domain_display_configuration));
             EXPECT_THAT(mir_error_get_code(error), Eq(mir_display_configuration_error_unauthorized));
@@ -1519,7 +1593,7 @@ TEST_F(DisplayConfigurationTest, receives_error_when_display_configuration_alrea
     auto config = client.get_base_config();
 
     ErrorValidator validator;
-    validator.validate = [&config](MirError const* error)
+    validator.validate = [](MirError const* error)
     {
         EXPECT_THAT(mir_error_get_domain(error), Eq(mir_error_domain_display_configuration));
         EXPECT_THAT(mir_error_get_code(error), Eq(mir_display_configuration_error_in_progress));
@@ -1591,7 +1665,7 @@ TEST_F(DisplayConfigurationTest, cancel_receives_error_when_no_preview_pending)
     auto config = client.get_base_config();
 
     ErrorValidator validator;
-    validator.validate = [&config](MirError const* error)
+    validator.validate = [](MirError const* error)
     {
         EXPECT_THAT(mir_error_get_domain(error), Eq(mir_error_domain_display_configuration));
         EXPECT_THAT(mir_error_get_code(error), Eq(mir_display_configuration_error_no_preview_in_progress));

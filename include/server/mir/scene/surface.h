@@ -30,7 +30,6 @@
 
 namespace mir
 {
-namespace input { class InputChannel; }
 namespace shell { class InputTargeter; }
 namespace geometry { struct Rectangle; }
 namespace graphics { class CursorImage; }
@@ -98,9 +97,6 @@ public:
     virtual void add_observer(std::shared_ptr<SurfaceObserver> const& observer) = 0;
     virtual void remove_observer(std::weak_ptr<SurfaceObserver> const& observer) = 0;
 
-    // TODO input_channel() relates to adding and removing the surface
-    // TODO from the scene and is probably not cleanest interface for this.
-    virtual std::shared_ptr<input::InputChannel> input_channel() const override = 0;
     virtual void set_reception_mode(input::InputReceptionMode mode) = 0;
 
     virtual void request_client_surface_close() = 0;
@@ -120,6 +116,7 @@ public:
     virtual MirPointerConfinementState confine_pointer_state() const = 0;
 
     virtual void placed_relative(geometry::Rectangle const& placement) = 0;
+    virtual void start_drag_and_drop(std::vector<uint8_t> const& handle) = 0;
 };
 }
 }

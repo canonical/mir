@@ -23,6 +23,9 @@
 #include "native_surface.h"
 #include "mir/client_buffer_factory.h"
 #include "mir/client_context.h"
+#include "mir/client_buffer.h"
+#include "mir/mir_render_surface.h"
+#include "mir/mir_buffer.h"
 #include "mir/weak_egl.h"
 #include "mir/platform_message.h"
 #include "mir_toolkit/mesa/platform_operation.h"
@@ -32,7 +35,10 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <cstring>
+#include <mutex>
+#include <condition_variable>
 
+namespace mgm=mir::graphics::mesa;
 namespace mcl=mir::client;
 namespace mclm=mir::client::mesa;
 namespace geom=mir::geometry;
@@ -63,7 +69,7 @@ constexpr size_t division_ceiling(size_t a, size_t b)
 
 struct AuthFdContext
 {
-    mir_auth_fd_callback cb;
+    MirAuthFdCallback cb;
     void* context;
 };
 
@@ -79,7 +85,7 @@ void auth_fd_cb(
     delete ctx;
 }
 
-void auth_fd_ext(MirConnection* conn, mir_auth_fd_callback cb, void* context)
+void auth_fd_ext(MirConnection* conn, MirAuthFdCallback cb, void* context)
 {
     auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
     MirPlatformMessage msg(MirMesaPlatformOperation::auth_fd);
@@ -89,7 +95,7 @@ void auth_fd_ext(MirConnection* conn, mir_auth_fd_callback cb, void* context)
 
 struct AuthMagicContext
 {
-    mir_auth_magic_callback cb;
+    MirAuthMagicCallback cb;
     void* context;
 };
 
@@ -103,7 +109,7 @@ void auth_magic_cb(MirConnection*, MirPlatformMessage* reply, void* context)
     delete ctx;
 }
 
-void auth_magic_ext(MirConnection* conn, int magic, mir_auth_magic_callback cb, void* context)
+void auth_magic_ext(MirConnection* conn, int magic, MirAuthMagicCallback cb, void* context)
 {
     auto connection = reinterpret_cast<mcl::ClientContext*>(conn);
     MirPlatformMessage msg(MirMesaPlatformOperation::auth_magic);
@@ -121,29 +127,166 @@ void set_device(gbm_device* device, void* context)
 
 void allocate_buffer_gbm(
     MirConnection* connection,
+    uint32_t width, uint32_t height,
+    uint32_t gbm_pixel_format,
+    uint32_t gbm_bo_flags,
+    MirBufferCallback available_callback, void* available_context)
+{
+    auto context = mcl::to_client_context(connection);
+    context->allocate_buffer(
+        mir::geometry::Size{width, height}, gbm_pixel_format, gbm_bo_flags,
+        available_callback, available_context); 
+}
+
+void allocate_buffer_gbm_legacy(
+    MirConnection* connection,
     int width, int height,
     unsigned int gbm_pixel_format,
     unsigned int gbm_bo_flags,
-    mir_buffer_callback available_callback, void* available_context)
+    MirBufferCallback available_callback, void* available_context)
 {
-    //TODO: cannot service gbm_bo_flags appropriately without first sharing mirclient objects.
-    //this will return an error buffer for now. In the future, we should share MirConnection
-    //and mcl::ErrorBuffer so the platforms can use them. 
-    if (gbm_bo_flags)
-    {
-        mir_connection_allocate_buffer(
-            connection, width, height, mir_pixel_format_invalid, mir_buffer_usage_hardware,
-            available_callback, available_context);
-    }
-
-    mir_connection_allocate_buffer(
-        connection,
-        width, height,
-        mir::graphics::mesa::gbm_format_to_mir_format(gbm_pixel_format),
-        mir_buffer_usage_hardware,
+    allocate_buffer_gbm(
+        connection, static_cast<uint32_t>(width), static_cast<uint32_t>(height),
+        static_cast<uint32_t>(gbm_pixel_format), static_cast<uint32_t>(gbm_bo_flags),
         available_callback, available_context);
 }
 
+MirBuffer* allocate_buffer_gbm_sync(
+    MirConnection* connection,
+    uint32_t width, uint32_t height,
+    uint32_t gbm_pixel_format,
+    uint32_t gbm_bo_flags)
+try
+{
+    struct BufferSync
+    {
+        void set_buffer(MirBuffer* b)
+        {
+            std::unique_lock<decltype(mutex)> lk(mutex);
+            buffer = b;
+            cv.notify_all();
+        }
+
+        MirBuffer* wait_for_buffer()
+        {
+            std::unique_lock<decltype(mutex)> lk(mutex);
+            cv.wait(lk, [this]{ return buffer; });
+            return buffer;
+        }
+    private:
+        std::mutex mutex;
+        std::condition_variable cv;
+        MirBuffer* buffer = nullptr;
+    } sync;
+
+    allocate_buffer_gbm(
+        connection, width, height, gbm_pixel_format, gbm_bo_flags,
+        [](auto* b, auto* context){ reinterpret_cast<BufferSync*>(context)->set_buffer(b); }, &sync);
+    return sync.wait_for_buffer();
+}
+catch (...)
+{
+    return nullptr;
+}
+
+bool is_gbm_importable(MirBuffer const* b)
+try
+{
+    if (!b)
+        return false;
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
+    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    if (!native)
+        return false;
+    return native->is_gbm_buffer;
+}
+catch (...)
+{
+    return false;
+}
+
+int import_fd(MirBuffer const* b)
+try
+{
+    if (!is_gbm_importable(b))
+        return -1;
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
+    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    return native->fd[0];
+}
+catch (...)
+{
+    return -1;
+}
+
+uint32_t buffer_stride(MirBuffer const* b)
+try
+{
+    if (!is_gbm_importable(b))
+        return 0;
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
+    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    return native->stride;
+}
+catch (...)
+{
+    return 0;
+}
+
+uint32_t buffer_format(MirBuffer const* b)
+try
+{
+    if (!is_gbm_importable(b))
+        return 0;
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
+    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    return native->native_format;
+}
+catch (...)
+{
+    return 0;
+}
+
+uint32_t buffer_flags(MirBuffer const* b)
+try
+{
+    if (!is_gbm_importable(b))
+        return 0;
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
+    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    return native->native_flags;
+}
+catch (...)
+{
+    return 0;
+}
+
+unsigned int buffer_age(MirBuffer const* b)
+try
+{
+    if (!is_gbm_importable(b))
+        return 0;
+    auto const buffer = reinterpret_cast<mcl::MirBuffer const*>(b);
+    auto native = dynamic_cast<mgm::NativeBuffer*>(buffer->client_buffer()->native_buffer_handle().get());
+    return native->age;
+}
+catch (...)
+{
+    return 0;
+}
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+MirBufferStream* get_hw_stream(
+    MirRenderSurface* rs_key,
+    int width, int height,
+    MirPixelFormat format)
+{
+    auto rs = mcl::render_surface_lookup(rs_key);
+    if (!rs)
+        return nullptr;
+    return rs->get_buffer_stream(width, height, format, mir_buffer_usage_hardware);
+}
+#pragma GCC diagnostic pop
 }
 
 void mclm::ClientPlatform::set_gbm_device(gbm_device* device)
@@ -161,7 +304,10 @@ mclm::ClientPlatform::ClientPlatform(
       gbm_dev{nullptr},
       drm_extensions{auth_fd_ext, auth_magic_ext},
       mesa_auth{set_device, this},
-      gbm_buffer{allocate_buffer_gbm}
+      gbm_buffer1{allocate_buffer_gbm_legacy},
+      gbm_buffer2{allocate_buffer_gbm, allocate_buffer_gbm_sync,
+                 is_gbm_importable, import_fd, buffer_stride, buffer_format, buffer_flags, buffer_age},
+      hw_stream{get_hw_stream}
 {
 }
 
@@ -285,7 +431,28 @@ void* mclm::ClientPlatform::request_interface(char const* extension_name, int ve
     if (!strcmp(extension_name, "mir_extension_set_gbm_device") && (version == 1))
         return &mesa_auth;
     if (!strcmp(extension_name, "mir_extension_gbm_buffer") && (version == 1))
-        return &gbm_buffer;
+        return &gbm_buffer1;
+    if (!strcmp(extension_name, "mir_extension_gbm_buffer") && (version == 2))
+        return &gbm_buffer2;
+    if (!strcmp(extension_name, "mir_extension_hardware_buffer_stream") && (version == 1))
+        return &hw_stream;
 
     return nullptr;
+}
+
+uint32_t mclm::ClientPlatform::native_format_for(MirPixelFormat format) const
+{
+    return mgm::mir_format_to_gbm_format(format);
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+uint32_t mclm::ClientPlatform::native_flags_for(MirBufferUsage, mir::geometry::Size size) const
+{
+#pragma GCC diagnostic pop
+
+    uint32_t bo_flags{GBM_BO_USE_RENDERING};
+    if (size.width.as_uint32_t() >= 800 && size.height.as_uint32_t() >= 600)
+        bo_flags |= GBM_BO_USE_SCANOUT;
+    return bo_flags;
 }

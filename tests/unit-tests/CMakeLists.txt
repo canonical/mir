@@ -5,10 +5,6 @@ add_definitions(
   -DMIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING="${MIR_SERVER_GRAPHICS_PLATFORM_ABI}"
 )
 
-if (MIR_BUILD_PLATFORM_ANDROID)
-  add_definitions(-DMIR_BUILD_PLATFORM_ANDROID)
-endif()
-
 if (MIR_BUILD_PLATFORM_MESA_KMS)
   add_definitions(-DMIR_BUILD_PLATFORM_MESA_KMS)
 endif()
@@ -24,7 +20,6 @@ endif()
 include_directories(
   ${CMAKE_SOURCE_DIR}
 
-  ${ANDROID_HEADERS_INCLUDE_DIRS}
   ${DRM_INCLUDE_DIRS}
   ${GBM_INCLUDE_DIRS}
   ${UMOCKDEV_INCLUDE_DIRS}
@@ -102,7 +97,6 @@ add_subdirectory(shell/)
 add_subdirectory(geometry/)
 add_subdirectory(graphics/)
 add_subdirectory(input/)
-add_subdirectory(android_input/)
 add_subdirectory(scene/)
 add_subdirectory(thread/)
 add_subdirectory(dispatch/)
@@ -123,8 +117,6 @@ mir_precompiled_header(mir_unit_tests ${CMAKE_CURRENT_SOURCE_DIR}/precompiled.hp
 
 add_dependencies(mir_unit_tests GMock)
 
-uses_android_input(mir_unit_tests)
-
 target_link_libraries(
   mir_unit_tests
 
@@ -138,8 +130,6 @@ target_link_libraries(
   mirclient-static
   mirclientlttng-static
 
-  mirsharedmesa-static
-
   mir-test-static
   mir-test-framework-static
 
@@ -152,6 +142,14 @@ target_link_libraries(
   ${Boost_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
+
+if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11 OR MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+  target_link_libraries(
+    mir_unit_tests
+
+    mirsharedmesa-static
+  )
+endif (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11 OR MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
 
 mir_add_wrapped_executable(mir_umock_unit_tests
   ${UMOCK_UNIT_TEST_SOURCES}

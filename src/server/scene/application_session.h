@@ -39,6 +39,7 @@ namespace graphics
 {
 class DisplayConfiguration;
 class GraphicBufferAllocator;
+class BufferAttribute;
 }
 namespace shell { class SurfaceStack; }
 namespace scene
@@ -80,14 +81,12 @@ public:
     std::string name() const override;
     pid_t process_id() const override;
 
-    void drop_outstanding_requests() override;
-
     void hide() override;
     void show() override;
 
     void send_display_config(graphics::DisplayConfiguration const& info) override;
     void send_error(ClientVisibleError const& error) override;
-    void send_input_device_change(std::vector<std::shared_ptr<input::Device>> const& devices) override;
+    void send_input_config(MirInputConfig const& devices) override;
 
     void set_lifecycle_state(MirLifecycleState state) override;
 
@@ -103,6 +102,8 @@ public:
     void destroy_surface(std::weak_ptr<Surface> const& surface) override;
 
     graphics::BufferID create_buffer(graphics::BufferProperties const& properties) override;
+    graphics::BufferID create_buffer(geometry::Size, MirPixelFormat) override;
+    graphics::BufferID create_buffer(geometry::Size, uint32_t native_format, uint32_t native_flags) override;
     void destroy_buffer(graphics::BufferID) override;
     std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) override;
 protected:

@@ -19,6 +19,7 @@
 #define MIR_CLIENT_CLIENT_PLATFORM_H_
 
 #include "mir/graphics/native_buffer.h"
+#include "mir/geometry/size.h"
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
@@ -72,6 +73,11 @@ public:
     virtual std::shared_ptr<EGLNativeDisplayType> create_egl_native_display() = 0;
     virtual MirNativeBuffer* convert_native_buffer(graphics::NativeBuffer*) const = 0;
     virtual MirPixelFormat get_egl_pixel_format(EGLDisplay, EGLConfig) const = 0;
+    virtual uint32_t native_format_for(MirPixelFormat) const = 0;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    virtual uint32_t native_flags_for(MirBufferUsage, mir::geometry::Size) const = 0;
+#pragma GCC diagnostic pop
 };
 
 }

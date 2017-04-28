@@ -18,6 +18,7 @@
 
 #include "buffer_stream_arrangement.h"
 #include "mir_toolkit/mir_presentation_chain.h"
+#include "mir_toolkit/rs/mir_render_surface.h"
 #include <gmock/gmock.h>
 
 namespace mt = mir::test;
@@ -25,15 +26,62 @@ namespace geom = mir::geometry;
 using namespace std::literals::chrono_literals;
 using namespace testing;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+namespace
+{
+
+struct RenderSurface
+{
+    RenderSurface(MirConnection* connection, geom::Size size) :
+        surface(mir_connection_create_render_surface_sync(
+            connection, size.width.as_int(), size.height.as_int()))
+    {
+    }
+
+    ~RenderSurface()
+    {
+        mir_render_surface_release(surface);
+    }
+    MirRenderSurface* surface;
+};
+struct RenderSurfaceBasedStream : mt::Stream
+{
+    RenderSurfaceBasedStream(
+        MirConnection* connection,
+        std::unique_ptr<RenderSurface> rs,
+        geom::Size physical_size,
+        geom::Rectangle position) :
+        mt::Stream(position, [&] {
+            return mir_render_surface_get_buffer_stream(
+                rs->surface,
+                physical_size.width.as_int(),
+                physical_size.height.as_int(),
+                an_available_format(connection));
+        }),
+        rs(std::move(rs))
+    {
+    }
+
+    std::unique_ptr<RenderSurface> const rs;
+};
+
+}
+
 typedef mt::BufferStreamArrangementBase BufferStreamArrangementStaging;
 TEST_F(BufferStreamArrangementStaging, can_set_stream_logical_and_physical_size)
 {
     geom::Size logical_size { 233, 111 };
     geom::Size physical_size { 133, 222 };
-    mt::Stream stream(connection, physical_size, { {0, 0}, logical_size } );
+    RenderSurfaceBasedStream stream(
+        connection,
+        std::make_unique<RenderSurface>(connection, physical_size),
+        physical_size,
+        { {0, 0}, logical_size });
 
     auto change_spec = mir_create_window_spec(connection);
-    mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
+    mir_window_spec_add_render_surface(change_spec, stream.rs->surface,
+        logical_size.width.as_int(), logical_size.height.as_int(), 0, 0);
     mir_window_apply_spec(window, change_spec);
     mir_window_spec_release(change_spec);
 
@@ -47,10 +95,15 @@ TEST_F(BufferStreamArrangementStaging, can_setting_stream_physical_size_doesnt_a
     geom::Size logical_size { 233, 111 };
     geom::Size original_physical_size { 133, 222 };
     geom::Size changed_physical_size { 133, 222 };
-    mt::Stream stream(connection, original_physical_size, { {0, 0}, logical_size } );
+    RenderSurfaceBasedStream stream(
+        connection,
+        std::make_unique<RenderSurface>(connection, original_physical_size),
+        original_physical_size,
+        { {0, 0}, logical_size });
 
     auto change_spec = mir_create_window_spec(connection);
-    mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
+    mir_window_spec_add_render_surface(change_spec, stream.rs->surface,
+        logical_size.width.as_int(), logical_size.height.as_int(), 0, 0);
     mir_window_apply_spec(window, change_spec);
     mir_window_spec_release(change_spec);
 
@@ -70,10 +123,15 @@ TEST_F(BufferStreamArrangementStaging, stream_size_reflects_current_buffer_physi
     geom::Size logical_size { 233, 111 };
     geom::Size original_physical_size { 133, 222 };
     geom::Size changed_physical_size { 133, 222 };
-    mt::Stream stream(connection, original_physical_size, { {0, 0}, logical_size } );
+    RenderSurfaceBasedStream stream(
+        connection,
+        std::make_unique<RenderSurface>(connection, original_physical_size),
+        original_physical_size,
+        { {0, 0}, logical_size });
 
     auto change_spec = mir_create_window_spec(connection);
-    mir_surface_spec_add_buffer_stream(change_spec, 0, 0, logical_size.width.as_int(), logical_size.height.as_int(), stream.handle());
+    mir_window_spec_add_render_surface(change_spec, stream.rs->surface,
+        logical_size.width.as_int(), logical_size.height.as_int(), 0, 0);
     mir_window_apply_spec(window, change_spec);
     mir_window_spec_release(change_spec);
 
@@ -83,3 +141,4 @@ TEST_F(BufferStreamArrangementStaging, stream_size_reflects_current_buffer_physi
     streams.back()->swap_buffers();
     EXPECT_THAT(stream.physical_size(), Eq(changed_physical_size));
 }
+#pragma GCC diagnostic pop

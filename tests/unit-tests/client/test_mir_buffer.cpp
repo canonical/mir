@@ -49,10 +49,13 @@ struct MirBufferTest : Test
     geom::Width width { 190 };
     geom::Height height { 119 };
     geom::Stride stride { 2211 };
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferUsage usage { mir_buffer_usage_hardware };
+#pragma GCC diagnostic pop
     MirPixelFormat format { mir_pixel_format_abgr_8888 };
     std::shared_ptr<char> vaddr { std::make_shared<char>('\0') };
-    mir_buffer_callback cb { buffer_callback };
+    MirBufferCallback cb { buffer_callback };
     std::shared_ptr<mtd::MockClientBuffer> const mock_client_buffer {
         std::make_shared<NiceMock<mtd::MockClientBuffer>>() };
     std::chrono::nanoseconds timeout { 101 };

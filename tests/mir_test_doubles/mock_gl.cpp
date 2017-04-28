@@ -20,6 +20,8 @@
 #include "mir/test/doubles/mock_gl.h"
 #include <gtest/gtest.h>
 
+#include <GLES2/gl2.h>
+
 #include <cstring>
 
 namespace mtd = mir::test::doubles;
@@ -461,4 +463,10 @@ void glPixelStorei(GLenum pname, GLint param)
 {
     CHECK_GLOBAL_VOID_MOCK();
     global_mock_gl->glPixelStorei(pname, param);
+}
+
+void glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indicies)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glDrawElements(mode, count, type, indicies);
 }

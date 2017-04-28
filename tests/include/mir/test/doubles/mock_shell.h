@@ -72,6 +72,9 @@ struct MockShell : public frontend::Shell
 
     MOCK_METHOD3(raise_surface, void(std::shared_ptr<frontend::Session> const& session,
         frontend::SurfaceId surface_id, uint64_t timestamp));
+
+    MOCK_METHOD4(request_operation, void(std::shared_ptr<frontend::Session> const &session,
+        frontend::SurfaceId surface_id, uint64_t timestamp, UserRequest request));
 };
 
 }

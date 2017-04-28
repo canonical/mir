@@ -15,20 +15,20 @@
 # Authored by: Thomas Voss <thomas.voss@canonical.com>,
 #              Alan Griffiths <alan@octopull.co.uk>
 
-set(CMAKE_GCOV gcov)
-
-project(Mir)
-
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 
 cmake_policy(SET CMP0015 NEW)
 cmake_policy(SET CMP0022 NEW)
+
+set(CMAKE_GCOV gcov)
+
+project(Mir)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 26)
+set(MIR_VERSION_MINOR 27)
 set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
@@ -121,7 +121,13 @@ elseif(cmake_build_type_lower MATCHES "threadsanitizer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=thread")
-  link_libraries(tsan) # Workaround for LP:1413474
+  if (CMAKE_COMPILER_IS_GNUCXX)
+    # Work around GCC bug. It should automatically link to tsan when
+    # -fsanitize=thread is used, but doesn't.
+    #
+    # Linking everything with tsan is harmless and simple, so do that.
+    link_libraries(tsan) # Workaround for LP:1413474
+  endif()
 elseif(cmake_build_type_lower MATCHES "ubsanitizer")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=undefined -fno-omit-frame-pointer")
@@ -168,10 +174,10 @@ add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 # Default to KMS backend, but build all of them
 set(
   MIR_PLATFORM
-  mesa-kms;android;mesa-x11;eglstream-kms
+  mesa-kms;mesa-x11;eglstream-kms
   CACHE
   STRING
-  "a list of graphics backends to build (options are 'mesa-kms', 'android', 'mesa-x11', or 'eglstream-kms')"
+  "a list of graphics backends to build (options are 'mesa-kms', 'mesa-x11', or 'eglstream-kms')"
 )
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
@@ -181,9 +187,6 @@ option(MIR_ENABLE_TESTS "Build tests" ON)
 foreach(platform IN LISTS MIR_PLATFORM)
   if (platform STREQUAL "mesa-kms")
     set(MIR_BUILD_PLATFORM_MESA_KMS TRUE)
-  endif()
-  if (platform STREQUAL "android")
-     set(MIR_BUILD_PLATFORM_ANDROID TRUE)
   endif()
   if (platform STREQUAL "mesa-x11")
      set(MIR_BUILD_PLATFORM_MESA_X11 TRUE)
@@ -201,6 +204,7 @@ find_package(CapnProto REQUIRED)
 find_package(GLog REQUIRED)
 find_package(GFlags REQUIRED)
 find_package(LTTngUST REQUIRED)
+
 pkg_check_modules(UDEV REQUIRED libudev)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 
@@ -245,32 +249,24 @@ else()
   message(FATAL_ERROR "Invalid MIR_SERVER_LIBGL value ${MIR_SERVER_LIBGL}")
 endif()
 
-if (MIR_BUILD_PLATFORM_ANDROID)
-  find_package(AndroidProperties REQUIRED)
-  find_package(LibHardware REQUIRED)
-endif()
-
 if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
   find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
+  if (GBM_VERSION VERSION_LESS 11)
+    message(WARNING "Hybrid support requires libgbm from Mesa 11.0 or greater. Hybrid setups will not work")
+    add_definitions(-DMIR_NO_HYBRID_SUPPORT)
+  endif()
 endif()
 
 if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
   pkg_check_modules(EPOXY REQUIRED epoxy)
+  pkg_check_modules(DRM REQUIRED libdrm)
 endif()
-
-set(MIR_ANDROID_INCLUDE_DIRECTORIES) # to be filled by android-input
-set(MIR_ANDROID_INPUT_COMPILE_FLAGS) # to be filled by android-input
-set(MIR_3RD_PARTY_INCLUDE_DIRECTORIES)
-add_subdirectory(3rd_party/)
 
 set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)
 
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
-macro(uses_android_input _target_name)
-  set_property(TARGET ${_target_name} APPEND_STRING PROPERTY COMPILE_FLAGS "${MIR_ANDROID_INPUT_COMPILE_FLAGS}")
-endmacro()
 add_subdirectory(src/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 

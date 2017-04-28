@@ -91,7 +91,10 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
     ASSERT_THAT(connection, IsValid());
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
+#pragma GCC diagnostic pop
     auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
@@ -103,6 +106,8 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure)
     mir_connection_release(connection);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientLibraryErrors, create_buffer_stream_returns_error_object_on_failure)
 {
     std::string const exception_text{"Extravaganza!"};
@@ -123,6 +128,7 @@ TEST_F(ClientLibraryErrors, create_buffer_stream_returns_error_object_on_failure
     mir_buffer_stream_release_sync(stream);
     mir_connection_release(connection);
 }
+#pragma GCC diagnostic pop
 
 TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descriptors_on_error)
 {
@@ -138,7 +144,10 @@ TEST_F(ClientLibraryErrors, create_surface_doesnt_double_close_buffer_file_descr
     ASSERT_THAT(connection, IsValid());
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
+#pragma GCC diagnostic pop
     auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
@@ -167,7 +176,10 @@ TEST_F(ClientLibraryErrors, surface_release_on_error_object_still_calls_callback
     ASSERT_THAT(connection, IsValid());
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
+#pragma GCC diagnostic pop
     auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
@@ -194,7 +206,10 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
     ASSERT_THAT(connection, IsValid());
 
     auto spec = mir_create_normal_window_spec(connection, 800, 600);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_window_spec_set_pixel_format(spec, mir_pixel_format_xbgr_8888);
+#pragma GCC diagnostic pop
     auto window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
@@ -206,6 +221,8 @@ TEST_F(ClientLibraryErrors, create_surface_returns_error_object_on_failure_in_re
     mir_connection_release(connection);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 TEST_F(ClientLibraryErrors, passing_invalid_parent_id_to_surface_create)
 {
     using namespace testing;
@@ -306,6 +323,7 @@ TEST_F(ClientLibraryErrorsDeathTest, surface_spec_attaching_invalid_rectangle)
     mir_connection_release(connection);
 }
 
+#pragma GCC diagnostic pop
 TEST_F(ClientLibraryErrorsDeathTest, creating_screencast_with_invalid_connection)
 {
     MIR_EXPECT_DEATH(mir_create_screencast_spec(nullptr), "");

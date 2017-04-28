@@ -30,6 +30,7 @@
 #include "mir/graphics/virtual_output.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/transformation.h"
 #include "mir/renderer/gl/render_target.h"
 #include "mir/renderer/gl/context.h"
 
@@ -124,7 +125,8 @@ public:
         : dpy{dpy},
           ctx{create_context(dpy, config, ctx)},
           layer{output.output_layer()},
-          view_area_{output.top_left, output.size()}
+          view_area_{output.extents()},
+          transform{output.transformation()}
     {
         EGLint const stream_attribs[] = {
             EGL_STREAM_FIFO_LENGTH_KHR, 1,
@@ -200,14 +202,9 @@ public:
         return false;
     }
 
-    MirOrientation orientation() const override
+    glm::mat2 transformation() const override
     {
-        return mir_orientation_normal;
-    }
-
-    MirMirrorMode mirror_mode() const override
-    {
-        return mir_mirror_mode_none;
+        return transform;
     }
 
     mir::graphics::NativeDisplayBuffer* native_display_buffer() override
@@ -239,6 +236,7 @@ private:
     EGLContext ctx;
     EGLOutputLayerEXT layer;
     mir::geometry::Rectangle const view_area_;
+    glm::mat2 const transform;
     EGLStreamKHR output_stream;
     EGLSurface surface;
 };
@@ -289,7 +287,7 @@ void mge::Display::configure(DisplayConfiguration const& conf)
 {
     auto kms_conf = dynamic_cast<KMSDisplayConfiguration const&>(conf);
     active_sync_groups.clear();
-    kms_conf.for_each_output([this, &conf](kms::EGLOutput const& output)
+    kms_conf.for_each_output([this](kms::EGLOutput const& output)
          {
              if (output.used)
              {
@@ -322,8 +320,7 @@ void mge::Display::resume()
 
 }
 
-std::shared_ptr<mg::Cursor> mge::Display::create_hardware_cursor(
-    std::shared_ptr<CursorImage> const& /*initial_image*/)
+std::shared_ptr<mg::Cursor> mge::Display::create_hardware_cursor()
 {
     // TODO: Find the cursor plane, and use it.
     return nullptr;

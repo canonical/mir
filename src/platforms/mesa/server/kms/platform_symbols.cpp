@@ -214,7 +214,7 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
      * driver at all. (LP: #1528082)
      *
      * Just make sure we are below PlatformPriority::supported in case
-     * mesa-x11 or android can be used instead.
+     * mesa-x11 can be used instead.
      *
      * TODO: Revisit the priority terminology. having a range of values between
      *       "supported" and "unsupported" is potentially confusing.
@@ -246,8 +246,8 @@ mir::ModuleProperties const* describe_graphics_module()
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
     std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::NestedContext> const& nested_context)
+    std::shared_ptr<mg::PlatformAuthentication> const& platform_authentication)
 {
     mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
-    return mir::make_module_ptr<mgm::GuestPlatform>(nested_context);
+    return mir::make_module_ptr<mgm::GuestPlatform>(platform_authentication);
 }

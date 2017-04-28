@@ -151,8 +151,16 @@ public:
         mir::protobuf::StreamConfiguration const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
-    void raise_surface(
-        mir::protobuf::RaiseRequest const* request,
+    void request_operation(
+        mir::protobuf::RequestWithAuthority const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
+    void apply_input_configuration(
+        mir::protobuf::InputConfigurationRequest const* request,
+        mir::protobuf::Void* response,
+        google::protobuf::Closure* done) override;
+    void set_base_input_configuration(
+        mir::protobuf::InputConfigurationRequest const* request,
         mir::protobuf::Void* response,
         google::protobuf::Closure* done) override;
 private:

@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_NESTED_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "mir/renderer/gl/egl_platform.h"
 #include "passthrough_option.h"
 #include <memory>
 
@@ -35,7 +36,9 @@ class DisplayReport;
 namespace nested
 {
 class HostConnection;
-class Platform : public graphics::Platform
+class Platform : public graphics::Platform,
+                 public graphics::NativeRenderingPlatform,
+                 public mir::renderer::gl::EGLPlatform
 {
 public:
     Platform(
@@ -48,7 +51,11 @@ public:
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
+    NativeDisplayPlatform* native_display_platform() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+    NativeRenderingPlatform* native_rendering_platform() override;
+    EGLNativeDisplayType egl_native_display() const override;
+    std::vector<mir::ExtensionDescription> extensions() const override;
 private:
     std::shared_ptr<mir::SharedLibrary> const library; 
     std::shared_ptr<HostConnection> const connection; 

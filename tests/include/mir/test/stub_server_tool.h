@@ -108,6 +108,36 @@ struct StubServerTool : doubles::StubDisplayServer
         done->Run();
     }
 
+    virtual void apply_input_configuration(
+        mir::protobuf::InputConfigurationRequest const* /*request*/,
+        mir::protobuf::Void* /*response*/,
+        google::protobuf::Closure* done) override
+    {
+        done->Run();
+    }
+
+    virtual void set_base_input_configuration(
+        mir::protobuf::InputConfigurationRequest const* /*request*/,
+        mir::protobuf::Void* /*response*/,
+        google::protobuf::Closure* done) override
+    {
+        done->Run();
+    }
+    virtual void allocate_buffers(
+        mir::protobuf::BufferAllocation const* /*request*/,
+        mir::protobuf::Void* /*response*/,
+        google::protobuf::Closure* done)
+    {
+        done->Run();
+    }
+    void release_buffers(
+        mir::protobuf::BufferRelease const* /*request*/,
+        mir::protobuf::Void* /*response*/,
+        google::protobuf::Closure* done)
+    {
+        done->Run();
+    }
+
     std::string application_name() const
     {
         std::lock_guard<std::mutex> lock(guard);

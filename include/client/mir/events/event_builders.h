@@ -47,8 +47,8 @@ EventUPtr make_event(MirPromptSessionState state);
 // Surface resize event
 EventUPtr make_event(frontend::SurfaceId const& surface_id, geometry::Size const& size);
 // Surface configure event
-EventUPtr make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value);
-/* __attribute__ ((deprecated("use make_event with MirWindowAttribute instead")); */
+EventUPtr make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value)
+__attribute__ ((deprecated("use make_event with MirWindowAttribute instead")));
 // Window configure event
 EventUPtr make_event(frontend::SurfaceId const& surface_id, MirWindowAttrib attribute, int value);
 // Close surface event
@@ -159,7 +159,10 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
 
 EventUPtr clone_event(MirEvent const& event);
 void transform_positions(MirEvent& event, mir::geometry::Displacement const& movement);
+void set_window_id(MirEvent& event, int window_id);
 
+EventUPtr make_start_drag_and_drop_event(frontend::SurfaceId const& surface_id, std::vector<uint8_t> const& handle);
+void set_drag_and_drop_handle(MirEvent& event, std::vector<uint8_t> const& handle);
 }
 }
 
