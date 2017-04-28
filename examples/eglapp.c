@@ -512,6 +512,20 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     ok = eglMakeCurrent(egldisplay, eglsurface, eglsurface, eglctx);
     CHECK(ok, "Can't eglMakeCurrent");
 
+    EGLint buf_width, buf_height;
+    if (eglQuerySurface(egldisplay, eglsurface, EGL_WIDTH, &buf_width) &&
+        eglQuerySurface(egldisplay, eglsurface, EGL_HEIGHT, &buf_height))
+    {
+        /*
+         * Mir reserves the right to ignore our initial window dimensions and
+         * resize to whatever it likes. So query what we ended up with for the
+         * first frame...
+         * FIXME: ensure the first frame resize event has completed before now
+         */
+        *width = buf_width;
+        *height = buf_height;
+    }
+
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
     signal(SIGHUP, shutdown);
