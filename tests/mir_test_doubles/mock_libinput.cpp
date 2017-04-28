@@ -278,32 +278,32 @@ double libinput_event_touch_get_y_transformed(libinput_event_touch* event, uint3
     return global_libinput->libinput_event_touch_get_y_transformed(event, height);
 }
 
-double libinput_event_touch_get_major(libinput_event_touch* event)
+extern "C" double libinput_event_touch_get_major(libinput_event_touch* event)
 {
     return global_libinput->libinput_event_touch_get_major(event);
 }
 
-double libinput_event_touch_get_minor(libinput_event_touch* event)
+extern "C" double libinput_event_touch_get_minor(libinput_event_touch* event)
 {
     return global_libinput->libinput_event_touch_get_minor(event);
 }
 
-double libinput_event_touch_get_major_transformed(libinput_event_touch* event, uint32_t width, uint32_t height)
+extern "C" double libinput_event_touch_get_major_transformed(libinput_event_touch* event, uint32_t width, uint32_t height)
 {
     return global_libinput->libinput_event_touch_get_major_transformed(event, width, height);
 }
 
-double libinput_event_touch_get_minor_transformed(libinput_event_touch* event, uint32_t width, uint32_t height)
+extern "C" double libinput_event_touch_get_minor_transformed(libinput_event_touch* event, uint32_t width, uint32_t height)
 {
     return global_libinput->libinput_event_touch_get_minor_transformed(event, width, height);
 }
 
-double libinput_event_touch_get_pressure(libinput_event_touch* event)
+extern "C" double libinput_event_touch_get_pressure(libinput_event_touch* event)
 {
     return global_libinput->libinput_event_touch_get_pressure(event);
 }
 
-double libinput_event_touch_get_orientation(libinput_event_touch* event)
+extern "C" double libinput_event_touch_get_orientation(libinput_event_touch* event)
 {
     return global_libinput->libinput_event_touch_get_orientation(event);
 }
