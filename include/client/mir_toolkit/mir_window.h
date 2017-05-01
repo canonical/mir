@@ -710,7 +710,7 @@ void mir_window_set_event_handler(MirWindow* window,
  *   \param[in] window The window
  */
 MirBufferStream* mir_window_get_buffer_stream(MirWindow* window)
-    __attribute__((deprecated("Use mir_window_spec_set_cursor_name/mir_window_spec_set_cursor_render_surface instead")));
+    __attribute__((deprecated("Use mir_window_spec_add_render_surface during window creation/modification instead")));
 /**
  * Retrieve a text description of the error. The returned string is owned by
  * the library and remains valid until the window or the associated
