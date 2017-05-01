@@ -341,6 +341,39 @@ TEST_F(ClientLatency, average_swap_buffers_sync_latency_is_one_frame)
     EXPECT_NEAR(1.0f, average_latency, error_margin);
 }
 
+TEST_F(ClientLatency, manual_vsync_latency_is_one_frame)
+{
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    auto stream = mir_window_get_buffer_stream(surface);
+#pragma GCC diagnostic pop
+    mir_buffer_stream_set_swapinterval(stream, 0);
+    stats.swap_interval = 0;
+
+    auto const deadline = steady_clock::now() + 60s;
+
+    while (stats.frames_composited() < test_frames &&
+           steady_clock::now() < deadline)
+    {
+        microseconds const delay{
+            mir_buffer_stream_get_microseconds_till_vblank(stream)};
+        std::this_thread::sleep_until(steady_clock::now() + delay);
+
+        auto submission_id = mir_debug_window_current_buffer_id(surface);
+        stats.record_submission(submission_id);
+        mir_buffer_stream_swap_buffers_sync(stream);
+    }
+
+    ASSERT_THAT(stats.frames_composited(), Ge(test_frames));
+
+    if (server.get_options()->get<bool>(mtd::logging_opt))
+        display.group.dump_latency();
+
+    auto average_latency = display.group.average_latency();
+
+    EXPECT_NEAR(1.0f, average_latency, error_margin);
+}
+
 TEST_F(ClientLatency, max_latency_is_limited_to_nbuffers)
 {
 #pragma GCC diagnostic push
