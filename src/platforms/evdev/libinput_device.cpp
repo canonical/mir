@@ -73,7 +73,15 @@ double orientation(libinput_event_touch*)
 template<typename T> auto load_function(void* lib, char const* sym)
 {
     T result{};
+    dlerror();
     (void*&)result = dlsym(lib, sym);
+    char const *error = dlerror();
+
+    if (error)
+        throw std::runtime_error(error);
+    if (!result)
+        throw std::runtime_error("no valid function address");
+
     return result;
 }
 }
@@ -369,7 +377,6 @@ void mie::LibInputDevice::update_contact_data(ContactData & data, MirTouchAction
     data.action = action;
     data.x = libinput_event_touch_get_x_transformed(touch, width);
     data.y = libinput_event_touch_get_y_transformed(touch, height);
-    libinput_event_touch_get_pressure(touch);
     data.major = contact_extension->get_touch_major(touch, width, height);
     data.minor = contact_extension->get_touch_minor(touch, width, height);
     data.pressure = contact_extension->get_pressure(touch);
