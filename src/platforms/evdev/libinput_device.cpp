@@ -70,11 +70,11 @@ double orientation(libinput_event_touch*)
     return 0;
 }
 
-template<typename T> auto load_function(void* lib, char const* sym)
+template<typename T> auto load_function(char const* sym)
 {
     T result{};
     dlerror();
-    (void*&)result = dlsym(lib, sym);
+    (void*&)result = dlsym(RTLD_DEFAULT, sym);
     char const *error = dlerror();
 
     if (error)
@@ -95,28 +95,14 @@ struct mie::LibInputDevice::ContactExtension
         constexpr const char orientation_sym[] = "libinput_event_touch_get_orientation";
         constexpr const char pressure_sym[] = "libinput_event_touch_get_pressure";
 
-        void* lib = nullptr;
-
-        Dl_info library_info{nullptr, nullptr, nullptr, nullptr};
-        Dl_info exec_info{nullptr, nullptr, nullptr, nullptr};
-        dladdr(dlsym(nullptr, "main"), &exec_info);
-        dladdr(reinterpret_cast<void*>(&libinput_event_keyboard_get_key), &library_info);
-
-        if (library_info.dli_fbase != exec_info.dli_fbase)
-        {
-            lib = dlopen(library_info.dli_fname, RTLD_NOW | RTLD_LOCAL);
-        }
         try
         {
-            get_touch_major = load_function<decltype(&touch_major)>(lib, touch_major_sym);
-            get_touch_minor = load_function<decltype(&touch_minor)>(lib, touch_minor_sym);
-            get_orientation = load_function<decltype(&orientation)>(lib, orientation_sym);
-            get_pressure = load_function<decltype(&pressure)>(lib, pressure_sym);
+            get_touch_major = load_function<decltype(&touch_major)>(touch_major_sym);
+            get_touch_minor = load_function<decltype(&touch_minor)>(touch_minor_sym);
+            get_orientation = load_function<decltype(&orientation)>(orientation_sym);
+            get_pressure = load_function<decltype(&pressure)>(pressure_sym);
         }
         catch(...) {}
-
-        if (lib)
-            dlclose(lib);
     }
 
     decltype(&touch_major) get_touch_major{&touch_major};
