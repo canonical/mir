@@ -31,6 +31,7 @@ typedef std::unique_lock<std::mutex> Lock;
 FrameClock::FrameClock(FrameClock::GetCurrentTime gct)
     : get_current_time{gct}
     , config_changed{false}
+    , phase{0}
     , period{0}
     , resync_callback{std::bind(&FrameClock::fallback_resync_callback, this)}
 {
@@ -61,7 +62,7 @@ PosixTimestamp FrameClock::fallback_resync_callback() const
     return period != period.zero() ? now - (now % period) : now;
 }
 
-PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
+PosixTimestamp FrameClock::next_frame_after(PosixTimestamp when) const
 {
     Lock lock(mutex);
     /*
@@ -70,7 +71,12 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
      * it has no physical screen to sync to. Hence not throttled at all.
      */
     if (period == period.zero())
-        return prev;
+        return when;
+
+    /* Phase correction in case 'when' isn't in phase: */
+    auto const prev = when - ((when % period) - phase);
+    /* Verify it's been corrected: */
+    assert(prev % period == phase);
 
     /*
      * Regardless of render times and scheduling delays, we should always
@@ -108,6 +114,8 @@ PosixTimestamp FrameClock::next_frame_after(PosixTimestamp prev) const
         lock.unlock();
         auto const server_frame = resync_callback();
         lock.lock();
+
+        phase = server_frame % period;
 
         /*
          * Avoid mismatches (which will throw) and ensure we're always
