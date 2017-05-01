@@ -264,7 +264,7 @@ int mir_buffer_stream_get_swapinterval(MirBufferStream* stream);
  * at least when it should sample its inputs/scene) so as to produce perfectly
  * smooth rendering.
  *
- * \note  Thus function is only needed for streams that have been configured
+ * \note  This function is only needed for streams that have been configured
  *        with a swap interval of zero. Streams with non-zero swap intervals
  *        already have accurate synchronization and throttling built in to the
  *        mir_buffer_stream_swap_buffers_sync() function.
