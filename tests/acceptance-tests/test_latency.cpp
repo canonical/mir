@@ -355,9 +355,8 @@ TEST_F(ClientLatency, manual_vsync_latency_is_one_frame)
     while (stats.frames_composited() < test_frames &&
            steady_clock::now() < deadline)
     {
-        microseconds const delay{
-            mir_buffer_stream_get_microseconds_till_vblank(stream)};
-        std::this_thread::sleep_until(steady_clock::now() + delay);
+        auto const us = mir_buffer_stream_get_microseconds_till_vblank(stream);
+        std::this_thread::sleep_for(microseconds(us));
 
         auto submission_id = mir_debug_window_current_buffer_id(surface);
         stats.record_submission(submission_id);
