@@ -182,7 +182,8 @@ private:
 
     std::unordered_set<MirWindow*> users;
     std::shared_ptr<FrameClock> frame_clock;
-    mir::time::PosixTimestamp last_vsync, last_swap;
+    mir::time::PosixTimestamp last_vsync;
+    mutable mir::time::PosixTimestamp next_vsync;
 };
 
 }

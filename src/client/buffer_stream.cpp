@@ -444,12 +444,13 @@ std::chrono::microseconds mcl::BufferStream::microseconds_till_vblank() const
 
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        last = last_swap;
+        last = last_vsync;
         clock = frame_clock;
     }
 
     if (clock)
     {
+        // We are unlocked because in future this call might ping the server:
         mir::time::PosixTimestamp const target = clock->next_frame_after(last);
         auto const now = mir::time::PosixTimestamp::now(target.clock_id);
         if (target > now)
@@ -457,6 +458,9 @@ std::chrono::microseconds mcl::BufferStream::microseconds_till_vblank() const
             ret = std::chrono::duration_cast<std::chrono::microseconds>(
                   target - now);
         }
+
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        next_vsync = target;
     }
 
     return ret;
@@ -530,7 +534,8 @@ void mcl::BufferStream::swap_buffers_sync()
     for (int i = 0; i < interval; ++i)
         wait_for_vsync();
 
-    last_swap = interval ? last_vsync : last_swap.now(last_swap.clock_id);
+    if (!interval)  // wait_for_vsync wasn't called to update last_vsync
+        last_vsync = next_vsync;
 }
 
 void mcl::BufferStream::request_and_wait_for_configure(MirWindowAttrib attrib, int interval)
