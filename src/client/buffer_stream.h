@@ -137,6 +137,8 @@ public:
     MirRenderSurface* render_surface() const override;
 #pragma GCC diagnostic pop
 
+    std::chrono::microseconds microseconds_till_vblank() const;
+
 protected:
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;
@@ -180,7 +182,7 @@ private:
 
     std::unordered_set<MirWindow*> users;
     std::shared_ptr<FrameClock> frame_clock;
-    mir::time::PosixTimestamp last_vsync;
+    mir::time::PosixTimestamp last_vsync, last_swap;
 };
 
 }

@@ -82,6 +82,7 @@ public:
     MirWaitHandle* set_swap_interval(int interval) override;
     void adopted_by(MirWindow*) override;
     void unadopted_by(MirWindow*) override;
+    std::chrono::microseconds microseconds_till_vblank() const override;
     void set_buffer_cache_size(unsigned int) override;
 
     EGLNativeWindowType egl_native_window() override;

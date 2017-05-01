@@ -436,6 +436,32 @@ MirWindowParameters mcl::BufferStream::get_parameters() const
 }
 #pragma GCC diagnostic pop
 
+std::chrono::microseconds mcl::BufferStream::microseconds_till_vblank() const
+{
+    std::chrono::microseconds ret(0);
+    mir::time::PosixTimestamp last;
+    std::shared_ptr<FrameClock> clock;
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        last = last_swap;
+        clock = frame_clock;
+    }
+
+    if (clock)
+    {
+        mir::time::PosixTimestamp const target = clock->next_frame_after(last);
+        auto const now = mir::time::PosixTimestamp::now(target.clock_id);
+        if (target > now)
+        {
+            ret = std::chrono::duration_cast<std::chrono::microseconds>(
+                  target - now);
+        }
+    }
+
+    return ret;
+}
+
 void mcl::BufferStream::wait_for_vsync()
 {
     mir::time::PosixTimestamp last, target;
@@ -503,6 +529,8 @@ void mcl::BufferStream::swap_buffers_sync()
     int interval = swap_interval();
     for (int i = 0; i < interval; ++i)
         wait_for_vsync();
+
+    last_swap = interval ? last_vsync : last_swap.now(last_swap.clock_id);
 }
 
 void mcl::BufferStream::request_and_wait_for_configure(MirWindowAttrib attrib, int interval)

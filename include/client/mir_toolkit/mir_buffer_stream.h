@@ -256,6 +256,26 @@ MirWaitHandle* mir_buffer_stream_set_swapinterval(MirBufferStream* stream, int i
 int mir_buffer_stream_get_swapinterval(MirBufferStream* stream);
 
 /**
+ * Query the approximate time interval in microseconds until the next vblank
+ * for a given buffer stream (actually the next vblank for the monitor deemed
+ * most relevant to the window using the buffer stream). The result of
+ * (current_time + mir_buffer_stream_get_microseconds_till_vblank()) is the
+ * precise time at which the client should start rendering the next frame (or
+ * at least when it should sample its inputs/scene) so as to produce perfectly
+ * smooth rendering.
+ *
+ * \note  Thus function is only needed for streams that have been configured
+ *        with a swap interval of zero. Streams with non-zero swap intervals
+ *        already have accurate synchronization and throttling built in to the
+ *        mir_buffer_stream_swap_buffers_sync() function.
+ *
+ *   \param [in] stream   The buffer stream
+ *   \return              Time in microseconds to the next vblank for the
+ *                        given buffer stream (may be as low as zero).
+ */
+unsigned long mir_buffer_stream_get_microseconds_till_vblank(MirBufferStream const* stream);
+
+/**
  * Set the physical size of the buffers provided by the buffer stream.
  *
  * \warning: This does not affect the size of the current buffer.

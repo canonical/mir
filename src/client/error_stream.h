@@ -45,6 +45,7 @@ public:
     MirWaitHandle* set_swap_interval(int interval) override;
     void adopted_by(MirWindow*) override;
     void unadopted_by(MirWindow*) override;
+    std::chrono::microseconds microseconds_till_vblank() const override;
     MirNativeBuffer* get_current_buffer_package() override;
     MirPlatformType platform_type() override;
     frontend::BufferStreamId rpc_id() const override;
