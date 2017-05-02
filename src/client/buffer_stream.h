@@ -137,7 +137,7 @@ public:
     MirRenderSurface* render_surface() const override;
 #pragma GCC diagnostic pop
 
-    std::chrono::microseconds microseconds_till_vblank() const;
+    std::chrono::microseconds microseconds_till_vblank() const override;
 
 protected:
     BufferStream(BufferStream const&) = delete;
