@@ -185,7 +185,7 @@ struct BufferDepository
         return current->rpc_id();
     }
 
-    MirWaitHandle* submit(std::function<void()> const& done, MirPixelFormat, int)
+    MirWaitHandle* submit(std::function<void()> const& done)
     {
         std::unique_lock<std::mutex> lk(mutex);
         if (!current)
@@ -389,11 +389,8 @@ MirWaitHandle* mcl::BufferStream::swap_buffers(std::function<void()> const& done
 
     secured_region.reset();
 
-    // TODO: We can fix the strange "ID casting" used below in the second phase
-    // of buffer stream which generalizes and clarifies the server side logic.
     lock.unlock();
-    return buffer_depository->submit(done,
-        static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), protobuf_bs->id().value());
+    return buffer_depository->submit(done);
 }
 
 std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
