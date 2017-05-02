@@ -38,6 +38,7 @@
 
 #include <libinput.h>
 #include <linux/input.h>  // only used to get constants for input reports
+#include <dlfcn.h>
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <cstring>
@@ -50,8 +51,68 @@ namespace mi = mir::input;
 namespace mie = mi::evdev;
 using namespace std::literals::chrono_literals;
 
+namespace
+{
+double touch_major(libinput_event_touch*, uint32_t, uint32_t)
+{
+    return 8;
+}
+double touch_minor(libinput_event_touch*, uint32_t, uint32_t)
+{
+    return 6;
+}
+double pressure(libinput_event_touch*)
+{
+    return 0.8;
+}
+double orientation(libinput_event_touch*)
+{
+    return 0;
+}
+
+template<typename T> auto load_function(char const* sym)
+{
+    T result{};
+    dlerror();
+    (void*&)result = dlsym(RTLD_DEFAULT, sym);
+    char const *error = dlerror();
+
+    if (error)
+        throw std::runtime_error(error);
+    if (!result)
+        throw std::runtime_error("no valid function address");
+
+    return result;
+}
+}
+
+struct mie::LibInputDevice::ContactExtension
+{
+    ContactExtension()
+    {
+        constexpr const char touch_major_sym[] = "libinput_event_touch_get_major_transformed";
+        constexpr const char touch_minor_sym[] = "libinput_event_touch_get_minor_transformed";
+        constexpr const char orientation_sym[] = "libinput_event_touch_get_orientation";
+        constexpr const char pressure_sym[] = "libinput_event_touch_get_pressure";
+
+        try
+        {
+            get_touch_major = load_function<decltype(&touch_major)>(touch_major_sym);
+            get_touch_minor = load_function<decltype(&touch_minor)>(touch_minor_sym);
+            get_orientation = load_function<decltype(&orientation)>(orientation_sym);
+            get_pressure = load_function<decltype(&pressure)>(pressure_sym);
+        }
+        catch(...) {}
+    }
+
+    decltype(&touch_major) get_touch_major{&touch_major};
+    decltype(&touch_minor) get_touch_minor{&touch_minor};
+    decltype(&pressure) get_pressure{&pressure};
+    decltype(&orientation) get_orientation{&orientation};
+};
+
 mie::LibInputDevice::LibInputDevice(std::shared_ptr<mi::InputReport> const& report, LibInputDevicePtr dev)
-    : report{report}, pointer_pos{0, 0}, button_state{0}
+    : contact_extension{std::make_unique<ContactExtension>()}, report{report}, pointer_pos{0, 0}, button_state{0}
 {
     add_device_of_group(std::move(dev));
 }
@@ -300,11 +361,11 @@ void mie::LibInputDevice::update_contact_data(ContactData & data, MirTouchAction
     uint32_t height = info.output_size.height.as_int();
 
     data.action = action;
-    data.pressure = libinput_event_touch_get_pressure(touch);
     data.x = libinput_event_touch_get_x_transformed(touch, width);
     data.y = libinput_event_touch_get_y_transformed(touch, height);
-    data.major = libinput_event_touch_get_major_transformed(touch, width, height);
-    data.minor = libinput_event_touch_get_minor_transformed(touch, width, height);
+    data.major = contact_extension->get_touch_major(touch, width, height);
+    data.minor = contact_extension->get_touch_minor(touch, width, height);
+    data.pressure = contact_extension->get_pressure(touch);
 
     info.transform_to_scene(data.x, data.y);
 }
