@@ -94,6 +94,9 @@ mg::Frame mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
         DRM_EVENT_CONTEXT_VERSION,  /* .version */
         0,  /* .vblank_handler */
         page_flip_handler  /* .page_flip_handler */
+#if DRM_EVENT_CONTEXT_VERSION >= 3
+        , NULL /* .page_flip_handler2 */
+#endif
     };
     static std::thread::id const invalid_tid;
 
