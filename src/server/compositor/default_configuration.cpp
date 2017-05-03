@@ -24,7 +24,6 @@
 #include "multi_threaded_compositor.h"
 #include "gl/renderer_factory.h"
 #include "compositing_screencast.h"
-#include "timeout_frame_dropping_policy_factory.h"
 #include "mir/main_loop.h"
 
 #include "mir/frontend/screencast.h"
@@ -42,19 +41,7 @@ mir::DefaultServerConfiguration::the_buffer_stream_factory()
     return buffer_stream_factory(
         [this]()
         {
-            return std::make_shared<mc::BufferStreamFactory>(
-                the_frame_dropping_policy_factory());
-        });
-}
-
-std::shared_ptr<mc::FrameDroppingPolicyFactory>
-mir::DefaultServerConfiguration::the_frame_dropping_policy_factory()
-{
-    return frame_dropping_policy_factory(
-        [this]()
-        {
-            return std::make_shared<mc::TimeoutFrameDroppingPolicyFactory>(the_main_loop(),
-                                                                           std::chrono::milliseconds{100});
+            return std::make_shared<mc::BufferStreamFactory>();
         });
 }
 

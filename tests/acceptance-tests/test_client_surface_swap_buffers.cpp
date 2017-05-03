@@ -26,6 +26,7 @@
 #include "mir/graphics/cursor.h"
 
 #include <gtest/gtest.h>
+#include <thread>
 
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
@@ -36,11 +37,6 @@ using namespace testing;
 
 namespace
 {
-void swap_buffers_callback(MirBufferStream*, void* ctx)
-{
-    auto buffers_swapped = static_cast<mt::Signal*>(ctx);
-    buffers_swapped->raise();
-}
 
 struct SurfaceSwapBuffers : mtf::ConnectedClientWithAWindow
 {
@@ -64,13 +60,25 @@ TEST_F(SurfaceSwapBuffers, does_not_block_when_surface_is_not_composited)
         mt::Signal buffers_swapped;
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_buffer_stream_swap_buffers(mir_window_get_buffer_stream(window), swap_buffers_callback, &buffers_swapped);
+        auto bs = mir_window_get_buffer_stream(window);
 #pragma GCC diagnostic pop
+
+        /*
+         * Since we're using client-side vsync now, it should always return on
+         * the swap interval regardless of whether the server actually used
+         * the frame.
+         */
+        std::thread attempt_swap([bs, &buffers_swapped]{
+            mir_buffer_stream_swap_buffers_sync(bs);
+            buffers_swapped.raise();
+        });
+
         /*
          * ASSERT instead of EXPECT, since if we continue we will block in future
          * mir client calls (e.g mir_connection_release).
          */
         ASSERT_TRUE(buffers_swapped.wait_for(std::chrono::seconds{20}));
+        attempt_swap.join();
     }
 }
 

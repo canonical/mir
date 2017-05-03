@@ -36,14 +36,10 @@ namespace frontend { class ClientBuffers; }
 namespace compositor
 {
 class Schedule;
-class FrameDroppingPolicyFactory;
-class FrameDroppingPolicy;
 class Stream : public BufferStream
 {
 public:
-    Stream(
-        FrameDroppingPolicyFactory const& policy_factory,
-        std::shared_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
+    Stream(std::shared_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
     ~Stream();
 
     void submit_buffer(std::shared_ptr<graphics::Buffer> const& buffer) override;
@@ -67,20 +63,9 @@ public:
 
 private:
     enum class ScheduleMode;
-    struct DroppingCallback : mir::LockableCallback
-    {
-        DroppingCallback(Stream* stream);
-        void operator()() override;
-        void lock() override;
-        void unlock() override;
-        Stream* stream;
-        std::unique_lock<std::mutex> guard_lock;
-    };
     void transition_schedule(std::shared_ptr<Schedule>&& new_schedule, std::lock_guard<std::mutex> const&);
-    void drop_frame();
 
     std::mutex mutable mutex;
-    std::unique_ptr<compositor::FrameDroppingPolicy> drop_policy;
     ScheduleMode schedule_mode;
     std::shared_ptr<Schedule> schedule;
     std::shared_ptr<frontend::ClientBuffers> const buffers;
