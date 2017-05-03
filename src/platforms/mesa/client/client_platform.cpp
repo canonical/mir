@@ -151,12 +151,7 @@ void allocate_buffer_gbm_legacy(
         available_callback, available_context);
 }
 
-MirBuffer* allocate_buffer_gbm_sync(
-    MirConnection* connection,
-    uint32_t width, uint32_t height,
-    uint32_t gbm_pixel_format,
-    uint32_t gbm_bo_flags)
-try
+namespace
 {
     struct BufferSync
     {
@@ -177,11 +172,25 @@ try
         std::mutex mutex;
         std::condition_variable cv;
         MirBuffer* buffer = nullptr;
-    } sync;
+    };
 
+    void allocate_buffer_gbm_sync_cb(MirBuffer* b, void* context)
+    {
+        reinterpret_cast<BufferSync*>(context)->set_buffer(b);
+    }
+}
+
+MirBuffer* allocate_buffer_gbm_sync(
+    MirConnection* connection,
+    uint32_t width, uint32_t height,
+    uint32_t gbm_pixel_format,
+    uint32_t gbm_bo_flags)
+try
+{
+    BufferSync sync;
     allocate_buffer_gbm(
         connection, width, height, gbm_pixel_format, gbm_bo_flags,
-        [](auto* b, auto* context){ reinterpret_cast<BufferSync*>(context)->set_buffer(b); }, &sync);
+        &allocate_buffer_gbm_sync_cb, &sync);
     return sync.wait_for_buffer();
 }
 catch (...)

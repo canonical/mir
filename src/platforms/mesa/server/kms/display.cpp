@@ -557,8 +557,8 @@ void mgm::Display::configure_locked(
                     bounding_rect.size.height.as_uint32_t()};
 
                 auto const physical_size = transformation * logical_size;
-                uint32_t width = abs(physical_size.x);
-                uint32_t height = abs(physical_size.y);
+                uint32_t width = abs(int(physical_size.x));
+                uint32_t height = abs(int(physical_size.y));
 
                 for (auto const& group : kms_output_groups)
                 {
