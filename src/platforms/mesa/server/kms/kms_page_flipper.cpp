@@ -26,6 +26,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <chrono>
+#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -89,15 +90,11 @@ bool mgm::KMSPageFlipper::schedule_flip(uint32_t crtc_id,
 
 mg::Frame mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
 {
-    static drmEventContext evctx =
-    {
-        DRM_EVENT_CONTEXT_VERSION,  /* .version */
-        0,  /* .vblank_handler */
-        page_flip_handler  /* .page_flip_handler */
-#if DRM_EVENT_CONTEXT_VERSION >= 3
-        , NULL /* .page_flip_handler2 */
-#endif
-    };
+    drmEventContext evctx;
+    memset(&evctx, 0, sizeof evctx);
+    evctx.version = 2;  /* We only support the old page_flip_handler */
+    evctx.page_flip_handler = &page_flip_handler;
+
     static std::thread::id const invalid_tid;
 
     {
