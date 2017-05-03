@@ -92,7 +92,7 @@ mg::Frame mgm::KMSPageFlipper::wait_for_flip(uint32_t crtc_id)
 {
     drmEventContext evctx;
     memset(&evctx, 0, sizeof evctx);
-    evctx.version = 2;  /* We only support the old page_flip_handler */
+    evctx.version = 2;  // We only support the old v2 page_flip_handler
     evctx.page_flip_handler = &page_flip_handler;
 
     static std::thread::id const invalid_tid;
