@@ -336,7 +336,7 @@ Description: Display server for Ubuntu - shared library
 # Longer-term these drivers should move out-of-tree
 # Yes, this really should be x12. An unfortunate side-effect of our package
 # naming scheme...
-Package: mir-platform-graphics-mesa-x8
+Package: mir-platform-graphics-mesa-x12
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -350,7 +350,7 @@ Description: Display server for Ubuntu - platform library for X11 Mesa
  Contains the shared libraries required for the Mir server to interact with
  the X11 platform using the Mesa drivers.
 
-Package: mir-platform-graphics-mesa-kms8
+Package: mir-platform-graphics-mesa-kms12
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -378,7 +378,7 @@ Description: Display server for Ubuntu - platform library for Android
  Contains the shared libraries required for the Mir server to interact with
  the hardware platform using the Android drivers.
 
-Package: mir-platform-input-evdev5
+Package: mir-platform-input-evdev6
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -440,10 +440,10 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-mesa-kms8,
-         mir-platform-graphics-mesa-x8,
+         mir-platform-graphics-mesa-kms12,
+         mir-platform-graphics-mesa-x12,
          mir-client-platform-mesa5,
-         mir-platform-input-evdev5,
+         mir-platform-input-evdev6,
 Description: Display server for Ubuntu - desktop driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -459,7 +459,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          mir-platform-graphics-android12,
          mir-client-platform-android5,
-         mir-platform-input-evdev5,
+         mir-platform-input-evdev6,
 Description: Display server for Ubuntu - android driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
