@@ -25,9 +25,9 @@
 #include "src/client/connection_surface_map.h"
 #include "src/client/presentation_chain.h"
 
-#include "mir/client_platform.h"
-#include "mir/client_platform_factory.h"
-#include "mir/client_buffer_factory.h"
+#include "mir/client/client_platform.h"
+#include "mir/client/client_platform_factory.h"
+#include "mir/client/client_buffer_factory.h"
 #include "mir/raii.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/events/event_builders.h"

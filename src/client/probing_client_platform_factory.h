@@ -3,7 +3,7 @@
 
 #include <vector>
 
-#include "mir/client_platform_factory.h"
+#include "mir/client/client_platform_factory.h"
 #include "mir/shared_library.h"
 
 namespace mir

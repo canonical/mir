@@ -50,11 +50,13 @@ set(server_common_include_dirs
 set(server_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/common/server/symbols.map)
 
 set(client_common_include_dirs
+  ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/client
   ${CMAKE_CURRENT_SOURCE_DIR}/common/client
 )
 
 # TODO client platform implementations shouldn't depend on private APIs
+# - only needed for Hardware Buffer Stream in mesa client
 set(client_common_include_dirs
   ${client_common_include_dirs}
   ${PROJECT_SOURCE_DIR}/src/include/client

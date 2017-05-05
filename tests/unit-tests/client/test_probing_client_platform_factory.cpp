@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir/client_platform.h"
+#include "mir/client/client_platform.h"
 #include "src/client/probing_client_platform_factory.h"
 #include "src/server/report/null_report_factory.h"
 

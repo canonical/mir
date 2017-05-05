@@ -25,7 +25,7 @@
 #include "render_surface.h"
 
 #include "mir_toolkit/mir_buffer.h"
-#include "mir/client_buffer.h"
+#include "mir/client/client_buffer.h"
 
 #include "mir/uncaught.h"
 #include "mir/require.h"

@@ -17,7 +17,7 @@
  */
 
 #include "src/client/screencast_stream.h"
-#include "mir/client_platform.h"
+#include "mir/client/client_platform.h"
 #include "mir/test/doubles/null_client_buffer.h"
 #include "mir/test/doubles/mock_client_buffer_factory.h"
 #include "mir/test/doubles/mock_protobuf_server.h"

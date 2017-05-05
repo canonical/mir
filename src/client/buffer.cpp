@@ -16,7 +16,7 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/client_buffer.h"
+#include "mir/client/client_buffer.h"
 #include "buffer.h"
 #include <boost/throw_exception.hpp>
 

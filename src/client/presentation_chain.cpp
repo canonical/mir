@@ -16,8 +16,8 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/client_buffer_factory.h"
-#include "mir/client_buffer.h"
+#include "mir/client/client_buffer_factory.h"
+#include "mir/client/client_buffer.h"
 #include "rpc/mir_display_server.h"
 #include "presentation_chain.h"
 #include "protobuf_to_native_buffer.h"

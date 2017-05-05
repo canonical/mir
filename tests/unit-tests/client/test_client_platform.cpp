@@ -16,15 +16,15 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/client_platform.h"
-#include "mir/egl_native_surface.h"
+#include "mir/client/client_platform.h"
+#include "mir/client/egl_native_surface.h"
 
 #include "mir/test/doubles/mock_client_context.h"
 #include "mir/test/doubles/mock_egl_native_surface.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/stub_platform_helpers.h"
 
-#include "mir/client_platform_factory.h"
+#include "mir/client/client_platform_factory.h"
 
 #include "mir/shared_library.h"
 
