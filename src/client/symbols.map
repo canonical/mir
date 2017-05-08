@@ -612,8 +612,9 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27
     mir_touchscreen_config_set_output_id;
 } MIR_CLIENT_0.26.1;
 
-MIR_CLIENT_0.28 {  # New functions in Mir 0.28
+MIR_CLIENT_0.28 {  # New functions in Mir 0.28 (or 1.0)
   global:
+    mir_buffer_stream_get_microseconds_till_vblank;
     mir_output_has_custom_logical_size;
     mir_output_set_logical_size;
 } MIR_CLIENT_0.27;

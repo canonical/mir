@@ -106,6 +106,12 @@ void mcl::ErrorStream::adopted_by(MirWindow*)
 void mcl::ErrorStream::unadopted_by(MirWindow*)
 {
 }
+
+std::chrono::microseconds mcl::ErrorStream::microseconds_till_vblank() const
+{
+    return std::chrono::microseconds::zero();
+}
+
 MirNativeBuffer* mcl::ErrorStream::get_current_buffer_package()
 {
     BOOST_THROW_EXCEPTION(std::runtime_error(error));

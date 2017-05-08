@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <time.h>
+#include <errno.h>
 #include <string.h>
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
@@ -38,6 +39,7 @@ static EGLDisplay egldisplay;
 static EGLSurface eglsurface;
 static volatile sig_atomic_t running = 0;
 static double refresh_rate = 0.0;
+static mir_eglapp_bool alt_vsync = 0;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -84,6 +86,15 @@ mir_eglapp_bool mir_eglapp_running(void)
     return running;
 }
 
+/* Apparently usleep is deprecated so we write own own... */
+static void micro_sleep(unsigned long usec)
+{
+    struct timespec ts = {0, usec * 1000};
+    while (nanosleep(&ts, &ts) && errno == EINTR)
+    {
+    }
+}
+
 void mir_eglapp_swap_buffers(void)
 {
     EGLint width, height;
@@ -92,6 +103,11 @@ void mir_eglapp_swap_buffers(void)
         return;
 
     eglSwapBuffers(egldisplay, eglsurface);
+    if (alt_vsync)
+    {
+        MirBufferStream* bs = mir_window_get_buffer_stream(window);
+        micro_sleep(mir_buffer_stream_get_microseconds_till_vblank(bs));
+    }
 
     /*
      * Querying the surface (actually the current buffer) dimensions here is
@@ -347,6 +363,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
         {"-h", "!", &help, "Show this help text"},
         {"-m <socket>", "=", &mir_socket, "Mir server socket"},
         {"-n", "!", &no_vsync, "Don't sync to vblank"},
+        {"-v", "!", &alt_vsync, "Sync to vblank using the alternate method (manual timing)"},
         {"-o <id>", "%u", &output_id, "Force placement on output monitor ID"},
         {"-q", "!", &quiet, "Quiet mode (no messages output)"},
         {"-s <width>x<height>", "=", &dims, "Force window size"},
@@ -372,7 +389,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
         return 0;
     }
 
-    if (no_vsync)
+    if (no_vsync || alt_vsync)
         swapinterval = 0;
 
     if (dims)
