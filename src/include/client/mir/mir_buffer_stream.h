@@ -28,6 +28,7 @@
 #include "mir_toolkit/client_types.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
+#include <chrono>
 #include <memory>
 #include <functional>
 #include <EGL/eglplatform.h>
@@ -94,6 +95,7 @@ public:
     virtual MirWaitHandle* set_swap_interval(int interval) = 0;
     virtual void adopted_by(MirWindow*) = 0;
     virtual void unadopted_by(MirWindow*) = 0;
+    virtual std::chrono::microseconds microseconds_till_vblank() const = 0;
 
     virtual MirNativeBuffer* get_current_buffer_package() = 0;
     virtual MirPlatformType platform_type() = 0;

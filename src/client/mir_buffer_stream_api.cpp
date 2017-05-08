@@ -251,6 +251,13 @@ catch (std::exception const& ex)
     return -1;
 }
 
+unsigned long mir_buffer_stream_get_microseconds_till_vblank(
+    MirBufferStream const* stream)
+{
+    mir::require(stream);
+    return stream->microseconds_till_vblank().count();
+}
+
 void mir_buffer_stream_set_size(MirBufferStream* stream, int width, int height)
 try
 {
