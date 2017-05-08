@@ -861,7 +861,6 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.27 {
     mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
     mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     mir::DefaultServerConfiguration::the_focus_controller*;
-    mir::DefaultServerConfiguration::the_frame_dropping_policy_factory*;
     mir::DefaultServerConfiguration::the_frontend_display_changer*;
     mir::DefaultServerConfiguration::the_frontend_shell*;
     mir::DefaultServerConfiguration::the_gl_config*;

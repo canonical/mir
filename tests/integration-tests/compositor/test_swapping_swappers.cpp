@@ -16,7 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 #include "multithread_harness.h"
 
 #include "src/server/compositor/stream.h"
@@ -34,7 +33,6 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mt = mir::testing;
 namespace geom = mir::geometry;
-namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -43,8 +41,7 @@ struct SwapperSwappingStress : public ::testing::Test
 {
     void SetUp()
     {
-        mtd::StubFrameDroppingPolicyFactory policy_factory;
-        stream = std::make_shared<mc::Stream>(policy_factory,
+        stream = std::make_shared<mc::Stream>(
             std::make_shared<mc::BufferMap>(nullptr),
             geom::Size{380, 210}, mir_pixel_format_abgr_8888);
     }

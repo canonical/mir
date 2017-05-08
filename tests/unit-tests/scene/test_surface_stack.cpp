@@ -31,7 +31,6 @@
 #include "mir/test/doubles/stub_buffer_stream_factory.h"
 #include "mir/test/doubles/stub_renderable.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
-#include "mir/test/doubles/stub_frame_dropping_policy_factory.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -300,8 +299,7 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
     };
 
     auto buffers = std::make_shared<StubBuffers>();
-    mtd::StubFrameDroppingPolicyFactory factory;
-    auto stream = std::make_shared<mc::Stream>(factory, buffers, geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888);
+    auto stream = std::make_shared<mc::Stream>(buffers, geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888);
 
     auto surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),

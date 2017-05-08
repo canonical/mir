@@ -26,7 +26,6 @@
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display.h"
-#include "mir/compositor/frame_dropping_policy.h"
 
 #include <cassert>
 #include <memory>
@@ -36,11 +35,8 @@ namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
 
-mc::BufferStreamFactory::BufferStreamFactory(
-    std::shared_ptr<mc::FrameDroppingPolicyFactory> const& policy_factory) :
-    policy_factory{policy_factory}
+mc::BufferStreamFactory::BufferStreamFactory()
 {
-    assert(policy_factory);
 }
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
@@ -55,7 +51,6 @@ std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
     int, mg::BufferProperties const& buffer_properties)
 {
     return std::make_shared<mc::Stream>(
-        *policy_factory,
         buffers,
         buffer_properties.size, buffer_properties.format);
 }

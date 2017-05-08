@@ -36,12 +36,19 @@ namespace mt = mir::test;
 namespace mcl = mir::client;
 namespace mtd = mir::test::doubles;
 
+namespace
+{
+
 std::unique_ptr<mir::Fd> fd = nullptr;
 int get_fence(MirBuffer*)
 {
     if (fd)
         return *fd;
     return -1;
+}
+
+void null_connected_callback(MirConnection*, void*)
+{
 }
 
 struct TestConnectionConfiguration : mir::client::DefaultConnectionConfiguration
@@ -110,6 +117,8 @@ struct ServerTool : mt::StubServerTool
     }
 };
 
+}
+
 struct HostBuffer : Test
 {
     HostBuffer()
@@ -133,7 +142,7 @@ TEST_F(HostBuffer, does_not_own_fd_when_accessing_fence)
     fd = std::make_unique<mir::Fd>( fileno(tmpfile()) );
 
     MirConnection connection{*config};
-    connection.connect("", [](auto*, auto*){}, nullptr)->wait_for_all();
+    connection.connect("", &null_connected_callback, nullptr)->wait_for_all();
     mgn::HostBuffer buffer(&connection, mir::geometry::Size{1,1}, mir_pixel_format_abgr_8888);
     {
         auto fence = buffer.fence();
