@@ -3,6 +3,7 @@ mir (0.26.3-0ubuntu1) UNRELEASED; urgency=medium
   * New upstream release 0.26.3 (https://launchpad.net/mir/+milestone/0.26.3)
     - Enhancements:
       . Make deprecations optional (and default to off for builds on 16.04 LTS)
+      . Added support for building on Ubuntu 17.10 artful.
     - Bugs fixed:
       . unity-system-compositor crashed with SIGSEGV in
         libinput_device_config_accel_is_available() from
