@@ -296,7 +296,7 @@ Description: Display Server for Ubuntu - stress tests and other test tools
  Contains a tool for stress testing the Mir display server
 
 Package: mir-android-diagnostics
-Architecture: i386 amd64 armhf arm64
+Architecture: i386 amd64 armhf
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
          ${shlibs:Depends},
@@ -366,7 +366,7 @@ Description: Display server for Ubuntu - platform library for KMS Mesa
 
 Package: mir-platform-graphics-android12
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: i386 amd64 armhf
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -422,7 +422,7 @@ Description: Display server for Ubuntu - client platform library for Mesa develo
 
 Package: mir-client-platform-android5
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: i386 amd64 armhf
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -453,7 +453,7 @@ Description: Display server for Ubuntu - desktop driver metapackage
 
 Package: mir-graphics-drivers-android
 Section: libs
-Architecture: i386 amd64 armhf arm64
+Architecture: i386 amd64 armhf
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
