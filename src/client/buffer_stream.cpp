@@ -185,7 +185,7 @@ struct BufferDepository
         return current->rpc_id();
     }
 
-    MirWaitHandle* submit(std::function<void()> const& done, MirPixelFormat, int)
+    MirWaitHandle* submit(std::function<void()> const& done)
     {
         std::unique_lock<std::mutex> lk(mutex);
         if (!current)
@@ -389,11 +389,8 @@ MirWaitHandle* mcl::BufferStream::swap_buffers(std::function<void()> const& done
 
     secured_region.reset();
 
-    // TODO: We can fix the strange "ID casting" used below in the second phase
-    // of buffer stream which generalizes and clarifies the server side logic.
     lock.unlock();
-    return buffer_depository->submit(done,
-        static_cast<MirPixelFormat>(protobuf_bs->pixel_format()), protobuf_bs->id().value());
+    return buffer_depository->submit(done);
 }
 
 std::shared_ptr<mcl::ClientBuffer> mcl::BufferStream::get_current_buffer()
@@ -435,6 +432,36 @@ MirWindowParameters mcl::BufferStream::get_parameters() const
         mir_display_output_id_invalid};
 }
 #pragma GCC diagnostic pop
+
+std::chrono::microseconds mcl::BufferStream::microseconds_till_vblank() const
+{
+    std::chrono::microseconds ret(0);
+    mir::time::PosixTimestamp last;
+    std::shared_ptr<FrameClock> clock;
+
+    {
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        last = last_vsync;
+        clock = frame_clock;
+    }
+
+    if (clock)
+    {
+        // We are unlocked because in future this call might ping the server:
+        mir::time::PosixTimestamp const target = clock->next_frame_after(last);
+        auto const now = mir::time::PosixTimestamp::now(target.clock_id);
+        if (target > now)
+        {
+            ret = std::chrono::duration_cast<std::chrono::microseconds>(
+                  target - now);
+        }
+
+        std::lock_guard<decltype(mutex)> lock(mutex);
+        next_vsync = target;
+    }
+
+    return ret;
+}
 
 void mcl::BufferStream::wait_for_vsync()
 {
@@ -503,6 +530,9 @@ void mcl::BufferStream::swap_buffers_sync()
     int interval = swap_interval();
     for (int i = 0; i < interval; ++i)
         wait_for_vsync();
+
+    if (!interval)  // wait_for_vsync wasn't called to update last_vsync
+        last_vsync = next_vsync;
 }
 
 void mcl::BufferStream::request_and_wait_for_configure(MirWindowAttrib attrib, int interval)

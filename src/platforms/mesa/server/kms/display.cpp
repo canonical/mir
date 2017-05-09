@@ -521,7 +521,7 @@ void mgm::Display::configure_locked(
             auto bounding_rect = group.bounding_rectangle();
             // Each vector<KMSOutput> is a single GPU memory domain
             std::vector<std::vector<std::shared_ptr<KMSOutput>>> kms_output_groups;
-            MirOrientation orientation = mir_orientation_normal;
+            glm::mat2 transformation;
 
             group.for_each_output(
                 [&](DisplayConfigurationOutput const& conf_output)
@@ -539,15 +539,11 @@ void mgm::Display::configure_locked(
                     }
 
                     /*
-                    * Presently OverlappingOutputGroup guarantees all grouped
-                    * outputs have the same orientation.
-                    */
-                    orientation = conf_output.orientation;
+                     * Presently OverlappingOutputGroup guarantees all grouped
+                     * outputs have the same transformation.
+                     */
+                    transformation = conf_output.transformation();
                 });
-
-            // TODO in future outputs should emit transformation instead of
-            //      orientation
-            auto const transformation = mg::transformation(orientation);
 
             if (comp)
             {
@@ -561,8 +557,8 @@ void mgm::Display::configure_locked(
                     bounding_rect.size.height.as_uint32_t()};
 
                 auto const physical_size = transformation * logical_size;
-                uint32_t width = abs(physical_size.x);
-                uint32_t height = abs(physical_size.y);
+                uint32_t width = abs(int(physical_size.x));
+                uint32_t height = abs(int(physical_size.y));
 
                 for (auto const& group : kms_output_groups)
                 {

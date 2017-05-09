@@ -39,12 +39,12 @@ ifneq ($(filter armhf arm64,$(DEB_HOST_ARCH)),)
 	  $(COMMON_CONFIGURE_OPTIONS) \
 	  -DMIR_RUN_ACCEPTANCE_TESTS=OFF \
 	  -DMIR_RUN_INTEGRATION_TESTS=OFF \
-	  -DMIR_PLATFORM=android\;mesa-kms\;mesa-x11
+	  -DMIR_PLATFORM=mesa-kms\;mesa-x11
 else
 ifneq ($(filter amd64 i386,$(DEB_HOST_ARCH)),)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
-	  -DMIR_PLATFORM=mesa-kms\;mesa-x11\;android
+	  -DMIR_PLATFORM=mesa-kms\;mesa-x11
 else
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \

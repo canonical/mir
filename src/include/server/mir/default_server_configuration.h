@@ -54,7 +54,6 @@ class Drawer;
 class DisplayBufferCompositorFactory;
 class Compositor;
 class CompositorReport;
-class FrameDroppingPolicyFactory;
 }
 namespace frontend
 {
@@ -241,7 +240,6 @@ public:
      *  @{ */
     virtual std::shared_ptr<graphics::GraphicBufferAllocator> the_buffer_allocator();
     virtual std::shared_ptr<compositor::Scene>                  the_scene();
-    virtual std::shared_ptr<compositor::FrameDroppingPolicyFactory> the_frame_dropping_policy_factory();
     /** @} */
 
     /** @name frontend configuration - dependencies
@@ -411,7 +409,6 @@ protected:
     CachedPtr<frontend::InputConfigurationChanger> input_configuration_changer;
     CachedPtr<renderer::RendererFactory> renderer_factory;
     CachedPtr<compositor::BufferStreamFactory> buffer_stream_factory;
-    CachedPtr<compositor::FrameDroppingPolicyFactory> frame_dropping_policy_factory;
     CachedPtr<scene::SurfaceStack> scene_surface_stack;
     CachedPtr<shell::SurfaceStack> surface_stack;
     CachedPtr<scene::SceneReport> scene_report;

@@ -126,7 +126,7 @@ public:
           ctx{create_context(dpy, config, ctx)},
           layer{output.output_layer()},
           view_area_{output.extents()},
-          transform{mg::transformation(output.orientation)}
+          transform{output.transformation()}
     {
         EGLint const stream_attribs[] = {
             EGL_STREAM_FIFO_LENGTH_KHR, 1,

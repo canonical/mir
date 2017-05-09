@@ -15,7 +15,6 @@ set(
   TEST_UTILS_SRCS
 
   mock_input_device.cpp
-  mock_frame_dropping_policy_factory.cpp
   mock_timer.cpp
   test_protobuf_client.cpp
   test_protobuf_socket_server.cpp
@@ -61,13 +60,6 @@ if (MIR_BUILD_PLATFORM_MESA_KMS)
   list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_drm.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/mock_gbm.cpp
-  )
-endif()
-
-if (MIR_BUILD_PLATFORM_ANDROID)
-  include_directories(SYSTEM ${ANDROID_HEADERS_INCLUDE_DIRS})
-  list(APPEND MIR_TEST_DOUBLES_PLATFORM_SRCS
-    ${CMAKE_CURRENT_SOURCE_DIR}/mock_android_hw.cpp
   )
 endif()
 

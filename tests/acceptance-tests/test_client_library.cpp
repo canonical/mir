@@ -875,8 +875,6 @@ TEST_F(ClientLibrary, MultiSurfaceClientTracksBufferFdsCorrectly)
  * platform doesn't validate any of its input and we don't touch anything that requires
  * syscalls.
  *
- * The Android client platform *does* care about its input, and so the fact that it's
- * trying to marshall stub buffers causes crashes.
  */
 
 TEST_F(ClientLibrary, create_simple_normal_surface_from_spec)

@@ -60,41 +60,6 @@ namespace mgn = mg::nested;
 namespace msh = mir::shell;
 namespace md = mir::dispatch;
 
-namespace
-{
-
-bool is_arale()
-{
-#ifdef __ARM_EABI__
-    try
-    {
-        auto const android_properties = "libandroid-properties.so.1";
-        auto const arale_device_name = "arale";
-        int const property_value_max = 92;
-
-        mir::SharedLibrary android_properties_lib(android_properties);
-        int (*property_get)(char const*, char*, char const*) = nullptr;
-        property_get = android_properties_lib.load_function<decltype(property_get)>("property_get");
-
-        char default_value[] = "";
-        char value[property_value_max];
-
-        if (property_get == nullptr)
-            return false;
-
-        property_get("ro.product.device", value, default_value);
-
-        return std::strcmp(arale_device_name, value) == 0;
-    }
-    catch(...)
-    {
-    }
-#endif
-    return false;
-}
-
-}
-
 std::shared_ptr<mi::CompositeEventFilter>
 mir::DefaultServerConfiguration::the_composite_event_filter()
 {
@@ -156,7 +121,7 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
                 the_event_filter_chain_dispatcher(), the_main_loop(), the_cookie_authority(),
-                enable_repeat, key_repeat_timeout, key_repeat_delay, is_arale());
+                enable_repeat, key_repeat_timeout, key_repeat_delay, false);
         });
 }
 

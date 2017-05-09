@@ -32,10 +32,6 @@
 #include "mir/test/doubles/mock_gbm.h"
 #endif
 
-#ifdef MIR_BUILD_PLATFORM_ANDROID
-#include "mir/test/doubles/mock_android_hw.h"
-#endif
-
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
 
@@ -53,28 +49,12 @@ std::vector<std::shared_ptr<mir::SharedLibrary>> available_platforms()
 #ifdef MIR_BUILD_PLATFORM_MESA_KMS
     modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-mesa-kms")));
 #endif
-#ifdef MIR_BUILD_PLATFORM_ANDROID
-    modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-android")));
-#endif
     return modules;
 }
 
 void add_dummy_platform(std::vector<std::shared_ptr<mir::SharedLibrary>>& modules)
 {
     modules.insert(modules.begin(), std::make_shared<mir::SharedLibrary>(mtf::server_platform("graphics-dummy.so")));
-}
-
-std::shared_ptr<void> ensure_android_probing_fails()
-{
-#ifdef MIR_BUILD_PLATFORM_ANDROID
-    using namespace testing;
-    auto mock_android = std::make_shared<NiceMock<mtd::HardwareAccessMock>>();
-    ON_CALL(*mock_android, hw_get_module(_, _))
-       .WillByDefault(Return(-1));
-    return mock_android;
-#else
-    return std::shared_ptr<void>{};
-#endif
 }
 
 std::shared_ptr<void> ensure_mesa_probing_fails()
@@ -96,19 +76,6 @@ std::shared_ptr<void> ensure_mesa_probing_succeeds()
         .WillByDefault(Return("EGL_MESA_platform_gbm"));
 
     return env;
-}
-
-std::shared_ptr<void> ensure_android_probing_succeeds()
-{
-#ifdef MIR_BUILD_PLATFORM_ANDROID
-    using namespace testing;
-    auto mock_android = std::make_shared<NiceMock<mtd::HardwareAccessMock>>();
-    ON_CALL(*mock_android, hw_get_module(_, _))
-       .WillByDefault(Return(0));
-    return mock_android;
-#else
-    return std::shared_ptr<void>{};
-#endif
 }
 
 class ServerPlatformProbeMockDRM : public ::testing::Test
@@ -135,7 +102,6 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 {
     using namespace testing;
     mir::options::ProgramOption options;
-    auto block_android = ensure_android_probing_fails();
     auto fake_mesa = ensure_mesa_probing_succeeds();
 
     auto modules = available_platforms();
@@ -163,7 +129,6 @@ TEST_F(ServerPlatformProbeMockDRM, returns_kms_platform_when_nested)
     std::array<char const*, 3> args {{ "./aserver", "--host-socket", "/dev/null" }};
     options.parse_arguments(desc, args.size(), args.data());
 
-    auto block_android = ensure_android_probing_fails();
     auto block_mesa = ensure_mesa_probing_succeeds();
 
     auto modules = available_platforms();
@@ -178,31 +143,10 @@ TEST_F(ServerPlatformProbeMockDRM, returns_kms_platform_when_nested)
 }
 #endif
 
-#ifdef MIR_BUILD_PLATFORM_ANDROID
-TEST(ServerPlatformProbe, LoadsAndroidPlatformWhenHwaccessSucceeds)
-{
-    using namespace testing;
-    mir::options::ProgramOption options;
-    auto block_mesa = ensure_mesa_probing_fails();
-    auto fake_android = ensure_android_probing_succeeds();
-
-    auto modules = available_platforms();
-
-    auto module = mir::graphics::module_for_device(modules, options);
-    ASSERT_NE(nullptr, module);
-
-    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
-    auto description = descriptor();
-
-    EXPECT_THAT(description->name, HasSubstr("android"));
-}
-#endif
-
 TEST(ServerPlatformProbe, ThrowsExceptionWhenNothingProbesSuccessfully)
 {
     using namespace testing;
     mir::options::ProgramOption options;
-    auto block_android = ensure_android_probing_fails();
     auto block_mesa = ensure_mesa_probing_fails();
 
 
@@ -214,7 +158,6 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
 {
     using namespace testing;
     mir::options::ProgramOption options;
-    auto block_android = ensure_android_probing_fails();
     auto block_mesa = ensure_mesa_probing_fails();
 
     auto modules = available_platforms();
@@ -229,33 +172,11 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     EXPECT_THAT(description->name, HasSubstr("mir:stub-graphics"));
 }
 
-#if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11) || defined(MIR_BUILD_PLATFORM_ANDROID)
-TEST_F(ServerPlatformProbeMockDRM, LoadsMesaOrAndroidInPreferenceToDummy)
-{
-    using namespace testing;
-    mir::options::ProgramOption options;
-    auto ensure_mesa = ensure_mesa_probing_succeeds();
-    auto ensure_android = ensure_android_probing_succeeds();
-
-    auto modules = available_platforms();
-    add_dummy_platform(modules);
-
-    auto module = mir::graphics::module_for_device(modules, options);
-    ASSERT_NE(nullptr, module);
-
-    auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
-    auto description = descriptor();
-
-    EXPECT_THAT(description->name, Not(HasSubstr("mir:stub-graphics")));
-}
-#endif
-
 TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
 {
     using namespace testing;
     mir::options::ProgramOption options;
     auto ensure_mesa = ensure_mesa_probing_succeeds();
-    auto ensure_android = ensure_android_probing_succeeds();
 
     auto modules = available_platforms();
     add_dummy_platform(modules);

@@ -579,7 +579,7 @@ MIR_CLIENT_DETAIL_0.27 {  # New functions in Mir 0.27
     };
 } MIR_CLIENT_DETAIL_0.26.1;
 
-MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
+MIR_CLIENT_0.27 {  # New functions in Mir 0.27
   global:
     mir_connection_apply_session_input_config;
     mir_connection_set_base_input_config;
@@ -611,3 +611,8 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27 or 1.0
     mir_touchscreen_config_set_mapping_mode;
     mir_touchscreen_config_set_output_id;
 } MIR_CLIENT_0.26.1;
+
+MIR_CLIENT_0.28 {  # New functions in Mir 0.28 (or 1.0)
+  global:
+    mir_buffer_stream_get_microseconds_till_vblank;
+} MIR_CLIENT_0.27;

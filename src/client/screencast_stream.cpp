@@ -278,6 +278,11 @@ void mcl::ScreencastStream::unadopted_by(MirWindow*)
 {
 }
 
+std::chrono::microseconds mcl::ScreencastStream::microseconds_till_vblank() const
+{
+    return std::chrono::microseconds::zero();
+}
+
 void mcl::ScreencastStream::set_size(geom::Size)
 {
     BOOST_THROW_EXCEPTION(std::logic_error("Attempt to set size on screencast is invalid"));

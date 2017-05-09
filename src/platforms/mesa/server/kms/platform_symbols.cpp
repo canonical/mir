@@ -214,7 +214,7 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
      * driver at all. (LP: #1528082)
      *
      * Just make sure we are below PlatformPriority::supported in case
-     * mesa-x11 or android can be used instead.
+     * mesa-x11 can be used instead.
      *
      * TODO: Revisit the priority terminology. having a range of values between
      *       "supported" and "unsupported" is potentially confusing.
