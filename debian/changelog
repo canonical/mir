@@ -5,6 +5,7 @@ mir (0.26.3-0ubuntu1) UNRELEASED; urgency=medium
       . Make deprecations optional (and default to off for builds on 16.04 LTS)
       . Added support for building on Ubuntu 17.10 artful.
     - Bugs fixed:
+      . Mir needs to be updated to 0.26 in 16.04LTS (LP: #1685186)
       . unity-system-compositor crashed with SIGSEGV in
         libinput_device_config_accel_is_available() from
         libinput_device_config_accel_set_speed() from
