@@ -21,6 +21,7 @@
 
 #include "mir/optional_value.h"
 #include "mir/fd.h"
+#include "mir/module_deleter.h"
 #include <memory>
 #include <vector>
 
@@ -73,6 +74,17 @@ protected:
     PlatformAuthentication() = default;
     PlatformAuthentication(PlatformAuthentication const&) = delete;
     PlatformAuthentication& operator=(PlatformAuthentication const&) = delete;
+};
+
+class PlatformAuthenticationFactory
+{
+public:
+    virtual ~PlatformAuthenticationFactory() = default;
+    virtual UniqueModulePtr<PlatformAuthentication> create_platform_authentication() = 0;
+protected:
+    PlatformAuthenticationFactory() = default;
+    PlatformAuthenticationFactory(PlatformAuthenticationFactory const&) = delete;
+    PlatformAuthenticationFactory& operator=(PlatformAuthenticationFactory const&) = delete;
 };
 
 }

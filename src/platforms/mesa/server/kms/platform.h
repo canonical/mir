@@ -68,7 +68,7 @@ public:
     BypassOption bypass_option() const;
 private:
     BypassOption const bypass_option_;
-    std::unique_ptr<DRMNativePlatform> native_platform;
+    std::unique_ptr<DRMNativePlatformAuthFactory> auth_factory;
 };
 
 }

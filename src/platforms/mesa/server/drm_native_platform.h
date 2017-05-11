@@ -32,8 +32,18 @@ namespace helpers
 {
 class DRMHelper;
 }
-class DRMNativePlatform : public graphics::NativeDisplayPlatform,
-                          public graphics::PlatformAuthentication
+
+class DRMNativePlatformAuthFactory : public graphics::NativeDisplayPlatform,
+                                     public graphics::PlatformAuthenticationFactory
+{
+public:
+    DRMNativePlatformAuthFactory(helpers::DRMHelper&);
+    UniqueModulePtr<PlatformAuthentication> create_platform_authentication() override;
+private:
+    helpers::DRMHelper& drm;
+};
+
+class DRMNativePlatform : public graphics::PlatformAuthentication
 {
 public:
     DRMNativePlatform(helpers::DRMHelper&);

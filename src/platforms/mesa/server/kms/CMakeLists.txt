@@ -33,7 +33,6 @@ add_library(
   page_flipper.h
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
-  nested_authentication.cpp
   platform.cpp
   kms_display_configuration.h
   real_kms_display_configuration.cpp
