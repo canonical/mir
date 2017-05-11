@@ -135,7 +135,7 @@ mg::NativeRenderingPlatform* mgm::GuestPlatform::native_rendering_platform()
     return this;
 }
 
-EGLNativeDisplayType mgm::GuestPlatform::egl_native_display() const
+MirEGLNativeDisplayType mgm::GuestPlatform::egl_native_display() const
 {
     return gbm.device;
 }
