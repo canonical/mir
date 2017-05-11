@@ -24,7 +24,7 @@
 #include "buffer_allocator.h"
 #include "mesa_extensions.h"
 
-#include "mir/graphics/platform_authentication.h"
+#include "mir/graphics/platform_authentication_wrapper.h"
 #include "mir/graphics/platform_operation_message.h"
 #include "mir_toolkit/mesa/platform_operation.h"
 #include "mir_toolkit/extensions/set_gbm_device.h"
@@ -64,35 +64,7 @@ mgm::GuestPlatform::NestedAuthFactory::NestedAuthFactory(
 mir::UniqueModulePtr<mg::PlatformAuthentication>
 mgm::GuestPlatform::NestedAuthFactory::create_platform_authentication()
 {
-    struct AuthenticationWrapper : mg::PlatformAuthentication
-    {
-        AuthenticationWrapper(std::shared_ptr<PlatformAuthentication> const& auth) :
-            auth(auth)
-        {
-        }
-
-        mir::optional_value<std::shared_ptr<mg::MesaAuthExtension>> auth_extension() override
-        {
-            return auth->auth_extension();
-        }
-
-        mir::optional_value<std::shared_ptr<mg::SetGbmExtension>> set_gbm_extension() override
-        {
-            return auth->set_gbm_extension();
-        }
-
-        mg::PlatformOperationMessage platform_operation(
-            unsigned int op, mg::PlatformOperationMessage const& msg) override
-        {
-            return auth->platform_operation(op, msg);
-        }
-        mir::optional_value<mir::Fd> drm_fd() override
-        {
-            return auth->drm_fd();
-        }
-        std::shared_ptr<mg::PlatformAuthentication> const auth;
-    };
-    return make_module_ptr<AuthenticationWrapper>(auth);
+    return make_module_ptr<mg::AuthenticationWrapper>(auth);
 }
 
 mgm::GuestPlatform::GuestPlatform(

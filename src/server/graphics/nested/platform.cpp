@@ -31,6 +31,7 @@
 #include "mir/graphics/buffer_ipc_message.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
+#include "mir/graphics/platform_authentication_wrapper.h"
 #include "mir/renderer/gl/egl_platform.h"
 
 namespace mg = mir::graphics;
@@ -47,17 +48,17 @@ mgn::PassthroughOption passthrough_from_options(mo::Option const& options)
 }
 }
 
-mgn::Platform::Platform(
+mgn::NestedBufferPlatform::NestedBufferPlatform(
     std::shared_ptr<mir::SharedLibrary> const& library, 
     std::shared_ptr<mgn::HostConnection> const& connection, 
     std::shared_ptr<mg::DisplayReport> const& display_report,
-    mo::Option const& options) :
+    std::shared_ptr<mo::Option> const& options) :
     library(library),
     connection(connection),
     display_report(display_report),
-    guest_platform(library->load_function<mg::CreateGuestPlatform>(
-        "create_guest_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION)(display_report, connection)),
-    passthrough_option(passthrough_from_options(options))
+    rendering_platform(library->load_function<mg::CreateRenderingPlatform>(
+        "create_rendering_platform", MIR_SERVER_GRAPHICS_PLATFORM_VERSION)(options, connection)),
+    passthrough_option(passthrough_from_options(*options))
 {
 }
 
@@ -112,25 +113,54 @@ private:
 };
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::NestedBufferPlatform::create_buffer_allocator()
 {
     if (connection->supports_passthrough(mg::BufferUsage::software) ||
         connection->supports_passthrough(mg::BufferUsage::hardware))
     {
-        return mir::make_module_ptr<BufferAllocator>(connection, guest_platform->create_buffer_allocator());
+        return mir::make_module_ptr<BufferAllocator>(connection, rendering_platform->create_buffer_allocator());
     }
     else
     {
-        return guest_platform->create_buffer_allocator();
+        return rendering_platform->create_buffer_allocator();
     }
 }
 
-mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::NestedBufferPlatform::make_ipc_operations() const
+{
+    return mir::make_module_ptr<mgn::IpcOperations>(rendering_platform->make_ipc_operations());
+}
+
+EGLNativeDisplayType mgn::NestedBufferPlatform::egl_native_display() const
+{
+    if (auto a = dynamic_cast<mir::renderer::gl::EGLPlatform*>(rendering_platform->native_rendering_platform()))
+        return a->egl_native_display();
+    return EGL_NO_DISPLAY;
+}
+
+mg::NativeRenderingPlatform* mgn::NestedBufferPlatform::native_rendering_platform()
+{
+    return rendering_platform->native_rendering_platform();
+}
+
+mgn::NestedDisplayPlatform::NestedDisplayPlatform(
+    std::shared_ptr<graphics::RenderingPlatform> const& platform,
+    std::shared_ptr<mgn::HostConnection> const& connection, 
+    std::shared_ptr<mg::DisplayReport> const& display_report,
+    mo::Option const& options) :
+    platform(platform),
+    connection(connection),
+    display_report(display_report),
+    passthrough_option(passthrough_from_options(options))
+{
+}
+
+mir::UniqueModulePtr<mg::Display> mgn::NestedDisplayPlatform::create_display(
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& policy,
     std::shared_ptr<mg::GLConfig> const& config)
 {
     return mir::make_module_ptr<mgn::Display>(
-        guest_platform,
+        platform,
         connection,
         display_report,
         policy,
@@ -138,29 +168,57 @@ mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
         passthrough_option);
 }
 
-mg::NativeDisplayPlatform* mgn::Platform::native_display_platform()
-{
-    return connection.get();
-}
-
-mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operations() const
-{
-    return mir::make_module_ptr<mgn::IpcOperations>(guest_platform->make_ipc_operations());
-}
-
-EGLNativeDisplayType mgn::Platform::egl_native_display() const
-{
-    if (auto a = dynamic_cast<mir::renderer::gl::EGLPlatform*>(guest_platform->native_rendering_platform()))
-        return a->egl_native_display();
-    return EGL_NO_DISPLAY;
-}
-
-mg::NativeRenderingPlatform* mgn::Platform::native_rendering_platform()
+mg::NativeDisplayPlatform* mgn::NestedDisplayPlatform::native_display_platform()
 {
     return this;
 }
 
-std::vector<mir::ExtensionDescription> mgn::Platform::extensions() const
+std::vector<mir::ExtensionDescription> mgn::NestedDisplayPlatform::extensions() const
 {
-    return guest_platform->extensions();
+    return {}; // TODO can we support extensions transitively?
+}
+
+mir::UniqueModulePtr<mg::PlatformAuthentication> mgn::NestedDisplayPlatform::create_platform_authentication()
+{
+    return make_module_ptr<mg::AuthenticationWrapper>(connection);
+}
+
+mgn::Platform::Platform(
+    std::shared_ptr<mgn::NestedBufferPlatform> buffer_platform,
+    std::unique_ptr<mgn::NestedDisplayPlatform> display_platform) :
+    buffer_platform{std::move(buffer_platform)},
+    display_platform{std::move(display_platform)}
+{
+}
+
+mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
+    std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,
+    std::shared_ptr<mg::GLConfig> const& gl_config)
+{
+    return display_platform->create_display(initial_conf_policy, gl_config);
+}
+ 
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator()
+{
+    return buffer_platform->create_buffer_allocator();
+}
+
+mg::NativeDisplayPlatform* mgn::Platform::native_display_platform()
+{
+    return display_platform->native_display_platform();
+}
+
+mir::UniqueModulePtr<mg::PlatformIpcOperations> mgn::Platform::make_ipc_operations() const
+{
+    return buffer_platform->make_ipc_operations();
+}
+
+mg::NativeRenderingPlatform* mgn::Platform::native_rendering_platform()
+{
+    return buffer_platform->native_rendering_platform();
+}
+
+std::vector<mir::ExtensionDescription> mir::graphics::nested::Platform::extensions() const
+{
+    return display_platform->extensions();
 }
