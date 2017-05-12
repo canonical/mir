@@ -184,7 +184,8 @@ __attribute__ ((deprecated("Use platform specific buffer extensions instead")));
 MirWaitHandle *mir_buffer_stream_swap_buffers(
     MirBufferStream *buffer_stream,
     MirBufferStreamCallback callback,
-    void *context);
+    void *context)
+__attribute__ ((deprecated("For non-blocking swaps use mir_buffer_stream_swap_buffers_sync with an interval of zero. And a client API for manual vsync will soon be available.")));
 
 /**
  * Advance a buffer stream's buffer as in mir_buffer stream_swap_buffers(), 
