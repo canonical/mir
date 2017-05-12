@@ -56,7 +56,7 @@ public:
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
     NativeRenderingPlatform* native_rendering_platform() override;
-    MirEGLNativeDisplayType egl_native_display() const override;
+    MirServerEGLNativeDisplayType egl_native_display() const override;
 
     std::shared_ptr<mir::udev::Context> udev;
     std::vector<std::shared_ptr<helpers::DRMHelper>> const drm;
