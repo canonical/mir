@@ -20,6 +20,7 @@
 #define MIR_TOOLKIT_MIR_DISPLAY_CONFIGURATION_H_
 
 #include "client_types.h"
+#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,7 +61,7 @@ void mir_display_config_release(MirDisplayConfig* config);
  */
 int mir_display_config_get_max_simultaneous_outputs(
     MirDisplayConfig const* config)
-    __attribute__((deprecated("Not accurate in Mir 0.26 and later. May be removed in future.")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Not accurate in Mir 0.26 and later. May be removed in future.");
 
 /**
  * Get the number of outputs available in this display configuration.
@@ -268,7 +269,7 @@ MirOutputType mir_output_get_type(MirOutput const* output);
  * \returns           The name of the output type.
  */
 char const* mir_display_output_type_name(MirDisplayOutputType type)
-__attribute__((deprecated("use mir_output_type_name instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_output_type_name instead");
 
 /**
  * Get the textual name of an output type.

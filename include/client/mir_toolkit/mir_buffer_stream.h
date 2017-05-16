@@ -20,6 +20,7 @@
 
 #include <mir_toolkit/mir_native_buffer.h>
 #include <mir_toolkit/client_types.h>
+#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 /**
@@ -155,7 +156,8 @@ __attribute__ ((deprecated));
  *                            mir_platform_type_gbm
  */
 MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream *stream)
-    __attribute__ ((deprecated));
+MIR_FOR_REMOVAL_IN_VERSION_1("To identify the graphics platform use mir_connection_get_graphics_module(). \n"
+                             "To safely interpret the buffer contents use mir_buffer_stream_get_graphics_region()");
 
 /**
  * Retrieve the current buffer in "raw" representation.
@@ -166,7 +168,7 @@ MirPlatformType mir_buffer_stream_get_platform_type(MirBufferStream *stream)
  */
 void mir_buffer_stream_get_current_buffer(MirBufferStream *buffer_stream,
     MirNativeBuffer **buffer_package)
-__attribute__ ((deprecated("Use platform specific buffer extensions instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use platform specific buffer extensions instead");
 
 /**
  * Advance a buffer stream's buffer. The returned handle remains valid until the

@@ -22,6 +22,7 @@
 #include <mir_toolkit/client_types.h>
 #include <mir_toolkit/common.h>
 #include <mir_toolkit/mir_cursor_configuration.h>
+#include <mir_toolkit/deprecations.h>
 
 #include <stdbool.h>
 
@@ -609,7 +610,7 @@ void mir_window_spec_add_render_surface(MirWindowSpec* spec,
                                         MirRenderSurface* render_surface,
                                         int logical_width, int logical_height,
                                         int displacement_x, int displacement_y)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
 #pragma GCC diagnostic pop
 
 /**
@@ -847,7 +848,7 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window);
  * \param [in,out] context   User data passed to completion callback.
  */
 void mir_window_request_persistent_id(MirWindow* window, MirWindowIdCallback callback, void* context)
-__attribute__((deprecated("Use mir_window_request_window_id() instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_request_window_id() instead");
 void mir_window_request_window_id(MirWindow* window, MirWindowIdCallback callback, void* context);
 
 /**
@@ -857,7 +858,7 @@ void mir_window_request_window_id(MirWindow* window, MirWindowIdCallback callbac
  *         be freed with a call to mir_persistent_id_release()
  */
 MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
-__attribute__((deprecated("Use mir_window_request_window_id_sync")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_request_window_id_sync");
 MirWindowId* mir_window_request_window_id_sync(MirWindow* window);
 #ifdef __cplusplus
 }
