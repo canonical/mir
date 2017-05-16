@@ -54,8 +54,7 @@ typedef struct MirDisplayConfig MirDisplayConfig;
 typedef struct MirError MirError;
 typedef struct MirPresentationChain MirPresentationChain;
 typedef struct MirBuffer MirBuffer;
-typedef struct MirRenderSurface MirRenderSurface
-MIR_FOR_REMOVAL_IN_VERSION_1("This type is slated for rename due to MirRenderSurface-->MirSurface transition");
+typedef struct MirRenderSurface MirRenderSurface;
 
 /**
  * Opaque structure containing cursor parameterization. Create with mir_cursor* family.

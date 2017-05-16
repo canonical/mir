@@ -23,6 +23,17 @@
 #include <mir_toolkit/client_types.h>
 #include <mir_toolkit/deprecations.h>
 
+#ifndef MIR_DEPRECATE_RENDERSURFACES
+    #define MIR_DEPRECATE_RENDERSURFACES 1
+#endif
+
+#if MIR_ENABLE_DEPRECATIONS > 0 && MIR_DEPRECATE_RENDERSURFACES > 0
+    #define MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1\
+    __attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")))
+#else
+    #define MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1
+#endif
+
 #ifdef __cplusplus
 /**
  * \addtogroup mir_toolkit
@@ -50,7 +61,7 @@ void mir_connection_create_render_surface(
     int width, int height,
     MirRenderSurfaceCallback callback,
     void* context)
-MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Create a render surface and wait for the result
@@ -65,7 +76,7 @@ MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRende
 MirRenderSurface* mir_connection_create_render_surface_sync(
     MirConnection* connection,
     int width, int height)
-MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Get the size of the MirRenderSurface
@@ -77,7 +88,7 @@ MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRende
 void mir_render_surface_get_size(
     MirRenderSurface* render_surface,
     int* width, int* height)
-MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Set the size of the MirRenderSurface
@@ -89,7 +100,7 @@ MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRende
 void mir_render_surface_set_size(
     MirRenderSurface* render_surface,
     int width, int height)
-MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Test for a valid render surface
@@ -101,7 +112,7 @@ MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRende
  */
 bool mir_render_surface_is_valid(
     MirRenderSurface* render_surface)
-MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Retrieve a text description of the error. The returned string is owned by
@@ -114,7 +125,7 @@ MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRende
  */
 char const *mir_render_surface_get_error_message(
     MirRenderSurface* render_surface)
-MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Release the specified render surface
@@ -123,7 +134,7 @@ MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRende
  */
 void mir_render_surface_release(
     MirRenderSurface* render_surface)
-MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Obtain the buffer stream backing a given render surface.
@@ -143,7 +154,7 @@ MirBufferStream* mir_render_surface_get_buffer_stream(
     MirRenderSurface* render_surface,
     int width, int height,
     MirPixelFormat format)
-MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Obtain the presentation chain backing a given render surface.
@@ -156,7 +167,7 @@ MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRende
  */
 MirPresentationChain* mir_render_surface_get_presentation_chain(
     MirRenderSurface* render_surface)
-MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /** Query whether the server supports a given presentation mode.
  *
@@ -190,7 +201,7 @@ void mir_window_spec_set_cursor_render_surface(
     MirWindowSpec* spec,
     MirRenderSurface* render_surface,
     int hotspot_x, int hotspot_y)
-MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRenderSurface-->MirSurface transition");
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Returns a new cursor configuration tied to a given render surface.
@@ -205,7 +216,7 @@ MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRende
 MirCursorConfiguration* mir_cursor_configuration_from_render_surface(
     MirRenderSurface* surface,
     int hotspot_x, int hotspot_y)
-MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_spec_set_cursor_render_surface instead");
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 #pragma GCC diagnostic pop
 
