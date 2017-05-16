@@ -19,8 +19,8 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "client_platform.h"
 #include "client_buffer_factory.h"
-#include "mir/client_buffer_factory.h"
-#include "mir/client_context.h"
+#include "mir/client/client_buffer_factory.h"
+#include "mir/client/client_context.h"
 #include "native_buffer.h"
 
 #include <cstring>

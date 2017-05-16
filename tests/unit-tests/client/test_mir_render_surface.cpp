@@ -23,7 +23,7 @@
 #include "src/client/connection_surface_map.h"
 #include "src/client/mir_wait_handle.h"
 
-#include "mir/client_platform_factory.h"
+#include "mir/client/client_platform_factory.h"
 #include "mir/dispatch/dispatchable.h"
 
 #include "mir/test/fake_shared.h"

@@ -25,7 +25,7 @@
 #include "rpc/mir_display_server.h"
 #include "rpc/mir_display_server_debug.h"
 
-#include "mir/client_platform.h"
+#include "mir/client/client_platform.h"
 #include "mir/frontend/surface_id.h"
 #include "mir/optional_value.h"
 #include "mir/geometry/dimensions.h"

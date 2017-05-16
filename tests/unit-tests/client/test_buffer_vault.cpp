@@ -20,7 +20,7 @@
 #include "src/client/buffer_vault.h"
 #include "src/client/buffer_factory.h"
 #include "src/client/connection_surface_map.h"
-#include "mir/client_buffer_factory.h"
+#include "mir/client/client_buffer_factory.h"
 #include "mir/aging_buffer.h"
 #include "mir_toolkit/common.h"
 #include "mir/geometry/size.h"

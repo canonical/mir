@@ -16,7 +16,7 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "mir/client_platform.h"
+#include "mir/client/client_platform.h"
 #include "mir/shared_library.h"
 #include "mir/raii.h"
 #include "src/platforms/mesa/client/buffer_file_ops.h"

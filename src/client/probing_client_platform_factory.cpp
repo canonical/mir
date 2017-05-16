@@ -1,5 +1,5 @@
 #include "probing_client_platform_factory.h"
-#include "mir/client_platform.h"
+#include "mir/client/client_platform.h"
 #include "mir/shared_library.h"
 #include "mir/shared_library_prober.h"
 #include "mir/shared_library_prober_report.h"

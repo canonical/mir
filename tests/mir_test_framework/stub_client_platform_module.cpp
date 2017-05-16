@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>>
  */
 
-#include "src/include/client/mir/client_platform_factory.h"
-#include "src/include/client/mir/client_context.h"
+#include "mir/client/client_platform_factory.h"
+#include "mir/client/client_context.h"
 
 #include "mir_test_framework/stub_client_platform_factory.h"
 #include "mir_test_framework/stub_platform_helpers.h"

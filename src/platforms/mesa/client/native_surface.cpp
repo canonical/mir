@@ -21,7 +21,7 @@
 #include <cstring>
 
 #include "native_buffer.h"
-#include "mir/client_buffer.h"
+#include "mir/client/client_buffer.h"
 #include "mir/uncaught.h"
 
 #include "native_surface.h"

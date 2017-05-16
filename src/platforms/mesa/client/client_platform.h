@@ -18,7 +18,7 @@
 #ifndef MIR_CLIENT_MESA_CLIENT_PLATFORM_H_
 #define MIR_CLIENT_MESA_CLIENT_PLATFORM_H_
 
-#include "mir/client_platform.h"
+#include "mir/client/client_platform.h"
 #include "mir_toolkit/extensions/mesa_drm_auth.h"
 #include "mir_toolkit/extensions/set_gbm_device.h"
 #include "mir_toolkit/extensions/gbm_buffer.h"

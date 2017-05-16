@@ -18,7 +18,7 @@
  * Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/egl_native_surface.h"
+#include "mir/client/egl_native_surface.h"
 
 #include "mir/test/doubles/mock_egl.h"
 #include <gtest/gtest.h>

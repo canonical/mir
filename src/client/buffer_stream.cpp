@@ -33,7 +33,7 @@
 #include "connection_surface_map.h"
 
 #include "mir/log.h"
-#include "mir/client_platform.h"
+#include "mir/client/client_platform.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
 

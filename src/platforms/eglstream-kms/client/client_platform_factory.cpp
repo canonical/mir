@@ -16,11 +16,11 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "mir/client_platform_factory.h"
+#include "mir/client/client_platform_factory.h"
 #include "client_platform.h"
 #include "mir_toolkit/client_types.h"
-#include "mir/client_context.h"
-#include "mir/egl_native_display_container.h"
+#include "mir/client/client_context.h"
+#include "mir/client/egl_native_display_container.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/module_deleter.h"
 

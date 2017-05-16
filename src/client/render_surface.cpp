@@ -22,7 +22,7 @@
 #include "mir_wait_handle.h"
 #include "rpc/mir_display_server.h"
 
-#include "mir/client_platform.h"
+#include "mir/client/client_platform.h"
 
 #include <boost/throw_exception.hpp>
 

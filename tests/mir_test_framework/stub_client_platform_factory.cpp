@@ -18,9 +18,9 @@
 
 #include "mir_test_framework/stub_client_platform_factory.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
-#include "mir/client_buffer_factory.h"
-#include "mir/client_buffer.h"
-#include "mir/client_context.h"
+#include "mir/client/client_buffer_factory.h"
+#include "mir/client/client_buffer.h"
+#include "mir/client/client_context.h"
 #include "mir_test_framework/stub_platform_native_buffer.h"
 #include "mir_test_framework/stub_platform_extension.h"
 #include "mir_toolkit/mir_native_buffer.h"

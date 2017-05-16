@@ -20,8 +20,8 @@
 #define MIR_TEST_DOUBLES_MOCK_CLIENT_PLATFOM_H_
 
 #include "stub_client_buffer_factory.h"
-#include "mir/client_platform.h"
-#include "mir/client_platform_factory.h"
+#include "mir/client/client_platform.h"
+#include "mir/client/client_platform_factory.h"
 #include <gmock/gmock.h>
 
 namespace mir

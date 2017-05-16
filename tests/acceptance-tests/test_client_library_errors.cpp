@@ -22,9 +22,9 @@
 #include "mir_toolkit/mir_screencast.h"
 #include "mir_toolkit/debug/surface.h"
 
-#include "src/include/client/mir/client_platform_factory.h"
-#include "src/include/client/mir/client_platform.h"
-#include "src/include/client/mir/client_buffer_factory.h"
+#include "mir/client/client_platform_factory.h"
+#include "mir/client/client_platform.h"
+#include "mir/client/client_buffer_factory.h"
 
 #include "mir/test/validity_matchers.h"
 #include "mir/test/death.h"
