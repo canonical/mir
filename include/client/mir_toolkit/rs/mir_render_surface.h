@@ -205,7 +205,7 @@ MIR_FOR_REMOVAL_IN_VERSION_1("This function is slated for rename due to MirRende
 MirCursorConfiguration* mir_cursor_configuration_from_render_surface(
     MirRenderSurface* surface,
     int hotspot_x, int hotspot_y)
-__attribute__((deprecated("Use mir_window_spec_set_cursor_render_surface instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_spec_set_cursor_render_surface instead");
 
 #pragma GCC diagnostic pop
 

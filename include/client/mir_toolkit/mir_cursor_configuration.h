@@ -38,7 +38,7 @@ extern "C" {
  *     \param [in] parameters The operand
  */
 void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters)
-__attribute__((deprecated("MirCursorConfiguration is deprecated")));
+MIR_FOR_REMOVAL_IN_VERSION_1("MirCursorConfiguration is deprecated");
 
 /**
  * Returns a new MirCursorConfiguration representing a named cursor

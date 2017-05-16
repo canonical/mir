@@ -80,7 +80,7 @@ MirWaitHandle* mir_connection_create_buffer_stream(MirConnection *connection,
     MirBufferUsage buffer_usage,
     MirBufferStreamCallback callback,
     void* context)
-__attribute__ ((deprecated("Use mir_render_surface_get_buffer_stream instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_render_surface_get_buffer_stream instead");
 #pragma GCC diagnostic pop
 
 /**
@@ -106,7 +106,7 @@ MirBufferStream* mir_connection_create_buffer_stream_sync(MirConnection *connect
     int width, int height,
     MirPixelFormat format,
     MirBufferUsage buffer_usage)
-__attribute__ ((deprecated("Use mir_render_surface_get_buffer_stream instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_render_surface_get_buffer_stream instead");
 #pragma GCC diagnostic pop
 /**
  * Release the supplied stream and any associated buffer. The returned wait
@@ -126,7 +126,7 @@ MirWaitHandle *mir_buffer_stream_release(
     MirBufferStream * buffer_stream,
     MirBufferStreamCallback callback,
     void *context)
-__attribute__ ((deprecated));
+MIR_FOR_REMOVAL_IN_VERSION_1("A stream obtained through mir_render_surface_get_buffer_stream() does not need to be released.");
 
 /**
  * Release the specified buffer stream like in mir,_buffer_stream_release(), 
@@ -135,7 +135,7 @@ __attribute__ ((deprecated));
  *   \param [in] buffer_stream  The buffer stream to be released
  */
 void mir_buffer_stream_release_sync(MirBufferStream *buffer_stream)
-__attribute__ ((deprecated));
+MIR_FOR_REMOVAL_IN_VERSION_1("A stream obtained through mir_render_surface_get_buffer_stream() does not need to be released.");
 
 /**
  * Get the underlying platform type so the buffer obtained in "raw"
@@ -187,7 +187,8 @@ MirWaitHandle *mir_buffer_stream_swap_buffers(
     MirBufferStream *buffer_stream,
     MirBufferStreamCallback callback,
     void *context)
-__attribute__ ((deprecated("For non-blocking swaps use mir_buffer_stream_swap_buffers_sync with an interval of zero. And a client API for manual vsync will soon be available.")));
+MIR_FOR_REMOVAL_IN_VERSION_1("For non-blocking swaps use mir_buffer_stream_swap_buffers_sync with an interval of zero."
+                             " And a client API for manual vsync will soon be available.");
 
 /**
  * Advance a buffer stream's buffer as in mir_buffer stream_swap_buffers(), 
@@ -217,7 +218,7 @@ bool mir_buffer_stream_get_graphics_region(
  *   \return                   An EGLNativeWindowType that the client can use
  */
 MirEGLNativeWindowType mir_buffer_stream_get_egl_native_window(MirBufferStream *buffer_stream)
-__attribute__ ((deprecated("Use MirRenderSurface *as the window type")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use MirRenderSurface *as the window type");
 
 /**
  * Set the scale associated with all buffers in the stream
@@ -227,7 +228,7 @@ __attribute__ ((deprecated("Use MirRenderSurface *as the window type")));
  * \return                  A handle that can be passed to mir_wait_for
  */
 MirWaitHandle *mir_buffer_stream_set_scale(MirBufferStream* buffer_stream, float scale)
-__attribute__ ((deprecated));
+MIR_FOR_REMOVAL_IN_VERSION_1("Functionality replaced by the introduction of MirRenderSurface");
 
 /**
  * Set the scale as in mir_buffer_stream_set_scale(), but also wait for the
@@ -236,7 +237,7 @@ __attribute__ ((deprecated));
  * \param [in] scale         The scale
  */
 void mir_buffer_stream_set_scale_sync(MirBufferStream* buffer_stream, float scale)
-__attribute__ ((deprecated));
+MIR_FOR_REMOVAL_IN_VERSION_1("Functionality replaced by the introduction of MirRenderSurface");
 
 /**
  * Set the swapinterval for the stream.

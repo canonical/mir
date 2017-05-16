@@ -42,7 +42,7 @@ extern "C" {
  */
 void mir_keymap_event_get_rules(MirKeymapEvent const* ev,
                                 struct xkb_rule_names* rules)
-    __attribute__ ((deprecated));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_keymap_event_get_keymap_buffer() instead");
 
 /**
  * Retrieve the new keymap reported by this MirKeymapEvent

@@ -62,7 +62,7 @@ MIR_FOR_REMOVAL_IN_VERSION_1("This type is slated for rename due to MirRenderSur
  * Used with mir_window_configure_cursor.
  */
 typedef struct MirCursorConfiguration MirCursorConfiguration
-    __attribute__((deprecated("Use mir_window_spec_set_cursor_name/mir_window_spec_set_cursor_render_surface instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_spec_set_cursor_name/mir_window_spec_set_cursor_render_surface instead");
 
 /**
  * Descriptor for an output connection.
@@ -187,7 +187,7 @@ typedef enum MirBufferUsage
 {
     mir_buffer_usage_hardware = 1,
     mir_buffer_usage_software
-} MirBufferUsage __attribute__((deprecated("No longer applicable when using MirRenderSurface")));
+} MirBufferUsage MIR_FOR_REMOVAL_IN_VERSION_1("No longer applicable when using MirRenderSurface");
 
 /**
  * MirWindowParameters is the structure of minimum required information that
@@ -583,7 +583,7 @@ typedef void (*MirRenderSurfaceCallback)(MirRenderSurface*, void* context)
 MIR_FOR_REMOVAL_IN_VERSION_1("This type is slated for rename due to MirRenderSurface-->MirSurface transition");
 
 typedef MirSurfaceParameters MirWindowParameters
-__attribute__((deprecated("Use mir_window_get_xxx apis or listen for attribute events instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_get_xxx apis or listen for attribute events instead");
 
 #pragma GCC diagnostic pop
 

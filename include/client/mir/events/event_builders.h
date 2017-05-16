@@ -48,7 +48,7 @@ EventUPtr make_event(MirPromptSessionState state);
 EventUPtr make_event(frontend::SurfaceId const& surface_id, geometry::Size const& size);
 // Surface configure event
 EventUPtr make_event(frontend::SurfaceId const& surface_id, MirSurfaceAttrib attribute, int value)
-__attribute__ ((deprecated("use make_event with MirWindowAttribute instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use make_event with MirWindowAttribute instead");
 // Window configure event
 EventUPtr make_event(frontend::SurfaceId const& surface_id, MirWindowAttrib attribute, int value);
 // Close surface event
@@ -81,12 +81,12 @@ void set_button_state(MirEvent& event, MirPointerButtons button_state);
 // Deprecated version with uint64_t mac
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     uint64_t mac, MirKeyboardAction action, xkb_keysym_t key_code,
-    int scan_code, MirInputEventModifiers modifiers) __attribute__ ((deprecated));
+    int scan_code, MirInputEventModifiers modifiers) MIR_FOR_REMOVAL_IN_VERSION_1("unused");
 
 // Deprecated version without mac
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirKeyboardAction action, xkb_keysym_t key_code,
-    int scan_code, MirInputEventModifiers modifiers) __attribute__ ((deprecated));
+    int scan_code, MirInputEventModifiers modifiers) MIR_FOR_REMOVAL_IN_VERSION_1("unused");
 
 // Touch event
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
@@ -94,11 +94,11 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
 
 // Deprecated version with uint64_t mac
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    uint64_t mac, MirInputEventModifiers modifiers) __attribute__ ((deprecated));
+    uint64_t mac, MirInputEventModifiers modifiers) MIR_FOR_REMOVAL_IN_VERSION_1("unused");
 
 // Deprecated version without mac
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers) __attribute__ ((deprecated));
+    MirInputEventModifiers modifiers) MIR_FOR_REMOVAL_IN_VERSION_1("unused");
 
 void add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
     MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
@@ -110,14 +110,14 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
     uint64_t mac, MirInputEventModifiers modifiers, MirPointerAction action,
     MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
-    float hscroll_value, float vscroll_value) __attribute__ ((deprecated));
+    float hscroll_value, float vscroll_value) MIR_FOR_REMOVAL_IN_VERSION_1("unused");
 
 // Deprecated version without relative axis and mac
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers, MirPointerAction action,
     MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
-    float hscroll_value, float vscroll_value) __attribute__ ((deprecated));
+    float hscroll_value, float vscroll_value) MIR_FOR_REMOVAL_IN_VERSION_1("unused");
 
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     std::vector<uint8_t> const& mac, MirInputEventModifiers modifiers, MirPointerAction action,
@@ -132,7 +132,7 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
     MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value,
-    float relative_x_value, float relative_y_value) __attribute__ ((deprecated));
+    float relative_x_value, float relative_y_value) MIR_FOR_REMOVAL_IN_VERSION_1("unused");
 
 // Deprecated version without mac
 EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
@@ -140,11 +140,11 @@ EventUPtr make_event(MirInputDeviceId device_id, std::chrono::nanoseconds timest
     MirPointerButtons buttons_pressed,
     float x_axis_value, float y_axis_value,
     float hscroll_value, float vscroll_value,
-    float relative_x_value, float relative_y_value) __attribute__ ((deprecated));
+    float relative_x_value, float relative_y_value) MIR_FOR_REMOVAL_IN_VERSION_1("unused");
 
 // Input configuration event
 EventUPtr make_event(MirInputConfigurationAction action,
-    MirInputDeviceId id, std::chrono::nanoseconds time) __attribute__((deprecated));
+    MirInputDeviceId id, std::chrono::nanoseconds time) MIR_FOR_REMOVAL_IN_VERSION_1("unused");
 
 EventUPtr make_event(std::chrono::nanoseconds timestamp,
                      MirPointerButtons pointer_buttons,

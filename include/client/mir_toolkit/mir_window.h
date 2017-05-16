@@ -544,7 +544,7 @@ void mir_window_spec_set_cursor_name(MirWindowSpec* spec, char const* name);
  *          the point mir_create_window() is called it will instead return an invalid window.
  */
 void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format)
-    __attribute__((deprecated("Use mir_connection_allocate_buffer/mir_render_surface_get_buffer_stream instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_connection_allocate_buffer/mir_render_surface_get_buffer_stream instead");
 
 /**
  * \note To be deprecated soon. Only for enabling other deprecations.
@@ -561,7 +561,7 @@ void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage)
-    __attribute__((deprecated("No longer applicable, use mir_render_surface apis")));
+MIR_FOR_REMOVAL_IN_VERSION_1("No longer applicable, use mir_render_surface apis");
 #pragma GCC diagnostic pop
 /**
  *
@@ -586,7 +586,7 @@ void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage)
 void mir_window_spec_set_streams(MirWindowSpec* spec,
                                  MirBufferStreamInfo* streams,
                                  unsigned int num_streams)
-    __attribute__((deprecated("Use mir_window_spec_add_render_surface instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_spec_add_render_surface instead");
 
 /**
  * Set the MirWindowSpec to display content contained in a render surface
@@ -711,7 +711,7 @@ void mir_window_set_event_handler(MirWindow* window,
  *   \param[in] window The window
  */
 MirBufferStream* mir_window_get_buffer_stream(MirWindow* window)
-    __attribute__((deprecated("Use mir_window_spec_add_render_surface during window creation/modification instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_spec_add_render_surface during window creation/modification instead");
 /**
  * Retrieve a text description of the error. The returned string is owned by
  * the library and remains valid until the window or the associated
@@ -733,7 +733,7 @@ char const* mir_window_get_error_message(MirWindow* window);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void mir_window_get_parameters(MirWindow* window, MirWindowParameters* parameters)
-    __attribute__((deprecated("Use mir_window_get_xxx apis or listen to state/attribute change events instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_get_xxx apis or listen to state/attribute change events instead");
 #pragma GCC diagnostic pop
 
 
@@ -817,7 +817,7 @@ int mir_window_get_dpi(MirWindow* window);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* parameters)
-    __attribute__((deprecated("Use mir_window_spec_set_cursor_name/mir_window_spec_set_cursor_render_surface instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_spec_set_cursor_name/mir_window_spec_set_cursor_render_surface instead");
 #pragma GCC diagnostic pop
 /**
  * Request to set the preferred orientations of a window.
