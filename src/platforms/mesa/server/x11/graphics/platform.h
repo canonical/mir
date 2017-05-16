@@ -66,7 +66,7 @@ private:
     std::shared_ptr<DisplayReport> const report;
     mesa::helpers::GBMHelper gbm;
     mir::geometry::Size const size;
-    std::unique_ptr<mesa::DRMNativePlatform> native_platform;
+    std::unique_ptr<mesa::DRMNativePlatformAuthFactory> auth_factory;
 };
 
 }

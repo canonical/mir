@@ -22,6 +22,7 @@
 #define MIR_GRAPHICS_MESA_GUEST_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/renderer/gl/egl_platform.h"
 #include "display_helpers.h"
@@ -51,11 +52,18 @@ public:
     std::vector<ExtensionDescription> extensions() const override;
 
     NativeRenderingPlatform* native_rendering_platform() override;
-    EGLNativeDisplayType egl_native_display() const override;
+    MirServerEGLNativeDisplayType egl_native_display() const override;
 
 private:
     std::shared_ptr<graphics::PlatformAuthentication> const platform_authentication;
-    std::shared_ptr<graphics::NativeDisplayPlatform> auth;
+
+    struct NestedAuthFactory : graphics::NativeDisplayPlatform,
+                               graphics::PlatformAuthenticationFactory
+    {
+        NestedAuthFactory(std::shared_ptr<graphics::PlatformAuthentication> const&);
+        UniqueModulePtr<graphics::PlatformAuthentication> create_platform_authentication() override;
+        std::shared_ptr<graphics::PlatformAuthentication> const auth;
+    } auth_factory;
     helpers::GBMHelper gbm;
 };
 }

@@ -54,7 +54,7 @@ public:
     NativeDisplayPlatform* native_display_platform() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativeRenderingPlatform* native_rendering_platform() override;
-    EGLNativeDisplayType egl_native_display() const override;
+    MirServerEGLNativeDisplayType egl_native_display() const override;
     std::vector<mir::ExtensionDescription> extensions() const override;
 private:
     std::shared_ptr<mir::SharedLibrary> const library; 

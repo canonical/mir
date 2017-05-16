@@ -19,6 +19,8 @@
 #include "mir/graphics/display_report.h"
 #include "mir/options/option.h"
 #include "platform.h"
+#include "gbm_platform.h"
+#include "platform_common.h"
 #include "guest_platform.h"
 #include "../X11_resources.h"
 #include "mir/module_deleter.h"
@@ -29,6 +31,7 @@
 
 namespace mo = mir::options;
 namespace mg = mir::graphics;
+namespace mgm = mir::graphics::mesa;
 namespace mx = mir::X;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
@@ -56,11 +59,12 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
         BOOST_THROW_EXCEPTION(std::runtime_error("Malformed display size option"));
 
     return mir::make_module_ptr<mgx::Platform>(
-               x11_resources.get_conn(),
-               geom::Size{std::stoi(display_dims_str.substr(0, pos)),
-                          std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))},
-               report
-           );
+        x11_resources.get_conn(),
+        geom::Size{
+            std::stoi(display_dims_str.substr(0, pos)),
+            std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))},
+        report
+    );
 }
 
 mir::UniqueModulePtr<mg::Platform> create_guest_platform(
@@ -116,4 +120,40 @@ mir::ModuleProperties const* describe_graphics_module()
 {
     mir::assert_entry_point_signature<mg::DescribeModule>(&describe_graphics_module);
     return &description;
+}
+
+mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
+    std::shared_ptr<mo::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
+    std::shared_ptr<mg::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const&)
+{
+    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
+
+    if (!x11_resources.get_conn())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
+
+    auto display_dims_str = options->get<std::string>(x11_displays_option_name);
+    auto pos = display_dims_str.find('x');
+    if (pos == std::string::npos)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Malformed display size option"));
+
+    return mir::make_module_ptr<mgx::Platform>(
+               x11_resources.get_conn(),
+               geom::Size{std::stoi(display_dims_str.substr(0, pos)),
+                          std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))},
+               report
+           );
+}
+
+mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
+    std::shared_ptr<mir::options::Option> const&,
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const&)
+{
+    mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
+    auto udev = std::make_shared<mir::udev::Context>();
+    auto drm = std::make_shared<mgm::helpers::DRMHelper>(mgm::helpers::DRMNodeToUse::render);
+    drm->setup(udev);
+    return mir::make_module_ptr<mgm::GBMPlatform>(
+        mgm::BypassOption::prohibited, mgm::BufferImportMethod::dma_buf, udev, drm);
 }

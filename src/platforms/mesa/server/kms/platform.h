@@ -56,7 +56,7 @@ public:
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
 
     NativeRenderingPlatform* native_rendering_platform() override;
-    EGLNativeDisplayType egl_native_display() const override;
+    MirServerEGLNativeDisplayType egl_native_display() const override;
 
     std::shared_ptr<mir::udev::Context> udev;
     std::vector<std::shared_ptr<helpers::DRMHelper>> const drm;
@@ -68,7 +68,7 @@ public:
     BypassOption bypass_option() const;
 private:
     BypassOption const bypass_option_;
-    std::unique_ptr<DRMNativePlatform> native_platform;
+    std::unique_ptr<DRMNativePlatformAuthFactory> auth_factory;
 };
 
 }

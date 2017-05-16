@@ -19,7 +19,7 @@
 #ifndef MIR_RENDERER_GL_EGL_PLATFORM_H_
 #define MIR_RENDERER_GL_EGL_PLATFORM_H_
 
-#include <EGL/egl.h>
+typedef void* MirServerEGLNativeDisplayType;
 
 namespace mir
 {
@@ -32,7 +32,7 @@ class EGLPlatform
 {
 public:
     virtual ~EGLPlatform() = default;
-    virtual EGLNativeDisplayType egl_native_display() const = 0;
+    virtual MirServerEGLNativeDisplayType egl_native_display() const = 0;
 
 protected:
     EGLPlatform() = default;

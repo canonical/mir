@@ -19,6 +19,8 @@ add_library(
   gbm_buffer.cpp
   ipc_operations.cpp
   software_buffer.cpp
+  gbm_platform.cpp
+  nested_authentication.cpp
   drm_native_platform.cpp
 )
 

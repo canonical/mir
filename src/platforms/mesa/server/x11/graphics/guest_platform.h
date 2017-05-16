@@ -50,13 +50,13 @@ public:
     std::vector<ExtensionDescription> extensions() const override;
 
     NativeRenderingPlatform* native_rendering_platform() override;
-    EGLNativeDisplayType egl_native_display() const override;
+    MirServerEGLNativeDisplayType egl_native_display() const override;
 
 private:
     std::shared_ptr<mir::udev::Context> udev;
     std::shared_ptr<graphics::mesa::helpers::DRMHelper> const drm;
     graphics::mesa::helpers::GBMHelper gbm;
-    std::unique_ptr<graphics::mesa::DRMNativePlatform> native_platform;
+    std::unique_ptr<mesa::DRMNativePlatformAuthFactory> auth_factory;
 };
 
 }
