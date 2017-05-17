@@ -91,6 +91,7 @@ void pack_protobuf_display_output(mp::DisplayOutput& protobuf_output,
     auto const& logical_size = display_output.extents().size;
     protobuf_output.set_logical_width(logical_size.width.as_int());
     protobuf_output.set_logical_height(logical_size.height.as_int());
+    protobuf_output.set_custom_logical_size(display_output.custom_logical_size.is_set());
 }
 
 }

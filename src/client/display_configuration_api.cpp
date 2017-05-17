@@ -261,6 +261,26 @@ unsigned int mir_output_get_logical_height(MirOutput const* output)
     return output->logical_height();
 }
 
+void mir_output_set_logical_size(MirOutput* output, unsigned w, unsigned h)
+{
+    if (w && h)
+    {
+        output->set_logical_width(w);
+        output->set_logical_height(h);
+        output->set_custom_logical_size(true);
+    }
+    else
+    {
+        output->set_custom_logical_size(false);
+    }
+}
+
+bool mir_output_has_custom_logical_size(MirOutput const* output)
+{
+    return output->has_custom_logical_size() && // has the protobuf field and
+           output->custom_logical_size();       // ... a custom size is set
+}
+
 void mir_output_set_position(MirOutput* output, int x, int y)
 {
     output->set_position_x(x);

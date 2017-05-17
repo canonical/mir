@@ -1273,6 +1273,20 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
         dest.gamma = {convert_string_to_gamma_curve(src.gamma_red()),
                       convert_string_to_gamma_curve(src.gamma_green()),
                       convert_string_to_gamma_curve(src.gamma_blue())};
+
+        if (src.has_custom_logical_size())
+        {
+            if (!src.custom_logical_size())
+            {   // User has explicitly removed logical size customization
+                if (dest.custom_logical_size.is_set())
+                    (void)dest.custom_logical_size.consume();
+            }
+            else if (src.has_logical_width() && src.has_logical_height())
+            {   // User has explicitly set a logical size customization
+                dest.custom_logical_size = {src.logical_width(),
+                                            src.logical_height()};
+            }
+        }
     });
 
     return config;

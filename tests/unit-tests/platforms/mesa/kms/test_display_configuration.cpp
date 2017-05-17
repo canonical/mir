@@ -300,6 +300,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mir_subpixel_arrangement_unknown,
             {},
             mir_output_gamma_unsupported,
+            {},
             {}
         },
         {
@@ -322,6 +323,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mir_subpixel_arrangement_unknown,
             {},
             mir_output_gamma_unsupported,
+            {},
             {}
         },
         {
@@ -344,6 +346,7 @@ TEST_F(MesaDisplayConfigurationTest, configuration_is_read_correctly)
             mir_subpixel_arrangement_unknown,
             {},
             mir_output_gamma_unsupported,
+            {},
             {}
         }
     };
@@ -577,6 +580,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_subpixel_arrangement_unknown,
             {},
             mir_output_gamma_unsupported,
+            {},
             {}
         },
         {
@@ -599,6 +603,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_subpixel_arrangement_unknown,
             {},
             mir_output_gamma_unsupported,
+            {},
             {}
         },
     };
@@ -625,6 +630,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_subpixel_arrangement_unknown,
             {},
             mir_output_gamma_unsupported,
+            {},
             {}
         },
         {
@@ -647,6 +653,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
             mir_subpixel_arrangement_unknown,
             {},
             mir_output_gamma_unsupported,
+            {},
             {}
         },
     };
@@ -794,6 +801,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
             mir_subpixel_arrangement_unknown,
             {},
             mir_output_gamma_unsupported,
+            {},
             {}
         },
     };
@@ -822,6 +830,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
             mir_subpixel_arrangement_unknown,
             {},
             mir_output_gamma_unsupported,
+            {},
             {}
         },
     };
