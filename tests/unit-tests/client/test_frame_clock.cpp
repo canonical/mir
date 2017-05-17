@@ -116,6 +116,33 @@ TEST_F(FrameClockTest, interval_is_perfectly_smooth)
     EXPECT_EQ(one_frame, e - d);
 }
 
+TEST_F(FrameClockTest, interval_is_perfectly_smooth_despite_parameter_jitter)
+{
+    FrameClock clock(with_fake_time);
+    clock.set_period(one_frame);
+
+    PosixTimestamp a;
+    auto b = clock.next_frame_after(a);
+
+    fake_sleep_until(b);
+    fake_sleep_for(one_frame/13);  // short render time
+
+    auto c = clock.next_frame_after(b + 3ms);
+    EXPECT_EQ(one_frame, c - b);
+
+    fake_sleep_until(c);
+    fake_sleep_for(one_frame/7);  // short render time
+
+    auto d = clock.next_frame_after(c + 1ms);
+    EXPECT_EQ(one_frame, d - c);
+
+    fake_sleep_until(d);
+    fake_sleep_for(one_frame/5);  // short render time
+
+    auto e = clock.next_frame_after(d + 7ms);
+    EXPECT_EQ(one_frame, e - d);
+}
+
 TEST_F(FrameClockTest, long_render_time_is_recoverable_without_decimation)
 {
     FrameClock clock(with_fake_time);

@@ -52,10 +52,10 @@ public:
 
     /**
      * Return the next timestamp to sleep_until, which comes after the last one
-     * that was slept till. On the first frame you can just provide an
-     * uninitialized timestamp.
+     * that was slept till (or more generally after time 'when'). On the first
+     * frame you can just provide an uninitialized timestamp.
      */
-    time::PosixTimestamp next_frame_after(time::PosixTimestamp prev) const;
+    time::PosixTimestamp next_frame_after(time::PosixTimestamp when) const;
 
 private:
     time::PosixTimestamp fallback_resync_callback() const;
@@ -64,6 +64,7 @@ private:
 
     mutable std::mutex mutex;  // Protects below fields:
     mutable bool config_changed;
+    mutable std::chrono::nanoseconds phase;
     std::chrono::nanoseconds period;
     ResyncCallback resync_callback;
 };
