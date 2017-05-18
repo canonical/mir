@@ -138,11 +138,11 @@ int demo_client(const char* server, int buffer_swap_count)
     else
         assert(strcmp(mir_window_get_error_message(mcd.window), "") == 0);
 
+    MirBufferStream* bs = mir_render_surface_get_buffer_stream(rs, width, height, pixel_format);
+
     // We can keep exchanging the current buffer for a new one
     for (int i = 0; i < buffer_swap_count; i++)
     {
-        MirBufferStream* bs = mir_render_surface_get_buffer_stream(rs, width, height, pixel_format);
-
         // We can query the current graphics buffer attributes
         {
             MirGraphicsRegion graphics_region;

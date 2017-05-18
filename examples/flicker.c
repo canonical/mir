@@ -16,6 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_DEPRECATE_RENDERSURFACES 0
+
 #include "mir_toolkit/mir_client_library.h"
 
 #include <assert.h>
@@ -101,11 +103,48 @@ static void shutdown(int signum)
     }
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+typedef struct Context
+{
+    MirConnection *connection;
+    MirRenderSurface* surface;
+} Context;
+
+static void handle_event(MirWindow* window, MirEvent const* ev, void* context_)
+{
+    Context* context = (Context*)context_;
+
+    switch (mir_event_get_type(ev))
+    {
+    case mir_event_type_resize:
+    {
+        MirResizeEvent const* resize = mir_event_get_resize_event(ev);
+        int const new_width = mir_resize_event_get_width(resize);
+        int const new_height = mir_resize_event_get_height(resize);
+
+        mir_render_surface_set_size(context->surface, new_width, new_height);
+        MirWindowSpec* spec = mir_create_window_spec(context->connection);
+        mir_window_spec_add_render_surface(spec, context->surface, new_width, new_height, 0, 0);
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
+        break;
+    }
+
+    case mir_event_type_close_window:
+        running = 0;
+        printf("Received close event from server.\n");
+        break;
+
+    default:
+        break;
+    }
+}
+
+
 int main(int argc, char* argv[])
 {
-    MirConnection *connection = 0;
+    static int const width = 640;
+    static int const height = 480;
+
     MirWindow *window = 0;
     int swapinterval = 1;
 
@@ -140,25 +179,30 @@ int main(int argc, char* argv[])
         }
     }
 
+    Context context = { 0, 0 };
+
     puts("Starting");
 
-    connection = mir_connect_sync(socket_file, __FILE__);
-    assert(connection != NULL);
-    assert(mir_connection_is_valid(connection));
-    assert(strcmp(mir_connection_get_error_message(connection), "") == 0);
+    context.connection = mir_connect_sync(socket_file, __FILE__);
+    assert(context.connection != NULL);
+    assert(mir_connection_is_valid(context.connection));
+    assert(strcmp(mir_connection_get_error_message(context.connection), "") == 0);
     puts("Connected");
 
     unsigned int const num_formats = 32;
     MirPixelFormat pixel_formats[num_formats];
     unsigned int valid_formats;
-    mir_connection_get_available_surface_formats(connection, pixel_formats, num_formats, &valid_formats);
+    mir_connection_get_available_surface_formats(context.connection, pixel_formats, num_formats, &valid_formats);
     MirPixelFormat pixel_format = find_8888_format(pixel_formats, valid_formats);
 
-    MirWindowSpec *spec = mir_create_normal_window_spec(connection, 640, 480);
+    context.surface = mir_connection_create_render_surface_sync(context.connection, width, height);
+    puts("Surface created");
+
+    MirWindowSpec *spec = mir_create_normal_window_spec(context.connection, width, height);
     assert(spec != NULL);
-    mir_window_spec_set_pixel_format(spec, pixel_format);
     mir_window_spec_set_name(spec, __FILE__);
-    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_add_render_surface(spec, context.surface, width, height, 0, 0);
+    mir_window_spec_set_event_handler(spec, handle_event, &context);
 
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
@@ -168,7 +212,7 @@ int main(int argc, char* argv[])
     assert(strcmp(mir_window_get_error_message(window), "") == 0);
     puts("Window created");
 
-    MirBufferStream* bs = mir_window_get_buffer_stream(window);
+    MirBufferStream* bs = mir_render_surface_get_buffer_stream(context.surface, width, height, pixel_format);
     mir_buffer_stream_set_swapinterval(bs, swapinterval);
 
     uint32_t pattern[2] = {0};
@@ -192,9 +236,11 @@ int main(int argc, char* argv[])
     mir_window_release_sync(window);
     puts("Window released");
 
-    mir_connection_release(connection);
+    mir_render_surface_release(context.surface);
+    puts("Surface released");
+
+    mir_connection_release(context.connection);
     puts("Connection released");
 
     return 0;
 }
-#pragma GCC diagnostic pop
