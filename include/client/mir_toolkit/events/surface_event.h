@@ -49,7 +49,7 @@ MIR_FOR_REMOVAL_IN_VERSION_1("use mir_window_event_get_attribute instead");
  * \return           The associated attribute value
  */
 int mir_surface_event_get_attribute_value(MirSurfaceEvent const* event)
-MIR_FOR_REMOVAL_IN_VERSION_1("use make_event with mir_window_event_get_attribute_value instead");
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_window_event_get_attribute_value with MirWindowEvent instead");
 #pragma GCC diagnostic pop
 
 #ifdef __cplusplus
