@@ -21,6 +21,18 @@
 #define MIR_TOOLKIT_MIR_RENDER_SURFACE_H_
 
 #include <mir_toolkit/client_types.h>
+#include <mir_toolkit/deprecations.h>
+
+#ifndef MIR_DEPRECATE_RENDERSURFACES
+    #define MIR_DEPRECATE_RENDERSURFACES 1
+#endif
+
+#if MIR_ENABLE_DEPRECATIONS > 0 && MIR_DEPRECATE_RENDERSURFACES > 0
+    #define MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1\
+    __attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")))
+#else
+    #define MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1
+#endif
 
 #ifdef __cplusplus
 /**
@@ -29,6 +41,9 @@
  */
 extern "C" {
 #endif
+
+typedef void (*MirRenderSurfaceCallback)(MirRenderSurface*, void* context)
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -49,7 +64,7 @@ void mir_connection_create_render_surface(
     int width, int height,
     MirRenderSurfaceCallback callback,
     void* context)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Create a render surface and wait for the result
@@ -64,7 +79,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
 MirRenderSurface* mir_connection_create_render_surface_sync(
     MirConnection* connection,
     int width, int height)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Get the size of the MirRenderSurface
@@ -76,7 +91,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
 void mir_render_surface_get_size(
     MirRenderSurface* render_surface,
     int* width, int* height)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Set the size of the MirRenderSurface
@@ -88,7 +103,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
 void mir_render_surface_set_size(
     MirRenderSurface* render_surface,
     int width, int height)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Test for a valid render surface
@@ -100,7 +115,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
  */
 bool mir_render_surface_is_valid(
     MirRenderSurface* render_surface)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Retrieve a text description of the error. The returned string is owned by
@@ -113,7 +128,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
  */
 char const *mir_render_surface_get_error_message(
     MirRenderSurface* render_surface)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Release the specified render surface
@@ -122,7 +137,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
  */
 void mir_render_surface_release(
     MirRenderSurface* render_surface)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Obtain the buffer stream backing a given render surface.
@@ -142,7 +157,7 @@ MirBufferStream* mir_render_surface_get_buffer_stream(
     MirRenderSurface* render_surface,
     int width, int height,
     MirPixelFormat format)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Obtain the presentation chain backing a given render surface.
@@ -155,7 +170,7 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
  */
 MirPresentationChain* mir_render_surface_get_presentation_chain(
     MirRenderSurface* render_surface)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /** Query whether the server supports a given presentation mode.
  *
@@ -189,7 +204,7 @@ void mir_window_spec_set_cursor_render_surface(
     MirWindowSpec* spec,
     MirRenderSurface* render_surface,
     int hotspot_x, int hotspot_y)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 /**
  * Returns a new cursor configuration tied to a given render surface.
@@ -204,7 +219,30 @@ __attribute__((deprecated("This function is slated for rename due to MirRenderSu
 MirCursorConfiguration* mir_cursor_configuration_from_render_surface(
     MirRenderSurface* surface,
     int hotspot_x, int hotspot_y)
-__attribute__((deprecated("Use mir_window_spec_set_cursor_render_surface instead")));
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+
+
+/**
+ * Set the MirWindowSpec to display content contained in a render surface
+ *
+ * \warning: The initial call to mir_window_spec_add_render_surface will set
+ *           the bottom-most content, and subsequent calls will stack the
+ *           content on top.
+ *
+ * \param spec             The window_spec to be updated
+ * \param render_surface   The render surface containing the content to be displayed
+ * \param logical_width    The width that the content will be displayed at
+ *                         (Ignored for buffer streams)
+ * \param logical_height   The height that the content will be displayed at
+ *                         (Ignored for buffer streams)
+ * \param displacement_x   The x displacement from the top-left corner of the MirWindow
+ * \param displacement_y   The y displacement from the top-left corner of the MirWindow
+ */
+void mir_window_spec_add_render_surface(MirWindowSpec* spec,
+                                        MirRenderSurface* render_surface,
+                                        int logical_width, int logical_height,
+                                        int displacement_x, int displacement_y)
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 
 #pragma GCC diagnostic pop
 

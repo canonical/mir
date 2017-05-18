@@ -20,6 +20,7 @@
 
 #include <mir_toolkit/client_types.h>
 #include <mir_toolkit/common.h>
+#include <mir_toolkit/deprecations.h>
 
 #include <stdbool.h>
 
@@ -93,7 +94,7 @@ void mir_connection_release(MirConnection *connection);
  *   \param [out] platform_package  Structure to be populated
  */
 void mir_connection_get_platform(MirConnection *connection, MirPlatformPackage *platform_package)
-__attribute__((deprecated("use platform extensions instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use platform extensions instead");
 
 /**
  * Query graphics platform module.
@@ -105,7 +106,7 @@ __attribute__((deprecated("use platform extensions instead")));
  *   \param [out] properties    Structure to be populated
  */
 void mir_connection_get_graphics_module(MirConnection *connection, MirModuleProperties *properties)
-__attribute__((deprecated("use graphics module extension instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use graphics module extension instead");
 
 /**
  * Register a callback to be called when a Lifecycle state change occurs.
@@ -156,7 +157,7 @@ void mir_connection_pong(MirConnection* connection, int32_t serial);
  *   \return                        structure that describes the display configuration
  */
 MirDisplayConfiguration* mir_connection_create_display_config(MirConnection *connection)
-__attribute__ ((deprecated("use mir_connection_create_display_configuration instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_connection_create_display_configuration instead");
 
 /**
  * Query the display
@@ -188,7 +189,7 @@ void mir_connection_set_display_config_change_callback(
  *   \param [in] display_configuration  The display_configuration information resource to be destroyed
  */
 void mir_display_config_destroy(MirDisplayConfiguration* display_configuration)
-__attribute__ ((deprecated("use mir_display_config_release instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_display_config_release instead");
 
 /**
  * Apply the display configuration
@@ -204,7 +205,7 @@ __attribute__ ((deprecated("use mir_display_config_release instead")));
  *   \return                            A handle that can be passed to mir_wait_for
  */
 MirWaitHandle* mir_connection_apply_display_config(MirConnection *connection, MirDisplayConfiguration* display_configuration)
-__attribute__ ((deprecated("use mir_connection_apply_session_display_config instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_connection_apply_session_display_config instead");
 
 /**
  * Apply the display config for the connection
@@ -254,7 +255,7 @@ void mir_connection_remove_session_display_config(MirConnection* connection);
 MirWaitHandle* mir_connection_set_base_display_config(
     MirConnection* connection,
     MirDisplayConfiguration const* display_configuration)
-__attribute__ ((deprecated("use mir_connection_preview_base_display_configuration/mir_connection_confirm_base_display_configuration")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_connection_preview_base_display_configuration/mir_connection_confirm_base_display_configuration");
 
 
 /**
@@ -333,7 +334,7 @@ void mir_connection_cancel_base_display_configuration_preview(
  *   \return                 An EGLNativeDisplayType that the client can use
  */
 MirEGLNativeDisplayType mir_connection_get_egl_native_display(MirConnection *connection)
-__attribute__((deprecated("Use MirConnection * as the native display instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use MirConnection * as the native display instead");
 
 /**
  * Get the exact MirPixelFormat to use in creating a surface for a chosen
@@ -346,7 +347,7 @@ __attribute__((deprecated("Use MirConnection * as the native display instead")))
  */
 MirPixelFormat mir_connection_get_egl_pixel_format(
     MirConnection *connection, void *egldisplay, void *eglconfig)
-__attribute__((deprecated("Use EGL directly, the EGL implementation will now set correct pixel format")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use EGL directly, the EGL implementation will now set correct pixel format");
 
 /**
  * Get the list of possible formats that a surface can be created with.
@@ -383,7 +384,7 @@ MirWaitHandle* mir_connection_platform_operation(
     MirConnection* connection,
     MirPlatformMessage const* request,
     MirPlatformOperationCallback callback, void* context)
-__attribute__ ((deprecated("use platform specific extensions instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use platform specific extensions instead");
 
 /**
  * Create a snapshot of the attached input devices and device configurations.
@@ -441,7 +442,7 @@ void mir_connection_set_base_input_config(
  * \param [in] config  The input configuration
  */
 void mir_input_config_destroy(MirInputConfig const* config)
-__attribute__ ((deprecated("use mir_input_config_release instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_input_config_release instead");
 
 /**
  * Release this snapshot of the input configuration.

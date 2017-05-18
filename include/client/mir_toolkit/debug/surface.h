@@ -19,6 +19,7 @@
 #define MIR_CLIENT_LIBRARY_DEBUG_H
 
 #include <mir_toolkit/mir_client_library.h>
+#include <mir_toolkit/deprecations.h>
 
 /* This header defines debug interfaces that aren't expected to be generally useful
  * and do not have the same API-stability guarantees that the main API has */
@@ -65,13 +66,13 @@ uint32_t mir_debug_window_current_buffer_id(MirWindow *window);
 bool mir_debug_surface_coords_to_screen(MirSurface *surface,
                                        int x, int y,
                                        int* screen_x, int* screen_y)
-__attribute__((deprecated("Use mir_extension_window_coordinate_translation instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_extension_window_coordinate_translation instead");
 
 int mir_debug_surface_id(MirSurface *surface)
-__attribute__((deprecated("Use mir_debug_window_id() instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_debug_window_id() instead");
 
 uint32_t mir_debug_surface_current_buffer_id(MirSurface *surface)
-__attribute__((deprecated("Use mir_debug_window_current_buffer_id() instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_debug_window_current_buffer_id() instead");
 
 #pragma GCC diagnostic pop
 

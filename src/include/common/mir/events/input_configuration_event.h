@@ -37,8 +37,7 @@ struct MirInputConfigurationEvent : MirEvent
 
     MirInputDeviceId id() const;
     void set_id(MirInputDeviceId id);
-}
- __attribute__((deprecated));
+};
 #pragma GCC diagnostic pop
 
 #endif /* MIR_COMMON_INPUT_CONFIGURATION_EVENT_H_ */
