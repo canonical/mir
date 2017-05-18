@@ -16,6 +16,8 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
+#define MIR_DEPRECATE_RENDERSURFACES 0
+
 #include "mir_toolkit/mir_client_library.h"
 #include "eglapp.h"
 #include <assert.h>
@@ -86,7 +88,6 @@ static GLuint load_shader(const char *src, GLenum type)
 static void on_event(MirWindow *surface, const MirEvent *event, void *context)
 {
     State *state = (State*)context;
-    bool handled = true;
 
     // FIXME: We presently need to know that events come in on a different
     //        thread to main (LP: #1194384). When that's resolved, simple
@@ -99,15 +100,12 @@ static void on_event(MirWindow *surface, const MirEvent *event, void *context)
         state->resized = true;
         break;
     default:
-        handled = false;
         break;
     }
 
     pthread_mutex_unlock(&state->mutex);
 
-    if (!handled)
-        mir_eglapp_handle_event(surface, event, NULL);
-
+    mir_eglapp_handle_event(surface, event, NULL);
 }
 
 static void fourcc_string(__u32 x, char str[5])
@@ -387,11 +385,8 @@ int main(int argc, char *argv[])
     if (ultrafast)
     {
         pref = camera_pref_speed;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        MirBufferStream* bs = mir_window_get_buffer_stream(mir_eglapp_native_window());
-#pragma GCC diagnostic pop
-        mir_buffer_stream_set_swapinterval(bs, 0);
+//        MirBufferStream* bs = mir_window_get_buffer_stream(mir_eglapp_native_window());
+//        mir_buffer_stream_set_swapinterval(bs, 0);
     }
     Camera *cam = open_camera(dev_video, pref, 1);
     if (!cam)
