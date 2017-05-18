@@ -578,9 +578,6 @@ typedef void (*mir_surface_id_callback)(
     MirSurface* surface, MirPersistentId* id, void* context)
 MIR_FOR_REMOVAL_IN_VERSION_1("Use MirWindowIdCallback instead");
 
-typedef void (*MirRenderSurfaceCallback)(MirRenderSurface*, void* context)
-MIR_FOR_REMOVAL_IN_VERSION_1("This type is slated for rename due to MirRenderSurface-->MirSurface transition");
-
 typedef MirSurfaceParameters MirWindowParameters
 MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_get_xxx apis or listen for attribute events instead");
 

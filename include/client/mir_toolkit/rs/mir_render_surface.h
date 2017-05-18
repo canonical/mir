@@ -42,6 +42,9 @@
 extern "C" {
 #endif
 
+typedef void (*MirRenderSurfaceCallback)(MirRenderSurface*, void* context)
+MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 /**
