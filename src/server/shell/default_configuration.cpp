@@ -53,7 +53,10 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 auto mir::DefaultServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
 {
     return [this](msh::FocusController* focus_controller)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         { return std::make_shared<msh::CanonicalWindowManager>(
+#pragma GCC diagnostic pop
             focus_controller,
             the_shell_display_layout()); };
 }
