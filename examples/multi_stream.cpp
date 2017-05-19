@@ -40,28 +40,29 @@ class BufferStream
 public:
     BufferStream(
         Connection& connection,
-        unsigned int width,
-        unsigned int height,
+        int width,
+        int height,
         bool prefer_alpha = false,
         bool hardware = true);
 
     operator MirBufferStream*() const;
 
+    BufferStream& operator=(BufferStream &&) = default;
+
 private:
     MirBufferStream* create_stream(
         MirConnection* connection,
-        unsigned int width,
-        unsigned int height,
+        int width,
+        int height,
         bool prefer_alpha,
         bool hardware);
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    std::unique_ptr<MirBufferStream, decltype(&mir_buffer_stream_release_sync)> const stream;
+    std::unique_ptr<MirBufferStream, decltype(&mir_buffer_stream_release_sync)> stream;
 #pragma GCC diagnostic pop
 
     BufferStream(BufferStream const&) = delete;
-
     BufferStream& operator=(BufferStream const&) = delete;
 };
 }
@@ -247,13 +248,13 @@ int main(int argc, char* argv[])
     MirBufferStream* surface_stream = mir_window_get_buffer_stream(window);
 #pragma GCC diagnostic pop
     int topSize = 100, dTopSize = 2;
-    auto top = std::make_unique<me::BufferStream>(connection, topSize, topSize, true, false);
+    me::BufferStream top{connection, topSize, topSize, true, false};
     me::BufferStream bottom(connection, 50, 50, true, false);
 
     fill_stream_with(surface_stream, 255, 0, 0, 128);
     mir_buffer_stream_swap_buffers_sync(surface_stream);
-    fill_stream_with(*top, 0, 255, 0, 128);
-    mir_buffer_stream_swap_buffers_sync(*top);
+    fill_stream_with(top, 0, 255, 0, 128);
+    mir_buffer_stream_swap_buffers_sync(top);
     fill_stream_with(bottom, 0, 0, 255, 128);
     mir_buffer_stream_swap_buffers_sync(bottom);
 
@@ -269,7 +270,7 @@ int main(int argc, char* argv[])
 
     arrangement[2].displacement_x = -40;
     arrangement[2].displacement_y = -10;
-    arrangement[2].stream = *top;
+    arrangement[2].stream = top;
 
     int top_dx{1}, top_dy{2};
     int bottom_dx{2}, bottom_dy{-1};
@@ -308,19 +309,19 @@ int main(int argc, char* argv[])
 
         bounce_position(topSize, dTopSize, 70, 120);
 
-        top = std::make_unique<me::BufferStream>(connection, topSize, topSize, true, false);
-        arrangement[2].stream = *top;
+        top = me::BufferStream{connection, topSize, topSize, true, false};
+        arrangement[2].stream = top;
 
         fill_stream_with(surface_stream, baseColour, 0, 0, 128);
         fill_stream_with(bottom, 0, 0, bottomColour, 128);
-        fill_stream_with(*top, 0, topColour, 0, 128);
+        fill_stream_with(top, 0, topColour, 0, 128);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         mir_window_spec_set_streams(spec, arrangement.data(), arrangement.size());
 #pragma GCC diagnostic pop
         mir_buffer_stream_swap_buffers_sync(surface_stream);
         mir_buffer_stream_swap_buffers_sync(bottom);
-        mir_buffer_stream_swap_buffers_sync(*top);
+        mir_buffer_stream_swap_buffers_sync(top);
         mir_window_apply_spec(window, spec);
     }
     mir_window_spec_release(spec);
@@ -334,8 +335,8 @@ int main(int argc, char* argv[])
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 me::BufferStream::BufferStream(
     Connection& connection,
-    unsigned int width,
-    unsigned int height,
+    int width,
+    int height,
     bool prefer_alpha,
     bool hardware)
     : stream{create_stream(connection, width, height, prefer_alpha, hardware),
@@ -355,8 +356,8 @@ me::BufferStream::operator MirBufferStream*() const
 
 MirBufferStream* me::BufferStream::create_stream(
     MirConnection *connection,
-    unsigned int width,
-    unsigned int height,
+    int width,
+    int height,
     bool prefer_alpha,
     bool hardware)
 {
