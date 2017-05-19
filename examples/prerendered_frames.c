@@ -17,8 +17,6 @@
  *
  */
 
-#define MIR_DEPRECATE_RENDERSURFACES 0
-
 #include <mir_toolkit/mir_connection.h>
 #include <mir_toolkit/mir_buffer_stream.h>
 #include <mir_toolkit/mir_window.h>

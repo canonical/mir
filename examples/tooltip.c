@@ -17,8 +17,6 @@
  * Author: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_DEPRECATE_RENDERSURFACES 0
-
 #include "eglapp.h"
 #include <mir_toolkit/mir_client_library.h>
 

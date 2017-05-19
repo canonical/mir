@@ -17,8 +17,6 @@
  *         Cemil Azizoglu <cemil.azizoglu@canonical.com>
  */
 
-#define MIR_DEPRECATE_RENDERSURFACES 0
-
 #include <boost/program_options.hpp>
 #include <iostream>
 #include <thread>

@@ -16,8 +16,6 @@
  * Author: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#define MIR_DEPRECATE_RENDERSURFACES 0
-
 #include <boost/program_options.hpp>
 #include <iostream>
 #include <thread>

@@ -16,8 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#define MIR_DEPRECATE_RENDERSURFACES 0
-
 #include "mir_toolkit/mir_client_library.h"
 
 #include <assert.h>

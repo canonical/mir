@@ -16,8 +16,6 @@
  * Author: Daniel van Vugt <daniel.van.vugt@canonical.com>
  */
 
-#define MIR_DEPRECATE_RENDERSURFACES 0
-
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/events/input/input_event.h"
 
