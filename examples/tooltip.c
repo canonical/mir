@@ -17,6 +17,8 @@
  * Author: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#define MIR_DEPRECATE_RENDERSURFACES 0
+
 #include "eglapp.h"
 #include <mir_toolkit/mir_client_library.h>
 
@@ -28,7 +30,14 @@
 /// A simple orange client surface with a simple grey tooltip
 
 static MirPixelFormat select_pixel_format(MirConnection* connection);
-static MirWindow* create_tooltip(MirConnection* const connection, MirWindow* const parent, const MirPixelFormat format);
+
+typedef struct MyWindow
+{
+    MirRenderSurface    *surface;
+    MirWindow           *window;
+} MyWindow;
+
+static MyWindow create_tooltip(MirConnection* const connection, MirWindow* const parent, const MirPixelFormat format);
 
 typedef struct Color
 {
@@ -61,12 +70,13 @@ int main(int argc, char *argv[])
     mir_window_apply_spec(parent, spec);
     mir_window_spec_release(spec);
 
-    MirWindow* tooltip = create_tooltip(connection, parent, select_pixel_format(connection));
+    MyWindow tooltip = create_tooltip(connection, parent, select_pixel_format(connection));
     while (mir_eglapp_running())
     {
     }
 
-    mir_window_release_sync(tooltip);
+    mir_window_release_sync(tooltip.window);
+    mir_render_surface_release(tooltip.surface);
     mir_eglapp_cleanup();
 
     return 0;
@@ -97,28 +107,29 @@ static MirPixelFormat select_pixel_format(MirConnection* connection)
     return pixel_format;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-static MirWindow* create_tooltip(MirConnection* const connection, MirWindow* const parent, const MirPixelFormat format)
+
+
+static MyWindow create_tooltip(MirConnection* const connection, MirWindow* const parent, const MirPixelFormat format)
 {
     MirRectangle zone = { 0, 0, 10, 10 };
     int const width = 50;
     int const height = 20;
+
+    MirRenderSurface *const surface = mir_connection_create_render_surface_sync(connection, width, height);
+
     MirWindowSpec* const spec = mir_create_tip_window_spec(
         connection, width, height, parent, &zone, mir_edge_attachment_vertical);
-    mir_window_spec_set_pixel_format(spec, format);
-
-    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
     mir_window_spec_set_name(spec, "tooltip");
     mir_window_spec_set_min_width(spec, width);
     mir_window_spec_set_max_width(spec, width);
     mir_window_spec_set_min_height(spec, height);
     mir_window_spec_set_max_height(spec, height);
+    mir_window_spec_add_render_surface(spec, surface, width, height, 0, 0);
 
     MirWindow* tooltip = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
-    MirBufferStream* const bs = mir_window_get_buffer_stream(tooltip);
+    MirBufferStream* bs = mir_render_surface_get_buffer_stream(surface, width, height, format);
     MirGraphicsRegion buffer;
     mir_buffer_stream_get_graphics_region(bs, &buffer);
 
@@ -156,6 +167,6 @@ static MirWindow* create_tooltip(MirConnection* const connection, MirWindow* con
 
     mir_buffer_stream_swap_buffers_sync(bs);
 
-    return tooltip;
+    MyWindow result = {surface, tooltip};
+    return result;
 }
-#pragma GCC diagnostic pop
