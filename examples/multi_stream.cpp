@@ -31,6 +31,42 @@
 
 namespace po = boost::program_options;
 
+namespace mir
+{
+namespace examples
+{
+class BufferStream
+{
+public:
+    BufferStream(
+        Connection& connection,
+        unsigned int width,
+        unsigned int height,
+        bool prefer_alpha = false,
+        bool hardware = true);
+
+    operator MirBufferStream*() const;
+
+private:
+    MirBufferStream* create_stream(
+        MirConnection* connection,
+        unsigned int width,
+        unsigned int height,
+        bool prefer_alpha,
+        bool hardware);
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+    std::unique_ptr<MirBufferStream, decltype(&mir_buffer_stream_release_sync)> const stream;
+#pragma GCC diagnostic pop
+
+    BufferStream(BufferStream const&) = delete;
+
+    BufferStream& operator=(BufferStream const&) = delete;
+};
+}
+}
+
 namespace me = mir::examples;
 
 class Pixel
@@ -292,4 +328,63 @@ int main(int argc, char* argv[])
 
     std::cout << "Quitting; have a nice day." << std::endl;
     return 0;
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+me::BufferStream::BufferStream(
+    Connection& connection,
+    unsigned int width,
+    unsigned int height,
+    bool prefer_alpha,
+    bool hardware)
+    : stream{create_stream(connection, width, height, prefer_alpha, hardware),
+             &mir_buffer_stream_release_sync}
+{
+    if (!mir_buffer_stream_is_valid(stream.get()))
+    {
+        // TODO: Huh. There's no mir_buffer_stream_get_error?
+        throw std::runtime_error("Could not create buffer stream.");
+    }
+}
+
+me::BufferStream::operator MirBufferStream*() const
+{
+    return stream.get();
+}
+
+MirBufferStream* me::BufferStream::create_stream(
+    MirConnection *connection,
+    unsigned int width,
+    unsigned int height,
+    bool prefer_alpha,
+    bool hardware)
+{
+    MirPixelFormat selected_format;
+    unsigned int valid_formats{0};
+    MirPixelFormat pixel_formats[mir_pixel_formats];
+    mir_connection_get_available_surface_formats(connection, pixel_formats, mir_pixel_formats, &valid_formats);
+    if (valid_formats == 0)
+        throw std::runtime_error("no pixel formats for buffer stream");
+    selected_format = pixel_formats[0];
+    //select an 8 bit opaque format if we can
+    if (!prefer_alpha)
+    {
+        for(auto i = 0u; i < valid_formats; i++)
+        {
+            if (pixel_formats[i] == mir_pixel_format_xbgr_8888 ||
+                pixel_formats[i] == mir_pixel_format_xrgb_8888)
+            {
+                selected_format = pixel_formats[i];
+                break;
+            }
+        }
+    }
+
+    return mir_connection_create_buffer_stream_sync(
+        connection,
+        width,
+        height,
+        selected_format,
+        hardware ? mir_buffer_usage_hardware : mir_buffer_usage_software);
 }
