@@ -19,6 +19,7 @@
 #define MIR_TOOLKIT_MIR_WAIT_H_
 
 #include <mir_toolkit/client_types.h>
+#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 /**
@@ -36,7 +37,7 @@ struct MirWaitHandle;
  *   \param [in] wait_handle  Handle returned by an asynchronous request
  */
 void mir_wait_for(MirWaitHandle *wait_handle)
-__attribute__ ((deprecated("No longer supported - use callbacks or wait for state changes")));
+MIR_FOR_REMOVAL_IN_VERSION_1("No longer supported - use callbacks or wait for state changes");
 
 /**
  * Wait on the supplied handle until one instance of the associated request
@@ -47,7 +48,7 @@ __attribute__ ((deprecated("No longer supported - use callbacks or wait for stat
  *   \param [in] wait_handle  Handle returned by an asynchronous request
  */
 void mir_wait_for_one(MirWaitHandle *wait_handle)
-__attribute__ ((deprecated("No longer supported - use callbacks or wait for state changes")));
+MIR_FOR_REMOVAL_IN_VERSION_1("No longer supported - use callbacks or wait for state changes");
 
 
 #ifdef __cplusplus

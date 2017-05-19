@@ -20,6 +20,7 @@
 #define MIR_TOOLKIT_EVENTS_SURFACE_EVENT_H_
 
 #include <mir_toolkit/events/event.h>
+#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 /**
@@ -39,7 +40,7 @@ extern "C" {
  * \return           The associated attribute
  */
 MirSurfaceAttrib mir_surface_event_get_attribute(MirSurfaceEvent const* event)
-__attribute__ ((deprecated("use mir_window_event_get_attribute instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_window_event_get_attribute instead");
 
 /**
  * Retrieve the new value of the associated attribute for a given MirSurfaceEvent
@@ -48,7 +49,7 @@ __attribute__ ((deprecated("use mir_window_event_get_attribute instead")));
  * \return           The associated attribute value
  */
 int mir_surface_event_get_attribute_value(MirSurfaceEvent const* event)
-__attribute__ ((deprecated("use make_event with mir_window_event_get_attribute_value instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_window_event_get_attribute_value with MirWindowEvent instead");
 #pragma GCC diagnostic pop
 
 #ifdef __cplusplus

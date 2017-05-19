@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "mir_toolkit/common.h"
+#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 /**
@@ -58,24 +59,24 @@ typedef enum
 #pragma GCC diagnostic pop
 
 typedef struct MirSurfaceEvent MirSurfaceEvent
-    __attribute__ ((deprecated("use MirWindowEvent instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("use MirWindowEvent instead");
 typedef struct MirSurfaceEvent MirWindowEvent;
 typedef struct MirResizeEvent MirResizeEvent;
 typedef struct MirPromptSessionEvent MirPromptSessionEvent;
 typedef struct MirOrientationEvent MirOrientationEvent;
 typedef struct MirCloseSurfaceEvent MirCloseSurfaceEvent
-    __attribute__ ((deprecated("use MirCloseWindowEvent instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("use MirCloseWindowEvent instead");
 typedef struct MirCloseSurfaceEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
 typedef struct MirKeymapEvent MirKeymapEvent;
 typedef struct MirInputConfigurationEvent MirInputConfigurationEvent 
-    __attribute__ ((deprecated("Use MirInputDeviceStateEvent and the MirInputConfig callback instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Use MirInputDeviceStateEvent and the MirInputConfig callback instead");
 typedef struct MirSurfaceOutputEvent MirSurfaceOutputEvent
-    __attribute__ ((deprecated("use MirWindowOutputEvent instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("use MirWindowOutputEvent instead");
 typedef struct MirSurfaceOutputEvent MirWindowOutputEvent;
 typedef struct MirInputDeviceStateEvent MirInputDeviceStateEvent;
 typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent
-    __attribute__ ((deprecated("use MirWindowPlacementEvent instead")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("use MirWindowPlacementEvent instead");
 typedef struct MirSurfacePlacementEvent MirWindowPlacementEvent;
 
 typedef struct MirCookie MirCookie;
@@ -136,7 +137,7 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* event);
  * \return           The associated MirSurfaceEvent
  */
 MirSurfaceEvent const* mir_event_get_surface_event(MirEvent const* event)
-__attribute__ ((deprecated("use mir_event_get_window_event instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_event_get_window_event instead");
 
 /**
  * Retrieve the MirWindowEvent associated with a MirEvent of
@@ -195,7 +196,7 @@ MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* event
  * \return           The associated MirCloseSurfaceEvent
  */
 /// @cond
-__attribute__ ((deprecated))
+MIR_FOR_REMOVAL_IN_VERSION_1("Use of this function is pointless as there is no way to use the return value")
 /// @endcond
 MirCloseSurfaceEvent const* mir_event_get_close_surface_event(MirEvent const* event);
 #pragma GCC diagnostic pop
@@ -223,7 +224,7 @@ MirKeymapEvent const* mir_event_get_keymap_event(MirEvent const* event);
  * \return           The associated MirInputConfigurationEvent
  */
 /// @cond
-__attribute__((deprecated))
+MIR_FOR_REMOVAL_IN_VERSION_1("Input devices and changes to the input devices are indicated via the MirInputConfigCallback")
 /// @endcond
 MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEvent const* event);
 #pragma GCC diagnostic pop
@@ -242,7 +243,7 @@ MirInputConfigurationEvent const* mir_event_get_input_configuration_event(MirEve
  * \return           The associated MirSurfaceOutputEvent
  */
 MirSurfaceOutputEvent const* mir_event_get_surface_output_event(MirEvent const* event)
-__attribute__((deprecated("use mir_event_get_window_output_event")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_event_get_window_output_event");
 
 /**
  * Retrieve the MirWindowOutputEvent associated with a MirEvent of type
@@ -279,7 +280,7 @@ MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent 
  * \return           The associated MirSurfacePlacementEvent
  */
 MirSurfacePlacementEvent const* mir_event_get_surface_placement_event(MirEvent const* event)
-__attribute__((deprecated("use mir_event_get_window_placement_event")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_event_get_window_placement_event");
 
 /**
  * Retrieve the MirWindowPlacementEvent associated with a MirEvent of

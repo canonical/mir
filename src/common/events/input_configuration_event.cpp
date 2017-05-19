@@ -18,13 +18,12 @@
 
 #include "mir/events/input_configuration_event.h"
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirInputConfigurationEvent::MirInputConfigurationEvent()
 {
     event.initInputConfiguration();
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirInputConfigurationAction MirInputConfigurationEvent::action() const
 {
     return static_cast<MirInputConfigurationAction>(event.asReader().getInputConfiguration().getAction());
@@ -34,7 +33,6 @@ void MirInputConfigurationEvent::set_action(MirInputConfigurationAction action)
 {
     event.getInputConfiguration().setAction(static_cast<mir::capnp::InputConfigurationEvent::Action>(action));
 }
-#pragma GCC diagnostic pop
 
 std::chrono::nanoseconds MirInputConfigurationEvent::when() const
 {

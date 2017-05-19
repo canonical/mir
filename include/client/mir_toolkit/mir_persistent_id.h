@@ -19,6 +19,7 @@
 #define MIR_TOOLKIT_MIR_PERSISTENT_ID_H_
 
 #include <mir_toolkit/client_types.h>
+#include <mir_toolkit/deprecations.h>
 
 #include <stdbool.h>
 
@@ -39,7 +40,7 @@ extern "C" {
  * \note This does not guarantee that the ID refers to a currently valid object.
  */
 bool mir_persistent_id_is_valid(MirPersistentId* id)
-__attribute__((deprecated("Use mir_window_id_is_valid() instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_id_is_valid() instead");
 
 /**
  * \brief Free a MirPersistentId
@@ -48,7 +49,7 @@ __attribute__((deprecated("Use mir_window_id_is_valid() instead")));
  *       object referred to by \arg id.
  */
 void mir_persistent_id_release(MirPersistentId* id)
-__attribute__((deprecated("Use mir_window_id_release() instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_id_release() instead");
 
 /**
  * \brief Get a string representation of a MirSurfaceId
@@ -59,7 +60,7 @@ __attribute__((deprecated("Use mir_window_id_release() instead")));
  * \see mir_surface_id_from_string
  */
 char const* mir_persistent_id_as_string(MirPersistentId* id)
-__attribute__((deprecated("Use mir_window_id_as_string() instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_id_as_string() instead");
 
 /**
  * \brief Deserialise a string representation of a MirSurfaceId
@@ -67,7 +68,7 @@ __attribute__((deprecated("Use mir_window_id_as_string() instead")));
  * \return The deserialised MirSurfaceId
  */
 MirPersistentId* mir_persistent_id_from_string(char const* string_representation)
-__attribute__((deprecated("Use mir_window_id_from_string() instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_id_from_string() instead");
 
 #pragma GCC diagnostic pop
 

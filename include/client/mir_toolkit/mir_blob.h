@@ -19,6 +19,7 @@
 #define MIR_TOOLKIT_MIR_BLOB_H_
 
 #include <mir_toolkit/client_types.h>
+#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 /**
@@ -35,7 +36,7 @@ extern "C" {
  * \return                 A blob
  */
 MirBlob* mir_blob_from_display_configuration(MirDisplayConfiguration* configuration)
-__attribute__ ((deprecated("use mir_blob_from_display_config instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_blob_from_display_config instead");
 
 /**
  * Create a blob from a display config
@@ -65,7 +66,7 @@ MirBlob* mir_blob_onto_buffer(void const* buffer, size_t buffer_size);
  * \return                 A display configuration
  */
 MirDisplayConfiguration* mir_blob_to_display_configuration(MirBlob* blob)
-__attribute__ ((deprecated("use mir_blob_to_display_config instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_blob_to_display_config instead");
 
 /**
  * Create a blob from a display config

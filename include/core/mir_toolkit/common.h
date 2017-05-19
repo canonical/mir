@@ -21,6 +21,8 @@
 #ifndef MIR_COMMON_H_
 #define MIR_COMMON_H_
 
+#include <mir_toolkit/deprecations.h>
+
 //for clang
 #ifndef __has_feature
   #define __has_feature(x) 0  // Compatibility with non-clang
@@ -35,7 +37,7 @@
     (__has_extension(attribute_deprecated_with_message) && \
      __has_extension(enumerator_attributes))
   #define MIR_DEPRECATED_ENUM(ENUM, INSTEAD) \
-      ENUM __attribute__ ((deprecated("Use " #INSTEAD " instead")))
+      ENUM MIR_FOR_REMOVAL_IN_VERSION_1("Use " #INSTEAD " instead")
 #else
   #define MIR_DEPRECATED_ENUM(ENUM, INSTEAD) \
       ENUM
@@ -65,7 +67,7 @@ typedef enum MirSurfaceAttrib
     mir_surface_attrib_preferred_orientation,
     /* Must be last */
     mir_surface_attribs
-} MirSurfaceAttrib __attribute__ ((deprecated("use MirWindowAttrib")));
+} MirSurfaceAttrib MIR_FOR_REMOVAL_IN_VERSION_1("use MirWindowAttrib");
 
 /**
  * Attributes of a window that the client and server/shell may wish to
@@ -102,7 +104,7 @@ typedef enum MirSurfaceType
     mir_surface_type_satellite,    /**< AKA "toolbox"/"toolbar"             */
     mir_surface_type_tip,          /**< AKA "tooltip"                       */
     mir_surface_types
-} MirSurfaceType __attribute__ ((deprecated("use MirWindowType")));
+} MirSurfaceType MIR_FOR_REMOVAL_IN_VERSION_1("use MirWindowType");
 
 typedef enum MirWindowType
 {
@@ -132,7 +134,7 @@ typedef enum MirSurfaceState
     mir_surface_state_horizmaximized,
     mir_surface_state_hidden,
     mir_surface_states
-} MirSurfaceState __attribute__ ((deprecated("use MirWindowState")));
+} MirSurfaceState MIR_FOR_REMOVAL_IN_VERSION_1("use MirWindowState");
 
 typedef enum MirWindowState
 {
@@ -154,7 +156,7 @@ typedef enum MirSurfaceFocusState
 {
     mir_surface_unfocused = 0,
     mir_surface_focused
-} MirSurfaceFocusState __attribute__ ((deprecated("use MirWindowFocusState")));
+} MirSurfaceFocusState MIR_FOR_REMOVAL_IN_VERSION_1("use MirWindowFocusState");
 
 typedef enum MirWindowFocusState
 {
@@ -166,7 +168,7 @@ typedef enum MirSurfaceVisibility
 {
     mir_surface_visibility_occluded = 0,
     mir_surface_visibility_exposed
-} MirSurfaceVisibility __attribute__ ((deprecated("use MirWindowFocusState")));
+} MirSurfaceVisibility MIR_FOR_REMOVAL_IN_VERSION_1("use MirWindowFocusState");
 
 typedef enum MirWindowVisibility
 {

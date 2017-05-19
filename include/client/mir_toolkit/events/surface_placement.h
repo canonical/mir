@@ -20,6 +20,7 @@
 #define MIR_TOOLKIT_SURFACE_PLACEMENT_H_
 
 #include <mir_toolkit/client_types.h>
+#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 /**
@@ -38,7 +39,7 @@ typedef struct MirSurfacePlacementEvent MirSurfacePlacementEvent;
  * \return            The position relative to the parent surface
  */
 MirRectangle mir_surface_placement_get_relative_position(MirSurfacePlacementEvent const* event)
-__attribute__ ((deprecated("use mir_window_placement_get_relative_position instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_window_placement_get_relative_position instead");
 
 #ifdef __cplusplus
 }
