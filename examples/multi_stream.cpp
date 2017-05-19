@@ -32,44 +32,41 @@
 #include <memory>
 
 namespace po = boost::program_options;
+namespace me = mir::examples;
 
-namespace mir
+namespace 
 {
-namespace examples
-{
-class BufferStream
+class MyBufferStream
 {
 public:
-    BufferStream(
-        Connection& connection,
+    MyBufferStream(
+        me::Connection& connection,
         int width,
         int height,
-        bool prefer_alpha = false,
-        bool hardware = true);
+        int displacement_x,
+        int displacement_y);
 
     operator MirBufferStream*() const { return bs; }
     operator MirRenderSurface*() const;
 
-    BufferStream& operator=(BufferStream &&) = default;
+    int displacement_x{0};
+    int displacement_y{0};
+    int width{0};
+    int height{0};
+
+    MyBufferStream& operator=(MyBufferStream &&) = default;
+    MyBufferStream(MyBufferStream &&) = default;
 
 private:
 
-    MirBufferStream* get_stream(
-        MirConnection* connection,
-        int width,
-        int height,
-        bool prefer_alpha) const;
+    MirBufferStream* get_stream(MirConnection* connection, int width, int height) const;
 
     std::unique_ptr<MirRenderSurface, decltype(&mir_render_surface_release)> stream;
     MirBufferStream* bs;
 
-    BufferStream(BufferStream const&) = delete;
-    BufferStream& operator=(BufferStream const&) = delete;
+    MyBufferStream(MyBufferStream const&) = delete;
+    MyBufferStream& operator=(MyBufferStream const&) = delete;
 };
-}
-}
-
-namespace me = mir::examples;
 
 class Pixel
 {
@@ -131,6 +128,8 @@ public:
     void* const addr;
     MirPixelFormat const format;
 };
+}
+
 
 class pixel_iterator : std::iterator<std::random_access_iterator_tag, Pixel>
 {
@@ -218,6 +217,7 @@ void bounce_position(int& position, int& delta, int min, int max)
     position += delta;
 }
 
+
 int main(int argc, char* argv[])
 {
     po::options_description desc("Mir multi-bufferstream example:");
@@ -244,31 +244,21 @@ int main(int argc, char* argv[])
     me::Connection connection{socket, "Multiple MirBufferStream example"};
 
     me::NormalWindow window{connection, 200, 200, true, false};
-    me::BufferStream surface_stream{connection, 200, 200, true, false};;
+
+    std::vector<MyBufferStream> stream;
+
+    stream.emplace_back(connection, 200, 200, 0, 0);
+    fill_stream_with(stream[0], 255, 0, 0, 128);
+    mir_buffer_stream_swap_buffers_sync(stream[0]);
+
+    stream.emplace_back(connection, 50, 50, 50, 50);
+    fill_stream_with(stream[1], 0, 0, 255, 128);
+    mir_buffer_stream_swap_buffers_sync(stream[1]);
+
     int topSize = 100, dTopSize = 2;
-    me::BufferStream top{connection, topSize, topSize, true, false};
-    me::BufferStream bottom(connection, 50, 50, true, false);
-
-    fill_stream_with(surface_stream, 255, 0, 0, 128);
-    mir_buffer_stream_swap_buffers_sync(surface_stream);
-    fill_stream_with(top, 0, 255, 0, 128);
-    mir_buffer_stream_swap_buffers_sync(top);
-    fill_stream_with(bottom, 0, 0, 255, 128);
-    mir_buffer_stream_swap_buffers_sync(bottom);
-
-    std::array<MirBufferStreamInfo, 3> arrangement;
-
-    arrangement[0].displacement_x = 0;
-    arrangement[0].displacement_y = 0;
-    arrangement[0].stream = surface_stream;
-
-    arrangement[1].displacement_x = 50;
-    arrangement[1].displacement_y = 50;
-    arrangement[1].stream = bottom;
-
-    arrangement[2].displacement_x = -40;
-    arrangement[2].displacement_y = -10;
-    arrangement[2].stream = top;
+    stream.emplace_back(connection, topSize, topSize, -40, -10);
+    fill_stream_with(stream[2], 0, 255, 0, 128);
+    mir_buffer_stream_swap_buffers_sync(stream[2]);
 
     int top_dx{1}, top_dy{2};
     int bottom_dx{2}, bottom_dy{-1};
@@ -294,10 +284,10 @@ int main(int argc, char* argv[])
 
     while (poll(&signal_poll, 1, 0) <= 0)
     {
-        bounce_position(arrangement[1].displacement_x, bottom_dx, -100, 300);
-        bounce_position(arrangement[1].displacement_y, bottom_dy, -100, 300);
-        bounce_position(arrangement[2].displacement_x, top_dx, -100, 300);
-        bounce_position(arrangement[2].displacement_y, top_dy, -100, 300);
+        bounce_position(stream[1].displacement_x, bottom_dx, -100, 300);
+        bounce_position(stream[1].displacement_y, bottom_dy, -100, 300);
+        bounce_position(stream[2].displacement_x, top_dx, -100, 300);
+        bounce_position(stream[2].displacement_y, top_dy, -100, 300);
 
         bounce_position(baseColour, dbase, 128, 255);
         bounce_position(topColour, dtop, 200, 255);
@@ -305,21 +295,18 @@ int main(int argc, char* argv[])
 
         bounce_position(topSize, dTopSize, 70, 120);
 
-        top = me::BufferStream{connection, topSize, topSize, true, false};
-        arrangement[2].stream = top;
+        stream[2] = MyBufferStream{connection, topSize, topSize, stream[2].displacement_x, stream[2].displacement_y};
 
-        fill_stream_with(surface_stream, baseColour, 0, 0, 128);
-        fill_stream_with(bottom, 0, 0, bottomColour, 128);
-        fill_stream_with(top, 0, topColour, 0, 128);
-
-        mir_buffer_stream_swap_buffers_sync(surface_stream);
-        mir_buffer_stream_swap_buffers_sync(bottom);
-        mir_buffer_stream_swap_buffers_sync(top);
+        fill_stream_with(stream[0], baseColour, 0, 0, 128);
+        fill_stream_with(stream[1], 0, 0, bottomColour, 128);
+        fill_stream_with(stream[2], 0, topColour, 0, 128);
 
         auto spec = mir_create_window_spec(connection);
-        mir_window_spec_add_render_surface(spec, surface_stream, 200, 200, arrangement[0].displacement_x, arrangement[0].displacement_y);
-        mir_window_spec_add_render_surface(spec, bottom, 50, 50, arrangement[1].displacement_x, arrangement[1].displacement_y);
-        mir_window_spec_add_render_surface(spec, top, topSize, topSize, arrangement[2].displacement_x, arrangement[2].displacement_y);
+        for (auto& s : stream)
+        {
+            mir_buffer_stream_swap_buffers_sync(s);
+            mir_window_spec_add_render_surface(spec, s, s.width, s.height, s.displacement_x, s.displacement_y);
+        }
         mir_window_apply_spec(window, spec);
         mir_window_spec_release(spec);
     }
@@ -329,27 +316,27 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-me::BufferStream::BufferStream(
-    Connection& connection,
+MyBufferStream::MyBufferStream(
+    me::Connection& connection,
     int width,
     int height,
-    bool prefer_alpha,
-    bool /*hardware*/)
-    : stream{mir_connection_create_render_surface_sync(connection, width, height), &mir_render_surface_release},
-      bs{get_stream(connection, width, height, prefer_alpha)}
+    int displacement_x,
+    int displacement_y)
+    : displacement_x{displacement_x},
+      displacement_y{displacement_y},
+      width{width},
+      height{height},
+      stream{mir_connection_create_render_surface_sync(connection, width, height), &mir_render_surface_release},
+      bs{get_stream(connection, width, height)}
 {
 }
 
-me::BufferStream::operator MirRenderSurface*() const
+MyBufferStream::operator MirRenderSurface*() const
 {
     return stream.get();
 }
 
-MirBufferStream* me::BufferStream::get_stream(
-    MirConnection* connection,
-    int width,
-    int height,
-    bool prefer_alpha) const
+MirBufferStream* MyBufferStream::get_stream(MirConnection* connection, int width, int height) const
 {
     MirPixelFormat selected_format;
     unsigned int valid_formats{0};
@@ -358,19 +345,6 @@ MirBufferStream* me::BufferStream::get_stream(
     if (valid_formats == 0)
         throw std::runtime_error("no pixel formats for buffer stream");
     selected_format = pixel_formats[0];
-    //select an 8 bit opaque format if we can
-    if (!prefer_alpha)
-    {
-        for(auto i = 0u; i < valid_formats; i++)
-        {
-            if (pixel_formats[i] == mir_pixel_format_xbgr_8888 ||
-                pixel_formats[i] == mir_pixel_format_xrgb_8888)
-            {
-                selected_format = pixel_formats[i];
-                break;
-            }
-        }
-    }
 
     return mir_render_surface_get_buffer_stream(stream.get(), width, height, selected_format);
 }
