@@ -16,6 +16,8 @@
  * Author: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#define MIR_DEPRECATE_RENDERSURFACES 0
+
 #include <boost/program_options.hpp>
 #include <iostream>
 #include <thread>
@@ -45,22 +47,21 @@ public:
         bool prefer_alpha = false,
         bool hardware = true);
 
-    operator MirBufferStream*() const;
+    operator MirBufferStream*() const { return bs; }
+    operator MirRenderSurface*() const;
 
     BufferStream& operator=(BufferStream &&) = default;
 
 private:
-    MirBufferStream* create_stream(
+
+    MirBufferStream* get_stream(
         MirConnection* connection,
         int width,
         int height,
-        bool prefer_alpha,
-        bool hardware);
+        bool prefer_alpha) const;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    std::unique_ptr<MirBufferStream, decltype(&mir_buffer_stream_release_sync)> stream;
-#pragma GCC diagnostic pop
+    std::unique_ptr<MirRenderSurface, decltype(&mir_render_surface_release)> stream;
+    MirBufferStream* bs;
 
     BufferStream(BufferStream const&) = delete;
     BufferStream& operator=(BufferStream const&) = delete;
@@ -243,10 +244,7 @@ int main(int argc, char* argv[])
     me::Connection connection{socket, "Multiple MirBufferStream example"};
 
     me::NormalWindow window{connection, 200, 200, true, false};
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    MirBufferStream* surface_stream = mir_window_get_buffer_stream(window);
-#pragma GCC diagnostic pop
+    me::BufferStream surface_stream{connection, 200, 200, true, false};;
     int topSize = 100, dTopSize = 2;
     me::BufferStream top{connection, topSize, topSize, true, false};
     me::BufferStream bottom(connection, 50, 50, true, false);
@@ -274,8 +272,6 @@ int main(int argc, char* argv[])
 
     int top_dx{1}, top_dy{2};
     int bottom_dx{2}, bottom_dy{-1};
-
-    auto spec = mir_create_window_spec(connection);
 
     int baseColour = 255, dbase = 1;
     int topColour = 255, dtop = 1;
@@ -315,51 +311,45 @@ int main(int argc, char* argv[])
         fill_stream_with(surface_stream, baseColour, 0, 0, 128);
         fill_stream_with(bottom, 0, 0, bottomColour, 128);
         fill_stream_with(top, 0, topColour, 0, 128);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_window_spec_set_streams(spec, arrangement.data(), arrangement.size());
-#pragma GCC diagnostic pop
+
         mir_buffer_stream_swap_buffers_sync(surface_stream);
         mir_buffer_stream_swap_buffers_sync(bottom);
         mir_buffer_stream_swap_buffers_sync(top);
+
+        auto spec = mir_create_window_spec(connection);
+        mir_window_spec_add_render_surface(spec, surface_stream, 200, 200, arrangement[0].displacement_x, arrangement[0].displacement_y);
+        mir_window_spec_add_render_surface(spec, bottom, 50, 50, arrangement[1].displacement_x, arrangement[1].displacement_y);
+        mir_window_spec_add_render_surface(spec, top, topSize, topSize, arrangement[2].displacement_x, arrangement[2].displacement_y);
         mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
     }
-    mir_window_spec_release(spec);
     close(signal_watch);
 
     std::cout << "Quitting; have a nice day." << std::endl;
     return 0;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 me::BufferStream::BufferStream(
     Connection& connection,
     int width,
     int height,
     bool prefer_alpha,
-    bool hardware)
-    : stream{create_stream(connection, width, height, prefer_alpha, hardware),
-             &mir_buffer_stream_release_sync}
+    bool /*hardware*/)
+    : stream{mir_connection_create_render_surface_sync(connection, width, height), &mir_render_surface_release},
+      bs{get_stream(connection, width, height, prefer_alpha)}
 {
-    if (!mir_buffer_stream_is_valid(stream.get()))
-    {
-        // TODO: Huh. There's no mir_buffer_stream_get_error?
-        throw std::runtime_error("Could not create buffer stream.");
-    }
 }
 
-me::BufferStream::operator MirBufferStream*() const
+me::BufferStream::operator MirRenderSurface*() const
 {
     return stream.get();
 }
 
-MirBufferStream* me::BufferStream::create_stream(
-    MirConnection *connection,
+MirBufferStream* me::BufferStream::get_stream(
+    MirConnection* connection,
     int width,
     int height,
-    bool prefer_alpha,
-    bool hardware)
+    bool prefer_alpha) const
 {
     MirPixelFormat selected_format;
     unsigned int valid_formats{0};
@@ -382,10 +372,5 @@ MirBufferStream* me::BufferStream::create_stream(
         }
     }
 
-    return mir_connection_create_buffer_stream_sync(
-        connection,
-        width,
-        height,
-        selected_format,
-        hardware ? mir_buffer_usage_hardware : mir_buffer_usage_software);
+    return mir_render_surface_get_buffer_stream(stream.get(), width, height, selected_format);
 }
