@@ -30,10 +30,7 @@
 #include <time.h>
 #include <GLES2/gl2.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 MirRenderSurface* render_surface;
-#pragma GCC diagnostic pop
 
 void animate_cursor(MirBufferStream *stream)
 {
@@ -73,8 +70,6 @@ void animate_cursor(MirBufferStream *stream)
 
 MirBufferStream* make_cursor_surface(MirConnection *connection, MirWindow *window)
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     render_surface =
         mir_connection_create_render_surface_sync(connection, 24, 24);
 
@@ -85,7 +80,6 @@ MirBufferStream* make_cursor_surface(MirConnection *connection, MirWindow *windo
 
     MirWindowSpec *spec = mir_create_window_spec(connection);
     mir_window_spec_set_cursor_render_surface(spec, render_surface, 0 , 0);
-#pragma GCC diagnostic pop
 
     mir_window_apply_spec(window, spec);
     mir_window_spec_release(spec);
@@ -112,10 +106,7 @@ int main(int argc, char *argv[])
         animate_cursor(stream);
     }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_render_surface_release(render_surface);
-#pragma GCC diagnostic pop
 
     mir_eglapp_cleanup();
 
