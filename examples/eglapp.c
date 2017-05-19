@@ -422,7 +422,31 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     CHECK(spec != NULL, "Can't create a window spec");
 
     if (fullscreen)
+    {
         mir_window_spec_set_state(spec, mir_window_state_fullscreen);
+
+        MirDisplayConfig* display_config =
+            mir_connection_create_display_configuration(connection);
+
+        int const count = mir_display_config_get_num_outputs(display_config);
+
+        for (int i = 0; i != count; ++i)
+        {
+            MirOutput const* output = mir_display_config_get_output(display_config, i);
+
+            if (mir_output_get_connection_state(output) == mir_output_connection_state_connected &&
+                mir_output_is_enabled(output))
+            {
+                MirOutputMode const* mode = mir_output_get_current_mode(output);
+                *width = mir_output_mode_get_width(mode);
+                *height = mir_output_mode_get_height(mode);
+
+                break;
+            }
+        }
+
+        mir_display_config_release(display_config);
+    }
 
     surface = mir_connection_create_render_surface_sync(connection, *width, *height);
     CHECK(mir_render_surface_is_valid(surface), "could not create surface");
