@@ -34,6 +34,8 @@ set(
   session_mediator_observer_multiplexer.cpp
   session_mediator_observer_multiplexer.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/shell.h
+  buffer_map.cpp
+  buffer_map.h
 )
 
 add_library(

@@ -28,6 +28,8 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/display_layout.h"
 #include "mir/shell/system_compositor_window_manager.h"
+#include "mir/graphics/platform.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 
 namespace me = mir::examples;
 namespace mf = mir::frontend;
@@ -134,7 +136,10 @@ void me::add_window_manager_option_to(Server& server)
             }
             else if (selection == wm_canonical)
             {
-                return std::make_shared<CanonicalWindowManager>(focus_controller, server.the_shell_display_layout());
+                return std::make_shared<CanonicalWindowManager>(
+                    focus_controller,
+                    server.the_shell_display_layout(),
+                    server.the_graphics_platform()->create_buffer_allocator());
             }
             else if (selection == wm_system_compositor)
             {

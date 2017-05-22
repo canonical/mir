@@ -143,31 +143,6 @@ void mtd::StubSession::send_input_config(MirInputConfig const& /*config*/)
 {
 }
 
-mir::graphics::BufferID mtd::StubSession::create_buffer(mir::graphics::BufferProperties const&)
-{
-    return mir::graphics::BufferID(3);
-}
-
-mir::graphics::BufferID mtd::StubSession::create_buffer(mir::geometry::Size, uint32_t, uint32_t)
-{
-    return mir::graphics::BufferID(3);
-}
-
-mir::graphics::BufferID mtd::StubSession::create_buffer(mir::geometry::Size, MirPixelFormat)
-{
-    return mir::graphics::BufferID(3);
-}
-
-void mtd::StubSession::destroy_buffer(mir::graphics::BufferID)
-{
-}
-
-std::shared_ptr<mir::graphics::Buffer> mtd::StubSession::get_buffer(graphics::BufferID)
-{
-    return std::make_shared<mtd::StubBuffer>(
-        std::make_shared<mir_test_framework::NativeBuffer>(graphics::BufferProperties{}));
-}
-
 namespace
 {
 // Ensure we don't accidentally have an abstract class

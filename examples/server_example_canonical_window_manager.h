@@ -32,6 +32,10 @@
 namespace mir
 {
 namespace shell { class DisplayLayout; }
+namespace graphics
+{
+class GraphicBufferAllocator;
+}
 namespace examples
 {
 // standard window management algorithm:
@@ -48,7 +52,8 @@ public:
 
     explicit CanonicalWindowManagerPolicyCopy(
         WindowManagerTools* const tools,
-        std::shared_ptr<shell::DisplayLayout> const& display_layout);
+        std::shared_ptr<shell::DisplayLayout> const& display_layout,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     void click(geometry::Point cursor);
 
@@ -118,6 +123,7 @@ private:
 
     WindowManagerTools* const tools;
     std::shared_ptr<shell::DisplayLayout> const display_layout;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
 
     geometry::Rectangle display_area;
     geometry::Point old_cursor{};

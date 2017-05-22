@@ -20,7 +20,7 @@
 #include "snapshot_strategy.h"
 #include "default_session_container.h"
 #include "output_properties_cache.h"
-#include "../compositor/buffer_map.h"
+#include "../frontend/buffer_map.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
@@ -427,56 +427,6 @@ void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock,
     lock.unlock();
 
     surface_stack->remove_surface(surface);
-}
-
-mg::BufferID ms::ApplicationSession::create_buffer(mg::BufferProperties const& properties)
-{
-    try
-    {
-        return buffers->add_buffer(gralloc->alloc_buffer(properties));
-    }
-    catch (std::exception& e)
-    {
-        event_sink->error_buffer(properties.size, properties.format, e.what());
-        throw;
-    }
-}
-
-mg::BufferID ms::ApplicationSession::create_buffer(mir::geometry::Size size, MirPixelFormat format)
-{
-    try
-    {
-        return buffers->add_buffer(gralloc->alloc_software_buffer(size, format));
-    }
-    catch (std::exception& e)
-    {
-        event_sink->error_buffer(size, format, e.what());
-        throw;
-    }
-}
-
-mg::BufferID ms::ApplicationSession::create_buffer(
-    mir::geometry::Size size, uint32_t native_format, uint32_t native_flags)
-{
-    try
-    {
-        return buffers->add_buffer(gralloc->alloc_buffer(size, native_format, native_flags));
-    }
-    catch (std::exception& e)
-    {
-        event_sink->error_buffer(size, static_cast<MirPixelFormat>(native_format), e.what());
-        throw;
-    }
-}
-
-void ms::ApplicationSession::destroy_buffer(mg::BufferID id)
-{
-    buffers->remove_buffer(id);
-}
-
-std::shared_ptr<mg::Buffer> ms::ApplicationSession::get_buffer(mg::BufferID id)
-{
-    return buffers->get(id);
 }
 
 void ms::ApplicationSession::send_error(mir::ClientVisibleError const& error)

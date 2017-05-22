@@ -22,11 +22,10 @@
 #include "mir/renderer/sw/pixel_source.h"
 #include "src/client/buffer_vault.h"
 #include "src/client/buffer_factory.h"
-#include "src/client/buffer_factory.h"
 #include "src/client/protobuf_to_native_buffer.h"
 #include "src/client/connection_surface_map.h"
 #include "src/server/compositor/stream.h"
-#include "src/server/compositor/buffer_map.h"
+#include "src/server/frontend/buffer_map.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/mock_client_buffer_factory.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
@@ -470,7 +469,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     {
         ipc = std::make_shared<StubIpcSystem>();
         sink = std::make_shared<StubEventSink>(ipc);
-        map = std::make_shared<mc::BufferMap>(sink);
+        map = std::make_shared<mf::BufferMap>(sink);
         auto submit_stream = std::make_shared<mc::Stream>(
             map,
             geom::Size{100,100},
@@ -529,7 +528,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     std::unique_ptr<ConsumerSystem> consumer;
     std::unique_ptr<ConsumerSystem> second_consumer;
     std::unique_ptr<ConsumerSystem> third_consumer;
-    std::shared_ptr<mc::BufferMap> map;
+    std::shared_ptr<mf::BufferMap> map;
 };
 
 struct WithAnyNumberOfBuffers : BufferScheduling {};

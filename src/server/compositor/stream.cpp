@@ -72,9 +72,9 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
     {
         std::lock_guard<decltype(mutex)> lk(mutex); 
         first_frame_posted = true;
-        buffers->receive_buffer(buffer->id());
-        deferred_io = schedule->schedule_nonblocking(buffers->get(buffer->id()));
         pf = buffer->pixel_format();
+        size = buffer->size();
+        deferred_io = schedule->schedule_nonblocking(buffer);
     }
     observers.frame_posted(1, buffer->size());
 
@@ -182,9 +182,6 @@ void mc::Stream::drop_old_buffers()
         transferred_buffers.pop_back();
     }
 
-    for (auto &buffer : transferred_buffers)
-        buffers->send_buffer(buffer->id());
-
     arbiter->advance_schedule();
 }
 
@@ -214,15 +211,7 @@ void mc::Stream::set_scale(float)
 
 bool mc::Stream::suitable_for_cursor() const
 {
-    if (associated_buffers.empty())
-    {
-        return true;
-    }
-    else
-    {
-        for (auto it : associated_buffers)
-            if (buffers->get(it)->pixel_format() != mir_pixel_format_argb_8888)
-                return false;
-    }
+    // We can't reasonably answer this question -
+    // Suitability for cursor use is a per-buffer property, not a per-stream property.
     return true;
 }
