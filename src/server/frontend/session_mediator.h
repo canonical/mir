@@ -77,6 +77,7 @@ class Screencast;
 class PromptSession;
 class BufferStream;
 class InputConfigurationChanger;
+class BufferMap;
 
 namespace detail
 {
@@ -124,8 +125,8 @@ public:
         std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
         std::shared_ptr<cookie::Authority> const& cookie_authority,
         std::shared_ptr<InputConfigurationChanger> const& input_changer,
-        std::vector<mir::ExtensionDescription> const& extensions
-        );
+        std::vector<mir::ExtensionDescription> const& extensions,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     ~SessionMediator() noexcept;
 
@@ -299,6 +300,8 @@ private:
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<InputConfigurationChanger> const input_changer;
     std::vector<mir::ExtensionDescription> const extensions;
+    std::unique_ptr<BufferMap> const buffer_cache;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
 
     ScreencastBufferTracker screencast_buffer_tracker;
 

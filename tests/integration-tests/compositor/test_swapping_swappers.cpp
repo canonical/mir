@@ -19,7 +19,7 @@
 #include "multithread_harness.h"
 
 #include "src/server/compositor/stream.h"
-#include "src/server/compositor/buffer_map.h"
+#include "src/server/frontend/buffer_map.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
 #include <gmock/gmock.h>
@@ -30,6 +30,7 @@
 #include <atomic>
 
 namespace mc = mir::compositor;
+namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mt = mir::testing;
 namespace geom = mir::geometry;
@@ -42,7 +43,7 @@ struct SwapperSwappingStress : public ::testing::Test
     void SetUp()
     {
         stream = std::make_shared<mc::Stream>(
-            std::make_shared<mc::BufferMap>(nullptr),
+            std::make_shared<mf::BufferMap>(nullptr),
             geom::Size{380, 210}, mir_pixel_format_abgr_8888);
     }
 

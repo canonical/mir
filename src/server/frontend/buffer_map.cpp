@@ -22,13 +22,12 @@
 #include <boost/throw_exception.hpp>
 #include <algorithm>
 
-namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 
 namespace mir
 {
-namespace compositor
+namespace frontend
 {
 enum class BufferMap::Owner
 {
@@ -38,12 +37,12 @@ enum class BufferMap::Owner
 }
 }
 
-mc::BufferMap::BufferMap(std::shared_ptr<mf::BufferSink> const& sink) :
+mf::BufferMap::BufferMap(std::shared_ptr<mf::BufferSink> const& sink) :
     sink(sink)
 {
 }
 
-mg::BufferID mc::BufferMap::add_buffer(std::shared_ptr<mg::Buffer> const& buffer)
+mg::BufferID mf::BufferMap::add_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
     try
     {
@@ -60,7 +59,7 @@ mg::BufferID mc::BufferMap::add_buffer(std::shared_ptr<mg::Buffer> const& buffer
     }
 }
 
-void mc::BufferMap::remove_buffer(mg::BufferID id)
+void mf::BufferMap::remove_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = checked_buffers_find(id, lk);
@@ -69,7 +68,7 @@ void mc::BufferMap::remove_buffer(mg::BufferID id)
     buffers.erase(it); 
 }
 
-void mc::BufferMap::send_buffer(mg::BufferID id)
+void mf::BufferMap::send_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = buffers.find(id);
@@ -83,7 +82,7 @@ void mc::BufferMap::send_buffer(mg::BufferID id)
     }
 }
 
-void mc::BufferMap::receive_buffer(graphics::BufferID id)
+void mf::BufferMap::receive_buffer(graphics::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = buffers.find(id);
@@ -91,13 +90,13 @@ void mc::BufferMap::receive_buffer(graphics::BufferID id)
         it->second.owner = Owner::server;
 }
 
-std::shared_ptr<mg::Buffer> mc::BufferMap::get(mg::BufferID id) const
+std::shared_ptr<mg::Buffer> mf::BufferMap::get(mg::BufferID id) const
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     return checked_buffers_find(id, lk)->second.buffer;
 }
 
-mc::BufferMap::Map::iterator mc::BufferMap::checked_buffers_find(
+mf::BufferMap::Map::iterator mf::BufferMap::checked_buffers_find(
     mg::BufferID id, std::unique_lock<std::mutex> const&)
 {
     auto it = buffers.find(id);
@@ -106,7 +105,7 @@ mc::BufferMap::Map::iterator mc::BufferMap::checked_buffers_find(
     return it;
 }
 
-mc::BufferMap::Map::const_iterator mc::BufferMap::checked_buffers_find(
+mf::BufferMap::Map::const_iterator mf::BufferMap::checked_buffers_find(
     mg::BufferID id, std::unique_lock<std::mutex> const&) const
 {
     auto it = buffers.find(id);

@@ -25,22 +25,25 @@
 
 namespace mir
 {
-namespace frontend { class BufferSink; }
-namespace compositor
+namespace frontend
 {
+class BufferSink;
+
 class BufferMap : public frontend::ClientBuffers
 {
 public:
     BufferMap(std::shared_ptr<frontend::BufferSink> const& sink);
 
     graphics::BufferID add_buffer(std::shared_ptr<graphics::Buffer> const& buffer) override;
+
     void remove_buffer(graphics::BufferID id) override;
 
     void receive_buffer(graphics::BufferID id) override;
+
     void send_buffer(graphics::BufferID id) override;
 
     std::shared_ptr<graphics::Buffer> get(graphics::BufferID) const override;
-    
+
 private:
     std::mutex mutable mutex;
 
@@ -53,7 +56,9 @@ private:
     typedef std::map<graphics::BufferID, MapEntry> Map;
     //used to keep strong reference
     Map buffers;
+
     Map::iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&);
+
     Map::const_iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&) const;
 
     //would be better to schedule the async buffer callbacks in the ipc subsystem,
