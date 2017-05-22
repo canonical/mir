@@ -97,6 +97,7 @@ void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> con
 
 MirPixelFormat mc::Stream::pixel_format() const
 {
+    std::lock_guard<decltype(mutex)> lk(mutex);
     return pf;
 }
 
