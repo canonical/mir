@@ -75,6 +75,7 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
         first_frame_posted = true;
         buffers->receive_buffer(buffer->id());
         deferred_io = schedule->schedule_nonblocking(buffers->get(buffer->id()));
+        pf = buffer->pixel_format();
     }
     observers.frame_posted(1, buffer->size());
 
