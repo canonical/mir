@@ -104,8 +104,8 @@ class SurfaceWithAHole
 {
 public:
     SurfaceWithAHole(me::Connection& connection) :
-        window{connection, width_and_height, width_and_height, true},
-        context{connection, window, 1},
+        context{connection, 1, width_and_height, width_and_height},
+        window{connection, width_and_height, width_and_height, context},
         program{context, width_and_height, width_and_height}
     {
         context.make_current();
@@ -122,8 +122,8 @@ public:
     SurfaceWithAHole(SurfaceWithAHole const&) = delete;
     SurfaceWithAHole& operator=(SurfaceWithAHole const&) = delete;
 private:
-    me::NormalWindow window;
     me::Context context;
+    me::NormalWindow window;
     RenderProgram program;
 
     static int const width_and_height = 500;

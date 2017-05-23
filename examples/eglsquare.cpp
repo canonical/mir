@@ -105,8 +105,8 @@ class SquareRenderingSurface
 public:
     SquareRenderingSurface(me::Connection& connection, int swap_interval) :
         dimensions(active_output_dimensions(connection)),
-        window{connection, dimensions.width, dimensions.height},
-        context{connection, window, swap_interval},
+        context{connection, swap_interval, dimensions.width, dimensions.height},
+        window{connection, dimensions.width, dimensions.height, context},
         program{context, dimensions.width, dimensions.height}
     {
         mir_window_set_event_handler(window, &on_event, this);
@@ -151,8 +151,8 @@ private:
         unsigned int const height;
     } const dimensions;
 
-    me::NormalWindow window;
     me::Context context;
+    me::NormalWindow window;
     RenderProgram program;
 
     OutputDimensions active_output_dimensions(MirConnection* connection)

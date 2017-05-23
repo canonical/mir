@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -41,32 +41,18 @@ private:
     MirConnection* connection;
 };
 
-class NormalWindow
-{
-public:
-    NormalWindow(Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha = false, bool hardware = true);
-
-    operator MirWindow*() const;
-private:
-    MirWindow* create_window(MirConnection* connection, unsigned int width, unsigned int height, bool prefers_alpha, bool hardware);
-    std::function<void(MirWindow*)> const window_deleter{
-        [](MirWindow* window) { mir_window_release_sync(window); }
-    };
-    std::unique_ptr<MirWindow, decltype(window_deleter)> window;
-    NormalWindow(NormalWindow const&) = delete;
-    NormalWindow& operator=(NormalWindow const&) = delete;
-};
-
 class Context
 {
 public:
-    Context(Connection& connection, MirWindow* surface, int swap_interval);
+    Context(Connection& connection, int swap_interval, unsigned int width, unsigned int height);
     void make_current();
     void release_current();
     void swapbuffers();
+    MirRenderSurface* mir_surface() const { return rsurface.get(); }
     Context(Context const&) = delete;
     Context& operator=(Context const&) = delete;
 private:
+    std::unique_ptr<MirRenderSurface, decltype(&mir_render_surface_release)> rsurface;
     EGLConfig chooseconfig(EGLDisplay disp);
     EGLNativeDisplayType native_display;
     EGLNativeWindowType native_window;
@@ -93,6 +79,22 @@ private:
         EGLContext context;
     } context;
 };
+
+class NormalWindow
+{
+public:
+    NormalWindow(Connection& connection, unsigned int width, unsigned int height);
+    NormalWindow(Connection& connection, unsigned int width, unsigned int height, Context& eglcontext);
+
+    operator MirWindow*() const;
+private:
+    MirWindow* create_window(
+        MirConnection* connection, unsigned int width, unsigned int height, MirRenderSurface* surface);
+    std::unique_ptr<MirWindow, decltype(&mir_window_release_sync)> window;
+    NormalWindow(NormalWindow const&) = delete;
+    NormalWindow& operator=(NormalWindow const&) = delete;
+};
+
 
 struct Shader
 {
