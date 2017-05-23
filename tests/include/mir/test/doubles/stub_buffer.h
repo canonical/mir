@@ -67,12 +67,12 @@ public:
     {
     }
 
-    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer, geometry::Size const& size)
+    StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer, geometry::Size const& size, MirPixelFormat const pixel_format)
         : StubBuffer{
               native_buffer,
               graphics::BufferProperties{
                   size,
-                  mir_pixel_format_argb_8888,
+                  pixel_format,
                   graphics::BufferUsage::hardware},
                   geometry::Stride{}}
 
@@ -80,7 +80,7 @@ public:
     }
 
     StubBuffer(std::shared_ptr<graphics::NativeBuffer> const& native_buffer)
-        : StubBuffer{native_buffer, {}}
+        : StubBuffer{native_buffer, {}, mir_pixel_format_abgr_8888}
     {
     }
 

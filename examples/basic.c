@@ -61,10 +61,12 @@ typedef struct MirDemoState
 } MirDemoState;
 ///\internal [MirDemoState_tag]
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+
 int demo_client(const char* server, int buffer_swap_count)
 {
+    static int const width = 640;
+    static int const height = 480;
+
     MirDemoState mcd;
     mcd.connection = 0;
     mcd.window = 0;
@@ -107,10 +109,11 @@ int demo_client(const char* server, int buffer_swap_count)
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(mcd.connection, &pixel_format, 1, &valid_formats);
 
-    MirWindowSpec *spec = mir_create_normal_window_spec(mcd.connection, 640, 480);
+    MirRenderSurface* rs = mir_connection_create_render_surface_sync(mcd.connection, width, height);
+    MirWindowSpec *spec = mir_create_normal_window_spec(mcd.connection, width, height);
     assert(spec != NULL);
-    mir_window_spec_set_pixel_format(spec, pixel_format);
     mir_window_spec_set_name(spec, __FILE__);
+    mir_window_spec_add_render_surface(spec, rs, width, height, 0, 0);
 
     ///\internal [surface_create_tag]
     // ...we create a surface using that format.
@@ -133,19 +136,13 @@ int demo_client(const char* server, int buffer_swap_count)
     else
         assert(strcmp(mir_window_get_error_message(mcd.window), "") == 0);
 
-    MirBufferStream *bs =
-        mir_window_get_buffer_stream(mcd.window);
+    MirBufferStream* bs = mir_render_surface_get_buffer_stream(rs, width, height, pixel_format);
 
     // We can keep exchanging the current buffer for a new one
     for (int i = 0; i < buffer_swap_count; i++)
     {
         // We can query the current graphics buffer attributes
         {
-            ///\internal [get_current_buffer_tag]
-            MirNativeBuffer* buffer_package = NULL;
-            mir_buffer_stream_get_current_buffer(bs, &buffer_package);
-#pragma GCC diagnostic pop
-            assert(buffer_package != NULL);
             MirGraphicsRegion graphics_region;
             mir_buffer_stream_get_graphics_region(bs, &graphics_region);
 
@@ -163,6 +160,8 @@ int demo_client(const char* server, int buffer_swap_count)
     mir_window_release_sync(mcd.window);
     puts("Window released");
     ///\internal [surface_release_tag]
+
+    mir_render_surface_release(rs);
 
     ///\internal [connection_release_tag]
     // We should release our connection

@@ -47,10 +47,6 @@ void demo_client(const char* server)
     unsigned int valid_formats;
     mir_connection_get_available_surface_formats(connection, &pixel_format, 1, &valid_formats);
     MirWindowSpec *spec = mir_create_normal_window_spec(connection, 640, 480);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_window_spec_set_pixel_format(spec, pixel_format);
-#pragma GCC diagnostic pop
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 

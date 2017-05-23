@@ -30,8 +30,41 @@
 #include <memory>
 
 namespace po = boost::program_options;
-
 namespace me = mir::examples;
+
+namespace 
+{
+class MyBufferStream
+{
+public:
+    MyBufferStream(
+        me::Connection& connection,
+        int width,
+        int height,
+        int displacement_x,
+        int displacement_y);
+
+    operator MirBufferStream*() const { return bs; }
+    operator MirRenderSurface*() const;
+
+    int displacement_x{0};
+    int displacement_y{0};
+    int width{0};
+    int height{0};
+
+    MyBufferStream& operator=(MyBufferStream &&) = default;
+    MyBufferStream(MyBufferStream &&) = default;
+
+private:
+
+    MirBufferStream* get_stream(MirConnection* connection, int width, int height) const;
+
+    std::unique_ptr<MirRenderSurface, decltype(&mir_render_surface_release)> stream;
+    MirBufferStream* bs;
+
+    MyBufferStream(MyBufferStream const&) = delete;
+    MyBufferStream& operator=(MyBufferStream const&) = delete;
+};
 
 class Pixel
 {
@@ -93,6 +126,8 @@ public:
     void* const addr;
     MirPixelFormat const format;
 };
+}
+
 
 class pixel_iterator : std::iterator<std::random_access_iterator_tag, Pixel>
 {
@@ -180,6 +215,7 @@ void bounce_position(int& position, int& delta, int min, int max)
     position += delta;
 }
 
+
 int main(int argc, char* argv[])
 {
     po::options_description desc("Mir multi-bufferstream example:");
@@ -206,39 +242,24 @@ int main(int argc, char* argv[])
     me::Connection connection{socket, "Multiple MirBufferStream example"};
 
     me::NormalWindow window{connection, 200, 200, true, false};
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    MirBufferStream* surface_stream = mir_window_get_buffer_stream(window);
-#pragma GCC diagnostic pop
+
+    std::vector<MyBufferStream> stream;
+
+    stream.emplace_back(connection, 200, 200, 0, 0);
+    fill_stream_with(stream[0], 255, 0, 0, 128);
+    mir_buffer_stream_swap_buffers_sync(stream[0]);
+
+    stream.emplace_back(connection, 50, 50, 50, 50);
+    fill_stream_with(stream[1], 0, 0, 255, 128);
+    mir_buffer_stream_swap_buffers_sync(stream[1]);
+
     int topSize = 100, dTopSize = 2;
-    auto top = std::make_unique<me::BufferStream>(connection, topSize, topSize, true, false);
-    me::BufferStream bottom(connection, 50, 50, true, false);
-
-    fill_stream_with(surface_stream, 255, 0, 0, 128);
-    mir_buffer_stream_swap_buffers_sync(surface_stream);
-    fill_stream_with(*top, 0, 255, 0, 128);
-    mir_buffer_stream_swap_buffers_sync(*top);
-    fill_stream_with(bottom, 0, 0, 255, 128);
-    mir_buffer_stream_swap_buffers_sync(bottom);
-
-    std::array<MirBufferStreamInfo, 3> arrangement;
-
-    arrangement[0].displacement_x = 0;
-    arrangement[0].displacement_y = 0;
-    arrangement[0].stream = surface_stream;
-
-    arrangement[1].displacement_x = 50;
-    arrangement[1].displacement_y = 50;
-    arrangement[1].stream = bottom;
-
-    arrangement[2].displacement_x = -40;
-    arrangement[2].displacement_y = -10;
-    arrangement[2].stream = *top;
+    stream.emplace_back(connection, topSize, topSize, -40, -10);
+    fill_stream_with(stream[2], 0, 255, 0, 128);
+    mir_buffer_stream_swap_buffers_sync(stream[2]);
 
     int top_dx{1}, top_dy{2};
     int bottom_dx{2}, bottom_dy{-1};
-
-    auto spec = mir_create_window_spec(connection);
 
     int baseColour = 255, dbase = 1;
     int topColour = 255, dtop = 1;
@@ -261,10 +282,10 @@ int main(int argc, char* argv[])
 
     while (poll(&signal_poll, 1, 0) <= 0)
     {
-        bounce_position(arrangement[1].displacement_x, bottom_dx, -100, 300);
-        bounce_position(arrangement[1].displacement_y, bottom_dy, -100, 300);
-        bounce_position(arrangement[2].displacement_x, top_dx, -100, 300);
-        bounce_position(arrangement[2].displacement_y, top_dy, -100, 300);
+        bounce_position(stream[1].displacement_x, bottom_dx, -100, 300);
+        bounce_position(stream[1].displacement_y, bottom_dy, -100, 300);
+        bounce_position(stream[2].displacement_x, top_dx, -100, 300);
+        bounce_position(stream[2].displacement_y, top_dy, -100, 300);
 
         bounce_position(baseColour, dbase, 128, 255);
         bounce_position(topColour, dtop, 200, 255);
@@ -272,24 +293,56 @@ int main(int argc, char* argv[])
 
         bounce_position(topSize, dTopSize, 70, 120);
 
-        top = std::make_unique<me::BufferStream>(connection, topSize, topSize, true, false);
-        arrangement[2].stream = *top;
+        stream[2] = MyBufferStream{connection, topSize, topSize, stream[2].displacement_x, stream[2].displacement_y};
 
-        fill_stream_with(surface_stream, baseColour, 0, 0, 128);
-        fill_stream_with(bottom, 0, 0, bottomColour, 128);
-        fill_stream_with(*top, 0, topColour, 0, 128);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_window_spec_set_streams(spec, arrangement.data(), arrangement.size());
-#pragma GCC diagnostic pop
-        mir_buffer_stream_swap_buffers_sync(surface_stream);
-        mir_buffer_stream_swap_buffers_sync(bottom);
-        mir_buffer_stream_swap_buffers_sync(*top);
+        fill_stream_with(stream[0], baseColour, 0, 0, 128);
+        fill_stream_with(stream[1], 0, 0, bottomColour, 128);
+        fill_stream_with(stream[2], 0, topColour, 0, 128);
+
+        auto spec = mir_create_window_spec(connection);
+        for (auto& s : stream)
+        {
+            mir_buffer_stream_swap_buffers_sync(s);
+            mir_window_spec_add_render_surface(spec, s, s.width, s.height, s.displacement_x, s.displacement_y);
+        }
         mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
     }
-    mir_window_spec_release(spec);
     close(signal_watch);
 
     std::cout << "Quitting; have a nice day." << std::endl;
     return 0;
+}
+
+MyBufferStream::MyBufferStream(
+    me::Connection& connection,
+    int width,
+    int height,
+    int displacement_x,
+    int displacement_y)
+    : displacement_x{displacement_x},
+      displacement_y{displacement_y},
+      width{width},
+      height{height},
+      stream{mir_connection_create_render_surface_sync(connection, width, height), &mir_render_surface_release},
+      bs{get_stream(connection, width, height)}
+{
+}
+
+MyBufferStream::operator MirRenderSurface*() const
+{
+    return stream.get();
+}
+
+MirBufferStream* MyBufferStream::get_stream(MirConnection* connection, int width, int height) const
+{
+    MirPixelFormat selected_format;
+    unsigned int valid_formats{0};
+    MirPixelFormat pixel_formats[mir_pixel_formats];
+    mir_connection_get_available_surface_formats(connection, pixel_formats, mir_pixel_formats, &valid_formats);
+    if (valid_formats == 0)
+        throw std::runtime_error("no pixel formats for buffer stream");
+    selected_format = pixel_formats[0];
+
+    return mir_render_surface_get_buffer_stream(stream.get(), width, height, selected_format);
 }

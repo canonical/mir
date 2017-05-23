@@ -88,8 +88,6 @@ static void shutdown(int signum)
         rendering = 0;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 int main(int argc, char** argv)
 {
     static char const *socket_file = NULL;
@@ -192,19 +190,12 @@ int main(int argc, char** argv)
         {
             printf("could not create MirPresentationChain\n");
 
-            // TODO this is a frig to pass smoke tests until we support NBS by default
-#if (MIR_CLIENT_VERSION <= MIR_VERSION_NUMBER(3, 3, 0))
-            printf("This is currently an unreleased API - likely server support is switched off\n");
-            return 0;
-#else
             return -1;
-#endif
         }
     }
 
     //Arrange a 2x2 grid of chains within window
     MirWindowSpec* spec = mir_create_normal_window_spec(connection, width, height);
-    mir_window_spec_set_pixel_format(spec, format);
     mir_window_spec_add_render_surface(
         spec, render_surface[0], chain_width, chain_height, displacement_x, displacement_y);
     mir_window_spec_add_render_surface(
@@ -273,4 +264,3 @@ int main(int argc, char** argv)
     mir_connection_release(connection);
     return 0;
 }
-#pragma GCC diagnostic pop

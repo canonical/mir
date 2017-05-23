@@ -30,7 +30,10 @@ typedef struct
 
 typedef struct
 {
+    MirConnection *conn;
+    MirRenderSurface* surface;
     MirWindow *window;
+    MirBufferStream* bs;
     Color fill;
 } Window;
 
@@ -164,16 +167,58 @@ static void clear_region(const MirGraphicsRegion *region, const Color *color)
 static void draw_window(Window *win)
 {
     MirGraphicsRegion region;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    MirBufferStream *bs = mir_window_get_buffer_stream(win->window);
-#pragma GCC diagnostic pop
-    mir_buffer_stream_get_graphics_region(bs, &region);
+    mir_buffer_stream_get_graphics_region(win->bs, &region);
     clear_region(&region, &win->fill);
-    mir_buffer_stream_swap_buffers_sync(bs);
+    mir_buffer_stream_swap_buffers_sync(win->bs);
 }
 
 static char const *socket_file = NULL;
+
+static void handle_event(MirWindow* window, MirEvent const* ev, void* context_)
+{
+    Window* context = (Window*)context_;
+
+    switch (mir_event_get_type(ev))
+    {
+    case mir_event_type_resize:
+    {
+        MirResizeEvent const* resize = mir_event_get_resize_event(ev);
+        int const new_width = mir_resize_event_get_width(resize);
+        int const new_height = mir_resize_event_get_height(resize);
+
+        mir_render_surface_set_size(context->surface, new_width, new_height);
+        MirWindowSpec* spec = mir_create_window_spec(context->conn);
+        mir_window_spec_add_render_surface(spec, context->surface, new_width, new_height, 0, 0);
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
+        break;
+    }
+
+    case mir_event_type_close_window:
+        running = 0;
+        printf("Received close event from server.\n");
+        break;
+
+    default:
+        break;
+    }
+}
+
+static void init_window(MirConnection *conn, Window* win, char const* name, int width, int height, Color color, MirPixelFormat pixel_format)
+{
+    win->conn = conn;
+    win->surface = mir_connection_create_render_surface_sync(conn, width, height);
+    win->bs = mir_render_surface_get_buffer_stream(win->surface, width, height, pixel_format);
+    win->fill = color;
+    premultiply_alpha(&win->fill);
+
+    MirWindowSpec *spec= mir_create_normal_window_spec(conn, width, height);
+    mir_window_spec_set_name(spec, name);
+    mir_window_spec_add_render_surface(spec, win->surface, width, height, 0, 0);
+    mir_window_spec_set_event_handler(spec, &handle_event, win);
+    win->window = mir_create_window_sync(spec);
+    mir_window_spec_release(spec);
+}
 
 int main(int argc, char *argv[])
 {
@@ -225,8 +270,7 @@ int main(int argc, char *argv[])
     {
         MirPixelFormat formats[mir_pixel_formats];
         unsigned int valid_formats;
-        mir_connection_get_available_surface_formats(conn, formats,
-            mir_pixel_formats, &valid_formats);
+        mir_connection_get_available_surface_formats(conn, formats, mir_pixel_formats, &valid_formats);
 
         for (f = 0; f < valid_formats; f++)
         {
@@ -245,49 +289,13 @@ int main(int argc, char *argv[])
         }
     }
 
-    MirWindowSpec *spec = mir_create_normal_window_spec(conn, 225, 225);
-    if (spec == NULL)
-    {
-        fprintf(stderr, "Could not create a window spec.\n");
-        mir_connection_release(conn);
-        return 1;
-    }
+    Color red = {0xff, 0x00, 0x00, alpha};
+    Color green = {0x00, 0xff, 0x00, alpha};
+    Color blue = {0x00, 0x00, 0xff, alpha};
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_window_spec_set_pixel_format(spec, pixel_format);
-    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
-#pragma GCC diagnostic pop
-    mir_window_spec_set_name(spec, "red");
-
-    win[0].window = mir_create_window_sync(spec);
-    win[0].fill.r = 0xff;
-    win[0].fill.g = 0x00;
-    win[0].fill.b = 0x00;
-    win[0].fill.a = alpha;
-    premultiply_alpha(&win[0].fill);
-
-    mir_window_spec_set_name(spec, "green");
-    mir_window_spec_set_width(spec, 300);
-    mir_window_spec_set_height(spec, 150);
-    win[1].window = mir_create_window_sync(spec);
-    win[1].fill.r = 0x00;
-    win[1].fill.g = 0xff;
-    win[1].fill.b = 0x00;
-    win[1].fill.a = alpha;
-    premultiply_alpha(&win[1].fill);
-
-    mir_window_spec_set_name(spec, "blue");
-    mir_window_spec_set_width(spec, 150);
-    mir_window_spec_set_height(spec, 300);
-    win[2].window = mir_create_window_sync(spec);
-    win[2].fill.r = 0x00;
-    win[2].fill.g = 0x00;
-    win[2].fill.b = 0xff;
-    win[2].fill.a = alpha;
-    premultiply_alpha(&win[2].fill);
-
-    mir_window_spec_release(spec);
+    init_window(conn, win+0, "red",   255, 255, red,   pixel_format);
+    init_window(conn, win+1, "green", 300, 150, green, pixel_format);
+    init_window(conn, win+2, "blue",  150, 300, blue,  pixel_format);
 
     signal(SIGINT, shutdown);
     signal(SIGTERM, shutdown);
@@ -295,14 +303,16 @@ int main(int argc, char *argv[])
 
     while (running)
     {
-        int w;
-        for (w = 0; w < (int)(sizeof(win)/sizeof(win[0])); w++)
+        for (int w = 0; w < (int)(sizeof(win)/sizeof(win[0])); w++)
             draw_window(win + w);
     }
 
-    mir_window_release_sync(win[0].window);
-    mir_window_release_sync(win[1].window);
-    mir_window_release_sync(win[2].window);
+    for (int w = 0; w < (int)(sizeof(win)/sizeof(win[0])); w++)
+    {
+        mir_window_release_sync(win[w].window);
+        mir_render_surface_release(win[w].surface);
+    }
+
     mir_connection_release(conn);
 
     return 0;

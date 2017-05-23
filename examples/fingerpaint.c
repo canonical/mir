@@ -182,33 +182,70 @@ static void copy_region(const MirGraphicsRegion *dest,
     }
 }
 
-static void on_event(MirWindow *surface, const MirEvent *event, void *context)
+typedef struct Context
 {
-    (void)surface;
-    MirGraphicsRegion *canvas = (MirGraphicsRegion*)context;
+    MirConnection *connection;
+    MirRenderSurface* surface;
+    MirWindow* window;
+    MirGraphicsRegion* canvas;
+} Context;
 
-    static const Color color[] =
-    {
-        {0x80, 0xff, 0x00, 0xff},
-        {0x00, 0xff, 0x80, 0xff},
-        {0xff, 0x00, 0x80, 0xff},
-        {0xff, 0x80, 0x00, 0xff},
-        {0x00, 0x80, 0xff, 0xff},
-        {0x80, 0x00, 0xff, 0xff},
-        {0xff, 0xff, 0x00, 0xff},
-        {0x00, 0xff, 0xff, 0xff},
-        {0xff, 0x00, 0xff, 0xff},
-        {0xff, 0x00, 0x00, 0xff},
-        {0x00, 0xff, 0x00, 0xff},
-        {0x00, 0x00, 0xff, 0xff},
-    };
-    
-    MirEventType event_type = mir_event_get_type(event);
+static void on_event(MirWindow *window, const MirEvent *event, void *context_)
+{
+    Context* context = (Context*)context_;
 
     pthread_mutex_lock(&mutex);
 
-    if (event_type == mir_event_type_input)
+    switch (mir_event_get_type(event))
     {
+    case mir_event_type_resize:
+    {
+        MirResizeEvent const* resize = mir_event_get_resize_event(event);
+        int const new_width = mir_resize_event_get_width(resize);
+        int const new_height = mir_resize_event_get_height(resize);
+
+        mir_render_surface_set_size(context->surface, new_width, new_height);
+        MirWindowSpec* spec = mir_create_window_spec(context->connection);
+        mir_window_spec_add_render_surface(spec, context->surface, new_width, new_height, 0, 0);
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
+        break;
+    }
+
+    case mir_event_type_close_window:
+    {
+        static int closing = 0;
+
+        ++closing;
+        if (closing == 1)
+            printf("Sure you don't want to save your work?\n");
+        else if (closing > 1)
+        {
+            printf("Oh I forgot you can't save your work. Quitting now...\n");
+            running = false;
+            changed = true;
+        }
+        break;
+    }
+
+    case mir_event_type_input:
+    {
+        static const Color color[] =
+            {
+                {0x80, 0xff, 0x00, 0xff},
+                {0x00, 0xff, 0x80, 0xff},
+                {0xff, 0x00, 0x80, 0xff},
+                {0xff, 0x80, 0x00, 0xff},
+                {0x00, 0x80, 0xff, 0xff},
+                {0x80, 0x00, 0xff, 0xff},
+                {0xff, 0xff, 0x00, 0xff},
+                {0x00, 0xff, 0xff, 0xff},
+                {0xff, 0x00, 0xff, 0xff},
+                {0xff, 0x00, 0x00, 0xff},
+                {0x00, 0xff, 0x00, 0xff},
+                {0x00, 0x00, 0xff, 0xff},
+            };
+
         static size_t base_color = 0;
         static size_t max_fingers = 0;
         static float max_pressure = 1.0f;
@@ -232,8 +269,7 @@ static void on_event(MirWindow *surface, const MirEvent *event, void *context)
             pev = mir_input_event_get_pointer_event(input_event);
             ended = mir_pointer_event_action(pev) ==
                     mir_pointer_action_button_up;
-            touch_count = mir_pointer_event_button_state(pev,
-                               mir_pointer_button_primary) ? 1 : 0;
+            touch_count = mir_pointer_event_button_state(pev, mir_pointer_button_primary) ? 1 : 0;
         default:
             break;
         }
@@ -263,15 +299,15 @@ static void on_event(MirWindow *surface, const MirEvent *event, void *context)
                     x = mir_touch_event_axis_value(tev, p, mir_touch_axis_x);
                     y = mir_touch_event_axis_value(tev, p, mir_touch_axis_y);
                     float m = mir_touch_event_axis_value(tev, p,
-                                                  mir_touch_axis_touch_major);
+                                                         mir_touch_axis_touch_major);
                     float n = mir_touch_event_axis_value(tev, p,
-                                                  mir_touch_axis_touch_minor);
+                                                         mir_touch_axis_touch_minor);
                     radius = (m + n) / 4;  /* Half the average */
                     // mir_touch_axis_touch_major can be 0
                     if (radius < 5)
                         radius = 5;
                     pressure = mir_touch_event_axis_value(tev, p,
-                                                      mir_touch_axis_pressure);
+                                                          mir_touch_axis_pressure);
                 }
                 else if (pev != NULL)
                 {
@@ -293,29 +329,17 @@ static void on_event(MirWindow *surface, const MirEvent *event, void *context)
                 pressure /= max_pressure;
                 tone.a *= pressure;
 
-                draw_box(canvas, x - radius, y - radius, 2*radius, &tone);
+                draw_box(context->canvas, x - radius, y - radius, 2*radius, &tone);
             }
-    
-            changed = true;
-        }
-    }
-    else if (event_type == mir_event_type_close_window)
-    {
-        static int closing = 0;
 
-        ++closing;
-        if (closing == 1)
-            printf("Sure you don't want to save your work?\n");
-        else if (closing > 1)
-        {
-            printf("Oh I forgot you can't save your work. Quitting now...\n");
-            running = false;
             changed = true;
         }
+
+        break;
     }
-    else if (event_type == mir_event_type_resize)
-    {
-        changed = true;
+
+    default:
+        break;
     }
 
     pthread_cond_signal(&change);
@@ -340,14 +364,12 @@ static MirOutput const* find_active_output(
     return NULL;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 int main(int argc, char *argv[])
 {
     static const Color background = {180, 180, 150, 255};
-    MirConnection *conn;
-    MirWindow* window;
     MirGraphicsRegion canvas;
+    Context context = { NULL, NULL, NULL, &canvas };
+
     int swap_interval = 0;
 
     char *mir_socket = NULL;
@@ -409,21 +431,21 @@ int main(int argc, char *argv[])
         }
     }
 
-    conn = mir_connect_sync(mir_socket, argv[0]);
-    if (!mir_connection_is_valid(conn))
+    context.connection = mir_connect_sync(mir_socket, argv[0]);
+    if (!mir_connection_is_valid(context.connection))
     {
-        fprintf(stderr, "Could not connect to a display server: %s\n", mir_connection_get_error_message(conn));
+        fprintf(stderr, "Could not connect to a display server: %s\n", mir_connection_get_error_message(context.connection));
         return 1;
     }
 
     MirDisplayConfig* display_config =
-        mir_connection_create_display_configuration(conn);
+        mir_connection_create_display_configuration(context.connection);
 
     MirOutput const* output = find_active_output(display_config);
     if (output == NULL)
     {
         fprintf(stderr, "No active outputs found.\n");
-        mir_connection_release(conn);
+        mir_connection_release(context.connection);
         return 1;
     }
 
@@ -443,7 +465,7 @@ int main(int argc, char *argv[])
     if (pixel_format == mir_pixel_format_invalid)
     {
         fprintf(stderr, "Could not find a fast 32-bit pixel format\n");
-        mir_connection_release(conn);
+        mir_connection_release(context.connection);
         return 1;
     }
 
@@ -453,19 +475,19 @@ int main(int argc, char *argv[])
 
     mir_display_config_release(display_config);
 
-    MirWindowSpec *spec = mir_create_normal_window_spec(conn, width, height);
-    mir_window_spec_set_pixel_format(spec, pixel_format);
+    context.surface = mir_connection_create_render_surface_sync(context.connection, width, height);
+    MirWindowSpec *spec = mir_create_normal_window_spec(context.connection, width, height);
     mir_window_spec_set_name(spec, "Mir Fingerpaint");
-    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
+    mir_window_spec_add_render_surface(spec, context.surface, width, height, 0, 0);
 
-    window = mir_create_window_sync(spec);
+    context.window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
-    if (window != NULL)
+    if (context.window != NULL)
     {
-        MirBufferStream* bs = mir_window_get_buffer_stream(window);
+        mir_window_set_event_handler(context.window, &on_event, &context);
+        MirBufferStream* bs = mir_render_surface_get_buffer_stream(context.surface, width, height, pixel_format);
         mir_buffer_stream_set_swapinterval(bs, swap_interval);
-        mir_window_set_event_handler(window, &on_event, &canvas);
 
         canvas.width = width;
         canvas.height = height;
@@ -497,7 +519,7 @@ int main(int argc, char *argv[])
             }
 
             /* Ensure canvas won't be used after it's freed */
-            mir_window_set_event_handler(window, NULL, NULL);
+            mir_window_set_event_handler(context.window, NULL, NULL);
             free(canvas.vaddr);
         }
         else
@@ -505,15 +527,15 @@ int main(int argc, char *argv[])
             fprintf(stderr, "Failed to malloc canvas\n");
         }
 
-        mir_window_release_sync(window);
+        mir_window_release_sync(context.window);
     }
     else
     {
         fprintf(stderr, "mir_connection_create_surface_sync failed\n");
     }
 
-    mir_connection_release(conn);
+    mir_render_surface_release(context.surface);
+    mir_connection_release(context.connection);
 
     return 0;
 }
-#pragma GCC diagnostic pop

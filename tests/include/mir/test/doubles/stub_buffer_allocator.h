@@ -39,24 +39,24 @@ struct StubBufferAllocator : public graphics::GraphicBufferAllocator
     std::shared_ptr<graphics::Buffer> alloc_buffer(
         graphics::BufferProperties const& properties)
     {
-        return std::make_shared<StubBuffer>(std::make_shared<mir_test_framework::NativeBuffer>(properties), properties.size);
+        return std::make_shared<StubBuffer>(std::make_shared<mir_test_framework::NativeBuffer>(properties), properties.size, properties.format);
     }
 
     std::shared_ptr<graphics::Buffer> alloc_software_buffer(geometry::Size sz, MirPixelFormat pf)
     {
         graphics::BufferProperties properties{sz, pf, graphics::BufferUsage::software};
-        return std::make_shared<StubBuffer>(std::make_shared<mir_test_framework::NativeBuffer>(properties), sz);
+        return std::make_shared<StubBuffer>(std::make_shared<mir_test_framework::NativeBuffer>(properties), sz, pf);
     }
 
     std::shared_ptr<graphics::Buffer> alloc_buffer(geometry::Size sz, uint32_t, uint32_t flags)
     {
-        graphics::BufferProperties properties{sz, mir_pixel_format_abgr_8888, graphics::BufferUsage::hardware};
+        graphics::BufferProperties properties{sz, mir_pixel_format_xbgr_8888, graphics::BufferUsage::hardware};
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         if (mir_buffer_usage_software == static_cast<MirBufferUsage>(flags))
             properties.usage = graphics::BufferUsage::software;
 #pragma GCC diagnostic pop
-        return std::make_shared<StubBuffer>(std::make_shared<mir_test_framework::NativeBuffer>(properties), sz);
+        return std::make_shared<StubBuffer>(std::make_shared<mir_test_framework::NativeBuffer>(properties), sz, properties.format);
     }
 
     std::vector<MirPixelFormat> supported_pixel_formats()

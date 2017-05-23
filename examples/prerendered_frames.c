@@ -92,8 +92,6 @@ static void shutdown(int signum)
         rendering = 0;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 int main(int argc, char** argv)
 {
     static char const *socket_file = NULL;
@@ -149,31 +147,24 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    MirRenderSurface* render_surface = mir_connection_create_render_surface_sync(connection, width, height);
-    if (!mir_render_surface_is_valid(render_surface))
+    MirRenderSurface* surface = mir_connection_create_render_surface_sync(connection, width, height);
+    if (!mir_render_surface_is_valid(surface))
     {
         printf("could not create a render surface\n");
         return -1;
     }
 
-    MirPresentationChain* chain =  mir_render_surface_get_presentation_chain(render_surface);
+    MirPresentationChain* chain =  mir_render_surface_get_presentation_chain(surface);
     if (!mir_presentation_chain_is_valid(chain))
     {
         printf("could not create MirPresentationChain\n");
 
-// TODO this is a frig to pass smoke tests until we support NBS by default
-#if (MIR_CLIENT_VERSION <= MIR_VERSION_NUMBER(3, 3, 0))
-        printf("This is currently an unreleased API - likely server support is switched off\n");
-        return 0;
-#else
         return -1;
-#endif
     }
 
     MirWindowSpec* spec = mir_create_normal_window_spec(connection, width, height);
-    mir_window_spec_set_pixel_format(spec, format);
     mir_window_spec_add_render_surface(
-        spec, render_surface, width, height, displacement_x, displacement_y);
+        spec, surface, width, height, displacement_x, displacement_y);
     MirWindow* window = mir_create_window_sync(spec);
     if (!mir_window_is_valid(window))
     {
@@ -234,9 +225,8 @@ int main(int argc, char** argv)
 
     for (i = 0u; i < num_prerendered_frames; i++)
         mir_buffer_release(buffer_available[i].buffer);
-    mir_render_surface_release(render_surface);
+    mir_render_surface_release(surface);
     mir_window_release_sync(window);
     mir_connection_release(connection);
     return 0;
 }
-#pragma GCC diagnostic pop
