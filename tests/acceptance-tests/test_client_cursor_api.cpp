@@ -461,11 +461,11 @@ struct ClientCursor : mtf::HeadlessInProcessServer
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                 using PlacementWindowManager = msh::WindowManagerConstructor<mtf::DeclarativePlacementWindowManagerPolicy>;
-#pragma GCC diagnostic pop
                 return std::make_shared<PlacementWindowManager>(
                     focus_controller,
                     client_geometries,
                     server.the_shell_display_layout());
+#pragma GCC diagnostic pop
             });
 
         server.wrap_shell([&, this](auto const& wrapped)
