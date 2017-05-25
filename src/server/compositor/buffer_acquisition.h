@@ -30,12 +30,6 @@ namespace graphics { class Buffer; struct BufferProperties; }
 namespace compositor
 {
 
-enum class MultiMonitorMode
-{
-    multi_monitor_sync, // lower latency+framerate, and supports multi-monitor
-    single_monitor_fast // higher latency+framerate, no multi-monitor
-};
-
 class BufferAcquisition
 {
 public:
@@ -55,7 +49,6 @@ public:
     virtual void compositor_release(std::shared_ptr<graphics::Buffer> const&) = 0;
     virtual std::shared_ptr<graphics::Buffer> snapshot_acquire() = 0;
     virtual void snapshot_release(std::shared_ptr<graphics::Buffer> const&) = 0;
-    virtual void set_mode(MultiMonitorMode mode) = 0;
     virtual ~BufferAcquisition() = default;
 
 protected:

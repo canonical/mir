@@ -41,8 +41,7 @@ mc::Stream::Stream(
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
     buffers(map),
-    arbiter(std::make_shared<mc::MultiMonitorArbiter>(
-        mc::MultiMonitorMode::multi_monitor_sync, buffers, schedule)),
+    arbiter(std::make_shared<mc::MultiMonitorArbiter>(buffers, schedule)),
     size(size),
     pf(pf),
     first_frame_posted(false)
