@@ -360,7 +360,9 @@ TEST_F(PresentationChain, submission_will_eventually_call_callback)
             buffer_callback, &contexts[i % num_buffers]);
         contexts[i % num_buffers].unavailable();
         if (i != 0)
-            ASSERT_TRUE(contexts[(i-1) % num_buffers].wait_for_buffer(10s)) << "iteration " << i;
+        {
+            ASSERT_TRUE(contexts[(i - 1) % num_buffers].wait_for_buffer(10s)) << "iteration " << i;
+        }
     }
 
     for (auto& context : contexts)
@@ -588,7 +590,9 @@ TEST_F(PresentationChain, mailbox_looks_correct_from_client_perspective)
     {
         buffers[i]->submit_to(window.chain());
         if (i > 0)
-            EXPECT_TRUE(buffers[i-1]->wait_ready(5s));
+        {
+            EXPECT_TRUE(buffers[i - 1]->wait_ready(5s));
+        }
     }
 
     for(auto i = 0u; i < num_buffers - 1; i++)

@@ -26,6 +26,7 @@
 #include <vector>
 #include <string>
 #include <iosfwd>
+#include <functional>
 
 struct MirPointerConfig;
 struct MirTouchpadConfig;

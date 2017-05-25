@@ -39,7 +39,7 @@ std::shared_ptr<ms::BufferStreamFactory>
 mir::DefaultServerConfiguration::the_buffer_stream_factory()
 {
     return buffer_stream_factory(
-        [this]()
+        []()
         {
             return std::make_shared<mc::BufferStreamFactory>();
         });

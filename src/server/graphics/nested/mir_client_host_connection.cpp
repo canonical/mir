@@ -423,7 +423,7 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
             delete surf;
         });
 
-    if (stored_cursor_image.size().width.as_int() * stored_cursor_image.size().height.as_int())
+    if (stored_cursor_image.size().width.as_int() && stored_cursor_image.size().height.as_int())
         surf->set_cursor_image(stored_cursor_image);
 
     surfaces.push_back(surf.get());
