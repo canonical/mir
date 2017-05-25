@@ -822,8 +822,6 @@ TEST_P(WithTwoOrMoreBuffers, client_is_not_woken_by_compositor_release)
     ASSERT_FALSE(producer->can_produce());
 
     onscreen.reset();
-    // single_monitor_fast -> can produce here
-    // multi_monitor_sync -> can't produce here
     ASSERT_FALSE(producer->can_produce());
 }
 
