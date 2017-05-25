@@ -1,3 +1,57 @@
+mir (0.26.3-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.26.3 (https://launchpad.net/mir/+milestone/0.26.3)
+    - Enhancements:
+      . Make deprecations optional (and default to off for builds on 16.04 LTS)
+      . Added support for building on Ubuntu 17.10 artful.
+    - Bugs fixed:
+      . Mir needs to be updated to 0.26 in 16.04LTS (LP: #1685186)
+      . unity-system-compositor crashed with SIGSEGV in
+        libinput_device_config_accel_is_available() from
+        libinput_device_config_accel_set_speed() from
+        mir::input::evdev::LibInputDevice::apply_settings() (LP: #1672955)
+      . Please transition to Boost 1.62 (LP: #1675138)
+      . Mir sending key repeat events continually to nested shell after VT
+        switch (causes Unity8 lockup for a while) (LP: #1675357)
+      . mir_demo_standalone_render_overlays fails to link (LP: #1677239)
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 30 Mar 2017 11:43:28 +0800
+
+mir (0.26.2+17.04.20170322.1-0ubuntu2) zesty; urgency=medium
+
+  [ Mattia Rizzolo ]
+  * Patch the code to use unversioned runtime boost libraries (LP: #1675138).
+
+ -- Gianfranco Costamagna <locutusofborg@debian.org>  Fri, 24 Mar 2017 22:58:36 +0100
+
+mir (0.26.2+17.04.20170322.1-0ubuntu1) zesty; urgency=medium
+
+  [ Daniel van Vugt ]
+  * New upstream release 0.26.2 (https://launchpad.net/mir/+milestone/0.26.2)
+    - Bugs fixed:
+      . EDID does not change when hotplugging a monitor (LP: #1660017)
+      . [regression] mirout crashes when connecting to unity8 or any nested
+        server: [libprotobuf FATAL /usr/include/google/protobuf/repeated_field.
+        h:1408] CHECK failed: (index) < (current_size_) (LP: #1661163)
+      . Mir server crashed with SIGSEGV in
+        mir::compositor::TemporaryBuffer::size() called from
+        mir::gl::tessellate_renderable_into_rectangle() (LP: #1664760)
+      . Nested servers (Unity8) periodically stutter (half frame rate) with
+        Mir 0.26.1 (LP: #1666372)
+      . Don't dereference the end iterator in ms::ApplicationSession::
+        surface_after() (LP: #1667645)
+      . [regression] OSK input shaping no longer works correctly (LP: #1669444)
+      . Setting MirWindowSpec parameters always causes window's input_region
+        to be reset (LP: #1670876)
+      . Subpixel order not included in Mir display information (LP: #1393578)
+      . Presentation chains should support various swap interval modes
+        (LP: #1673533)
+      . Need an extension for GBM buffers to replace
+        mir_buffer_get_buffer_package() (LP: #1673534)
+      . Seg fault on detect_fd_leaks (LP: #1661498)
+
+ -- Cemil Azizoglu <cemil.azizoglu@canonical.com>  Wed, 22 Mar 2017 04:54:19 +0000
+
 mir (0.26.1+17.04.20170209.1-0ubuntu1) zesty; urgency=medium
 
   * New upstream release 0.26.1 (https://launchpad.net/mir/+milestone/0.26.1)
