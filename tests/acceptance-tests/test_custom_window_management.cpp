@@ -472,23 +472,33 @@ TEST_F(CustomWindowManagement, when_the_client_places_a_new_surface_the_request_
 
             EXPECT_TRUE(params.placement_hints.is_set());
             if (params.placement_hints.is_set())
+            {
                 EXPECT_THAT(params.placement_hints.value(), Eq(placement_hints));
+            }
 
             EXPECT_TRUE(params.surface_placement_gravity.is_set());
             if (params.surface_placement_gravity.is_set())
+            {
                 EXPECT_THAT(params.surface_placement_gravity.value(), Eq(surface_gravity));
+            }
 
             EXPECT_TRUE(params.aux_rect_placement_gravity.is_set());
             if (params.aux_rect_placement_gravity.is_set())
+            {
                 EXPECT_THAT(params.aux_rect_placement_gravity.value(), Eq(rect_gravity));
+            }
 
             EXPECT_TRUE(params.aux_rect_placement_offset_x.is_set());
             if (params.aux_rect_placement_offset_x.is_set())
+            {
                 EXPECT_THAT(params.aux_rect_placement_offset_x.value(), Eq(offset_dx));
+            }
 
             EXPECT_TRUE(params.aux_rect_placement_offset_y.is_set());
             if (params.aux_rect_placement_offset_y.is_set())
+            {
                 EXPECT_THAT(params.aux_rect_placement_offset_y.value(), Eq(offset_dy));
+            }
 
             received.raise();
             return build(session, params);
@@ -561,23 +571,33 @@ TEST_F(CustomWindowManagement, when_the_client_places_an_existing_surface_the_re
 
             EXPECT_TRUE(spec.placement_hints.is_set());
             if (spec.placement_hints.is_set())
+            {
                 EXPECT_THAT(spec.placement_hints.value(), Eq(placement_hints));
+            }
 
             EXPECT_TRUE(spec.surface_placement_gravity.is_set());
             if (spec.surface_placement_gravity.is_set())
+            {
                 EXPECT_THAT(spec.surface_placement_gravity.value(), Eq(surface_gravity));
+            }
 
             EXPECT_TRUE(spec.aux_rect_placement_gravity.is_set());
             if (spec.aux_rect_placement_gravity.is_set())
+            {
                 EXPECT_THAT(spec.aux_rect_placement_gravity.value(), Eq(rect_gravity));
+            }
 
             EXPECT_TRUE(spec.aux_rect_placement_offset_x.is_set());
             if (spec.aux_rect_placement_offset_x.is_set())
+            {
                 EXPECT_THAT(spec.aux_rect_placement_offset_x.value(), Eq(offset_dx));
+            }
 
             EXPECT_TRUE(spec.aux_rect_placement_offset_y.is_set());
             if (spec.aux_rect_placement_offset_y.is_set())
+            {
                 EXPECT_THAT(spec.aux_rect_placement_offset_y.value(), Eq(offset_dy));
+            }
 
             received.raise();
         };

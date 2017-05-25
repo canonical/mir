@@ -23,6 +23,7 @@
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 #include <memory>
+#include <functional>
 
 namespace mir
 {

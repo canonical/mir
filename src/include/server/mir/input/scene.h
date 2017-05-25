@@ -21,6 +21,7 @@
 #define MIR_INPUT_INPUT_SCENE_H_
 
 #include <memory>
+#include <functional>
 
 namespace mir
 {

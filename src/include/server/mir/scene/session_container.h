@@ -19,6 +19,7 @@
 #ifndef MIR_SCENE_SESSION_CONTAINER_H_
 #define MIR_SCENE_SESSION_CONTAINER_H_
 
+#include <functional>
 #include <vector>
 #include <memory>
 #include <mutex>

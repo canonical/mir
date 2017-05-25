@@ -23,6 +23,7 @@
 #include "mir/recursive_read_write_mutex.h"
 
 #include <atomic>
+#include <functional>
 
 namespace mir
 {

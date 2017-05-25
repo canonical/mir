@@ -711,7 +711,7 @@ bool me::CanonicalWindowManagerPolicyCopy::handle_touch_event(MirTouchEvent cons
 
         case mir_touch_action_down:
             is_drag = false;
-
+            // fallthrough
         case mir_touch_action_change:
             continue;
 

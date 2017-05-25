@@ -25,6 +25,7 @@
 #include <atomic>
 #include <vector>
 #include <condition_variable>
+#include <functional>
 
 namespace google
 {

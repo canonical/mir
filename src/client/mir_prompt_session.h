@@ -26,6 +26,7 @@
 #include <mutex>
 #include <memory>
 #include <atomic>
+#include <functional>
 
 namespace mir
 {
