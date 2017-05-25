@@ -19,6 +19,7 @@
 #ifndef MIR_UDEV_WRAPPER_H_
 #define MIR_UDEV_WRAPPER_H_
 
+#include <functional>
 #include <memory>
 #include <libudev.h>
 

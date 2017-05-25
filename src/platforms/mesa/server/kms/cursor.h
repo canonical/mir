@@ -28,6 +28,7 @@
 
 #include <gbm.h>
 
+#include <functional>
 #include <memory>
 #include <mutex>
 

@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_X11_EGL_HELPER_H_
 
 #include <memory>
+#include <functional>
 
 #include <X11/Xlib.h>
 #include <EGL/egl.h>
