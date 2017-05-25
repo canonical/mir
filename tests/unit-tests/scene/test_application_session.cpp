@@ -439,7 +439,9 @@ TEST_F(ApplicationSession, surface_after_cycles_through_all)
         surf[i] = app_session->surface(id[i]);
 
         if (i > 0)
+        {
             ASSERT_NE(surf[i], surf[i-1]);
+        }
     }
 
     for (int i = 0; i < N-1; ++i)
