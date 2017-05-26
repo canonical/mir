@@ -1,5 +1,3 @@
-add_definitions(-DMIR_DEPRECATE_RENDERSURFACES=0)
-
 mir_add_wrapped_executable(mir_demo_standalone_render_surfaces
   render_surfaces.cpp
   buffer_render_target.cpp
