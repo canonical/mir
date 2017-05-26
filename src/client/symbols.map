@@ -581,6 +581,7 @@ MIR_CLIENT_DETAIL_0.27 {  # New functions in Mir 0.27
 
 MIR_CLIENT_0.27 {  # New functions in Mir 0.27
   global:
+    mir_buffer_stream_get_microseconds_till_vblank;
     mir_connection_apply_session_input_config;
     mir_connection_set_base_input_config;
     mir_create_freestyle_window_spec;
@@ -603,6 +604,8 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27
     mir_keyboard_config_set_keymap_variant;
     mir_keyboard_event_key_text;
     mir_output_get_logical_height;
+    mir_output_has_custom_logical_size;
+    mir_output_set_logical_size;
     mir_output_get_logical_width;
     mir_window_request_user_move;
     mir_window_request_user_resize;
@@ -611,10 +614,3 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27
     mir_touchscreen_config_set_mapping_mode;
     mir_touchscreen_config_set_output_id;
 } MIR_CLIENT_0.26.1;
-
-MIR_CLIENT_0.28 {  # New functions in Mir 0.28 (or 1.0)
-  global:
-    mir_buffer_stream_get_microseconds_till_vblank;
-    mir_output_has_custom_logical_size;
-    mir_output_set_logical_size;
-} MIR_CLIENT_0.27;
