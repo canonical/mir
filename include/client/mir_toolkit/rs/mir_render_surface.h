@@ -24,14 +24,14 @@
 #include <mir_toolkit/deprecations.h>
 
 #ifndef MIR_DEPRECATE_RENDERSURFACES
-    #define MIR_DEPRECATE_RENDERSURFACES 1
+    #define MIR_DEPRECATE_RENDERSURFACES 0
 #endif
 
 #if MIR_ENABLE_DEPRECATIONS > 0 && MIR_DEPRECATE_RENDERSURFACES > 0
-    #define MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1\
+    #define MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME\
     __attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")))
 #else
-    #define MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1
+    #define MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME
 #endif
 
 #ifdef __cplusplus
@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 typedef void (*MirRenderSurfaceCallback)(MirRenderSurface*, void* context)
-MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -64,7 +64,7 @@ void mir_connection_create_render_surface(
     int width, int height,
     MirRenderSurfaceCallback callback,
     void* context)
-MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
 
 /**
  * Create a render surface and wait for the result
@@ -79,7 +79,7 @@ MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 MirRenderSurface* mir_connection_create_render_surface_sync(
     MirConnection* connection,
     int width, int height)
-MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
 
 /**
  * Get the size of the MirRenderSurface
@@ -91,7 +91,7 @@ MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 void mir_render_surface_get_size(
     MirRenderSurface* render_surface,
     int* width, int* height)
-MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
 
 /**
  * Set the size of the MirRenderSurface
@@ -103,7 +103,7 @@ MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 void mir_render_surface_set_size(
     MirRenderSurface* render_surface,
     int width, int height)
-MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
 
 /**
  * Test for a valid render surface
@@ -115,7 +115,7 @@ MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
  */
 bool mir_render_surface_is_valid(
     MirRenderSurface* render_surface)
-MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
 
 /**
  * Retrieve a text description of the error. The returned string is owned by
@@ -128,7 +128,7 @@ MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
  */
 char const *mir_render_surface_get_error_message(
     MirRenderSurface* render_surface)
-MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
 
 /**
  * Release the specified render surface
@@ -137,7 +137,7 @@ MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
  */
 void mir_render_surface_release(
     MirRenderSurface* render_surface)
-MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
 
 /**
  * Obtain the buffer stream backing a given render surface.
@@ -157,7 +157,7 @@ MirBufferStream* mir_render_surface_get_buffer_stream(
     MirRenderSurface* render_surface,
     int width, int height,
     MirPixelFormat format)
-MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
 
 /**
  * Obtain the presentation chain backing a given render surface.
@@ -170,7 +170,7 @@ MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
  */
 MirPresentationChain* mir_render_surface_get_presentation_chain(
     MirRenderSurface* render_surface)
-MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
 
 /** Query whether the server supports a given presentation mode.
  *
@@ -204,7 +204,7 @@ void mir_window_spec_set_cursor_render_surface(
     MirWindowSpec* spec,
     MirRenderSurface* render_surface,
     int hotspot_x, int hotspot_y)
-MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
 
 /**
  * Returns a new cursor configuration tied to a given render surface.
@@ -219,7 +219,7 @@ MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
 MirCursorConfiguration* mir_cursor_configuration_from_render_surface(
     MirRenderSurface* surface,
     int hotspot_x, int hotspot_y)
-MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
 
 
 /**
@@ -242,7 +242,7 @@ void mir_window_spec_add_render_surface(MirWindowSpec* spec,
                                         MirRenderSurface* render_surface,
                                         int logical_width, int logical_height,
                                         int displacement_x, int displacement_y)
-MIR_RENDERSURFACES_FOR_RENAME_IN_VERSION_1;
+MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
 
 #pragma GCC diagnostic pop
 
