@@ -241,8 +241,6 @@ int main(int argc, char* argv[])
 
     me::Connection connection{socket, "Multiple MirBufferStream example"};
 
-    me::NormalWindow window{connection, 200, 200, true, false};
-
     std::vector<MyBufferStream> stream;
 
     stream.emplace_back(connection, 200, 200, 0, 0);
@@ -279,6 +277,8 @@ int main(int argc, char* argv[])
         POLLIN | POLLERR,
         0
     };
+
+    me::NormalWindow window{connection, 200, 200};
 
     while (poll(&signal_poll, 1, 0) <= 0)
     {
