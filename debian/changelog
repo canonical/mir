@@ -1,3 +1,147 @@
+mir (0.27.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.27.0 (https://launchpad.net/mir/+milestone/0.27.0)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 44
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI bumped to 61
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 13
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI bumped to 7
+      . mircore ABI unchanged at 1
+    - Enhancements:
+      . Mostly groundwork required to support major enhancements coming in
+        future Mir versions.
+      . Removed android-input and eliminated the entire "3rd_party/" subtree.
+        Now the Mir source tree contains original code only.
+      . Added mir_prompt_session_new_fds_for_prompt_providers_sync API.
+      . mirout: Added load and save options for keeping display configs
+        on disk.
+      . mirout: Added "--" support for applying configuration changes under
+        Unity8.
+      . Fixed failure of DRM hardware cursor {hide(); show(image);}
+      . Added server option: "--cursor software" (MIR_SERVER_CURSOR=software)
+      . Added letterboxing/black bars support to the GL renderer in preparation
+        for generic output cloning.
+      . Added client API for getting the logical size of an output.
+      . Migrated MirCookie to use SHA-256.
+      . Ensure RealKMSOutputConfiguration stays in sync with actual hardware
+        state.
+      . Added support for drag-and-drop.
+      . Lots of other client API enhancements.
+      . Minor clean-ups, optimizations and dead code removal.
+      . Added support for building on Ubuntu 17.10 artful.
+    - Bugs fixed:
+      . [enhancement] Make able to get version information from client /
+        server APIs (LP: #1195540)
+      . Touch screen coordinates don't rotate with the screen (LP: #1349660)
+      . Subpixel order not included in Mir display information (LP: #1393578)
+      . [enhancement] Missing client API for relative surface movement (e.g.
+        dragging client-decorated windows) (LP: #1420334) . Mir does not reset
+        key states when paused or resumed (modifiers get stuck after VT
+        switching) (LP: #1536279)
+      . NBS never uses mc::MultiMonitorMode::single_monitor_fast, even when
+        only a single monitor is plugged in (LP: #1561418)
+      . Inconsistent behaviour of Num Lock (LP: #1588237)
+      . A scaled (not panned or clipped) mirror/clone mode is desired
+        (LP: #1639226)
+      . Rotating an output left or right without restarting the
+        compositor distorts the image (LP: #1643488)
+      . support display scaling slider in unity8 (LP: #1645372)
+      . [ FAILED ] NestedInputWithMouse.mouse_pointer_coordinates_in_nested_
+        server_are_accumulated (LP: #1646375)
+      . [ FAILED ] NestedInputWithMouse.mouse_pointer_position_is_in_sync_with_
+        host_server (LP: #1646558)
+      . abi_check doesn't check mircore (LP: #1649354)
+      . [testsfail] PromptSessionClientAPI.client_pid_is_associated_with_
+        session hangs and times out (LP: #1655929)
+      . EDID does not change when hotplugging a monitor (LP: #1660017)
+      . [regression] Mir 0.26.0 - spinner loading animation, minimize, maximize
+        too fast (LP: #1661072)
+      . [regression] Unity8 stutters constantly (like half frame rate) using
+        Mir 0.26.0 (LP: #1661128)
+      . [regression] mir_demo_server refuses to quit on Ctrl+Alt+Backspace or
+        Ctrl+C in its terminal (deadlock in DefaultInputDeviceHub::add_device)
+        (LP: #1661151)
+      . [regression] mirout crashes when connecting to unity8 or any nested
+        server: [libprotobuf FATAL
+        /usr/include/google/protobuf/repeated_field.h:1408] CHECK failed:
+        (index) < (current_size_): (LP: #1661163)
+      . [ FAILED ] DefaultInputManagerTest.forwards_pause_continue_state_
+        changes_to_platform (LP: #1661187)
+      . [regression] Segfault on detect_fd_leaks during acceptance tests (in
+        DisplayConfiguration/{DisplayFormatSetting,DisplaySubpixelSetting})
+        (LP: #1661498)
+      . [regression] Nested server segfaults or rapidly logs exceptions when a
+        fullscreen client starts [in mir_presentation_chain_set_dropping_mode
+        ... std::exception::what: Operation not permitted] (LP: #1661508)
+      . [regression] Windowed clients of nested servers are all black
+        (LP: #1661521)
+      . mir_window_request_persistent_id_sync seg faults when called twice
+        (LP: #1661704)
+      . mir_acceptance_tests now takes 10 seconds longer (in r4002 compared to
+        r4001) (LP: #1662044)
+      . Mir graphics platform ABI broke in series 0.26 but sonames never
+        changed (LP: #1662455)
+      . libmirclient-dev missing build depndency on libmircore-dev
+        (LP: #1662942)
+      . [regression] mirscreencast hangs during screencast creation
+        (LP: #1662997)
+      . [regression] Software clients of nested servers with size >=480x480
+        are all black in Mir 0.25.0 and later (or stretched and distorted under
+        Unity8) (LP: #1663062)
+      . mir_window_spec_set_cursor_name() doesn't trigger
+        mir::scene::SurfaceObserver::cursor_image_set_to (LP: #1663197)
+      . android complaint during mirscreencast of nested server (LP: #1664562)
+      . qtubuntu sends wrong text as part of QKeyEvent (LP: #1664610)
+      . Mir server crashed with SIGSEGV in
+        mir::compositor::TemporaryBuffer::size() called from
+        mir::gl::tessellate_renderable_into_rectangle() (LP: #1664760)
+      . mirout reports logical size of a rotated display incorrectly
+        (LP: #1665271)
+      . Nested servers (Unity8) periodically stutter (half frame rate) with
+        Mir 0.26.1 (LP: #1666372)
+      . If the only surface in a session cannot take focus the server crashes
+        (LP: #1667645)
+      . [regression] OSK input shaping no longer works correctly (LP: #1669444)
+      . GTK window functions `Always on Top, Move and Resize' don't work in
+        Mir/Unity8 (LP: #1669524)
+      . [regression] mir_proving_server mode hotkeys (Ctrl+Alt+=/-) cause the
+        server to segfault (LP: #1669752)
+      . Test takes minutes to complete: MediatingDisplayChangerTest.confirmed_
+        configuration_doesnt_revert_after_timeout (LP: #1671033)
+      . [ FAILED ] PosixRWMutex.prefer_writer_nonrecursive_prevents_writer_
+        starvation (Timeout waiting to acquire write lock) (LP: #1671037)
+      . [regression] Mixing screen rotation with mode changes makes the image
+        squished (LP: #1672269)
+      . unity-system-compositor crashed with SIGSEGV in
+        libinput_device_config_accel_is_available() from
+        libinput_device_config_accel_set_speed() from
+        mir::input::evdev::LibInputDevice::apply_settings() (LP: #1672955)
+      . Presentation chains should support various Vulkan presentation modes
+        (LP: #1673533)
+      . Need an extension for GBM buffers to replace
+        mir_buffer_get_buffer_package() (LP: #1673534)
+      . cross-compile-chroot.sh (to zesty) fails to build [cannot find -ludev]
+        due to libudev.so being in a different directory to where libudev.pc
+        searches for it (LP: #1674201)
+      . Please transition to Boost 1.62 (LP: #1675138)
+      . [regression] Mir is assigning the first output ID = 0 (==
+        mir_display_output_id_invalid) (LP: #1675331)
+      . Mir sending key repeat events continually to nested shell after VT
+        switch (causes Unity8 lockup for a while) (LP: #1675357)
+      . mirout commands don't work when followed by -- (LP: #1676320)
+      . mir_demo_standalone_render_overlays fails to link (LP: #1677239)
+      . [regression] doxygen processing for capnproto/protobuf broken
+        (LP: #1679248)
+      . mir_window_spec_set_cursor_render_surface does not work (LP: #1679836)
+      . [regression] Some fullscreen apps render nothing until the window has
+        been resized (LP: #1686620)
+
+ -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 03 Apr 2017 11:28:15 +0800
+
 mir (0.26.3+17.10.20170526.3-0ubuntu1) artful; urgency=medium
 
   [ Daniel van Vugt ]
