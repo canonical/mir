@@ -15,7 +15,7 @@
  *
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
-#define MIR_DEPRECATE_RENDERSURFACES 0
+
 #include "mir_toolkit/mir_client_library.h"
 
 #include "mir/test/signal.h"
