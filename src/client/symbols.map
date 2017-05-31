@@ -607,6 +607,7 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27
     mir_output_has_custom_logical_size;
     mir_output_set_logical_size;
     mir_output_get_logical_width;
+    mir_window_create_spec;
     mir_window_request_user_move;
     mir_window_request_user_resize;
     mir_touchscreen_config_get_mapping_mode;

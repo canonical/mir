@@ -219,15 +219,27 @@ mir_create_freestyle_window_spec(MirConnection* connection, int width, int heigh
  * Create a window specification.
  * This can be used with mir_create_window() to create a window or with
  * mir_window_apply_spec() to change an existing window.
- * \remark For use with mir_create_window() at least the type, width, height,
- * format and buffer_usage must be set. (And for types requiring a parent that
- * too must be set.)
+ * \remark For use with mir_create_window() at least the type, width and height
+ * must be set. (And for types requiring a parent that too must be set.)
  *
  * \param [in] connection   a valid mir connection
  * \return                  A handle that can ultimately be passed to
  *                          mir_create_window() or mir_window_apply_spec()
  */
 MirWindowSpec* mir_create_window_spec(MirConnection* connection);
+
+/**
+ * Create a window specification.
+ * This can be used with mir_create_window() to create a window or with
+ * mir_window_apply_spec() to change an existing window.
+ * \remark For use with mir_create_window() at least the type, width and height
+ * must be set. (And for types requiring a parent that too must be set.)
+ *
+ * \param [in] window       a valid MirWindow
+ * \return                  A handle that can ultimately be passed to
+ *                          mir_create_window() or mir_window_apply_spec()
+ */
+MirWindowSpec* mir_window_create_spec(MirWindow* window);
 
 /**
  * Set the requested parent.
