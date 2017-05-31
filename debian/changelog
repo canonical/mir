@@ -1,5 +1,6 @@
-mir (0.26.3-0ubuntu1) UNRELEASED; urgency=medium
+mir (0.26.3+17.10.20170526.3-0ubuntu1) artful; urgency=medium
 
+  [ Daniel van Vugt ]
   * New upstream release 0.26.3 (https://launchpad.net/mir/+milestone/0.26.3)
     - Enhancements:
       . Make deprecations optional (and default to off for builds on 16.04 LTS)
@@ -15,7 +16,7 @@ mir (0.26.3-0ubuntu1) UNRELEASED; urgency=medium
         switch (causes Unity8 lockup for a while) (LP: #1675357)
       . mir_demo_standalone_render_overlays fails to link (LP: #1677239)
 
- -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Thu, 30 Mar 2017 11:43:28 +0800
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Fri, 26 May 2017 16:57:20 +0000
 
 mir (0.26.2+17.04.20170322.1-0ubuntu2) zesty; urgency=medium
 
