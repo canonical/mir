@@ -52,15 +52,9 @@ static void shutdown(int signum)
     }
 }
 
-typedef struct
+static void handle_event(MirWindow* window, MirEvent const* ev, void* context)
 {
-    MirConnection *conn;
-    MirRenderSurface* surface;
-} Surface;
-
-static void handle_event(MirWindow* window, MirEvent const* ev, void* context_)
-{
-    Surface* context = (Surface*)context_;
+    MirRenderSurface* surface = (MirRenderSurface*)context;
 
     switch (mir_event_get_type(ev))
     {
@@ -70,9 +64,9 @@ static void handle_event(MirWindow* window, MirEvent const* ev, void* context_)
         int const new_width = mir_resize_event_get_width(resize);
         int const new_height = mir_resize_event_get_height(resize);
 
-        mir_render_surface_set_size(context->surface, new_width, new_height);
-        MirWindowSpec* spec = mir_create_window_spec(context->conn);
-        mir_window_spec_add_render_surface(spec, context->surface, new_width, new_height, 0, 0);
+        mir_render_surface_set_size(surface, new_width, new_height);
+        MirWindowSpec* spec = mir_window_create_spec(window);
+        mir_window_spec_add_render_surface(spec, surface, new_width, new_height, 0, 0);
         mir_window_apply_spec(window, spec);
         mir_window_spec_release(spec);
         break;
@@ -286,16 +280,13 @@ int main(int argc, char *argv[])
     int width = 500;
     int height = 500;
 
-    Surface surface;
-
-    surface.conn = conn;
-    surface.surface = mir_connection_create_render_surface_sync(conn, width, height);
-    MirBufferStream *bs = mir_render_surface_get_buffer_stream(surface.surface, width, height, pixel_format);
+    MirRenderSurface *const surface = mir_connection_create_render_surface_sync(conn, width, height);
+    MirBufferStream *bs = mir_render_surface_get_buffer_stream(surface, width, height, pixel_format);
 
     MirWindowSpec *spec = mir_create_normal_window_spec(conn, width, height);
 
-    mir_window_spec_add_render_surface(spec, surface.surface, width, height, 0, 0);
-    mir_window_spec_set_event_handler(spec, &handle_event, &surface);
+    mir_window_spec_add_render_surface(spec, surface, width, height, 0, 0);
+    mir_window_spec_set_event_handler(spec, &handle_event, surface);
 
     if (spec == NULL)
     {
