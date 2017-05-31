@@ -18,12 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir/test/signal.h"
-#include "mir/test/event_matchers.h"
-
 #include "mir_test_framework/connected_client_headless_server.h"
-#include "mir_test_framework/process.h"
-#include "mir/test/cross_process_sync.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
