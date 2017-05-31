@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_NESTED_PLATFORM_H_
 
 #include "mir/graphics/platform.h"
+#include "mir/graphics/platform_authentication.h"
 #include "mir/renderer/gl/egl_platform.h"
 #include "passthrough_option.h"
 #include <memory>
@@ -36,36 +37,77 @@ class DisplayReport;
 namespace nested
 {
 class HostConnection;
-class Platform : public graphics::Platform,
-                 public graphics::NativeRenderingPlatform,
-                 public mir::renderer::gl::EGLPlatform
+
+class NestedDisplayPlatform : public graphics::DisplayPlatform,
+                              public graphics::NativeDisplayPlatform,
+                              public graphics::PlatformAuthenticationFactory
 {
 public:
-    Platform(
-        std::shared_ptr<mir::SharedLibrary> const& library, 
+    NestedDisplayPlatform(
+        std::shared_ptr<graphics::RenderingPlatform> const& platform,
         std::shared_ptr<HostConnection> const& connection, 
         std::shared_ptr<DisplayReport> const& display_report,
         options::Option const& options);
 
-    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<GLConfig> const& gl_config) override;
     NativeDisplayPlatform* native_display_platform() override;
+    UniqueModulePtr<PlatformAuthentication> create_platform_authentication() override;
+    std::vector<mir::ExtensionDescription> extensions() const override;
+
+private:
+    std::shared_ptr<graphics::RenderingPlatform> const platform;
+    std::shared_ptr<HostConnection> const connection; 
+    std::shared_ptr<DisplayReport> const display_report;
+
+    PassthroughOption const passthrough_option;
+};
+
+class NestedBufferPlatform : public graphics::RenderingPlatform,
+                             public graphics::NativeRenderingPlatform,
+                             public mir::renderer::gl::EGLPlatform
+{
+public:
+    NestedBufferPlatform(
+        std::shared_ptr<mir::SharedLibrary> const& library, 
+        std::shared_ptr<HostConnection> const& connection, 
+        std::shared_ptr<DisplayReport> const& display_report,
+        std::shared_ptr<options::Option> const& options);
+
+    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativeRenderingPlatform* native_rendering_platform() override;
     MirServerEGLNativeDisplayType egl_native_display() const override;
-    std::vector<mir::ExtensionDescription> extensions() const override;
 private:
     std::shared_ptr<mir::SharedLibrary> const library; 
     std::shared_ptr<HostConnection> const connection; 
     std::shared_ptr<DisplayReport> const display_report;
 
-    //the concept of guest platform is strange, it only exists to deny creating a
-    //host display in a nested context. It should go away soon.
-    std::shared_ptr<graphics::Platform> const guest_platform;
+    std::shared_ptr<graphics::RenderingPlatform> const rendering_platform;
     PassthroughOption const passthrough_option;
 };
+
+class Platform : public graphics::Platform
+{
+public:
+    Platform(
+        std::shared_ptr<NestedBufferPlatform> buffer_platform,
+        std::unique_ptr<NestedDisplayPlatform> display_platform);
+    UniqueModulePtr<graphics::Display> create_display(
+        std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
+        std::shared_ptr<GLConfig> const& gl_config) override;
+    NativeDisplayPlatform* native_display_platform() override;
+
+    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
+    NativeRenderingPlatform* native_rendering_platform() override;
+    std::vector<mir::ExtensionDescription> extensions() const override;
+private:
+    std::shared_ptr<NestedBufferPlatform> const buffer_platform;
+    std::unique_ptr<NestedDisplayPlatform> const display_platform;
+};
+
 }
 }
 }
