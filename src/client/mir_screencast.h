@@ -24,6 +24,8 @@
 #include "mir/optional_value.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
+#include "mir_protobuf.pb.h"
+#include "mir_error.h"
 
 #include <EGL/eglplatform.h>
 
@@ -38,6 +40,7 @@ class Void;
 }
 namespace client
 {
+class MirBuffer;
 namespace rpc
 {
 class DisplayServer;
@@ -85,6 +88,11 @@ public:
 
     MirBufferStream* get_buffer_stream();
 
+    void screencast_to_buffer(
+        mir::client::MirBuffer* buffer,
+        MirScreencastBufferCallback available_callback,
+        void* available_context);
+
 private:
     void screencast_created(
         MirScreencastCallback callback, void* context);
@@ -103,6 +111,24 @@ private:
     MirWaitHandle release_wait_handle;
 
     std::string const empty_error_message;
+
+    struct ScreencastRequest
+    {
+        ScreencastRequest(mir::client::MirBuffer* b, MirScreencastBufferCallback cb, void* context) :
+            buffer(b),
+            available_callback(cb),
+            available_context(context)
+        {
+        }
+ 
+        mir::client::MirBuffer* buffer;
+        MirScreencastBufferCallback available_callback;
+        void* available_context;
+        mir::protobuf::Void response;
+    };
+    std::vector<std::unique_ptr<ScreencastRequest>> requests;
+    void screencast_done(ScreencastRequest* request);
+    std::unique_ptr<MirError> error = nullptr;
 };
 
 #endif /* MIR_CLIENT_MIR_SCREENCAST_H_ */

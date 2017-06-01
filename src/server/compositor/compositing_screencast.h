@@ -64,8 +64,7 @@ private:
     std::shared_ptr<detail::ScreencastSessionContext>
         create_session_context(geometry::Rectangle const& rect,
             geometry::Size const& size,
-            MirPixelFormat pixel_format,
-            int nbuffers,
+            std::vector<std::shared_ptr<graphics::Buffer>> const& buffers,
             MirMirrorMode mirror_mode);
    std::shared_ptr<detail::ScreencastSessionContext> session(frontend::ScreencastSessionId id);
 

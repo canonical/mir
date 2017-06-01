@@ -19,11 +19,13 @@
 #define MIR_LOG_COMPONENT "MirScreencastAPI"
 
 #include "mir_toolkit/mir_screencast.h"
+#include "mir_toolkit/mir_buffer.h"
 #include "mir_screencast.h"
 #include "mir_connection.h"
 #include "mir/raii.h"
 #include "mir/require.h"
 #include "mir/uncaught.h"
+#include "no_tls_future-inl.h"
 
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
@@ -130,4 +132,40 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
     return nullptr;
+}
+
+static MirError unknown(mir_error_domain_screencast, mir_screencast_error_failure);
+void mir_screencast_capture_to_buffer(
+    MirScreencast* screencast,
+    MirBuffer* b,
+    MirScreencastBufferCallback available_callback, void* available_context)
+try
+{
+    mir::require(b);
+    mir::require(screencast);
+
+    auto buffer = reinterpret_cast<mir::client::MirBuffer*>(b);
+    screencast->screencast_to_buffer(buffer, available_callback, available_context);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    available_callback(nullptr, &unknown, available_context);
+}
+
+MirError const* mir_screencast_capture_to_buffer_sync(MirScreencast* screencast, MirBuffer* buffer)
+try
+{
+    mir::client::NoTLSPromise<MirError const*> promise;
+    mir_screencast_capture_to_buffer(screencast, buffer,
+        [](MirBuffer*, MirError const* e, void* c)
+        {
+            reinterpret_cast<mir::client::NoTLSPromise<MirError const*>*>(c)->set_value(e);
+        }, &promise);
+    return promise.get_future().get();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    return &unknown;
 }
