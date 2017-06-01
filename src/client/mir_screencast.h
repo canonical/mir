@@ -25,7 +25,6 @@
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
 #include "mir_protobuf.pb.h"
-#include "mir_error.h"
 
 #include <EGL/eglplatform.h>
 
