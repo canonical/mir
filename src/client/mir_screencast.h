@@ -20,7 +20,7 @@
 #define MIR_CLIENT_MIR_SCREENCAST_H_
 
 #include "mir_wait_handle.h"
-#include "mir_toolkit/client_types.h"
+#include "mir_toolkit/mir_screencast.h"
 #include "mir/optional_value.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
@@ -128,7 +128,6 @@ private:
     };
     std::vector<std::unique_ptr<ScreencastRequest>> requests;
     void screencast_done(ScreencastRequest* request);
-    std::unique_ptr<MirError> error = nullptr;
 };
 
 #endif /* MIR_CLIENT_MIR_SCREENCAST_H_ */

@@ -169,7 +169,7 @@ TEST_F(Screencast, can_cast_to_buffer)
     } capture;
 
     mir_screencast_capture_to_buffer(screencast, buffer_info.buffer, 
-        [] (MirBuffer*, MirError const*, void* context) {
+        [] (MirScreencastResult /*status*/, MirBuffer* /*buffer*/, void* context) {
             auto c = reinterpret_cast<Capture*>(context);
             std::unique_lock<decltype(c->mutex)> lk(c->mutex);
             c->capture = true;

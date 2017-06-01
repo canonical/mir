@@ -239,13 +239,9 @@ MirBufferStream* MirScreencast::get_buffer_stream()
 
 void MirScreencast::screencast_done(ScreencastRequest* request)
 {
-    if (request->response.has_error())
-        error = std::make_unique<MirError>(mir_error_domain_screencast, mir_screencast_error_failure);
-    else
-        error = nullptr;
+    auto const status = request->response.has_error() ? mir_screencast_error_failure : mir_screencast_success;
 
-    request->available_callback(
-        reinterpret_cast<MirBuffer*>(request->buffer), error.get(), request->available_context);
+    request->available_callback(status, reinterpret_cast<MirBuffer*>(request->buffer), request->available_context);
 
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = std::find_if(requests.begin(), requests.end(),

@@ -106,11 +106,10 @@ try
     mir_screencast_spec_release(spec);
 
     auto buffer = mir_connection_allocate_buffer_sync(connection, width, height, pf);
-    auto error = mir_screencast_capture_to_buffer_sync(screencast, buffer);
-    if (error && mir_error_get_domain(error) == mir_error_domain_screencast)
+
+    if (auto status = mir_screencast_capture_to_buffer_sync(screencast, buffer))
     {
-        auto code = mir_error_get_code(error);
-        switch (code)
+        switch (status)
         {
             case mir_screencast_error_unsupported:
                 std::cerr << "screencast unsupported" << std::endl;

@@ -134,7 +134,6 @@ catch (std::exception const& ex)
     return nullptr;
 }
 
-static MirError unknown(mir_error_domain_screencast, mir_screencast_error_failure);
 void mir_screencast_capture_to_buffer(
     MirScreencast* screencast,
     MirBuffer* b,
@@ -150,22 +149,22 @@ try
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    available_callback(nullptr, &unknown, available_context);
+    available_callback(mir_screencast_error_failure, nullptr, available_context);
 }
 
-MirError const* mir_screencast_capture_to_buffer_sync(MirScreencast* screencast, MirBuffer* buffer)
+MirScreencastResult mir_screencast_capture_to_buffer_sync(MirScreencast* screencast, MirBuffer* buffer)
 try
 {
-    mir::client::NoTLSPromise<MirError const*> promise;
+    mir::client::NoTLSPromise<MirScreencastResult> promise;
     mir_screencast_capture_to_buffer(screencast, buffer,
-        [](MirBuffer*, MirError const* e, void* c)
+        [](MirScreencastResult status, MirBuffer* /*buffer*/, void* context)
         {
-            reinterpret_cast<mir::client::NoTLSPromise<MirError const*>*>(c)->set_value(e);
+            reinterpret_cast<mir::client::NoTLSPromise<MirScreencastResult>*>(context)->set_value(status);
         }, &promise);
     return promise.get_future().get();
 }
 catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
-    return &unknown;
+    return mir_screencast_error_failure;
 }

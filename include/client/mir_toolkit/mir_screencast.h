@@ -28,6 +28,33 @@
 extern "C" {
 #endif
 
+typedef enum MirScreencastResult
+{
+    /**
+     * Screencasting to the MirBuffer succeeded.
+     */
+    mir_screencast_success,
+
+    /**
+     * Screencast completed successfully, but format conversions, buffer copies
+     * or other operations occurred that affected performance.
+     */
+    mir_screencast_performance_warning,
+
+    /**
+     * Screencasting failed.
+     */
+    mir_screencast_error_failure,
+
+    /**
+     * Screencasting to the MirBuffer is unsupported.
+     */
+    mir_screencast_error_unsupported,
+} MirScreencastResult;
+
+typedef void (*MirScreencastBufferCallback)(
+    MirScreencastResult status, MirBuffer* buffer, void* context);
+
 /**
  * Create a screencast specification.
  *
@@ -182,7 +209,7 @@ void mir_screencast_capture_to_buffer(
  *   \param [in] buffer             The buffer
  *   \return                        The error condition
  **/
-MirError const* mir_screencast_capture_to_buffer_sync(MirScreencast* screencast, MirBuffer* buffer);
+MirScreencastResult mir_screencast_capture_to_buffer_sync(MirScreencast* screencast, MirBuffer* buffer);
 
 #ifdef __cplusplus
 }
