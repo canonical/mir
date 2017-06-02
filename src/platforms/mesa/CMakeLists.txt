@@ -17,7 +17,7 @@ add_subdirectory(client/)
 
 install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/platforms/mesa/mir_toolkit
-  DESTINATION "include/mirplatform"
+  DESTINATION "include/mirplatforms"
 )
 
 install(
