@@ -215,6 +215,8 @@ TEST_F(Screencast, can_cast_to_buffer_sync)
 
     mir_screencast_spec_set_capture_region(spec, &default_capture_region);
     auto screencast = mir_screencast_create_sync(spec);
+
+    mir_screencast_spec_release(spec);
     mir_screencast_capture_to_buffer_sync(screencast, buffer_info.buffer);
 
     mir_screencast_release_sync(screencast);
