@@ -69,7 +69,7 @@ override_dh_install:
 ifeq ($(filter xenial yakkety zesty,$(DISTRIB_CODENAME)),)
 	dh_install
 else
-  # xenial, yakkety & zesty predate dh_missing
+	# xenial, yakkety & zesty predate dh_missing
 	dh_install --fail-missing
 endif
 
