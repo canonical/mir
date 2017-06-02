@@ -160,6 +160,7 @@ TEST_F(Screencast, can_cast_to_buffer)
 
     mir_screencast_spec_set_capture_region(spec, &default_capture_region);
     auto screencast = mir_screencast_create_sync(spec);
+    mir_screencast_spec_release(spec);
 
     struct Capture
     {
