@@ -24,6 +24,7 @@
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir/test/doubles/stub_session_authorizer.h"
 #include "mir/test/fake_shared.h"
+#include "mir/test/doubles/mock_gl.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -50,6 +51,7 @@ struct MockSessionAuthorizer : public mtd::StubSessionAuthorizer
 struct Screencast : mtf::HeadlessInProcessServer
 {
     MockSessionAuthorizer mock_authorizer;
+    NiceMock<mtd::MockGL> mockgl;
 
     void SetUp() override
     {
@@ -135,24 +137,10 @@ TEST_F(Screencast, can_cast_to_buffer)
         .WillOnce(Return(true));
     auto const connection = mir_connect_sync(new_connection().c_str(), __PRETTY_FUNCTION__);
 
-    struct BufferSync
-    {
-        MirBuffer* buffer = nullptr;
-        std::mutex mutex;
-        std::condition_variable cv;
-    } buffer_info;
+    auto const buffer = mir_connection_allocate_buffer_sync(
+        connection, default_width, default_height, default_pixel_format);
 
-    mir_connection_allocate_buffer(
-        connection,
-        default_width, default_height, default_pixel_format,
-        [](MirBuffer* b, void* ctxt) {
-            auto info = reinterpret_cast<BufferSync*>(ctxt);
-            std::unique_lock<decltype(info->mutex)> lk(info->mutex);
-            info->buffer = b;
-            info->cv.notify_all(); 
-        }, &buffer_info);
-    std::unique_lock<decltype(buffer_info.mutex)> lk(buffer_info.mutex);
-    ASSERT_TRUE(buffer_info.cv.wait_for(lk, 5s, [&] { return buffer_info.buffer; }));
+    ASSERT_TRUE(buffer);
 
     MirScreencastSpec* spec = mir_create_screencast_spec(connection);
     //We have to set nbuffers == 0 now to avoid capturing at startup. Current default is 1.
@@ -169,7 +157,7 @@ TEST_F(Screencast, can_cast_to_buffer)
         bool capture = false;
     } capture;
 
-    mir_screencast_capture_to_buffer(screencast, buffer_info.buffer, 
+    mir_screencast_capture_to_buffer(screencast, buffer,
         [] (MirScreencastResult /*status*/, MirBuffer* /*buffer*/, void* context) {
             auto c = reinterpret_cast<Capture*>(context);
             std::unique_lock<decltype(c->mutex)> lk(c->mutex);
@@ -179,7 +167,7 @@ TEST_F(Screencast, can_cast_to_buffer)
 
     std::unique_lock<decltype(capture.mutex)> lk2(capture.mutex);
     ASSERT_TRUE(capture.cv.wait_for(lk2, 5s, [&] { return capture.capture; }));
-    EXPECT_THAT(mir_buffer_get_error_message(buffer_info.buffer), StrEq(""));
+    EXPECT_THAT(mir_buffer_get_error_message(buffer), StrEq(""));
 
     mir_screencast_release_sync(screencast);
     mir_connection_release(connection);
