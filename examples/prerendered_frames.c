@@ -92,6 +92,31 @@ static void shutdown(int signum)
         rendering = 0;
 }
 
+static void handle_window_event(MirWindow* window, MirEvent const* event, void* context)
+{
+    MirRenderSurface* const surface = (MirRenderSurface*)context;
+
+    switch (mir_event_get_type(event))
+    {
+    case mir_event_type_resize:
+    {
+        MirResizeEvent const* resize = mir_event_get_resize_event(event);
+        int const new_width = mir_resize_event_get_width(resize);
+        int const new_height = mir_resize_event_get_height(resize);
+
+        mir_render_surface_set_size(surface, new_width, new_height);
+        MirWindowSpec* spec = mir_create_window_spec(mir_window_get_connection(window));
+        mir_window_spec_add_render_surface(spec, surface, new_width, new_height, 0, 0);
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
+        break;
+    }
+
+    default:
+        break;
+    }
+}
+
 int main(int argc, char** argv)
 {
     static char const *socket_file = NULL;
@@ -165,6 +190,8 @@ int main(int argc, char** argv)
     MirWindowSpec* spec = mir_create_normal_window_spec(connection, width, height);
     mir_window_spec_add_render_surface(
         spec, surface, width, height, displacement_x, displacement_y);
+    mir_window_spec_set_event_handler(spec, &handle_window_event, surface);
+    mir_window_spec_set_name(spec, "prerendered_frames");
     MirWindow* window = mir_create_window_sync(spec);
     if (!mir_window_is_valid(window))
     {
