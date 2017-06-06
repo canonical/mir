@@ -51,8 +51,14 @@ me::NormalWindow::NormalWindow(me::Connection& connection, unsigned int width, u
 }
 
 mir::examples::NormalWindow::NormalWindow(
+    Connection& connection, unsigned int width, unsigned int height, MirRenderSurface* surface) :
+    window{create_window(connection, width, height, surface), &mir_window_release_sync}
+{
+}
+
+mir::examples::NormalWindow::NormalWindow(
     mir::examples::Connection& connection, unsigned int width, unsigned int height, mir::examples::Context& eglcontext) :
-    window{create_window(connection, width, height, eglcontext.mir_surface()), &mir_window_release_sync}
+    NormalWindow(connection, width, height, eglcontext.mir_surface())
 {
 }
 

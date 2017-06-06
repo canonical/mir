@@ -49,8 +49,6 @@ public:
 
     int displacement_x{0};
     int displacement_y{0};
-    int width{0};
-    int height{0};
 
     MyBufferStream& operator=(MyBufferStream &&) = default;
     MyBufferStream(MyBufferStream &&) = default;
@@ -278,7 +276,7 @@ int main(int argc, char* argv[])
         0
     };
 
-    me::NormalWindow window{connection, 200, 200};
+    me::NormalWindow window{connection, 200, 200, stream[0]};
 
     while (poll(&signal_poll, 1, 0) <= 0)
     {
@@ -302,8 +300,12 @@ int main(int argc, char* argv[])
         auto spec = mir_create_window_spec(connection);
         for (auto& s : stream)
         {
+            int width{0};
+            int height{0};
+            mir_render_surface_get_size(s, &width, &height);
+
             mir_buffer_stream_swap_buffers_sync(s);
-            mir_window_spec_add_render_surface(spec, s, s.width, s.height, s.displacement_x, s.displacement_y);
+            mir_window_spec_add_render_surface(spec, s, width, height, s.displacement_x, s.displacement_y);
         }
         mir_window_apply_spec(window, spec);
         mir_window_spec_release(spec);
@@ -322,8 +324,6 @@ MyBufferStream::MyBufferStream(
     int displacement_y)
     : displacement_x{displacement_x},
       displacement_y{displacement_y},
-      width{width},
-      height{height},
       stream{mir_connection_create_render_surface_sync(connection, width, height), &mir_render_surface_release},
       bs{get_stream(connection, width, height)}
 {
