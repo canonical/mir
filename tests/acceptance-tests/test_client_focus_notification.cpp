@@ -18,12 +18,7 @@
 
 #include "mir_toolkit/mir_client_library.h"
 
-#include "mir/test/signal.h"
-#include "mir/test/event_matchers.h"
-
 #include "mir_test_framework/connected_client_headless_server.h"
-#include "mir_test_framework/process.h"
-#include "mir/test/cross_process_sync.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -40,19 +35,15 @@ struct FocusSurface
     FocusSurface(MirConnection* connection) :
         connection(connection)
     {
+        surface = mir_connection_create_render_surface_sync(connection, 100, 100);
         auto spec = mir_create_normal_window_spec(connection, 100, 100);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_window_spec_set_pixel_format(spec, mir_pixel_format_abgr_8888);
-#pragma GCC diagnostic pop
         mir_window_spec_set_event_handler(spec, FocusSurface::handle_event, this);
-
+        mir_window_spec_add_render_surface(spec, surface, 100, 100, 0, 0);
         window = mir_create_window_sync(spec);
         mir_window_spec_release(spec);
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-        mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
-#pragma GCC diagnostic pop
+
+        mir_buffer_stream_swap_buffers_sync(
+            mir_render_surface_get_buffer_stream(surface, 100, 100, mir_pixel_format_argb_8888));
     }
 
     ~FocusSurface()
@@ -113,6 +104,7 @@ private:
     std::vector<MirWindowFocusState> focus_events;
     bool released {false};
     MirConnection* connection = nullptr;
+    MirRenderSurface* surface = nullptr;
     MirWindow* window = nullptr;
     std::chrono::seconds timeout{5};
 };
