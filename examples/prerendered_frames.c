@@ -112,6 +112,11 @@ static void handle_window_event(MirWindow* window, MirEvent const* event, void* 
         break;
     }
 
+    case mir_event_type_close_window:
+        printf("Received close event from server.\n");
+        rendering = 0;
+        break;
+
     default:
         break;
     }
