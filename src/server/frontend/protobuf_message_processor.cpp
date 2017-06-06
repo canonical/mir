@@ -425,7 +425,7 @@ void mfd::ProtobufMessageProcessor::send_response(::google::protobuf::uint32 id,
 void mfd::ProtobufMessageProcessor::send_response(
     ::google::protobuf::uint32 id, mir::protobuf::Screencast* response)
 {
-    if (response->has_buffer_stream())
+    if (response->has_buffer_stream() && response->buffer_stream().has_buffer())
         sender->send_response(id, response,
             {extract_fds_from(response->mutable_buffer_stream()->mutable_buffer())});
     else

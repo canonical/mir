@@ -28,6 +28,22 @@
 extern "C" {
 #endif
 
+typedef enum MirScreencastResult
+{
+    /**
+     * Screencasting to the MirBuffer succeeded.
+     */
+    mir_screencast_success,
+
+    /**
+     * Screencasting failed.
+     */
+    mir_screencast_error_failure,
+} MirScreencastResult;
+
+typedef void (*MirScreencastBufferCallback)(
+    MirScreencastResult status, MirBuffer* buffer, void* context);
+
 /**
  * Create a screencast specification.
  *
@@ -160,6 +176,29 @@ void mir_screencast_release_sync(
  *   \param[in] screencast The screencast
  */
 MirBufferStream* mir_screencast_get_buffer_stream(MirScreencast* screencast);
+
+/** Capture the contents of the screen to a particular buffer.
+ *
+ *   \param [in] screencast         The screencast
+ *   \param [in] buffer             The buffer
+ *   \param [in] available_callback Callback triggered when buffer is available again
+ *   \param [in] available_context  The context for the above callback
+ **/
+void mir_screencast_capture_to_buffer(
+    MirScreencast* screencast,
+    MirBuffer* buffer,
+    MirScreencastBufferCallback available_callback, void* available_context);
+
+/** Capture the contents of the screen to a particular buffer and wait for the
+ *  capture to complete.
+ *
+ *   \warning   The returned MirError will be valid until the next call
+ *              to mir_screencast_capture_to_buffer or mir_screencast_capture_to_buffer_sync.
+ *   \param [in] screencast         The screencast
+ *   \param [in] buffer             The buffer
+ *   \return                        The error condition
+ **/
+MirScreencastResult mir_screencast_capture_to_buffer_sync(MirScreencast* screencast, MirBuffer* buffer);
 
 #ifdef __cplusplus
 }

@@ -116,6 +116,10 @@ public:
 
     NativeDisplayBuffer* native_display_buffer() override;
 
+    geometry::Size renderbuffer_size();
+    void set_renderbuffer_size(geometry::Size);
+    void set_transformation(glm::mat2 const& transform);
+
 private:
     std::unique_ptr<renderer::gl::Context> gl_context;
     geometry::Rectangle const rect;
@@ -131,6 +135,8 @@ private:
     detail::GLResource<glDeleteTextures> color_tex;
     detail::GLResource<glDeleteRenderbuffers> depth_rbo;
     detail::GLResource<glDeleteFramebuffers> fbo;
+
+    geometry::Size current_size;
 };
 
 }

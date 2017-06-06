@@ -251,7 +251,6 @@ TEST_F(CompositingScreencastTest, throws_on_creation_with_invalid_params)
     EXPECT_THROW(screencast.create_session(invalid_region, default_size, default_pixel_format, default_num_buffers, default_mirror_mode), std::runtime_error);
     EXPECT_THROW(screencast.create_session(default_region, invalid_size, default_pixel_format, default_num_buffers, default_mirror_mode), std::runtime_error);
     EXPECT_THROW(screencast.create_session(default_region, default_size, mir_pixel_format_invalid, default_num_buffers, default_mirror_mode), std::runtime_error);
-    EXPECT_THROW(screencast.create_session(default_region, default_size, mir_pixel_format_invalid, 0, default_mirror_mode), std::runtime_error);
 }
 
 TEST_F(CompositingScreencastTest, throws_on_capture_with_invalid_session_id)
