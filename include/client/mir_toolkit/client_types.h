@@ -515,12 +515,6 @@ typedef enum MirErrorDomain
      * Associated error codes are found in \ref MirInputConfigurationError.
      */
     mir_error_domain_input_configuration,
-    /**
-     * Errors relating to screencast
-     *
-     * Associated error codes are found in \ref MirScreencastError.
-     */
-    mir_error_domain_screencast,
 } MirErrorDomain;
 
 /**

@@ -36,20 +36,9 @@ typedef enum MirScreencastResult
     mir_screencast_success,
 
     /**
-     * Screencast completed successfully, but format conversions, buffer copies
-     * or other operations occurred that affected performance.
-     */
-    mir_screencast_performance_warning,
-
-    /**
      * Screencasting failed.
      */
     mir_screencast_error_failure,
-
-    /**
-     * Screencasting to the MirBuffer is unsupported.
-     */
-    mir_screencast_error_unsupported,
 } MirScreencastResult;
 
 typedef void (*MirScreencastBufferCallback)(

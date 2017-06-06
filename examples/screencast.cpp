@@ -111,16 +111,9 @@ try
     {
         switch (status)
         {
-            case mir_screencast_error_unsupported:
-                std::cerr << "screencast unsupported" << std::endl;
-                rc = -1;
-                break;
             case mir_screencast_error_failure:
                 std::cerr << "screencast failed" << std::endl;
                 rc = -1;
-                break;
-            case mir_screencast_performance_warning:
-                std::cout << "screencast performance warning" << std::endl;
                 break;
             default:
                 break;
@@ -147,10 +140,10 @@ try
     mir_buffer_release(buffer);
     mir_screencast_release_sync(screencast);
     mir_connection_release(connection);
-    return 0;
+    return EXIT_SUCCESS;
 }
 catch(std::exception& e)
 {
     std::cerr << "error : " << e.what() << std::endl;
-    return 1;
+    return EXIT_FAILURE;
 }
