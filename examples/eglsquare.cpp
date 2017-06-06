@@ -26,6 +26,8 @@
 #include <cstring>
 #include <unistd.h>
 #include <signal.h>
+#include <condition_variable>
+#include <atomic>
 
 #include "client_helpers.h"
 
@@ -107,9 +109,22 @@ public:
         dimensions(active_output_dimensions(connection)),
         context{connection, swap_interval, dimensions.width, dimensions.height},
         window{connection, dimensions.width, dimensions.height, context},
-        program{context, dimensions.width, dimensions.height}
+        program{context, dimensions.width, dimensions.height},
+        pos{Pos{0,0}},
+        worker{[this] { do_work(); }}
     {
         mir_window_set_event_handler(window, &on_event, this);
+    }
+
+    ~SquareRenderingSurface()
+    {
+        {
+            std::lock_guard<decltype(mutex)> lock{mutex};
+            running = false;
+            cv.notify_one();
+        }
+
+        if (worker.joinable()) worker.join();
     }
 
     void on_event(MirEvent const* ev)
@@ -135,11 +150,9 @@ public:
         {
             return;
         }
-        context.make_current();
-        program.draw(
-            x/static_cast<float>(dimensions.width)*2.0 - 1.0,
-            y/static_cast<float>(dimensions.height)*-2.0 + 1.0);
-        context.swapbuffers();
+
+        pos = Pos{x, y};
+        cv.notify_one();
     }
 
     SquareRenderingSurface(SquareRenderingSurface const&) = delete;
@@ -184,6 +197,35 @@ private:
         auto surface = reinterpret_cast<SquareRenderingSurface*>(context);
         if (surface) surface->on_event(event);
     }
+
+private:
+    void do_work()
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+
+        while (true)
+        {
+            cv.wait(lock);
+
+            if (!running) return;
+
+            Pos  pos = this->pos;
+
+            context.make_current();
+            program.draw(
+                pos.x/static_cast<float>(dimensions.width)*2.0 - 1.0,
+                pos.y/static_cast<float>(dimensions.height)*-2.0 + 1.0);
+            context.swapbuffers();
+        }
+    }
+
+    struct Pos { float x; float y; };
+    std::atomic<Pos> pos;
+
+    std::thread worker;
+    std::condition_variable cv;
+    std::mutex mutex;
+    bool running{true};
 };
 }
 
