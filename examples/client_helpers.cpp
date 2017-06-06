@@ -51,14 +51,48 @@ me::NormalWindow::NormalWindow(me::Connection& connection, unsigned int width, u
 }
 
 mir::examples::NormalWindow::NormalWindow(
+    Connection& connection, unsigned int width, unsigned int height, MirRenderSurface* surface) :
+    window{create_window(connection, width, height, surface), &mir_window_release_sync}
+{
+}
+
+mir::examples::NormalWindow::NormalWindow(
     mir::examples::Connection& connection, unsigned int width, unsigned int height, mir::examples::Context& eglcontext) :
-    window{create_window(connection, width, height, eglcontext.mir_surface()), &mir_window_release_sync}
+    NormalWindow(connection, width, height, eglcontext.mir_surface())
 {
 }
 
 me::NormalWindow::operator MirWindow*() const
 {
     return window.get();
+}
+
+namespace
+{
+void handle_window_event(MirWindow* window, MirEvent const* event, void* context)
+{
+    auto const surface = (MirRenderSurface*)context;
+
+    switch (mir_event_get_type(event))
+    {
+    case mir_event_type_resize:
+    {
+        MirResizeEvent const* resize = mir_event_get_resize_event(event);
+        int const new_width = mir_resize_event_get_width(resize);
+        int const new_height = mir_resize_event_get_height(resize);
+
+        mir_render_surface_set_size(surface, new_width, new_height);
+        MirWindowSpec* spec = mir_create_window_spec(mir_window_get_connection(window));
+        mir_window_spec_add_render_surface(spec, surface, new_width, new_height, 0, 0);
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
+        break;
+    }
+
+    default:
+        break;
+    }
+}
 }
 
 MirWindow* me::NormalWindow::create_window(
@@ -72,7 +106,10 @@ MirWindow* me::NormalWindow::create_window(
     mir_window_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
 
     if (surface)
+    {
         mir_window_spec_add_render_surface(spec.get(), surface, width, height, 0, 0);
+        mir_window_spec_set_event_handler(spec.get(), &handle_window_event, surface);
+    }
 
     auto window = mir_create_window_sync(spec.get());
     return window;

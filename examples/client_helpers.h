@@ -86,6 +86,7 @@ class NormalWindow
 public:
     NormalWindow(Connection& connection, unsigned int width, unsigned int height);
     NormalWindow(Connection& connection, unsigned int width, unsigned int height, Context& eglcontext);
+    NormalWindow(Connection& connection, unsigned int width, unsigned int height, MirRenderSurface* surface);
 
     operator MirWindow*() const;
 private:
