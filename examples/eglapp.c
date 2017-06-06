@@ -183,21 +183,7 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
          * support for event queuing (directing them to another thread) or
          * full single-threaded callbacks. (LP: #1194384).
          */
-        {
-            MirResizeEvent const* resize = mir_event_get_resize_event(ev);
-            int const new_width = mir_resize_event_get_width(resize);
-            int const new_height = mir_resize_event_get_height(resize);
-
-            printf("Resized to %dx%d\n", new_width, new_height);
-            if (surface)
-            {
-                mir_render_surface_set_size(surface, new_width, new_height);
-                MirWindowSpec* spec = mir_create_window_spec(connection);
-                mir_window_spec_add_render_surface(spec, surface, new_width, new_height, 0, 0);
-                mir_window_apply_spec(window, spec);
-                mir_window_spec_release(spec);
-            }
-        }
+        egl_app_handle_resize_event(window, mir_event_get_resize_event(ev));
         break;
     case mir_event_type_close_window:
         printf("Received close event from server.\n");
@@ -206,6 +192,22 @@ void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused
     default:
         break;
     }
+}
+
+void egl_app_handle_resize_event(MirWindow* window, MirResizeEvent const* resize)
+{
+    int const new_width = mir_resize_event_get_width(resize);
+    int const new_height = mir_resize_event_get_height(resize);
+
+    printf("Resized to %dx%d\n", new_width, new_height);
+    if (surface)
+            {
+                mir_render_surface_set_size(surface, new_width, new_height);
+                MirWindowSpec* spec = mir_create_window_spec(connection);
+                mir_window_spec_add_render_surface(spec, surface, new_width, new_height, 0, 0);
+                mir_window_apply_spec(window, spec);
+                mir_window_spec_release(spec);
+            }
 }
 
 static void show_help(struct mir_eglapp_arg const* const* arg_lists)

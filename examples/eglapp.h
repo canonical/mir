@@ -45,6 +45,7 @@ void            mir_eglapp_quit(void);
 mir_eglapp_bool mir_eglapp_running(void);
 void            mir_eglapp_cleanup(void);
 void            mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused);
+void            egl_app_handle_resize_event(MirWindow* window, MirResizeEvent const* resize);
 double          mir_eglapp_display_hz(void);
 
 MirConnection* mir_eglapp_native_connection();
