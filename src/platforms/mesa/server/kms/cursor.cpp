@@ -151,7 +151,8 @@ mgm::Cursor::Cursor(
             kms_conf.for_each_output(
                 [this, &kms_conf](auto const& output)
                 {
-                    buffer_for_output(*kms_conf.get_output_for(output.id));
+                    // I'm not sure why g++ needs the explicit "this->" but it does - alan_g
+                    this->buffer_for_output(*kms_conf.get_output_for(output.id));
                 });
         });
 
