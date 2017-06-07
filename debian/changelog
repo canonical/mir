@@ -33,6 +33,7 @@ mir (0.27.0-0ubuntu1) UNRELEASED; urgency=medium
       . Lots of other client API enhancements.
       . Minor clean-ups, optimizations and dead code removal.
       . Added support for building on Ubuntu 17.10 artful.
+      . Update example code to use undeprecated API.
     - Bugs fixed:
       . [enhancement] Make able to get version information from client /
         server APIs (LP: #1195540)
@@ -139,6 +140,8 @@ mir (0.27.0-0ubuntu1) UNRELEASED; urgency=medium
       . mir_window_spec_set_cursor_render_surface does not work (LP: #1679836)
       . [regression] Some fullscreen apps render nothing until the window has
         been resized (LP: #1686620)
+      . Correct eglsquare example: Don't paint from the window event handler.
+        (LP: #1695221)
 
  -- Daniel van Vugt <daniel.van.vugt@canonical.com>  Mon, 03 Apr 2017 11:28:15 +0800
 
