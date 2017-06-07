@@ -20,6 +20,7 @@
 #define MIR_SCENE_APPLICATION_MANAGER_H_
 
 #include "mir/scene/session_coordinator.h"
+#include "mir/scene/session_listener.h"
 
 #include <memory>
 #include <vector>
@@ -76,11 +77,16 @@ public:
     void set_focus_to(std::shared_ptr<Session> const& focus) override;
     void unset_focus() override;
 
+    void add_listener(std::shared_ptr<SessionListener> const& listener) override;
+    void remove_listener(std::shared_ptr<SessionListener> const& listener) override;
+
 protected:
     SessionManager(const SessionManager&) = delete;
     SessionManager& operator=(const SessionManager&) = delete;
 
 private:
+    struct SessionObservers;
+    std::shared_ptr<SessionObservers> const observers;
     std::shared_ptr<shell::SurfaceStack> const surface_stack;
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
