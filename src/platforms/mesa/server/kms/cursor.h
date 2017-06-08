@@ -118,8 +118,8 @@ private:
 
         GBMBOWrapper(GBMBOWrapper&& from);
     private:
-        gbm_device* const device;
-        gbm_bo* const buffer;
+        gbm_device* device;
+        gbm_bo* buffer;
         GBMBOWrapper(GBMBOWrapper const&) = delete;
         GBMBOWrapper& operator=(GBMBOWrapper const&) = delete;
     };

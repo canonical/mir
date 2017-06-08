@@ -130,8 +130,8 @@ mgm::Cursor::GBMBOWrapper::GBMBOWrapper(GBMBOWrapper&& from)
     : device{from.device},
       buffer{from.buffer}
 {
-    const_cast<gbm_bo*&>(from.buffer) = nullptr;
-    const_cast<gbm_device*&>(from.device) = nullptr;
+    from.buffer = nullptr;
+    from.device = nullptr;
 }
 
 mgm::Cursor::Cursor(
@@ -194,7 +194,7 @@ void mgm::Cursor::pad_and_write_image_data_locked(
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Image is too big for GBM cursor buffer"));
     }
-    
+
     size_t buffer_stride = gbm_bo_get_stride(buffer);  // in bytes
     size_t padded_size = buffer_stride * gbm_bo_get_height(buffer);
     auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);
