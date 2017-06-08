@@ -2,7 +2,14 @@ add_custom_target(benchmarks)   # XXX Is this used by anything?
 
 add_subdirectory(cpu)
 add_subdirectory(memory)
-add_dependencies(benchmarks cpu_benchmarks memory_benchmarks)
+
+if (TARGET cpu_benchmarks)
+  add_dependencies(benchmarks cpu_benchmarks)
+endif ()
+
+if (TARGET memory_benchmarks)
+  add_dependencies(benchmarks memory_benchmarks)
+endif ()
 
 if (MIR_ENABLE_TESTS)
   # Shouldn't tests dependent things be in tests/?
