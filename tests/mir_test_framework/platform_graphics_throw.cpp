@@ -176,10 +176,3 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     return mir::make_module_ptr<ExceptionThrowingPlatform>();
 }
 
-mir::UniqueModulePtr<mg::Platform> create_guest_platform(
-    std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::PlatformAuthentication> const&)
-{
-    mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
-    return mir::make_module_ptr<ExceptionThrowingPlatform>();
-}
