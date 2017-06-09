@@ -275,7 +275,7 @@ mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform
     mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
 
     auto bypass_option = mgm::BypassOption::allowed;
-    if (!options->get<bool>(bypass_option_name))
+    if (options->is_set(bypass_option_name) && !options->get<bool>(bypass_option_name))
         bypass_option = mgm::BypassOption::prohibited;
     return mir::make_module_ptr<mgm::GBMPlatform>(
         bypass_option, mgm::BufferImportMethod::gbm_native_pixmap, platform_authentication);
