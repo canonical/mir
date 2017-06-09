@@ -487,6 +487,19 @@ void mir_connection_set_error_callback(
  */
 unsigned mir_get_client_api_version();
 
+/**
+ * Enumerates the supported extensions
+ *
+ * \param [in]  connection  The connection
+ * \param [out] context     User data passed to the enumerator function
+ * \param [in]  enumerator  The function to be called for each extension
+ *
+ */
+void mir_connection_enumerate_extensions(
+    MirConnection* connection,
+    void* context,
+    void (*enumerator)(void* context, char const* extension, int version));
+
 #ifdef __cplusplus
 }
 /**@}*/

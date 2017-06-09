@@ -1503,3 +1503,16 @@ void MirConnection::set_base_input_configuration(MirInputConfig const* config)
                                         store_error_result->result.get(),
                                         gp::NewCallback(&handle_structured_error, store_error_result));
 }
+
+void MirConnection::enumerate_extensions(
+    void* context,
+    void (*enumerator)(void* context, char const* extension, int version))
+{
+    for(auto const& extension : extensions)
+    {
+        for(auto const version : extension.version)
+        {
+            enumerator(context, extension.name.c_str(), version);
+        }
+    }
+}

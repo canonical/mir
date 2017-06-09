@@ -197,6 +197,7 @@ public:
         return {};
     }
     void* request_interface(char const*, int) { return nullptr; }
+    std::vector<mir::ExtensionDescription> extensions() const { return {}; }
 };
 
 struct MockHostConnection : StubHostConnection
@@ -216,6 +217,7 @@ struct MockHostConnection : StubHostConnection
         if (event_callback)
             event_callback(event, source_frame);
     }
+    std::vector<ExtensionDescription> extensions() const { return {}; }
 
     MockHostConnection()
     {

@@ -226,6 +226,10 @@ public:
 
     void* request_interface(char const* name, int version);
 
+    void enumerate_extensions(
+        void* context,
+        void (*enumerator)(void* context, char const* extension, int version));
+
 private:
     //google cant have callbacks with more than 2 args
     struct SurfaceCreationRequest
