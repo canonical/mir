@@ -25,12 +25,14 @@
 #include "mir/geometry/displacement.h"
 
 #include "mir_toolkit/common.h"
+#include "mutex.h"
 
 #include <gbm.h>
 
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <vector>
 
 namespace mir
 {
@@ -67,7 +69,6 @@ class Cursor : public graphics::Cursor
 {
 public:
     Cursor(
-        gbm_device* device,
         KMSOutputContainer& output_container,
         std::shared_ptr<CurrentConfiguration> const& current_configuration);
 
@@ -87,9 +88,18 @@ private:
     void for_each_used_output(std::function<void(KMSOutput&, geometry::Rectangle const&, MirOrientation orientation)> const& f);
     void place_cursor_at(geometry::Point position, ForceCursorState force_state);
     void place_cursor_at_locked(std::lock_guard<std::mutex> const&, geometry::Point position, ForceCursorState force_state);
-    void write_buffer_data_locked(std::lock_guard<std::mutex> const&, void const* data, size_t count);
-    void pad_and_write_image_data_locked(std::lock_guard<std::mutex> const&, CursorImage const& image);
+    void write_buffer_data_locked(
+        std::lock_guard<std::mutex> const&,
+        gbm_bo* buffer,
+        void const* data,
+        size_t count);
+    void pad_and_write_image_data_locked(
+        std::lock_guard<std::mutex> const&,
+        gbm_bo* buffer,
+        CursorImage const& image);
     void clear(std::lock_guard<std::mutex> const&);
+
+    gbm_bo* buffer_for_output(KMSOutput const& output);
     
     std::mutex guard;
 
@@ -102,17 +112,21 @@ private:
 
     struct GBMBOWrapper
     {
-        GBMBOWrapper(gbm_device* gbm);
+        GBMBOWrapper(int fd);
         operator gbm_bo*();
         ~GBMBOWrapper();
+
+        GBMBOWrapper(GBMBOWrapper&& from);
     private:
+        gbm_device* device;
         gbm_bo* buffer;
         GBMBOWrapper(GBMBOWrapper const&) = delete;
         GBMBOWrapper& operator=(GBMBOWrapper const&) = delete;
-    } buffer;
+    };
+    Mutex<std::vector<std::pair<int, GBMBOWrapper>>> buffers;
 
-    uint32_t buffer_width;
-    uint32_t buffer_height;
+    uint32_t min_buffer_width;
+    uint32_t min_buffer_height;
 
     std::shared_ptr<CurrentConfiguration> const current_configuration;
 };
