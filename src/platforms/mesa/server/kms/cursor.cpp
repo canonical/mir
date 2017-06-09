@@ -241,7 +241,8 @@ void mgm::Cursor::show(CursorImage const& cursor_image)
             if (size != geometry::Size{gbm_bo_get_width(buffer), gbm_bo_get_height(buffer)})
             {
                 pad_and_write_image_data_locked(lg, buffer, cursor_image);
-            } else
+            }
+            else
             {
                 auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);
                 write_buffer_data_locked(lg, buffer, cursor_image.as_argb_8888(), count);
