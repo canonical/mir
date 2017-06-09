@@ -220,10 +220,3 @@ mir::ModuleProperties const* describe_graphics_module()
     return &description;
 }
 
-mir::UniqueModulePtr<mg::Platform> create_guest_platform(
-    std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::PlatformAuthentication> const& /*platform_authentication*/)
-{
-    mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
-    return nullptr;
-}

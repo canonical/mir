@@ -14,7 +14,6 @@ mir_add_wrapped_executable(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_kms_page_flipper.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_linux_virtual_terminal.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_cursor.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_guest_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_bypass.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_nested_authentication.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_drm_helper.cpp

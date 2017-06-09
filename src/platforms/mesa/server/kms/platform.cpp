@@ -17,7 +17,6 @@
  */
 
 #include "platform.h"
-#include "guest_platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
 #include "linux_virtual_terminal.h"

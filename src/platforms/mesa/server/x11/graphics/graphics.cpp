@@ -21,7 +21,6 @@
 #include "platform.h"
 #include "gbm_platform.h"
 #include "platform_common.h"
-#include "guest_platform.h"
 #include "../X11_resources.h"
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
@@ -65,14 +64,6 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
             std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))},
         report
     );
-}
-
-mir::UniqueModulePtr<mg::Platform> create_guest_platform(
-    std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::PlatformAuthentication> const&)
-{
-    mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
-    return mir::make_module_ptr<mgx::GuestPlatform>();
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)

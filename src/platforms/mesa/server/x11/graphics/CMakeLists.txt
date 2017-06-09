@@ -16,7 +16,6 @@ add_library(
   mirplatformgraphicsmesax11objects OBJECT
 
   platform.cpp
-  guest_platform.cpp
   display.cpp
   display_configuration.cpp
   display_buffer.cpp
