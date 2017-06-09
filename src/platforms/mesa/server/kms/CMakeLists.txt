@@ -29,8 +29,7 @@ add_library(
   cursor.cpp
   display.cpp
   display_buffer.cpp
-  guest_platform.cpp
-  page_flipper.h
+        page_flipper.h
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
   platform.cpp

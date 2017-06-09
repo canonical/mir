@@ -21,7 +21,6 @@
 #include "platform.h"
 #include "gbm_platform.h"
 #include "platform_common.h"
-#include "guest_platform.h"
 #include "../X11_resources.h"
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
