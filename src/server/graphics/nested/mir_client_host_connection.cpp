@@ -709,6 +709,21 @@ void mgn::MirClientHostConnection::apply_input_configuration(MirInputConfig cons
     mir_connection_apply_session_input_config(mir_connection, config);
 }
 
+std::vector<mir::ExtensionDescription> mgn::MirClientHostConnection::extensions() const
+{
+    std::vector<ExtensionDescription> result;
+
+    auto enumerator = [](void* context, char const* extension, int version)
+        {
+            auto result = static_cast<std::vector<ExtensionDescription>*>(context);
+            result->push_back(ExtensionDescription{extension, {version}});
+        };
+
+    mir_connection_enumerate_extensions(mir_connection, &result, enumerator);
+
+    return result;
+}
+
 namespace
 {
 template<typename T>

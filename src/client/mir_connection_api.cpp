@@ -438,3 +438,18 @@ catch (std::exception const& ex)
 {
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
+
+void mir_connection_enumerate_extensions(
+    MirConnection* connection,
+    void* context,
+    void (*enumerator)(void* context, char const* extension, int version))
+try
+{
+    mir::require(mir_connection_is_valid(connection));
+    connection->enumerate_extensions(context, enumerator);
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+}
+

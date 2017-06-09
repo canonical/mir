@@ -175,7 +175,7 @@ mg::NativeDisplayPlatform* mgn::NestedDisplayPlatform::native_display_platform()
 
 std::vector<mir::ExtensionDescription> mgn::NestedDisplayPlatform::extensions() const
 {
-    return {}; // TODO can we support extensions transitively?
+    return connection->extensions();
 }
 
 mir::UniqueModulePtr<mg::PlatformAuthentication> mgn::NestedDisplayPlatform::create_platform_authentication()

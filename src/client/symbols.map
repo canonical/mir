@@ -583,6 +583,7 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27
   global:
     mir_buffer_stream_get_microseconds_till_vblank;
     mir_connection_apply_session_input_config;
+    mir_connection_enumerate_extensions;
     mir_connection_set_base_input_config;
     mir_screencast_capture_to_buffer;
     mir_screencast_capture_to_buffer_sync;
