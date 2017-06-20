@@ -423,7 +423,7 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
             delete surf;
         });
 
-    if (stored_cursor_image.size().width.as_int() * stored_cursor_image.size().height.as_int())
+    if (stored_cursor_image.size().width.as_int() && stored_cursor_image.size().height.as_int())
         surf->set_cursor_image(stored_cursor_image);
 
     surfaces.push_back(surf.get());
@@ -707,6 +707,21 @@ bool mgn::MirClientHostConnection::supports_passthrough(mg::BufferUsage)
 void mgn::MirClientHostConnection::apply_input_configuration(MirInputConfig const* config)
 {
     mir_connection_apply_session_input_config(mir_connection, config);
+}
+
+std::vector<mir::ExtensionDescription> mgn::MirClientHostConnection::extensions() const
+{
+    std::vector<ExtensionDescription> result;
+
+    auto enumerator = [](void* context, char const* extension, int version)
+        {
+            auto result = static_cast<std::vector<ExtensionDescription>*>(context);
+            result->push_back(ExtensionDescription{extension, {version}});
+        };
+
+    mir_connection_enumerate_extensions(mir_connection, &result, enumerator);
+
+    return result;
 }
 
 namespace

@@ -35,6 +35,7 @@ class EventSink;
 namespace scene
 {
 class Session;
+class SessionListener;
 class Surface;
 struct SurfaceCreationParameters;
 
@@ -53,6 +54,8 @@ public:
 
     virtual std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const&) const = 0;
 
+    virtual void add_listener(std::shared_ptr<SessionListener> const&) = 0;
+    virtual void remove_listener(std::shared_ptr<SessionListener> const&) = 0;
 protected:
     SessionCoordinator() = default;
     virtual ~SessionCoordinator() = default;

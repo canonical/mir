@@ -1,9 +1,7 @@
 pkg_check_modules(XMLPP libxml++-2.6 REQUIRED)
 
-include_directories(${XMLPP_INCLUDE_DIRS})
+include_directories(SYSTEM ${XMLPP_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-
-add_compile_options("-Wno-error=deprecated-declarations")
 
 add_executable(wrapper-generator
 

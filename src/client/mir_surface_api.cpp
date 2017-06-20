@@ -184,6 +184,19 @@ catch (std::exception const& ex)
     std::abort();  // If we just failed to allocate a MirWindowSpec returning isn't safe
 }
 
+MirConnection* mir_window_get_connection(MirWindow* window)
+try
+{
+    mir::require(mir_window_is_valid(window));
+
+    return window->connection();
+}
+catch (std::exception const& ex)
+{
+    MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    std::abort();  // If we just failed to allocate a MirWindowSpec returning isn't safe
+}
+
 void mir_window_spec_set_parent(MirWindowSpec* spec, MirWindow* parent)
 try
 {

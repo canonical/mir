@@ -71,7 +71,7 @@ private:
     std::shared_ptr<frontend::ClientBuffers> const buffers;
     std::shared_ptr<MultiMonitorArbiter> const arbiter;
     geometry::Size size; 
-    MirPixelFormat const pf;
+    MirPixelFormat pf;
     bool first_frame_posted;
 
     scene::SurfaceObservers observers;

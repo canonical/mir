@@ -25,8 +25,8 @@
 #include "protobuf_to_native_buffer.h"
 
 #include "mir/log.h"
-#include "mir/client_platform.h"
-#include "mir/client_buffer_factory.h"
+#include "mir/client/client_platform.h"
+#include "mir/client/client_buffer_factory.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
 

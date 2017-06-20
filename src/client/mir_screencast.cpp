@@ -21,10 +21,12 @@
 #include "mir_protobuf.pb.h"
 #include "make_protobuf_object.h"
 #include "mir/mir_buffer_stream.h"
+#include "mir/mir_buffer.h"
 #include "mir/frontend/client_constants.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
 #include <boost/throw_exception.hpp>
+#include <algorithm>
 
 namespace mcl = mir::client;
 namespace mp = mir::protobuf;
@@ -55,6 +57,16 @@ mir::protobuf::ScreencastParameters serialize_spec(MirScreencastSpec const& spec
         message.mutable_region()->set_height(region.height);
     }
 
+    if (spec.num_buffers.is_set() && spec.num_buffers.value() == 0)
+    {
+        if (!spec.pixel_format.is_set())
+            message.set_pixel_format(mir_pixel_format_abgr_8888);
+        if (!spec.width.is_set())
+            message.set_width(1);
+        if (!spec.width.is_set())
+            message.set_height(1);
+    }
+        
     return message;
 }
 
@@ -72,9 +84,6 @@ void throw_if_invalid(MirScreencastSpec const& spec)
 
 #define THROW_IF_ZERO(option) THROW_IF_EQ(option, 0)
 
-    THROW_IF_ZERO(width);
-    THROW_IF_ZERO(height);
-    THROW_IF_EQ(pixel_format, mir_pixel_format_invalid);
     THROW_IF_UNSET(capture_region);
 
     if (spec.capture_region.is_set())
@@ -84,6 +93,14 @@ void throw_if_invalid(MirScreencastSpec const& spec)
             BOOST_THROW_EXCEPTION(std::runtime_error("Invalid capture region width"));
         if (region.height == 0)
             BOOST_THROW_EXCEPTION(std::runtime_error("Invalid capture region height"));
+    }
+
+    //zero nbuffers don't need to set pixel format, width, or height
+    if (!spec.num_buffers.is_set() || spec.num_buffers.value() > 0)
+    {
+        THROW_IF_ZERO(width);
+        THROW_IF_ZERO(height);
+        THROW_IF_EQ(pixel_format, mir_pixel_format_invalid);
     }
 }
 }
@@ -180,13 +197,13 @@ MirWaitHandle* MirScreencast::release(MirScreencastCallback callback, void* cont
 void MirScreencast::screencast_created(
     MirScreencastCallback callback, void* context)
 {
-    if (!protobuf_screencast->has_error() && connection)
+    if (connection && !protobuf_screencast->has_error() &&
+        protobuf_screencast->has_buffer_stream() && protobuf_screencast->buffer_stream().has_buffer())
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
         try
         {
-            buffer_stream = connection->make_consumer_stream(
-                protobuf_screencast->buffer_stream());
+            buffer_stream = connection->make_consumer_stream(protobuf_screencast->buffer_stream());
         }
         catch (...)
         {
@@ -207,7 +224,7 @@ void MirScreencast::released(
 
     {
         std::lock_guard<decltype(mutex)> lock(mutex);
-        if (connection)
+        if (buffer_stream)
             connection->release_consumer_stream(buffer_stream.get());
         buffer_stream.reset();
     }
@@ -218,4 +235,39 @@ MirBufferStream* MirScreencast::get_buffer_stream()
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     return buffer_stream.get();
+}
+
+void MirScreencast::screencast_done(ScreencastRequest* request)
+{
+    auto const status = request->response.has_error() ? mir_screencast_error_failure : mir_screencast_success;
+
+    request->available_callback(status, reinterpret_cast<MirBuffer*>(request->buffer), request->available_context);
+
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    auto it = std::find_if(requests.begin(), requests.end(),
+        [&request] (auto const& it) { return it.get() == request; } );
+    if (it != requests.end())
+        requests.erase(it);
+}
+
+void MirScreencast::screencast_to_buffer(
+    mcl::MirBuffer* buffer,
+    MirScreencastBufferCallback cb,
+    void* context)
+{
+    if (!server) //construction with nullptr should be invalid
+        BOOST_THROW_EXCEPTION(std::runtime_error("invalid screencast"));
+    
+    std::unique_lock<decltype(mutex)> lk(mutex);
+
+    requests.emplace_back(std::make_unique<ScreencastRequest>(buffer, cb, context));
+
+    mir::protobuf::ScreencastRequest request;
+    request.set_buffer_id(buffer->rpc_id());
+    request.mutable_id()->set_value(protobuf_screencast->screencast_id().value());
+
+    server->screencast_to_buffer(
+        &request,
+        &(requests.back()->response),
+        google::protobuf::NewCallback(this, &MirScreencast::screencast_done, requests.back().get()));
 }

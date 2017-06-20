@@ -52,6 +52,36 @@ static void shutdown(int signum)
     }
 }
 
+static void handle_event(MirWindow* window, MirEvent const* ev, void* context)
+{
+    MirRenderSurface* surface = (MirRenderSurface*)context;
+
+    switch (mir_event_get_type(ev))
+    {
+    case mir_event_type_resize:
+    {
+        MirResizeEvent const* resize = mir_event_get_resize_event(ev);
+        int const new_width = mir_resize_event_get_width(resize);
+        int const new_height = mir_resize_event_get_height(resize);
+
+        mir_render_surface_set_size(surface, new_width, new_height);
+        MirWindowSpec* spec = mir_create_window_spec(mir_window_get_connection(window));
+        mir_window_spec_add_render_surface(spec, surface, new_width, new_height, 0, 0);
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
+        break;
+    }
+
+    case mir_event_type_close_window:
+        running = 0;
+        printf("Received close event from server.\n");
+        break;
+
+    default:
+        break;
+    }
+}
+
 static void blend(uint32_t *dest, uint32_t src, int alpha_shift)
 {
     uint8_t *d = (uint8_t*)dest;
@@ -181,13 +211,9 @@ static void copy_region(const MirGraphicsRegion *dest,
     }
 }
 
-static void redraw(MirWindow *window, const MirGraphicsRegion *canvas)
+static void redraw(MirBufferStream *bs, const MirGraphicsRegion *canvas)
 {
     MirGraphicsRegion backbuffer;
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    MirBufferStream *bs = mir_window_get_buffer_stream(window);
-#pragma GCC diagnostic pop
 
     mir_buffer_stream_get_graphics_region(bs, &backbuffer);
     clear_region(&backbuffer, background);
@@ -253,17 +279,22 @@ int main(int argc, char *argv[])
 
     int width = 500;
     int height = 500;
+
+    MirRenderSurface *const surface = mir_connection_create_render_surface_sync(conn, width, height);
+    MirBufferStream *bs = mir_render_surface_get_buffer_stream(surface, width, height, pixel_format);
+
     MirWindowSpec *spec = mir_create_normal_window_spec(conn, width, height);
+
+    mir_window_spec_add_render_surface(spec, surface, width, height, 0, 0);
+    mir_window_spec_set_event_handler(spec, &handle_event, surface);
+
     if (spec == NULL)
     {
         fprintf(stderr, "Could not create a window spec.\n");
         mir_connection_release(conn);
         return 1;
     }
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_window_spec_set_pixel_format(spec, pixel_format);
-#pragma GCC diagnostic pop
+
     {
         char name[128];
         snprintf(name, sizeof(name)-1, "Progress Bars (%dHz)", hz);
@@ -271,10 +302,6 @@ int main(int argc, char *argv[])
         mir_window_spec_set_name(spec, name);
     }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_software);
-#pragma GCC diagnostic pop
     window = mir_create_window_sync(spec);
     mir_window_spec_release(spec);
 
@@ -311,7 +338,7 @@ int main(int argc, char *argv[])
 
                 draw_box(&canvas, x, y, box_width, foreground);
 
-                redraw(window, &canvas);
+                redraw(bs, &canvas);
                 usleep(1000000 / hz);
             }
 

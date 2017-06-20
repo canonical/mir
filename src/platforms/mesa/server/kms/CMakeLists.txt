@@ -29,11 +29,9 @@ add_library(
   cursor.cpp
   display.cpp
   display_buffer.cpp
-  guest_platform.cpp
   page_flipper.h
   kms_page_flipper.cpp
   linux_virtual_terminal.cpp
-  nested_authentication.cpp
   platform.cpp
   kms_display_configuration.h
   real_kms_display_configuration.cpp
@@ -44,6 +42,7 @@ add_library(
   real_kms_output_container.cpp
   egl_helper.h
   egl_helper.cpp
+  mutex.h
 )
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in

@@ -196,6 +196,7 @@ static void on_event(MirWindow *surface, const MirEvent *event, void *context)
         get_all_touch_points(mir_event_get_input_event(event), &state->touch);
         break;
     case mir_event_type_resize:
+        egl_app_handle_resize_event(surface, mir_event_get_resize_event(event));
         state->resized = true;
         break;
     case mir_event_type_close_window:

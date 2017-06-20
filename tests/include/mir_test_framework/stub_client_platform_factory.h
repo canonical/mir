@@ -19,8 +19,8 @@
 #ifndef MIR_TEST_FRAMEWORK_STUB_CLIENT_PLATFORM_FACTORY_
 #define MIR_TEST_FRAMEWORK_STUB_CLIENT_PLATFORM_FACTORY_
 
-#include "mir/client_platform_factory.h"
-#include "mir/client_platform.h"
+#include "mir/client/client_platform_factory.h"
+#include "mir/client/client_platform.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir_toolkit/extensions/fenced_buffers.h"
 #include "mir_toolkit/extensions/gbm_buffer.h"

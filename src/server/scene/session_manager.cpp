@@ -29,6 +29,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/observer_multiplexer.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -42,6 +43,43 @@ namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace msh = mir::shell;
 
+struct ms::SessionManager::SessionObservers : mir::Executor, mir::ObserverMultiplexer<ms::SessionListener>
+{
+    SessionObservers()
+        : ObserverMultiplexer<ms::SessionListener>(static_cast<Executor&>(*this))
+    {
+    }
+    void spawn(std::function<void()>&& work) override
+    {
+        work();
+    }
+
+    void starting(std::shared_ptr<Session> const& session) override
+    {
+        for_each_observer(&SessionListener::starting, session);
+    }
+    void stopping(std::shared_ptr<Session> const& session) override
+    {
+        for_each_observer(&SessionListener::stopping, session);
+    }
+    void focused(std::shared_ptr<Session> const& session) override
+    {
+        for_each_observer(&SessionListener::focused, session);
+    }
+    void unfocused() override
+    {
+        for_each_observer(&SessionListener::unfocused);
+    }
+    void surface_created(Session& session, std::shared_ptr<Surface> const& surface) override
+    {
+        for_each_observer(&SessionListener::surface_created, std::ref(session), surface);
+    }
+    void destroying_surface(Session& session, std::shared_ptr<Surface> const& surface) override
+    {
+        for_each_observer(&SessionListener::destroying_surface, std::ref(session), surface);
+    }
+};
+
 ms::SessionManager::SessionManager(
     std::shared_ptr<shell::SurfaceStack> const& surface_stack,
     std::shared_ptr<SurfaceFactory> const& surface_factory,
@@ -52,7 +90,8 @@ ms::SessionManager::SessionManager(
     std::shared_ptr<SessionListener> const& session_listener,
     std::shared_ptr<graphics::Display const> const& display,
     std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator) : 
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator) :
+    observers(std::make_shared<SessionObservers>()),
     surface_stack(surface_stack),
     surface_factory(surface_factory),
     buffer_stream_factory(buffer_stream_factory),
@@ -64,6 +103,7 @@ ms::SessionManager::SessionManager(
     anr_detector{anr_detector},
     allocator(allocator)
 {
+    observers->register_interest(session_listener);
 }
 
 ms::SessionManager::~SessionManager() noexcept
@@ -98,14 +138,14 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
             client_pid,
             name,
             snapshot_strategy,
-            session_listener,
+            observers,
             *display->configuration(),
             sender,
             allocator);
 
     app_container->insert_session(new_session);
 
-    session_listener->starting(new_session);
+    observers->starting(new_session);
 
     anr_detector->register_session(new_session.get(), [sender]()
     {
@@ -118,13 +158,13 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
 void ms::SessionManager::set_focus_to(std::shared_ptr<Session> const& session)
 {
     session_event_sink->handle_focus_change(session);
-    session_listener->focused(session);
+    observers->focused(session);
 }
 
 void ms::SessionManager::unset_focus()
 {
     session_event_sink->handle_no_focus();
-    session_listener->unfocused();
+    observers->unfocused();
 }
 
 void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
@@ -135,7 +175,7 @@ void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
 
     session_event_sink->handle_session_stopping(scene_session);
 
-    session_listener->stopping(scene_session);
+    observers->stopping(scene_session);
 
     app_container->remove_session(scene_session);
 }
@@ -145,4 +185,14 @@ std::shared_ptr<ms::Session> ms::SessionManager::successor_of(
     std::shared_ptr<Session> const& session) const
 {
     return app_container->successor_of(session);
+}
+
+void ms::SessionManager::add_listener(std::shared_ptr<SessionListener> const& listener)
+{
+    observers->register_interest(listener);
+}
+
+void ms::SessionManager::remove_listener(std::shared_ptr<SessionListener> const& listener)
+{
+    observers->unregister_interest(*listener);
 }

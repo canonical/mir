@@ -184,6 +184,49 @@ TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_lifec
     session_manager.close_session(session);
 }
 
+TEST_F(SessionManagerSessionListenerSetup, additional_listeners_receive_session_callbacks)
+{
+    using namespace ::testing;
+
+    auto additional_listener = std::make_shared<testing::NiceMock<mtd::MockSessionListener>>();
+    EXPECT_CALL(*additional_listener, starting(_)).Times(1);
+    EXPECT_CALL(*additional_listener, stopping(_)).Times(1);
+
+    session_manager.add_listener(additional_listener);
+    auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+    session_manager.close_session(session);
+}
+
+TEST_F(SessionManagerSessionListenerSetup, additional_listeners_receive_focus_changes)
+{
+    using namespace ::testing;
+
+    auto additional_listener = std::make_shared<testing::NiceMock<mtd::MockSessionListener>>();
+    EXPECT_CALL(*additional_listener, starting(_)).Times(1);
+    EXPECT_CALL(*additional_listener, focused(_)).Times(1);
+    EXPECT_CALL(*additional_listener, unfocused()).Times(1);
+
+    session_manager.add_listener(additional_listener);
+    auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+    session_manager.set_focus_to(session);
+    session_manager.unset_focus();
+}
+
+TEST_F(SessionManagerSessionListenerSetup, additional_listeners_receive_surface_creation)
+{
+    using namespace ::testing;
+    mtd::NullEventSink event_sink;
+    auto additional_listener = std::make_shared<testing::NiceMock<mtd::MockSessionListener>>();
+    EXPECT_CALL(*additional_listener, starting(_)).Times(1);
+    EXPECT_CALL(*additional_listener, surface_created(_,_)).Times(1);
+
+    session_manager.add_listener(additional_listener);
+    auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
+    auto bs = session->create_buffer_stream(
+        mg::BufferProperties{{640, 480}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware});
+    session->create_surface(ms::SurfaceCreationParameters().with_buffer_stream(bs), mt::fake_shared(event_sink));
+}
+
 namespace
 {
 struct SessionManagerSessionEventsSetup : public testing::Test

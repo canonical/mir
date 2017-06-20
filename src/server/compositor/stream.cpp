@@ -41,8 +41,7 @@ mc::Stream::Stream(
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
     buffers(map),
-    arbiter(std::make_shared<mc::MultiMonitorArbiter>(
-        mc::MultiMonitorMode::multi_monitor_sync, buffers, schedule)),
+    arbiter(std::make_shared<mc::MultiMonitorArbiter>(buffers, schedule)),
     size(size),
     pf(pf),
     first_frame_posted(false)
@@ -75,6 +74,7 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
         first_frame_posted = true;
         buffers->receive_buffer(buffer->id());
         deferred_io = schedule->schedule_nonblocking(buffers->get(buffer->id()));
+        pf = buffer->pixel_format();
     }
     observers.frame_posted(1, buffer->size());
 
@@ -96,6 +96,7 @@ void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> con
 
 MirPixelFormat mc::Stream::pixel_format() const
 {
+    std::lock_guard<decltype(mutex)> lk(mutex);
     return pf;
 }
 

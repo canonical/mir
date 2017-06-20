@@ -20,6 +20,7 @@
 
 #include <mir_toolkit/common.h>
 #include <mir_toolkit/client_types.h>
+#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 /**
@@ -37,7 +38,7 @@ extern "C" {
  *     \param [in] parameters The operand
  */
 void mir_cursor_configuration_destroy(MirCursorConfiguration *parameters)
-__attribute__((deprecated("MirCursorConfiguration is deprecated")));
+MIR_FOR_REMOVAL_IN_VERSION_1("MirCursorConfiguration is deprecated");
 
 /**
  * Returns a new MirCursorConfiguration representing a named cursor
@@ -51,7 +52,7 @@ __attribute__((deprecated("MirCursorConfiguration is deprecated")));
  *            to_mir_cursor_configuration_destroy
  */
 MirCursorConfiguration *mir_cursor_configuration_from_name(char const* name)
-__attribute__((deprecated("Use mir_window_spec_set_cursor_name instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_spec_set_cursor_name() instead");
 
 /**
  * Returns a new cursor configuration tied to a given buffer stream.
@@ -66,7 +67,7 @@ __attribute__((deprecated("Use mir_window_spec_set_cursor_name instead")));
  */
 MirCursorConfiguration *mir_cursor_configuration_from_buffer_stream(MirBufferStream const* stream, int hotspot_x,
     int hotspot_y)
-__attribute__((deprecated("Use mir_window_spec_set_cursor_render_surface instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_spec_set_cursor_render_surface instead");
 
 #pragma GCC diagnostic pop
 #ifdef __cplusplus

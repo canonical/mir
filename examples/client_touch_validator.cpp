@@ -134,7 +134,7 @@ void on_input_event(TouchState *state, MirInputEvent const *event)
     state->record_event(tev);
 }
     
-void on_event(MirWindow * /*surface*/, const MirEvent *event, void *context)
+void on_event(MirWindow *window, const MirEvent *event, void *context)
 {
     TouchState *state = (TouchState*)context;
 
@@ -142,6 +142,9 @@ void on_event(MirWindow * /*surface*/, const MirEvent *event, void *context)
     {
     case mir_event_type_input:
         on_input_event(state, mir_event_get_input_event(event));
+        break;
+    case mir_event_type_resize:
+        egl_app_handle_resize_event(window, mir_event_get_resize_event(event));
         break;
     case mir_event_type_close_window:
         abort();

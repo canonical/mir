@@ -209,6 +209,7 @@ bool mgm::compatible(mgm::RealKMSDisplayConfiguration const& conf1, mgm::RealKMS
                 clone.subpixel_arrangement = conf1.outputs[i].first.subpixel_arrangement;
                 clone.scale = conf1.outputs[i].first.scale;
                 clone.form_factor = conf1.outputs[i].first.form_factor;
+                clone.custom_logical_size = conf1.outputs[i].first.custom_logical_size;
                 compatible &= (conf1.outputs[i].first == clone);
             }
             else

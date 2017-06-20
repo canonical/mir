@@ -20,6 +20,7 @@
 #define MIR_TOOLKIT_MIR_DISPLAY_CONFIGURATION_H_
 
 #include "client_types.h"
+#include <mir_toolkit/deprecations.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,7 +61,7 @@ void mir_display_config_release(MirDisplayConfig* config);
  */
 int mir_display_config_get_max_simultaneous_outputs(
     MirDisplayConfig const* config)
-    __attribute__((deprecated("Not accurate in Mir 0.26 and later. May be removed in future.")));
+    MIR_FOR_REMOVAL_IN_VERSION_1("Not accurate in Mir 0.26 and later. May be removed in future.");
 
 /**
  * Get the number of outputs available in this display configuration.
@@ -268,7 +269,7 @@ MirOutputType mir_output_get_type(MirOutput const* output);
  * \returns           The name of the output type.
  */
 char const* mir_display_output_type_name(MirDisplayOutputType type)
-__attribute__((deprecated("use mir_output_type_name instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("use mir_output_type_name instead");
 
 /**
  * Get the textual name of an output type.
@@ -331,6 +332,29 @@ unsigned int mir_output_get_logical_width(MirOutput const* output);
  * \returns     The height in logical pixels (not physical screen pixels)
  */
 unsigned int mir_output_get_logical_height(MirOutput const* output);
+
+/**
+ * Set the logical size of the virtual display space occupied by an output.
+ * By default this is the dimensions of the output's current mode, but you
+ * can now set it to an arbitrary size and the compositor will scale
+ * accordingly.
+ *
+ * \param [in] output  The output to modify
+ * \param [in] w       The width in logical view area pixels, or zero to
+ *                     revert to the current display mode dimensions.
+ * \param [in] h       The height in logical view area pixels, or zero to
+ *                     revert to the current display mode dimensions.
+ */
+void mir_output_set_logical_size(MirOutput* output, unsigned w, unsigned h);
+
+/*
+ * Determine if the logical size of an output is user-customized or just
+ * automatically calculated.
+ *
+ * \param [in]  output  The MirOutput to query
+ * \returns     Whether the logical output size has been user-customized.
+ */
+bool mir_output_has_custom_logical_size(MirOutput const* output);
 
 /**
  * Set the coordinates of the top-left point of the output in the virtual

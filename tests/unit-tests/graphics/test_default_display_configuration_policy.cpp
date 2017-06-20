@@ -47,7 +47,8 @@ public:
 
 DisplayConfigurationOutput default_output(DisplayConfigurationOutputId id)
 {
-    return { id, DisplayConfigurationCardId{1},
+    // We name the return value just to work around an apparent clang bug/quirk
+    DisplayConfigurationOutput ret{ id, DisplayConfigurationCardId{1},
         DisplayConfigurationOutputType::vga,
         {mir_pixel_format_abgr_8888},
         { {Size{523, 555}, 60.0} },
@@ -65,8 +66,10 @@ DisplayConfigurationOutput default_output(DisplayConfigurationOutputId id)
         mir_subpixel_arrangement_unknown,
         {},
         mir_output_gamma_unsupported,
+        {},
         {}
     };
+    return ret;
 }
 
 DisplayConfigurationOutput connected_with_modes()

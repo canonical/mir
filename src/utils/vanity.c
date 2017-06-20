@@ -176,6 +176,7 @@ static void on_event(MirWindow* surface, MirEvent const* event, void* context)
         handled = on_surface_event(mir_event_get_window_event(event), state);
         break;
     case mir_event_type_resize:
+        egl_app_handle_resize_event(surface, mir_event_get_resize_event(event));
         state->resized = true;
         break;
     default:

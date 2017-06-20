@@ -22,11 +22,10 @@
 #include "presentation_chain.h"
 #include "mir_connection.h"
 #include "buffer.h"
-#include "mir/client_buffer.h"
+#include "mir/client/client_buffer.h"
 #include "mir/require.h"
 #include "mir/uncaught.h"
 #include "mir/require.h"
-#include "mir/client_buffer.h"
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 

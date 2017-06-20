@@ -18,9 +18,9 @@
 
 #include "mir_test_framework/stub_client_platform_factory.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
-#include "mir/client_buffer_factory.h"
-#include "mir/client_buffer.h"
-#include "mir/client_context.h"
+#include "mir/client/client_buffer_factory.h"
+#include "mir/client/client_buffer.h"
+#include "mir/client/client_context.h"
 #include "mir_test_framework/stub_platform_native_buffer.h"
 #include "mir_test_framework/stub_platform_extension.h"
 #include "mir_toolkit/mir_native_buffer.h"
@@ -140,11 +140,11 @@ std::shared_ptr<mir::client::ClientBufferFactory> mtf::StubClientPlatform::creat
         }
 
         std::shared_ptr<mcl::ClientBuffer> create_buffer(
-            std::shared_ptr<MirBufferPackage> const& package, uint32_t, uint32_t) override
+            std::shared_ptr<MirBufferPackage> const& package, uint32_t native_pf, uint32_t) override
         {
             mir::graphics::BufferUsage usage = mir::graphics::BufferUsage::hardware;
             geom::Size size {package->width, package->height};
-            auto pf = mir_pixel_format_abgr_8888;
+            auto const pf = static_cast<MirPixelFormat>(native_pf);
             mir::graphics::BufferProperties properties { size, pf, usage }; 
             return std::make_shared<mtd::StubClientBuffer>(package, size, pf,
                 std::make_shared<mtf::NativeBuffer>(properties));

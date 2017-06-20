@@ -153,6 +153,10 @@ target_link_libraries(mir_demo_client_display_config eglapp)
 mir_add_wrapped_executable(mir_demo_client_eglsquare eglsquare.cpp)
 target_link_libraries(mir_demo_client_eglsquare eglapp)
 
+if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
+  target_link_libraries(mir_demo_client_eglsquare atomic)
+endif()
+
 mir_add_wrapped_executable(mir_demo_client_flicker
   flicker.c
 )
@@ -316,3 +320,8 @@ target_link_libraries(mir_demo_client_wayland
 
   ${WAYLAND_CLIENT_LIBRARIES}
 )
+
+mir_add_wrapped_executable(mir_demo_client_screencast screencast.cpp)
+
+target_link_libraries(mir_demo_client_screencast mirclient)
+

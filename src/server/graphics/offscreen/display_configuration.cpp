@@ -40,6 +40,7 @@ mgo::DisplayConfiguration::DisplayConfiguration(geom::Size const& display_size)
                  mir_subpixel_arrangement_unknown,
                  {},
                  mir_output_gamma_unsupported,
+                 {},
                  {}},
           card{mg::DisplayConfigurationCardId{0}, 1}
 {

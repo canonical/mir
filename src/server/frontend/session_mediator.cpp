@@ -826,6 +826,7 @@ void mf::SessionMediator::create_screencast(
     protobuf_screencast->mutable_buffer_stream()->set_pixel_format(pixel_format);
     protobuf_screencast->mutable_buffer_stream()->mutable_id()->set_value(
         screencast_session_id.as_value());
+    protobuf_screencast->mutable_buffer_stream()->set_pixel_format(pixel_format);
 
     done->Run();
 }
@@ -869,7 +870,6 @@ void mf::SessionMediator::screencast_to_buffer(
     auto session = weak_session.lock();
     ScreencastSessionId const screencast_session_id{request->id().value()};
     auto buffer = session->get_buffer(mg::BufferID{request->buffer_id()});
-    mf::ScreencastSessionId const screencast_id{request->id().value()};
     screencast->capture(screencast_session_id, buffer);
     done->Run();
 }
@@ -1273,6 +1273,20 @@ mf::SessionMediator::unpack_and_sanitize_display_configuration(
         dest.gamma = {convert_string_to_gamma_curve(src.gamma_red()),
                       convert_string_to_gamma_curve(src.gamma_green()),
                       convert_string_to_gamma_curve(src.gamma_blue())};
+
+        if (src.has_custom_logical_size())
+        {
+            if (!src.custom_logical_size())
+            {   // User has explicitly removed logical size customization
+                if (dest.custom_logical_size.is_set())
+                    (void)dest.custom_logical_size.consume();
+            }
+            else if (src.has_logical_width() && src.has_logical_height())
+            {   // User has explicitly set a logical size customization
+                dest.custom_logical_size = {src.logical_width(),
+                                            src.logical_height()};
+            }
+        }
     });
 
     return config;

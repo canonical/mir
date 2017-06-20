@@ -175,11 +175,6 @@ typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
     std::shared_ptr<mir::logging::Logger> const& logger);
 
-typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateGuestPlatform)(
-    std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
-
-
 typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
 
@@ -225,21 +220,6 @@ mir::UniqueModulePtr<mir::graphics::Platform> create_host_platform(
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
     std::shared_ptr<mir::logging::Logger> const& logger);
-
-/**
- * Function prototype used to return a new guest graphics platform. The guest graphics platform
- * exists alongside the host platform and do not output or control the physical displays
- *
- * \param [in] platform_authentication the object that contains resources needed from the host platform
- * \param [in] report the object to use to report interesting events from the display subsystem
- *
- * This factory function needs to be implemented by each platform.
- *
- * \ingroup platform_enablement
- */
-mir::UniqueModulePtr<mir::graphics::Platform> create_guest_platform(
-    std::shared_ptr<mir::graphics::DisplayReport> const& report,
-    std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
 
 /**
  * Function prototype used to add platform specific options to the platform-independent server options.

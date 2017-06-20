@@ -715,12 +715,16 @@ TEST(LP, 1540731)
     int socket_fd[size];
     int const opt = 1;
 
-    assert(socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fd) == 0);
+    // Mark this as maybe-unused, as it's only used in an assert()
+    [[gnu::unused]] auto const socketpair_succeded = socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fd);
+    assert(socketpair_succeded == 0);
 
     char const msg[] = "A random message";
     send(socket_fd[client], msg, sizeof msg, MSG_DONTWAIT | MSG_NOSIGNAL);
 
-    assert(setsockopt(socket_fd[server], SOL_SOCKET, SO_PASSCRED, &opt, sizeof(opt)) != -1);
+    // Mark this as maybe-unused, as it's only used in an assert()
+    [[gnu::unused]] auto const setsockopt_succeded = setsockopt(socket_fd[server], SOL_SOCKET, SO_PASSCRED, &opt, sizeof(opt));
+    assert(setsockopt_succeded != -1);
 
     union {
         struct cmsghdr cmh;

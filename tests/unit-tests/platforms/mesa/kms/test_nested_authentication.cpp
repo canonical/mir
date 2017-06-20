@@ -18,7 +18,7 @@
 
 #include "mir/graphics/platform_authentication.h"
 #include "mir/graphics/platform_operation_message.h"
-#include "src/platforms/mesa/server/kms/nested_authentication.h"
+#include "src/platforms/mesa/server/nested_authentication.h"
 #include "mir_toolkit/mesa/platform_operation.h"
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_platform_authentication.h"

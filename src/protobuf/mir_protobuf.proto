@@ -244,8 +244,15 @@ message DisplayOutput {
   optional uint32 gamma_supported = 23;
   optional bytes edid = 24;
   optional string model = 25;
+
+  // Until recently logical_width/height were read-only fields calculated
+  // by the server from the current mode and orientation. However they are
+  // now user-customizable, so we need to be able to tell the difference
+  // between logical dimensions calculated automatically (change dynamically)
+  // and those chosen by the user (may only change by user intervention).
   optional uint32 logical_width = 26;
   optional uint32 logical_height = 27;
+  optional bool custom_logical_size = 28;
 }
 
 message Extension

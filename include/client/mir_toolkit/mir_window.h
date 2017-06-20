@@ -22,6 +22,7 @@
 #include <mir_toolkit/client_types.h>
 #include <mir_toolkit/common.h>
 #include <mir_toolkit/mir_cursor_configuration.h>
+#include <mir_toolkit/deprecations.h>
 
 #include <stdbool.h>
 
@@ -218,15 +219,24 @@ mir_create_freestyle_window_spec(MirConnection* connection, int width, int heigh
  * Create a window specification.
  * This can be used with mir_create_window() to create a window or with
  * mir_window_apply_spec() to change an existing window.
- * \remark For use with mir_create_window() at least the type, width, height,
- * format and buffer_usage must be set. (And for types requiring a parent that
- * too must be set.)
+ * \remark For use with mir_create_window() at least the type, width and height
+ * must be set. (And for types requiring a parent that too must be set.)
  *
  * \param [in] connection   a valid mir connection
  * \return                  A handle that can ultimately be passed to
  *                          mir_create_window() or mir_window_apply_spec()
  */
 MirWindowSpec* mir_create_window_spec(MirConnection* connection);
+
+/**
+ * Retrieve the connection.
+ * \remark this is the same connection as used to create the Window and does
+ * not need an additional mir_connection_release().
+ *
+ * \param [in] window       a valid MirWindow
+ * \return                  the connection
+ */
+MirConnection* mir_window_get_connection(MirWindow* window);
 
 /**
  * Set the requested parent.
@@ -543,7 +553,7 @@ void mir_window_spec_set_cursor_name(MirWindowSpec* spec, char const* name);
  *          the point mir_create_window() is called it will instead return an invalid window.
  */
 void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format)
-    __attribute__((deprecated("Use mir_connection_allocate_buffer/mir_render_surface_get_buffer_stream instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_connection_allocate_buffer/mir_render_surface_get_buffer_stream instead");
 
 /**
  * \note To be deprecated soon. Only for enabling other deprecations.
@@ -560,7 +570,7 @@ void mir_window_spec_set_pixel_format(MirWindowSpec* spec, MirPixelFormat format
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage)
-    __attribute__((deprecated("No longer applicable, use mir_render_surface apis")));
+MIR_FOR_REMOVAL_IN_VERSION_1("No longer applicable, use mir_render_surface apis");
 #pragma GCC diagnostic pop
 /**
  *
@@ -585,32 +595,7 @@ void mir_window_spec_set_buffer_usage(MirWindowSpec* spec, MirBufferUsage usage)
 void mir_window_spec_set_streams(MirWindowSpec* spec,
                                  MirBufferStreamInfo* streams,
                                  unsigned int num_streams)
-    __attribute__((deprecated("Use mir_window_spec_add_render_surface instead")));
-
-/**
- * Set the MirWindowSpec to display content contained in a render surface
- *
- * \warning: The initial call to mir_window_spec_add_render_surface will set
- *           the bottom-most content, and subsequent calls will stack the
- *           content on top.
- *
- * \param spec             The window_spec to be updated
- * \param render_surface   The render surface containing the content to be displayed
- * \param logical_width    The width that the content will be displayed at
- *                         (Ignored for buffer streams)
- * \param logical_height   The height that the content will be displayed at
- *                         (Ignored for buffer streams)
- * \param displacement_x   The x displacement from the top-left corner of the MirWindow
- * \param displacement_y   The y displacement from the top-left corner of the MirWindow
- */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-void mir_window_spec_add_render_surface(MirWindowSpec* spec,
-                                        MirRenderSurface* render_surface,
-                                        int logical_width, int logical_height,
-                                        int displacement_x, int displacement_y)
-__attribute__((deprecated("This function is slated for rename due to MirRenderSurface-->MirSurface transition")));
-#pragma GCC diagnostic pop
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_spec_add_render_surface instead");
 
 /**
  * Release the resources held by a MirWindowSpec.
@@ -710,7 +695,7 @@ void mir_window_set_event_handler(MirWindow* window,
  *   \param[in] window The window
  */
 MirBufferStream* mir_window_get_buffer_stream(MirWindow* window)
-    __attribute__((deprecated("Use mir_window_spec_add_render_surface during window creation/modification instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_spec_add_render_surface during window creation/modification instead");
 /**
  * Retrieve a text description of the error. The returned string is owned by
  * the library and remains valid until the window or the associated
@@ -732,7 +717,7 @@ char const* mir_window_get_error_message(MirWindow* window);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void mir_window_get_parameters(MirWindow* window, MirWindowParameters* parameters)
-    __attribute__((deprecated("Use mir_window_get_xxx apis or listen to state/attribute change events instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_get_xxx apis or listen to state/attribute change events instead");
 #pragma GCC diagnostic pop
 
 
@@ -816,7 +801,7 @@ int mir_window_get_dpi(MirWindow* window);
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void mir_window_configure_cursor(MirWindow* window, MirCursorConfiguration const* parameters)
-    __attribute__((deprecated("Use mir_window_spec_set_cursor_name/mir_window_spec_set_cursor_render_surface instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_spec_set_cursor_name/mir_window_spec_set_cursor_render_surface instead");
 #pragma GCC diagnostic pop
 /**
  * Request to set the preferred orientations of a window.
@@ -847,7 +832,7 @@ MirOrientationMode mir_window_get_preferred_orientation(MirWindow* window);
  * \param [in,out] context   User data passed to completion callback.
  */
 void mir_window_request_persistent_id(MirWindow* window, MirWindowIdCallback callback, void* context)
-__attribute__((deprecated("Use mir_window_request_window_id() instead")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_request_window_id() instead");
 void mir_window_request_window_id(MirWindow* window, MirWindowIdCallback callback, void* context);
 
 /**
@@ -857,7 +842,7 @@ void mir_window_request_window_id(MirWindow* window, MirWindowIdCallback callbac
  *         be freed with a call to mir_persistent_id_release()
  */
 MirPersistentId* mir_window_request_persistent_id_sync(MirWindow* window)
-__attribute__((deprecated("Use mir_window_request_window_id_sync")));
+MIR_FOR_REMOVAL_IN_VERSION_1("Use mir_window_request_window_id_sync");
 MirWindowId* mir_window_request_window_id_sync(MirWindow* window);
 #ifdef __cplusplus
 }

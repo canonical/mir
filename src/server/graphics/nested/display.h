@@ -46,7 +46,7 @@ class DisplayReport;
 class DisplayBuffer;
 class DisplayConfigurationPolicy;
 class GLConfig;
-class Platform;
+class RenderingPlatform;
 
 namespace nested
 {
@@ -118,7 +118,7 @@ class Display : public graphics::Display,
 {
 public:
     Display(
-        std::shared_ptr<graphics::Platform> const& platform,
+        std::shared_ptr<graphics::RenderingPlatform> const& platform,
         std::shared_ptr<HostConnection> const& connection,
         std::shared_ptr<DisplayReport> const& display_report,
         std::shared_ptr<DisplayConfigurationPolicy> const& conf_policy,
@@ -155,7 +155,7 @@ public:
     Frame last_frame_on(unsigned output_id) const override;
 
 private:
-    std::shared_ptr<graphics::Platform> const platform;
+    std::shared_ptr<graphics::RenderingPlatform> const platform;
     std::shared_ptr<HostConnection> const connection;
     std::shared_ptr<DisplayReport> const display_report;
     detail::EGLDisplayHandle egl_display;

@@ -7,6 +7,7 @@ MIRPLATFORM_0.27 {
     mir::graphics::Buffer::Buffer*;
     mir::graphics::DisplayConfiguration::operator*;
     mir::graphics::DisplayConfigurationOutput::extents*;
+    mir::graphics::DisplayConfigurationOutput::transformation*;
     mir::graphics::DisplayConfigurationOutput::valid*;
     mir::graphics::DisplayConfigurationPolicy::apply_to*;
     mir::graphics::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
@@ -152,10 +153,3 @@ MIRPLATFORM_0.27 {
   };
  local: *;
 };
-
-MIRPLATFORM_0.28 {
- global:
-  extern "C++" {
-    mir::graphics::DisplayConfigurationOutput::transformation*;
-  };
-} MIRPLATFORM_0.27;

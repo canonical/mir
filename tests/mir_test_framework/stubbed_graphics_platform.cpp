@@ -375,18 +375,37 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     return mir::make_module_ptr<GuestPlatformAdapter>(nullptr, result);
 }
 
-mir::UniqueModulePtr<mg::Platform> create_guest_platform(
+mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
+    std::shared_ptr<mo::Option> const&,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::PlatformAuthentication> const& context)
+    std::shared_ptr<mir::logging::Logger> const&)
 {
-    mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
-    auto graphics_platform = the_graphics_platform.lock();
-    if (!graphics_platform)
+    mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
+    std::shared_ptr<mg::Platform> result{};
+
+    if (auto const display_rects = std::move(chosen_display_rects))
+    {
+        result = create_stub_platform(*display_rects);
+    }
+    else
     {
         static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
-        the_graphics_platform = graphics_platform = create_stub_platform(default_display_rects);
+        result = create_stub_platform(default_display_rects);
     }
-    return mir::make_module_ptr<GuestPlatformAdapter>(context, graphics_platform);
+    the_graphics_platform = result;
+    return mir::make_module_ptr<GuestPlatformAdapter>(nullptr, result);
+}
+
+mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
+    std::shared_ptr<mir::options::Option> const&, 
+    std::shared_ptr<mir::graphics::PlatformAuthentication> const&) 
+{
+    mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
+
+    static std::vector<geom::Rectangle> const default_display_rects{geom::Rectangle{{0,0},{1600,1600}}};
+    auto result = create_stub_platform(default_display_rects);
+    return mir::make_module_ptr<GuestPlatformAdapter>(nullptr, result);
 }
 
 void add_graphics_platform_options(

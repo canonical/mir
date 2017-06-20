@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -18,12 +18,6 @@
 
 #include "client_helpers.h"
 #include "mir_toolkit/mir_client_library.h"
-#include <thread>
-#include <chrono>
-#include <iostream>
-#include <cstring>
-#include <unistd.h>
-#include <signal.h>
 
 namespace me = mir::examples;
 
@@ -51,67 +45,20 @@ me::Connection::operator MirConnection*()
     return connection;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-me::BufferStream::BufferStream(
-    Connection& connection,
-    unsigned int width,
-    unsigned int height,
-    bool prefer_alpha,
-    bool hardware)
-    : stream{create_stream(connection, width, height, prefer_alpha, hardware),
-             &mir_buffer_stream_release_sync}
+me::NormalWindow::NormalWindow(me::Connection& connection, unsigned int width, unsigned int height) :
+    window{create_window(connection, width, height, nullptr), &mir_window_release_sync}
 {
-    if (!mir_buffer_stream_is_valid(stream.get()))
-    {
-        // TODO: Huh. There's no mir_buffer_stream_get_error?
-        throw std::runtime_error("Could not create buffer stream.");
-    }
 }
 
-me::BufferStream::operator MirBufferStream*() const
+mir::examples::NormalWindow::NormalWindow(
+    Connection& connection, unsigned int width, unsigned int height, MirRenderSurface* surface) :
+    window{create_window(connection, width, height, surface), &mir_window_release_sync}
 {
-    return stream.get();
 }
 
-MirBufferStream* me::BufferStream::create_stream(
-    MirConnection *connection,
-    unsigned int width,
-    unsigned int height,
-    bool prefer_alpha,
-    bool hardware)
-{
-    MirPixelFormat selected_format;
-    unsigned int valid_formats{0};
-    MirPixelFormat pixel_formats[mir_pixel_formats];
-    mir_connection_get_available_surface_formats(connection, pixel_formats, mir_pixel_formats, &valid_formats);
-    if (valid_formats == 0)
-        throw std::runtime_error("no pixel formats for buffer stream");
-    selected_format = pixel_formats[0];
-    //select an 8 bit opaque format if we can
-    if (!prefer_alpha)
-    {
-        for(auto i = 0u; i < valid_formats; i++)
-        {
-            if (pixel_formats[i] == mir_pixel_format_xbgr_8888 ||
-                pixel_formats[i] == mir_pixel_format_xrgb_8888)
-            {
-                selected_format = pixel_formats[i];
-                break;
-            }
-        }
-    }
-
-    return mir_connection_create_buffer_stream_sync(
-        connection,
-        width,
-        height,
-        selected_format,
-        hardware ? mir_buffer_usage_hardware : mir_buffer_usage_software);
-}
-
-me::NormalWindow::NormalWindow(me::Connection& connection, unsigned int width, unsigned int height, bool prefers_alpha, bool hardware) :
-    window{create_window(connection, width, height, prefers_alpha, hardware), window_deleter}
+mir::examples::NormalWindow::NormalWindow(
+    mir::examples::Connection& connection, unsigned int width, unsigned int height, mir::examples::Context& eglcontext) :
+    NormalWindow(connection, width, height, eglcontext.mir_surface())
 {
 }
 
@@ -120,52 +67,58 @@ me::NormalWindow::operator MirWindow*() const
     return window.get();
 }
 
-MirWindow* me::NormalWindow::create_window(
-    MirConnection* connection,
-    unsigned int width,
-    unsigned int height,
-    bool prefers_alpha,
-    bool hardware)
+namespace
 {
-    MirPixelFormat selected_format;
-    unsigned int valid_formats{0};
-    MirPixelFormat pixel_formats[mir_pixel_formats];
-    mir_connection_get_available_surface_formats(connection, pixel_formats, mir_pixel_formats, &valid_formats);
-    if (valid_formats == 0)
-        throw std::runtime_error("no pixel formats for surface");
-    selected_format = pixel_formats[0]; 
-    //select an 8 bit opaque format if we can
-    if (!prefers_alpha)
+void handle_window_event(MirWindow* window, MirEvent const* event, void* context)
+{
+    auto const surface = (MirRenderSurface*)context;
+
+    switch (mir_event_get_type(event))
     {
-        for(auto i = 0u; i < valid_formats; i++)
-        {
-            if (pixel_formats[i] == mir_pixel_format_xbgr_8888 ||
-                pixel_formats[i] == mir_pixel_format_xrgb_8888)
-            {
-                selected_format = pixel_formats[i];
-                break;
-            }
-        }
+    case mir_event_type_resize:
+    {
+        MirResizeEvent const* resize = mir_event_get_resize_event(event);
+        int const new_width = mir_resize_event_get_width(resize);
+        int const new_height = mir_resize_event_get_height(resize);
+
+        mir_render_surface_set_size(surface, new_width, new_height);
+        MirWindowSpec* spec = mir_create_window_spec(mir_window_get_connection(window));
+        mir_window_spec_add_render_surface(spec, surface, new_width, new_height, 0, 0);
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
+        break;
     }
-    
-    auto deleter = [](MirWindowSpec *spec) { mir_window_spec_release(spec); };
-    std::unique_ptr<MirWindowSpec, decltype(deleter)> spec{
+
+    default:
+        break;
+    }
+}
+}
+
+MirWindow* me::NormalWindow::create_window(
+    MirConnection* connection, unsigned int width, unsigned int height, MirRenderSurface* surface)
+{
+    std::unique_ptr<MirWindowSpec, decltype(&mir_window_spec_release)> spec{
         mir_create_normal_window_spec(connection, width, height),
-        deleter
+        &mir_window_spec_release
     };
 
-    mir_window_spec_set_pixel_format(spec.get(), selected_format);
     mir_window_spec_set_name(spec.get(), __PRETTY_FUNCTION__);
-    mir_window_spec_set_buffer_usage(spec.get(), hardware ? mir_buffer_usage_hardware : mir_buffer_usage_software);
+
+    if (surface)
+    {
+        mir_window_spec_add_render_surface(spec.get(), surface, width, height, 0, 0);
+        mir_window_spec_set_event_handler(spec.get(), &handle_window_event, surface);
+    }
+
     auto window = mir_create_window_sync(spec.get());
     return window;
 }
 
-me::Context::Context(Connection& connection, MirWindow* window, int swap_interval) :
-    native_display(reinterpret_cast<EGLNativeDisplayType>(
-        mir_connection_get_egl_native_display(connection))),
-    native_window(reinterpret_cast<EGLNativeWindowType>(
-        mir_buffer_stream_get_egl_native_window(mir_window_get_buffer_stream(window)))),
+me::Context::Context(Connection& connection, int swap_interval, unsigned int width, unsigned int height) :
+    rsurface{mir_connection_create_render_surface_sync(connection, width, height), &mir_render_surface_release},
+    native_display(connection),
+    native_window(reinterpret_cast<EGLNativeWindowType>(rsurface.get())),
     display(native_display),
     config(chooseconfig(display.disp)),
     surface(display.disp, config, native_window),
@@ -174,7 +127,6 @@ me::Context::Context(Connection& connection, MirWindow* window, int swap_interva
     make_current();
     eglSwapInterval(display.disp, swap_interval);
 }
-#pragma GCC diagnostic pop
 
 void me::Context::make_current()
 {

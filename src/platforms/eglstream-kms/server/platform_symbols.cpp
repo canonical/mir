@@ -105,6 +105,19 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
 }
 
+namespace
+{
+char const* drm_node_for_device(EGLDeviceEXT device)
+{
+    auto const device_path = eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
+    if (!device_path)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to determine DRM device node path from EGLDevice"));
+    }
+    return device_path;
+}
+}
+
 mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
@@ -158,7 +171,22 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*
             {
                 mir::log_debug("Found EGLDeviceEXT with device extensions: %s",
                                device_extensions);
-                return strstr(device_extensions, "EGL_EXT_device_drm") != NULL;
+                // TODO: This test is not strictly correct (will incorrectly match
+                // EGL_EXT_device_drmish_but_not_drm)
+                if (strstr(device_extensions, "EGL_EXT_device_drm") != NULL)
+                {
+                    // Check if we can acquire DRM master
+                    int const drm_fd = open(drm_node_for_device(device), O_RDWR | O_CLOEXEC);
+                    if (drmSetMaster(drm_fd))
+                    {
+                        mir::log_debug(
+                            "EGL_EXT_device_drm found, but can't acquire DRM master.");
+                        return false;
+                    }
+                    drmDropMaster(drm_fd);
+                    return true;
+                }
+                return false;
             }
             else
             {
@@ -167,8 +195,8 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*
             }
         }))
     {
-        mir::log_debug("EGLDeviceEXTs found, but none support required "
-                       "EGL_EXT_device_drm extension");
+        mir::log_debug(
+            "EGLDeviceEXTs found, but none are suitable for Mir");
         return mg::PlatformPriority::unsupported;
     }
 
@@ -192,10 +220,3 @@ mir::ModuleProperties const* describe_graphics_module()
     return &description;
 }
 
-mir::UniqueModulePtr<mg::Platform> create_guest_platform(
-    std::shared_ptr<mg::DisplayReport> const&,
-    std::shared_ptr<mg::PlatformAuthentication> const& /*platform_authentication*/)
-{
-    mir::assert_entry_point_signature<mg::CreateGuestPlatform>(&create_guest_platform);
-    return nullptr;
-}

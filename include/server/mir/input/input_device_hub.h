@@ -20,6 +20,7 @@
 #define MIR_INPUT_INPUT_DEVICE_HUB_H_
 
 #include <memory>
+#include <functional>
 
 namespace mir
 {

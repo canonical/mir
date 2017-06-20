@@ -28,9 +28,9 @@
 #include "mir_toolkit/extensions/window_coordinate_translation.h"
 #include "mir_toolkit/extensions/graphics_module.h"
 #include "mir/geometry/size.h"
-#include "mir/client_platform.h"
+#include "mir/client/client_platform.h"
 #include "mir/frontend/surface_id.h"
-#include "mir/client_context.h"
+#include "mir/client/client_context.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_surface.h"
 #include "display_configuration.h"
@@ -225,6 +225,10 @@ public:
         void* render_surface);
 
     void* request_interface(char const* name, int version);
+
+    void enumerate_extensions(
+        void* context,
+        void (*enumerator)(void* context, char const* extension, int version));
 
 private:
     //google cant have callbacks with more than 2 args

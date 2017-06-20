@@ -88,34 +88,74 @@ int get_drm_cursor_width(int fd)
        drmGetCap(fd, DRM_CAP_CURSOR_WIDTH, &width);
     return int(width);
 }
+
+gbm_device* gbm_create_device_checked(int fd)
+{
+    auto device = gbm_create_device(fd);
+    if (!device)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create gbm device"));
+    }
+    return device;
+}
 }
 
-mgm::Cursor::GBMBOWrapper::GBMBOWrapper(gbm_device* gbm) :
-    buffer(gbm_bo_create(
-                gbm,
-                get_drm_cursor_width(gbm_device_get_fd(gbm)),
-                get_drm_cursor_height(gbm_device_get_fd(gbm)),
-                GBM_FORMAT_ARGB8888,
-                GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE))
+mgm::Cursor::GBMBOWrapper::GBMBOWrapper(int fd) :
+    device{gbm_create_device_checked(fd)},
+    buffer{
+        gbm_bo_create(
+            device,
+            get_drm_cursor_width(fd),
+            get_drm_cursor_height(fd),
+            GBM_FORMAT_ARGB8888,
+            GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE)}
 {
     if (!buffer) BOOST_THROW_EXCEPTION(std::runtime_error("failed to create gbm buffer"));
 }
 
-inline mgm::Cursor::GBMBOWrapper::operator gbm_bo*() { return buffer; }
-inline mgm::Cursor::GBMBOWrapper::~GBMBOWrapper()    { gbm_bo_destroy(buffer); }
+inline mgm::Cursor::GBMBOWrapper::operator gbm_bo*()
+{
+    return buffer;
+}
+
+inline mgm::Cursor::GBMBOWrapper::~GBMBOWrapper()
+{
+    if (device)
+        gbm_device_destroy(device);
+    if (buffer)
+        gbm_bo_destroy(buffer);
+}
+
+mgm::Cursor::GBMBOWrapper::GBMBOWrapper(GBMBOWrapper&& from)
+    : device{from.device},
+      buffer{from.buffer}
+{
+    from.buffer = nullptr;
+    from.device = nullptr;
+}
 
 mgm::Cursor::Cursor(
-    gbm_device* gbm,
     KMSOutputContainer& output_container,
     std::shared_ptr<CurrentConfiguration> const& current_configuration) :
         output_container(output_container),
         current_position(),
         last_set_failed(false),
-        buffer(gbm),
-        buffer_width(gbm_bo_get_width(buffer)),
-        buffer_height(gbm_bo_get_height(buffer)),
+        min_buffer_width{std::numeric_limits<uint32_t>::max()},
+        min_buffer_height{std::numeric_limits<uint32_t>::max()},
         current_configuration(current_configuration)
 {
+    // Generate the buffers for the initial configuration.
+    current_configuration->with_current_configuration_do(
+        [this](KMSDisplayConfiguration const& kms_conf)
+        {
+            kms_conf.for_each_output(
+                [this, &kms_conf](auto const& output)
+                {
+                    // I'm not sure why g++ needs the explicit "this->" but it does - alan_g
+                    this->buffer_for_output(*kms_conf.get_output_for(output.id));
+                });
+        });
+
     hide();
     if (last_set_failed)
         throw std::runtime_error("Initial KMS cursor set failed");
@@ -126,7 +166,11 @@ mgm::Cursor::~Cursor() noexcept
     hide();
 }
 
-void mgm::Cursor::write_buffer_data_locked(std::lock_guard<std::mutex> const&, void const* data, size_t count)
+void mgm::Cursor::write_buffer_data_locked(
+    std::lock_guard<std::mutex> const&,
+    gbm_bo* buffer,
+    void const* data,
+    size_t count)
 {
     if (auto result = gbm_bo_write(buffer, data, count))
     {
@@ -136,20 +180,23 @@ void mgm::Cursor::write_buffer_data_locked(std::lock_guard<std::mutex> const&, v
     }
 }
 
-void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> const& lg, CursorImage const& image)
+void mgm::Cursor::pad_and_write_image_data_locked(
+    std::lock_guard<std::mutex> const& lg,
+    gbm_bo* buffer,
+    CursorImage const& image)
 {
     auto image_argb = static_cast<uint8_t const*>(image.as_argb_8888());
     auto image_width = image.size().width.as_uint32_t();
     auto image_height = image.size().height.as_uint32_t();
     auto image_stride = image_width * 4;
 
-    if (image_width > buffer_width || image_height > buffer_height)
+    if (image_width > min_buffer_width || image_height > min_buffer_height)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Image is too big for GBM cursor buffer"));
     }
-    
+
     size_t buffer_stride = gbm_bo_get_stride(buffer);  // in bytes
-    size_t padded_size = buffer_stride * buffer_height;
+    size_t padded_size = buffer_stride * gbm_bo_get_height(buffer);
     auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);
     size_t rhs_padding = buffer_stride - image_stride;
 
@@ -164,9 +211,9 @@ void mgm::Cursor::pad_and_write_image_data_locked(std::lock_guard<std::mutex> co
         src += image_stride;
     }
 
-    memset(dest, 0, buffer_stride * (buffer_height - image_height));
+    memset(dest, 0, buffer_stride * (gbm_bo_get_height(buffer) - image_height));
 
-    write_buffer_data_locked(lg, &padded[0], padded_size);
+    write_buffer_data_locked(lg, buffer, &padded[0], padded_size);
 }
 
 void mgm::Cursor::show()
@@ -186,14 +233,21 @@ void mgm::Cursor::show(CursorImage const& cursor_image)
 
     auto const& size = cursor_image.size();
 
-    if (size != geometry::Size{buffer_width, buffer_height})
     {
-        pad_and_write_image_data_locked(lg, cursor_image);
-    }
-    else
-    {
-        auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);
-        write_buffer_data_locked(lg, cursor_image.as_argb_8888(), count);
+        auto locked_buffers = buffers.lock();
+        for (auto& pair : *locked_buffers)
+        {
+            auto& buffer = pair.second;
+            if (size != geometry::Size{gbm_bo_get_width(buffer), gbm_bo_get_height(buffer)})
+            {
+                pad_and_write_image_data_locked(lg, buffer, cursor_image);
+            }
+            else
+            {
+                auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);
+                write_buffer_data_locked(lg, buffer, cursor_image.as_argb_8888(), count);
+            }
+        }
     }
     hotspot = cursor_image.hotspot();
     
@@ -288,7 +342,7 @@ void mgm::Cursor::place_cursor_at_locked(
             output.move_cursor(geom::Point{} + dp - hotspot);
             if (force_state || !output.has_cursor()) // TODO - or if orientation had changed - then set buffer..
             {
-                if (!output.set_cursor(buffer) || !output.has_cursor())
+                if (!output.set_cursor(buffer_for_output(output)) || !output.has_cursor())
                     set_on_all_outputs = false;
             }
         }
@@ -302,4 +356,36 @@ void mgm::Cursor::place_cursor_at_locked(
     });
 
     last_set_failed = !set_on_all_outputs;
+}
+
+gbm_bo* mgm::Cursor::buffer_for_output(KMSOutput const& output)
+{
+    auto locked_buffers = buffers.lock();
+
+    auto buffer_it = std::find_if(
+        locked_buffers->begin(),
+        locked_buffers->end(),
+        [&output](auto const& candidate)
+        {
+            return candidate.first == output.drm_fd();
+        });
+
+    if (buffer_it != locked_buffers->end())
+    {
+        return buffer_it->second;
+    }
+
+    locked_buffers->push_back(std::make_pair(output.drm_fd(), GBMBOWrapper(output.drm_fd())));
+
+    gbm_bo* bo = locked_buffers->back().second;
+    if (gbm_bo_get_width(bo) < min_buffer_width)
+    {
+        min_buffer_width = gbm_bo_get_width(bo);
+    }
+    if (gbm_bo_get_height(bo) < min_buffer_height)
+    {
+        min_buffer_height = gbm_bo_get_height(bo);
+    }
+
+    return bo;
 }

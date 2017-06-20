@@ -38,7 +38,6 @@ class MultiMonitorArbiter : public BufferAcquisition
 {
 public:
     MultiMonitorArbiter(
-        MultiMonitorMode mode,
         std::shared_ptr<frontend::ClientBuffers> const& map,
         std::shared_ptr<Schedule> const& schedule);
     ~MultiMonitorArbiter();
@@ -48,7 +47,6 @@ public:
     std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
     void snapshot_release(std::shared_ptr<graphics::Buffer> const&) override;
     void set_schedule(std::shared_ptr<Schedule> const& schedule);
-    void set_mode(MultiMonitorMode mode) override;
     bool buffer_ready_for(compositor::CompositorID id);
     bool has_buffer();
     void advance_schedule();
@@ -58,7 +56,6 @@ private:
     void clean_onscreen_buffers(std::lock_guard<std::mutex> const&);
 
     std::mutex mutable mutex;
-    MultiMonitorMode mode;
     std::shared_ptr<frontend::ClientBuffers> const map;
     struct ScheduleEntry
     {

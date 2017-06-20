@@ -92,8 +92,36 @@ static void shutdown(int signum)
         rendering = 0;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+static void handle_window_event(MirWindow* window, MirEvent const* event, void* context)
+{
+    MirRenderSurface* const surface = (MirRenderSurface*)context;
+
+    switch (mir_event_get_type(event))
+    {
+    case mir_event_type_resize:
+    {
+        MirResizeEvent const* resize = mir_event_get_resize_event(event);
+        int const new_width = mir_resize_event_get_width(resize);
+        int const new_height = mir_resize_event_get_height(resize);
+
+        mir_render_surface_set_size(surface, new_width, new_height);
+        MirWindowSpec* spec = mir_create_window_spec(mir_window_get_connection(window));
+        mir_window_spec_add_render_surface(spec, surface, new_width, new_height, 0, 0);
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
+        break;
+    }
+
+    case mir_event_type_close_window:
+        printf("Received close event from server.\n");
+        rendering = 0;
+        break;
+
+    default:
+        break;
+    }
+}
+
 int main(int argc, char** argv)
 {
     static char const *socket_file = NULL;
@@ -149,31 +177,26 @@ int main(int argc, char** argv)
         return -1;
     }
 
-    MirRenderSurface* render_surface = mir_connection_create_render_surface_sync(connection, width, height);
-    if (!mir_render_surface_is_valid(render_surface))
+    MirRenderSurface* surface = mir_connection_create_render_surface_sync(connection, width, height);
+    if (!mir_render_surface_is_valid(surface))
     {
         printf("could not create a render surface\n");
         return -1;
     }
 
-    MirPresentationChain* chain =  mir_render_surface_get_presentation_chain(render_surface);
+    MirPresentationChain* chain =  mir_render_surface_get_presentation_chain(surface);
     if (!mir_presentation_chain_is_valid(chain))
     {
         printf("could not create MirPresentationChain\n");
 
-// TODO this is a frig to pass smoke tests until we support NBS by default
-#if (MIR_CLIENT_VERSION <= MIR_VERSION_NUMBER(3, 3, 0))
-        printf("This is currently an unreleased API - likely server support is switched off\n");
-        return 0;
-#else
         return -1;
-#endif
     }
 
     MirWindowSpec* spec = mir_create_normal_window_spec(connection, width, height);
-    mir_window_spec_set_pixel_format(spec, format);
     mir_window_spec_add_render_surface(
-        spec, render_surface, width, height, displacement_x, displacement_y);
+        spec, surface, width, height, displacement_x, displacement_y);
+    mir_window_spec_set_event_handler(spec, &handle_window_event, surface);
+    mir_window_spec_set_name(spec, "prerendered_frames");
     MirWindow* window = mir_create_window_sync(spec);
     if (!mir_window_is_valid(window))
     {
@@ -234,9 +257,8 @@ int main(int argc, char** argv)
 
     for (i = 0u; i < num_prerendered_frames; i++)
         mir_buffer_release(buffer_available[i].buffer);
-    mir_render_surface_release(render_surface);
+    mir_render_surface_release(surface);
     mir_window_release_sync(window);
     mir_connection_release(connection);
     return 0;
 }
-#pragma GCC diagnostic pop

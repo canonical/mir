@@ -52,6 +52,17 @@ public:
         for (int i = 0; i < protobuf_config.display_output_size(); i++)
         {
             auto const& protobuf_output = protobuf_config.display_output(i);
+
+            mir::optional_value<geom::Size> custom_logical_size;
+            if (protobuf_output.has_custom_logical_size() &&
+                protobuf_output.custom_logical_size() &&
+                protobuf_output.has_logical_width() &&
+                protobuf_output.has_logical_height())
+            {
+                custom_logical_size = {protobuf_output.logical_width(),
+                                       protobuf_output.logical_height()};
+            }
+
             mg::DisplayConfigurationOutput display_output
             {
                 mg::DisplayConfigurationOutputId(protobuf_output.output_id()),
@@ -75,7 +86,8 @@ public:
                 mir_subpixel_arrangement_unknown,
                 {},
                 mir_output_gamma_unsupported,
-                {}
+                {},
+                custom_logical_size
             };
 
             /* Modes */
@@ -134,6 +146,7 @@ public:
                 mir_subpixel_arrangement_unknown,
                 {},
                 mir_output_gamma_unsupported,
+                {},
                 {}
             };
 
@@ -169,6 +182,17 @@ public:
         for (int i = 0; i < mir_display_config_get_num_outputs(config); i++)
         {
             auto const client_output = mir_display_config_get_output(config, i);
+
+            mir::optional_value<geom::Size> custom_logical_size;
+            if (mir_output_has_custom_logical_size(client_output))
+            {
+                custom_logical_size =
+                {
+                    mir_output_get_logical_width(client_output),
+                    mir_output_get_logical_height(client_output)
+                };
+            }
+
             mg::DisplayConfigurationOutput display_output
                 {
                     mg::DisplayConfigurationOutputId(mir_output_get_id(client_output)),
@@ -192,7 +216,8 @@ public:
                     mir_subpixel_arrangement_unknown,
                     {},
                     mir_output_gamma_unsupported,
-                    {}
+                    {},
+                    custom_logical_size
                 };
 
             /* Modes */

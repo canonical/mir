@@ -2,6 +2,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
+#include <functional>
 
 #include <experimental/optional>
 #include <vector>

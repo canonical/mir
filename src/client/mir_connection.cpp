@@ -24,8 +24,8 @@
 #include "mir_protobuf.pb.h"
 #include "make_protobuf_object.h"
 #include "mir_toolkit/mir_platform_message.h"
-#include "mir/client_platform.h"
-#include "mir/client_platform_factory.h"
+#include "mir/client/client_platform.h"
+#include "mir/client/client_platform_factory.h"
 #include "rpc/mir_basic_rpc_channel.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/dispatch/threaded_dispatcher.h"
@@ -1287,7 +1287,6 @@ void MirConnection::allocate_buffer(
     MirBufferCallback callback, void* context)
 {
     mp::BufferAllocation request;
-    request.mutable_id()->set_value(-1);
     auto buffer_request = request.add_buffer_requests();
     buffer_request->set_width(size.width.as_int());
     buffer_request->set_height(size.height.as_int());
@@ -1503,4 +1502,17 @@ void MirConnection::set_base_input_configuration(MirInputConfig const* config)
     server.set_base_input_configuration(&request,
                                         store_error_result->result.get(),
                                         gp::NewCallback(&handle_structured_error, store_error_result));
+}
+
+void MirConnection::enumerate_extensions(
+    void* context,
+    void (*enumerator)(void* context, char const* extension, int version))
+{
+    for(auto const& extension : extensions)
+    {
+        for(auto const version : extension.version)
+        {
+            enumerator(context, extension.name.c_str(), version);
+        }
+    }
 }

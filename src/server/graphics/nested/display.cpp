@@ -215,7 +215,7 @@ std::vector<mg::DisplayConfigurationOutput> calculate_best_outputs(
 }
 
 mgn::Display::Display(
-    std::shared_ptr<mg::Platform> const& platform,
+    std::shared_ptr<mg::RenderingPlatform> const& platform,
     std::shared_ptr<HostConnection> const& connection,
     std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mg::DisplayConfigurationPolicy> const& initial_conf_policy,

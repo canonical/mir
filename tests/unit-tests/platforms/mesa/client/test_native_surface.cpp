@@ -18,7 +18,7 @@
 
 #include "src/platforms/mesa/include/native_buffer.h"
 #include "src/platforms/mesa/client/native_surface.h"
-#include "mir/client_buffer.h"
+#include "mir/client/client_buffer.h"
 #include "mir/test/doubles/mock_egl_native_surface.h"
 #include "mir/test/doubles/mock_client_buffer.h"
 #include "mir/test/fake_shared.h"
