@@ -19,14 +19,13 @@
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
-#include "src/server/compositor/buffer_map.h"
+#include "src/server/frontend/buffer_map.h"
 #include "mir/graphics/display_configuration.h"
 
 #include <gtest/gtest.h>
 using namespace testing;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
-namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -36,13 +35,13 @@ struct ClientBuffers : public Test
     std::shared_ptr<mtd::MockEventSink> mock_sink = std::make_shared<testing::NiceMock<mtd::MockEventSink>>();
     mg::BufferProperties properties{geom::Size{42,43}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware};
     mtd::StubBuffer stub_buffer{properties};
-    mc::BufferMap map{mock_sink};
+    mf::BufferMap map{mock_sink};
 };
 
 TEST_F(ClientBuffers, sends_full_buffer_on_allocation)
 {
     EXPECT_CALL(*mock_sink, add_buffer(Ref(stub_buffer)));
-    mc::BufferMap map{mock_sink};
+    mf::BufferMap map{mock_sink};
     EXPECT_THAT(map.add_buffer(mt::fake_shared(stub_buffer)), Eq(stub_buffer.id()));
 }
 
@@ -112,7 +111,7 @@ TEST_F(ClientBuffers, sends_error_buffer_when_alloc_fails)
     EXPECT_CALL(*mock_sink, add_buffer(_))
         .WillOnce(Throw(std::runtime_error(error_msg)));
     EXPECT_CALL(*mock_sink, error_buffer(stub_buffer.size(), stub_buffer.pixel_format(), StrEq(error_msg)));
-    mc::BufferMap map{mock_sink};
+    mf::BufferMap map{mock_sink};
     EXPECT_THROW({
         map.add_buffer(mt::fake_shared(stub_buffer));
     }, std::runtime_error);

@@ -21,7 +21,7 @@
 #include "buffer_stream_factory.h"
 #include "mir/graphics/buffer_properties.h"
 #include "stream.h"
-#include "buffer_map.h"
+#include "../frontend/buffer_map.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -58,5 +58,5 @@ std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
 std::shared_ptr<mf::ClientBuffers> mc::BufferStreamFactory::create_buffer_map(
         std::shared_ptr<mf::BufferSink> const& sink)
 {
-    return std::make_shared<mc::BufferMap>(sink);
+    return std::make_shared<mf::BufferMap>(sink);
 }

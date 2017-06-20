@@ -269,9 +269,15 @@ TEST_F(Stream, returns_buffers_to_client_when_told_to_bring_queue_up_to_date)
     stream.submit_buffer(buffers[1]);
     stream.submit_buffer(buffers[2]);
 
-    Mock::VerifyAndClearExpectations(&mock_sink);
-    EXPECT_CALL(mock_sink, send_buffer(_,Ref(*buffers[0]),_));
-    EXPECT_CALL(mock_sink, send_buffer(_,Ref(*buffers[1]),_));
+    // Buffers should be owned by the stream, and our test
+    ASSERT_THAT(buffers[0].use_count(), Eq(2));
+    ASSERT_THAT(buffers[1].use_count(), Eq(2));
+    ASSERT_THAT(buffers[2].use_count(), Eq(2));
+
     stream.drop_old_buffers();
-    Mock::VerifyAndClearExpectations(&mock_sink);
+
+    // Stream should have released ownership of all but the most recent buffer
+    EXPECT_THAT(buffers[0].use_count(), Eq(1));
+    EXPECT_THAT(buffers[1].use_count(), Eq(1));
+    EXPECT_THAT(buffers[2].use_count(), Eq(2));
 }
