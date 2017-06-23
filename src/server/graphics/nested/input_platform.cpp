@@ -55,62 +55,68 @@ mgn::UniqueInputConfig make_empty_config()
     return mgn::UniqueInputConfig(nullptr, [](MirInputConfig const*){});
 }
 
-class Worker
+class Postman
 {
 public:
 
     void start_work();
-    void enqueue_work(std::function<void()> const& functor);
+    void post(std::shared_ptr<MirEvent> const& event);
     void stop_work();
 
+    mi::InputSink* destination{nullptr};
+
 private:
-    using WorkQueue = std::queue<std::function<void()>>;
+    using EventQueue = std::queue<std::shared_ptr<MirEvent>>;
 
     std::thread worker_thread;
-    std::mutex mutable work_mutex;
+    std::mutex mutable mutex;
     std::condition_variable work_cv;
-    WorkQueue work_queue;
-    bool work_done = false;
+    EventQueue events;
 
     void do_work();
+
+    std::shared_ptr<MirEvent> next_event();
 };
 
-void Worker::do_work()
+void Postman::do_work()
 {
-    while (!work_done)
-    {
-        WorkQueue::value_type work;
-        {
-            std::unique_lock<decltype(work_mutex)> lock{work_mutex};
-            work_cv.wait(lock, [this] { return !work_queue.empty(); });
-            work = work_queue.front();
-            work_queue.pop();
-        }
-
-        work();
-    }
+    while (auto const event = next_event())
+        destination->handle_input(*event);
 }
 
-void Worker::enqueue_work(std::function<void()> const& functor)
+std::shared_ptr<MirEvent> Postman::next_event()
 {
-    std::lock_guard<decltype(work_mutex)> lock{work_mutex};
-    work_queue.push(functor);
+    EventQueue::value_type event;
+    {
+        std::unique_lock<decltype(mutex)> lock{mutex};
+        work_cv.wait(lock, [this] { return !events.empty(); });
+        event.swap(events.front());
+        events.pop();
+    }
+    return event;
+}
+
+void Postman::post(std::shared_ptr<MirEvent> const& event)
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    events.push(event);
     work_cv.notify_one();
 }
 
-void Worker::start_work()
+void Postman::start_work()
 {
     worker_thread = std::thread([this] { do_work(); });
 }
 
-void Worker::stop_work()
+void Postman::stop_work()
 {
-    enqueue_work([this] { work_done = true; });
+    // We use a null event as a sentinel
+    post({});
     worker_thread.join();
 }
 }
 
-struct mgn::InputPlatform::InputDevice : mi::InputDevice, Worker
+struct mgn::InputPlatform::InputDevice : mi::InputDevice, Postman
 {
 public:
     InputDevice(MirInputDevice* dev, std::function<void()> config_change)
@@ -180,7 +186,7 @@ public:
 
     void post_event(std::shared_ptr<MirEvent> const event)
     {
-        enqueue_work([this, event]() { destination->handle_input(*event); });
+        post(event);
     }
 
     void emit_event(MirInputEvent const* event, mir::geometry::Rectangle const& frame)
@@ -332,7 +338,6 @@ public:
 
     MirInputDeviceId device_id;
     MirInputDevice* device{nullptr};
-    mi::InputSink* destination{nullptr};
     mi::EventBuilder* builder{nullptr};
     mi::InputDeviceInfo device_info;
     mir::optional_value<mi::PointerSettings> pointer_settings;
