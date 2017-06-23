@@ -153,6 +153,8 @@ TEST_F(TestNestedInputPlatform, devices_forward_input_events)
     mock_host_connection.event_callback(*mev::make_event(a_mouse.id(), 12ns, cookie, mir_input_event_modifier_none,
                                                          mir_pointer_action_motion, mir_pointer_button_primary, 23, 42,
                                                          0, 0, 12, 10), source_surface);
+
+    nested_input_device->stop();
 }
 
 TEST_F(TestNestedInputPlatform, devices_forward_key_events)
@@ -172,6 +174,7 @@ TEST_F(TestNestedInputPlatform, devices_forward_key_events)
 
     mock_host_connection.event_callback(*mev::make_event(a_keyboard.id(), 141ns, cookie, mir_keyboard_action_down, 0,
                                                          scan_code, mir_input_event_modifier_none), source_surface);
+    nested_input_device->stop();
 }
 
 TEST_F(TestNestedInputPlatform, replaces_enter_events_as_motion_event)
@@ -199,6 +202,7 @@ TEST_F(TestNestedInputPlatform, replaces_enter_events_as_motion_event)
                                  60.0f, 35.0f);
 
     mock_host_connection.event_callback(*event, source_surface);
+    nested_input_device->stop();
 }
 
 TEST_F(TestNestedInputPlatform, device_configurations_are_forwarded_to_host_connection)
@@ -216,4 +220,5 @@ TEST_F(TestNestedInputPlatform, device_configurations_are_forwarded_to_host_conn
     EXPECT_CALL(mock_host_connection, apply_input_configuration(_));
 
     nested_input_device->apply_settings(left_handed);
+    nested_input_device->stop();
 }

@@ -67,6 +67,7 @@ public:
 private:
     using WorkQueue = std::queue<std::function<void()>>;
 
+    std::thread worker_thread;
     std::mutex mutable work_mutex;
     std::condition_variable work_cv;
     WorkQueue work_queue;
@@ -104,12 +105,13 @@ void Worker::enqueue_work(std::function<void()> const& functor)
 
 void Worker::start_work()
 {
-    do_work();
+    worker_thread = std::thread([this] { do_work(); });
 }
 
 void Worker::stop_work()
 {
     enqueue_work([this] { work_done = true; });
+    worker_thread.join();
 }
 }
 
@@ -178,7 +180,7 @@ public:
     {
         this->destination = destination;
         this->builder = builder;
-        worker_thread = std::thread([this] { start_work(); });
+        start_work();
     }
 
     void post_event(std::shared_ptr<MirEvent> const& event)
@@ -253,7 +255,6 @@ public:
     void stop() override
     {
         stop_work();
-        if (worker_thread.joinable()) worker_thread.join();
         this->destination = nullptr;
         this->builder = nullptr;
     }
@@ -343,7 +344,6 @@ public:
     mir::optional_value<mi::TouchpadSettings> touchpad_settings;
     mir::optional_value<mi::TouchscreenSettings> touchscreen_settings;
     std::function<void()> emit_device_change;
-    std::thread worker_thread;
 };
 
 
