@@ -71,11 +71,6 @@ public:
     {
     }
 
-    ~Worker()
-    {
-        exit();
-    }
-
     void operator()() noexcept
     try
     {

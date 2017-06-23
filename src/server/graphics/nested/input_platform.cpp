@@ -58,7 +58,6 @@ mgn::UniqueInputConfig make_empty_config()
 class Worker
 {
 public:
-    ~Worker();
 
     void start_work();
     void enqueue_work(std::function<void()> const& functor);
@@ -75,10 +74,6 @@ private:
 
     void do_work();
 };
-
-Worker::~Worker()
-{
-}
 
 void Worker::do_work()
 {
@@ -183,9 +178,9 @@ public:
         start_work();
     }
 
-    void post_event(std::shared_ptr<MirEvent> const& event)
+    void post_event(std::shared_ptr<MirEvent> const event)
     {
-        enqueue_work([this, x = event]() {destination->handle_input(*x); });
+        enqueue_work([this, event]() { destination->handle_input(*event); });
     }
 
     void emit_event(MirInputEvent const* event, mir::geometry::Rectangle const& frame)
