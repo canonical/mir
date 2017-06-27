@@ -33,6 +33,9 @@
 #include "mir/events/event_builders.h"
 
 #include <chrono>
+#include <condition_variable>
+#include <thread>
+#include <queue>
 
 namespace mi = mir::input;
 namespace mgn = mir::graphics::nested;
@@ -52,9 +55,68 @@ mgn::UniqueInputConfig make_empty_config()
     return mgn::UniqueInputConfig(nullptr, [](MirInputConfig const*){});
 }
 
+class Postman
+{
+public:
+
+    void start_work();
+    void post(std::shared_ptr<MirEvent> const& event);
+    void stop_work();
+
+    mi::InputSink* destination{nullptr};
+
+private:
+    using EventQueue = std::queue<std::shared_ptr<MirEvent>>;
+
+    std::thread worker_thread;
+    std::mutex mutable mutex;
+    std::condition_variable work_cv;
+    EventQueue events;
+
+    void do_work();
+
+    std::shared_ptr<MirEvent> next_event();
+};
+
+void Postman::do_work()
+{
+    while (auto const event = next_event())
+        destination->handle_input(*event);
 }
 
-struct mgn::InputPlatform::InputDevice : mi::InputDevice
+std::shared_ptr<MirEvent> Postman::next_event()
+{
+    EventQueue::value_type event;
+    {
+        std::unique_lock<decltype(mutex)> lock{mutex};
+        work_cv.wait(lock, [this] { return !events.empty(); });
+        event.swap(events.front());
+        events.pop();
+    }
+    return event;
+}
+
+void Postman::post(std::shared_ptr<MirEvent> const& event)
+{
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    events.push(event);
+    work_cv.notify_one();
+}
+
+void Postman::start_work()
+{
+    worker_thread = std::thread([this] { do_work(); });
+}
+
+void Postman::stop_work()
+{
+    // We use a null event as a sentinel
+    post({});
+    worker_thread.join();
+}
+}
+
+struct mgn::InputPlatform::InputDevice : mi::InputDevice, Postman
 {
 public:
     InputDevice(MirInputDevice* dev, std::function<void()> config_change)
@@ -119,6 +181,12 @@ public:
     {
         this->destination = destination;
         this->builder = builder;
+        start_work();
+    }
+
+    void post_event(std::shared_ptr<MirEvent> const event)
+    {
+        post(event);
     }
 
     void emit_event(MirInputEvent const* event, mir::geometry::Rectangle const& frame)
@@ -147,20 +215,19 @@ public:
                     contact.touch_major = mir_touch_event_axis_value(touch_event, i, mir_touch_axis_touch_major);
                     contact.touch_minor = mir_touch_event_axis_value(touch_event, i, mir_touch_axis_touch_minor);
                 }
-                destination->handle_input(*builder->touch_event(event_time, contacts));
+                post_event(builder->touch_event(event_time, contacts));
                 break;
             }
         case mir_input_event_type_key:
             {
                 auto const* key_event = mir_input_event_get_keyboard_event(event);
 
-                auto new_kev = builder->key_event(
+                post_event(builder->key_event(
                         event_time,
                         mir_keyboard_event_action(key_event),
                         mir_keyboard_event_key_code(key_event),
                         mir_keyboard_event_scan_code(key_event)
-                        );
-                destination->handle_input(*new_kev);
+                        ));
                 break;
             }
         case mir_input_event_type_pointer:
@@ -168,7 +235,7 @@ public:
                 auto const* pointer_event = mir_input_event_get_pointer_event(event);
                 auto x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x);
                 auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
-                auto new_event = builder->pointer_event(
+                post_event(builder->pointer_event(
                         event_time,
                         filter_pointer_action(mir_pointer_event_action(pointer_event)),
                         mir_pointer_event_buttons(pointer_event),
@@ -178,9 +245,7 @@ public:
                         mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_vscroll),
                         mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_relative_x),
                         mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_relative_y)
-                        );
-
-                destination->handle_input(*new_event);
+                        ));
                 break;
             }
         default:
@@ -190,6 +255,7 @@ public:
 
     void stop() override
     {
+        stop_work();
         this->destination = nullptr;
         this->builder = nullptr;
     }
@@ -272,7 +338,6 @@ public:
 
     MirInputDeviceId device_id;
     MirInputDevice* device{nullptr};
-    mi::InputSink* destination{nullptr};
     mi::EventBuilder* builder{nullptr};
     mi::InputDeviceInfo device_info;
     mir::optional_value<mi::PointerSettings> pointer_settings;
