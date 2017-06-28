@@ -50,6 +50,12 @@ mgm::GBMPlatform::GBMPlatform(
     {
         BOOST_THROW_EXCEPTION(std::logic_error("no authentication fd to make gbm buffers"));
     }
+
+    {
+        auto gbm_extension = platform_authentication->set_gbm_extension();
+        if (gbm_extension.is_set())
+            gbm_extension.value()->set_gbm_device(gbm->device);
+    }
 }
 
 mgm::GBMPlatform::GBMPlatform(
