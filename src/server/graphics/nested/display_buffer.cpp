@@ -117,17 +117,24 @@ void mgn::detail::DisplayBuffer::bind()
 bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
 {
     if ((passthrough_option == mgn::PassthroughOption::disabled) ||
-        list.empty() ||
-        (list.back()->screen_position() != area) ||
-        (list.back()->alpha() != 1.0f) ||
-        (list.back()->shaped()) ||
-        (list.back()->transformation() != identity))
+        list.empty())
     {
         //could not represent scene with subsurfaces
         return false;
     }
 
-    auto passthrough_buffer = list.back()->buffer();
+    auto const topmost = list.back();
+
+    if ((topmost->screen_position() != area) ||
+        (topmost->alpha() != 1.0f) ||
+        (topmost->shaped()) ||
+        (topmost->transformation() != identity))
+    {
+        //could not represent scene with subsurfaces
+        return false;
+    }
+
+    auto passthrough_buffer = topmost->buffer();
     auto native = dynamic_cast<mgn::NativeBuffer*>(passthrough_buffer->native_buffer_handle().get());
     if (!native)
         return false;
@@ -144,7 +151,7 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
         if ((submission_info == last_submitted) && (submitted != submitted_buffers.end()))
             return true;
 
-        if (list.back()->swap_interval() == 0)
+        if (topmost->swap_interval() == 0)
             host_chain->set_submission_mode(mgn::SubmissionMode::dropping);
         else
             host_chain->set_submission_mode(mgn::SubmissionMode::queueing);
@@ -161,7 +168,7 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
     if (content != BackingContent::chain)
     {
         auto spec = host_connection->create_surface_spec();
-        spec->add_chain(*host_chain, geom::Displacement{0,0}, passthrough_buffer->size());
+        spec->add_chain(*host_chain, geom::Displacement{0,0}, area.size);
         content = BackingContent::chain;
         host_surface->apply_spec(*spec);
     }
