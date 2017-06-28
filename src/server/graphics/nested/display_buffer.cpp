@@ -161,7 +161,7 @@ bool mgn::detail::DisplayBuffer::overlay(RenderableList const& list)
     if (content != BackingContent::chain)
     {
         auto spec = host_connection->create_surface_spec();
-        spec->add_chain(*host_chain, geom::Displacement{0,0}, passthrough_buffer->size());
+        spec->add_chain(*host_chain, geom::Displacement{0,0}, list.back()->screen_position().size);
         content = BackingContent::chain;
         host_surface->apply_spec(*spec);
     }
