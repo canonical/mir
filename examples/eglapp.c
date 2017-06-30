@@ -494,12 +494,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
          * Mir reserves the right to ignore our initial window dimensions and
          * resize to whatever it likes. Usually that resize callback has
          * occurred by now (see r4150), but libmirclient does not provide a
-         * solid guarantee of it. Luckily, we don't care... by querying EGL
-         * buffer dimensions we can get the correct answer without being
-         * victim to the callback race that's going on in the background...
-         * If the server has given us dimensions other than what we requested
-         * then EGL will already know about it, possibly before the initial
-         * resize event (!).
+         * solid guarantee of it.
          */
         *width = buf_width;
         *height = buf_height;
