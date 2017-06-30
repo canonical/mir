@@ -487,8 +487,10 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
     callback(surf.get(), context);
     request->wh->result_received();
 
-    send_resize_event_if_needed(surf.get(), spec, *surface_proto);
     surface_requests.erase(request_it);
+
+    lock.unlock(); // Must release lock before potential callback
+    send_resize_event_if_needed(surf.get(), spec, *surface_proto);
 }
 
 char const * MirConnection::get_error_message()
