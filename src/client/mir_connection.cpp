@@ -470,7 +470,6 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
     }
 
     callback(surf.get(), context);
-    request->wh->result_received();
 
     if (spec.width.is_set() && spec.height.is_set() && spec.event_handler.is_set())
     {
@@ -485,6 +484,8 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
             lock.lock();
         }
     }
+
+    request->wh->result_received();
     surface_requests.erase(request_it);
 }
 
