@@ -23,6 +23,7 @@ list(APPEND MIR_COMMON_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/libname.cpp
   ${PROJECT_SOURCE_DIR}/include/common/mir/libname.h
   ${PROJECT_SOURCE_DIR}/include/common/mir/posix_rw_mutex.h
+  ${PROJECT_SOURCE_DIR}/src/include/common/mir/mutex.h
   posix_rw_mutex.cpp
   edid.cpp
 )
