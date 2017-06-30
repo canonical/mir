@@ -494,7 +494,7 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
          * Mir reserves the right to ignore our initial window dimensions and
          * resize to whatever it likes. In that case, a resize callback to
          * mir_eglapp_handle_event() has occurred by now and we have resized
-         * the eglsurface .
+         * the eglsurface.
          */
         *width = buf_width;
         *height = buf_height;
