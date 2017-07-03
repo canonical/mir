@@ -46,13 +46,7 @@ using namespace testing;
 
 namespace
 {
-
-enum class TestType
-{
-    ExchangeSemantics,
-    SubmitSemantics
-};
-
+    
 enum class Access
 {
     blocked,
