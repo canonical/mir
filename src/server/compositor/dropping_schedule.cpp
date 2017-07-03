@@ -44,11 +44,6 @@ std::future<void> mc::DroppingSchedule::schedule_nonblocking(
     std::lock_guard<decltype(mutex)> lk(mutex);
     if ((the_only_buffer != buffer) && the_only_buffer)
     {
-        drop = std::async(std::launch::deferred,
-            [sender=sender, dropped=the_only_buffer]()
-            {
-                sender->send_buffer(dropped->id());
-            });
     }
     the_only_buffer = buffer;
     return drop;

@@ -41,7 +41,7 @@ mc::Stream::Stream(
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
     buffers(map),
-    arbiter(std::make_shared<mc::MultiMonitorArbiter>(buffers, schedule)),
+    arbiter(std::make_shared<mc::MultiMonitorArbiter>(schedule)),
     size(size),
     pf(pf),
     first_frame_posted(false)
@@ -73,7 +73,6 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
         std::lock_guard<decltype(mutex)> lk(mutex); 
         first_frame_posted = true;
         pf = buffer->pixel_format();
-        size = buffer->size();
         deferred_io = schedule->schedule_nonblocking(buffer);
     }
     observers.frame_posted(1, buffer->size());

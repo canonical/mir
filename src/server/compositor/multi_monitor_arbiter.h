@@ -38,7 +38,6 @@ class MultiMonitorArbiter : public BufferAcquisition
 {
 public:
     MultiMonitorArbiter(
-        std::shared_ptr<frontend::ClientBuffers> const& map,
         std::shared_ptr<Schedule> const& schedule);
     ~MultiMonitorArbiter();
 
@@ -56,7 +55,6 @@ private:
     void clean_onscreen_buffers(std::lock_guard<std::mutex> const&);
 
     std::mutex mutable mutex;
-    std::shared_ptr<frontend::ClientBuffers> const map;
     struct ScheduleEntry
     {
         ScheduleEntry(std::shared_ptr<graphics::Buffer> const& buffer, unsigned int use_count) :

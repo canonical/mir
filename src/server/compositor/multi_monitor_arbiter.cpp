@@ -30,9 +30,7 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 
 mc::MultiMonitorArbiter::MultiMonitorArbiter(
-    std::shared_ptr<frontend::ClientBuffers> const& map,
     std::shared_ptr<Schedule> const& schedule) :
-    map(map),
     schedule(schedule)
 {
 }
@@ -43,7 +41,7 @@ mc::MultiMonitorArbiter::~MultiMonitorArbiter()
     for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end(); it++)
     {
         if (it->use_count == 0)
-            map->send_buffer(it->buffer->id());
+            it->buffer.reset();
     }
 
 }
@@ -96,7 +94,6 @@ void mc::MultiMonitorArbiter::clean_onscreen_buffers(std::lock_guard<std::mutex>
         if ((it->use_count == 0) &&
             (it != onscreen_buffers.begin() || schedule->num_scheduled())) //ensure monitors always have a buffer
         {
-            map->send_buffer(it->buffer->id());
             it = onscreen_buffers.erase(it);
         }
         else

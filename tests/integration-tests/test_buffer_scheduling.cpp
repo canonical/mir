@@ -26,6 +26,7 @@
 #include "src/client/connection_surface_map.h"
 #include "src/server/compositor/stream.h"
 #include "src/server/frontend/buffer_map.h"
+#include "src/server/compositor/temporary_buffers.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/mock_client_buffer_factory.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
@@ -46,7 +47,7 @@ using namespace testing;
 
 namespace
 {
-    
+
 enum class Access
 {
     blocked,
@@ -455,6 +456,24 @@ MATCHER(NeverBlocks, "")
     return never_blocks; 
 }
 
+class AutoSendBuffer : public mc::TemporaryBuffer
+{
+public:
+    AutoSendBuffer(
+        std::shared_ptr<mg::Buffer> const& wrapped,
+        std::shared_ptr<mf::BufferSink> const& sink)
+        : TemporaryBuffer(wrapped),
+          sink{sink}
+    {
+    }
+
+    ~AutoSendBuffer()
+    {
+        sink->update_buffer(*buffer);
+    }
+private:
+    std::shared_ptr<mf::BufferSink> const sink;
+};
 
 //test infrastructure
 struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
@@ -476,7 +495,8 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
                 if (!submit_stream)
                     return;
                 mg::BufferID id{static_cast<unsigned int>(buffer.buffer_id())};
-                submit_stream->submit_buffer(map->get(id));
+                submit_stream->submit_buffer(
+                    std::make_shared<AutoSendBuffer>(map->get(id), sink));
             });
         ipc->on_allocate(
             [this](geom::Size sz)

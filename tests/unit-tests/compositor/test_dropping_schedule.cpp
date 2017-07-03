@@ -74,43 +74,19 @@ TEST_F(DroppingSchedule, throws_if_no_buffers)
 
 TEST_F(DroppingSchedule, drops_excess_buffers)
 {
-    InSequence seq;
-    EXPECT_CALL(mock_client_buffers, send_buffer(buffers[0]->id()));
-    EXPECT_CALL(mock_client_buffers, send_buffer(buffers[1]->id()));
-    EXPECT_CALL(mock_client_buffers, send_buffer(buffers[2]->id()));
-    EXPECT_CALL(mock_client_buffers, send_buffer(buffers[3]->id()));
- 
     for(auto i = 0u; i < num_buffers; i++)
         schedule.schedule(buffers[i]);
 
     auto queue = drain_queue();
     ASSERT_THAT(queue, SizeIs(1));
-    EXPECT_THAT(queue[0]->id(), Eq(buffers[4]->id()));
-}
 
-TEST_F(DroppingSchedule, nonblocking_schedule_avoids_socket_io)
-{
-    for (auto i = 0u; i < num_buffers; i++)
+    // The 5th buffer should be scheduled...
+    EXPECT_THAT(queue[0]->id(), Eq(buffers[4]->id()));
+    for (int i = 0; i < 4 ; ++i)
     {
-        EXPECT_CALL(mock_client_buffers, send_buffer(_))
-            .Times(0);
-
-        auto deferred_io = schedule.schedule_nonblocking(buffers[i]);
-
-        testing::Mock::VerifyAndClearExpectations(&mock_client_buffers);
-        if (i > 0)
-        {
-            EXPECT_CALL(mock_client_buffers, send_buffer(buffers[i-1]->id()))
-                .Times(1);
-            ASSERT_TRUE(deferred_io.valid());
-            deferred_io.wait();
-            testing::Mock::VerifyAndClearExpectations(&mock_client_buffers);
-        }
+        // ...and all the others should have no external references
+        EXPECT_TRUE(buffers[i].unique());
     }
-
-    auto queue = drain_queue();
-    ASSERT_THAT(queue, SizeIs(1));
-    EXPECT_THAT(queue[0]->id(), Eq(buffers[4]->id()));
 }
 
 TEST_F(DroppingSchedule, queueing_same_buffer_many_times_doesnt_drop)
