@@ -125,7 +125,7 @@ struct SurfaceStackCompositor : public Test
     SurfaceStackCompositor() :
         timeout{std::chrono::system_clock::now() + std::chrono::seconds(5)},
         buffers(std::make_shared<mf::BufferMap>(std::make_shared<NiceMock<mtd::MockEventSink>>())),
-        stream(std::make_shared<mc::Stream>(buffers, geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888 )),
+        stream(std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888 )),
         mock_buffer_stream(std::make_shared<NiceMock<mtd::MockBufferStream>>()),
         streams({ { stream, {0,0}, {} } }),
         stub_surface{std::make_shared<ms::BasicSurface>(

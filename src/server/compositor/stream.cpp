@@ -37,10 +37,9 @@ enum class mc::Stream::ScheduleMode {
 };
 
 mc::Stream::Stream(
-    std::shared_ptr<frontend::ClientBuffers> map, geom::Size size, MirPixelFormat pf) :
+    geom::Size size, MirPixelFormat pf) :
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
-    buffers(map),
     arbiter(std::make_shared<mc::MultiMonitorArbiter>(schedule)),
     size(size),
     pf(pf),
@@ -48,11 +47,7 @@ mc::Stream::Stream(
 {
 }
 
-mc::Stream::~Stream()
-{
-    while(schedule->num_scheduled())
-        buffers->send_buffer(schedule->next_buffer()->id());
-}
+mc::Stream::~Stream() = default;
 
 unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const
 {
@@ -133,7 +128,7 @@ void mc::Stream::allow_framedropping(bool dropping)
     std::lock_guard<decltype(mutex)> lk(mutex); 
     if (dropping && schedule_mode == ScheduleMode::Queueing)
     {
-        transition_schedule(std::make_shared<mc::DroppingSchedule>(buffers), lk);
+        transition_schedule(std::make_shared<mc::DroppingSchedule>(), lk);
         schedule_mode = ScheduleMode::Dropping;
     }
     else if (!dropping && schedule_mode == ScheduleMode::Dropping)

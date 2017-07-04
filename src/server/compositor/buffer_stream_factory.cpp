@@ -47,11 +47,10 @@ std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
 }
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const& buffers,
+    mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const& /*buffers*/,
     int, mg::BufferProperties const& buffer_properties)
 {
     return std::make_shared<mc::Stream>(
-        buffers,
         buffer_properties.size, buffer_properties.format);
 }
 

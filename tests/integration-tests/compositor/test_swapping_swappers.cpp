@@ -43,7 +43,6 @@ struct SwapperSwappingStress : public ::testing::Test
     void SetUp()
     {
         stream = std::make_shared<mc::Stream>(
-            std::make_shared<mf::BufferMap>(nullptr),
             geom::Size{380, 210}, mir_pixel_format_abgr_8888);
     }
 

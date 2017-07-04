@@ -77,10 +77,10 @@ struct StubStreamFactory : public msc::BufferStreamFactory
     }
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const& sink,
+        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const& /*sink*/,
         mg::BufferProperties const& properties) override
     {
-        return std::make_shared<mc::Stream>(sink, properties.size, properties.format);
+        return std::make_shared<mc::Stream>(properties.size, properties.format);
     }
 
     std::shared_ptr<mf::ClientBuffers> create_buffer_map(std::shared_ptr<mf::BufferSink> const& sink) override

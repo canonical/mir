@@ -25,8 +25,7 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 
-mc::DroppingSchedule::DroppingSchedule(std::shared_ptr<mf::ClientBuffers> const& client_buffers) :
-    sender(client_buffers)
+mc::DroppingSchedule::DroppingSchedule()
 {
 }
 
@@ -42,9 +41,6 @@ std::future<void> mc::DroppingSchedule::schedule_nonblocking(
 {
     std::future<void> drop;
     std::lock_guard<decltype(mutex)> lk(mutex);
-    if ((the_only_buffer != buffer) && the_only_buffer)
-    {
-    }
     the_only_buffer = buffer;
     return drop;
 }

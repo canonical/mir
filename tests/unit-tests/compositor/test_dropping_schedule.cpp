@@ -52,8 +52,7 @@ struct DroppingSchedule : Test
     unsigned int const num_buffers{5};
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
 
-    MockBufferMap mock_client_buffers;
-    mc::DroppingSchedule schedule{mt::fake_shared(mock_client_buffers)};
+    mc::DroppingSchedule schedule;
     std::vector<std::shared_ptr<mg::Buffer>> drain_queue()
     {
         std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers;
@@ -91,8 +90,6 @@ TEST_F(DroppingSchedule, drops_excess_buffers)
 
 TEST_F(DroppingSchedule, queueing_same_buffer_many_times_doesnt_drop)
 {
-    EXPECT_CALL(mock_client_buffers, send_buffer(_)).Times(0);
- 
     schedule.schedule(buffers[2]);
     schedule.schedule(buffers[2]);
     schedule.schedule(buffers[2]);

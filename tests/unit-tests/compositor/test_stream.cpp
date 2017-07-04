@@ -94,10 +94,9 @@ struct Stream : Test
 
     geom::Size initial_size{44,2};
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
-    NiceMock<mtd::MockEventSink> mock_sink;
     MirPixelFormat construction_format{mir_pixel_format_rgb_565};
     mc::Stream stream{
-        std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
+        initial_size, construction_format};
 };
 }
 

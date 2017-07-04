@@ -39,7 +39,7 @@ class Schedule;
 class Stream : public BufferStream
 {
 public:
-    Stream(std::shared_ptr<frontend::ClientBuffers>, geometry::Size sz, MirPixelFormat format);
+    Stream(geometry::Size sz, MirPixelFormat format);
     ~Stream();
 
     void submit_buffer(std::shared_ptr<graphics::Buffer> const& buffer) override;
@@ -68,7 +68,6 @@ private:
     std::mutex mutable mutex;
     ScheduleMode schedule_mode;
     std::shared_ptr<Schedule> schedule;
-    std::shared_ptr<frontend::ClientBuffers> const buffers;
     std::shared_ptr<MultiMonitorArbiter> const arbiter;
     geometry::Size size; 
     MirPixelFormat pf;

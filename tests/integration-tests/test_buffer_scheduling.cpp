@@ -484,7 +484,6 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
         sink = std::make_shared<StubEventSink>(ipc);
         map = std::make_shared<mf::BufferMap>(sink);
         auto submit_stream = std::make_shared<mc::Stream>(
-            map,
             geom::Size{100,100},
             mir_pixel_format_abgr_8888);
         auto weak_stream = std::weak_ptr<mc::Stream>(submit_stream);
