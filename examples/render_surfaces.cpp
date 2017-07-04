@@ -396,8 +396,7 @@ public:
                 void error_buffer(geom::Size, MirPixelFormat, std::string const&) override {}
             };
 
-            auto buffers = buffer_stream_factory->create_buffer_map(std::make_shared<NullBufferSink>());
-            auto const stream = buffer_stream_factory->create_buffer_stream({}, buffers, properties);
+            auto const stream = buffer_stream_factory->create_buffer_stream({}, properties);
             auto const surface = surface_factory->create_surface(
                 {ms::StreamInfo{stream, {}, {}}}, params);
             surface_stack->add_surface(surface, params.input_mode);

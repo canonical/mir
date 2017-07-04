@@ -70,96 +70,17 @@ struct StubStreamFactory : public msc::BufferStreamFactory
     {}
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId i, std::shared_ptr<mf::ClientBuffers> const& s,
+        mf::BufferStreamId i,
         int, mg::BufferProperties const& p) override
     {
-        return create_buffer_stream(i, s, p);
+        return create_buffer_stream(i, p);
     }
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const& /*sink*/,
+        mf::BufferStreamId,
         mg::BufferProperties const& properties) override
     {
         return std::make_shared<mc::Stream>(properties.size, properties.format);
-    }
-
-    std::shared_ptr<mf::ClientBuffers> create_buffer_map(std::shared_ptr<mf::BufferSink> const& sink) override
-    {
-        struct BufferMap : mf::ClientBuffers
-        {
-            BufferMap(
-                std::shared_ptr<mf::BufferSink> const& sink,
-                std::vector<mg::BufferID> const& ids) :
-                sink(sink),
-                buffer_id_seq(ids)
-            {
-                std::reverse(buffer_id_seq.begin(), buffer_id_seq.end());
-            }
-
-            mg::BufferID add_buffer(std::shared_ptr<mg::Buffer> const& buffer) override
-            {
-                struct BufferIdWrapper : mg::Buffer
-                {
-                    BufferIdWrapper(std::shared_ptr<mg::Buffer> const& b, mg::BufferID id) :
-                        wrapped(b),
-                        id_(id)
-                    {
-                    }
-                
-                    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
-                    {
-                        return wrapped->native_buffer_handle();
-                    }
-                    mg::BufferID id() const override
-                    {
-                        return id_;
-                    }
-                    geom::Size size() const override
-                    {
-                        return wrapped->size();
-                    }
-                    MirPixelFormat pixel_format() const override
-                    {
-                        return wrapped->pixel_format();
-                    }
-                    mg::NativeBufferBase* native_buffer_base() override
-                    {
-                        return wrapped->native_buffer_base();
-                    }
-                    std::shared_ptr<mg::Buffer> const wrapped;
-                    mg::BufferID const id_;
-                };
-
-                auto id = buffer_id_seq.back();
-                buffer_id_seq.pop_back();
-                b = std::make_shared<BufferIdWrapper>(buffer, id);
-                sink->add_buffer(*b);
-                return id; 
-            }
-
-            void remove_buffer(mg::BufferID) override
-            {
-            } 
-
-            std::shared_ptr<mg::Buffer> get(mg::BufferID) const override
-            {
-                return b;
-            }
-
-            void send_buffer(mg::BufferID) override
-            {
-            }
-
-            void receive_buffer(mg::BufferID) override
-            {
-            }
-
-            std::shared_ptr<mg::Buffer> b;
-            std::shared_ptr<mf::BufferSink> const sink;
-            std::shared_ptr<mtd::StubBufferAllocator> alloc{std::make_shared<mtd::StubBufferAllocator>()};
-            std::vector<mg::BufferID> buffer_id_seq;
-        };
-        return std::make_shared<BufferMap>(sink, buffer_id_seq);
     }
 
     std::vector<mg::BufferID> const buffer_id_seq;

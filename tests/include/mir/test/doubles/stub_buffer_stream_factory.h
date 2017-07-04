@@ -55,15 +55,17 @@ struct StubClientBuffers : frontend::ClientBuffers
 struct StubBufferStreamFactory : public scene::BufferStreamFactory
 {
     std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        frontend::BufferStreamId i, std::shared_ptr<frontend::ClientBuffers> const& s,
-        int, graphics::BufferProperties const& p) { return create_buffer_stream(i, s, p); }
-    std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        frontend::BufferStreamId, std::shared_ptr<frontend::ClientBuffers> const&,
-        graphics::BufferProperties const&) { return std::make_shared<StubBufferStream>(); }
-    std::shared_ptr<frontend::ClientBuffers> create_buffer_map(
-        std::shared_ptr<frontend::BufferSink> const&)
+        frontend::BufferStreamId i,
+        int,
+        graphics::BufferProperties const& p)
     {
-        return std::make_shared<StubClientBuffers>();
+        return create_buffer_stream(i, p);
+    }
+    std::shared_ptr<compositor::BufferStream> create_buffer_stream(
+        frontend::BufferStreamId,
+        graphics::BufferProperties const&)
+    {
+        return std::make_shared<StubBufferStream>();
     }
 };
 }

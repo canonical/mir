@@ -40,22 +40,17 @@ mc::BufferStreamFactory::BufferStreamFactory()
 }
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    mf::BufferStreamId id, std::shared_ptr<mf::ClientBuffers> const& buffers,
+    mf::BufferStreamId id,
     mg::BufferProperties const& buffer_properties)
 {
-    return create_buffer_stream(id, buffers, 0, buffer_properties);
+    return create_buffer_stream(id, 0, buffer_properties);
 }
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const& /*buffers*/,
-    int, mg::BufferProperties const& buffer_properties)
+    mf::BufferStreamId,
+    int,
+    mg::BufferProperties const& buffer_properties)
 {
     return std::make_shared<mc::Stream>(
         buffer_properties.size, buffer_properties.format);
-}
-
-std::shared_ptr<mf::ClientBuffers> mc::BufferStreamFactory::create_buffer_map(
-        std::shared_ptr<mf::BufferSink> const& sink)
-{
-    return std::make_shared<mf::BufferMap>(sink);
 }

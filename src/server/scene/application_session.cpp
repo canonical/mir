@@ -68,7 +68,6 @@ ms::ApplicationSession::ApplicationSession(
     snapshot_strategy(snapshot_strategy),
     session_listener(session_listener),
     event_sink(sink),
-    buffers(buffer_stream_factory->create_buffer_map(sink)),
     gralloc(gralloc),
     next_surface_id(0)
 {
@@ -372,7 +371,7 @@ std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::
 mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)
 {
     auto const id = static_cast<mf::BufferStreamId>(next_id().as_value());
-    auto stream = buffer_stream_factory->create_buffer_stream(id, buffers, props);
+    auto stream = buffer_stream_factory->create_buffer_stream(id, props);
     
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     streams[id] = stream;
