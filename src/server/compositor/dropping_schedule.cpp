@@ -17,11 +17,9 @@
  */
 
 #include "dropping_schedule.h"
-#include "mir/frontend/client_buffers.h"
 #include "mir/graphics/buffer.h"
 
 #include <boost/throw_exception.hpp>
-namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 

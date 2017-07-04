@@ -22,7 +22,6 @@
 #include "src/server/compositor/multi_monitor_arbiter.h"
 #include "src/server/compositor/schedule.h"
 #include "src/server/compositor/temporary_buffers.h"
-#include "mir/frontend/client_buffers.h"
 
 #include <gtest/gtest.h>
 using namespace testing;

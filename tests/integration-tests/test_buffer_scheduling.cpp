@@ -16,7 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/frontend/client_buffers.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/buffer_sink.h"
 #include "mir/renderer/sw/pixel_source.h"
@@ -482,7 +481,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     {
         ipc = std::make_shared<StubIpcSystem>();
         sink = std::make_shared<StubEventSink>(ipc);
-        map = std::make_shared<mf::BufferMap>(sink);
+        map = std::make_shared<mf::BufferMap>();
         auto submit_stream = std::make_shared<mc::Stream>(
             geom::Size{100,100},
             mir_pixel_format_abgr_8888);
@@ -500,7 +499,8 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
         ipc->on_allocate(
             [this](geom::Size sz)
             {
-                map->add_buffer(std::make_shared<mtd::StubBuffer>(sz));
+                auto id = map->add_buffer(std::make_shared<mtd::StubBuffer>(sz));
+                sink->add_buffer(*map->get(id));
             });
 
         consumer = std::make_unique<ScheduledConsumer>(submit_stream);

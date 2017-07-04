@@ -37,57 +37,20 @@ enum class BufferMap::Owner
 }
 }
 
-mf::BufferMap::BufferMap(std::shared_ptr<mf::BufferSink> const& sink) :
-    sink(sink)
-{
-}
+mf::BufferMap::BufferMap() = default;
 
 mg::BufferID mf::BufferMap::add_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    try
-    {
-        std::unique_lock<decltype(mutex)> lk(mutex);
-        buffers[buffer->id()] = {buffer, Owner::client};
-        if (auto s = sink.lock())
-            s->add_buffer(*buffer);
-        return buffer->id();
-    } catch (std::exception& e)
-    {
-        if (auto s = sink.lock())
-            s->error_buffer(buffer->size(), buffer->pixel_format(), e.what());
-        throw;
-    }
+    std::unique_lock<decltype(mutex)> lk(mutex);
+    buffers[buffer->id()] = {buffer, Owner::client};
+    return buffer->id();
 }
 
 void mf::BufferMap::remove_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = checked_buffers_find(id, lk);
-    if (auto s = sink.lock())
-        s->remove_buffer(*it->second.buffer);
-    buffers.erase(it); 
-}
-
-void mf::BufferMap::send_buffer(mg::BufferID id)
-{
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    auto it = buffers.find(id);
-    if (it != buffers.end())
-    {
-        auto buffer = it->second.buffer;
-        it->second.owner = Owner::client;
-        lk.unlock();
-        if (auto s = sink.lock())
-            s->update_buffer(*buffer);
-    }
-}
-
-void mf::BufferMap::receive_buffer(graphics::BufferID id)
-{
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    auto it = buffers.find(id);
-    if (it != buffers.end())
-        it->second.owner = Owner::server;
+    buffers.erase(it);
 }
 
 std::shared_ptr<mg::Buffer> mf::BufferMap::get(mg::BufferID id) const

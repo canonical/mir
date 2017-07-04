@@ -19,7 +19,6 @@
 #ifndef MIR_COMPOSITOR_BUFFER_MAP_H_
 #define MIR_COMPOSITOR_BUFFER_MAP_H_
 
-#include "mir/frontend/client_buffers.h"
 #include <mutex>
 #include <map>
 
@@ -27,22 +26,16 @@ namespace mir
 {
 namespace frontend
 {
-class BufferSink;
-
-class BufferMap : public frontend::ClientBuffers
+class BufferMap
 {
 public:
-    BufferMap(std::shared_ptr<frontend::BufferSink> const& sink);
+    BufferMap();
 
-    graphics::BufferID add_buffer(std::shared_ptr<graphics::Buffer> const& buffer) override;
+    graphics::BufferID add_buffer(std::shared_ptr<graphics::Buffer> const& buffer);
 
-    void remove_buffer(graphics::BufferID id) override;
+    void remove_buffer(graphics::BufferID id);
 
-    void receive_buffer(graphics::BufferID id) override;
-
-    void send_buffer(graphics::BufferID id) override;
-
-    std::shared_ptr<graphics::Buffer> get(graphics::BufferID) const override;
+    std::shared_ptr<graphics::Buffer> get(graphics::BufferID) const;
 
 private:
     std::mutex mutable mutex;
@@ -60,10 +53,6 @@ private:
     Map::iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&);
 
     Map::const_iterator checked_buffers_find(graphics::BufferID, std::unique_lock<std::mutex> const&) const;
-
-    //would be better to schedule the async buffer callbacks in the ipc subsystem,
-    //instead of driving from within the compositor threads (LP: #1395421)
-    std::weak_ptr<frontend::BufferSink> const sink;
 };
 }
 }

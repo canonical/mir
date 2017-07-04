@@ -21,7 +21,6 @@
 #include "queueing_schedule.h"
 #include "dropping_schedule.h"
 #include "temporary_buffers.h"
-#include "mir/frontend/client_buffers.h"
 #include "mir/graphics/buffer.h"
 #include <boost/throw_exception.hpp>
 

@@ -19,7 +19,6 @@
 #ifndef MIR_TEST_DOUBLES_STUB_BUFFER_STREAM_FACTORY_H_
 #define MIR_TEST_DOUBLES_STUB_BUFFER_STREAM_FACTORY_H_
 
-#include "mir/frontend/client_buffers.h"
 #include "mir/scene/buffer_stream_factory.h"
 #include "stub_buffer_stream.h"
 
@@ -29,28 +28,6 @@ namespace test
 {
 namespace doubles
 {
-
-struct StubClientBuffers : frontend::ClientBuffers
-{
-    graphics::BufferID add_buffer(std::shared_ptr<graphics::Buffer> const&) override
-    {
-        return {};
-    }
-    void remove_buffer(graphics::BufferID) override
-    {
-    }
-    std::shared_ptr<graphics::Buffer> get(graphics::BufferID) const override
-    {
-        return buffer;
-    }
-    void send_buffer(graphics::BufferID) override
-    {
-    }
-    void receive_buffer(graphics::BufferID) override
-    {
-    }
-    std::shared_ptr<graphics::Buffer> buffer;
-};
 
 struct StubBufferStreamFactory : public scene::BufferStreamFactory
 {

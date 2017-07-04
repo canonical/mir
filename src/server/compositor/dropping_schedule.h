@@ -25,7 +25,6 @@
 namespace mir
 {
 namespace graphics { class Buffer; }
-namespace frontend { class ClientBuffers; }
 namespace compositor
 {
 class DroppingSchedule : public Schedule

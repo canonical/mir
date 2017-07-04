@@ -132,7 +132,7 @@ mf::SessionMediator::SessionMediator(
     cookie_authority(cookie_authority),
     input_changer(input_changer),
     extensions(extensions),
-    buffer_cache{std::make_unique<BufferMap>(event_sink)},
+    buffer_cache{std::make_unique<BufferMap>()},
     allocator{allocator}
 {
 }
@@ -499,6 +499,7 @@ void mf::SessionMediator::allocate_buffers(
             }
 
             auto const id = buffer_cache->add_buffer(buffer);
+            event_sink->add_buffer(*buffer);
 
             if (request->has_id())
             {

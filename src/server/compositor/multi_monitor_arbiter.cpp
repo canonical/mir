@@ -20,7 +20,6 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/event_sink.h"
-#include "mir/frontend/client_buffers.h"
 #include "schedule.h"
 #include <boost/throw_exception.hpp>
 #include <algorithm>

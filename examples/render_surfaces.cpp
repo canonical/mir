@@ -34,7 +34,6 @@
 #include "mir/scene/surface_factory.h"
 #include "mir/shell/surface_stack.h"
 #include "mir/frontend/buffer_sink.h"
-#include "mir/frontend/client_buffers.h"
 #include "mir/server.h"
 #include "mir/report_exception.h"
 #include "mir/renderer/gl/context.h"

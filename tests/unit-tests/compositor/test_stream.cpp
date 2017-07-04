@@ -22,7 +22,6 @@
 #include "mir/test/fake_shared.h"
 #include "src/server/compositor/stream.h"
 #include "mir/scene/null_surface_observer.h"
-#include "mir/frontend/client_buffers.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -39,45 +38,6 @@ namespace
 struct MockSurfaceObserver : mir::scene::NullSurfaceObserver
 {
     MOCK_METHOD2(frame_posted, void(int, geom::Size const&));
-};
-
-struct StubBufferMap : mf::ClientBuffers
-{
-    StubBufferMap(mf::EventSink& sink, std::vector<std::shared_ptr<mg::Buffer>>& buffers) :
-        buffers{buffers},
-        sink{sink}
-    {
-    }
-    mg::BufferID add_buffer(std::shared_ptr<mg::Buffer> const&)
-    {
-        return mg::BufferID{};
-    }
-    void remove_buffer(mg::BufferID)
-    {
-    }
-    void with_buffer(mg::BufferID, std::function<void(mg::Buffer&)> const&)
-    {
-    }
-    void receive_buffer(mg::BufferID)
-    {
-    }
-    void send_buffer(mg::BufferID id)
-    {
-        sink.send_buffer(mf::BufferStreamId{33}, *get(id), mg::BufferIpcMsgType::update_msg);
-    }
-    std::shared_ptr<mg::Buffer> get(mg::BufferID id) const
-    {
-        auto it = std::find_if(buffers.begin(), buffers.end(),
-            [id](std::shared_ptr<mg::Buffer> const& b)
-            {
-                return b->id() == id;
-            });
-        if (it == buffers.end())
-            throw std::logic_error("cannot find buffer in map");
-        return *it;
-    }
-    std::vector<std::shared_ptr<mg::Buffer>>& buffers;
-    mf::EventSink& sink;
 };
 
 struct Stream : Test
