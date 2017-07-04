@@ -21,7 +21,6 @@
 #include "buffer_stream_factory.h"
 #include "mir/graphics/buffer_properties.h"
 #include "stream.h"
-#include "../frontend/buffer_map.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/graphic_buffer_allocator.h"

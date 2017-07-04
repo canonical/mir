@@ -20,7 +20,6 @@
 #include "snapshot_strategy.h"
 #include "default_session_container.h"
 #include "output_properties_cache.h"
-#include "../frontend/buffer_map.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"

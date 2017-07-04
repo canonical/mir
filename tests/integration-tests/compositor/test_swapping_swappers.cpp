@@ -19,7 +19,6 @@
 #include "multithread_harness.h"
 
 #include "src/server/compositor/stream.h"
-#include "src/server/frontend/buffer_map.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
 #include <gmock/gmock.h>

@@ -24,7 +24,6 @@
 #include "src/client/protobuf_to_native_buffer.h"
 #include "src/client/connection_surface_map.h"
 #include "src/server/compositor/stream.h"
-#include "src/server/frontend/buffer_map.h"
 #include "src/server/compositor/temporary_buffers.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/mock_client_buffer_factory.h"
@@ -481,7 +480,6 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     {
         ipc = std::make_shared<StubIpcSystem>();
         sink = std::make_shared<StubEventSink>(ipc);
-        map = std::make_shared<mf::BufferMap>();
         auto submit_stream = std::make_shared<mc::Stream>(
             geom::Size{100,100},
             mir_pixel_format_abgr_8888);
@@ -494,13 +492,14 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
                     return;
                 mg::BufferID id{static_cast<unsigned int>(buffer.buffer_id())};
                 submit_stream->submit_buffer(
-                    std::make_shared<AutoSendBuffer>(map->get(id), sink));
+                    std::make_shared<AutoSendBuffer>(map.at(id), sink));
             });
         ipc->on_allocate(
             [this](geom::Size sz)
             {
-                auto id = map->add_buffer(std::make_shared<mtd::StubBuffer>(sz));
-                sink->add_buffer(*map->get(id));
+                auto const buffer = std::make_shared<mtd::StubBuffer>(sz);
+                map[buffer->id()] = buffer;
+                sink->add_buffer(*buffer);
             });
 
         consumer = std::make_unique<ScheduledConsumer>(submit_stream);
@@ -541,7 +540,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     std::unique_ptr<ConsumerSystem> consumer;
     std::unique_ptr<ConsumerSystem> second_consumer;
     std::unique_ptr<ConsumerSystem> third_consumer;
-    std::shared_ptr<mf::BufferMap> map;
+    std::unordered_map<mg::BufferID, std::shared_ptr<mg::Buffer>> map;
 };
 
 struct WithAnyNumberOfBuffers : BufferScheduling {};

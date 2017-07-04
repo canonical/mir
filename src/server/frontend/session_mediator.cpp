@@ -59,7 +59,6 @@
 #include "mir/fd.h"
 #include "mir/cookie/authority.h"
 #include "mir/module_properties.h"
-#include "buffer_map.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
 #include "mir/geometry/rectangles.h"
@@ -132,7 +131,6 @@ mf::SessionMediator::SessionMediator(
     cookie_authority(cookie_authority),
     input_changer(input_changer),
     extensions(extensions),
-    buffer_cache{std::make_unique<BufferMap>()},
     allocator{allocator}
 {
 }
@@ -445,7 +443,7 @@ void mf::SessionMediator::submit_buffer(
     auto stream = session->get_buffer_stream(stream_id);
 
     mfd::ProtobufBufferPacker request_msg{const_cast<mir::protobuf::Buffer*>(&request->buffer())};
-    auto b = buffer_cache->get(buffer_id);
+    auto b = buffer_cache.at(buffer_id);
     ipc_operations->unpack_buffer(request_msg, *b);
 
     stream->submit_buffer(std::make_shared<AutoSendBuffer>(b, event_sink));
@@ -498,13 +496,14 @@ void mf::SessionMediator::allocate_buffers(
                 BOOST_THROW_EXCEPTION(std::logic_error("Invalid buffer request"));
             }
 
-            auto const id = buffer_cache->add_buffer(buffer);
+            // TODO: Throw if insert fails (duplicate ID)?
+            buffer_cache.insert(std::make_pair(buffer->id(), buffer));
             event_sink->add_buffer(*buffer);
 
             if (request->has_id())
             {
                 auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
-                stream->associate_buffer(id);
+                stream->associate_buffer(buffer->id());
             }
         }
         catch (std::runtime_error const& err)
@@ -547,7 +546,7 @@ void mf::SessionMediator::release_buffers(
     for (auto i = 0; i < request->buffers().size(); i++)
     {
         mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
-        buffer_cache->remove_buffer(buffer_id);
+        buffer_cache.erase(buffer_id);
     }
    done->Run();
 }
@@ -943,7 +942,7 @@ void mf::SessionMediator::screencast_to_buffer(
 {
     auto session = weak_session.lock();
     ScreencastSessionId const screencast_session_id{request->id().value()};
-    auto buffer = buffer_cache->get(mg::BufferID{request->buffer_id()});
+    auto buffer = buffer_cache.at(mg::BufferID{request->buffer_id()});
     screencast->capture(screencast_session_id, buffer);
     done->Run();
 }

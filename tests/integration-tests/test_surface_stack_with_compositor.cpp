@@ -24,7 +24,6 @@
 #include "src/server/scene/basic_surface.h"
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "src/server/compositor/multi_threaded_compositor.h"
-#include "src/server/frontend/buffer_map.h"
 #include "src/server/compositor/stream.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_buffer_stream.h"

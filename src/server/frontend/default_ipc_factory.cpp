@@ -29,7 +29,6 @@
 #include "event_sink_factory.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/cookie/authority.h"
-#include "buffer_map.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
