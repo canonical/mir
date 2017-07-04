@@ -32,8 +32,6 @@ class DroppingSchedule : public Schedule
 public:
     DroppingSchedule();
     void schedule(std::shared_ptr<graphics::Buffer> const& buffer) override;
-    std::future<void> schedule_nonblocking(
-        std::shared_ptr<graphics::Buffer> const& buffer) override;
     unsigned int num_scheduled() override;
     std::shared_ptr<graphics::Buffer> next_buffer() override;
 

@@ -19,7 +19,6 @@
 #define MIR_COMPOSITOR_SCHEDULE_H_
 
 #include <memory>
-#include <future>
 
 namespace mir
 {
@@ -31,8 +30,6 @@ class Schedule
 {
 public:
     virtual void schedule(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
-    virtual std::future<void> schedule_nonblocking(
-        std::shared_ptr<graphics::Buffer> const& buffer) = 0;
     virtual unsigned int num_scheduled() = 0;
     virtual std::shared_ptr<graphics::Buffer> next_buffer() = 0;
 
