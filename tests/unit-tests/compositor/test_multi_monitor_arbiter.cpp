@@ -509,7 +509,7 @@ TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_overlay_scenario)
     b2.reset();
     arbiter.compositor_acquire(&comp_id1);
 
-    EXPECT_TRUE(buffer_released);
+    EXPECT_TRUE(*buffer_released);
 }
 
 TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_starvation_scenario)
