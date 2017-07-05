@@ -24,6 +24,9 @@
 
 namespace mir
 {
+
+class Executor;
+
 namespace cookie
 {
 class Authority;
@@ -109,6 +112,7 @@ private:
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<InputConfigurationChanger> const input_changer;
     std::vector<mir::ExtensionDescription> const extensions;
+    std::shared_ptr<mir::Executor> const execution_queue;
 };
 }
 }

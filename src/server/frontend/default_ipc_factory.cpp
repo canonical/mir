@@ -29,11 +29,71 @@
 #include "event_sink_factory.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/cookie/authority.h"
+#include "mir/executor.h"
+
+#include <deque>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace ms = mir::scene;
+
+namespace
+{
+class ThreadExecutor : public mir::Executor
+{
+public:
+    ThreadExecutor()
+        : shutdown{false}
+    {
+        dispatch_thread = std::thread{
+            [this]()
+            {
+                while (!shutdown)
+                {
+                    std::unique_lock<std::mutex> lock{queue_mutex};
+                    queue_notifier.wait(lock, [this]() { return shutdown || !tasks.empty(); });
+                    if (!tasks.empty())
+                    {
+                        tasks.front()();
+                        tasks.pop_front();
+                    }
+                }
+            }
+        };
+    }
+
+    ~ThreadExecutor()
+    {
+        {
+            std::lock_guard<std::mutex> lock{queue_mutex};
+            shutdown = true;
+        }
+        queue_notifier.notify_all();
+        if (dispatch_thread.joinable())
+        {
+            dispatch_thread.join();
+        }
+    }
+
+    void spawn(std::function<void()>&& work) override
+    {
+        {
+            std::lock_guard<std::mutex> lock{queue_mutex};
+            tasks.emplace_back(std::move(work));
+        }
+        queue_notifier.notify_all();
+    }
+
+private:
+    std::thread dispatch_thread;
+
+    std::mutex queue_mutex;
+    bool shutdown;
+    std::condition_variable queue_notifier;
+    std::deque<std::function<void()>> tasks;
+};
+}
 
 mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<Shell> const& shell,
@@ -63,7 +123,8 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     anr_detector{anr_detector},
     cookie_authority(cookie_authority),
     input_changer(input_changer),
-    extensions(extensions)
+    extensions(extensions),
+    execution_queue{std::make_shared<ThreadExecutor>()}
 {
 }
 
@@ -152,5 +213,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         cookie_authority,
         input_changer,
         extensions,
-        buffer_allocator);
+        buffer_allocator,
+        execution_queue);
 }

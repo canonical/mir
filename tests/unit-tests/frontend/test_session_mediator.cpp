@@ -269,6 +269,22 @@ struct RecordingBufferAllocator : public mg::GraphicBufferAllocator
     std::vector<std::weak_ptr<mg::Buffer>> allocated_buffers;
 };
 
+class MockExecutor : public mir::Executor
+{
+public:
+    MockExecutor()
+    {
+        ON_CALL(*this, spawn_thunk(_))
+            .WillByDefault(InvokeArgument<0>());
+    }
+
+    void spawn(std::function<void()>&& task) override
+    {
+        spawn_thunk(task);
+    }
+    MOCK_METHOD1(spawn_thunk, void(std::function<void()>));
+};
+
 struct SessionMediator : public ::testing::Test
 {
     SessionMediator()
@@ -281,6 +297,7 @@ struct SessionMediator : public ::testing::Test
           stubbed_session{std::make_shared<NiceMock<StubbedSession>>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)},
           allocator{std::make_shared<RecordingBufferAllocator>()},
+          executor{std::make_shared<MockExecutor>()},
           mediator{
             shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
             surface_pixel_formats, report,
@@ -293,7 +310,8 @@ struct SessionMediator : public ::testing::Test
             mir::cookie::Authority::create(),
             mt::fake_shared(mock_input_config_changer),
             {},
-            allocator}
+            allocator,
+            executor}
     {
         using namespace ::testing;
 
@@ -324,7 +342,8 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
             mt::fake_shared(mock_input_config_changer), std::vector<mir::ExtensionDescription>{},
-            allocator);
+            allocator,
+            executor);
     }
 
     std::shared_ptr<mf::SessionMediator> create_session_mediator_with_screencast(
@@ -340,7 +359,8 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
             mt::fake_shared(mock_input_config_changer), std::vector<mir::ExtensionDescription>{},
-            allocator);
+            allocator,
+            executor);
     }
 
     MockConnector connector;
@@ -355,6 +375,7 @@ struct SessionMediator : public ::testing::Test
     std::shared_ptr<NiceMock<StubbedSession>> const stubbed_session;
     std::unique_ptr<google::protobuf::Closure> null_callback;
     std::shared_ptr<RecordingBufferAllocator> const allocator;
+    std::shared_ptr<MockExecutor> const executor;
     mf::SessionMediator mediator;
 
     mp::ConnectParameters connect_parameters;
@@ -400,7 +421,8 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
         mt::fake_shared(mock_input_config_changer), {},
-        allocator};
+        allocator,
+        executor};
 
     EXPECT_THAT(connects_handled_count, Eq(0));
 
@@ -881,7 +903,8 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
         mt::fake_shared(mock_input_config_changer), {},
-        allocator};
+        allocator,
+        executor};
 
     ON_CALL(*shell, create_surface( _, _, _))
         .WillByDefault(
@@ -1250,4 +1273,46 @@ TEST_F(SessionMediator, screencast_to_buffer_looks_up_and_fills_appropriate_buff
     screencast_request.set_buffer_id(allocator->allocated_buffers.front().lock()->id().as_value());
 
     mediator->screencast_to_buffer(&screencast_request, &null, null_callback.get());
+}
+
+TEST_F(SessionMediator, buffer_releases_are_sent_from_specified_executor)
+{
+    mp::BufferRelease release_buffer;
+    mp::BufferAllocation allocate_buffer;
+    mp::Void null;
+
+    // Add a fake BufferStream...
+    auto stream_id = mf::BufferStreamId{42};
+    auto stream = stubbed_session->create_mock_stream(stream_id);
+
+    // ...and allocate a buffer to it
+    allocate_buffer.mutable_id()->set_value(42);
+    auto buffer_props = allocate_buffer.add_buffer_requests();
+    buffer_props->set_buffer_usage(0);
+    buffer_props->set_pixel_format(0);
+    buffer_props->set_width(230);
+    buffer_props->set_height(230);
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.allocate_buffers(&allocate_buffer, &null, null_callback.get());
+
+    ASSERT_THAT(allocator->allocated_buffers.size(), Eq(1));
+    auto allocated_buffer = allocator->allocated_buffers.front().lock();
+    ASSERT_THAT(allocated_buffer, NotNull());
+
+    auto const buffer_id = allocated_buffer->id();
+
+    // Submit this buffer
+    mp::BufferRequest submit_request;
+    submit_request.mutable_id()->set_value(stream_id.as_value());
+    submit_request.mutable_buffer()->set_buffer_id(buffer_id.as_value());
+
+    // Ensure the submitted buffer's lifetime ends immediately, and so should
+    // get released to the client.
+    ON_CALL(*stream, submit_buffer(_))
+        .WillByDefault(Invoke([](auto const&) {}));
+    // And our buffer should be released by the executor.
+    EXPECT_CALL(*executor, spawn_thunk(_)).Times(1);
+
+    mediator.submit_buffer(&submit_request, &null, null_callback.get());
 }

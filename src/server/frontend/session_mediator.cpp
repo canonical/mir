@@ -60,6 +60,7 @@
 #include "mir/cookie/authority.h"
 #include "mir/module_properties.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/executor.h"
 
 #include "mir/geometry/rectangles.h"
 #include "protobuf_buffer_packer.h"
@@ -112,7 +113,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
     std::shared_ptr<mf::InputConfigurationChanger> const& input_changer,
     std::vector<mir::ExtensionDescription> const& extensions,
-    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) :
+    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<mir::Executor> const& executor) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -131,7 +133,8 @@ mf::SessionMediator::SessionMediator(
     cookie_authority(cookie_authority),
     input_changer(input_changer),
     extensions(extensions),
-    allocator{allocator}
+    allocator{allocator},
+    executor{executor}
 {
 }
 
@@ -384,8 +387,10 @@ namespace
     public:
         AutoSendBuffer(
             std::shared_ptr<mg::Buffer> const& wrapped,
+            std::shared_ptr<mir::Executor> const& executor,
             std::weak_ptr<mf::BufferSink> const& sink)
             : buffer{wrapped},
+              executor{executor},
               sink{sink}
         {
         }
@@ -393,7 +398,12 @@ namespace
         {
             if (auto live_sink = sink.lock())
             {
-                live_sink->update_buffer(*buffer);
+                // Ensure we send buffer events from a dedicated thread.
+                executor->spawn(
+                    [live_sink, to_send = buffer]()
+                    {
+                        live_sink->update_buffer(*to_send);
+                    });
             }
         }
 
@@ -424,6 +434,7 @@ namespace
 
     private:
         std::shared_ptr<mg::Buffer> const buffer;
+        std::shared_ptr<mir::Executor> executor;
         std::weak_ptr<mf::BufferSink> const sink;
     };
 
@@ -446,7 +457,7 @@ void mf::SessionMediator::submit_buffer(
     auto b = buffer_cache.at(buffer_id);
     ipc_operations->unpack_buffer(request_msg, *b);
 
-    stream->submit_buffer(std::make_shared<AutoSendBuffer>(b, event_sink));
+    stream->submit_buffer(std::make_shared<AutoSendBuffer>(b, executor, event_sink));
 
     done->Run();
 }
