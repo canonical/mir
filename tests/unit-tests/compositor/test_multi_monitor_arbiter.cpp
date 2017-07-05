@@ -494,7 +494,7 @@ TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_overlay_scenario)
         {
             notifying_buffer,
             buffers[1],
-            notifying_buffer,
+            buffers[0],    // We only want to be notified when the first submission is released
             buffers[1]
         });
     notifying_buffer.reset();
@@ -507,7 +507,6 @@ TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_overlay_scenario)
     arbiter.compositor_release(b2);
     b1.reset();
     b2.reset();
-    arbiter.compositor_acquire(&comp_id1);
 
     EXPECT_TRUE(*buffer_released);
 }
