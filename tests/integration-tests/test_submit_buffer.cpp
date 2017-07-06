@@ -306,13 +306,13 @@ struct SubmitBuffer : mir_test_framework::InProcessServer
 };
 template<class Clock>
 bool spin_wait_for_id(
-    std::vector<mg::BufferID> const& ids,
+    std::function<std::vector<mg::BufferID>()> const& id_generator,
     MirWindow* window,
     std::chrono::time_point<Clock> const& pt)
 {
     while(Clock::now() < pt)
     {
-        for (auto const& id : ids)
+        for (auto const& id : id_generator())
         {
             if (mir_debug_window_current_buffer_id(window) == id.as_value())
                 return true;
@@ -411,21 +411,30 @@ TEST_F(SubmitBuffer, server_can_send_buffer)
 
     auto timeout = std::chrono::steady_clock::now() + 5s;
 
-    /* We expect to receive one of the implicitly allocated buffers
-     * We don't care which one we get
-     */
-    std::vector<mg::BufferID> candidate_ids;
-    for (auto const weak_buffer : get_allocated_buffers())
-    {
-        auto const buffer = weak_buffer.lock();
-        if (buffer)
-        {
-            // If there are any expired buffers we don't care about them
-            candidate_ids.push_back(buffer->id());
-        }
-    }
-
-    EXPECT_TRUE(spin_wait_for_id(candidate_ids, window, timeout))
+    EXPECT_TRUE(
+        spin_wait_for_id(
+            [this]()
+            {
+                /* We expect to receive one of the implicitly allocated buffers
+                 * We don't care which one we get.
+                 *
+                 * We need to repeatedly check the allocated buffers, because
+                 * buffer allocation is asynchronous WRT window creation.
+                 */
+                std::vector<mg::BufferID> candidate_ids;
+                for (auto const weak_buffer : get_allocated_buffers())
+                {
+                    auto const buffer = weak_buffer.lock();
+                    if (buffer)
+                    {
+                        // If there are any expired buffers we don't care about them
+                        candidate_ids.push_back(buffer->id());
+                    }
+                }
+                return candidate_ids;
+            },
+            window,
+            timeout))
         << "failed to see buffer";
 
     mir_window_release_sync(window);
