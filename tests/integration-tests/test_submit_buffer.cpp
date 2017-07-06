@@ -129,9 +129,11 @@ class RecordingBufferAllocator : public mg::GraphicBufferAllocator
 public:
     RecordingBufferAllocator(
         std::shared_ptr<mg::GraphicBufferAllocator> const& wrapped,
-        std::vector<std::weak_ptr<mg::Buffer>>& allocated_buffers)
+        std::vector<std::weak_ptr<mg::Buffer>>& allocated_buffers,
+        std::mutex& buffer_mutex)
         : allocated_buffers{allocated_buffers},
-          underlying_allocator{wrapped}
+          underlying_allocator{wrapped},
+          buffer_mutex{buffer_mutex}
     {
     }
 
@@ -139,7 +141,10 @@ public:
         mg::BufferProperties const& buffer_properties) override
     {
         auto const buf = underlying_allocator->alloc_buffer(buffer_properties);
-        allocated_buffers.push_back(buf);
+        {
+            std::lock_guard<std::mutex> lock{buffer_mutex};
+            allocated_buffers.push_back(buf);
+        }
         return buf;
     }
 
@@ -154,7 +159,10 @@ public:
         uint32_t native_flags) override
     {
         auto const buf = underlying_allocator->alloc_buffer(size, native_format, native_flags);
-        allocated_buffers.push_back(buf);
+        {
+            std::lock_guard<std::mutex> lock{buffer_mutex};
+            allocated_buffers.push_back(buf);
+        }
         return buf;
     }
 
@@ -163,13 +171,17 @@ public:
         MirPixelFormat format) override
     {
         auto const buf = underlying_allocator->alloc_software_buffer(size, format);
-        allocated_buffers.push_back(buf);
+        {
+            std::lock_guard<std::mutex> lock{buffer_mutex};
+            allocated_buffers.push_back(buf);
+        }
         return buf;
     }
 
     std::vector<std::weak_ptr<mg::Buffer>>& allocated_buffers;
 private:
     std::shared_ptr<mg::GraphicBufferAllocator> const underlying_allocator;
+    std::mutex& buffer_mutex;
 };
 
 struct StubPlatform : public mg::Platform
@@ -184,7 +196,8 @@ struct StubPlatform : public mg::Platform
     {
         return mir::make_module_ptr<RecordingBufferAllocator>(
             underlying_platform->create_buffer_allocator(),
-            allocated_buffers);
+            allocated_buffers,
+            buffer_mutex);
     }
 
     mir::UniqueModulePtr<mg::PlatformIpcOperations> make_ipc_operations() const override
@@ -201,13 +214,22 @@ struct StubPlatform : public mg::Platform
         return underlying_platform->create_display(policy, config);
     }
 
+    std::vector<std::weak_ptr<mg::Buffer>> get_allocated_buffers()
+    {
+        std::lock_guard<std::mutex> lock{buffer_mutex};
+        return allocated_buffers;
+    }
+
     mg::NativeRenderingPlatform* native_rendering_platform() override { return nullptr; }
     mg::NativeDisplayPlatform* native_display_platform() override { return nullptr; }
     std::vector<mir::ExtensionDescription> extensions() const override { return {}; }
 
     std::shared_ptr<mir::Fd> const last_fd;
-    std::vector<std::weak_ptr<mg::Buffer>> allocated_buffers;
     std::shared_ptr<mg::Platform> const underlying_platform;
+
+private:
+    std::mutex buffer_mutex;
+    std::vector<std::weak_ptr<mg::Buffer>> allocated_buffers;
 };
 
 struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
@@ -232,9 +254,9 @@ struct SubmitBuffer : mir_test_framework::InProcessServer
     ExchangeServerConfiguration server_configuration{last_unpacked_fd};
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
 
-    std::vector<std::weak_ptr<mg::Buffer>> const& get_allocated_buffers()
+    std::vector<std::weak_ptr<mg::Buffer>> get_allocated_buffers()
     {
-        return server_configuration.platform->allocated_buffers;
+        return server_configuration.platform->get_allocated_buffers();
     }
 
     void request_completed()
