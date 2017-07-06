@@ -51,21 +51,8 @@ public:
     void advance_schedule();
 
 private:
-    void decrease_refcount_for(graphics::BufferID id, std::lock_guard<std::mutex> const&);
-    void clean_onscreen_buffers(std::lock_guard<std::mutex> const&);
-
     std::mutex mutable mutex;
-    struct ScheduleEntry
-    {
-        ScheduleEntry(std::shared_ptr<graphics::Buffer> const& buffer, unsigned int use_count) :
-            buffer(buffer),
-            use_count(use_count)
-        {
-        }
-        std::shared_ptr<graphics::Buffer> buffer;
-        unsigned int use_count;
-    };
-    std::deque<ScheduleEntry> onscreen_buffers;
+    std::shared_ptr<graphics::Buffer> current_buffer;
     std::set<compositor::CompositorID> current_buffer_users;
     std::shared_ptr<Schedule> schedule;
 };
