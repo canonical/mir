@@ -36,6 +36,11 @@ public:
     /**
      * Acquire the next buffer that's ready to display/composite.
      *
+     * \note    The returned buffer is considered in-use until the its
+     *          use-count reaches 0. In-use buffers will not be returned
+     *          to the client, so for best performance it is important to
+     *          release the returned buffer as soon as possible.
+     *
      * \param [in] user_id A unique identifier of who is going to use the
      *                     buffer, to ensure that separate users representing
      *                     separate monitors who need the same frame will get
@@ -46,9 +51,19 @@ public:
      */
     virtual std::shared_ptr<graphics::Buffer>
         compositor_acquire(void const* user_id) = 0;
-    virtual void compositor_release(std::shared_ptr<graphics::Buffer> const&) = 0;
+
+    /**
+     * Acquire the most recently displayed buffer.
+     *
+     * In contrast with compositor_acquire() this does not consume a client
+     * buffer.
+     *
+     * Like compositor_acquire(), you should release your reference to the
+     * returned buffer as soon as possible.
+     *
+     * \return A shared reference to the most recent visible client buffer.
+     */
     virtual std::shared_ptr<graphics::Buffer> snapshot_acquire() = 0;
-    virtual void snapshot_release(std::shared_ptr<graphics::Buffer> const&) = 0;
     virtual ~BufferAcquisition() = default;
 
 protected:

@@ -40,7 +40,6 @@ mc::TemporaryCompositorBuffer::TemporaryCompositorBuffer(
 
 mc::TemporaryCompositorBuffer::~TemporaryCompositorBuffer()
 {
-    acquisition->compositor_release(buffer);
 }
 
 mc::TemporarySnapshotBuffer::TemporarySnapshotBuffer(
@@ -52,7 +51,6 @@ mc::TemporarySnapshotBuffer::TemporarySnapshotBuffer(
 
 mc::TemporarySnapshotBuffer::~TemporarySnapshotBuffer()
 {
-    acquisition->snapshot_release(buffer);
 }
 
 geom::Size mc::TemporaryBuffer::size() const
