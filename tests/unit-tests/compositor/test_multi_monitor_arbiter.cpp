@@ -21,7 +21,6 @@
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "src/server/compositor/multi_monitor_arbiter.h"
 #include "src/server/compositor/schedule.h"
-#include "src/server/compositor/temporary_buffers.h"
 
 #include <gtest/gtest.h>
 using namespace testing;
@@ -83,13 +82,13 @@ std::shared_ptr<mg::Buffer> wrap_with_destruction_notifier(
     std::shared_ptr<mg::Buffer> const& buffer,
     std::shared_ptr<bool> const& destroyed)
 {
-    class DestructionNotifyingBuffer : public mc::TemporaryBuffer
+    class DestructionNotifyingBuffer : public mg::Buffer
     {
     public:
         DestructionNotifyingBuffer(
             std::shared_ptr<mg::Buffer> const& buffer,
             std::shared_ptr<bool> const& destroyed)
-            : TemporaryBuffer(buffer),
+            : wrapped{buffer},
               destroyed{destroyed}
         {
         }
@@ -98,7 +97,34 @@ std::shared_ptr<mg::Buffer> wrap_with_destruction_notifier(
         {
             *destroyed = true;
         }
+
+        std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
+        {
+            return wrapped->native_buffer_handle();
+        }
+
+        mg::BufferID id() const override
+        {
+            return wrapped->id();
+        }
+
+        mir::geometry::Size size() const override
+        {
+            return wrapped->size();
+        }
+
+        MirPixelFormat pixel_format() const override
+        {
+            return wrapped->pixel_format();
+        }
+
+        mg::NativeBufferBase *native_buffer_base() override
+        {
+            return wrapped->native_buffer_base();
+        }
+
     private:
+        std::shared_ptr<mg::Buffer> const wrapped;
         std::shared_ptr<bool> const destroyed;
     };
 

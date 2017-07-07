@@ -9,7 +9,6 @@ set(
 
   default_display_buffer_compositor.cpp
   default_display_buffer_compositor_factory.cpp
-  temporary_buffers.cpp
   buffer_stream_factory.cpp
   multi_threaded_compositor.cpp
   occlusion.cpp

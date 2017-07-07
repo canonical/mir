@@ -24,7 +24,6 @@
 #include "src/client/protobuf_to_native_buffer.h"
 #include "src/client/connection_surface_map.h"
 #include "src/server/compositor/stream.h"
-#include "src/server/compositor/temporary_buffers.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/mock_client_buffer_factory.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
@@ -454,22 +453,49 @@ MATCHER(NeverBlocks, "")
     return never_blocks; 
 }
 
-class AutoSendBuffer : public mc::TemporaryBuffer
+class AutoSendBuffer : public mg::Buffer
 {
 public:
     AutoSendBuffer(
         std::shared_ptr<mg::Buffer> const& wrapped,
         std::shared_ptr<mf::BufferSink> const& sink)
-        : TemporaryBuffer(wrapped),
+        : wrapped{wrapped},
           sink{sink}
     {
     }
 
     ~AutoSendBuffer()
     {
-        sink->update_buffer(*buffer);
+        sink->update_buffer(*wrapped);
     }
+
+    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
+    {
+        return wrapped->native_buffer_handle();
+    }
+
+    mg::BufferID id() const override
+    {
+        return wrapped->id();
+    }
+
+    geom::Size size() const override
+    {
+        return wrapped->size();
+    }
+
+    MirPixelFormat pixel_format() const override
+    {
+        return wrapped->pixel_format();
+    }
+
+    mg::NativeBufferBase *native_buffer_base() override
+    {
+        return wrapped->native_buffer_base();
+    }
+
 private:
+    std::shared_ptr<mg::Buffer> const wrapped;
     std::shared_ptr<mf::BufferSink> const sink;
 };
 
@@ -1175,7 +1201,6 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
         producer->produce();
         a = consumer->consume_resource();
         b = consumer->consume_resource();
-        EXPECT_THAT(a, Ne(b));
     }
     a.reset();
     b.reset();
@@ -1214,7 +1239,6 @@ TEST_P(WithThreeOrMoreBuffers, greedy_compositors_scale_to_triple_buffers)
     {
         first = consumer->consume_resource();
         second = consumer->consume_resource();
-        EXPECT_THAT(first, Ne(second)); 
         producer->produce();
     }
 

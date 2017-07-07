@@ -20,7 +20,6 @@
 #include "stream.h"
 #include "queueing_schedule.h"
 #include "dropping_schedule.h"
-#include "temporary_buffers.h"
 #include "mir/graphics/buffer.h"
 #include <boost/throw_exception.hpp>
 
@@ -73,8 +72,7 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const& fn)
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 
-    TemporarySnapshotBuffer buffer(arbiter);
-    fn(buffer);
+    fn(*arbiter->snapshot_acquire());
 }
 
 MirPixelFormat mc::Stream::pixel_format() const
@@ -96,7 +94,7 @@ void mc::Stream::remove_observer(std::weak_ptr<ms::SurfaceObserver> const& obser
 
 std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
 {
-    return std::make_shared<mc::TemporaryCompositorBuffer>(arbiter, id);
+    return arbiter->compositor_acquire(id);
 }
 
 geom::Size mc::Stream::stream_size()
