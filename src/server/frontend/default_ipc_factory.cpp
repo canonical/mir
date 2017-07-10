@@ -47,16 +47,28 @@ public:
         : shutdown{false}
     {
         dispatch_thread = std::thread{
-            [this]()
+            [this]() noexcept
             {
                 while (!shutdown)
                 {
-                    std::unique_lock<std::mutex> lock{queue_mutex};
-                    queue_notifier.wait(lock, [this]() { return shutdown || !tasks.empty(); });
-                    if (!tasks.empty())
+                    std::function<void()> task;
                     {
-                        tasks.front()();
-                        tasks.pop_front();
+                        std::unique_lock<std::mutex> lock{queue_mutex};
+                        queue_notifier.wait(
+                            lock,
+                            [this]()
+                            {
+                                return shutdown || !tasks.empty();
+                            });
+                        if (!tasks.empty())
+                        {
+                            task = std::move(tasks.front());
+                            tasks.pop_front();
+                        }
+                    }
+                    if (task)
+                    {
+                        task();
                     }
                 }
             }
