@@ -107,7 +107,7 @@ std::shared_ptr<mcl::MirBuffer> mcl::ConnectionSurfaceMap::buffer(int buffer_id)
     if (it != buffers.end())
         return it->second;
     else
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not find buffer"));
+        return nullptr;
 }
 
 void mcl::ConnectionSurfaceMap::erase(void* render_surface_key)

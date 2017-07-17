@@ -97,17 +97,13 @@ TEST_F(ConnectionResourceMap, maps_buffers)
 {
     using namespace testing;
     mcl::ConnectionSurfaceMap map;
-    EXPECT_THROW({
-        map.buffer(buffer_id);
-    }, std::runtime_error);
+    EXPECT_THAT(map.buffer(buffer_id), IsNull());
 
     map.insert(buffer_id, buffer);
     EXPECT_THAT(map.buffer(buffer_id), Eq(buffer));
     map.erase(buffer_id);
 
-    EXPECT_THROW({
-        map.buffer(buffer_id);
-    }, std::runtime_error);
+    EXPECT_THAT(map.buffer(buffer_id), IsNull());
 }
 
 TEST_F(ConnectionResourceMap, can_access_buffers_from_surface)

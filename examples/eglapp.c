@@ -161,7 +161,6 @@ double mir_eglapp_display_hz(void)
 
 void mir_eglapp_handle_event(MirWindow* window, MirEvent const* ev, void* unused)
 {
-    (void) window;
     (void) unused;
 
     switch (mir_event_get_type(ev))
@@ -201,13 +200,13 @@ void egl_app_handle_resize_event(MirWindow* window, MirResizeEvent const* resize
 
     printf("Resized to %dx%d\n", new_width, new_height);
     if (surface)
-            {
-                mir_render_surface_set_size(surface, new_width, new_height);
-                MirWindowSpec* spec = mir_create_window_spec(connection);
-                mir_window_spec_add_render_surface(spec, surface, new_width, new_height, 0, 0);
-                mir_window_apply_spec(window, spec);
-                mir_window_spec_release(spec);
-            }
+    {
+        mir_render_surface_set_size(surface, new_width, new_height);
+        MirWindowSpec* spec = mir_create_window_spec(connection);
+        mir_window_spec_add_render_surface(spec, surface, new_width, new_height, 0, 0);
+        mir_window_apply_spec(window, spec);
+        mir_window_spec_release(spec);
+    }
 }
 
 static void show_help(struct mir_eglapp_arg const* const* arg_lists)
@@ -462,6 +461,8 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
             name = p + 1;
     }
     mir_window_spec_set_name(spec, name);
+    mir_window_spec_set_event_handler(spec, mir_eglapp_handle_event, NULL);
+    mir_window_spec_set_cursor_name(spec, cursor_name);
 
     if (output_id != mir_display_output_id_invalid)
         mir_window_spec_set_fullscreen_on_output(spec, output_id);
@@ -470,13 +471,6 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     mir_window_spec_release(spec);
 
     CHECK(mir_window_is_valid(window), "Can't create a window");
-
-    mir_window_set_event_handler(window, mir_eglapp_handle_event, NULL);
-
-    spec = mir_create_window_spec(connection);
-    mir_window_spec_set_cursor_name(spec, cursor_name);
-    mir_window_apply_spec(window, spec);
-    mir_window_spec_release(spec);
 
     eglsurface = eglCreateWindowSurface(egldisplay,
                                         eglconfig,
@@ -498,14 +492,9 @@ mir_eglapp_bool mir_eglapp_init(int argc, char* argv[],
     {
         /*
          * Mir reserves the right to ignore our initial window dimensions and
-         * resize to whatever it likes. Usually that resize callback has
-         * occurred by now (see r4150), but libmirclient does not provide a
-         * solid guarantee of it. Luckily, we don't care... by querying EGL
-         * buffer dimensions we can get the correct answer without being
-         * victim to the callback race that's going on in the background...
-         * If the server has given us dimensions other than what we requested
-         * then EGL will already know about it, possibly before the initial
-         * resize event (!).
+         * resize to whatever it likes. In that case, a resize callback to
+         * mir_eglapp_handle_event() has occurred by now and we have resized
+         * the eglsurface.
          */
         *width = buf_width;
         *height = buf_height;
