@@ -391,7 +391,6 @@ public:
             {
                 void send_buffer(mf::BufferStreamId, mg::Buffer&, mg::BufferIpcMsgType) override {}
                 void add_buffer(mg::Buffer&) override {}
-                void remove_buffer(mg::Buffer&) override {}
                 void update_buffer(mg::Buffer&) override {}
                 void error_buffer(geom::Size, MirPixelFormat, std::string const&) override {}
             };

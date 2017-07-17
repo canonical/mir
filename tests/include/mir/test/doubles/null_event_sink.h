@@ -44,7 +44,6 @@ struct NullEventSink : public frontend::EventSink
     void send_buffer(frontend::BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType) override {}
     void handle_input_config_change(MirInputConfig const&) override {}
     void add_buffer(graphics::Buffer&) override {}
-    void remove_buffer(graphics::Buffer&) override {}
     void update_buffer(graphics::Buffer&) override {}
     void error_buffer(geometry::Size, MirPixelFormat, std::string const&) override {}
 };

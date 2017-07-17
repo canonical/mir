@@ -143,14 +143,6 @@ void mfd::EventSender::error_buffer(geometry::Size size, MirPixelFormat, std::st
     send_event_sequence(seq, {});
 }
 
-void mfd::EventSender::remove_buffer(graphics::Buffer& buffer)
-{
-    mp::EventSequence seq;
-    auto request = seq.mutable_buffer_request();
-    request->set_operation(mir::protobuf::BufferOperation::remove);
-    send_buffer(seq, buffer, mg::BufferIpcMsgType::update_msg);
-}
-
 void mfd::EventSender::update_buffer(graphics::Buffer& buffer)
 {
     mp::EventSequence seq;
