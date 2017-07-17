@@ -90,7 +90,9 @@ mcl::BufferVault::~BufferVault()
             buffer->set_callback(ignore_buffer, nullptr);
         } 
         if (!disconnected_)
+        {
             free_buffer(it.first);
+        }
     }
     catch (...)
     {
@@ -110,6 +112,10 @@ void mcl::BufferVault::alloc_buffer(geom::Size size, MirPixelFormat format, int 
 void mcl::BufferVault::free_buffer(int free_id)
 {
     server_requests->free_buffer(free_id);
+    if (auto map = surface_map.lock())
+    {
+        map->erase(free_id);
+    }
 }
 
 void mcl::BufferVault::realloc_buffer(int free_id, geom::Size size, MirPixelFormat format, int usage)
