@@ -86,8 +86,10 @@ mcl::BufferVault::~BufferVault()
     {
         if (auto map = surface_map.lock())
         {
-            auto buffer = map->buffer(it.first);
-            buffer->set_callback(ignore_buffer, nullptr);
+            if (auto buffer = map->buffer(it.first))
+            {
+                buffer->set_callback(ignore_buffer, nullptr);
+            }
         } 
         if (!disconnected_)
         {
