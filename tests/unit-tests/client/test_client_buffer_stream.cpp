@@ -210,10 +210,9 @@ struct ClientBufferStream : TestWithParam<bool>
         }
         else
         {
-            auto bb = factory->generate_buffer(buffer);
-            auto braw = bb.get();
-            map->insert(buffer.buffer_id(), std::move(bb)); 
-            braw->received();
+            map->insert(buffer.buffer_id(), factory->generate_buffer(buffer));
+            buf = map->buffer(buffer.buffer_id());
+            buf->received();
         }
     }
 
