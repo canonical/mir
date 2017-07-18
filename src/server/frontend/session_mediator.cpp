@@ -451,6 +451,28 @@ void mf::SessionMediator::submit_buffer(
     done->Run();
 }
 
+namespace
+{
+bool validate_buffer_request(mir::protobuf::BufferStreamParameters const& req)
+{
+    // A valid buffer request has either flags & native_format set
+    // or buffer_usage & pixel_format set, not both.
+    return
+        (
+            req.has_pixel_format() &&
+            req.has_buffer_usage() &&
+            !req.has_native_format() &&
+            !req.has_flags()
+        ) ||
+        (
+            !req.has_pixel_format() &&
+            !req.has_buffer_usage() &&
+            req.has_native_format() &&
+            req.has_flags()
+        );
+}
+}
+
 void mf::SessionMediator::allocate_buffers(
     mir::protobuf::BufferAllocation const* request,
     mir::protobuf::Void*,
@@ -464,10 +486,14 @@ void mf::SessionMediator::allocate_buffers(
     for (auto i = 0; i < request->buffer_requests().size(); i++)
     {
         auto const& req = request->buffer_requests(i);
-
         std::shared_ptr<mg::Buffer> buffer;
         try
         {
+            if (!validate_buffer_request(req))
+            {
+                BOOST_THROW_EXCEPTION(std::logic_error("Invalid buffer request"));
+            }
+
             if (req.has_flags() && req.has_native_format())
             {
                 buffer = allocator->alloc_buffer(
@@ -475,7 +501,7 @@ void mf::SessionMediator::allocate_buffers(
                     req.native_format(),
                     req.flags());
             }
-            else if (req.has_buffer_usage() && req.has_pixel_format())
+            else
             {
                 auto const usage = static_cast<mg::BufferUsage>(req.buffer_usage());
                 geom::Size const size{req.width(), req.height()};
@@ -490,10 +516,6 @@ void mf::SessionMediator::allocate_buffers(
                     buffer =
                         allocator->alloc_buffer(mg::BufferProperties{size, pf, mg::BufferUsage::hardware});
                 }
-            }
-            else
-            {
-                BOOST_THROW_EXCEPTION(std::logic_error("Invalid buffer request"));
             }
 
             // TODO: Throw if insert fails (duplicate ID)?
