@@ -506,7 +506,7 @@ void mf::SessionMediator::allocate_buffers(
                 stream->associate_buffer(buffer->id());
             }
         }
-        catch (std::runtime_error const& err)
+        catch (std::exception const& err)
         {
             event_sink->error_buffer(
                 geom::Size{req.width(), req.height()},
