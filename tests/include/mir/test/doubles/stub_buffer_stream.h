@@ -82,7 +82,6 @@ public:
     void associate_buffer(graphics::BufferID) override {}
     void disassociate_buffer(graphics::BufferID) override {}
     void set_scale(float) override {}
-    bool suitable_for_cursor() const override { return false; }
 
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
     int nready = 0;
