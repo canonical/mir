@@ -518,15 +518,15 @@ void mf::SessionMediator::allocate_buffers(
                 }
             }
 
-            // TODO: Throw if insert fails (duplicate ID)?
-            buffer_cache.insert(std::make_pair(buffer->id(), buffer));
-            event_sink->add_buffer(*buffer);
-
             if (request->has_id())
             {
                 auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
                 stream->associate_buffer(buffer->id());
             }
+
+            // TODO: Throw if insert fails (duplicate ID)?
+            buffer_cache.insert(std::make_pair(buffer->id(), buffer));
+            event_sink->add_buffer(*buffer);
         }
         catch (std::exception const& err)
         {
