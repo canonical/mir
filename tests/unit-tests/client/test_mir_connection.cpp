@@ -873,7 +873,6 @@ TEST_F(MirConnectionTest, can_alloc_native_buffer_from_connection)
     auto native_format = 342u;
     auto native_flags = 0x44;
     mp::BufferAllocation mp_alloc;
-    mp_alloc.mutable_id()->set_value(-1);
     auto params = mp_alloc.add_buffer_requests();
     params->set_width(size.width.as_int());
     params->set_height(size.height.as_int());

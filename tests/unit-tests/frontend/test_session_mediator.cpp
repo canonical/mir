@@ -259,8 +259,11 @@ struct RecordingBufferAllocator : public mg::GraphicBufferAllocator
     }
 
     std::shared_ptr<mg::Buffer> alloc_software_buffer(
-        geom::Size size, MirPixelFormat /*format*/) override
+        geom::Size size, MirPixelFormat format) override
     {
+        if ((format >= mir_pixel_formats) || format == mir_pixel_format_invalid)
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Invalid pixel format"}));
+        
         auto const buf = std::make_shared<mtd::StubBuffer>(size);
         allocated_buffers.push_back(buf);
         return buf;
@@ -359,6 +362,111 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
             mt::fake_shared(mock_input_config_changer), std::vector<mir::ExtensionDescription>{},
+            allocator,
+            executor);
+    }
+
+    std::shared_ptr<mf::SessionMediator> create_session_mediator_with_event_sink(
+        std::shared_ptr<mf::EventSink> const& sink)
+    {
+        class WrappingEventSink : public mf::EventSink
+        {
+        public:
+            WrappingEventSink(std::shared_ptr<mf::EventSink> const& wrapped)
+                : wrapped{wrapped}
+            {
+            }
+
+            void handle_event(MirEvent const &e) override
+            {
+                wrapped->handle_event(e);
+            }
+
+            void handle_lifecycle_event(MirLifecycleState state) override
+            {
+                wrapped->handle_lifecycle_event(state);
+            }
+
+            void handle_display_config_change(
+                mg::DisplayConfiguration const& config) override
+            {
+                wrapped->handle_display_config_change(config);
+            }
+
+            void send_ping(int32_t serial) override
+            {
+                wrapped->send_ping(serial);
+            }
+
+            void handle_input_config_change(MirInputConfig const& config) override
+            {
+                wrapped->handle_input_config_change(config);
+            }
+
+            void handle_error(mir::ClientVisibleError const& error) override
+            {
+                wrapped->handle_error(error);
+            }
+
+            void send_buffer(
+                mf::BufferStreamId id,
+                mg::Buffer& buffer,
+                mg::BufferIpcMsgType type) override
+            {
+                wrapped->send_buffer(id, buffer, type);
+            }
+
+            void add_buffer(mg::Buffer& buffer) override
+            {
+                wrapped->add_buffer(buffer);
+            }
+
+            void error_buffer(
+                geom::Size req_size,
+                MirPixelFormat req_format,
+                std::string const &error_msg) override
+            {
+                wrapped->error_buffer(req_size, req_format, error_msg);
+            }
+
+            void update_buffer(mg::Buffer &buffer) override
+            {
+                wrapped->update_buffer(buffer);
+            }
+
+        private:
+            std::shared_ptr<mf::EventSink> const wrapped;
+        };
+
+        class EventSinkFactory : public mf::EventSinkFactory
+        {
+        public:
+            EventSinkFactory(std::shared_ptr<mf::EventSink> const& sink)
+                : the_sink{sink}
+            {
+            }
+
+            std::unique_ptr<mf::EventSink> create_sink(
+                std::shared_ptr<mf::MessageSender> const&) override
+            {
+                return std::make_unique<WrappingEventSink>(the_sink);
+            }
+
+        private:
+            std::shared_ptr<mf::EventSink> const the_sink;
+        };
+
+        return std::make_shared<mf::SessionMediator>(
+            shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
+            surface_pixel_formats, report,
+            std::make_shared<EventSinkFactory>(sink),
+            std::make_shared<mtd::NullMessageSender>(),
+            resource_cache, stub_screencast, &connector, nullptr,
+            std::make_shared<NullCoordinateTranslator>(),
+            std::make_shared<mtd::NullANRDetector>(),
+            mir::cookie::Authority::create(),
+            mt::fake_shared(mock_input_config_changer),
+            std::vector<mir::ExtensionDescription>{},
             allocator,
             executor);
     }
@@ -728,12 +836,17 @@ TEST_F(SessionMediator, does_not_reset_input_region_if_region_not_set)
 TEST_F(SessionMediator, allocates_software_buffers)
 {
     using namespace testing;
+
+    auto sink = std::make_shared<NiceMock<mtd::MockEventSink>>();
+    auto mediator = create_session_mediator_with_event_sink(sink);
+
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
+    mediator->create_surface(&surface_parameters, &surface_response, null_callback.get());
+
     auto num_requests = 3;
     mp::Void null;
-    mp::BufferStreamId id;
-    id.set_value(0);
     mp::BufferAllocation request;
-    *request.mutable_id() = id;
+    *request.mutable_id() = surface_response.buffer_stream().id();
     mg::BufferProperties properties(geom::Size{34, 84}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware);
     for(auto i = 0; i < num_requests; i++)
     {
@@ -744,34 +857,38 @@ TEST_F(SessionMediator, allocates_software_buffers)
         buffer_request->set_buffer_usage((int)properties.usage);
     }
 
-    mediator.connect(&connect_parameters, &connection, null_callback.get());
-    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
 
-    mediator.allocate_buffers(&request, &null, null_callback.get());
+    EXPECT_CALL(*sink, add_buffer(_)).Times(num_requests);
+    EXPECT_CALL(*sink, error_buffer(_,_,_)).Times(0);
+    mediator->allocate_buffers(&request, &null, null_callback.get());
     EXPECT_THAT(allocator->allocated_buffers.size(), Eq(num_requests));
 }
 
 TEST_F(SessionMediator, allocates_native_buffers)
 {
     using namespace testing;
+
+    auto sink = std::make_shared<NiceMock<mtd::MockEventSink>>();
+    auto mediator = create_session_mediator_with_event_sink(sink);
+
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
+    mediator->create_surface(&surface_parameters, &surface_response, null_callback.get());
+
     geom::Size const size { 1029, 10302 };
     auto native_flags = 24u;
     auto native_format = 124u;
     mp::Void null;
-    mp::BufferStreamId id;
-    id.set_value(0);
     mp::BufferAllocation request;
-    *request.mutable_id() = id;
+    *request.mutable_id() = surface_response.buffer_stream().id();
     auto buffer_request = request.add_buffer_requests();
     buffer_request->set_width(size.width.as_int());
     buffer_request->set_height(size.height.as_int());
     buffer_request->set_native_format(native_format);
     buffer_request->set_flags(native_flags);
 
-    mediator.connect(&connect_parameters, &connection, null_callback.get());
-    mediator.create_surface(&surface_parameters, &surface_response, null_callback.get());
-
-    mediator.allocate_buffers(&request, &null, null_callback.get());
+    EXPECT_CALL(*sink, add_buffer(_)).Times(1);
+    EXPECT_CALL(*sink, error_buffer(_,_,_)).Times(0);
+    mediator->allocate_buffers(&request, &null, null_callback.get());
     EXPECT_THAT(allocator->allocated_buffers.size(), Eq(1));
 }
 
@@ -1310,9 +1427,182 @@ TEST_F(SessionMediator, buffer_releases_are_sent_from_specified_executor)
     // Ensure the submitted buffer's lifetime ends immediately, and so should
     // get released to the client.
     ON_CALL(*stream, submit_buffer(_))
-        .WillByDefault(Invoke([](auto const&) {}));
+        .WillByDefault(Invoke([](auto const &){}));
     // And our buffer should be released by the executor.
     EXPECT_CALL(*executor, spawn_thunk(_)).Times(1);
 
     mediator.submit_buffer(&submit_request, &null, null_callback.get());
+}
+
+namespace
+{
+void add_software_buffer_request(
+    mp::BufferAllocation& request,
+    int width,
+    int height,
+    MirPixelFormat format)
+{
+    auto buffer_request = request.add_buffer_requests();
+    buffer_request->set_width(width);
+    buffer_request->set_height(height);
+    buffer_request->set_pixel_format(format);
+    buffer_request->set_buffer_usage(static_cast<int>(mg::BufferUsage::software));
+}
+
+void add_hardware_request(
+    mp::BufferAllocation& request,
+    int width,
+    int height,
+    int native_format,
+    int flags)
+{
+    auto buffer_request = request.add_buffer_requests();
+
+    buffer_request->set_width(width);
+    buffer_request->set_height(height);
+    buffer_request->set_native_format(native_format);
+    buffer_request->set_flags(flags);
+}
+}
+
+TEST_F(SessionMediator, invalid_buffer_stream_in_software_buffer_allocation_sends_only_error_buffer)
+{
+    using namespace testing;
+
+    auto sink = std::make_shared<NiceMock<mtd::MockEventSink>>();
+    auto mediator = create_session_mediator_with_event_sink(sink);
+
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
+
+    auto num_requests = 3;
+    mp::Void null;
+    mp::BufferAllocation request;
+    request.mutable_id()->set_value(-1);
+    mg::BufferProperties properties(geom::Size{34, 84}, mir_pixel_format_abgr_8888, mg::BufferUsage::software);
+    for(auto i = 0; i < num_requests; i++)
+    {
+        add_software_buffer_request(
+            request,
+            properties.size.width.as_int(),
+            properties.size.height.as_int(),
+            properties.format);
+    }
+
+    EXPECT_CALL(*sink, add_buffer(_)).Times(0);
+    EXPECT_CALL(*sink, error_buffer(_,_,_)).Times(num_requests);
+    mediator->allocate_buffers(&request, &null, null_callback.get());
+    EXPECT_THAT(allocator->allocated_buffers.size(), Eq(num_requests));
+}
+
+TEST_F(SessionMediator, invalid_request_sends_error_buffer)
+{
+    using namespace testing;
+
+    auto sink = std::make_shared<NiceMock<mtd::MockEventSink>>();
+    auto mediator = create_session_mediator_with_event_sink(sink);
+
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
+    mediator->create_surface(&surface_parameters, &surface_response, null_callback.get());
+
+    mp::Void null;
+    mp::BufferAllocation request;
+    *request.mutable_id() = surface_response.buffer_stream().id();
+
+    decltype(request.add_buffer_requests()) buffer_request;
+
+    // Loop through all possibilities of has_flags, has_native_format,
+    // has_buffer_usage, has_pixel_format
+    for (int i = 0 ; i < 1<<4; ++i)
+    {
+        buffer_request = request.add_buffer_requests();
+        buffer_request->set_width(1024);
+        buffer_request->set_height(768);
+
+        if (i & 1<<0)
+            buffer_request->set_flags(0xfaac);
+        if (i & 1<<1)
+            buffer_request->set_native_format(0xdeeb);
+        if (i & 1<<2)
+            buffer_request->set_pixel_format(mir_pixel_format_abgr_8888);
+        if (i & 1<<3)
+            buffer_request->set_buffer_usage(static_cast<int>(mg::BufferUsage::software));
+    }
+
+    // There are two valid allocations here - one with flags and native_format set,
+    // one with pixel_format and buffer_usage set.
+    EXPECT_CALL(*sink, add_buffer(_)).Times(2);
+
+    EXPECT_CALL(*sink, error_buffer(_,_,_)).Times(16 - 2);
+    mediator->allocate_buffers(&request, &null, null_callback.get());
+    EXPECT_THAT(allocator->allocated_buffers.size(), Eq(2));
+}
+
+TEST_F(SessionMediator, sends_errors_only_for_invalid_buffer_parameters)
+{
+    using namespace testing;
+
+    auto sink = std::make_shared<NiceMock<mtd::MockEventSink>>();
+    auto mediator = create_session_mediator_with_event_sink(sink);
+
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
+    mediator->create_surface(&surface_parameters, &surface_response, null_callback.get());
+
+    auto const num_requests = 3;
+    mp::Void null;
+    mp::BufferAllocation request;
+    *request.mutable_id() = surface_response.buffer_stream().id();
+    mg::BufferProperties properties(geom::Size{34, 84}, mir_pixel_format_abgr_8888, mg::BufferUsage::software);
+    for(auto i = 0; i < num_requests; i++)
+    {
+        add_software_buffer_request(
+            request,
+            properties.size.width.as_int(),
+            properties.size.height.as_int(),
+            properties.format);
+    }
+
+    // Make the 2nd buffer request invalid, leaving the 1st and 3rd valid
+    request.mutable_buffer_requests(1)->set_pixel_format(mir_pixel_format_invalid);
+
+    EXPECT_CALL(*sink, add_buffer(_)).Times(num_requests - 1);
+    EXPECT_CALL(*sink, error_buffer(_,_,_)).Times(1);
+    mediator->allocate_buffers(&request, &null, null_callback.get());
+    EXPECT_THAT(allocator->allocated_buffers.size(), Eq(num_requests - 1));
+}
+
+TEST_F(SessionMediator, invalid_buffer_stream_in_native_buffer_allocation_sends_only_error_buffer)
+{
+    using namespace testing;
+
+    auto const num_requests = 3;
+
+    auto sink = std::make_shared<NiceMock<mtd::MockEventSink>>();
+    auto mediator = create_session_mediator_with_event_sink(sink);
+
+    mediator->connect(&connect_parameters, &connection, null_callback.get());
+
+    geom::Size const size { 1029, 10302 };
+    auto native_flags = 24u;
+    auto native_format = 124u;
+    mp::Void null;
+    mp::BufferAllocation request;
+    request.mutable_id()->set_value(42);
+
+    for (auto i = 0; i < num_requests; ++i)
+    {
+        add_hardware_request(
+            request,
+            size.width.as_int(),
+            size.height.as_int(),
+            native_format,
+            native_flags);
+    }
+
+    EXPECT_CALL(*sink, add_buffer(_)).Times(0);
+    EXPECT_CALL(*sink, error_buffer(_,_,_)).Times(num_requests);
+    mediator->allocate_buffers(&request, &null, null_callback.get());
+    // We don't much care if the buffers were allocated and then freed or never allocated
+    EXPECT_THAT(
+        allocator->allocated_buffers,
+        Each(Property(&std::weak_ptr<mg::Buffer>::expired, Eq(true))));
 }
