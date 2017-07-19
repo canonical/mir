@@ -289,17 +289,7 @@ TEST_F(SurfaceStack, scene_counts_pending_accurately)
     ms::SurfaceStack stack{report};
     stack.register_compositor(this);
 
-    struct StubBuffers : mtd::StubClientBuffers
-    {
-        std::shared_ptr<mg::Buffer> get(mg::BufferID) const override
-        {
-            return buffer;
-        }
-        std::shared_ptr<mg::Buffer> buffer {std::make_shared<mtd::StubBuffer>()};
-    };
-
-    auto buffers = std::make_shared<StubBuffers>();
-    auto stream = std::make_shared<mc::Stream>(buffers, geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888);
+    auto stream = std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888);
 
     auto surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),

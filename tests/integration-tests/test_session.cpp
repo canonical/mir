@@ -80,7 +80,7 @@ public:
 struct StubGLBufferStreamFactory : public mtd::StubBufferStreamFactory
 {
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&,
+        mf::BufferStreamId,
         mg::BufferProperties const&) override
     {
         return std::make_shared<StubGLBufferStream>();

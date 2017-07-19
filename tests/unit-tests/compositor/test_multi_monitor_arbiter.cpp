@@ -21,7 +21,7 @@
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "src/server/compositor/multi_monitor_arbiter.h"
 #include "src/server/compositor/schedule.h"
-#include "mir/frontend/client_buffers.h"
+#include "src/server/compositor/temporary_buffers.h"
 
 #include <gtest/gtest.h>
 using namespace testing;
@@ -33,16 +33,6 @@ namespace mf = mir::frontend;
 
 namespace
 {
-struct MockBufferMap : mf::ClientBuffers
-{
-    MOCK_METHOD1(add_buffer, mg::BufferID(std::shared_ptr<mg::Buffer> const&));
-    MOCK_METHOD1(remove_buffer, void(mg::BufferID id));
-    MOCK_METHOD1(receive_buffer, void(mg::BufferID id));
-    MOCK_METHOD1(send_buffer, void(mg::BufferID id));
-    MOCK_CONST_METHOD0(client_owned_buffer_count, size_t());
-    MOCK_CONST_METHOD1(get, std::shared_ptr<mg::Buffer>(mg::BufferID));
-};
-
 struct FixedSchedule : mc::Schedule
 {
     void schedule(std::shared_ptr<mg::Buffer> const&) override
@@ -63,7 +53,9 @@ struct FixedSchedule : mc::Schedule
     {
         if (sched.empty() || current == sched.size())
             throw std::runtime_error("no buffer scheduled");
-        return sched[current++];
+        auto buf = sched.front();
+        sched.erase(sched.begin());
+        return buf;
     }
     void set_schedule(std::vector<std::shared_ptr<mg::Buffer>> s)
     {
@@ -84,10 +76,40 @@ struct MultiMonitorArbiter : Test
     }
     unsigned int const num_buffers{6u};
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
-    NiceMock<MockBufferMap> mock_map;
     FixedSchedule schedule;
-    mc::MultiMonitorArbiter arbiter{mt::fake_shared(mock_map), mt::fake_shared(schedule)};
+    mc::MultiMonitorArbiter arbiter{mt::fake_shared(schedule)};
 };
+
+MATCHER_P(IsSameBufferAs, buffer, "")
+{
+    return buffer->id() == arg->id();
+}
+
+std::shared_ptr<mg::Buffer> wrap_with_destruction_notifier(
+    std::shared_ptr<mg::Buffer> const& buffer,
+    std::shared_ptr<bool> const& destroyed)
+{
+    class DestructionNotifyingBuffer : public mc::TemporaryBuffer
+    {
+    public:
+        DestructionNotifyingBuffer(
+            std::shared_ptr<mg::Buffer> const& buffer,
+            std::shared_ptr<bool> const& destroyed)
+            : TemporaryBuffer(buffer),
+              destroyed{destroyed}
+        {
+        }
+
+        ~DestructionNotifyingBuffer()
+        {
+            *destroyed = true;
+        }
+    private:
+        std::shared_ptr<bool> const destroyed;
+    };
+
+    return std::make_shared<DestructionNotifyingBuffer>(buffer, destroyed);
+}
 }
 
 TEST_F(MultiMonitorArbiter, compositor_access_before_any_submission_throws)
@@ -107,32 +129,30 @@ TEST_F(MultiMonitorArbiter, compositor_access)
 {
     schedule.set_schedule({buffers[0]});
     auto cbuffer = arbiter.compositor_acquire(this);
-    EXPECT_THAT(cbuffer, Eq(buffers[0]));
+    EXPECT_THAT(cbuffer, IsSameBufferAs(buffers[0]));
 }
 
 TEST_F(MultiMonitorArbiter, compositor_release_sends_buffer_back)
 {
-    EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
-
-    schedule.set_schedule({buffers[0]});
+    auto buffer_released = std::make_shared<bool>(false);
+    schedule.set_schedule({ wrap_with_destruction_notifier(buffers[0], buffer_released) });
 
     auto cbuffer = arbiter.compositor_acquire(this);
     schedule.set_schedule({buffers[1]});
     arbiter.compositor_release(cbuffer);
+    cbuffer.reset();
+    // We need to acquire a new buffer - the current one is on-screen, so can't be sent back.
+    arbiter.compositor_acquire(this);
+    EXPECT_TRUE(*buffer_released);
 }
 
 TEST_F(MultiMonitorArbiter, compositor_can_acquire_different_buffers)
 {
-    EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
-
     schedule.set_schedule({buffers[0]});
     auto cbuffer1 = arbiter.compositor_acquire(this);
     schedule.set_schedule({buffers[1]});
     auto cbuffer2 = arbiter.compositor_acquire(this);
-    EXPECT_THAT(cbuffer1, Ne(cbuffer2));
-    arbiter.compositor_release(cbuffer2);
-    arbiter.compositor_release(cbuffer1);
-    Mock::VerifyAndClearExpectations(&mock_map);
+    EXPECT_THAT(cbuffer1, Not(IsSameBufferAs(cbuffer2)));
 }
 
 TEST_F(MultiMonitorArbiter, compositor_buffer_syncs_to_fastest_compositor)
@@ -155,13 +175,13 @@ TEST_F(MultiMonitorArbiter, compositor_buffer_syncs_to_fastest_compositor)
     auto cbuffer6 = arbiter.compositor_acquire(&comp_id2);
     auto cbuffer7 = arbiter.compositor_acquire(&comp_id2);
 
-    EXPECT_THAT(cbuffer1, Eq(buffers[0]));
-    EXPECT_THAT(cbuffer2, Eq(buffers[0]));
-    EXPECT_THAT(cbuffer3, Eq(buffers[1]));
-    EXPECT_THAT(cbuffer4, Eq(buffers[0]));
-    EXPECT_THAT(cbuffer5, Eq(buffers[0]));
-    EXPECT_THAT(cbuffer6, Eq(buffers[1]));
-    EXPECT_THAT(cbuffer7, Eq(buffers[1]));
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(buffers[0]));
+    EXPECT_THAT(cbuffer2, IsSameBufferAs(buffers[0]));
+    EXPECT_THAT(cbuffer3, IsSameBufferAs(buffers[1]));
+    EXPECT_THAT(cbuffer4, IsSameBufferAs(buffers[0]));
+    EXPECT_THAT(cbuffer5, IsSameBufferAs(buffers[0]));
+    EXPECT_THAT(cbuffer6, IsSameBufferAs(buffers[1]));
+    EXPECT_THAT(cbuffer7, IsSameBufferAs(buffers[1]));
 }
 
 TEST_F(MultiMonitorArbiter, compositor_consumes_all_buffers_when_operating_as_a_composited_scene_would)
@@ -179,11 +199,11 @@ TEST_F(MultiMonitorArbiter, compositor_consumes_all_buffers_when_operating_as_a_
     auto cbuffer5 = arbiter.compositor_acquire(this);
     arbiter.compositor_release(cbuffer5);
 
-    EXPECT_THAT(cbuffer1, Eq(buffers[0]));
-    EXPECT_THAT(cbuffer2, Eq(buffers[1]));
-    EXPECT_THAT(cbuffer3, Eq(buffers[2]));
-    EXPECT_THAT(cbuffer4, Eq(buffers[3]));
-    EXPECT_THAT(cbuffer5, Eq(buffers[4]));
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(buffers[0]));
+    EXPECT_THAT(cbuffer2, IsSameBufferAs(buffers[1]));
+    EXPECT_THAT(cbuffer3, IsSameBufferAs(buffers[2]));
+    EXPECT_THAT(cbuffer4, IsSameBufferAs(buffers[3]));
+    EXPECT_THAT(cbuffer5, IsSameBufferAs(buffers[4]));
 }
 
 TEST_F(MultiMonitorArbiter, compositor_consumes_all_buffers_when_operating_as_a_bypassed_buffer_would)
@@ -201,11 +221,11 @@ TEST_F(MultiMonitorArbiter, compositor_consumes_all_buffers_when_operating_as_a_
     arbiter.compositor_release(cbuffer4);
     arbiter.compositor_release(cbuffer5);
 
-    EXPECT_THAT(cbuffer1, Eq(buffers[0]));
-    EXPECT_THAT(cbuffer2, Eq(buffers[1]));
-    EXPECT_THAT(cbuffer3, Eq(buffers[2]));
-    EXPECT_THAT(cbuffer4, Eq(buffers[3]));
-    EXPECT_THAT(cbuffer5, Eq(buffers[4]));
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(buffers[0]));
+    EXPECT_THAT(cbuffer2, IsSameBufferAs(buffers[1]));
+    EXPECT_THAT(cbuffer3, IsSameBufferAs(buffers[2]));
+    EXPECT_THAT(cbuffer4, IsSameBufferAs(buffers[3]));
+    EXPECT_THAT(cbuffer5, IsSameBufferAs(buffers[4]));
 }
 
 TEST_F(MultiMonitorArbiter, multimonitor_compositor_buffer_syncs_to_fastest_with_more_queueing)
@@ -228,18 +248,18 @@ TEST_F(MultiMonitorArbiter, multimonitor_compositor_buffer_syncs_to_fastest_with
     auto cbuffer7 = arbiter.compositor_acquire(&comp_id2); //buffer[4]
     auto cbuffer8 = arbiter.compositor_acquire(&comp_id1); //buffer[4]
 
-    EXPECT_THAT(cbuffer1, Eq(buffers[0]));
-    EXPECT_THAT(cbuffer2, Eq(buffers[0]));
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(buffers[0]));
+    EXPECT_THAT(cbuffer2, IsSameBufferAs(buffers[0]));
 
-    EXPECT_THAT(cbuffer3, Eq(buffers[1]));
+    EXPECT_THAT(cbuffer3, IsSameBufferAs(buffers[1]));
 
-    EXPECT_THAT(cbuffer4, Eq(buffers[2]));
-    EXPECT_THAT(cbuffer5, Eq(buffers[2]));
+    EXPECT_THAT(cbuffer4, IsSameBufferAs(buffers[2]));
+    EXPECT_THAT(cbuffer5, IsSameBufferAs(buffers[2]));
 
-    EXPECT_THAT(cbuffer6, Eq(buffers[3]));
+    EXPECT_THAT(cbuffer6, IsSameBufferAs(buffers[3]));
 
-    EXPECT_THAT(cbuffer7, Eq(buffers[4]));
-    EXPECT_THAT(cbuffer8, Eq(buffers[4]));
+    EXPECT_THAT(cbuffer7, IsSameBufferAs(buffers[4]));
+    EXPECT_THAT(cbuffer8, IsSameBufferAs(buffers[4]));
 }
 
 TEST_F(MultiMonitorArbiter, can_set_a_new_schedule)
@@ -252,8 +272,8 @@ TEST_F(MultiMonitorArbiter, can_set_a_new_schedule)
     arbiter.set_schedule(mt::fake_shared(another_schedule));
     auto cbuffer2 = arbiter.compositor_acquire(this);
 
-    EXPECT_THAT(cbuffer1, Eq(buffers[3]));
-    EXPECT_THAT(cbuffer2, Eq(buffers[0])); 
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(buffers[3]));
+    EXPECT_THAT(cbuffer2, IsSameBufferAs(buffers[0]));
 }
 
 TEST_F(MultiMonitorArbiter, basic_snapshot_equals_compositor_buffer)
@@ -262,7 +282,7 @@ TEST_F(MultiMonitorArbiter, basic_snapshot_equals_compositor_buffer)
 
     auto cbuffer1 = arbiter.compositor_acquire(this);
     auto sbuffer1 = arbiter.snapshot_acquire();
-    EXPECT_EQ(cbuffer1, sbuffer1);
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(sbuffer1));
 }
 
 TEST_F(MultiMonitorArbiter, basic_snapshot_equals_latest_compositor_buffer)
@@ -278,8 +298,8 @@ TEST_F(MultiMonitorArbiter, basic_snapshot_equals_latest_compositor_buffer)
     cbuffer2 = arbiter.compositor_acquire(&that);
 
     auto sbuffer2 = arbiter.snapshot_acquire();
-    EXPECT_EQ(cbuffer1, sbuffer1);
-    EXPECT_EQ(cbuffer2, sbuffer2);
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(sbuffer1));
+    EXPECT_THAT(cbuffer2, IsSameBufferAs(sbuffer2));
 }
 
 TEST_F(MultiMonitorArbiter, snapshot_cycling_doesnt_advance_buffer_for_compositors)
@@ -297,8 +317,8 @@ TEST_F(MultiMonitorArbiter, snapshot_cycling_doesnt_advance_buffer_for_composito
     }
     auto cbuffer2 = arbiter.compositor_acquire(&that);
 
-    EXPECT_THAT(cbuffer1, Eq(cbuffer2));
-    EXPECT_THAT(snapshot_buffers, Each(cbuffer1));
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(cbuffer2));
+    EXPECT_THAT(snapshot_buffers, Each(IsSameBufferAs(cbuffer1)));
 }
 
 TEST_F(MultiMonitorArbiter, no_buffers_available_throws_on_snapshot)
@@ -311,29 +331,48 @@ TEST_F(MultiMonitorArbiter, no_buffers_available_throws_on_snapshot)
 
 TEST_F(MultiMonitorArbiter, snapshotting_will_release_buffer_if_it_was_the_last_owner)
 {
-    EXPECT_CALL(mock_map, send_buffer(_)).Times(0);
-    schedule.set_schedule({buffers[3],buffers[4]});
+    auto buffer_released = std::make_shared<bool>(false);
+    schedule.set_schedule(
+        {
+            wrap_with_destruction_notifier(buffers[3], buffer_released),
+            buffers[4]
+        });
     auto cbuffer1 = arbiter.compositor_acquire(this);
     auto sbuffer1 = arbiter.snapshot_acquire();
     arbiter.compositor_release(cbuffer1);
+    cbuffer1.reset();
 
-    Mock::VerifyAndClearExpectations(&mock_map);
-    EXPECT_CALL(mock_map, send_buffer(sbuffer1->id()));
+    // Acquire a new buffer so first one is no longer onscreen.
+    arbiter.compositor_acquire(this);
+
+    EXPECT_FALSE(*buffer_released);
     arbiter.snapshot_release(sbuffer1);
+    sbuffer1.reset();
+    EXPECT_TRUE(*buffer_released);
 }
 
 TEST_F(MultiMonitorArbiter, compositor_can_acquire_a_few_times_and_only_sends_on_the_last_release)
 {
     int comp_id1{0};
     int comp_id2{0};
-    schedule.set_schedule({buffers[0], buffers[1]});
+
+    auto buffer_released = std::make_shared<bool>(false);
+    schedule.set_schedule(
+        {
+            wrap_with_destruction_notifier(buffers[0], buffer_released),
+            buffers[1]
+        });
     auto cbuffer1 = arbiter.compositor_acquire(&comp_id1);
     auto cbuffer2 = arbiter.compositor_acquire(&comp_id2);
-    EXPECT_THAT(cbuffer1, Eq(cbuffer2));
-    EXPECT_CALL(mock_map, send_buffer(buffers[0]->id())).Times(Exactly(1));
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(cbuffer2));
+
     auto cbuffer3 = arbiter.compositor_acquire(&comp_id1);
     arbiter.compositor_release(cbuffer2);
+    EXPECT_FALSE(*buffer_released);
     arbiter.compositor_release(cbuffer1);
+    cbuffer1.reset();
+    cbuffer2.reset();
+    EXPECT_TRUE(*buffer_released);
 }
 
 TEST_F(MultiMonitorArbiter, advance_on_fastest_has_same_buffer)
@@ -349,29 +388,29 @@ TEST_F(MultiMonitorArbiter, advance_on_fastest_has_same_buffer)
 
     auto cbuffer3 = arbiter.compositor_acquire(&comp_id1); //buffer[1]
  
-    EXPECT_THAT(cbuffer1, Eq(cbuffer2));
-    EXPECT_THAT(cbuffer1, Eq(buffers[0]));
-    EXPECT_THAT(cbuffer3, Eq(buffers[1]));
-}
-
-TEST_F(MultiMonitorArbiter, compositor_acquire_sends_buffer_back_with_fastest_guarantee)
-{
-    EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
-
-    schedule.set_schedule({buffers[0], buffers[1]});
-
-    auto cbuffer = arbiter.compositor_acquire(this);
-    schedule.set_schedule({buffers[1]});
-    arbiter.compositor_release(cbuffer);
-    cbuffer = arbiter.compositor_acquire(this);
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(cbuffer2));
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(buffers[0]));
+    EXPECT_THAT(cbuffer3, IsSameBufferAs(buffers[1]));
 }
 
 TEST_F(MultiMonitorArbiter, buffers_are_sent_back)
 {
-    EXPECT_CALL(mock_map, send_buffer(_)).Times(3);
+    std::array<std::shared_ptr<bool>, 3> buffer_released = {
+        {
+            std::make_shared<bool>(false),
+            std::make_shared<bool>(false),
+            std::make_shared<bool>(false)
+        }};
     int comp_id1{0};
     int comp_id2{0};
-    schedule.set_schedule({buffers[0], buffers[1], buffers[2], buffers[3]});
+
+    schedule.set_schedule(
+        {
+            wrap_with_destruction_notifier(buffers[0], buffer_released[0]),
+            wrap_with_destruction_notifier(buffers[1], buffer_released[1]),
+            wrap_with_destruction_notifier(buffers[2], buffer_released[2]),
+            buffers[3]
+        });
 
     auto b1 = arbiter.compositor_acquire(&comp_id1);
     arbiter.compositor_release(b1);
@@ -386,7 +425,14 @@ TEST_F(MultiMonitorArbiter, buffers_are_sent_back)
     auto b6 = arbiter.compositor_acquire(&comp_id1);
     arbiter.compositor_release(b6);
 
-    Mock::VerifyAndClearExpectations(&mock_map);
+    b1.reset();
+    b2.reset();
+    b3.reset();
+    b4.reset();
+    b5.reset();
+    b6.reset();
+
+    EXPECT_THAT(buffer_released, Each(Pointee(true)));
 }
 
 TEST_F(MultiMonitorArbiter, can_check_if_buffers_are_ready)
@@ -442,17 +488,28 @@ TEST_F(MultiMonitorArbiter, other_compositor_ready_status_advances_with_fastest_
 TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_overlay_scenario)
 {
     int comp_id1{0};
-    schedule.set_schedule({buffers[0], buffers[1], buffers[0], buffers[1]});
+    auto buffer_released = std::make_shared<bool>(false);
+    auto notifying_buffer = wrap_with_destruction_notifier(buffers[0], buffer_released);
+    schedule.set_schedule(
+        {
+            notifying_buffer,
+            buffers[1],
+            buffers[0],    // We only want to be notified when the first submission is released
+            buffers[1]
+        });
+    notifying_buffer.reset();
 
-    EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
     auto b1 = arbiter.compositor_acquire(&comp_id1);
     auto b2 = arbiter.compositor_acquire(&comp_id1);
-    EXPECT_THAT(b1, Eq(buffers[0]));
-    EXPECT_THAT(b2, Eq(buffers[1]));
+    EXPECT_THAT(b1, IsSameBufferAs(buffers[0]));
+    EXPECT_THAT(b2, IsSameBufferAs(buffers[1]));
     arbiter.compositor_release(b1);
     arbiter.compositor_release(b2);
-    Mock::VerifyAndClearExpectations(&mock_map);
-} 
+    b1.reset();
+    b2.reset();
+
+    EXPECT_TRUE(*buffer_released);
+}
 
 TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_starvation_scenario)
 {
@@ -471,10 +528,10 @@ TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_starvation_scenari
     arbiter.compositor_release(b2);
     arbiter.compositor_release(b4);
 
-    EXPECT_THAT(b1, Eq(buffers[0]));
-    EXPECT_THAT(b2, Eq(buffers[1]));
-    EXPECT_THAT(b3, Eq(buffers[1]));
-    EXPECT_THAT(b4, Eq(buffers[0]));
+    EXPECT_THAT(b1, IsSameBufferAs(buffers[0]));
+    EXPECT_THAT(b2, IsSameBufferAs(buffers[1]));
+    EXPECT_THAT(b3, IsSameBufferAs(buffers[1]));
+    EXPECT_THAT(b4, IsSameBufferAs(buffers[0]));
 
 } 
 
@@ -482,12 +539,11 @@ TEST_F(MultiMonitorArbiter, will_ensure_smooth_monitor_production)
 {
     int comp_id1{0};
     int comp_id2{0};
+
     schedule.set_schedule({
         buffers[0], buffers[1], buffers[2],
         buffers[0], buffers[1], buffers[2],
         buffers[0], buffers[1], buffers[2]});
-
-    EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
 
     auto b1 = arbiter.compositor_acquire(&comp_id1);
     auto b2 = arbiter.compositor_acquire(&comp_id2);
@@ -502,13 +558,12 @@ TEST_F(MultiMonitorArbiter, will_ensure_smooth_monitor_production)
     auto b5 = arbiter.compositor_acquire(&comp_id1);
     arbiter.compositor_release(b5); //send nothing
 
-    EXPECT_THAT(b1, Eq(buffers[0]));
-    EXPECT_THAT(b2, Eq(buffers[0]));
-    EXPECT_THAT(b3, Eq(buffers[1]));
-    EXPECT_THAT(b4, Eq(buffers[1]));
-    EXPECT_THAT(b5, Eq(buffers[2]));
-    Mock::VerifyAndClearExpectations(&mock_map);
-} 
+    EXPECT_THAT(b1, IsSameBufferAs(buffers[0]));
+    EXPECT_THAT(b2, IsSameBufferAs(buffers[0]));
+    EXPECT_THAT(b3, IsSameBufferAs(buffers[1]));
+    EXPECT_THAT(b4, IsSameBufferAs(buffers[1]));
+    EXPECT_THAT(b5, IsSameBufferAs(buffers[2]));
+}
 
 TEST_F(MultiMonitorArbiter, can_advance_buffer_manually)
 {
@@ -521,11 +576,11 @@ TEST_F(MultiMonitorArbiter, can_advance_buffer_manually)
 
     auto b1 = arbiter.compositor_acquire(&comp_id1);
     auto b2 = arbiter.compositor_acquire(&comp_id2);
-    EXPECT_THAT(b1->id(), Eq(buffers[1]->id()));
-    EXPECT_THAT(b2->id(), Eq(buffers[1]->id()));
+    EXPECT_THAT(b1, IsSameBufferAs(buffers[1]));
+    EXPECT_THAT(b2, IsSameBufferAs(buffers[1]));
 
     auto b3 = arbiter.compositor_acquire(&comp_id1);
-    EXPECT_THAT(b3->id(), Eq(buffers[2]->id()));
+    EXPECT_THAT(b3, IsSameBufferAs(buffers[2]));
 }
 
 TEST_F(MultiMonitorArbiter, checks_if_buffer_is_valid_after_clean_onscreen_buffer)
@@ -547,8 +602,12 @@ TEST_F(MultiMonitorArbiter, checks_if_buffer_is_valid_after_clean_onscreen_buffe
 
 TEST_F(MultiMonitorArbiter, releases_buffer_on_destruction)
 {
-    mc::MultiMonitorArbiter arbiter{mt::fake_shared(mock_map), mt::fake_shared(schedule)};
-    EXPECT_CALL(mock_map, send_buffer(buffers[0]->id()));
-    schedule.set_schedule({buffers[0]});
-    arbiter.advance_schedule();
+    auto buffer_released = std::make_shared<bool>(false);
+    schedule.set_schedule({wrap_with_destruction_notifier(buffers[0], buffer_released)});
+
+    {
+        mc::MultiMonitorArbiter arbiter{mt::fake_shared(schedule)};
+        arbiter.advance_schedule();
+    }
+    EXPECT_TRUE(*buffer_released);
 }

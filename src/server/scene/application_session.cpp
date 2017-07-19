@@ -20,7 +20,6 @@
 #include "snapshot_strategy.h"
 #include "default_session_container.h"
 #include "output_properties_cache.h"
-#include "../compositor/buffer_map.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
@@ -68,7 +67,6 @@ ms::ApplicationSession::ApplicationSession(
     snapshot_strategy(snapshot_strategy),
     session_listener(session_listener),
     event_sink(sink),
-    buffers(buffer_stream_factory->create_buffer_map(sink)),
     gralloc(gralloc),
     next_surface_id(0)
 {
@@ -372,7 +370,7 @@ std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::
 mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)
 {
     auto const id = static_cast<mf::BufferStreamId>(next_id().as_value());
-    auto stream = buffer_stream_factory->create_buffer_stream(id, buffers, props);
+    auto stream = buffer_stream_factory->create_buffer_stream(id, props);
     
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     streams[id] = stream;
@@ -427,56 +425,6 @@ void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock,
     lock.unlock();
 
     surface_stack->remove_surface(surface);
-}
-
-mg::BufferID ms::ApplicationSession::create_buffer(mg::BufferProperties const& properties)
-{
-    try
-    {
-        return buffers->add_buffer(gralloc->alloc_buffer(properties));
-    }
-    catch (std::exception& e)
-    {
-        event_sink->error_buffer(properties.size, properties.format, e.what());
-        throw;
-    }
-}
-
-mg::BufferID ms::ApplicationSession::create_buffer(mir::geometry::Size size, MirPixelFormat format)
-{
-    try
-    {
-        return buffers->add_buffer(gralloc->alloc_software_buffer(size, format));
-    }
-    catch (std::exception& e)
-    {
-        event_sink->error_buffer(size, format, e.what());
-        throw;
-    }
-}
-
-mg::BufferID ms::ApplicationSession::create_buffer(
-    mir::geometry::Size size, uint32_t native_format, uint32_t native_flags)
-{
-    try
-    {
-        return buffers->add_buffer(gralloc->alloc_buffer(size, native_format, native_flags));
-    }
-    catch (std::exception& e)
-    {
-        event_sink->error_buffer(size, static_cast<MirPixelFormat>(native_format), e.what());
-        throw;
-    }
-}
-
-void ms::ApplicationSession::destroy_buffer(mg::BufferID id)
-{
-    buffers->remove_buffer(id);
-}
-
-std::shared_ptr<mg::Buffer> ms::ApplicationSession::get_buffer(mg::BufferID id)
-{
-    return buffers->get(id);
 }
 
 void ms::ApplicationSession::send_error(mir::ClientVisibleError const& error)

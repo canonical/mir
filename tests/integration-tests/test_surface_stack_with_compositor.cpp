@@ -24,7 +24,6 @@
 #include "src/server/scene/basic_surface.h"
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include "src/server/compositor/multi_threaded_compositor.h"
-#include "src/server/compositor/buffer_map.h"
 #include "src/server/compositor/stream.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
@@ -47,6 +46,7 @@ namespace mtd = mir::test::doubles;
 namespace mr = mir::report;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 using namespace testing;
 
@@ -123,8 +123,7 @@ struct SurfaceStackCompositor : public Test
 {
     SurfaceStackCompositor() :
         timeout{std::chrono::system_clock::now() + std::chrono::seconds(5)},
-        buffers(std::make_shared<mc::BufferMap>(std::make_shared<NiceMock<mtd::MockEventSink>>())),
-        stream(std::make_shared<mc::Stream>(buffers, geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888 )),
+        stream(std::make_shared<mc::Stream>(geom::Size{ 1, 1 }, mir_pixel_format_abgr_8888 )),
         mock_buffer_stream(std::make_shared<NiceMock<mtd::MockBufferStream>>()),
         streams({ { stream, {0,0}, {} } }),
         stub_surface{std::make_shared<ms::BasicSurface>(
@@ -136,7 +135,6 @@ struct SurfaceStackCompositor : public Test
             null_scene_report)},
         stub_buffer(std::make_shared<mtd::StubBuffer>())
     {
-        buffers->add_buffer(stub_buffer);
         ON_CALL(*mock_buffer_stream, lock_compositor_buffer(_))
             .WillByDefault(Return(mt::fake_shared(*stub_buffer)));
     }
@@ -145,7 +143,6 @@ struct SurfaceStackCompositor : public Test
     std::shared_ptr<mc::CompositorReport> null_comp_report{mr::null_compositor_report()};
     StubRendererFactory renderer_factory;
     std::chrono::system_clock::time_point timeout;
-    std::shared_ptr<mc::BufferMap> buffers;
     std::shared_ptr<mc::Stream> stream;
     std::shared_ptr<mtd::MockBufferStream> mock_buffer_stream;
     std::list<ms::StreamInfo> const streams;

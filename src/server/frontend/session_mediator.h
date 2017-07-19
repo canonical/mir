@@ -28,6 +28,7 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/graphics/platform_ipc_operations.h"
+#include "mir/graphics/buffer_id.h"
 #include "mir/protobuf/display_server_debug.h"
 #include "mir_toolkit/common.h"
 
@@ -77,6 +78,7 @@ class Screencast;
 class PromptSession;
 class BufferStream;
 class InputConfigurationChanger;
+class BufferMap;
 
 namespace detail
 {
@@ -124,8 +126,8 @@ public:
         std::shared_ptr<scene::ApplicationNotRespondingDetector> const& anr_detector,
         std::shared_ptr<cookie::Authority> const& cookie_authority,
         std::shared_ptr<InputConfigurationChanger> const& input_changer,
-        std::vector<mir::ExtensionDescription> const& extensions
-        );
+        std::vector<mir::ExtensionDescription> const& extensions,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     ~SessionMediator() noexcept;
 
@@ -299,6 +301,8 @@ private:
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<InputConfigurationChanger> const input_changer;
     std::vector<mir::ExtensionDescription> const extensions;
+    std::unordered_map<graphics::BufferID, std::shared_ptr<graphics::Buffer>> buffer_cache;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
 
     ScreencastBufferTracker screencast_buffer_tracker;
 

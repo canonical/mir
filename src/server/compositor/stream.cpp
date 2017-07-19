@@ -21,7 +21,6 @@
 #include "queueing_schedule.h"
 #include "dropping_schedule.h"
 #include "temporary_buffers.h"
-#include "mir/frontend/client_buffers.h"
 #include "mir/graphics/buffer.h"
 #include <boost/throw_exception.hpp>
 
@@ -37,22 +36,17 @@ enum class mc::Stream::ScheduleMode {
 };
 
 mc::Stream::Stream(
-    std::shared_ptr<frontend::ClientBuffers> map, geom::Size size, MirPixelFormat pf) :
+    geom::Size size, MirPixelFormat pf) :
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
-    buffers(map),
-    arbiter(std::make_shared<mc::MultiMonitorArbiter>(buffers, schedule)),
+    arbiter(std::make_shared<mc::MultiMonitorArbiter>(schedule)),
     size(size),
     pf(pf),
     first_frame_posted(false)
 {
 }
 
-mc::Stream::~Stream()
-{
-    while(schedule->num_scheduled())
-        buffers->send_buffer(schedule->next_buffer()->id());
-}
+mc::Stream::~Stream() = default;
 
 unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const
 {
@@ -72,9 +66,8 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
     {
         std::lock_guard<decltype(mutex)> lk(mutex); 
         first_frame_posted = true;
-        buffers->receive_buffer(buffer->id());
-        deferred_io = schedule->schedule_nonblocking(buffers->get(buffer->id()));
         pf = buffer->pixel_format();
+        deferred_io = schedule->schedule_nonblocking(buffer);
     }
     observers.frame_posted(1, buffer->size());
 
@@ -134,7 +127,7 @@ void mc::Stream::allow_framedropping(bool dropping)
     std::lock_guard<decltype(mutex)> lk(mutex); 
     if (dropping && schedule_mode == ScheduleMode::Queueing)
     {
-        transition_schedule(std::make_shared<mc::DroppingSchedule>(buffers), lk);
+        transition_schedule(std::make_shared<mc::DroppingSchedule>(), lk);
         schedule_mode = ScheduleMode::Dropping;
     }
     else if (!dropping && schedule_mode == ScheduleMode::Dropping)
@@ -182,9 +175,6 @@ void mc::Stream::drop_old_buffers()
         transferred_buffers.pop_back();
     }
 
-    for (auto &buffer : transferred_buffers)
-        buffers->send_buffer(buffer->id());
-
     arbiter->advance_schedule();
 }
 
@@ -214,15 +204,7 @@ void mc::Stream::set_scale(float)
 
 bool mc::Stream::suitable_for_cursor() const
 {
-    if (associated_buffers.empty())
-    {
-        return true;
-    }
-    else
-    {
-        for (auto it : associated_buffers)
-            if (buffers->get(it)->pixel_format() != mir_pixel_format_argb_8888)
-                return false;
-    }
+    // We can't reasonably answer this question -
+    // Suitability for cursor use is a per-buffer property, not a per-stream property.
     return true;
 }

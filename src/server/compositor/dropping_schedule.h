@@ -25,13 +25,12 @@
 namespace mir
 {
 namespace graphics { class Buffer; }
-namespace frontend { class ClientBuffers; }
 namespace compositor
 {
 class DroppingSchedule : public Schedule
 {
 public:
-    DroppingSchedule(std::shared_ptr<frontend::ClientBuffers> const&);
+    DroppingSchedule();
     void schedule(std::shared_ptr<graphics::Buffer> const& buffer) override;
     std::future<void> schedule_nonblocking(
         std::shared_ptr<graphics::Buffer> const& buffer) override;
@@ -40,7 +39,6 @@ public:
 
 private:
     std::mutex mutable mutex;
-    std::shared_ptr<frontend::ClientBuffers> const sender;
     std::shared_ptr<graphics::Buffer> the_only_buffer;
 };
 }

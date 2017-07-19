@@ -16,17 +16,15 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/frontend/client_buffers.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/buffer_sink.h"
 #include "mir/renderer/sw/pixel_source.h"
 #include "src/client/buffer_vault.h"
 #include "src/client/buffer_factory.h"
-#include "src/client/buffer_factory.h"
 #include "src/client/protobuf_to_native_buffer.h"
 #include "src/client/connection_surface_map.h"
 #include "src/server/compositor/stream.h"
-#include "src/server/compositor/buffer_map.h"
+#include "src/server/compositor/temporary_buffers.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/mock_client_buffer_factory.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
@@ -47,12 +45,6 @@ using namespace testing;
 
 namespace
 {
-
-enum class TestType
-{
-    ExchangeSemantics,
-    SubmitSemantics
-};
 
 enum class Access
 {
@@ -462,6 +454,24 @@ MATCHER(NeverBlocks, "")
     return never_blocks; 
 }
 
+class AutoSendBuffer : public mc::TemporaryBuffer
+{
+public:
+    AutoSendBuffer(
+        std::shared_ptr<mg::Buffer> const& wrapped,
+        std::shared_ptr<mf::BufferSink> const& sink)
+        : TemporaryBuffer(wrapped),
+          sink{sink}
+    {
+    }
+
+    ~AutoSendBuffer()
+    {
+        sink->update_buffer(*buffer);
+    }
+private:
+    std::shared_ptr<mf::BufferSink> const sink;
+};
 
 //test infrastructure
 struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
@@ -470,9 +480,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     {
         ipc = std::make_shared<StubIpcSystem>();
         sink = std::make_shared<StubEventSink>(ipc);
-        map = std::make_shared<mc::BufferMap>(sink);
         auto submit_stream = std::make_shared<mc::Stream>(
-            map,
             geom::Size{100,100},
             mir_pixel_format_abgr_8888);
         auto weak_stream = std::weak_ptr<mc::Stream>(submit_stream);
@@ -483,12 +491,15 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
                 if (!submit_stream)
                     return;
                 mg::BufferID id{static_cast<unsigned int>(buffer.buffer_id())};
-                submit_stream->submit_buffer(map->get(id));
+                submit_stream->submit_buffer(
+                    std::make_shared<AutoSendBuffer>(map.at(id), sink));
             });
         ipc->on_allocate(
             [this](geom::Size sz)
             {
-                map->add_buffer(std::make_shared<mtd::StubBuffer>(sz));
+                auto const buffer = std::make_shared<mtd::StubBuffer>(sz);
+                map[buffer->id()] = buffer;
+                sink->add_buffer(*buffer);
             });
 
         consumer = std::make_unique<ScheduledConsumer>(submit_stream);
@@ -529,7 +540,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     std::unique_ptr<ConsumerSystem> consumer;
     std::unique_ptr<ConsumerSystem> second_consumer;
     std::unique_ptr<ConsumerSystem> third_consumer;
-    std::shared_ptr<mc::BufferMap> map;
+    std::unordered_map<mg::BufferID, std::shared_ptr<mg::Buffer>> map;
 };
 
 struct WithAnyNumberOfBuffers : BufferScheduling {};

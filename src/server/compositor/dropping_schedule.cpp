@@ -17,16 +17,13 @@
  */
 
 #include "dropping_schedule.h"
-#include "mir/frontend/client_buffers.h"
 #include "mir/graphics/buffer.h"
 
 #include <boost/throw_exception.hpp>
-namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 
-mc::DroppingSchedule::DroppingSchedule(std::shared_ptr<mf::ClientBuffers> const& client_buffers) :
-    sender(client_buffers)
+mc::DroppingSchedule::DroppingSchedule()
 {
 }
 
@@ -42,14 +39,6 @@ std::future<void> mc::DroppingSchedule::schedule_nonblocking(
 {
     std::future<void> drop;
     std::lock_guard<decltype(mutex)> lk(mutex);
-    if ((the_only_buffer != buffer) && the_only_buffer)
-    {
-        drop = std::async(std::launch::deferred,
-            [sender=sender, dropped=the_only_buffer]()
-            {
-                sender->send_buffer(dropped->id());
-            });
-    }
     the_only_buffer = buffer;
     return drop;
 }

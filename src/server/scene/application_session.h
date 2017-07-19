@@ -100,12 +100,6 @@ public:
     void destroy_buffer_stream(frontend::BufferStreamId stream) override;
     void configure_streams(Surface& surface, std::vector<shell::StreamSpecification> const& config) override;
     void destroy_surface(std::weak_ptr<Surface> const& surface) override;
-
-    graphics::BufferID create_buffer(graphics::BufferProperties const& properties) override;
-    graphics::BufferID create_buffer(geometry::Size, MirPixelFormat) override;
-    graphics::BufferID create_buffer(geometry::Size, uint32_t native_format, uint32_t native_flags) override;
-    void destroy_buffer(graphics::BufferID) override;
-    std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) override;
 protected:
     ApplicationSession(ApplicationSession const&) = delete;
     ApplicationSession& operator=(ApplicationSession const&) = delete;
@@ -119,7 +113,6 @@ private:
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<frontend::EventSink> const event_sink;
-    std::shared_ptr<frontend::ClientBuffers> const buffers;
     std::shared_ptr<graphics::GraphicBufferAllocator> const gralloc;
 
     frontend::SurfaceId next_id();

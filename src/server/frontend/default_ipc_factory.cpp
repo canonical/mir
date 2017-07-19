@@ -26,6 +26,7 @@
 #include "resource_cache.h"
 #include "mir/frontend/session_authorizer.h"
 #include "mir/frontend/event_sink.h"
+#include "event_sink_factory.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/cookie/authority.h"
 
@@ -150,5 +151,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         anr_detector,
         cookie_authority,
         input_changer,
-        extensions);
+        extensions,
+        buffer_allocator);
 }
