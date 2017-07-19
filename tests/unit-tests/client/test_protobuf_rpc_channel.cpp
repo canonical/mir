@@ -840,3 +840,27 @@ TEST_F(MirProtobufRpcChannelTest, sends_incoming_buffer_to_stream_if_stream_id_p
                   std::make_shared<mtd::NullClientEventSink>()};
     channel.on_data_available();
 }
+
+TEST_F(MirProtobufRpcChannelTest, ignores_update_message_for_unknown_buffer)
+{
+    mir::protobuf::EventSequence seq;
+    auto request = seq.mutable_buffer_request();
+    request->mutable_buffer()->set_buffer_id(42);
+    request->set_operation(mir::protobuf::BufferOperation::update);
+
+    set_async_buffer_message(seq, *transport);
+
+    channel->on_data_available();
+}
+
+TEST_F(MirProtobufRpcChannelTest, ignores_delete_message_for_unknown_buffer)
+{
+    mir::protobuf::EventSequence seq;
+    auto request = seq.mutable_buffer_request();
+    request->mutable_buffer()->set_buffer_id(42);
+    request->set_operation(mir::protobuf::BufferOperation::remove);
+
+    set_async_buffer_message(seq, *transport);
+
+    channel->on_data_available();
+}

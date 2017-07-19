@@ -52,7 +52,6 @@ public:
     void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, graphics::BufferIpcMsgType) override;
     void add_buffer(graphics::Buffer&) override;
     void error_buffer(geometry::Size, MirPixelFormat, std::string const&) override;
-    void remove_buffer(graphics::Buffer&) override;
     void update_buffer(graphics::Buffer&) override;
 
 private:

@@ -64,9 +64,7 @@ void mc::BufferMap::remove_buffer(mg::BufferID id)
 {
     std::unique_lock<decltype(mutex)> lk(mutex);
     auto it = checked_buffers_find(id, lk);
-    if (auto s = sink.lock())
-        s->remove_buffer(*it->second.buffer);
-    buffers.erase(it); 
+    buffers.erase(it);
 }
 
 void mc::BufferMap::send_buffer(mg::BufferID id)

@@ -27,12 +27,12 @@ namespace protobuf
 {
 inline constexpr int current_protocol_version()
 { 
-    return MIR_VERSION_NUMBER(0,5,0);
+    return MIR_VERSION_NUMBER(0,6,0);
 }
 
 inline constexpr int oldest_compatible_protocol_version()
 {
-    return MIR_VERSION_NUMBER(0,5,0);
+    return MIR_VERSION_NUMBER(0,6,0);
 }
 
 inline constexpr int next_incompatible_protocol_version()

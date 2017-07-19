@@ -79,7 +79,6 @@ TEST_F(ClientBuffers, sends_no_update_msg_if_buffer_is_not_around)
     auto id = map.add_buffer(mt::fake_shared(stub_buffer));
     auto buffer = map.get(id);
 
-    EXPECT_CALL(*mock_sink, remove_buffer(Ref(*buffer)));
     map.remove_buffer(id);
     map.send_buffer(id);
 }
