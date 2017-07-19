@@ -1,15 +1,3 @@
-mir_add_wrapped_executable(mir_demo_standalone_render_surfaces
-  render_surfaces.cpp
-  buffer_render_target.cpp
-  image_renderer.cpp
-)
-
-target_link_libraries(mir_demo_standalone_render_surfaces
-  mirserver
-  exampleserverconfig
-  ${Boost_LIBRARIES}
-)
-
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
 add_library(eglapp STATIC
@@ -190,17 +178,6 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/renderers/gl
   ${PROJECT_SOURCE_DIR}/include/renderers/sw
   ${GL_INCLUDE_DIRS}
-)
-
-mir_add_wrapped_executable(mir_demo_standalone_render_to_fb
-    render_to_fb.cpp
-)
-
-target_link_libraries(mir_demo_standalone_render_to_fb
-    mirserver
-    mirdraw
-    ${GL_LIBRARIES}
-    ${Boost_LIBRARIES}
 )
 
 add_library(mir_demo_server_loadable MODULE

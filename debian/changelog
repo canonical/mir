@@ -34,6 +34,8 @@ mir (0.27.0-0ubuntu1) UNRELEASED; urgency=medium
       . Minor clean-ups, optimizations and dead code removal.
       . Added support for building on Ubuntu 17.10 artful.
       . Update example code to use undeprecated API.
+      . mesa-kms: Support hardware cursors in hybrid setups.
+      . Rework and publish the graphics platform APIs
     - Bugs fixed:
       . [enhancement] Make able to get version information from client /
         server APIs (LP: #1195540)

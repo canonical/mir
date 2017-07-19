@@ -276,21 +276,6 @@ catch (std::exception& ex)
     MIR_LOG_UNCAUGHT_EXCEPTION(ex);
 }
 
-void send_resize_event_if_needed(MirWindow *window, MirWindowSpec const& spec, mir::protobuf::Surface const& surface_proto)
-{
-    if (spec.width.is_set() && spec.height.is_set() && spec.event_handler.is_set())
-    {
-        mir::geometry::Size requested_size{spec.width.value(), spec.height.value()};
-        mir::geometry::Size actual_size{surface_proto.width(), surface_proto.height()};
-        auto event_handler = spec.event_handler.value();
-        if (requested_size != actual_size)
-        {
-            auto event = mev::make_event(mf::SurfaceId{surface_proto.id().value()}, actual_size);
-            event_handler.callback(window, event.get(), event_handler.context);
-        }
-    }
-}
-
 std::mutex connection_guard;
 MirConnection* valid_connections{nullptr};
 }
@@ -393,7 +378,7 @@ MirWaitHandle* MirConnection::create_surface(
         surface_requests.emplace_back(c);
     }
 
-    try 
+    try
     {
         server.create_surface(&message, c->response.get(),
             gp::NewCallback(this, &MirConnection::surface_created, c.get()));
@@ -434,7 +419,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
     if (request_it == surface_requests.end())
         return;
 
-    auto surface_proto = request->response; 
+    auto surface_proto = request->response;
     auto callback = request->cb;
     auto context = request->context;
     auto const& spec = request->spec;
@@ -471,7 +456,7 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
             reason += surface_proto->error();
         if (surface_proto->has_error() && !surface_proto->has_id())
             reason += " and ";
-        if (!surface_proto->has_id()) 
+        if (!surface_proto->has_id())
             reason +=  "Server assigned surface no id";
         auto id = next_error_id(lock);
         surf = std::make_shared<MirWindow>(reason, this, id, request->wh);
@@ -485,9 +470,22 @@ void MirConnection::surface_created(SurfaceCreationRequest* request)
     }
 
     callback(surf.get(), context);
-    request->wh->result_received();
 
-    send_resize_event_if_needed(surf.get(), spec, *surface_proto);
+    if (MirWindow::is_valid(surf.get()) && spec.width.is_set() && spec.height.is_set() && spec.event_handler.is_set())
+    {
+        mir::geometry::Size requested_size{spec.width.value(), spec.height.value()};
+        mir::geometry::Size actual_size{(*surface_proto).width(), (*surface_proto).height()};
+        auto event_handler = spec.event_handler.value();
+        if (requested_size != actual_size)
+        {
+            auto event = mir::events::make_event(mir::frontend::SurfaceId{(*surface_proto).id().value()}, actual_size);
+            lock.unlock();
+            event_handler.callback(surf.get(), event.get(), event_handler.context);
+            lock.lock();
+        }
+    }
+
+    request->wh->result_received();
     surface_requests.erase(request_it);
 }
 
@@ -571,7 +569,7 @@ MirWaitHandle* MirConnection::release_surface(
         callback(surface, context);
         auto id = surface->id();
         surface_map->erase(mf::SurfaceId(id));
-        return raw_wait_handle;    
+        return raw_wait_handle;
     }
 
     SurfaceRelease surf_release{surface, raw_wait_handle, callback, context};
@@ -1301,7 +1299,7 @@ void MirConnection::allocate_buffer(
         callback, context);
     server.allocate_buffers(&request, ignored.get(), gp::NewCallback(ignore));
 }
- 
+
 void MirConnection::allocate_buffer(
     geom::Size size, uint32_t native_format, uint32_t native_flags,
     MirBufferCallback callback, void* context)

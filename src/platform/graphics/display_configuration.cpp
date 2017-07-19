@@ -278,8 +278,7 @@ bool mg::DisplayConfigurationOutput::valid() const
     if (f == pixel_formats.end())
         return false;
 
-    auto nmodes = modes.size();
-    if (current_mode_index >= nmodes)
+    if (used && current_mode_index >= modes.size())
         return false;
 
     if (custom_logical_size.is_set())

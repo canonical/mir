@@ -176,7 +176,7 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*
                 if (strstr(device_extensions, "EGL_EXT_device_drm") != NULL)
                 {
                     // Check if we can acquire DRM master
-                    int const drm_fd = open(drm_node_for_device(device), O_RDWR | O_CLOEXEC);
+                    mir::Fd const drm_fd{open(drm_node_for_device(device), O_RDWR | O_CLOEXEC)};
                     if (drmSetMaster(drm_fd))
                     {
                         mir::log_debug(
