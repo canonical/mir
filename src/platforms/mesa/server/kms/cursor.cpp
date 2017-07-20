@@ -71,7 +71,7 @@ int get_drm_cursor_height(int fd)
 {
     // on some older hardware drm incorrectly reports the cursor size
     bool const force_64x64_cursor = getenv(mir_drm_cursor_64x64);
-   
+
     uint64_t height = fallback_cursor_size;
     if (!force_64x64_cursor)
        drmGetCap(fd, DRM_CAP_CURSOR_HEIGHT, &height);
@@ -82,7 +82,7 @@ int get_drm_cursor_width(int fd)
 {
     // on some older hardware drm incorrectly reports the cursor size
     bool const force_64x64_cursor = getenv(mir_drm_cursor_64x64);
-    
+
     uint64_t width = fallback_cursor_size;
     if (!force_64x64_cursor)
        drmGetCap(fd, DRM_CAP_CURSOR_WIDTH, &width);
@@ -233,6 +233,7 @@ void mgm::Cursor::show(CursorImage const& cursor_image)
 
     auto const& size = cursor_image.size();
 
+    hotspot = cursor_image.hotspot();
     {
         auto locked_buffers = buffers.lock();
         for (auto& pair : *locked_buffers)
@@ -249,8 +250,7 @@ void mgm::Cursor::show(CursorImage const& cursor_image)
             }
         }
     }
-    hotspot = cursor_image.hotspot();
-    
+
     // Writing the data could throw an exception so lets
     // hold off on setting visible until after we have succeeded.
     visible = true;
@@ -334,7 +334,7 @@ void mgm::Cursor::place_cursor_at_locked(
         if (output_rect.contains(position))
         {
             auto dp = transform(output_rect, position - output_rect.top_left, orientation);
-            
+
             // It's a little strange that we implement hotspot this way as there is
             // drmModeSetCursor2 with hotspot support. However it appears to not actually
             // work on radeon and intel. There also seems to be precedent in weston for
