@@ -272,8 +272,8 @@ void mgm::RealKMSOutput::move_cursor(geometry::Point destination)
     if (current_crtc)
     {
         if (auto result = drmModeMoveCursor(drm_fd_, current_crtc->crtc_id,
-                                            destination.x.as_uint32_t(),
-                                            destination.y.as_uint32_t()))
+                                            destination.x.as_int(),
+                                            destination.y.as_int()))
         {
             mir::log_warning("move_cursor: drmModeMoveCursor failed (%s)",
                              strerror(-result));
