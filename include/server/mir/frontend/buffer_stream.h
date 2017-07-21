@@ -63,7 +63,6 @@ public:
     //      side once we only support the NBS system.
     virtual void allow_framedropping(bool) = 0;
     virtual void set_scale(float scale) = 0;
-    virtual bool suitable_for_cursor() const = 0;
 protected:
     BufferStream() = default;
     BufferStream(BufferStream const&) = delete;
