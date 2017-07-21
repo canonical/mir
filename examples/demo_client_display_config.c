@@ -53,9 +53,10 @@ struct ClientContext
     volatile sig_atomic_t reconfigure;
 };
 
-static void print_current_configuration(MirConnection *connection)
+static MirDisplayConfig *conf = NULL;
+
+static void print_current_configuration()
 {
-    MirDisplayConfig *conf = mir_connection_create_display_configuration(connection);
     size_t num_outputs = mir_display_config_get_num_outputs(conf);
 
     for (uint32_t i = 0; i < num_outputs; i++)
@@ -68,8 +69,8 @@ static void print_current_configuration(MirConnection *connection)
         bool connected = mir_output_get_connection_state(output) ==
             mir_output_connection_state_connected;
 
-        printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d",
-               id, connected, used, position_x, position_y);
+        printf("Output id: %d connected: %d used: %d position_x: %d position_y: %d orientation: %d",
+               id, connected, used, position_x, position_y, mir_output_get_orientation(output));
 
         MirOutputMode const* current = mir_output_get_current_mode(output);
         if (current)
@@ -84,8 +85,6 @@ static void print_current_configuration(MirConnection *connection)
             printf("\n");
         }
     }
-
-    mir_display_config_release(conf);
 }
 
 static int apply_configuration(MirConnection *connection, MirDisplayConfig *conf)
@@ -212,7 +211,7 @@ static void configure_display_single(MirDisplayConfig *conf, int output_num)
     }
 }
 
-void orient_display(MirDisplayConfig *conf, MirOrientation orientation)
+static void orient_display(MirDisplayConfig *conf, MirOrientation orientation)
 {
     size_t num_outputs = mir_display_config_get_num_outputs(conf);
 
@@ -226,8 +225,8 @@ void orient_display(MirDisplayConfig *conf, MirOrientation orientation)
 static void configure_display(struct ClientContext *context, ConfigurationMode mode,
                               int mode_data)
 {
-    MirDisplayConfig *conf =
-        mir_connection_create_display_configuration(context->connection);
+    if (!conf)
+        conf = mir_connection_create_display_configuration(context->connection);
 
     switch (mode)
     {
@@ -280,20 +279,31 @@ static void configure_display(struct ClientContext *context, ConfigurationMode m
         context->mode = mode;
         context->mode_data = mode_data;
     }
-
-    mir_display_config_release(conf);
 }
 
 static void display_change_callback(MirConnection *connection, void *context)
 {
-    (void)context;
-
     printf("=== Display configuration changed === \n");
 
-    print_current_configuration(connection);
+    if (conf)
+        mir_display_config_release(conf);
+
+    conf = mir_connection_create_display_configuration(connection);
+
+    print_current_configuration();
 
     struct ClientContext *ctx = (struct ClientContext*) context;
     ctx->reconfigure = 1;
+}
+
+static void apply_to_base_configuration(MirConnection *connection)
+{
+    if (!conf)
+        return;
+
+    mir_connection_preview_base_display_configuration(connection, conf, 2);
+    puts("Applying to base configuration");
+    mir_connection_confirm_base_display_configuration(connection, conf);
 }
 
 static void handle_keyboard_event(struct ClientContext *ctx, MirKeyboardEvent const* event)
@@ -311,6 +321,9 @@ static void handle_keyboard_event(struct ClientContext *ctx, MirKeyboardEvent co
 
     switch (key_code)
     {
+    case XKB_KEY_a:
+        apply_to_base_configuration(ctx->connection);
+        break;
     case XKB_KEY_q:
         ctx->running = 0;
         break;
@@ -323,8 +336,7 @@ static void handle_keyboard_event(struct ClientContext *ctx, MirKeyboardEvent co
     case XKB_KEY_v:
         configure_display(ctx, configuration_mode_vertical, 0);
         break;
-    case XKB_KEY_p:
-        print_current_configuration(ctx->connection);
+    case XKB_KEY_p:print_current_configuration();
         break;
     case XKB_KEY_Left:
         configure_display(ctx, configuration_mode_right, 0);
@@ -371,7 +383,8 @@ int main(int argc, char *argv[])
                " v: arrange outputs vertically in the virtual space\n"
                " 1-9: enable only the Nth connected output (in the order returned by the hardware)\n"
                " Arrows: orient display (sets \"down\" direction)\n"
-               " p: print current display configuration\n");
+               " p: print current display configuration\n"
+               " a: apply current display configuration globally\n");
 
         return 1;
     }
@@ -404,6 +417,9 @@ int main(int argc, char *argv[])
             ctx.reconfigure = 0;
         }
     }
+
+    if (conf)
+        mir_display_config_release(conf);
 
     mir_eglapp_cleanup();
 
