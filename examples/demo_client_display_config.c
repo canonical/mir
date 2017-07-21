@@ -37,7 +37,11 @@ typedef enum
     configuration_mode_clone,
     configuration_mode_horizontal,
     configuration_mode_vertical,
-    configuration_mode_single
+    configuration_mode_single,
+    configuration_mode_left,
+    configuration_mode_right,
+    configuration_mode_up,
+    configuration_mode_down
 } ConfigurationMode;
 
 struct ClientContext
@@ -208,31 +212,67 @@ static void configure_display_single(MirDisplayConfig *conf, int output_num)
     }
 }
 
+void orient_display(MirDisplayConfig *conf, MirOrientation orientation)
+{
+    size_t num_outputs = mir_display_config_get_num_outputs(conf);
+
+    for (size_t i = 0; i < num_outputs; i++)
+    {
+        MirOutput *output = mir_display_config_get_mutable_output(conf, i);
+        mir_output_set_orientation(output, orientation);
+    }
+}
+
 static void configure_display(struct ClientContext *context, ConfigurationMode mode,
                               int mode_data)
 {
     MirDisplayConfig *conf =
         mir_connection_create_display_configuration(context->connection);
 
-    if (mode == configuration_mode_clone)
+    switch (mode)
     {
+    case configuration_mode_clone:
         configure_display_clone(conf);
         printf("Applying clone configuration: ");
-    }
-    else if (mode == configuration_mode_vertical)
-    {
+        break;
+
+    case configuration_mode_vertical:
         configure_display_vertical(conf);
         printf("Applying vertical configuration: ");
-    }
-    else if (mode == configuration_mode_horizontal)
-    {
+        break;
+
+    case configuration_mode_horizontal:
         configure_display_horizontal(conf);
         printf("Applying horizontal configuration: ");
-    }
-    else if (mode == configuration_mode_single)
-    {
+        break;
+
+    case configuration_mode_single:
         configure_display_single(conf, mode_data);
         printf("Applying single configuration for output %d: ", mode_data);
+        break;
+
+    case configuration_mode_left:
+        orient_display(conf, mir_orientation_left);
+        printf("Applying orientation left: ");
+        break;
+
+    case configuration_mode_right:
+        orient_display(conf, mir_orientation_right);
+        printf("Applying orientation right: ");
+        break;
+
+    case configuration_mode_up:
+        orient_display(conf, mir_orientation_inverted);
+        printf("Applying orientation up: ");
+        break;
+
+    case configuration_mode_down:
+        orient_display(conf, mir_orientation_normal);
+        printf("Applying orientation down: ");
+        break;
+
+    default:
+        break;
     }
 
     if (apply_configuration(context->connection, conf))
@@ -286,21 +326,34 @@ static void handle_keyboard_event(struct ClientContext *ctx, MirKeyboardEvent co
     case XKB_KEY_p:
         print_current_configuration(ctx->connection);
         break;
+    case XKB_KEY_Left:
+        configure_display(ctx, configuration_mode_right, 0);
+        break;
+    case XKB_KEY_Up:
+        configure_display(ctx, configuration_mode_up, 0);
+        break;
+    case XKB_KEY_Right:
+        configure_display(ctx, configuration_mode_left, 0);
+        break;
+    case XKB_KEY_Down:
+        configure_display(ctx, configuration_mode_down, 0);
+        break;
     }
 }
 
 static void event_callback(
     MirWindow* surface, MirEvent const* event, void* context)
 {
-    (void) surface;
+    mir_eglapp_handle_event(surface, event, context);
+
     struct ClientContext *ctx = (struct ClientContext*) context;
-    
+
     if (mir_event_get_type(event) != mir_event_type_input)
         return;
     MirInputEvent const* input_event = mir_event_get_input_event(event);
     if (mir_input_event_get_type(input_event) != mir_input_event_type_key)
         return;
-    
+
     handle_keyboard_event(ctx, mir_input_event_get_keyboard_event(input_event));
 }
 
@@ -317,6 +370,7 @@ int main(int argc, char *argv[])
                " h: arrange outputs horizontally in the virtual space\n"
                " v: arrange outputs vertically in the virtual space\n"
                " 1-9: enable only the Nth connected output (in the order returned by the hardware)\n"
+               " Arrows: orient display (sets \"down\" direction)\n"
                " p: print current display configuration\n");
 
         return 1;
