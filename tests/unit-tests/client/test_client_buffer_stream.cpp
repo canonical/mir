@@ -204,16 +204,15 @@ struct ClientBufferStream : TestWithParam<bool>
 
     void async_buffer_arrives(mp::Buffer& buffer)
     {
-        try
+        if (auto buf = map->buffer(buffer.buffer_id()))
         {
-            map->buffer(buffer.buffer_id())->received(*mcl::protobuf_to_native_buffer(buffer));
+            buf->received(*mcl::protobuf_to_native_buffer(buffer));
         }
-        catch (std::runtime_error& e)
+        else
         {
-            auto bb = factory->generate_buffer(buffer);
-            auto braw = bb.get();
-            map->insert(buffer.buffer_id(), std::move(bb)); 
-            braw->received();
+            map->insert(buffer.buffer_id(), factory->generate_buffer(buffer));
+            buf = map->buffer(buffer.buffer_id());
+            buf->received();
         }
     }
 

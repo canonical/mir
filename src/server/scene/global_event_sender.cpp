@@ -67,10 +67,6 @@ void ms::GlobalEventSender::add_buffer(graphics::Buffer&)
 {
 }
 
-void ms::GlobalEventSender::remove_buffer(graphics::Buffer&)
-{
-}
-
 void ms::GlobalEventSender::update_buffer(graphics::Buffer&)
 {
 }
