@@ -1,7 +1,7 @@
 /*
  * Client-side display configuration demo.
  *
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013, 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -41,7 +41,7 @@ typedef enum
     configuration_mode_left,
     configuration_mode_right,
     configuration_mode_up,
-    configuration_mode_down
+    configuration_mode_down,
 } ConfigurationMode;
 
 struct ClientContext
@@ -57,6 +57,9 @@ static MirDisplayConfig *conf = NULL;
 
 static void print_current_configuration()
 {
+    if (!conf)
+        return;
+
     size_t num_outputs = mir_display_config_get_num_outputs(conf);
 
     for (uint32_t i = 0; i < num_outputs; i++)
@@ -336,7 +339,10 @@ static void handle_keyboard_event(struct ClientContext *ctx, MirKeyboardEvent co
     case XKB_KEY_v:
         configure_display(ctx, configuration_mode_vertical, 0);
         break;
-    case XKB_KEY_p:print_current_configuration();
+    case XKB_KEY_p:
+        if (!conf)
+            conf = mir_connection_create_display_configuration(ctx->connection);
+        print_current_configuration();
         break;
     case XKB_KEY_Left:
         configure_display(ctx, configuration_mode_right, 0);
