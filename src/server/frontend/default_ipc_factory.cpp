@@ -60,24 +60,23 @@ public:
             {
                 while (!shutdown)
                 {
-                    std::function<void()> task;
-                    {
-                        std::unique_lock<std::mutex> lock{queue_mutex};
-                        queue_notifier.wait(
-                            lock,
-                            [this]()
-                            {
-                                return shutdown || !tasks.empty();
-                            });
-                        if (!tasks.empty())
+                    std::unique_lock<std::mutex> lock{queue_mutex};
+                    queue_notifier.wait(
+                        lock,
+                        [this]()
                         {
-                            task = std::move(tasks.front());
-                            tasks.pop_front();
-                        }
-                    }
-                    if (task)
+                            return shutdown || !tasks.empty();
+                        });
+
+                    while (!tasks.empty())
                     {
+                        std::function<void()> task;
+                        task = std::move(tasks.front());
+                        tasks.pop_front();
+
+                        lock.unlock();
                         task();
+                        lock.lock();
                     }
                 }
             }
