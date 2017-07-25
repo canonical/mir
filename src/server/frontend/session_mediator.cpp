@@ -396,15 +396,12 @@ namespace
         }
         ~AutoSendBuffer()
         {
-            if (auto live_sink = sink.lock())
-            {
-                // Ensure we send buffer events from a dedicated thread.
-                executor->spawn(
-                    [live_sink, to_send = buffer]()
-                    {
+            executor->spawn(
+                [maybe_sink = sink, to_send = buffer]()
+                {
+                    if (auto const live_sink = maybe_sink.lock())
                         live_sink->update_buffer(*to_send);
-                    });
-            }
+                });
         }
 
         std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const override
