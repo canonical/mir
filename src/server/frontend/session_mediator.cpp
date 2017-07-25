@@ -397,7 +397,7 @@ namespace
         ~AutoSendBuffer()
         {
             executor->spawn(
-                [maybe_sink = sink, to_send = buffer]()
+                [maybe_sink = sink, to_send = std::move(buffer)]()
                 {
                     if (auto const live_sink = maybe_sink.lock())
                         live_sink->update_buffer(*to_send);
@@ -430,7 +430,7 @@ namespace
         }
 
     private:
-        std::shared_ptr<mg::Buffer> const buffer;
+        std::shared_ptr<mg::Buffer> buffer;
         std::shared_ptr<mir::Executor> executor;
         std::weak_ptr<mf::BufferSink> const sink;
     };
