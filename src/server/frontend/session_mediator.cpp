@@ -431,7 +431,7 @@ namespace
 
     private:
         std::shared_ptr<mg::Buffer> buffer;
-        std::shared_ptr<mir::Executor> executor;
+        std::shared_ptr<mir::Executor> const executor;
         std::weak_ptr<mf::BufferSink> const sink;
     };
 
