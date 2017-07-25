@@ -30,6 +30,7 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/cookie/authority.h"
 #include "mir/executor.h"
+#include "mir/signal_blocker.h"
 
 #include <deque>
 
@@ -46,6 +47,14 @@ public:
     ThreadExecutor()
         : shutdown{false}
     {
+        /*
+         * Block all signals on the dispatch thread.
+         *
+         * Threads inherit their parent's signal mask, so use a SignalBlocker to block
+         * all signals *before* spawning the thread (and then restore the signal mask
+         * when this constructor completes).
+         */
+        mir::SignalBlocker blocker;
         dispatch_thread = std::thread{
             [this]() noexcept
             {
