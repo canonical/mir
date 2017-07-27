@@ -191,10 +191,3 @@ void mc::Stream::disassociate_buffer(mg::BufferID id)
 void mc::Stream::set_scale(float)
 {
 }
-
-bool mc::Stream::suitable_for_cursor() const
-{
-    // We can't reasonably answer this question -
-    // Suitability for cursor use is a per-buffer property, not a per-stream property.
-    return true;
-}

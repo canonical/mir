@@ -765,8 +765,6 @@ void mf::SessionMediator::modify_surface(
     {
         mf::BufferStreamId id{surface_specification.cursor_id().value()};
         auto stream = session->get_buffer_stream(id);
-        if (!stream->suitable_for_cursor())
-            BOOST_THROW_EXCEPTION(std::logic_error("Cursor buffer streams must have mir_pixel_format_argb_8888 format"));
         mods.stream_cursor = msh::StreamCursor{
             id, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} };
     }
@@ -1066,9 +1064,6 @@ void mf::SessionMediator::configure_cursor(
         auto const& stream_id = mf::BufferStreamId(cursor_request->buffer_stream().value());
         auto hotspot = geom::Displacement{cursor_request->hotspot_x(), cursor_request->hotspot_y()};
         auto stream = session->get_buffer_stream(stream_id);
-
-        if (!stream->suitable_for_cursor())
-            BOOST_THROW_EXCEPTION(std::logic_error("Cursor buffer streams must have mir_pixel_format_argb_8888 format"));
 
         surface->set_cursor_stream(stream, hotspot);
     }

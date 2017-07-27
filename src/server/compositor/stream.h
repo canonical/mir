@@ -59,7 +59,6 @@ public:
     void associate_buffer(graphics::BufferID) override;
     void disassociate_buffer(graphics::BufferID) override;
     void set_scale(float scale) override;
-    bool suitable_for_cursor() const override;
 
 private:
     enum class ScheduleMode;
