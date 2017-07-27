@@ -89,51 +89,45 @@ mcl::BufferVault::~BufferVault()
     disposing = true;
 
     for (auto& it : buffers)
-    try
+    if (auto map = surface_map.lock())
     {
-        if (auto map = surface_map.lock())
+        if (auto buffer = map->buffer(it.first))
         {
-            if (auto buffer = map->buffer(it.first))
-            {
-                /*
-                 * Annoying wart:
-                 *
-                 * mir::AtomicCallback is atomic via locking, and we need it to be because
-                 * we rely on the guarantee that after set_callback() returns no thread
-                 * is in, or will enter, the previous callback.
-                 *
-                 * However!
-                 *
-                 * wire_transfer_inbound() is called from buffer->callback, and acquires
-                 * BufferVault::mutex.
-                 *
-                 * This destuctor must call buffer->set_callback(), and has acquired
-                 * BufferVault::mutex.
-                 *
-                 * So we've got a lock inversion.
-                 *
-                 * We can't unlock here, as wire_transfer_inbound() might mutate
-                 * BufferVault::buffers, which we're iterating over.
-                 *
-                 * So store them up to process later...
-                 */
-                current_buffers.push_back(buffer);
+            /*
+             * Annoying wart:
+             *
+             * mir::AtomicCallback is atomic via locking, and we need it to be because
+             * we rely on the guarantee that after set_callback() returns no thread
+             * is in, or will enter, the previous callback.
+             *
+             * However!
+             *
+             * wire_transfer_inbound() is called from buffer->callback, and acquires
+             * BufferVault::mutex.
+             *
+             * This destuctor must call buffer->set_callback(), and has acquired
+             * BufferVault::mutex.
+             *
+             * So we've got a lock inversion.
+             *
+             * We can't unlock here, as wire_transfer_inbound() might mutate
+             * BufferVault::buffers, which we're iterating over.
+             *
+             * So store them up to process later...
+             */
+            current_buffers.push_back(buffer);
 
-                /*
-                 * ...and erase them from the SurfaceMap.
-                 *
-                 * After this point, the RPC layer will ignore any messages about
-                 * this buffer.
-                 *
-                 * We don't need to explicitly ask the server to free it; it'll be
-                 * freed with the BufferStream
-                 */
-                map->erase(it.first);
-            }
-        } 
-    }
-    catch (...)
-    {
+            /*
+             * ...and erase them from the SurfaceMap.
+             *
+             * After this point, the RPC layer will ignore any messages about
+             * this buffer.
+             *
+             * We don't need to explicitly ask the server to free it; it'll be
+             * freed with the BufferStream
+             */
+            map->erase(it.first);
+        }
     }
     lk.unlock();
 
