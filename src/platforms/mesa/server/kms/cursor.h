@@ -85,6 +85,7 @@ public:
 
 private:
     enum ForceCursorState { UpdateState, ForceState };
+    struct GBMBOWrapper;
     void for_each_used_output(std::function<void(KMSOutput&, geometry::Rectangle const&, MirOrientation orientation)> const& f);
     void place_cursor_at(geometry::Point position, ForceCursorState force_state);
     void place_cursor_at_locked(std::lock_guard<std::mutex> const&, geometry::Point position, ForceCursorState force_state);
@@ -95,11 +96,10 @@ private:
         size_t count);
     void pad_and_write_image_data_locked(
         std::lock_guard<std::mutex> const&,
-        gbm_bo* buffer,
-        CursorImage const& image);
+        GBMBOWrapper& buffer);
     void clear(std::lock_guard<std::mutex> const&);
 
-    gbm_bo* buffer_for_output(KMSOutput const& output);
+    GBMBOWrapper& buffer_for_output(KMSOutput const& output);
     
     std::mutex guard;
 
@@ -114,14 +114,19 @@ private:
 
     struct GBMBOWrapper
     {
-        GBMBOWrapper(int fd);
+        GBMBOWrapper(int fd, MirOrientation orientation);
         operator gbm_bo*();
+
+        auto orientation() const -> MirOrientation { return current_orientation; }
+        auto change_orientation(MirOrientation new_orientation) -> bool;
+
         ~GBMBOWrapper();
 
         GBMBOWrapper(GBMBOWrapper&& from);
     private:
         gbm_device* device;
         gbm_bo* buffer;
+        MirOrientation current_orientation;
         GBMBOWrapper(GBMBOWrapper const&) = delete;
         GBMBOWrapper& operator=(GBMBOWrapper const&) = delete;
     };

@@ -100,7 +100,7 @@ gbm_device* gbm_create_device_checked(int fd)
 }
 }
 
-mgm::Cursor::GBMBOWrapper::GBMBOWrapper(int fd) :
+mgm::Cursor::GBMBOWrapper::GBMBOWrapper(int fd, MirOrientation orientation) :
     device{gbm_create_device_checked(fd)},
     buffer{
         gbm_bo_create(
@@ -108,7 +108,8 @@ mgm::Cursor::GBMBOWrapper::GBMBOWrapper(int fd) :
             get_drm_cursor_width(fd),
             get_drm_cursor_height(fd),
             GBM_FORMAT_ARGB8888,
-            GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE)}
+            GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE)},
+    current_orientation{orientation}
 {
     if (!buffer) BOOST_THROW_EXCEPTION(std::runtime_error("failed to create gbm buffer"));
 }
@@ -132,6 +133,15 @@ mgm::Cursor::GBMBOWrapper::GBMBOWrapper(GBMBOWrapper&& from)
 {
     from.buffer = nullptr;
     from.device = nullptr;
+}
+
+auto mir::graphics::mesa::Cursor::GBMBOWrapper::change_orientation(MirOrientation new_orientation) -> bool
+{
+    if (current_orientation == new_orientation)
+        return false;
+
+    current_orientation = new_orientation;
+    return true;
 }
 
 mgm::Cursor::Cursor(
@@ -182,8 +192,7 @@ void mgm::Cursor::write_buffer_data_locked(
 
 void mgm::Cursor::pad_and_write_image_data_locked(
     std::lock_guard<std::mutex> const& lg,
-    gbm_bo* buffer,
-    CursorImage const& /*image*/)
+    GBMBOWrapper& buffer)
 {
     uint8_t const* const image_argb = argb8888.data();
     auto const image_width = size.width.as_uint32_t();
@@ -212,6 +221,8 @@ void mgm::Cursor::pad_and_write_image_data_locked(
     }
 
     memset(dest, 0, buffer_stride * (gbm_bo_get_height(buffer) - image_height));
+
+
 
     write_buffer_data_locked(lg, buffer, &padded[0], padded_size);
 }
@@ -244,7 +255,7 @@ void mgm::Cursor::show(CursorImage const& cursor_image)
             auto& buffer = pair.second;
             if (size != geometry::Size{gbm_bo_get_width(buffer), gbm_bo_get_height(buffer)})
             {
-                pad_and_write_image_data_locked(lg, buffer, cursor_image);
+                pad_and_write_image_data_locked(lg, buffer);
             }
             else
             {
@@ -319,7 +330,7 @@ void mgm::Cursor::place_cursor_at(
 }
 
 void mgm::Cursor::place_cursor_at_locked(
-    std::lock_guard<std::mutex> const&,
+    std::lock_guard<std::mutex> const& lg,
     geometry::Point position,
     ForceCursorState force_state)
 {
@@ -342,9 +353,16 @@ void mgm::Cursor::place_cursor_at_locked(
             // work on radeon and intel. There also seems to be precedent in weston for
             // implementing hotspot in this fashion.
             output.move_cursor(geom::Point{} + dp - hotspot);
-            if (force_state || !output.has_cursor()) // TODO - or if orientation had changed - then set buffer..
+            auto& buffer_wrapper = buffer_for_output(output);
+
+            auto const changed_orientation = buffer_wrapper.change_orientation(orientation);
+
+            if (changed_orientation)
+                pad_and_write_image_data_locked(lg, buffer_wrapper);
+
+            if (force_state || !output.has_cursor() || changed_orientation)
             {
-                if (!output.set_cursor(buffer_for_output(output)) || !output.has_cursor())
+                if (!output.set_cursor(buffer_wrapper) || !output.has_cursor())
                     set_on_all_outputs = false;
             }
         }
@@ -360,7 +378,7 @@ void mgm::Cursor::place_cursor_at_locked(
     last_set_failed = !set_on_all_outputs;
 }
 
-gbm_bo* mgm::Cursor::buffer_for_output(KMSOutput const& output)
+mgm::Cursor::GBMBOWrapper& mgm::Cursor::buffer_for_output(KMSOutput const& output)
 {
     auto locked_buffers = buffers.lock();
 
@@ -377,9 +395,9 @@ gbm_bo* mgm::Cursor::buffer_for_output(KMSOutput const& output)
         return buffer_it->second;
     }
 
-    locked_buffers->push_back(std::make_pair(output.drm_fd(), GBMBOWrapper(output.drm_fd())));
+    locked_buffers->push_back(std::make_pair(output.drm_fd(), GBMBOWrapper(output.drm_fd(), mir_orientation_normal)));
 
-    gbm_bo* bo = locked_buffers->back().second;
+    GBMBOWrapper& bo = locked_buffers->back().second;
     if (gbm_bo_get_width(bo) < min_buffer_width)
     {
         min_buffer_width = gbm_bo_get_width(bo);
