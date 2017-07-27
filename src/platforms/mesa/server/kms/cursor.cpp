@@ -195,34 +195,27 @@ void mgm::Cursor::pad_and_write_image_data_locked(
     GBMBOWrapper& buffer)
 {
     uint8_t const* const image_argb = argb8888.data();
-    auto const image_width = size.width.as_uint32_t();
-    auto const image_height = size.height.as_uint32_t();
-    auto const image_stride = image_width * 4;
-
-    if (image_width > min_buffer_width || image_height > min_buffer_height)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Image is too big for GBM cursor buffer"));
-    }
+    auto const image_width = std::min(min_buffer_width, size.width.as_uint32_t());
+    auto const image_height = std::min(min_buffer_height, size.height.as_uint32_t());
+    auto const image_stride = size.width.as_uint32_t() * 4;
 
     size_t buffer_stride = gbm_bo_get_stride(buffer);  // in bytes
     size_t padded_size = buffer_stride * gbm_bo_get_height(buffer);
     auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);
-    size_t rhs_padding = buffer_stride - image_stride;
+    size_t rhs_padding = buffer_stride - 4*image_width;
 
     uint8_t* dest = &padded[0];
     uint8_t const* src = image_argb;
 
     for (unsigned int y = 0; y < image_height; y++)
     {
-        memcpy(dest, src, image_stride);
-        memset(dest + image_stride, 0, rhs_padding);
+        memcpy(dest, src, 4*image_width);
+        memset(dest + 4*image_width, 0, rhs_padding);
         dest += buffer_stride;
         src += image_stride;
     }
 
     memset(dest, 0, buffer_stride * (gbm_bo_get_height(buffer) - image_height));
-
-
 
     write_buffer_data_locked(lg, buffer, &padded[0], padded_size);
 }
