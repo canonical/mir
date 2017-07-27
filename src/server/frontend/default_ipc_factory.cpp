@@ -45,7 +45,10 @@ class ThreadExecutor : public mir::Executor
 {
 public:
     ThreadExecutor()
-        : shutdown{false}
+        : queue_mutex{std::make_shared<std::mutex>()},
+          shutdown{std::make_shared<bool>(false)},
+          queue_notifier{std::make_shared<std::condition_variable>()},
+          tasks{std::make_shared<std::deque<std::function<void()>>>()}
     {
         /*
          * Block all signals on the dispatch thread.
@@ -55,63 +58,79 @@ public:
          * when this constructor completes).
          */
         mir::SignalBlocker blocker;
-        dispatch_thread = std::thread{
-            [this]() noexcept
+        std::thread{
+            [
+                shutdown = shutdown,
+                queue_mutex = queue_mutex,
+                queue_notifier = queue_notifier,
+                tasks = tasks
+            ]() noexcept
             {
-                while (!shutdown)
+                while (!*shutdown)
                 {
-                    std::unique_lock<std::mutex> lock{queue_mutex};
-                    queue_notifier.wait(
+                    std::unique_lock<std::mutex> lock{*queue_mutex};
+                    queue_notifier->wait(
                         lock,
-                        [this]()
+                        [shutdown, tasks]()
                         {
-                            return shutdown || !tasks.empty();
+                            return *shutdown || !tasks->empty();
                         });
 
-                    while (!tasks.empty())
+                    if (*shutdown)
+                        return;
+
+                    while (!tasks->empty())
                     {
                         std::function<void()> task;
-                        task = std::move(tasks.front());
-                        tasks.pop_front();
+                        task = std::move(tasks->front());
+                        tasks->pop_front();
 
                         lock.unlock();
                         task();
+                        /*
+                         * The task functor may have captured resources with non-trivial
+                         * destructors.
+                         *
+                         * Ensure those destructors are called outside the lock.
+                         */
+                        task = nullptr;
                         lock.lock();
                     }
                 }
             }
-        };
+        /*
+         * Let this thread roam free!
+         *
+         * It has shared ownership of all the things it needs to continue, and this
+         * avoids a deadlock during Nested server shutdown where ~ThreadExecutor is called
+         * while holding a lock that a task needs to acquire in order to complete.
+         */
+        }.detach();
     }
 
     ~ThreadExecutor()
     {
         {
-            std::lock_guard<std::mutex> lock{queue_mutex};
-            shutdown = true;
+            std::lock_guard<std::mutex> lock{*queue_mutex};
+            *shutdown = true;
         }
-        queue_notifier.notify_all();
-        if (dispatch_thread.joinable())
-        {
-            dispatch_thread.join();
-        }
+        queue_notifier->notify_all();
     }
 
     void spawn(std::function<void()>&& work) override
     {
         {
-            std::lock_guard<std::mutex> lock{queue_mutex};
-            tasks.emplace_back(std::move(work));
+            std::lock_guard<std::mutex> lock{*queue_mutex};
+            tasks->emplace_back(std::move(work));
         }
-        queue_notifier.notify_all();
+        queue_notifier->notify_all();
     }
 
 private:
-    std::thread dispatch_thread;
-
-    std::mutex queue_mutex;
-    bool shutdown;
-    std::condition_variable queue_notifier;
-    std::deque<std::function<void()>> tasks;
+    std::shared_ptr<std::mutex> queue_mutex;
+    std::shared_ptr<bool> shutdown;
+    std::shared_ptr<std::condition_variable> queue_notifier;
+    std::shared_ptr<std::deque<std::function<void()>>> tasks;
 };
 }
 
