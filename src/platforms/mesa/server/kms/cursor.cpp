@@ -183,12 +183,12 @@ void mgm::Cursor::write_buffer_data_locked(
 void mgm::Cursor::pad_and_write_image_data_locked(
     std::lock_guard<std::mutex> const& lg,
     gbm_bo* buffer,
-    CursorImage const& image)
+    CursorImage const& /*image*/)
 {
-    auto image_argb = static_cast<uint8_t const*>(image.as_argb_8888());
-    auto image_width = image.size().width.as_uint32_t();
-    auto image_height = image.size().height.as_uint32_t();
-    auto image_stride = image_width * 4;
+    uint8_t const* const image_argb = argb8888.data();
+    auto const image_width = size.width.as_uint32_t();
+    auto const image_height = size.height.as_uint32_t();
+    auto const image_stride = image_width * 4;
 
     if (image_width > min_buffer_width || image_height > min_buffer_height)
     {
@@ -231,7 +231,10 @@ void mgm::Cursor::show(CursorImage const& cursor_image)
 {
     std::lock_guard<std::mutex> lg(guard);
 
-    auto const& size = cursor_image.size();
+    size = cursor_image.size();
+
+    argb8888.resize(size.width.as_uint32_t() * size.height.as_uint32_t() * 4);
+    memcpy(argb8888.data(), cursor_image.as_argb_8888(), argb8888.size());
 
     hotspot = cursor_image.hotspot();
     {
@@ -245,8 +248,7 @@ void mgm::Cursor::show(CursorImage const& cursor_image)
             }
             else
             {
-                auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);
-                write_buffer_data_locked(lg, buffer, cursor_image.as_argb_8888(), count);
+                write_buffer_data_locked(lg, buffer, argb8888.data(), argb8888.size());
             }
         }
     }

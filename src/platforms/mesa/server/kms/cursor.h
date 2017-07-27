@@ -106,6 +106,8 @@ private:
     KMSOutputContainer& output_container;
     geometry::Point current_position;
     geometry::Displacement hotspot;
+    geometry::Size size;
+    std::vector<uint8_t> argb8888;
 
     bool visible;
     bool last_set_failed;
