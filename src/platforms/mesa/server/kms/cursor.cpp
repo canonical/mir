@@ -210,17 +210,17 @@ void mgm::Cursor::pad_and_write_image_data_locked(
     auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);
     size_t rhs_padding = buffer_stride - 4*image_width;
 
+    auto const filler = 0; // 0x3f; is useful to make buffer visible for debugging
     uint8_t const* src = argb8888.data();
     uint8_t* dest = &padded[0];
 
     switch (orientation)
     {
     case mir_orientation_normal:
-    default:
         for (unsigned int y = 0; y < image_height; y++)
         {
             memcpy(dest, src, 4*image_width);
-            memset(dest + 4*image_width, 0, rhs_padding);
+            memset(dest + 4*image_width, filler, rhs_padding);
             dest += buffer_stride;
             src += image_stride;
         }
@@ -231,7 +231,7 @@ void mgm::Cursor::pad_and_write_image_data_locked(
     case mir_orientation_inverted:
         for (unsigned int row = 0; row != image_height; ++row)
         {
-            memset(dest+row*buffer_stride+4*image_width, 0x3f, rhs_padding);
+            memset(dest+row*buffer_stride+4*image_width, filler, rhs_padding);
 
             for (unsigned int col = 0; col != image_width; ++col)
             {
@@ -239,10 +239,36 @@ void mgm::Cursor::pad_and_write_image_data_locked(
             }
         }
 
-        memset(dest+image_height*buffer_stride, 0x3f, buffer_stride * (buffer_height - image_height));
-
+        memset(dest+image_height*buffer_stride, filler, buffer_stride * (buffer_height - image_height));
         break;
 
+    case mir_orientation_left:
+        for (unsigned int row = 0; row != image_width; ++row)
+        {
+            memset(dest+row*buffer_stride+4*image_height, filler, rhs_padding);
+
+            for (unsigned int col = 0; col != image_height; ++col)
+            {
+                memcpy(dest+row*buffer_stride+4*col, src + ((image_width-1)-row)*4 + image_stride*col, 4);
+            }
+        }
+
+        memset(dest+image_width*buffer_stride, filler, buffer_stride * (buffer_height - image_width));
+        break;
+
+    case mir_orientation_right:
+        for (unsigned int row = 0; row != image_width; ++row)
+        {
+            memset(dest+row*buffer_stride+4*image_height, filler, rhs_padding);
+
+            for (unsigned int col = 0; col != image_height; ++col)
+            {
+                memcpy(dest+row*buffer_stride+4*col, src + row*4 + image_stride*((image_height-1)-col), 4);
+            }
+        }
+
+        memset(dest+image_width*buffer_stride, filler, buffer_stride * (buffer_height - image_width));
+        break;
     }
 
     write_buffer_data_locked(lg, buffer, &padded[0], padded_size);
