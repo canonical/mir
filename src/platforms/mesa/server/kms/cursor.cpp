@@ -299,15 +299,7 @@ void mgm::Cursor::show(CursorImage const& cursor_image)
         auto locked_buffers = buffers.lock();
         for (auto& pair : *locked_buffers)
         {
-            auto& buffer = pair.second;
-            if (size != geometry::Size{gbm_bo_get_width(buffer), gbm_bo_get_height(buffer)})
-            {
-                pad_and_write_image_data_locked(lg, buffer);
-            }
-            else
-            {
-                write_buffer_data_locked(lg, buffer, argb8888.data(), argb8888.size());
-            }
+            pad_and_write_image_data_locked(lg, pair.second);
         }
     }
 
@@ -401,16 +393,16 @@ void mgm::Cursor::place_cursor_at_locked(
             // work on radeon and intel. There also seems to be precedent in weston for
             // implementing hotspot in this fashion.
             output.move_cursor(geom::Point{} + dp - hs);
-            auto& buffer_wrapper = buffer_for_output(output);
+            auto& buffer = buffer_for_output(output);
 
-            auto const changed_orientation = buffer_wrapper.change_orientation(orientation);
+            auto const changed_orientation = buffer.change_orientation(orientation);
 
             if (changed_orientation)
-                pad_and_write_image_data_locked(lg, buffer_wrapper);
+                pad_and_write_image_data_locked(lg, buffer);
 
             if (force_state || !output.has_cursor() || changed_orientation)
             {
-                if (!output.set_cursor(buffer_wrapper) || !output.has_cursor())
+                if (!output.set_cursor(buffer) || !output.has_cursor())
                     set_on_all_outputs = false;
             }
         }
