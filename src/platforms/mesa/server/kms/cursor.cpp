@@ -194,28 +194,56 @@ void mgm::Cursor::pad_and_write_image_data_locked(
     std::lock_guard<std::mutex> const& lg,
     GBMBOWrapper& buffer)
 {
-    uint8_t const* const image_argb = argb8888.data();
-    auto const image_width = std::min(min_buffer_width, size.width.as_uint32_t());
-    auto const image_height = std::min(min_buffer_height, size.height.as_uint32_t());
+    auto const orientation = buffer.orientation();
+    bool const sideways = orientation == mir_orientation_left || orientation == mir_orientation_right;
+
+    auto const min_width  = sideways ? min_buffer_width : min_buffer_height;
+    auto const min_height = sideways ? min_buffer_height : min_buffer_width;
+
+    auto const image_width = std::min(min_width, size.width.as_uint32_t());
+    auto const image_height = std::min(min_height, size.height.as_uint32_t());
     auto const image_stride = size.width.as_uint32_t() * 4;
 
-    size_t buffer_stride = gbm_bo_get_stride(buffer);  // in bytes
-    size_t padded_size = buffer_stride * gbm_bo_get_height(buffer);
+    auto const buffer_stride = gbm_bo_get_stride(buffer);  // in bytes
+    auto const buffer_height = gbm_bo_get_height(buffer);
+    size_t const padded_size = buffer_stride * buffer_height;
     auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);
     size_t rhs_padding = buffer_stride - 4*image_width;
 
+    uint8_t const* src = argb8888.data();
     uint8_t* dest = &padded[0];
-    uint8_t const* src = image_argb;
 
-    for (unsigned int y = 0; y < image_height; y++)
+    switch (orientation)
     {
-        memcpy(dest, src, 4*image_width);
-        memset(dest + 4*image_width, 0, rhs_padding);
-        dest += buffer_stride;
-        src += image_stride;
-    }
+    case mir_orientation_normal:
+    default:
+        for (unsigned int y = 0; y < image_height; y++)
+        {
+            memcpy(dest, src, 4*image_width);
+            memset(dest + 4*image_width, 0, rhs_padding);
+            dest += buffer_stride;
+            src += image_stride;
+        }
 
-    memset(dest, 0, buffer_stride * (gbm_bo_get_height(buffer) - image_height));
+        memset(dest, 0, buffer_stride * (buffer_height - image_height));
+        break;
+
+    case mir_orientation_inverted:
+        for (unsigned int row = 0; row != image_height; ++row)
+        {
+            memset(dest+row*buffer_stride+4*image_width, 0x3f, rhs_padding);
+
+            for (unsigned int col = 0; col != image_width; ++col)
+            {
+                memcpy(dest+row*buffer_stride+4*col, src + ((image_height-1)-row)*image_stride + 4*((image_width-1)-col), 4);
+            }
+        }
+
+        memset(dest+image_height*buffer_stride, 0x3f, buffer_stride * (buffer_height - image_height));
+
+        break;
+
+    }
 
     write_buffer_data_locked(lg, buffer, &padded[0], padded_size);
 }
@@ -278,10 +306,10 @@ void mir::graphics::mesa::Cursor::clear(std::lock_guard<std::mutex> const&)
 {
     last_set_failed = false;
     output_container.for_each_output([&](std::shared_ptr<KMSOutput> const& output)
-        {
-            if (!output->clear_cursor())
-                last_set_failed = true;
-        });
+                                         {
+                                         if (!output->clear_cursor())
+                                             last_set_failed = true;
+                                         });
 }
 
 void mgm::Cursor::resume()
@@ -299,19 +327,19 @@ void mgm::Cursor::hide()
 void mgm::Cursor::for_each_used_output(
     std::function<void(KMSOutput&, geom::Rectangle const&, MirOrientation orientation)> const& f)
 {
-    current_configuration->with_current_configuration_do(
-        [&f](KMSDisplayConfiguration const& kms_conf)
-        {
-            kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
-            {
-                if (conf_output.used)
-                {
-                    auto output = kms_conf.get_output_for(conf_output.id);
+current_configuration->with_current_configuration_do(
+[&f](KMSDisplayConfiguration const& kms_conf)
+{
+kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+{
+if (conf_output.used)
+{
+auto output = kms_conf.get_output_for(conf_output.id);
 
-                    f(*output, conf_output.extents(), conf_output.orientation);
-                }
-            });
-        });
+f(*output, conf_output.extents(), conf_output.orientation);
+}
+});
+});
 }
 
 void mgm::Cursor::place_cursor_at(
@@ -336,69 +364,70 @@ void mgm::Cursor::place_cursor_at_locked(
     bool set_on_all_outputs = true;
 
     for_each_used_output([&](KMSOutput& output, geom::Rectangle const& output_rect, MirOrientation orientation)
-    {
-        if (output_rect.contains(position))
-        {
-            auto dp = transform(output_rect, position - output_rect.top_left, orientation);
+                             {
+                             if (output_rect.contains(position))
+                             {
+                                 auto dp = transform(output_rect, position - output_rect.top_left, orientation);
+                                 auto hs = transform(geom::Rectangle{{0,0}, size}, hotspot, orientation);
 
-            // It's a little strange that we implement hotspot this way as there is
-            // drmModeSetCursor2 with hotspot support. However it appears to not actually
-            // work on radeon and intel. There also seems to be precedent in weston for
-            // implementing hotspot in this fashion.
-            output.move_cursor(geom::Point{} + dp - hotspot);
-            auto& buffer_wrapper = buffer_for_output(output);
+                                 // It's a little strange that we implement hotspot this way as there is
+                                 // drmModeSetCursor2 with hotspot support. However it appears to not actually
+                                 // work on radeon and intel. There also seems to be precedent in weston for
+                                 // implementing hotspot in this fashion.
+                                 output.move_cursor(geom::Point{} + dp - hs);
+                                 auto& buffer_wrapper = buffer_for_output(output);
 
-            auto const changed_orientation = buffer_wrapper.change_orientation(orientation);
+                                 auto const changed_orientation = buffer_wrapper.change_orientation(orientation);
 
-            if (changed_orientation)
-                pad_and_write_image_data_locked(lg, buffer_wrapper);
+                                 if (changed_orientation)
+                                     pad_and_write_image_data_locked(lg, buffer_wrapper);
 
-            if (force_state || !output.has_cursor() || changed_orientation)
-            {
-                if (!output.set_cursor(buffer_wrapper) || !output.has_cursor())
-                    set_on_all_outputs = false;
-            }
-        }
-        else
-        {
-            if (force_state || output.has_cursor())
-            {
-                output.clear_cursor();
-            }
-        }
-    });
+                                 if (force_state || !output.has_cursor() || changed_orientation)
+                                 {
+                                     if (!output.set_cursor(buffer_wrapper) || !output.has_cursor())
+                                         set_on_all_outputs = false;
+                                 }
+                             }
+                             else
+                             {
+                                 if (force_state || output.has_cursor())
+                                 {
+                                     output.clear_cursor();
+                                 }
+                             }
+                             });
 
     last_set_failed = !set_on_all_outputs;
 }
 
 mgm::Cursor::GBMBOWrapper& mgm::Cursor::buffer_for_output(KMSOutput const& output)
 {
-    auto locked_buffers = buffers.lock();
+auto locked_buffers = buffers.lock();
 
-    auto buffer_it = std::find_if(
-        locked_buffers->begin(),
-        locked_buffers->end(),
-        [&output](auto const& candidate)
+auto buffer_it = std::find_if(
+    locked_buffers->begin(),
+    locked_buffers->end(),
+    [&output](auto const& candidate)
         {
-            return candidate.first == output.drm_fd();
+        return candidate.first == output.drm_fd();
         });
 
-    if (buffer_it != locked_buffers->end())
-    {
-        return buffer_it->second;
-    }
+if (buffer_it != locked_buffers->end())
+{
+return buffer_it->second;
+}
 
-    locked_buffers->push_back(std::make_pair(output.drm_fd(), GBMBOWrapper(output.drm_fd(), mir_orientation_normal)));
+locked_buffers->push_back(std::make_pair(output.drm_fd(), GBMBOWrapper(output.drm_fd(), mir_orientation_normal)));
 
-    GBMBOWrapper& bo = locked_buffers->back().second;
-    if (gbm_bo_get_width(bo) < min_buffer_width)
-    {
-        min_buffer_width = gbm_bo_get_width(bo);
-    }
-    if (gbm_bo_get_height(bo) < min_buffer_height)
-    {
-        min_buffer_height = gbm_bo_get_height(bo);
-    }
+GBMBOWrapper& bo = locked_buffers->back().second;
+if (gbm_bo_get_width(bo) < min_buffer_width)
+{
+min_buffer_width = gbm_bo_get_width(bo);
+}
+if (gbm_bo_get_height(bo) < min_buffer_height)
+{
+min_buffer_height = gbm_bo_get_height(bo);
+}
 
-    return bo;
+return bo;
 }
