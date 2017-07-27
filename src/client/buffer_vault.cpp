@@ -86,7 +86,7 @@ mcl::BufferVault::~BufferVault()
     std::unique_lock<std::mutex> lk(mutex);
 
     // Prevent callbacks from allocating new buffers
-    disposing = true;
+    being_destroyed = true;
 
     for (auto& it : buffers)
     if (auto map = surface_map.lock())
@@ -290,7 +290,7 @@ void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
      * The BufferVault is in the process of being destroyed; there's no point in
      * doing any processing and we should *certainly* not allocate any more buffers.
      */
-    if (disposing)
+    if (being_destroyed)
         return;
 
     last_received_id = buffer_id;

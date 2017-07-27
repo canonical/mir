@@ -96,7 +96,7 @@ private:
     int const usage;
 
     std::mutex mutex;
-    bool disposing{false};
+    bool being_destroyed{false};
     BufferMap buffers;
     std::deque<NoTLSPromise<std::shared_ptr<MirBuffer>>> promises;
     geometry::Size size;
