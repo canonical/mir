@@ -332,10 +332,10 @@ void mir::graphics::mesa::Cursor::clear(std::lock_guard<std::mutex> const&)
 {
     last_set_failed = false;
     output_container.for_each_output([&](std::shared_ptr<KMSOutput> const& output)
-                                         {
-                                         if (!output->clear_cursor())
-                                             last_set_failed = true;
-                                         });
+        {
+            if (!output->clear_cursor())
+                last_set_failed = true;
+        });
 }
 
 void mgm::Cursor::resume()
@@ -353,19 +353,19 @@ void mgm::Cursor::hide()
 void mgm::Cursor::for_each_used_output(
     std::function<void(KMSOutput&, geom::Rectangle const&, MirOrientation orientation)> const& f)
 {
-current_configuration->with_current_configuration_do(
-[&f](KMSDisplayConfiguration const& kms_conf)
-{
-kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
-{
-if (conf_output.used)
-{
-auto output = kms_conf.get_output_for(conf_output.id);
+    current_configuration->with_current_configuration_do(
+        [&f](KMSDisplayConfiguration const& kms_conf)
+        {
+            kms_conf.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+            {
+                if (conf_output.used)
+                {
+                    auto output = kms_conf.get_output_for(conf_output.id);
 
-f(*output, conf_output.extents(), conf_output.orientation);
-}
-});
-});
+                    f(*output, conf_output.extents(), conf_output.orientation);
+                }
+            });
+        });
 }
 
 void mgm::Cursor::place_cursor_at(
@@ -390,70 +390,70 @@ void mgm::Cursor::place_cursor_at_locked(
     bool set_on_all_outputs = true;
 
     for_each_used_output([&](KMSOutput& output, geom::Rectangle const& output_rect, MirOrientation orientation)
-                             {
-                             if (output_rect.contains(position))
-                             {
-                                 auto dp = transform(output_rect, position - output_rect.top_left, orientation);
-                                 auto hs = transform(geom::Rectangle{{0,0}, size}, hotspot, orientation);
+    {
+        if (output_rect.contains(position))
+        {
+            auto dp = transform(output_rect, position - output_rect.top_left, orientation);
+            auto hs = transform(geom::Rectangle{{0,0}, size}, hotspot, orientation);
 
-                                 // It's a little strange that we implement hotspot this way as there is
-                                 // drmModeSetCursor2 with hotspot support. However it appears to not actually
-                                 // work on radeon and intel. There also seems to be precedent in weston for
-                                 // implementing hotspot in this fashion.
-                                 output.move_cursor(geom::Point{} + dp - hs);
-                                 auto& buffer_wrapper = buffer_for_output(output);
+            // It's a little strange that we implement hotspot this way as there is
+            // drmModeSetCursor2 with hotspot support. However it appears to not actually
+            // work on radeon and intel. There also seems to be precedent in weston for
+            // implementing hotspot in this fashion.
+            output.move_cursor(geom::Point{} + dp - hs);
+            auto& buffer_wrapper = buffer_for_output(output);
 
-                                 auto const changed_orientation = buffer_wrapper.change_orientation(orientation);
+            auto const changed_orientation = buffer_wrapper.change_orientation(orientation);
 
-                                 if (changed_orientation)
-                                     pad_and_write_image_data_locked(lg, buffer_wrapper);
+            if (changed_orientation)
+                pad_and_write_image_data_locked(lg, buffer_wrapper);
 
-                                 if (force_state || !output.has_cursor() || changed_orientation)
-                                 {
-                                     if (!output.set_cursor(buffer_wrapper) || !output.has_cursor())
-                                         set_on_all_outputs = false;
-                                 }
-                             }
-                             else
-                             {
-                                 if (force_state || output.has_cursor())
-                                 {
-                                     output.clear_cursor();
-                                 }
-                             }
-                             });
+            if (force_state || !output.has_cursor() || changed_orientation)
+            {
+                if (!output.set_cursor(buffer_wrapper) || !output.has_cursor())
+                    set_on_all_outputs = false;
+            }
+        }
+        else
+        {
+            if (force_state || output.has_cursor())
+            {
+                output.clear_cursor();
+            }
+        }
+    });
 
     last_set_failed = !set_on_all_outputs;
 }
 
 mgm::Cursor::GBMBOWrapper& mgm::Cursor::buffer_for_output(KMSOutput const& output)
 {
-auto locked_buffers = buffers.lock();
+    auto locked_buffers = buffers.lock();
 
-auto buffer_it = std::find_if(
-    locked_buffers->begin(),
-    locked_buffers->end(),
-    [&output](auto const& candidate)
-        {
-        return candidate.first == output.drm_fd();
-        });
+    auto buffer_it = std::find_if(
+        locked_buffers->begin(),
+        locked_buffers->end(),
+        [&output](auto const& candidate)
+            {
+                return candidate.first == output.drm_fd();
+            });
 
-if (buffer_it != locked_buffers->end())
-{
-return buffer_it->second;
-}
+    if (buffer_it != locked_buffers->end())
+    {
+        return buffer_it->second;
+    }
 
-locked_buffers->push_back(std::make_pair(output.drm_fd(), GBMBOWrapper(output.drm_fd(), mir_orientation_normal)));
+    locked_buffers->push_back(std::make_pair(output.drm_fd(), GBMBOWrapper(output.drm_fd(), mir_orientation_normal)));
 
-GBMBOWrapper& bo = locked_buffers->back().second;
-if (gbm_bo_get_width(bo) < min_buffer_width)
-{
-min_buffer_width = gbm_bo_get_width(bo);
-}
-if (gbm_bo_get_height(bo) < min_buffer_height)
-{
-min_buffer_height = gbm_bo_get_height(bo);
-}
+    GBMBOWrapper& bo = locked_buffers->back().second;
+    if (gbm_bo_get_width(bo) < min_buffer_width)
+    {
+        min_buffer_width = gbm_bo_get_width(bo);
+    }
+    if (gbm_bo_get_height(bo) < min_buffer_height)
+    {
+        min_buffer_height = gbm_bo_get_height(bo);
+    }
 
-return bo;
+    return bo;
 }
