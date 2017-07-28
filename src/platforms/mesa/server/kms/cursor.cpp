@@ -204,9 +204,10 @@ void mgm::Cursor::pad_and_write_image_data_locked(
     auto const image_height = std::min(min_height, size.height.as_uint32_t());
     auto const image_stride = size.width.as_uint32_t() * 4;
 
-    auto const buffer_stride = gbm_bo_get_stride(buffer);  // in bytes
-    auto const buffer_height = gbm_bo_get_height(buffer);
+    auto const buffer_stride = std::max(min_width*4, gbm_bo_get_stride(buffer));  // in bytes
+    auto const buffer_height = std::max(min_height, gbm_bo_get_height(buffer));
     size_t const padded_size = buffer_stride * buffer_height;
+
     auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);
     size_t rhs_padding = buffer_stride - 4*image_width;
 
