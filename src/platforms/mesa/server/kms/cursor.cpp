@@ -129,7 +129,8 @@ inline mgm::Cursor::GBMBOWrapper::~GBMBOWrapper()
 
 mgm::Cursor::GBMBOWrapper::GBMBOWrapper(GBMBOWrapper&& from)
     : device{from.device},
-      buffer{from.buffer}
+      buffer{from.buffer},
+      current_orientation{from.current_orientation}
 {
     from.buffer = nullptr;
     from.device = nullptr;
