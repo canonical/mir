@@ -420,14 +420,20 @@ std::unique_ptr<mir::renderer::gl::Context> mgm::Display::create_gl_context()
 bool mgm::Display::apply_if_configuration_preserves_display_buffers(
     mg::DisplayConfiguration const& conf)
 {
+    bool result = false;
     auto const& new_kms_conf = dynamic_cast<RealKMSDisplayConfiguration const&>(conf);
-    std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
-    if (compatible(current_display_configuration, new_kms_conf))
+
     {
-        configure_locked(new_kms_conf, lock);
-        return true;
+        std::lock_guard<decltype(configuration_mutex)> lock{configuration_mutex};
+        if (compatible(current_display_configuration, new_kms_conf))
+        {
+            configure_locked(new_kms_conf, lock);
+            result = true;
+        }
     }
-    return false;
+
+    if (auto c = cursor.lock()) c->resume();
+    return result;
 }
 
 mg::Frame mgm::Display::last_frame_on(unsigned output_id) const
