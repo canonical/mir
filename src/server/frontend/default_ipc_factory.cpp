@@ -45,10 +45,7 @@ class ThreadExecutor : public mir::Executor
 {
 public:
     ThreadExecutor()
-        : queue_mutex{std::make_shared<std::mutex>()},
-          shutdown{std::make_shared<bool>(false)},
-          queue_notifier{std::make_shared<std::condition_variable>()},
-          tasks{std::make_shared<std::deque<std::function<void()>>>()}
+        : state{std::make_shared<State>()}
     {
         /*
          * Block all signals on the dispatch thread.
@@ -60,30 +57,32 @@ public:
         mir::SignalBlocker blocker;
         std::thread{
             [
-                shutdown = shutdown,
-                queue_mutex = queue_mutex,
-                queue_notifier = queue_notifier,
-                tasks = tasks
+                local_state = state
             ]() noexcept
             {
-                while (!*shutdown)
+                auto& shutdown = local_state->shutdown;
+                auto& queue_mutex = local_state->queue_mutex;
+                auto& queue_notifier = local_state->queue_notifier;
+                auto& tasks = local_state->tasks;
+
+                while (!shutdown)
                 {
-                    std::unique_lock<std::mutex> lock{*queue_mutex};
-                    queue_notifier->wait(
+                    std::unique_lock<std::mutex> lock{queue_mutex};
+                    queue_notifier.wait(
                         lock,
-                        [shutdown, tasks]()
+                        [local_state]()
                         {
-                            return *shutdown || !tasks->empty();
+                            return local_state->shutdown || !local_state->tasks.empty();
                         });
 
-                    if (*shutdown)
+                    if (shutdown)
                         return;
 
-                    while (!tasks->empty())
+                    while (!tasks.empty())
                     {
                         std::function<void()> task;
-                        task = std::move(tasks->front());
-                        tasks->pop_front();
+                        task = std::move(tasks.front());
+                        tasks.pop_front();
 
                         lock.unlock();
                         task();
@@ -111,26 +110,30 @@ public:
     ~ThreadExecutor()
     {
         {
-            std::lock_guard<std::mutex> lock{*queue_mutex};
-            *shutdown = true;
+            std::lock_guard<std::mutex> lock{state->queue_mutex};
+            state->shutdown = true;
         }
-        queue_notifier->notify_all();
+        state->queue_notifier.notify_all();
     }
 
     void spawn(std::function<void()>&& work) override
     {
         {
-            std::lock_guard<std::mutex> lock{*queue_mutex};
-            tasks->emplace_back(std::move(work));
+            std::lock_guard<std::mutex> lock{state->queue_mutex};
+            state->tasks.emplace_back(std::move(work));
         }
-        queue_notifier->notify_all();
+        state->queue_notifier.notify_all();
     }
 
 private:
-    std::shared_ptr<std::mutex> queue_mutex;
-    std::shared_ptr<bool> shutdown;
-    std::shared_ptr<std::condition_variable> queue_notifier;
-    std::shared_ptr<std::deque<std::function<void()>>> tasks;
+    struct State
+    {
+        std::mutex queue_mutex;
+        std::condition_variable queue_notifier;
+        bool shutdown{false};
+        std::deque<std::function<void()>> tasks;
+    };
+    std::shared_ptr<State> state;
 };
 }
 
