@@ -44,97 +44,87 @@ namespace
 class ThreadExecutor : public mir::Executor
 {
 public:
-    ThreadExecutor()
-        : state{std::make_shared<State>()}
+    void do_work() noexcept
     {
-        /*
-         * Block all signals on the dispatch thread.
-         *
-         * Threads inherit their parent's signal mask, so use a SignalBlocker to block
-         * all signals *before* spawning the thread (and then restore the signal mask
-         * when this constructor completes).
-         */
-        mir::SignalBlocker blocker;
-        std::thread{
-            [
-                local_state = state
-            ]() noexcept
-            {
-                auto& shutdown = local_state->shutdown;
-                auto& queue_mutex = local_state->queue_mutex;
-                auto& queue_notifier = local_state->queue_notifier;
-                auto& tasks = local_state->tasks;
-
-                while (!shutdown)
+        for(;;)
+        {
+            std::unique_lock<std::mutex> lock{queue_mutex};
+            queue_notifier.wait(
+                lock,
+                [this]()
                 {
-                    std::unique_lock<std::mutex> lock{queue_mutex};
-                    queue_notifier.wait(
-                        lock,
-                        [local_state]()
-                        {
-                            return local_state->shutdown || !local_state->tasks.empty();
-                        });
+                    return shutdown || !tasks.empty();
+                });
 
-                    if (shutdown)
-                        return;
-
-                    while (!tasks.empty())
-                    {
-                        std::function<void()> task;
-                        task = std::move(tasks.front());
-                        tasks.pop_front();
-
-                        lock.unlock();
-                        task();
-                        /*
-                         * The task functor may have captured resources with non-trivial
-                         * destructors.
-                         *
-                         * Ensure those destructors are called outside the lock.
-                         */
-                        task = nullptr;
-                        lock.lock();
-                    }
-                }
+            if (shutdown)
+            {
+                return;
             }
-        /*
-         * Let this thread roam free!
-         *
-         * It has shared ownership of all the things it needs to continue, and this
-         * avoids a deadlock during Nested server shutdown where ~ThreadExecutor is called
-         * while holding a lock that a task needs to acquire in order to complete.
-         */
-        }.detach();
+
+            while (!tasks.empty())
+            {
+                std::function<void()> task;
+                task = std::move(tasks.front());
+                tasks.pop_front();
+
+                lock.unlock();
+                task();
+                /*
+                 * The task functor may have captured resources with non-trivial
+                 * destructors.
+                 *
+                 * Ensure those destructors are called outside the lock.
+                 */
+                task = nullptr;
+                lock.lock();
+            }
+        }
     }
 
     ~ThreadExecutor()
     {
         {
-            std::lock_guard<std::mutex> lock{state->queue_mutex};
-            state->shutdown = true;
+            std::lock_guard<std::mutex> lock{queue_mutex};
+            shutdown = true;
         }
-        state->queue_notifier.notify_all();
+        queue_notifier.notify_all();
+
+        if (dispatch_thread.joinable())
+            dispatch_thread.join();
     }
 
     void spawn(std::function<void()>&& work) override
     {
         {
-            std::lock_guard<std::mutex> lock{state->queue_mutex};
-            state->tasks.emplace_back(std::move(work));
+            std::lock_guard<std::mutex> lock{queue_mutex};
+            tasks.emplace_back(std::move(work));
+
+            if (!dispatch_thread.joinable())
+            {
+                /*
+                 * Block all signals on the dispatch thread.
+                 *
+                 * Threads inherit their parent's signal mask, so use a SignalBlocker to block
+                 * all signals *before* spawning the thread (and then restore the signal mask
+                 * when this constructor completes).
+                 */
+                mir::SignalBlocker blocker;
+                dispatch_thread = std::thread{std::bind(&ThreadExecutor::do_work, this)};
+            }
         }
-        state->queue_notifier.notify_all();
+        queue_notifier.notify_all();
     }
 
 private:
-    struct State
-    {
-        std::mutex queue_mutex;
-        std::condition_variable queue_notifier;
-        bool shutdown{false};
-        std::deque<std::function<void()>> tasks;
-    };
-    std::shared_ptr<State> state;
+    std::thread dispatch_thread;
+
+    std::mutex queue_mutex;
+    std::condition_variable queue_notifier;
+    bool shutdown{false};
+    std::deque<std::function<void()>> tasks;
 };
+
+ThreadExecutor executor;
 }
 
 mf::DefaultIpcFactory::DefaultIpcFactory(
@@ -165,8 +155,7 @@ mf::DefaultIpcFactory::DefaultIpcFactory(
     anr_detector{anr_detector},
     cookie_authority(cookie_authority),
     input_changer(input_changer),
-    extensions(extensions),
-    execution_queue{std::make_shared<ThreadExecutor>()}
+    extensions(extensions)
 {
 }
 
@@ -256,5 +245,5 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         input_changer,
         extensions,
         buffer_allocator,
-        execution_queue);
+        executor);
 }

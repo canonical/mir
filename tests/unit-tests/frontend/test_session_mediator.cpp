@@ -300,7 +300,6 @@ struct SessionMediator : public ::testing::Test
           stubbed_session{std::make_shared<NiceMock<StubbedSession>>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)},
           allocator{std::make_shared<RecordingBufferAllocator>()},
-          executor{std::make_shared<MockExecutor>()},
           mediator{
             shell, mt::fake_shared(mock_ipc_operations), graphics_changer,
             surface_pixel_formats, report,
@@ -483,7 +482,7 @@ struct SessionMediator : public ::testing::Test
     std::shared_ptr<NiceMock<StubbedSession>> const stubbed_session;
     std::unique_ptr<google::protobuf::Closure> null_callback;
     std::shared_ptr<RecordingBufferAllocator> const allocator;
-    std::shared_ptr<MockExecutor> const executor;
+    NiceMock<MockExecutor> executor;
     mf::SessionMediator mediator;
 
     mp::ConnectParameters connect_parameters;
@@ -1429,7 +1428,7 @@ TEST_F(SessionMediator, buffer_releases_are_sent_from_specified_executor)
     ON_CALL(*stream, submit_buffer(_))
         .WillByDefault(Invoke([](auto const &){}));
     // And our buffer should be released by the executor.
-    EXPECT_CALL(*executor, spawn_thunk(_)).Times(1);
+    EXPECT_CALL(executor, spawn_thunk(_)).Times(1);
 
     mediator.submit_buffer(&submit_request, &null, null_callback.get());
 }

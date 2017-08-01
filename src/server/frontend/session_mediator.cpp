@@ -114,7 +114,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<mf::InputConfigurationChanger> const& input_changer,
     std::vector<mir::ExtensionDescription> const& extensions,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<mir::Executor> const& executor) :
+    mir::Executor& executor) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -387,7 +387,7 @@ namespace
     public:
         AutoSendBuffer(
             std::shared_ptr<mg::Buffer> const& wrapped,
-            std::shared_ptr<mir::Executor> const& executor,
+            mir::Executor& executor,
             std::weak_ptr<mf::BufferSink> const& sink)
             : buffer{wrapped},
               executor{executor},
@@ -396,7 +396,7 @@ namespace
         }
         ~AutoSendBuffer()
         {
-            executor->spawn(
+            executor.spawn(
                 [maybe_sink = sink, to_send = std::move(buffer)]()
                 {
                     if (auto const live_sink = maybe_sink.lock())
@@ -431,7 +431,7 @@ namespace
 
     private:
         std::shared_ptr<mg::Buffer> buffer;
-        std::shared_ptr<mir::Executor> const executor;
+        mir::Executor& executor;
         std::weak_ptr<mf::BufferSink> const sink;
     };
 
