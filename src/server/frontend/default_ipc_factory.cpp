@@ -52,7 +52,6 @@ public:
     void do_work() noexcept
     {
         std::unique_lock<std::mutex> lock{queue_mutex};
-        state = State::Running;
         for(;;)
         {
             while (!tasks.empty())
@@ -108,6 +107,7 @@ public:
                  * when this constructor completes).
                  */
                 mir::SignalBlocker blocker;
+                state = State::Running;
                 dispatch_thread = std::thread{std::bind(&ThreadExecutor::do_work, this)};
             }
         }
@@ -140,6 +140,7 @@ public:
              * when this constructor completes).
              */
             mir::SignalBlocker blocker;
+            state = State::Running;
             dispatch_thread = std::thread{std::bind(&ThreadExecutor::do_work, this)};
         }
     }
