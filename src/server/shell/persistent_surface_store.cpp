@@ -20,12 +20,15 @@
 
 #include <boost/throw_exception.hpp>
 
+#include "memcheck.h"
+
 namespace msh = mir::shell;
 using Id = mir::shell::PersistentSurfaceStore::Id;
 
 Id::Id()
 {
     uuid_generate(uuid);
+    VALGRIND_MAKE_MEM_DEFINED(uuid, sizeof uuid);
 }
 
 Id::Id(std::string const& serialized_form)

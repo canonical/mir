@@ -1,3 +1,10 @@
+pkg_check_modules(VALGRIND valgrind)
+
+if(VALGRIND_FOUND)
+    message("VALGRIND_INCLUDE_DIRS=${VALGRIND_INCLUDE_DIRS}")
+    include_directories(${VALGRIND_INCLUDE_DIRS})
+endif()
+
 set(
   SHELL_SOURCES
 

@@ -30,6 +30,8 @@
 
 #include <climits>
 
+#include "memcheck.h"
+
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 using namespace mir::geometry;
@@ -590,6 +592,7 @@ void msh::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(
 {
     uuid_t uuid;
     uuid_generate(uuid);
+    VALGRIND_MAKE_MEM_DEFINED(uuid, sizeof uuid);
     std::vector<uint8_t> const handle{std::begin(uuid), std::end(uuid)};
 
     surface->start_drag_and_drop(handle);
