@@ -20,7 +20,11 @@
 
 #include <boost/throw_exception.hpp>
 
-#include "memcheck.h"
+#ifdef MIR_WORKAROUND_VALGRIND_COMPLAINT_ABOUT_UUID_GENERATE_RANDOM
+    #include "memcheck.h"
+#else
+    #define VALGRIND_MAKE_MEM_DEFINED(addr, len)
+#endif
 
 namespace msh = mir::shell;
 using Id = mir::shell::PersistentSurfaceStore::Id;
