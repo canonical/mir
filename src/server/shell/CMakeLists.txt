@@ -1,11 +1,3 @@
-pkg_check_modules(VALGRIND valgrind)
-
-if(VALGRIND_FOUND)
-    add_definitions(-DMIR_WORKAROUND_VALGRIND_COMPLAINT_ABOUT_UUID_GENERATE_RANDOM)
-    include_directories(${VALGRIND_INCLUDE_DIRS})
-endif()
-
-
 set(
   SHELL_SOURCES
 

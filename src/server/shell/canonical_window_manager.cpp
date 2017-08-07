@@ -30,12 +30,6 @@
 
 #include <climits>
 
-#ifdef MIR_WORKAROUND_VALGRIND_COMPLAINT_ABOUT_UUID_GENERATE_RANDOM
-    #include "memcheck.h"
-#else
-    #define VALGRIND_MAKE_MEM_DEFINED(addr, len)
-#endif
-
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 using namespace mir::geometry;
@@ -596,7 +590,6 @@ void msh::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(
 {
     uuid_t uuid;
     uuid_generate(uuid);
-    VALGRIND_MAKE_MEM_DEFINED(uuid, sizeof uuid);
     std::vector<uint8_t> const handle{std::begin(uuid), std::end(uuid)};
 
     surface->start_drag_and_drop(handle);
