@@ -297,6 +297,25 @@ ms::MediatingDisplayChanger::preview_base_configuration(
                 }
                 catch (std::runtime_error const&)
                 {
+                    std::unique_ptr<mt::Alarm> previously_set_alarm;
+                    {
+                        std::lock_guard<std::mutex> lock{configuration_mutex};
+                        if (preview_configuration_timeout && (currently_previewing_session.lock() == live_session))
+                        {
+                            /* We transfer the alarm out of the lock, because the alarm's callback may try
+                             * to *take* the configuration_mutex lock.
+                             *
+                             * Since cancel() blocks until the callback will definitely not be entered,
+                             * we need to call cancel() outside the configuration_mutex lock to avoid possible
+                             * deadlocks
+                             */
+                            previously_set_alarm = std::move(preview_configuration_timeout);
+                            preview_configuration_timeout = nullptr;
+                            currently_previewing_session = std::weak_ptr<frontend::Session>{};
+                        }
+                    }
+
+                    if (previously_set_alarm) previously_set_alarm->cancel();
                     live_session->send_error(DisplayConfigurationFailedError{});
                 }
             }
@@ -559,12 +578,20 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
         {
             std::lock_guard<std::mutex> lg{configuration_mutex};
 
-            base_configuration_ = conf;
-            if (base_configuration_applied)
-                apply_base_config();
+            try
+            {
+                if (base_configuration_applied)
+                    apply_config(conf);
 
-            observer->base_configuration_updated(conf);
-            send_config_to_all_sessions(conf);
+                base_configuration_ = conf;
+
+                observer->base_configuration_updated(conf);
+                send_config_to_all_sessions(conf);
+            }
+            catch (std::runtime_error const& error)
+            {
+                observer->configuration_failed(conf, error);
+            }
         });
 }
 
