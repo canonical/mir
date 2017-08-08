@@ -1,7 +1,7 @@
 # Copyright © 2012 Canonical Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3 as
+# it under the terms of the GNU General Public License version 2 or 3 as
 # published by the Free Software Foundation.
 #
 # This program is distributed in the hope that it will be useful,
@@ -291,7 +291,7 @@ if (MIR_ENABLE_TESTS)
 
   # There's no nice way to format this. Thanks CMake.
   mir_add_test(NAME LGPL-required
-    COMMAND /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/common ${PROJECT_SOURCE_DIR}/include/common ${PROJECT_SOURCE_DIR}/src/include/common ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform ${PROJECT_SOURCE_DIR}/src/include/platform ${PROJECT_SOURCE_DIR}/src/capnproto"
+    COMMAND /bin/sh -c "! grep -rl 'GNU General' ${PROJECT_SOURCE_DIR}/src/client ${PROJECT_SOURCE_DIR}/include/client ${PROJECT_SOURCE_DIR}/src/core ${PROJECT_SOURCE_DIR}/include/core ${PROJECT_SOURCE_DIR}/src/common ${PROJECT_SOURCE_DIR}/include/common ${PROJECT_SOURCE_DIR}/src/include/common ${PROJECT_SOURCE_DIR}/src/platform ${PROJECT_SOURCE_DIR}/include/platform ${PROJECT_SOURCE_DIR}/src/include/platform ${PROJECT_SOURCE_DIR}/src/platforms ${PROJECT_SOURCE_DIR}/include/platforms ${PROJECT_SOURCE_DIR}/src/include/platforms ${PROJECT_SOURCE_DIR}/src/renderers ${PROJECT_SOURCE_DIR}/include/renderers ${PROJECT_SOURCE_DIR}/src/include/renderers ${PROJECT_SOURCE_DIR}/src/capnproto"
   )
   mir_add_test(NAME GPL-required
     COMMAND /bin/sh -c "! grep -rl 'GNU Lesser' ${PROJECT_SOURCE_DIR}/src/server ${PROJECT_SOURCE_DIR}/include/server ${PROJECT_SOURCE_DIR}/src/include/server ${PROJECT_SOURCE_DIR}/tests ${PROJECT_SOURCE_DIR}/examples"
