@@ -82,14 +82,14 @@ msh::DefaultPersistentSurfaceStore::~DefaultPersistentSurfaceStore()
 auto msh::DefaultPersistentSurfaceStore::id_for_surface(std::shared_ptr<scene::Surface> const& surface)
     -> Id
 {
-    return store->insert_or_retrieve(surface);
+    return (*store.lock())->insert_or_retrieve(surface);
 }
 
 std::shared_ptr<ms::Surface> msh::DefaultPersistentSurfaceStore::surface_for_id(Id const& id) const
 {
     try
     {
-        return (*store)[id];
+        return (**(store.lock()))[id];
     }
     catch (std::out_of_range& err)
     {
