@@ -2,7 +2,7 @@
  * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -114,7 +114,7 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<mf::InputConfigurationChanger> const& input_changer,
     std::vector<mir::ExtensionDescription> const& extensions,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<mir::Executor> const& executor) :
+    mir::Executor& executor) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -387,7 +387,7 @@ namespace
     public:
         AutoSendBuffer(
             std::shared_ptr<mg::Buffer> const& wrapped,
-            std::shared_ptr<mir::Executor> const& executor,
+            mir::Executor& executor,
             std::weak_ptr<mf::BufferSink> const& sink)
             : buffer{wrapped},
               executor{executor},
@@ -396,15 +396,12 @@ namespace
         }
         ~AutoSendBuffer()
         {
-            if (auto live_sink = sink.lock())
-            {
-                // Ensure we send buffer events from a dedicated thread.
-                executor->spawn(
-                    [live_sink, to_send = buffer]()
-                    {
+            executor.spawn(
+                [maybe_sink = sink, to_send = std::move(buffer)]()
+                {
+                    if (auto const live_sink = maybe_sink.lock())
                         live_sink->update_buffer(*to_send);
-                    });
-            }
+                });
         }
 
         std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const override
@@ -433,8 +430,8 @@ namespace
         }
 
     private:
-        std::shared_ptr<mg::Buffer> const buffer;
-        std::shared_ptr<mir::Executor> executor;
+        std::shared_ptr<mg::Buffer> buffer;
+        mir::Executor& executor;
         std::weak_ptr<mf::BufferSink> const sink;
     };
 
@@ -768,8 +765,6 @@ void mf::SessionMediator::modify_surface(
     {
         mf::BufferStreamId id{surface_specification.cursor_id().value()};
         auto stream = session->get_buffer_stream(id);
-        if (!stream->suitable_for_cursor())
-            BOOST_THROW_EXCEPTION(std::logic_error("Cursor buffer streams must have mir_pixel_format_argb_8888 format"));
         mods.stream_cursor = msh::StreamCursor{
             id, geom::Displacement{surface_specification.hotspot_x(), surface_specification.hotspot_y()} };
     }
@@ -1069,9 +1064,6 @@ void mf::SessionMediator::configure_cursor(
         auto const& stream_id = mf::BufferStreamId(cursor_request->buffer_stream().value());
         auto hotspot = geom::Displacement{cursor_request->hotspot_x(), cursor_request->hotspot_y()};
         auto stream = session->get_buffer_stream(stream_id);
-
-        if (!stream->suitable_for_cursor())
-            BOOST_THROW_EXCEPTION(std::logic_error("Cursor buffer streams must have mir_pixel_format_argb_8888 format"));
 
         surface->set_cursor_stream(stream, hotspot);
     }

@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -154,16 +154,6 @@ TEST_F(BufferVault, creates_all_buffers_on_start)
     EXPECT_CALL(mock_requests, allocate_buffer(size, format, usage))
         .Times(initial_nbuffers);
     make_vault();
-}
-
-TEST_F(BufferVault, frees_the_buffers_we_actually_got)
-{
-    EXPECT_CALL(mock_requests, free_buffer(package.buffer_id()));
-    EXPECT_CALL(mock_requests, free_buffer(package2.buffer_id()));
-    auto vault = make_vault();
-
-    vault->wire_transfer_inbound(package.buffer_id());
-    vault->wire_transfer_inbound(package2.buffer_id());
 }
 
 TEST_F(BufferVault, withdrawing_and_never_filling_up_will_timeout)
@@ -368,24 +358,6 @@ TEST_F(BufferVault, waiting_threads_give_error_if_disconnected)
     EXPECT_THROW({
         future.get();
     }, std::exception);
-}
-
-TEST_F(BufferVault, makes_sure_rpc_calls_exceptions_are_caught_in_destructor)
-{
-    EXPECT_CALL(mock_requests, free_buffer(_))
-        .Times(1)
-        .WillOnce(Throw(std::runtime_error("")));
-    EXPECT_NO_THROW({
-        auto vault = make_vault();
-        vault->wire_transfer_inbound(package.buffer_id());
-    });
-}
-
-TEST_F(StartedBufferVault, skips_free_buffer_rpc_calls_if_disconnected)
-{
-    EXPECT_CALL(mock_requests, free_buffer(_))
-        .Times(0);
-    vault.disconnected();
 }
 
 TEST_F(StartedBufferVault, buffer_count_remains_the_same_after_scaling)

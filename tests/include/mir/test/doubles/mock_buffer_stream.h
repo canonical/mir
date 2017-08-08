@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -53,8 +53,6 @@ struct MockBufferStream : public compositor::BufferStream
             .WillByDefault(testing::Return(mir_pixel_format_abgr_8888));
         ON_CALL(*this, stream_size())
             .WillByDefault(testing::Return(geometry::Size{0,0}));
-        ON_CALL(*this, suitable_for_cursor())
-            .WillByDefault(testing::Return(true));
     }
     std::shared_ptr<StubBuffer> buffer { std::make_shared<StubBuffer>() };
     MOCK_METHOD1(acquire_client_buffer, void(std::function<void(graphics::Buffer* buffer)>));
@@ -82,7 +80,6 @@ struct MockBufferStream : public compositor::BufferStream
     MOCK_METHOD1(disassociate_buffer, void(graphics::BufferID));
     MOCK_METHOD1(associate_buffer, void(graphics::BufferID));
     MOCK_METHOD1(set_scale, void(float));
-    MOCK_CONST_METHOD0(suitable_for_cursor, bool());
 
 };
 }

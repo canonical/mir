@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -272,7 +272,9 @@ struct StubCursorImage : public mg::CursorImage
 
     static void const* image_data;
 };
-void const* StubCursorImage::image_data = reinterpret_cast<void*>(&StubCursorImage::image_data);
+
+char const stub_data[128*128*4] = { 0 };
+void const* StubCursorImage::image_data = stub_data;
 
 // Those new cap flags are currently only available in drm/drm.h but not in
 // libdrm/drm.h nor in xf86drm.h. Additionally drm/drm.h is current c++ unfriendly
@@ -407,7 +409,7 @@ TEST_F(MesaCursorTest, show_cursor_writes_to_bo)
     geom::Size const cursor_size{cursor_side, cursor_side};
     size_t const cursor_size_bytes{cursor_side * cursor_side * sizeof(uint32_t)};
 
-    EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, StubCursorImage::image_data, cursor_size_bytes));
+    EXPECT_CALL(mock_gbm, gbm_bo_write(mock_gbm.fake_gbm.bo, NotNull(), cursor_size_bytes));
 
     cursor.show(image);
 }
@@ -464,7 +466,7 @@ TEST_F(MesaCursorTest, pads_missing_data_when_buffer_size_differs)
     cursor_tmp.show(SinglePixelCursorImage());
 }
 
-TEST_F(MesaCursorTest, throws_when_images_are_too_large)
+TEST_F(MesaCursorTest, does_not_throw_when_images_are_too_large)
 {
     using namespace testing;
 
@@ -478,9 +480,7 @@ TEST_F(MesaCursorTest, throws_when_images_are_too_large)
         geom::Size const large_cursor_size{cursor_side, cursor_side};
     };
 
-    EXPECT_THROW({
-        cursor.show(LargeCursorImage());
-    }, std::logic_error);
+    cursor.show(LargeCursorImage());
 }
 
 TEST_F(MesaCursorTest, clears_cursor_state_on_construction)
@@ -607,8 +607,9 @@ TEST_F(MesaCursorTest, moves_properly_to_and_inside_left_rotated_output)
 
     current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{2}, mir_orientation_left);
 
-    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{112,100}));
-    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{150,96}));
+    InSequence seq;
+    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{112, 36}));
+    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{150, 32}));
 
     cursor.move_to({766, 112});
     cursor.move_to({770, 150});
@@ -625,9 +626,9 @@ TEST_F(MesaCursorTest, moves_properly_to_and_inside_right_rotated_output)
 
     current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{2}, mir_orientation_right);
 
-
-    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{688,100}));
-    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{650,104}));
+    InSequence seq;
+    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{624, 100}));
+    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{586, 104}));
 
     cursor.move_to({766, 112});
     cursor.move_to({770, 150});
@@ -643,8 +644,9 @@ TEST_F(MesaCursorTest, moves_properly_to_and_inside_inverted_output)
 
     current_configuration.conf.set_orentation_of_output(mg::DisplayConfigurationOutputId{2}, mir_orientation_inverted);
 
-    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{700,88}));
-    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{696,50}));
+    InSequence seq;
+    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{636, 24}));
+    EXPECT_CALL(*output_container.outputs[2], move_cursor(geom::Point{632,-14}));
 
     cursor.move_to({766, 112});
     cursor.move_to({770, 150});

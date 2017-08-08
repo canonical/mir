@@ -2,7 +2,7 @@
  * Copyright © 2015-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -18,6 +18,8 @@
 
 #include "client_helpers.h"
 #include "mir_toolkit/mir_client_library.h"
+#include <unistd.h>
+#include <signal.h>
 
 namespace me = mir::examples;
 
@@ -88,6 +90,10 @@ void handle_window_event(MirWindow* window, MirEvent const* event, void* context
         mir_window_spec_release(spec);
         break;
     }
+
+    case mir_event_type_close_window:
+        kill(getpid(), SIGTERM);
+        break;
 
     default:
         break;

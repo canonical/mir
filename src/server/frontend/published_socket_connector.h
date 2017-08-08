@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -62,7 +62,7 @@ protected:
         std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket,
         std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const;
 
-    boost::asio::io_service mutable io_service;
+    std::shared_ptr<boost::asio::io_service> const io_service;
     boost::asio::io_service::work work;
     std::shared_ptr<ConnectorReport> const report;
 

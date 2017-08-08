@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -71,7 +71,7 @@ int get_drm_cursor_height(int fd)
 {
     // on some older hardware drm incorrectly reports the cursor size
     bool const force_64x64_cursor = getenv(mir_drm_cursor_64x64);
-   
+
     uint64_t height = fallback_cursor_size;
     if (!force_64x64_cursor)
        drmGetCap(fd, DRM_CAP_CURSOR_HEIGHT, &height);
@@ -82,7 +82,7 @@ int get_drm_cursor_width(int fd)
 {
     // on some older hardware drm incorrectly reports the cursor size
     bool const force_64x64_cursor = getenv(mir_drm_cursor_64x64);
-    
+
     uint64_t width = fallback_cursor_size;
     if (!force_64x64_cursor)
        drmGetCap(fd, DRM_CAP_CURSOR_WIDTH, &width);
@@ -100,7 +100,7 @@ gbm_device* gbm_create_device_checked(int fd)
 }
 }
 
-mgm::Cursor::GBMBOWrapper::GBMBOWrapper(int fd) :
+mgm::Cursor::GBMBOWrapper::GBMBOWrapper(int fd, MirOrientation orientation) :
     device{gbm_create_device_checked(fd)},
     buffer{
         gbm_bo_create(
@@ -108,7 +108,8 @@ mgm::Cursor::GBMBOWrapper::GBMBOWrapper(int fd) :
             get_drm_cursor_width(fd),
             get_drm_cursor_height(fd),
             GBM_FORMAT_ARGB8888,
-            GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE)}
+            GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE)},
+    current_orientation{orientation}
 {
     if (!buffer) BOOST_THROW_EXCEPTION(std::runtime_error("failed to create gbm buffer"));
 }
@@ -128,10 +129,20 @@ inline mgm::Cursor::GBMBOWrapper::~GBMBOWrapper()
 
 mgm::Cursor::GBMBOWrapper::GBMBOWrapper(GBMBOWrapper&& from)
     : device{from.device},
-      buffer{from.buffer}
+      buffer{from.buffer},
+      current_orientation{from.current_orientation}
 {
     from.buffer = nullptr;
     from.device = nullptr;
+}
+
+auto mir::graphics::mesa::Cursor::GBMBOWrapper::change_orientation(MirOrientation new_orientation) -> bool
+{
+    if (current_orientation == new_orientation)
+        return false;
+
+    current_orientation = new_orientation;
+    return true;
 }
 
 mgm::Cursor::Cursor(
@@ -182,36 +193,85 @@ void mgm::Cursor::write_buffer_data_locked(
 
 void mgm::Cursor::pad_and_write_image_data_locked(
     std::lock_guard<std::mutex> const& lg,
-    gbm_bo* buffer,
-    CursorImage const& image)
+    GBMBOWrapper& buffer)
 {
-    auto image_argb = static_cast<uint8_t const*>(image.as_argb_8888());
-    auto image_width = image.size().width.as_uint32_t();
-    auto image_height = image.size().height.as_uint32_t();
-    auto image_stride = image_width * 4;
+    auto const orientation = buffer.orientation();
+    bool const sideways = orientation == mir_orientation_left || orientation == mir_orientation_right;
 
-    if (image_width > min_buffer_width || image_height > min_buffer_height)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Image is too big for GBM cursor buffer"));
-    }
+    auto const min_width  = sideways ? min_buffer_width : min_buffer_height;
+    auto const min_height = sideways ? min_buffer_height : min_buffer_width;
 
-    size_t buffer_stride = gbm_bo_get_stride(buffer);  // in bytes
-    size_t padded_size = buffer_stride * gbm_bo_get_height(buffer);
+    auto const image_width = std::min(min_width, size.width.as_uint32_t());
+    auto const image_height = std::min(min_height, size.height.as_uint32_t());
+    auto const image_stride = size.width.as_uint32_t() * 4;
+
+    auto const buffer_stride = std::max(min_width*4, gbm_bo_get_stride(buffer));  // in bytes
+    auto const buffer_height = std::max(min_height, gbm_bo_get_height(buffer));
+    size_t const padded_size = buffer_stride * buffer_height;
+
     auto padded = std::unique_ptr<uint8_t[]>(new uint8_t[padded_size]);
-    size_t rhs_padding = buffer_stride - image_stride;
+    size_t rhs_padding = buffer_stride - 4*image_width;
 
+    auto const filler = 0; // 0x3f; is useful to make buffer visible for debugging
+    uint8_t const* src = argb8888.data();
     uint8_t* dest = &padded[0];
-    uint8_t const* src = image_argb;
 
-    for (unsigned int y = 0; y < image_height; y++)
+    switch (orientation)
     {
-        memcpy(dest, src, image_stride);
-        memset(dest + image_stride, 0, rhs_padding);
-        dest += buffer_stride;
-        src += image_stride;
-    }
+    case mir_orientation_normal:
+        for (unsigned int y = 0; y < image_height; y++)
+        {
+            memcpy(dest, src, 4*image_width);
+            memset(dest + 4*image_width, filler, rhs_padding);
+            dest += buffer_stride;
+            src += image_stride;
+        }
 
-    memset(dest, 0, buffer_stride * (gbm_bo_get_height(buffer) - image_height));
+        memset(dest, 0, buffer_stride * (buffer_height - image_height));
+        break;
+
+    case mir_orientation_inverted:
+        for (unsigned int row = 0; row != image_height; ++row)
+        {
+            memset(dest+row*buffer_stride+4*image_width, filler, rhs_padding);
+
+            for (unsigned int col = 0; col != image_width; ++col)
+            {
+                memcpy(dest+row*buffer_stride+4*col, src + ((image_height-1)-row)*image_stride + 4*((image_width-1)-col), 4);
+            }
+        }
+
+        memset(dest+image_height*buffer_stride, filler, buffer_stride * (buffer_height - image_height));
+        break;
+
+    case mir_orientation_left:
+        for (unsigned int row = 0; row != image_width; ++row)
+        {
+            memset(dest+row*buffer_stride+4*image_height, filler, rhs_padding);
+
+            for (unsigned int col = 0; col != image_height; ++col)
+            {
+                memcpy(dest+row*buffer_stride+4*col, src + ((image_width-1)-row)*4 + image_stride*col, 4);
+            }
+        }
+
+        memset(dest+image_width*buffer_stride, filler, buffer_stride * (buffer_height - image_width));
+        break;
+
+    case mir_orientation_right:
+        for (unsigned int row = 0; row != image_width; ++row)
+        {
+            memset(dest+row*buffer_stride+4*image_height, filler, rhs_padding);
+
+            for (unsigned int col = 0; col != image_height; ++col)
+            {
+                memcpy(dest+row*buffer_stride+4*col, src + row*4 + image_stride*((image_height-1)-col), 4);
+            }
+        }
+
+        memset(dest+image_width*buffer_stride, filler, buffer_stride * (buffer_height - image_width));
+        break;
+    }
 
     write_buffer_data_locked(lg, buffer, &padded[0], padded_size);
 }
@@ -231,26 +291,20 @@ void mgm::Cursor::show(CursorImage const& cursor_image)
 {
     std::lock_guard<std::mutex> lg(guard);
 
-    auto const& size = cursor_image.size();
+    size = cursor_image.size();
 
+    argb8888.resize(size.width.as_uint32_t() * size.height.as_uint32_t() * 4);
+    memcpy(argb8888.data(), cursor_image.as_argb_8888(), argb8888.size());
+
+    hotspot = cursor_image.hotspot();
     {
         auto locked_buffers = buffers.lock();
         for (auto& pair : *locked_buffers)
         {
-            auto& buffer = pair.second;
-            if (size != geometry::Size{gbm_bo_get_width(buffer), gbm_bo_get_height(buffer)})
-            {
-                pad_and_write_image_data_locked(lg, buffer, cursor_image);
-            }
-            else
-            {
-                auto const count = size.width.as_uint32_t() * size.height.as_uint32_t() * sizeof(uint32_t);
-                write_buffer_data_locked(lg, buffer, cursor_image.as_argb_8888(), count);
-            }
+            pad_and_write_image_data_locked(lg, pair.second);
         }
     }
-    hotspot = cursor_image.hotspot();
-    
+
     // Writing the data could throw an exception so lets
     // hold off on setting visible until after we have succeeded.
     visible = true;
@@ -317,7 +371,7 @@ void mgm::Cursor::place_cursor_at(
 }
 
 void mgm::Cursor::place_cursor_at_locked(
-    std::lock_guard<std::mutex> const&,
+    std::lock_guard<std::mutex> const& lg,
     geometry::Point position,
     ForceCursorState force_state)
 {
@@ -334,15 +388,23 @@ void mgm::Cursor::place_cursor_at_locked(
         if (output_rect.contains(position))
         {
             auto dp = transform(output_rect, position - output_rect.top_left, orientation);
-            
+            auto hs = transform(geom::Rectangle{{0,0}, size}, hotspot, orientation);
+
             // It's a little strange that we implement hotspot this way as there is
             // drmModeSetCursor2 with hotspot support. However it appears to not actually
             // work on radeon and intel. There also seems to be precedent in weston for
             // implementing hotspot in this fashion.
-            output.move_cursor(geom::Point{} + dp - hotspot);
-            if (force_state || !output.has_cursor()) // TODO - or if orientation had changed - then set buffer..
+            output.move_cursor(geom::Point{} + dp - hs);
+            auto& buffer = buffer_for_output(output);
+
+            auto const changed_orientation = buffer.change_orientation(orientation);
+
+            if (changed_orientation)
+                pad_and_write_image_data_locked(lg, buffer);
+
+            if (force_state || !output.has_cursor() || changed_orientation)
             {
-                if (!output.set_cursor(buffer_for_output(output)) || !output.has_cursor())
+                if (!output.set_cursor(buffer) || !output.has_cursor())
                     set_on_all_outputs = false;
             }
         }
@@ -358,7 +420,7 @@ void mgm::Cursor::place_cursor_at_locked(
     last_set_failed = !set_on_all_outputs;
 }
 
-gbm_bo* mgm::Cursor::buffer_for_output(KMSOutput const& output)
+mgm::Cursor::GBMBOWrapper& mgm::Cursor::buffer_for_output(KMSOutput const& output)
 {
     auto locked_buffers = buffers.lock();
 
@@ -366,18 +428,18 @@ gbm_bo* mgm::Cursor::buffer_for_output(KMSOutput const& output)
         locked_buffers->begin(),
         locked_buffers->end(),
         [&output](auto const& candidate)
-        {
-            return candidate.first == output.drm_fd();
-        });
+            {
+                return candidate.first == output.drm_fd();
+            });
 
     if (buffer_it != locked_buffers->end())
     {
         return buffer_it->second;
     }
 
-    locked_buffers->push_back(std::make_pair(output.drm_fd(), GBMBOWrapper(output.drm_fd())));
+    locked_buffers->push_back(std::make_pair(output.drm_fd(), GBMBOWrapper(output.drm_fd(), mir_orientation_normal)));
 
-    gbm_bo* bo = locked_buffers->back().second;
+    GBMBOWrapper& bo = locked_buffers->back().second;
     if (gbm_bo_get_width(bo) < min_buffer_width)
     {
         min_buffer_width = gbm_bo_get_width(bo);

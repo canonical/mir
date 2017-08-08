@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -95,6 +95,30 @@ std::string remove_if_stale(std::string const& socket_name)
     }
     return socket_name;
 }
+
+std::shared_ptr<boost::asio::local::stream_protocol::socket> make_socket_self_cotained(
+    std::shared_ptr<boost::asio::io_service> const& io_service,
+    std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket)
+{
+    struct SelfContainedSocket {
+        SelfContainedSocket(
+            std::shared_ptr<boost::asio::io_service> const& io_service,
+            std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket)
+            : io_service{io_service},
+              socket{socket}
+        {
+        }
+
+        std::shared_ptr<boost::asio::io_service> const io_service;
+        std::shared_ptr<boost::asio::local::stream_protocol::socket> const socket;
+    };
+
+    auto holder = std::make_shared<SelfContainedSocket>(io_service, socket);
+
+    return std::shared_ptr<boost::asio::local::stream_protocol::socket>(
+        holder,
+        holder->socket.get());
+}
 }
 
 mf::PublishedSocketConnector::PublishedSocketConnector(
@@ -104,7 +128,7 @@ mf::PublishedSocketConnector::PublishedSocketConnector(
     std::shared_ptr<ConnectorReport> const& report)
 :   BasicConnector(connection_creator, report),
     socket_file(remove_if_stale(socket_file)),
-    acceptor(io_service, socket_file)
+    acceptor(*io_service, socket_file)
 {
     emergency_cleanup_registry.add(
         [socket_file] { std::remove(socket_file.c_str()); });
@@ -120,13 +144,26 @@ void mf::PublishedSocketConnector::start_accept()
 {
     report->listening_on(socket_file);
 
-    auto socket = std::make_shared<boost::asio::local::stream_protocol::socket>(io_service);
+    auto socket = std::make_shared<boost::asio::local::stream_protocol::socket>(*io_service);
 
     acceptor.async_accept(
         *socket,
-        [this,socket](boost::system::error_code const& ec)
+        [
+            this,
+            socket,
+            maybe_service = std::weak_ptr<boost::asio::io_service>(io_service)
+        ](boost::system::error_code const& ec)
         {
-            on_new_connection(socket, ec);
+            /*
+             * This functor lives on a queue in the io_service. If we capture a strong
+             * reference to the io_service, we'll have a reference cycle.
+             *
+             * Neither io_service::reset() nor acceptor.close() appear to cause the
+             * destruction of the functor, so just take a weak reference to the
+             * io_service and upgrade it when something actually connects.
+             */
+            if (auto live_service = maybe_service.lock())
+                on_new_connection(make_socket_self_cotained(live_service, socket), ec);
         });
 }
 
@@ -144,7 +181,8 @@ void mf::PublishedSocketConnector::on_new_connection(
 mf::BasicConnector::BasicConnector(
     std::shared_ptr<ConnectionCreator> const& connection_creator,
     std::shared_ptr<ConnectorReport> const& report)
-:   work(io_service),
+:   io_service(std::make_shared<boost::asio::io_service>()),
+    work(*io_service),
     report(report),
     connection_creator{connection_creator}
 {
@@ -159,7 +197,7 @@ void mf::BasicConnector::start()
         try
         {
             report->thread_start();
-            io_service.run();
+            io_service->run();
             report->thread_end();
             return;
         }
@@ -175,14 +213,14 @@ void mf::BasicConnector::start()
 void mf::BasicConnector::stop()
 {
     /* Stop processing new requests */
-    io_service.stop();
+    io_service->stop();
 
     /* Wait for io processing thread to finish */
     if (io_service_thread.joinable())
         io_service_thread.join();
 
     /* Prepare for a potential restart */
-    io_service.reset();
+    io_service->reset();
 }
 
 void mf::BasicConnector::create_session_for(
@@ -217,11 +255,13 @@ int mf::BasicConnector::client_socket_fd(std::function<void(std::shared_ptr<Sess
     }
 
     auto const server_socket = std::make_shared<boost::asio::local::stream_protocol::socket>(
-        io_service, boost::asio::local::stream_protocol(), socket_fd[server]);
+        *io_service,
+        boost::asio::local::stream_protocol(),
+        socket_fd[server]);
 
     report->creating_socket_pair(socket_fd[server], socket_fd[client]);
 
-    create_session_for(server_socket, connect_handler);
+    create_session_for(make_socket_self_cotained(io_service, server_socket), connect_handler);
 
     return socket_fd[client];
 }

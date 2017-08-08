@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -188,11 +188,4 @@ void mc::Stream::disassociate_buffer(mg::BufferID id)
 
 void mc::Stream::set_scale(float)
 {
-}
-
-bool mc::Stream::suitable_for_cursor() const
-{
-    // We can't reasonably answer this question -
-    // Suitability for cursor use is a per-buffer property, not a per-stream property.
-    return true;
 }
