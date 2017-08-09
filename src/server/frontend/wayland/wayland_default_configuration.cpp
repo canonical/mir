@@ -20,6 +20,7 @@
 #include "wayland_connector.h"
 
 #include "../../scene/mediating_display_changer.h"
+#include "mir/graphics/platform.h"
 
 namespace mf = mir::frontend;
 
@@ -32,7 +33,8 @@ std::shared_ptr<mf::Connector>
             return std::make_shared<mf::WaylandConnector>(
                 the_frontend_shell(),
                 the_global_event_sink(),
-                *the_mediating_display_changer());
+                *the_mediating_display_changer(),
+                the_graphics_platform());
         });
 }
 

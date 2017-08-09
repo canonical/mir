@@ -2,7 +2,7 @@
  * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -359,11 +359,19 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                         buffer->received();
                         break;
                     case mp::BufferOperation::update:
-                        map->buffer(buffer_id)->received(
-                            *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
+                        buffer = map->buffer(buffer_id);
+                        if (buffer)
+                        {
+                            buffer->received(
+                                *mcl::protobuf_to_native_buffer(seq.buffer_request().buffer()));
+                        }
                         break;
                     case mp::BufferOperation::remove:
-                        map->erase(buffer_id);
+                        /* The server never sends us an unsolicited ::remove request
+                         * (and clients have no way of dealing with one)
+                         *
+                         * Just ignore it, because we've already deleted our buffer.
+                         */
                         break;
                     default:
                         BOOST_THROW_EXCEPTION(std::runtime_error("unknown buffer operation"));

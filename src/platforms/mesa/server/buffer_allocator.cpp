@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -43,6 +43,12 @@
 #include <gbm.h>
 #include <cassert>
 #include <fcntl.h>
+
+#include <wayland-server.h>
+
+#define MIR_LOG_COMPONENT "mesa-buffer-allocator"
+#include <mir/log.h>
+#include <mutex>
 
 namespace mg  = mir::graphics;
 namespace mgm = mg::mesa;
@@ -316,4 +322,172 @@ std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
     };
 
     return pixel_formats;
+}
+
+namespace
+{
+class WaylandBuffer :
+    public mir::graphics::BufferBasic,
+    public mir::graphics::NativeBufferBase,
+    public mir::renderer::gl::TextureSource
+{
+public:
+    WaylandBuffer(
+        EGLDisplay dpy,
+        wl_resource* buffer,
+        std::shared_ptr<mg::EGLExtensions> const& extensions,
+        std::vector<std::unique_ptr<wl_resource, void(*)(wl_resource*)>>&& frames)
+        : buffer{buffer},
+          dpy{dpy},
+          egl_image{EGL_NO_IMAGE_KHR},
+          extensions{extensions},
+          frames{std::move(frames)}
+    {
+        if (extensions->wayland->eglQueryWaylandBufferWL(dpy, buffer, EGL_WIDTH, &width) == EGL_FALSE)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WaylandAllocator buffer width"));
+        }
+        if (extensions->wayland->eglQueryWaylandBufferWL(dpy, buffer, EGL_HEIGHT, &height) == EGL_FALSE)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WaylandAllocator buffer height"));
+        }
+
+        EGLint texture_format;
+        if (!extensions->wayland->eglQueryWaylandBufferWL(dpy, buffer, EGL_TEXTURE_FORMAT, &texture_format))
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WL buffer format"));
+        }
+
+        if (texture_format == EGL_TEXTURE_RGB)
+        {
+            format = mir_pixel_format_xrgb_8888;
+        }
+        else if (texture_format == EGL_TEXTURE_RGBA)
+        {
+            format = mir_pixel_format_argb_8888;
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION((std::invalid_argument{"YUV buffers are unimplemented"}));
+        }
+
+        mir::log_info("Bound Wayland buffer to MirBuffer");
+    }
+
+    ~WaylandBuffer()
+    {
+        if (egl_image != EGL_NO_IMAGE_KHR)
+            extensions->eglDestroyImageKHR(dpy, egl_image);
+
+        wl_resource_queue_event(buffer, WL_BUFFER_RELEASE);
+        mir::log_info("Released Wayland buffer");
+    }
+
+    void gl_bind_to_texture() override
+    {
+        std::unique_lock<std::mutex> lock{image_guard};
+        if (egl_image == EGL_NO_IMAGE_KHR)
+        {
+            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+
+            const EGLint image_attrs[] =
+                {
+                    EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+                    EGL_NONE
+                };
+
+            egl_image = extensions->eglCreateImageKHR(
+                dpy,
+                EGL_NO_CONTEXT,
+                EGL_WAYLAND_BUFFER_WL,
+                buffer,
+                image_attrs);
+
+            if (egl_image == EGL_NO_IMAGE_KHR)
+                BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage"));
+
+            for (auto&& frame : frames)
+            {
+                auto framer = std::move(frame);
+                wl_callback_send_done(framer.get(), 0);
+                wl_client_flush(wl_resource_get_client(framer.get()));
+            }
+            frames.clear();
+        }
+        lock.unlock();
+
+        extensions->glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
+    }
+
+    void bind() override
+    {
+        gl_bind_to_texture();
+    }
+
+    void secure_for_render() override
+    {
+    }
+
+    std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const override
+    {
+        return nullptr;
+    }
+
+    mir::geometry::Size size() const override
+    {
+        return mir::geometry::Size{width, height};
+    }
+
+    MirPixelFormat pixel_format() const override
+    {
+        return format;
+    }
+
+    mir::graphics::NativeBufferBase *native_buffer_base() override
+    {
+        return this;
+    }
+
+private:
+    wl_resource* const buffer;
+    EGLDisplay dpy;
+    std::mutex image_guard;
+    EGLImageKHR egl_image;
+    EGLint width, height;
+    MirPixelFormat format;
+    std::shared_ptr<mg::EGLExtensions> const extensions;
+    std::vector<std::unique_ptr<wl_resource, void(*)(wl_resource*)>> frames;
+};
+}
+
+void mgm::BufferAllocator::bind_display(wl_display* display)
+{
+    dpy = eglGetCurrentDisplay();
+
+    if (dpy == EGL_NO_DISPLAY)
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Fuck"}));
+
+    if (!egl_extensions->wayland)
+    {
+        mir::log_warning("No EGL_WL_bind_wayland_display support");
+        return;
+    }
+
+    if (egl_extensions->wayland->eglBindWaylandDisplayWL(dpy, display) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to bind Wayland display"));
+    }
+    else
+    {
+        mir::log_info("Bound WaylandAllocator display");
+    }
+}
+
+std::unique_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource(
+    wl_resource* buffer,
+    std::vector<std::unique_ptr<wl_resource, void(*)(wl_resource*)>>&& frames)
+{
+    if (egl_extensions->wayland)
+        return std::make_unique<WaylandBuffer>(dpy, buffer, egl_extensions, std::move(frames));
+    return nullptr;
 }

@@ -2,7 +2,7 @@
  * Copyright © 2015-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -29,6 +29,12 @@
 #include <csignal>
 
 #include <climits>
+
+#ifdef MIR_WORKAROUND_VALGRIND_COMPLAINT_ABOUT_UUID_GENERATE_RANDOM
+    #include "memcheck.h"
+#else
+    #define VALGRIND_MAKE_MEM_DEFINED(addr, len)
+#endif
 
 namespace msh = mir::shell;
 namespace ms = mir::scene;
@@ -590,6 +596,7 @@ void msh::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(
 {
     uuid_t uuid;
     uuid_generate(uuid);
+    VALGRIND_MAKE_MEM_DEFINED(uuid, sizeof uuid);
     std::vector<uint8_t> const handle{std::begin(uuid), std::end(uuid)};
 
     surface->start_drag_and_drop(handle);

@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -37,7 +37,6 @@ public:
     virtual void send_buffer(frontend::BufferStreamId id, graphics::Buffer& buffer, graphics::BufferIpcMsgType) = 0;
     virtual void add_buffer(graphics::Buffer&) = 0;
     virtual void error_buffer(geometry::Size req_size, MirPixelFormat req_format, std::string const& error_msg) = 0;
-    virtual void remove_buffer(graphics::Buffer&) = 0;
     virtual void update_buffer(graphics::Buffer&) = 0;
 
 protected:

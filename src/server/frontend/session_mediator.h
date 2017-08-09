@@ -2,7 +2,7 @@
  * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -28,6 +28,7 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/graphics/platform_ipc_operations.h"
+#include "mir/graphics/buffer_id.h"
 #include "mir/protobuf/display_server_debug.h"
 #include "mir_toolkit/common.h"
 
@@ -39,6 +40,8 @@
 
 namespace mir
 {
+class Executor;
+
 namespace cookie
 {
 class Authority;
@@ -126,7 +129,8 @@ public:
         std::shared_ptr<cookie::Authority> const& cookie_authority,
         std::shared_ptr<InputConfigurationChanger> const& input_changer,
         std::vector<mir::ExtensionDescription> const& extensions,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        mir::Executor& executor);
 
     ~SessionMediator() noexcept;
 
@@ -300,8 +304,9 @@ private:
     std::shared_ptr<cookie::Authority> const cookie_authority;
     std::shared_ptr<InputConfigurationChanger> const input_changer;
     std::vector<mir::ExtensionDescription> const extensions;
-    std::unique_ptr<BufferMap> const buffer_cache;
+    std::unordered_map<graphics::BufferID, std::shared_ptr<graphics::Buffer>> buffer_cache;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
+    mir::Executor& executor;
 
     ScreencastBufferTracker screencast_buffer_tracker;
 

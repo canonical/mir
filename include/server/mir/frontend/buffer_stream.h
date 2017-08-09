@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -63,7 +63,6 @@ public:
     //      side once we only support the NBS system.
     virtual void allow_framedropping(bool) = 0;
     virtual void set_scale(float scale) = 0;
-    virtual bool suitable_for_cursor() const = 0;
 protected:
     BufferStream() = default;
     BufferStream(BufferStream const&) = delete;

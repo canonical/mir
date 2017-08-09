@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -16,7 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/frontend/client_buffers.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/frontend/buffer_sink.h"
 #include "mir/renderer/sw/pixel_source.h"
@@ -25,7 +24,6 @@
 #include "src/client/protobuf_to_native_buffer.h"
 #include "src/client/connection_surface_map.h"
 #include "src/server/compositor/stream.h"
-#include "src/server/frontend/buffer_map.h"
 #include "mir/test/doubles/stub_client_buffer_factory.h"
 #include "mir/test/doubles/mock_client_buffer_factory.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
@@ -46,12 +44,6 @@ using namespace testing;
 
 namespace
 {
-
-enum class TestType
-{
-    ExchangeSemantics,
-    SubmitSemantics
-};
 
 enum class Access
 {
@@ -461,6 +453,51 @@ MATCHER(NeverBlocks, "")
     return never_blocks; 
 }
 
+class AutoSendBuffer : public mg::Buffer
+{
+public:
+    AutoSendBuffer(
+        std::shared_ptr<mg::Buffer> const& wrapped,
+        std::shared_ptr<mf::BufferSink> const& sink)
+        : wrapped{wrapped},
+          sink{sink}
+    {
+    }
+
+    ~AutoSendBuffer()
+    {
+        sink->update_buffer(*wrapped);
+    }
+
+    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
+    {
+        return wrapped->native_buffer_handle();
+    }
+
+    mg::BufferID id() const override
+    {
+        return wrapped->id();
+    }
+
+    geom::Size size() const override
+    {
+        return wrapped->size();
+    }
+
+    MirPixelFormat pixel_format() const override
+    {
+        return wrapped->pixel_format();
+    }
+
+    mg::NativeBufferBase *native_buffer_base() override
+    {
+        return wrapped->native_buffer_base();
+    }
+
+private:
+    std::shared_ptr<mg::Buffer> const wrapped;
+    std::shared_ptr<mf::BufferSink> const sink;
+};
 
 //test infrastructure
 struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
@@ -469,9 +506,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     {
         ipc = std::make_shared<StubIpcSystem>();
         sink = std::make_shared<StubEventSink>(ipc);
-        map = std::make_shared<mf::BufferMap>(sink);
         auto submit_stream = std::make_shared<mc::Stream>(
-            map,
             geom::Size{100,100},
             mir_pixel_format_abgr_8888);
         auto weak_stream = std::weak_ptr<mc::Stream>(submit_stream);
@@ -482,12 +517,15 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
                 if (!submit_stream)
                     return;
                 mg::BufferID id{static_cast<unsigned int>(buffer.buffer_id())};
-                submit_stream->submit_buffer(map->get(id));
+                submit_stream->submit_buffer(
+                    std::make_shared<AutoSendBuffer>(map.at(id), sink));
             });
         ipc->on_allocate(
             [this](geom::Size sz)
             {
-                map->add_buffer(std::make_shared<mtd::StubBuffer>(sz));
+                auto const buffer = std::make_shared<mtd::StubBuffer>(sz);
+                map[buffer->id()] = buffer;
+                sink->add_buffer(*buffer);
             });
 
         consumer = std::make_unique<ScheduledConsumer>(submit_stream);
@@ -528,7 +566,7 @@ struct BufferScheduling : public Test, ::testing::WithParamInterface<int>
     std::unique_ptr<ConsumerSystem> consumer;
     std::unique_ptr<ConsumerSystem> second_consumer;
     std::unique_ptr<ConsumerSystem> third_consumer;
-    std::shared_ptr<mf::BufferMap> map;
+    std::unordered_map<mg::BufferID, std::shared_ptr<mg::Buffer>> map;
 };
 
 struct WithAnyNumberOfBuffers : BufferScheduling {};
@@ -1163,7 +1201,6 @@ TEST_P(WithThreeOrMoreBuffers, queue_size_scales_with_client_performance)
         producer->produce();
         a = consumer->consume_resource();
         b = consumer->consume_resource();
-        EXPECT_THAT(a, Ne(b));
     }
     a.reset();
     b.reset();
@@ -1202,7 +1239,6 @@ TEST_P(WithThreeOrMoreBuffers, greedy_compositors_scale_to_triple_buffers)
     {
         first = consumer->consume_resource();
         second = consumer->consume_resource();
-        EXPECT_THAT(first, Ne(second)); 
         producer->produce();
     }
 

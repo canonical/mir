@@ -2,7 +2,7 @@
  * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -24,6 +24,7 @@
 #include "platform_common.h"
 #include "mir/renderer/gl/egl_platform.h"
 #include "buffer_allocator.h"
+#include "mir/graphics/wayland_allocator.h"
 
 namespace mir
 {
@@ -34,6 +35,7 @@ namespace mesa
 class GBMPlatform : public graphics::RenderingPlatform,
                     public graphics::NativeRenderingPlatform,
                     public renderer::gl::EGLPlatform
+//                    public graphics::WaylandAllocator
 {
 public:
     GBMPlatform(
@@ -50,6 +52,8 @@ public:
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativeRenderingPlatform* native_rendering_platform() override;
     MirServerEGLNativeDisplayType egl_native_display() const override;
+
+
 private:
     BypassOption const bypass_option;
     BufferImportMethod const import_method;

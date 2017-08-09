@@ -28,6 +28,13 @@
 namespace mir
 {
 
+
+namespace graphics
+{
+class RenderingPlatform;
+class WaylandAllocator;
+}
+
 namespace frontend
 {
 class WlCompositor;
@@ -46,7 +53,8 @@ public:
     WaylandConnector(
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<EventSink> const& global_sink,
-        DisplayChanger& display_config);
+        DisplayChanger& display_config,
+        std::shared_ptr<graphics::RenderingPlatform> const& platform);
 
     ~WaylandConnector() override;
 
@@ -63,9 +71,9 @@ private:
     mir::Fd const pause_signal;
     std::unique_ptr<WlCompositor> compositor_global;
     std::unique_ptr<WlSeat> seat_global;
-    std::unique_ptr<WlApplication> application_global;
-    std::unique_ptr<WlShell> shell_global;
     std::unique_ptr<OutputManager> output_manager;
+    std::shared_ptr<graphics::WaylandAllocator> const allocator;
+    std::unique_ptr<WlShell> shell_global;
     std::thread dispatch_thread;
 };
 

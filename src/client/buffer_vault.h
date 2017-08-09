@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -96,6 +96,7 @@ private:
     int const usage;
 
     std::mutex mutex;
+    bool being_destroyed{false};
     BufferMap buffers;
     std::deque<NoTLSPromise<std::shared_ptr<MirBuffer>>> promises;
     geometry::Size size;

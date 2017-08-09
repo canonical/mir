@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -20,8 +20,6 @@
 #include "stream.h"
 #include "queueing_schedule.h"
 #include "dropping_schedule.h"
-#include "temporary_buffers.h"
-#include "mir/frontend/client_buffers.h"
 #include "mir/graphics/buffer.h"
 #include <boost/throw_exception.hpp>
 
@@ -37,22 +35,17 @@ enum class mc::Stream::ScheduleMode {
 };
 
 mc::Stream::Stream(
-    std::shared_ptr<frontend::ClientBuffers> map, geom::Size size, MirPixelFormat pf) :
+    geom::Size size, MirPixelFormat pf) :
     schedule_mode(ScheduleMode::Queueing),
     schedule(std::make_shared<mc::QueueingSchedule>()),
-    buffers(map),
-    arbiter(std::make_shared<mc::MultiMonitorArbiter>(buffers, schedule)),
+    arbiter(std::make_shared<mc::MultiMonitorArbiter>(schedule)),
     size(size),
     pf(pf),
     first_frame_posted(false)
 {
 }
 
-mc::Stream::~Stream()
-{
-    while(schedule->num_scheduled())
-        buffers->send_buffer(schedule->next_buffer()->id());
-}
+mc::Stream::~Stream() = default;
 
 unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const
 {
@@ -64,32 +57,22 @@ unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mute
 
 void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    std::future<void> deferred_io;
-
     if (!buffer)
         BOOST_THROW_EXCEPTION(std::invalid_argument("cannot submit null buffer"));
 
     {
         std::lock_guard<decltype(mutex)> lk(mutex); 
         first_frame_posted = true;
-        deferred_io = schedule->schedule_nonblocking(buffer);
+        pf = buffer->pixel_format();
+        schedule->schedule(buffer);
     }
     observers.frame_posted(1, buffer->size());
-
-    // Ensure that mutex is not locked while we do this (synchronous!) socket
-    // IO. Holding it locked blocks the compositor thread(s) from rendering.
-    if (deferred_io.valid())
-    {
-        // TODO: Throttling of GPU hogs goes here (LP: #1211700, LP: #1665802)
-        deferred_io.wait();
-    }
 }
 
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const& fn)
 {
     std::lock_guard<decltype(mutex)> lk(mutex); 
-    TemporarySnapshotBuffer buffer(arbiter);
-    fn(buffer);
+    fn(*arbiter->snapshot_acquire());
 }
 
 MirPixelFormat mc::Stream::pixel_format() const
@@ -111,7 +94,7 @@ void mc::Stream::remove_observer(std::weak_ptr<ms::SurfaceObserver> const& obser
 
 std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
 {
-    return std::make_shared<mc::TemporaryCompositorBuffer>(arbiter, id);
+    return arbiter->compositor_acquire(id);
 }
 
 geom::Size mc::Stream::stream_size()
@@ -132,7 +115,7 @@ void mc::Stream::allow_framedropping(bool dropping)
     std::lock_guard<decltype(mutex)> lk(mutex); 
     if (dropping && schedule_mode == ScheduleMode::Queueing)
     {
-        transition_schedule(std::make_shared<mc::DroppingSchedule>(buffers), lk);
+        transition_schedule(std::make_shared<mc::DroppingSchedule>(), lk);
         schedule_mode = ScheduleMode::Dropping;
     }
     else if (!dropping && schedule_mode == ScheduleMode::Dropping)
@@ -205,11 +188,4 @@ void mc::Stream::disassociate_buffer(mg::BufferID id)
 
 void mc::Stream::set_scale(float)
 {
-}
-
-bool mc::Stream::suitable_for_cursor() const
-{
-    // We can't reasonably answer this question -
-    // Suitability for cursor use is a per-buffer property, not a per-stream property.
-    return true;
 }

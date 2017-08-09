@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -141,14 +141,6 @@ void mfd::EventSender::error_buffer(geometry::Size size, MirPixelFormat, std::st
     request->mutable_buffer()->set_width(size.width.as_int());
     request->mutable_buffer()->set_height(size.height.as_int());
     send_event_sequence(seq, {});
-}
-
-void mfd::EventSender::remove_buffer(graphics::Buffer& buffer)
-{
-    mp::EventSequence seq;
-    auto request = seq.mutable_buffer_request();
-    request->set_operation(mir::protobuf::BufferOperation::remove);
-    send_buffer(seq, buffer, mg::BufferIpcMsgType::update_msg);
 }
 
 void mfd::EventSender::update_buffer(graphics::Buffer& buffer)

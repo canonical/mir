@@ -2,7 +2,7 @@
  * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -22,6 +22,12 @@
 #include "ipc_operations.h"
 #include "nested_authentication.h"
 #include <boost/throw_exception.hpp>
+
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+
+#define MIR_LOG_COMPONENT "rendering-platform-gbm"
+#include <mir/log.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
@@ -92,3 +98,29 @@ MirServerEGLNativeDisplayType mgm::GBMPlatform::egl_native_display() const
 {
     return gbm->device;
 }
+
+/*
+void mir::graphics::mesa::GBMPlatform::bind_display(wl_display *display)
+{
+    auto egl_display = eglGetCurrentDisplay();
+
+    if (egl_display == EGL_NO_DISPLAY)
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Fuck"}));
+
+    auto bind_display = reinterpret_cast<PFNEGLBINDWAYLANDDISPLAYWL >(eglGetProcAddress("eglBindWaylandDisplayWL"));
+
+    if ((*bind_display)(egl_display, display) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to bind Wayland display"}));
+    }
+    else
+    {
+        mir::log_info("Bound WaylandAllocator display");
+    }
+}
+
+std::unique_ptr<mir::graphics::Buffer> mir::graphics::mesa::GBMPlatform::buffer_from_resource(wl_resource* buffer)
+{
+    return nullptr;
+}
+*/

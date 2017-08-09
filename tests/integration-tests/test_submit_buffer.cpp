@@ -2,7 +2,7 @@
  * Copyright © 2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -32,7 +32,6 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/compositor/buffer_stream.h"
 #include "src/server/compositor/stream.h"
-#include "src/server/frontend/buffer_map.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 #include "src/client/mir_connection.h"
@@ -70,96 +69,17 @@ struct StubStreamFactory : public msc::BufferStreamFactory
     {}
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId i, std::shared_ptr<mf::ClientBuffers> const& s,
+        mf::BufferStreamId i,
         int, mg::BufferProperties const& p) override
     {
-        return create_buffer_stream(i, s, p);
+        return create_buffer_stream(i, p);
     }
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const& sink,
+        mf::BufferStreamId,
         mg::BufferProperties const& properties) override
     {
-        return std::make_shared<mc::Stream>(sink, properties.size, properties.format);
-    }
-
-    std::shared_ptr<mf::ClientBuffers> create_buffer_map(std::shared_ptr<mf::BufferSink> const& sink) override
-    {
-        struct BufferMap : mf::ClientBuffers
-        {
-            BufferMap(
-                std::shared_ptr<mf::BufferSink> const& sink,
-                std::vector<mg::BufferID> const& ids) :
-                sink(sink),
-                buffer_id_seq(ids)
-            {
-                std::reverse(buffer_id_seq.begin(), buffer_id_seq.end());
-            }
-
-            mg::BufferID add_buffer(std::shared_ptr<mg::Buffer> const& buffer) override
-            {
-                struct BufferIdWrapper : mg::Buffer
-                {
-                    BufferIdWrapper(std::shared_ptr<mg::Buffer> const& b, mg::BufferID id) :
-                        wrapped(b),
-                        id_(id)
-                    {
-                    }
-                
-                    std::shared_ptr<mg::NativeBuffer> native_buffer_handle() const override
-                    {
-                        return wrapped->native_buffer_handle();
-                    }
-                    mg::BufferID id() const override
-                    {
-                        return id_;
-                    }
-                    geom::Size size() const override
-                    {
-                        return wrapped->size();
-                    }
-                    MirPixelFormat pixel_format() const override
-                    {
-                        return wrapped->pixel_format();
-                    }
-                    mg::NativeBufferBase* native_buffer_base() override
-                    {
-                        return wrapped->native_buffer_base();
-                    }
-                    std::shared_ptr<mg::Buffer> const wrapped;
-                    mg::BufferID const id_;
-                };
-
-                auto id = buffer_id_seq.back();
-                buffer_id_seq.pop_back();
-                b = std::make_shared<BufferIdWrapper>(buffer, id);
-                sink->add_buffer(*b);
-                return id; 
-            }
-
-            void remove_buffer(mg::BufferID) override
-            {
-            } 
-
-            std::shared_ptr<mg::Buffer> get(mg::BufferID) const override
-            {
-                return b;
-            }
-
-            void send_buffer(mg::BufferID) override
-            {
-            }
-
-            void receive_buffer(mg::BufferID) override
-            {
-            }
-
-            std::shared_ptr<mg::Buffer> b;
-            std::shared_ptr<mf::BufferSink> const sink;
-            std::shared_ptr<mtd::StubBufferAllocator> alloc{std::make_shared<mtd::StubBufferAllocator>()};
-            std::vector<mg::BufferID> buffer_id_seq;
-        };
-        return std::make_shared<BufferMap>(sink, buffer_id_seq);
+        return std::make_shared<mc::Stream>(properties.size, properties.format);
     }
 
     std::vector<mg::BufferID> const buffer_id_seq;
@@ -209,9 +129,11 @@ class RecordingBufferAllocator : public mg::GraphicBufferAllocator
 public:
     RecordingBufferAllocator(
         std::shared_ptr<mg::GraphicBufferAllocator> const& wrapped,
-        std::vector<std::weak_ptr<mg::Buffer>>& allocated_buffers)
+        std::vector<std::weak_ptr<mg::Buffer>>& allocated_buffers,
+        std::mutex& buffer_mutex)
         : allocated_buffers{allocated_buffers},
-          underlying_allocator{wrapped}
+          underlying_allocator{wrapped},
+          buffer_mutex{buffer_mutex}
     {
     }
 
@@ -219,7 +141,10 @@ public:
         mg::BufferProperties const& buffer_properties) override
     {
         auto const buf = underlying_allocator->alloc_buffer(buffer_properties);
-        allocated_buffers.push_back(buf);
+        {
+            std::lock_guard<std::mutex> lock{buffer_mutex};
+            allocated_buffers.push_back(buf);
+        }
         return buf;
     }
 
@@ -234,7 +159,10 @@ public:
         uint32_t native_flags) override
     {
         auto const buf = underlying_allocator->alloc_buffer(size, native_format, native_flags);
-        allocated_buffers.push_back(buf);
+        {
+            std::lock_guard<std::mutex> lock{buffer_mutex};
+            allocated_buffers.push_back(buf);
+        }
         return buf;
     }
 
@@ -243,13 +171,17 @@ public:
         MirPixelFormat format) override
     {
         auto const buf = underlying_allocator->alloc_software_buffer(size, format);
-        allocated_buffers.push_back(buf);
+        {
+            std::lock_guard<std::mutex> lock{buffer_mutex};
+            allocated_buffers.push_back(buf);
+        }
         return buf;
     }
 
     std::vector<std::weak_ptr<mg::Buffer>>& allocated_buffers;
 private:
     std::shared_ptr<mg::GraphicBufferAllocator> const underlying_allocator;
+    std::mutex& buffer_mutex;
 };
 
 struct StubPlatform : public mg::Platform
@@ -264,7 +196,8 @@ struct StubPlatform : public mg::Platform
     {
         return mir::make_module_ptr<RecordingBufferAllocator>(
             underlying_platform->create_buffer_allocator(),
-            allocated_buffers);
+            allocated_buffers,
+            buffer_mutex);
     }
 
     mir::UniqueModulePtr<mg::PlatformIpcOperations> make_ipc_operations() const override
@@ -281,13 +214,22 @@ struct StubPlatform : public mg::Platform
         return underlying_platform->create_display(policy, config);
     }
 
+    std::vector<std::weak_ptr<mg::Buffer>> get_allocated_buffers()
+    {
+        std::lock_guard<std::mutex> lock{buffer_mutex};
+        return allocated_buffers;
+    }
+
     mg::NativeRenderingPlatform* native_rendering_platform() override { return nullptr; }
     mg::NativeDisplayPlatform* native_display_platform() override { return nullptr; }
     std::vector<mir::ExtensionDescription> extensions() const override { return {}; }
 
     std::shared_ptr<mir::Fd> const last_fd;
-    std::vector<std::weak_ptr<mg::Buffer>> allocated_buffers;
     std::shared_ptr<mg::Platform> const underlying_platform;
+
+private:
+    std::mutex buffer_mutex;
+    std::vector<std::weak_ptr<mg::Buffer>> allocated_buffers;
 };
 
 struct ExchangeServerConfiguration : mtf::StubbedServerConfiguration
@@ -312,9 +254,9 @@ struct SubmitBuffer : mir_test_framework::InProcessServer
     ExchangeServerConfiguration server_configuration{last_unpacked_fd};
     mir::DefaultServerConfiguration& server_config() override { return server_configuration; }
 
-    std::vector<std::weak_ptr<mg::Buffer>> const& get_allocated_buffers()
+    std::vector<std::weak_ptr<mg::Buffer>> get_allocated_buffers()
     {
-        return server_configuration.platform->allocated_buffers;
+        return server_configuration.platform->get_allocated_buffers();
     }
 
     void request_completed()
@@ -364,13 +306,13 @@ struct SubmitBuffer : mir_test_framework::InProcessServer
 };
 template<class Clock>
 bool spin_wait_for_id(
-    std::vector<mg::BufferID> const& ids,
+    std::function<std::vector<mg::BufferID>()> const& id_generator,
     MirWindow* window,
     std::chrono::time_point<Clock> const& pt)
 {
     while(Clock::now() < pt)
     {
-        for (auto const& id : ids)
+        for (auto const& id : id_generator())
         {
             if (mir_debug_window_current_buffer_id(window) == id.as_value())
                 return true;
@@ -469,21 +411,30 @@ TEST_F(SubmitBuffer, server_can_send_buffer)
 
     auto timeout = std::chrono::steady_clock::now() + 5s;
 
-    /* We expect to receive one of the implicitly allocated buffers
-     * We don't care which one we get
-     */
-    std::vector<mg::BufferID> candidate_ids;
-    for (auto const weak_buffer : get_allocated_buffers())
-    {
-        auto const buffer = weak_buffer.lock();
-        if (buffer)
-        {
-            // If there are any expired buffers we don't care about them
-            candidate_ids.push_back(buffer->id());
-        }
-    }
-
-    EXPECT_TRUE(spin_wait_for_id(candidate_ids, window, timeout))
+    EXPECT_TRUE(
+        spin_wait_for_id(
+            [this]()
+            {
+                /* We expect to receive one of the implicitly allocated buffers
+                 * We don't care which one we get.
+                 *
+                 * We need to repeatedly check the allocated buffers, because
+                 * buffer allocation is asynchronous WRT window creation.
+                 */
+                std::vector<mg::BufferID> candidate_ids;
+                for (auto const weak_buffer : get_allocated_buffers())
+                {
+                    auto const buffer = weak_buffer.lock();
+                    if (buffer)
+                    {
+                        // If there are any expired buffers we don't care about them
+                        candidate_ids.push_back(buffer->id());
+                    }
+                }
+                return candidate_ids;
+            },
+            window,
+            timeout))
         << "failed to see buffer";
 
     mir_window_release_sync(window);

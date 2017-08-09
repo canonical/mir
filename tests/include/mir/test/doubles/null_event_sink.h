@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -44,7 +44,6 @@ struct NullEventSink : public frontend::EventSink
     void send_buffer(frontend::BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType) override {}
     void handle_input_config_change(MirInputConfig const&) override {}
     void add_buffer(graphics::Buffer&) override {}
-    void remove_buffer(graphics::Buffer&) override {}
     void update_buffer(graphics::Buffer&) override {}
     void error_buffer(geometry::Size, MirPixelFormat, std::string const&) override {}
 };

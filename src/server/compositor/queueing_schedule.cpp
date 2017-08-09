@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -30,13 +30,6 @@ void mc::QueueingSchedule::schedule(std::shared_ptr<graphics::Buffer> const& buf
     if (it != queue.end())
         queue.erase(it);
     queue.emplace_back(buffer);
-}
-
-std::future<void> mc::QueueingSchedule::schedule_nonblocking(
-    std::shared_ptr<graphics::Buffer> const& buffer)
-{
-    schedule(buffer);
-    return {};
 }
 
 unsigned int mc::QueueingSchedule::num_scheduled()

@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -272,8 +272,8 @@ void mgm::RealKMSOutput::move_cursor(geometry::Point destination)
     if (current_crtc)
     {
         if (auto result = drmModeMoveCursor(drm_fd_, current_crtc->crtc_id,
-                                            destination.x.as_uint32_t(),
-                                            destination.y.as_uint32_t()))
+                                            destination.x.as_int(),
+                                            destination.y.as_int()))
         {
             mir::log_warning("move_cursor: drmModeMoveCursor failed (%s)",
                              strerror(-result));

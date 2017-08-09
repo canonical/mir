@@ -2,7 +2,7 @@
  * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -80,7 +80,7 @@ public:
 struct StubGLBufferStreamFactory : public mtd::StubBufferStreamFactory
 {
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&,
+        mf::BufferStreamId,
         mg::BufferProperties const&) override
     {
         return std::make_shared<StubGLBufferStream>();

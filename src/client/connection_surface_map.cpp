@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -107,7 +107,7 @@ std::shared_ptr<mcl::MirBuffer> mcl::ConnectionSurfaceMap::buffer(int buffer_id)
     if (it != buffers.end())
         return it->second;
     else
-        BOOST_THROW_EXCEPTION(std::runtime_error("could not find buffer"));
+        return nullptr;
 }
 
 void mcl::ConnectionSurfaceMap::erase(void* render_surface_key)

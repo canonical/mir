@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -80,20 +80,63 @@ mcl::BufferVault::BufferVault(
 mcl::BufferVault::~BufferVault()
 {
     buffer_factory->cancel_requests_with_context(this);
+
+    std::vector<std::shared_ptr<MirBuffer>> current_buffers;
+
     std::unique_lock<std::mutex> lk(mutex);
+
+    // Prevent callbacks from allocating new buffers
+    being_destroyed = true;
+
     for (auto& it : buffers)
-    try
+    if (auto map = surface_map.lock())
     {
-        if (auto map = surface_map.lock())
+        if (auto buffer = map->buffer(it.first))
         {
-            auto buffer = map->buffer(it.first);
-            buffer->set_callback(ignore_buffer, nullptr);
-        } 
-        if (!disconnected_)
-            free_buffer(it.first);
+            /*
+             * Annoying wart:
+             *
+             * mir::AtomicCallback is atomic via locking, and we need it to be because
+             * we rely on the guarantee that after set_callback() returns no thread
+             * is in, or will enter, the previous callback.
+             *
+             * However!
+             *
+             * wire_transfer_inbound() is called from buffer->callback, and acquires
+             * BufferVault::mutex.
+             *
+             * This destuctor must call buffer->set_callback(), and has acquired
+             * BufferVault::mutex.
+             *
+             * So we've got a lock inversion.
+             *
+             * We can't unlock here, as wire_transfer_inbound() might mutate
+             * BufferVault::buffers, which we're iterating over.
+             *
+             * So store them up to process later...
+             */
+            current_buffers.push_back(buffer);
+
+            /*
+             * ...and erase them from the SurfaceMap.
+             *
+             * After this point, the RPC layer will ignore any messages about
+             * this buffer.
+             *
+             * We don't need to explicitly ask the server to free it; it'll be
+             * freed with the BufferStream
+             */
+            map->erase(it.first);
+        }
     }
-    catch (...)
+    lk.unlock();
+
+    /*
+     * Now, ensure that no threads are in the existing buffer callbacks...
+     */
+    for (auto const& buffer : current_buffers)
     {
+        buffer->set_callback(ignore_buffer, nullptr);
     }
 }
 
@@ -110,6 +153,10 @@ void mcl::BufferVault::alloc_buffer(geom::Size size, MirPixelFormat format, int 
 void mcl::BufferVault::free_buffer(int free_id)
 {
     server_requests->free_buffer(free_id);
+    if (auto map = surface_map.lock())
+    {
+        map->erase(free_id);
+    }
 }
 
 void mcl::BufferVault::realloc_buffer(int free_id, geom::Size size, MirPixelFormat format, int usage)
@@ -238,6 +285,14 @@ MirWaitHandle* mcl::BufferVault::wire_transfer_outbound(
 void mcl::BufferVault::wire_transfer_inbound(int buffer_id)
 {
     std::unique_lock<std::mutex> lk(mutex);
+
+    /*
+     * The BufferVault is in the process of being destroyed; there's no point in
+     * doing any processing and we should *certainly* not allocate any more buffers.
+     */
+    if (being_destroyed)
+        return;
+
     last_received_id = buffer_id;
     auto buffer = checked_buffer_from_map(buffer_id);
     auto inbound_size = buffer->size();

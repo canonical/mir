@@ -2,7 +2,7 @@
  * Copyright © 2013-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -113,7 +113,6 @@ private:
     std::shared_ptr<SnapshotStrategy> const snapshot_strategy;
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<frontend::EventSink> const event_sink;
-    std::shared_ptr<frontend::ClientBuffers> const buffers;
     std::shared_ptr<graphics::GraphicBufferAllocator> const gralloc;
 
     frontend::SurfaceId next_id();

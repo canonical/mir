@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -169,84 +169,89 @@ public:
 
             pos = Pos{x, y};
             cv.notify_one();
+            break;
         }
+
+        case mir_event_type_close_window:
+            kill(getpid(), SIGTERM);
+            break;
 
         default:;
         }
-        }
+    }
 
-        SquareRenderingSurface(SquareRenderingSurface const&) = delete;
-        SquareRenderingSurface& operator=(SquareRenderingSurface const&) = delete;
-        private:
-        struct OutputDimensions
+    SquareRenderingSurface(SquareRenderingSurface const&) = delete;
+    SquareRenderingSurface& operator=(SquareRenderingSurface const&) = delete;
+private:
+    struct OutputDimensions
+    {
+        unsigned int const width;
+        unsigned int const height;
+    } const dimensions;
+
+    me::Context context;
+    me::NormalWindow window;
+    RenderProgram program;
+
+    OutputDimensions active_output_dimensions(MirConnection* connection)
+    {
+        unsigned int width{0};
+        unsigned int height{0};
+        auto display_config = mir_connection_create_display_configuration(connection);
+        auto num_outputs = mir_display_config_get_num_outputs(display_config);
+        for (auto i = 0; i < num_outputs; i++)
         {
-            unsigned int const width;
-            unsigned int const height;
-        } const dimensions;
-
-        me::Context context;
-        me::NormalWindow window;
-        RenderProgram program;
-
-        OutputDimensions active_output_dimensions(MirConnection* connection)
-        {
-            unsigned int width{0};
-            unsigned int height{0};
-            auto display_config = mir_connection_create_display_configuration(connection);
-            auto num_outputs = mir_display_config_get_num_outputs(display_config);
-            for (auto i = 0; i < num_outputs; i++)
+            auto output = mir_display_config_get_output(display_config, i);
+            auto state = mir_output_get_connection_state(output);
+            if (state == mir_output_connection_state_connected && mir_output_is_enabled(output))
             {
-                auto output = mir_display_config_get_output(display_config, i);
-                auto state = mir_output_get_connection_state(output);
-                if (state == mir_output_connection_state_connected && mir_output_is_enabled(output))
-                {
-                    auto mode = mir_output_get_current_mode(output);
-                    width  = mir_output_mode_get_width(mode);
-                    height = mir_output_mode_get_height(mode);
-                    break;
-                }
-            }
-            mir_display_config_release(display_config);
-            if (width == 0 || height == 0)
-                throw std::logic_error("could not determine display size");
-            return {width, height};
-        }
-
-        static void on_event(MirWindow*, const MirEvent *event, void *context)
-        {
-            auto surface = reinterpret_cast<SquareRenderingSurface*>(context);
-            if (surface) surface->on_event(event);
-        }
-
-        private:
-        void do_work()
-        {
-            std::unique_lock<decltype(mutex)> lock(mutex);
-
-            while (true)
-            {
-                cv.wait(lock);
-
-                if (!running) return;
-
-                Pos  pos = this->pos;
-
-                context.make_current();
-                program.draw(
-                    pos.x/static_cast<float>(dimensions.width)*2.0 - 1.0,
-                    pos.y/static_cast<float>(dimensions.height)*-2.0 + 1.0);
-                context.swapbuffers();
+                auto mode = mir_output_get_current_mode(output);
+                width  = mir_output_mode_get_width(mode);
+                height = mir_output_mode_get_height(mode);
+                break;
             }
         }
+        mir_display_config_release(display_config);
+        if (width == 0 || height == 0)
+            throw std::logic_error("could not determine display size");
+        return {width, height};
+    }
 
-        struct Pos { float x; float y; };
-        std::atomic<Pos> pos;
+    static void on_event(MirWindow*, const MirEvent *event, void *context)
+    {
+        auto surface = reinterpret_cast<SquareRenderingSurface*>(context);
+        if (surface) surface->on_event(event);
+    }
 
-        std::thread worker;
-        std::condition_variable cv;
-        std::mutex mutex;
-        bool running{true};
-    };
+private:
+    void do_work()
+    {
+        std::unique_lock<decltype(mutex)> lock(mutex);
+
+        while (true)
+        {
+            cv.wait(lock);
+
+            if (!running) return;
+
+            Pos  pos = this->pos;
+
+            context.make_current();
+            program.draw(
+                pos.x/static_cast<float>(dimensions.width)*2.0 - 1.0,
+                pos.y/static_cast<float>(dimensions.height)*-2.0 + 1.0);
+            context.swapbuffers();
+        }
+    }
+
+    struct Pos { float x; float y; };
+    std::atomic<Pos> pos;
+
+    std::thread worker;
+    std::condition_variable cv;
+    std::mutex mutex;
+    bool running{true};
+};
 }
 
 int main(int argc, char *argv[])

@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -25,6 +25,7 @@
 #include "mir/renderer/gl/egl_platform.h"
 #include "platform_common.h"
 #include "display_helpers.h"
+#include "mir/graphics/wayland_allocator.h"
 
 namespace mir
 {
@@ -35,9 +36,10 @@ namespace mesa
 {
 
 class VirtualTerminal;
-class Platform : public graphics::Platform,
-                 public graphics::NativeRenderingPlatform,
-                 public mir::renderer::gl::EGLPlatform
+class Platform :
+    public graphics::Platform,
+    public graphics::NativeRenderingPlatform,
+    public mir::renderer::gl::EGLPlatform
 {
 public:
     explicit Platform(std::shared_ptr<DisplayReport> const& reporter,
@@ -66,6 +68,7 @@ public:
     std::shared_ptr<VirtualTerminal> const vt;
 
     BypassOption bypass_option() const;
+
 private:
     BypassOption const bypass_option_;
     std::unique_ptr<DRMNativePlatformAuthFactory> auth_factory;

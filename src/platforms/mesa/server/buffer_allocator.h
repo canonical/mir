@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -22,12 +22,15 @@
 #include "platform_common.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/graphics/wayland_allocator.h"
 #include "mir_toolkit/mir_native_buffer.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic warning "-Wall"
 #include <gbm.h>
 #pragma GCC diagnostic pop
+
+#include <EGL/egl.h>
 
 #include <memory>
 
@@ -46,7 +49,9 @@ enum class BufferImportMethod
     dma_buf
 };
 
-class BufferAllocator: public graphics::GraphicBufferAllocator
+class BufferAllocator:
+    public graphics::GraphicBufferAllocator,
+    public graphics::WaylandAllocator
 {
 public:
     BufferAllocator(gbm_device* device, BypassOption bypass_option, BufferImportMethod const buffer_import_method);
@@ -57,10 +62,15 @@ public:
     std::shared_ptr<Buffer> alloc_buffer(graphics::BufferProperties const& buffer_properties) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
+    void bind_display(wl_display* display) override;
+    std::unique_ptr<Buffer> buffer_from_resource(
+        wl_resource* buffer,
+        std::vector<std::unique_ptr<wl_resource, void(*)(wl_resource*)>>&& frames) override;
 private:
     std::shared_ptr<Buffer> alloc_hardware_buffer(
         graphics::BufferProperties const& buffer_properties);
 
+    EGLDisplay dpy;
     gbm_device* const device;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 

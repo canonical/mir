@@ -2,7 +2,7 @@
  * Copyright © 2012-2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -1305,7 +1305,6 @@ void MirConnection::allocate_buffer(
     MirBufferCallback callback, void* context)
 {
     mp::BufferAllocation request;
-    request.mutable_id()->set_value(-1);
     auto buffer_request = request.add_buffer_requests();
     buffer_request->set_width(size.width.as_int());
     buffer_request->set_height(size.height.as_int());
@@ -1323,16 +1322,15 @@ void MirConnection::allocate_buffer(
 
 void MirConnection::release_buffer(mcl::MirBuffer* buffer)
 {
-    if (!buffer->valid())
+    if (buffer->valid())
     {
-        surface_map->erase(buffer->rpc_id());
-        return;
+        mp::BufferRelease request;
+        auto released_buffer = request.add_buffers();
+        released_buffer->set_buffer_id(buffer->rpc_id());
+        server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
     }
 
-    mp::BufferRelease request;
-    auto released_buffer = request.add_buffers();
-    released_buffer->set_buffer_id(buffer->rpc_id());
-    server.release_buffers(&request, ignored.get(), gp::NewCallback(ignore));
+    surface_map->erase(buffer->rpc_id());
 }
 
 void MirConnection::release_render_surface_with_content(

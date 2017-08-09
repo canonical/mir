@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -25,6 +25,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <unistd.h>
 
 enum
 {
@@ -200,7 +201,7 @@ static void on_event(MirWindow *surface, const MirEvent *event, void *context)
         state->resized = true;
         break;
     case mir_event_type_close_window:
-        state->running = false;
+        kill(getpid(), SIGTERM);
         break;
     default:
         break;

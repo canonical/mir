@@ -2,7 +2,7 @@
  * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -20,7 +20,6 @@
 #include "snapshot_strategy.h"
 #include "default_session_container.h"
 #include "output_properties_cache.h"
-#include "../frontend/buffer_map.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
@@ -68,7 +67,6 @@ ms::ApplicationSession::ApplicationSession(
     snapshot_strategy(snapshot_strategy),
     session_listener(session_listener),
     event_sink(sink),
-    buffers(buffer_stream_factory->create_buffer_map(sink)),
     gralloc(gralloc),
     next_surface_id(0)
 {
@@ -372,7 +370,7 @@ std::shared_ptr<mf::BufferStream> ms::ApplicationSession::get_buffer_stream(mf::
 mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& props)
 {
     auto const id = static_cast<mf::BufferStreamId>(next_id().as_value());
-    auto stream = buffer_stream_factory->create_buffer_stream(id, buffers, props);
+    auto stream = buffer_stream_factory->create_buffer_stream(id, props);
     
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     streams[id] = stream;

@@ -8,6 +8,7 @@ endif()
 include_directories(
     ${server_common_include_dirs}
     ${DRM_INCLUDE_DIRS}
+    ${WAYLAND_SERVER_INCLUDE_DIRS}
 )
 
 add_library(
@@ -30,4 +31,5 @@ target_link_libraries(
 
   server_platform_common
   kms_utils
+  ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
 )

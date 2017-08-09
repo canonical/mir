@@ -2,7 +2,7 @@
  * Copyright © 2013-2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -67,22 +67,17 @@ public:
     }
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId id, std::shared_ptr<mf::ClientBuffers> const& sink,
+        mf::BufferStreamId id,
         int, mg::BufferProperties const& p) override
     {
-        return create_buffer_stream(id, sink, p);
+        return create_buffer_stream(id, p);
     }
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&,
+        mf::BufferStreamId,
         mg::BufferProperties const&) override
     {
         return std::make_shared<StubBufferStream>(framedropping_enabled);
-    }
-
-    std::shared_ptr<mf::ClientBuffers> create_buffer_map(std::shared_ptr<mf::BufferSink> const&) override
-    {
-        return std::make_shared<mtd::StubClientBuffers>();
     }
 
 private:

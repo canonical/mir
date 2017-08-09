@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -20,7 +20,6 @@
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/frontend/event_sink.h"
-#include "mir/frontend/client_buffers.h"
 #include "schedule.h"
 #include <boost/throw_exception.hpp>
 #include <algorithm>
@@ -30,105 +29,47 @@ namespace mc = mir::compositor;
 namespace mf = mir::frontend;
 
 mc::MultiMonitorArbiter::MultiMonitorArbiter(
-    std::shared_ptr<frontend::ClientBuffers> const& map,
     std::shared_ptr<Schedule> const& schedule) :
-    map(map),
     schedule(schedule)
 {
 }
 
 mc::MultiMonitorArbiter::~MultiMonitorArbiter()
 {
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end(); it++)
-    {
-        if (it->use_count == 0)
-            map->send_buffer(it->buffer->id());
-    }
-
 }
 
 std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(compositor::CompositorID id)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
 
-    if (onscreen_buffers.empty() && !schedule->num_scheduled())
+    if (!current_buffer && !schedule->num_scheduled())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to compositor"));
 
-    if (current_buffer_users.find(id) != current_buffer_users.end() || onscreen_buffers.empty())
+    if (current_buffer_users.find(id) != current_buffer_users.end() || !current_buffer)
     {
         if (schedule->num_scheduled())
-            onscreen_buffers.emplace_front(schedule->next_buffer(), 0);
+            current_buffer = schedule->next_buffer();
         current_buffer_users.clear();
     }
     current_buffer_users.insert(id);
 
-    auto& last_entry = onscreen_buffers.front();
-    last_entry.use_count++;
-    auto last_entry_buffer = last_entry.buffer;
-    clean_onscreen_buffers(lk);
-    return last_entry_buffer;
-}
-
-void mc::MultiMonitorArbiter::compositor_release(std::shared_ptr<mg::Buffer> const& buffer)
-{
-    std::lock_guard<decltype(mutex)> lk(mutex);
-
-    decrease_refcount_for(buffer->id(), lk);
-
-    if (onscreen_buffers.begin()->buffer != buffer)
-        clean_onscreen_buffers(lk);
-}
-
-void mc::MultiMonitorArbiter::decrease_refcount_for(mg::BufferID id, std::lock_guard<std::mutex> const&)
-{
-    auto it = std::find_if(onscreen_buffers.begin(), onscreen_buffers.end(),
-        [&id](ScheduleEntry const& s) { return s.buffer->id() == id; });
-    if (it == onscreen_buffers.end())
-        BOOST_THROW_EXCEPTION(std::logic_error("buffer not scheduled"));
-    it->use_count--;
-}
-
-void mc::MultiMonitorArbiter::clean_onscreen_buffers(std::lock_guard<std::mutex> const&)
-{
-    for(auto it = onscreen_buffers.begin(); it != onscreen_buffers.end();)
-    {
-        if ((it->use_count == 0) &&
-            (it != onscreen_buffers.begin() || schedule->num_scheduled())) //ensure monitors always have a buffer
-        {
-            map->send_buffer(it->buffer->id());
-            it = onscreen_buffers.erase(it);
-        }
-        else
-        {
-            it++;
-        } 
-    }
+    return current_buffer;
 }
 
 std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
 
-    if (onscreen_buffers.empty() && !schedule->num_scheduled())
+    if (!current_buffer && !schedule->num_scheduled())
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to snapshotter"));
 
-    if (onscreen_buffers.empty())
+    if (!current_buffer)
     {
         if (schedule->num_scheduled())
-            onscreen_buffers.emplace_front(schedule->next_buffer(), 0);
+            current_buffer = schedule->next_buffer();
     }
 
-    auto& last_entry = onscreen_buffers.front();
-    last_entry.use_count++;
-    return last_entry.buffer;
-}
-
-void mc::MultiMonitorArbiter::snapshot_release(std::shared_ptr<mg::Buffer> const& buffer)
-{
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    decrease_refcount_for(buffer->id(), lk);
-    clean_onscreen_buffers(lk);
+    return current_buffer;
 }
 
 void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const& new_schedule)
@@ -141,13 +82,13 @@ bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     return schedule->num_scheduled() ||
-       ((current_buffer_users.find(id) == current_buffer_users.end()) && !onscreen_buffers.empty());
+       ((current_buffer_users.find(id) == current_buffer_users.end()) && current_buffer);
 }
 
 bool mc::MultiMonitorArbiter::has_buffer()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-    return !onscreen_buffers.empty();
+    return static_cast<bool>(current_buffer);
 }
 
 void mc::MultiMonitorArbiter::advance_schedule()
@@ -155,7 +96,7 @@ void mc::MultiMonitorArbiter::advance_schedule()
     std::lock_guard<decltype(mutex)> lk(mutex);
     if (schedule->num_scheduled())
     {
-        onscreen_buffers.emplace_front(schedule->next_buffer(), 0);
+        current_buffer = schedule->next_buffer();
         current_buffer_users.clear();
     } 
 }

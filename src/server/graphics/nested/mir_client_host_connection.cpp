@@ -2,7 +2,7 @@
  * Copyright © 2014,2016 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -193,7 +193,7 @@ public:
             cursor_hotspot = image.hotspot();
 
             auto conf =
-                mir_cursor_configuration_from_render_surface(surface, 0, 0);
+                mir_cursor_configuration_from_render_surface(surface, cursor_hotspot.dx.as_int(), cursor_hotspot.dy.as_int());
 
             mir_window_configure_cursor(mir_surface, conf);
             mir_cursor_configuration_destroy(conf);
@@ -403,7 +403,7 @@ std::shared_ptr<mgn::HostSurface> mgn::MirClientHostConnection::create_surface(
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MirBufferUsage usage = (properties.usage == mg::BufferUsage::hardware) ?
-        mir_buffer_usage_hardware : mir_buffer_usage_software; 
+        mir_buffer_usage_hardware : mir_buffer_usage_software;
 
     mir_window_spec_set_pixel_format(spec.get(), properties.format);
     mir_window_spec_set_name(spec.get(), name);
@@ -700,7 +700,7 @@ std::unique_ptr<mgn::HostSurfaceSpec> mgn::MirClientHostConnection::create_surfa
 
 bool mgn::MirClientHostConnection::supports_passthrough(mg::BufferUsage)
 {
-    return mir_extension_android_buffer_v1(mir_connection) || 
+    return mir_extension_android_buffer_v1(mir_connection) ||
            mir_extension_gbm_buffer_v1(mir_connection);
 }
 

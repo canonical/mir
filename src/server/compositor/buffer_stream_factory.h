@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -42,13 +42,12 @@ public:
     virtual ~BufferStreamFactory() {}
 
     virtual std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        frontend::BufferStreamId, std::shared_ptr<frontend::ClientBuffers> const& sink,
-        int nbuffers, graphics::BufferProperties const& buffer_properties) override;
+        frontend::BufferStreamId,
+        int nbuffers,
+        graphics::BufferProperties const& buffer_properties) override;
     virtual std::shared_ptr<BufferStream> create_buffer_stream(
-        frontend::BufferStreamId, std::shared_ptr<frontend::ClientBuffers> const& sink,
+        frontend::BufferStreamId,
         graphics::BufferProperties const&) override;
-    virtual std::shared_ptr<frontend::ClientBuffers> create_buffer_map(
-        std::shared_ptr<frontend::BufferSink> const& sink) override;
 };
 
 }

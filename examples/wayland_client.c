@@ -34,9 +34,7 @@
 
 struct globals
 {
-    struct mir_application* application;
     struct wl_compositor* compositor;
-    struct mir_shell_bananas* shell;
     struct wl_shm* shm;
     struct wl_seat* seat;
     struct wl_output* output;
@@ -52,17 +50,9 @@ static void new_global(
     (void)version;
     struct globals* globals = data;
 
-    if (strcmp(interface, "mir_application") == 0)
-    {
-        globals->application = wl_registry_bind(registry, id, &mir_application_interface, 1);
-    }
-    else if (strcmp(interface, "wl_compositor") == 0)
+    if (strcmp(interface, "wl_compositor") == 0)
     {
         globals->compositor = wl_registry_bind(registry, id, &wl_compositor_interface, 3);
-    }
-    else if (strcmp(interface, "mir_shell_bananas") == 0)
-    {
-        globals->shell = wl_registry_bind(registry, id, &mir_shell_bananas_interface, 1);
     }
     else if (strcmp(interface, "wl_shm") == 0)
     {
@@ -298,8 +288,6 @@ int main()
 
     wl_display_roundtrip(display);
 
-    mir_application_connect(globals->application, "Demo client;");
-
     struct wl_pointer* pointer = wl_seat_get_pointer(globals->seat);
     wl_pointer_add_listener(pointer, &pointer_listener, NULL);
 
@@ -313,8 +301,6 @@ int main()
     ctx->content_area = pool_data;
 
     draw_new_stuff(ctx, buffer);
-
-    mir_shell_bananas_as_normal_window(globals->shell, ctx->surface);
 
     wl_buffer_add_listener(buffer, &buffer_listener, ctx);
 

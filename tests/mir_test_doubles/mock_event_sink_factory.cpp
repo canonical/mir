@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -42,7 +42,6 @@ public:
     void send_buffer(mf::BufferStreamId id, mg::Buffer& buf, mg::BufferIpcMsgType type) override;
     void handle_input_config_change(MirInputConfig const& devices) override;
     void add_buffer(mir::graphics::Buffer&) override;
-    void remove_buffer(mir::graphics::Buffer&) override;
     void update_buffer(mir::graphics::Buffer&) override;
     void error_buffer(mir::geometry::Size, MirPixelFormat, std::string const&) override;
 
@@ -104,11 +103,6 @@ void GloballyUniqueMockEventSink::error_buffer(
     mir::geometry::Size sz, MirPixelFormat pf, std::string const& error)
 {
     underlying_sink->error_buffer(sz, pf, error);
-}
-
-void GloballyUniqueMockEventSink::remove_buffer(mir::graphics::Buffer& buffer)
-{
-    underlying_sink->remove_buffer(buffer);
 }
 
 void GloballyUniqueMockEventSink::update_buffer(mir::graphics::Buffer& buffer)

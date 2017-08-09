@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -97,17 +97,13 @@ TEST_F(ConnectionResourceMap, maps_buffers)
 {
     using namespace testing;
     mcl::ConnectionSurfaceMap map;
-    EXPECT_THROW({
-        map.buffer(buffer_id);
-    }, std::runtime_error);
+    EXPECT_THAT(map.buffer(buffer_id), IsNull());
 
     map.insert(buffer_id, buffer);
     EXPECT_THAT(map.buffer(buffer_id), Eq(buffer));
     map.erase(buffer_id);
 
-    EXPECT_THROW({
-        map.buffer(buffer_id);
-    }, std::runtime_error);
+    EXPECT_THAT(map.buffer(buffer_id), IsNull());
 }
 
 TEST_F(ConnectionResourceMap, can_access_buffers_from_surface)

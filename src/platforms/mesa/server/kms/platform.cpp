@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -29,9 +29,23 @@
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/udev/wrapper.h"
 #include "mesa_extensions.h"
+#include "mir/renderer/gl/texture_target.h"
+#include "mir/graphics/buffer_basic.h"
+#include "mir/graphics/egl_error.h"
+
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include MIR_SERVER_GL_H
+#include MIR_SERVER_GLEXT_H
+
+#define MIR_LOG_COMPONENT "platform-graphics-mesa"
+#include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <mir/renderer/gl/texture_source.h>
+#include <wayland-server-core.h>
+#include <wayland-server-protocol.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;

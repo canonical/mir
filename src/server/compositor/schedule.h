@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -19,7 +19,6 @@
 #define MIR_COMPOSITOR_SCHEDULE_H_
 
 #include <memory>
-#include <future>
 
 namespace mir
 {
@@ -31,8 +30,6 @@ class Schedule
 {
 public:
     virtual void schedule(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
-    virtual std::future<void> schedule_nonblocking(
-        std::shared_ptr<graphics::Buffer> const& buffer) = 0;
     virtual unsigned int num_scheduled() = 0;
     virtual std::shared_ptr<graphics::Buffer> next_buffer() = 0;
 

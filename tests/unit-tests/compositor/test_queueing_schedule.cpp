@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -73,25 +73,6 @@ TEST_F(QueueingSchedule, queues_buffers_up)
     EXPECT_THAT(drain_queue(), ContainerEq(scheduled_buffers));
 
     EXPECT_FALSE(schedule.num_scheduled());
-}
-
-TEST_F(QueueingSchedule, nonblocking_schedule_queues_buffers_up)
-{
-    EXPECT_EQ(0u, schedule.num_scheduled());
-
-    std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers {
-        buffers[1], buffers[3], buffers[0], buffers[2], buffers[4]
-    };
-
-    for (auto& buffer : scheduled_buffers)
-    {
-        auto deferred_io = schedule.schedule_nonblocking(buffer);
-        EXPECT_FALSE(deferred_io.valid());
-    }
-
-    EXPECT_EQ(scheduled_buffers.size(), schedule.num_scheduled());
-    EXPECT_THAT(drain_queue(), ContainerEq(scheduled_buffers));
-    EXPECT_EQ(0u, schedule.num_scheduled());
 }
 
 TEST_F(QueueingSchedule, queuing_the_same_buffer_moves_it_to_front_of_queue)

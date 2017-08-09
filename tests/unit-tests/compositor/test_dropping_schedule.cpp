@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -16,7 +16,6 @@
  * Authored by: Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-#include "mir/frontend/client_buffers.h"
 #include "src/server/compositor/dropping_schedule.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/fake_shared.h"
@@ -28,19 +27,8 @@ namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
-namespace mf = mir::frontend;
 namespace
 {
-
-struct MockBufferMap : mf::ClientBuffers
-{
-    MOCK_METHOD1(add_buffer, mg::BufferID(std::shared_ptr<mg::Buffer> const&));
-    MOCK_METHOD1(remove_buffer, void(mg::BufferID id));
-    MOCK_METHOD1(send_buffer, void(mg::BufferID id));
-    MOCK_METHOD1(receive_buffer, void(mg::BufferID id));
-    MOCK_CONST_METHOD0(client_owned_buffer_count, size_t());
-    MOCK_CONST_METHOD1(get, std::shared_ptr<mg::Buffer>(mg::BufferID));
-};
 
 struct DroppingSchedule : Test
 {
@@ -52,8 +40,7 @@ struct DroppingSchedule : Test
     unsigned int const num_buffers{5};
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
 
-    MockBufferMap mock_client_buffers;
-    mc::DroppingSchedule schedule{mt::fake_shared(mock_client_buffers)};
+    mc::DroppingSchedule schedule;
     std::vector<std::shared_ptr<mg::Buffer>> drain_queue()
     {
         std::vector<std::shared_ptr<mg::Buffer>> scheduled_buffers;
@@ -74,49 +61,23 @@ TEST_F(DroppingSchedule, throws_if_no_buffers)
 
 TEST_F(DroppingSchedule, drops_excess_buffers)
 {
-    InSequence seq;
-    EXPECT_CALL(mock_client_buffers, send_buffer(buffers[0]->id()));
-    EXPECT_CALL(mock_client_buffers, send_buffer(buffers[1]->id()));
-    EXPECT_CALL(mock_client_buffers, send_buffer(buffers[2]->id()));
-    EXPECT_CALL(mock_client_buffers, send_buffer(buffers[3]->id()));
- 
     for(auto i = 0u; i < num_buffers; i++)
         schedule.schedule(buffers[i]);
 
     auto queue = drain_queue();
     ASSERT_THAT(queue, SizeIs(1));
-    EXPECT_THAT(queue[0]->id(), Eq(buffers[4]->id()));
-}
 
-TEST_F(DroppingSchedule, nonblocking_schedule_avoids_socket_io)
-{
-    for (auto i = 0u; i < num_buffers; i++)
+    // The 5th buffer should be scheduled...
+    EXPECT_THAT(queue[0]->id(), Eq(buffers[4]->id()));
+    for (int i = 0; i < 4 ; ++i)
     {
-        EXPECT_CALL(mock_client_buffers, send_buffer(_))
-            .Times(0);
-
-        auto deferred_io = schedule.schedule_nonblocking(buffers[i]);
-
-        testing::Mock::VerifyAndClearExpectations(&mock_client_buffers);
-        if (i > 0)
-        {
-            EXPECT_CALL(mock_client_buffers, send_buffer(buffers[i-1]->id()))
-                .Times(1);
-            ASSERT_TRUE(deferred_io.valid());
-            deferred_io.wait();
-            testing::Mock::VerifyAndClearExpectations(&mock_client_buffers);
-        }
+        // ...and all the others should have no external references
+        EXPECT_TRUE(buffers[i].unique());
     }
-
-    auto queue = drain_queue();
-    ASSERT_THAT(queue, SizeIs(1));
-    EXPECT_THAT(queue[0]->id(), Eq(buffers[4]->id()));
 }
 
 TEST_F(DroppingSchedule, queueing_same_buffer_many_times_doesnt_drop)
 {
-    EXPECT_CALL(mock_client_buffers, send_buffer(_)).Times(0);
- 
     schedule.schedule(buffers[2]);
     schedule.schedule(buffers[2]);
     schedule.schedule(buffers[2]);

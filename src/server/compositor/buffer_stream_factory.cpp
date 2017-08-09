@@ -2,7 +2,7 @@
  * Copyright © 2012 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -21,7 +21,6 @@
 #include "buffer_stream_factory.h"
 #include "mir/graphics/buffer_properties.h"
 #include "stream.h"
-#include "../frontend/buffer_map.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/buffer_id.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -40,23 +39,17 @@ mc::BufferStreamFactory::BufferStreamFactory()
 }
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    mf::BufferStreamId id, std::shared_ptr<mf::ClientBuffers> const& buffers,
+    mf::BufferStreamId id,
     mg::BufferProperties const& buffer_properties)
 {
-    return create_buffer_stream(id, buffers, 0, buffer_properties);
+    return create_buffer_stream(id, 0, buffer_properties);
 }
 
 std::shared_ptr<mc::BufferStream> mc::BufferStreamFactory::create_buffer_stream(
-    mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const& buffers,
-    int, mg::BufferProperties const& buffer_properties)
+    mf::BufferStreamId,
+    int,
+    mg::BufferProperties const& buffer_properties)
 {
     return std::make_shared<mc::Stream>(
-        buffers,
         buffer_properties.size, buffer_properties.format);
-}
-
-std::shared_ptr<mf::ClientBuffers> mc::BufferStreamFactory::create_buffer_map(
-        std::shared_ptr<mf::BufferSink> const& sink)
-{
-    return std::make_shared<mf::BufferMap>(sink);
 }

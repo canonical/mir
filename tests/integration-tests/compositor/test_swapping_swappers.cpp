@@ -2,7 +2,7 @@
  * Copyright © 2013 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -19,7 +19,6 @@
 #include "multithread_harness.h"
 
 #include "src/server/compositor/stream.h"
-#include "src/server/frontend/buffer_map.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 
 #include <gmock/gmock.h>
@@ -43,7 +42,6 @@ struct SwapperSwappingStress : public ::testing::Test
     void SetUp()
     {
         stream = std::make_shared<mc::Stream>(
-            std::make_shared<mf::BufferMap>(nullptr),
             geom::Size{380, 210}, mir_pixel_format_abgr_8888);
     }
 

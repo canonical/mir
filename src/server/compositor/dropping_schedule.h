@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -25,22 +25,18 @@
 namespace mir
 {
 namespace graphics { class Buffer; }
-namespace frontend { class ClientBuffers; }
 namespace compositor
 {
 class DroppingSchedule : public Schedule
 {
 public:
-    DroppingSchedule(std::shared_ptr<frontend::ClientBuffers> const&);
+    DroppingSchedule();
     void schedule(std::shared_ptr<graphics::Buffer> const& buffer) override;
-    std::future<void> schedule_nonblocking(
-        std::shared_ptr<graphics::Buffer> const& buffer) override;
     unsigned int num_scheduled() override;
     std::shared_ptr<graphics::Buffer> next_buffer() override;
 
 private:
     std::mutex mutable mutex;
-    std::shared_ptr<frontend::ClientBuffers> const sender;
     std::shared_ptr<graphics::Buffer> the_only_buffer;
 };
 }

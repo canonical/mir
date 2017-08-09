@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 3,
+ * under the terms of the GNU Lesser General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -27,12 +27,12 @@ namespace protobuf
 {
 inline constexpr int current_protocol_version()
 { 
-    return MIR_VERSION_NUMBER(0,5,0);
+    return MIR_VERSION_NUMBER(0,6,0);
 }
 
 inline constexpr int oldest_compatible_protocol_version()
 {
-    return MIR_VERSION_NUMBER(0,5,0);
+    return MIR_VERSION_NUMBER(0,6,0);
 }
 
 inline constexpr int next_incompatible_protocol_version()

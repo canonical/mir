@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -22,7 +22,6 @@
 #include "mir/test/fake_shared.h"
 #include "src/server/compositor/stream.h"
 #include "mir/scene/null_surface_observer.h"
-#include "mir/frontend/client_buffers.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -41,45 +40,6 @@ struct MockSurfaceObserver : mir::scene::NullSurfaceObserver
     MOCK_METHOD2(frame_posted, void(int, geom::Size const&));
 };
 
-struct StubBufferMap : mf::ClientBuffers
-{
-    StubBufferMap(mf::EventSink& sink, std::vector<std::shared_ptr<mg::Buffer>>& buffers) :
-        buffers{buffers},
-        sink{sink}
-    {
-    }
-    mg::BufferID add_buffer(std::shared_ptr<mg::Buffer> const&)
-    {
-        return mg::BufferID{};
-    }
-    void remove_buffer(mg::BufferID)
-    {
-    }
-    void with_buffer(mg::BufferID, std::function<void(mg::Buffer&)> const&)
-    {
-    }
-    void receive_buffer(mg::BufferID)
-    {
-    }
-    void send_buffer(mg::BufferID id)
-    {
-        sink.send_buffer(mf::BufferStreamId{33}, *get(id), mg::BufferIpcMsgType::update_msg);
-    }
-    std::shared_ptr<mg::Buffer> get(mg::BufferID id) const
-    {
-        auto it = std::find_if(buffers.begin(), buffers.end(),
-            [id](std::shared_ptr<mg::Buffer> const& b)
-            {
-                return b->id() == id;
-            });
-        if (it == buffers.end())
-            throw std::logic_error("cannot find buffer in map");
-        return *it;
-    }
-    std::vector<std::shared_ptr<mg::Buffer>>& buffers;
-    mf::EventSink& sink;
-};
-
 struct Stream : Test
 {
     Stream() :
@@ -94,16 +54,14 @@ struct Stream : Test
 
     geom::Size initial_size{44,2};
     std::vector<std::shared_ptr<mg::Buffer>> buffers;
-    NiceMock<mtd::MockEventSink> mock_sink;
     MirPixelFormat construction_format{mir_pixel_format_rgb_565};
     mc::Stream stream{
-        std::make_unique<StubBufferMap>(mock_sink, buffers), initial_size, construction_format};
+        initial_size, construction_format};
 };
 }
 
 TEST_F(Stream, transitions_from_queuing_to_framedropping)
 {
-    EXPECT_CALL(mock_sink, send_buffer(_,_,_)).Times(buffers.size() - 1);
     for(auto& buffer : buffers)
         stream.submit_buffer(buffer);
     stream.allow_framedropping(true);
@@ -111,25 +69,37 @@ TEST_F(Stream, transitions_from_queuing_to_framedropping)
     std::vector<std::shared_ptr<mg::Buffer>> cbuffers;
     while(stream.buffers_ready_for_compositor(this))
         cbuffers.push_back(stream.lock_compositor_buffer(this));
+    // Transition to framedropping should have dropped all queued buffers but the last...
     ASSERT_THAT(cbuffers, SizeIs(1));
     EXPECT_THAT(cbuffers[0]->id(), Eq(buffers.back()->id()));
-    Mock::VerifyAndClearExpectations(&mock_sink);
+
+    for (unsigned long i = 0; i < buffers.size() - 1; ++i)
+    {
+        // ...and so all the previous buffers should no longer have external references
+        EXPECT_TRUE(buffers[i].unique());
+    }
 }
 
 TEST_F(Stream, transitions_from_framedropping_to_queuing)
 {
     stream.allow_framedropping(true);
-    Mock::VerifyAndClearExpectations(&mock_sink);
 
-    EXPECT_CALL(mock_sink, send_buffer(_,_,_)).Times(buffers.size() - 1);
     for(auto& buffer : buffers)
         stream.submit_buffer(buffer);
+
+    // Only the last buffer should be owned by the stream...
+    EXPECT_THAT(
+        std::make_tuple(buffers.data(), buffers.size() - 1),
+        Each(Property(&std::shared_ptr<mg::Buffer>::unique, Eq(true))));
 
     stream.allow_framedropping(false);
     for(auto& buffer : buffers)
         stream.submit_buffer(buffer);
 
-    Mock::VerifyAndClearExpectations(&mock_sink);
+    // All buffers should be now owned by the the stream
+    EXPECT_THAT(
+        buffers,
+        Each(Property(&std::shared_ptr<mg::Buffer>::unique, Eq(false))));
 
     std::vector<std::shared_ptr<mg::Buffer>> cbuffers;
     while(stream.buffers_ready_for_compositor(this))
@@ -178,23 +148,6 @@ TEST_F(Stream, calls_observers_after_scheduling_on_submissions)
     stream.submit_buffer(buffers[0]);
     stream.remove_observer(observer);
     stream.submit_buffer(buffers[0]);
-}
-
-TEST_F(Stream, wakes_compositor_before_starting_socket_io)
-{
-    auto observer = std::make_shared<MockSurfaceObserver>();
-
-    InSequence seq;
-    EXPECT_CALL(*observer, frame_posted(_,_)).Times(2);
-    EXPECT_CALL(mock_sink, send_buffer(_,_,_)).Times(1);
-
-    stream.add_observer(observer);
-    stream.allow_framedropping(true);
-    stream.submit_buffer(buffers[0]);
-    stream.submit_buffer(buffers[1]);
-    stream.remove_observer(observer);
-
-    Mock::VerifyAndClearExpectations(&mock_sink);
 }
 
 TEST_F(Stream, calls_observers_call_doesnt_hold_lock)

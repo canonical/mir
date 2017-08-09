@@ -2,7 +2,7 @@
  * Copyright © 2015 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 3,
+ * under the terms of the GNU General Public License version 2 or 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -17,41 +17,20 @@
  */
 
 #include "dropping_schedule.h"
-#include "mir/frontend/client_buffers.h"
 #include "mir/graphics/buffer.h"
 
 #include <boost/throw_exception.hpp>
-namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 
-mc::DroppingSchedule::DroppingSchedule(std::shared_ptr<mf::ClientBuffers> const& client_buffers) :
-    sender(client_buffers)
+mc::DroppingSchedule::DroppingSchedule()
 {
 }
 
 void mc::DroppingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    auto drop = schedule_nonblocking(buffer);
-    if (drop.valid())
-        drop.wait();
-}
-
-std::future<void> mc::DroppingSchedule::schedule_nonblocking(
-    std::shared_ptr<mg::Buffer> const& buffer)
-{
-    std::future<void> drop;
     std::lock_guard<decltype(mutex)> lk(mutex);
-    if ((the_only_buffer != buffer) && the_only_buffer)
-    {
-        drop = std::async(std::launch::deferred,
-            [sender=sender, dropped=the_only_buffer]()
-            {
-                sender->send_buffer(dropped->id());
-            });
-    }
     the_only_buffer = buffer;
-    return drop;
 }
 
 unsigned int mc::DroppingSchedule::num_scheduled()

@@ -2,7 +2,7 @@
  * Copyright © 2012-2014 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 2 or 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -63,17 +63,10 @@ static std::shared_ptr<mtd::MockSurface> make_mock_surface()
 
 struct MockBufferStreamFactory : public ms::BufferStreamFactory
 {
-    MockBufferStreamFactory()
-    {
-        ON_CALL(*this, create_buffer_map(testing::_))
-            .WillByDefault(testing::Return(std::make_shared<mtd::StubClientBuffers>()));
-    }
+    MOCK_METHOD2(create_buffer_stream, std::shared_ptr<mc::BufferStream>(
+        mf::BufferStreamId, mg::BufferProperties const&));
     MOCK_METHOD3(create_buffer_stream, std::shared_ptr<mc::BufferStream>(
-        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&, mg::BufferProperties const&));
-    MOCK_METHOD4(create_buffer_stream, std::shared_ptr<mc::BufferStream>(
-        mf::BufferStreamId, std::shared_ptr<mf::ClientBuffers> const&, int, mg::BufferProperties const&));
-    MOCK_METHOD1(create_buffer_map, std::shared_ptr<mf::ClientBuffers>(
-        std::shared_ptr<mf::BufferSink> const&));
+        mf::BufferStreamId, int, mg::BufferProperties const&));
 };
 
 
@@ -488,7 +481,7 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
     NiceMock<MockSurfaceFactory> surface_factory;
     MockBufferStreamFactory mock_buffer_stream_factory;
     std::shared_ptr<mc::BufferStream> const mock_stream = std::make_shared<mtd::MockBufferStream>();
-    ON_CALL(mock_buffer_stream_factory, create_buffer_stream(_,_,_)).WillByDefault(Return(mock_stream));
+    ON_CALL(mock_buffer_stream_factory, create_buffer_stream(_,_)).WillByDefault(Return(mock_stream));
     ON_CALL(surface_factory, create_surface(_,_)).WillByDefault(Return(mock_surface));
     NiceMock<mtd::MockSurfaceStack> surface_stack;
 
@@ -588,7 +581,7 @@ TEST_F(ApplicationSession, sets_and_looks_up_surface_streams)
         std::make_shared<mtd::StubBufferStream>(),
         std::make_shared<mtd::StubBufferStream>()
     }};
-    EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_,_,_))
+    EXPECT_CALL(mock_bufferstream_factory, create_buffer_stream(_,_))
         .WillOnce(Return(streams[0]))
         .WillOnce(Return(streams[1]))
         .WillOnce(Return(streams[2]));
@@ -630,7 +623,7 @@ TEST_F(ApplicationSession, buffer_stream_constructed_with_requested_parameters)
 
     mg::BufferProperties properties(buffer_size, mir_pixel_format_argb_8888, mg::BufferUsage::software);
     
-    EXPECT_CALL(factory, create_buffer_stream(_,_,properties)).Times(1)
+    EXPECT_CALL(factory, create_buffer_stream(_,properties)).Times(1)
         .WillOnce(Return(mt::fake_shared(stream)));
 
     auto session = make_application_session_with_buffer_stream_factory(mt::fake_shared(factory));
@@ -658,7 +651,7 @@ TEST_F(ApplicationSession, buffer_stream_constructed_with_swapinterval_1)
 
     EXPECT_CALL(stream, allow_framedropping(true))
         .Times(0); 
-    EXPECT_CALL(factory, create_buffer_stream(_,_,properties)).Times(1)
+    EXPECT_CALL(factory, create_buffer_stream(_,properties)).Times(1)
         .WillOnce(Return(mt::fake_shared(stream)));
 
     auto session = make_application_session_with_buffer_stream_factory(mt::fake_shared(factory));
