@@ -254,7 +254,7 @@ void mgm::Display::configure(mg::DisplayConfiguration const& conf)
     if (!conf.valid())
     {
         BOOST_THROW_EXCEPTION(
-            std::runtime_error("Invalid or inconsistent display configuration"));
+            std::logic_error("Invalid or inconsistent display configuration"));
     }
 
     {

@@ -184,6 +184,12 @@ void ms::MediatingDisplayChanger::configure(
     std::shared_ptr<mf::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
+    if (!conf->valid())
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Invalid or inconsistent display configuration"));
+    }
+
     {
         std::lock_guard<std::mutex> lg{configuration_mutex};
         config_map[session] = conf;
@@ -262,6 +268,12 @@ ms::MediatingDisplayChanger::preview_base_configuration(
     std::shared_ptr<graphics::DisplayConfiguration> const& conf,
     std::chrono::seconds timeout)
 {
+    if (!conf->valid())
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Invalid or inconsistent display configuration"));
+    }
+
     {
         std::lock_guard<std::mutex> lock{configuration_mutex};
 
@@ -572,6 +584,12 @@ void ms::MediatingDisplayChanger::session_stopping_handler(
 
 void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::DisplayConfiguration> const &conf)
 {
+    if (!conf->valid())
+    {
+        BOOST_THROW_EXCEPTION(
+            std::runtime_error("Invalid or inconsistent display configuration"));
+    }
+
     server_action_queue->enqueue(
         this,
         [this, conf]
