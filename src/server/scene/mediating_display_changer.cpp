@@ -42,6 +42,7 @@ namespace mt = mir::time;
 
 namespace
 {
+char const* const bad_display_config = "Invalid or inconsistent display configuration";
 
 class DisplayConfigurationInProgressError : public mir::ClientVisibleError
 {
@@ -186,8 +187,7 @@ void ms::MediatingDisplayChanger::configure(
 {
     if (!conf->valid())
     {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Invalid or inconsistent display configuration"));
+        BOOST_THROW_EXCEPTION(std::runtime_error(bad_display_config));
     }
 
     {
@@ -270,8 +270,7 @@ ms::MediatingDisplayChanger::preview_base_configuration(
 {
     if (!conf->valid())
     {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Invalid or inconsistent display configuration"));
+        BOOST_THROW_EXCEPTION(std::runtime_error(bad_display_config));
     }
 
     {
@@ -567,8 +566,7 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
 {
     if (!conf->valid())
     {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Invalid or inconsistent display configuration"));
+        BOOST_THROW_EXCEPTION(std::runtime_error(bad_display_config));
     }
 
     server_action_queue->enqueue(
