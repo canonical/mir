@@ -454,7 +454,7 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_with_db_preserving_but_ou
     conf->for_each_output(
         [&new_output_enabled](mg::UserDisplayConfigurationOutput& output)
         {
-            if (!output.used)
+            if (output.connected && !output.used)
             {
                 new_output_enabled = true;
                 output.used = true;
