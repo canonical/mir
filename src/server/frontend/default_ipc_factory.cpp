@@ -165,7 +165,7 @@ private:
     std::deque<std::function<void()>> tasks;
 };
 
-mir::Executor& system_executor()
+mir::Executor& buffer_return_ipc_executor()
 {
     static std::once_flag setup;
     static ThreadExecutor executor;
@@ -337,5 +337,5 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         input_changer,
         extensions,
         buffer_allocator,
-        system_executor());
+        buffer_return_ipc_executor());
 }
