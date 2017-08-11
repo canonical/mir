@@ -20,6 +20,7 @@
 #define MIR_MUTEX_H_
 
 #include <mutex>
+#include <memory>
 
 namespace mir
 {
@@ -92,6 +93,25 @@ public:
     MutexGuard<Guarded> lock()
     {
         return MutexGuard<Guarded>{std::unique_lock<std::mutex>{mutex}, value};
+    }
+
+    /**
+     * Lock the mutex and return an accessor for the protected data (pointer specialisation).
+     *
+     * If \tparam Guarded is a pointer-esque type (specifically, if std::pointer_traits<>
+     * understands it), then this operator will return an accessor for the value
+     * \b pointed-at by the contained value.
+     *
+     * \return A smart-pointer-esque accessor for the pointer-unwrapped, contained data.
+     *          While code has access to the MutexGuard it is guaranteed to have exclusive
+     *          access to the contained data.
+     */
+    MutexGuard<typename std::pointer_traits<Guarded>::element_type> operator*()
+    {
+        return MutexGuard<typename std::pointer_traits<Guarded>::element_type>{
+            std::unique_lock<std::mutex>{mutex},
+            *value
+        };
     }
 
 private:
