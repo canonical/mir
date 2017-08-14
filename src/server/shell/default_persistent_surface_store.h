@@ -20,6 +20,7 @@
 #define MIR_SHELL_DEFAULT_PERSISTENT_SURFACE_STORE_H_
 
 #include "mir/shell/persistent_surface_store.h"
+#include <mutex>
 
 namespace mir
 {
@@ -36,6 +37,7 @@ public:
 
 private:
     class SurfaceIdBimap;
+    std::mutex mutable mutex;
     std::unique_ptr<SurfaceIdBimap> const store;
 };
 }
