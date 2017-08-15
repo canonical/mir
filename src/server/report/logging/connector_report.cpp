@@ -81,5 +81,13 @@ void mrl::ConnectorReport::error(std::exception const& error)
     logger->log(ml::Severity::warning, ss.str(), component);
 }
 
+void mrl::ConnectorReport::warning(std::string const& error)
+{
+    std::stringstream ss;
+    ss << "thread (" << std::this_thread::get_id() << ") " << error;
+
+    logger->log(ml::Severity::warning, ss.str(), component);
+}
+
 
 

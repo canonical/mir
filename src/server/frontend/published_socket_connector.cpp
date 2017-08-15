@@ -138,6 +138,10 @@ void mf::PublishedSocketConnector::on_new_connection(
     {
         create_session_for(socket, [](std::shared_ptr<mf::Session> const&) {});
     }
+    else
+    {
+        report->warning(ec.message());
+    }
     start_accept();
 }
 
