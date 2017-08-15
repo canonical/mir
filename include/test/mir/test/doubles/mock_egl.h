@@ -158,6 +158,13 @@ public:
                                                       int64_t*, int64_t*,
                                                       int64_t*));
 
+    MOCK_METHOD2(eglBindWaylandDisplayWL,
+        EGLBoolean(EGLDisplay, struct wl_display*));
+    MOCK_METHOD2(eglUnbindWaylandDisplayWL,
+        EGLBoolean(EGLDisplay, struct wl_display*));
+    MOCK_METHOD4(eglQueryWaylandBufferWL,
+        EGLBoolean(EGLDisplay, struct wl_resource*, EGLint, EGLint*));
+
     EGLDisplay const fake_egl_display;
     EGLConfig const* const fake_configs;
     EGLint const fake_configs_num;
