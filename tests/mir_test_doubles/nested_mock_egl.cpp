@@ -30,21 +30,12 @@ mtd::NestedMockEGL::NestedMockEGL()
         EXPECT_CALL(*this, eglTerminate(_)).Times(1);
     }
 
-    EXPECT_CALL(*this, eglCreateWindowSurface(_, _, _, _)).Times(AnyNumber());
-    EXPECT_CALL(*this, eglMakeCurrent(_, _, _, _)).Times(AnyNumber());
-    EXPECT_CALL(*this, eglDestroySurface(_, _)).Times(AnyNumber());
-    EXPECT_CALL(*this, eglQueryString(_, _)).Times(AnyNumber());
-
     provide_egl_extensions();
     provide_stub_platform_buffer_swapping();
 
-    EXPECT_CALL(*this, eglChooseConfig(_, _, _, _, _)).Times(AnyNumber()).WillRepeatedly(
+
+    ON_CALL(*this, eglChooseConfig(_, _, _, _, _)).WillByDefault(
         DoAll(WithArgs<2, 4>(Invoke(this, &NestedMockEGL::egl_choose_config)), Return(EGL_TRUE)));
-    EXPECT_CALL(*this, eglGetCurrentContext()).Times(AnyNumber());
-    EXPECT_CALL(*this, eglCreatePbufferSurface(_, _, _)).Times(AnyNumber());
-    EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglCreateImageKHR"))).Times(AnyNumber());
-    EXPECT_CALL(*this, eglGetProcAddress(StrEq("eglDestroyImageKHR"))).Times(AnyNumber());
-    EXPECT_CALL(*this, eglGetProcAddress(StrEq("glEGLImageTargetTexture2DOES"))).Times(AnyNumber());
 
     {
         InSequence context_lifecycle;
