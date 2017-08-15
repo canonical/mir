@@ -259,8 +259,11 @@ struct RecordingBufferAllocator : public mg::GraphicBufferAllocator
     }
 
     std::shared_ptr<mg::Buffer> alloc_software_buffer(
-        geom::Size size, MirPixelFormat /*format*/) override
+        geom::Size size, MirPixelFormat format) override
     {
+        if (format >= mir_pixel_formats || format == mir_pixel_format_invalid)
+            BOOST_THROW_EXCEPTION(std::invalid_argument{"Invalid pixel format"});
+
         auto const buf = std::make_shared<mtd::StubBuffer>(size);
         allocated_buffers.push_back(buf);
         return buf;
