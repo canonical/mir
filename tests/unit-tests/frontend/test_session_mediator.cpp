@@ -1557,3 +1557,36 @@ TEST_F(SessionMediator, invalid_buffer_stream_in_native_buffer_allocation_sends_
         allocator->allocated_buffers,
         Each(Property(&std::weak_ptr<mg::Buffer>::expired, Eq(true))));
 }
+
+TEST_F(SessionMediator, release_buffer_stream_releases_associated_buffers)
+{
+    mp::BufferStreamId stream_id;
+    mp::BufferAllocation allocate_buffer;
+    mp::Void null;
+
+    // Add a fake BufferStream...
+    stream_id.set_value(42);
+    auto stream = stubbed_session->create_mock_stream(mf::BufferStreamId{stream_id.value()});
+
+    // ...and allocate some buffers to it
+    *allocate_buffer.mutable_id() = stream_id;
+    add_software_buffer_request(allocate_buffer, 640, 480, mir_pixel_format_argb_8888);
+    add_software_buffer_request(allocate_buffer, 640, 480, mir_pixel_format_argb_8888);
+    add_software_buffer_request(allocate_buffer, 640, 480, mir_pixel_format_argb_8888);
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.allocate_buffers(&allocate_buffer, &null, null_callback.get());
+
+    // All the buffers should have been allocated and should be live
+    ASSERT_THAT(allocator->allocated_buffers.size(), Eq(3));
+    ASSERT_THAT(
+        allocator->allocated_buffers,
+        Each(Property(&std::weak_ptr<mg::Buffer>::expired, Eq(false))));
+
+    mediator.release_buffer_stream(&stream_id, &null, null_callback.get());
+
+    // Releasing the BufferStream should have ended the lifetime of all the buffers allocated to it.
+    EXPECT_THAT(
+        allocator->allocated_buffers,
+        Each(Property(&std::weak_ptr<mg::Buffer>::expired, Eq(true))));
+}
