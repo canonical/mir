@@ -31,6 +31,9 @@ mir (1.0.0-0ubuntu1) UNRELEASED; urgency=medium
       . Don't leak DRM fds in platform-eglstream probe.
       . Remove obsolete & broken example code. (LP: #1663130)
       . Move buffer-release IPC to a dedicated IPC thread. (LP: #1395421)
+      . [NestedServerWithTwoDisplays] Look for the last of a series of
+        synthetic events to ensure that the queue is drained before the test
+        exits. (LP: #1709666)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 10 Aug 2017 11:54:30 +0000
 
