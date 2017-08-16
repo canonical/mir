@@ -42,30 +42,15 @@ public:
     ~MultiMonitorArbiter();
 
     std::shared_ptr<graphics::Buffer> compositor_acquire(compositor::CompositorID id) override;
-    void compositor_release(std::shared_ptr<graphics::Buffer> const&) override;
     std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
-    void snapshot_release(std::shared_ptr<graphics::Buffer> const&) override;
     void set_schedule(std::shared_ptr<Schedule> const& schedule);
     bool buffer_ready_for(compositor::CompositorID id);
     bool has_buffer();
     void advance_schedule();
 
 private:
-    void decrease_refcount_for(graphics::BufferID id, std::lock_guard<std::mutex> const&);
-    void clean_onscreen_buffers(std::lock_guard<std::mutex> const&);
-
     std::mutex mutable mutex;
-    struct ScheduleEntry
-    {
-        ScheduleEntry(std::shared_ptr<graphics::Buffer> const& buffer, unsigned int use_count) :
-            buffer(buffer),
-            use_count(use_count)
-        {
-        }
-        std::shared_ptr<graphics::Buffer> buffer;
-        unsigned int use_count;
-    };
-    std::deque<ScheduleEntry> onscreen_buffers;
+    std::shared_ptr<graphics::Buffer> current_buffer;
     std::set<compositor::CompositorID> current_buffer_users;
     std::shared_ptr<Schedule> schedule;
 };
