@@ -29,11 +29,195 @@
 #include "event_sink_factory.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/cookie/authority.h"
+#include "mir/executor.h"
+#include "mir/signal_blocker.h"
+
+#include <deque>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace ms = mir::scene;
+
+namespace
+{
+class ThreadExecutor : public mir::Executor
+{
+public:
+    ThreadExecutor() = default;
+
+    ThreadExecutor(ThreadExecutor const&) = delete;
+    ThreadExecutor& operator=(ThreadExecutor const&) = delete;
+
+    void do_work() noexcept
+    {
+        std::unique_lock<std::mutex> lock{queue_mutex};
+        for(;;)
+        {
+            while (!tasks.empty())
+            {
+                std::function<void()> task;
+                task = std::move(tasks.front());
+                tasks.pop_front();
+
+                lock.unlock();
+                task();
+                /*
+                 * The task functor may have captured resources with non-trivial
+                 * destructors.
+                 *
+                 * Ensure those destructors are called outside the lock.
+                 */
+                task = nullptr;
+                lock.lock();
+            }
+
+            if (state != State::Running)
+            {
+                return;
+            }
+
+            queue_notifier.wait(
+                lock,
+                [this]()
+                {
+                    return (state != State::Running) || !tasks.empty();
+                });
+        }
+    }
+
+    ~ThreadExecutor()
+    {
+        quiesce();
+    }
+
+    void spawn(std::function<void()>&& work) override
+    {
+        {
+            std::lock_guard<std::mutex> lock{queue_mutex};
+            tasks.emplace_back(std::move(work));
+
+            if (state == State::NotYetStarted)
+            {
+                /*
+                 * Block all signals on the dispatch thread.
+                 *
+                 * Threads inherit their parent's signal mask, so use a SignalBlocker to block
+                 * all signals *before* spawning the thread (and then restore the signal mask
+                 * when this constructor completes).
+                 */
+                mir::SignalBlocker blocker;
+                state = State::Running;
+                dispatch_thread = std::thread{std::bind(&ThreadExecutor::do_work, this)};
+            }
+        }
+        queue_notifier.notify_all();
+    }
+
+    void quiesce()
+    {
+        {
+            std::lock_guard<std::mutex> lock{queue_mutex};
+            state = State::Quiesced;
+        }
+        queue_notifier.notify_all();
+
+        if (dispatch_thread.joinable())
+            dispatch_thread.join();
+    }
+
+    void resume()
+    {
+        std::lock_guard<std::mutex> lock{queue_mutex};
+        state = State::NotYetStarted;
+        if (!tasks.empty())
+        {
+            /*
+             * Block all signals on the dispatch thread.
+             *
+             * Threads inherit their parent's signal mask, so use a SignalBlocker to block
+             * all signals *before* spawning the thread (and then restore the signal mask
+             * when this constructor completes).
+             */
+            mir::SignalBlocker blocker;
+            state = State::Running;
+            dispatch_thread = std::thread{std::bind(&ThreadExecutor::do_work, this)};
+        }
+    }
+
+    void discard()
+    {
+        std::lock_guard<std::mutex> lock{queue_mutex};
+        tasks.clear();
+        state = State::NotYetStarted;
+    }
+private:
+    std::thread dispatch_thread;
+
+    std::mutex queue_mutex;
+    std::condition_variable queue_notifier;
+    enum class State
+    {
+        NotYetStarted,
+        Running,
+        Quiesced
+    } state{State::NotYetStarted};
+    std::deque<std::function<void()>> tasks;
+};
+
+mir::Executor& buffer_return_ipc_executor()
+{
+    static std::once_flag setup;
+    static ThreadExecutor executor;
+
+    std::call_once(
+        setup,
+        []()
+        {
+            /*
+             * fork() interacts with threads by screaming about being
+             * smothered by moths and then gibbering in a corner.
+             *
+             * Conveniently, our test-suite makes extensive use of fork(),
+             * and runs all the tests from a single main process, meaning
+             * that once a single test has called executor.spawn() every
+             * subsequent call to fork() is a call from a multithreaded
+             * program.
+             *
+             * Enter the moths.
+             *
+             * We can get around this by quiescing the executor; temporarily
+             * halting its execution thread and then resuming it post-fork.
+             */
+            pthread_atfork(
+                []()
+                {
+                    // Pre-fork
+                    executor.quiesce();
+                },
+                []()
+                {
+                    /*
+                     * Post-fork, in the parent:
+                     * Resume execution, executing any functors queued
+                     * since quiescence.
+                     */
+                    executor.resume();
+                },
+                []()
+                {
+                    /*
+                     * Post-fork, in the child:
+                     * Discard any tasks that snuck in after pre-fork but before fork();
+                     * they'll be handled in the parent.
+                     */
+                    executor.discard();
+                });
+        });
+
+    return executor;
+}
+}
 
 mf::DefaultIpcFactory::DefaultIpcFactory(
     std::shared_ptr<Shell> const& shell,
@@ -152,5 +336,6 @@ std::shared_ptr<mf::detail::DisplayServer> mf::DefaultIpcFactory::make_mediator(
         cookie_authority,
         input_changer,
         extensions,
-        buffer_allocator);
+        buffer_allocator,
+        buffer_return_ipc_executor());
 }

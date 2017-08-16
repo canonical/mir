@@ -60,6 +60,7 @@
 #include "mir/cookie/authority.h"
 #include "mir/module_properties.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/executor.h"
 
 #include "mir/geometry/rectangles.h"
 #include "protobuf_buffer_packer.h"
@@ -112,7 +113,8 @@ mf::SessionMediator::SessionMediator(
     std::shared_ptr<mir::cookie::Authority> const& cookie_authority,
     std::shared_ptr<mf::InputConfigurationChanger> const& input_changer,
     std::vector<mir::ExtensionDescription> const& extensions,
-    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) :
+    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
+    mir::Executor& executor) :
     client_pid_(0),
     shell(shell),
     ipc_operations(ipc_operations),
@@ -131,7 +133,8 @@ mf::SessionMediator::SessionMediator(
     cookie_authority(cookie_authority),
     input_changer(input_changer),
     extensions(extensions),
-    allocator{allocator}
+    allocator{allocator},
+    executor{executor}
 {
 }
 
@@ -384,17 +387,21 @@ namespace
     public:
         AutoSendBuffer(
             std::shared_ptr<mg::Buffer> const& wrapped,
+            mir::Executor& executor,
             std::weak_ptr<mf::BufferSink> const& sink)
             : buffer{wrapped},
+              executor{executor},
               sink{sink}
         {
         }
         ~AutoSendBuffer()
         {
-            if (auto live_sink = sink.lock())
-            {
-                live_sink->update_buffer(*buffer);
-            }
+            executor.spawn(
+                [maybe_sink = sink, to_send = std::move(buffer)]()
+                {
+                    if (auto const live_sink = maybe_sink.lock())
+                        live_sink->update_buffer(*to_send);
+                });
         }
 
         std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const override
@@ -423,7 +430,8 @@ namespace
         }
 
     private:
-        std::shared_ptr<mg::Buffer> const buffer;
+        std::shared_ptr<mg::Buffer> buffer;
+        mir::Executor& executor;
         std::weak_ptr<mf::BufferSink> const sink;
     };
 
@@ -446,7 +454,7 @@ void mf::SessionMediator::submit_buffer(
     auto b = buffer_cache.at(buffer_id);
     ipc_operations->unpack_buffer(request_msg, *b);
 
-    stream->submit_buffer(std::make_shared<AutoSendBuffer>(b, event_sink));
+    stream->submit_buffer(std::make_shared<AutoSendBuffer>(b, executor, event_sink));
 
     done->Run();
 }
@@ -520,8 +528,10 @@ void mf::SessionMediator::allocate_buffers(
 
             if (request->has_id())
             {
-                auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
-                stream->associate_buffer(buffer->id());
+                auto const stream_id = mf::BufferStreamId{request->id().value()};
+                // We don't need the stream, but we *do* need to know it exists
+                auto stream = session->get_buffer_stream(stream_id);
+                stream_associated_buffers.insert(std::make_pair(stream_id, buffer->id()));
             }
 
             // TODO: Throw if insert fails (duplicate ID)?
@@ -549,25 +559,35 @@ void mf::SessionMediator::release_buffers(
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     observer->session_release_buffers_called(session->name());
+
+    std::vector<mg::BufferID> to_release(request->buffers().size());
+    std::transform(
+        request->buffers().begin(),
+        request->buffers().end(),
+        to_release.begin(),
+        [](auto buffer)
+        {
+            return mg::BufferID{static_cast<uint32_t>(buffer.buffer_id())};
+        });
+
     if (request->has_id())
     {
-        auto stream_id = mf::BufferStreamId{request->id().value()};
-        try
+        auto const stream_id = mf::BufferStreamId{request->id().value()};
+
+        auto const associated_range = stream_associated_buffers.equal_range(stream_id);
+        for (auto match = associated_range.first; match != associated_range.second;)
         {
-            auto stream = session->get_buffer_stream(stream_id);
-            for (auto i = 0; i < request->buffers().size(); i++)
+            auto const current = match;
+            ++match;
+            if (std::find(to_release.begin(), to_release.end(), current->second) != to_release.end())
             {
-                mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
-                stream->disassociate_buffer(buffer_id);
+
+                stream_associated_buffers.erase(current);
             }
         }
-        catch(...)
-        {
-        }
     }
-    for (auto i = 0; i < request->buffers().size(); i++)
+    for (auto const& buffer_id : to_release)
     {
-        mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
         buffer_cache.erase(buffer_id);
     }
    done->Run();
@@ -1013,6 +1033,12 @@ void mf::SessionMediator::release_buffer_stream(
     auto const id = BufferStreamId(request->value());
 
     session->destroy_buffer_stream(id);
+
+    auto const associated_range = stream_associated_buffers.equal_range(id) ;
+    for (auto match = associated_range.first; match != associated_range.second; ++match)
+    {
+        buffer_cache.erase(match->second);
+    }
 
     done->Run();
 }

@@ -62,7 +62,7 @@ protected:
         std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket,
         std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const;
 
-    boost::asio::io_service mutable io_service;
+    std::shared_ptr<boost::asio::io_service> const io_service;
     boost::asio::io_service::work work;
     std::shared_ptr<ConnectorReport> const report;
 

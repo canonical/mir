@@ -272,6 +272,22 @@ struct RecordingBufferAllocator : public mg::GraphicBufferAllocator
     std::vector<std::weak_ptr<mg::Buffer>> allocated_buffers;
 };
 
+class MockExecutor : public mir::Executor
+{
+public:
+    MockExecutor()
+    {
+        ON_CALL(*this, spawn_thunk(_))
+            .WillByDefault(InvokeArgument<0>());
+    }
+
+    void spawn(std::function<void()>&& task) override
+    {
+        spawn_thunk(task);
+    }
+    MOCK_METHOD1(spawn_thunk, void(std::function<void()>));
+};
+
 struct SessionMediator : public ::testing::Test
 {
     SessionMediator()
@@ -296,7 +312,8 @@ struct SessionMediator : public ::testing::Test
             mir::cookie::Authority::create(),
             mt::fake_shared(mock_input_config_changer),
             {},
-            allocator}
+            allocator,
+            executor}
     {
         using namespace ::testing;
 
@@ -327,7 +344,8 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
             mt::fake_shared(mock_input_config_changer), std::vector<mir::ExtensionDescription>{},
-            allocator);
+            allocator,
+            executor);
     }
 
     std::shared_ptr<mf::SessionMediator> create_session_mediator_with_screencast(
@@ -343,7 +361,8 @@ struct SessionMediator : public ::testing::Test
             std::make_shared<mtd::NullANRDetector>(),
             mir::cookie::Authority::create(),
             mt::fake_shared(mock_input_config_changer), std::vector<mir::ExtensionDescription>{},
-            allocator);
+            allocator,
+            executor);
     }
 
     std::shared_ptr<mf::SessionMediator> create_session_mediator_with_event_sink(
@@ -447,7 +466,8 @@ struct SessionMediator : public ::testing::Test
             mir::cookie::Authority::create(),
             mt::fake_shared(mock_input_config_changer),
             std::vector<mir::ExtensionDescription>{},
-            allocator);
+            allocator,
+            executor);
     }
 
     MockConnector connector;
@@ -462,6 +482,7 @@ struct SessionMediator : public ::testing::Test
     std::shared_ptr<NiceMock<StubbedSession>> const stubbed_session;
     std::unique_ptr<google::protobuf::Closure> null_callback;
     std::shared_ptr<RecordingBufferAllocator> const allocator;
+    NiceMock<MockExecutor> executor;
     mf::SessionMediator mediator;
 
     mp::ConnectParameters connect_parameters;
@@ -507,7 +528,8 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
         mt::fake_shared(mock_input_config_changer), {},
-        allocator};
+        allocator,
+        executor};
 
     EXPECT_THAT(connects_handled_count, Eq(0));
 
@@ -997,7 +1019,8 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
         std::make_shared<mtd::NullANRDetector>(),
         mir::cookie::Authority::create(),
         mt::fake_shared(mock_input_config_changer), {},
-        allocator};
+        allocator,
+        executor};
 
     ON_CALL(*shell, create_surface( _, _, _))
         .WillByDefault(
@@ -1153,54 +1176,6 @@ TEST_F(SessionMediator, destructor_removes_orphaned_screencast_sessions)
 
     mediator.reset();
 
-}
-
-TEST_F(SessionMediator, disassociates_buffers_from_stream_before_destroying)
-{
-    mp::BufferRelease release_buffer;
-    mp::BufferAllocation allocate_buffer;
-    mp::Void null;
-
-    // Add a fake BufferStream...
-    auto stream_id = mf::BufferStreamId{42};
-    auto stream = stubbed_session->create_mock_stream(stream_id);
-
-    // ...and allocate a buffer to it
-    allocate_buffer.mutable_id()->set_value(42);
-    auto buffer_props = allocate_buffer.add_buffer_requests();
-    buffer_props->set_buffer_usage(0);
-    buffer_props->set_pixel_format(0);
-    buffer_props->set_width(230);
-    buffer_props->set_height(230);
-
-    mediator.connect(&connect_parameters, &connection, null_callback.get());
-    mediator.allocate_buffers(&allocate_buffer, &null, null_callback.get());
-
-    ASSERT_THAT(allocator->allocated_buffers.size(), Eq(1));
-    auto allocated_buffer = allocator->allocated_buffers.front().lock();
-    ASSERT_THAT(allocated_buffer, NotNull());
-
-    auto const buffer_id = allocated_buffer->id();
-
-    // Release our share of the buffer ownership.
-    allocated_buffer.reset();
-
-    auto buffer_item = release_buffer.add_buffers();
-    buffer_item->set_buffer_id(buffer_id.as_value());
-    release_buffer.mutable_id()->set_value(stream_id.as_value());
-
-    EXPECT_CALL(*stream, disassociate_buffer(buffer_id))
-        .WillOnce(InvokeWithoutArgs(
-            [weak_buffer = allocator->allocated_buffers.front()]()
-            {
-                // The buffer should be live here!
-                EXPECT_THAT(weak_buffer.lock(), NotNull());
-            }));
-
-    mediator.release_buffers(&release_buffer, &null, null_callback.get());
-
-    // And now we expect the buffer to have been destroyed.
-    EXPECT_THAT(allocator->allocated_buffers.front().lock(), IsNull());
 }
 
 TEST_F(SessionMediator, releases_buffers_of_unknown_buffer_stream_does_not_throw)
@@ -1366,6 +1341,48 @@ TEST_F(SessionMediator, screencast_to_buffer_looks_up_and_fills_appropriate_buff
     screencast_request.set_buffer_id(allocator->allocated_buffers.front().lock()->id().as_value());
 
     mediator->screencast_to_buffer(&screencast_request, &null, null_callback.get());
+}
+
+TEST_F(SessionMediator, buffer_releases_are_sent_from_specified_executor)
+{
+    mp::BufferRelease release_buffer;
+    mp::BufferAllocation allocate_buffer;
+    mp::Void null;
+
+    // Add a fake BufferStream...
+    auto stream_id = mf::BufferStreamId{42};
+    auto stream = stubbed_session->create_mock_stream(stream_id);
+
+    // ...and allocate a buffer to it
+    allocate_buffer.mutable_id()->set_value(42);
+    auto buffer_props = allocate_buffer.add_buffer_requests();
+    buffer_props->set_buffer_usage(0);
+    buffer_props->set_pixel_format(0);
+    buffer_props->set_width(230);
+    buffer_props->set_height(230);
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.allocate_buffers(&allocate_buffer, &null, null_callback.get());
+
+    ASSERT_THAT(allocator->allocated_buffers.size(), Eq(1));
+    auto allocated_buffer = allocator->allocated_buffers.front().lock();
+    ASSERT_THAT(allocated_buffer, NotNull());
+
+    auto const buffer_id = allocated_buffer->id();
+
+    // Submit this buffer
+    mp::BufferRequest submit_request;
+    submit_request.mutable_id()->set_value(stream_id.as_value());
+    submit_request.mutable_buffer()->set_buffer_id(buffer_id.as_value());
+
+    // Ensure the submitted buffer's lifetime ends immediately, and so should
+    // get released to the client.
+    ON_CALL(*stream, submit_buffer(_))
+        .WillByDefault(Invoke([](auto const &){}));
+    // And our buffer should be released by the executor.
+    EXPECT_CALL(executor, spawn_thunk(_)).Times(1);
+
+    mediator.submit_buffer(&submit_request, &null, null_callback.get());
 }
 
 namespace
@@ -1536,6 +1553,39 @@ TEST_F(SessionMediator, invalid_buffer_stream_in_native_buffer_allocation_sends_
     EXPECT_CALL(*sink, error_buffer(_,_,_)).Times(num_requests);
     mediator->allocate_buffers(&request, &null, null_callback.get());
     // We don't much care if the buffers were allocated and then freed or never allocated
+    EXPECT_THAT(
+        allocator->allocated_buffers,
+        Each(Property(&std::weak_ptr<mg::Buffer>::expired, Eq(true))));
+}
+
+TEST_F(SessionMediator, release_buffer_stream_releases_associated_buffers)
+{
+    mp::BufferStreamId stream_id;
+    mp::BufferAllocation allocate_buffer;
+    mp::Void null;
+
+    // Add a fake BufferStream...
+    stream_id.set_value(42);
+    auto stream = stubbed_session->create_mock_stream(mf::BufferStreamId{stream_id.value()});
+
+    // ...and allocate some buffers to it
+    *allocate_buffer.mutable_id() = stream_id;
+    add_software_buffer_request(allocate_buffer, 640, 480, mir_pixel_format_argb_8888);
+    add_software_buffer_request(allocate_buffer, 640, 480, mir_pixel_format_argb_8888);
+    add_software_buffer_request(allocate_buffer, 640, 480, mir_pixel_format_argb_8888);
+
+    mediator.connect(&connect_parameters, &connection, null_callback.get());
+    mediator.allocate_buffers(&allocate_buffer, &null, null_callback.get());
+
+    // All the buffers should have been allocated and should be live
+    ASSERT_THAT(allocator->allocated_buffers.size(), Eq(3));
+    ASSERT_THAT(
+        allocator->allocated_buffers,
+        Each(Property(&std::weak_ptr<mg::Buffer>::expired, Eq(false))));
+
+    mediator.release_buffer_stream(&stream_id, &null, null_callback.get());
+
+    // Releasing the BufferStream should have ended the lifetime of all the buffers allocated to it.
     EXPECT_THAT(
         allocator->allocated_buffers,
         Each(Property(&std::weak_ptr<mg::Buffer>::expired, Eq(true))));

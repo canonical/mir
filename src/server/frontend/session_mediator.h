@@ -40,6 +40,8 @@
 
 namespace mir
 {
+class Executor;
+
 namespace cookie
 {
 class Authority;
@@ -127,7 +129,8 @@ public:
         std::shared_ptr<cookie::Authority> const& cookie_authority,
         std::shared_ptr<InputConfigurationChanger> const& input_changer,
         std::vector<mir::ExtensionDescription> const& extensions,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        mir::Executor& executor);
 
     ~SessionMediator() noexcept;
 
@@ -302,7 +305,9 @@ private:
     std::shared_ptr<InputConfigurationChanger> const input_changer;
     std::vector<mir::ExtensionDescription> const extensions;
     std::unordered_map<graphics::BufferID, std::shared_ptr<graphics::Buffer>> buffer_cache;
+    std::unordered_multimap<BufferStreamId, graphics::BufferID> stream_associated_buffers;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
+    mir::Executor& executor;
 
     ScreencastBufferTracker screencast_buffer_tracker;
 

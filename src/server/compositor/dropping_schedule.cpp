@@ -29,18 +29,8 @@ mc::DroppingSchedule::DroppingSchedule()
 
 void mc::DroppingSchedule::schedule(std::shared_ptr<mg::Buffer> const& buffer)
 {
-    auto drop = schedule_nonblocking(buffer);
-    if (drop.valid())
-        drop.wait();
-}
-
-std::future<void> mc::DroppingSchedule::schedule_nonblocking(
-    std::shared_ptr<mg::Buffer> const& buffer)
-{
-    std::future<void> drop;
     std::lock_guard<decltype(mutex)> lk(mutex);
     the_only_buffer = buffer;
-    return drop;
 }
 
 unsigned int mc::DroppingSchedule::num_scheduled()
