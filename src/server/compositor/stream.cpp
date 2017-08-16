@@ -48,14 +48,6 @@ mc::Stream::Stream(
 
 mc::Stream::~Stream() = default;
 
-unsigned int mc::Stream::client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const
-{
-    auto server_count = schedule->num_scheduled();
-    if (arbiter->has_buffer())
-        server_count++;
-    return associated_buffers.size() - server_count;
-}
-
 void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
 {
     if (!buffer)

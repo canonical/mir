@@ -75,7 +75,6 @@ private:
     scene::SurfaceObservers observers;
 
     std::set<graphics::BufferID> associated_buffers;
-    unsigned int client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const;
 };
 }
 }
