@@ -49,6 +49,7 @@ public:
     void listening_on(std::string const& endpoint) override;
 
     void error(std::exception const& error) override;
+    void warning(std::string const& error) override;
 
 private:
     std::shared_ptr<mir::logging::Logger> const logger;
