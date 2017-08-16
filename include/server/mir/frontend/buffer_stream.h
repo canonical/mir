@@ -54,11 +54,6 @@ public:
 
     virtual MirPixelFormat pixel_format() const = 0;
 
-    //TODO: associate/disassociate_buffer are only used for timeout framedropping policy decisions.
-    //      They will be removed once timeout framedropping policy moves to the client side. 
-    virtual void associate_buffer(graphics::BufferID) = 0;
-    virtual void disassociate_buffer(graphics::BufferID) = 0;
-
     //TODO: framedropping for swapinterval-0 can probably be effectively managed from the client
     //      side once we only support the NBS system.
     virtual void allow_framedropping(bool) = 0;

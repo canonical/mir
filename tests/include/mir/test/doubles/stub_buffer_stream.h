@@ -79,8 +79,6 @@ public:
     void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) override {}
     void remove_observer(std::weak_ptr<scene::SurfaceObserver> const&) override {}
     bool has_submitted_buffer() const override { return true; }
-    void associate_buffer(graphics::BufferID) override {}
-    void disassociate_buffer(graphics::BufferID) override {}
     void set_scale(float) override {}
 
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;

@@ -166,20 +166,6 @@ bool mc::Stream::has_submitted_buffer() const
     return first_frame_posted;
 }
 
-void mc::Stream::associate_buffer(mg::BufferID id)
-{
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    associated_buffers.insert(id);
-}
-
-void mc::Stream::disassociate_buffer(mg::BufferID id)
-{
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    auto it = associated_buffers.find(id);
-    if (it != associated_buffers.end())
-        associated_buffers.erase(it);
-}
-
 void mc::Stream::set_scale(float)
 {
 }

@@ -1178,54 +1178,6 @@ TEST_F(SessionMediator, destructor_removes_orphaned_screencast_sessions)
 
 }
 
-TEST_F(SessionMediator, disassociates_buffers_from_stream_before_destroying)
-{
-    mp::BufferRelease release_buffer;
-    mp::BufferAllocation allocate_buffer;
-    mp::Void null;
-
-    // Add a fake BufferStream...
-    auto stream_id = mf::BufferStreamId{42};
-    auto stream = stubbed_session->create_mock_stream(stream_id);
-
-    // ...and allocate a buffer to it
-    allocate_buffer.mutable_id()->set_value(42);
-    auto buffer_props = allocate_buffer.add_buffer_requests();
-    buffer_props->set_buffer_usage(0);
-    buffer_props->set_pixel_format(0);
-    buffer_props->set_width(230);
-    buffer_props->set_height(230);
-
-    mediator.connect(&connect_parameters, &connection, null_callback.get());
-    mediator.allocate_buffers(&allocate_buffer, &null, null_callback.get());
-
-    ASSERT_THAT(allocator->allocated_buffers.size(), Eq(1));
-    auto allocated_buffer = allocator->allocated_buffers.front().lock();
-    ASSERT_THAT(allocated_buffer, NotNull());
-
-    auto const buffer_id = allocated_buffer->id();
-
-    // Release our share of the buffer ownership.
-    allocated_buffer.reset();
-
-    auto buffer_item = release_buffer.add_buffers();
-    buffer_item->set_buffer_id(buffer_id.as_value());
-    release_buffer.mutable_id()->set_value(stream_id.as_value());
-
-    EXPECT_CALL(*stream, disassociate_buffer(buffer_id))
-        .WillOnce(InvokeWithoutArgs(
-            [weak_buffer = allocator->allocated_buffers.front()]()
-            {
-                // The buffer should be live here!
-                EXPECT_THAT(weak_buffer.lock(), NotNull());
-            }));
-
-    mediator.release_buffers(&release_buffer, &null, null_callback.get());
-
-    // And now we expect the buffer to have been destroyed.
-    EXPECT_THAT(allocator->allocated_buffers.front().lock(), IsNull());
-}
-
 TEST_F(SessionMediator, releases_buffers_of_unknown_buffer_stream_does_not_throw)
 {
     mp::BufferStreamId stream_to_release;

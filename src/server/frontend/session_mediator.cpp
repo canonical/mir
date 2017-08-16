@@ -529,7 +529,6 @@ void mf::SessionMediator::allocate_buffers(
             if (request->has_id())
             {
                 auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
-                stream->associate_buffer(buffer->id());
             }
 
             // TODO: Throw if insert fails (duplicate ID)?
@@ -566,7 +565,6 @@ void mf::SessionMediator::release_buffers(
             for (auto i = 0; i < request->buffers().size(); i++)
             {
                 mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
-                stream->disassociate_buffer(buffer_id);
             }
         }
         catch(...)
