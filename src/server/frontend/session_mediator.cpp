@@ -581,7 +581,6 @@ void mf::SessionMediator::release_buffers(
             ++match;
             if (std::find(to_release.begin(), to_release.end(), current->second) != to_release.end())
             {
-
                 stream_associated_buffers.erase(current);
             }
         }
@@ -1039,6 +1038,7 @@ void mf::SessionMediator::release_buffer_stream(
     {
         buffer_cache.erase(match->second);
     }
+    stream_associated_buffers.erase(id);
 
     done->Run();
 }
