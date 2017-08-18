@@ -32,8 +32,8 @@ class SessionEventHandlerRegister
 public:
     virtual ~SessionEventHandlerRegister() = default;
 
-    virtual void add(std::shared_ptr<SessionEventSink> const& handler) = 0;
-    virtual void remove(std::shared_ptr<SessionEventSink> const& handler) = 0;
+    virtual void add(SessionEventSink* handler) = 0;
+    virtual void remove(SessionEventSink* handler) = 0;
 
 protected:
     SessionEventHandlerRegister() = default;

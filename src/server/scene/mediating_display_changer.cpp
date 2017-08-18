@@ -183,15 +183,15 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
       base_configuration_{display->configuration()},
       base_configuration_applied{true},
       alarm_factory{alarm_factory},
-      session_observer{std::make_shared<SessionObserver>(this)}
+      session_observer{std::make_unique<SessionObserver>(this)}
 {
-    session_event_handler_register->add(session_observer);
+    session_event_handler_register->add(session_observer.get());
     observer->initial_configuration(base_configuration_);
 }
 
 ms::MediatingDisplayChanger::~MediatingDisplayChanger()
 {
-    session_event_handler_register->remove(session_observer);
+    session_event_handler_register->remove(session_observer.get());
 }
 
 void ms::MediatingDisplayChanger::configure(

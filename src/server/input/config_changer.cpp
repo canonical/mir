@@ -174,16 +174,16 @@ mi::ConfigChanger::ConfigChanger(
       session_event_handler_register{session_event_handler_register},
       devices_wrapper_DO_NOT_USE{devices_wrapper},
       device_observer(std::make_shared<DeviceChangeTracker>(*this)),
-      session_observer{std::make_shared<SessionObserver>(*this)},
+      session_observer{std::make_unique<SessionObserver>(*this)},
       base_configuration_applied(true)
 {
     devices->add_observer(device_observer);
-    session_event_handler_register->add(session_observer);
+    session_event_handler_register->add(session_observer.get());
 }
 
 mi::ConfigChanger::~ConfigChanger()
 {
-    session_event_handler_register->remove(session_observer);
+    session_event_handler_register->remove(session_observer.get());
     devices->remove_observer(device_observer);
 }
 

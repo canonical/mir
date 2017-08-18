@@ -22,7 +22,7 @@
 #include "mir/scene/session_event_sink.h"
 #include "mir/scene/session_event_handler_register.h"
 
-#include "mir/basic_observers.h"
+#include "mir/thread_safe_list.h"
 
 namespace mir
 {
@@ -30,15 +30,15 @@ namespace scene
 {
 class BroadcastingSessionEventSink : public SessionEventSink,
                                      public SessionEventHandlerRegister,
-                                     private BasicObservers<SessionEventSink>
+                                     private ThreadSafeList<SessionEventSink*>
 {
 public:
     void handle_focus_change(std::shared_ptr<Session> const& session) override;
     void handle_no_focus() override;
     void handle_session_stopping(std::shared_ptr<Session> const& session) override;
 
-    void add(std::shared_ptr<SessionEventSink> const& handler) override;
-    void remove(std::shared_ptr<SessionEventSink> const& handler) override;
+    void add(SessionEventSink* handler) override;
+    void remove(SessionEventSink* handler) override;
 };
 
 }

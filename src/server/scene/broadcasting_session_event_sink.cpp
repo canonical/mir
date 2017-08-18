@@ -23,29 +23,29 @@ namespace ms = mir::scene;
 void ms::BroadcastingSessionEventSink::handle_focus_change(
     std::shared_ptr<Session> const& session)
 {
-    for_each([&](std::shared_ptr<SessionEventSink> const& observer)
+    for_each([&](SessionEventSink* observer)
         { observer->handle_focus_change(session); });
 }
 
 void ms::BroadcastingSessionEventSink::handle_no_focus()
 {
-    for_each([&](std::shared_ptr<SessionEventSink> const& observer)
+    for_each([&](SessionEventSink* observer)
         { observer->handle_no_focus(); });
 }
 
 void ms::BroadcastingSessionEventSink::handle_session_stopping(
     std::shared_ptr<Session> const& session)
 {
-    for_each([&](std::shared_ptr<SessionEventSink> const& observer)
+    for_each([&](SessionEventSink* observer)
         { observer->handle_session_stopping(session); });
 }
 
-void ms::BroadcastingSessionEventSink::add(std::shared_ptr<SessionEventSink> const& handler)
+void ms::BroadcastingSessionEventSink::add(SessionEventSink* handler)
 {
-    BasicObservers<SessionEventSink>::add(handler);
+    ThreadSafeList<SessionEventSink*>::add(handler);
 }
 
-void ms::BroadcastingSessionEventSink::remove(std::shared_ptr<SessionEventSink> const& handler)
+void ms::BroadcastingSessionEventSink::remove(SessionEventSink* handler)
 {
-    BasicObservers<SessionEventSink>::remove(handler);
+    ThreadSafeList<SessionEventSink*>::remove(handler);
 }

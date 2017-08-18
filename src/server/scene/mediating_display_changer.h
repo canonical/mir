@@ -121,7 +121,7 @@ private:
     std::unique_ptr<time::Alarm> preview_configuration_timeout;
     std::weak_ptr<frontend::Session> currently_previewing_session;
     struct SessionObserver;
-    std::shared_ptr<SessionObserver> const session_observer;
+    std::unique_ptr<SessionObserver> const session_observer;
 };
 
 }

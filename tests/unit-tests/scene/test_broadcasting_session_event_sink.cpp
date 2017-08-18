@@ -49,12 +49,12 @@ TEST(BroadcastingSessionEventSinkTest, emits_and_handles_focus_change)
 
     for (auto& h : handler_called)
     {
-        events.add(mt::fake_shared(h));
+        events.add(&h);
 
         EXPECT_CALL(h, handle_focus_change(session1ptr)).Times(1);
     }
 
-    events.handle_focus_change(mt::fake_shared(session1));
+    events.handle_focus_change(session1ptr);
 }
 
 TEST(BroadcastingSessionEventSinkTest, emits_and_handles_no_focus)
@@ -66,7 +66,7 @@ TEST(BroadcastingSessionEventSinkTest, emits_and_handles_no_focus)
 
     for (auto& h : handler_called)
     {
-        events.add(mt::fake_shared(h));
+        events.add(&h);
 
         EXPECT_CALL(h, handle_no_focus()).Times(1);
     }
@@ -85,10 +85,10 @@ TEST(BroadcastingSessionEventSinkTest, emits_and_handles_session_stopping)
 
     for (auto& h : handler_called)
     {
-        events.add(mt::fake_shared(h));
+        events.add(&h);
 
         EXPECT_CALL(h, handle_session_stopping(session1ptr)).Times(1);
     }
 
-    events.handle_session_stopping(mt::fake_shared(session1));
+    events.handle_session_stopping(session1ptr);
 }
