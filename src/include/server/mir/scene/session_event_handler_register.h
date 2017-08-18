@@ -19,7 +19,6 @@
 #ifndef MIR_SCENE_SESSION_EVENT_HANDLER_REGISTER_H_
 #define MIR_SCENE_SESSION_EVENT_HANDLER_REGISTER_H_
 
-#include <functional>
 #include <memory>
 
 namespace mir
