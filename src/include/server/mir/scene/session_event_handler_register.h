@@ -26,19 +26,15 @@ namespace mir
 {
 namespace scene
 {
-class Session;
+class SessionEventSink;
 
 class SessionEventHandlerRegister
 {
 public:
     virtual ~SessionEventHandlerRegister() = default;
 
-    virtual void register_focus_change_handler(
-        std::function<void(std::shared_ptr<Session> const& session)> const& handler) = 0;
-    virtual void register_no_focus_handler(
-        std::function<void()> const& handler) = 0;
-    virtual void register_session_stopping_handler(
-        std::function<void(std::shared_ptr<Session> const& session)> const& handler) = 0;
+    virtual void add(std::shared_ptr<SessionEventSink> const& handler) = 0;
+    virtual void remove(std::shared_ptr<SessionEventSink> const& handler) = 0;
 
 protected:
     SessionEventHandlerRegister() = default;
