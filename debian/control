@@ -523,3 +523,14 @@ Architecture: all
 Depends: ${misc:Depends},
 Description: API documentation for MirAL
  This package installs the MirAL abstraction layer documentation.
+
+Package: miral-examples
+Architecture: linux-any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Recommends: dmz-cursor-theme,
+Description: Display server for Ubuntu - demonstration programs
+ MirAL provides an ABI-stable abstraction layer for Mir based shells,
+ insulating them from mirserver ABI breaks.
+ .
+ Contains demo applications that use the MirAL abstraction layer
