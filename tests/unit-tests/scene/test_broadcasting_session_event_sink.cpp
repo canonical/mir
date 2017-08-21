@@ -21,79 +21,74 @@
 #include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 namespace ms = mir::scene;
 namespace mtd = mir::test::doubles;
 namespace mt = mir::test;
+using namespace testing;
+
+namespace
+{
+struct MockEventSink : ms::SessionEventSink
+{
+    MOCK_METHOD1(handle_focus_change, void (std::shared_ptr<ms::Session> const& session));
+    MOCK_METHOD1(handle_session_stopping, void (std::shared_ptr<ms::Session> const& session));
+    MOCK_METHOD0(handle_no_focus, void ());
+};
+}
 
 TEST(BroadcastingSessionEventSinkTest, emits_and_handles_focus_change)
 {
     mtd::StubSession session1;
-    std::vector<ms::Session*> handler_called(3, nullptr);
+    MockEventSink handler_called[3];
 
     ms::BroadcastingSessionEventSink events;
 
+    std::shared_ptr<ms::Session> session1ptr{mt::fake_shared(session1)};
+
     for (auto& h : handler_called)
     {
-        events.register_focus_change_handler(
-            [&h](std::shared_ptr<ms::Session> const& session)
-            {
-                h = session.get();
-            });
+        events.add(&h);
+
+        EXPECT_CALL(h, handle_focus_change(session1ptr)).Times(1);
     }
 
-    events.handle_focus_change(mt::fake_shared(session1));
-
-    for (unsigned int i = 0; i < handler_called.size(); i++)
-    {
-        EXPECT_EQ(&session1, handler_called[i]) << " i = " << i;
-    }
+    events.handle_focus_change(session1ptr);
 }
 
 TEST(BroadcastingSessionEventSinkTest, emits_and_handles_no_focus)
 {
     mtd::StubSession session1;
-    std::vector<int> handler_called(3, 0);
+    MockEventSink handler_called[3];
 
     ms::BroadcastingSessionEventSink events;
 
     for (auto& h : handler_called)
     {
-        events.register_no_focus_handler(
-            [&h]
-            {
-                h = 1;
-            });
+        events.add(&h);
+
+        EXPECT_CALL(h, handle_no_focus()).Times(1);
     }
 
     events.handle_no_focus();
-
-    for (unsigned int i = 0; i < handler_called.size(); i++)
-    {
-        EXPECT_EQ(1, handler_called[i]) << " i = " << i;
-    }
 }
 
 TEST(BroadcastingSessionEventSinkTest, emits_and_handles_session_stopping)
 {
     mtd::StubSession session1;
-    std::vector<ms::Session*> handler_called(3, nullptr);
+    MockEventSink handler_called[3];
 
     ms::BroadcastingSessionEventSink events;
 
+    std::shared_ptr<ms::Session> session1ptr{mt::fake_shared(session1)};
+
     for (auto& h : handler_called)
     {
-        events.register_session_stopping_handler(
-            [&h](std::shared_ptr<ms::Session> const& session)
-            {
-                h = session.get();
-            });
+        events.add(&h);
+
+        EXPECT_CALL(h, handle_session_stopping(session1ptr)).Times(1);
     }
 
-    events.handle_session_stopping(mt::fake_shared(session1));
-
-    for (unsigned int i = 0; i < handler_called.size(); i++)
-    {
-        EXPECT_EQ(&session1, handler_called[i]) << " i = " << i;
-    }
+    events.handle_session_stopping(session1ptr);
 }

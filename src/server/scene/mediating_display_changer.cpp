@@ -23,6 +23,7 @@
 #include "mir/scene/session_container.h"
 #include "mir/scene/session.h"
 #include "mir/scene/session_event_handler_register.h"
+#include "mir/scene/session_event_sink.h"
 #include "mir/graphics/display.h"
 #include "mir/compositor/compositor.h"
 #include "mir/geometry/rectangles.h"
@@ -124,6 +125,45 @@ private:
 };
 }
 
+struct ms::MediatingDisplayChanger::SessionObserver : ms::SessionEventSink
+{
+    SessionObserver(ms::MediatingDisplayChanger* self) : self{self} {}
+
+    void handle_focus_change(std::shared_ptr<mir::scene::Session> const& session) override
+    {
+        auto const weak_session = std::weak_ptr<ms::Session>(session);
+        self->server_action_queue->enqueue(
+            self,
+            [self=self,weak_session]
+                {
+                    if (auto const session = weak_session.lock())
+                        self->focus_change_handler(session);
+                });
+    }
+
+    void handle_no_focus() override
+    {
+        self->server_action_queue->enqueue(
+            self,
+            [self=self] { self->no_focus_handler(); });
+    }
+
+    void handle_session_stopping(std::shared_ptr<mir::scene::Session> const& session) override
+    {
+        auto const weak_session = std::weak_ptr<ms::Session>(session);
+        self->server_action_queue->enqueue(
+            self,
+            [self=self,weak_session]
+            {
+                if (auto const session = weak_session.lock())
+                    self->session_stopping_handler(session);
+            });
+    }
+
+    ms::MediatingDisplayChanger* const self;
+};
+
+
 ms::MediatingDisplayChanger::MediatingDisplayChanger(
     std::shared_ptr<mg::Display> const& display,
     std::shared_ptr<mc::Compositor> const& compositor,
@@ -142,43 +182,16 @@ ms::MediatingDisplayChanger::MediatingDisplayChanger(
       observer{observer},
       base_configuration_{display->configuration()},
       base_configuration_applied{true},
-      alarm_factory{alarm_factory}
+      alarm_factory{alarm_factory},
+      session_observer{std::make_unique<SessionObserver>(this)}
 {
-    session_event_handler_register->register_focus_change_handler(
-        [this](std::shared_ptr<ms::Session> const& session)
-        {
-            auto const weak_session = std::weak_ptr<ms::Session>(session);
-            this->server_action_queue->enqueue(
-                this,
-                [this,weak_session]
-                {
-                    if (auto const session = weak_session.lock())
-                        focus_change_handler(session);
-                });
-        });
-
-    session_event_handler_register->register_no_focus_handler(
-        [this]
-        {
-            this->server_action_queue->enqueue(
-                this,
-                [this] { no_focus_handler(); });
-        });
-
-    session_event_handler_register->register_session_stopping_handler(
-        [this](std::shared_ptr<ms::Session> const& session)
-        {
-            auto const weak_session = std::weak_ptr<ms::Session>(session);
-            this->server_action_queue->enqueue(
-                this,
-                [this,weak_session]
-                {
-                    if (auto const session = weak_session.lock())
-                        session_stopping_handler(session);
-                });
-        });
-
+    session_event_handler_register->add(session_observer.get());
     observer->initial_configuration(base_configuration_);
+}
+
+ms::MediatingDisplayChanger::~MediatingDisplayChanger()
+{
+    session_event_handler_register->remove(session_observer.get());
 }
 
 void ms::MediatingDisplayChanger::configure(

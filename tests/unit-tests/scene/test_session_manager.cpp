@@ -24,7 +24,7 @@
 
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/default_session_container.h"
-#include "src/server/scene/session_event_sink.h"
+#include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/report/null_report_factory.h"
 
 #include "mir/test/doubles/mock_surface_stack.h"

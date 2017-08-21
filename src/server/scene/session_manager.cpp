@@ -25,7 +25,7 @@
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/application_not_responding_detector.h"
 #include "mir/shell/surface_stack.h"
-#include "session_event_sink.h"
+#include "mir/scene/session_event_sink.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display.h"
 #include "mir/graphics/display_configuration.h"

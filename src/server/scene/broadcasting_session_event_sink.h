@@ -19,36 +19,26 @@
 #ifndef MIR_SCENE_BROADCASTING_SESSION_EVENT_SINK_H_
 #define MIR_SCENE_BROADCASTING_SESSION_EVENT_SINK_H_
 
-#include "session_event_sink.h"
+#include "mir/scene/session_event_sink.h"
 #include "mir/scene/session_event_handler_register.h"
 
-#include <vector>
-#include <mutex>
+#include "mir/thread_safe_list.h"
 
 namespace mir
 {
 namespace scene
 {
 class BroadcastingSessionEventSink : public SessionEventSink,
-                                     public SessionEventHandlerRegister
+                                     public SessionEventHandlerRegister,
+                                     private ThreadSafeList<SessionEventSink*>
 {
 public:
-    void handle_focus_change(std::shared_ptr<Session> const& session);
-    void handle_no_focus();
-    void handle_session_stopping(std::shared_ptr<Session> const& session);
+    void handle_focus_change(std::shared_ptr<Session> const& session) override;
+    void handle_no_focus() override;
+    void handle_session_stopping(std::shared_ptr<Session> const& session) override;
 
-    void register_focus_change_handler(
-        std::function<void(std::shared_ptr<Session> const& session)> const& handler);
-    void register_no_focus_handler(
-        std::function<void()> const& handler);
-    void register_session_stopping_handler(
-        std::function<void(std::shared_ptr<Session> const& session)> const& handler);
-
-private:
-    std::mutex handler_mutex;
-    std::vector<std::function<void(std::shared_ptr<Session> const&)>> focus_change_handlers;
-    std::vector<std::function<void()>> no_focus_handlers;
-    std::vector<std::function<void(std::shared_ptr<Session> const&)>> session_stopping_handlers;
+    void add(SessionEventSink* handler) override;
+    void remove(SessionEventSink* handler) override;
 };
 
 }

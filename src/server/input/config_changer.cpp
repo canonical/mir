@@ -19,6 +19,7 @@
 #include "config_changer.h"
 
 #include "mir/scene/session_event_handler_register.h"
+#include "mir/scene/session_event_sink.h"
 #include "mir/scene/session_container.h"
 #include "mir/scene/session.h"
 #include "mir/input/device.h"
@@ -137,8 +138,29 @@ struct DeviceChangeTracker : mi::InputDeviceObserver
     std::vector<std::shared_ptr<mi::Device>> added;
     std::vector<MirInputDeviceId> removed;
 };
-
 }
+
+struct mi::ConfigChanger::SessionObserver : ms::SessionEventSink
+{
+    SessionObserver(mi::ConfigChanger& self) : self{self} {}
+
+    void handle_focus_change(std::shared_ptr<mir::scene::Session> const& session) override
+    {
+        self.focus_change_handler(session);
+    }
+
+    void handle_no_focus() override
+    {
+        self.no_focus_handler();
+    }
+
+    void handle_session_stopping(std::shared_ptr<mir::scene::Session> const& session) override
+    {
+        self.session_stopping_handler(session);
+    }
+
+    mi::ConfigChanger& self;
+};
 
 mi::ConfigChanger::ConfigChanger(
     std::shared_ptr<InputManager> const& manager,
@@ -152,31 +174,16 @@ mi::ConfigChanger::ConfigChanger(
       session_event_handler_register{session_event_handler_register},
       devices_wrapper_DO_NOT_USE{devices_wrapper},
       device_observer(std::make_shared<DeviceChangeTracker>(*this)),
+      session_observer{std::make_unique<SessionObserver>(*this)},
       base_configuration_applied(true)
 {
     devices->add_observer(device_observer);
-
-    session_event_handler_register->register_focus_change_handler(
-        [this](std::shared_ptr<ms::Session> const& session)
-        {
-            focus_change_handler(session);
-        });
-
-    session_event_handler_register->register_no_focus_handler(
-        [this]
-        {
-            no_focus_handler();
-        });
-
-    session_event_handler_register->register_session_stopping_handler(
-        [this](std::shared_ptr<ms::Session> const& session)
-        {
-            session_stopping_handler(session);
-        });
+    session_event_handler_register->add(session_observer.get());
 }
 
 mi::ConfigChanger::~ConfigChanger()
 {
+    session_event_handler_register->remove(session_observer.get());
     devices->remove_observer(device_observer);
 }
 
