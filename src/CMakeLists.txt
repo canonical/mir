@@ -13,6 +13,7 @@ set(MIR_CLIENT_PLATFORM_PATH
 # Add the core and platform implementations before exposing any private APIs
 add_subdirectory(core)
 add_subdirectory(platforms/)
+add_subdirectory(miral/)
 
 # the src/include/... directories should be private to the implementation
 include_directories(${PROJECT_SOURCE_DIR}/src/include/common)
