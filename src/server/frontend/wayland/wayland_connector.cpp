@@ -1394,7 +1394,7 @@ mf::WaylandConnector::WaylandConnector(
 
     setup_new_client_handler(display.get(), shell);
 
-    wl_event_loop_add_fd(wayland_loop, pause_signal, WL_EVENT_READABLE, &halt_eventloop, display.get());
+    pause_source = wl_event_loop_add_fd(wayland_loop, pause_signal, WL_EVENT_READABLE, &halt_eventloop, display.get());
 }
 
 mf::WaylandConnector::~WaylandConnector()
@@ -1403,6 +1403,7 @@ mf::WaylandConnector::~WaylandConnector()
     {
         stop();
     }
+    wl_event_source_remove(pause_source);
 }
 
 void mf::WaylandConnector::start()

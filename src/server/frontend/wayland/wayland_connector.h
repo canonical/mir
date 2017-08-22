@@ -75,6 +75,7 @@ private:
     std::shared_ptr<graphics::WaylandAllocator> const allocator;
     std::unique_ptr<WlShell> shell_global;
     std::thread dispatch_thread;
+    wl_event_source* pause_source;
 };
 
 
