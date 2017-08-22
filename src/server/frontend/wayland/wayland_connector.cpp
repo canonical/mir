@@ -185,11 +185,11 @@ struct ClientSessionConstructor
 {
     ClientSessionConstructor(std::shared_ptr<mf::Shell> const& shell)
         : shell{shell}
-
     {
     }
 
     wl_listener construction_listener;
+    wl_listener destruction_listener;
     std::shared_ptr<mf::Shell> const shell;
 };
 
@@ -220,12 +220,23 @@ void create_client_session(wl_listener* listener, void* data)
     wl_client_add_destroy_listener(client, &client_context->destroy_listener);
 }
 
+void cleanup_client_handler(wl_listener* listener, void*)
+{
+    ClientSessionConstructor* construction_context;
+    construction_context = wl_container_of(listener, construction_context, destruction_listener);
+
+    delete construction_context;
+}
+
 void setup_new_client_handler(wl_display* display, std::shared_ptr<mf::Shell> const& shell)
 {
     auto context = new ClientSessionConstructor{shell};
     context->construction_listener.notify = &create_client_session;
 
     wl_display_add_client_created_listener(display, &context->construction_listener);
+
+    context->destruction_listener.notify = &cleanup_client_handler;
+    wl_display_add_destroy_listener(display, &context->destruction_listener);
 }
 
 /*
