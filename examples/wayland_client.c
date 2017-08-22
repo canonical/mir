@@ -291,7 +291,7 @@ int main()
     struct wl_pointer* pointer = wl_seat_get_pointer(globals->seat);
     wl_pointer_add_listener(pointer, &pointer_listener, NULL);
 
-    void* pool_data;
+    void* pool_data = NULL;
     struct wl_shm_pool* shm_pool = make_shm_pool(globals->shm, 400 * 400 * 4, &pool_data);
 
     struct wl_buffer* buffer = wl_shm_pool_create_buffer(shm_pool, 0, 400, 400, 400, WL_SHM_FORMAT_ARGB8888);
