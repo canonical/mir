@@ -116,7 +116,7 @@ add_custom_target(check-miral-symbols ALL
 endif()
 
 set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
-set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/miral")
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/miral.pc.in
     ${CMAKE_CURRENT_BINARY_DIR}/miral.pc
