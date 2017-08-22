@@ -125,7 +125,7 @@ private:
     auto confirm_placement_on_display(
         miral::WindowInfo const& window_info,
         MirWindowState new_state,
-        Rectangle const& new_placement) -> Rectangle;
+        Rectangle const& new_placement) -> Rectangle override;
 
     // Switch workspace, taking window (if not null)
     void switch_workspace_to(
