@@ -383,6 +383,7 @@ libmiral.so.2 libmiral2 #MINVER#
  (c++)"miral::WindowManagerTools::for_each_workspace_containing(miral::Window const&, std::function<void (std::shared_ptr<miral::Workspace> const&)> const&)@MIRAL_1.3" 1.0.0
  (c++)"typeinfo for miral::WorkspacePolicy@MIRAL_1.3" 1.0.0
  (c++)"vtable for miral::WorkspacePolicy@MIRAL_1.3" 1.0.0
+ (c++|optional)"miral::WorkspacePolicy::~WorkspacePolicy()@MIRAL_1.3" 1.0.0
  MIRAL_1.3.1@MIRAL_1.3.1 1.0.0
  (c++)"miral::SetWindowManagementPolicy::SetWindowManagementPolicy(std::function<std::unique_ptr<miral::WindowManagementPolicy, std::default_delete<miral::WindowManagementPolicy> > (miral::WindowManagerTools const&)> const&)@MIRAL_1.3.1" 1.0.0
  (c++)"miral::SetWindowManagementPolicy::SetWindowManagementPolicy(std::function<std::unique_ptr<miral::WindowManagementPolicy, std::default_delete<miral::WindowManagementPolicy> > (miral::WindowManagerTools const&)> const&)@MIRAL_1.3.1" 1.0.0
@@ -392,8 +393,8 @@ libmiral.so.2 libmiral2 #MINVER#
  MIRAL_1.4.0@MIRAL_1.4.0 1.0.0
  (c++)"miral::WindowManagerTools::end_drag_and_drop()@MIRAL_1.4.0" 1.0.0
  (c++)"miral::WindowManagerTools::start_drag_and_drop(miral::WindowInfo&, std::vector<unsigned char, std::allocator<unsigned char> > const&)@MIRAL_1.4.0" 1.0.0
- (c++)"typeinfo for miral::WindowManagementPolicyAddendum2@MIRAL_1.4.0" 1.0.0
+ (c++|optional)"typeinfo for miral::WindowManagementPolicyAddendum2@MIRAL_1.4.0" 1.0.0
  MIRAL_1.5.0@MIRAL_1.5.0 1.0.0
  (c++)"miral::pre_init(miral::CommandLineOption const&)@MIRAL_1.5.0" 1.0.0
- (c++)"typeinfo for miral::WindowManagementPolicyAddendum3@MIRAL_1.5.0" 1.0.0
+ (c++|optional)"typeinfo for miral::WindowManagementPolicyAddendum3@MIRAL_1.5.0" 1.0.0
  (c++)"miral::WindowManagerTools::active_output()@MIRAL_1.5.0" 1.0.0
