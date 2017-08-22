@@ -518,13 +518,6 @@ Description: A C++ wrapper for libmirclient-dev
  .
  Contains header files useful for C++ development against Mir.
 
-Package: miral-doc
-Section: doc
-Architecture: all
-Depends: ${misc:Depends},
-Description: API documentation for MirAL
- This package installs the MirAL abstraction layer documentation.
-
 Package: miral-examples
 Architecture: linux-any
 Depends: ${misc:Depends},
