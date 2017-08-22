@@ -1,3 +1,42 @@
+mir (1.0.0-0ubuntu1) UNRELEASED; urgency=medium
+
+  * New upstream release 1.0.0(https://launchpad.net/mir/+milestone/1.0.0)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . mirserver ABI bumped to 45
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 61
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 13
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+    - Enhancements:
+      . Update licences to (L)GPL3 or (L)GPL2.
+      . [mir_demo_client_display_config] add orientation changing
+      . RPC: Don't require the server ACK client's buffer-release requests.
+    - Bugs fixed:
+      . Fix handling of invalid display configuration. (LP: #1643446)
+      . Move full responsibility for buffer IPC into frontend. (LP: #1395421)
+      . Don't destroy an IPC "closure" object when it may yet be used
+        (LP: #1672960)
+      . [mesa-kms] Respect display orientation when painting cursor.
+        (LP: #1610078)
+      . Respect cursor hotspot when hosted on Mir. (LP: #1705284)
+      . mcl::BufferVault: Fix lock inversion.
+      . Handle mir_event_type_close_window in examples (LP: #1706004),
+        (LP: #1705439)
+      . Drop BufferStream::suitable_for_cursor()
+      . Only notify resize events for valid surfaces (LP: #1643446)
+      . Don't leak DRM fds in platform-eglstream probe.
+      . Remove obsolete & broken example code. (LP: #1663130)
+      . Move buffer-release IPC to a dedicated IPC thread. (LP: #1395421)
+      . [NestedServerWithTwoDisplays] Look for the last of a series of
+        synthetic events to ensure that the queue is drained before the test
+        exits. (LP: #1709666)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 10 Aug 2017 11:54:30 +0000
+
 mir (0.27.0-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release 0.27.0 (https://launchpad.net/mir/+milestone/0.27.0)

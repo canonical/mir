@@ -96,9 +96,9 @@ std::string remove_if_stale(std::string const& socket_name)
     return socket_name;
 }
 
-std::shared_ptr<boost::asio::local::stream_protocol::socket> make_socket_self_cotained(
-    std::shared_ptr<boost::asio::io_service> const& io_service,
-    std::shared_ptr<boost::asio::local::stream_protocol::socket> const& socket)
+std::shared_ptr<boost::asio::local::stream_protocol::socket> make_socket_self_contained(
+    std::shared_ptr<boost::asio::io_service> const &io_service,
+    std::shared_ptr<boost::asio::local::stream_protocol::socket> const &socket)
 {
     struct SelfContainedSocket {
         SelfContainedSocket(
@@ -163,7 +163,7 @@ void mf::PublishedSocketConnector::start_accept()
              * io_service and upgrade it when something actually connects.
              */
             if (auto live_service = maybe_service.lock())
-                on_new_connection(make_socket_self_cotained(live_service, socket), ec);
+                on_new_connection(make_socket_self_contained(live_service, socket), ec);
         });
 }
 
@@ -174,6 +174,10 @@ void mf::PublishedSocketConnector::on_new_connection(
     if (!ec)
     {
         create_session_for(socket, [](std::shared_ptr<mf::Session> const&) {});
+    }
+    else
+    {
+        report->warning(ec.message());
     }
     start_accept();
 }
@@ -261,7 +265,7 @@ int mf::BasicConnector::client_socket_fd(std::function<void(std::shared_ptr<Sess
 
     report->creating_socket_pair(socket_fd[server], socket_fd[client]);
 
-    create_session_for(make_socket_self_cotained(io_service, server_socket), connect_handler);
+    create_session_for(make_socket_self_contained(io_service, server_socket), connect_handler);
 
     return socket_fd[client];
 }

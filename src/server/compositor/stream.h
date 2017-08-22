@@ -56,8 +56,6 @@ public:
     int buffers_ready_for_compositor(void const* user_id) const override;
     void drop_old_buffers() override;
     bool has_submitted_buffer() const override;
-    void associate_buffer(graphics::BufferID) override;
-    void disassociate_buffer(graphics::BufferID) override;
     void set_scale(float scale) override;
 
 private:
@@ -73,9 +71,6 @@ private:
     bool first_frame_posted;
 
     scene::SurfaceObservers observers;
-
-    std::set<graphics::BufferID> associated_buffers;
-    unsigned int client_owned_buffer_count(std::lock_guard<decltype(mutex)> const&) const;
 };
 }
 }

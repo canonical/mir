@@ -1420,8 +1420,15 @@ void mf::WaylandConnector::stop()
             std::system_category(),
             "Failed to send IPC eventloop pause signal"}));
     }
-    dispatch_thread.join();
-    dispatch_thread = std::thread{};
+    if (dispatch_thread.joinable())
+    {
+        dispatch_thread.join();
+        dispatch_thread = std::thread{};
+    }
+    else
+    {
+        mir::log_warning("WaylandConnector::stop() called on not-running connector?");
+    }
 }
 
 int mf::WaylandConnector::client_socket_fd() const

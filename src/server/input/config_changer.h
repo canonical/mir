@@ -70,6 +70,8 @@ private:
     // needs to be owned (but not used) in Mir, where better?
     std::shared_ptr<InputDeviceHub> const devices_wrapper_DO_NOT_USE;
     std::shared_ptr<InputDeviceObserver> const device_observer;
+    struct SessionObserver;
+    std::unique_ptr<SessionObserver> const session_observer;
     bool base_configuration_applied;
 
     std::weak_ptr<frontend::Session> focused_session;

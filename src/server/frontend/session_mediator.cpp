@@ -528,8 +528,10 @@ void mf::SessionMediator::allocate_buffers(
 
             if (request->has_id())
             {
-                auto stream = session->get_buffer_stream(mf::BufferStreamId(request->id().value()));
-                stream->associate_buffer(buffer->id());
+                auto const stream_id = mf::BufferStreamId{request->id().value()};
+                // We don't need the stream, but we *do* need to know it exists
+                auto stream = session->get_buffer_stream(stream_id);
+                stream_associated_buffers.insert(std::make_pair(stream_id, buffer->id()));
             }
 
             // TODO: Throw if insert fails (duplicate ID)?
@@ -557,25 +559,34 @@ void mf::SessionMediator::release_buffers(
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     observer->session_release_buffers_called(session->name());
+
+    std::vector<mg::BufferID> to_release(request->buffers().size());
+    std::transform(
+        request->buffers().begin(),
+        request->buffers().end(),
+        to_release.begin(),
+        [](auto buffer)
+        {
+            return mg::BufferID{static_cast<uint32_t>(buffer.buffer_id())};
+        });
+
     if (request->has_id())
     {
-        auto stream_id = mf::BufferStreamId{request->id().value()};
-        try
+        auto const stream_id = mf::BufferStreamId{request->id().value()};
+
+        auto const associated_range = stream_associated_buffers.equal_range(stream_id);
+        for (auto match = associated_range.first; match != associated_range.second;)
         {
-            auto stream = session->get_buffer_stream(stream_id);
-            for (auto i = 0; i < request->buffers().size(); i++)
+            auto const current = match;
+            ++match;
+            if (std::find(to_release.begin(), to_release.end(), current->second) != to_release.end())
             {
-                mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
-                stream->disassociate_buffer(buffer_id);
+                stream_associated_buffers.erase(current);
             }
         }
-        catch(...)
-        {
-        }
     }
-    for (auto i = 0; i < request->buffers().size(); i++)
+    for (auto const& buffer_id : to_release)
     {
-        mg::BufferID buffer_id{static_cast<uint32_t>(request->buffers(i).buffer_id())};
         buffer_cache.erase(buffer_id);
     }
    done->Run();
@@ -1021,6 +1032,13 @@ void mf::SessionMediator::release_buffer_stream(
     auto const id = BufferStreamId(request->value());
 
     session->destroy_buffer_stream(id);
+
+    auto const associated_range = stream_associated_buffers.equal_range(id) ;
+    for (auto match = associated_range.first; match != associated_range.second; ++match)
+    {
+        buffer_cache.erase(match->second);
+    }
+    stream_associated_buffers.erase(id);
 
     done->Run();
 }

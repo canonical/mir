@@ -65,7 +65,9 @@ public:
         std::shared_ptr<graphics::DisplayConfigurationObserver> const& observer,
         std::shared_ptr<time::AlarmFactory> const& alarm_factory);
 
-    /* From mir::frontend::DisplayChanger */
+    ~MediatingDisplayChanger();
+
+        /* From mir::frontend::DisplayChanger */
     std::shared_ptr<graphics::DisplayConfiguration> base_configuration() override;
     void configure(std::shared_ptr<frontend::Session> const& session,
                    std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
@@ -118,6 +120,8 @@ private:
     std::shared_ptr<time::AlarmFactory> const alarm_factory;
     std::unique_ptr<time::Alarm> preview_configuration_timeout;
     std::weak_ptr<frontend::Session> currently_previewing_session;
+    struct SessionObserver;
+    std::unique_ptr<SessionObserver> const session_observer;
 };
 
 }

@@ -26,4 +26,5 @@ void mrn::ConnectorReport::creating_session_for(int /*socket_handle*/) {}
 void mrn::ConnectorReport::creating_socket_pair(int /*server_handle*/, int /*client_handle*/) {}
 void mrn::ConnectorReport::listening_on(std::string const& /*endpoint*/) {}
 void mrn::ConnectorReport::error(std::exception const& /*error*/) {}
+void mrn::ConnectorReport::warning(std::string const& /*error*/) {}
 

@@ -81,6 +81,8 @@ public:
     MOCK_METHOD1(listening_on, void(std::string const& endpoint));
 
     MOCK_METHOD1(error, void (std::exception const& error));
+
+    void warning(std::string const& /*error*/) /*override*/ {}
 };
 }
 

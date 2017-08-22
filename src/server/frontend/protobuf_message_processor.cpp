@@ -76,30 +76,23 @@ ParameterMessage parse_parameter(Invocation const& invocation)
     return request;
 }
 
-class SelfDeletingCallback : public google::protobuf::Closure
+class CallbackClosure : public google::protobuf::Closure
 {
 public:
-    SelfDeletingCallback(std::function<void()> const& callback)
+    CallbackClosure(std::function<void()> const& callback)
     : callback(callback)
     {
     }
 
     void Run() override
     {
-        struct Deleter
-        {
-          ~Deleter() { delete obj; }
-          SelfDeletingCallback* obj;
-        };
-        Deleter deleter{this};
         callback();
     }
 
  private:
-  ~SelfDeletingCallback() = default;
-  SelfDeletingCallback(SelfDeletingCallback&) = delete;
-  void operator=(const SelfDeletingCallback&) = delete;
-  std::function<void()> callback;
+  CallbackClosure(CallbackClosure&) = delete;
+  void operator=(const CallbackClosure&) = delete;
+  std::function<void()> const callback;
 };
 
 template<typename RequestType, typename ResponseType>
@@ -125,14 +118,14 @@ void invoke(
         }
     };
 
-    auto callback = new SelfDeletingCallback{response_callback};
+    CallbackClosure callback{response_callback};
 
     try
     {
         (server->*function)(
             request,
             result_message.get(),
-            callback);
+            &callback);
     }
     catch (mir::cookie::SecurityCheckError const& /*err*/)
     {
@@ -149,7 +142,7 @@ void invoke(
         using namespace std::literals;
         result_message->set_error("Error processing request: "s +
             x.what() + "\nInternal error details: " + boost::diagnostic_information(x));
-        callback->Run();
+        callback.Run();
     }
 }
 

@@ -305,6 +305,7 @@ private:
     std::shared_ptr<InputConfigurationChanger> const input_changer;
     std::vector<mir::ExtensionDescription> const extensions;
     std::unordered_map<graphics::BufferID, std::shared_ptr<graphics::Buffer>> buffer_cache;
+    std::unordered_multimap<BufferStreamId, graphics::BufferID> stream_associated_buffers;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     mir::Executor& executor;
 

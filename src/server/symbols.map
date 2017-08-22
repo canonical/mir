@@ -1,4 +1,4 @@
-MIR_SERVER_0.27 {
+MIR_SERVER_1.0 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -35,9 +35,6 @@ MIR_SERVER_0.27 {
     mir::frontend::BufferStream::?BufferStream*;
     mir::frontend::BufferStream::BufferStream*;
     mir::frontend::BufferStream::operator*;
-    mir::frontend::ClientBuffers::?ClientBuffers*;
-    mir::frontend::ClientBuffers::ClientBuffers*;
-    mir::frontend::ClientBuffers::operator*;
     mir::frontend::PromptSession::operator*;
     mir::frontend::PromptSession::?PromptSession*;
     mir::frontend::PromptSession::PromptSession*;
@@ -190,6 +187,7 @@ MIR_SERVER_0.27 {
     mir::Server::override_the_gl_config*;
     mir::Server::override_the_host_lifecycle_event_listener*;
     mir::Server::override_the_input_dispatcher*;
+    mir::Server::override_the_input_targeter*;
     mir::Server::override_the_logger*;
     mir::Server::override_the_persistent_surface_store*;
     mir::Server::override_the_prompt_session_listener*;
@@ -427,7 +425,6 @@ MIR_SERVER_0.27 {
     non-virtual?thunk?to?mir::Executor::?Executor*;
     non-virtual?thunk?to?mir::frontend::BufferSink::?BufferSink*;
     non-virtual?thunk?to?mir::frontend::BufferStream::?BufferStream*;
-    non-virtual?thunk?to?mir::frontend::ClientBuffers::?ClientBuffers*;
     non-virtual?thunk?to?mir::frontend::PromptSession::?PromptSession*;
     non-virtual?thunk?to?mir::frontend::SessionAuthorizer::?SessionAuthorizer*;
     non-virtual?thunk?to?mir::frontend::SessionMediatorObserver::?SessionMediatorObserver*;
@@ -616,7 +613,6 @@ MIR_SERVER_0.27 {
     typeinfo?for?mir::Executor;
     typeinfo?for?mir::frontend::BufferSink;
     typeinfo?for?mir::frontend::BufferStream;
-    typeinfo?for?mir::frontend::ClientBuffers;
     typeinfo?for?mir::frontend::PromptSession;
     typeinfo?for?mir::frontend::Session;
     typeinfo?for?mir::frontend::SessionAuthorizer;
@@ -704,7 +700,6 @@ MIR_SERVER_0.27 {
     vtable?for?mir::Executor;
     vtable?for?mir::frontend::BufferSink;
     vtable?for?mir::frontend::BufferStream;
-    vtable?for?mir::frontend::ClientBuffers;
     vtable?for?mir::frontend::PromptSession;
     vtable?for?mir::frontend::Session;
     vtable?for?mir::frontend::SessionAuthorizer;
@@ -825,7 +820,7 @@ MIR_SERVER_0.27 {
 };
 
 # these symbols are needed by the "throwback" tests and mir_proving_server but are not intended to be public
-MIR_SERVER_DETAIL_FOR_TESTING_0.27 {
+MIR_SERVER_DETAIL_FOR_TESTING_1.0 {
  global:
   extern "C++" {
     mir::DefaultServerConfiguration::clock*;
@@ -934,10 +929,10 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.27 {
 
     mir::run_mir*;
   };
-} MIR_SERVER_0.27;
+} MIR_SERVER_1.0;
 
 # these symbols are needed by mir_proving_server but are not intended to be public
-MIR_SERVER_DETAIL_FOR_PROVING_0.27 {
+MIR_SERVER_DETAIL_FOR_PROVING_1.0 {
  global:
   extern "C++" {
     mir::renderer::gl::ProgramFamily::add_program*;
@@ -955,4 +950,4 @@ MIR_SERVER_DETAIL_FOR_PROVING_0.27 {
     typeinfo?for?mir::renderer::gl::Renderer;
     vtable?for?mir::renderer::gl::Renderer;
   };
-} MIR_SERVER_DETAIL_FOR_TESTING_0.27;
+} MIR_SERVER_DETAIL_FOR_TESTING_1.0;

@@ -40,6 +40,7 @@ public:
     virtual void listening_on(std::string const& endpoint) = 0;
 
     virtual void error(std::exception const& error) = 0;
+    virtual void warning(std::string  const& error) = 0;
 
 protected:
     virtual ~ConnectorReport() = default;

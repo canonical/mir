@@ -289,13 +289,15 @@ public:
             [this]
             {
                 if (surface_ready) return true;
+                ++probe_scancode;
                 fake_input_device->emit_event(
-                    mi::synthesis::a_key_down_event().of_scancode(KEY_A));
+                    mi::synthesis::a_key_down_event().of_scancode(probe_scancode));
                 fake_input_device->emit_event(
-                    mi::synthesis::a_key_up_event().of_scancode(KEY_A));
+                    mi::synthesis::a_key_up_event().of_scancode(probe_scancode));
                 return false;
             },
-            std::chrono::seconds{5});
+            std::chrono::seconds{5},
+            std::chrono::seconds{1});
 
         EXPECT_TRUE(dummy_events_received);
 
@@ -329,7 +331,8 @@ private:
             if (mir_input_event_get_type(iev) == mir_input_event_type_key)
             {
                 auto const kev = mir_input_event_get_keyboard_event(iev);
-                if (mir_keyboard_event_scan_code(kev) == KEY_A)
+                if (mir_keyboard_event_scan_code(kev) == nmr->probe_scancode &&
+                    mir_keyboard_event_action(kev) ==mir_keyboard_action_up)
                     nmr->surface_ready = true;
             }
         }
@@ -341,6 +344,7 @@ private:
         "test-devce", "test-device",
         mi::DeviceCapability::pointer | mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric})};
     std::atomic<bool> surface_ready{false};
+    std::atomic<int> probe_scancode{KEY_A};
 };
 
 struct NestedServer : mtf::HeadlessInProcessServer

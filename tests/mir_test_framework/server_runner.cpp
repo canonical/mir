@@ -127,7 +127,7 @@ std::shared_ptr<mir::MainLoop> mtf::ServerRunner::start_mir_server()
     });
 
     std::unique_lock<std::mutex> lock(mutex);
-    started_cv.wait_for(lock, std::chrono::seconds{10}, [&]{ return started; });
+    started_cv.wait_for(lock, std::chrono::seconds{30}, [&]{ return started; });
 
     return ml;
 }

@@ -26,7 +26,7 @@
 
 #include "src/server/report/null/shell_report.h"
 #include "src/server/scene/default_session_container.h"
-#include "src/server/scene/session_event_sink.h"
+#include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/scene/session_manager.h"
 
 #include "mir/test/doubles/mock_window_manager.h"
