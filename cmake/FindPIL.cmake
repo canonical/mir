@@ -1,5 +1,5 @@
 execute_process(
-  COMMAND python -c "from PIL import Image"
+  COMMAND python3 -c "from PIL import Image"
   RESULT_VARIABLE HAVE_PIL
 )
 

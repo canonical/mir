@@ -37,7 +37,7 @@ def tocstring(data):
         if line_chars == 0:
             result += '    "'
 
-        s = '\\%o' % ord(c)
+        s = '\\%o' % c
         result += s
         line_chars += len(s)
 
@@ -60,19 +60,19 @@ def bytes_per_pixel(image):
 
 def export(image, variable_name):
     image_info = (image.size[0], image.size[1], bytes_per_pixel(image))
-    print "static const struct {"
-    print "    unsigned int width;"
-    print "    unsigned int height;"
-    print "    unsigned int bytes_per_pixel; /* 3:RGB, 4:RGBA */"
-    print "    unsigned char pixel_data[%d * %d * %d + 1];" % image_info
-    print "} %s = {" % variable_name
-    print "    %d, %d, %d," % image_info
-    print tocstring(image.tobytes())
-    print "};"
+    print("static const struct {")
+    print("    unsigned int width;")
+    print("    unsigned int height;")
+    print("    unsigned int bytes_per_pixel; /* 3:RGB, 4:RGBA */")
+    print("    unsigned char pixel_data[%d * %d * %d + 1];" % image_info)
+    print("} %s = {" % variable_name)
+    print("    %d, %d, %d," % image_info)
+    print(tocstring(image.tobytes()))
+    print("};")
 
 def show_usage():
-    print >>sys.stderr, "Usage: ./png2header.py PNGFILE VARNAME > HEADER_FILE"
-    print >>sys.stderr, "Convert a PNG image to an embeddable C/C++ header file"
+    print("Usage: ./png2header.py PNGFILE VARNAME > HEADER_FILE", file=sys.stderr)
+    print("Convert a PNG image to an embeddable C/C++ header file", file=sys.stderr)
 
 if len(sys.argv) < 3:
     show_usage()

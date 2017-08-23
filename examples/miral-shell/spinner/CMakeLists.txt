@@ -24,7 +24,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-overlength-strings")
 function(png2header png header varname)
   add_custom_command(
     OUTPUT ${header}
-    COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/png2header.py ${png} ${varname} > ${header}
+    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/png2header.py ${png} ${varname} > ${header}
     DEPENDS ${png} ${CMAKE_CURRENT_SOURCE_DIR}/png2header.py
   )
 endfunction()
