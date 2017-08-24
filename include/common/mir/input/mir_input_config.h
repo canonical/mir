@@ -75,7 +75,9 @@ private:
     std::unique_ptr<Implementation> impl;
 };
 
-class MirInputConfig
+// We use "struct", not "class" for consistency with mirclient/mir_toolkit/client_types.h:395
+// (To be nice to downstreams that use clang with it's pointless warnings about this.)
+struct MirInputConfig
 {
 public:
     MirInputConfig();
