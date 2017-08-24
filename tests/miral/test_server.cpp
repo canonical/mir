@@ -17,19 +17,20 @@
  */
 
 #include "test_server.h"
-#include "../miral/basic_window_manager.h"
+#include "basic_window_manager.h"
 
+#include <miral/command_line_option.h>
 #include <miral/set_window_management_policy.h>
 
 #include <mir_test_framework/executable_path.h>
 #include <mir_test_framework/stub_server_platform_factory.h>
+#include <mir_test_framework/headless_display_buffer_compositor_factory.h>
+#include <mir/test/doubles/null_logger.h>
 
 #include <mir/fd.h>
 #include <mir/main_loop.h>
 #include <mir/server.h>
 #include <mir/version.h>
-
-#include <mir_test_framework/headless_display_buffer_compositor_factory.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -116,7 +117,10 @@ void miral::TestServer::SetUp()
 
             try
             {
-                runner.run_with({init});
+                namespace mtd = mir::test::doubles;
+                // Ignore the --logging flag passed to mir tests
+                CommandLineOption logging{[](bool) {}, mtd::logging_opt, mtd::logging_descr, false};
+                runner.run_with({init, logging});
             }
             catch (std::exception const& e)
             {

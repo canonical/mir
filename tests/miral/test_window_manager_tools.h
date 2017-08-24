@@ -19,7 +19,7 @@
 #ifndef MIRAL_TEST_WINDOW_MANAGER_TOOLS_H
 #define MIRAL_TEST_WINDOW_MANAGER_TOOLS_H
 
-#include "../miral/basic_window_manager.h"
+#include "basic_window_manager.h"
 
 #include <miral/canonical_window_manager.h>
 
