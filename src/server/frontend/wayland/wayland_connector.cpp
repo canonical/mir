@@ -33,11 +33,13 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/display_configuration.h"
-#include "mir/graphics/platform.h"
+#include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/wayland_allocator.h"
 
 #include "mir/renderer/gl/texture_target.h"
 #include "mir/frontend/buffer_stream_id.h"
+
+#include "mir/executor.h"
 
 #include "../../scene/global_event_sender.h"
 #include "../../scene/mediating_display_changer.h"
@@ -56,6 +58,7 @@
 #include <iostream>
 #include <mir/log.h>
 #include <cstring>
+#include <deque>
 #include MIR_SERVER_GL_H
 #include MIR_SERVER_GLEXT_H
 
@@ -395,9 +398,11 @@ public:
         wl_client* client,
         wl_resource* parent,
         uint32_t id,
+        std::shared_ptr<mir::Executor> const& executor,
         std::shared_ptr<mg::WaylandAllocator> const& allocator)
         : Surface(client, parent, id),
           allocator{allocator},
+          executor{executor},
           pending_buffer{nullptr}
     {
         auto session = session_for_client(client);
@@ -409,14 +414,13 @@ public:
 
         stream_id = session->create_buffer_stream(props);
         stream = session->get_buffer_stream(stream_id);
-
-        mir::log_info("Created WlSurface");
     }
 
     mf::BufferStreamId stream_id;
     std::shared_ptr<mf::BufferStream> stream;
 private:
     std::shared_ptr<mg::WaylandAllocator> const allocator;
+    std::shared_ptr<mir::Executor> const executor;
 
     wl_resource* pending_buffer;
     std::vector<std::unique_ptr<wl_resource, decltype(&wl_resource_destroy)>> pending_frames;
@@ -450,23 +454,7 @@ void WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, 
         BOOST_THROW_EXCEPTION(std::runtime_error("Setting null buffer is unimplemented"));
     }
 
-    std::shared_ptr<mg::Buffer> mir_buffer;
-    auto shm_buffer = wl_shm_buffer_get(*buffer);
-    if (shm_buffer)
-    {
-        auto mir_buffer = std::make_shared<WlShmBuffer>(*buffer);
-    }
-    else if (
-        allocator &&
-        (mir_buffer = allocator->buffer_from_resource(*buffer, std::move(pending_frames))))
-    {
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Received unhandled buffer type"}));
-    }
-
-    stream->submit_buffer(mir_buffer);
+    pending_buffer = *buffer;
 }
 
 void WlSurface::damage(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -519,7 +507,7 @@ void WlSurface::commit()
         }
         else if (
             allocator &&
-            (mir_buffer = allocator->buffer_from_resource(pending_buffer, std::move(pending_frames))))
+            (mir_buffer = allocator->buffer_from_resource(pending_buffer, executor, std::move(pending_frames))))
         {
         }
         else
@@ -549,14 +537,17 @@ class WlCompositor : public wayland::Compositor
 public:
     WlCompositor(
         struct wl_display* display,
+        std::shared_ptr<mir::Executor> const& executor,
         std::shared_ptr<mg::WaylandAllocator> const& allocator)
         : Compositor(display, 3),
-          allocator{allocator}
+          allocator{allocator},
+          executor{executor}
     {
     }
 
 private:
     std::shared_ptr<mg::WaylandAllocator> const allocator;
+    std::shared_ptr<mir::Executor> const executor;
 
     void create_surface(wl_client* client, wl_resource* resource, uint32_t id) override;
     void create_region(wl_client* client, wl_resource* resource, uint32_t id) override;
@@ -564,7 +555,7 @@ private:
 
 void WlCompositor::create_surface(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    new WlSurface{client, resource, id, allocator};
+    new WlSurface{client, resource, id, executor, allocator};
 }
 
 class Region : public wayland::Region
@@ -1333,19 +1324,131 @@ void cleanup_display(wl_display *display)
     wl_display_flush_clients(display);
     wl_display_destroy(display);
 }
+
+class WaylandExecutor : public mir::Executor
+{
+public:
+    void spawn (std::function<void ()>&& work) override
+    {
+        {
+            std::lock_guard<std::recursive_mutex> lock{mutex};
+            workqueue.emplace_back(std::move(work));
+        }
+        if (auto err = eventfd_write(notify_fd, 1))
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{err, std::system_category(), "eventfd_write failed to notify event loop"}));
+        }
+    }
+
+    /**
+     * Get an Executor which dispatches onto a wl_event_loop
+     *
+     * \note    The executor may outlive the wl_event_loop, but no tasks will be dispatched
+     *          after the wl_event_loop is destroyed.
+     *
+     * \param [in]  loop    The event loop to dispatch on
+     * \return              An Executor that queues onto the wl_event_loop
+     */
+    static std::shared_ptr<mir::Executor> executor_for_event_loop(wl_event_loop* loop)
+    {
+        if (auto notifier = wl_event_loop_get_destroy_listener(loop, &on_display_destruction))
+        {
+            DestructionShim* shim;
+            shim = wl_container_of(notifier, shim, destruction_listener);
+
+            return shim->executor;
+        }
+        else
+        {
+            auto const executor = std::shared_ptr<WaylandExecutor>{new WaylandExecutor{loop}};
+            auto shim = std::make_unique<DestructionShim>(executor);
+
+            shim->destruction_listener.notify = &on_display_destruction;
+            wl_event_loop_add_destroy_listener(loop, &(shim.release())->destruction_listener);
+
+            return executor;
+        }
+    }
+
+private:
+    WaylandExecutor(wl_event_loop* loop)
+        : notify_fd{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE | EFD_NONBLOCK)},
+          notify_source{wl_event_loop_add_fd(loop, notify_fd, WL_EVENT_READABLE, &on_notify, this)}
+    {
+        if (notify_fd == mir::Fd::invalid)
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to create IPC pause notification eventfd"}));
+        }
+    }
+
+    static int on_notify(int fd, uint32_t, void* data)
+    {
+        auto executor = static_cast<WaylandExecutor*>(data);
+
+        eventfd_t unused;
+        if (auto err = eventfd_read(fd, &unused))
+        {
+            mir::log_error(
+                "eventfd_read failed to consume wakeup notification: %s (%i)",
+                strerror(err),
+                err);
+        }
+
+        std::lock_guard<std::recursive_mutex> lock{executor->mutex};
+        while (!executor->workqueue.empty())
+        {
+            auto work = std::move(executor->workqueue.front());
+            work();
+            executor->workqueue.pop_front();
+        }
+
+        return 0;
+    }
+
+    static void on_display_destruction(wl_listener* listener, void*)
+    {
+        DestructionShim* shim;
+        shim = wl_container_of(listener, shim, destruction_listener);
+
+        {
+            std::lock_guard<std::recursive_mutex> lock{shim->executor->mutex};
+        }
+        delete shim;
+    }
+
+    std::recursive_mutex mutex;
+    mir::Fd const notify_fd;
+    std::deque<std::function<void()>> workqueue;
+
+    wl_event_source* const notify_source;
+
+    struct DestructionShim
+    {
+        explicit DestructionShim(std::shared_ptr<WaylandExecutor> const& executor)
+            : executor{executor}
+        {
+        }
+
+        std::shared_ptr<WaylandExecutor> const executor;
+        wl_listener destruction_listener;
+    };
+    static_assert(
+        std::is_standard_layout<DestructionShim>::value,
+        "DestructionShim must be Standard Layout for wl_container_of to be defined behaviour");
+};
 }
 
 mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mf::Shell> const& shell,
     std::shared_ptr<mf::EventSink> const& global_sink,
     DisplayChanger& display_config,
-    std::shared_ptr<mg::RenderingPlatform> const& platform)
+    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
     : display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
-      allocator{std::shared_ptr<mg::WaylandAllocator>{
-          platform,
-          dynamic_cast<mg::WaylandAllocator*>(platform->native_rendering_platform())
-      }}
+      allocator{std::dynamic_pointer_cast<mg::WaylandAllocator>(allocator)}
 {
     if (pause_signal == mir::Fd::invalid)
     {
@@ -1369,7 +1472,10 @@ mf::WaylandConnector::WaylandConnector(
      * So far I've only found ones which expect wl_compositor before anything else,
      * so stick that first.
      */
-    compositor_global = std::make_unique<mf::WlCompositor>(display.get(), this->allocator);
+    compositor_global = std::make_unique<mf::WlCompositor>(
+        display.get(),
+        WaylandExecutor::executor_for_event_loop(wl_display_get_event_loop(display.get())),
+        this->allocator);
     seat_global = std::make_unique<mf::WlSeat>(display.get());
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),

@@ -31,7 +31,7 @@ namespace mir
 
 namespace graphics
 {
-class RenderingPlatform;
+class GraphicBufferAllocator;
 class WaylandAllocator;
 }
 
@@ -54,7 +54,7 @@ public:
         std::shared_ptr<Shell> const& shell,
         std::shared_ptr<EventSink> const& global_sink,
         DisplayChanger& display_config,
-        std::shared_ptr<graphics::RenderingPlatform> const& platform);
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
     ~WaylandConnector() override;
 

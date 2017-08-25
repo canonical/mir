@@ -34,7 +34,7 @@ std::shared_ptr<mf::Connector>
                 the_frontend_shell(),
                 the_global_event_sink(),
                 *the_mediating_display_changer(),
-                the_graphics_platform());
+                the_buffer_allocator());
         });
 }
 
