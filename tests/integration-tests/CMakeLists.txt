@@ -69,7 +69,8 @@ target_link_libraries(
 
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
   # Mesa platform dependencies
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}

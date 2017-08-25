@@ -104,7 +104,8 @@ target_link_libraries(mir-test-assist
   mir-test-doubles-platform-static
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARIES}
+  ${GMOCK_LIBRARY}
+  ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 

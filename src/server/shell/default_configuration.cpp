@@ -50,8 +50,6 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
         });
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 auto mir::DefaultServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
 {
 #pragma GCC diagnostic push
@@ -62,7 +60,6 @@ auto mir::DefaultServerConfiguration::the_window_manager_builder() -> shell::Win
             the_shell_display_layout()); };
 #pragma GCC diagnostic pop
 }
-#pragma GCC diagnostic pop
 
 auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) -> std::shared_ptr<msh::Shell>
 {

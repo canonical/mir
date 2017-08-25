@@ -155,7 +155,7 @@ TEST(NestedDisplayConfiguration, includes_host_edid)
     auto edid_size = mir_output_get_edid_size(output);
 
     ASSERT_NE(nullptr, edid_start);
-    ASSERT_NE(0u, edid_size);
+    ASSERT_NE(0, edid_size);
 
     std::vector<uint8_t> host_edid(edid_start, edid_start+edid_size);
 
