@@ -31,7 +31,7 @@
 
 #include "mir/abnormal_exit.h"
 #include "mir/server.h"
-//#include "mir/main_loop.h"
+#include "mir/main_loop.h"
 
 #include "mir/report_exception.h"
 #include "mir/options/option.h"
@@ -50,23 +50,40 @@ namespace me = mir::examples;
 
 namespace
 {
-//void add_timeout_option_to(mir::Server& server)
-//{
-//    static const char* const timeout_opt = "timeout";
-//    static const char* const timeout_descr = "Seconds to run before exiting";
-//
-//    server.add_configuration_option(timeout_opt, timeout_descr, mir::OptionType::integer);
-//
-//    server.add_init_callback([&server]
-//    {
-//        const auto options = server.get_options();
-//        if (options->is_set(timeout_opt))
-//        {
-//            static auto const exit_action = server.the_main_loop()->create_alarm([&server] { server.stop(); });
-//            exit_action->reschedule_in(std::chrono::seconds(options->get<int>(timeout_opt)));
-//        }
-//    });
-//}
+void add_timeout_option_to(mir::Server& server)
+{
+    static const char* const timeout_opt = "timeout";
+    static const char* const timeout_descr = "Seconds to run before exiting";
+
+    server.add_configuration_option(timeout_opt, timeout_descr, mir::OptionType::integer);
+
+    server.add_init_callback([&server]
+    {
+        const auto options = server.get_options();
+        if (options->is_set(timeout_opt))
+        {
+            static auto const exit_action = server.the_main_loop()->create_alarm([&server] { server.stop(); });
+            exit_action->reschedule_in(std::chrono::seconds(options->get<int>(timeout_opt)));
+        }
+    });
+}
+
+
+// Create some input filters (we need to keep them or they deactivate)
+struct InputFilters
+{
+    void operator()(mir::Server& server)
+    {
+        quit_filter = me::make_quit_filter_for(server);
+        printing_filter = me::make_printing_input_filter_for(server);
+        screen_rotation_filter = me::make_screen_rotation_filter_for(server);
+    }
+
+private:
+    std::shared_ptr<mir::input::EventFilter> quit_filter;
+    std::shared_ptr<mir::input::EventFilter> printing_filter;
+    std::shared_ptr<mir::input::EventFilter> screen_rotation_filter;
+};
 
 void exception_handler()
 try
@@ -107,6 +124,7 @@ try
 
     runner.set_exception_handler(exception_handler);
 
+    InputFilters input_filters;
     me::TestClientRunner test_runner;
 
     bool const server_exited_normally = runner.run_with({
@@ -117,15 +135,12 @@ try
         me::add_window_manager_option_to,
         me::add_custom_compositor_option_to,
         me::add_input_device_configuration_options_to,
-    //    add_timeout_option_to(server);
+        add_timeout_option_to,
         miral::CursorTheme{"default"},
+        input_filters,
         test_runner
     });
 
-    // Create some input filters (we need to keep them or they deactivate)
-//    auto const quit_filter = me::make_quit_filter_for(server);
-//    auto const printing_filter = me::make_printing_input_filter_for(server);
-//    auto const screen_rotation_filter = me::make_screen_rotation_filter_for(server);
 
     // Propagate any test failure
     if (test_runner.test_failed())
