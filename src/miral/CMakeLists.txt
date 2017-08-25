@@ -133,6 +133,12 @@ configure_file(
     ${miral_include}/miral/version.h
 )
 
+if(TARGET doc)
+    add_custom_target(regenerate-miral-symbols-map
+            ${CMAKE_CURRENT_SOURCE_DIR}/process_doxygen_xml.py ${CMAKE_BINARY_DIR}/doc/xml/*.xml > ${symbol_map}
+            DEPENDS doc)
+endif()
+
 install(TARGETS     miral                           LIBRARY         DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}")
 install(DIRECTORY   ${CMAKE_SOURCE_DIR}/include/miral               DESTINATION "${INCLUDEDIR}")
 install(FILES       ${CMAKE_CURRENT_BINARY_DIR}/miral.pc
