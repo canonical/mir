@@ -1209,6 +1209,12 @@ public:
             session,
             params,
             std::make_shared<SurfaceInputSink>(&seat, client, surface));
+
+        auto shim = new DestructionShim{session, shell, surface_id};
+        shim->destruction_listener.notify = &cleanup_surface;
+        wl_resource_add_destroy_listener(
+            resource,
+            &shim->destruction_listener);
     }
 
     ~WlShellSurface() override = default;
@@ -1266,6 +1272,38 @@ protected:
     {
     }
 private:
+    struct DestructionShim
+    {
+        DestructionShim(
+            std::shared_ptr<mf::Session> const& session,
+            std::shared_ptr<mf::Shell> const& shell,
+            mf::SurfaceId id)
+            : session{session},
+              shell{shell},
+              surface_id{id}
+        {
+        }
+
+        std::shared_ptr<mf::Session> const session;
+        std::shared_ptr<mf::Shell> const shell;
+        mf::SurfaceId const surface_id;
+        wl_listener destruction_listener;
+    };
+
+    static_assert(
+        std::is_standard_layout<DestructionShim>::value,
+        "DestructionShim must be Standard Layout for wl_container_of to be defined behaviour");
+
+    static void cleanup_surface(wl_listener* listener, void*)
+    {
+        DestructionShim* shim;
+        shim = wl_container_of(listener, shim, destruction_listener);
+
+        shim->shell->destroy_surface(shim->session, shim->surface_id);
+
+        delete shim;
+    }
+
     std::shared_ptr<mf::Shell> const shell;
     mf::SurfaceId surface_id;
 };
