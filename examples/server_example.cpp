@@ -163,8 +163,9 @@ try
 
     server.set_exception_handler(exception_handler);
 
-    me::ClientContext context;
-    me::add_test_client_option_to(server, context);
+    me::TestClientRunner test_runner;
+
+    test_runner(server);
 
     // Create some input filters (we need to keep them or they deactivate)
     auto const quit_filter = me::make_quit_filter_for(server);
@@ -177,7 +178,7 @@ try
     server.run();
 
     // Propagate any test failure
-    if (context.test_failed)
+    if (test_runner.test_failed())
     {
         return EXIT_FAILURE;
     }

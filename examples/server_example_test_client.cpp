@@ -24,6 +24,8 @@
 #include "mir/log.h"
 #include "mir/options/option.h"
 
+#include <future>
+
 #include <csignal>
 #include <sys/wait.h>
 
@@ -84,6 +86,23 @@ bool exit_success(pid_t pid)
         ml::log(ml::Severity::informational, "Client died mysteriously", component);
         return false;
     }
+}
+}
+
+namespace mir
+{
+class Server;
+
+namespace examples
+{
+struct ClientContext
+{
+    std::unique_ptr<mir::time::Alarm> client_kill_action;
+    std::unique_ptr<mir::time::Alarm> server_stop_action;
+    std::atomic<bool> test_failed;
+};
+
+void add_test_client_option_to(mir::Server& server, ClientContext& context);
 }
 }
 
@@ -155,3 +174,15 @@ void me::add_test_client_option_to(mir::Server& server, me::ClientContext& conte
         }
     });
 }
+
+
+struct me::TestClientRunner::Self : me::ClientContext {};
+
+me::TestClientRunner::TestClientRunner() : self{std::make_shared<Self>()} {}
+
+void me::TestClientRunner::operator()(mir::Server& server)
+{
+    me::add_test_client_option_to(server, *self);
+}
+
+bool me::TestClientRunner::test_failed() const { return self->test_failed; }
