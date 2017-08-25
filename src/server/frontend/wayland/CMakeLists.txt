@@ -11,4 +11,4 @@ add_library(
   ${WAYLAND_SOURCES}
 )
 
-add_dependencies(mirfrontend-wayland mirwaylandserver)
+add_dependencies(mirfrontend-wayland wayland-headers)

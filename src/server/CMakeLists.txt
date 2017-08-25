@@ -87,7 +87,6 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirthread>
 
   $<TARGET_OBJECTS:mirrenderergl>
-  $<TARGET_OBJECTS:mirwaylandserver>
   $<TARGET_OBJECTS:mirgl>
 )
 
