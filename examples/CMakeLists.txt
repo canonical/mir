@@ -12,7 +12,6 @@ add_library(exampleserverconfig STATIC
   server_example_basic_window_manager.cpp
   server_example_basic_window_manager.h
   server_example_canonical_window_manager.cpp
-  server_example_display_configuration_policy.cpp
   server_example_input_device_config.cpp
   server_example_input_event_filter.cpp
   server_example_log_options.cpp
@@ -21,12 +20,6 @@ add_library(exampleserverconfig STATIC
   server_example_window_management.cpp
   server_example_custom_compositor.cpp
   server_example_adorning_compositor.cpp
-  server_example_cursor_images.cpp
-  server_example_cursor_images.h
-  xcursor_loader.cpp
-  xcursor_loader.h
-  xcursor.c
-  xcursor.h
 )
 
 target_link_libraries(eglapp
@@ -249,15 +242,6 @@ if (MIR_ENABLE_TESTS)
     )
   endif ()
 endif ()
-
-add_executable(mir_cursor_theme_dump
-  cursor-theme-dump.cpp
-)
-
-target_link_libraries(mir_cursor_theme_dump
-  exampleserverconfig
-  mirserver
-)
 
 mir_add_wrapped_executable(mir_demo_client_multistream
   multi_stream.cpp

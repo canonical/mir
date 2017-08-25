@@ -16,6 +16,7 @@ include_directories(
 
 add_library(playgroundserverconfig STATIC
     server_configuration.cpp
+    server_example_display_configuration_policy.cpp
 )
 
 add_subdirectory(demo-shell/)

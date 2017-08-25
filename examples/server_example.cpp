@@ -19,12 +19,12 @@
 #include "server_example_log_options.h"
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
-#include "server_example_display_configuration_policy.h"
+#include <miral/display_configuration_option.h>
 #include "server_example_host_lifecycle_event_listener.h"
 #include "server_example_window_management.h"
 #include "server_example_custom_compositor.h"
 #include "server_example_test_client.h"
-#include "server_example_cursor_images.h"
+#include <miral/cursor_theme.h>
 #include "server_example_input_device_config.h"
 
 #include "miral/runner.h"
@@ -109,16 +109,16 @@ try
 
     me::TestClientRunner test_runner;
 
-    bool server_exited_normally = runner.run_with({
+    bool const server_exited_normally = runner.run_with({
         // Add example options for display layout, logging, launching clients and timeout
-        me::add_display_configuration_options_to,
+        miral::display_configuration_options,
         me::add_log_host_lifecycle_option_to,
         me::add_glog_options_to,
         me::add_window_manager_option_to,
         me::add_custom_compositor_option_to,
         me::add_input_device_configuration_options_to,
     //    add_timeout_option_to(server);
-        me::add_x_cursor_images,
+        miral::CursorTheme{"default"},
         test_runner
     });
 
