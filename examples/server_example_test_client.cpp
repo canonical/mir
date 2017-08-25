@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2015 Canonical Ltd.
+ * Copyright © 2014-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -24,12 +24,11 @@
 #include "mir/log.h"
 #include "mir/options/option.h"
 
+#include <chrono>
 #include <future>
 
 #include <csignal>
 #include <sys/wait.h>
-
-#include <chrono>
 
 namespace me = mir::examples;
 namespace ml = mir::logging;
@@ -89,24 +88,16 @@ bool exit_success(pid_t pid)
 }
 }
 
-namespace mir
+struct me::TestClientRunner::Self
 {
-class Server;
-
-namespace examples
-{
-struct ClientContext
-{
-    std::unique_ptr<mir::time::Alarm> client_kill_action;
-    std::unique_ptr<mir::time::Alarm> server_stop_action;
+    std::unique_ptr<time::Alarm> client_kill_action;
+    std::unique_ptr<time::Alarm> server_stop_action;
     std::atomic<bool> test_failed;
 };
 
-void add_test_client_option_to(mir::Server& server, ClientContext& context);
-}
-}
+me::TestClientRunner::TestClientRunner() : self{std::make_shared<Self>()} {}
 
-void me::add_test_client_option_to(mir::Server& server, me::ClientContext& context)
+void me::TestClientRunner::operator()(mir::Server& server)
 {
     static const char* const test_client_opt = "test-client";
     static const char* const test_client_descr = "client executable";
@@ -114,16 +105,16 @@ void me::add_test_client_option_to(mir::Server& server, me::ClientContext& conte
     static const char* const test_timeout_opt = "test-timeout";
     static const char* const test_timeout_descr = "Seconds to run before sending SIGTERM to client";
 
-    server.add_configuration_option(test_client_opt, test_client_descr, mir::OptionType::string);
+    server.add_configuration_option(test_client_opt, test_client_descr, OptionType::string);
     server.add_configuration_option(test_timeout_opt, test_timeout_descr, 10);
 
-    server.add_init_callback([&server, &context]
+    server.add_init_callback([&server, self = self]
     {
-        const auto options = server.get_options();
+        const auto options1 = server.get_options();
 
-        if (options->is_set(test_client_opt))
+        if (options1->is_set(test_client_opt))
         {
-            context.test_failed = true;
+            self->test_failed = true;
 
             auto const client_fd = server.open_client_socket();
 
@@ -139,29 +130,30 @@ void me::add_test_client_option_to(mir::Server& server, me::ClientContext& conte
 
                 setenv("MIR_SOCKET", connect_string, 1);
 
-                auto const client = options->get<std::string>(test_client_opt);
+                auto const client = options1->get<std::__cxx11::string>(test_client_opt);
                 execlp(client.c_str(), client.c_str(), static_cast<char const*>(nullptr));
+                // If execl() returns then something is badly wrong
                 log(logging::Severity::critical, "mir::examples",
                     "Failed to execute client (%s) error: %s", client.c_str(), strerror(errno));
-                abort(); // If execl() returns then something is badly wrong
+                abort();
             }
             else if (pid > 0)
             {
-                context.client_kill_action = server.the_main_loop()->create_alarm(
+                self->client_kill_action = server.the_main_loop()->create_alarm(
                     [pid]
                     {
                         kill(pid, SIGTERM);
                     });
 
-                context.server_stop_action = server.the_main_loop()->create_alarm(
-                    [pid, &server, &context]()
+                self->server_stop_action = server.the_main_loop()->create_alarm(
+                    [pid, &server, self]()
                     {
-                        context.test_failed = !exit_success(pid);
+                        self->test_failed = !exit_success(pid);
                         server.stop();
                     });
 
-                context.client_kill_action->reschedule_in(std::chrono::seconds(options->get<int>(test_timeout_opt)));
-                context.server_stop_action->reschedule_in(std::chrono::seconds(options->get<int>(test_timeout_opt)+1));
+                self->client_kill_action->reschedule_in(std::chrono::seconds(options1->get<int>(test_timeout_opt)));
+                self->server_stop_action->reschedule_in(std::chrono::seconds(options1->get<int>(test_timeout_opt) + 1));
             }
             else
             {
@@ -170,19 +162,9 @@ void me::add_test_client_option_to(mir::Server& server, me::ClientContext& conte
         }
         else
         {
-            context.test_failed = false;
+            self->test_failed = false;
         }
     });
-}
-
-
-struct me::TestClientRunner::Self : me::ClientContext {};
-
-me::TestClientRunner::TestClientRunner() : self{std::make_shared<Self>()} {}
-
-void me::TestClientRunner::operator()(mir::Server& server)
-{
-    me::add_test_client_option_to(server, *self);
 }
 
 bool me::TestClientRunner::test_failed() const { return self->test_failed; }

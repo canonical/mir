@@ -27,10 +27,11 @@
 #include "server_example_cursor_images.h"
 #include "server_example_input_device_config.h"
 
+#include "miral/runner.h"
+
 #include "mir/abnormal_exit.h"
 #include "mir/server.h"
-#include "mir/main_loop.h"
-#include "mir/fd.h"
+//#include "mir/main_loop.h"
 
 #include "mir/report_exception.h"
 #include "mir/options/option.h"
@@ -40,6 +41,8 @@
 #include <chrono>
 #include <cstdlib>
 
+namespace mir { class AbnormalExit; }
+
 namespace me = mir::examples;
 
 ///\example server_example.cpp
@@ -47,68 +50,23 @@ namespace me = mir::examples;
 
 namespace
 {
-auto connection(int fd) -> std::string
-{
-    char connect_string[64] = {0};
-    // We can't have both the server and the client owning the same fd, since
-    // that will result in a double-close(). We give the client a duplicate which
-    // the client can safely own (and should close when done).
-    sprintf(connect_string, "fd://%d", dup(fd));
-    return connect_string;
-}
-
-void add_launcher_option_to(mir::Server& server)
-{
-    static const char* const launch_child_opt = "launch-client";
-    static const char* const launch_client_descr = "system() command to launch client";
-
-    server.add_configuration_option(launch_child_opt, launch_client_descr, mir::OptionType::string);
-    server.add_init_callback([&]
-    {
-        const auto options = server.get_options();
-        if (options->is_set(launch_child_opt))
-        {
-            unsetenv("DISPLAY");                                // Discourage toolkits from using X11
-            setenv("GDK_BACKEND", "mir", true);                 // configure GTK to use Mir
-            setenv("QT_QPA_PLATFORM", "ubuntumirclient", true); // configure Qt to use Mir
-            unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
-            setenv("SDL_VIDEODRIVER", "mir", true);             // configure SDL to use Mir
-
-            auto const value = options->get<std::string>(launch_child_opt);
-
-            for (auto i = begin(value); i != end(value); )
-            {
-                auto const j = find(i, end(value), '&');
-
-                auto const cmd ="MIR_SOCKET=" + connection(server.open_client_socket()) + " " +
-                    std::string{i, j} + "&";
-
-                auto ignore = std::system(cmd.c_str());
-                (void)(ignore);
-
-                if ((i = j) != end(value)) ++i;
-            }
-        }
-    });
-}
-
-void add_timeout_option_to(mir::Server& server)
-{
-    static const char* const timeout_opt = "timeout";
-    static const char* const timeout_descr = "Seconds to run before exiting";
-
-    server.add_configuration_option(timeout_opt, timeout_descr, mir::OptionType::integer);
-
-    server.add_init_callback([&server]
-    {
-        const auto options = server.get_options();
-        if (options->is_set(timeout_opt))
-        {
-            static auto const exit_action = server.the_main_loop()->create_alarm([&server] { server.stop(); });
-            exit_action->reschedule_in(std::chrono::seconds(options->get<int>(timeout_opt)));
-        }
-    });
-}
+//void add_timeout_option_to(mir::Server& server)
+//{
+//    static const char* const timeout_opt = "timeout";
+//    static const char* const timeout_descr = "Seconds to run before exiting";
+//
+//    server.add_configuration_option(timeout_opt, timeout_descr, mir::OptionType::integer);
+//
+//    server.add_init_callback([&server]
+//    {
+//        const auto options = server.get_options();
+//        if (options->is_set(timeout_opt))
+//        {
+//            static auto const exit_action = server.the_main_loop()->create_alarm([&server] { server.stop(); });
+//            exit_action->reschedule_in(std::chrono::seconds(options->get<int>(timeout_opt)));
+//        }
+//    });
+//}
 
 void exception_handler()
 try
@@ -145,37 +103,29 @@ catch (...)
 int main(int argc, char const* argv[])
 try
 {
-    mir::Server server;
+    miral::MirRunner runner{argc, argv, "mir/mir_demo_server.config"};
 
-    // Use config options file in e.g. ~/.config/mir/mir_demo_server.config
-    server.set_config_filename("mir/mir_demo_server.config");
-
-    // Add example options for display layout, logging, launching clients and timeout
-    me::add_display_configuration_options_to(server);
-    me::add_log_host_lifecycle_option_to(server);
-    me::add_glog_options_to(server);
-    me::add_window_manager_option_to(server);
-    me::add_custom_compositor_option_to(server);
-    me::add_input_device_configuration_options_to(server);
-    add_launcher_option_to(server);
-    add_timeout_option_to(server);
-    me::add_x_cursor_images(server);
-
-    server.set_exception_handler(exception_handler);
+    runner.set_exception_handler(exception_handler);
 
     me::TestClientRunner test_runner;
 
-    test_runner(server);
+    bool server_exited_normally = runner.run_with({
+        // Add example options for display layout, logging, launching clients and timeout
+        me::add_display_configuration_options_to,
+        me::add_log_host_lifecycle_option_to,
+        me::add_glog_options_to,
+        me::add_window_manager_option_to,
+        me::add_custom_compositor_option_to,
+        me::add_input_device_configuration_options_to,
+    //    add_timeout_option_to(server);
+        me::add_x_cursor_images,
+        test_runner
+    });
 
     // Create some input filters (we need to keep them or they deactivate)
-    auto const quit_filter = me::make_quit_filter_for(server);
-    auto const printing_filter = me::make_printing_input_filter_for(server);
-    auto const screen_rotation_filter = me::make_screen_rotation_filter_for(server);
-
-    // Provide the command line and run the server
-    server.set_command_line(argc, argv);
-    server.apply_settings();
-    server.run();
+//    auto const quit_filter = me::make_quit_filter_for(server);
+//    auto const printing_filter = me::make_printing_input_filter_for(server);
+//    auto const screen_rotation_filter = me::make_screen_rotation_filter_for(server);
 
     // Propagate any test failure
     if (test_runner.test_failed())
@@ -183,7 +133,7 @@ try
         return EXIT_FAILURE;
     }
 
-    return server.exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
+    return server_exited_normally ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 catch (...)
 {

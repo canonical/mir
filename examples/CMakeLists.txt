@@ -175,6 +175,7 @@ target_link_libraries(mir_demo_client_prompt_session mirclient)
 add_library(mirdraw STATIC graphics_utils.cpp)
 
 include_directories(
+  ${PROJECT_SOURCE_DIR}/include/miral
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/platform
@@ -190,6 +191,7 @@ add_library(mir_demo_server_loadable MODULE
 )
 
 target_link_libraries(mir_demo_server_loadable
+  miral
   mirserver
   exampleserverconfig
   ${GLog_LIBRARY}
