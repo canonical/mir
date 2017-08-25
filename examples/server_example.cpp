@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2015 Canonical Ltd.
+ * Copyright © 2012-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -21,13 +21,18 @@
 #include "server_example_input_filter.h"
 #include <miral/display_configuration_option.h>
 #include "server_example_host_lifecycle_event_listener.h"
-#include "server_example_window_management.h"
+#include "miral-shell/tiling_window_manager.h"
+#include "miral-shell/floating_window_manager.h"
+#include "miral-shell/titlebar_config.h"
+#include "miral-shell/spinner/splash.h"
+
 #include "server_example_custom_compositor.h"
 #include "server_example_test_client.h"
 #include <miral/cursor_theme.h>
 #include "server_example_input_device_config.h"
 
-#include "miral/runner.h"
+#include <miral/runner.h>
+#include <miral/window_management_options.h>
 
 #include "mir/abnormal_exit.h"
 #include "mir/server.h"
@@ -124,6 +129,18 @@ try
 
     runner.set_exception_handler(exception_handler);
 
+    std::function<void()> shutdown_hook{[]{}};
+    runner.add_stop_callback([&] { shutdown_hook(); });
+
+    SpinnerSplash spinner;
+    miral::InternalClientLauncher launcher;
+    miral::ActiveOutputsMonitor outputs_monitor;
+    miral::WindowManagerOptions window_managers
+        {
+            miral::add_window_manager_policy<FloatingWindowManagerPolicy>("floating", spinner, launcher, shutdown_hook),
+            miral::add_window_manager_policy<TilingWindowManagerPolicy>("tiling", spinner, launcher, outputs_monitor),
+        };
+
     InputFilters input_filters;
     me::TestClientRunner test_runner;
 
@@ -132,7 +149,9 @@ try
         miral::display_configuration_options,
         me::add_log_host_lifecycle_option_to,
         me::add_glog_options_to,
-        me::add_window_manager_option_to,
+        miral::StartupInternalClient{"Intro", spinner},
+        launcher,
+        window_managers,
         me::add_custom_compositor_option_to,
         me::add_input_device_configuration_options_to,
         add_timeout_option_to,
@@ -140,7 +159,6 @@ try
         input_filters,
         test_runner
     });
-
 
     // Propagate any test failure
     if (test_runner.test_failed())

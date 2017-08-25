@@ -9,18 +9,16 @@ add_library(eglapp STATIC
 )
 
 add_library(exampleserverconfig STATIC
-  server_example_basic_window_manager.cpp
-  server_example_basic_window_manager.h
-  server_example_canonical_window_manager.cpp
   server_example_input_device_config.cpp
   server_example_input_event_filter.cpp
   server_example_log_options.cpp
   server_example_input_filter.cpp
   server_example_host_lifecycle_event.cpp
-  server_example_window_management.cpp
   server_example_custom_compositor.cpp
   server_example_adorning_compositor.cpp
 )
+
+target_link_libraries(exampleserverconfig mirserver)
 
 target_link_libraries(eglapp
   mirclient
@@ -184,8 +182,8 @@ add_library(mir_demo_server_loadable MODULE
 )
 
 target_link_libraries(mir_demo_server_loadable
+  miral-shell-lib
   miral
-  mirserver
   exampleserverconfig
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
