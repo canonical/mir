@@ -53,6 +53,7 @@ add_library(miral-shell-lib STATIC
     titlebar_config.cpp         titlebar_config.h
 )
 
+pkg_check_modules(FREETYPE freetype2 REQUIRED)
 target_include_directories(miral-shell-lib PRIVATE ${FREETYPE_INCLUDE_DIRS})
 target_compile_definitions(miral-shell-lib PRIVATE -DTYPO_SUPPORTS_FREETYPE)
 target_link_libraries(miral-shell-lib miral-spinner miral ${FREETYPE_LIBRARIES})
@@ -60,8 +61,6 @@ target_link_libraries(miral-shell-lib miral-spinner miral ${FREETYPE_LIBRARIES})
 mir_add_wrapped_executable(miral-shell
     shell_main.cpp
 )
-
-pkg_check_modules(FREETYPE freetype2 REQUIRED)
 
 target_link_libraries(miral-shell
     miral-shell-lib
