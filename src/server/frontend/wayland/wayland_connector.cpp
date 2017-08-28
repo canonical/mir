@@ -20,8 +20,6 @@
 
 #include "core_generated_interfaces.h"
 
-#include "mir_server_protocol.h"
-
 #include "mir/frontend/shell.h"
 
 #include "mir/compositor/buffer_stream.h"
