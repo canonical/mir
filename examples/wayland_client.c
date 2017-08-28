@@ -30,7 +30,6 @@
 #include <stdio.h>
 
 #include <wayland-client.h>
-#include "mir_client_protocol.h"
 
 struct globals
 {
