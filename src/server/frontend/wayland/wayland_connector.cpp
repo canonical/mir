@@ -290,9 +290,14 @@ class WlShmBuffer :
     public mir::renderer::software::PixelSource
 {
 public:
-    WlShmBuffer(wl_resource* buffer)
+    WlShmBuffer(
+        wl_resource* buffer,
+        std::shared_ptr<mir::Executor> const& executor,
+        std::vector<std::unique_ptr<wl_resource, void(*)(wl_resource*)>>&& frames)
         : buffer{wl_shm_buffer_get(buffer)},
-          resource{buffer}
+          resource{buffer},
+          executor{executor},
+          frames{std::move(frames)}
     {
         if (!buffer)
         {
@@ -302,8 +307,8 @@ public:
 
     ~WlShmBuffer()
     {
-        mir::log_info("WlShmBuffer released - notifying client");
         wl_resource_queue_event(resource, WL_BUFFER_RELEASE);
+        wl_client_flush(wl_resource_get_client(resource));
     }
 
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override
@@ -354,6 +359,18 @@ public:
                });
         }
 
+        for (auto&& frame : frames)
+        {
+            auto framer = std::move(frame);
+            executor->spawn(
+                [frame = framer.release(), deleter = framer.get_deleter()]()
+                {
+                    wl_callback_send_done(frame, 0);
+                    wl_client_flush(wl_resource_get_client(frame));
+                    deleter(frame);
+                });
+        }
+        frames.clear();
     }
 
     void bind() override
@@ -389,6 +406,8 @@ public:
 private:
     wl_shm_buffer* const buffer;
     wl_resource* const resource;
+    std::shared_ptr<mir::Executor> const& executor;
+    std::vector<std::unique_ptr<wl_resource, void(*)(wl_resource*)>> frames;
 };
 
 class WlSurface : public wayland::Surface
@@ -498,12 +517,7 @@ void WlSurface::commit()
         auto shm_buffer = wl_shm_buffer_get(pending_buffer);
         if (shm_buffer)
         {
-            auto mir_buffer = std::make_shared<WlShmBuffer>(pending_buffer);
-            for (auto const& frame : pending_frames)
-            {
-                wl_callback_send_done(frame.get(), 0);
-            }
-            wl_client_flush(client);
+            mir_buffer = std::make_shared<WlShmBuffer>(pending_buffer, executor, std::move(pending_frames));
         }
         else if (
             allocator &&
