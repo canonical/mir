@@ -677,7 +677,6 @@ public:
 
     void handle_event(MirInputEvent const* event, wl_resource* target)
     {
-        std::cout << "Hello! In WlPointer::handle_event" << std::endl;
         auto pointer_event = mir_input_event_get_pointer_event(event);
 
         auto serial = wl_display_next_serial(display);
@@ -802,7 +801,6 @@ public:
 
     void handle_event(MirInputEvent const* /*event*/, wl_resource* /*target*/)
     {
-        std::cout << "Hello! In WlTouch::handle_event" << std::endl;
     }
 
     // Touch interface
@@ -826,7 +824,6 @@ public:
 
     void register_listener(std::shared_ptr<InputInterface> const& listener)
     {
-        std::cout << "Registering listener" << std::endl;
         listeners.push_back(listener);
     }
 
@@ -845,7 +842,6 @@ public:
     {
         for (auto& listener : listeners)
         {
-            std::cout << "Sending event" << std::endl;
             listener->handle_event(event, target);
         }
     }
