@@ -28,8 +28,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #include <wayland-client.h>
+#include <wayland-client-core.h>
 
 struct globals
 {
@@ -37,6 +39,7 @@ struct globals
     struct wl_shm* shm;
     struct wl_seat* seat;
     struct wl_output* output;
+    struct wl_shell* shell;
 };
 
 static void new_global(
@@ -66,6 +69,10 @@ static void new_global(
     else if (strcmp(interface, "wl_output") == 0)
     {
         globals->output = wl_registry_bind(registry, id, &wl_output_interface, 2);
+    }
+    else if (strcmp(interface, "wl_shell") == 0)
+    {
+        globals->shell = wl_registry_bind(registry, id, &wl_shell_interface, 1);
     }
 }
 
@@ -113,23 +120,86 @@ make_shm_pool(struct wl_shm* shm, int size, void **data)
 struct draw_context
 {
     void* content_area;
+    struct wl_display* display;
     struct wl_surface* surface;
+    struct wl_callback* new_frame_signal;
+    struct Buffers
+    {
+        struct wl_buffer* buffer;
+        bool available;
+    } buffers[4];
+    bool waiting_for_buffer;
 };
 
-static void draw_new_stuff(void* data, struct wl_buffer* buffer)
+static struct wl_buffer* find_free_buffer(struct draw_context* ctx)
 {
-    static unsigned char current_value = 0;
+    for (int i = 0; i < 4 ; ++i)
+    {
+        if (ctx->buffers[i].available)
+        {
+            ctx->buffers[i].available = false;
+            return ctx->buffers[i].buffer;
+        }
+    }
+    return NULL;
+}
+
+static void draw_new_stuff(void* data, struct wl_callback* callback, uint32_t time);
+
+static const struct wl_callback_listener frame_listener =
+{
+    .done = &draw_new_stuff
+};
+
+static void update_free_buffers(void* data, struct wl_buffer* buffer)
+{
     struct draw_context* ctx = data;
+    for (int i = 0; i < 4 ; ++i)
+    {
+        if (ctx->buffers[i].buffer == buffer)
+        {
+            ctx->buffers[i].available = true;
+        }
+    }
+
+    if (ctx->waiting_for_buffer)
+    {
+        struct wl_callback* fake_frame = wl_display_sync(ctx->display);
+        wl_callback_add_listener(fake_frame, &frame_listener, ctx);
+    }
+
+    ctx->waiting_for_buffer = false;
+}
+
+static void draw_new_stuff(
+    void* data,
+    struct wl_callback* callback,
+    uint32_t time)
+{
+    (void)time;
+    static unsigned char current_value = 128;
+    struct draw_context* ctx = data;
+
+    wl_callback_destroy(callback);
+
+    struct wl_buffer* buffer = find_free_buffer(ctx);
+    if (!buffer)
+    {
+        ctx->waiting_for_buffer = false;
+        return;
+    }
 
     memset(ctx->content_area, current_value, 400 * 400 * 4);
     ++current_value;
 
+    ctx->new_frame_signal = wl_surface_frame(ctx->surface);
+    wl_callback_add_listener(ctx->new_frame_signal, &frame_listener, ctx);
     wl_surface_attach(ctx->surface, buffer, 0, 0);
     wl_surface_commit(ctx->surface);
 }
 
 static struct wl_buffer_listener const buffer_listener = {
-    .release = draw_new_stuff
+    .release = update_free_buffers
 };
 
 void mouse_enter(
@@ -293,15 +363,24 @@ int main()
     void* pool_data = NULL;
     struct wl_shm_pool* shm_pool = make_shm_pool(globals->shm, 400 * 400 * 4, &pool_data);
 
-    struct wl_buffer* buffer = wl_shm_pool_create_buffer(shm_pool, 0, 400, 400, 400, WL_SHM_FORMAT_ARGB8888);
-
     struct draw_context* ctx = calloc(sizeof *ctx, 1);
+
+    for (int i = 0; i < 4; ++i)
+    {
+        ctx->buffers[i].buffer = wl_shm_pool_create_buffer(shm_pool, 0, 400, 400, 400, WL_SHM_FORMAT_ARGB8888);
+        ctx->buffers[i].available = true;
+        wl_buffer_add_listener(ctx->buffers[i].buffer, &buffer_listener, ctx);
+    }
+
+    ctx->display = display;
     ctx->surface = wl_compositor_create_surface(globals->compositor);
     ctx->content_area = pool_data;
 
-    draw_new_stuff(ctx, buffer);
+    struct wl_shell_surface* window = wl_shell_get_shell_surface(globals->shell, ctx->surface);
+    wl_shell_surface_set_toplevel(window);
 
-    wl_buffer_add_listener(buffer, &buffer_listener, ctx);
+    struct wl_callback* first_frame = wl_display_sync(display);
+    wl_callback_add_listener(first_frame, &frame_listener, ctx);
 
     wl_output_add_listener(globals->output, &output_listener, NULL);
 
