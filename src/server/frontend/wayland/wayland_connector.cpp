@@ -769,7 +769,7 @@ public:
     // Pointer interface
 private:
     wl_display* const display;
-    MirPointerButtons last_set;
+    MirPointerButtons last_set{0};
     float last_x, last_y, last_vscroll, last_hscroll;
 
     void set_cursor(uint32_t serial, std::experimental::optional<wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) override;
