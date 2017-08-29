@@ -264,9 +264,11 @@ Description: Display server for Ubuntu - client debug interface headers
 
 Package: mir-demos
 Architecture: linux-any
+Breaks: miral-examples
+Replaces: miral-examples
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-Recommends: fonts-liberation
+Recommends: fonts-liberation,  dmz-cursor-theme
 Description: Display server for Ubuntu - demonstration programs
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -488,13 +490,3 @@ Description: Display server for Ubuntu - GL Renderer development files
  Contains header files that define the interfaces through which platforms and
  renderers access the functionality needed to render with GL.
 
-Package: miral-examples
-Architecture: linux-any
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-Recommends: dmz-cursor-theme,
-Description: Display server for Ubuntu - demonstration programs
- MirAL provides an ABI-stable abstraction layer for Mir based shells,
- insulating them from mirserver ABI breaks.
- .
- Contains demo applications that use the MirAL abstraction layer
