@@ -1461,6 +1461,7 @@ private:
 
         {
             std::lock_guard<std::recursive_mutex> lock{shim->executor->mutex};
+            wl_event_source_remove(shim->executor->notify_source);
         }
         delete shim;
     }
