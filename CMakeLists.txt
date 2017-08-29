@@ -73,6 +73,16 @@ if(HAS_W_MISMATCHED_TAGS)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-mismatched-tags")
 endif()
 
+# GCC 7.1 fixed a bug in the ARM ABI, which results in some std::vector methods
+# (among others) generating this warning.
+#
+# There's nothing we can do about it; everything just needs to be rebuilt with
+# GCC 7.1.
+check_cxx_compiler_flag(-Wpsabi HAS_W_PSABI)
+if(HAS_W_PSABI)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
+endif()
+
 option(MIR_USE_LD_GOLD "Enables the \"gold\" linker." OFF)
 if(MIR_USE_LD_GOLD)
   set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold")
