@@ -11,6 +11,11 @@ configure_file(
   @ONLY
 )
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mirclientcpp.pc.in
+  ${CMAKE_CURRENT_BINARY_DIR}/mirclientcpp.pc
+  @ONLY
+)
+
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/mirclient-debug-extension.pc.in
   ${CMAKE_CURRENT_BINARY_DIR}/mirclient-debug-extension.pc
@@ -106,6 +111,13 @@ add_library(mirclientobjects OBJECT
   mir_extension_core.cpp
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/mir_extension_core.h
   ${CMAKE_SOURCE_DIR}/include/client/mir_toolkit/extensions/drag_and_drop.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir/client/blob.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir/client/cookie.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir/client/window_spec.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir/client/window_id.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir/client/connection.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir/client/display_config.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir/client/window.h
 )
 
 # Ensure protobuf C++ headers have been produced before
@@ -153,6 +165,7 @@ install(
 
 install(
   FILES ${CMAKE_CURRENT_BINARY_DIR}/mirclient.pc
+        ${CMAKE_CURRENT_BINARY_DIR}/mirclientcpp.pc
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 

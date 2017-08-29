@@ -1,8 +1,10 @@
 usr/include/mirclient/mir_toolkit/*.h
 usr/include/mirclient/mir_toolkit/extensions/*.h
+usr/include/mirclient/mir/client/*.h
 usr/include/mirclient/mir/events/*.h
 usr/include/mirclient/mir/event_printer.h
 usr/include/mirclient/mir_toolkit/events
 usr/include/mirclient/mir_toolkit/rs/mir_render_surface.h
 usr/lib/*/pkgconfig/mirclient.pc
+usr/lib/*/pkgconfig/mirclientcpp.pc
 usr/lib/*/libmirclient.so

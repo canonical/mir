@@ -196,6 +196,8 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
+Breaks: libmirclientcpp-dev
+Replaces: libmirclientcpp-dev
 Depends: libmirclient9 (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libmircookie-dev (= ${binary:Version}),
@@ -506,17 +508,6 @@ Description: Developer files for the Mir ABI-stable abstraction layer
  .
  Contains header files required for development using the MirAL abstraction
  layer.
-
-Package: libmirclientcpp-dev
-Section: libdevel
-Architecture: linux-any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirclient-dev,
-Description: A C++ wrapper for libmirclient-dev
- Provides RAII (and other facilities) for Mir client library types.
- .
- Contains header files useful for C++ development against Mir.
 
 Package: miral-examples
 Architecture: linux-any
