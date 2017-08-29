@@ -75,6 +75,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Breaks: libmiral2
 Replaces: libmiral2
+Provides: libmiral2
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - server library
@@ -157,6 +158,7 @@ Depends: libmirserver45 (= ${binary:Version}),
          ${misc:Depends},
 Breaks:   libmiral-dev
 Replaces: libmiral-dev
+Provides: libmiral-dev
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -202,6 +204,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Breaks: libmirclientcpp-dev
 Replaces: libmirclientcpp-dev
+Provides: libmirclientcpp-dev
 Depends: libmirclient9 (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libmircookie-dev (= ${binary:Version}),
