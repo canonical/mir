@@ -520,7 +520,6 @@ private:
 
     std::shared_ptr<std::mutex> buffer_mutex;
     wl_resource* buffer;
-    wl_listener destruction_listener;
 
     EGLDisplay dpy;
     EGLImageKHR egl_image;
