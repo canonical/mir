@@ -155,6 +155,8 @@ Depends: libmirserver45 (= ${binary:Version}),
          libglm-dev,
          uuid-dev,
          ${misc:Depends},
+Breaks:   libmiral-dev
+Replaces: libmiral-dev
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -482,21 +484,6 @@ Description: Display server for Ubuntu - GL Renderer development files
  .
  Contains header files that define the interfaces through which platforms and
  renderers access the functionality needed to render with GL.
-
-Package: libmiral-dev
-Section: libdevel
-Architecture: linux-any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver45 (= ${binary:Version}),
-         libmirclient-dev (= ${binary:Version}),
-         ${misc:Depends},
-Description: Developer files for the Mir ABI-stable abstraction layer
- MirAL provides an ABI-stable abstraction layer for Mir based shells,
- insulating them from mirserver ABI breaks.
- .
- Contains header files required for development using the MirAL abstraction
- layer.
 
 Package: miral-examples
 Architecture: linux-any

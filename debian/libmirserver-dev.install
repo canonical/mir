@@ -1,3 +1,6 @@
 usr/include/mirserver
+usr/include/miral
 usr/lib/*/pkgconfig/mirserver.pc
+usr/lib/*/pkgconfig/miral.pc
 usr/lib/*/libmirserver.so
+usr/lib/*/libmiral.so
