@@ -539,7 +539,7 @@ void mgm::BufferAllocator::bind_display(wl_display* display)
     dpy = eglGetCurrentDisplay();
 
     if (dpy == EGL_NO_DISPLAY)
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Fuck"}));
+        BOOST_THROW_EXCEPTION((std::logic_error{"WaylandAllocator::bind_display called without an active EGL Display"}));
 
     if (!egl_extensions->wayland)
     {
