@@ -229,24 +229,10 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
     EXPECT_EQ(trans, got);
 }
 
-TEST_F(BasicSurfaceTest, test_surface_set_alpha_notifies_changes)
-{
-    using namespace testing;
-    EXPECT_CALL(mock_callback, call())
-        .Times(1);
-
-    surface.add_observer(observer);
-
-    float alpha = 0.5f;
-    surface.set_alpha(0.5f);
-    EXPECT_THAT(alpha, FloatEq(surface.alpha()));
-}
-
 TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
 {
     using namespace testing;
 
-    EXPECT_THAT(1.0f, FloatEq(surface.alpha()));
     auto renderables = surface.generate_renderables(compositor_id);
     ASSERT_THAT(renderables.size(), testing::Eq(1));
     EXPECT_FALSE(renderables[0]->shaped());

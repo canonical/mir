@@ -53,7 +53,6 @@ public:
     graphics::RenderableList generate_renderables(compositor::CompositorID) const override { return {}; }
     int buffers_ready_for_compositor(void const*) const override { return 0; }
 
-    float alpha() const override { return 0.0f;}
     MirWindowType type() const override { return mir_window_type_normal; }
     MirWindowState state() const override { return mir_window_state_unknown; }
 

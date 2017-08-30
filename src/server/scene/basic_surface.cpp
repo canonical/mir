@@ -289,12 +289,6 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
     observers.moved_to(top_left);
 }
 
-float ms::BasicSurface::alpha() const
-{
-    std::unique_lock<std::mutex> lk(guard);
-    return surface_alpha;
-}
-
 void ms::BasicSurface::set_hidden(bool hide)
 {
     {

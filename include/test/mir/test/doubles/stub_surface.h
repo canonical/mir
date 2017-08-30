@@ -32,7 +32,6 @@ struct StubSurface : scene::Surface
 {
     std::string name() const override;
     void move_to(geometry::Point const& top_left) override;
-    float alpha() const override;
     geometry::Size size() const override;
     geometry::Size client_size() const override;
     std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const override;
