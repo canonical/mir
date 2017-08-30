@@ -1,5 +1,5 @@
 libdir=@LIBDIR@
-includedir=@INCLUDEDIR@
+includedir=@INCLUDEDIR@/miral
 
 Name: miral
 Description: Mir Abstraction Layer library
