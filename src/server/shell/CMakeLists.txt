@@ -2,8 +2,6 @@ set(
   SHELL_SOURCES
 
   abstract_shell.cpp
-  basic_window_manager.cpp  ${CMAKE_SOURCE_DIR}/include/server/mir/shell/basic_window_manager.h
-  canonical_window_manager.cpp  ${CMAKE_SOURCE_DIR}/include/server/mir/shell/canonical_window_manager.h
   frontend_shell.cpp
   graphics_display_layout.cpp
   graphics_display_layout.h
