@@ -130,7 +130,7 @@ void me::TestClientRunner::operator()(mir::Server& server)
 
                 setenv("MIR_SOCKET", connect_string, 1);
 
-                auto const client = options1->get<std::__cxx11::string>(test_client_opt);
+                auto const client = options1->get<std::string>(test_client_opt);
                 execlp(client.c_str(), client.c_str(), static_cast<char const*>(nullptr));
                 // If execl() returns then something is badly wrong
                 log(logging::Severity::critical, "mir::examples",
