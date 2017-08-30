@@ -39,10 +39,6 @@ public:
     virtual void rendered() = 0;
     virtual void occluded() = 0;
 
-    //TODO: Decoration is opaque on purpose. It is only used by an internal example,
-    //      and this function should be removed from the public API.
-    virtual std::unique_ptr<Decoration> decoration() const = 0; 
-
 protected:
     SceneElement() = default;
     SceneElement(SceneElement const&) = delete;
