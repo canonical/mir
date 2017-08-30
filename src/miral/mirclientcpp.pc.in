@@ -1,0 +1,7 @@
+includedir=@INCLUDEDIR@/miral
+
+Name: mirclientcpp
+Description: Mir Abstraction Layer C++ wrapper for mirclient
+Version: @MIRAL_VERSION@
+Requires: mirclient
+Cflags: -I${includedir}

@@ -81,8 +81,6 @@ if(MIR_USE_LD_GOLD)
 endif()
 
 # Link time optimization allows leaner, cleaner libraries
-message(STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER})
-
 option(MIR_LINK_TIME_OPTIMIZATION "Enables the linker to optimize binaries." OFF)
 if(MIR_LINK_TIME_OPTIMIZATION)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -flto -ffat-lto-objects")
