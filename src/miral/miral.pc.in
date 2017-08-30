@@ -1,0 +1,9 @@
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@
+
+Name: miral
+Description: Mir Abstraction Layer library
+Version: @MIRAL_VERSION@
+Requires: mirclientcpp
+Libs: -L${libdir} -lmiral
+Cflags: -I${includedir}

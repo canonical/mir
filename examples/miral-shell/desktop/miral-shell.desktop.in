@@ -1,0 +1,18 @@
+[Desktop Entry]
+Version=1.0
+Name=Miral Shell
+GenericName=Mir Shell
+Comment=A Mir Shell
+Keywords=Mir;Server;Shell
+Type=Application
+Icon=@ICON_NAME@
+Exec=@PROGRAM_NAME@
+Terminal=false
+Categories=Utility
+#MimeType=
+X-Ubuntu-Touch=true
+X-Ubuntu-Gettext-Domain=miral-shell
+X-Ubuntu-Single-Instance=true
+X-Ubuntu-Default-Department-ID=miral-shell
+#X-Screenshot=
+X-Ubuntu-Splash-Color=#FFFFFF

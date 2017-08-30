@@ -3,6 +3,7 @@ mir (1.0.0-0ubuntu1) UNRELEASED; urgency=medium
   * New upstream release 1.0.0(https://launchpad.net/mir/+milestone/1.0.0)
     - ABI summary:
       . mirclient ABI unchanged at 9
+      . miral ABI introduced at 2
       . mirserver ABI bumped to 45
       . mircommon ABI unchanged at 7
       . mirplatform ABI unchanged at 61
@@ -15,6 +16,8 @@ mir (1.0.0-0ubuntu1) UNRELEASED; urgency=medium
       . Update licences to (L)GPL3 or (L)GPL2.
       . [mir_demo_client_display_config] add orientation changing
       . RPC: Don't require the server ACK client's buffer-release requests.
+      . Added libmirclientcpp to Mir source package
+      . Added libmiral to Mir source package
     - Bugs fixed:
       . Fix handling of invalid display configuration. (LP: #1643446)
       . Move full responsibility for buffer IPC into frontend. (LP: #1395421)
