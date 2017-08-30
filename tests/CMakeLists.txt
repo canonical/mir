@@ -70,6 +70,8 @@ if (MIR_BUILD_PRIVILEGED_TESTS)
     add_subdirectory(privileged-tests/)
 endif(MIR_BUILD_PRIVILEGED_TESTS)
 
+add_subdirectory(miral)
+
 # Private test headers used by integration and unit tests
 include_directories(
   include
