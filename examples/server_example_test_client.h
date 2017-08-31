@@ -20,9 +20,6 @@
 #define MIR_EXAMPLE_TEST_CLIENT_H_
 
 #include <memory>
-#include <future>
-
-#include "mir/main_loop.h"
 
 namespace mir
 {
@@ -30,14 +27,21 @@ class Server;
 
 namespace examples
 {
-struct ClientContext
+
+class TestClientRunner
 {
-    std::unique_ptr<mir::time::Alarm> client_kill_action;
-    std::unique_ptr<mir::time::Alarm> server_stop_action;
-    std::atomic<bool> test_failed;
+public:
+    TestClientRunner();
+
+    void operator()(mir::Server& server);
+
+    bool test_failed() const;
+
+private:
+    struct Self;
+    std::shared_ptr<Self> self;
 };
 
-void add_test_client_option_to(mir::Server& server, ClientContext& context);
 }
 }
 
