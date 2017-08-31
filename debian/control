@@ -218,7 +218,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Breaks: libmirclientcpp-dev
 Replaces: libmirclientcpp-dev
-Provides: libmirclientcpp-dev
+Provides: libmirclientcpp-dev (=1.5)
 Depends: libmirclient9 (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libmircookie-dev (= ${binary:Version}),
