@@ -66,14 +66,11 @@ Description: Display server for Ubuntu - RPC definitions
  Contains the shared library containing the Google Protobuf definitions
  required for Mir clients and servers.
 
-Package: libmirserveral2
+Package: libmirserveral1
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Breaks: libmiral2
-Replaces: libmiral2
-Provides: libmiral2
 Depends: ${misc:Depends},
          ${shlibs:Depends},
 Description: Display server for Ubuntu - server library
@@ -163,7 +160,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserveral2 (= ${binary:Version}),
+Depends: libmirserveral1 (= ${binary:Version}),
          libmirserver45 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
@@ -172,7 +169,7 @@ Depends: libmirserveral2 (= ${binary:Version}),
          ${misc:Depends},
 Breaks:   libmiral-dev
 Replaces: libmiral-dev
-Provides: libmiral-dev
+Provides: libmiral-dev (=1.5)
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.

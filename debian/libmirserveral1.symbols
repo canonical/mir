@@ -1,4 +1,4 @@
-libmiral.so.2 libmiral2 #MINVER#
+libmirserveral.so.1 libmirserveral1 #MINVER#
  MIRAL_1.0@MIRAL_1.0 1.0.0
  (c++)"miral::WindowInfo::height_inc(mir::geometry::detail::IntWrapper<mir::geometry::DeltaYTag>)@MIRAL_1.0" 1.0.0
  (c++)"miral::WindowInfo::max_aspect(miral::WindowSpecification::AspectRatio)@MIRAL_1.0" 1.0.0
