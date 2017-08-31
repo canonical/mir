@@ -290,12 +290,11 @@ class WlShmBuffer :
 public:
     WlShmBuffer(
         wl_resource* buffer,
-        std::shared_ptr<mir::Executor> const& executor,
-        std::vector<std::unique_ptr<wl_resource, void(*)(wl_resource*)>>&& frames)
+        std::function<void()>&& on_consumed)
         : buffer{wl_shm_buffer_get(buffer)},
           resource{buffer},
-          executor{executor},
-          frames{std::move(frames)}
+          consumed{false},
+          on_consumed{std::move(on_consumed)}
     {
         if (!buffer)
         {
@@ -357,18 +356,11 @@ public:
                });
         }
 
-        for (auto&& frame : frames)
+        if (!consumed)
         {
-            auto framer = std::move(frame);
-            executor->spawn(
-                [frame = framer.release(), deleter = framer.get_deleter()]()
-                {
-                    wl_callback_send_done(frame, 0);
-                    wl_client_flush(wl_resource_get_client(frame));
-                    deleter(frame);
-                });
+            on_consumed();
+            consumed = true;
         }
-        frames.clear();
     }
 
     void bind() override
@@ -404,8 +396,8 @@ public:
 private:
     wl_shm_buffer* const buffer;
     wl_resource* const resource;
-    std::shared_ptr<mir::Executor> const& executor;
-    std::vector<std::unique_ptr<wl_resource, void(*)(wl_resource*)>> frames;
+    bool consumed;
+    std::function<void()> on_consumed;
 };
 
 class WlSurface : public wayland::Surface
@@ -420,7 +412,8 @@ public:
         : Surface(client, parent, id),
           allocator{allocator},
           executor{executor},
-          pending_buffer{nullptr}
+          pending_buffer{nullptr},
+          pending_frames{std::make_shared<std::vector<wl_resource*>>()}
     {
         auto session = session_for_client(client);
         mg::BufferProperties const props{
@@ -440,7 +433,7 @@ private:
     std::shared_ptr<mir::Executor> const executor;
 
     wl_resource* pending_buffer;
-    std::vector<std::unique_ptr<wl_resource, decltype(&wl_resource_destroy)>> pending_frames;
+    std::shared_ptr<std::vector<wl_resource*>> const pending_frames;
 
     void destroy();
     void attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y);
@@ -492,9 +485,8 @@ void WlSurface::damage_buffer(int32_t x, int32_t y, int32_t width, int32_t heigh
 
 void WlSurface::frame(uint32_t callback)
 {
-    pending_frames.emplace_back(
-        wl_resource_create(client, &wl_callback_interface, 1, callback),
-        &wl_resource_destroy);
+    pending_frames->emplace_back(
+        wl_resource_create(client, &wl_callback_interface, 1, callback));
 }
 
 void WlSurface::set_opaque_region(const std::experimental::optional<wl_resource*>& region)
@@ -513,13 +505,40 @@ void WlSurface::commit()
     {
         std::shared_ptr<mg::Buffer> mir_buffer;
         auto shm_buffer = wl_shm_buffer_get(pending_buffer);
+        auto send_frame_notifications =
+            [executor = executor, frames = pending_frames]()
+            {
+                executor->spawn(
+                    [frames]()
+                    {
+                        /*
+                         * There is no synchronisation required here -
+                         * This is run on the WaylandExecutor, and is guaranteed to run on the
+                         * wl_event_loop's thread.
+                         *
+                         * The only other accessors of WlSurface are also on the wl_event_loop,
+                         * so this is guaranteed not to be reentrant.
+                         */
+                        for (auto frame : *frames)
+                        {
+                            wl_callback_send_done(frame, 0);
+                            wl_resource_destroy(frame);
+                        }
+                        frames->clear();
+                    });
+            };
+
         if (shm_buffer)
         {
-            mir_buffer = std::make_shared<WlShmBuffer>(pending_buffer, executor, std::move(pending_frames));
+            mir_buffer = std::make_shared<WlShmBuffer>(
+                pending_buffer,
+                std::move(send_frame_notifications));
         }
         else if (
             allocator &&
-            (mir_buffer = allocator->buffer_from_resource(pending_buffer, executor, std::move(pending_frames))))
+            (mir_buffer = allocator->buffer_from_resource(
+                pending_buffer,
+                std::move(send_frame_notifications))))
         {
         }
         else
@@ -530,7 +549,6 @@ void WlSurface::commit()
         stream->submit_buffer(mir_buffer);
 
         pending_buffer = nullptr;
-        pending_frames.clear();
     }
 }
 

@@ -39,10 +39,7 @@ public:
     virtual ~WaylandAllocator() = default;
 
     virtual void bind_display(wl_display* display) = 0;
-    virtual std::unique_ptr<Buffer> buffer_from_resource(
-        wl_resource* buffer,
-        std::shared_ptr<Executor> const& executor,
-        std::vector<std::unique_ptr<wl_resource, void(*)(wl_resource*)>>&& frames) = 0;
+    virtual std::unique_ptr<Buffer> buffer_from_resource (wl_resource* buffer, std::function<void ()>&& on_consumed) = 0;
 };
 }
 }

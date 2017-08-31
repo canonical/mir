@@ -337,14 +337,12 @@ public:
         EGLDisplay dpy,
         wl_resource* buffer,
         std::shared_ptr<mg::EGLExtensions> const& extensions,
-        std::shared_ptr<mir::Executor> const& eventloop_executor,
-        std::vector<std::unique_ptr<wl_resource, void(*)(wl_resource*)>>&& frames)
+        std::function<void()>&& on_consumed)
         : buffer{buffer},
           dpy{dpy},
           egl_image{EGL_NO_IMAGE_KHR},
           extensions{extensions},
-          executor{eventloop_executor},
-          frames{std::move(frames)}
+          on_consumed{std::move(on_consumed)}
     {
         if (auto notifier = wl_resource_get_destroy_listener(buffer, &on_buffer_destroyed))
         {
@@ -443,18 +441,7 @@ public:
             if (egl_image == EGL_NO_IMAGE_KHR)
                 BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage"));
 
-            for (auto&& frame : frames)
-            {
-                auto framer = std::move(frame);
-                executor->spawn(
-                    [frame = framer.release(), deleter = framer.get_deleter()]()
-                    {
-                        wl_callback_send_done(frame, 0);
-                        wl_client_flush(wl_resource_get_client(frame));
-                        deleter(frame);
-                    });
-            }
-            frames.clear();
+            on_consumed();
         }
         lock.unlock();
 
@@ -529,8 +516,7 @@ private:
 
     std::shared_ptr<mg::EGLExtensions> const extensions;
 
-    std::shared_ptr<mir::Executor> const executor;
-    std::vector<std::unique_ptr<wl_resource, void(*)(wl_resource*)>> frames;
+    std::function<void()> on_consumed;
 };
 }
 
@@ -557,12 +543,9 @@ void mgm::BufferAllocator::bind_display(wl_display* display)
     }
 }
 
-std::unique_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource(
-    wl_resource* buffer,
-    std::shared_ptr<Executor> const& executor,
-    std::vector<std::unique_ptr<wl_resource, void(*)(wl_resource*)>>&& frames)
+std::unique_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource (wl_resource* buffer, std::function<void ()>&& on_consumed)
 {
     if (egl_extensions->wayland)
-        return std::make_unique<WaylandBuffer>(dpy, buffer, egl_extensions, executor, std::move(frames));
+        return std::make_unique<WaylandBuffer>(dpy, buffer, egl_extensions, std::move(on_consumed));
     return nullptr;
 }
