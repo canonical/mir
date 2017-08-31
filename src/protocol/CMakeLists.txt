@@ -1,7 +1,6 @@
 pkg_check_modules(XMLPP libxml++-2.6 REQUIRED)
 
 include_directories(SYSTEM ${XMLPP_INCLUDE_DIRS})
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(wrapper-generator
 
@@ -13,18 +12,16 @@ target_link_libraries(wrapper-generator
   ${XMLPP_LDFLAGS} ${XMLPP_LIBRARIES}
 )
 
-# Export the include directories
-list(APPEND MIR_GENERATED_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
-
-set(MIR_GENERATED_INCLUDE_DIRECTORIES
-  ${MIR_GENERATED_INCLUDE_DIRECTORIES}
-  PARENT_SCOPE
+get_filename_component(
+  GENERATED_HEADER src/server/frontend/wayland/core_generated_interfaces.h
+  ABSOLUTE
+  BASE_DIR ${PROJECT_SOURCE_DIR}
 )
 
-add_custom_command(OUTPUT core_generated_interfaces.h
-  COMMAND "sh" ARGS "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator wl_ /usr/share/wayland/wayland.xml >core_generated_interfaces.h"
+add_custom_command(OUTPUT ${GENERATED_HEADER}
+  COMMAND "sh" ARGS "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator wl_ /usr/share/wayland/wayland.xml >${GENERATED_HEADER}"
   DEPENDS wrapper-generator
   DEPENDS /usr/share/wayland/wayland.xml
 )
 
-add_custom_target(wayland-headers DEPENDS core_generated_interfaces.h)
+add_custom_target(refresh-wayland-wrapper DEPENDS ${GENERATED_HEADER})
