@@ -53,7 +53,7 @@ MIR_DEPRECATE_RENDERSURFACES_FOR_RENAME;
  * \param [in] connection                       A valid connection
  * \param [in] width                            The width in pixels
  * \param [in] height                           The height in pixels
- * \param [in] MirRenderSurfaceCallback         Callback to be invoked when the request completes.
+ * \param [in] callback                         Callback to be invoked when the request completes.
  *                                              The callback is guaranteed to be called and called
  *                                              with a non-null MirRenderSurface*, but the render
  *                                              surface may be invalid in case of error.

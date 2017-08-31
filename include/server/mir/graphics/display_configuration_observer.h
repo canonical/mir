@@ -57,7 +57,7 @@ public:
     /**
      * Notification after updating base display configuration.
      *
-     * \param [in] config   The configuration that has just been updated.
+     * \param [in] base_config   The configuration that has just been updated.
      */
     virtual void base_configuration_updated(std::shared_ptr<DisplayConfiguration const> const& base_config) = 0;
 

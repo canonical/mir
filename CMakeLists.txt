@@ -53,6 +53,7 @@ endif()
 include (cmake/EnableCoverageReport.cmake)
 include (cmake/MirCommon.cmake)
 include (GNUInstallDirs)
+include (cmake/Doxygen.cmake)
 
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer;UBSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
@@ -300,7 +301,6 @@ if (MIR_ENABLE_TESTS)
 endif ()
 
 enable_coverage_report(mirserver)
-include (cmake/Doxygen.cmake)
 include (cmake/ABICheck.cmake)
 
 add_custom_target(ptest

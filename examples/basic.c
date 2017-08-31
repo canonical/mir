@@ -41,16 +41,12 @@
 /// \snippet basic.c surface_release_tag
 ///\subsection connection_release We release our connection
 /// \snippet basic.c connection_release_tag
-///\subsection get the raw, platform-specific buffer handle for the current buffer
-/// \snippet basic.c get_current_buffer_tag
+///\subsection get graphics region for the current buffer
+/// \snippet basic.c get_graphics_region_tag
 /// \example basic.c A simple mir client
 ///\section MirDemoState MirDemoState
 /// The handles needs to be accessible both to callbacks and to the control function.
 /// \snippet basic.c MirDemoState_tag
-///\section Callbacks Callbacks
-/// This program opens a mir connection and creates a surface. The handles
-/// needs to be accessible both to callbacks and to the control function.
-/// \snippet basic.c Callback_tag
 
 ///\internal [MirDemoState_tag]
 // Utility structure for the state of a single surface session.
@@ -143,11 +139,12 @@ int demo_client(const char* server, int buffer_swap_count)
     {
         // We can query the current graphics buffer attributes
         {
+            ///\internal [get_graphics_region_tag]
             MirGraphicsRegion graphics_region;
             mir_buffer_stream_get_graphics_region(bs, &graphics_region);
 
-            ///\internal [get_current_buffer_tag]
-            // In a real application we'd render into the current buffer
+            ///\internal [get_graphics_region_tag]
+            // In a real application we'd render into the graphics_region
         }
 
         ///\internal [swap_buffers_tag]

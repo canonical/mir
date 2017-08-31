@@ -46,6 +46,7 @@ public:
      * vertically maximized windows to allow adjustment for decorations.
      *
      * @param window_info   the window
+     * @param new_state     the new state
      * @param new_placement the suggested placement
      *
      * @return the confirmed placement of the window

@@ -103,6 +103,11 @@ private:
     std::shared_ptr<Self> self;
 };
 
+/**
+ *  Update the option to be called back *before* Mir initialization starts
+ *
+ *  \param clo  the option
+ */
 auto pre_init(CommandLineOption const& clo) -> CommandLineOption;
 }
 
