@@ -424,6 +424,9 @@ public:
 
         stream_id = session->create_buffer_stream(props);
         stream = session->get_buffer_stream(stream_id);
+
+        // wl_surface is specified to act in mailbox mode
+        stream->allow_framedropping(true);
     }
 
     mf::BufferStreamId stream_id;
