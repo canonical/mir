@@ -5,5 +5,5 @@ Name: miral
 Description: Mir Abstraction Layer library
 Version: @MIRAL_VERSION@
 Requires: mirclientcpp
-Libs: -L${libdir} -lmirserveral
+Libs: -L${libdir} -lmiral
 Cflags: -I${includedir}

@@ -13,7 +13,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
 )
 
-set(MIRAL_ABI 1)
+set(MIRAL_ABI 2)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
@@ -33,7 +33,7 @@ add_library(miral-internal STATIC
 
 set_source_files_properties(xcursor.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 
-add_library(mirserveral SHARED
+add_library(miral SHARED
     active_outputs.cpp                  ${miral_include}/miral/active_outputs.h
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
     application.cpp                     ${miral_include}/miral/application.h
@@ -72,12 +72,12 @@ target_include_directories(miral-internal
     PRIVATE ${MIRSERVER_INCLUDE_DIRS}
 )
 
-target_include_directories(mirserveral
+target_include_directories(miral
     PUBLIC  "${miral_include}" ${MIRCLIENT_INCLUDE_DIRS}
     PRIVATE ${MIRSERVER_INCLUDE_DIRS}
 )
 
-target_link_libraries(mirserveral
+target_link_libraries(miral
     PUBLIC
         mirclient
         mircommon
@@ -86,7 +86,7 @@ target_link_libraries(mirserveral
         mirserver
 )
 
-set_target_properties(mirserveral
+set_target_properties(miral
         PROPERTIES
         SOVERSION ${MIRAL_ABI}
         LINK_FLAGS "-Wl,--exclude-libs=ALL -Wl,--version-script,${symbol_map}"
@@ -96,9 +96,9 @@ set_target_properties(mirserveral
 # clang generates slightly different symbols (but we don't care)
 if (CMAKE_COMPILER_IS_GNUCXX)
     add_custom_target(check-miral-symbols ALL
-            DEPENDS mirserveral ${PROJECT_SOURCE_DIR}/debian/libmirserveral${MIRAL_ABI}.symbols
-            COMMAND rm -f ${CMAKE_CURRENT_BINARY_DIR}/libmirserveral${MIRAL_ABI}.symbols
-            COMMAND dpkg-gensymbols -e${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libmirserveral.so.${MIRAL_ABI} -plibmirserveral${MIRAL_ABI} -O${CMAKE_CURRENT_BINARY_DIR}/libmirserveral${MIRAL_ABI}.symbols
+            DEPENDS miral ${PROJECT_SOURCE_DIR}/debian/libmiral${MIRAL_ABI}.symbols
+            COMMAND rm -f ${CMAKE_CURRENT_BINARY_DIR}/libmiral${MIRAL_ABI}.symbols
+            COMMAND dpkg-gensymbols -e${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libmiral.so.${MIRAL_ABI} -plibmiral${MIRAL_ABI} -O${CMAKE_CURRENT_BINARY_DIR}/libmiral${MIRAL_ABI}.symbols
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
             VERBATIM
     )
@@ -117,6 +117,6 @@ configure_file(
     ${miral_include}/miral/version.h
 )
 
-install(TARGETS     mirserveral LIBRARY                     DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}")
+install(TARGETS     miral                           LIBRARY DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}")
 install(DIRECTORY   ${CMAKE_SOURCE_DIR}/include/miral       DESTINATION "${INCLUDEDIR}")
 install(FILES       ${CMAKE_CURRENT_BINARY_DIR}/miral.pc    DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig")

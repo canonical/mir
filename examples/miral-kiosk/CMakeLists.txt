@@ -9,4 +9,4 @@ mir_add_wrapped_executable(miral-kiosk
     sw_splash.cpp               sw_splash.h
 )
 
-target_link_libraries(miral-kiosk mirserveral)
+target_link_libraries(miral-kiosk miral)

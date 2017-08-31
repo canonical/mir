@@ -49,7 +49,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
 target_link_libraries(miral-test
     ${GTEST_BOTH_LIBRARIES}
     ${GMOCK_LIBRARIES}
-    mirserveral
+    miral
     miral-internal
     mir-test-assist
 )

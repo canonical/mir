@@ -59,7 +59,7 @@ target_include_directories(miral-shell PRIVATE ${FREETYPE_INCLUDE_DIRS})
 target_compile_definitions(miral-shell PRIVATE -DTYPO_SUPPORTS_FREETYPE)
 target_link_libraries(miral-shell
     miral-spinner
-    mirserveral
+    miral
     ${FREETYPE_LIBRARIES}
 )
 

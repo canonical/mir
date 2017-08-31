@@ -10,7 +10,7 @@ then
 fi
 
 packages="\
-    libmirserveral:MIRAL_ABI \
+    libmiral:MIRAL_ABI \
     libmircore:MIRCORE_ABI \
     libmirclient:MIRCLIENT_ABI \
     libmirclient-debug-extension:MIRCLIENT_DEBUG_EXTENSION_ABI \
