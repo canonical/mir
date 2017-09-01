@@ -36,11 +36,11 @@
 
 #include "mir/renderer/gl/texture_target.h"
 #include "mir/frontend/buffer_stream_id.h"
+#include "mir/frontend/display_changer.h"
 
 #include "mir/executor.h"
 
 #include "../../scene/global_event_sender.h"
-#include "../../scene/mediating_display_changer.h"
 
 #include <system_error>
 #include <sys/eventfd.h>
