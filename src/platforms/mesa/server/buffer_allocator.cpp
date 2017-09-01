@@ -29,7 +29,6 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_ipc_message.h"
-#include "../../../../include/server/mir/executor.h"
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 

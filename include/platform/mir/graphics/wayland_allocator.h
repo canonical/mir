@@ -27,8 +27,6 @@
 
 namespace mir
 {
-class Executor;
-
 namespace graphics
 {
 class Buffer;
