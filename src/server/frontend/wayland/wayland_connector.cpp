@@ -549,6 +549,16 @@ void WlSurface::commit()
             BOOST_THROW_EXCEPTION((std::runtime_error{"Received unhandled buffer type"}));
         }
 
+        /*
+         * This is technically incorrect - the resize and submit_buffer *should* be atomic,
+         * but are not, so a client in the process of resizing can have buffers rendered at
+         * an unexpected size.
+         *
+         * It should be good enough for now, though.
+         *
+         * TODO: Provide a mg::Buffer::logical_size() to do this properly.
+         */
+        stream->resize(mir_buffer->size());
         stream->submit_buffer(mir_buffer);
 
         pending_buffer = nullptr;
