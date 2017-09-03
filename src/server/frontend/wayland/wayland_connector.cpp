@@ -40,8 +40,6 @@
 
 #include "mir/executor.h"
 
-#include "../../scene/global_event_sender.h"
-
 #include <system_error>
 #include <sys/eventfd.h>
 #include <wayland-server-core.h>
@@ -1171,13 +1169,10 @@ class OutputManager
 public:
     OutputManager(
         wl_display* display,
-        std::shared_ptr<ms::GlobalEventSender> const& /*hotplug_sink*/,
         mf::DisplayChanger& display_config)
         : display{display}
     {
-//        hotplug_sink->subscribe_to_display_events(std::bind(&OutputManager::handle_configuration_change, this, std::placeholders::_1));
-//
-//        display_config.active_configuration()->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
+        // TODO: Also register display configuration listeners
         display_config.base_configuration()->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
     }
 
@@ -1521,7 +1516,6 @@ private:
 
 mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mf::Shell> const& shell,
-    std::shared_ptr<mf::EventSink> const& global_sink,
     DisplayChanger& display_config,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
     : display{wl_display_create(), &cleanup_display},
@@ -1557,7 +1551,6 @@ mf::WaylandConnector::WaylandConnector(
     seat_global = std::make_unique<mf::WlSeat>(display.get());
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
-        std::dynamic_pointer_cast<ms::GlobalEventSender>(global_sink),
         display_config);
     shell_global = std::make_unique<mf::WlShell>(display.get(), shell, *seat_global);
 

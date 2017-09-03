@@ -32,7 +32,6 @@ std::shared_ptr<mf::Connector>
         {
             return std::make_shared<mf::WaylandConnector>(
                 the_frontend_shell(),
-                the_global_event_sink(),
                 *the_mediating_display_changer(),
                 the_buffer_allocator());
         });

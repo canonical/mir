@@ -44,7 +44,6 @@ class WlSeat;
 class OutputManager;
 
 class Shell;
-class EventSink;
 class DisplayChanger;
 
 class WaylandConnector : public Connector
@@ -52,7 +51,6 @@ class WaylandConnector : public Connector
 public:
     WaylandConnector(
         std::shared_ptr<Shell> const& shell,
-        std::shared_ptr<EventSink> const& global_sink,
         DisplayChanger& display_config,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
 
