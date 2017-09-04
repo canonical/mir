@@ -713,39 +713,50 @@ class WlTouch;
 class WlKeyboard : public wayland::Keyboard
 {
 public:
-    WlKeyboard(wl_client* client, wl_resource* parent, uint32_t id)
-        : Keyboard(client, parent, id)
+    WlKeyboard(
+        wl_client* client,
+        wl_resource* parent,
+        uint32_t id,
+        std::shared_ptr<mir::Executor> const& executor)
+        : Keyboard(client, parent, id),
+          executor{executor}
     {
     }
 
     void handle_event(MirInputEvent const* event, wl_resource* /*target*/)
     {
-        std::cout << "Hello! In WlKeyboard::handle_event" << std::endl;
+        executor->spawn(
+            [ev = mir_event_ref(mir_input_event_get_event(event)), this] ()
+            {
+                int const serial = wl_display_next_serial(wl_client_get_display(client));
+                auto event = mir_event_get_input_event(ev);
+                auto key_event = mir_input_event_get_keyboard_event(event);
 
-        int serial = 0;
-        auto key_event = mir_input_event_get_keyboard_event(event);
-        switch (mir_keyboard_event_action(key_event))
-        {
-        case mir_keyboard_action_up:
-            wl_keyboard_send_key(resource,
-                serial,
-                mir_input_event_get_event_time(event) / 1000,
-                mir_keyboard_event_scan_code(key_event),
-                WL_KEYBOARD_KEY_STATE_RELEASED);
-            break;
-        case mir_keyboard_action_down:
-            wl_keyboard_send_key(resource,
-                serial,
-                mir_input_event_get_event_time(event) / 1000,
-                mir_keyboard_event_scan_code(key_event),
-                WL_KEYBOARD_KEY_STATE_PRESSED);
-        default:
-            break;
-        }
+                switch (mir_keyboard_event_action(key_event))
+                {
+                    case mir_keyboard_action_up:
+                        wl_keyboard_send_key(resource,
+                            serial,
+                            mir_input_event_get_event_time(event) / 1000,
+                            mir_keyboard_event_scan_code(key_event),
+                            WL_KEYBOARD_KEY_STATE_RELEASED);
+                    case mir_keyboard_action_down:
+                        wl_keyboard_send_key(resource,
+                            serial,
+                            mir_input_event_get_event_time(event) / 1000,
+                            mir_keyboard_event_scan_code(key_event),
+                            WL_KEYBOARD_KEY_STATE_PRESSED);
+                    default:
+                        break;
+                }
+                mir_event_unref(ev);
+            });
     }
 
 private:
-    virtual void release();
+    std::shared_ptr<mir::Executor> const executor;
+
+    void release() override;
 };
 
 void WlKeyboard::release()
@@ -778,108 +789,119 @@ class WlPointer : public wayland::Pointer
 {
 public:
 
-    WlPointer(wl_client* client, wl_resource* parent, uint32_t id)
+    WlPointer(
+        wl_client* client,
+        wl_resource* parent,
+        uint32_t id,
+        std::shared_ptr<mir::Executor> const& executor)
         : Pointer(client, parent, id),
-          display{wl_client_get_display(client)}
+          display{wl_client_get_display(client)},
+          executor{executor}
     {
     }
 
     void handle_event(MirInputEvent const* event, wl_resource* target)
     {
-        auto pointer_event = mir_input_event_get_pointer_event(event);
-
-        auto serial = wl_display_next_serial(display);
-
-        switch(mir_pointer_event_action(pointer_event))
-        {
-        case mir_pointer_action_button_down:
-        {
-            auto button = calc_button_difference(last_set, mir_pointer_event_buttons(pointer_event));
-            wl_pointer_send_button(
-                resource,
-                serial,
-                mir_input_event_get_event_time(event) / 1000,
-                button,
-                WL_POINTER_BUTTON_STATE_PRESSED);
-            last_set = mir_pointer_event_buttons(pointer_event);
-            break;
-        }
-        case mir_pointer_action_button_up:
-        {
-            auto button = calc_button_difference(last_set, mir_pointer_event_buttons(pointer_event));
-            wl_pointer_send_button(
-                resource,
-                serial,
-                mir_input_event_get_event_time(event) / 1000,
-                button,
-                WL_POINTER_BUTTON_STATE_RELEASED);
-            last_set = mir_pointer_event_buttons(pointer_event);
-            break;
-        }
-        case mir_pointer_action_enter:
-        {
-            wl_pointer_send_enter(
-                resource,
-                serial,
-                target,
-                wl_fixed_from_double(mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x)),
-                wl_fixed_from_double(mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y)));
-            break;
-        }
-        case mir_pointer_action_leave:
-        {
-            wl_pointer_send_leave(
-                resource,
-                serial,
-                target);
-            break;
-        }
-        case mir_pointer_action_motion:
-        {
-            auto x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x);
-            auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
-            auto vscroll = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_vscroll);
-            auto hscroll = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_hscroll);
-
-            if ((x != last_x) || (y != last_y))
+        executor->spawn(
+            [ev = mir_event_ref(mir_input_event_get_event(event)), target, this]()
             {
-                wl_pointer_send_motion(
-                    resource,
-                    mir_input_event_get_event_time(event) / 1000,
-                    wl_fixed_from_double(x),
-                    wl_fixed_from_double(y));
+                auto const serial = wl_display_next_serial(display);
+                auto const event = mir_event_get_input_event(ev);
+                auto const pointer_event = mir_input_event_get_pointer_event(event);
 
-                last_x = x;
-                last_y = y;
-            }
-            if (vscroll != last_vscroll)
-            {
-                wl_pointer_send_axis(
-                    resource,
-                    mir_input_event_get_event_time(event) / 1000,
-                    WL_POINTER_AXIS_VERTICAL_SCROLL,
-                    wl_fixed_from_double(vscroll));
-                last_vscroll = vscroll;
-            }
-            if (hscroll != last_hscroll)
-            {
-                wl_pointer_send_axis(
-                    resource,
-                    mir_input_event_get_event_time(event) / 1000,
-                    WL_POINTER_AXIS_HORIZONTAL_SCROLL,
-                    wl_fixed_from_double(hscroll));
-                last_hscroll = hscroll;
-            }
-            break;
-        }
-        case mir_pointer_actions:
-            break;
-        }
+                switch(mir_pointer_event_action(pointer_event))
+                {
+                    case mir_pointer_action_button_down:
+                    {
+                        auto button = calc_button_difference(last_set, mir_pointer_event_buttons(pointer_event));
+                        wl_pointer_send_button(
+                            resource,
+                            serial,
+                            mir_input_event_get_event_time(event) / 1000,
+                            button,
+                            WL_POINTER_BUTTON_STATE_PRESSED);
+                        last_set = mir_pointer_event_buttons(pointer_event);
+                        break;
+                    }
+                    case mir_pointer_action_button_up:
+                    {
+                        auto button = calc_button_difference(last_set, mir_pointer_event_buttons(pointer_event));
+                        wl_pointer_send_button(
+                            resource,
+                            serial,
+                            mir_input_event_get_event_time(event) / 1000,
+                            button,
+                            WL_POINTER_BUTTON_STATE_RELEASED);
+                        last_set = mir_pointer_event_buttons(pointer_event);
+                        break;
+                    }
+                    case mir_pointer_action_enter:
+                    {
+                        wl_pointer_send_enter(
+                            resource,
+                            serial,
+                            target,
+                            wl_fixed_from_double(mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x)),
+                            wl_fixed_from_double(mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y)));
+                        break;
+                    }
+                    case mir_pointer_action_leave:
+                    {
+                        wl_pointer_send_leave(
+                            resource,
+                            serial,
+                            target);
+                        break;
+                    }
+                    case mir_pointer_action_motion:
+                    {
+                        auto x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x);
+                        auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
+                        auto vscroll = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_vscroll);
+                        auto hscroll = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_hscroll);
+
+                        if ((x != last_x) || (y != last_y))
+                        {
+                            wl_pointer_send_motion(
+                                resource,
+                                mir_input_event_get_event_time(event) / 1000,
+                                wl_fixed_from_double(x),
+                                wl_fixed_from_double(y));
+
+                            last_x = x;
+                            last_y = y;
+                        }
+                        if (vscroll != last_vscroll)
+                        {
+                            wl_pointer_send_axis(
+                                resource,
+                                mir_input_event_get_event_time(event) / 1000,
+                                WL_POINTER_AXIS_VERTICAL_SCROLL,
+                                wl_fixed_from_double(vscroll));
+                            last_vscroll = vscroll;
+                        }
+                        if (hscroll != last_hscroll)
+                        {
+                            wl_pointer_send_axis(
+                                resource,
+                                mir_input_event_get_event_time(event) / 1000,
+                                WL_POINTER_AXIS_HORIZONTAL_SCROLL,
+                                wl_fixed_from_double(hscroll));
+                            last_hscroll = hscroll;
+                        }
+                        break;
+                    }
+                    case mir_pointer_actions:
+                        break;
+                }
+            });
     }
 
     // Pointer interface
 private:
     wl_display* const display;
+    std::shared_ptr<mir::Executor> const executor;
+
     MirPointerButtons last_set{0};
     float last_x, last_y, last_vscroll, last_hscroll;
 
@@ -903,7 +925,11 @@ void WlPointer::release()
 class WlTouch : public wayland::Touch
 {
 public:
-    WlTouch(wl_client* client, wl_resource* parent, uint32_t id)
+    WlTouch(
+        wl_client* client,
+        wl_resource* parent,
+        uint32_t id,
+        std::shared_ptr<mir::Executor> const& /*executor*/)
         : Touch(client, parent, id)
     {
     }
@@ -914,7 +940,7 @@ public:
 
     // Touch interface
 private:
-    virtual void release();
+    void release() override;
 };
 
 void WlTouch::release()
@@ -962,8 +988,9 @@ private:
 class WlSeat : public wayland::Seat
 {
 public:
-    WlSeat(wl_display* display)
-        : Seat(display, 4)
+    WlSeat(wl_display* display, std::shared_ptr<mir::Executor> const& executor)
+        : Seat(display, 4),
+          executor{executor}
     {
     }
 
@@ -975,6 +1002,7 @@ private:
     std::unordered_map<wl_client*, InputCtx<WlPointer>> mutable pointer;
     std::unordered_map<wl_client*, InputCtx<WlKeyboard>> mutable keyboard;
     std::unordered_map<wl_client*, InputCtx<WlTouch>> mutable touch;
+    std::shared_ptr<mir::Executor> const executor;
 
     void get_pointer(wl_client* client, wl_resource* resource, uint32_t id) override;
     void get_keyboard(wl_client* client, wl_resource* resource, uint32_t id) override;
@@ -999,17 +1027,17 @@ InputCtx<WlTouch> const& WlSeat::acquire_touch_reference(wl_client* client) cons
 
 void WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    keyboard[client].register_listener(std::make_shared<WlKeyboard>(client, resource, id));
+    keyboard[client].register_listener(std::make_shared<WlKeyboard>(client, resource, id, executor));
 }
 
 void WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    pointer[client].register_listener(std::make_shared<WlPointer>(client, resource, id));
+    pointer[client].register_listener(std::make_shared<WlPointer>(client, resource, id, executor));
 }
 
 void WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    touch[client].register_listener(std::make_shared<WlTouch>(client, resource, id));
+    touch[client].register_listener(std::make_shared<WlTouch>(client, resource, id, executor));
 }
 
 void WaylandEventSink::send_buffer(BufferStreamId /*id*/, graphics::Buffer& /*buffer*/, graphics::BufferIpcMsgType)
@@ -1626,11 +1654,13 @@ mf::WaylandConnector::WaylandConnector(
      * So far I've only found ones which expect wl_compositor before anything else,
      * so stick that first.
      */
+    auto const executor = WaylandExecutor::executor_for_event_loop(wl_display_get_event_loop(display.get()));
+
     compositor_global = std::make_unique<mf::WlCompositor>(
         display.get(),
-        WaylandExecutor::executor_for_event_loop(wl_display_get_event_loop(display.get())),
+        executor,
         this->allocator);
-    seat_global = std::make_unique<mf::WlSeat>(display.get());
+    seat_global = std::make_unique<mf::WlSeat>(display.get(), executor);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         display_config);
