@@ -277,6 +277,17 @@ MirPixelFormat wl_format_to_mir_format(uint32_t format)
             return mir_pixel_format_invalid;
     }
 }
+
+wl_shm_buffer* shm_buffer_from_resource_checked(wl_resource* resource)
+{
+    auto const buffer = wl_shm_buffer_get(resource);
+    if (!buffer)
+    {
+        BOOST_THROW_EXCEPTION((std::logic_error{"Tried to create WlShmBuffer from non-shm resource"}));
+    }
+
+    return buffer;
+}
 }
 
 class WlShmBuffer :
@@ -289,21 +300,50 @@ public:
     WlShmBuffer(
         wl_resource* buffer,
         std::function<void()>&& on_consumed)
-        : buffer{wl_shm_buffer_get(buffer)},
+        : buffer{shm_buffer_from_resource_checked(buffer)},
           resource{buffer},
+          size_{wl_shm_buffer_get_height(this->buffer), wl_shm_buffer_get_width(this->buffer)},
+          stride_{wl_shm_buffer_get_stride(this->buffer)},
+          format_{wl_format_to_mir_format(wl_shm_buffer_get_format(this->buffer))},
           consumed{false},
           on_consumed{std::move(on_consumed)}
     {
-        if (!buffer)
+        if (auto notifier = wl_resource_get_destroy_listener(buffer, &on_buffer_destroyed))
         {
-            BOOST_THROW_EXCEPTION((std::logic_error{"Tried to create WlShmBuffer from non-shm resource"}));
+            DestructionShim* shim;
+
+            shim = wl_container_of(notifier, shim, destruction_listener);
+
+            if (shim->associated_buffer)
+                BOOST_THROW_EXCEPTION(std::logic_error("Attempt to associate a single wl_buffer with multiple WlShmBuffer wrappers"));
+
+            shim->associated_buffer = this;
+            buffer_mutex = shim->mutex;
+        }
+        else
+        {
+            auto shim = new DestructionShim;
+            shim->destruction_listener.notify = &on_buffer_destroyed;
+            shim->associated_buffer = this;
+            buffer_mutex = shim->mutex;
+
+            wl_resource_add_destroy_listener(resource, &shim->destruction_listener);
         }
     }
 
     ~WlShmBuffer()
     {
-        wl_resource_queue_event(resource, WL_BUFFER_RELEASE);
-        wl_client_flush(wl_resource_get_client(resource));
+        std::lock_guard<std::mutex> lock{*buffer_mutex};
+        if (buffer)
+        {
+            wl_resource_queue_event(resource, WL_BUFFER_RELEASE);
+            auto notifier = wl_resource_get_destroy_listener(resource, &on_buffer_destroyed);
+            DestructionShim* shim;
+
+            shim = wl_container_of(notifier, shim, destruction_listener);
+
+            shim->associated_buffer = nullptr;
+        }
     }
 
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override
@@ -313,12 +353,12 @@ public:
 
     geometry::Size size() const override
     {
-        return {wl_shm_buffer_get_height(buffer), wl_shm_buffer_get_width(buffer)};
+        return size_;
     }
 
     MirPixelFormat pixel_format() const override
     {
-        return wl_format_to_mir_format(wl_shm_buffer_get_format(buffer));
+        return format_;
     }
 
     graphics::NativeBufferBase *native_buffer_base() override
@@ -331,7 +371,7 @@ public:
         GLenum format, type;
 
         if (get_gl_pixel_format(
-            wl_format_to_mir_format(wl_shm_buffer_get_format(buffer)),
+            format_,
             format,
             type))
         {
@@ -353,12 +393,6 @@ public:
                                 0, format, type, pixels);
                });
         }
-
-        if (!consumed)
-        {
-            on_consumed();
-            consumed = true;
-        }
     }
 
     void bind() override
@@ -372,6 +406,7 @@ public:
 
     void write(unsigned char const *pixels, size_t size) override
     {
+        std::lock_guard<std::mutex> lock{*buffer_mutex};
         wl_shm_buffer_begin_access(buffer);
         auto data = wl_shm_buffer_get_data(buffer);
         ::memcpy(data, pixels, size);
@@ -380,6 +415,19 @@ public:
 
     void read(std::function<void(unsigned char const *)> const &do_with_pixels) override
     {
+        std::lock_guard<std::mutex> lock{*buffer_mutex};
+        if (!buffer)
+        {
+            mir::log_warning("Attempt to read from WlShmBuffer after the wl_buffer has been destroyed");
+            return;
+        }
+
+        if (!consumed)
+        {
+            on_consumed();
+            consumed = true;
+        }
+
         wl_shm_buffer_begin_access(buffer);
         auto data = wl_shm_buffer_get_data(buffer);
         do_with_pixels(static_cast<unsigned char const*>(data));
@@ -388,12 +436,46 @@ public:
 
     geometry::Stride stride() const override
     {
-        return geom::Stride{wl_shm_buffer_get_stride(buffer)};
+        return stride_;
     }
 
 private:
-    wl_shm_buffer* const buffer;
+    static void on_buffer_destroyed(wl_listener* listener, void*)
+    {
+        static_assert(
+            std::is_standard_layout<DestructionShim>::value,
+            "DestructionShim must be Standard Layout for wl_container_of to be defined behaviour");
+
+        DestructionShim* shim;
+        shim = wl_container_of(listener, shim, destruction_listener);
+
+        {
+            std::lock_guard<std::mutex> lock{*shim->mutex};
+            if (shim->associated_buffer)
+            {
+                shim->associated_buffer->buffer = nullptr;
+            }
+        }
+
+        delete shim;
+    }
+
+    struct DestructionShim
+    {
+        std::shared_ptr<std::mutex> const mutex = std::make_shared<std::mutex>();
+        WlShmBuffer* associated_buffer;
+        wl_listener destruction_listener;
+    };
+
+    std::shared_ptr<std::mutex> buffer_mutex;
+
+    wl_shm_buffer* buffer;
     wl_resource* const resource;
+
+    geom::Size const size_;
+    geom::Stride const stride_;
+    MirPixelFormat const format_;
+
     bool consumed;
     std::function<void()> on_consumed;
 };
