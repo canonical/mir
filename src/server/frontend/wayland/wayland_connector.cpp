@@ -509,11 +509,18 @@ public:
         stream->allow_framedropping(true);
     }
 
+    void set_resize_handler(std::function<void(geom::Size)> const& handler)
+    {
+        resize_handler = handler;
+    }
+
     mf::BufferStreamId stream_id;
     std::shared_ptr<mf::BufferStream> stream;
 private:
     std::shared_ptr<mg::WaylandAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
+
+    std::function<void(geom::Size)> resize_handler;
 
     wl_resource* pending_buffer;
     std::shared_ptr<std::vector<wl_resource*>> const pending_frames;
@@ -639,6 +646,10 @@ void WlSurface::commit()
          * TODO: Provide a mg::Buffer::logical_size() to do this properly.
          */
         stream->resize(mir_buffer->size());
+        if (resize_handler)
+        {
+            resize_handler(mir_buffer->size());
+        }
         stream->submit_buffer(mir_buffer);
 
         pending_buffer = nullptr;
@@ -1353,6 +1364,15 @@ public:
             session,
             params,
             std::make_shared<SurfaceInputSink>(&seat, client, surface));
+
+        mir_surface.set_resize_handler(
+            [shell, session, id = surface_id](geom::Size new_size)
+            {
+                shell::SurfaceSpecification new_size_spec;
+                new_size_spec.width = new_size.width;
+                new_size_spec.height = new_size.height;
+                shell->modify_surface(session, id, new_size_spec);
+            });
 
         auto shim = new DestructionShim{session, shell, surface_id};
         shim->destruction_listener.notify = &cleanup_surface;
