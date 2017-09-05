@@ -24,6 +24,7 @@
 #include "mir/geometry/rectangle.h"
 #include "mir/options/option.h"
 #include "mir/test/doubles/null_logger.h"
+#include <mir/shell/canonical_window_manager.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -31,6 +32,7 @@
 
 namespace geom = mir::geometry;
 namespace ml = mir::logging;
+namespace msh = mir::shell;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
 namespace mt = mir::test;
@@ -53,6 +55,15 @@ mtf::AsyncServerRunner::AsyncServerRunner()
                 result = std::make_shared<mtd::NullLogger>();
 
             return result;
+        });
+    server.override_the_window_manager_builder([this](msh::FocusController* focus_controller)
+        {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+            return std::make_shared<msh::CanonicalWindowManager>(
+                    focus_controller,
+                    server.the_shell_display_layout());
+#pragma GCC diagnostic pop
         });
 }
 

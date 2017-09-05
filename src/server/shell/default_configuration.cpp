@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2015 Canonical Ltd.
+ * Copyright © 2013-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -16,10 +16,10 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
+#include <mir/shell/system_compositor_window_manager.h>
 #include "mir/default_server_configuration.h"
 #include "null_host_lifecycle_event_listener.h"
 
-#include "mir/shell/canonical_window_manager.h"
 #include "mir/input/composite_event_filter.h"
 #include "mir/shell/abstract_shell.h"
 #include "default_persistent_surface_store.h"
@@ -52,13 +52,11 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 
 auto mir::DefaultServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return [this](msh::FocusController* focus_controller)
-        { return std::make_shared<msh::CanonicalWindowManager>(
+        { return std::make_shared<msh::SystemCompositorWindowManager>(
             focus_controller,
-            the_shell_display_layout()); };
-#pragma GCC diagnostic pop
+            the_shell_display_layout(),
+            the_session_coordinator()); };
 }
 
 auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) -> std::shared_ptr<msh::Shell>
