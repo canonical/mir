@@ -1054,6 +1054,9 @@ private:
         }
         wl_resource_set_implementation(resource, &vtable, me, nullptr);
 
+        /*
+         * TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
+         */
         wl_seat_send_capabilities(
             resource,
             WL_SEAT_CAPABILITY_POINTER |
