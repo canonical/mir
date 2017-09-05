@@ -1007,13 +1007,27 @@ private:
     std::vector<std::shared_ptr<InputInterface>> listeners;
 };
 
-class WlSeat : public wayland::Seat
+class WlSeat
 {
 public:
     WlSeat(wl_display* display, std::shared_ptr<mir::Executor> const& executor)
-        : Seat(display, 4),
-          executor{executor}
+        : executor{executor},
+          global{wl_global_create(
+              display,
+              &wl_seat_interface,
+              6,
+              this,
+              &WlSeat::bind)}
     {
+        if (!global)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to export wl_seat interface"));
+        }
+    }
+
+    ~WlSeat()
+    {
+        wl_global_destroy(global);
     }
 
     InputCtx<WlPointer> const& acquire_pointer_reference(wl_client* client) const;
@@ -1026,10 +1040,71 @@ private:
     std::unordered_map<wl_client*, InputCtx<WlTouch>> mutable touch;
     std::shared_ptr<mir::Executor> const executor;
 
-    void get_pointer(wl_client* client, wl_resource* resource, uint32_t id) override;
-    void get_keyboard(wl_client* client, wl_resource* resource, uint32_t id) override;
-    void get_touch(wl_client* client, wl_resource* resource, uint32_t id) override;
-    void release(struct wl_client* /*client*/, struct wl_resource* /*resource*/) override {}
+    static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
+    {
+        auto me = reinterpret_cast<WlSeat*>(data);
+        auto resource = wl_resource_create(client, &wl_seat_interface,
+            std::min(version, 6u), id);
+        if (resource == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
+        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+
+        wl_seat_send_capabilities(
+            resource,
+            WL_SEAT_CAPABILITY_POINTER |
+            WL_SEAT_CAPABILITY_KEYBOARD);
+        wl_seat_send_name(
+            resource,
+            "seat0");
+
+        wl_resource_set_user_data(resource, me);
+    }
+
+    static void get_pointer(wl_client* client, wl_resource* resource, uint32_t id)
+    {
+        auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
+        me->pointer[client].register_listener(
+            std::make_shared<WlPointer>(
+                client,
+                resource,
+                id,
+                me->executor));
+    }
+    static void get_keyboard(wl_client* client, wl_resource* resource, uint32_t id)
+    {
+        auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
+        me->keyboard[client].register_listener(
+            std::make_shared<WlKeyboard>(
+                client,
+                resource,
+                id,
+                me->executor));
+    }
+    static void get_touch(wl_client* client, wl_resource* resource, uint32_t id)
+    {
+        auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
+        me->touch[client].register_listener(
+            std::make_shared<WlTouch>(
+                client,
+                resource,
+                id,
+                me->executor));
+    }
+    static void release(struct wl_client* /*client*/, struct wl_resource* /*resource*/) {}
+
+
+    wl_global* const global;
+    static struct wl_seat_interface const vtable;
+};
+
+struct wl_seat_interface const WlSeat::vtable = {
+    WlSeat::get_pointer,
+    WlSeat::get_keyboard,
+    WlSeat::get_touch,
+    WlSeat::release
 };
 
 InputCtx<WlKeyboard> const& WlSeat::acquire_keyboard_reference(wl_client* client) const
@@ -1045,21 +1120,6 @@ InputCtx<WlPointer> const& WlSeat::acquire_pointer_reference(wl_client* client) 
 InputCtx<WlTouch> const& WlSeat::acquire_touch_reference(wl_client* client) const
 {
     return touch[client];
-}
-
-void WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t id)
-{
-    keyboard[client].register_listener(std::make_shared<WlKeyboard>(client, resource, id, executor));
-}
-
-void WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t id)
-{
-    pointer[client].register_listener(std::make_shared<WlPointer>(client, resource, id, executor));
-}
-
-void WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id)
-{
-    touch[client].register_listener(std::make_shared<WlTouch>(client, resource, id, executor));
 }
 
 void WaylandEventSink::send_buffer(BufferStreamId /*id*/, graphics::Buffer& /*buffer*/, graphics::BufferIpcMsgType)
