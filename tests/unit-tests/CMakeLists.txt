@@ -122,7 +122,6 @@ target_link_libraries(
 
   exampleserverconfig
   mirdraw
-  demo-shell
   mircommon
   client_platform_common
   server_platform_common
@@ -166,7 +165,6 @@ target_link_libraries(
 
   exampleserverconfig
   mirdraw
-  demo-shell
   mircommon
   client_platform_common
 
