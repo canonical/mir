@@ -6,6 +6,11 @@ DEB_HOST_ARCH_ENDIAN ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_ENDIAN)
 EXACT_PACKAGE_VERSION = $(shell dpkg-parsechangelog | grep Version | cut -d' ' -f 2)
 DISTRIB_CODENAME = $(shell grep DISTRIB_CODENAME /etc/lsb-release | cut -d= -f2)
 
+# Reconstruct the MirAL version
+MIRAL_VERSION_MAJOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MAJOR ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
+MIRAL_VERSION_MINOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MINOR ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
+MIRAL_VERSION_PATCH = $(shell perl -n -e '/^set\(MIRAL_VERSION_PATCH ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
+
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
 %:
@@ -80,3 +85,7 @@ override_dh_strip:
 # Don't try to find dependencies of libraries used as test data
 override_dh_shlibdeps:
 	dh_shlibdeps -Xmir-test-data
+
+override_dh_gencontrol:
+	dh_gencontrol
+	dh_gencontrol -- -plibmiral2 -v$(MIRAL_VERSION_MAJOR).$(MIRAL_VERSION_MINOR).$(MIRAL_VERSION_PATCH)
