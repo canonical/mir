@@ -297,53 +297,51 @@ class WlShmBuffer :
     public mir::renderer::software::PixelSource
 {
 public:
-    WlShmBuffer(
-        wl_resource* buffer,
-        std::function<void()>&& on_consumed)
-        : buffer{shm_buffer_from_resource_checked(buffer)},
-          resource{buffer},
-          size_{wl_shm_buffer_get_height(this->buffer), wl_shm_buffer_get_width(this->buffer)},
-          stride_{wl_shm_buffer_get_stride(this->buffer)},
-          format_{wl_format_to_mir_format(wl_shm_buffer_get_format(this->buffer))},
-          consumed{false},
-          on_consumed{std::move(on_consumed)}
-    {
-        if (auto notifier = wl_resource_get_destroy_listener(buffer, &on_buffer_destroyed))
-        {
-            DestructionShim* shim;
-
-            shim = wl_container_of(notifier, shim, destruction_listener);
-
-            if (shim->associated_buffer)
-                BOOST_THROW_EXCEPTION(std::logic_error("Attempt to associate a single wl_buffer with multiple WlShmBuffer wrappers"));
-
-            shim->associated_buffer = this;
-            buffer_mutex = shim->mutex;
-        }
-        else
-        {
-            auto shim = new DestructionShim;
-            shim->destruction_listener.notify = &on_buffer_destroyed;
-            shim->associated_buffer = this;
-            buffer_mutex = shim->mutex;
-
-            wl_resource_add_destroy_listener(resource, &shim->destruction_listener);
-        }
-    }
-
     ~WlShmBuffer()
     {
         std::lock_guard<std::mutex> lock{*buffer_mutex};
         if (buffer)
         {
             wl_resource_queue_event(resource, WL_BUFFER_RELEASE);
-            auto notifier = wl_resource_get_destroy_listener(resource, &on_buffer_destroyed);
-            DestructionShim* shim;
+        }
+    }
 
+    static std::shared_ptr<graphics::Buffer> mir_buffer_from_wl_buffer(
+        wl_resource* buffer,
+        std::function<void()>&& on_consumed)
+    {
+        std::shared_ptr<WlShmBuffer> mir_buffer;
+        DestructionShim* shim;
+
+        if (auto notifier = wl_resource_get_destroy_listener(buffer, &on_buffer_destroyed))
+        {
+            // We've already constructed a shim for this buffer, update it.
             shim = wl_container_of(notifier, shim, destruction_listener);
 
-            shim->associated_buffer = nullptr;
+            if (!(mir_buffer = shim->associated_buffer.lock()))
+            {
+                /*
+                 * We've seen this wl_buffer before, but all the WlShmBuffers associated with it
+                 * have been destroyed.
+                 *
+                 * Recreate a new WlShmBuffer to track the new compositor lifetime.
+                 */
+                mir_buffer = std::shared_ptr<WlShmBuffer>{new WlShmBuffer{buffer, std::move(on_consumed)}};
+                shim->associated_buffer = mir_buffer;
+            }
         }
+        else
+        {
+            mir_buffer = std::shared_ptr<WlShmBuffer>{new WlShmBuffer{buffer, std::move(on_consumed)}};
+            shim = new DestructionShim;
+            shim->destruction_listener.notify = &on_buffer_destroyed;
+            shim->associated_buffer = mir_buffer;
+
+            wl_resource_add_destroy_listener(buffer, &shim->destruction_listener);
+        }
+
+        mir_buffer->buffer_mutex = shim->mutex;
+        return mir_buffer;
     }
 
     std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override
@@ -440,6 +438,19 @@ public:
     }
 
 private:
+    WlShmBuffer(
+        wl_resource* buffer,
+        std::function<void()>&& on_consumed)
+        : buffer{shm_buffer_from_resource_checked(buffer)},
+          resource{buffer},
+          size_{wl_shm_buffer_get_width(this->buffer), wl_shm_buffer_get_height(this->buffer)},
+          stride_{wl_shm_buffer_get_stride(this->buffer)},
+          format_{wl_format_to_mir_format(wl_shm_buffer_get_format(this->buffer))},
+          consumed{false},
+          on_consumed{std::move(on_consumed)}
+    {
+    }
+
     static void on_buffer_destroyed(wl_listener* listener, void*)
     {
         static_assert(
@@ -451,9 +462,9 @@ private:
 
         {
             std::lock_guard<std::mutex> lock{*shim->mutex};
-            if (shim->associated_buffer)
+            if (auto mir_buffer = shim->associated_buffer.lock())
             {
-                shim->associated_buffer->buffer = nullptr;
+                mir_buffer->buffer = nullptr;
             }
         }
 
@@ -463,7 +474,7 @@ private:
     struct DestructionShim
     {
         std::shared_ptr<std::mutex> const mutex = std::make_shared<std::mutex>();
-        WlShmBuffer* associated_buffer;
+        std::weak_ptr<WlShmBuffer> associated_buffer;
         wl_listener destruction_listener;
     };
 
@@ -620,7 +631,7 @@ void WlSurface::commit()
 
         if (shm_buffer)
         {
-            mir_buffer = std::make_shared<WlShmBuffer>(
+            mir_buffer = WlShmBuffer::mir_buffer_from_wl_buffer(
                 pending_buffer,
                 std::move(send_frame_notifications));
         }
