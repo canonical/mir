@@ -762,12 +762,14 @@ public:
                             mir_input_event_get_event_time(event) / 1000,
                             mir_keyboard_event_scan_code(key_event),
                             WL_KEYBOARD_KEY_STATE_RELEASED);
+                        break;
                     case mir_keyboard_action_down:
                         wl_keyboard_send_key(resource,
                             serial,
                             mir_input_event_get_event_time(event) / 1000,
                             mir_keyboard_event_scan_code(key_event),
                             WL_KEYBOARD_KEY_STATE_PRESSED);
+                        break;
                     default:
                         break;
                 }
