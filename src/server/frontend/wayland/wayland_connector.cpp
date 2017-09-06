@@ -1017,7 +1017,7 @@ public:
           global{wl_global_create(
               display,
               &wl_seat_interface,
-              6,
+              5,
               this,
               &WlSeat::bind)}
     {
