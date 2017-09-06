@@ -1209,63 +1209,6 @@ void SurfaceInputSink::handle_event(MirEvent const& event)
     }
 }
 
-class LifetimeGuard
-{
-    LifetimeGuard()
-        : guard{std::shared_ptr<LifetimeGuard>{this, &on_lifetime_end}}
-    {
-    }
-
-    ~LifetimeGuard()
-    {
-        guard.reset();
-
-        std::unique_lock<std::mutex> lock{lifetime_guard};
-        {
-            if (live)
-            {
-                liveness_changed.wait(lock, [this]() { return !live; });
-            }
-        }
-    }
-
-    template<typename Guarded>
-    std::shared_ptr<Guarded> make_lifetime_guard(Guarded* to_guard)
-    {
-        return std::shared_ptr<Guarded>(guard, to_guard);
-    }
-
-    template<typename Rep, typename Period>
-    void wait_for_destruction(std::chrono::duration<Rep, Period> delay)
-    {
-        guard.reset();
-
-        std::unique_lock<std::mutex> lock{lifetime_guard};
-        {
-            if (live)
-            {
-                liveness_changed.wait_for(lock, delay, [this]() { return !live; });
-            }
-        }
-    }
-
-private:
-    static void on_lifetime_end(LifetimeGuard* me)
-    {
-        {
-            std::lock_guard<std::mutex> lock{me->lifetime_guard};
-            me->live = false;
-        }
-        me->liveness_changed.notify_all();
-    }
-
-    std::mutex lifetime_guard;
-    std::condition_variable liveness_changed;
-    bool live;
-
-    std::shared_ptr<LifetimeGuard> guard;
-};
-
 class Output
 {
 public:
