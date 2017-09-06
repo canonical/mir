@@ -18,10 +18,11 @@ get_filename_component(
   BASE_DIR ${PROJECT_SOURCE_DIR}
 )
 
-add_custom_command(OUTPUT ${GENERATED_HEADER}
-  COMMAND "sh" ARGS "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator wl_ /usr/share/wayland/wayland.xml >${GENERATED_HEADER}"
+add_custom_target(refresh-wayland-wrapper
+  COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator wl_ /usr/share/wayland/wayland.xml >${GENERATED_HEADER}"
+  VERBATIM
   DEPENDS wrapper-generator
   DEPENDS /usr/share/wayland/wayland.xml
+  SOURCES ${GENERATED_HEADER}
 )
 
-add_custom_target(refresh-wayland-wrapper DEPENDS ${GENERATED_HEADER})
