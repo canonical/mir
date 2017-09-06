@@ -71,38 +71,31 @@ struct mir::DisplayServer::Private
     {
         try
         {
-            // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62258
-            // After using rethrow_exception() (and catching the exception),
-            // all subsequent calls to uncaught_exception() return `true'.
-            bool really_unwinding = true;
-            
             auto comm = try_but_revert_if_unwinding(
                 [this] { connector->stop(); },
-                [&, this] { if (really_unwinding) connector->start(); });
+                [&, this] { connector->start(); });
 
             auto prompt = try_but_revert_if_unwinding(
                 [this] { prompt_connector->stop(); },
-                [&, this] { if (really_unwinding) prompt_connector->start(); });
+                [&, this] { prompt_connector->start(); });
 
             auto dispatcher = try_but_revert_if_unwinding(
                 [this] { input_dispatcher->stop(); },
-                [&, this] { if (really_unwinding) input_dispatcher->start(); });
+                [&, this] { input_dispatcher->start(); });
 
             auto input = try_but_revert_if_unwinding(
                 [this] { input_manager->stop(); },
-                [&, this] { if (really_unwinding) input_manager->start(); });
+                [&, this] { input_manager->start(); });
 
             auto display_config_processing = try_but_revert_if_unwinding(
                 [this] { display_changer->pause_display_config_processing(); },
-                [&, this] { if (really_unwinding) display_changer->resume_display_config_processing(); });
+                [&, this] { display_changer->resume_display_config_processing(); });
 
             auto comp = try_but_revert_if_unwinding(
                 [this] { compositor->stop(); },
-                [&, this] { if (really_unwinding) compositor->start(); });
+                [&, this] { compositor->start(); });
 
             display->pause();
-
-            really_unwinding = false;
         }
         catch(std::runtime_error const&)
         {
@@ -118,38 +111,31 @@ struct mir::DisplayServer::Private
     {
         try
         {
-            // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=62258
-            // After using rethrow_exception() (and catching the exception),
-            // all subsequent calls to uncaught_exception() return `true'.
-            bool really_unwinding = true;
-
             auto disp = try_but_revert_if_unwinding(
                 [this] { display->resume(); },
-                [&, this] { if (really_unwinding) display->pause(); });
+                [&, this] { display->pause(); });
 
             auto comp = try_but_revert_if_unwinding(
                 [this] { compositor->start(); },
-                [&, this] { if (really_unwinding) compositor->stop(); });
+                [&, this] { compositor->stop(); });
 
             auto display_config_processing = try_but_revert_if_unwinding(
                 [this] { display_changer->resume_display_config_processing(); },
-                [&, this] { if (really_unwinding) display_changer->pause_display_config_processing(); });
+                [&, this] { display_changer->pause_display_config_processing(); });
 
             auto input = try_but_revert_if_unwinding(
                 [this] { input_manager->start(); },
-                [&, this] { if (really_unwinding) input_manager->stop(); });
+                [&, this] { input_manager->stop(); });
 
             auto dispatcher = try_but_revert_if_unwinding(
                 [this] { input_dispatcher->start(); },
-                [&, this] { if (really_unwinding) input_dispatcher->stop(); });
+                [&, this] { input_dispatcher->stop(); });
 
             auto prompt = try_but_revert_if_unwinding(
                 [this] { prompt_connector->start(); },
-                [&, this] { if (really_unwinding) prompt_connector->stop(); });
+                [&, this] { prompt_connector->stop(); });
 
             connector->start();
-            
-            really_unwinding = false;
         }
         catch(std::runtime_error const&)
         {
