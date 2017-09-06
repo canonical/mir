@@ -929,24 +929,3 @@ MIR_SERVER_DETAIL_FOR_TESTING_1.0 {
     mir::run_mir*;
   };
 } MIR_SERVER_1.0;
-
-# these symbols are needed by mir_proving_server but are not intended to be public
-MIR_SERVER_DETAIL_FOR_PROVING_1.0 {
- global:
-  extern "C++" {
-    mir::renderer::gl::ProgramFamily::add_program*;
-
-    mir::renderer::gl::Renderer::Renderer*;
-    mir::renderer::gl::Renderer::?Renderer*;
-    mir::renderer::gl::Renderer::Program::Program*;
-    mir::renderer::gl::Renderer::draw*;
-    mir::renderer::gl::Renderer::render*;
-    mir::renderer::gl::Renderer::set_output_transform*;
-    mir::renderer::gl::Renderer::set_viewport*;
-    mir::renderer::gl::Renderer::suspend*;
-    mir::renderer::gl::Renderer::tessellate*;
-    mir::renderer::gl::Renderer::vshader;
-    typeinfo?for?mir::renderer::gl::Renderer;
-    vtable?for?mir::renderer::gl::Renderer;
-  };
-} MIR_SERVER_DETAIL_FOR_TESTING_1.0;
