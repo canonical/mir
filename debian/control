@@ -241,8 +241,7 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirclient-debug-extension1 (= ${binary:Version}),
-	 ${misc:Depends},
-         ${shlibs:Depends},
+	       ${misc:Depends},
 Description: Display server for Ubuntu - client debug interface headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.

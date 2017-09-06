@@ -10,6 +10,7 @@ DISTRIB_CODENAME = $(shell grep DISTRIB_CODENAME /etc/lsb-release | cut -d= -f2)
 MIRAL_VERSION_MAJOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MAJOR ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
 MIRAL_VERSION_MINOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MINOR ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
 MIRAL_VERSION_PATCH = $(shell perl -n -e '/^set\(MIRAL_VERSION_PATCH ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
+MIRAL_VERSION_SUFFIX= $(shell echo $(EXACT_PACKAGE_VERSION) | cut -d- -f 2)
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
@@ -88,4 +89,4 @@ override_dh_shlibdeps:
 
 override_dh_gencontrol:
 	dh_gencontrol
-	dh_gencontrol -- -plibmiral2 -v$(MIRAL_VERSION_MAJOR).$(MIRAL_VERSION_MINOR).$(MIRAL_VERSION_PATCH)
+	dh_gencontrol -- -plibmiral2 -v$(MIRAL_VERSION_MAJOR).$(MIRAL_VERSION_MINOR).$(MIRAL_VERSION_PATCH)-$(MIRAL_VERSION_SUFFIX)
