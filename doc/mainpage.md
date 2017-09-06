@@ -39,7 +39,6 @@ Using Mir
 ---------
 
  - \ref using_mir_on_pc
- - \ref demo_shell_controls
  - \ref demo_server
 
 Getting involved
