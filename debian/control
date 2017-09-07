@@ -46,6 +46,7 @@ Build-Depends: cmake,
                libcapnp-dev,
                capnproto,
                libepoxy-dev,
+               python3-pil:native,
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
@@ -478,3 +479,53 @@ Description: Display server for Ubuntu - GL Renderer development files
  .
  Contains header files that define the interfaces through which platforms and
  renderers access the functionality needed to render with GL.
+
+Package: libmiral2
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - ABI preserving abstraction layer
+ MirAL provides an ABI-stable abstraction layer for Mir based shells,
+ insulating them from mirserver ABI breaks.
+ .
+ Contains the shared library containing MirAL abstraction layer.
+
+Package: libmiral-dev
+Section: libdevel
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libmiral2 (= ${binary:Version}),
+         libmirclientcpp-dev (= ${binary:Version}),
+         ${misc:Depends},
+Description: Developer files for the Mir ABI-stable abstraction layer
+ MirAL provides an ABI-stable abstraction layer for Mir based shells,
+ insulating them from mirserver ABI breaks.
+ .
+ Contains header files required for development using the MirAL abstraction
+ layer.
+
+Package: libmirclientcpp-dev
+Section: libdevel
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libmirclient-dev,
+Description: A C++ wrapper for libmirclient-dev
+ Provides RAII (and other facilities) for Mir client library types.
+ .
+ Contains header files useful for C++ development against Mir.
+
+Package: miral-examples
+Architecture: linux-any
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Recommends: dmz-cursor-theme,
+Description: Display server for Ubuntu - demonstration programs
+ MirAL provides an ABI-stable abstraction layer for Mir based shells,
+ insulating them from mirserver ABI breaks.
+ .
+ Contains demo applications that use the MirAL abstraction layer

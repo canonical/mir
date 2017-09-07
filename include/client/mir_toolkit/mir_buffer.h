@@ -40,6 +40,7 @@ extern "C" {
  *   \param [in] connection            The connection
  *   \param [in] width                 Requested buffer width
  *   \param [in] height                Requested buffer height
+ *   \param [in] format                Requested buffer pixel format
  *   \param [in] available_callback    The callback called when the buffer
  *                                     is available
  *   \param [in] available_context     The context for the available_callback
@@ -55,6 +56,7 @@ void mir_connection_allocate_buffer(
  *   \param [in] connection            The connection
  *   \param [in] width                 Requested buffer width
  *   \param [in] height                Requested buffer height
+ *   \param [in] format                Requested buffer pixel format
  *   \return                           The buffer
  **/
 MirBuffer* mir_connection_allocate_buffer_sync(

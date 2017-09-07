@@ -22,7 +22,6 @@
 #include "mir/scene/observer.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/compositor/scene_element.h"
-#include "mir/compositor/decoration.h"
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/compositor/stream.h"
@@ -224,63 +223,6 @@ TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2)));
-}
-
-TEST_F(SurfaceStack, decor_name_is_surface_name)
-{
-    using namespace testing;
-
-    ms::SurfaceStack stack{report};
-    auto surface = std::make_shared<ms::BasicSurface>(
-        std::string("Mary had a little lamb"),
-        geom::Rectangle{{},{}},
-        mir_pointer_unconfined,
-        std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
-        std::shared_ptr<mg::CursorImage>(),
-        report);
-    stack.add_surface(surface, default_params.input_mode);
-    surface->configure(mir_window_attrib_visibility,
-                       mir_window_visibility_exposed);
-    
-    auto elements = stack.scene_elements_for(compositor_id);
-    ASSERT_EQ(1, elements.size());
-
-    auto& element = elements.front();
-
-    auto decor = element->decoration();
-    ASSERT_THAT(decor, Ne(nullptr));
-    EXPECT_EQ(mc::Decoration::Type::surface, decor->type);
-    EXPECT_EQ("Mary had a little lamb", decor->name);
-}
-
-TEST_F(SurfaceStack, gets_surface_renames)
-{
-    using namespace testing;
-
-    ms::SurfaceStack stack{report};
-    auto surface = std::make_shared<ms::BasicSurface>(
-        std::string("username@hostname: /"),
-        geom::Rectangle{{},{}},
-        mir_pointer_unconfined,
-        std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
-        std::shared_ptr<mg::CursorImage>(),
-        report);
-    stack.add_surface(surface, default_params.input_mode);
-    surface->configure(mir_window_attrib_visibility,
-                       mir_window_visibility_exposed);
-    
-    // (change directory in shell app)
-    surface->rename("username@hostname: ~/Documents");
-
-    auto elements = stack.scene_elements_for(compositor_id);
-    ASSERT_EQ(1, elements.size());
-
-    auto& element = elements.front();
-
-    auto decor = element->decoration();
-    ASSERT_THAT(decor, Ne(nullptr));
-    EXPECT_EQ(mc::Decoration::Type::surface, decor->type);
-    EXPECT_EQ("username@hostname: ~/Documents", decor->name);
 }
 
 TEST_F(SurfaceStack, scene_counts_pending_accurately)

@@ -1,17 +1,7 @@
-pkg_check_modules(VALGRIND valgrind)
-
-if(VALGRIND_FOUND)
-    add_definitions(-DMIR_WORKAROUND_VALGRIND_COMPLAINT_ABOUT_UUID_GENERATE_RANDOM)
-    include_directories(${VALGRIND_INCLUDE_DIRS})
-endif()
-
-
 set(
   SHELL_SOURCES
 
   abstract_shell.cpp
-  basic_window_manager.cpp  ${CMAKE_SOURCE_DIR}/include/server/mir/shell/basic_window_manager.h
-  canonical_window_manager.cpp  ${CMAKE_SOURCE_DIR}/include/server/mir/shell/canonical_window_manager.h
   frontend_shell.cpp
   graphics_display_layout.cpp
   graphics_display_layout.h

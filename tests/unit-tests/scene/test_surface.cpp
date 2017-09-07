@@ -331,27 +331,6 @@ TEST_F(SurfaceCreation, impossible_resize_clamps)
     }
 }
 
-TEST_F(SurfaceCreation, test_surface_set_alpha)
-{
-    using namespace testing;
-
-    float alpha = 0.5f;
-
-    surface.set_alpha(alpha);
-    EXPECT_FLOAT_EQ(alpha, surface.alpha());
-    auto renderables = surface.generate_renderables(nullptr);
-    ASSERT_THAT(renderables.size(), Ge(1));
-    EXPECT_FLOAT_EQ(alpha, renderables[0]->alpha());
-    
-    alpha = 0.1;
-
-    surface.set_alpha(alpha);
-    EXPECT_FLOAT_EQ(alpha, surface.alpha());
-    renderables = surface.generate_renderables(nullptr);
-    ASSERT_THAT(renderables.size(), Ge(1));
-    EXPECT_FLOAT_EQ(alpha, renderables[0]->alpha());
-}
-
 TEST_F(SurfaceCreation, consume_calls_send_event)
 {
     using namespace testing;

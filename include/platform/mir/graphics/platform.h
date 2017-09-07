@@ -210,6 +210,7 @@ extern "C"
  * \param [in] options options to use for this platform
  * \param [in] emergency_cleanup_registry object to register emergency shutdown handlers with
  * \param [in] report the object to use to report interesting events from the display subsystem
+ * \param [in] logger the object to use to log interesting events from the display subsystem
  *
  * This factory function needs to be implemented by each platform.
  *

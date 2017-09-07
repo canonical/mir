@@ -29,11 +29,6 @@ void mtd::StubSurface::move_to(mir::geometry::Point const& /*top_left*/)
 {
 }
 
-float mtd::StubSurface::alpha() const
-{
-    return 0;
-}
-
 mir::geometry::Size mtd::StubSurface::size() const
 {
     return {};

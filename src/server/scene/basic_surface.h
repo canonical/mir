@@ -79,7 +79,7 @@ public:
 
     std::string name() const override;
     void move_to(geometry::Point const& top_left) override;
-    float alpha() const override;
+
     void set_hidden(bool is_hidden);
 
     geometry::Size size() const override;

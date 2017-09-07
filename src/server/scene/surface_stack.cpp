@@ -23,7 +23,6 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/scene_report.h"
 #include "mir/compositor/scene_element.h"
-#include "mir/compositor/decoration.h"
 #include "mir/graphics/renderable.h"
 
 #include <boost/throw_exception.hpp>
@@ -73,11 +72,6 @@ public:
         tracker->occluded_in(cid);
     }
 
-    std::unique_ptr<mc::Decoration> decoration() const override
-    {
-        return std::make_unique<mc::Decoration>(mc::Decoration::Type::surface, surface_name);
-    }
-
 private:
     std::shared_ptr<mg::Renderable> const renderable_;
     std::shared_ptr<ms::RenderingTracker> const tracker;
@@ -106,11 +100,6 @@ public:
 
     void occluded() override
     {
-    }
-
-    std::unique_ptr<mc::Decoration> decoration() const override
-    {
-        return std::make_unique<mc::Decoration>();
     }
 
 private:
