@@ -147,7 +147,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiral2 (= ${libmiral2:Version}),
+Depends: libmiral2 (= ${binary:Version}),
          libmirserver45 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
