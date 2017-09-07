@@ -876,7 +876,9 @@ EXCLUDE_SYMLINKS       = NO
 # exclude all test directories for example use the pattern */test/*
 
 EXCLUDE_PATTERNS       = *.capnp.c++ \
-                         */examples/multi_stream.cpp
+                         @CMAKE_CURRENT_SOURCE_DIR@/include/server/* \
+                         @CMAKE_CURRENT_SOURCE_DIR@/include/test/mir/* \
+                         @CMAKE_CURRENT_SOURCE_DIR@/examples/multi_stream.cpp
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the

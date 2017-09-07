@@ -1,38 +1,6 @@
 Mir hacking guide
 =================
 
-Getting Mir
------------
-
-If you're reading this file then you've probably solved this one. ;)
-
-However, for completeness Mir is a project on LaunchPad (https://launchpad.net/mir)
-to grab a copy use the command:
-
-    $ bzr branch lp:mir
-
-
-Getting dependencies
---------------------
-To succesfully build Mir there are a few packages required:
-
-    $ apt-get install devscripts equivs cmake
-    $ mk-build-deps --install --tool "apt-get -y" --build-dep debian/control
-
-
-Building Mir
------------
-
-Mir is built using cmake. There are other options, but here's one way to
-build the system:
-
-    $ mkdir build
-    $ cd build
-    $ cmake ..
-    $ make -j 8
-    $ ctest
-
-
 Coding Mir
 ----------
 
@@ -109,7 +77,7 @@ them built. You might think it's obvious but there are some important things
 you need to know to get it working, and also to prevent your existing X server
 from dying at the same time.
 
- - \ref using_mir_on_pc
+ - \ref getting_and_using_mir
 
 You can configure Mir to provide runtime information helpful for debugging
 by enabling component reports:
