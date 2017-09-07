@@ -525,6 +525,11 @@ public:
         resize_handler = handler;
     }
 
+    void set_hide_handler(std::function<void()> const& handler)
+    {
+        hide_handler = handler;
+    }
+
     mf::BufferStreamId stream_id;
     std::shared_ptr<mf::BufferStream> stream;
 private:
@@ -532,6 +537,7 @@ private:
     std::shared_ptr<mir::Executor> const executor;
 
     std::function<void(geom::Size)> resize_handler;
+    std::function<void()> hide_handler;
 
     wl_resource* pending_buffer;
     std::shared_ptr<std::vector<wl_resource*>> const pending_frames;
@@ -560,9 +566,9 @@ void WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, 
         BOOST_THROW_EXCEPTION(std::runtime_error("Non-zero buffer offsets are unimplemented"));
     }
 
-    if (!buffer)
+    if(!buffer && hide_handler)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Setting null buffer is unimplemented"));
+        hide_handler();
     }
 
     pending_buffer = *buffer;
@@ -1391,6 +1397,14 @@ public:
                 new_size_spec.width = new_size.width;
                 new_size_spec.height = new_size.height;
                 shell->modify_surface(session, id, new_size_spec);
+            });
+
+        mir_surface.set_hide_handler(
+            [shell, session, id = surface_id]()
+            {
+                shell::SurfaceSpecification hide_spec;
+                hide_spec.state = mir_window_state_hidden;
+                shell->modify_surface(session, id, hide_spec);
             });
 
         auto shim = new DestructionShim{session, shell, surface_id};
