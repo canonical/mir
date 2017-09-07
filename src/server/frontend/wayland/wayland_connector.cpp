@@ -563,7 +563,7 @@ void WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, 
 {
     if (x != 0 || y != 0)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Non-zero buffer offsets are unimplemented"));
+        mir::log_warning("Client requested unimplemented non-zero attach offset. Rendering will be incorrect.");
     }
 
     if(!buffer && hide_handler)
