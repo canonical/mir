@@ -66,7 +66,6 @@ public:
     virtual graphics::RenderableList generate_renderables(compositor::CompositorID id) const = 0; 
     virtual int buffers_ready_for_compositor(void const* compositor_id) const = 0;
 
-    virtual float alpha() const = 0; //only used in examples/
     virtual MirWindowType type() const = 0;
     virtual MirWindowState state() const = 0;
     virtual void hide() = 0;

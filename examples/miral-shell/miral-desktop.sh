@@ -2,7 +2,7 @@
 
 socket=${XDG_RUNTIME_DIR}/miral_socket
 miral_server=miral-shell
-launcher='gnome-terminal --app-id com.canonical.miral.Terminal'
+launcher=qterminal
 bindir=$(dirname $0)
 vt=4
 

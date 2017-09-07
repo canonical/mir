@@ -202,9 +202,6 @@ target_link_libraries(mir_demo_server
   dl
 )
 
-mir_add_wrapped_executable(mir_demo_server_minimal server_minimal.cpp)
-target_link_libraries(mir_demo_server_minimal mirserver)
-
 if (MIR_ENABLE_TESTS)
   add_executable(mir_symbol_test
       uses_non_client_symbol.cpp

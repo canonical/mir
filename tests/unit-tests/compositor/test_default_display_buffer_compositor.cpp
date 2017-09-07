@@ -18,7 +18,6 @@
 
 #include "src/server/compositor/default_display_buffer_compositor.h"
 #include "mir/compositor/display_buffer_compositor.h"
-#include "mir/compositor/decoration.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/compositor/scene.h"
 #include "mir/renderer/renderer.h"
@@ -72,11 +71,6 @@ struct StubSceneElement : mc::SceneElement
 
     void occluded() override
     {
-    }
-
-    std::unique_ptr<mc::Decoration> decoration() const override
-    {
-        return nullptr;
     }
 
 private:
@@ -346,7 +340,6 @@ struct MockSceneElement : mc::SceneElement
     }
 
     MOCK_CONST_METHOD0(renderable, std::shared_ptr<mir::graphics::Renderable>());
-    MOCK_CONST_METHOD0(decoration, std::unique_ptr<mc::Decoration>());
     MOCK_METHOD0(rendered, void());
     MOCK_METHOD0(occluded, void());
 };
