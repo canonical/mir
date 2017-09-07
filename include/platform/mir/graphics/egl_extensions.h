@@ -19,6 +19,8 @@
 #ifndef MIR_GRAPHICS_EGL_EXTENSIONS_H_
 #define MIR_GRAPHICS_EGL_EXTENSIONS_H_
 
+#include <experimental/optional>
+
 #define EGL_EGLEXT_PROTOTYPES
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -35,6 +37,15 @@ struct EGLExtensions
     PFNEGLCREATEIMAGEKHRPROC const eglCreateImageKHR;
     PFNEGLDESTROYIMAGEKHRPROC const eglDestroyImageKHR;
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC const glEGLImageTargetTexture2DOES;
+
+    struct WaylandExtensions
+    {
+        WaylandExtensions();
+
+        PFNEGLBINDWAYLANDDISPLAYWL const eglBindWaylandDisplayWL;
+        PFNEGLQUERYWAYLANDBUFFERWL const eglQueryWaylandBufferWL;
+    };
+    std::experimental::optional<WaylandExtensions> const wayland;
 };
 
 }

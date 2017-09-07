@@ -51,6 +51,16 @@ EGLBoolean extension_eglDestroySyncKHR(EGLDisplay dpy, EGLSyncKHR sync);
 EGLint extension_eglClientWaitSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags, EGLTimeKHR timeout);
 EGLBoolean extension_eglGetSyncValuesCHROMIUM(EGLDisplay dpy,
     EGLSurface surface, int64_t *ust, int64_t *msc, int64_t *sbc);
+EGLBoolean extension_eglBindWaylandDisplayWL(
+    EGLDisplay dpy,
+    struct wl_display *display);
+EGLBoolean extension_eglUnbindWaylandDisplayWL(
+    EGLDisplay dpy,
+    struct wl_display *display);
+EGLBoolean extension_eglQueryWaylandBufferWL(
+    EGLDisplay dpy,
+    struct wl_resource *buffer,
+    EGLint attribute, EGLint *value);
 
 /* EGL{Surface,Display,Config,Context} are all opaque types, so we can put whatever
    we want in them for testing */
@@ -150,13 +160,24 @@ mtd::MockEGL::MockEGL()
         .WillByDefault(Return(
             reinterpret_cast<func_ptr_t>(extension_eglGetSyncValuesCHROMIUM)
             ));
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglQueryWaylandBufferWL")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglQueryWaylandBufferWL)));
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglBindWaylandDisplayWL")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglBindWaylandDisplayWL)));
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglUnbindWaylandDisplayWL")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglUnbindWaylandDisplayWL)));
 }
 
 void mtd::MockEGL::provide_egl_extensions()
 {
     using namespace testing;
 
-    const char* egl_exts = "EGL_KHR_image EGL_KHR_image_base EGL_KHR_image_pixmap EGL_EXT_image_dma_buf_import";
+    const char* egl_exts =
+        "EGL_KHR_image "
+        "EGL_KHR_image_base "
+        "EGL_KHR_image_pixmap "
+        "EGL_EXT_image_dma_buf_import "
+        "EGL_WL_bind_wayland_display";
     ON_CALL(*this, eglQueryString(_,EGL_EXTENSIONS))
         .WillByDefault(Return(egl_exts));
 }
@@ -429,4 +450,30 @@ EGLBoolean extension_eglGetSyncValuesCHROMIUM(EGLDisplay dpy,
     CHECK_GLOBAL_MOCK(EGLBoolean);
     return global_mock_egl->eglGetSyncValuesCHROMIUM(dpy, surface,
                                                      ust, msc, sbc);
+}
+
+EGLBoolean extension_eglBindWaylandDisplayWL(
+    EGLDisplay dpy,
+    struct wl_display *display)
+{
+    CHECK_GLOBAL_MOCK(EGLBoolean);
+    return global_mock_egl->eglBindWaylandDisplayWL(dpy, display);
+}
+
+EGLBoolean extension_eglUnbindWaylandDisplayWL(
+    EGLDisplay dpy,
+    struct wl_display *display)
+{
+    CHECK_GLOBAL_MOCK(EGLBoolean);
+    return global_mock_egl->eglUnbindWaylandDisplayWL(dpy, display);
+}
+
+EGLBoolean extension_eglQueryWaylandBufferWL(
+    EGLDisplay dpy,
+    struct wl_resource* buffer,
+    EGLint attribute, EGLint* value)
+{
+    CHECK_GLOBAL_MOCK(EGLBoolean);
+    return global_mock_egl->eglQueryWaylandBufferWL(
+        dpy, buffer, attribute, value);
 }

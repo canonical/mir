@@ -21,7 +21,25 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 
+#define MIR_LOG_COMPONENT "EGL extensions"
+#include "mir/log.h"
+
 namespace mg=mir::graphics;
+
+namespace
+{
+std::experimental::optional<mg::EGLExtensions::WaylandExtensions> maybe_wayland_ext()
+{
+    try
+    {
+        return mg::EGLExtensions::WaylandExtensions{};
+    }
+    catch (std::runtime_error const&)
+    {
+        return {};
+    }
+}
+}
 
 mg::EGLExtensions::EGLExtensions() :
     eglCreateImageKHR{
@@ -36,11 +54,26 @@ mg::EGLExtensions::EGLExtensions() :
      * mix ES and GL code. But other drivers won't be so lenient.
      */
     glEGLImageTargetTexture2DOES{
-        reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))}
+        reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))},
+    wayland{maybe_wayland_ext()}
 {
     if (!eglCreateImageKHR || !eglDestroyImageKHR)
         BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGLImage"));
 
     if (!glEGLImageTargetTexture2DOES)
         BOOST_THROW_EXCEPTION(std::runtime_error("GLES2 implementation doesn't support updating a texture from an EGLImage"));
+}
+
+mg::EGLExtensions::WaylandExtensions::WaylandExtensions() :
+    eglBindWaylandDisplayWL{
+        reinterpret_cast<PFNEGLBINDWAYLANDDISPLAYWL>(eglGetProcAddress("eglBindWaylandDisplayWL"))
+    },
+    eglQueryWaylandBufferWL{
+        reinterpret_cast<PFNEGLQUERYWAYLANDBUFFERWL>(eglGetProcAddress("eglQueryWaylandBufferWL"))
+    }
+{
+    if (!eglBindWaylandDisplayWL || !eglQueryWaylandBufferWL)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGL_WL_bind_wayland_display"));
+    }
 }
