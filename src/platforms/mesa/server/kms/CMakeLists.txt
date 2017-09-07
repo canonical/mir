@@ -9,6 +9,7 @@ include_directories(
     ${GBM_INCLUDE_DIRS}
     ${EGL_INCLUDE_DIRS}
     ${GL_INCLUDE_DIRS}
+    ${WAYLAND_SERVER_INCLUDE_DIRS}
     ${UDEV_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/include/client
 )
@@ -65,6 +66,7 @@ target_link_libraries(
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GL_LDFLAGS} ${GL_LIBRARIES}
+  ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
 )
 
 set_target_properties(
