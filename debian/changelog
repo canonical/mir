@@ -1,4 +1,4 @@
-mir (1:1.0.0-0ubuntu1) UNRELEASED; urgency=medium
+mir (1.0.0-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release 1.0.0(https://launchpad.net/mir/+milestone/1.0.0)
     - ABI summary:

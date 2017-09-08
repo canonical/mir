@@ -28,7 +28,7 @@ Using Mir for server development
 
 Install the headers and libraries for using libmiral in development:
 
-    $ sudo apt install libmirserver-dev
+    $ sudo apt install libmiral-dev
 
 A `miral.pc` file is provided for use with `pkg-config` or other tools. For
 example: 
