@@ -53,11 +53,18 @@ endif
 override_dh_auto_build-indep:
 	dh_auto_build -- doc
 
+# Reconstruct the MirAL version
+MIRAL_VERSION_MAJOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MAJOR ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
+MIRAL_VERSION_MINOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MINOR ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
+MIRAL_VERSION_PATCH = $(shell perl -n -e '/^set\(MIRAL_VERSION_PATCH ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
+MIRAL_RELEASE=$(MIRAL_VERSION_MAJOR).$(MIRAL_VERSION_MINOR).$(MIRAL_VERSION_PATCH)
+MIRAL_VERSION=$(MIRAL_RELEASE)-$(shell echo $(DEB_VERSION) | cut -d- -f 2)
+
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
 	dh_makeshlibs -Nlibmiral2 -V -Nmir-test-tools
 	# libmiral2 *has* a symbols file, so we don't need to -V it!
-	dh_makeshlibs -plibmiral2 -Nmir-test-tools
+	dh_makeshlibs -plibmiral2 -- -v$(MIRAL_RELEASE)
 
 override_dh_install:
 # Nothing outside Mir should link to libmirprotobuf directly.
@@ -78,12 +85,6 @@ override_dh_strip:
 # Don't try to find dependencies of libraries used as test data
 override_dh_shlibdeps:
 	dh_shlibdeps -Xmir-test-data
-
-# Reconstruct the MirAL version
-MIRAL_VERSION_MAJOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MAJOR ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
-MIRAL_VERSION_MINOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MINOR ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
-MIRAL_VERSION_PATCH = $(shell perl -n -e '/^set\(MIRAL_VERSION_PATCH ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
-MIRAL_VERSION=$(MIRAL_VERSION_MAJOR).$(MIRAL_VERSION_MINOR).$(MIRAL_VERSION_PATCH).$(DEB_VERSION)
 
 override_dh_gencontrol:
 	dh_gencontrol -Nlibmiral2 -- -V'libmiral2:Version=$(MIRAL_VERSION)'
