@@ -58,7 +58,7 @@ MIRAL_VERSION_MAJOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MAJOR ([0-9]*)\)$
 MIRAL_VERSION_MINOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MINOR ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
 MIRAL_VERSION_PATCH = $(shell perl -n -e '/^set\(MIRAL_VERSION_PATCH ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
 MIRAL_RELEASE=$(MIRAL_VERSION_MAJOR).$(MIRAL_VERSION_MINOR).$(MIRAL_VERSION_PATCH)
-MIRAL_VERSION=$(MIRAL_RELEASE)-$(shell echo $(DEB_VERSION) | cut -d- -f 2)
+MIRAL_VERSION=$(MIRAL_RELEASE).$(DEB_VERSION)
 
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
