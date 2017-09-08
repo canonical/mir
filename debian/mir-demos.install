@@ -1,2 +1,11 @@
 usr/bin/mir_demo_*
 usr/lib/*/libmir_demo_*
+usr/bin/miral-shell
+usr/bin/miral-run
+usr/bin/miral-kiosk
+usr/bin/miral-xrun
+usr/bin/miral-screencast
+usr/bin/miral-desktop
+usr/bin/miral-app
+usr/share/applications/miral-shell.desktop
+usr/share/icons/hicolor/scalable/apps/ubuntu-logo.svg
