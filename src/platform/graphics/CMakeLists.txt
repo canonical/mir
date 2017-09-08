@@ -14,6 +14,7 @@ set(
   platform_probe.cpp
   atomic_frame.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/display.h
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/wayland_allocator.h
 )
 
 add_library(mirplatformgraphicscommon OBJECT

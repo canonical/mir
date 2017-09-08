@@ -36,6 +36,8 @@ set(
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/shell.h
 )
 
+add_subdirectory(wayland)
+
 add_library(
   mirfrontend OBJECT
 

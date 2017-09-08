@@ -31,6 +31,7 @@ Build-Depends: cmake,
                libudev-dev,
                libgtest-dev,
                google-mock (>= 1.6.0+svn437),
+               libxml++2.6-dev,
 # only enable valgrind once it's been tested to work on each architecture:
                valgrind [amd64 i386 armhf arm64],
                libglib2.0-dev,

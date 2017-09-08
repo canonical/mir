@@ -76,6 +76,7 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mircompositor>
   $<TARGET_OBJECTS:mirgraphics>
   $<TARGET_OBJECTS:mirfrontend>
+  $<TARGET_OBJECTS:mirfrontend-wayland>
   $<TARGET_OBJECTS:mirshell>
   $<TARGET_OBJECTS:mirlttng>
   $<TARGET_OBJECTS:mirreport>
@@ -120,6 +121,7 @@ target_link_libraries(mirserver LINK_PUBLIC
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
   ${GLIB_LDFLAGS} ${GLIB_LIBRARIES}
   ${UUID_LDFLAGS} ${UUID_LIBRARIES}
+  ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
 )
 
 install(TARGETS mirserver
