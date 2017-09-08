@@ -85,4 +85,4 @@ MIRAL_VERSION=$(MIRAL_VERSION_MAJOR).$(MIRAL_VERSION_MINOR).$(MIRAL_VERSION_PATC
 
 override_dh_gencontrol:
 	dh_gencontrol -plibmiral2 -- -v$(MIRAL_VERSION)
-	dh_gencontrol -- -D'libmiral2:Version=$(MIRAL_VERSION)'
+	dh_gencontrol -- -V'libmiral2:Version=$(MIRAL_VERSION)'
