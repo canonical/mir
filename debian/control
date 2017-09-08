@@ -156,7 +156,7 @@ Depends: libmiral2 (= ${binary:Version}),
          ${misc:Depends},
 Breaks:   libmiral-dev
 Replaces: libmiral-dev
-Provides: libmiral-dev
+Provides: libmiral-dev (=1.5)
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
