@@ -87,5 +87,5 @@ override_dh_shlibdeps:
 	dh_shlibdeps -Xmir-test-data
 
 override_dh_gencontrol:
-	dh_gencontrol -Nlibmiral2 -Nlibmiral-dev -- -V'libmiral2:Version=$(MIRAL_VERSION)'
-	dh_gencontrol -plibmiral2 -plibmiral-dev -- -v$(MIRAL_VERSION)
+	dh_gencontrol -Nlibmiral2 -Nlibmiral-dev
+	dh_gencontrol -plibmiral2 -plibmiral-dev -- -v$(MIRAL_VERSION) -V'libmiral2:Version=$(MIRAL_VERSION)'
