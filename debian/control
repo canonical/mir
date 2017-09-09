@@ -197,6 +197,9 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
+Breaks: libmirclientcpp-dev
+Replaces: libmirclientcpp-dev
+Provides: libmirclientcpp-dev (=1.5)
 Depends: libmirclient9 (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libmircookie-dev (= ${binary:Version}),
@@ -256,9 +259,13 @@ Description: Display server for Ubuntu - client debug interface headers
 
 Package: mir-demos
 Architecture: linux-any
+Breaks: miral-examples
+Replaces: miral-examples
+Provides: miral-examples (=1.5)
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-Recommends: fonts-liberation
+Recommends: dmz-cursor-theme,
+            fonts-liberation
 Description: Display server for Ubuntu - demonstration programs
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -498,7 +505,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiral2 (= ${binary:Version}),
+Depends: libmiral2 (= ${libmiral2:Version}),
          libmirclientcpp-dev (= ${binary:Version}),
          ${misc:Depends},
 Description: Developer files for the Mir ABI-stable abstraction layer
@@ -507,25 +514,3 @@ Description: Developer files for the Mir ABI-stable abstraction layer
  .
  Contains header files required for development using the MirAL abstraction
  layer.
-
-Package: libmirclientcpp-dev
-Section: libdevel
-Architecture: linux-any
-Multi-Arch: same
-Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirclient-dev,
-Description: A C++ wrapper for libmirclient-dev
- Provides RAII (and other facilities) for Mir client library types.
- .
- Contains header files useful for C++ development against Mir.
-
-Package: miral-examples
-Architecture: linux-any
-Depends: ${misc:Depends},
-         ${shlibs:Depends},
-Recommends: dmz-cursor-theme,
-Description: Display server for Ubuntu - demonstration programs
- MirAL provides an ABI-stable abstraction layer for Mir based shells,
- insulating them from mirserver ABI breaks.
- .
- Contains demo applications that use the MirAL abstraction layer

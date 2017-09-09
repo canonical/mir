@@ -1,10 +1,6 @@
 #!/usr/bin/make -f
 
-DEB_HOST_ARCH ?= $(shell dpkg-architecture -qDEB_HOST_ARCH)
-DEB_HOST_MULTIARCH ?= $(shell dpkg-architecture -qDEB_HOST_MULTIARCH)
-DEB_HOST_ARCH_ENDIAN ?= $(shell dpkg-architecture -qDEB_HOST_ARCH_ENDIAN)
-EXACT_PACKAGE_VERSION = $(shell dpkg-parsechangelog | grep Version | cut -d' ' -f 2)
-DISTRIB_CODENAME = $(shell grep DISTRIB_CODENAME /etc/lsb-release | cut -d= -f2)
+include /usr/share/dpkg/default.mk
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
@@ -57,16 +53,25 @@ endif
 override_dh_auto_build-indep:
 	dh_auto_build -- doc
 
+# Reconstruct the MirAL version
+MIRAL_VERSION_MAJOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MAJOR ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
+MIRAL_VERSION_MINOR = $(shell perl -n -e '/^set\(MIRAL_VERSION_MINOR ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
+MIRAL_VERSION_PATCH = $(shell perl -n -e '/^set\(MIRAL_VERSION_PATCH ([0-9]*)\)$$/ && print $$1' src/CMakeLists.txt)
+MIRAL_RELEASE=$(MIRAL_VERSION_MAJOR).$(MIRAL_VERSION_MINOR).$(MIRAL_VERSION_PATCH)
+MIRAL_VERSION=$(MIRAL_RELEASE).$(DEB_VERSION)
+
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
-	dh_makeshlibs -V -Nmir-test-tools
+	dh_makeshlibs -Nlibmiral2 -V -Nmir-test-tools
+	# libmiral2 *has* a symbols file, so we don't need to -V it!
+	dh_makeshlibs -plibmiral2 -- -v$(MIRAL_RELEASE)
 
 override_dh_install:
 # Nothing outside Mir should link to libmirprotobuf directly.
 # Delete the symlink so that --fail-missing doesn't think we've missed it
 # accidentally.
 	-rm debian/tmp/usr/lib/*/libmirprotobuf.so
-ifeq ($(filter xenial yakkety zesty,$(DISTRIB_CODENAME)),)
+ifeq ($(filter xenial yakkety zesty,$(DEB_DISTRIBUTION)),)
 	dh_install
 else
 	# xenial, yakkety & zesty predate dh_missing
@@ -80,3 +85,7 @@ override_dh_strip:
 # Don't try to find dependencies of libraries used as test data
 override_dh_shlibdeps:
 	dh_shlibdeps -Xmir-test-data
+
+override_dh_gencontrol:
+	dh_gencontrol -Nlibmiral2 -Nlibmiral-dev
+	dh_gencontrol -plibmiral2 -plibmiral-dev -- -v$(MIRAL_VERSION) -V'libmiral2:Version=$(MIRAL_VERSION)'
