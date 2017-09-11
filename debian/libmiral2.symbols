@@ -355,45 +355,45 @@ libmiral.so.2 libmiral2 #MINVER#
  (c++)"vtable for miral::ActiveOutputsListener@MIRAL_1.0" 1.0.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_1.0" 1.0.0
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_1.0" 1.0.0
- MIRAL_1.1@MIRAL_1.1 1.0.0
- (c++)"miral::WindowInfo::needs_titlebar(MirWindowType)@MIRAL_1.1" 1.0.0
- (c++)"miral::WindowInfo::type(MirWindowType)@MIRAL_1.1" 1.0.0
- (c++)"miral::WindowInfo::state(MirWindowState)@MIRAL_1.1" 1.0.0
- (c++)"miral::WindowManagementPolicy::advise_state_change(miral::WindowInfo const&, MirWindowState)@MIRAL_1.1" 1.0.0
- (c++)"miral::WindowInfo::can_morph_to(MirWindowType) const@MIRAL_1.1" 1.0.0
- (c++)"miral::CanonicalWindowManagerPolicy::place_new_window(miral::ApplicationInfo const&, miral::WindowSpecification const&)@MIRAL_1.1" 1.0.0
- MIRAL_1.2@MIRAL_1.2 1.0.0
- (c++)"miral::StartupInternalClient::StartupInternalClient(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::function<void (mir::client::Connection)>, std::function<void (std::weak_ptr<mir::scene::Session>)>)@MIRAL_1.2" 1.0.0
- (c++)"miral::InternalClientLauncher::launch(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::function<void (mir::client::Connection)> const&, std::function<void (std::weak_ptr<mir::scene::Session>)> const&) const@MIRAL_1.2" 1.0.0
- (c++)"miral::WindowInfo::shell_chrome(MirShellChrome)@MIRAL_1.2" 1.0.0
- (c++)"miral::WindowInfo::shell_chrome() const@MIRAL_1.2" 1.0.0
- (c++)"miral::WindowManagerTools::drag_window(miral::Window const&, mir::geometry::Displacement)@MIRAL_1.2" 1.0.0
- (c++)"typeinfo for miral::ApplicationAuthorizer@MIRAL_1.0" 1.0.0
- (c++)"typeinfo for miral::ApplicationAuthorizer1@MIRAL_1.2" 1.0.0
- MIRAL_1.3@MIRAL_1.3 1.0.0
- (c++)"miral::operator<(miral::Window const&, miral::Window const&)@MIRAL_1.0" 1.0.0
- (c++)"miral::WindowManagerTools::create_workspace()@MIRAL_1.3" 1.0.0
- (c++)"miral::WindowManagerTools::add_tree_to_workspace(miral::Window const&, std::shared_ptr<miral::Workspace> const&)@MIRAL_1.3" 1.0.0
- (c++)"miral::WindowManagerTools::focus_prev_within_application()@MIRAL_1.3" 1.0.0
- (c++)"miral::WindowManagerTools::remove_tree_from_workspace(miral::Window const&, std::shared_ptr<miral::Workspace> const&)@MIRAL_1.3" 1.0.0
- (c++)"miral::WindowManagerTools::move_workspace_content_to_workspace(std::shared_ptr<miral::Workspace> const&, std::shared_ptr<miral::Workspace> const&)@MIRAL_1.3" 1.0.0
- (c++)"miral::WorkspacePolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const&, std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_1.3" 1.0.0
- (c++)"miral::WorkspacePolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const&, std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_1.3" 1.0.0
- (c++)"miral::WindowManagerTools::for_each_window_in_workspace(std::shared_ptr<miral::Workspace> const&, std::function<void (miral::Window const&)> const&)@MIRAL_1.3" 1.0.0
- (c++)"miral::WindowManagerTools::for_each_workspace_containing(miral::Window const&, std::function<void (std::shared_ptr<miral::Workspace> const&)> const&)@MIRAL_1.3" 1.0.0
- (c++)"typeinfo for miral::WorkspacePolicy@MIRAL_1.3" 1.0.0
- (c++)"vtable for miral::WorkspacePolicy@MIRAL_1.3" 1.0.0
- MIRAL_1.3.1@MIRAL_1.3.1 1.0.0
- (c++)"miral::SetWindowManagementPolicy::SetWindowManagementPolicy(std::function<std::unique_ptr<miral::WindowManagementPolicy, std::default_delete<miral::WindowManagementPolicy> > (miral::WindowManagerTools const&)> const&)@MIRAL_1.3.1" 1.0.0
- (c++)"miral::SetWindowManagementPolicy::SetWindowManagementPolicy(std::function<std::unique_ptr<miral::WindowManagementPolicy, std::default_delete<miral::WindowManagementPolicy> > (miral::WindowManagerTools const&)> const&)@MIRAL_1.3.1" 1.0.0
- (c++)"miral::SetWindowManagementPolicy::~SetWindowManagementPolicy()@MIRAL_1.3.1" 1.0.0
- (c++)"miral::SetWindowManagementPolicy::~SetWindowManagementPolicy()@MIRAL_1.3.1" 1.0.0
- (c++)"miral::SetWindowManagementPolicy::operator()(mir::Server&) const@MIRAL_1.3.1" 1.0.0
- MIRAL_1.4.0@MIRAL_1.4.0 1.0.0
- (c++)"miral::WindowManagerTools::end_drag_and_drop()@MIRAL_1.4.0" 1.0.0
- (c++)"miral::WindowManagerTools::start_drag_and_drop(miral::WindowInfo&, std::vector<unsigned char, std::allocator<unsigned char> > const&)@MIRAL_1.4.0" 1.0.0
- (c++)"typeinfo for miral::WindowManagementPolicyAddendum2@MIRAL_1.4.0" 1.0.0
- MIRAL_1.5.0@MIRAL_1.5.0 1.0.0
- (c++)"miral::pre_init(miral::CommandLineOption const&)@MIRAL_1.5.0" 1.0.0
- (c++)"typeinfo for miral::WindowManagementPolicyAddendum3@MIRAL_1.5.0" 1.0.0
- (c++)"miral::WindowManagerTools::active_output()@MIRAL_1.5.0" 1.0.0
+ MIRAL_1.1@MIRAL_1.1 1.1.0
+ (c++)"miral::WindowInfo::needs_titlebar(MirWindowType)@MIRAL_1.1" 1.1.0
+ (c++)"miral::WindowInfo::type(MirWindowType)@MIRAL_1.1" 1.1.0
+ (c++)"miral::WindowInfo::state(MirWindowState)@MIRAL_1.1" 1.1.0
+ (c++)"miral::WindowManagementPolicy::advise_state_change(miral::WindowInfo const&, MirWindowState)@MIRAL_1.1" 1.1.0
+ (c++)"miral::WindowInfo::can_morph_to(MirWindowType) const@MIRAL_1.1" 1.1.0
+ (c++)"miral::CanonicalWindowManagerPolicy::place_new_window(miral::ApplicationInfo const&, miral::WindowSpecification const&)@MIRAL_1.1" 1.1.0
+ MIRAL_1.2@MIRAL_1.2 1.2.0
+ (c++)"miral::StartupInternalClient::StartupInternalClient(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::function<void (mir::client::Connection)>, std::function<void (std::weak_ptr<mir::scene::Session>)>)@MIRAL_1.2" 1.2.0
+ (c++)"miral::InternalClientLauncher::launch(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::function<void (mir::client::Connection)> const&, std::function<void (std::weak_ptr<mir::scene::Session>)> const&) const@MIRAL_1.2" 1.2.0
+ (c++)"miral::WindowInfo::shell_chrome(MirShellChrome)@MIRAL_1.2" 1.2.0
+ (c++)"miral::WindowInfo::shell_chrome() const@MIRAL_1.2" 1.2.0
+ (c++)"miral::WindowManagerTools::drag_window(miral::Window const&, mir::geometry::Displacement)@MIRAL_1.2" 1.2.0
+ (c++)"typeinfo for miral::ApplicationAuthorizer@MIRAL_1.0" 1.2.0
+ (c++)"typeinfo for miral::ApplicationAuthorizer1@MIRAL_1.2" 1.2.0
+ MIRAL_1.3@MIRAL_1.3 1.3.0
+ (c++)"miral::operator<(miral::Window const&, miral::Window const&)@MIRAL_1.0" 1.3.0
+ (c++)"miral::WindowManagerTools::create_workspace()@MIRAL_1.3" 1.3.0
+ (c++)"miral::WindowManagerTools::add_tree_to_workspace(miral::Window const&, std::shared_ptr<miral::Workspace> const&)@MIRAL_1.3" 1.3.0
+ (c++)"miral::WindowManagerTools::focus_prev_within_application()@MIRAL_1.3" 1.3.0
+ (c++)"miral::WindowManagerTools::remove_tree_from_workspace(miral::Window const&, std::shared_ptr<miral::Workspace> const&)@MIRAL_1.3" 1.3.0
+ (c++)"miral::WindowManagerTools::move_workspace_content_to_workspace(std::shared_ptr<miral::Workspace> const&, std::shared_ptr<miral::Workspace> const&)@MIRAL_1.3" 1.3.0
+ (c++)"miral::WorkspacePolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const&, std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_1.3" 1.3.0
+ (c++)"miral::WorkspacePolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const&, std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_1.3" 1.3.0
+ (c++)"miral::WindowManagerTools::for_each_window_in_workspace(std::shared_ptr<miral::Workspace> const&, std::function<void (miral::Window const&)> const&)@MIRAL_1.3" 1.3.0
+ (c++)"miral::WindowManagerTools::for_each_workspace_containing(miral::Window const&, std::function<void (std::shared_ptr<miral::Workspace> const&)> const&)@MIRAL_1.3" 1.3.0
+ (c++)"typeinfo for miral::WorkspacePolicy@MIRAL_1.3" 1.3.0
+ (c++)"vtable for miral::WorkspacePolicy@MIRAL_1.3" 1.3.0
+ MIRAL_1.3.1@MIRAL_1.3.1 1.3.1
+ (c++)"miral::SetWindowManagementPolicy::SetWindowManagementPolicy(std::function<std::unique_ptr<miral::WindowManagementPolicy, std::default_delete<miral::WindowManagementPolicy> > (miral::WindowManagerTools const&)> const&)@MIRAL_1.3.1" 1.3.1
+ (c++)"miral::SetWindowManagementPolicy::SetWindowManagementPolicy(std::function<std::unique_ptr<miral::WindowManagementPolicy, std::default_delete<miral::WindowManagementPolicy> > (miral::WindowManagerTools const&)> const&)@MIRAL_1.3.1" 1.3.1
+ (c++)"miral::SetWindowManagementPolicy::~SetWindowManagementPolicy()@MIRAL_1.3.1" 1.3.1
+ (c++)"miral::SetWindowManagementPolicy::~SetWindowManagementPolicy()@MIRAL_1.3.1" 1.3.1
+ (c++)"miral::SetWindowManagementPolicy::operator()(mir::Server&) const@MIRAL_1.3.1" 1.3.1
+ MIRAL_1.4.0@MIRAL_1.4.0 1.4.0
+ (c++)"miral::WindowManagerTools::end_drag_and_drop()@MIRAL_1.4.0" 1.4.0
+ (c++)"miral::WindowManagerTools::start_drag_and_drop(miral::WindowInfo&, std::vector<unsigned char, std::allocator<unsigned char> > const&)@MIRAL_1.4.0" 1.4.0
+ (c++)"typeinfo for miral::WindowManagementPolicyAddendum2@MIRAL_1.4.0" 1.4.0
+ MIRAL_1.5.0@MIRAL_1.5.0 1.5.0
+ (c++)"miral::pre_init(miral::CommandLineOption const&)@MIRAL_1.5.0" 1.5.0
+ (c++)"typeinfo for miral::WindowManagementPolicyAddendum3@MIRAL_1.5.0" 1.5.0
+ (c++)"miral::WindowManagerTools::active_output()@MIRAL_1.5.0" 1.5.0
