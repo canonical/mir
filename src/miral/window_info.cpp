@@ -256,14 +256,14 @@ void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_s
     {
         auto const width = new_size.width.as_int() - min_width().as_int();
         auto inc = width_inc().as_int();
-        if (width % inc)
+        if (inc > 0 && width % inc)
             new_size.width = min_width() + DeltaX{inc*(((2L*width + inc)/2)/inc)};
     }
 
     {
         auto const height = new_size.height.as_int() - min_height().as_int();
         auto inc = height_inc().as_int();
-        if (height % inc)
+        if (inc > 0 && height % inc)
             new_size.height = min_height() + DeltaY{inc*(((2L*height + inc)/2)/inc)};
     }
 
@@ -272,7 +272,7 @@ void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_s
 
         auto const error = new_size.height.as_int()*long(ar.width) - new_size.width.as_int()*long(ar.height);
 
-        if (error > 0)
+        if (error > 0 && ar.width > 0 && ar.height > 0)
         {
             // Add (denominator-1) to numerator to ensure rounding up
             auto const width_correction  = (error+(ar.height-1))/ar.height;
@@ -294,7 +294,7 @@ void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_s
 
         auto const error = new_size.width.as_int()*long(ar.height) - new_size.height.as_int()*long(ar.width);
 
-        if (error > 0)
+        if (error > 0 && ar.width > 0 && ar.height > 0)
         {
             // Add (denominator-1) to numerator to ensure rounding up
             auto const height_correction = (error+(ar.width-1))/ar.width;

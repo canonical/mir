@@ -44,6 +44,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     workspaces.cpp
     drag_and_drop.cpp
     client_mediated_gestures.cpp
+    window_info.cpp
 )
 
 target_link_libraries(miral-test
