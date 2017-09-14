@@ -52,7 +52,8 @@ public:
     WaylandConnector(
         std::shared_ptr<Shell> const& shell,
         DisplayChanger& display_config,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        bool arw_socket);
 
     ~WaylandConnector() override;
 
