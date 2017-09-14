@@ -32,6 +32,11 @@ namespace
 char const* const trace_option = "window-management-trace";
 }
 
+// clang version 4.0.1-4~ubuntu4 crashes on these.
+// As we don't use clang for archive packages it seems simplest to just
+// disable these compatibility symbols. (It seems the __clang__major__ and
+// __clang_minor__ macros are used inconsistently, so we don't use them.)
+#if !defined(__clang__)
 MIRAL_FAKE_OLD_SYMBOL(
     _ZN5miral24SetWindowManagmentPolicyC1ERKSt8functionIFSt10unique_ptrINS_22WindowManagementPolicyESt14default_deleteIS3_EERKNS_18WindowManagerToolsEEE,
     _ZN5miral25SetWindowManagementPolicyC1ERKSt8functionIFSt10unique_ptrINS_22WindowManagementPolicyESt14default_deleteIS3_EERKNS_18WindowManagerToolsEEE)
@@ -47,6 +52,7 @@ MIRAL_FAKE_OLD_SYMBOL(
 MIRAL_FAKE_OLD_SYMBOL(
     _ZN5miral24SetWindowManagmentPolicyD2Ev,
     _ZN5miral25SetWindowManagementPolicyD2Ev)
+#endif
 
 miral::SetWindowManagementPolicy::SetWindowManagementPolicy(WindowManagementPolicyBuilder const& builder) :
     builder{builder}
