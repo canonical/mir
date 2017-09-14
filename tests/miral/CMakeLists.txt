@@ -15,14 +15,10 @@ include_directories(
     ${GTEST_INCLUDE_DIR}
 )
 
-if(${CMAKE_COMPILER_IS_GNUCXX})
-    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS} -flto")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
-    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -flto")
-    set(CMAKE_AR "gcc-ar")
-    set(CMAKE_NM "gcc-nm")
-    set(CMAKE_RANLIB "gcc-ranlib")
-endif()
+string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_C_FLAGS})
+set(CMAKE_C_FLAGS ${NO_NO_LTO_FLAGS})
+string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_CXX_FLAGS})
+set(CMAKE_CXX_FLAGS ${NO_NO_LTO_FLAGS})
 
 mir_add_wrapped_executable(miral-test NOINSTALL
     mru_window_list.cpp
