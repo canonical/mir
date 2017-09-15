@@ -32,22 +32,6 @@ namespace
 char const* const trace_option = "window-management-trace";
 }
 
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZN5miral24SetWindowManagmentPolicyC1ERKSt8functionIFSt10unique_ptrINS_22WindowManagementPolicyESt14default_deleteIS3_EERKNS_18WindowManagerToolsEEE,
-    _ZN5miral25SetWindowManagementPolicyC1ERKSt8functionIFSt10unique_ptrINS_22WindowManagementPolicyESt14default_deleteIS3_EERKNS_18WindowManagerToolsEEE)
-
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZNK5miral24SetWindowManagmentPolicyclERN3mir6ServerE,
-    _ZNK5miral25SetWindowManagementPolicyclERN3mir6ServerE)
-
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZN5miral24SetWindowManagmentPolicyD1Ev,
-    _ZN5miral25SetWindowManagementPolicyD1Ev)
-
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZN5miral24SetWindowManagmentPolicyD2Ev,
-    _ZN5miral25SetWindowManagementPolicyD2Ev)
-
 miral::SetWindowManagementPolicy::SetWindowManagementPolicy(WindowManagementPolicyBuilder const& builder) :
     builder{builder}
 {
@@ -89,3 +73,19 @@ void miral::SetWindowManagementPolicy::operator()(mir::Server& server) const
                 builder);
         });
 }
+
+MIRAL_FAKE_OLD_SYMBOL(
+    _ZN5miral24SetWindowManagmentPolicyC1ERKSt8functionIFSt10unique_ptrINS_22WindowManagementPolicyESt14default_deleteIS3_EERKNS_18WindowManagerToolsEEE,
+    _ZN5miral25SetWindowManagementPolicyC1ERKSt8functionIFSt10unique_ptrINS_22WindowManagementPolicyESt14default_deleteIS3_EERKNS_18WindowManagerToolsEEE)
+
+MIRAL_FAKE_OLD_SYMBOL(
+    _ZNK5miral24SetWindowManagmentPolicyclERN3mir6ServerE,
+    _ZNK5miral25SetWindowManagementPolicyclERN3mir6ServerE)
+
+MIRAL_FAKE_OLD_SYMBOL(
+    _ZN5miral24SetWindowManagmentPolicyD1Ev,
+    _ZN5miral25SetWindowManagementPolicyD1Ev)
+
+MIRAL_FAKE_OLD_SYMBOL(
+    _ZN5miral24SetWindowManagmentPolicyD2Ev,
+    _ZN5miral25SetWindowManagementPolicyD2Ev)
