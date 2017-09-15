@@ -17,6 +17,7 @@
  */
 
 #include "miral/window_info.h"
+#include "window_info_defaults.h"
 
 #include "both_versions.h"
 
@@ -35,7 +36,32 @@ auto optional_value_or_default(mir::optional_value<Value> const& optional_value,
 {
     return optional_value.is_set() ? optional_value.value() : default_;
 }
+
+unsigned clamp_dim(unsigned dim)
+{
+    return std::min<unsigned long>(std::numeric_limits<long>::max(), dim);
 }
+
+// For our convenience when doing calculations we clamp the dimensions of the aspect ratio
+// so they will fit into a long without overflow.
+miral::WindowInfo::AspectRatio clamp(miral::WindowInfo::AspectRatio const& source)
+{
+    return {clamp_dim(source.width), clamp_dim(source.height)};
+}
+}
+
+miral::Width  const miral::default_min_width{0};
+miral::Height const miral::default_min_height{0};
+miral::Width  const miral::default_max_width{std::numeric_limits<int>::max()};
+miral::Height const miral::default_max_height{std::numeric_limits<int>::max()};
+miral::DeltaX const miral::default_width_inc{1};
+miral::DeltaY const miral::default_height_inc{1};
+
+
+miral::WindowInfo::AspectRatio const miral::default_min_aspect_ratio{
+    clamp(miral::WindowInfo::AspectRatio{0U, std::numeric_limits<unsigned>::max()})};
+miral::WindowInfo::AspectRatio const miral::default_max_aspect_ratio{
+    clamp(miral::WindowInfo::AspectRatio{std::numeric_limits<unsigned>::max(), 0U})};
 
 struct miral::WindowInfo::Self
 {
@@ -71,16 +97,16 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
     type{optional_value_or_default(params.type(), mir_window_type_normal)},
     state{optional_value_or_default(params.state(), mir_window_state_restored)},
     restore_rect{params.top_left().value(), params.size().value()},
-    min_width{optional_value_or_default(params.min_width())},
-    min_height{optional_value_or_default(params.min_height())},
-    max_width{optional_value_or_default(params.max_width(), Width{std::numeric_limits<int>::max()})},
-    max_height{optional_value_or_default(params.max_height(), Height{std::numeric_limits<int>::max()})},
+    min_width{optional_value_or_default(params.min_width(), miral::default_min_width)},
+    min_height{optional_value_or_default(params.min_height(), miral::default_min_height)},
+    max_width{optional_value_or_default(params.max_width(), miral::default_max_width)},
+    max_height{optional_value_or_default(params.max_height(), miral::default_max_height)},
     preferred_orientation{optional_value_or_default(params.preferred_orientation(), mir_orientation_mode_any)},
     confine_pointer(optional_value_or_default(params.confine_pointer(), mir_pointer_unconfined)),
-    width_inc{optional_value_or_default(params.width_inc(), DeltaX{1})},
-    height_inc{optional_value_or_default(params.height_inc(), DeltaY{1})},
-    min_aspect(optional_value_or_default(params.min_aspect(), AspectRatio{0U, std::numeric_limits<unsigned>::max()})),
-    max_aspect(optional_value_or_default(params.max_aspect(), AspectRatio{std::numeric_limits<unsigned>::max(), 0U})),
+    width_inc{optional_value_or_default(params.width_inc(), default_width_inc)},
+    height_inc{optional_value_or_default(params.height_inc(), default_height_inc)},
+    min_aspect(optional_value_or_default(params.min_aspect(), default_min_aspect_ratio)),
+    max_aspect(optional_value_or_default(params.max_aspect(), default_max_aspect_ratio)),
     shell_chrome(optional_value_or_default(params.shell_chrome(), mir_shell_chrome_normal))
 {
     if (params.output_id().is_set())
@@ -520,7 +546,7 @@ auto miral::WindowInfo::min_aspect() const -> AspectRatio
 
 void miral::WindowInfo::min_aspect(AspectRatio min_aspect)
 {
-    self->min_aspect = min_aspect;
+    self->min_aspect = clamp(min_aspect);
 }
 
 auto miral::WindowInfo::max_aspect() const -> AspectRatio
@@ -530,7 +556,7 @@ auto miral::WindowInfo::max_aspect() const -> AspectRatio
 
 void miral::WindowInfo::max_aspect(AspectRatio max_aspect)
 {
-    self->max_aspect = max_aspect;
+    self->max_aspect = clamp(max_aspect);
 }
 
 bool miral::WindowInfo::has_output_id() const
