@@ -56,12 +56,10 @@ miral::Width  const miral::default_max_width{std::numeric_limits<int>::max()};
 miral::Height const miral::default_max_height{std::numeric_limits<int>::max()};
 miral::DeltaX const miral::default_width_inc{1};
 miral::DeltaY const miral::default_height_inc{1};
-
-
 miral::WindowInfo::AspectRatio const miral::default_min_aspect_ratio{
-    clamp(miral::WindowInfo::AspectRatio{0U, std::numeric_limits<unsigned>::max()})};
+    clamp(WindowInfo::AspectRatio{0U, std::numeric_limits<unsigned>::max()})};
 miral::WindowInfo::AspectRatio const miral::default_max_aspect_ratio{
-    clamp(miral::WindowInfo::AspectRatio{std::numeric_limits<unsigned>::max(), 0U})};
+    clamp(WindowInfo::AspectRatio{std::numeric_limits<unsigned>::max(), 0U})};
 
 struct miral::WindowInfo::Self
 {
