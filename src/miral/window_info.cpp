@@ -48,6 +48,16 @@ miral::WindowInfo::AspectRatio clamp(miral::WindowInfo::AspectRatio const& sourc
 {
     return {clamp_dim(source.width), clamp_dim(source.height)};
 }
+
+miral::Width clamp(miral::Width const& source)
+{
+    return std::min(miral::default_max_width, std::max(miral::default_min_width, source));
+}
+
+miral::Height clamp(miral::Height const& source)
+{
+    return std::min(miral::default_max_height, std::max(miral::default_min_height, source));
+}
 }
 
 miral::Width  const miral::default_min_width{0};
@@ -474,7 +484,7 @@ auto miral::WindowInfo::min_width() const -> mir::geometry::Width
 
 void miral::WindowInfo::min_width(mir::geometry::Width min_width)
 {
-    self->min_width = min_width;
+    self->min_width = clamp(min_width);
 }
 
 auto miral::WindowInfo::min_height() const -> mir::geometry::Height
@@ -484,7 +494,7 @@ auto miral::WindowInfo::min_height() const -> mir::geometry::Height
 
 void miral::WindowInfo::min_height(mir::geometry::Height min_height)
 {
-    self->min_height = min_height;
+    self->min_height = clamp(min_height);
 }
 
 auto miral::WindowInfo::max_width() const -> mir::geometry::Width
@@ -494,7 +504,7 @@ auto miral::WindowInfo::max_width() const -> mir::geometry::Width
 
 void miral::WindowInfo::max_width(mir::geometry::Width max_width)
 {
-    self->max_width = max_width;
+    self->max_width = clamp(max_width);
 }
 
 auto miral::WindowInfo::max_height() const -> mir::geometry::Height
@@ -504,7 +514,7 @@ auto miral::WindowInfo::max_height() const -> mir::geometry::Height
 
 void miral::WindowInfo::max_height(mir::geometry::Height max_height)
 {
-    self->max_height = max_height;
+    self->max_height = clamp(max_height);
 }
 
 auto miral::WindowInfo::userdata() const -> std::shared_ptr<void>
