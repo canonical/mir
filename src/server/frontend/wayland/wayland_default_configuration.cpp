@@ -21,6 +21,7 @@
 
 #include "mir/frontend/display_changer.h"
 #include "mir/graphics/platform.h"
+#include "mir/options/default_configuration.h"
 
 namespace mf = mir::frontend;
 
@@ -30,10 +31,13 @@ std::shared_ptr<mf::Connector>
     return wayland_connector(
         [this]() -> std::shared_ptr<mf::Connector>
         {
+            bool const arw_socket = the_options()->is_set(options::arw_server_socket_opt);
+
             return std::make_shared<mf::WaylandConnector>(
                 the_frontend_shell(),
                 *the_frontend_display_changer(),
-                the_buffer_allocator());
+                the_buffer_allocator(),
+                arw_socket);
         });
 }
 

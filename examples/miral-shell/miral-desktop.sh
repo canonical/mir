@@ -35,7 +35,7 @@ if [ -e "${socket}" ]; then echo "Error: '${socket}' already exists"; exit 1 ;fi
 
 sudo ls >> /dev/null
 oldvt=$(sudo fgconsole)
-sudo sh -c "LD_LIBRARY_PATH=${LD_LIBRARY_PATH} ${bindir}${miral_server} --vt ${vt} --arw-file --file ${socket} $*; chvt ${oldvt}"&
+sudo sh -c "LD_LIBRARY_PATH=${LD_LIBRARY_PATH} XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR} ${bindir}${miral_server} --vt ${vt} --arw-file --file ${socket} $*; chvt ${oldvt}"&
 
 while [ ! -e "${socket}" ]; do echo "waiting for ${socket}"; sleep 1 ;done
 
