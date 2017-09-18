@@ -21,6 +21,7 @@
 
 #include "mir/frontend/connector.h"
 #include "mir/fd.h"
+#include "mir/optional_value.h"
 
 #include <wayland-server-core.h>
 #include <thread>
@@ -50,6 +51,7 @@ class WaylandConnector : public Connector
 {
 public:
     WaylandConnector(
+        optional_value<std::string> const& display_name,
         std::shared_ptr<Shell> const& shell,
         DisplayChanger& display_config,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,

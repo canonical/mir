@@ -153,3 +153,10 @@ MIRPLATFORM_0.27 {
   };
  local: *;
 };
+
+MIRPLATFORM_1.0 {
+ global:
+  extern "C++" {
+    mir::options::wayland_socket_name_opt*;
+  };
+} MIRPLATFORM_0.27;
