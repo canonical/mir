@@ -43,6 +43,7 @@ endif()
 # public headers (only public headers should be accessed by acceptance tests)
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
+  ${PROJECT_SOURCE_DIR}/include/miral
   ${PROJECT_SOURCE_DIR}/include/server
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/common
@@ -100,13 +101,16 @@ add_library(mir-test-assist STATIC
 )
 
 target_link_libraries(mir-test-assist
+PUBLIC
   mirclient
+  miral
   mirserver
 
   mir-test-doubles-platform-static
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARY}
+PRIVATE
   ${GMOCK_MAIN_LIBRARY}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )

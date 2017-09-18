@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -18,12 +18,14 @@
 
 #include "mir_test_framework/async_server_runner.h"
 #include "mir_test_framework/command_line_server_configuration.h"
+#include "mir_test_framework/canonical_window_manager_policy.h"
 
 #include "mir/fd.h"
 #include "mir/main_loop.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/options/option.h"
 #include "mir/test/doubles/null_logger.h"
+#include <miral/set_window_management_policy.h>
 #include <mir/shell/canonical_window_manager.h>
 
 #include <boost/throw_exception.hpp>
@@ -42,7 +44,8 @@ namespace
 std::chrono::seconds const timeout{20};
 }
 
-mtf::AsyncServerRunner::AsyncServerRunner()
+mtf::AsyncServerRunner::AsyncServerRunner() :
+    set_window_management_policy{[](auto&){}}
 {
     configure_from_commandline(server);
 
@@ -56,6 +59,9 @@ mtf::AsyncServerRunner::AsyncServerRunner()
 
             return result;
         });
+    // TODO This is here to support tests that rely on the legacy window management code
+    // once they go, then we can set set_window_management_policy appropriately, kill this
+    // and remove msh::CanonicalWindowManager
     server.override_the_window_manager_builder([this](msh::FocusController* focus_controller)
         {
 #pragma GCC diagnostic push
@@ -74,6 +80,8 @@ void mtf::AsyncServerRunner::add_to_environment(char const* key, char const* val
 
 void mtf::AsyncServerRunner::start_server()
 {
+    set_window_management_policy(server);
+
     server.add_init_callback([&]
         {
             auto const main_loop = server.the_main_loop();

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -19,6 +19,7 @@
 #include "mir_toolkit/mir_client_library.h"
 #include "mir_toolkit/debug/surface.h"
 
+#include "miral/application_info.h"
 #include "mir/test/doubles/mock_window_manager.h"
 
 #include "mir/scene/session.h"
@@ -34,6 +35,7 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <mir_test_framework/canonical_window_manager_policy.h>
 
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
@@ -41,9 +43,27 @@ namespace msh = mir::shell;
 namespace ms = mir::scene;
 namespace mt = mir::test;
 namespace mg = mir::geometry;
+using namespace testing;
 
 namespace
 {
+struct MockWindowManagementPolicy : mtf::CanonicalWindowManagerPolicy
+{
+    MockWindowManagementPolicy(
+        miral::WindowManagerTools const& tools,
+        MockWindowManagementPolicy*& self) :
+        mtf::CanonicalWindowManagerPolicy(tools)
+    {
+        self = this;
+        ON_CALL(*this, place_new_window(_, _)).WillByDefault(ReturnArg<1>());
+    }
+
+    MOCK_METHOD2(place_new_window,
+        miral::WindowSpecification(miral::ApplicationInfo const& app_info, miral::WindowSpecification const& request_parameters));
+
+    MOCK_METHOD1(advise_new_window, void (miral::WindowInfo const& window_info));
+};
+
 struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
 {
     static const int max_surface_count = 5;
@@ -51,14 +71,13 @@ struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
 
     void SetUp() override
     {
-        server.override_the_window_manager_builder([this](msh::FocusController*)
-        {
-            return mt::fake_shared(window_manager);
-        });
-        ConnectedClientHeadlessServer::SetUp();
+        override_window_management_policy<MockWindowManagementPolicy>(mock_wm_policy);
+        mtf::ConnectedClientHeadlessServer::SetUp();
+
+        ASSERT_THAT(mock_wm_policy, NotNull());
     }
 
-    testing::NiceMock<mtd::MockWindowManager> window_manager;
+    MockWindowManagementPolicy* mock_wm_policy = 0;
 };
 }
 #pragma GCC diagnostic push
@@ -351,22 +370,27 @@ TEST_F(ClientSurfaces, input_methods_get_corret_parent_coordinates)
 
     std::shared_ptr<ms::Surface> parent_surface;
     InSequence seq;
-    EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(Invoke([&parent_surface](auto session, auto params, auto builder)
-    {
-        auto id = builder(session, params);
-        parent_surface = session->surface(id);
-        return id;
-    }));
-    EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(Invoke([&parent_surface, server_rect, edge_attachment](auto session, auto params, auto builder)
-    {
-        EXPECT_THAT(params.parent.lock(), Eq(parent_surface));
-        EXPECT_TRUE(params.aux_rect.is_set());
-        EXPECT_THAT(params.aux_rect.value(), Eq(server_rect));
-        EXPECT_TRUE(params.edge_attachment.is_set());
-        EXPECT_THAT(params.edge_attachment.value(), Eq(edge_attachment));
+    EXPECT_CALL(*mock_wm_policy, place_new_window(_, _)).Times(1);
+    EXPECT_CALL(*mock_wm_policy, advise_new_window(_)).WillOnce(Invoke([&parent_surface](auto const& info)
+        {
+            parent_surface = info.window();
+        }));
 
-        return builder(session, params);
-    }));
+    EXPECT_CALL(*mock_wm_policy, place_new_window(_, _)).WillOnce(Invoke([&](auto const&, auto const& params)
+        {
+            EXPECT_TRUE(params.parent().is_set());
+            EXPECT_THAT(params.parent().value().lock(), Eq(parent_surface));
+            EXPECT_TRUE(params.aux_rect().is_set());
+            EXPECT_THAT(params.aux_rect().value(), Eq(server_rect));
+            EXPECT_TRUE(params.window_placement_gravity().is_set());
+            EXPECT_THAT(params.window_placement_gravity().value(), Eq(mir_placement_gravity_northwest));
+            EXPECT_TRUE(params.aux_rect_placement_gravity().is_set());
+            EXPECT_THAT(params.aux_rect_placement_gravity().value(), Eq(mir_placement_gravity_northeast));
+            EXPECT_TRUE(params.placement_hints().is_set());
+            EXPECT_THAT(params.placement_hints().value(), Eq(mir_placement_hints_flip_x));
+            return params;
+        }));
+    EXPECT_CALL(*mock_wm_policy, advise_new_window(_)).Times(1);
 
     auto window = mtf::make_any_surface(connection);
 
