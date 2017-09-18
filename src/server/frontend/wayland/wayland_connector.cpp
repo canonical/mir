@@ -1044,6 +1044,8 @@ public:
     InputCtx<WlKeyboard> const& acquire_keyboard_reference(wl_client* client) const;
     InputCtx<WlTouch> const& acquire_touch_reference(wl_client* client) const;
 
+    // TODO refactor away this encapsulation failure
+    auto& get_me_an_executor() const { return executor; }
 private:
     std::unordered_map<wl_client*, InputCtx<WlPointer>> mutable pointer;
     std::unordered_map<wl_client*, InputCtx<WlKeyboard>> mutable keyboard;
@@ -1165,10 +1167,10 @@ void WaylandEventSink::send_ping(int32_t)
 class SurfaceInputSink : public mf::EventSink
 {
 public:
-    SurfaceInputSink(WlSeat* seat, wl_client* client, wl_resource* target)
+    SurfaceInputSink(WlSeat* seat, wl_client* client, wl_resource* surface)
         : seat{seat},
           client{client},
-          target{target}
+          surface{surface}
     {
     }
 
@@ -1187,26 +1189,41 @@ public:
 private:
     WlSeat* const seat;
     wl_client* const client;
-    wl_resource* const target;
+    wl_resource* const surface;
 };
 
 void SurfaceInputSink::handle_event(MirEvent const& event)
 {
     switch (mir_event_get_type(&event))
     {
+    case mir_event_type_resize:
+    {
+        auto resize = mir_event_get_resize_event(&event);
+        int const width = mir_resize_event_get_width(resize);
+        int const height = mir_resize_event_get_height(resize);
+
+        seat->get_me_an_executor()->spawn([surface=surface, width, height]()
+            {
+                printf("Resizing %p to %dx%d\n", static_cast<void*>(surface), width, height);
+// TODO why does this segfault?!
+//                wl_shell_surface_send_configure(surface, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
+            });
+
+        break;
+    }
     case mir_event_type_input:
     {
         auto input_event = mir_event_get_input_event(&event);
         switch (mir_input_event_get_type(input_event))
         {
         case mir_input_event_type_key:
-            seat->acquire_keyboard_reference(client).handle_event(input_event, target);
+            seat->acquire_keyboard_reference(client).handle_event(input_event, surface);
             break;
         case mir_input_event_type_pointer:
-            seat->acquire_pointer_reference(client).handle_event(input_event, target);
+            seat->acquire_pointer_reference(client).handle_event(input_event, surface);
             break;
         case mir_input_event_type_touch:
-            seat->acquire_touch_reference(client).handle_event(input_event, target);
+            seat->acquire_touch_reference(client).handle_event(input_event, surface);
             break;
         default:
             break;
@@ -1445,8 +1462,15 @@ protected:
     void set_fullscreen(
         uint32_t /*method*/,
         uint32_t /*framerate*/,
-        std::experimental::optional<struct wl_resource*> const& /*output*/) override
+        std::experimental::optional<struct wl_resource*> const& output) override
     {
+        mir::shell::SurfaceSpecification mods;
+        mods.state = mir_window_state_fullscreen;
+        if (output)
+        {
+            // TODO mods.output_id = DisplayConfigurationOutputId_from(output)
+        }
+        shell->modify_surface(session_for_client(client), surface_id, mods);
     }
 
     void set_popup(
@@ -1459,8 +1483,15 @@ protected:
     {
     }
 
-    void set_maximized(std::experimental::optional<struct wl_resource*> const& /*output*/) override
+    void set_maximized(std::experimental::optional<struct wl_resource*> const& output) override
     {
+        mir::shell::SurfaceSpecification mods;
+        mods.state = mir_window_state_maximized;
+        if (output)
+        {
+            // TODO mods.output_id = DisplayConfigurationOutputId_from(output)
+        }
+        shell->modify_surface(session_for_client(client), surface_id, mods);
     }
 
     void set_title(std::string const& /*title*/) override
