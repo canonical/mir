@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -145,4 +145,20 @@ void KioskWindowManagerPolicy::advise_new_window(WindowInfo const& window_info)
     }
 
     CanonicalWindowManagerPolicy::advise_new_window(window_info);
+}
+
+void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications)
+{
+    WindowSpecification specification = modifications;
+
+    if (window_info.type() == mir_window_type_normal &&
+        !window_info.parent() &&
+        modifications.state().is_set() &&
+        modifications.state().value() == mir_window_state_restored)
+    {
+        specification.state() = mir_window_state_maximized;
+        tools.place_and_size_for_state(specification, window_info);
+    }
+
+    CanonicalWindowManagerPolicy::handle_modify_window(window_info, specification);
 }

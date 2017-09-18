@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -37,6 +37,8 @@ public:
     bool handle_keyboard_event(MirKeyboardEvent const* event) override;
     bool handle_touch_event(MirTouchEvent const* event) override;
     bool handle_pointer_event(MirPointerEvent const* event) override;
+
+    void handle_modify_window(miral::WindowInfo& window_info, miral::WindowSpecification const& modifications) override;
 
 private:
     static const int modifier_mask =
