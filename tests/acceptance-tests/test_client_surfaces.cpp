@@ -20,13 +20,14 @@
 #include "mir_toolkit/debug/surface.h"
 
 #include "miral/application_info.h"
-#include "mir/test/doubles/mock_window_manager.h"
 
 #include "mir/scene/session.h"
 #include "mir/geometry/rectangle.h"
 
+#include "mir_test_framework/canonical_window_manager_policy.h"
 #include "mir_test_framework/connected_client_headless_server.h"
 #include "mir_test_framework/any_surface.h"
+
 #include "mir/test/validity_matchers.h"
 #include "mir/test/fake_shared.h"
 
@@ -35,10 +36,8 @@
 
 #include <condition_variable>
 #include <mutex>
-#include <mir_test_framework/canonical_window_manager_policy.h>
 
 namespace mtf = mir_test_framework;
-namespace mtd = mir::test::doubles;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 namespace mt = mir::test;
