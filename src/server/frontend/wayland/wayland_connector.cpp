@@ -61,6 +61,8 @@
 #include "mir/fd.h"
 #include "../../../platforms/common/server/shm_buffer.h"
 
+#include <sys/stat.h>
+
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -1680,7 +1682,8 @@ private:
 mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mf::Shell> const& shell,
     DisplayChanger& display_config,
-    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
+    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
+    bool arw_socket)
     : display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       allocator{std::dynamic_pointer_cast<mg::WaylandAllocator>(allocator)}
@@ -1730,7 +1733,14 @@ mf::WaylandConnector::WaylandConnector(
         mir::log_warning("No WaylandAllocator EGL support!");
     }
 
-    wl_display_add_socket_auto(display.get());
+    if (auto const wayland_display = wl_display_add_socket_auto(display.get()))
+    {
+        if (arw_socket)
+        {
+            chmod((std::string{getenv("XDG_RUNTIME_DIR")} + "/" + wayland_display).c_str(),
+                  S_IRUSR|S_IWUSR| S_IRGRP|S_IWGRP | S_IROTH|S_IWOTH);
+        };
+    }
 
     auto wayland_loop = wl_display_get_event_loop(display.get());
 
