@@ -30,14 +30,14 @@ class KioskWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy
 public:
     KioskWindowManagerPolicy(miral::WindowManagerTools const& tools, SwSplash const&);
 
-    void advise_focus_gained(miral::WindowInfo const& info) override;
+    auto place_new_window(miral::ApplicationInfo const& app_info, miral::WindowSpecification const& request)
+    -> miral::WindowSpecification override;
 
-    virtual void advise_new_window(miral::WindowInfo const& window_info) override;
+    void advise_focus_gained(miral::WindowInfo const& info) override;
 
     bool handle_keyboard_event(MirKeyboardEvent const* event) override;
     bool handle_touch_event(MirTouchEvent const* event) override;
     bool handle_pointer_event(MirPointerEvent const* event) override;
-
     void handle_modify_window(miral::WindowInfo& window_info, miral::WindowSpecification const& modifications) override;
 
 private:

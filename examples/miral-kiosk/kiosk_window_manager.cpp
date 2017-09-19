@@ -128,23 +128,22 @@ void KioskWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
     }
 }
 
-void KioskWindowManagerPolicy::advise_new_window(WindowInfo const& window_info)
+auto KioskWindowManagerPolicy::place_new_window(ApplicationInfo const& app_info, WindowSpecification const& request)
+-> WindowSpecification
 {
-    // We do this here, not in place_new_window() so that clients get a resize event.
-    // This shouldn't be necessary, but works better with the gtk-mir backend.
-    if (window_info.type() == mir_window_type_normal &&
-        !window_info.parent() &&
-        window_info.state() == mir_window_state_restored)
+    WindowSpecification specification = CanonicalWindowManagerPolicy::place_new_window(app_info, request);
+
+    if (specification.type() == mir_window_type_normal &&
+        (!specification.parent().is_set() || !specification.parent().value().lock()))
     {
-        WindowSpecification specification;
-
         specification.state() = mir_window_state_maximized;
+        tools.place_and_size_for_state(specification, WindowInfo{});
 
-        tools.place_and_size_for_state(specification, window_info);
-        tools.modify_window(window_info.window(), specification);
+        if (!request.state().is_set() || request.state().value() != mir_window_state_restored)
+            specification.state() = request.state();
     }
 
-    CanonicalWindowManagerPolicy::advise_new_window(window_info);
+    return specification;
 }
 
 void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications)
