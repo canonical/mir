@@ -21,6 +21,7 @@
 #include "core_generated_interfaces.h"
 
 #include "mir/frontend/shell.h"
+#include "mir/frontend/surface.h"
 
 #include "mir/compositor/buffer_stream.h"
 
@@ -1044,8 +1045,6 @@ public:
     InputCtx<WlKeyboard> const& acquire_keyboard_reference(wl_client* client) const;
     InputCtx<WlTouch> const& acquire_touch_reference(wl_client* client) const;
 
-    // TODO refactor away this encapsulation failure
-    auto& get_me_an_executor() const { return executor; }
 private:
     std::unordered_map<wl_client*, InputCtx<WlPointer>> mutable pointer;
     std::unordered_map<wl_client*, InputCtx<WlKeyboard>> mutable keyboard;
@@ -1167,10 +1166,10 @@ void WaylandEventSink::send_ping(int32_t)
 class SurfaceInputSink : public mf::EventSink
 {
 public:
-    SurfaceInputSink(WlSeat* seat, wl_client* client, wl_resource* surface)
+    SurfaceInputSink(WlSeat* seat, wl_client* client, wl_resource* target)
         : seat{seat},
           client{client},
-          surface{surface}
+          target{target}
     {
     }
 
@@ -1189,7 +1188,7 @@ public:
 private:
     WlSeat* const seat;
     wl_client* const client;
-    wl_resource* const surface;
+    wl_resource* const target;
 };
 
 void SurfaceInputSink::handle_event(MirEvent const& event)
@@ -1198,16 +1197,11 @@ void SurfaceInputSink::handle_event(MirEvent const& event)
     {
     case mir_event_type_resize:
     {
-        auto resize = mir_event_get_resize_event(&event);
-        int const width = mir_resize_event_get_width(resize);
-        int const height = mir_resize_event_get_height(resize);
-
-        seat->get_me_an_executor()->spawn([surface=surface, width, height]()
-            {
-                printf("Resizing %p to %dx%d\n", static_cast<void*>(surface), width, height);
-// TODO why does this segfault?!
-//                wl_shell_surface_send_configure(surface, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
-            });
+//        auto resize = mir_event_get_resize_event(&event);
+//        int const width = mir_resize_event_get_width(resize);
+//        int const height = mir_resize_event_get_height(resize);
+// TODO{alan_g} this seems the right place to call wl_shell_surface_send_configure()
+// but how can we get hold of wayland::ShellSurface::resource?
 
         break;
     }
@@ -1217,13 +1211,13 @@ void SurfaceInputSink::handle_event(MirEvent const& event)
         switch (mir_input_event_get_type(input_event))
         {
         case mir_input_event_type_key:
-            seat->acquire_keyboard_reference(client).handle_event(input_event, surface);
+            seat->acquire_keyboard_reference(client).handle_event(input_event, target);
             break;
         case mir_input_event_type_pointer:
-            seat->acquire_pointer_reference(client).handle_event(input_event, surface);
+            seat->acquire_pointer_reference(client).handle_event(input_event, target);
             break;
         case mir_input_event_type_touch:
-            seat->acquire_touch_reference(client).handle_event(input_event, surface);
+            seat->acquire_touch_reference(client).handle_event(input_event, target);
             break;
         default:
             break;
@@ -1395,7 +1389,7 @@ public:
           shell{shell}
     {
         auto* tmp = wl_resource_get_user_data(surface);
-        auto& mir_surface = *static_cast<WlSurface*>(reinterpret_cast<wayland::Surface*>(tmp));
+        auto& mir_surface = *static_cast<WlSurface*>(tmp);
 
         auto const session = session_for_client(client);
 
@@ -1468,9 +1462,16 @@ protected:
         mods.state = mir_window_state_fullscreen;
         if (output)
         {
-            // TODO mods.output_id = DisplayConfigurationOutputId_from(output)
+            // TODO{alan_g} mods.output_id = DisplayConfigurationOutputId_from(output)
         }
-        shell->modify_surface(session_for_client(client), surface_id, mods);
+
+        auto const session = session_for_client(client);
+        shell->modify_surface(session, surface_id, mods);
+
+        // TODO{alan_g} It seems wrong to do this here, and not in a surface observer, but that crashes.
+        auto const window = session->get_surface(surface_id);
+        auto const size = window->client_size();
+        wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, size.width.as_int(), size.height.as_int());
     }
 
     void set_popup(
@@ -1489,9 +1490,15 @@ protected:
         mods.state = mir_window_state_maximized;
         if (output)
         {
-            // TODO mods.output_id = DisplayConfigurationOutputId_from(output)
+            // TODO{alan_g} mods.output_id = DisplayConfigurationOutputId_from(output)
         }
-        shell->modify_surface(session_for_client(client), surface_id, mods);
+        auto const session = session_for_client(client);
+        shell->modify_surface(session, surface_id, mods);
+
+        // TODO{alan_g} It seems wrong to do this here, and not in a surface observer, but that crashes.
+        auto const window = session->get_surface(surface_id);
+        auto const size = window->client_size();
+        wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, size.width.as_int(), size.height.as_int());
     }
 
     void set_title(std::string const& /*title*/) override
