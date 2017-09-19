@@ -35,14 +35,14 @@ done
 if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 
 if [ -e "${socket}" ]; then echo "Error: session endpoint '${socket}' already exists"; exit 1 ;fi
-if [ -e "${wayland_display}" ]; then echo "Error: wayland endpoint '${wayland_display}' already exists"; exit 1 ;fi
+if [ -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; then echo "Error: wayland endpoint '${wayland_display}' already exists"; exit 1 ;fi
 
 qtubuntu_desktop_installed=$(apt list qtubuntu-desktop 2>/dev/null | grep installed | wc -l)
 if [ "${qtubuntu_desktop_installed}" == "0" ]; then echo "Need qtubuntu-desktop - run \"sudo apt install qtubuntu-desktop\""; exit 1 ;fi
 
 sudo ls >> /dev/null
 oldvt=$(sudo fgconsole)
-sudo sh -c "LD_LIBRARY_PATH=${LD_LIBRARY_PATH} XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR} --wayland-socket-name ${wayland_display} ${bindir}${miral_server} --vt ${vt} --arw-file --file ${socket} $*; chvt ${oldvt}"&
+sudo sh -c "LD_LIBRARY_PATH=${LD_LIBRARY_PATH} XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR} ${bindir}${miral_server} --wayland-socket-name ${wayland_display} --vt ${vt} --arw-file --file ${socket} $*; chvt ${oldvt}"&
 
 while [ ! -e "${socket}" ]; do echo "waiting for ${socket}"; sleep 1 ;done
 
