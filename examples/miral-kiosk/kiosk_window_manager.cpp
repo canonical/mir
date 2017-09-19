@@ -150,13 +150,13 @@ void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, Win
 {
     WindowSpecification specification = modifications;
 
-    if (window_info.type() == mir_window_type_normal &&
-        !window_info.parent() &&
-        modifications.state().is_set() &&
-        modifications.state().value() == mir_window_state_restored)
+    if (window_info.type() == mir_window_type_normal && !window_info.parent())
     {
         specification.state() = mir_window_state_maximized;
         tools.place_and_size_for_state(specification, window_info);
+
+        if (!modifications.state().is_set() || modifications.state().value() != mir_window_state_restored)
+            specification.state() = modifications.state();
     }
 
     CanonicalWindowManagerPolicy::handle_modify_window(window_info, specification);
