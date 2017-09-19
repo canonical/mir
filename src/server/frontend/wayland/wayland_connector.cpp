@@ -1711,6 +1711,7 @@ private:
 }
 
 mf::WaylandConnector::WaylandConnector(
+    optional_value<std::string> const& display_name,
     std::shared_ptr<mf::Shell> const& shell,
     DisplayChanger& display_config,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
@@ -1764,7 +1765,21 @@ mf::WaylandConnector::WaylandConnector(
         mir::log_warning("No WaylandAllocator EGL support!");
     }
 
-    if (auto const wayland_display = wl_display_add_socket_auto(display.get()))
+    char const* wayland_display = nullptr;
+
+    if (!display_name.is_set())
+    {
+        wayland_display = wl_display_add_socket_auto(display.get());
+    }
+    else
+    {
+        if (!wl_display_add_socket(display.get(), display_name.value().c_str()))
+        {
+            wayland_display = display_name.value().c_str();
+        }
+    }
+
+    if (wayland_display)
     {
         if (arw_socket)
         {

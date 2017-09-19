@@ -33,7 +33,13 @@ std::shared_ptr<mf::Connector>
         {
             bool const arw_socket = the_options()->is_set(options::arw_server_socket_opt);
 
+            optional_value<std::string> display_name;
+
+            if (the_options()->is_set(options::wayland_socket_name_opt))
+                display_name = the_options()->get<std::string>(options::wayland_socket_name_opt);
+
             return std::make_shared<mf::WaylandConnector>(
+                display_name,
                 the_frontend_shell(),
                 *the_frontend_display_changer(),
                 the_buffer_allocator(),

@@ -27,6 +27,7 @@ namespace mir
 {
 namespace options
 {
+extern char const* const wayland_socket_name_opt;
 extern char const* const server_socket_opt;
 extern char const* const prompt_socket_opt;
 extern char const* const no_server_socket_opt;
