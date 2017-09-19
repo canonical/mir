@@ -61,6 +61,7 @@ add_library(miral SHARED
     window_manager_tools.cpp            ${miral_include}/miral/window_manager_tools.h
                                         ${miral_include}/miral/window_management_policy_addendum2.h
                                         ${miral_include}/miral/window_management_policy_addendum3.h
+                                        window_info_defaults.h
 )
 
 target_include_directories(mirclientcpp
