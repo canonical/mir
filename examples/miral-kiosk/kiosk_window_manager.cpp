@@ -133,7 +133,7 @@ auto KioskWindowManagerPolicy::place_new_window(ApplicationInfo const& app_info,
 {
     WindowSpecification specification = CanonicalWindowManagerPolicy::place_new_window(app_info, request);
 
-    if (specification.type() == mir_window_type_normal &&
+    if ((specification.type() == mir_window_type_normal || specification.type() == mir_window_type_freestyle) &&
         (!specification.parent().is_set() || !specification.parent().value().lock()))
     {
         specification.state() = mir_window_state_maximized;
@@ -150,7 +150,8 @@ void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, Win
 {
     WindowSpecification specification = modifications;
 
-    if (window_info.type() == mir_window_type_normal && !window_info.parent())
+    if ((window_info.type() == mir_window_type_normal || window_info.type() == mir_window_type_freestyle) &&
+        !window_info.parent())
     {
         specification.state() = mir_window_state_maximized;
         tools.place_and_size_for_state(specification, window_info);
