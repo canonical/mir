@@ -49,6 +49,8 @@ mir (1.0.0-0ubuntu1) UNRELEASED; urgency=medium
       . Make racy DragAndDrop test reliable. (LP: #1704780)
       . [libmiral] Define default window settings in one place and clamp the
         actual values to avoid ldiv0. (LP: #1717061)
+      . [miral-kiosk] Apply fullscreen logic when hidden windows are restored.
+        (LP: #1717910)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 10 Aug 2017 11:54:30 +0000
 
