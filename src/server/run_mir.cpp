@@ -52,7 +52,7 @@ extern "C" void perform_emergency_cleanup()
 
 extern "C" { typedef void (*sig_handler)(int); }
 
-volatile sig_handler old_handler[SIGUNUSED]  = { nullptr };
+volatile sig_handler old_handler[NSIG]  = { nullptr };
 
 extern "C" void fatal_signal_cleanup(int sig)
 {

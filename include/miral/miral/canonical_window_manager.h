@@ -31,7 +31,7 @@ public:
 
     explicit CanonicalWindowManagerPolicy(WindowManagerTools const& tools);
 
-    auto place_new_window(
+    virtual auto place_new_window(
         ApplicationInfo const& app_info,
         WindowSpecification const& request_parameters)
         -> WindowSpecification override;
