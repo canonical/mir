@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -23,6 +23,7 @@
 #include "mir/test/auto_unblock_thread.h"
 
 #include "mir/server.h"
+#include "miral/set_window_management_policy.h"
 
 #include <condition_variable>
 #include <list>
@@ -56,9 +57,20 @@ public:
 
     mir::Server server;
 
+    template<typename Policy, typename ...Args>
+    void override_window_management_policy(Args& ... args)
+    {
+        set_window_management_policy =
+            miral::set_window_management_policy<Policy>(args...);
+    }
+
 private:
     std::list<TemporaryEnvironmentValue> env;
     mir::test::AutoJoinThread server_thread;
+
+    // Once we migrate away from "legacy" window management stubs this can become
+    // SetWindowManagementPolicy set_window_management_policy;
+    std::function<void(mir::Server&)> set_window_management_policy;
 
     std::mutex mutex;
     std::condition_variable started;

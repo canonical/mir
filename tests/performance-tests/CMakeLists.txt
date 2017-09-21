@@ -17,11 +17,7 @@ mir_add_wrapped_executable(mir_glmark2_performance_test
 )
 add_dependencies(mir_glmark2_performance_test GMock)
 target_link_libraries(mir_glmark2_performance_test
-  mir-test-static
-  mir-test-framework-static
-  mir-test-doubles-static
-  mirserver
-  ${GTEST_BOTH_LIBRARIES}
+  mir-test-assist
 )
 
 add_library(mir_system_performance_test STATIC
@@ -40,10 +36,6 @@ mir_add_wrapped_executable(mir_client_startup_performance_test
   test_client_startup.cpp
 )
 target_link_libraries(mir_client_startup_performance_test
-  mir-test-static
-  mir-test-framework-static
-  mir-test-doubles-static
-  mirserver
-  ${GTEST_BOTH_LIBRARIES}
+  mir-test-assist
 )
 
