@@ -1029,6 +1029,11 @@ public:
     InputCtx<WlKeyboard> const& acquire_keyboard_reference(wl_client* client) const;
     InputCtx<WlTouch> const& acquire_touch_reference(wl_client* client) const;
 
+    void spawn(std::function<void()>&& work)
+    {
+        executor->spawn(std::move(work));
+    }
+
 private:
     std::unordered_map<wl_client*, InputCtx<WlPointer>> mutable pointer;
     std::unordered_map<wl_client*, InputCtx<WlKeyboard>> mutable keyboard;
@@ -1184,9 +1189,12 @@ void SurfaceEventSink::handle_event(MirEvent const& event)
     case mir_event_type_resize:
     {
         auto resize = mir_event_get_resize_event(&event);
-        int const width = mir_resize_event_get_width(resize);
-        int const height = mir_resize_event_get_height(resize);
-        wl_shell_surface_send_configure(event_sink, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
+        seat->spawn([event_sink=event_sink,
+                     width = mir_resize_event_get_width(resize),
+                     height = mir_resize_event_get_height(resize)]()
+        {
+            wl_shell_surface_send_configure(event_sink, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
+        });
         break;
     }
     case mir_event_type_input:
@@ -1386,6 +1394,14 @@ public:
             session,
             params,
             std::make_shared<SurfaceEventSink>(&seat, client, surface, resource));
+
+        {
+            // The shell isn't guaranteed to respect the requested size
+            auto const window = session->get_surface(surface_id);
+            auto const size = window->client_size();
+            seat.spawn([resource=resource, height = size.height.as_int(), width = size.width.as_int()]()
+                { wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, width, height); });
+        }
 
         mir_surface.set_resize_handler(
             [shell, session, id = surface_id](geom::Size new_size)
