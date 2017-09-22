@@ -1017,11 +1017,13 @@ public:
 
     void register_listener(std::shared_ptr<InputInterface> const& listener)
     {
+        std::lock_guard<std::mutex> lock{mutex};
         listeners.push_back(listener);
     }
 
     void unregister_listener(InputInterface const* listener)
     {
+        std::lock_guard<std::mutex> lock{mutex};
         std::remove_if(
             listeners.begin(),
             listeners.end(),
@@ -1033,6 +1035,7 @@ public:
 
     void handle_event(MirInputEvent const* event, wl_resource* target) const
     {
+        std::lock_guard<std::mutex> lock{mutex};
         for (auto& listener : listeners)
         {
             listener->handle_event(event, target);
@@ -1040,6 +1043,7 @@ public:
     }
 
 private:
+    std::mutex mutable mutex;
     std::vector<std::shared_ptr<InputInterface>> listeners;
 };
 
