@@ -1147,13 +1147,14 @@ void WaylandEventSink::send_ping(int32_t)
 {
 }
 
-class SurfaceInputSink : public mf::EventSink
+class SurfaceEventSink : public mf::EventSink
 {
 public:
-    SurfaceInputSink(WlSeat* seat, wl_client* client, wl_resource* target)
+    SurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink)
         : seat{seat},
           client{client},
-          target{target}
+          target{target},
+          event_sink{event_sink}
     {
     }
 
@@ -1173,20 +1174,19 @@ private:
     WlSeat* const seat;
     wl_client* const client;
     wl_resource* const target;
+    wl_resource* const event_sink;
 };
 
-void SurfaceInputSink::handle_event(MirEvent const& event)
+void SurfaceEventSink::handle_event(MirEvent const& event)
 {
     switch (mir_event_get_type(&event))
     {
     case mir_event_type_resize:
     {
-//        auto resize = mir_event_get_resize_event(&event);
-//        int const width = mir_resize_event_get_width(resize);
-//        int const height = mir_resize_event_get_height(resize);
-// TODO{alan_g} this seems the right place to call wl_shell_surface_send_configure()
-// but how can we get hold of wayland::ShellSurface::resource?
-
+        auto resize = mir_event_get_resize_event(&event);
+        int const width = mir_resize_event_get_width(resize);
+        int const height = mir_resize_event_get_height(resize);
+        wl_shell_surface_send_configure(event_sink, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
         break;
     }
     case mir_event_type_input:
@@ -1385,7 +1385,7 @@ public:
         surface_id = shell->create_surface(
             session,
             params,
-            std::make_shared<SurfaceInputSink>(&seat, client, surface));
+            std::make_shared<SurfaceEventSink>(&seat, client, surface, resource));
 
         mir_surface.set_resize_handler(
             [shell, session, id = surface_id](geom::Size new_size)
@@ -1452,10 +1452,6 @@ protected:
         auto const session = session_for_client(client);
         shell->modify_surface(session, surface_id, mods);
 
-        // TODO{alan_g} It seems wrong to do this here, and not in a surface observer, but that crashes.
-        auto const window = session->get_surface(surface_id);
-        auto const size = window->client_size();
-        wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, size.width.as_int(), size.height.as_int());
     }
 
     void set_popup(
@@ -1478,11 +1474,6 @@ protected:
         }
         auto const session = session_for_client(client);
         shell->modify_surface(session, surface_id, mods);
-
-        // TODO{alan_g} It seems wrong to do this here, and not in a surface observer, but that crashes.
-        auto const window = session->get_surface(surface_id);
-        auto const size = window->client_size();
-        wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, size.width.as_int(), size.height.as_int());
     }
 
     void set_title(std::string const& /*title*/) override
