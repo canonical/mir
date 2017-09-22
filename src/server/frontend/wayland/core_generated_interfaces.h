@@ -83,10 +83,14 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
     }
 
     uint32_t const max_version;
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<Compositor*>(wl_resource_get_user_data(us));
+    }
     static struct wl_compositor_interface const vtable;
 };
 
@@ -138,6 +142,10 @@ private:
         me->resize(size);
     }
 
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<ShmPool*>(wl_resource_get_user_data(us));
+    }
     static struct wl_shm_pool_interface const vtable;
 };
 
@@ -183,10 +191,14 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
     }
 
     uint32_t const max_version;
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<Shm*>(wl_resource_get_user_data(us));
+    }
     static struct wl_shm_interface const vtable;
 };
 
@@ -223,6 +235,10 @@ private:
         me->destroy();
     }
 
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<Buffer*>(wl_resource_get_user_data(us));
+    }
     static struct wl_buffer_interface const vtable;
 };
 
@@ -293,6 +309,10 @@ private:
         me->set_actions(dnd_actions, preferred_action);
     }
 
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<DataOffer*>(wl_resource_get_user_data(us));
+    }
     static struct wl_data_offer_interface const vtable;
 };
 
@@ -347,6 +367,10 @@ private:
         me->set_actions(dnd_actions);
     }
 
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<DataSource*>(wl_resource_get_user_data(us));
+    }
     static struct wl_data_source_interface const vtable;
 };
 
@@ -414,6 +438,10 @@ private:
         me->release();
     }
 
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<DataDevice*>(wl_resource_get_user_data(us));
+    }
     static struct wl_data_device_interface const vtable;
 };
 
@@ -465,10 +493,14 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
     }
 
     uint32_t const max_version;
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<DataDeviceManager*>(wl_resource_get_user_data(us));
+    }
     static struct wl_data_device_manager_interface const vtable;
 };
 
@@ -512,10 +544,14 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
     }
 
     uint32_t const max_version;
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<Shell*>(wl_resource_get_user_data(us));
+    }
     static struct wl_shell_interface const vtable;
 };
 
@@ -625,6 +661,10 @@ private:
         me->set_class(class_);
     }
 
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<ShellSurface*>(wl_resource_get_user_data(us));
+    }
     static struct wl_shell_surface_interface const vtable;
 };
 
@@ -748,6 +788,10 @@ private:
         me->damage_buffer(x, y, width, height);
     }
 
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<Surface*>(wl_resource_get_user_data(us));
+    }
     static struct wl_surface_interface const vtable;
 };
 
@@ -820,10 +864,14 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
     }
 
     uint32_t const max_version;
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<Seat*>(wl_resource_get_user_data(us));
+    }
     static struct wl_seat_interface const vtable;
 };
 
@@ -875,6 +923,10 @@ private:
         me->release();
     }
 
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<Pointer*>(wl_resource_get_user_data(us));
+    }
     static struct wl_pointer_interface const vtable;
 };
 
@@ -912,6 +964,10 @@ private:
         me->release();
     }
 
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<Keyboard*>(wl_resource_get_user_data(us));
+    }
     static struct wl_keyboard_interface const vtable;
 };
 
@@ -948,6 +1004,10 @@ private:
         me->release();
     }
 
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<Touch*>(wl_resource_get_user_data(us));
+    }
     static struct wl_touch_interface const vtable;
 };
 
@@ -990,10 +1050,14 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
     }
 
     uint32_t const max_version;
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<Output*>(wl_resource_get_user_data(us));
+    }
     static struct wl_output_interface const vtable;
 };
 
@@ -1044,6 +1108,10 @@ private:
         me->subtract(x, y, width, height);
     }
 
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<Region*>(wl_resource_get_user_data(us));
+    }
     static struct wl_region_interface const vtable;
 };
 
@@ -1095,10 +1163,14 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
     }
 
     uint32_t const max_version;
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<Subcompositor*>(wl_resource_get_user_data(us));
+    }
     static struct wl_subcompositor_interface const vtable;
 };
 
@@ -1171,6 +1243,10 @@ private:
         me->set_desync();
     }
 
+    static void resource_destroyed_thunk(wl_resource* us)
+    {
+        delete static_cast<Subsurface*>(wl_resource_get_user_data(us));
+    }
     static struct wl_subsurface_interface const vtable;
 };
 
