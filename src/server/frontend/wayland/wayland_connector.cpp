@@ -21,6 +21,7 @@
 #include "core_generated_interfaces.h"
 
 #include "mir/frontend/shell.h"
+#include "mir/frontend/surface.h"
 
 #include "mir/compositor/buffer_stream.h"
 
@@ -1028,6 +1029,11 @@ public:
     InputCtx<WlKeyboard> const& acquire_keyboard_reference(wl_client* client) const;
     InputCtx<WlTouch> const& acquire_touch_reference(wl_client* client) const;
 
+    void spawn(std::function<void()>&& work)
+    {
+        executor->spawn(std::move(work));
+    }
+
 private:
     std::unordered_map<wl_client*, InputCtx<WlPointer>> mutable pointer;
     std::unordered_map<wl_client*, InputCtx<WlKeyboard>> mutable keyboard;
@@ -1146,13 +1152,14 @@ void WaylandEventSink::send_ping(int32_t)
 {
 }
 
-class SurfaceInputSink : public mf::EventSink
+class SurfaceEventSink : public mf::EventSink
 {
 public:
-    SurfaceInputSink(WlSeat* seat, wl_client* client, wl_resource* target)
+    SurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink)
         : seat{seat},
           client{client},
-          target{target}
+          target{target},
+          event_sink{event_sink}
     {
     }
 
@@ -1172,12 +1179,24 @@ private:
     WlSeat* const seat;
     wl_client* const client;
     wl_resource* const target;
+    wl_resource* const event_sink;
 };
 
-void SurfaceInputSink::handle_event(MirEvent const& event)
+void SurfaceEventSink::handle_event(MirEvent const& event)
 {
     switch (mir_event_get_type(&event))
     {
+    case mir_event_type_resize:
+    {
+        auto resize = mir_event_get_resize_event(&event);
+        seat->spawn([event_sink=event_sink,
+                     width = mir_resize_event_get_width(resize),
+                     height = mir_resize_event_get_height(resize)]()
+        {
+            wl_shell_surface_send_configure(event_sink, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
+        });
+        break;
+    }
     case mir_event_type_input:
     {
         auto input_event = mir_event_get_input_event(&event);
@@ -1362,7 +1381,7 @@ public:
           shell{shell}
     {
         auto* tmp = wl_resource_get_user_data(surface);
-        auto& mir_surface = *static_cast<WlSurface*>(reinterpret_cast<wayland::Surface*>(tmp));
+        auto& mir_surface = *static_cast<WlSurface*>(tmp);
 
         auto const session = session_for_client(client);
 
@@ -1374,7 +1393,15 @@ public:
         surface_id = shell->create_surface(
             session,
             params,
-            std::make_shared<SurfaceInputSink>(&seat, client, surface));
+            std::make_shared<SurfaceEventSink>(&seat, client, surface, resource));
+
+        {
+            // The shell isn't guaranteed to respect the requested size
+            auto const window = session->get_surface(surface_id);
+            auto const size = window->client_size();
+            seat.spawn([resource=resource, height = size.height.as_int(), width = size.width.as_int()]()
+                { wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, width, height); });
+        }
 
         mir_surface.set_resize_handler(
             [shell, session, id = surface_id](geom::Size new_size)
@@ -1429,8 +1456,18 @@ protected:
     void set_fullscreen(
         uint32_t /*method*/,
         uint32_t /*framerate*/,
-        std::experimental::optional<struct wl_resource*> const& /*output*/) override
+        std::experimental::optional<struct wl_resource*> const& output) override
     {
+        mir::shell::SurfaceSpecification mods;
+        mods.state = mir_window_state_fullscreen;
+        if (output)
+        {
+            // TODO{alan_g} mods.output_id = DisplayConfigurationOutputId_from(output)
+        }
+
+        auto const session = session_for_client(client);
+        shell->modify_surface(session, surface_id, mods);
+
     }
 
     void set_popup(
@@ -1443,8 +1480,16 @@ protected:
     {
     }
 
-    void set_maximized(std::experimental::optional<struct wl_resource*> const& /*output*/) override
+    void set_maximized(std::experimental::optional<struct wl_resource*> const& output) override
     {
+        mir::shell::SurfaceSpecification mods;
+        mods.state = mir_window_state_maximized;
+        if (output)
+        {
+            // TODO{alan_g} mods.output_id = DisplayConfigurationOutputId_from(output)
+        }
+        auto const session = session_for_client(client);
+        shell->modify_surface(session, surface_id, mods);
     }
 
     void set_title(std::string const& /*title*/) override
