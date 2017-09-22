@@ -812,7 +812,10 @@ uint32_t calc_button_difference(MirPointerButtons old, MirPointerButtons updated
     case mir_pointer_button_forward:
         return 276; // I dunno. It's a number, I guess.
     default:
-        throw std::logic_error("Whoops, I misunderstand how Mir pointer events work");
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            std::string("Received unsupported mouse button ") +
+            std::to_string(old ^ updated) +
+            ", ignoring"));
     }
 }
 }
@@ -845,25 +848,41 @@ public:
                 {
                     case mir_pointer_action_button_down:
                     {
-                        auto button = calc_button_difference(last_set, mir_pointer_event_buttons(pointer_event));
-                        wl_pointer_send_button(
-                            resource,
-                            serial,
-                            mir_input_event_get_event_time(event) / 1000,
-                            button,
-                            WL_POINTER_BUTTON_STATE_PRESSED);
+                        try
+                        {
+                            auto button = calc_button_difference(last_set, mir_pointer_event_buttons(pointer_event));
+                            wl_pointer_send_button(
+                                resource,
+                                serial,
+                                mir_input_event_get_event_time(event) / 1000,
+                                button,
+                                WL_POINTER_BUTTON_STATE_PRESSED);
+                        }
+                        catch(std::runtime_error const& err)
+                        {
+                            mir::log_error(err.what());
+                        }
+
                         last_set = mir_pointer_event_buttons(pointer_event);
                         break;
                     }
                     case mir_pointer_action_button_up:
                     {
-                        auto button = calc_button_difference(last_set, mir_pointer_event_buttons(pointer_event));
-                        wl_pointer_send_button(
-                            resource,
-                            serial,
-                            mir_input_event_get_event_time(event) / 1000,
-                            button,
-                            WL_POINTER_BUTTON_STATE_RELEASED);
+                        try
+                        {
+                            auto button = calc_button_difference(last_set, mir_pointer_event_buttons(pointer_event));
+                            wl_pointer_send_button(
+                                resource,
+                                serial,
+                                mir_input_event_get_event_time(event) / 1000,
+                                button,
+                                WL_POINTER_BUTTON_STATE_RELEASED);
+                        }
+                        catch (std::runtime_error const& err)
+                        {
+                            mir::log_error(err.what());
+                        }
+
                         last_set = mir_pointer_event_buttons(pointer_event);
                         break;
                     }
