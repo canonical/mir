@@ -50,6 +50,7 @@
 #include <functional>
 #include <type_traits>
 
+#include <linux/input.h>
 #include <algorithm>
 #include <iostream>
 #include <mir/log.h>
@@ -802,15 +803,21 @@ uint32_t calc_button_difference(MirPointerButtons old, MirPointerButtons updated
     switch (old ^ updated)
     {
     case mir_pointer_button_primary:
-        return 272; // No, I have *no* idea why GTK expects 271 to be the primary button.
+        return BTN_LEFT;
     case mir_pointer_button_secondary:
-        return 274;
+        return BTN_RIGHT;
     case mir_pointer_button_tertiary:
-        return 273;
+        return BTN_MIDDLE;
     case mir_pointer_button_back:
-        return 275; // I dunno. It's a number, I guess.
+        return BTN_BACK;
     case mir_pointer_button_forward:
-        return 276; // I dunno. It's a number, I guess.
+        return BTN_FORWARD;
+    case mir_pointer_button_side:
+        return BTN_SIDE;
+    case mir_pointer_button_extra:
+        return BTN_EXTRA;
+    case mir_pointer_button_task:
+        return BTN_TASK;
     default:
         BOOST_THROW_EXCEPTION(std::runtime_error(
             std::string("Received unsupported mouse button ") +
