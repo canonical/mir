@@ -748,9 +748,11 @@ public:
         wl_client* client,
         wl_resource* parent,
         uint32_t id,
+        std::function<void(WlKeyboard*)> const& on_destroy,
         std::shared_ptr<mir::Executor> const& executor)
         : Keyboard(client, parent, id),
-          executor{executor}
+          executor{executor},
+          on_destroy{on_destroy}
     {
     }
 
@@ -788,12 +790,26 @@ public:
 
 private:
     std::shared_ptr<mir::Executor> const executor;
+    std::function<void(WlKeyboard*)> on_destroy;
 
     void release() override;
 };
 
 void WlKeyboard::release()
 {
+    // First we unregister from the input listener...
+    on_destroy(this);
+    /* ...now, we're sure that handle_event() will no longer be called
+     * but there might be previous events already queued up.
+     *
+     * Defer the actual destruction of the WlPointer to an eventloop callback,
+     * so that any previous handle_event() will be completed before we're destroyed
+     */
+    executor->spawn(
+        [this]()
+        {
+            wl_resource_destroy(resource);
+        });
 }
 
 namespace
@@ -835,10 +851,12 @@ public:
         wl_client* client,
         wl_resource* parent,
         uint32_t id,
+        std::function<void(WlPointer*)> const& on_destroy,
         std::shared_ptr<mir::Executor> const& executor)
         : Pointer(client, parent, id),
           display{wl_client_get_display(client)},
-          executor{executor}
+          executor{executor},
+          on_destroy{on_destroy}
     {
     }
 
@@ -960,6 +978,8 @@ private:
     wl_display* const display;
     std::shared_ptr<mir::Executor> const executor;
 
+    std::function<void(WlPointer*)> on_destroy;
+
     MirPointerButtons last_set{0};
     float last_x, last_y, last_vscroll, last_hscroll;
 
@@ -977,7 +997,19 @@ void WlPointer::set_cursor(uint32_t serial, std::experimental::optional<wl_resou
 
 void WlPointer::release()
 {
-    delete this;
+    // First we unregister from the input listener...
+    on_destroy(this);
+    /* ...now, we're sure that handle_event() will no longer be called
+     * but there might be previous events already queued up.
+     *
+     * Defer the actual destruction of the WlPointer to an eventloop callback,
+     * so that any previous handle_event() will be completed before we're destroyed
+     */
+    executor->spawn(
+        [this]()
+        {
+            wl_resource_destroy(resource);
+        });
 }
 
 class WlTouch : public wayland::Touch
@@ -987,8 +1019,11 @@ public:
         wl_client* client,
         wl_resource* parent,
         uint32_t id,
+        std::function<void(WlTouch*)> const& on_destroy,
         std::shared_ptr<mir::Executor> const& /*executor*/)
-        : Touch(client, parent, id)
+        : Touch(client, parent, id),
+          executor{executor},
+          on_destroy{on_destroy}
     {
     }
 
@@ -998,11 +1033,27 @@ public:
 
     // Touch interface
 private:
+    std::shared_ptr<mir::Executor> const executor;
+    std::function<void(WlTouch*)> on_destroy;
+
     void release() override;
 };
 
 void WlTouch::release()
 {
+    // First we unregister from the input listener...
+    on_destroy(this);
+    /* ...now, we're sure that handle_event() will no longer be called
+     * but there might be previous events already queued up.
+     *
+     * Defer the actual destruction of the WlPointer to an eventloop callback,
+     * so that any previous handle_event() will be completed before we're destroyed
+     */
+    executor->spawn(
+        [this]()
+        {
+            wl_resource_destroy(resource);
+        });
 }
 
 template<class InputInterface>
@@ -1015,7 +1066,7 @@ public:
     InputCtx(InputCtx const&) = delete;
     InputCtx& operator=(InputCtx const&) = delete;
 
-    void register_listener(std::shared_ptr<InputInterface> const& listener)
+    void register_listener(InputInterface* listener)
     {
         std::lock_guard<std::mutex> lock{mutex};
         listeners.push_back(listener);
@@ -1024,19 +1075,16 @@ public:
     void unregister_listener(InputInterface const* listener)
     {
         std::lock_guard<std::mutex> lock{mutex};
-        std::remove_if(
+        std::remove(
             listeners.begin(),
             listeners.end(),
-            [listener](auto candidate)
-            {
-                return candidate.get() == listener;
-            });
+            listener);
     }
 
     void handle_event(MirInputEvent const* event, wl_resource* target) const
     {
         std::lock_guard<std::mutex> lock{mutex};
-        for (auto& listener : listeners)
+        for (auto listener : listeners)
         {
             listener->handle_event(event, target);
         }
@@ -1044,7 +1092,7 @@ public:
 
 private:
     std::mutex mutable mutex;
-    std::vector<std::shared_ptr<InputInterface>> listeners;
+    std::vector<InputInterface*> listeners;
 };
 
 class WlSeat
@@ -1109,32 +1157,49 @@ private:
     static void get_pointer(wl_client* client, wl_resource* resource, uint32_t id)
     {
         auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
-        me->pointer[client].register_listener(
-            std::make_shared<WlPointer>(
+        auto& input_ctx = me->pointer[client];
+        input_ctx.register_listener(
+            new WlPointer{
                 client,
                 resource,
                 id,
-                me->executor));
+                [&input_ctx](WlPointer* listener)
+                {
+                    input_ctx.unregister_listener(listener);
+                },
+                me->executor});
     }
     static void get_keyboard(wl_client* client, wl_resource* resource, uint32_t id)
     {
         auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
-        me->keyboard[client].register_listener(
-            std::make_shared<WlKeyboard>(
+        auto& input_ctx = me->keyboard[client];
+
+        input_ctx.register_listener(
+            new WlKeyboard{
                 client,
                 resource,
                 id,
-                me->executor));
+                [&input_ctx](WlKeyboard* listener)
+                {
+                    input_ctx.unregister_listener(listener);
+                },
+                me->executor});
     }
     static void get_touch(wl_client* client, wl_resource* resource, uint32_t id)
     {
         auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
-        me->touch[client].register_listener(
-            std::make_shared<WlTouch>(
+        auto& input_ctx = me->touch[client];
+
+        input_ctx.register_listener(
+            new WlTouch{
                 client,
                 resource,
                 id,
-                me->executor));
+                [&input_ctx](WlTouch* listener)
+                {
+                    input_ctx.unregister_listener(listener);
+                },
+                me->executor});
     }
     static void release(struct wl_client* /*client*/, struct wl_resource* /*resource*/) {}
 
