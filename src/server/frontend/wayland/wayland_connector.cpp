@@ -786,6 +786,29 @@ public:
             });
     }
 
+    void handle_event(MirWindowEvent const* event, wl_resource* target)
+    {
+        if (mir_window_event_get_attribute(event) == mir_window_attrib_focus)
+        {
+            executor->spawn(
+               [resource = resource, serial = wl_display_next_serial(wl_client_get_display(client)),
+                target = target, focussed = mir_window_event_get_attribute_value(event)]()
+                {
+                    if (focussed)
+                    {
+                        wl_array key_state;
+                        wl_array_init(&key_state);
+                        wl_keyboard_send_enter(resource, serial, target, &key_state);
+                        wl_array_release(&key_state);
+                    }
+                    else
+                    {
+                        wl_keyboard_send_leave(resource, serial, target);
+                    }
+                });
+        }
+    }
+
 private:
     std::shared_ptr<mir::Executor> const executor;
 
@@ -991,6 +1014,14 @@ public:
     }
 
     void handle_event(MirInputEvent const* event, wl_resource* target) const
+    {
+        for (auto& listener : listeners)
+        {
+            listener->handle_event(event, target);
+        }
+    }
+
+    void handle_event(MirWindowEvent const* event, wl_resource* target) const
     {
         for (auto& listener : listeners)
         {
@@ -1214,6 +1245,13 @@ void SurfaceEventSink::handle_event(MirEvent const& event)
         default:
             break;
         }
+        break;
+    }
+    case mir_event_type_window:
+    {
+        auto const wev = mir_event_get_window_event(&event);
+
+        seat->acquire_keyboard_reference(client).handle_event(wev, target);
     }
     default:
         break;
