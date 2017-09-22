@@ -332,66 +332,54 @@ class WaylandBuffer :
     public mir::renderer::gl::TextureSource
 {
 public:
-    WaylandBuffer(
+    static std::shared_ptr<mg::Buffer> mir_buffer_from_wl_buffer(
         EGLDisplay dpy,
         wl_resource* buffer,
         std::shared_ptr<mg::EGLExtensions> const& extensions,
         std::function<void()>&& on_consumed)
-        : buffer{buffer},
-          dpy{dpy},
-          egl_image{EGL_NO_IMAGE_KHR},
-          extensions{extensions},
-          on_consumed{std::move(on_consumed)}
     {
+        std::shared_ptr<WaylandBuffer> mir_buffer;
+        DestructionShim* shim;
+
         if (auto notifier = wl_resource_get_destroy_listener(buffer, &on_buffer_destroyed))
         {
-            DestructionShim* shim;
-
+            // We've already constructed a shim for this buffer, update it.
             shim = wl_container_of(notifier, shim, destruction_listener);
 
-            if (shim->associated_buffer)
-                BOOST_THROW_EXCEPTION(std::logic_error("Attempt to associate a single wl_buffer with multiple WaylandBuffer wrappers"));
-
-            shim->associated_buffer = this;
-            buffer_mutex = shim->mutex;
+            if (!(mir_buffer = shim->associated_buffer.lock()))
+            {
+                /*
+                 * We've seen this wl_buffer before, but all the WaylandBuffers associated with it
+                 * have been destroyed.
+                 *
+                 * Recreate a new WaylandBuffer to track the new compositor lifetime.
+                 */
+                mir_buffer = std::shared_ptr<WaylandBuffer>{
+                    new WaylandBuffer{
+                        dpy,
+                        buffer,
+                        extensions,
+                        std::move(on_consumed)}};
+                shim->associated_buffer = mir_buffer;
+            }
         }
         else
         {
-            auto shim = new DestructionShim;
+            mir_buffer = std::shared_ptr<WaylandBuffer>{
+                new WaylandBuffer{
+                    dpy,
+                    buffer,
+                    extensions,
+                    std::move(on_consumed)}};
+            shim = new DestructionShim;
             shim->destruction_listener.notify = &on_buffer_destroyed;
-            shim->associated_buffer = this;
-            buffer_mutex = shim->mutex;
+            shim->associated_buffer = mir_buffer;
 
             wl_resource_add_destroy_listener(buffer, &shim->destruction_listener);
         }
 
-        if (extensions->wayland->eglQueryWaylandBufferWL(dpy, buffer, EGL_WIDTH, &width) == EGL_FALSE)
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WaylandAllocator buffer width"));
-        }
-        if (extensions->wayland->eglQueryWaylandBufferWL(dpy, buffer, EGL_HEIGHT, &height) == EGL_FALSE)
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WaylandAllocator buffer height"));
-        }
-
-        EGLint texture_format;
-        if (!extensions->wayland->eglQueryWaylandBufferWL(dpy, buffer, EGL_TEXTURE_FORMAT, &texture_format))
-        {
-            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WL buffer format"));
-        }
-
-        if (texture_format == EGL_TEXTURE_RGB)
-        {
-            format = mir_pixel_format_xrgb_8888;
-        }
-        else if (texture_format == EGL_TEXTURE_RGBA)
-        {
-            format = mir_pixel_format_argb_8888;
-        }
-        else
-        {
-            BOOST_THROW_EXCEPTION((std::invalid_argument{"YUV buffers are unimplemented"}));
-        }
+        mir_buffer->buffer_mutex = shim->mutex;
+        return mir_buffer;
     }
 
     ~WaylandBuffer()
@@ -403,12 +391,6 @@ public:
         if (buffer)
         {
             wl_resource_queue_event(buffer, WL_BUFFER_RELEASE);
-            auto notifier = wl_resource_get_destroy_listener(buffer, &on_buffer_destroyed);
-            DestructionShim* shim;
-
-            shim = wl_container_of(notifier, shim, destruction_listener);
-
-            shim->associated_buffer = nullptr;
         }
     }
 
@@ -477,6 +459,46 @@ public:
     }
 
 private:
+    WaylandBuffer(
+        EGLDisplay dpy,
+        wl_resource* buffer,
+        std::shared_ptr<mg::EGLExtensions> const& extensions,
+        std::function<void()>&& on_consumed)
+        : buffer{buffer},
+        dpy{dpy},
+        egl_image{EGL_NO_IMAGE_KHR},
+        extensions{extensions},
+        on_consumed{std::move(on_consumed)}
+    {
+        if (extensions->wayland->eglQueryWaylandBufferWL(dpy, buffer, EGL_WIDTH, &width) == EGL_FALSE)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WaylandAllocator buffer width"));
+        }
+        if (extensions->wayland->eglQueryWaylandBufferWL(dpy, buffer, EGL_HEIGHT, &height) == EGL_FALSE)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WaylandAllocator buffer height"));
+        }
+
+        EGLint texture_format;
+        if (!extensions->wayland->eglQueryWaylandBufferWL(dpy, buffer, EGL_TEXTURE_FORMAT, &texture_format))
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WL buffer format"));
+        }
+
+        if (texture_format == EGL_TEXTURE_RGB)
+        {
+            format = mir_pixel_format_xrgb_8888;
+        }
+        else if (texture_format == EGL_TEXTURE_RGBA)
+        {
+            format = mir_pixel_format_argb_8888;
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION((std::invalid_argument{"YUV buffers are unimplemented"}));
+        }
+    }
+
     static void on_buffer_destroyed(wl_listener* listener, void*)
     {
         static_assert(
@@ -488,9 +510,9 @@ private:
 
         {
             std::lock_guard<std::mutex> lock{*shim->mutex};
-            if (shim->associated_buffer)
+            if (auto mir_buffer = shim->associated_buffer.lock())
             {
-                shim->associated_buffer->buffer = nullptr;
+                mir_buffer->buffer = nullptr;
             }
         }
 
@@ -500,7 +522,7 @@ private:
     struct DestructionShim
     {
         std::shared_ptr<std::mutex> const mutex = std::make_shared<std::mutex>();
-        WaylandBuffer* associated_buffer;
+        std::weak_ptr<WaylandBuffer> associated_buffer;
         wl_listener destruction_listener;
     };
 
@@ -542,9 +564,13 @@ void mgm::BufferAllocator::bind_display(wl_display* display)
     }
 }
 
-std::unique_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource (wl_resource* buffer, std::function<void ()>&& on_consumed)
+std::shared_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource (wl_resource* buffer, std::function<void ()>&& on_consumed)
 {
     if (egl_extensions->wayland)
-        return std::make_unique<WaylandBuffer>(dpy, buffer, egl_extensions, std::move(on_consumed));
+        return WaylandBuffer::mir_buffer_from_wl_buffer(
+            dpy,
+            buffer,
+            egl_extensions,
+            std::move(on_consumed));
     return nullptr;
 }

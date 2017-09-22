@@ -23,3 +23,10 @@
    ...
    fun:_M_load_and_test
 }
+
+{
+   New (apparently spurious) on Artful: Syscall param epoll_pwait(sigmask) points to unaddressable byte(s)
+   Memcheck:Param
+   epoll_pwait(sigmask)
+   fun:epoll_pwait
+}

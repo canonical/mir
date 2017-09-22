@@ -796,28 +796,6 @@ void WlKeyboard::release()
 {
 }
 
-namespace
-{
-uint32_t calc_button_difference(MirPointerButtons old, MirPointerButtons updated)
-{
-    switch (old ^ updated)
-    {
-    case mir_pointer_button_primary:
-        return 272; // No, I have *no* idea why GTK expects 271 to be the primary button.
-    case mir_pointer_button_secondary:
-        return 274;
-    case mir_pointer_button_tertiary:
-        return 273;
-    case mir_pointer_button_back:
-        return 275; // I dunno. It's a number, I guess.
-    case mir_pointer_button_forward:
-        return 276; // I dunno. It's a number, I guess.
-    default:
-        throw std::logic_error("Whoops, I misunderstand how Mir pointer events work");
-    }
-}
-}
-
 class WlPointer : public wayland::Pointer
 {
 public:
@@ -845,27 +823,33 @@ public:
                 switch(mir_pointer_event_action(pointer_event))
                 {
                     case mir_pointer_action_button_down:
-                    {
-                        auto button = calc_button_difference(last_set, mir_pointer_event_buttons(pointer_event));
-                        wl_pointer_send_button(
-                            resource,
-                            serial,
-                            mir_input_event_get_event_time(event) / 1000,
-                            button,
-                            WL_POINTER_BUTTON_STATE_PRESSED);
-                        last_set = mir_pointer_event_buttons(pointer_event);
-                        break;
-                    }
                     case mir_pointer_action_button_up:
                     {
-                        auto button = calc_button_difference(last_set, mir_pointer_event_buttons(pointer_event));
-                        wl_pointer_send_button(
-                            resource,
-                            serial,
-                            mir_input_event_get_event_time(event) / 1000,
-                            button,
-                            WL_POINTER_BUTTON_STATE_RELEASED);
-                        last_set = mir_pointer_event_buttons(pointer_event);
+                        auto const current_set  = mir_pointer_event_buttons(pointer_event);
+                        auto const current_time = mir_input_event_get_event_time(event) / 1000;
+
+                        auto button = 272;  // No, I have *no* idea why GTK expects 272 to be the primary button.
+                        // NB button is incremented in the loop and the order mir_pointer_button_XXX matters
+                        for (auto mir_button :
+                            {mir_pointer_button_primary,    // 272
+                             mir_pointer_button_tertiary,   // 273
+                             mir_pointer_button_secondary,  // 274
+                             mir_pointer_button_back,       // 275
+                             mir_pointer_button_forward})   // 276
+                        {
+                            if (mir_button & (current_set ^ last_set))
+                            {
+                                auto const action = (mir_button & current_set) ?
+                                                    WL_POINTER_BUTTON_STATE_PRESSED :
+                                                    WL_POINTER_BUTTON_STATE_RELEASED;
+
+                                wl_pointer_send_button(resource, serial, current_time, button, action);
+                            }
+
+                            ++button;
+                        }
+
+                        last_set = current_set;
                         break;
                     }
                     case mir_pointer_action_enter:
