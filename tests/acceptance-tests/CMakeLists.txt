@@ -62,7 +62,6 @@ set(
   test_client_extensions.cpp
   test_client_cursor_api.cpp
   test_client_library_errors.cpp
-  test_shell_control_of_surface_configuration.cpp
   test_client_library.cpp
   test_presentation_chain.cpp
   test_render_surface.cpp
