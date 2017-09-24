@@ -456,17 +456,7 @@ struct ClientCursor : mtf::HeadlessInProcessServer
 
         server.override_the_cursor_images([]() { return std::make_shared<NamedCursorImages>(); });
 
-        server.override_the_window_manager_builder([this](msh::FocusController* focus_controller)
-            {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-                using PlacementWindowManager = msh::WindowManagerConstructor<mtf::DeclarativePlacementWindowManagerPolicy>;
-                return std::make_shared<PlacementWindowManager>(
-                    focus_controller,
-                    client_geometries,
-                    server.the_shell_display_layout());
-#pragma GCC diagnostic pop
-            });
+        override_window_management_policy<mtf::DeclarativePlacementWindowManagerPolicy>(client_geometries);
 
         server.wrap_shell([&, this](auto const& wrapped)
         {
