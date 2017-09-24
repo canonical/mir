@@ -19,12 +19,13 @@
 #include <mir_toolkit/mir_window.h>
 #include <mir_toolkit/mir_blob.h>
 
+#include <miral/window_management_policy_addendum2.h>
+
 #include <mir/geometry/displacement.h>
 #include <mir/input/input_device_info.h>
 #include <mir/input/device_capability.h>
-#include <mir/shell/canonical_window_manager.h>
-#include <mir/shell/shell.h>
 
+#include <mir_test_framework/canonical_window_manager_policy.h>
 #include <mir_test_framework/connected_client_with_a_window.h>
 #include <mir_test_framework/fake_input_device.h>
 #include <mir_test_framework/stub_server_platform_factory.h>
@@ -70,16 +71,20 @@ private:
 
 void mir_cookie_release(Cookie const&) = delete;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-struct MockWindowManager : mir::shell::CanonicalWindowManager
+struct MockWindowManagementPolicy : mir_test_framework::CanonicalWindowManagerPolicy,
+    miral::WindowManagementPolicyAddendum2
 {
-    using mir::shell::CanonicalWindowManager::CanonicalWindowManager;
+    MockWindowManagementPolicy(
+        miral::WindowManagerTools const& tools,
+        MockWindowManagementPolicy*& self) :
+        mir_test_framework::CanonicalWindowManagerPolicy(tools)
+        {
+            self = this;
+        }
 
-    MOCK_METHOD3(handle_request_move,
-        void(std::shared_ptr<mir::scene::Session> const&, std::shared_ptr<mir::scene::Surface> const&, uint64_t));
+    MOCK_METHOD2(handle_request_move, void(miral::WindowInfo&, MirInputEvent const*));
+    MOCK_METHOD1(handle_request_drag_and_drop, void(miral::WindowInfo&));
 };
-#pragma GCC diagnostic pop
 
 struct MouseMoverAndFaker
 {
@@ -117,13 +122,10 @@ struct ClientMediatedUserGestures : mir_test_framework::ConnectedClientWithAWind
     void SetUp() override
     {
         initial_display_layout({screen_geometry});
-        server.override_the_window_manager_builder([this](mir::shell::FocusController* focus_controller)
-            {
-                return window_manager =
-                    std::make_shared<MockWindowManager>(focus_controller, server.the_shell_display_layout());
-            });
-
+        override_window_management_policy<MockWindowManagementPolicy>(mock_wm_policy);
         mir_test_framework::ConnectedClientWithAWindow::SetUp();
+        ASSERT_THAT(mock_wm_policy, NotNull());
+
         mir_window_set_event_handler(window, &window_event_handler, this);
 
         paint_window();
@@ -134,13 +136,12 @@ struct ClientMediatedUserGestures : mir_test_framework::ConnectedClientWithAWind
     void TearDown() override
     {
         reset_window_event_handler();
-        window_manager.reset();
         mir_test_framework::ConnectedClientWithAWindow::TearDown();
     }
 
     auto user_initiates_gesture() -> Cookie;
 
-    std::shared_ptr<MockWindowManager> window_manager;
+    MockWindowManagementPolicy* mock_wm_policy = 0;
 
 private:
     void center_mouse();
@@ -197,7 +198,7 @@ void ClientMediatedUserGestures::paint_window()
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     mir_buffer_stream_swap_buffers_sync(mir_window_get_buffer_stream(window));
 #pragma GCC diagnostic pop
-    
+
     EXPECT_THAT(have_focus.wait_for(receive_event_timeout), Eq(true));
 
     reset_window_event_handler();
@@ -280,7 +281,7 @@ TEST_F(ClientMediatedUserGestures, when_client_initiates_move_window_manager_han
 {
     auto const cookie = user_initiates_gesture();
     Signal have_request;
-    EXPECT_CALL(*window_manager, handle_request_move(_, _, _)).WillOnce(InvokeWithoutArgs([&]{ have_request.raise(); }));
+    EXPECT_CALL(*mock_wm_policy, handle_request_move(_, _)).WillOnce(InvokeWithoutArgs([&]{ have_request.raise(); }));
 
     mir_window_request_user_move(window, cookie);
 
