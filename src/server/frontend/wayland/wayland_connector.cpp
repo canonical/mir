@@ -560,7 +560,7 @@ private:
 
 void WlSurface::destroy()
 {
-    delete this;
+    wl_resource_destroy(resource);
 }
 
 void WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y)
