@@ -21,6 +21,7 @@
 
 #include <mir_toolkit/common.h>
 #include "mir/graphics/buffer_id.h"
+#include "mir/geometry/size.h"
 #include <functional>
 #include <memory>
 
