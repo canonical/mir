@@ -1074,10 +1074,12 @@ public:
     void unregister_listener(InputInterface const* listener)
     {
         std::lock_guard<std::mutex> lock{mutex};
-        std::remove(
-            listeners.begin(),
-            listeners.end(),
-            listener);
+        listeners.erase(
+            std::remove(
+                listeners.begin(),
+                listeners.end(),
+                listener),
+            listeners.end());
     }
 
     void handle_event(MirInputEvent const* event, wl_resource* target) const
