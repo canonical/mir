@@ -41,6 +41,8 @@
 
 #include "mir/executor.h"
 
+#include "mir/client/event.h"
+
 #include <system_error>
 #include <sys/eventfd.h>
 #include <wayland-server-core.h>
@@ -70,6 +72,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
+namespace mcl = mir::client;
 
 namespace mir
 {
@@ -742,6 +745,19 @@ void WlCompositor::create_region(wl_client* client, wl_resource* resource, uint3
 class WlPointer;
 class WlTouch;
 
+template<typename Callable>
+auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callable)
+{
+    return
+        [callable = std::move(callable), condition]()
+        {
+            if (*condition)
+                return;
+
+            callable();
+        };
+}
+
 class WlKeyboard : public wayland::Keyboard
 {
 public:
@@ -766,20 +782,13 @@ public:
 
     void handle_event(MirInputEvent const* event, wl_resource* /*target*/)
     {
-        executor->spawn(
+        executor->spawn(run_unless(
+            destroyed,
             [
-                destroyed = destroyed,
-                ev = mir_event_ref(mir_input_event_get_event(event)),
+                ev = mcl::Event{mir_event_ref(mir_input_event_get_event(event))},
                 this
             ] ()
             {
-                auto event_holder = std::unique_ptr<MirEvent const, decltype(&mir_event_unref)>{
-                    ev, &mir_event_unref
-                };
-
-                if (*destroyed)
-                    return;
-
                 int const serial = wl_display_next_serial(wl_client_get_display(client));
                 auto event = mir_event_get_input_event(ev);
                 auto key_event = mir_input_event_get_keyboard_event(event);
@@ -803,24 +812,21 @@ public:
                     default:
                         break;
                 }
-            });
+            }));
     }
 
     void handle_event(MirWindowEvent const* event, wl_resource* target)
     {
         if (mir_window_event_get_attribute(event) == mir_window_attrib_focus)
         {
-            executor->spawn(
+            executor->spawn(run_unless(
+                destroyed,
                 [
-                    destroyed = destroyed,
                     target = target,
                     focussed = mir_window_event_get_attribute_value(event),
                     this
                 ]()
                 {
-                    if (*destroyed)
-                        return;
-
                     auto const serial = wl_display_next_serial(wl_client_get_display(client));
                     if (focussed)
                     {
@@ -833,7 +839,7 @@ public:
                     {
                         wl_keyboard_send_leave(resource, serial, target);
                     }
-                });
+                }));
         }
     }
 
