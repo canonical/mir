@@ -870,25 +870,27 @@ public:
                         auto const current_set  = mir_pointer_event_buttons(pointer_event);
                         auto const current_time = mir_input_event_get_event_time(event) / 1000;
 
-                        auto button = BTN_MOUSE;
-                        // NB button is incremented in the loop and the order mir_pointer_button_XXX matters
-                        for (auto mir_button :
-                            {mir_pointer_button_primary,    // 272
-                             mir_pointer_button_tertiary,   // 273
-                             mir_pointer_button_secondary,  // 274
-                             mir_pointer_button_back,       // 275
-                             mir_pointer_button_forward})   // 276
+                        std::unordered_map<MirPointerButton, int> const button_mappings = {
+                            {mir_pointer_button_primary, BTN_LEFT},
+                            {mir_pointer_button_secondary, BTN_RIGHT},
+                            {mir_pointer_button_tertiary, BTN_MIDDLE},
+                            {mir_pointer_button_back, BTN_BACK},
+                            {mir_pointer_button_forward, BTN_FORWARD},
+                            {mir_pointer_button_side, BTN_SIDE},
+                            {mir_pointer_button_task, BTN_TASK},
+                            {mir_pointer_button_extra, BTN_EXTRA}
+                        };
+
+                        for (auto mapping : button_mappings)
                         {
-                            if (mir_button & (current_set ^ last_set))
+                            if (mapping.first & (current_set ^ last_set))
                             {
-                                auto const action = (mir_button & current_set) ?
+                                auto const action = (mapping.first & current_set) ?
                                                     WL_POINTER_BUTTON_STATE_PRESSED :
                                                     WL_POINTER_BUTTON_STATE_RELEASED;
 
-                                wl_pointer_send_button(resource, serial, current_time, button, action);
+                                wl_pointer_send_button(resource, serial, current_time, mapping.second, action);
                             }
-
-                            ++button;
                         }
 
                         last_set = current_set;
