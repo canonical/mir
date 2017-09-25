@@ -869,14 +869,22 @@ public:
         : Pointer(client, parent, id),
           display{wl_client_get_display(client)},
           executor{executor},
-          on_destroy{on_destroy}
+          on_destroy{on_destroy},
+          destroyed{std::make_shared<bool>(false)}
     {
+    }
+
+    ~WlPointer()
+    {
+        on_destroy(this);
+        *destroyed = true;
     }
 
     void handle_event(MirInputEvent const* event, wl_resource* target)
     {
-        executor->spawn(
-            [ev = mir_event_ref(mir_input_event_get_event(event)), target, this]()
+        executor->spawn(run_unless(
+            destroyed,
+            [ev = mcl::Event{mir_input_event_get_event(event)}, target, this]()
             {
                 auto const serial = wl_display_next_serial(display);
                 auto const event = mir_event_get_input_event(ev);
@@ -975,7 +983,7 @@ public:
                     case mir_pointer_actions:
                         break;
                 }
-            });
+            }));
     }
 
     // Pointer interface
@@ -984,6 +992,7 @@ private:
     std::shared_ptr<mir::Executor> const executor;
 
     std::function<void(WlPointer*)> on_destroy;
+    std::shared_ptr<bool> const destroyed;
 
     MirPointerButtons last_set{0};
     float last_x, last_y, last_vscroll, last_hscroll;
@@ -1002,19 +1011,7 @@ void WlPointer::set_cursor(uint32_t serial, std::experimental::optional<wl_resou
 
 void WlPointer::release()
 {
-    // First we unregister from the input listener...
-    on_destroy(this);
-    /* ...now, we're sure that handle_event() will no longer be called
-     * but there might be previous events already queued up.
-     *
-     * Defer the actual destruction of the WlPointer to an eventloop callback,
-     * so that any previous handle_event() will be completed before we're destroyed
-     */
-    executor->spawn(
-        [this]()
-        {
-            wl_resource_destroy(resource);
-        });
+    wl_resource_destroy(resource);
 }
 
 class WlTouch : public wayland::Touch
@@ -1025,11 +1022,17 @@ public:
         wl_resource* parent,
         uint32_t id,
         std::function<void(WlTouch*)> const& on_destroy,
-        std::shared_ptr<mir::Executor> const& /*executor*/)
+        std::shared_ptr<mir::Executor> const& executor)
         : Touch(client, parent, id),
           executor{executor},
           on_destroy{on_destroy}
     {
+    }
+
+    ~WlTouch()
+    {
+        on_destroy(this);
+        *destroyed = true;
     }
 
     void handle_event(MirInputEvent const* /*event*/, wl_resource* /*target*/)
@@ -1040,25 +1043,14 @@ public:
 private:
     std::shared_ptr<mir::Executor> const executor;
     std::function<void(WlTouch*)> on_destroy;
+    std::shared_ptr<bool> const destroyed;
 
     void release() override;
 };
 
 void WlTouch::release()
 {
-    // First we unregister from the input listener...
-    on_destroy(this);
-    /* ...now, we're sure that handle_event() will no longer be called
-     * but there might be previous events already queued up.
-     *
-     * Defer the actual destruction of the WlPointer to an eventloop callback,
-     * so that any previous handle_event() will be completed before we're destroyed
-     */
-    executor->spawn(
-        [this]()
-        {
-            wl_resource_destroy(resource);
-        });
+    wl_resource_destroy(resource);
 }
 
 template<class InputInterface>
