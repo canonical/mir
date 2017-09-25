@@ -83,14 +83,10 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
+        wl_resource_set_implementation(resource, &vtable, me, nullptr);
     }
 
     uint32_t const max_version;
-    static void resource_destroyed_thunk(wl_resource* us)
-    {
-        delete static_cast<Compositor*>(wl_resource_get_user_data(us));
-    }
     static struct wl_compositor_interface const vtable;
 };
 
@@ -112,7 +108,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, this, nullptr);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
     virtual ~ShmPool() = default;
 
@@ -191,14 +187,10 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
+        wl_resource_set_implementation(resource, &vtable, me, nullptr);
     }
 
     uint32_t const max_version;
-    static void resource_destroyed_thunk(wl_resource* us)
-    {
-        delete static_cast<Shm*>(wl_resource_get_user_data(us));
-    }
     static struct wl_shm_interface const vtable;
 };
 
@@ -219,7 +211,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, this, nullptr);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
     virtual ~Buffer() = default;
 
@@ -259,7 +251,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, this, nullptr);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
     virtual ~DataOffer() = default;
 
@@ -337,7 +329,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, this, nullptr);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
     virtual ~DataSource() = default;
 
@@ -393,7 +385,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, this, nullptr);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
     virtual ~DataDevice() = default;
 
@@ -493,14 +485,10 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
+        wl_resource_set_implementation(resource, &vtable, me, nullptr);
     }
 
     uint32_t const max_version;
-    static void resource_destroyed_thunk(wl_resource* us)
-    {
-        delete static_cast<DataDeviceManager*>(wl_resource_get_user_data(us));
-    }
     static struct wl_data_device_manager_interface const vtable;
 };
 
@@ -544,14 +532,10 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
+        wl_resource_set_implementation(resource, &vtable, me, nullptr);
     }
 
     uint32_t const max_version;
-    static void resource_destroyed_thunk(wl_resource* us)
-    {
-        delete static_cast<Shell*>(wl_resource_get_user_data(us));
-    }
     static struct wl_shell_interface const vtable;
 };
 
@@ -572,7 +556,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, this, nullptr);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
     virtual ~ShellSurface() = default;
 
@@ -694,7 +678,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, this, nullptr);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
     virtual ~Surface() = default;
 
@@ -864,14 +848,10 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
+        wl_resource_set_implementation(resource, &vtable, me, nullptr);
     }
 
     uint32_t const max_version;
-    static void resource_destroyed_thunk(wl_resource* us)
-    {
-        delete static_cast<Seat*>(wl_resource_get_user_data(us));
-    }
     static struct wl_seat_interface const vtable;
 };
 
@@ -895,7 +875,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, this, nullptr);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
     virtual ~Pointer() = default;
 
@@ -948,7 +928,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, this, nullptr);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
     virtual ~Keyboard() = default;
 
@@ -988,7 +968,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, this, nullptr);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
     virtual ~Touch() = default;
 
@@ -1050,14 +1030,10 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
+        wl_resource_set_implementation(resource, &vtable, me, nullptr);
     }
 
     uint32_t const max_version;
-    static void resource_destroyed_thunk(wl_resource* us)
-    {
-        delete static_cast<Output*>(wl_resource_get_user_data(us));
-    }
     static struct wl_output_interface const vtable;
 };
 
@@ -1078,7 +1054,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, this, nullptr);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
     virtual ~Region() = default;
 
@@ -1163,14 +1139,10 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, &resource_destroyed_thunk);
+        wl_resource_set_implementation(resource, &vtable, me, nullptr);
     }
 
     uint32_t const max_version;
-    static void resource_destroyed_thunk(wl_resource* us)
-    {
-        delete static_cast<Subcompositor*>(wl_resource_get_user_data(us));
-    }
     static struct wl_subcompositor_interface const vtable;
 };
 
@@ -1192,7 +1164,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, this, nullptr);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
     virtual ~Subsurface() = default;
 
