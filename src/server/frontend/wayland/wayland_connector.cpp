@@ -753,15 +753,33 @@ public:
         std::shared_ptr<mir::Executor> const& executor)
         : Keyboard(client, parent, id),
           executor{executor},
-          on_destroy{on_destroy}
+          on_destroy{on_destroy},
+          destroyed{std::make_shared<bool>(false)}
     {
+    }
+
+    ~WlKeyboard()
+    {
+        on_destroy(this);
+        *destroyed = true;
     }
 
     void handle_event(MirInputEvent const* event, wl_resource* /*target*/)
     {
         executor->spawn(
-            [ev = mir_event_ref(mir_input_event_get_event(event)), this] ()
+            [
+                destroyed = destroyed,
+                ev = mir_event_ref(mir_input_event_get_event(event)),
+                this
+            ] ()
             {
+                auto event_holder = std::unique_ptr<MirEvent const, decltype(&mir_event_unref)>{
+                    ev, &mir_event_unref
+                };
+
+                if (*destroyed)
+                    return;
+
                 int const serial = wl_display_next_serial(wl_client_get_display(client));
                 auto event = mir_event_get_input_event(ev);
                 auto key_event = mir_input_event_get_keyboard_event(event);
@@ -785,7 +803,6 @@ public:
                     default:
                         break;
                 }
-                mir_event_unref(ev);
             });
     }
 
@@ -794,9 +811,17 @@ public:
         if (mir_window_event_get_attribute(event) == mir_window_attrib_focus)
         {
             executor->spawn(
-               [resource = resource, serial = wl_display_next_serial(wl_client_get_display(client)),
-                target = target, focussed = mir_window_event_get_attribute_value(event)]()
+                [
+                    destroyed = destroyed,
+                    target = target,
+                    focussed = mir_window_event_get_attribute_value(event),
+                    this
+                ]()
                 {
+                    if (*destroyed)
+                        return;
+
+                    auto const serial = wl_display_next_serial(wl_client_get_display(client));
                     if (focussed)
                     {
                         wl_array key_state;
@@ -815,25 +840,14 @@ public:
 private:
     std::shared_ptr<mir::Executor> const executor;
     std::function<void(WlKeyboard*)> on_destroy;
+    std::shared_ptr<bool> const destroyed;
 
     void release() override;
 };
 
 void WlKeyboard::release()
 {
-    // First we unregister from the input listener...
-    on_destroy(this);
-    /* ...now, we're sure that handle_event() will no longer be called
-     * but there might be previous events already queued up.
-     *
-     * Defer the actual destruction of the WlPointer to an eventloop callback,
-     * so that any previous handle_event() will be completed before we're destroyed
-     */
-    executor->spawn(
-        [this]()
-        {
-            wl_resource_destroy(resource);
-        });
+    wl_resource_destroy(resource);
 }
 
 class WlPointer : public wayland::Pointer
