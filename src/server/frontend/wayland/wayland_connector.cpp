@@ -1093,6 +1093,7 @@ public:
 
     void handle_event(MirWindowEvent const* event, wl_resource* target) const
     {
+        std::lock_guard<std::mutex> lock{mutex};
         for (auto& listener : listeners)
         {
             listener->handle_event(event, target);
