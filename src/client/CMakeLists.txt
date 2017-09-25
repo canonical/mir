@@ -118,6 +118,7 @@ add_library(mirclientobjects OBJECT
   ${CMAKE_SOURCE_DIR}/include/client/mir/client/connection.h
   ${CMAKE_SOURCE_DIR}/include/client/mir/client/display_config.h
   ${CMAKE_SOURCE_DIR}/include/client/mir/client/window.h
+  ${CMAKE_SOURCE_DIR}/include/client/mir/client/event.h
 )
 
 # Ensure protobuf C++ headers have been produced before
