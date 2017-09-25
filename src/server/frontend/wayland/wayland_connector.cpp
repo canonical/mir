@@ -1436,7 +1436,7 @@ public:
 
         auto params = ms::SurfaceCreationParameters()
             .of_type(mir_window_type_freestyle)
-            .of_size(geom::Size{100, 100})
+            .of_size(geom::Size{640, 480})
             .with_buffer_stream(mir_surface.stream_id);
 
         auto const sink = std::make_shared<SurfaceEventSink>(&seat, client, surface, resource);
