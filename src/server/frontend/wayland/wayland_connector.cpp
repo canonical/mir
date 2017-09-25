@@ -898,7 +898,7 @@ public:
                         auto const current_set  = mir_pointer_event_buttons(pointer_event);
                         auto const current_time = mir_input_event_get_event_time(event) / 1000;
 
-                        std::unordered_map<MirPointerButton, int> const button_mappings = {
+                        std::initializer_list<std::pair<MirPointerButton, int>> const button_mappings = {
                             {mir_pointer_button_primary, BTN_LEFT},
                             {mir_pointer_button_secondary, BTN_RIGHT},
                             {mir_pointer_button_tertiary, BTN_MIDDLE},
