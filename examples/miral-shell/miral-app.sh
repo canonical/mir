@@ -43,7 +43,7 @@ done
 if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 
 if [ -e "${socket}" ]; then echo "Error: session endpoint '${socket}' already exists"; exit 1 ;fi
-if [ -e "${wayland_display}" ]; then echo "Error: wayland endpoint '${wayland_display}' already exists"; exit 1 ;fi
+if [ -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; then echo "Error: wayland endpoint '${wayland_display}' already exists"; exit 1 ;fi
 
 qtubuntu_desktop_installed=$(apt list qtubuntu-desktop 2>/dev/null | grep installed | wc -l)
 if [ "${qtubuntu_desktop_installed}" == "0" ]; then echo "Need qtubuntu-desktop - run \"sudo apt install qtubuntu-desktop\""; exit 1 ;fi

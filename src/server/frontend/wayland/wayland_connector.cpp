@@ -1190,7 +1190,8 @@ public:
         : seat{seat},
           client{client},
           target{target},
-          event_sink{event_sink}
+          event_sink{event_sink},
+          window_size{geometry::Size{0,0}}
     {
     }
 
@@ -1206,11 +1207,17 @@ public:
     void error_buffer(geometry::Size, MirPixelFormat, std::string const& ) override {}
     void update_buffer(graphics::Buffer&) override {}
 
+    void latest_resize(geometry::Size window_size)
+    {
+        this->window_size = window_size;
+    }
+
 private:
     WlSeat* const seat;
     wl_client* const client;
     wl_resource* const target;
     wl_resource* const event_sink;
+    std::atomic<geometry::Size> window_size;
 };
 
 void SurfaceEventSink::handle_event(MirEvent const& event)
@@ -1220,12 +1227,16 @@ void SurfaceEventSink::handle_event(MirEvent const& event)
     case mir_event_type_resize:
     {
         auto resize = mir_event_get_resize_event(&event);
-        seat->spawn([event_sink=event_sink,
-                     width = mir_resize_event_get_width(resize),
-                     height = mir_resize_event_get_height(resize)]()
+        geometry::Size new_size{mir_resize_event_get_width(resize), mir_resize_event_get_height(resize)};
+        if (window_size != new_size)
         {
-            wl_shell_surface_send_configure(event_sink, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
-        });
+            seat->spawn([event_sink=event_sink,
+                         width = mir_resize_event_get_width(resize),
+                         height = mir_resize_event_get_height(resize)]()
+                {
+                    wl_shell_surface_send_configure(event_sink, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
+                });
+        }
         break;
     }
     case mir_event_type_input:
@@ -1425,25 +1436,25 @@ public:
 
         auto params = ms::SurfaceCreationParameters()
             .of_type(mir_window_type_freestyle)
-            .of_size(geom::Size{100, 100})
+            .of_size(geom::Size{640, 480})
             .with_buffer_stream(mir_surface.stream_id);
 
-        surface_id = shell->create_surface(
-            session,
-            params,
-            std::make_shared<SurfaceEventSink>(&seat, client, surface, resource));
+        auto const sink = std::make_shared<SurfaceEventSink>(&seat, client, surface, resource);
+        surface_id = shell->create_surface(session, params, sink);
 
         {
             // The shell isn't guaranteed to respect the requested size
             auto const window = session->get_surface(surface_id);
             auto const size = window->client_size();
+            sink->latest_resize(size);
             seat.spawn([resource=resource, height = size.height.as_int(), width = size.width.as_int()]()
                 { wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, width, height); });
         }
 
         mir_surface.set_resize_handler(
-            [shell, session, id = surface_id](geom::Size new_size)
+            [shell, session, id = surface_id, sink](geom::Size new_size)
             {
+                sink->latest_resize(new_size);
                 shell::SurfaceSpecification new_size_spec;
                 new_size_spec.width = new_size.width;
                 new_size_spec.height = new_size.height;
