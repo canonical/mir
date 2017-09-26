@@ -121,6 +121,20 @@ bool parse_optional(xmlpp::Element const& arg)
     return false;
 }
 
+void emit_indented_lines(std::ostream& out, std::string const& indent,
+    std::initializer_list<std::initializer_list<std::string>> lines)
+{
+    for (auto const& line : lines)
+    {
+        out << indent;
+        for (auto const& fragment : line)
+        {
+            out << fragment;
+        }
+        out << std::endl;
+    }
+}
+
 class Interface;
 
 class Argument
@@ -255,20 +269,6 @@ private:
     std::string const name;
     std::vector<Argument> arguments;
 };
-
-void emit_indented_lines(std::ostream& out, std::string const& indent,
-                         std::initializer_list<std::initializer_list<std::string>> lines)
-{
-    for (auto const& line : lines)
-    {
-        out << indent;
-        for (auto const& fragment : line)
-        {
-            out << fragment;
-        }
-        out << std::endl;
-    }
-}
 
 class Interface
 {
