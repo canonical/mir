@@ -295,6 +295,19 @@ wl_shm_buffer* shm_buffer_from_resource_checked(wl_resource* resource)
 
     return buffer;
 }
+
+template<typename Callable>
+auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callable)
+{
+    return
+        [callable = std::move(callable), condition]()
+        {
+            if (*condition)
+                return;
+
+            callable();
+        };
+}
 }
 
 class WlShmBuffer :
@@ -511,7 +524,8 @@ public:
           allocator{allocator},
           executor{executor},
           pending_buffer{nullptr},
-          pending_frames{std::make_shared<std::vector<wl_resource*>>()}
+          pending_frames{std::make_shared<std::vector<wl_resource*>>()},
+          destroyed{std::make_shared<bool>(false)}
     {
         auto session = session_for_client(client);
         mg::BufferProperties const props{
@@ -525,6 +539,13 @@ public:
 
         // wl_surface is specified to act in mailbox mode
         stream->allow_framedropping(true);
+    }
+
+    ~WlSurface()
+    {
+        *destroyed = true;
+        if (auto session = session_for_client(client))
+            session->destroy_buffer_stream(stream_id);
     }
 
     void set_resize_handler(std::function<void(geom::Size)> const& handler)
@@ -548,6 +569,7 @@ private:
 
     wl_resource* pending_buffer;
     std::shared_ptr<std::vector<wl_resource*>> const pending_frames;
+    std::shared_ptr<bool> const destroyed;
 
     void destroy();
     void attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y);
@@ -620,9 +642,10 @@ void WlSurface::commit()
         std::shared_ptr<mg::Buffer> mir_buffer;
         auto shm_buffer = wl_shm_buffer_get(pending_buffer);
         auto send_frame_notifications =
-            [executor = executor, frames = pending_frames]()
+            [executor = executor, frames = pending_frames, destroyed = destroyed]()
             {
-                executor->spawn(
+                executor->spawn(run_unless(
+                    destroyed,
                     [frames]()
                     {
                         /*
@@ -639,7 +662,7 @@ void WlSurface::commit()
                             wl_resource_destroy(frame);
                         }
                         frames->clear();
-                    });
+                    }));
             };
 
         if (shm_buffer)
@@ -744,19 +767,6 @@ void WlCompositor::create_region(wl_client* client, wl_resource* resource, uint3
 
 class WlPointer;
 class WlTouch;
-
-template<typename Callable>
-auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callable)
-{
-    return
-        [callable = std::move(callable), condition]()
-        {
-            if (*condition)
-                return;
-
-            callable();
-        };
-}
 
 class WlKeyboard : public wayland::Keyboard
 {
