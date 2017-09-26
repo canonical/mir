@@ -1864,7 +1864,22 @@ private:
         while (!executor->workqueue.empty())
         {
             auto work = std::move(executor->workqueue.front());
-            work();
+            try
+            {
+                work();
+            }
+            catch(std::exception const& err)
+            {
+                mir::log_critical(
+                    "Exception processing Wayland event loop work item: %s",
+                    boost::diagnostic_information(err).c_str());
+            }
+            catch(...)
+            {
+                mir::log_critical(
+                    "Unknown exception processing Wayland event loop work item.");
+            }
+
             executor->workqueue.pop_front();
         }
 
