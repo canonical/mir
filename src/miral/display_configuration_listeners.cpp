@@ -83,7 +83,8 @@ void miral::DisplayConfigurationListeners::configuration_applied(std::shared_ptr
             {
             Output o{output};
 
-            if (!o.connected() || !o.valid()) return;
+            if (!o.valid() || !o.used() || !o.connected() || o.power_mode() != mir_power_mode_on)
+                return;
 
             auto op = find_if(
                 begin(active_outputs), end(active_outputs), [&](Output const& oo)
