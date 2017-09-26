@@ -1066,8 +1066,81 @@ public:
         *destroyed = true;
     }
 
-    void handle_event(MirInputEvent const* /*event*/, wl_resource* /*target*/)
+    void handle_event(MirInputEvent const* event, wl_resource* target)
     {
+        executor->spawn(run_unless(
+            destroyed,
+            [ev = mcl::Event{mir_input_event_get_event(event)}, target = target, this]()
+            {
+                auto const input_ev = mir_event_get_input_event(ev);
+                auto const touch_ev = mir_input_event_get_touch_event(input_ev);
+
+                for (auto i = 0u; i < mir_touch_event_point_count(touch_ev); ++i)
+                {
+                    auto const touch_id = mir_touch_event_id(touch_ev, i);
+                    auto const action = mir_touch_event_action(touch_ev, i);
+                    auto const x = mir_touch_event_axis_value(
+                        touch_ev,
+                        i,
+                        mir_touch_axis_x);
+                    auto const y = mir_touch_event_axis_value(
+                        touch_ev,
+                        i,
+                        mir_touch_axis_y);
+
+                    switch (action)
+                    {
+                    case mir_touch_action_down:
+                        wl_touch_send_down(
+                            resource,
+                            wl_display_get_serial(wl_client_get_display(client)),
+                            mir_input_event_get_event_time(input_ev) / 1000,
+                            target,
+                            touch_id,
+                            wl_fixed_from_double(x),
+                            wl_fixed_from_double(y));
+                        break;
+                    case mir_touch_action_up:
+                        wl_touch_send_up(
+                            resource,
+                            wl_display_get_serial(wl_client_get_display(client)),
+                            mir_input_event_get_event_time(input_ev) / 1000,
+                            touch_id);
+                        break;
+                    case mir_touch_action_change:
+                        wl_touch_send_motion(
+                            resource,
+                            mir_input_event_get_event_time(input_ev) / 1000,
+                            touch_id,
+                            wl_fixed_from_double(x),
+                            wl_fixed_from_double(y));
+                        break;
+                    case mir_touch_actions:
+                        /*
+                         * We should never receive an event with this action set;
+                         * the only way would be if a *new* action has been added
+                         * to the enum, and this hasn't been updated.
+                         *
+                         * There's nothing to do here, but don't use default: so
+                         * that the compiler will warn if a new enum value is added.
+                         */
+                        break;
+                    }
+                }
+
+                if (mir_touch_event_point_count(touch_ev) > 0)
+                {
+                    /*
+                     * This is mostly paranoia; I assume we won't actually be called
+                     * with an empty touch event.
+                     *
+                     * Regardless, the Wayland protocol requires that there be at least
+                     * one event sent before we send the ending frame, so make that explicit.
+                     */
+                    wl_touch_send_frame(resource);
+                }
+            }
+            ));
     }
 
     // Touch interface
@@ -1190,7 +1263,8 @@ private:
         wl_seat_send_capabilities(
             resource,
             WL_SEAT_CAPABILITY_POINTER |
-            WL_SEAT_CAPABILITY_KEYBOARD);
+            WL_SEAT_CAPABILITY_KEYBOARD |
+            WL_SEAT_CAPABILITY_TOUCH);
         wl_seat_send_name(
             resource,
             "seat0");
