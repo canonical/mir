@@ -898,18 +898,17 @@ public:
                         auto const current_set  = mir_pointer_event_buttons(pointer_event);
                         auto const current_time = mir_input_event_get_event_time(event) / 1000;
 
-                        std::initializer_list<std::pair<MirPointerButton, int>> const button_mappings = {
-                            {mir_pointer_button_primary, BTN_LEFT},
-                            {mir_pointer_button_secondary, BTN_RIGHT},
-                            {mir_pointer_button_tertiary, BTN_MIDDLE},
-                            {mir_pointer_button_back, BTN_BACK},
-                            {mir_pointer_button_forward, BTN_FORWARD},
-                            {mir_pointer_button_side, BTN_SIDE},
-                            {mir_pointer_button_task, BTN_TASK},
-                            {mir_pointer_button_extra, BTN_EXTRA}
-                        };
-
-                        for (auto mapping : button_mappings)
+                        for (auto const& mapping :
+                            {
+                                std::make_pair(mir_pointer_button_primary, BTN_LEFT),
+                                std::make_pair(mir_pointer_button_secondary, BTN_RIGHT),
+                                std::make_pair(mir_pointer_button_tertiary, BTN_MIDDLE),
+                                std::make_pair(mir_pointer_button_back, BTN_BACK),
+                                std::make_pair(mir_pointer_button_forward, BTN_FORWARD),
+                                std::make_pair(mir_pointer_button_side, BTN_SIDE),
+                                std::make_pair(mir_pointer_button_task, BTN_TASK),
+                                std::make_pair(mir_pointer_button_extra, BTN_EXTRA)
+                            })
                         {
                             if (mapping.first & (current_set ^ last_set))
                             {
