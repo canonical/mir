@@ -1056,7 +1056,8 @@ public:
         std::shared_ptr<mir::Executor> const& executor)
         : Touch(client, parent, id),
           executor{executor},
-          on_destroy{on_destroy}
+          on_destroy{on_destroy},
+          destroyed{std::make_shared<bool>(false)}
     {
     }
 
