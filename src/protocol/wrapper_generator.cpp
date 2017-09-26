@@ -373,6 +373,16 @@ public:
 
         if (!methods.empty())
         {
+            if (!is_global)
+            {
+                emit_indented_lines(out, "    ", {
+                    {"static void resource_destroyed_thunk(wl_resource* us)"},
+                    {"{"},
+                    {"    delete static_cast<", generated_name, "*>(wl_resource_get_user_data(us));"},
+                    {"}"}
+                });
+            }
+
             emit_indented_lines(out, "    ", {
                 { "static struct ", wl_name, "_interface const vtable;" }
             });
@@ -427,7 +437,7 @@ private:
         if (has_vtable)
         {
             emit_indented_lines(out, indent + "    ",
-                {{ "wl_resource_set_implementation(resource, &vtable, this, nullptr);" }});
+                {{ "wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);" }});
         }
         emit_indented_lines(out, indent, {
             { "}" }

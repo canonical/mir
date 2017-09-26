@@ -41,6 +41,8 @@
 
 #include "mir/executor.h"
 
+#include "mir/client/event.h"
+
 #include <system_error>
 #include <sys/eventfd.h>
 #include <wayland-server-core.h>
@@ -51,6 +53,7 @@
 #include <functional>
 #include <type_traits>
 
+#include <linux/input.h>
 #include <algorithm>
 #include <iostream>
 #include <mir/log.h>
@@ -69,6 +72,7 @@ namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
+namespace mcl = mir::client;
 
 namespace mir
 {
@@ -559,7 +563,7 @@ private:
 
 void WlSurface::destroy()
 {
-    delete this;
+    wl_resource_destroy(resource);
 }
 
 void WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y)
@@ -741,6 +745,19 @@ void WlCompositor::create_region(wl_client* client, wl_resource* resource, uint3
 class WlPointer;
 class WlTouch;
 
+template<typename Callable>
+auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callable)
+{
+    return
+        [callable = std::move(callable), condition]()
+        {
+            if (*condition)
+                return;
+
+            callable();
+        };
+}
+
 class WlKeyboard : public wayland::Keyboard
 {
 public:
@@ -748,16 +765,29 @@ public:
         wl_client* client,
         wl_resource* parent,
         uint32_t id,
+        std::function<void(WlKeyboard*)> const& on_destroy,
         std::shared_ptr<mir::Executor> const& executor)
         : Keyboard(client, parent, id),
-          executor{executor}
+          executor{executor},
+          on_destroy{on_destroy},
+          destroyed{std::make_shared<bool>(false)}
     {
+    }
+
+    ~WlKeyboard()
+    {
+        on_destroy(this);
+        *destroyed = true;
     }
 
     void handle_event(MirInputEvent const* event, wl_resource* /*target*/)
     {
-        executor->spawn(
-            [ev = mir_event_ref(mir_input_event_get_event(event)), this] ()
+        executor->spawn(run_unless(
+            destroyed,
+            [
+                ev = mcl::Event{mir_event_ref(mir_input_event_get_event(event))},
+                this
+            ] ()
             {
                 int const serial = wl_display_next_serial(wl_client_get_display(client));
                 auto event = mir_event_get_input_event(ev);
@@ -782,18 +812,22 @@ public:
                     default:
                         break;
                 }
-                mir_event_unref(ev);
-            });
+            }));
     }
 
     void handle_event(MirWindowEvent const* event, wl_resource* target)
     {
         if (mir_window_event_get_attribute(event) == mir_window_attrib_focus)
         {
-            executor->spawn(
-               [resource = resource, serial = wl_display_next_serial(wl_client_get_display(client)),
-                target = target, focussed = mir_window_event_get_attribute_value(event)]()
+            executor->spawn(run_unless(
+                destroyed,
+                [
+                    target = target,
+                    focussed = mir_window_event_get_attribute_value(event),
+                    this
+                ]()
                 {
+                    auto const serial = wl_display_next_serial(wl_client_get_display(client));
                     if (focussed)
                     {
                         wl_array key_state;
@@ -805,18 +839,21 @@ public:
                     {
                         wl_keyboard_send_leave(resource, serial, target);
                     }
-                });
+                }));
         }
     }
 
 private:
     std::shared_ptr<mir::Executor> const executor;
+    std::function<void(WlKeyboard*)> on_destroy;
+    std::shared_ptr<bool> const destroyed;
 
     void release() override;
 };
 
 void WlKeyboard::release()
 {
+    wl_resource_destroy(resource);
 }
 
 class WlPointer : public wayland::Pointer
@@ -827,17 +864,27 @@ public:
         wl_client* client,
         wl_resource* parent,
         uint32_t id,
+        std::function<void(WlPointer*)> const& on_destroy,
         std::shared_ptr<mir::Executor> const& executor)
         : Pointer(client, parent, id),
           display{wl_client_get_display(client)},
-          executor{executor}
+          executor{executor},
+          on_destroy{on_destroy},
+          destroyed{std::make_shared<bool>(false)}
     {
+    }
+
+    ~WlPointer()
+    {
+        on_destroy(this);
+        *destroyed = true;
     }
 
     void handle_event(MirInputEvent const* event, wl_resource* target)
     {
-        executor->spawn(
-            [ev = mir_event_ref(mir_input_event_get_event(event)), target, this]()
+        executor->spawn(run_unless(
+            destroyed,
+            [ev = mcl::Event{mir_input_event_get_event(event)}, target, this]()
             {
                 auto const serial = wl_display_next_serial(display);
                 auto const event = mir_event_get_input_event(ev);
@@ -851,25 +898,26 @@ public:
                         auto const current_set  = mir_pointer_event_buttons(pointer_event);
                         auto const current_time = mir_input_event_get_event_time(event) / 1000;
 
-                        auto button = 272;  // No, I have *no* idea why GTK expects 272 to be the primary button.
-                        // NB button is incremented in the loop and the order mir_pointer_button_XXX matters
-                        for (auto mir_button :
-                            {mir_pointer_button_primary,    // 272
-                             mir_pointer_button_tertiary,   // 273
-                             mir_pointer_button_secondary,  // 274
-                             mir_pointer_button_back,       // 275
-                             mir_pointer_button_forward})   // 276
-                        {
-                            if (mir_button & (current_set ^ last_set))
+                        for (auto const& mapping :
                             {
-                                auto const action = (mir_button & current_set) ?
+                                std::make_pair(mir_pointer_button_primary, BTN_LEFT),
+                                std::make_pair(mir_pointer_button_secondary, BTN_RIGHT),
+                                std::make_pair(mir_pointer_button_tertiary, BTN_MIDDLE),
+                                std::make_pair(mir_pointer_button_back, BTN_BACK),
+                                std::make_pair(mir_pointer_button_forward, BTN_FORWARD),
+                                std::make_pair(mir_pointer_button_side, BTN_SIDE),
+                                std::make_pair(mir_pointer_button_task, BTN_TASK),
+                                std::make_pair(mir_pointer_button_extra, BTN_EXTRA)
+                            })
+                        {
+                            if (mapping.first & (current_set ^ last_set))
+                            {
+                                auto const action = (mapping.first & current_set) ?
                                                     WL_POINTER_BUTTON_STATE_PRESSED :
                                                     WL_POINTER_BUTTON_STATE_RELEASED;
 
-                                wl_pointer_send_button(resource, serial, current_time, button, action);
+                                wl_pointer_send_button(resource, serial, current_time, mapping.second, action);
                             }
-
-                            ++button;
                         }
 
                         last_set = current_set;
@@ -934,13 +982,16 @@ public:
                     case mir_pointer_actions:
                         break;
                 }
-            });
+            }));
     }
 
     // Pointer interface
 private:
     wl_display* const display;
     std::shared_ptr<mir::Executor> const executor;
+
+    std::function<void(WlPointer*)> on_destroy;
+    std::shared_ptr<bool> const destroyed;
 
     MirPointerButtons last_set{0};
     float last_x, last_y, last_vscroll, last_hscroll;
@@ -959,7 +1010,7 @@ void WlPointer::set_cursor(uint32_t serial, std::experimental::optional<wl_resou
 
 void WlPointer::release()
 {
-    delete this;
+    wl_resource_destroy(resource);
 }
 
 class WlTouch : public wayland::Touch
@@ -969,9 +1020,18 @@ public:
         wl_client* client,
         wl_resource* parent,
         uint32_t id,
-        std::shared_ptr<mir::Executor> const& /*executor*/)
-        : Touch(client, parent, id)
+        std::function<void(WlTouch*)> const& on_destroy,
+        std::shared_ptr<mir::Executor> const& executor)
+        : Touch(client, parent, id),
+          executor{executor},
+          on_destroy{on_destroy}
     {
+    }
+
+    ~WlTouch()
+    {
+        on_destroy(this);
+        *destroyed = true;
     }
 
     void handle_event(MirInputEvent const* /*event*/, wl_resource* /*target*/)
@@ -980,11 +1040,16 @@ public:
 
     // Touch interface
 private:
+    std::shared_ptr<mir::Executor> const executor;
+    std::function<void(WlTouch*)> on_destroy;
+    std::shared_ptr<bool> const destroyed;
+
     void release() override;
 };
 
 void WlTouch::release()
 {
+    wl_resource_destroy(resource);
 }
 
 template<class InputInterface>
@@ -997,25 +1062,27 @@ public:
     InputCtx(InputCtx const&) = delete;
     InputCtx& operator=(InputCtx const&) = delete;
 
-    void register_listener(std::shared_ptr<InputInterface> const& listener)
+    void register_listener(InputInterface* listener)
     {
+        std::lock_guard<std::mutex> lock{mutex};
         listeners.push_back(listener);
     }
 
     void unregister_listener(InputInterface const* listener)
     {
-        std::remove_if(
-            listeners.begin(),
-            listeners.end(),
-            [listener](auto candidate)
-            {
-                return candidate.get() == listener;
-            });
+        std::lock_guard<std::mutex> lock{mutex};
+        listeners.erase(
+            std::remove(
+                listeners.begin(),
+                listeners.end(),
+                listener),
+            listeners.end());
     }
 
     void handle_event(MirInputEvent const* event, wl_resource* target) const
     {
-        for (auto& listener : listeners)
+        std::lock_guard<std::mutex> lock{mutex};
+        for (auto listener : listeners)
         {
             listener->handle_event(event, target);
         }
@@ -1023,6 +1090,7 @@ public:
 
     void handle_event(MirWindowEvent const* event, wl_resource* target) const
     {
+        std::lock_guard<std::mutex> lock{mutex};
         for (auto& listener : listeners)
         {
             listener->handle_event(event, target);
@@ -1030,7 +1098,8 @@ public:
     }
 
 private:
-    std::vector<std::shared_ptr<InputInterface>> listeners;
+    std::mutex mutable mutex;
+    std::vector<InputInterface*> listeners;
 };
 
 class WlSeat
@@ -1100,32 +1169,49 @@ private:
     static void get_pointer(wl_client* client, wl_resource* resource, uint32_t id)
     {
         auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
-        me->pointer[client].register_listener(
-            std::make_shared<WlPointer>(
+        auto& input_ctx = me->pointer[client];
+        input_ctx.register_listener(
+            new WlPointer{
                 client,
                 resource,
                 id,
-                me->executor));
+                [&input_ctx](WlPointer* listener)
+                {
+                    input_ctx.unregister_listener(listener);
+                },
+                me->executor});
     }
     static void get_keyboard(wl_client* client, wl_resource* resource, uint32_t id)
     {
         auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
-        me->keyboard[client].register_listener(
-            std::make_shared<WlKeyboard>(
+        auto& input_ctx = me->keyboard[client];
+
+        input_ctx.register_listener(
+            new WlKeyboard{
                 client,
                 resource,
                 id,
-                me->executor));
+                [&input_ctx](WlKeyboard* listener)
+                {
+                    input_ctx.unregister_listener(listener);
+                },
+                me->executor});
     }
     static void get_touch(wl_client* client, wl_resource* resource, uint32_t id)
     {
         auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
-        me->touch[client].register_listener(
-            std::make_shared<WlTouch>(
+        auto& input_ctx = me->touch[client];
+
+        input_ctx.register_listener(
+            new WlTouch{
                 client,
                 resource,
                 id,
-                me->executor));
+                [&input_ctx](WlTouch* listener)
+                {
+                    input_ctx.unregister_listener(listener);
+                },
+                me->executor});
     }
     static void release(struct wl_client* /*client*/, struct wl_resource* /*resource*/) {}
 
