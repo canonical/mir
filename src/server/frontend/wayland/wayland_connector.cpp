@@ -158,8 +158,29 @@ GLenum const abgr = GL_INVALID_ENUM;
 
 struct ClientPrivate
 {
+    ClientPrivate(std::shared_ptr<mf::Session> const& session, mf::Shell& shell)
+        : session{session},
+          shell{&shell}
+    {
+    }
+
+    ~ClientPrivate()
+    {
+        shell->close_session(session);
+        /*
+         * This ensures that further calls to
+         * wl_client_get_destroy_listener(client, &cleanup_private)
+         * - and hence session_for_client(client) - return nullptr.
+         */
+        wl_list_remove(&destroy_listener.link);
+    }
+
     wl_listener destroy_listener;
-    std::shared_ptr<mf::Session> session;
+    std::shared_ptr<mf::Session> const session;
+    /*
+     * This shell is owned by the ClientSessionConstructor, which outlives all clients.
+     */
+    mf::Shell* const shell;
 };
 
 static_assert(
@@ -182,9 +203,10 @@ std::shared_ptr<mf::Session> session_for_client(wl_client* client)
 {
     auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
 
-    assert(listener && "Client session requested for malformed client");
+    if (listener)
+        return private_from_listener(listener)->session;
 
-    return private_from_listener(listener)->session;
+    return nullptr;
 }
 
 struct ClientSessionConstructor
@@ -220,9 +242,8 @@ void create_client_session(wl_listener* listener, void* data)
         "",
         std::make_shared<WaylandEventSink>([](auto){}));
 
-    auto client_context = new ClientPrivate;
+    auto client_context = new ClientPrivate{session, *construction_context->shell};
     client_context->destroy_listener.notify = &cleanup_private;
-    client_context->session = session;
     wl_client_add_destroy_listener(client, &client_context->destroy_listener);
 }
 
@@ -294,6 +315,19 @@ wl_shm_buffer* shm_buffer_from_resource_checked(wl_resource* resource)
     }
 
     return buffer;
+}
+
+template<typename Callable>
+auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callable)
+{
+    return
+        [callable = std::move(callable), condition]()
+        {
+            if (*condition)
+                return;
+
+            callable();
+        };
 }
 }
 
@@ -511,7 +545,8 @@ public:
           allocator{allocator},
           executor{executor},
           pending_buffer{nullptr},
-          pending_frames{std::make_shared<std::vector<wl_resource*>>()}
+          pending_frames{std::make_shared<std::vector<wl_resource*>>()},
+          destroyed{std::make_shared<bool>(false)}
     {
         auto session = session_for_client(client);
         mg::BufferProperties const props{
@@ -525,6 +560,13 @@ public:
 
         // wl_surface is specified to act in mailbox mode
         stream->allow_framedropping(true);
+    }
+
+    ~WlSurface()
+    {
+        *destroyed = true;
+        if (auto session = session_for_client(client))
+            session->destroy_buffer_stream(stream_id);
     }
 
     void set_resize_handler(std::function<void(geom::Size)> const& handler)
@@ -548,6 +590,7 @@ private:
 
     wl_resource* pending_buffer;
     std::shared_ptr<std::vector<wl_resource*>> const pending_frames;
+    std::shared_ptr<bool> const destroyed;
 
     void destroy();
     void attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y);
@@ -620,9 +663,10 @@ void WlSurface::commit()
         std::shared_ptr<mg::Buffer> mir_buffer;
         auto shm_buffer = wl_shm_buffer_get(pending_buffer);
         auto send_frame_notifications =
-            [executor = executor, frames = pending_frames]()
+            [executor = executor, frames = pending_frames, destroyed = destroyed]()
             {
-                executor->spawn(
+                executor->spawn(run_unless(
+                    destroyed,
                     [frames]()
                     {
                         /*
@@ -639,7 +683,7 @@ void WlSurface::commit()
                             wl_resource_destroy(frame);
                         }
                         frames->clear();
-                    });
+                    }));
             };
 
         if (shm_buffer)
@@ -744,19 +788,6 @@ void WlCompositor::create_region(wl_client* client, wl_resource* resource, uint3
 
 class WlPointer;
 class WlTouch;
-
-template<typename Callable>
-auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callable)
-{
-    return
-        [callable = std::move(callable), condition]()
-        {
-            if (*condition)
-                return;
-
-            callable();
-        };
-}
 
 class WlKeyboard : public wayland::Keyboard
 {
@@ -1554,15 +1585,15 @@ public:
                 hide_spec.state = mir_window_state_hidden;
                 shell->modify_surface(session, id, hide_spec);
             });
-
-        auto shim = new DestructionShim{session, shell, surface_id};
-        shim->destruction_listener.notify = &cleanup_surface;
-        wl_resource_add_destroy_listener(
-            resource,
-            &shim->destruction_listener);
     }
 
-    ~WlShellSurface() override = default;
+    ~WlShellSurface() override
+    {
+        if (auto session = session_for_client(client))
+        {
+            shell->destroy_surface(session, surface_id);
+        }
+    }
 protected:
     void pong(uint32_t /*serial*/) override
     {
@@ -1602,7 +1633,6 @@ protected:
 
         auto const session = session_for_client(client);
         shell->modify_surface(session, surface_id, mods);
-
     }
 
     void set_popup(
@@ -1635,38 +1665,6 @@ protected:
     {
     }
 private:
-    struct DestructionShim
-    {
-        DestructionShim(
-            std::shared_ptr<mf::Session> const& session,
-            std::shared_ptr<mf::Shell> const& shell,
-            mf::SurfaceId id)
-            : session{session},
-              shell{shell},
-              surface_id{id}
-        {
-        }
-
-        std::shared_ptr<mf::Session> const session;
-        std::shared_ptr<mf::Shell> const shell;
-        mf::SurfaceId const surface_id;
-        wl_listener destruction_listener;
-    };
-
-    static_assert(
-        std::is_standard_layout<DestructionShim>::value,
-        "DestructionShim must be Standard Layout for wl_container_of to be defined behaviour");
-
-    static void cleanup_surface(wl_listener* listener, void*)
-    {
-        DestructionShim* shim;
-        shim = wl_container_of(listener, shim, destruction_listener);
-
-        shim->shell->destroy_surface(shim->session, shim->surface_id);
-
-        delete shim;
-    }
-
     std::shared_ptr<mf::Shell> const shell;
     mf::SurfaceId surface_id;
 };
