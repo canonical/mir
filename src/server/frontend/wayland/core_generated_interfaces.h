@@ -7,11 +7,13 @@
 
 #include <experimental/optional>
 #include <boost/throw_exception.hpp>
+#include <boost/exception/diagnostic_information.hpp>
 
 #include <wayland-server.h>
 #include <wayland-server-protocol.h>
 
 #include "mir/fd.h"
+#include "mir/log.h"
 
 namespace mir
 {
@@ -64,13 +66,49 @@ private:
     static void create_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<Compositor*>(wl_resource_get_user_data(resource));
-        me->create_surface(client, resource, id);
+        try
+        {
+            me->create_surface(client, resource, id);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Compositor::create_surface() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Compositor::create_surface() request");
+        }
     }
 
     static void create_region_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<Compositor*>(wl_resource_get_user_data(resource));
-        me->create_region(client, resource, id);
+        try
+        {
+            me->create_region(client, resource, id);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Compositor::create_region() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Compositor::create_region() request");
+        }
     }
 
     static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
@@ -123,19 +161,73 @@ private:
     static void create_buffer_thunk(struct wl_client*, struct wl_resource* resource, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format)
     {
         auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
-        me->create_buffer(id, offset, width, height, stride, format);
+        try
+        {
+            me->create_buffer(id, offset, width, height, stride, format);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing ShmPool::create_buffer() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing ShmPool::create_buffer() request");
+        }
     }
 
     static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
-        me->destroy();
+        try
+        {
+            me->destroy();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing ShmPool::destroy() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing ShmPool::destroy() request");
+        }
     }
 
     static void resize_thunk(struct wl_client*, struct wl_resource* resource, int32_t size)
     {
         auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
-        me->resize(size);
+        try
+        {
+            me->resize(size);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing ShmPool::resize() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing ShmPool::resize() request");
+        }
     }
 
     static void resource_destroyed_thunk(wl_resource* us)
@@ -174,7 +266,25 @@ private:
     {
         auto me = static_cast<Shm*>(wl_resource_get_user_data(resource));
         mir::Fd fd_resolved{fd};
-        me->create_pool(client, resource, id, fd_resolved, size);
+        try
+        {
+            me->create_pool(client, resource, id, fd_resolved, size);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Shm::create_pool() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Shm::create_pool() request");
+        }
     }
 
     static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
@@ -224,7 +334,25 @@ private:
     static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<Buffer*>(wl_resource_get_user_data(resource));
-        me->destroy();
+        try
+        {
+            me->destroy();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Buffer::destroy() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Buffer::destroy() request");
+        }
     }
 
     static void resource_destroyed_thunk(wl_resource* us)
@@ -273,32 +401,122 @@ private:
         {
             mime_type_resolved = std::experimental::make_optional<std::string>(mime_type);
         }
-        me->accept(serial, mime_type_resolved);
+        try
+        {
+            me->accept(serial, mime_type_resolved);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing DataOffer::accept() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing DataOffer::accept() request");
+        }
     }
 
     static void receive_thunk(struct wl_client*, struct wl_resource* resource, char const* mime_type, int fd)
     {
         auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
         mir::Fd fd_resolved{fd};
-        me->receive(mime_type, fd_resolved);
+        try
+        {
+            me->receive(mime_type, fd_resolved);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing DataOffer::receive() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing DataOffer::receive() request");
+        }
     }
 
     static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
-        me->destroy();
+        try
+        {
+            me->destroy();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing DataOffer::destroy() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing DataOffer::destroy() request");
+        }
     }
 
     static void finish_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
-        me->finish();
+        try
+        {
+            me->finish();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing DataOffer::finish() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing DataOffer::finish() request");
+        }
     }
 
     static void set_actions_thunk(struct wl_client*, struct wl_resource* resource, uint32_t dnd_actions, uint32_t preferred_action)
     {
         auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
-        me->set_actions(dnd_actions, preferred_action);
+        try
+        {
+            me->set_actions(dnd_actions, preferred_action);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing DataOffer::set_actions() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing DataOffer::set_actions() request");
+        }
     }
 
     static void resource_destroyed_thunk(wl_resource* us)
@@ -344,19 +562,73 @@ private:
     static void offer_thunk(struct wl_client*, struct wl_resource* resource, char const* mime_type)
     {
         auto me = static_cast<DataSource*>(wl_resource_get_user_data(resource));
-        me->offer(mime_type);
+        try
+        {
+            me->offer(mime_type);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing DataSource::offer() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing DataSource::offer() request");
+        }
     }
 
     static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<DataSource*>(wl_resource_get_user_data(resource));
-        me->destroy();
+        try
+        {
+            me->destroy();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing DataSource::destroy() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing DataSource::destroy() request");
+        }
     }
 
     static void set_actions_thunk(struct wl_client*, struct wl_resource* resource, uint32_t dnd_actions)
     {
         auto me = static_cast<DataSource*>(wl_resource_get_user_data(resource));
-        me->set_actions(dnd_actions);
+        try
+        {
+            me->set_actions(dnd_actions);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing DataSource::set_actions() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing DataSource::set_actions() request");
+        }
     }
 
     static void resource_destroyed_thunk(wl_resource* us)
@@ -410,7 +682,25 @@ private:
         {
             icon_resolved = icon;
         }
-        me->start_drag(source_resolved, origin, icon_resolved, serial);
+        try
+        {
+            me->start_drag(source_resolved, origin, icon_resolved, serial);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing DataDevice::start_drag() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing DataDevice::start_drag() request");
+        }
     }
 
     static void set_selection_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* source, uint32_t serial)
@@ -421,13 +711,49 @@ private:
         {
             source_resolved = source;
         }
-        me->set_selection(source_resolved, serial);
+        try
+        {
+            me->set_selection(source_resolved, serial);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing DataDevice::set_selection() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing DataDevice::set_selection() request");
+        }
     }
 
     static void release_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<DataDevice*>(wl_resource_get_user_data(resource));
-        me->release();
+        try
+        {
+            me->release();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing DataDevice::release() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing DataDevice::release() request");
+        }
     }
 
     static void resource_destroyed_thunk(wl_resource* us)
@@ -466,13 +792,49 @@ private:
     static void create_data_source_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
-        me->create_data_source(client, resource, id);
+        try
+        {
+            me->create_data_source(client, resource, id);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing DataDeviceManager::create_data_source() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing DataDeviceManager::create_data_source() request");
+        }
     }
 
     static void get_data_device_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat)
     {
         auto me = static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
-        me->get_data_device(client, resource, id, seat);
+        try
+        {
+            me->get_data_device(client, resource, id, seat);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing DataDeviceManager::get_data_device() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing DataDeviceManager::get_data_device() request");
+        }
     }
 
     static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
@@ -519,7 +881,25 @@ private:
     static void get_shell_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
         auto me = static_cast<Shell*>(wl_resource_get_user_data(resource));
-        me->get_shell_surface(client, resource, id, surface);
+        try
+        {
+            me->get_shell_surface(client, resource, id, surface);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Shell::get_shell_surface() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Shell::get_shell_surface() request");
+        }
     }
 
     static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
@@ -578,31 +958,121 @@ private:
     static void pong_thunk(struct wl_client*, struct wl_resource* resource, uint32_t serial)
     {
         auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        me->pong(serial);
+        try
+        {
+            me->pong(serial);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing ShellSurface::pong() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing ShellSurface::pong() request");
+        }
     }
 
     static void move_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
     {
         auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        me->move(seat, serial);
+        try
+        {
+            me->move(seat, serial);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing ShellSurface::move() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing ShellSurface::move() request");
+        }
     }
 
     static void resize_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
     {
         auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        me->resize(seat, serial, edges);
+        try
+        {
+            me->resize(seat, serial, edges);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing ShellSurface::resize() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing ShellSurface::resize() request");
+        }
     }
 
     static void set_toplevel_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        me->set_toplevel();
+        try
+        {
+            me->set_toplevel();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing ShellSurface::set_toplevel() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing ShellSurface::set_toplevel() request");
+        }
     }
 
     static void set_transient_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
     {
         auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        me->set_transient(parent, x, y, flags);
+        try
+        {
+            me->set_transient(parent, x, y, flags);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing ShellSurface::set_transient() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing ShellSurface::set_transient() request");
+        }
     }
 
     static void set_fullscreen_thunk(struct wl_client*, struct wl_resource* resource, uint32_t method, uint32_t framerate, struct wl_resource* output)
@@ -613,13 +1083,49 @@ private:
         {
             output_resolved = output;
         }
-        me->set_fullscreen(method, framerate, output_resolved);
+        try
+        {
+            me->set_fullscreen(method, framerate, output_resolved);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing ShellSurface::set_fullscreen() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing ShellSurface::set_fullscreen() request");
+        }
     }
 
     static void set_popup_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
     {
         auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        me->set_popup(seat, serial, parent, x, y, flags);
+        try
+        {
+            me->set_popup(seat, serial, parent, x, y, flags);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing ShellSurface::set_popup() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing ShellSurface::set_popup() request");
+        }
     }
 
     static void set_maximized_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* output)
@@ -630,19 +1136,73 @@ private:
         {
             output_resolved = output;
         }
-        me->set_maximized(output_resolved);
+        try
+        {
+            me->set_maximized(output_resolved);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing ShellSurface::set_maximized() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing ShellSurface::set_maximized() request");
+        }
     }
 
     static void set_title_thunk(struct wl_client*, struct wl_resource* resource, char const* title)
     {
         auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        me->set_title(title);
+        try
+        {
+            me->set_title(title);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing ShellSurface::set_title() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing ShellSurface::set_title() request");
+        }
     }
 
     static void set_class_thunk(struct wl_client*, struct wl_resource* resource, char const* class_)
     {
         auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        me->set_class(class_);
+        try
+        {
+            me->set_class(class_);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing ShellSurface::set_class() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing ShellSurface::set_class() request");
+        }
     }
 
     static void resource_destroyed_thunk(wl_resource* us)
@@ -700,7 +1260,25 @@ private:
     static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        me->destroy();
+        try
+        {
+            me->destroy();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Surface::destroy() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Surface::destroy() request");
+        }
     }
 
     static void attach_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* buffer, int32_t x, int32_t y)
@@ -711,19 +1289,73 @@ private:
         {
             buffer_resolved = buffer;
         }
-        me->attach(buffer_resolved, x, y);
+        try
+        {
+            me->attach(buffer_resolved, x, y);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Surface::attach() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Surface::attach() request");
+        }
     }
 
     static void damage_thunk(struct wl_client*, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
     {
         auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        me->damage(x, y, width, height);
+        try
+        {
+            me->damage(x, y, width, height);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Surface::damage() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Surface::damage() request");
+        }
     }
 
     static void frame_thunk(struct wl_client*, struct wl_resource* resource, uint32_t callback)
     {
         auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        me->frame(callback);
+        try
+        {
+            me->frame(callback);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Surface::frame() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Surface::frame() request");
+        }
     }
 
     static void set_opaque_region_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* region)
@@ -734,7 +1366,25 @@ private:
         {
             region_resolved = region;
         }
-        me->set_opaque_region(region_resolved);
+        try
+        {
+            me->set_opaque_region(region_resolved);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Surface::set_opaque_region() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Surface::set_opaque_region() request");
+        }
     }
 
     static void set_input_region_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* region)
@@ -745,31 +1395,121 @@ private:
         {
             region_resolved = region;
         }
-        me->set_input_region(region_resolved);
+        try
+        {
+            me->set_input_region(region_resolved);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Surface::set_input_region() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Surface::set_input_region() request");
+        }
     }
 
     static void commit_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        me->commit();
+        try
+        {
+            me->commit();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Surface::commit() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Surface::commit() request");
+        }
     }
 
     static void set_buffer_transform_thunk(struct wl_client*, struct wl_resource* resource, int32_t transform)
     {
         auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        me->set_buffer_transform(transform);
+        try
+        {
+            me->set_buffer_transform(transform);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Surface::set_buffer_transform() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Surface::set_buffer_transform() request");
+        }
     }
 
     static void set_buffer_scale_thunk(struct wl_client*, struct wl_resource* resource, int32_t scale)
     {
         auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        me->set_buffer_scale(scale);
+        try
+        {
+            me->set_buffer_scale(scale);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Surface::set_buffer_scale() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Surface::set_buffer_scale() request");
+        }
     }
 
     static void damage_buffer_thunk(struct wl_client*, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
     {
         auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        me->damage_buffer(x, y, width, height);
+        try
+        {
+            me->damage_buffer(x, y, width, height);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Surface::damage_buffer() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Surface::damage_buffer() request");
+        }
     }
 
     static void resource_destroyed_thunk(wl_resource* us)
@@ -817,25 +1557,97 @@ private:
     static void get_pointer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
-        me->get_pointer(client, resource, id);
+        try
+        {
+            me->get_pointer(client, resource, id);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Seat::get_pointer() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Seat::get_pointer() request");
+        }
     }
 
     static void get_keyboard_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
-        me->get_keyboard(client, resource, id);
+        try
+        {
+            me->get_keyboard(client, resource, id);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Seat::get_keyboard() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Seat::get_keyboard() request");
+        }
     }
 
     static void get_touch_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
-        me->get_touch(client, resource, id);
+        try
+        {
+            me->get_touch(client, resource, id);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Seat::get_touch() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Seat::get_touch() request");
+        }
     }
 
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
-        me->release(client, resource);
+        try
+        {
+            me->release(client, resource);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Seat::release() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Seat::release() request");
+        }
     }
 
     static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
@@ -894,13 +1706,49 @@ private:
         {
             surface_resolved = surface;
         }
-        me->set_cursor(serial, surface_resolved, hotspot_x, hotspot_y);
+        try
+        {
+            me->set_cursor(serial, surface_resolved, hotspot_x, hotspot_y);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Pointer::set_cursor() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Pointer::set_cursor() request");
+        }
     }
 
     static void release_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<Pointer*>(wl_resource_get_user_data(resource));
-        me->release();
+        try
+        {
+            me->release();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Pointer::release() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Pointer::release() request");
+        }
     }
 
     static void resource_destroyed_thunk(wl_resource* us)
@@ -941,7 +1789,25 @@ private:
     static void release_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<Keyboard*>(wl_resource_get_user_data(resource));
-        me->release();
+        try
+        {
+            me->release();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Keyboard::release() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Keyboard::release() request");
+        }
     }
 
     static void resource_destroyed_thunk(wl_resource* us)
@@ -981,7 +1847,25 @@ private:
     static void release_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<Touch*>(wl_resource_get_user_data(resource));
-        me->release();
+        try
+        {
+            me->release();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Touch::release() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Touch::release() request");
+        }
     }
 
     static void resource_destroyed_thunk(wl_resource* us)
@@ -1017,7 +1901,25 @@ private:
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<Output*>(wl_resource_get_user_data(resource));
-        me->release(client, resource);
+        try
+        {
+            me->release(client, resource);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Output::release() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Output::release() request");
+        }
     }
 
     static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
@@ -1069,19 +1971,73 @@ private:
     static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<Region*>(wl_resource_get_user_data(resource));
-        me->destroy();
+        try
+        {
+            me->destroy();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Region::destroy() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Region::destroy() request");
+        }
     }
 
     static void add_thunk(struct wl_client*, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
     {
         auto me = static_cast<Region*>(wl_resource_get_user_data(resource));
-        me->add(x, y, width, height);
+        try
+        {
+            me->add(x, y, width, height);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Region::add() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Region::add() request");
+        }
     }
 
     static void subtract_thunk(struct wl_client*, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
     {
         auto me = static_cast<Region*>(wl_resource_get_user_data(resource));
-        me->subtract(x, y, width, height);
+        try
+        {
+            me->subtract(x, y, width, height);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Region::subtract() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Region::subtract() request");
+        }
     }
 
     static void resource_destroyed_thunk(wl_resource* us)
@@ -1120,13 +2076,49 @@ private:
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
-        me->destroy(client, resource);
+        try
+        {
+            me->destroy(client, resource);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Subcompositor::destroy() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Subcompositor::destroy() request");
+        }
     }
 
     static void get_subsurface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* parent)
     {
         auto me = static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
-        me->get_subsurface(client, resource, id, surface, parent);
+        try
+        {
+            me->get_subsurface(client, resource, id, surface, parent);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Subcompositor::get_subsurface() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Subcompositor::get_subsurface() request");
+        }
     }
 
     static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
@@ -1182,37 +2174,145 @@ private:
     static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
-        me->destroy();
+        try
+        {
+            me->destroy();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Subsurface::destroy() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Subsurface::destroy() request");
+        }
     }
 
     static void set_position_thunk(struct wl_client*, struct wl_resource* resource, int32_t x, int32_t y)
     {
         auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
-        me->set_position(x, y);
+        try
+        {
+            me->set_position(x, y);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Subsurface::set_position() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Subsurface::set_position() request");
+        }
     }
 
     static void place_above_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* sibling)
     {
         auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
-        me->place_above(sibling);
+        try
+        {
+            me->place_above(sibling);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Subsurface::place_above() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Subsurface::place_above() request");
+        }
     }
 
     static void place_below_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* sibling)
     {
         auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
-        me->place_below(sibling);
+        try
+        {
+            me->place_below(sibling);
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Subsurface::place_below() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Subsurface::place_below() request");
+        }
     }
 
     static void set_sync_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
-        me->set_sync();
+        try
+        {
+            me->set_sync();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Subsurface::set_sync() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Subsurface::set_sync() request");
+        }
     }
 
     static void set_desync_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
-        me->set_desync();
+        try
+        {
+            me->set_desync();
+        }
+        catch(std::exception const& err)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Exception processing Subsurface::set_desync() request: %s",
+                boost::diagnostic_information(err).c_str());
+        }
+        catch (...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                "Unknown exception processing Subsurface::set_desync() request");
+        }
     }
 
     static void resource_destroyed_thunk(wl_resource* us)
