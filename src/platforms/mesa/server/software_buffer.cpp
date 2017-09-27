@@ -17,7 +17,7 @@
  */
 
 #include "software_buffer.h"
-#include "shm_file.h"
+#include "mir/shm_file.h"
 #include "native_buffer.h"
 
 namespace mg = mir::graphics;
@@ -26,7 +26,7 @@ namespace mgc = mir::graphics::common;
 namespace geom = mir::geometry;
 
 mgm::SoftwareBuffer::SoftwareBuffer(
-    std::unique_ptr<mgc::ShmFile> shm_file,
+    std::unique_ptr<mir::ShmFile> shm_file,
     geom::Size const& size,
     MirPixelFormat const& pixel_format) :
     ShmBuffer(std::move(shm_file), size, pixel_format),

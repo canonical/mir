@@ -16,16 +16,14 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platforms/common/server/anonymous_shm_file.h"
+#include "mir/anonymous_shm_file.h"
 #include <gtest/gtest.h>
-
-namespace mgc = mir::graphics::common;
 
 TEST(AnonymousShmFile, is_created)
 {
     size_t const file_size{100};
 
-    mgc::AnonymousShmFile shm_file{file_size};
+    mir::AnonymousShmFile shm_file{file_size};
 
     EXPECT_GE(shm_file.fd(), 0);
 }
@@ -34,7 +32,7 @@ TEST(AnonymousShmFile, has_correct_size)
 {
     size_t const file_size{100};
 
-    mgc::AnonymousShmFile shm_file{file_size};
+    mir::AnonymousShmFile shm_file{file_size};
 
     struct stat stat;
     fstat(shm_file.fd(), &stat);
@@ -46,7 +44,7 @@ TEST(AnonymousShmFile, writing_to_base_ptr_writes_to_file)
 {
     size_t const file_size{100};
 
-    mgc::AnonymousShmFile shm_file{file_size};
+    mir::AnonymousShmFile shm_file{file_size};
 
     auto base_ptr = reinterpret_cast<uint8_t*>(shm_file.base_ptr());
 

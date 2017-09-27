@@ -15,7 +15,6 @@
 # Authored by: Kevin DuBois <kevin.dubois@canonical.com>
 
 add_library(mirsharedfd OBJECT
-  fd.cpp
   fd_socket_transmission.cpp
 )
 

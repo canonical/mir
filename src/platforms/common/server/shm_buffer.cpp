@@ -18,7 +18,7 @@
  */
 
 #include "mir/graphics/gl_format.h"
-#include "shm_file.h"
+#include "mir/shm_file.h"
 #include "shm_buffer.h"
 #include "buffer_texture_binder.h"
 

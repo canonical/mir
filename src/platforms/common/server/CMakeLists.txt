@@ -9,9 +9,7 @@ include_directories(
 
 add_library(server_platform_common STATIC
   platform_authentication_wrapper.cpp
-  anonymous_shm_file.cpp
   shm_buffer.cpp
-  shm_file.h
 )
 
 target_link_libraries(

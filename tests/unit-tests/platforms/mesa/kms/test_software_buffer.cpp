@@ -18,7 +18,7 @@
 
 #include "src/platforms/mesa/server/software_buffer.h"
 #include "src/platforms/mesa/include/native_buffer.h"
-#include "src/platforms/common/server/shm_file.h"
+#include "mir/shm_file.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -29,7 +29,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct StubShmFile : public mgc::ShmFile
+struct StubShmFile : public mir::ShmFile
 {
     void* base_ptr() const { return fake_mapping; }
     int fd() const { return fake_fd; }
