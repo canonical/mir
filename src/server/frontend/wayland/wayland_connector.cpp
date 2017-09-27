@@ -1868,16 +1868,13 @@ private:
             {
                 work();
             }
-            catch(std::exception const& err)
-            {
-                mir::log_critical(
-                    "Exception processing Wayland event loop work item: %s",
-                    boost::diagnostic_information(err).c_str());
-            }
             catch(...)
             {
-                mir::log_critical(
-                    "Unknown exception processing Wayland event loop work item.");
+                mir::log(
+                    mir::logging::Severity::critical,
+                    MIR_LOG_COMPONENT,
+                    std::current_exception(),
+                    "Exception processing Wayland event loop work item");
             }
 
             executor->workqueue.pop_front();
