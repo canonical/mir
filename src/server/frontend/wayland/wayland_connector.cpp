@@ -66,6 +66,7 @@
 #include "../../../platforms/common/server/shm_buffer.h"
 
 #include <sys/stat.h>
+#include "mir/anonymous_shm_file.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -874,6 +875,23 @@ public:
         }
     }
 
+    void handle_event(MirKeymapEvent const* event, wl_resource* target)
+    {
+        char const* buffer;
+        size_t length;
+
+        mir_keymap_event_get_keymap_buffer(event, &buffer, &length);
+
+        mir::AnonymousShmFile shm_buffer{length};
+        memcpy(shm_buffer.base_ptr(), buffer, length);
+
+        wl_keyboard_send_keymap(
+            target,
+            WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,
+            shm_buffer.fd(),
+            length);
+    }
+
 private:
     std::shared_ptr<mir::Executor> const executor;
     std::function<void(WlKeyboard*)> on_destroy;
@@ -1202,6 +1220,15 @@ public:
         }
     }
 
+    void handle_event(MirKeymapEvent const* event, wl_resource* target) const
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        for (auto& listener : listeners)
+        {
+            listener->handle_event(event, target);
+        }
+    }
+
 private:
     std::mutex mutable mutex;
     std::vector<InputInterface*> listeners;
@@ -1437,6 +1464,13 @@ void SurfaceEventSink::handle_event(MirEvent const& event)
         default:
             break;
         }
+        break;
+    }
+    case mir_event_type_keymap:
+    {
+        auto const map_ev = mir_event_get_keymap_event(&event);
+
+        seat->acquire_keyboard_reference(client).handle_event(map_ev, target);
         break;
     }
     case mir_event_type_window:
