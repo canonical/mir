@@ -421,7 +421,7 @@ void DecorationProvider::paint_titlebar_for(miral::WindowInfo const& info, int i
 
         auto const title = info.name();
 
-        enqueue_work([this, stream=data->stream, title, intensity]{ paint_surface(stream, title, intensity); });
+        enqueue_work([stream=data->stream, title, intensity]{ paint_surface(stream, title, intensity); });
     }
 }
 
@@ -534,7 +534,7 @@ void DecorationProvider::repaint_titlebar_for(miral::WindowInfo const& window_in
     {
         auto const title = window_info.name();
 
-        enqueue_work([this, stream=data->stream, title, intensity=data->intensity.load()]
+        enqueue_work([stream=data->stream, title, intensity=data->intensity.load()]
             { paint_surface(stream, title, intensity); });
     }
 }

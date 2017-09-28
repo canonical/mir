@@ -124,7 +124,7 @@ mir::AnonymousShmFile::AnonymousShmFile(size_t size)
 {
 }
 
-mir::AnonymousShmFile::~AnonymousShmFile() = default;
+mir::AnonymousShmFile::~AnonymousShmFile() noexcept = default;
 
 void* mir::AnonymousShmFile::base_ptr() const
 {

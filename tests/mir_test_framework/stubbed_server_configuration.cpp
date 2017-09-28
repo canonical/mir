@@ -139,8 +139,11 @@ std::shared_ptr<ml::Logger> mtf::StubbedServerConfiguration::the_logger()
 
 mir::shell::WindowManagerBuilder mir_test_framework::StubbedServerConfiguration::the_window_manager_builder()
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     return [this](msh::FocusController* focus_controller)
         { return std::make_shared<msh::CanonicalWindowManager>(
         focus_controller,
         the_shell_display_layout()); };
+#pragma GCC diagnostic pop
 }
