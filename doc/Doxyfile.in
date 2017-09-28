@@ -784,7 +784,8 @@ WARN_LOGFILE           =
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/README.md \
                          @CMAKE_CURRENT_SOURCE_DIR@/HACKING.md \
                          @CMAKE_CURRENT_SOURCE_DIR@/doc \
-                         @CMAKE_CURRENT_SOURCE_DIR@/examples \
+                         @CMAKE_CURRENT_SOURCE_DIR@/examples/miral-kiosk \
+                         @CMAKE_CURRENT_SOURCE_DIR@/examples/miral-shell \
                          @CMAKE_CURRENT_SOURCE_DIR@/include \
                          @MIR_GENERATED_INCLUDE_DIRECTORIES_FLATTENED@
 
@@ -878,8 +879,10 @@ EXCLUDE_SYMLINKS       = NO
 # exclude all test directories for example use the pattern */test/*
 
 EXCLUDE_PATTERNS       = *.capnp.c++ \
+                         */detail/* \
                          @CMAKE_CURRENT_SOURCE_DIR@/examples/multi_stream.cpp \
-                         @CMAKE_CURRENT_SOURCE_DIR@/examples/server_example_*
+                         @CMAKE_CURRENT_SOURCE_DIR@/examples/uses_non_client_symbol.cpp \
+                         @CMAKE_CURRENT_SOURCE_DIR@/examples/miral-shell/titlebar_config.*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
