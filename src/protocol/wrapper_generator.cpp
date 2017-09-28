@@ -41,11 +41,13 @@ void emit_required_headers()
 {
     std::cout << "#include <experimental/optional>" << std::endl;
     std::cout << "#include <boost/throw_exception.hpp>" << std::endl;
+    std::cout << "#include <boost/exception/diagnostic_information.hpp>" << std::endl;
     std::cout << std::endl;
     std::cout << "#include <wayland-server.h>" << std::endl;
     std::cout << "#include <wayland-server-protocol.h>" << std::endl;
     std::cout << std::endl;
     std::cout << "#include \"mir/fd.h\"" << std::endl;
+    std::cout << "#include \"mir/log.h\"" << std::endl;
 }
 
 std::string strip_wl_prefix(std::string const& name)
@@ -119,6 +121,20 @@ bool parse_optional(xmlpp::Element const& arg)
         return allow_null->get_value() == "true";
     }
     return false;
+}
+
+void emit_indented_lines(std::ostream& out, std::string const& indent,
+    std::initializer_list<std::initializer_list<std::string>> lines)
+{
+    for (auto const& line : lines)
+    {
+        out << indent;
+        for (auto const& fragment : line)
+        {
+            out << fragment;
+        }
+        out << std::endl;
+    }
 }
 
 class Interface;
@@ -216,15 +232,27 @@ public:
         }
         out << ")" << std::endl;
 
-        out << indent << "{" << std::endl;
-        out << indent << "    auto me = static_cast<" << interface_type << "*>("
-            << "wl_resource_get_user_data(resource));" << std::endl;
+        emit_indented_lines(
+            out,
+            indent,
+            {
+                {"{"},
+                {"    auto me = static_cast<", interface_type, "*>(wl_resource_get_user_data(resource));"}
+            });
+
         for (auto const& arg : arguments)
         {
             arg.emit_thunk_converter(out, indent + "    ");
         }
 
-        out << indent << "    me->" << name << "(";
+        emit_indented_lines(
+            out,
+            indent,
+            {
+                {"    try"},
+                {"    {"},
+            });
+        out << indent << "        me->" << name << "(";
         if (is_global)
         {
             out << "client, resource";
@@ -243,7 +271,21 @@ public:
         }
         out << ");" << std::endl;
 
-        out << indent << "}" << std::endl;
+        emit_indented_lines(
+            out,
+            indent,
+            {
+                {"    }"},
+                {"    catch(...)"},
+                {"    {"},
+                {"        ::mir::log("},
+                {"            ::mir::logging::Severity::critical,"},
+                {"            \"frontend:Wayland\","},
+                {"            std::current_exception(),"},
+                {"            \"Exception processing ", interface_type, "::", name, "() request\");"},
+                {"    }"},
+                {"}"}
+            });
     }
 
     void emit_vtable_initialiser(std::ostream& out, std::string const& indent) const
@@ -255,20 +297,6 @@ private:
     std::string const name;
     std::vector<Argument> arguments;
 };
-
-void emit_indented_lines(std::ostream& out, std::string const& indent,
-                         std::initializer_list<std::initializer_list<std::string>> lines)
-{
-    for (auto const& line : lines)
-    {
-        out << indent;
-        for (auto const& fragment : line)
-        {
-            out << fragment;
-        }
-        out << std::endl;
-    }
-}
 
 class Interface
 {

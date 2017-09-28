@@ -1875,7 +1875,19 @@ private:
         while (!executor->workqueue.empty())
         {
             auto work = std::move(executor->workqueue.front());
-            work();
+            try
+            {
+                work();
+            }
+            catch(...)
+            {
+                mir::log(
+                    mir::logging::Severity::critical,
+                    MIR_LOG_COMPONENT,
+                    std::current_exception(),
+                    "Exception processing Wayland event loop work item");
+            }
+
             executor->workqueue.pop_front();
         }
 
