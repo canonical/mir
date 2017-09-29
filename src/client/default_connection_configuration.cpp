@@ -71,7 +71,7 @@ mcl::DefaultConnectionConfiguration::the_rpc_channel()
             return mcl::rpc::make_rpc_channel(
                 the_socket_file(), the_surface_map(), the_buffer_factory(),
                 the_display_configuration(), the_input_devices(), the_rpc_report(),
-                the_lifecycle_control(), the_ping_handler(),
+                the_input_receiver_report(), the_lifecycle_control(), the_ping_handler(),
                 the_error_handler(), the_event_sink());
         });
 }

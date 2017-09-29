@@ -18,6 +18,7 @@
 
 #include "mir_protobuf_rpc_channel.h"
 #include "rpc_report.h"
+#include "mir/input/input_receiver_report.h"
 
 #include "mir/client/surface_map.h"
 #include "../buffer.h"
@@ -61,12 +62,14 @@ mclr::MirProtobufRpcChannel::MirProtobufRpcChannel(
     std::shared_ptr<DisplayConfiguration> const& disp_config,
     std::shared_ptr<input::InputDevices> const& input_devices,
     std::shared_ptr<RpcReport> const& rpc_report,
+    std::shared_ptr<input::receiver::InputReceiverReport> const& input_report,
     std::shared_ptr<LifecycleControl> const& lifecycle_control,
     std::shared_ptr<PingHandler> const& ping_handler,
     std::shared_ptr<ErrorHandler> const& error_handler,
     std::shared_ptr<EventSink> const& event_sink) :
     rpc_report(rpc_report),
     pending_calls(rpc_report),
+    input_report(input_report),
     surface_map(surface_map),
     buffer_factory(buffer_factory),
     display_configuration(disp_config),
@@ -426,6 +429,7 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                         window_id = e->to_close_window()->surface_id();
                         break;
                     case mir_event_type_keymap:
+                        input_report->received_event(*e);
                         window_id = e->to_keymap()->surface_id();
                         break;
                     case mir_event_type_window_output:
@@ -435,9 +439,11 @@ void mclr::MirProtobufRpcChannel::process_event_sequence(std::string const& even
                         window_id = e->to_window_placement()->id();
                         break;
                     case mir_event_type_input:
+                        input_report->received_event(*e);
                         window_id = e->to_input()->window_id();
                         break;
                     case mir_event_type_input_device_state:
+                        input_report->received_event(*e);
                         window_id = e->to_input_device_state()->window_id();
                         break;
                     default:

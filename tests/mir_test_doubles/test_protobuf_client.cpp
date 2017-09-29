@@ -18,6 +18,7 @@
 
 #include "mir/test/test_protobuf_client.h"
 #include "mir/test/doubles/mock_rpc_report.h"
+#include "mir/input/null_input_receiver_report.h"
 #include "mir/test/doubles/null_client_event_sink.h"
 
 #include "src/client/connection_surface_map.h"
@@ -50,6 +51,7 @@ mir::test::TestProtobufClient::TestProtobufClient(std::string socket_file, int t
         std::make_shared<mir::client::DisplayConfiguration>(),
         std::make_shared<mir::input::InputDevices>(surface_map),
         rpc_report,
+        input_report,
         std::make_shared<mir::client::LifecycleControl>(),
         std::make_shared<mir::client::AtomicCallback<int32_t>>(),
         std::make_shared<mir::client::AtomicCallback<MirError const*>>(),

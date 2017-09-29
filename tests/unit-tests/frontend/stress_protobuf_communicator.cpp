@@ -37,6 +37,7 @@
 #include "src/client/rpc/mir_display_server.h"
 #include "src/client/buffer_factory.h"
 #include "mir/input/input_devices.h"
+#include "mir/input/null_input_receiver_report.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -59,6 +60,7 @@ struct StubProtobufClient
     StubProtobufClient(std::string socket_file, int timeout_ms);
 
     std::shared_ptr<mir::client::rpc::RpcReport> rpc_report;
+    std::shared_ptr<mir::input::receiver::InputReceiverReport> input_report;
     std::shared_ptr<mir::client::SurfaceMap> surface_map;
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     mir::client::rpc::DisplayServer display_server;
@@ -163,6 +165,7 @@ StubProtobufClient::StubProtobufClient(
     std::string socket_file,
     int timeout_ms) :
     rpc_report(std::make_shared<mir::client::rpc::NullRpcReport>()),
+    input_report(std::make_shared<mir::input::receiver::NullInputReceiverReport>()),
     surface_map(std::make_shared<mir::client::ConnectionSurfaceMap>()),
     channel(mir::client::rpc::make_rpc_channel(
         socket_file,
@@ -171,6 +174,7 @@ StubProtobufClient::StubProtobufClient(
         std::make_shared<mir::client::DisplayConfiguration>(),
         std::make_shared<mir::input::InputDevices>(surface_map),
         rpc_report,
+        input_report,
         std::make_shared<mir::client::LifecycleControl>(),
         std::make_shared<mir::client::PingHandler>(),
         std::make_shared<mir::client::ErrorHandler>(),
