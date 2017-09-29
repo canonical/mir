@@ -1260,7 +1260,7 @@ private:
         /*
          * TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
          */
-        if (version > WL_SEAT_CAPABILITIES_SINCE_VERSION)
+        if (version >= WL_SEAT_CAPABILITIES_SINCE_VERSION)
         {
             wl_seat_send_capabilities(
                 resource,
@@ -1268,7 +1268,7 @@ private:
                 WL_SEAT_CAPABILITY_KEYBOARD |
                 WL_SEAT_CAPABILITY_TOUCH);
         }
-        if (version > WL_SEAT_NAME_SINCE_VERSION)
+        if (version >= WL_SEAT_NAME_SINCE_VERSION)
         {
             wl_seat_send_name(
                 resource,
