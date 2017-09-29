@@ -70,20 +70,13 @@ private:
         {
             me->create_surface(client, resource, id);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Compositor::create_surface() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Compositor::create_surface() request");
+                std::current_exception(),
+                "Exception processing Compositor::create_surface() request");
         }
     }
 
@@ -94,20 +87,13 @@ private:
         {
             me->create_region(client, resource, id);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Compositor::create_region() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Compositor::create_region() request");
+                std::current_exception(),
+                "Exception processing Compositor::create_region() request");
         }
     }
 
@@ -165,20 +151,13 @@ private:
         {
             me->create_buffer(id, offset, width, height, stride, format);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing ShmPool::create_buffer() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing ShmPool::create_buffer() request");
+                std::current_exception(),
+                "Exception processing ShmPool::create_buffer() request");
         }
     }
 
@@ -189,20 +168,13 @@ private:
         {
             me->destroy();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing ShmPool::destroy() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing ShmPool::destroy() request");
+                std::current_exception(),
+                "Exception processing ShmPool::destroy() request");
         }
     }
 
@@ -213,20 +185,13 @@ private:
         {
             me->resize(size);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing ShmPool::resize() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing ShmPool::resize() request");
+                std::current_exception(),
+                "Exception processing ShmPool::resize() request");
         }
     }
 
@@ -270,20 +235,13 @@ private:
         {
             me->create_pool(client, resource, id, fd_resolved, size);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Shm::create_pool() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Shm::create_pool() request");
+                std::current_exception(),
+                "Exception processing Shm::create_pool() request");
         }
     }
 
@@ -338,20 +296,13 @@ private:
         {
             me->destroy();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Buffer::destroy() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Buffer::destroy() request");
+                std::current_exception(),
+                "Exception processing Buffer::destroy() request");
         }
     }
 
@@ -405,20 +356,13 @@ private:
         {
             me->accept(serial, mime_type_resolved);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing DataOffer::accept() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing DataOffer::accept() request");
+                std::current_exception(),
+                "Exception processing DataOffer::accept() request");
         }
     }
 
@@ -430,20 +374,13 @@ private:
         {
             me->receive(mime_type, fd_resolved);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing DataOffer::receive() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing DataOffer::receive() request");
+                std::current_exception(),
+                "Exception processing DataOffer::receive() request");
         }
     }
 
@@ -454,20 +391,13 @@ private:
         {
             me->destroy();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing DataOffer::destroy() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing DataOffer::destroy() request");
+                std::current_exception(),
+                "Exception processing DataOffer::destroy() request");
         }
     }
 
@@ -478,20 +408,13 @@ private:
         {
             me->finish();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing DataOffer::finish() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing DataOffer::finish() request");
+                std::current_exception(),
+                "Exception processing DataOffer::finish() request");
         }
     }
 
@@ -502,20 +425,13 @@ private:
         {
             me->set_actions(dnd_actions, preferred_action);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing DataOffer::set_actions() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing DataOffer::set_actions() request");
+                std::current_exception(),
+                "Exception processing DataOffer::set_actions() request");
         }
     }
 
@@ -566,20 +482,13 @@ private:
         {
             me->offer(mime_type);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing DataSource::offer() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing DataSource::offer() request");
+                std::current_exception(),
+                "Exception processing DataSource::offer() request");
         }
     }
 
@@ -590,20 +499,13 @@ private:
         {
             me->destroy();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing DataSource::destroy() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing DataSource::destroy() request");
+                std::current_exception(),
+                "Exception processing DataSource::destroy() request");
         }
     }
 
@@ -614,20 +516,13 @@ private:
         {
             me->set_actions(dnd_actions);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing DataSource::set_actions() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing DataSource::set_actions() request");
+                std::current_exception(),
+                "Exception processing DataSource::set_actions() request");
         }
     }
 
@@ -686,20 +581,13 @@ private:
         {
             me->start_drag(source_resolved, origin, icon_resolved, serial);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing DataDevice::start_drag() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing DataDevice::start_drag() request");
+                std::current_exception(),
+                "Exception processing DataDevice::start_drag() request");
         }
     }
 
@@ -715,20 +603,13 @@ private:
         {
             me->set_selection(source_resolved, serial);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing DataDevice::set_selection() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing DataDevice::set_selection() request");
+                std::current_exception(),
+                "Exception processing DataDevice::set_selection() request");
         }
     }
 
@@ -739,20 +620,13 @@ private:
         {
             me->release();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing DataDevice::release() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing DataDevice::release() request");
+                std::current_exception(),
+                "Exception processing DataDevice::release() request");
         }
     }
 
@@ -796,20 +670,13 @@ private:
         {
             me->create_data_source(client, resource, id);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing DataDeviceManager::create_data_source() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing DataDeviceManager::create_data_source() request");
+                std::current_exception(),
+                "Exception processing DataDeviceManager::create_data_source() request");
         }
     }
 
@@ -820,20 +687,13 @@ private:
         {
             me->get_data_device(client, resource, id, seat);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing DataDeviceManager::get_data_device() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing DataDeviceManager::get_data_device() request");
+                std::current_exception(),
+                "Exception processing DataDeviceManager::get_data_device() request");
         }
     }
 
@@ -885,20 +745,13 @@ private:
         {
             me->get_shell_surface(client, resource, id, surface);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Shell::get_shell_surface() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Shell::get_shell_surface() request");
+                std::current_exception(),
+                "Exception processing Shell::get_shell_surface() request");
         }
     }
 
@@ -962,20 +815,13 @@ private:
         {
             me->pong(serial);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing ShellSurface::pong() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing ShellSurface::pong() request");
+                std::current_exception(),
+                "Exception processing ShellSurface::pong() request");
         }
     }
 
@@ -986,20 +832,13 @@ private:
         {
             me->move(seat, serial);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing ShellSurface::move() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing ShellSurface::move() request");
+                std::current_exception(),
+                "Exception processing ShellSurface::move() request");
         }
     }
 
@@ -1010,20 +849,13 @@ private:
         {
             me->resize(seat, serial, edges);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing ShellSurface::resize() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing ShellSurface::resize() request");
+                std::current_exception(),
+                "Exception processing ShellSurface::resize() request");
         }
     }
 
@@ -1034,20 +866,13 @@ private:
         {
             me->set_toplevel();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing ShellSurface::set_toplevel() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing ShellSurface::set_toplevel() request");
+                std::current_exception(),
+                "Exception processing ShellSurface::set_toplevel() request");
         }
     }
 
@@ -1058,20 +883,13 @@ private:
         {
             me->set_transient(parent, x, y, flags);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing ShellSurface::set_transient() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing ShellSurface::set_transient() request");
+                std::current_exception(),
+                "Exception processing ShellSurface::set_transient() request");
         }
     }
 
@@ -1087,20 +905,13 @@ private:
         {
             me->set_fullscreen(method, framerate, output_resolved);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing ShellSurface::set_fullscreen() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing ShellSurface::set_fullscreen() request");
+                std::current_exception(),
+                "Exception processing ShellSurface::set_fullscreen() request");
         }
     }
 
@@ -1111,20 +922,13 @@ private:
         {
             me->set_popup(seat, serial, parent, x, y, flags);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing ShellSurface::set_popup() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing ShellSurface::set_popup() request");
+                std::current_exception(),
+                "Exception processing ShellSurface::set_popup() request");
         }
     }
 
@@ -1140,20 +944,13 @@ private:
         {
             me->set_maximized(output_resolved);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing ShellSurface::set_maximized() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing ShellSurface::set_maximized() request");
+                std::current_exception(),
+                "Exception processing ShellSurface::set_maximized() request");
         }
     }
 
@@ -1164,20 +961,13 @@ private:
         {
             me->set_title(title);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing ShellSurface::set_title() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing ShellSurface::set_title() request");
+                std::current_exception(),
+                "Exception processing ShellSurface::set_title() request");
         }
     }
 
@@ -1188,20 +978,13 @@ private:
         {
             me->set_class(class_);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing ShellSurface::set_class() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing ShellSurface::set_class() request");
+                std::current_exception(),
+                "Exception processing ShellSurface::set_class() request");
         }
     }
 
@@ -1264,20 +1047,13 @@ private:
         {
             me->destroy();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Surface::destroy() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Surface::destroy() request");
+                std::current_exception(),
+                "Exception processing Surface::destroy() request");
         }
     }
 
@@ -1293,20 +1069,13 @@ private:
         {
             me->attach(buffer_resolved, x, y);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Surface::attach() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Surface::attach() request");
+                std::current_exception(),
+                "Exception processing Surface::attach() request");
         }
     }
 
@@ -1317,20 +1086,13 @@ private:
         {
             me->damage(x, y, width, height);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Surface::damage() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Surface::damage() request");
+                std::current_exception(),
+                "Exception processing Surface::damage() request");
         }
     }
 
@@ -1341,20 +1103,13 @@ private:
         {
             me->frame(callback);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Surface::frame() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Surface::frame() request");
+                std::current_exception(),
+                "Exception processing Surface::frame() request");
         }
     }
 
@@ -1370,20 +1125,13 @@ private:
         {
             me->set_opaque_region(region_resolved);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Surface::set_opaque_region() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Surface::set_opaque_region() request");
+                std::current_exception(),
+                "Exception processing Surface::set_opaque_region() request");
         }
     }
 
@@ -1399,20 +1147,13 @@ private:
         {
             me->set_input_region(region_resolved);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Surface::set_input_region() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Surface::set_input_region() request");
+                std::current_exception(),
+                "Exception processing Surface::set_input_region() request");
         }
     }
 
@@ -1423,20 +1164,13 @@ private:
         {
             me->commit();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Surface::commit() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Surface::commit() request");
+                std::current_exception(),
+                "Exception processing Surface::commit() request");
         }
     }
 
@@ -1447,20 +1181,13 @@ private:
         {
             me->set_buffer_transform(transform);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Surface::set_buffer_transform() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Surface::set_buffer_transform() request");
+                std::current_exception(),
+                "Exception processing Surface::set_buffer_transform() request");
         }
     }
 
@@ -1471,20 +1198,13 @@ private:
         {
             me->set_buffer_scale(scale);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Surface::set_buffer_scale() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Surface::set_buffer_scale() request");
+                std::current_exception(),
+                "Exception processing Surface::set_buffer_scale() request");
         }
     }
 
@@ -1495,20 +1215,13 @@ private:
         {
             me->damage_buffer(x, y, width, height);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Surface::damage_buffer() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Surface::damage_buffer() request");
+                std::current_exception(),
+                "Exception processing Surface::damage_buffer() request");
         }
     }
 
@@ -1561,20 +1274,13 @@ private:
         {
             me->get_pointer(client, resource, id);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Seat::get_pointer() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Seat::get_pointer() request");
+                std::current_exception(),
+                "Exception processing Seat::get_pointer() request");
         }
     }
 
@@ -1585,20 +1291,13 @@ private:
         {
             me->get_keyboard(client, resource, id);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Seat::get_keyboard() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Seat::get_keyboard() request");
+                std::current_exception(),
+                "Exception processing Seat::get_keyboard() request");
         }
     }
 
@@ -1609,20 +1308,13 @@ private:
         {
             me->get_touch(client, resource, id);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Seat::get_touch() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Seat::get_touch() request");
+                std::current_exception(),
+                "Exception processing Seat::get_touch() request");
         }
     }
 
@@ -1633,20 +1325,13 @@ private:
         {
             me->release(client, resource);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Seat::release() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Seat::release() request");
+                std::current_exception(),
+                "Exception processing Seat::release() request");
         }
     }
 
@@ -1710,20 +1395,13 @@ private:
         {
             me->set_cursor(serial, surface_resolved, hotspot_x, hotspot_y);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Pointer::set_cursor() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Pointer::set_cursor() request");
+                std::current_exception(),
+                "Exception processing Pointer::set_cursor() request");
         }
     }
 
@@ -1734,20 +1412,13 @@ private:
         {
             me->release();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Pointer::release() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Pointer::release() request");
+                std::current_exception(),
+                "Exception processing Pointer::release() request");
         }
     }
 
@@ -1793,20 +1464,13 @@ private:
         {
             me->release();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Keyboard::release() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Keyboard::release() request");
+                std::current_exception(),
+                "Exception processing Keyboard::release() request");
         }
     }
 
@@ -1851,20 +1515,13 @@ private:
         {
             me->release();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Touch::release() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Touch::release() request");
+                std::current_exception(),
+                "Exception processing Touch::release() request");
         }
     }
 
@@ -1905,20 +1562,13 @@ private:
         {
             me->release(client, resource);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Output::release() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Output::release() request");
+                std::current_exception(),
+                "Exception processing Output::release() request");
         }
     }
 
@@ -1975,20 +1625,13 @@ private:
         {
             me->destroy();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Region::destroy() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Region::destroy() request");
+                std::current_exception(),
+                "Exception processing Region::destroy() request");
         }
     }
 
@@ -1999,20 +1642,13 @@ private:
         {
             me->add(x, y, width, height);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Region::add() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Region::add() request");
+                std::current_exception(),
+                "Exception processing Region::add() request");
         }
     }
 
@@ -2023,20 +1659,13 @@ private:
         {
             me->subtract(x, y, width, height);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Region::subtract() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Region::subtract() request");
+                std::current_exception(),
+                "Exception processing Region::subtract() request");
         }
     }
 
@@ -2080,20 +1709,13 @@ private:
         {
             me->destroy(client, resource);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Subcompositor::destroy() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Subcompositor::destroy() request");
+                std::current_exception(),
+                "Exception processing Subcompositor::destroy() request");
         }
     }
 
@@ -2104,20 +1726,13 @@ private:
         {
             me->get_subsurface(client, resource, id, surface, parent);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Subcompositor::get_subsurface() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Subcompositor::get_subsurface() request");
+                std::current_exception(),
+                "Exception processing Subcompositor::get_subsurface() request");
         }
     }
 
@@ -2178,20 +1793,13 @@ private:
         {
             me->destroy();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Subsurface::destroy() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Subsurface::destroy() request");
+                std::current_exception(),
+                "Exception processing Subsurface::destroy() request");
         }
     }
 
@@ -2202,20 +1810,13 @@ private:
         {
             me->set_position(x, y);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Subsurface::set_position() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Subsurface::set_position() request");
+                std::current_exception(),
+                "Exception processing Subsurface::set_position() request");
         }
     }
 
@@ -2226,20 +1827,13 @@ private:
         {
             me->place_above(sibling);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Subsurface::place_above() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Subsurface::place_above() request");
+                std::current_exception(),
+                "Exception processing Subsurface::place_above() request");
         }
     }
 
@@ -2250,20 +1844,13 @@ private:
         {
             me->place_below(sibling);
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Subsurface::place_below() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Subsurface::place_below() request");
+                std::current_exception(),
+                "Exception processing Subsurface::place_below() request");
         }
     }
 
@@ -2274,20 +1861,13 @@ private:
         {
             me->set_sync();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Subsurface::set_sync() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Subsurface::set_sync() request");
+                std::current_exception(),
+                "Exception processing Subsurface::set_sync() request");
         }
     }
 
@@ -2298,20 +1878,13 @@ private:
         {
             me->set_desync();
         }
-        catch(std::exception const& err)
+        catch(...)
         {
             ::mir::log(
                 ::mir::logging::Severity::critical,
                 "frontend:Wayland",
-                "Exception processing Subsurface::set_desync() request: %s",
-                boost::diagnostic_information(err).c_str());
-        }
-        catch (...)
-        {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                "Unknown exception processing Subsurface::set_desync() request");
+                std::current_exception(),
+                "Exception processing Subsurface::set_desync() request");
         }
     }
 

@@ -276,20 +276,13 @@ public:
             indent,
             {
                 {"    }"},
-                {"    catch(std::exception const& err)"},
+                {"    catch(...)"},
                 {"    {"},
                 {"        ::mir::log("},
                 {"            ::mir::logging::Severity::critical,"},
                 {"            \"frontend:Wayland\","},
-                {"            \"Exception processing ", interface_type, "::", name, "() request: %s\","},
-                {"            boost::diagnostic_information(err).c_str());"},
-                {"    }"},
-                {"    catch (...)"},
-                {"    {"},
-                {"        ::mir::log("},
-                {"            ::mir::logging::Severity::critical,"},
-                {"            \"frontend:Wayland\","},
-                {"            \"Unknown exception processing ", interface_type, "::", name, "() request\");"},
+                {"            std::current_exception(),"},
+                {"            \"Exception processing ", interface_type, "::", name, "() request\");"},
                 {"    }"},
                 {"}"}
             });

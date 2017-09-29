@@ -24,27 +24,27 @@ namespace ms = mir::scene;
 namespace mtf = mir_test_framework;
 
 mtf::DeclarativePlacementWindowManagerPolicy::DeclarativePlacementWindowManagerPolicy(
-    mir::shell::WindowManagerTools* const tools,
-    SurfaceGeometries const& positions_by_name,
-    std::shared_ptr<mir::shell::DisplayLayout> const& display_layout) :
-    mir::shell::CanonicalWindowManagerPolicy{tools, display_layout},
+    miral::WindowManagerTools const& tools,
+    SurfaceGeometries const& positions_by_name) :
+    mir_test_framework::CanonicalWindowManagerPolicy{tools},
     surface_geometries_by_name{positions_by_name}
 {
 }
 
-ms::SurfaceCreationParameters mtf::DeclarativePlacementWindowManagerPolicy::handle_place_new_surface(
-    std::shared_ptr<mir::scene::Session> const& /*session*/,
-    ms::SurfaceCreationParameters const& request_parameters)
+auto mtf::DeclarativePlacementWindowManagerPolicy::place_new_window(
+    miral::ApplicationInfo const& /*app_info*/,
+    miral::WindowSpecification const& request_parameters)
+-> miral::WindowSpecification
 {
     auto placed = request_parameters;
 
-    auto const& name = request_parameters.name;
-    
+    auto const& name = request_parameters.name().value();
+
     if (surface_geometries_by_name.find(name) != surface_geometries_by_name.end())
     {
         auto const& geometry = surface_geometries_by_name.at(name);
-        placed.top_left = geometry.top_left;
-        placed.size = geometry.size;        
+        placed.top_left() = geometry.top_left;
+        placed.size() = geometry.size;
     }
 
     return placed;

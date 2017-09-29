@@ -122,6 +122,7 @@ target_link_libraries(mirserver LINK_PUBLIC
   ${GLIB_LDFLAGS} ${GLIB_LIBRARIES}
   ${UUID_LDFLAGS} ${UUID_LIBRARIES}
   ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
+  atomic
 )
 
 install(TARGETS mirserver

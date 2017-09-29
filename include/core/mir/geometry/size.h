@@ -29,12 +29,12 @@ namespace geometry
 
 struct Size
 {
-    constexpr Size() {}
-    constexpr Size(Size const&) = default;
-    Size& operator=(Size const&) = default;
+    constexpr Size() noexcept {}
+    constexpr Size(Size const&) noexcept = default;
+    Size& operator=(Size const&) noexcept = default;
 
     template<typename WidthType, typename HeightType>
-    constexpr Size(WidthType&& width, HeightType&& height) : width(width), height(height) {}
+    constexpr Size(WidthType&& width, HeightType&& height) noexcept : width(width), height(height) {}
 
     Width width;
     Height height;

@@ -51,6 +51,8 @@ mir (1.0.0-0ubuntu1) UNRELEASED; urgency=medium
         actual values to avoid ldiv0. (LP: #1717061)
       . [miral-kiosk] Apply fullscreen logic when hidden windows are restored.
         (LP: #1717910)
+      . [mir-on-x11] Less annoying clipping of Mir-on-X11 window when it exceeds
+        display bounds. (LP: #1668599)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 10 Aug 2017 11:54:30 +0000
 

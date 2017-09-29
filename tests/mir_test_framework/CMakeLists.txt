@@ -58,8 +58,8 @@ add_library(mir-public-test-framework OBJECT
   visible_surface.cpp
   stub_client_platform_options.cpp
   ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/stub_client_platform_options.h
-  basic_window_manager.cpp  ${PROJECT_SOURCE_DIR}/include/test/mir/shell/basic_window_manager.h
-  canonical_window_manager.cpp  ${PROJECT_SOURCE_DIR}/include/test/mir/shell/canonical_window_manager.h
+  basic_window_manager.cpp  ${PROJECT_SOURCE_DIR}/tests/include/mir/shell/basic_window_manager.h
+  canonical_window_manager.cpp  ${PROJECT_SOURCE_DIR}/tests/include/mir/shell/canonical_window_manager.h
 )
 
 # Umockdev uses glib, which uses the deprecated "register" storage qualifier
@@ -120,7 +120,7 @@ set_target_properties(
 
 add_library(
   mir-test-input-framework OBJECT
-  
+
   stub_input.cpp
   fake_input_device_impl.cpp
   stub_input_platform.cpp
@@ -177,7 +177,7 @@ add_library(
 )
 
 target_link_libraries(
-  mirplatformgraphicsthrow 
+  mirplatformgraphicsthrow
 
   mirplatform
 )

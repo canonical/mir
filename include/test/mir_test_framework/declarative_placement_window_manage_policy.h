@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_FRAMEWORK_DECLARATIVE_PLACEMENT_WINDOW_MANAGER_POLICY_H_
 #define MIR_TEST_FRAMEWORK_DECLARATIVE_PLACEMENT_WINDOW_MANAGER_POLICY_H_
 
-#include "mir/shell/canonical_window_manager.h"
+#include "mir_test_framework/canonical_window_manager_policy.h"
 #include "mir/geometry/rectangle.h"
 
 #include <memory>
@@ -34,18 +34,17 @@ typedef std::map<std::string, mir::geometry::Rectangle> SurfaceGeometries;
 /// a static list of surface geometries and relative depths. Used, for example,
 /// in input tests where it is necessary to set up scenarios depending on
 /// multiple surfaces geometry and stacking.
-class DeclarativePlacementWindowManagerPolicy : public mir::shell::CanonicalWindowManagerPolicy
+class DeclarativePlacementWindowManagerPolicy : public mir_test_framework::CanonicalWindowManagerPolicy
 {
 public:
     DeclarativePlacementWindowManagerPolicy(
-        mir::shell::WindowManagerTools* const tools,
-        SurfaceGeometries const& positions_by_name, 
-        std::shared_ptr<mir::shell::DisplayLayout> const& display_layout);
+        miral::WindowManagerTools const& tools,
+        SurfaceGeometries const& positions_by_name);
 
-    auto handle_place_new_surface(
-        std::shared_ptr<mir::scene::Session> const& session,
-        mir::scene::SurfaceCreationParameters const& request_parameters)
-    -> mir::scene::SurfaceCreationParameters;
+    virtual auto place_new_window(
+        miral::ApplicationInfo const& app_info,
+        miral::WindowSpecification const& request_parameters)
+    -> miral::WindowSpecification override;
 
 private:
     SurfaceGeometries const& surface_geometries_by_name;

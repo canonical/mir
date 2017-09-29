@@ -529,20 +529,26 @@ void TilingWindowManagerPolicy::update_surfaces(ApplicationInfo& info, Rectangle
 
             if (!window_info.parent())
             {
-                auto const new_pos = window.top_left() + (new_tile.top_left - old_tile.top_left);
-                auto const offset = new_pos - new_tile.top_left;
+                auto offset_in_tile = window.top_left() - old_tile.top_left;
+                offset_in_tile.dx = std::min(offset_in_tile.dx, as_displacement(new_tile.size).dx);
+                offset_in_tile.dy = std::min(offset_in_tile.dy, as_displacement(new_tile.size).dy);
 
-                // For now just scale if was filling width/height of tile
-                auto const old_size = window.size();
-                auto const scaled_width  = old_size.width  == old_tile.size.width  ? new_tile.size.width  : old_size.width;
-                auto const scaled_height = old_size.height == old_tile.size.height ? new_tile.size.height : old_size.height;
+                Rectangle new_placement{new_tile.top_left + offset_in_tile, window.size()};
 
-                auto width  = std::min(new_tile.size.width.as_int()  - offset.dx.as_int(), scaled_width.as_int());
-                auto height = std::min(new_tile.size.height.as_int() - offset.dy.as_int(), scaled_height.as_int());
+                if (window.size().width == old_tile.size.width)
+                    new_placement.size.width = new_tile.size.width;
+
+                if (window.size().height == old_tile.size.height)
+                    new_placement.size.height = new_tile.size.height;
+
+                if (!new_placement.overlaps(new_tile))
+                    new_placement.top_left = new_tile.top_left;
+
+                new_placement = new_placement.intersection_with(new_tile);
 
                 WindowSpecification modifications;
-                modifications.top_left() = new_pos;
-                modifications.size() = {width, height};
+                modifications.top_left() = new_placement.top_left;
+                modifications.size() = new_placement.size;
                 tools.modify_window(window_info, modifications);
             }
         }
@@ -652,12 +658,10 @@ void TilingWindowManagerPolicy::advise_output_create(const Output& output)
     dirty_displays = true;
 }
 
-#include <iostream>
 void TilingWindowManagerPolicy::advise_output_update(const Output& updated, const Output& original)
 {
     if (!equivalent_display_area(updated, original))
     {
-        std::cout << "Original: " << original.extents() << "new: " << updated.extents() << '\n';
         live_displays.remove(original.extents());
         live_displays.add(updated.extents());
 

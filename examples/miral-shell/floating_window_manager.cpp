@@ -677,20 +677,24 @@ void FloatingWindowManagerPolicy::advise_adding_to_workspace(
 }
 
 auto FloatingWindowManagerPolicy::confirm_placement_on_display(
-    miral::WindowInfo const& /*window_info*/, MirWindowState new_state, Rectangle const& new_placement) -> Rectangle
+    miral::WindowInfo const& window_info, MirWindowState new_state, Rectangle const& new_placement) -> Rectangle
 {
     switch (new_state)
     {
-    default:
-        return new_placement;
-
     case mir_window_state_maximized:
     case mir_window_state_vertmaximized:
-        auto result = new_placement;
+        if (window_info.needs_titlebar(window_info.type()))
+        {
+            auto result = new_placement;
 
-        result.top_left.y = result.top_left.y  + title_bar_height;
-        result.size.height = result.size.height - title_bar_height;
-        return result;
+            result.top_left.y = result.top_left.y  + title_bar_height;
+            result.size.height = result.size.height - title_bar_height;
+            return result;
+        }
+        // else
+        //     Falls through.
+    default:
+        return new_placement;
     }
 }
 
