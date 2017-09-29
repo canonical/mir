@@ -304,7 +304,8 @@ void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_s
     {
         auto const ar = min_aspect();
 
-        auto const error = new_size.height.as_int()*long(ar.width) - new_size.width.as_int()*long(ar.height);
+        auto const error = new_size.height.as_int()*static_cast<long long>(ar.width) -
+                           new_size.width.as_int() *static_cast<long long>(ar.height);
 
         if (error > 0)
         {
@@ -326,7 +327,8 @@ void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_s
     {
         auto const ar = max_aspect();
 
-        auto const error = new_size.width.as_int()*long(ar.height) - new_size.height.as_int()*long(ar.width);
+        auto const error = new_size.width.as_int() *static_cast<long long>(ar.height) -
+                           new_size.height.as_int()*static_cast<long long>(ar.width);
 
         if (error > 0)
         {
