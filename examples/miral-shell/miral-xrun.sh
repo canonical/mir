@@ -41,7 +41,7 @@ then
   else
     echo "Error: Cannot detect Mir endpoint"; exit 1
   fi
-  socket_name=MIR_SOCKET
+  MIR_SOCKET=${socket_value}
   x11_server_args=-rootless
 elif [ "${x11_server}" == "Xwayland" ];
 then
@@ -54,7 +54,7 @@ then
   else
     echo "Error: Cannot detect Mir-Wayland endpoint"; exit 1
   fi
-  socket_name=WAYLAND_DISPLAY
+  WAYLAND_DISPLAY=${socket_value}
   x11_server_args=
 fi
 
@@ -64,8 +64,6 @@ while [ -e "/tmp/.X11-unix/X${port}" ]; do
     let port+=1
 done
 
-echo ${socket_name}=${socket_value} ${x11_server} -rootless :${port}
-
-socket_name=${socket_value} ${x11_server} ${x11_server_args} :${port} & pid=$!
+${x11_server} ${x11_server_args} :${port} & pid=$!
 DISPLAY=:${port} "$@"
 kill ${pid}
