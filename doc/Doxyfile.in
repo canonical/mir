@@ -784,7 +784,8 @@ WARN_LOGFILE           =
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/README.md \
                          @CMAKE_CURRENT_SOURCE_DIR@/HACKING.md \
                          @CMAKE_CURRENT_SOURCE_DIR@/doc \
-                         @CMAKE_CURRENT_SOURCE_DIR@/examples \
+                         @CMAKE_CURRENT_SOURCE_DIR@/examples/miral-kiosk \
+                         @CMAKE_CURRENT_SOURCE_DIR@/examples/miral-shell \
                          @CMAKE_CURRENT_SOURCE_DIR@/include \
                          @MIR_GENERATED_INCLUDE_DIRECTORIES_FLATTENED@
 
@@ -859,7 +860,9 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                =
+EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/include/server \
+                         @CMAKE_CURRENT_SOURCE_DIR@/include/platform \
+                         @CMAKE_CURRENT_SOURCE_DIR@/include/platforms
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -876,9 +879,10 @@ EXCLUDE_SYMLINKS       = NO
 # exclude all test directories for example use the pattern */test/*
 
 EXCLUDE_PATTERNS       = *.capnp.c++ \
-                         @CMAKE_CURRENT_SOURCE_DIR@/include/server/* \
-                         @CMAKE_CURRENT_SOURCE_DIR@/include/test/mir/* \
-                         @CMAKE_CURRENT_SOURCE_DIR@/examples/multi_stream.cpp
+                         */detail/* \
+                         @CMAKE_CURRENT_SOURCE_DIR@/examples/multi_stream.cpp \
+                         @CMAKE_CURRENT_SOURCE_DIR@/examples/uses_non_client_symbol.cpp \
+                         @CMAKE_CURRENT_SOURCE_DIR@/examples/miral-shell/titlebar_config.*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
