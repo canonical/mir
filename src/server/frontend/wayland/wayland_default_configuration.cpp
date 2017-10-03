@@ -42,6 +42,7 @@ std::shared_ptr<mf::Connector>
                 display_name,
                 the_frontend_shell(),
                 *the_frontend_display_changer(),
+                the_input_device_hub(),
                 the_buffer_allocator(),
                 arw_socket);
         });
