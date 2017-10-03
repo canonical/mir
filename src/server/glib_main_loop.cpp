@@ -154,7 +154,19 @@ void mir::GLibMainLoop::stop()
     detail::add_idle_gsource(main_context, G_PRIORITY_HIGH,
         [this]
         {
-            running = false;
+            {
+                std::lock_guard<std::mutex> lock{run_on_halt_mutex};
+                running = false;
+            }
+            // We know any other thread sees running == false here, so don't need
+            // to lock run_on_halt_queue.
+            for (auto& action : run_on_halt_queue)
+            {
+                try { action(); }
+                catch (...) { handle_exception(std::current_exception()); }
+            }
+            run_on_halt_queue.clear();
+
             g_main_context_wakeup(main_context);
         });
 }
@@ -244,6 +256,48 @@ void mir::GLibMainLoop::enqueue(void const* owner, ServerAction const& action)
         {
             return should_process_actions_for(owner);
         });
+}
+
+
+void mir::GLibMainLoop::enqueue_with_guaranteed_execution (mir::ServerAction const& action)
+{
+    auto const action_with_exception_handling =
+        [this]
+        {
+            try
+            {
+                mir::ServerAction action;
+                {
+                    std::lock_guard<std::mutex> lock{run_on_halt_mutex};
+                    action = run_on_halt_queue.front();
+                    run_on_halt_queue.pop_front();
+                }
+                action();
+            }
+            catch (...)
+            {
+                handle_exception(std::current_exception());
+            }
+        };
+
+    {
+        std::lock_guard<std::mutex> lock{run_on_halt_mutex};
+
+        if (!running)
+        {
+            action();
+            return;
+        }
+        else
+        {
+            run_on_halt_queue.push_back(action);
+        }
+    }
+
+    detail::add_idle_gsource(
+        main_context,
+        G_PRIORITY_DEFAULT,
+        action_with_exception_handling);
 }
 
 void mir::GLibMainLoop::pause_processing_for(void const* owner)

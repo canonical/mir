@@ -833,6 +833,76 @@ TEST_F(GLibMainLoopTest, can_be_rerun_after_exception)
         destroy_glib_main_loop);
 }
 
+TEST_F(GLibMainLoopTest, enqueue_with_guaranteed_execution_executes_before_run)
+{
+    using namespace testing;
+
+    int num_actions{0};
+
+    ml.enqueue_with_guaranteed_execution(
+        [&num_actions]
+        {
+            ++num_actions;
+        });
+
+    EXPECT_THAT(num_actions, Eq(1));
+}
+
+TEST_F(GLibMainLoopTest, enqueue_with_guaranteed_execution_executes_after_stop)
+{
+    using namespace testing;
+
+    int num_actions{0};
+
+    ml.enqueue(
+        nullptr,
+        [this]()
+        {
+            ml.stop();
+        });
+
+    ml.run();
+
+    ml.enqueue_with_guaranteed_execution(
+        [&num_actions]
+        {
+            ++num_actions;
+        });
+
+    EXPECT_THAT(num_actions, Eq(1));
+}
+
+TEST_F(GLibMainLoopTest, enqueue_with_guaranteed_execution_executes_on_mainloop)
+{
+    using namespace testing;
+
+    mt::Signal loop_running;
+    mt::Signal loop_finished;
+
+    ml.enqueue(
+        nullptr,
+        [&loop_running]() { loop_running.raise(); });
+
+    mt::AutoJoinThread t{
+        [&]
+        {
+            ml.run();
+            loop_finished.raise();
+        }};
+
+    ASSERT_TRUE(loop_running.wait_for(std::chrono::seconds{5}));
+
+    ml.enqueue_with_guaranteed_execution(
+        [main_thread = std::this_thread::get_id()]()
+        {
+            EXPECT_THAT(std::this_thread::get_id(), Ne(main_thread));
+        });
+
+    ml.stop();
+
+    EXPECT_TRUE(loop_finished.wait_for(std::chrono::seconds{30}));
+}
+
 namespace
 {
 
