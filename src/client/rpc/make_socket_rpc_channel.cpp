@@ -48,6 +48,7 @@ mclr::make_rpc_channel(
     std::shared_ptr<mcl::DisplayConfiguration> const& disp_conf,
     std::shared_ptr<input::InputDevices> const& input_devices,
     std::shared_ptr<RpcReport> const& rpc_report,
+    std::shared_ptr<input::receiver::InputReceiverReport> const& input_report,
     std::shared_ptr<mcl::LifecycleControl> const& lifecycle_control,
     std::shared_ptr<mcl::PingHandler> const& ping_handler,
     std::shared_ptr<mcl::ErrorHandler> const& error_handler,
@@ -65,6 +66,6 @@ mclr::make_rpc_channel(
     }
     return std::make_shared<MirProtobufRpcChannel>(
         std::move(transport), map, buffer_factory, disp_conf,
-        input_devices, rpc_report, lifecycle_control, ping_handler,
+        input_devices, rpc_report, input_report, lifecycle_control, ping_handler,
         error_handler, event_sink);
 }

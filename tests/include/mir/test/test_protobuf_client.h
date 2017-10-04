@@ -33,6 +33,13 @@
 
 namespace mir
 {
+namespace input
+{
+namespace receiver
+{
+class NullInputReceiverReport;
+}
+}
 namespace client
 {
 class SurfaceMap;
@@ -53,6 +60,7 @@ struct TestProtobufClient
     TestProtobufClient(std::string socket_file, int timeout_ms);
 
     std::shared_ptr<doubles::MockRpcReport> rpc_report;
+    std::shared_ptr<input::receiver::NullInputReceiverReport> input_report;
     std::shared_ptr<mir::client::SurfaceMap> surface_map;
     std::shared_ptr<mir::client::rpc::MirBasicRpcChannel> channel;
     std::shared_ptr<dispatch::ThreadedDispatcher> eventloop;
