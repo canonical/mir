@@ -98,7 +98,7 @@ TEST_F(WindowProperties, on_creation_default_shell_chrome_is_normal)
     paint(surface);
     ASSERT_TRUE(window_ready.wait_for(400ms));
 
-    invoke_tools([&, this](WindowManagerTools& tools)
+    invoke_tools([&](WindowManagerTools& tools)
     {
         EXPECT_THAT(tools.info_for(tools.active_window()).shell_chrome(), Eq(mir_shell_chrome_normal));
     });
@@ -115,7 +115,7 @@ TEST_F(WindowProperties, on_creation_client_setting_shell_chrome_low_is_seen_by_
     paint(surface);
     ASSERT_TRUE(window_ready.wait_for(400ms));
 
-    invoke_tools([&, this](WindowManagerTools& tools)
+    invoke_tools([&](WindowManagerTools& tools)
     {
         EXPECT_THAT(tools.info_for(tools.active_window()).shell_chrome(), Eq(mir_shell_chrome_low));
     });
@@ -136,7 +136,7 @@ TEST_F(WindowProperties, after_creation_client_setting_shell_chrome_low_is_seen_
 
     ASSERT_TRUE(window_ready.wait_for(400ms));
 
-    invoke_tools([&, this](WindowManagerTools& tools)
+    invoke_tools([&](WindowManagerTools& tools)
     {
         EXPECT_THAT(tools.info_for(tools.active_window()).shell_chrome(), Eq(mir_shell_chrome_low));
     });
@@ -157,7 +157,7 @@ TEST_F(WindowProperties, after_creation_client_setting_shell_chrome_normal_is_se
     paint(surface);
     ASSERT_TRUE(window_ready.wait_for(400ms));
 
-    invoke_tools([&, this](WindowManagerTools& tools)
+    invoke_tools([&](WindowManagerTools& tools)
     {
         EXPECT_THAT(tools.info_for(tools.active_window()).shell_chrome(), Eq(mir_shell_chrome_normal));
     });

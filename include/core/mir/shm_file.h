@@ -17,52 +17,28 @@
  *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_ANONYMOUS_SHM_FILE_H_
-#define MIR_GRAPHICS_MESA_ANONYMOUS_SHM_FILE_H_
+#ifndef MIR_CORE_SHM_FILE_H_
+#define MIR_CORE_SHM_FILE_H_
 
-#include "shm_file.h"
-#include "mir/fd.h"
+#include <cstddef>
 
 namespace mir
 {
-namespace graphics
-{
-namespace common
-{
 
-namespace detail
-{
-class MapHandle
+class ShmFile
 {
 public:
-    MapHandle(int fd, size_t size);
-    ~MapHandle() noexcept;
+    virtual ~ShmFile() = default;
 
-    operator void*() const;
+    virtual void* base_ptr() const = 0;
+    virtual int fd() const = 0;
 
-private:
-    MapHandle(MapHandle const&) = delete;
-    MapHandle& operator=(MapHandle const&) = delete;
-    size_t const size;
-    void* const mapping;
-};
-}
-
-class AnonymousShmFile : public ShmFile
-{
-public:
-    AnonymousShmFile(size_t size);
-
-    void* base_ptr() const;
-    int fd() const;
-
-private:
-    Fd const fd_;
-    detail::MapHandle const mapping;
+protected:
+    ShmFile() = default;
+    ShmFile(ShmFile const&) = delete;
+    ShmFile& operator=(ShmFile const&) = delete;
 };
 
 }
-}
-}
 
-#endif /* MIR_GRAPHICS_MESA_ANONYMOUS_SHM_FILE_H_ */
+#endif /* MIR_CORE_SHM_FILE_H_ */

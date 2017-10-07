@@ -53,6 +53,7 @@
 #include <functional>
 #include <type_traits>
 
+#include <xkbcommon/xkbcommon.h>
 #include <linux/input.h>
 #include <algorithm>
 #include <iostream>
@@ -66,6 +67,7 @@
 #include "../../../platforms/common/server/shm_buffer.h"
 
 #include <sys/stat.h>
+#include "mir/anonymous_shm_file.h"
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -799,10 +801,29 @@ public:
         std::function<void(WlKeyboard*)> const& on_destroy,
         std::shared_ptr<mir::Executor> const& executor)
         : Keyboard(client, parent, id),
+          keymap{nullptr, &xkb_keymap_unref},
+          state{nullptr, &xkb_state_unref},
+          context{xkb_context_new(XKB_CONTEXT_NO_FLAGS), &xkb_context_unref},
           executor{executor},
           on_destroy{on_destroy},
           destroyed{std::make_shared<bool>(false)}
     {
+        // TODO: We should really grab the keymap for the focused surface when
+        // we receive focus.
+
+        xkb_rule_names default_rules;
+        memset(&default_rules, 0, sizeof(default_rules));
+
+        keymap = decltype(keymap){
+            xkb_keymap_new_from_names(
+                context.get(),
+                &default_rules,
+                XKB_KEYMAP_COMPILE_NO_FLAGS),
+            &xkb_keymap_unref};
+
+        state = decltype(state){
+            xkb_state_new(keymap.get()),
+            &xkb_state_unref};
     }
 
     ~WlKeyboard()
@@ -820,13 +841,19 @@ public:
                 this
             ] ()
             {
-                int const serial = wl_display_next_serial(wl_client_get_display(client));
-                auto event = mir_event_get_input_event(ev);
-                auto key_event = mir_input_event_get_keyboard_event(event);
+                auto const serial = wl_display_next_serial(wl_client_get_display(client));
+                auto const event = mir_event_get_input_event(ev);
+                auto const key_event = mir_input_event_get_keyboard_event(event);
+                auto const scancode = mir_keyboard_event_scan_code(key_event);
+                /*
+                 * HACK! Maintain our own XKB state, so we can serialise it for
+                 * wl_keyboard_send_modifiers
+                 */
 
                 switch (mir_keyboard_event_action(key_event))
                 {
                     case mir_keyboard_action_up:
+                        xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_UP);
                         wl_keyboard_send_key(resource,
                             serial,
                             mir_input_event_get_event_time(event) / 1000,
@@ -834,6 +861,7 @@ public:
                             WL_KEYBOARD_KEY_STATE_RELEASED);
                         break;
                     case mir_keyboard_action_down:
+                        xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
                         wl_keyboard_send_key(resource,
                             serial,
                             mir_input_event_get_event_time(event) / 1000,
@@ -842,6 +870,38 @@ public:
                         break;
                     default:
                         break;
+                }
+
+                auto new_depressed_mods = xkb_state_serialize_mods(
+                    state.get(),
+                    XKB_STATE_MODS_DEPRESSED);
+                auto new_latched_mods = xkb_state_serialize_mods(
+                    state.get(),
+                    XKB_STATE_MODS_LATCHED);
+                auto new_locked_mods = xkb_state_serialize_mods(
+                    state.get(),
+                    XKB_STATE_MODS_LOCKED);
+                auto new_group = xkb_state_serialize_layout(
+                    state.get(),
+                    XKB_STATE_LAYOUT_EFFECTIVE);
+
+                if ((new_depressed_mods != mods_depressed) ||
+                    (new_latched_mods != mods_latched) ||
+                    (new_locked_mods != mods_locked) ||
+                    (new_group != group))
+                {
+                    mods_depressed = new_depressed_mods;
+                    mods_latched = new_latched_mods;
+                    mods_locked = new_locked_mods;
+                    group = new_group;
+
+                    wl_keyboard_send_modifiers(
+                        resource,
+                        wl_display_get_serial(wl_client_get_display(client)),
+                        mods_depressed,
+                        mods_latched,
+                        mods_locked,
+                        group);
                 }
             }));
     }
@@ -861,6 +921,11 @@ public:
                     auto const serial = wl_display_next_serial(wl_client_get_display(client));
                     if (focussed)
                     {
+                        /*
+                         * TODO:
+                         *  *) Send the actual modifier state here.
+                         *  *) Send the surface's keymap here.
+                         */
                         wl_array key_state;
                         wl_array_init(&key_state);
                         wl_keyboard_send_enter(resource, serial, target, &key_state);
@@ -874,10 +939,46 @@ public:
         }
     }
 
+    void handle_event(MirKeymapEvent const* event, wl_resource* /*target*/)
+    {
+        char const* buffer;
+        size_t length;
+
+        mir_keymap_event_get_keymap_buffer(event, &buffer, &length);
+
+        mir::AnonymousShmFile shm_buffer{length};
+        memcpy(shm_buffer.base_ptr(), buffer, length);
+
+        wl_keyboard_send_keymap(
+            resource,
+            WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,
+            shm_buffer.fd(),
+            length);
+
+        keymap = decltype(keymap)(xkb_keymap_new_from_buffer(
+            context.get(),
+            buffer,
+            length,
+            XKB_KEYMAP_FORMAT_TEXT_V1,
+            XKB_KEYMAP_COMPILE_NO_FLAGS),
+            &xkb_keymap_unref);
+
+        state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
+    }
+
 private:
+    std::unique_ptr<xkb_keymap, decltype(&xkb_keymap_unref)> keymap;
+    std::unique_ptr<xkb_state, decltype(&xkb_state_unref)> state;
+    std::unique_ptr<xkb_context, decltype(&xkb_context_unref)> const context;
+
     std::shared_ptr<mir::Executor> const executor;
     std::function<void(WlKeyboard*)> on_destroy;
     std::shared_ptr<bool> const destroyed;
+
+    uint32_t mods_depressed{0};
+    uint32_t mods_latched{0};
+    uint32_t mods_locked{0};
+    uint32_t group{0};
 
     void release() override;
 };
@@ -1202,6 +1303,15 @@ public:
         }
     }
 
+    void handle_event(MirKeymapEvent const* event, wl_resource* target) const
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        for (auto& listener : listeners)
+        {
+            listener->handle_event(event, target);
+        }
+    }
+
 private:
     std::mutex mutable mutex;
     std::vector<InputInterface*> listeners;
@@ -1448,6 +1558,13 @@ void SurfaceEventSink::handle_event(MirEvent const& event)
         default:
             break;
         }
+        break;
+    }
+    case mir_event_type_keymap:
+    {
+        auto const map_ev = mir_event_get_keymap_event(&event);
+
+        seat->acquire_keyboard_reference(client).handle_event(map_ev, target);
         break;
     }
     case mir_event_type_window:

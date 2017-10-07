@@ -96,7 +96,7 @@ miral::BasicSetApplicationAuthorizer::~BasicSetApplicationAuthorizer() = default
 
 void miral::BasicSetApplicationAuthorizer::operator()(mir::Server& server)
 {
-    server.override_the_session_authorizer([this, &server]()
+    server.override_the_session_authorizer([this]()
         -> std::shared_ptr<mf::SessionAuthorizer>
         {
             auto wrapped = self->builder();

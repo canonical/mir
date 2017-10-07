@@ -23,12 +23,10 @@
 
 namespace mir
 {
+class ShmFile;
+
 namespace graphics
 {
-namespace common
-{
-class ShmFile;
-}
 namespace mesa
 {
 
@@ -36,7 +34,7 @@ class SoftwareBuffer: public common::ShmBuffer
 {
 public:
     SoftwareBuffer(
-        std::unique_ptr<common::ShmFile> shm_file,
+        std::unique_ptr<ShmFile> shm_file,
         geometry::Size const& size,
         MirPixelFormat const& pixel_format);
 

@@ -19,7 +19,7 @@
 
 #include "buffer_allocator.h"
 #include "buffer_texture_binder.h"
-#include "anonymous_shm_file.h"
+#include "mir/anonymous_shm_file.h"
 #include "shm_buffer.h"
 #include "mir/graphics/buffer_properties.h"
 #include "software_buffer.h"
@@ -58,7 +58,7 @@ std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_software_buffer(geom::Si
     auto const stride = geom::Stride{ MIR_BYTES_PER_PIXEL(format) * size.width.as_uint32_t() };
     size_t const size_in_bytes = stride.as_int() * size.height.as_int();
     return std::make_shared<mge::SoftwareBuffer>(
-        std::make_unique<mgc::AnonymousShmFile>(size_in_bytes), size, format);
+        std::make_unique<mir::AnonymousShmFile>(size_in_bytes), size, format);
 }
 
 std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()

@@ -445,7 +445,7 @@ MirWindowType ms::BasicSurface::set_type(MirWindowType t)
 {
     std::unique_lock<std::mutex> lg(guard);
     
-    if (t < 0 || t > mir_window_types)
+    if (t > mir_window_types)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
             "type."));

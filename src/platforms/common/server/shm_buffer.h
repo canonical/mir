@@ -30,12 +30,13 @@
 
 namespace mir
 {
+class ShmFile;
+
 namespace graphics
 {
 namespace common
 {
 
-class ShmFile;
 
 class ShmBuffer : public BufferBasic, public NativeBufferBase,
                   public renderer::gl::TextureSource,
