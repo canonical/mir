@@ -31,9 +31,6 @@ MIR_COMMON_0.25 {
     mir::dispatch::ThreadedDispatcher::remove_thread*;
     mir::dispatch::ThreadedDispatcher::?ThreadedDispatcher*;
     mir::dispatch::ThreadedDispatcher::ThreadedDispatcher*;
-    mir::Fd::Fd*;
-    mir::Fd::invalid*;
-    mir::Fd::operator*;
     mir::graphics::NativeBuffer::?NativeBuffer*;
     mir::graphics::NativeBuffer::NativeBuffer*;
     mir::graphics::NativeBuffer::operator*;
@@ -88,7 +85,6 @@ MIR_COMMON_0.25 {
     typeinfo?for?mir::dispatch::ThreadedDispatcher;
     typeinfo?for?mir::events::ContactState;
     typeinfo?for?mir::events::InputDeviceState;
-    typeinfo?for?mir::Fd;
     typeinfo?for?mir::graphics::NativeBuffer;
     typeinfo?for?mir::input::Keymap;
     typeinfo?for?mir::IntOwnedFd;
@@ -107,7 +103,6 @@ MIR_COMMON_0.25 {
     vtable?for?mir::dispatch::ThreadedDispatcher;
     vtable?for?mir::events::ContactState;
     vtable?for?mir::events::InputDeviceState;
-    vtable?for?mir::Fd;
     vtable?for?mir::graphics::NativeBuffer;
     vtable?for?mir::input::Keymap;
     vtable?for?mir::IntOwnedFd;

@@ -17,7 +17,7 @@
  *   Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "anonymous_shm_file.h"
+#include "mir/anonymous_shm_file.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/filesystem.hpp>
@@ -29,8 +29,6 @@
 #include <cstring>
 #include <sys/mman.h>
 #include <fcntl.h>
-
-namespace mgc = mir::graphics::common;
 
 namespace
 {
@@ -87,43 +85,53 @@ mir::Fd create_anonymous_file(size_t size)
  * MapHandle *
  *************/
 
-mgc::detail::MapHandle::MapHandle(int fd, size_t size)
-    : size{size},
-      mapping{mmap(nullptr, size, PROT_READ|PROT_WRITE,
-                   MAP_SHARED, fd, 0)}
+class mir::AnonymousShmFile::MapHandle
 {
-    if (mapping == MAP_FAILED)
-        BOOST_THROW_EXCEPTION(
-            std::system_error(errno, std::system_category(), "Failed to map file"));
-}
+public:
+    MapHandle(int fd, size_t size)
+        : size{size},
+          mapping{mmap(nullptr, size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)}
+    {
+        if (mapping == MAP_FAILED)
+            BOOST_THROW_EXCEPTION(
+                std::system_error(errno, std::system_category(), "Failed to map file"));
+    }
 
-mgc::detail::MapHandle::~MapHandle() noexcept
-{
-    munmap(mapping, size);
-}
+    ~MapHandle() noexcept
+    {
+        munmap(mapping, size);
+    }
 
-mgc::detail::MapHandle::operator void*() const
-{
-    return mapping;
+    operator void*() const
+    {
+        return mapping;
+    }
 
-}
+private:
+    MapHandle(MapHandle const&) = delete;
+    MapHandle& operator=(MapHandle const&) = delete;
+    size_t const size;
+    void* const mapping;
+};
 
 /********************
  * AnonymousShmFile *
  ********************/
 
-mgc::AnonymousShmFile::AnonymousShmFile(size_t size)
+mir::AnonymousShmFile::AnonymousShmFile(size_t size)
     : fd_{create_anonymous_file(size)},
-      mapping{fd_, size}
+      mapping{new MapHandle(fd_, size)}
 {
 }
 
-void* mgc::AnonymousShmFile::base_ptr() const
+mir::AnonymousShmFile::~AnonymousShmFile() noexcept = default;
+
+void* mir::AnonymousShmFile::base_ptr() const
 {
-    return mapping;
+    return *mapping;
 }
 
-int mgc::AnonymousShmFile::fd() const
+int mir::AnonymousShmFile::fd() const
 {
     return fd_;
 }

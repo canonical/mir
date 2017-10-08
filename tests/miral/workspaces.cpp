@@ -295,12 +295,12 @@ TEST_F(Workspaces, given_a_tree_in_a_workspace_when_another_tree_is_added_and_re
     auto const client_window = create_window(original_tree);
     auto const original_window= server_window(original_tree);
 
-    invoke_tools([&, this](WindowManagerTools& tools)
+    invoke_tools([&](WindowManagerTools& tools)
         { tools.add_tree_to_workspace(original_window, workspace); });
 
-    invoke_tools([&, this](WindowManagerTools& tools)
+    invoke_tools([&](WindowManagerTools& tools)
         { tools.add_tree_to_workspace(server_window(top_level), workspace); });
-    invoke_tools([&, this](WindowManagerTools& tools)
+    invoke_tools([&](WindowManagerTools& tools)
         { tools.remove_tree_from_workspace(server_window(top_level), workspace); });
 
     EXPECT_THAT(windows_in_workspace(workspace), ElementsAre(original_window));

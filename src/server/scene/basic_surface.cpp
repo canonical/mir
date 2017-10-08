@@ -410,7 +410,7 @@ void ms::BasicSurface::set_transformation(glm::mat4 const& t)
 bool ms::BasicSurface::visible() const
 {
     std::unique_lock<std::mutex> lk(guard);
-    return visible(lk); 
+    return visible(lk);
 }
 
 bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
@@ -436,7 +436,7 @@ void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
 }
 
 MirWindowType ms::BasicSurface::type() const
-{    
+{
     std::unique_lock<std::mutex> lg(guard);
     return type_;
 }
@@ -444,7 +444,7 @@ MirWindowType ms::BasicSurface::type() const
 MirWindowType ms::BasicSurface::set_type(MirWindowType t)
 {
     std::unique_lock<std::mutex> lg(guard);
-    
+
     if (t < 0 || t > mir_window_types)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
@@ -456,7 +456,7 @@ MirWindowType ms::BasicSurface::set_type(MirWindowType t)
         type_ = t;
         lg.unlock();
 
-        observers.attrib_changed(mir_window_attrib_type, type_); 
+        observers.attrib_changed(mir_window_attrib_type, type_);
     }
 
     return t;
@@ -496,7 +496,7 @@ int ms::BasicSurface::set_swap_interval(int interval)
     {
         swapinterval_ = interval;
         bool allow_dropping = (interval == 0);
-        for (auto& info : layers) 
+        for (auto& info : layers)
             info.stream->allow_framedropping(allow_dropping);
 
         lg.unlock();
@@ -610,7 +610,7 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
     {
         std::unique_lock<std::mutex> lock(guard);
         cursor_stream_adapter->reset();
-        
+
         cursor_image_ = image;
     }
 
@@ -722,7 +722,7 @@ int ms::BasicSurface::set_dpi(int new_dpi)
         lg.unlock();
         observers.attrib_changed(mir_window_attrib_dpi, new_dpi);
     }
-    
+
     return new_dpi;
 }
 
@@ -753,7 +753,7 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
 void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
 {
     observers.add(observer);
-    for (auto& info : layers) 
+    for (auto& info : layers)
         info.stream->add_observer(observer);
 }
 
@@ -763,7 +763,7 @@ void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& obs
     if (!o)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (previously destroyed)"));
     observers.remove(o);
-    for (auto& info : layers) 
+    for (auto& info : layers)
         info.stream->remove_observer(observer);
 }
 
@@ -803,7 +803,7 @@ public:
     {
         return underlying_buffer_stream->framedropping() ? 0 : 1;
     }
- 
+
     std::shared_ptr<mg::Buffer> buffer() const override
     {
         if (!compositor_buffer)
@@ -822,7 +822,7 @@ public:
 
     bool shaped() const override
     { return mg::contains_alpha(underlying_buffer_stream->pixel_format()); }
- 
+
     mg::Renderable::ID id() const override
     { return id_; }
 private:

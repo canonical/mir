@@ -47,5 +47,29 @@ MIR_CORE_0.25 {
     vtable?for?mir::geometry::Rectangles;
     vtable?for?mir::geometry::Size;
   };
- local: *;
 };
+
+MIR_CORE_1.0 {
+ global:
+  extern "C++" {
+    mir::Fd::Fd*;
+    mir::Fd::invalid*;
+    mir::Fd::operator*;
+    mir::AnonymousShmFile::AnonymousShmFile*;
+    mir::AnonymousShmFile::?AnonymousShmFile*;
+    mir::AnonymousShmFile::base_ptr*;
+    mir::AnonymousShmFile::fd*;
+    mir::ShmFile::ShmFile*;
+    mir::ShmFile::?ShmFile*;
+    mir::ShmFile::base_ptr*;
+    mir::ShmFile::fd*;
+
+    typeinfo?for?mir::Fd;
+    typeinfo?for?mir::AnonymousShmFile;
+    typeinfo?for?mir::ShmFile;
+    vtable?for?mir::Fd;
+    vtable?for?mir::AnonymousShmFile;
+    vtable?for?mir::ShmFile;
+  };
+  local: *;
+} MIR_CORE_0.25;
