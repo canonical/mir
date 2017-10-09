@@ -59,6 +59,11 @@ public:
         return std::move(value_);
     }
 
+    operator bool() const
+    {
+        return is_set();
+    }
+
 private:
     void die_if_unset() const
     {

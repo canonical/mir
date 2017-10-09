@@ -32,6 +32,16 @@ public:
     virtual ~ServerActionQueue() = default;
 
     virtual void enqueue(void const* owner, ServerAction const& action) = 0;
+    /**
+     * Enqueue an action to be run, guaranteeing that it *will* be run.
+     *
+     * The action will be run even if the queue is not normally being drained
+     * (for example, if the main loop is suspended). If running on the queue is
+     * not possible, the action will be run on the caller's thread.
+     *
+     * \param [in]  action  Functor to invoke.
+     */
+    virtual void enqueue_with_guaranteed_execution(ServerAction const& action) = 0;
     virtual void pause_processing_for(void const* owner) = 0;
     virtual void resume_processing_for(void const* owner) = 0;
 
