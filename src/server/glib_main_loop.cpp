@@ -259,7 +259,7 @@ void mir::GLibMainLoop::enqueue(void const* owner, ServerAction const& action)
 }
 
 
-void mir::GLibMainLoop::enqueue_with_guaranteed_execution (mir::ServerAction const& action)
+void mir::GLibMainLoop::enqueue_with_guaranteed_execution(mir::ServerAction const& action)
 {
     auto const action_with_exception_handling =
         [this]

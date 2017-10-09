@@ -100,7 +100,7 @@ struct StubServerActionQueue : mir::ServerActionQueue
     {
         action();
     }
-    void enqueue_with_guaranteed_execution (mir::ServerAction const& action) override
+    void enqueue_with_guaranteed_execution(mir::ServerAction const& action) override
     {
         action();
     }

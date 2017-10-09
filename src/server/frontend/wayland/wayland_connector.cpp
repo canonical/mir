@@ -1409,10 +1409,10 @@ private:
         {
         }
 
-        void device_added (std::shared_ptr<input::Device> const& device) override;
-        void device_changed (std::shared_ptr<input::Device> const& device) override;
-        void device_removed (std::shared_ptr<input::Device> const& device) override;
-        void changes_complete () override;
+        void device_added(std::shared_ptr<input::Device> const& device) override;
+        void device_changed(std::shared_ptr<input::Device> const& device) override;
+        void device_removed(std::shared_ptr<input::Device> const& device) override;
+        void changes_complete() override;
 
     private:
         mir::input::Keymap const& current_keymap;
@@ -1544,7 +1544,7 @@ InputCtx<WlTouch> const& WlSeat::acquire_touch_reference(wl_client* client) cons
     return touch[client];
 }
 
-void WlSeat::ConfigObserver::device_added (std::shared_ptr<input::Device> const& device)
+void WlSeat::ConfigObserver::device_added(std::shared_ptr<input::Device> const& device)
 {
     if (auto keyboard_config = device->keyboard_configuration())
     {
@@ -1555,7 +1555,7 @@ void WlSeat::ConfigObserver::device_added (std::shared_ptr<input::Device> const&
     }
 }
 
-void WlSeat::ConfigObserver::device_changed (std::shared_ptr<input::Device> const& device)
+void WlSeat::ConfigObserver::device_changed(std::shared_ptr<input::Device> const& device)
 {
     if (auto keyboard_config = device->keyboard_configuration())
     {
@@ -1566,11 +1566,11 @@ void WlSeat::ConfigObserver::device_changed (std::shared_ptr<input::Device> cons
     }
 }
 
-void WlSeat::ConfigObserver::device_removed (std::shared_ptr<input::Device> const& /*device*/)
+void WlSeat::ConfigObserver::device_removed(std::shared_ptr<input::Device> const& /*device*/)
 {
 }
 
-void WlSeat::ConfigObserver::changes_complete ()
+void WlSeat::ConfigObserver::changes_complete()
 {
     on_keymap_commit(pending_keymap);
 }

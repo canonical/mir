@@ -77,7 +77,7 @@ public:
     void unregister_fd_handler(void const* owner) override;
 
     void enqueue(void const* owner, ServerAction const& action) override;
-    void enqueue_with_guaranteed_execution (ServerAction const& action) override;
+    void enqueue_with_guaranteed_execution(ServerAction const& action) override;
 
     void pause_processing_for(void const* owner) override;
     void resume_processing_for(void const* owner) override;
