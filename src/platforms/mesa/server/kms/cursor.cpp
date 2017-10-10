@@ -25,7 +25,6 @@
 #include "mir/graphics/cursor_image.h"
 
 #include <xf86drm.h>
-#include <drm/drm.h>
 
 #include <boost/exception/errinfo_errno.hpp>
 

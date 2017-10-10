@@ -24,7 +24,6 @@
 #include "mir/graphics/cursor_image.h"
 
 #include <xf86drm.h>
-#include <drm/drm.h>
 
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_drm.h"
@@ -265,7 +264,7 @@ struct StubCursorImage : public mg::CursorImage
     {
         return geom::Size{geom::Width{64}, geom::Height{64}};
     }
-    geom::Displacement hotspot() const 
+    geom::Displacement hotspot() const
     {
         return geom::Displacement{0, 0};
     }
@@ -425,7 +424,7 @@ MATCHER_P(ContainsASingleWhitePixel, buffersize, "")
         if (pixels[i] != 0x0)
             return false;
     }
-    return true; 
+    return true;
 }
 
 TEST_F(MesaCursorTest, show_cursor_pads_missing_data)
@@ -680,7 +679,7 @@ TEST_F(MesaCursorTest, hidden_cursor_is_not_shown_on_display_when_moved)
 
     cursor.hide();
     cursor.move_to({17, 29});
-    
+
     output_container.verify_and_clear_expectations();
 }
 
@@ -772,7 +771,7 @@ TEST_F(MesaCursorTest, show_cursor_sets_cursor_with_hotspot)
     cursor.show(stub_image); // ensures initial_cursor_location
 
     static geom::Displacement hotspot_displacement{10, 10};
-    
+
     static geom::Point const
         initial_cursor_location = {0, 0},
         cursor_location_1 = {20, 20},
@@ -788,8 +787,8 @@ TEST_F(MesaCursorTest, show_cursor_sets_cursor_with_hotspot)
             return hotspot_displacement;
         }
     };
-    
-    
+
+
     EXPECT_CALL(mock_gbm, gbm_bo_write(_, _, _)).Times(AnyNumber());
     EXPECT_CALL(*output_container.outputs[0], set_cursor(_)).Times(AnyNumber());
 
