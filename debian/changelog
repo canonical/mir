@@ -1,6 +1,6 @@
 mir (0.28.0-0ubuntu1) UNRELEASED; urgency=medium
 
-  * New upstream release 1.0.0(https://launchpad.net/mir/+milestone/1.0.0)
+  * New upstream release 0.28.0(https://launchpad.net/mir/+milestone/0.28.0)
     - ABI summary:
       . mirclient ABI unchanged at 9
       . miral ABI introduced at 2
