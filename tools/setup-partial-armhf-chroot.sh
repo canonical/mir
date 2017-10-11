@@ -10,9 +10,9 @@ name=${0}
 usage() {
     echo "Usage: ${name} [options] mychroot-dir"
     echo "options:"
-    echo "	-a arch	Select architecture, i.e. armhf, arm64, ppc... Default is armhf"
-    echo "	-d dist	Select distribution, i.e. vivid, wily. Default is vivid"
-    echo "	-r rep	Select an additional repository for bootstrap. Default is none"
+    echo "  -a arch Select architecture, i.e. armhf, arm64, ppc... Default is armhf"
+    echo "  -d dist Select distribution, i.e. vivid, wily. Default is vivid"
+    echo "  -r rep  Select an additional repository for bootstrap. Default is none"
     echo
     echo "please supply at least a directory to create partial chroot in. (eg, ./setup-partial-armhf-chroot.sh mychroot-dir)"
 }
@@ -39,7 +39,7 @@ while getopts a:d:r:h opt; do
             sources="$sources source$sourceid"
             ;;
         :)
-            echo "Option -$OPTARG requires an argument" 
+            echo "Option -$OPTARG requires an argument"
             usage
             exit 1
             ;;
@@ -48,7 +48,7 @@ while getopts a:d:r:h opt; do
             exit 0
             ;;
         \?)
-            echo "Invalid option: -$OPTARG" 
+            echo "Invalid option: -$OPTARG"
             usage
             exit 1
             ;;
@@ -66,7 +66,7 @@ directory=${1}
 echo "creating phablet-compatible $arch partial chroot for mir compilation in directory ${directory}"
 
 if [ ! -d ${directory} ]; then
-    mkdir -p ${directory} 
+    mkdir -p ${directory}
 fi
 
 DEBCONTROL=$(pwd)/../debian/control
@@ -83,7 +83,7 @@ set +e
 # dpkg-checkbuilddeps returns non-zero when dependencies are not met and the list is sent to stderr
 builddeps=$(dpkg-checkbuilddeps -a ${arch} --admindir=. ${DEBCONTROL} 2>&1 )
 if [ $? -eq 0 ] ; then
-    exit 0 
+    exit 0
 fi
 echo "${builddeps}"
 
@@ -97,7 +97,6 @@ builddeps=$(echo ${builddeps} | sed -e 's/dpkg-checkbuilddeps://g' \
                                     -e 's/Unmet build dependencies://g' \
                                     -e 's/build-essential:native//g')
 builddeps=$(echo ${builddeps} | sed 's/([^)]*)//g')
-builddeps=$(echo ${builddeps} | sed -e 's/abi-compliance-checker//g')
 builddeps=$(echo ${builddeps} | sed -e 's/multistrap//g')
 
 case ${arch} in
@@ -143,7 +142,7 @@ suite=${dist}
 done
 
 # Fakeroot is required to stop the apt update command giving up
-fakeroot multistrap -f mstrap.conf 
+fakeroot multistrap -f mstrap.conf
 
 rm -f var/cache/apt/archives/lock
 
@@ -163,4 +162,4 @@ for broken_symlink in $(find . -name \*.so -type l -xtype l) ; do
     ln -sf $(pwd)$(readlink ${broken_symlink}) ${broken_symlink}
 done
 
-popd > /dev/null 
+popd > /dev/null
