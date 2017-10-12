@@ -313,7 +313,6 @@ if (MIR_ENABLE_TESTS)
 endif ()
 
 enable_coverage_report(mirserver)
-include (cmake/ABICheck.cmake)
 
 add_custom_target(ptest
     COMMAND "${CMAKE_SOURCE_DIR}/tools/run_ctests.sh" "--cost-file" "${CMAKE_BINARY_DIR}/ptest_ctest_cost_data.txt" "sh ${CMAKE_BINARY_DIR}/discover_all_tests.sh" "--" "$$ARGS"
