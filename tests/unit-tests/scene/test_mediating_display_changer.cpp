@@ -100,6 +100,10 @@ struct StubServerActionQueue : mir::ServerActionQueue
     {
         action();
     }
+    void enqueue_with_guaranteed_execution(mir::ServerAction const& action) override
+    {
+        action();
+    }
 
     void pause_processing_for(void const* /*owner*/) override {}
     void resume_processing_for(void const* /*owner*/) override {}
@@ -110,8 +114,10 @@ struct MockServerActionQueue : mir::ServerActionQueue
     MockServerActionQueue()
     {
         ON_CALL(*this, enqueue(_, _)).WillByDefault(InvokeArgument<1>());
+        ON_CALL(*this, enqueue_with_guaranteed_execution(_)).WillByDefault(InvokeArgument<0>());
     }
     MOCK_METHOD2(enqueue, void(void const*, mir::ServerAction const&));
+    MOCK_METHOD1(enqueue_with_guaranteed_execution, void(mir::ServerAction const&));
     MOCK_METHOD1(pause_processing_for, void(void const*));
     MOCK_METHOD1(resume_processing_for, void(void const*));
 };

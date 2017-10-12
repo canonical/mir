@@ -81,6 +81,12 @@ void mtd::TriggeredMainLoop::enqueue(void const* owner, ServerAction const& acti
     actions.push_back(action);
 }
 
+void mtd::TriggeredMainLoop::enqueue_with_guaranteed_execution(ServerAction const& action)
+{
+    base::enqueue(nullptr, action);
+    actions.push_back(action);
+}
+
 void mtd::TriggeredMainLoop::trigger_server_actions()
 {
     for (auto const& action : actions)

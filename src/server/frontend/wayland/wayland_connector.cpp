@@ -43,6 +43,11 @@
 
 #include "mir/client/event.h"
 
+#include "mir/input/device.h"
+#include "mir/input/mir_keyboard_config.h"
+#include "mir/input/input_device_hub.h"
+#include "mir/input/input_device_observer.h"
+
 #include <system_error>
 #include <sys/eventfd.h>
 #include <wayland-server-core.h>
@@ -75,6 +80,7 @@ namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
+namespace mi = mir::input;
 
 namespace mir
 {
@@ -798,6 +804,7 @@ public:
         wl_client* client,
         wl_resource* parent,
         uint32_t id,
+        mir::input::Keymap const& initial_keymap,
         std::function<void(WlKeyboard*)> const& on_destroy,
         std::shared_ptr<mir::Executor> const& executor)
         : Keyboard(client, parent, id),
@@ -811,19 +818,14 @@ public:
         // TODO: We should really grab the keymap for the focused surface when
         // we receive focus.
 
-        xkb_rule_names default_rules;
-        memset(&default_rules, 0, sizeof(default_rules));
+        // TODO: Maintain per-device keymaps, and send the appropriate map before
+        // sending an event from a keyboard with a different map.
 
-        keymap = decltype(keymap){
-            xkb_keymap_new_from_names(
-                context.get(),
-                &default_rules,
-                XKB_KEYMAP_COMPILE_NO_FLAGS),
-            &xkb_keymap_unref};
-
-        state = decltype(state){
-            xkb_state_new(keymap.get()),
-            &xkb_state_unref};
+        /* The wayland::Keyboard constructor has already run, creating the keyboard
+         * resource. It is thus safe to send a keymap event to it; the client will receive
+         * the keyboard object before this event.
+         */
+        set_keymap(initial_keymap);
     }
 
     ~WlKeyboard()
@@ -964,6 +966,38 @@ public:
             &xkb_keymap_unref);
 
         state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
+    }
+
+    void set_keymap(mir::input::Keymap const& new_keymap)
+    {
+        xkb_rule_names const names = {
+            "evdev",
+            new_keymap.model.c_str(),
+            new_keymap.layout.c_str(),
+            new_keymap.variant.c_str(),
+            new_keymap.options.c_str()
+        };
+        keymap = decltype(keymap){
+            xkb_keymap_new_from_names(
+                context.get(),
+                &names,
+                XKB_KEYMAP_COMPILE_NO_FLAGS),
+            &xkb_keymap_unref};
+
+        // TODO: We might need to copy across the existing depressed keys?
+        state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
+
+        auto buffer = xkb_keymap_get_as_string(keymap.get(), XKB_KEYMAP_FORMAT_TEXT_V1);
+        auto length = strlen(buffer);
+
+        mir::AnonymousShmFile shm_buffer{length};
+        memcpy(shm_buffer.base_ptr(), buffer, length);
+
+        wl_keyboard_send_keymap(
+            resource,
+            WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,
+            shm_buffer.fd(),
+            length);
     }
 
 private:
@@ -1320,8 +1354,20 @@ private:
 class WlSeat
 {
 public:
-    WlSeat(wl_display* display, std::shared_ptr<mir::Executor> const& executor)
-        : executor{executor},
+    WlSeat(
+        wl_display* display,
+        std::shared_ptr<mi::InputDeviceHub> const& input_hub,
+        std::shared_ptr<mir::Executor> const& executor)
+        : config_observer{
+              std::make_shared<ConfigObserver>(
+                  keymap,
+                  [this](mir::input::Keymap const& new_keymap)
+                  {
+                      keymap = new_keymap;
+
+                  })},
+          input_hub{input_hub},
+          executor{executor},
           global{wl_global_create(
               display,
               &wl_seat_interface,
@@ -1333,10 +1379,12 @@ public:
         {
             BOOST_THROW_EXCEPTION(std::runtime_error("Failed to export wl_seat interface"));
         }
+        input_hub->add_observer(config_observer);
     }
 
     ~WlSeat()
     {
+        input_hub->remove_observer(config_observer);
         wl_global_destroy(global);
     }
 
@@ -1350,9 +1398,38 @@ public:
     }
 
 private:
+    class ConfigObserver :  public mi::InputDeviceObserver
+    {
+    public:
+        ConfigObserver(
+            mir::input::Keymap const& keymap,
+            std::function<void(mir::input::Keymap const&)> const& on_keymap_commit)
+            : current_keymap{keymap},
+              on_keymap_commit{on_keymap_commit}
+        {
+        }
+
+        void device_added(std::shared_ptr<input::Device> const& device) override;
+        void device_changed(std::shared_ptr<input::Device> const& device) override;
+        void device_removed(std::shared_ptr<input::Device> const& device) override;
+        void changes_complete() override;
+
+    private:
+        mir::input::Keymap const& current_keymap;
+        mir::input::Keymap pending_keymap;
+        std::function<void(mir::input::Keymap const&)> const on_keymap_commit;
+    };
+
+    mir::input::Keymap keymap;
+    std::shared_ptr<ConfigObserver> const config_observer;
+
     std::unordered_map<wl_client*, InputCtx<WlPointer>> mutable pointer;
     std::unordered_map<wl_client*, InputCtx<WlKeyboard>> mutable keyboard;
     std::unordered_map<wl_client*, InputCtx<WlTouch>> mutable touch;
+
+    std::shared_ptr<mi::InputDeviceHub> const input_hub;
+
+
     std::shared_ptr<mir::Executor> const executor;
 
     static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
@@ -1413,6 +1490,7 @@ private:
                 client,
                 resource,
                 id,
+                me->keymap,
                 [&input_ctx](WlKeyboard* listener)
                 {
                     input_ctx.unregister_listener(listener);
@@ -1435,8 +1513,10 @@ private:
                 },
                 me->executor});
     }
-    static void release(struct wl_client* /*client*/, struct wl_resource* /*resource*/) {}
-
+    static void release(struct wl_client* /*client*/, struct wl_resource* us)
+    {
+        wl_resource_destroy(us);
+    }
 
     wl_global* const global;
     static struct wl_seat_interface const vtable;
@@ -1462,6 +1542,37 @@ InputCtx<WlPointer> const& WlSeat::acquire_pointer_reference(wl_client* client) 
 InputCtx<WlTouch> const& WlSeat::acquire_touch_reference(wl_client* client) const
 {
     return touch[client];
+}
+
+void WlSeat::ConfigObserver::device_added(std::shared_ptr<input::Device> const& device)
+{
+    if (auto keyboard_config = device->keyboard_configuration())
+    {
+        if (current_keymap != keyboard_config.value().device_keymap())
+        {
+            pending_keymap = keyboard_config.value().device_keymap();
+        }
+    }
+}
+
+void WlSeat::ConfigObserver::device_changed(std::shared_ptr<input::Device> const& device)
+{
+    if (auto keyboard_config = device->keyboard_configuration())
+    {
+        if (current_keymap != keyboard_config.value().device_keymap())
+        {
+            pending_keymap = keyboard_config.value().device_keymap();
+        }
+    }
+}
+
+void WlSeat::ConfigObserver::device_removed(std::shared_ptr<input::Device> const& /*device*/)
+{
+}
+
+void WlSeat::ConfigObserver::changes_complete()
+{
+    on_keymap_commit(pending_keymap);
 }
 
 void WaylandEventSink::send_buffer(BufferStreamId /*id*/, graphics::Buffer& /*buffer*/, graphics::BufferIpcMsgType)
@@ -2055,6 +2166,7 @@ mf::WaylandConnector::WaylandConnector(
     optional_value<std::string> const& display_name,
     std::shared_ptr<mf::Shell> const& shell,
     DisplayChanger& display_config,
+    std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     bool arw_socket)
     : display{wl_display_create(), &cleanup_display},
@@ -2089,7 +2201,7 @@ mf::WaylandConnector::WaylandConnector(
         display.get(),
         executor,
         this->allocator);
-    seat_global = std::make_unique<mf::WlSeat>(display.get(), executor);
+    seat_global = std::make_unique<mf::WlSeat>(display.get(), input_hub, executor);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         display_config);

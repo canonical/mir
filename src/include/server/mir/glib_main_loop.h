@@ -28,6 +28,7 @@
 #include <exception>
 
 #include <glib.h>
+#include <deque>
 
 namespace mir
 {
@@ -76,6 +77,8 @@ public:
     void unregister_fd_handler(void const* owner) override;
 
     void enqueue(void const* owner, ServerAction const& action) override;
+    void enqueue_with_guaranteed_execution(ServerAction const& action) override;
+
     void pause_processing_for(void const* owner) override;
     void resume_processing_for(void const* owner) override;
 
@@ -100,6 +103,8 @@ private:
     detail::SignalSources signal_sources;
     std::mutex do_not_process_mutex;
     std::vector<void const*> do_not_process;
+    std::mutex run_on_halt_mutex;
+    std::deque<ServerAction> run_on_halt_queue;
     std::function<void()> before_iteration_hook;
     std::exception_ptr main_loop_exception;
 };

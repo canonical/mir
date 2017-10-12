@@ -41,6 +41,7 @@ public:
     void unregister_fd_handler(void const* owner) override;
     std::unique_ptr<mir::time::Alarm> create_alarm(callback const& call) override;
     void enqueue(void const* owner, ServerAction const& action) override;
+    void enqueue_with_guaranteed_execution(ServerAction const& action) override;
 
     void spawn(std::function<void()>&& work) override;
 
