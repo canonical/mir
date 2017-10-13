@@ -48,7 +48,7 @@ struct miral::MirRunner::Self
     int const argc;
     char const** const argv;
     std::string const config_file;
-    
+
     std::mutex mutex;
     std::function<void()> start_callback{[]{}};
     std::function<void()> stop_callback{[this]{ join_client_threads(weak_server.lock().get()); }};
@@ -103,7 +103,7 @@ void launch_startup_app(std::string socket_file, std::string app)
         setenv("GDK_BACKEND", "mir", true);                 // configure GTK to use Mir
         setenv("QT_QPA_PLATFORM", "ubuntumirclient", true); // configure Qt to use Mir
         unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
-        setenv("SDL_VIDEODRIVER", "mir", true);             // configure SDL to use Mir
+        setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland
 
         // gnome-terminal is the (only known) special case
         char const* exec_args[] = { "gnome-terminal", "--app-id", "com.canonical.miral.Terminal", nullptr };

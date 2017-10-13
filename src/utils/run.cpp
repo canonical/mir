@@ -85,7 +85,7 @@ try
     setenv("GDK_BACKEND", "mir", true);                 // configure GTK to use Mir
     setenv("QT_QPA_PLATFORM", "ubuntumirclient", true); // configure Qt to use Mir
     unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
-    setenv("SDL_VIDEODRIVER", "mir", true);             // configure SDL to use Mir
+    setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland
 
     if (auto const client_platform = getenv("MIR_CLIENT_PLATFORM_PATH"))
         setenv("MIR_CLIENT_PLATFORM_PATH", canonicalize(client_platform).c_str(), true);
