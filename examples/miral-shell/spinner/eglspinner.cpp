@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2015 Canonical Ltd.
+ * Copyright © 2013-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * under the terms of the GNU General Public License version 2 or 3 as as
@@ -18,6 +18,14 @@
  *          Alan Griffiths <alan@octopull.co.uk>
  *          Kevin DuBois <kevin.dubois@canonical.com>
  */
+
+// Ugly way to detect the Mir EGL patch to mesa
+// NB this has to be before any other includes
+#define MIR_EGL_PLATFORM
+#include <EGL/eglplatform.h>
+#ifndef MIR_CLIENT_API_VERSION
+#define MIR_EGL_UNAVAILABLE
+#endif
 
 #include "splash.h"
 
@@ -143,7 +151,7 @@ bool updateAnimation (GTimer* timer, AnimationValues* anim)
     //1.) 0.0   - 0.6:   logo fades in fully
     //2.) 0.0   - 6.0:   logo does one full spin 360°
     //3.) 6.0   - 6.833: glow fades in fully, black-background fades out to 50%
-    //4.) 6.833 - 7.666: glow fades out fully, black-background fades out to 0% 
+    //4.) 6.833 - 7.666: glow fades out fully, black-background fades out to 0%
     //5.) 7.666 - 8.266: logo fades out fully
     //8.266..:       now spinner can be closed as all its elements are faded out
 
@@ -221,11 +229,14 @@ const char fShaderSrcLogo[] =
     "}                                                    \n";
 
 std::atomic<bool> dying{false};
+
+#ifndef MIR_EGL_UNAVAILABLE
 void lifecycle_event_callback(MirConnection* /*connection*/, MirLifecycleState state, void* context)
 {
     if (state == mir_lifecycle_connection_lost)
         static_cast<decltype(dying)*>(context)->store(true);
 }
+#endif
 }
 
 struct SpinnerSplash::Self
@@ -254,6 +265,7 @@ auto SpinnerSplash::session() const
 void SpinnerSplash::operator()(MirConnection* const connection)
 try
 {
+#ifndef MIR_EGL_UNAVAILABLE
     GLuint prog[2];
     GLuint texture[2];
     GLint vpos[2];
@@ -365,6 +377,9 @@ try
 
     glDeleteTextures(2, texture);
     g_timer_destroy (timer);
+#else
+    (void)connection;
+#endif
 }
 catch (std::exception const& x)
 {
