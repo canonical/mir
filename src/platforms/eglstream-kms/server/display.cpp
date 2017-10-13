@@ -34,7 +34,6 @@
 #include "mir/renderer/gl/render_target.h"
 #include "mir/renderer/gl/context.h"
 
-#include <drm/drm.h>
 #include <xf86drmMode.h>
 #include <sys/ioctl.h>
 #include <system_error>

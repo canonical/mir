@@ -23,7 +23,7 @@
 #include "kms-utils/kms_connector.h"
 
 #include <cstring>
-#include <drm/drm.h>
+#include <drm.h>
 #include <sys/ioctl.h>
 #include <vector>
 #include <boost/throw_exception.hpp>
