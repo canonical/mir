@@ -32,7 +32,7 @@
 #include <EGL/eglext.h>
 #include MIR_SERVER_GL_H
 #include <GLES2/gl2ext.h>
-#include <drm/drm_fourcc.h>
+#include <drm_fourcc.h>
 
 #include <sstream>
 #include <stdexcept>
@@ -504,7 +504,7 @@ mgm::DisplayBuffer::DisplayBuffer(
     make_current();
 
     listener->report_successful_egl_make_current_on_construction();
-    
+
     glClear(GL_COLOR_BUFFER_BIT);
 
     surface.swap_buffers();
@@ -776,7 +776,7 @@ void mgm::DisplayBuffer::wait_for_page_flip()
 
         visible_bypass_frame = scheduled_bypass_frame;
         scheduled_bypass_frame = nullptr;
-    
+
         visible_composite_frame = std::move(scheduled_composite_frame);
         scheduled_composite_frame = nullptr;
     }
