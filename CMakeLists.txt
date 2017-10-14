@@ -295,25 +295,7 @@ add_subdirectory(guides/)
 add_subdirectory(cmake/)
 
 if (MIR_ENABLE_TESTS)
-  #
-  # When cross compiling MIR_CHROOT points to our chroot.
-  # When not cross compiling, it should be blank to use the host system.
-  #
-  if (EXISTS ${MIR_CHROOT}/usr/src/googletest)
-    find_package(GMock REQUIRED)
-    if (MIR_CHROOT)
-      string(REPLACE "/usr/" "${MIR_CHROOT}/usr/" GMOCK_INCLUDE_DIRS    "${GMOCK_INCLUDE_DIRS}")
-      string(REPLACE "/usr/" "${MIR_CHROOT}/usr/" GTEST_INCLUDE_DIRS    "${GTEST_INCLUDE_DIRS}")
-      string(REPLACE "/usr/" "${MIR_CHROOT}/usr/" GTEST_LIBRARIES       "${GTEST_LIBRARIES}")
-      string(REPLACE "/usr/" "${MIR_CHROOT}/usr/" GMOCK_INCLUDE_DIRS    "${GMOCK_INCLUDE_DIRS}")
-      string(REPLACE "/usr/" "${MIR_CHROOT}/usr/" GTEST_MAIN_LIBRARIES  "${GTEST_MAIN_LIBRARIES}")
-      string(REPLACE "/usr/" "${MIR_CHROOT}/usr/" GMOCK_LIBRARIES       "${GMOCK_LIBRARIES}")
-      string(REPLACE "/usr/" "${MIR_CHROOT}/usr/" GTEST_BOTH_LIBRARIES  "${GTEST_BOTH_LIBRARIES}")
-    endif()
-  else()
-    find_package(GtestGmock REQUIRED)
-  endif()
-
+  find_package(GtestGmock REQUIRED)
   pkg_check_modules(LIBEVDEV REQUIRED libevdev)
   include_directories(${GMOCK_INCLUDE_DIR} ${GTEST_INCLUDE_DIR})
   add_subdirectory(tests/)
