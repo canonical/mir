@@ -504,7 +504,7 @@ mgm::DisplayBuffer::DisplayBuffer(
     make_current();
 
     listener->report_successful_egl_make_current_on_construction();
-    
+
     glClear(GL_COLOR_BUFFER_BIT);
 
     surface.swap_buffers();
@@ -591,9 +591,7 @@ bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
         {
             auto bypass_buffer = (*bypass_it)->buffer();
             auto native = std::dynamic_pointer_cast<mgm::NativeBuffer>(bypass_buffer->native_buffer_handle());
-            if (!native)
-                BOOST_THROW_EXCEPTION(std::invalid_argument("could not convert NativeBuffer"));
-            if (native->flags & mir_buffer_flag_can_scanout &&
+            if (native && native->flags & mir_buffer_flag_can_scanout &&
                 bypass_buffer->size() == surface.size() &&
                 !needs_bounce_buffer(*outputs.front(), native->bo))
             {
@@ -776,7 +774,7 @@ void mgm::DisplayBuffer::wait_for_page_flip()
 
         visible_bypass_frame = scheduled_bypass_frame;
         scheduled_bypass_frame = nullptr;
-    
+
         visible_composite_frame = std::move(scheduled_composite_frame);
         scheduled_composite_frame = nullptr;
     }
