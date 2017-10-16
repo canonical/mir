@@ -85,11 +85,11 @@ add_dependencies(mir-test-framework-static GMock)
 
 target_link_libraries(mir-test-framework-static
 
+  mirserver
   mirclient
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
-  ${GMOCK_LIBRARY}
-  ${GMOCK_MAIN_LIBRARY}
+  ${GMOCK_LIBRARIES}
   ${UMOCKDEV_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
