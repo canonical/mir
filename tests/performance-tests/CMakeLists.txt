@@ -28,8 +28,8 @@ mir_add_wrapped_executable(mir_compositor_performance_test
   test_compositor.cpp
 )
 target_link_libraries(mir_compositor_performance_test
-  ${GTEST_BOTH_LIBRARIES}
   mir_system_performance_test
+  ${GTEST_BOTH_LIBRARIES}
 )
 
 mir_add_wrapped_executable(mir_client_startup_performance_test
