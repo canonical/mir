@@ -10,3 +10,8 @@ mir_add_wrapped_executable(miral-kiosk
 )
 
 target_link_libraries(miral-kiosk miral)
+
+# I'm not sure why this is needed in a chroot, but it's not worth finding out
+if(DEFINED MIR_CHROOT)
+    target_link_libraries(miral-kiosk EGL ${GLESv2_LIBRARIES})
+endif()
