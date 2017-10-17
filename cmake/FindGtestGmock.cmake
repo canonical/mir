@@ -1,12 +1,19 @@
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
-if (NOT MIR_CHROOT)
+execute_process(COMMAND "arch" OUTPUT_VARIABLE MIR_HOST_PROCESSOR OUTPUT_STRIP_TRAILING_WHITESPACE)
+MESSAGE(STATUS "\${CMAKE_SYSTEM_PROCESSOR}=${CMAKE_SYSTEM_PROCESSOR}")
+MESSAGE(STATUS "\${MIR_HOST_PROCESSOR} . .=${MIR_HOST_PROCESSOR}")
+MESSAGE(STATUS "\${MIR_CHROOT} . . . . . .=${MIR_CHROOT}")
+
+if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "${MIR_HOST_PROCESSOR}" AND NOT MIR_CHROOT)
+  MESSAGE(STATUS "find_package(GMock REQUIRED)")
   find_package(GMock REQUIRED)
   if (NOT TARGET GMock)
     add_custom_target(GMock DEPENDS gmock)
   endif()
 else()
+  MESSAGE(STATUS "legacy GMock detection")
 #
 # When cross compiling MIR_CHROOT points to our chroot.
 # When not cross compiling, it should be blank to use the host system.
