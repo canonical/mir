@@ -10,9 +10,11 @@ include_directories(
 mir_add_wrapped_executable(mirout out.c)
 target_link_libraries(mirout mirclient m)
 
+if (TARGET eglapp)
 mir_add_wrapped_executable(mirvanity vanity.c)
 target_include_directories(mirvanity PRIVATE ${PROJECT_SOURCE_DIR}/examples)
 target_link_libraries(mirvanity eglapp)
+endif()
 
 mir_add_wrapped_executable(mirin in.cpp)
 target_link_libraries(mirin mirclient)
