@@ -32,7 +32,7 @@
 #include <EGL/eglext.h>
 #include MIR_SERVER_GL_H
 #include <GLES2/gl2ext.h>
-#include <drm/drm_fourcc.h>
+#include <drm_fourcc.h>
 
 #include <sstream>
 #include <stdexcept>
