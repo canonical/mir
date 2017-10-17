@@ -17,16 +17,8 @@ add_library(exampleserverconfig STATIC
 
 target_link_libraries(exampleserverconfig mirserver)
 
-mir_add_wrapped_executable(mir_demo_client_basic
-  basic.c
-  )
-
-target_link_libraries(mir_demo_client_basic
-  mirclient
-
-  ${Boost_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-)
+mir_add_wrapped_executable(mir_demo_client_basic basic.c)
+target_link_libraries     (mir_demo_client_basic mirclient ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 mir_add_wrapped_executable(mir_demo_client_release_at_exit release_at_exit.c)
 target_link_libraries     (mir_demo_client_release_at_exit mirclient)
@@ -201,7 +193,7 @@ if (MIR_EGL_SUPPORTED)
   target_link_libraries     (mir_demo_client_eglsquare eglapp)
 
   if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
-    target_link_libraries(mir_demo_client_eglsquare atomic)
+    target_link_libraries   (mir_demo_client_eglsquare atomic)
   endif()
 
   mir_add_wrapped_executable(mir_demo_client_input_shapes input_shapes.cpp)
@@ -214,6 +206,6 @@ if (MIR_EGL_SUPPORTED)
   target_link_libraries     (mir_demo_client_multistream mirclient eglapp ${Boost_LIBRARIES})
 
   mir_add_wrapped_executable(mir_demo_client_render_surface render_surface.cpp)
-  target_link_libraries(mir_demo_client_render_surface mirclient eglapp)
+  target_link_libraries     (mir_demo_client_render_surface mirclient eglapp)
 
 endif() # MIR_EGL_SUPPORTED
