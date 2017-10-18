@@ -1,6 +1,14 @@
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
+execute_process(COMMAND "arch" OUTPUT_VARIABLE MIR_HOST_PROCESSOR OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "${MIR_HOST_PROCESSOR}")
+  find_package(GMock REQUIRED)
+  if (NOT TARGET GMock)
+    add_custom_target(GMock DEPENDS gmock)
+  endif()
+else()
 #
 # When cross compiling MIR_CHROOT points to our chroot.
 # When not cross compiling, it should be blank to use the host system.
@@ -89,8 +97,9 @@ set(GMOCK_BOTH_LIBRARIES ${GMOCK_LIBRARY} ${GMOCK_MAIN_LIBRARY})
 set(GTEST_LIBRARY ${GTEST_BINARY_DIR}/libgtest.a)
 set(GTEST_MAIN_LIBRARY ${GTEST_BINARY_DIR}/libgtest_main.a)
 set(GTEST_BOTH_LIBRARIES ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
-set(GTEST_ALL_LIBRARIES ${GTEST_BOTH_LIBRARIES} ${GMOCK_BOTH_LIBRARIES})
+set(GMOCK_LIBRARIES ${GTEST_BOTH_LIBRARIES} ${GMOCK_BOTH_LIBRARIES})
 
 find_package_handle_standard_args(GTest  DEFAULT_MSG
                                     GMOCK_INCLUDE_DIR
                                     GTEST_INCLUDE_DIR)
+endif()
