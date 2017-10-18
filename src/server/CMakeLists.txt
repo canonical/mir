@@ -1,4 +1,8 @@
-pkg_check_modules(UUID REQUIRED uuid)
+if (MIR_DISTRO MATCHES "Fedora")
+    pkg_check_modules(UUID REQUIRED ossp-uuid)
+else()
+    pkg_check_modules(UUID REQUIRED uuid)
+endif()
 
 add_definitions(
   -DMIR_LOG_COMPONENT_FALLBACK="mirserver"
@@ -124,6 +128,13 @@ target_link_libraries(mirserver LINK_PUBLIC
   ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
   atomic
 )
+
+target_include_directories(mirshell
+  PUBLIC
+    ${UUID_INCLUDE_DIRS}
+)
+
+set(MIRSERVER_INCLUDE_DIRS ${UUID_INCLUDE_DIRS} PARENT_SCOPE)
 
 install(TARGETS mirserver
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
