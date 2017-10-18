@@ -127,16 +127,6 @@ target_link_libraries     (mir_demo_client_screencast mirclient)
 
 
 # The remaining examples are dependent on Mir EGL being supported.
-# This incantation gets the MIR_EGL_SUPPORTED default right for Mesa
-execute_process(COMMAND grep mir_toolkit /usr/include/EGL/eglplatform.h
-  OUTPUT_VARIABLE MIR_EGL_SUPPORTED_OUT)
-
-if (MIR_EGL_SUPPORTED_OUT STREQUAL "")
-  option(MIR_EGL_SUPPORTED "Build examples that depend on Mir EGL." OFF)
-else()
-  option(MIR_EGL_SUPPORTED "Build examples that depend on Mir EGL." ON)
-endif()
-
 if (MIR_EGL_SUPPORTED)
 
   add_library(eglapp STATIC
