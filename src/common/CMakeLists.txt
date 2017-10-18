@@ -63,6 +63,22 @@ target_link_libraries(mircommon
   ${MIR_COMMON_REFERENCES}
 )
 
+if (MIR_DISTRO MATCHES "Fedora")
+  target_link_libraries(mircommon CapnProto::capnp)
+
+  #message(STATUS "mircommon CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
+  foreach(source ${MIR_COMMON_SOURCES})
+    #execute_process(COMMAND echo ${source})
+    set_source_files_properties(${source} PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS}")
+  endforeach(source)
+  set_source_files_properties(input/mir_input_config.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS}")
+  set_source_files_properties(input/mir_input_config_serialization.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS}")
+  set_source_files_properties(input/mir_touchpad_config.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS}")
+  set_source_files_properties(input/mir_pointer_config.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS}")
+  set_source_files_properties(input/mir_keyboard_config.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS}")
+  set_source_files_properties(input/mir_touchscreen_config.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS}")
+endif()
+
 add_dependencies(mircommon mircapnproto)
 
 set_target_properties(mircommon
