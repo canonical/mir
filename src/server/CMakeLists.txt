@@ -1,8 +1,4 @@
-if (MIR_DISTRO MATCHES "Fedora")
-    pkg_check_modules(UUID REQUIRED ossp-uuid)
-else()
-    pkg_check_modules(UUID REQUIRED uuid)
-endif()
+pkg_check_modules(UUID REQUIRED uuid)
 
 add_definitions(
   -DMIR_LOG_COMPONENT_FALLBACK="mirserver"

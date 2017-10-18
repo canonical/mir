@@ -33,10 +33,6 @@ add_library(mirplatforminputevdev MODULE
   $<TARGET_OBJECTS:mirevdevutilsobjects>
 )
 
-if (MIR_DISTRO MATCHES "Fedora")
-  set_source_files_properties(platform_factory.cpp PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS}")
-endif()
-
 set_target_properties(
   mirplatforminputevdev PROPERTIES
   OUTPUT_NAME input-evdev
