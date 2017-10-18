@@ -24,7 +24,7 @@
 #include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/display_layout.h"
 
-#include <uuid/uuid.h>
+#include <uuid.h>
 #include <linux/input.h>
 #include <csignal>
 
