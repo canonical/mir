@@ -1158,3 +1158,22 @@ MIR_PROTOBUF_0.27 {
     vtable?for?mir::protobuf::RequestWithAuthority;
   };
 } MIR_PROTOBUF_0.26;
+
+# When building with the Fedora 26 toolchain these are needed
+MIR_PROTOBUF_FEDORA {
+ global:
+  extern "C++" {
+    mir::protobuf::_Buffer_default_instance_;
+    mir::protobuf::_BufferRequest_default_instance_;
+    mir::protobuf::_BufferStream_default_instance_;
+    mir::protobuf::_BufferStreamId_default_instance_;
+    mir::protobuf::_DisplayConfiguration_default_instance_;
+    mir::protobuf::_LifecycleEvent_default_instance_;
+    mir::protobuf::_ModuleProperties_default_instance_;
+    mir::protobuf::_PingEvent_default_instance_;
+    mir::protobuf::_Platform_default_instance_;
+    mir::protobuf::_ScreencastId_default_instance_;
+    mir::protobuf::_StructuredError_default_instance_;
+    mir::protobuf::_SurfaceId_default_instance_;
+  };
+} MIR_PROTOBUF_0.27;
