@@ -17,7 +17,7 @@
  */
 
 #include "default_persistent_surface_store.h"
-#include <uuid/uuid.h>
+#include <uuid.h>
 #include <algorithm>
 #include <unordered_map>
 #include <boost/throw_exception.hpp>

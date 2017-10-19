@@ -20,7 +20,12 @@ capnp_generate_cpp(CAPNPROTO_EVENT_SRC CAPNPROTO_EVENT_HDRS mir_event.capnp)
 capnp_generate_cpp(CAPNPROTO_INPUT_CONFIG_SRC CAPNPROTO_INPUT_CONFIG_HDRS mir_input_config.capnp)
 
 add_library(mircapnproto STATIC ${CAPNPROTO_EVENT_SRC} ${CAPNPROTO_INPUT_CONFIG_SRC})
-target_link_libraries(mircapnproto ${CAPNP_LIBRARIES_LITE})
+
+if (NOT MIR_DISTRO MATCHES "Fedora")
+  target_link_libraries(mircapnproto ${CAPNP_LIBRARIES_LITE})
+else()
+  target_link_libraries(mircapnproto $<TARGET_FILE:CapnProto::capnp> $<TARGET_FILE:CapnProto::kj>)
+endif()
 
 list(APPEND MIR_GENERATED_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_BINARY_DIR})
 

@@ -125,6 +125,13 @@ target_link_libraries(mirserver LINK_PUBLIC
   atomic
 )
 
+target_include_directories(mirshell
+  PUBLIC
+    ${UUID_INCLUDE_DIRS}
+)
+
+set(MIRSERVER_INCLUDE_DIRS ${UUID_INCLUDE_DIRS} PARENT_SCOPE)
+
 install(TARGETS mirserver
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )

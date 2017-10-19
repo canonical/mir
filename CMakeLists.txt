@@ -74,6 +74,9 @@ if(HAS_W_MISMATCHED_TAGS)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-mismatched-tags")
 endif()
 
+execute_process(COMMAND sh -c "cat /etc/os-release | grep ^NAME= | cut -f2 -d= | sed -e 's/\"//g'"
+        OUTPUT_VARIABLE MIR_DISTRO OUTPUT_STRIP_TRAILING_WHITESPACE)
+
 # GCC 7.1 fixed a bug in the ARM ABI, which results in some std::vector methods
 # (among others) generating this warning.
 #
@@ -300,7 +303,9 @@ endif ()
 
 add_subdirectory(benchmarks/)
 add_subdirectory(examples/)
-add_subdirectory(playground/)
+if (MIR_EGL_SUPPORTED)
+  add_subdirectory(playground/)
+endif()
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
 
