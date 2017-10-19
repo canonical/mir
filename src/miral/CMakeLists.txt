@@ -94,11 +94,9 @@ set_target_properties(miral
         LINK_DEPENDS ${symbol_map}
 )
 
-# clang generates slightly different symbols (but we don't care)
-if (CMAKE_COMPILER_IS_GNUCXX)
-    execute_process(COMMAND which dpkg-gensymbols RESULT_VARIABLE MIR_HAS_DPKG_GENSYMBOLS)
-
-    if (MIR_HAS_DPKG_GENSYMBOLS EQUAL 0)
+if (MIR_DISTRO MATCHES "Ubuntu")
+    # clang generates slightly different symbols (but we don't care)
+    if (CMAKE_COMPILER_IS_GNUCXX)
         add_custom_target(check-miral-symbols ALL
             DEPENDS miral ${PROJECT_SOURCE_DIR}/debian/libmiral${MIRAL_ABI}.symbols
             COMMAND rm -f ${CMAKE_CURRENT_BINARY_DIR}/libmiral${MIRAL_ABI}.symbols
