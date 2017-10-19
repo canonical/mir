@@ -22,7 +22,7 @@
 namespace
 {
 std::mutex mutex;
-std::string font_file{"/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-B.ttf"};
+std::string font_file{MIRAL_DEFAULT_FONT_FILE};
 }
 
 void titlebar::font_file(std::string const& font_file)
