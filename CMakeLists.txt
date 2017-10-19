@@ -278,6 +278,16 @@ if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
   pkg_check_modules(DRM REQUIRED libdrm)
 endif()
 
+# This incantation gets the MIR_EGL_SUPPORTED default right for Mesa
+execute_process(COMMAND grep mir_toolkit /usr/include/EGL/eglplatform.h
+        OUTPUT_VARIABLE MIR_EGL_SUPPORTED_OUT)
+
+if (MIR_EGL_SUPPORTED_OUT STREQUAL "")
+  option(MIR_EGL_SUPPORTED "Build examples that depend on Mir EGL." OFF)
+else()
+  option(MIR_EGL_SUPPORTED "Build examples that depend on Mir EGL." ON)
+endif()
+
 set(MIR_TRACEPOINT_LIB_INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/mir/tools)
 
 set(MIR_GENERATED_INCLUDE_DIRECTORIES)
