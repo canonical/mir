@@ -77,8 +77,6 @@ endif()
 execute_process(COMMAND sh -c "cat /etc/os-release | grep ^NAME= | cut -f2 -d= | sed -e 's/\"//g'"
         OUTPUT_VARIABLE MIR_DISTRO OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-message(STATUS "MIR_DISTRO=${MIR_DISTRO}")
-
 # GCC 7.1 fixed a bug in the ARM ABI, which results in some std::vector methods
 # (among others) generating this warning.
 #
