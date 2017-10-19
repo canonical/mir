@@ -3,10 +3,7 @@ add_subdirectory(miral-shell)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
-add_library(eglapp STATIC
-  eglapp.c
-  client_helpers.cpp
-)
+add_library(mirdraw STATIC graphics_utils.cpp)
 
 add_library(exampleserverconfig STATIC
   server_example_input_device_config.cpp
@@ -20,150 +17,26 @@ add_library(exampleserverconfig STATIC
 
 target_link_libraries(exampleserverconfig mirserver)
 
-target_link_libraries(eglapp
-  mirclient
-  ${EGL_LIBRARIES}
-  ${GLESv2_LIBRARIES}
-  )
-
-mir_add_wrapped_executable(mir_demo_client_animated_cursor
-  animated_cursor_demo_client.c
-)
-target_link_libraries(mir_demo_client_animated_cursor
-  eglapp
-)
-mir_add_wrapped_executable(mir_demo_client_eglflash
-  eglflash.c
-)
-target_link_libraries(mir_demo_client_eglflash
-  eglapp
-)
-mir_add_wrapped_executable(mir_demo_client_egltriangle
-  egltriangle.c
-)
-target_link_libraries(mir_demo_client_egltriangle
-  eglapp
-)
-mir_add_wrapped_executable(mir_demo_client_target
-  target.c
-)
-target_link_libraries(mir_demo_client_target
-  eglapp
-)
-mir_add_wrapped_executable(mir_demo_client_pointer_confinement
-  pointer_confinement.c
-)
-target_link_libraries(mir_demo_client_pointer_confinement
-  eglapp
-)
-mir_add_wrapped_executable(mir_demo_client_camera
-  camera.c
-)
-target_link_libraries(mir_demo_client_camera
-  eglapp
-)
-mir_add_wrapped_executable(mir_demo_client_eglcounter
-  eglcounter.cpp
-)
-target_link_libraries(mir_demo_client_eglcounter
-  eglapp
-)
-mir_add_wrapped_executable(mir_demo_client_eglplasma
-  eglplasma.c
-)
-target_link_libraries(mir_demo_client_eglplasma
-  eglapp
-)
-mir_add_wrapped_executable(mir_demo_client_cursors
-  cursors_demo_client.c
-)
-target_link_libraries(mir_demo_client_cursors
-  eglapp
-)
-mir_add_wrapped_executable(mir_demo_client_eglstateswitcher
-  eglstateswitcher.c
-)
-target_link_libraries(mir_demo_client_eglstateswitcher
-  eglapp
-)
-
-mir_add_wrapped_executable(mir_demo_client_tooltip
-  tooltip.c
-)
-target_link_libraries(mir_demo_client_tooltip
-  eglapp
-  )
-
-mir_add_wrapped_executable(mir_demo_client_touch_validator
-  client_touch_validator.cpp
-)
-target_link_libraries(mir_demo_client_touch_validator
-  eglapp
-)
-
-mir_add_wrapped_executable(mir_demo_client_basic
-  basic.c
-  )
-
-mir_add_wrapped_executable(mir_demo_client_input_shapes
-  input_shapes.cpp
-  )
-target_link_libraries(mir_demo_client_input_shapes eglapp)
-
-target_link_libraries(mir_demo_client_basic
-  mirclient
-
-  ${Boost_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-)
+mir_add_wrapped_executable(mir_demo_client_basic basic.c)
+target_link_libraries     (mir_demo_client_basic mirclient ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 mir_add_wrapped_executable(mir_demo_client_release_at_exit release_at_exit.c)
-target_link_libraries(mir_demo_client_release_at_exit mirclient)
+target_link_libraries     (mir_demo_client_release_at_exit mirclient)
 
 mir_add_wrapped_executable(mir_demo_client_multiwin multiwin.c)
-target_link_libraries(mir_demo_client_multiwin mirclient)
+target_link_libraries     (mir_demo_client_multiwin mirclient)
 
 mir_add_wrapped_executable(mir_demo_client_fingerpaint fingerpaint.c)
-target_link_libraries(mir_demo_client_fingerpaint mirclient)
+target_link_libraries     (mir_demo_client_fingerpaint mirclient)
 
 mir_add_wrapped_executable(mir_demo_client_progressbar progressbar.c)
-target_link_libraries(mir_demo_client_progressbar mirclient)
+target_link_libraries     (mir_demo_client_progressbar mirclient)
 
-mir_add_wrapped_executable(mir_demo_client_display_config demo_client_display_config.c)
-target_link_libraries(mir_demo_client_display_config eglapp)
-
-mir_add_wrapped_executable(mir_demo_client_eglsquare eglsquare.cpp)
-target_link_libraries(mir_demo_client_eglsquare eglapp)
-
-if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
-  target_link_libraries(mir_demo_client_eglsquare atomic)
-endif()
-
-mir_add_wrapped_executable(mir_demo_client_flicker
-  flicker.c
-)
-
-target_link_libraries(mir_demo_client_flicker
-  mirclient
-
-  ${Boost_LIBRARIES}
-  ${CMAKE_THREAD_LIBS_INIT}
-)
-
-mir_add_wrapped_executable(mir_demo_client_scroll
-  scroll.cpp
-)
-
-target_link_libraries(mir_demo_client_scroll
-  eglapp
-  mirdraw
-  ${GLESv2_LIBRARIES}
-)
+mir_add_wrapped_executable(mir_demo_client_flicker flicker.c)
+target_link_libraries     (mir_demo_client_flicker mirclient ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
 
 mir_add_wrapped_executable(mir_demo_client_prompt_session prompt_session.c)
-target_link_libraries(mir_demo_client_prompt_session mirclient)
-
-add_library(mirdraw STATIC graphics_utils.cpp)
+target_link_libraries     (mir_demo_client_prompt_session mirclient)
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/miral
@@ -238,51 +111,91 @@ if (MIR_ENABLE_TESTS)
   endif ()
 endif ()
 
-mir_add_wrapped_executable(mir_demo_client_multistream
-  multi_stream.cpp
-)
+mir_add_wrapped_executable(mir_demo_client_prerendered_frames prerendered_frames.c)
+target_link_libraries     (mir_demo_client_prerendered_frames mirclient m)
 
-target_link_libraries(mir_demo_client_multistream
-  mirclient
-  eglapp
-  ${Boost_LIBRARIES}
-)
-
-mir_add_wrapped_executable(mir_demo_client_render_surface
-  render_surface.cpp
-)
-
-target_link_libraries(mir_demo_client_render_surface
-  mirclient
-  eglapp
-)
-
-mir_add_wrapped_executable(mir_demo_client_prerendered_frames
-  prerendered_frames.c
-)
-
-target_link_libraries(mir_demo_client_prerendered_frames
-  mirclient
-  m
-)
-
-mir_add_wrapped_executable(mir_demo_client_chain_jumping_buffers
-  chain_jumping_buffers.c
-)
-
-target_link_libraries(mir_demo_client_chain_jumping_buffers
-  mirclient
-)
+mir_add_wrapped_executable(mir_demo_client_chain_jumping_buffers chain_jumping_buffers.c)
+target_link_libraries     (mir_demo_client_chain_jumping_buffers mirclient)
 
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 mir_add_wrapped_executable(mir_demo_client_wayland wayland_client.c)
-target_link_libraries(mir_demo_client_wayland
-
-  ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
-)
+target_link_libraries     (mir_demo_client_wayland ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES})
 
 mir_add_wrapped_executable(mir_demo_client_screencast screencast.cpp)
+target_link_libraries     (mir_demo_client_screencast mirclient)
 
-target_link_libraries(mir_demo_client_screencast mirclient)
 
+# The remaining examples are dependent on Mir EGL being supported.
+if (MIR_EGL_SUPPORTED)
+
+  add_library(eglapp STATIC
+    eglapp.c
+    client_helpers.cpp
+  )
+
+  target_link_libraries(eglapp
+    mirclient
+    ${EGL_LIBRARIES}
+    ${GLESv2_LIBRARIES}
+  )
+
+  mir_add_wrapped_executable(mir_demo_client_animated_cursor animated_cursor_demo_client.c)
+  target_link_libraries     (mir_demo_client_animated_cursor eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_eglflash eglflash.c)
+  target_link_libraries     (mir_demo_client_eglflash eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_egltriangle egltriangle.c)
+  target_link_libraries     (mir_demo_client_egltriangle eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_target target.c)
+  target_link_libraries     (mir_demo_client_target eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_pointer_confinement pointer_confinement.c)
+  target_link_libraries     (mir_demo_client_pointer_confinement eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_camera camera.c)
+  target_link_libraries     (mir_demo_client_camera eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_eglcounter eglcounter.cpp)
+  target_link_libraries     (mir_demo_client_eglcounter eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_eglplasma eglplasma.c)
+  target_link_libraries     (mir_demo_client_eglplasma eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_cursors cursors_demo_client.c)
+  target_link_libraries     (mir_demo_client_cursors eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_eglstateswitcher eglstateswitcher.c)
+  target_link_libraries     (mir_demo_client_eglstateswitcher eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_tooltip tooltip.c)
+  target_link_libraries     (mir_demo_client_tooltip eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_touch_validator client_touch_validator.cpp)
+  target_link_libraries     (mir_demo_client_touch_validator eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_display_config demo_client_display_config.c)
+  target_link_libraries     (mir_demo_client_display_config eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_eglsquare eglsquare.cpp)
+  target_link_libraries     (mir_demo_client_eglsquare eglapp)
+
+  if ("${CMAKE_CXX_COMPILER}" MATCHES "clang")
+    target_link_libraries   (mir_demo_client_eglsquare atomic)
+  endif()
+
+  mir_add_wrapped_executable(mir_demo_client_input_shapes input_shapes.cpp)
+  target_link_libraries     (mir_demo_client_input_shapes eglapp)
+
+  mir_add_wrapped_executable(mir_demo_client_scroll scroll.cpp)
+  target_link_libraries     (mir_demo_client_scroll eglapp mirdraw ${GLESv2_LIBRARIES})
+
+  mir_add_wrapped_executable(mir_demo_client_multistream multi_stream.cpp)
+  target_link_libraries     (mir_demo_client_multistream mirclient eglapp ${Boost_LIBRARIES})
+
+  mir_add_wrapped_executable(mir_demo_client_render_surface render_surface.cpp)
+  target_link_libraries     (mir_demo_client_render_surface mirclient eglapp)
+
+endif() # MIR_EGL_SUPPORTED
