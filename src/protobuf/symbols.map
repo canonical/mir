@@ -1175,5 +1175,10 @@ MIR_PROTOBUF_FEDORA {
     mir::protobuf::_ScreencastId_default_instance_;
     mir::protobuf::_StructuredError_default_instance_;
     mir::protobuf::_SurfaceId_default_instance_;
+    mir::protobuf::Cookie::internal_default_instance;
+    mir::protobuf::PersistentSurfaceId::internal_default_instance;
+    mir::protobuf::Rectangle::internal_default_instance;
+    mir::protobuf::SurfaceAspectRatio::internal_default_instance;
+    mir::protobuf::SurfaceSpecification::internal_default_instance;
   };
 } MIR_PROTOBUF_0.27;
