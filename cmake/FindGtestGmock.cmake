@@ -1,14 +1,37 @@
-include(ExternalProject)
-include(FindPackageHandleStandardArgs)
+if (MIR_DISTRO MATCHES "Fedora")
+  find_package(GTest REQUIRED)
+
+  set(GMOCK_SOURCE /usr/src/gmock/gmock-all.cc)
+
+  find_path(GMOCK_INCLUDE_DIR gmock/gmock.h)
+  add_library(GMock STATIC ${GMOCK_SOURCE})
+
+  find_package_handle_standard_args(GMock DEFAULT_MSG GMOCK_INCLUDE_DIR)
+
+  set(GMOCK_LIBRARY GMock)
+  set(GMOCK_LIBRARIES ${GTEST_BOTH_LIBRARIES} ${GMOCK_LIBRARY})
+
+  return()
+endif()
 
 execute_process(COMMAND "arch" OUTPUT_VARIABLE MIR_HOST_PROCESSOR OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 if ("${CMAKE_SYSTEM_PROCESSOR}" STREQUAL "${MIR_HOST_PROCESSOR}")
-  find_package(GMock REQUIRED)
-  if (NOT TARGET GMock)
-    add_custom_target(GMock DEPENDS gmock)
+  find_package(GMock)
+  if (GMOCK_FOUND)
+    if (NOT TARGET GMock)
+      add_custom_target(GMock DEPENDS gmock)
+    endif()
   endif()
-else()
+endif()
+
+if (TARGET GMock)
+  return()
+endif()
+
+include(ExternalProject)
+include(FindPackageHandleStandardArgs)
+
 #
 # When cross compiling MIR_CHROOT points to our chroot.
 # When not cross compiling, it should be blank to use the host system.
@@ -102,4 +125,3 @@ set(GMOCK_LIBRARIES ${GTEST_BOTH_LIBRARIES} ${GMOCK_BOTH_LIBRARIES})
 find_package_handle_standard_args(GTest  DEFAULT_MSG
                                     GMOCK_INCLUDE_DIR
                                     GTEST_INCLUDE_DIR)
-endif()
