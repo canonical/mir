@@ -53,6 +53,18 @@ add_library(miral-shell-lib STATIC
     titlebar_config.cpp         titlebar_config.h
 )
 
+if (EXISTS /usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-B.ttf)
+ set_source_files_properties(titlebar_config.cpp PROPERTIES
+   COMPILE_DEFINITIONS MIRAL_DEFAULT_FONT_FILE="/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-B.ttf")
+elseif (EXISTS /usr/share/fonts/gnu-free/FreeSansBold.ttf)
+ set_source_files_properties(titlebar_config.cpp PROPERTIES
+   COMPILE_DEFINITIONS MIRAL_DEFAULT_FONT_FILE="/usr/share/fonts/gnu-free/FreeSansBold.ttf")
+else()
+ message(WARNING "Failed to find a default titlebar font for miral-shell")
+ set_source_files_properties(titlebar_config.cpp PROPERTIES
+   COMPILE_DEFINITIONS MIRAL_DEFAULT_FONT_FILE="/usr/share/fonts/truetype/freefont/FreeSansBold.ttf")
+endif()
+
 pkg_check_modules(FREETYPE freetype2 REQUIRED)
 target_include_directories(miral-shell-lib PRIVATE ${FREETYPE_INCLUDE_DIRS})
 target_compile_definitions(miral-shell-lib PRIVATE -DTYPO_SUPPORTS_FREETYPE)
