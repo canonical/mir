@@ -1,4 +1,4 @@
-# Copyright © 2012 Canonical Ltd.
+# Copyright © 2012-2017 Canonical Ltd.
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License version 2 or 3 as
@@ -29,7 +29,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
 set(MIR_VERSION_MINOR 28)
-set(MIR_VERSION_PATCH 0)
+set(MIR_VERSION_PATCH 1)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_definitions(-DMIR_VERSION_MINOR=${MIR_VERSION_MINOR})

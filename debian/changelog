@@ -1,3 +1,31 @@
+mir (0.28.1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.28.1(https://launchpad.net/mir/+milestone/0.28.1)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 2
+      . mirserver ABI unchanged to 45
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 61
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 13
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+    - Enhancements:
+      . Wayland support for keymaps
+      . Don't use Mir EGL if it isn't available.
+      . [miral-app, miral-desktop] Default to using SDL's Wayland support.
+      . Use system GMock detection (unless cross-compiling)
+    - Bugs fixed:
+      . Build process depends on debian toolchain. (LP: #1724202)
+      . Wayland demo client doesn't cross-compile. (LP: #1723971)
+      . mir fails to find drm.h. (LP: #1722147)
+      . Don't treat failing to bypass buffers as a fatal error. (LP: #1723235)
+      . Build process depends on Debian toolchain. (LP: #1724202)
+
+ -- Alan Griffiths <alan@Octopull-desktop>  Tue, 17 Oct 2017 14:14:37 +0100
+
 mir (0.28.0-0ubuntu1) UNRELEASED; urgency=medium
 
   * New upstream release 0.28.0(https://launchpad.net/mir/+milestone/0.28.0)
