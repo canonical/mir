@@ -41,7 +41,6 @@ then
   else
     echo "Error: Cannot detect Mir endpoint"; exit 1
   fi
-  MIR_SOCKET=${socket_value}
   x11_server_args=-rootless
 elif [ "${x11_server}" == "Xwayland" ];
 then
@@ -51,10 +50,15 @@ then
   if [ -e "${XDG_RUNTIME_DIR}/miral_wayland" ];
   then
     socket_value=miral_wayland
+  elif [ -e "${XDG_RUNTIME_DIR}/wayland-1" ]
+  then
+    socket_value=wayland-1
+  elif [ -e "${XDG_RUNTIME_DIR}/wayland-0" ]
+  then
+    socket_value=wayland-0
   else
     echo "Error: Cannot detect Mir-Wayland endpoint"; exit 1
   fi
-  WAYLAND_DISPLAY=${socket_value}
   x11_server_args=
 fi
 
@@ -64,6 +68,7 @@ while [ -e "/tmp/.X11-unix/X${port}" ]; do
     let port+=1
 done
 
-${x11_server} ${x11_server_args} :${port} & pid=$!
+MIR_SOCKET=${socket_value} WAYLAND_DISPLAY=${socket_value} ${x11_server} ${x11_server_args} :${port} & pid=$!
+while [ ! -e "/tmp/.X11-unix/X${port}" ]; do echo "waiting for DISPLAY=:${port}"; sleep 1 ;done
 DISPLAY=:${port} "$@"
 kill ${pid}
