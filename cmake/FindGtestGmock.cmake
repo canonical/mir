@@ -35,7 +35,7 @@ endif()
 find_file(GMOCK_SOURCE
         NAMES gmock-all.cc
         DOC "GMock source"
-        PATHS /usr/src/googletest/googlemock/src/ /usr/src/gmock/)
+        PATHS /usr/src/googletest/googlemock/src/ /usr/src/gmock/ /usr/src/gmock/src)
 
 message(STATUS "GMOCK_SOURCE=${GMOCK_SOURCE}")
 
@@ -43,8 +43,12 @@ find_path(GMOCK_INCLUDE_DIR gmock/gmock.h)
 
 add_library(GMock STATIC ${GMOCK_SOURCE})
 
-if (EXISTS /usr/src/googletest/googlemock)
+if (EXISTS /usr/src/googletest/googlemock/src)
     set_source_files_properties(${GMOCK_SOURCE} PROPERTIES COMPILE_FLAGS "-I/usr/src/googletest/googlemock")
+endif()
+
+if (EXISTS /usr/src/gmock/src)
+    set_source_files_properties(${GMOCK_SOURCE} PROPERTIES COMPILE_FLAGS "-I/usr/src/gmock")
 endif()
 
 if (TARGET gtest)
