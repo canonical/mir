@@ -300,7 +300,9 @@ endif ()
 
 add_subdirectory(benchmarks/)
 add_subdirectory(examples/)
-add_subdirectory(playground/)
+if (MIR_EGL_SUPPORTED)
+  add_subdirectory(playground/)
+endif()
 add_subdirectory(guides/)
 add_subdirectory(cmake/)
 

@@ -41,7 +41,7 @@
 #include <gtest/gtest.h>
 
 #include <linux/input.h>
-#include <uuid/uuid.h>
+#include <uuid.h>
 
 #include <boost/throw_exception.hpp>
 #include <atomic>

@@ -18,7 +18,6 @@ set(MIR_CLIENT_PLATFORM_PATH
 # Add the core and platform implementations before exposing any private APIs
 add_subdirectory(core)
 add_subdirectory(platforms/)
-add_subdirectory(miral/)
 
 # the src/include/... directories should be private to the implementation
 include_directories(${PROJECT_SOURCE_DIR}/src/include/common)
@@ -31,6 +30,7 @@ include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(platform/)
 add_subdirectory(server/)
+add_subdirectory(miral/)
 add_subdirectory(client/)
 add_subdirectory(utils/)
 add_subdirectory(renderer/)
@@ -54,6 +54,7 @@ set(MIR_PLATFORM_OBJECTS ${MIR_PLATFORM_OBJECTS} PARENT_SCOPE)
 set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)
 set(MIR_CLIENT_PLATFORM_PATH ${MIR_CLIENT_PLATFORM_PATH} PARENT_SCOPE)
 set(MIR_SERVER_PLATFORM_PATH ${MIR_SERVER_PLATFORM_PATH} PARENT_SCOPE)
+set(MIRSERVER_INCLUDE_DIRS ${MIRSERVER_INCLUDE_DIRS} PARENT_SCOPE)
 
 # We need the ABI versions in the tests
 set(MIR_SERVER_GRAPHICS_PLATFORM_ABI ${MIR_SERVER_GRAPHICS_PLATFORM_ABI} PARENT_SCOPE)
