@@ -1,0 +1,24 @@
+environment:
+    DEB_BUILD_OPTIONS: "parallel=$( nproc ) noopt"
+    NO_PKG_MANGLE: 1
+
+summary: Build Ubuntu packages
+
+execute: |
+    cd $SPREAD_PATH
+
+    apt-get update
+
+    apt-get install \
+      --yes \
+      --no-install-recommends \
+      devscripts \
+      equivs
+
+    mk-build-deps \
+      --install \
+      --tool "apt-get --yes -o Debug::pkgProblemResolver=yes"
+
+    debuild \
+      -us \
+      -uc
