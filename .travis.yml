@@ -1,0 +1,20 @@
+# Needed so we can install snaps
+sudo: required
+dist: trusty
+
+language: cpp
+
+env:
+  global:
+    # SPREAD_LINODE_KEY
+  - secure: QmijX+AeqyYUJuiRkdCCXMZTAzokc7Y9a5Lwv1Y48SALuBLyMULrJxNVrHi/8whRX97PL5+31JazS8ZdfxucIaEy/JapwbmoKlJIjsvcm4azFgzATlXLKdqkfTOZ0qtYdSI910UjRT7EfBp2tyTz4zDnXysicr3K/CWx2P4MnIvNoH+hNz6ux/WpET9a+GFMmDJmyqyxDNLiHCpk7AUHARMsl6LC0SeGfabJjd59cRkG0Kdktr7nDooegB9aZPrMkIH9HIFRkib45/nTFHHa7jqX0CvJPMTBY/QljPOuNfhkaNtUTxCdfqFH7u8hM7d7ieX6PavjSgt4aTZC4LVJf6Y7xC/LA32yZELHKUexH1EaDkur0fypErDpRmjoPC9yBvpijL+bLlnDAHNc7xnelIhn6HHd8qM6OpEQUN6yl3J5KHRSuXPsBxwMQWoo3cXWRtLo0ESrZOm5KJ2+UA+JArofBwcyeygbBtYnvzTJB+nNPCmY5TrqA6wPeSaaZPMsESCGmgzCRTxg3B2YNbgX7VqZjwBcwRhNwGzLSlL40WSOa7bgDyQTm76l7Y/6Nav4vMrSFDycQz1n4keaD4b0Dy7rUTD5HTIu+IP7KiO/anu8IPCnG4kBfPw2r52GHMXlNE9cN8aC9exwuvfZOn3DbtREPeZUTaxqpWUvAIQ7nRs=
+  matrix:
+  - SYSTEM=ubuntu-16.04
+  - SYSTEM=ubuntu-17.10
+
+before_install:
+- sudo apt-get --yes install snapd
+- sudo snap install spread
+
+script:
+- /snap/bin/spread linode:$SYSTEM
