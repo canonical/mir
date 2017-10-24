@@ -21,6 +21,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <functional>
+
 namespace
 {
 struct RaiiTest : public ::testing::Test
