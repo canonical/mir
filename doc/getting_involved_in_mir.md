@@ -9,26 +9,41 @@ the \#ubuntu-mir IRC channel on freenode.
 
 The Mir project is hosted on Launchpad: https://launchpad.net/mir
 
-Building Mir
-------------
 
-These instructions assume that you’re using Ubuntu 16.04LTS or later, I’ve not
-earlier Ubuntu versions or other distributions.
+Getting Mir source & dependencies
+---------------------------------
+###  On Ubuntu
 
-You’ll need a few development and utility packages installed, along with the
-Mir graphics drivers:
+These instructions assume that you’re using Ubuntu 16.04LTS or later.
+
+You’ll need a few development tools installed:
 
     $ sudo apt install devscripts equivs bzr
-    $ sudo apt install mir-graphics-drivers-desktop
 
-If you’re working on a phone or tablet use mir-graphics-drivers-android in
-place of mir-graphics-drivers-desktop. (See \ref building_source_for_arm for
-more on this.)
-
-With these installed you can checkout and build Mir:
+With these installed you can checkout Mir and get the remaining dependencies:
 
     $ bzr branch lp:mir
     $ sudo mk-build-deps -i
+
+### On Fedora
+
+You’ll need some development tools and packages installed:
+
+    $ sudo dnf install bzr cmake gcc-c++ boost-devel mesa-libEGL-devel \
+    mesa-ligGLES-devel glm-devel protobuf-lite-devel protobuf-compiler \
+    capnproto-devel capnproto glog-devel gflags-devel systemd-devel \
+    glib2-devel wayland-devel mesa-libgbm-devel libepoxy-devel nettle-devel \
+    libinput-devel libxml++-devel libuuid-devel libxkbcommon-devel \
+    freetype-devel lttng-ust-devel libatomic qterminal qt5-qtwayland \
+    python3-pillow libevdev-devel umockdev-devel gtest-devel gmock-devel
+
+With these installed you can checkout Mir:
+
+    $ bzr branch lp:mir
+
+Building Mir
+------------
+
     $ mkdir mir/build
     $ cd  mir/build
     $ cmake ..
