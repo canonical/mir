@@ -19,7 +19,6 @@ mir (0.28.1) UNRELEASED; urgency=medium
       . [miral-app, miral-desktop] Default to using SDL's Wayland support.
       . Use system GMock detection (unless cross-compiling)
     - Bugs fixed:
-      . Build process depends on debian toolchain. (LP: #1724202)
       . Wayland demo client doesn't cross-compile. (LP: #1723971)
       . mir fails to find drm.h. (LP: #1722147)
       . Don't treat failing to bypass buffers as a fatal error. (LP: #1723235)
