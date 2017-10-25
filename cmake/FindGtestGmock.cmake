@@ -10,25 +10,28 @@ if (NOT GTEST_FOUND)
         PATHS /usr/src/gtest /usr/src/googletest/googletest/
         DOC "Path to GTest CMake project")
 
-    ExternalProject_Add(gtest PREFIX ./gtest
+    ExternalProject_Add(GTest PREFIX ./gtest
             SOURCE_DIR ${GTEST_ROOT}
             CMAKE_ARGS
-                -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS}'
                 -DCMAKE_CXX_COMPILER_WORKS=1
-                -DCMAKE_C_COMPILER_WORKS=1
-                -DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}
+                -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS}'
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                -DCMAKE_FIND_ROOT_PATH=${CMAKE_FIND_ROOT_PATH}
             INSTALL_COMMAND true)
 
-    set(GTEST_LIBRARY "-lgtest")
-    set(GTEST_MAIN_LIBRARY "-lgtest_main")
+    ExternalProject_Get_Property(GTest binary_dir)
+
+    add_library(gtest UNKNOWN IMPORTED)
+    set_target_properties(gtest      PROPERTIES IMPORTED_LOCATION ${binary_dir}/libgtest.a)
+    add_dependencies(gtest GTest)
+    set(GTEST_LIBRARY "gtest")
+
+    add_library(gtest_main UNKNOWN IMPORTED)
+    set_target_properties(gtest_main PROPERTIES IMPORTED_LOCATION ${binary_dir}/libgtest_main.a)
+    add_dependencies(gtest_main GTest)
+    set(GTEST_MAIN_LIBRARY "gtest_main")
+
     set(GTEST_BOTH_LIBRARIES ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
-    set(GTEST_DEPENDENCIES "gtest")
-    set(GTEST_FOUND TRUE)
     find_path(GTEST_INCLUDE_DIRS NAMES gtest/gtest.h)
-    link_directories(${CMAKE_CURRENT_BINARY_DIR}/gtest/src/gtest-build)
     find_package_handle_standard_args(GTest GTEST_LIBRARY GTEST_BOTH_LIBRARIES GTEST_INCLUDE_DIRS)
 endif()
 
@@ -49,10 +52,6 @@ endif()
 
 if (EXISTS /usr/src/gmock/src)
     set_source_files_properties(${GMOCK_SOURCE} PROPERTIES COMPILE_FLAGS "-I/usr/src/gmock")
-endif()
-
-if (TARGET gtest)
-    add_dependencies(GMock gtest)
 endif()
 
 find_package_handle_standard_args(GMock DEFAULT_MSG GMOCK_INCLUDE_DIR)
