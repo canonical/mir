@@ -421,8 +421,6 @@ public:
 
             if (egl_image == EGL_NO_IMAGE_KHR)
                 BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage"));
-
-            on_consumed();
         }
         lock.unlock();
 
@@ -436,6 +434,7 @@ public:
 
     void secure_for_render() override
     {
+        on_consumed();
     }
 
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const override
@@ -537,7 +536,7 @@ private:
 
     std::shared_ptr<mg::EGLExtensions> const extensions;
 
-    std::function<void()> on_consumed;
+    std::function<void()> const on_consumed;
 };
 }
 
