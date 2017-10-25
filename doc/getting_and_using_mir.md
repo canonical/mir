@@ -4,7 +4,10 @@ Getting and Using Mir  {#getting_and_using_mir}
 Getting Mir examples
 --------------------
 
-You can install the Mir examples as follows:
+These instructions assume that you’re using Ubuntu 17.10 later. For
+earlier releases of Ubuntu or other distributions see \ref getting_involved_in_mir.
+
+You can install the Mir examples along with the Mir graphics drivers as follows:
 
     $ sudo apt install mir-demos qterminal
     $ sudo apt install mir-graphics-drivers-desktop qtubuntu-desktop

@@ -13,6 +13,7 @@ mir (0.28.1) UNRELEASED; urgency=medium
       . mirinputplatform ABI unchanged at 7
       . mircore ABI unchanged at 1
     - Enhancements:
+      . Fix build (and add instructions) for Fedora
       . Wayland support for keymaps
       . Don't use Mir EGL if it isn't available.
       . [miral-app, miral-desktop] Default to using SDL's Wayland support.
