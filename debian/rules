@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 include /usr/share/dpkg/default.mk
+include debian/opts.mk
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
@@ -36,16 +37,19 @@ ifneq ($(filter armhf,$(DEB_HOST_ARCH)),)
 	  $(COMMON_CONFIGURE_OPTIONS) \
 	  -DMIR_RUN_ACCEPTANCE_TESTS=OFF \
 	  -DMIR_RUN_INTEGRATION_TESTS=OFF \
-	  -DMIR_PLATFORM=mesa-kms\;mesa-x11
+	  -DMIR_PLATFORM=mesa-kms\;mesa-x11 \
+	  $(OVERRIDE_CONFIGURE_OPTIONS)
 else
 ifneq ($(filter amd64 i386,$(DEB_HOST_ARCH)),)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
-	  -DMIR_PLATFORM=mesa-kms\;mesa-x11
+	  -DMIR_PLATFORM=mesa-kms\;mesa-x11 \
+	  $(OVERRIDE_CONFIGURE_OPTIONS)
 else
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
-	  -DMIR_PLATFORM=mesa-kms\;mesa-x11
+	  -DMIR_PLATFORM=mesa-kms\;mesa-x11 \
+	  $(OVERRIDE_CONFIGURE_OPTIONS)
 endif
 endif
 
