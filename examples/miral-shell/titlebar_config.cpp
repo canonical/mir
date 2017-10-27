@@ -17,12 +17,30 @@
  */
 
 #include "titlebar_config.h"
+#include <unistd.h>
 #include <mutex>
 
 namespace
 {
+auto default_font() -> std::string
+{
+    for (std::string const file : { "Ubuntu-B.ttf", "FreeSansBold.ttf" })
+    {
+        for (auto const path : { "/usr/share/fonts/truetype/ubuntu-font-family/",   // Ubuntu Ubuntu-B.ttf
+                                 "/usr/share/fonts/truetype/freefont/",             // Debian FreeSansBold.ttf
+                                 "/usr/share/fonts/gnu-free/"})                     // Fedora FreeSansBold.ttf
+        {
+            auto const full_path = path + file;
+            if (access(full_path.c_str(), R_OK) == 0)
+                return full_path;
+        }
+    }
+
+    return "/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-B.ttf";
+}
+
 std::mutex mutex;
-std::string font_file{MIRAL_DEFAULT_FONT_FILE};
+std::string font_file{default_font()};
 }
 
 void titlebar::font_file(std::string const& font_file)
