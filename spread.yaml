@@ -13,6 +13,12 @@ backends:
             - ubuntu-16.04
             - ubuntu-17.10
 
+environment:
+    ARCH/amd64: amd64
+    ARCH/arm64: arm64
+    ARCH/armhf: armhf
+    ARCH/i386: i386
+
 suites:
     spread/build/:
         summary: Build Mir
