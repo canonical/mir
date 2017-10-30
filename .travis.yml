@@ -9,12 +9,13 @@ env:
     # SPREAD_LINODE_KEY
     secure: nTF58U2HFwLcnGaytQfySywsVGSrBmRWmiL4IX7QolHcWChyAcAXZrTPYrexsMfK5oFvjfUUmXbG1SIAoCOVxRi8mscbs0pme5epTTaCp1sQCwGS7anEFBAfe3IIjR3gLiLE8yaxJ8v0V3RwYGmUNgZOg7AvWjrB9hT0L/TkKCu4vPMQ4KK0ROnySIIGvKbuaWDXSbtk/52nM/Qhxp3Im7cxLDsh7e1YwY5+FcrU6GNxGy0OWY5xjGAK/Tlbd4NuSBMeg9VF4XYIGvUgA4P5jlp+EIi0gEtXXyv6Ns9PKYfPtpq5gKVGr/srEJK0+faTpfdWzVJr2AWwXfLh9gWwwkGL08s8XqqNM7raec8YX7UB3eiK/huIFcZrDG2MEkdJT2LBKKgXfGwN5K9bi7i2TawfIhepzusZJZWwld3BfUkHakmWwbyU+bINqs99cgkFPpLYqsFjTrI1S3/Av+atPprkK5SLamxNV0H+C/oyewIytr1T5hGdL9kwt///jP+6DHs8vswJ57yQxqBGwMJVjn82QqwDer7EQ5N2XzMO54ezqc7ImN3dma+CYU8IzWuznd/RdDoQ2tpv2Jj4vPhQ9W4KMsWKF7r/GQr2jXs7taI7Nvj3tCNxPgKmqRK7KOXk0sc4BYlPgT81BIUPximAUk22T5A20FXx6GtEoNkPVxA=
   matrix:
-  - SYSTEM=ubuntu-16.04
-  - SYSTEM=ubuntu-17.10
+  - SYSTEM=ubuntu-16.04 ARCH=amd64
+  - SYSTEM=ubuntu-16.04 ARCH=arm64
+  - SYSTEM=ubuntu-17.10 ARCH=amd64
 
 before_install:
 - sudo apt-get --yes install snapd
 - sudo snap install spread
 
 script:
-- /snap/bin/spread linode:$SYSTEM
+- /snap/bin/spread linode:$SYSTEM:...:$ARCH

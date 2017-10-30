@@ -5,16 +5,54 @@ environment:
 summary: Build Ubuntu packages
 
 execute: |
-    cd $SPREAD_PATH
-
     apt-get update
 
+    # to get dpkg-architecture and mk-build-deps
     apt-get install \
       --yes \
       --no-install-recommends \
       devscripts \
+      dpkg-dev \
       equivs
 
+    # set host and build environment up
+    source <( dpkg-architecture --print-set --host-arch ${ARCH} )
+
+    # if cross-building
+    if [ "${DEB_BUILD_ARCH}" != "${DEB_HOST_ARCH}" ]; then
+        # add host architecture
+        dpkg --add-architecture "${DEB_HOST_ARCH}"
+
+        # limit existing apt sources to build architecture
+        sed -i "s/^deb \(\[arch=.*\] \)\?/deb [arch=${DEB_BUILD_ARCH}] /" \
+          /etc/apt/sources.list
+
+        case "${DEB_HOST_ARCH}" in
+          amd64|i386)
+            ARCHIVE_URL="http://archive.ubuntu.com/ubuntu"
+            ;;
+          *)
+            ARCHIVE_URL="http://ports.ubuntu.com/ubuntu-ports"
+            ;;
+        esac
+
+        # add host architecture apt sources
+        printf "deb [arch=${DEB_HOST_ARCH}] ${ARCHIVE_URL} \
+          %s main multiverse universe restricted\n" \
+          $(lsb_release -sc){,-security,-updates} \
+        > /etc/apt/sources.list.d/cross-${DEB_HOST_ARCH}.list
+
+        apt-get update
+
+        if [ "$(lsb_release -cs)" == "xenial" ]; then
+          # workaround for 16.04 passing invalid compiler names (LP#1728673)
+          apt-get --yes install debhelper/xenial-backports
+        fi
+    fi
+
+    cd $SPREAD_PATH
+
+    # install dependencies
     mk-build-deps \
       --install \
       --tool "apt-get --yes -o Debug::pkgProblemResolver=yes"
