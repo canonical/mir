@@ -78,6 +78,12 @@ void mtf::AsyncServerRunner::add_to_environment(char const* key, char const* val
     env.emplace_back(key, value);
 }
 
+namespace
+{
+// This avoids an intermittent shutdown crash deleting a stub-graphics buffer (LP: #1728931)
+std::shared_ptr<void> delay_unloading_graphics_platform;
+}
+
 void mtf::AsyncServerRunner::start_server()
 {
     set_window_management_policy(server);
@@ -99,6 +105,8 @@ void mtf::AsyncServerRunner::start_server()
         });
 
     server.apply_settings();
+
+    delay_unloading_graphics_platform = server.the_graphics_platform();
 
     mt::AutoJoinThread t([&]
         {
@@ -143,7 +151,10 @@ void mtf::AsyncServerRunner::wait_for_server_exit()
     server_thread.stop();
 }
 
-mtf::AsyncServerRunner::~AsyncServerRunner() noexcept = default;
+mtf::AsyncServerRunner::~AsyncServerRunner() noexcept
+{
+    delay_unloading_graphics_platform.reset();
+}
 
 auto mtf::AsyncServerRunner::new_connection() -> std::string
 {
