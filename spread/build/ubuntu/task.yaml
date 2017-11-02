@@ -60,5 +60,12 @@ execute: |
       --install \
       --tool "apt-get --yes -o Debug::pkgProblemResolver=yes"
 
+    # use clang
+    if [ "${CLANG}" -eq 1 ]; then
+      apt-get install --yes --no-install-recommends clang
+      echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_C_COMPILER=clang" >> debian/opts.mk
+      echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER=clang++" >> debian/opts.mk
+    fi
+
     # build and run tests
     debian/rules build
