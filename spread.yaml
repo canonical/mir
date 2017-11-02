@@ -14,10 +14,13 @@ backends:
             - ubuntu-17.10
 
 environment:
+    ARCH: amd64
     ARCH/amd64: amd64
     ARCH/arm64: arm64
     ARCH/armhf: armhf
     ARCH/i386: i386
+    CLANG: 0
+    CLANG/clang: 1
 
 suites:
     spread/build/:
