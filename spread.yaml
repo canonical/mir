@@ -21,6 +21,8 @@ environment:
     ARCH/i386: i386
     CLANG: 0
     CLANG/clang: 1
+    VALGRIND: 0
+    VALGRIND/valgrind: 1
 
 suites:
     spread/build/:

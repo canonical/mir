@@ -67,5 +67,10 @@ execute: |
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER=clang++" >> debian/opts.mk
     fi
 
+    # enable valgrind
+    if [ "${VALGRIND}" -eq 1 ]; then
+      echo "OVERRIDE_CONFIGURE_OPTIONS += -DENABLE_MEMCHECK_OPTION=ON" >> debian/opts.mk
+    fi
+
     # build and run tests
     debian/rules build
