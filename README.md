@@ -1,10 +1,7 @@
-Readme
-======
-
-mir - cross-platform display manager
+## Mir - cross-platform display manager
 ------------------------------------
 
-Mir is a display manager that provides efficient support for graphics coprocessors.
+**Mir** is a *display manager* that provides efficient support for graphics coprocessors.
 
 License (server)
 -------
@@ -33,6 +30,10 @@ GNU Lesser General Public License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Website
+-------
+Mir's website is hosted on <http://www.mirserver.io/>.
 
 \copyright Copyright © 2012 Canonical Ltd.
 \author Alan Griffiths <alan@octopull.co.uk>
