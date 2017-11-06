@@ -668,8 +668,6 @@ void WlSurface::commit()
 {
     if (pending_buffer)
     {
-        std::shared_ptr<mg::Buffer> mir_buffer;
-        auto shm_buffer = wl_shm_buffer_get(pending_buffer);
         auto send_frame_notifications =
             [executor = executor, frames = pending_frames, destroyed = destroyed]()
             {
@@ -694,22 +692,32 @@ void WlSurface::commit()
                     }));
             };
 
-        if (shm_buffer)
+        std::shared_ptr<mg::Buffer> mir_buffer;
+
+        if (wl_shm_buffer_get(pending_buffer))
         {
             mir_buffer = WlShmBuffer::mir_buffer_from_wl_buffer(
                 pending_buffer,
                 std::move(send_frame_notifications));
         }
-        else if (
-            allocator &&
-            (mir_buffer = allocator->buffer_from_resource(
-                pending_buffer,
-                std::move(send_frame_notifications))))
-        {
-        }
         else
         {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Received unhandled buffer type"}));
+            auto release_buffer = [executor = executor, buffer = pending_buffer, destroyed = destroyed]()
+                {
+                    executor->spawn(run_unless(
+                        destroyed,
+                        [buffer](){ wl_resource_queue_event(buffer, WL_BUFFER_RELEASE); }));
+                };
+
+            if (allocator &&
+                (mir_buffer = allocator->buffer_from_resource(
+                    pending_buffer, std::move(send_frame_notifications), std::move(release_buffer))))
+            {
+            }
+            else
+            {
+                BOOST_THROW_EXCEPTION((std::runtime_error{"Received unhandled buffer type"}));
+            }
         }
 
         /*
