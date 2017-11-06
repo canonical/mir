@@ -37,7 +37,10 @@ public:
     virtual ~WaylandAllocator() = default;
 
     virtual void bind_display(wl_display* display) = 0;
-    virtual std::shared_ptr<Buffer> buffer_from_resource (wl_resource* buffer, std::function<void ()>&& on_consumed) = 0;
+    virtual std::shared_ptr<Buffer> buffer_from_resource(
+        wl_resource* buffer,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release) = 0;
 };
 }
 }

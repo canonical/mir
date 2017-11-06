@@ -63,7 +63,10 @@ public:
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
     void bind_display(wl_display* display) override;
-    std::shared_ptr<Buffer> buffer_from_resource (wl_resource* buffer, std::function<void ()>&& on_consumed) override;
+    std::shared_ptr<Buffer> buffer_from_resource(
+        wl_resource* buffer,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release) override;
 private:
     std::shared_ptr<Buffer> alloc_hardware_buffer(
         graphics::BufferProperties const& buffer_properties);
