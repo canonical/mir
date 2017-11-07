@@ -1,4 +1,26 @@
-mir (0.28.1) UNRELEASED; urgency=medium
+mir (0.28.2) UNRELEASED; urgency=medium
+
+  * New upstream release 0.28.2(https://launchpad.net/mir/+milestone/0.28.2)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 2
+      . mirserver ABI unchanged to 45
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 61
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 13
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+    - Enhancements:
+      . benchmarks: Use standard options to install perf framework on non-Debian
+    - Bugs fixed:
+      . [mir_demo_server] extend (not replace) the default error reporting. (LP: #1728581)
+      . Releasing Wayland buffers must occur on the executor thread. (LP: #1728069)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 7 Nov 2017 11:13:47 +0000
+
+ mir (0.28.1) UNRELEASED; urgency=medium
 
   * New upstream release 0.28.1(https://launchpad.net/mir/+milestone/0.28.1)
     - ABI summary:
