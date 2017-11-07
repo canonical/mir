@@ -83,7 +83,7 @@ int main(int argc, char const* argv[])
         {
             CommandLineOption{[&](std::string const& ) { },
                               "desktop_file_hint", "Ignored for Unity8 compatibility", "miral-shell.desktop"},
-            CursorTheme{"default"},
+            CursorTheme{"default:DMZ-White"},
             window_managers,
             display_configuration_options,
             launcher,
