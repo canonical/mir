@@ -5,7 +5,6 @@ wayland_display=miral_wayland
 miral_server=miral-shell
 launcher=qterminal
 bindir=$(dirname $0)
-vt=4
 
 while [ $# -gt 0 ]
 do
@@ -16,14 +15,12 @@ do
     echo "Options are:"
     echo "    -kiosk                        use miral-kiosk instead of ${miral_server}"
     echo "    -launcher <launcher>          use <launcher> instead of '${launcher}'"
-    echo "    -vt <termid>                  set the virtual terminal [${vt}]"
     echo "    -socket <socket>              set the legacy mir socket [${socket}]"
     echo "    -wayland-socket-name <socket> set the wayland socket [${wayland_display}]"
     echo "    -bindir <bindir>              path to the miral executable [${bindir}]"
     exit 0
     elif [ "$1" == "-kiosk" ];              then miral_server=miral-kiosk
     elif [ "$1" == "-launcher" ];           then shift; launcher=$1
-    elif [ "$1" == "-vt" ];                 then shift; vt=$1
     elif [ "$1" == "-socket" ];             then shift; socket=$1
     elif [ "$1" == "-wayland-socket-name" ];then shift; wayland_display=$1
     elif [ "$1" == "-bindir" ];             then shift; bindir=$1
@@ -47,8 +44,7 @@ then
 fi
 
 sudo ls >> /dev/null
-oldvt=$(sudo fgconsole)
-sudo sh -c "LD_LIBRARY_PATH=${LD_LIBRARY_PATH} XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR} ${bindir}${miral_server} --wayland-socket-name ${wayland_display} --vt ${vt} --arw-file --file ${socket} $*; chvt ${oldvt}"&
+sudo sh -c "LD_LIBRARY_PATH=${LD_LIBRARY_PATH} XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR} ${bindir}${miral_server} --wayland-socket-name ${wayland_display} --arw-file --file ${socket} $*"
 
 while [ ! -e "${socket}" ]; do echo "waiting for ${socket}"; sleep 1 ;done
 
