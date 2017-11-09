@@ -1,11 +1,30 @@
 Getting and Using Mir  {#getting_and_using_mir}
 =====================
 
+If you are not running Ubuntu things may not work as described below. While some
+applications are able to use Mir's Wayland support only Ubuntu carries "native"
+Mir support for GTK+, SDL2 and Qt applications and the Xmir X11 server. 
+
 Getting Mir examples
 --------------------
 
-These instructions assume that you’re using Ubuntu 17.10 later. For
-earlier releases of Ubuntu or other distributions see \ref getting_involved_in_mir.
+Mir was initially developed on and for Ubuntu. We aim to make it available for
+other distributions, but currently you need to build it yourself see 
+\ref getting_involved_in_mir.
+
+On Ubuntu the latest Mir release is available from the Mir team's "release PPA".
+We recommend always using the latest release, but if you don't wish to use the
+PPA, there will be an earlier release of Mir in the Ubuntu archive, but some
+things may not work as described here.
+
+To add the PPA to your system:
+
+    $ sudo add-apt-repository ppa:mir-team/release
+    $ sudo apt update
+
+To remove the PPA from your system:
+
+    $ sudo ppa-purge mir-team/release
 
 You can install the Mir examples along with the Mir graphics drivers as follows:
 
@@ -15,8 +34,9 @@ You can install the Mir examples along with the Mir graphics drivers as follows:
 Using Mir examples
 ------------------
 
-For convenient testing there's a "miral-app" script that wraps the commands used
-to start a server and then launches a terminal (as the current user):
+For convenient testing under X11 there's a "miral-app" script that wraps the
+commands used to start a server and then launches a terminal (as the current
+user):
 
     $ miral-app
 
@@ -64,6 +84,10 @@ This automatically starts a Xmir X11 server on a new $DISPLAY for the
 application to use. You can use miral-xrun both from a command-line outside the
 miral-shell or, for example, from the terminal running in the shell.
 
+_miral-xrun has an option "-Xwayland" to use the Xwayland server instead of Xmir.
+This can be useful when the latter is not available._
+
+
 ### Options when running the Mir example shell
 
 #### Script Options
@@ -107,3 +131,9 @@ examples support this option.
 
 Is only supported by miral-shell and its main use is to allow an alternative
 "tiling" window manager to be selected.
+
+These options can also be specified in a configuration file. For example:
+
+    $ cat ~/.config/miral-shell.config 
+    keymap=gb
+    window-manager=tiling
