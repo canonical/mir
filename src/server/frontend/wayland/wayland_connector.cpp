@@ -476,10 +476,7 @@ public:
             consumed = true;
         }
 
-        wl_shm_buffer_begin_access(buffer);
-        auto data = wl_shm_buffer_get_data(buffer);
-        do_with_pixels(static_cast<unsigned char const*>(data));
-        wl_shm_buffer_end_access(buffer);
+        do_with_pixels(static_cast<unsigned char const*>(data.get()));
     }
 
     geometry::Stride stride() const override
@@ -496,9 +493,13 @@ private:
           size_{wl_shm_buffer_get_width(this->buffer), wl_shm_buffer_get_height(this->buffer)},
           stride_{wl_shm_buffer_get_stride(this->buffer)},
           format_{wl_format_to_mir_format(wl_shm_buffer_get_format(this->buffer))},
+          data{std::make_unique<uint8_t[]>(size_.height.as_int() * stride_.as_int())},
           consumed{false},
           on_consumed{std::move(on_consumed)}
     {
+        wl_shm_buffer_begin_access(this->buffer);
+        std::memcpy(data.get(), wl_shm_buffer_get_data(this->buffer), size_.height.as_int() * stride_.as_int());
+        wl_shm_buffer_end_access(this->buffer);
     }
 
     static void on_buffer_destroyed(wl_listener* listener, void*)
@@ -536,6 +537,8 @@ private:
     geom::Size const size_;
     geom::Stride const stride_;
     MirPixelFormat const format_;
+
+    std::unique_ptr<uint8_t[]> const data;
 
     bool consumed;
     std::function<void()> on_consumed;
