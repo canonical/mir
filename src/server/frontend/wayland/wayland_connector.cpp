@@ -1865,6 +1865,7 @@ public:
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat)
         : ShellSurface(client, parent, id),
+          destroyed{std::make_shared<bool>(false)},
           shell{shell}
     {
         auto* tmp = wl_resource_get_user_data(surface);
@@ -1885,8 +1886,11 @@ public:
             auto const window = session->get_surface(surface_id);
             auto const size = window->client_size();
             sink->latest_resize(size);
-            seat.spawn([resource=resource, height = size.height.as_int(), width = size.width.as_int()]()
-                { wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, width, height); });
+            seat.spawn(
+                run_unless(
+                    destroyed,
+                    [resource=resource, height = size.height.as_int(), width = size.width.as_int()]()
+                    { wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, width, height); }));
         }
 
         mir_surface.set_resize_handler(
@@ -1910,6 +1914,7 @@ public:
 
     ~WlShellSurface() override
     {
+        *destroyed = true;
         if (auto session = session_for_client(client))
         {
             shell->destroy_surface(session, surface_id);
@@ -1986,6 +1991,7 @@ protected:
     {
     }
 private:
+    std::shared_ptr<bool> const destroyed;
     std::shared_ptr<mf::Shell> const shell;
     mf::SurfaceId surface_id;
 };
