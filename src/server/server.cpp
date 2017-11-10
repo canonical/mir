@@ -468,6 +468,14 @@ auto mir::Server::open_prompt_socket() -> Fd
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
+auto mir::Server::open_wayland_client_socket() -> Fd
+{
+    if (auto const config = self->server_config)
+        return Fd{config->the_wayland_connector()->client_socket_fd()};
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
+}
+
 auto mir::Server::open_client_socket(ConnectHandler const& connect_handler) -> Fd
 {
     if (auto const config = self->server_config)

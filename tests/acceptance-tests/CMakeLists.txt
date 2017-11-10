@@ -1,5 +1,7 @@
 include(CMakeDependentOption)
 
+add_subdirectory(wayland)
+
 set(
   SOURCES
 

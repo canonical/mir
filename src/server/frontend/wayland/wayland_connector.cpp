@@ -72,6 +72,7 @@
 #include "../../../platforms/common/server/shm_buffer.h"
 
 #include <sys/stat.h>
+#include <sys/socket.h>
 #include "mir/anonymous_shm_file.h"
 
 namespace mf = mir::frontend;
@@ -2292,7 +2293,26 @@ void mf::WaylandConnector::stop()
 
 int mf::WaylandConnector::client_socket_fd() const
 {
-    return -1;
+    enum { server, client, size };
+    int socket_fd[size];
+
+    if (socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fd))
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{
+            errno,
+            std::system_category(),
+            "Could not create socket pair"}));
+    }
+
+    if (!wl_client_create(display.get(), socket_fd[server]))
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{
+            errno,
+            std::system_category(),
+            "Failed to add server end of socketpair to Wayland display"}));
+    }
+
+    return socket_fd[client];
 }
 
 int mf::WaylandConnector::client_socket_fd(
