@@ -25,6 +25,9 @@
 
 #include <boost/throw_exception.hpp>
 
+#define MIR_LOG_COMPONENT "miral"
+#include <mir/log.h>
+
 namespace mi = mir::input;
 
 namespace
@@ -46,17 +49,28 @@ void miral::CursorTheme::operator()(mir::Server& server) const
 {
     static char const* const option = "cursor-theme";
 
-    server.add_configuration_option(option, "Cursor theme (e.g. \"DMZ-Black\")", theme);
+    server.add_configuration_option(option, "Colon separated cursor theme list (e.g. \"DMZ-Black\")", theme);
 
     server.override_the_cursor_images([&]
         {
-            auto const theme = server.get_options()->get<std::string const>(option);
+            auto const themes = server.get_options()->get<std::string const>(option);
 
-            std::shared_ptr<mi::CursorImages> const xcursor_loader{std::make_shared<XCursorLoader>(theme)};
+            for (auto i = std::begin(themes); i != std::end(themes); )
+            {
+                auto const j = std::find(i, std::end(themes), ':');
 
-            if (has_default_cursor(*xcursor_loader))
-                return xcursor_loader;
+                std::string const theme{i, j};
 
-            BOOST_THROW_EXCEPTION(std::runtime_error(("Failed to load cursor theme: " + theme).c_str()));
+                std::shared_ptr<mi::CursorImages> const xcursor_loader{std::make_shared<XCursorLoader>(theme)};
+
+                if (has_default_cursor(*xcursor_loader))
+                    return xcursor_loader;
+
+                mir::log_warning("Failed to load cursor theme: %s", theme.c_str());
+
+                if ((i = j) != std::end(themes)) ++i;
+            }
+
+            BOOST_THROW_EXCEPTION(std::runtime_error(("Failed to load cursor theme: " + themes).c_str()));
         });
 }

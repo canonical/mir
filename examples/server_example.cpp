@@ -152,7 +152,7 @@ try
         me::add_custom_compositor_option_to,
         me::add_input_device_configuration_options_to,
         add_timeout_option_to,
-        miral::CursorTheme{"default"},
+        miral::CursorTheme{"default:DMZ-White"},
         input_filters,
         test_runner
     });

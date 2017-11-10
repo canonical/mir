@@ -40,21 +40,26 @@ find_file(GMOCK_SOURCE
         DOC "GMock source"
         PATHS /usr/src/googletest/googlemock/src/ /usr/src/gmock/ /usr/src/gmock/src)
 
-message(STATUS "GMOCK_SOURCE=${GMOCK_SOURCE}")
+if (EXISTS ${GMOCK_SOURCE})
+    find_path(GMOCK_INCLUDE_DIR gmock/gmock.h)
 
-find_path(GMOCK_INCLUDE_DIR gmock/gmock.h)
+    add_library(GMock STATIC ${GMOCK_SOURCE})
 
-add_library(GMock STATIC ${GMOCK_SOURCE})
+    if (EXISTS /usr/src/googletest/googlemock/src)
+        set_source_files_properties(${GMOCK_SOURCE} PROPERTIES COMPILE_FLAGS "-I/usr/src/googletest/googlemock")
+    endif()
 
-if (EXISTS /usr/src/googletest/googlemock/src)
-    set_source_files_properties(${GMOCK_SOURCE} PROPERTIES COMPILE_FLAGS "-I/usr/src/googletest/googlemock")
+    if (EXISTS /usr/src/gmock/src)
+        set_source_files_properties(${GMOCK_SOURCE} PROPERTIES COMPILE_FLAGS "-I/usr/src/gmock")
+    endif()
+
+    find_package_handle_standard_args(GMock DEFAULT_MSG GMOCK_INCLUDE_DIR)
+
+    set(GMOCK_LIBRARY GMock)
+else()
+    # Assume gmock is no longer source, we'll find out soon enough if that's wrong
+    add_custom_target(GMock)
+    string(REPLACE gtest gmock GMOCK_LIBRARY ${GTEST_LIBRARY})
 endif()
 
-if (EXISTS /usr/src/gmock/src)
-    set_source_files_properties(${GMOCK_SOURCE} PROPERTIES COMPILE_FLAGS "-I/usr/src/gmock")
-endif()
-
-find_package_handle_standard_args(GMock DEFAULT_MSG GMOCK_INCLUDE_DIR)
-
-set(GMOCK_LIBRARY GMock)
 set(GMOCK_LIBRARIES ${GTEST_BOTH_LIBRARIES} ${GMOCK_LIBRARY})
