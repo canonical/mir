@@ -60,7 +60,7 @@ not report problems (depending upon the __NDEBUG__ define).
 Implicit rules
 --------------
 
-There are a lot of pointers (mostly smart, but a few raw ones) passed
+There are a lot of __pointers__ (mostly smart, but a few raw ones) passed
 around in the code. We have adopted the general rule that pointers are
 expected to refer to valid objects. This avoids repetitive tests for
 validity. Unless otherwise documented functions and constructors that
