@@ -1,6 +1,11 @@
 #!/bin/bash
 
-x11_server=Xmir
+x11_server=Xwayland
+
+if which Xmir 2>/dev/null >/dev/null
+then
+    x11_server=Xmir
+fi
 
 while [ $# -gt 0 ]
 do
@@ -27,11 +32,16 @@ export GDK_BACKEND=x11
 export QT_QPA_PLATFORM=xcb
 export SDL_VIDEODRIVER=x11
 
+if ! which ${x11_server} 2>/dev/null >/dev/null
+then
+    echo "Error: Need ${x11_server}"
+    echo "On Ubuntu run \"sudo apt install xmir xwayland\""; 
+    echo "On Fedora run \"sudo dnf install xorg-x11-server-Xwayland\""; 
+    exit 1
+fi
+
 if [ "${x11_server}" == "Xmir" ];
 then
-  x_server_installed=$(apt list xmir 2>/dev/null | grep installed | wc -l)
-  if [ "${x_server_installed}" == "0" ]; then echo "Need Xmir - run \"sudo apt install xmir\""; exit 1 ;fi
-
   if   [ -e "${XDG_RUNTIME_DIR}/miral_socket" ];
   then
     socket_value=${XDG_RUNTIME_DIR}/miral_socket
@@ -44,9 +54,6 @@ then
   x11_server_args=-rootless
 elif [ "${x11_server}" == "Xwayland" ];
 then
-  x_server_installed=$(apt list xwayland 2>/dev/null | grep installed | wc -l)
-  if [ "${x_server_installed}" == "0" ]; then echo "Need Xwayland - run \"sudo apt install xwayland\""; exit 1 ;fi
-
   if [ -e "${XDG_RUNTIME_DIR}/miral_wayland" ];
   then
     socket_value=miral_wayland
