@@ -1,3 +1,5 @@
+include(ExternalProject)
+
 ExternalProject_Add(
   wlcs PREFIX ./wlcs
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/wlcs
