@@ -13,10 +13,19 @@ mir (0.28.2) UNRELEASED; urgency=medium
       . mirinputplatform ABI unchanged at 7
       . mircore ABI unchanged at 1
     - Enhancements:
-      . benchmarks: Use standard options to install perf framework on non-Debian
+      . Update docs to reflect recent changes
+      . Initial cut at integrating Wayland conformance tests
+      . Fix Wayland conformance test failures
+      . Fix build & runtime issues on Fedora 26, 27 & rawhide
+      . benchmarks: Use standard options to install perf framework on
+        non-Debian distros
     - Bugs fixed:
-      . [mir_demo_server] extend (not replace) the default error reporting. (LP: #1728581)
-      . Releasing Wayland buffers must occur on the executor thread. (LP: #1728069)
+      . [mir_demo_server] extend (not replace) the default error reporting.
+        (LP: #1728581)
+      . Releasing Wayland buffers must occur on the executor thread.
+        (LP: #1728069)
+      . Check that user is logged into the VT before using it (LP: #1728574)
+      . Allow alternative cursor themes to be specified in a list. (Fixes #16)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 7 Nov 2017 11:13:47 +0000
 
