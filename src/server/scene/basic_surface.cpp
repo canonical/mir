@@ -445,7 +445,12 @@ MirWindowType ms::BasicSurface::set_type(MirWindowType t)
 {
     std::unique_lock<std::mutex> lg(guard);
 
-    if (t < 0 || t > mir_window_types)
+    /* mir_window_type_normal is the first enum constant
+     * Use the symbolic constant, rather than 0, to tell clang we don't care that this
+     * happens to be always-false because clang has chosen an unsigned type as the
+     * underlying storage.
+     */
+    if (t < mir_window_type_normal || t >= mir_window_types)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
             "type."));
@@ -470,7 +475,7 @@ MirWindowState ms::BasicSurface::state() const
 
 MirWindowState ms::BasicSurface::set_state(MirWindowState s)
 {
-    if (s < mir_window_state_unknown || s > mir_window_states)
+    if (s < mir_window_state_unknown || s >= mir_window_states)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
 
     std::unique_lock<std::mutex> lg(guard);

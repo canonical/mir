@@ -481,7 +481,8 @@ struct AttributeTestParameters
     MirWindowAttrib attribute;
     int default_value;
     int a_valid_value;
-    int an_invalid_value;
+    int infimum_invalid_value;
+    int supremum_invalid_value;
 };
 
 struct BasicSurfaceAttributeTest : public BasicSurfaceTest,
@@ -493,27 +494,31 @@ AttributeTestParameters const surface_visibility_test_parameters{
     mir_window_attrib_visibility,
     mir_window_visibility_occluded,
     mir_window_visibility_exposed,
-    -1
+    mir_window_visibility_exposed + 1,
+    mir_window_visibility_occluded - 1
 };
 
 AttributeTestParameters const surface_type_test_parameters{
     mir_window_attrib_type,
     mir_window_type_normal,
     mir_window_type_freestyle,
-    -1
+    mir_window_types,
+    mir_window_type_normal - 1
 };
 
 AttributeTestParameters const surface_state_test_parameters{
     mir_window_attrib_state,
     mir_window_state_restored,
     mir_window_state_fullscreen,
-    1178312
+    mir_window_types,
+    mir_window_state_unknown - 1
 };
 
 AttributeTestParameters const surface_swapinterval_test_parameters{
     mir_window_attrib_swapinterval,
     1,
     0,
+    -1,
     -1
 };
 
@@ -521,6 +526,7 @@ AttributeTestParameters const surface_dpi_test_parameters{
     mir_window_attrib_dpi,
     0,
     90,
+    -1,
     -1
 };
 
@@ -528,7 +534,8 @@ AttributeTestParameters const surface_focus_test_parameters{
     mir_window_attrib_focus,
     mir_window_focus_state_unfocused,
     mir_window_focus_state_focused,
-    -1
+    mir_window_focus_state_focused + 1,
+    mir_window_focus_state_unfocused - 1
 };
 
 }
@@ -592,10 +599,13 @@ TEST_P(BasicSurfaceAttributeTest, throws_on_invalid_value)
     
     auto const& params = GetParam();
     auto const& attribute = params.attribute;
-    auto const& invalid_value = params.an_invalid_value;
+    auto const& invalid_value = params.infimum_invalid_value;
     
     EXPECT_THROW({
             surface.configure(attribute, invalid_value);
+        }, std::logic_error);
+    EXPECT_THROW({
+            surface.configure(attribute, params.supremum_invalid_value);
         }, std::logic_error);
 }
 
