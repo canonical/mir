@@ -72,6 +72,7 @@
 #include "../../../platforms/common/server/shm_buffer.h"
 
 #include <sys/stat.h>
+#include <sys/socket.h>
 #include "mir/anonymous_shm_file.h"
 
 namespace mf = mir::frontend;
@@ -475,10 +476,7 @@ public:
             consumed = true;
         }
 
-        wl_shm_buffer_begin_access(buffer);
-        auto data = wl_shm_buffer_get_data(buffer);
-        do_with_pixels(static_cast<unsigned char const*>(data));
-        wl_shm_buffer_end_access(buffer);
+        do_with_pixels(static_cast<unsigned char const*>(data.get()));
     }
 
     geometry::Stride stride() const override
@@ -495,9 +493,13 @@ private:
           size_{wl_shm_buffer_get_width(this->buffer), wl_shm_buffer_get_height(this->buffer)},
           stride_{wl_shm_buffer_get_stride(this->buffer)},
           format_{wl_format_to_mir_format(wl_shm_buffer_get_format(this->buffer))},
+          data{std::make_unique<uint8_t[]>(size_.height.as_int() * stride_.as_int())},
           consumed{false},
           on_consumed{std::move(on_consumed)}
     {
+        wl_shm_buffer_begin_access(this->buffer);
+        std::memcpy(data.get(), wl_shm_buffer_get_data(this->buffer), size_.height.as_int() * stride_.as_int());
+        wl_shm_buffer_end_access(this->buffer);
     }
 
     static void on_buffer_destroyed(wl_listener* listener, void*)
@@ -535,6 +537,8 @@ private:
     geom::Size const size_;
     geom::Stride const stride_;
     MirPixelFormat const format_;
+
+    std::unique_ptr<uint8_t[]> const data;
 
     bool consumed;
     std::function<void()> on_consumed;
@@ -1861,6 +1865,7 @@ public:
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat)
         : ShellSurface(client, parent, id),
+          destroyed{std::make_shared<bool>(false)},
           shell{shell}
     {
         auto* tmp = wl_resource_get_user_data(surface);
@@ -1881,8 +1886,11 @@ public:
             auto const window = session->get_surface(surface_id);
             auto const size = window->client_size();
             sink->latest_resize(size);
-            seat.spawn([resource=resource, height = size.height.as_int(), width = size.width.as_int()]()
-                { wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, width, height); });
+            seat.spawn(
+                run_unless(
+                    destroyed,
+                    [resource=resource, height = size.height.as_int(), width = size.width.as_int()]()
+                    { wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, width, height); }));
         }
 
         mir_surface.set_resize_handler(
@@ -1906,6 +1914,7 @@ public:
 
     ~WlShellSurface() override
     {
+        *destroyed = true;
         if (auto session = session_for_client(client))
         {
             shell->destroy_surface(session, surface_id);
@@ -1982,6 +1991,7 @@ protected:
     {
     }
 private:
+    std::shared_ptr<bool> const destroyed;
     std::shared_ptr<mf::Shell> const shell;
     mf::SurfaceId surface_id;
 };
@@ -2292,7 +2302,26 @@ void mf::WaylandConnector::stop()
 
 int mf::WaylandConnector::client_socket_fd() const
 {
-    return -1;
+    enum { server, client, size };
+    int socket_fd[size];
+
+    if (socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fd))
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{
+            errno,
+            std::system_category(),
+            "Could not create socket pair"}));
+    }
+
+    if (!wl_client_create(display.get(), socket_fd[server]))
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{
+            errno,
+            std::system_category(),
+            "Failed to add server end of socketpair to Wayland display"}));
+    }
+
+    return socket_fd[client];
 }
 
 int mf::WaylandConnector::client_socket_fd(

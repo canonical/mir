@@ -819,6 +819,13 @@ MIR_SERVER_1.0 {
  local: *;
 };
 
+MIR_SERVER_0.29 {
+ global:
+  extern "C++" {
+    mir::Server::open_wayland_client_socket*;
+  };
+} MIR_SERVER_1.0;
+
 # these symbols are needed by the "throwback" tests and mir_proving_server but are not intended to be public
 MIR_SERVER_DETAIL_FOR_TESTING_1.0 {
  global:

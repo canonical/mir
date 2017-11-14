@@ -19,9 +19,11 @@
 #include "mir_test_framework/headless_display_buffer_compositor_factory.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir/renderer/gl/render_target.h"
+#include "mir/renderer/gl/texture_source.h"
 #include "mir/graphics/display_buffer.h"
 #include "mir/compositor/display_buffer_compositor.h"
 #include "mir/compositor/scene_element.h"
+#include "mir/graphics/buffer.h"
 #include "mir/geometry/rectangle.h"
 #include <algorithm>
 
@@ -100,7 +102,14 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplayBu
 
             // We need to consume a buffer to unblock client tests
             for (auto const& renderable : renderlist)
-                renderable->buffer(); 
+            {
+                auto buf = renderable->buffer();
+                if (auto gl_buf = dynamic_cast<mrg::TextureSource*>(buf->native_buffer_base()))
+                {
+                    // Bind to texture is what drives the Wayland frame event.
+                    gl_buf->gl_bind_to_texture();
+                }
+            }
 
             if (render_target)
                 render_target->swap_buffers();
