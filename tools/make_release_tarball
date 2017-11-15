@@ -1,0 +1,44 @@
+#!/bin/bash
+
+set -e
+
+VERSION_MAJOR=$(grep set.MIR_VERSION_MAJOR CMakeLists.txt | cut -f2 -d' ' | tr -d \))
+VERSION_MINOR=$(grep set.MIR_VERSION_MINOR CMakeLists.txt | cut -f2 -d' ' | tr -d \))
+VERSION_PATCH=$(grep set.MIR_VERSION_PATCH CMakeLists.txt | cut -f2 -d' ' | tr -d \))
+
+VERSIONED_NAME=mir-$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH
+
+SCRATCH_DIR=$(mktemp -d)
+BUILD_DIR=$(mktemp -d)
+INSTALL_DIR=$(mktemp -d)
+
+function cleanup() {
+	ARG=$?
+	[ -d $SCRATCH_DIR ] && rm -r $SCRATCH_DIR
+	[ -d $BUILD_DIR ] && rm -r $BUILD_DIR
+	[ -d $INSTALL_DIR ] && rm -r $INSTALL_DIR
+	exit $ARG
+}
+
+trap cleanup EXIT
+
+echo "Generating Mir tarball…" 
+bzr export \
+    --per-file-timestamps \
+    --root=$VERSIONED_NAME \
+    --format=tar - \
+        | \
+        xz -9 > $SCRATCH_DIR/$VERSIONED_NAME.tar.xz
+
+(cd $SCRATCH_DIR; tar xvJf $SCRATCH_DIR/$VERSIONED_NAME.tar.xz)
+
+echo "Testing that the tarball is buildable"
+(cd $BUILD_DIR ; cmake $SCRATCH_DIR/$VERSIONED_NAME )
+make -C $BUILD_DIR -j $(nproc)
+
+echo "Testing that the tarball is installable"
+make -C $BUILD_DIR install DESTDIR=$INSTALL_DIR
+
+mv $SCRATCH_DIR/$VERSIONED_NAME.tar.xz .
+echo "$VERSIONED_NAME.tar.xz successfully created and tested"
+
