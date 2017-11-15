@@ -29,7 +29,7 @@ mir (0.28.2) UNRELEASED; urgency=medium
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 7 Nov 2017 11:13:47 +0000
 
- mir (0.28.1) UNRELEASED; urgency=medium
+mir (0.28.1) UNRELEASED; urgency=medium
 
   * New upstream release 0.28.1(https://launchpad.net/mir/+milestone/0.28.1)
     - ABI summary:
