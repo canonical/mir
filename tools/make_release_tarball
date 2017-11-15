@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ ! -e tools/make_release_tarball  -o  "$1" != "" ]
+then
+  echo "Handy script for creating tarball: Use from the checkout directory"
+  exit 0
+fi
+
 set -e
 
 VERSION_MAJOR=$(grep set.MIR_VERSION_MAJOR CMakeLists.txt | cut -f2 -d' ' | tr -d \))
@@ -22,13 +28,13 @@ function cleanup() {
 
 trap cleanup EXIT
 
-echo "Generating Mir tarball…" 
-bzr export \
-    --per-file-timestamps \
-    --root=$VERSIONED_NAME \
-    --format=tar - \
-        | \
-        xz -9 > $SCRATCH_DIR/$VERSIONED_NAME.tar.xz
+echo "Generating Mir tarball…"
+pushd tests/acceptance-tests/wayland/wlcs
+git archive --format=tar -o $SCRATCH_DIR/$VERSIONED_NAME-wlcs.tar --prefix=$VERSIONED_NAME/tests/acceptance-tests/wayland/wlcs/ HEAD
+popd
+git archive --format=tar -o $SCRATCH_DIR/$VERSIONED_NAME.tar --prefix=$VERSIONED_NAME/ HEAD
+tar --concatenate -vf $SCRATCH_DIR/$VERSIONED_NAME.tar $SCRATCH_DIR/$VERSIONED_NAME-wlcs.tar
+xz -9 $SCRATCH_DIR/$VERSIONED_NAME.tar
 
 (cd $SCRATCH_DIR; tar xvJf $SCRATCH_DIR/$VERSIONED_NAME.tar.xz)
 
