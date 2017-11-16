@@ -29,11 +29,14 @@ function cleanup() {
 trap cleanup EXIT
 
 echo "Generating Mir tarball…"
-pushd tests/acceptance-tests/wayland/wlcs
-git archive --format=tar -o $SCRATCH_DIR/$VERSIONED_NAME-wlcs.tar --prefix=$VERSIONED_NAME/tests/acceptance-tests/wayland/wlcs/ HEAD
-popd
 git archive --format=tar -o $SCRATCH_DIR/$VERSIONED_NAME.tar --prefix=$VERSIONED_NAME/ HEAD
-tar --concatenate -vf $SCRATCH_DIR/$VERSIONED_NAME.tar $SCRATCH_DIR/$VERSIONED_NAME-wlcs.tar
+for submodule in $(git submodule | cut -f 3 -d ' ')
+do
+  pushd $submodule
+  git archive --format=tar -o $SCRATCH_DIR/$VERSIONED_NAME-temp.tar --prefix=$VERSIONED_NAME/$submodule/ HEAD
+  tar --concatenate -vf $SCRATCH_DIR/$VERSIONED_NAME.tar $SCRATCH_DIR/$VERSIONED_NAME-temp.tar
+  popd
+done
 xz -9 $SCRATCH_DIR/$VERSIONED_NAME.tar
 
 (cd $SCRATCH_DIR; tar xvJf $SCRATCH_DIR/$VERSIONED_NAME.tar.xz)
