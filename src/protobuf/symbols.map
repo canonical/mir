@@ -1180,5 +1180,6 @@ MIR_PROTOBUF_FEDORA {
     mir::protobuf::_SurfaceId_default_instance_;
     mir::protobuf::_SurfaceSpecification_default_instance_;
     mir::protobuf::_Rectangle_default_instance_;
+    mir::protobuf::*::InternalSwap*;
   };
 } MIR_PROTOBUF_0.27;
