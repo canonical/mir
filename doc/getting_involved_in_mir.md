@@ -43,6 +43,8 @@ With these installed you can checkout Mir:
 
     $ git clone https://github.com/MirServer/mir.git
     $ cd mir
+    $ git submodule init
+    $ git submodule update
 
 Building Mir
 ------------
