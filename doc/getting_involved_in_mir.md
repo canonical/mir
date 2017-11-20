@@ -23,8 +23,7 @@ With these installed you can checkout Mir and get the remaining dependencies:
 
     $ git clone https://github.com/MirServer/mir.git
     $ cd mir
-    $ git submodule init
-    $ git submodule update
+    $ git submodule update --init --recursive
     $ mk-build-deps -i -s sudo
 
 ### On Fedora
@@ -43,8 +42,7 @@ With these installed you can checkout Mir:
 
     $ git clone https://github.com/MirServer/mir.git
     $ cd mir
-    $ git submodule init
-    $ git submodule update
+    $ git submodule update --init --recursive
 
 Building Mir
 ------------
