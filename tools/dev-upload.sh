@@ -1,0 +1,74 @@
+#!/bin/bash
+
+set -e
+
+if [ -z "${RELEASE}" ]; then
+  echo "ERROR: RELEASE environment variable needs to be set to the" >&2
+  echo "  target Ubuntu version." >&2
+  exit 1
+fi
+
+MIR_VERSION=$( dpkg-parsechangelog --show-field Version \
+               | perl -n -e '/(^[^~-]+)/ && print $1' )
+GIT_REVISION=$( git rev-parse --short HEAD )
+
+source <( python <<EOF
+import os
+from launchpadlib.launchpad import Launchpad
+
+lp = Launchpad.login_anonymously("mir-ci",
+                                 "production",
+                                 "/tmp/lplib",
+                                 version="devel")
+
+ubuntu = lp.distributions["ubuntu"]
+series = ubuntu.getSeries(name_or_version=os.environ['RELEASE'])
+
+print("UBUNTU_SERIES={}".format(series.name))
+print("UBUNTU_VERSION={}".format(series.version))
+
+dev_ppa = lp.people["mir-team"].getPPAByName(name="dev")
+try:
+  mir = dev_ppa.getPublishedSources(source_name="mir",
+                                    distro_series=series,
+                                    order_by_date=True)[0]
+except IndexError:
+  print("PPA_VERSION=")
+else:
+  print("PPA_VERSION={}".format(mir.source_package_version))
+EOF
+)
+
+if [ -z "${UBUNTU_SERIES}" -o -z "${UBUNTU_VERSION}" ]; then
+  echo "ERROR: \"${RELEASE}\" was not recognized as a valid Ubuntu series" >&2
+  exit 2
+fi
+
+while dpkg --compare-versions "${PPA_VERSION}" ge "${DEV_VERSION}"; do
+  DEV_COUNTER=$(( ${DEV_COUNTER} + 1 ))
+  DEV_VERSION=${MIR_VERSION}~dev-${DEV_COUNTER}
+  if [ ${DEV_COUNTER} -gt 1000 ]; then
+    echo "ERROR: version still lower than PPA after 1000 iterations:" >&2
+    echo "  ${PPA_VERSION} >= ${MIR_VERSION}~-${DEV_COUNTER}" >&2
+    exit 3
+  fi
+done
+
+DEV_VERSION=${DEV_VERSION}-g${GIT_REVISION}~ubuntu${UBUNTU_VERSION}
+
+echo "Setting version to:"
+echo "  ${DEV_VERSION}"
+
+debchange \
+  --newversion ${DEV_VERSION} \
+  --force-bad-version \
+  "Automatic build of revision ${GIT_REVISION}"
+
+debchange \
+  --release \
+  --distribution ${UBUNTU_SERIES} \
+  "Build for Ubuntu ${UBUNTU_VERSION}"
+
+dpkg-buildpackage -d -S
+
+dput ppa:mir-team/dev ../mir_${DEV_VERSION}_source.changes
