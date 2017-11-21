@@ -1,0 +1,65 @@
+#!/bin/bash
+
+while [ $# -gt 0 ]
+do
+  if [ "$1" == "--skip-checks" ]
+  then
+    skip_checks=true
+  fi
+  shift
+done
+
+if [ ! -e tools/make_release_tarball  -o  "$1" != "" ]
+then
+  echo "Handy script for creating tarball: Use from the checkout directory"
+  exit 0
+fi
+
+set -e
+
+VERSION_MAJOR=$(grep set.MIR_VERSION_MAJOR CMakeLists.txt | cut -f2 -d' ' | tr -d \))
+VERSION_MINOR=$(grep set.MIR_VERSION_MINOR CMakeLists.txt | cut -f2 -d' ' | tr -d \))
+VERSION_PATCH=$(grep set.MIR_VERSION_PATCH CMakeLists.txt | cut -f2 -d' ' | tr -d \))
+
+VERSIONED_NAME=mir-$VERSION_MAJOR.$VERSION_MINOR.$VERSION_PATCH
+
+SCRATCH_DIR=$(mktemp -d)
+BUILD_DIR=$(mktemp -d)
+INSTALL_DIR=$(mktemp -d)
+
+function cleanup() {
+	ARG=$?
+	[ -d $SCRATCH_DIR ] && rm -r $SCRATCH_DIR
+	[ -d $BUILD_DIR ] && rm -r $BUILD_DIR
+	[ -d $INSTALL_DIR ] && rm -r $INSTALL_DIR
+	exit $ARG
+}
+
+trap cleanup EXIT
+
+echo "Generating Mir tarball…"
+git archive --format=tar -o $SCRATCH_DIR/$VERSIONED_NAME.tar --prefix=$VERSIONED_NAME/ HEAD
+for submodule in $(git submodule --quiet foreach 'echo $path')
+do
+  pushd $submodule
+  git archive --format=tar -o $SCRATCH_DIR/$VERSIONED_NAME-temp.tar --prefix=$VERSIONED_NAME/$submodule/ HEAD
+  tar --concatenate -vf $SCRATCH_DIR/$VERSIONED_NAME.tar $SCRATCH_DIR/$VERSIONED_NAME-temp.tar
+  popd
+done
+xz -9 $SCRATCH_DIR/$VERSIONED_NAME.tar
+
+if [ ! -v skip_checks ]
+then
+  (cd $SCRATCH_DIR; tar xvJf $SCRATCH_DIR/$VERSIONED_NAME.tar.xz)
+
+  echo "Testing that the tarball is buildable"
+  (cd $BUILD_DIR ; cmake $SCRATCH_DIR/$VERSIONED_NAME )
+  make -C $BUILD_DIR -j $(nproc)
+
+  echo "Testing that the tarball is installable"
+  make -C $BUILD_DIR install DESTDIR=$INSTALL_DIR
+fi
+
+mv $SCRATCH_DIR/$VERSIONED_NAME.tar.xz .
+echo "$VERSIONED_NAME.tar.xz successfully created and tested"
+
