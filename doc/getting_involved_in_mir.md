@@ -21,9 +21,8 @@ You’ll need a few development tools installed:
 
 With these installed you can checkout Mir and get the remaining dependencies:
 
-    $ git clone https://github.com/MirServer/mir.git
+    $ git clone --recursive https://github.com/MirServer/mir.git
     $ cd mir
-    $ git submodule update --init --recursive
     $ mk-build-deps -i -s sudo
 
 ### On Fedora
@@ -40,9 +39,8 @@ You’ll need some development tools and packages installed:
 
 With these installed you can checkout Mir:
 
-    $ git clone https://github.com/MirServer/mir.git
+    $ git clone --recursive https://github.com/MirServer/mir.git
     $ cd mir
-    $ git submodule update --init --recursive
 
 Building Mir
 ------------
