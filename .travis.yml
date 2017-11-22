@@ -10,10 +10,16 @@ branches:
   - trying
   - master
 
+stages:
+- name: upload to ppa:mir-team/dev
+  if: branch = master AND type = push
+
 env:
   global:
     # SPREAD_LINODE_KEY
   - secure: QmijX+AeqyYUJuiRkdCCXMZTAzokc7Y9a5Lwv1Y48SALuBLyMULrJxNVrHi/8whRX97PL5+31JazS8ZdfxucIaEy/JapwbmoKlJIjsvcm4azFgzATlXLKdqkfTOZ0qtYdSI910UjRT7EfBp2tyTz4zDnXysicr3K/CWx2P4MnIvNoH+hNz6ux/WpET9a+GFMmDJmyqyxDNLiHCpk7AUHARMsl6LC0SeGfabJjd59cRkG0Kdktr7nDooegB9aZPrMkIH9HIFRkib45/nTFHHa7jqX0CvJPMTBY/QljPOuNfhkaNtUTxCdfqFH7u8hM7d7ieX6PavjSgt4aTZC4LVJf6Y7xC/LA32yZELHKUexH1EaDkur0fypErDpRmjoPC9yBvpijL+bLlnDAHNc7xnelIhn6HHd8qM6OpEQUN6yl3J5KHRSuXPsBxwMQWoo3cXWRtLo0ESrZOm5KJ2+UA+JArofBwcyeygbBtYnvzTJB+nNPCmY5TrqA6wPeSaaZPMsESCGmgzCRTxg3B2YNbgX7VqZjwBcwRhNwGzLSlL40WSOa7bgDyQTm76l7Y/6Nav4vMrSFDycQz1n4keaD4b0Dy7rUTD5HTIu+IP7KiO/anu8IPCnG4kBfPw2r52GHMXlNE9cN8aC9exwuvfZOn3DbtREPeZUTaxqpWUvAIQ7nRs=
+  - DEBFULLNAME="Mir CI Bot"
+  - DEBEMAIL="mir-ci-bot@canonical.com"
   matrix:
   - SYSTEM=ubuntu-16.04 VARIANT=amd64
   - SYSTEM=ubuntu-16.04 VARIANT=arm64
@@ -25,3 +31,27 @@ before_install:
 
 script:
 - /snap/bin/spread linode:$SYSTEM:...:$VARIANT
+
+jobs:
+  include:
+  - &dev-upload
+    stage: upload to ppa:mir-team/dev
+    env: RELEASE=16.04
+    before_install:
+    - openssl aes-256-cbc -K $encrypted_ba35384b250b_key -iv $encrypted_ba35384b250b_iv
+      -in tools/bot-data.tar.xz.enc -out tools/bot-data.tar.xz -d
+    - tar --extract --xz --file tools/bot-data.tar.xz --directory ${HOME}
+    script:
+    - tools/dev-upload.sh
+    addons:
+      apt:
+        packages:
+        - debhelper
+        - devscripts
+        - dput
+        - fakeroot
+        - python-launchpadlib
+  - <<: *dev-upload
+    env: RELEASE=17.10
+  - <<: *dev-upload
+    env: RELEASE=devel
