@@ -11,6 +11,7 @@ usr/bin/mir_client_startup_performance_test
 usr/bin/mir_privileged_tests
 usr/bin/mir_test_reload_protobuf
 usr/bin/mir_test_client_*
+usr/bin/mir_wlcs_tests
 usr/lib/*/mir/tools/libmirclientlttng.so
 usr/lib/*/mir/tools/libmirserverlttng.so
 usr/lib/*/mir/server-platform/graphics-dummy.so
