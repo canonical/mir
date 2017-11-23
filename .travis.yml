@@ -11,6 +11,7 @@ branches:
   - master
 
 stages:
+- name: test
 - name: upload to ppa:mir-team/dev
   if: branch = master AND type = push
 
