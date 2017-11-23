@@ -10,6 +10,7 @@ fi
 
 MIR_VERSION=$( dpkg-parsechangelog --show-field Version \
                | perl -n -e '/(^[^~-]+)/ && print $1' )
+GIT_COMMITS=$( git rev-list --count HEAD )
 GIT_REVISION=$( git rev-parse --short HEAD )
 
 source <( python <<EOF
@@ -26,16 +27,6 @@ series = ubuntu.getSeries(name_or_version=os.environ['RELEASE'])
 
 print("UBUNTU_SERIES={}".format(series.name))
 print("UBUNTU_VERSION={}".format(series.version))
-
-dev_ppa = lp.people["mir-team"].getPPAByName(name="dev")
-try:
-  mir = dev_ppa.getPublishedSources(source_name="mir",
-                                    distro_series=series,
-                                    order_by_date=True)[0]
-except IndexError:
-  print("PPA_VERSION=")
-else:
-  print("PPA_VERSION={}".format(mir.source_package_version))
 EOF
 )
 
@@ -44,17 +35,7 @@ if [ -z "${UBUNTU_SERIES}" -o -z "${UBUNTU_VERSION}" ]; then
   exit 2
 fi
 
-while dpkg --compare-versions "${PPA_VERSION}" ge "${DEV_VERSION}"; do
-  DEV_COUNTER=$(( ${DEV_COUNTER} + 1 ))
-  DEV_VERSION=${MIR_VERSION}~dev-${DEV_COUNTER}
-  if [ ${DEV_COUNTER} -gt 1000 ]; then
-    echo "ERROR: version still lower than PPA after 1000 iterations:" >&2
-    echo "  ${PPA_VERSION} >= ${MIR_VERSION}~-${DEV_COUNTER}" >&2
-    exit 3
-  fi
-done
-
-DEV_VERSION=${DEV_VERSION}-g${GIT_REVISION}~ubuntu${UBUNTU_VERSION}
+DEV_VERSION=${MIR_VERSION}~dev-${GIT_COMMITS}-g${GIT_REVISION}~ubuntu${UBUNTU_VERSION}
 
 echo "Setting version to:"
 echo "  ${DEV_VERSION}"
