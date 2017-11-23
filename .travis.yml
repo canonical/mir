@@ -53,6 +53,8 @@ jobs:
         - fakeroot
         - python-launchpadlib
   - <<: *dev-upload
+    env: RELEASE=17.04
+  - <<: *dev-upload
     env: RELEASE=17.10
   - <<: *dev-upload
     env: RELEASE=devel
