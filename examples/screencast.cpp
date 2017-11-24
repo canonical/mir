@@ -112,7 +112,7 @@ try
         switch (status)
         {
             case mir_screencast_error_failure:
-                std::cerr << "screencast failed" << std::endl;
+                std::cerr << "SCREENCAST FAILED: " << mir_screencast_get_error_message(screencast) << std::endl;
                 rc = -1;
                 break;
             default:

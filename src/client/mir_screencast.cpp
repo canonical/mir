@@ -241,6 +241,9 @@ void MirScreencast::screencast_done(ScreencastRequest* request)
 {
     auto const status = request->response.has_error() ? mir_screencast_error_failure : mir_screencast_success;
 
+    if (status == mir_screencast_error_failure)
+        protobuf_screencast->set_error(request->response.error());
+
     request->available_callback(status, reinterpret_cast<MirBuffer*>(request->buffer), request->available_context);
 
     std::unique_lock<decltype(mutex)> lk(mutex);
