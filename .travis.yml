@@ -12,6 +12,8 @@ branches:
 
 stages:
 - name: test
+  # everything is tested in staging first
+  if: NOT (branch = master AND type = push)
 - name: upload to ppa:mir-team/dev
   if: branch = master AND type = push
 
