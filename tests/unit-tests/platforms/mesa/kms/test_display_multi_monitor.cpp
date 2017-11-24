@@ -407,7 +407,7 @@ struct FBIDContainer
     FBIDContainer(uint32_t base_fb_id) : last_fb_id{base_fb_id} {}
 
     int add_fb2(int, uint32_t, uint32_t, uint32_t,
-               uint32_t[4], uint32_t[4], uint32_t[4],
+               uint32_t const[4], uint32_t const[4], uint32_t const[4],
                uint32_t *buf_id, uint32_t)
     {
         *buf_id = last_fb_id;

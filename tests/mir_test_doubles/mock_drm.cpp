@@ -589,10 +589,17 @@ int drmModeAddFB(int fd, uint32_t width, uint32_t height,
                                      pitch, bo_handle, buf_id);
 }
 
+#ifdef MIR_DRMMODEADDFB_HAS_CONST_SIGNATURE
+int drmModeAddFB2(int fd, uint32_t width, uint32_t height,
+                  uint32_t pixel_format, uint32_t const bo_handles[4],
+                  uint32_t const pitches[4], uint32_t const offsets[4],
+                  uint32_t* buf_id, uint32_t flags)
+#else
 int drmModeAddFB2(int fd, uint32_t width, uint32_t height,
                   uint32_t pixel_format, uint32_t bo_handles[4],
                   uint32_t pitches[4], uint32_t offsets[4],
                   uint32_t *buf_id, uint32_t flags)
+#endif
 {
     return global_mock->drmModeAddFB2(fd, width, height, pixel_format,
                                       bo_handles, pitches, offsets,

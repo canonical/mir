@@ -118,8 +118,8 @@ public:
                                    uint8_t depth, uint8_t bpp, uint32_t pitch,
                                    uint32_t bo_handle, uint32_t *buf_id));
     MOCK_METHOD9(drmModeAddFB2, int(int fd, uint32_t width, uint32_t height,
-                                    uint32_t pixel_format, uint32_t bo_handles[4],
-                                    uint32_t pitches[4], uint32_t offsets[4],
+                                    uint32_t pixel_format, uint32_t const bo_handles[4],
+                                    uint32_t const pitches[4], uint32_t const offsets[4],
                                     uint32_t *buf_id, uint32_t flags));
     MOCK_METHOD2(drmModeRmFB, int(int fd, uint32_t bufferId));
 

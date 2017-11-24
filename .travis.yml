@@ -12,6 +12,8 @@ branches:
 
 stages:
 - name: test
+  # everything is tested in staging first
+  if: NOT (branch = master AND type = push)
 - name: upload to ppa:mir-team/dev
   if: branch = master AND type = push
 
@@ -24,7 +26,8 @@ env:
   matrix:
   - SYSTEM=ubuntu-16.04 VARIANT=amd64
   - SYSTEM=ubuntu-16.04 VARIANT=arm64
-  - SYSTEM=ubuntu-17.10 VARIANT=clang
+  - SYSTEM=ubuntu-17.10 VARIANT=amd64
+  - SYSTEM=ubuntu-devel VARIANT=clang
 
 before_install:
 - sudo apt-get --yes install snapd
