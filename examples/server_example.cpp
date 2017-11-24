@@ -141,7 +141,7 @@ try
     InputFilters input_filters;
     me::TestClientRunner test_runner;
 
-    bool const server_exited_normally = runner.run_with({
+    auto const server_exit_status = runner.run_with({
         // example options for display layout, logging and timeout
         miral::display_configuration_options,
         me::add_log_host_lifecycle_option_to,
@@ -163,7 +163,7 @@ try
         return EXIT_FAILURE;
     }
 
-    return server_exited_normally ? EXIT_SUCCESS : EXIT_FAILURE;
+    return server_exit_status;
 }
 catch (...)
 {
