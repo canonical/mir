@@ -25,6 +25,7 @@
 #include "mir/geometry/size.h"
 #include "mir_toolkit/common.h"
 #include "mir/renderer/gl/texture_source.h"
+#include "mir/renderer/gl/texture_target.h"
 #include "mir_toolkit/mir_native_buffer.h"
 #include "mir/renderer/sw/pixel_source.h"
 
@@ -40,6 +41,7 @@ namespace common
 
 class ShmBuffer : public BufferBasic, public NativeBufferBase,
                   public renderer::gl::TextureSource,
+                  public renderer::gl::TextureTarget,
                   public renderer::software::PixelSource
 {
 public:
@@ -59,6 +61,8 @@ public:
 
     //each platform will have to return the NativeBuffer type that the platform has defined.
     virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override = 0;
+
+    void bind_for_write() override;
 
 protected:
     ShmBuffer(std::unique_ptr<ShmFile> shm_file,

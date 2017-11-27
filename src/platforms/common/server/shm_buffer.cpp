@@ -183,3 +183,8 @@ void mgc::ShmBuffer::bind()
 void mgc::ShmBuffer::secure_for_render()
 {
 }
+
+void mir::graphics::common::ShmBuffer::bind_for_write()
+{
+    gl_bind_to_texture();
+}

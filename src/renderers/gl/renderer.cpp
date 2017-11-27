@@ -217,6 +217,9 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
     // Deleting unused textures only requires the GL context. This clean-up
     // does not affect screen contents so can happen after swap_buffers...
     texture_cache->drop_unused();
+
+    if (auto gl_error = glGetError())
+        mir::log_debug("GL error: %d", gl_error);
 }
 
 void mrg::Renderer::draw(mg::Renderable const& renderable,
