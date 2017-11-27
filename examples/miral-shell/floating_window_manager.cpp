@@ -478,27 +478,36 @@ bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* 
             case KEY_LEFT:
                 modifications.state() = mir_window_state_vertmaximized;
                 tools.place_and_size_for_state(modifications, window_info);
-                modifications.top_left() = active_output.top_left + title_bar_height;
+                modifications.top_left() = window_info.needs_titlebar(window_info.type()) ?
+                                           active_output.top_left + title_bar_height :
+                                           active_output.top_left;
                 break;
 
             case KEY_RIGHT:
+            {
                 modifications.state() = mir_window_state_vertmaximized;
                 tools.place_and_size_for_state(modifications, window_info);
-                modifications.top_left() = active_output.top_right() -
-                    as_displacement({active_window.size().width, 0}) + title_bar_height;
+
+                auto const new_width =
+                    (modifications.size().is_set() ? modifications.size().value() : active_window.size()).width;
+
+                modifications.top_left() = window_info.needs_titlebar(window_info.type()) ?
+                                           active_output.top_right() - as_displacement({new_width, 0}) + title_bar_height :
+                                           active_output.top_right() - as_displacement({new_width, 0});
                 break;
+            }
 
             case KEY_UP:
                 modifications.state() = mir_window_state_horizmaximized;
                 tools.place_and_size_for_state(modifications, window_info);
-
-                modifications.top_left() = active_output.top_left + title_bar_height;
+                modifications.top_left() = window_info.needs_titlebar(window_info.type()) ?
+                                           active_output.top_left + title_bar_height :
+                                           active_output.top_left;
                 break;
 
             case KEY_DOWN:
                 modifications.state() = mir_window_state_horizmaximized;
                 tools.place_and_size_for_state(modifications, window_info);
-
                 modifications.top_left() = active_output.bottom_right() - as_displacement(
                     modifications.size().is_set() ? modifications.size().value() : active_window.size());
                 break;

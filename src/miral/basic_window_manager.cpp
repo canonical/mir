@@ -1042,7 +1042,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
             return;
     }
 
-    auto const display_area = outputs.bounding_rectangle();
+    auto const display_area = const_cast<miral::BasicWindowManager*>(this)->active_output();
     auto const window = window_info.window();
 
     auto restore_rect = window_info.restore_rect();
