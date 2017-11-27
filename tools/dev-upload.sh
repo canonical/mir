@@ -50,6 +50,10 @@ debchange \
   --distribution ${UBUNTU_SERIES} \
   "Build for Ubuntu ${UBUNTU_VERSION}"
 
-dpkg-buildpackage -I -i -d -S
+dpkg-buildpackage \
+    --tar-ignore=".git" \
+    --tar-ignore="build" \
+    --diff-ignore="^.git|^build" \
+    -d -S
 
 dput ppa:mir-team/dev ../mir_${DEV_VERSION}_source.changes
