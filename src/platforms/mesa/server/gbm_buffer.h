@@ -65,7 +65,7 @@ public:
     virtual void gl_bind_to_texture() override;
     virtual void bind() override;
     virtual void secure_for_render() override;
-
+    void secure_pixels() override;
     void bind_for_write() override;
 
     NativeBufferBase* native_buffer_base() override;

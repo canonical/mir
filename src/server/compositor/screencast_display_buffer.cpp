@@ -169,6 +169,12 @@ void mc::ScreencastDisplayBuffer::swap_buffers()
         //to wait for rendering completion
         glFinish();
 
+
+        if (auto const texture_target = as_texture_target(current_buffer.get()))
+        {
+            texture_target->secure_pixels();
+        }
+
         ready_queue.schedule(current_buffer);
         current_buffer = nullptr;
     }

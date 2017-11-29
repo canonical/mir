@@ -34,6 +34,9 @@ public:
     /* Bind the target as a texture suitable for rendering to via glFramebufferTexture2D */
     virtual void bind_for_write() = 0;
 
+    /// Memory backed targets need to secure the pixels after rendering
+    virtual void secure_pixels() = 0;
+
 protected:
     TextureTarget() = default;
     TextureTarget(TextureTarget const&) = delete;

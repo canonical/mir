@@ -107,6 +107,10 @@ public:
         bind();
     }
 
+    void secure_pixels() override
+    {
+    }
+
 private:
     std::shared_ptr<mgn::NativeBuffer> const native_buffer;
     std::shared_ptr<mgn::HostConnection> const connection;
