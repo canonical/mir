@@ -183,3 +183,19 @@ void mgc::ShmBuffer::bind()
 void mgc::ShmBuffer::secure_for_render()
 {
 }
+
+void mir::graphics::common::ShmBuffer::bind_for_write()
+{
+    gl_bind_to_texture();
+}
+
+void mir::graphics::common::ShmBuffer::commit()
+{
+    GLenum format, type;
+
+    if (mg::get_gl_pixel_format(pixel_format_, format, type))
+    {
+        glReadPixels(0, 0, size_.width.as_int(), size_.height.as_int(), format, type, pixels);
+    }
+}
+

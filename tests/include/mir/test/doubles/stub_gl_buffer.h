@@ -41,6 +41,7 @@ public:
     void bind() {}
     void secure_for_render() {}
     void bind_for_write() {}
+    void commit() {}
 };
 
 }
