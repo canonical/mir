@@ -25,6 +25,18 @@
 #include <getopt.h>
 #include <fstream>
 
+namespace
+{
+void remove_transparency(MirPixelFormat const& pf, MirGraphicsRegion const& region)
+{
+    auto const bytes_per_pixel = MIR_BYTES_PER_PIXEL(pf);
+    auto const addr = region.vaddr;
+
+    for (auto p = addr; p != addr + region.width * region.height * bytes_per_pixel; p += bytes_per_pixel)
+        *(p+3) = '\xff';
+}
+}
+
 int main(int argc, char *argv[])
 try
 {
@@ -96,7 +108,6 @@ try
 
     auto spec = mir_create_screencast_spec(connection);
     mir_screencast_spec_set_capture_region(spec, &rect);
-    mir_screencast_spec_set_mirror_mode(spec, mir_mirror_mode_horizontal);
     //TODO: the default screencast spec will capture a buffer when creating the screencast.
     //      Set to zero to avoid this, and when the old screencast-bufferstream method is removed,
     //      the initial capture will be removed. 
@@ -126,6 +137,7 @@ try
         MirBufferLayout layout;
         MirGraphicsRegion region;
         mir_buffer_map(buffer, &region, &layout);
+        remove_transparency(pf, region);
 
         auto addr = region.vaddr;
         for (int i = 0; i < region.height; i++)

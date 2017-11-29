@@ -218,7 +218,7 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
     // does not affect screen contents so can happen after swap_buffers...
     texture_cache->drop_unused();
 
-    if (auto gl_error = glGetError())
+    while (auto const gl_error = glGetError())
         mir::log_debug("GL error: %d", gl_error);
 }
 
