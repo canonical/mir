@@ -189,7 +189,7 @@ void mir::graphics::common::ShmBuffer::bind_for_write()
     gl_bind_to_texture();
 }
 
-void mir::graphics::common::ShmBuffer::secure_pixels()
+void mir::graphics::common::ShmBuffer::commit()
 {
     GLenum format, type;
 

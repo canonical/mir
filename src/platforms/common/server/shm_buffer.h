@@ -63,7 +63,7 @@ public:
     virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override = 0;
 
     void bind_for_write() override;
-    void secure_pixels();
+    void commit() override;
 
 protected:
     ShmBuffer(std::unique_ptr<ShmFile> shm_file,

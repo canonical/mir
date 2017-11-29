@@ -129,7 +129,7 @@ TEST_F(ScreencastDisplayBufferTest, renders_to_supplied_buffer)
     {
         using MockBuffer::MockBuffer;
         MOCK_METHOD0(bind_for_write, void());
-        MOCK_METHOD0(secure_pixels, void());
+        MOCK_METHOD0(commit, void());
     };
  
     testing::NiceMock<MockTargetBuffer> mock_buffer{

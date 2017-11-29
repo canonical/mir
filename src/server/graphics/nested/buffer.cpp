@@ -107,7 +107,7 @@ public:
         bind();
     }
 
-    void secure_pixels() override
+    void commit() override
     {
     }
 

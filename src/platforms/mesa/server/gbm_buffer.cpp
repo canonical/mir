@@ -108,7 +108,7 @@ void mgm::GBMBuffer::secure_for_render()
 {
 }
 
-void mgm::GBMBuffer::secure_pixels()
+void mgm::GBMBuffer::commit()
 {
 }
 

@@ -172,7 +172,7 @@ void mc::ScreencastDisplayBuffer::swap_buffers()
 
         if (auto const texture_target = as_texture_target(current_buffer.get()))
         {
-            texture_target->secure_pixels();
+            texture_target->commit();
         }
 
         ready_queue.schedule(current_buffer);
