@@ -143,6 +143,7 @@ public:
             throw std::runtime_error("unable to capture to buffer");
 
         display_buffer->set_transformation(mg::transformation(mirror_mode));
+        display_buffer->commit();
     }
 
 private:
@@ -179,6 +180,12 @@ mf::ScreencastSessionId mc::CompositingScreencast::create_session(
     int nbuffers,
     MirMirrorMode mirror_mode)
 {
+#ifdef MIR_EGL_SUPPORTED
+    static auto const buffer_usage = mg::BufferUsage::hardware;
+#else
+    static auto const buffer_usage = mg::BufferUsage::software;
+#endif
+    
     if (size.width.as_int() == 0 ||
         size.height.as_int() == 0 ||
         region.size.width.as_int() == 0 ||
@@ -193,8 +200,7 @@ mf::ScreencastSessionId mc::CompositingScreencast::create_session(
     std::vector<std::shared_ptr<mg::Buffer>> buffers(nbuffers);
     for (auto& buffer : buffers)
     {
-        buffer = buffer_allocator->alloc_buffer(
-            mg::BufferProperties{size, pixel_format, mg::BufferUsage::hardware});
+        buffer = buffer_allocator->alloc_buffer(mg::BufferProperties{size, pixel_format, buffer_usage});
     }
     session_contexts[id] = create_session_context(region, size, buffers, mirror_mode);
 

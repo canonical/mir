@@ -170,13 +170,18 @@ void mc::ScreencastDisplayBuffer::swap_buffers()
         glFinish();
 
 
-        if (auto const texture_target = as_texture_target(current_buffer.get()))
-        {
-            texture_target->commit();
-        }
+        commit();
 
         ready_queue.schedule(current_buffer);
         current_buffer = nullptr;
+    }
+}
+
+void mc::ScreencastDisplayBuffer::commit()
+{
+    if (auto const texture_target = as_texture_target(current_buffer.get()))
+    {
+        texture_target->commit();
     }
 }
 
