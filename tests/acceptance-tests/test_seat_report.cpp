@@ -148,3 +148,59 @@ TEST_F(TestSeatReport, add_device_received)
 
     EXPECT_THAT(device_ids_seen, ContainerEq(devices));
 }
+
+TEST_F(TestSeatReport, remove_device_received)
+{
+    class DeviceRemoveListener : public NullSeatListener
+    {
+    public:
+        DeviceRemoveListener(size_t expected_devices)
+            : expected_devices{expected_devices}
+        {
+        }
+
+        void seat_add_device(uint64_t id) override
+        {
+            seen_ids.push_back(id);
+        }
+
+        void seat_remove_device(uint64_t id) override
+        {
+            removed_ids.push_back(id);
+            if (removed_ids.size() == expected_devices)
+                seen_expected_devices.raise();
+        }
+
+        bool wait_for_all_device_removals()
+        {
+            bool const waited = seen_expected_devices.wait_for(30s);
+
+            EXPECT_THAT(removed_ids, UnorderedElementsAreArray(seen_ids));
+            return waited;
+        }
+    private:
+        size_t const expected_devices;
+        std::vector<uint64_t> seen_ids;
+        std::vector<uint64_t> removed_ids;
+        mt::Signal seen_expected_devices;
+    };
+
+    auto listener = std::make_shared<DeviceRemoveListener>(3);
+    server.the_seat_observer_registrar()->register_interest(listener);
+
+    auto fake_pointer = mtf::add_fake_input_device(
+        mi::InputDeviceInfo{"name", "uid", mi::DeviceCapability::pointer});
+    auto fake_touch = mtf::add_fake_input_device(
+        mi::InputDeviceInfo{"name", "uid", mi::DeviceCapability::touchscreen});
+    auto fake_keyboard = mtf::add_fake_input_device(
+        mi::InputDeviceInfo{
+            "name",
+            "uid",
+            mi::DeviceCapability::alpha_numeric | mi::DeviceCapability::keyboard});
+
+    fake_keyboard->emit_device_removal();
+    fake_pointer->emit_device_removal();
+    fake_touch->emit_device_removal();
+
+    EXPECT_TRUE(listener->wait_for_all_device_removals());
+}
