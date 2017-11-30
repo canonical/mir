@@ -204,3 +204,91 @@ TEST_F(TestSeatReport, remove_device_received)
 
     EXPECT_TRUE(listener->wait_for_all_device_removals());
 }
+
+namespace
+{
+class DeviceAwaitingObserver : public NullSeatListener
+{
+public:
+    DeviceAwaitingObserver(size_t expected_devices)
+        : expected_devices{expected_devices}
+    {
+    }
+
+    void seat_add_device(uint64_t /*id*/) override
+    {
+        devices_seen++;
+        if (devices_seen == expected_devices)
+        {
+            seen_expected_devices.raise();
+        }
+    }
+
+    template<typename Period, typename Ratio>
+    bool wait_for_expected_devices(std::chrono::duration<Period, Ratio> timeout)
+    {
+        return seen_expected_devices.wait_for(timeout);
+    };
+private:
+    size_t const expected_devices;
+    size_t devices_seen{0};
+    mt::Signal seen_expected_devices;
+};
+}
+
+TEST_F(TestSeatReport, dispatch_event_received)
+{
+    int const event_x = 234;
+    int const event_y = 2097;
+    class DispatchEventListener : public DeviceAwaitingObserver
+    {
+    public:
+        DispatchEventListener(size_t expected_devices)
+            : DeviceAwaitingObserver(expected_devices)
+        {
+        }
+
+        void seat_dispatch_event(MirEvent const* event) override
+        {
+            if (mir_event_get_type(event) == mir_event_type_input)
+            {
+                auto iev = mir_event_get_input_event(event);
+                if (mir_input_event_get_type(iev) == mir_input_event_type_pointer)
+                {
+                    auto pointer = mir_input_event_get_pointer_event(iev);
+
+                    EXPECT_THAT(
+                        mir_pointer_event_axis_value(pointer, mir_pointer_axis_relative_x),
+                        FloatNear(event_x, 0.5f));
+                    EXPECT_THAT(
+                        mir_pointer_event_axis_value(pointer, mir_pointer_axis_relative_y),
+                        FloatNear(event_y, 0.5f));
+
+                    pointer_event_seen.raise();
+                }
+            }
+        }
+
+        bool wait_for_matching_input(std::chrono::seconds timeout)
+        {
+            return pointer_event_seen.wait_for(timeout);
+        };
+
+    private:
+        mt::Signal pointer_event_seen;
+    };
+
+    auto listener = std::make_shared<DispatchEventListener>(1);
+    server.the_seat_observer_registrar()->register_interest(listener);
+
+    auto fake_pointer = mtf::add_fake_input_device(
+        mi::InputDeviceInfo{"name", "uid", mi::DeviceCapability::pointer});
+
+    listener->wait_for_expected_devices(30s);
+
+    fake_pointer->emit_event(
+        mis::a_pointer_event()
+            .with_movement(event_x, event_y));
+
+    EXPECT_TRUE(listener->wait_for_matching_input(30s));
+}
