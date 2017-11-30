@@ -31,7 +31,7 @@ void mi::SeatObserverMultiplexer::seat_add_device(uint64_t id)
 
 void mi::SeatObserverMultiplexer::seat_remove_device(uint64_t id)
 {
-    for_each_observer(&mi::SeatObserver::seat_add_device, id);
+    for_each_observer(&mi::SeatObserver::seat_remove_device, id);
 }
 
 void mi::SeatObserverMultiplexer::seat_dispatch_event(MirEvent const* event)
