@@ -4,6 +4,8 @@ height=1080
 output=screencast.mp4
 socket=${XDG_RUNTIME_DIR}/miral_socket
 if [ -v MIR_SERVER ]; then socket=${MIR_SERVER}; fi
+bindir=$(dirname $0)
+if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 
 while [ $# -gt 0 ]
 do
@@ -39,7 +41,7 @@ if [ -e ${output} ]; then echo "Output exists, moving to ${output}~"; mv ${outpu
 while [ ! -e "${socket}" ]; do echo "waiting for ${socket}"; sleep 1 ;done
 
 if [ ! -v tempfile ]; then tempfile=$(mktemp); fi
-mirscreencast --size ${width} ${height} -m ${socket} -f ${tempfile}& mirscreencast_pid=$!
+${bindir}mirscreencast --size ${width} ${height} -m ${socket} -f ${tempfile}& mirscreencast_pid=$!
 trap 'kill ${mirscreencast_pid}; rm -f -- "${tempfile}"; exit 0' INT TERM HUP EXIT
 
 sleep 1; # don't lose the next message in the spew from mirscreencast
