@@ -108,7 +108,11 @@ void mi::SeatInputDeviceTracker::dispatch(MirEvent &event)
     }
 
     dispatcher->dispatch(event);
-    observer->seat_dispatch_event(&event);
+    observer->seat_dispatch_event(
+        std::shared_ptr<MirEvent const>(
+            mir_event_ref(&event),
+            &mir_event_unref
+        ));
 }
 
 bool mi::SeatInputDeviceTracker::filter_input_event(MirInputEvent const* event)

@@ -36,7 +36,7 @@ class MockSeatObserver : public input::SeatObserver
 public:
     MOCK_METHOD1(seat_add_device, void(uint64_t /*id*/));
     MOCK_METHOD1(seat_remove_device, void(uint64_t /*id*/));
-    MOCK_METHOD1(seat_dispatch_event, void(MirEvent const* /*event*/));
+    MOCK_METHOD1(seat_dispatch_event, void(std::shared_ptr<MirEvent const> const& /*event*/));
     MOCK_METHOD2(seat_get_rectangle_for, void(uint64_t /*id*/, geometry::Rectangle const& /*out_rect*/));
     MOCK_METHOD2(seat_set_key_state, void(uint64_t /*id*/, std::vector<uint32_t> const& /*scan_codes*/));
     MOCK_METHOD2(seat_set_pointer_state, void(uint64_t /*id*/, unsigned /*buttons*/));

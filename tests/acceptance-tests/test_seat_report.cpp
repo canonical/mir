@@ -65,7 +65,7 @@ class NullSeatListener : public mi::SeatObserver
 public:
     void seat_add_device(uint64_t /*id*/) override {}
     void seat_remove_device(uint64_t /*id*/) override {}
-    void seat_dispatch_event(MirEvent const* /*event*/) override {}
+    void seat_dispatch_event(std::shared_ptr<MirEvent const> const& /*event*/) override {}
 
     void seat_get_rectangle_for(
         uint64_t /*id*/,
@@ -248,11 +248,11 @@ TEST_F(TestSeatReport, dispatch_event_received)
         {
         }
 
-        void seat_dispatch_event(MirEvent const* event) override
+        void seat_dispatch_event(std::shared_ptr<MirEvent const> const& event) override
         {
-            if (mir_event_get_type(event) == mir_event_type_input)
+            if (mir_event_get_type(event.get()) == mir_event_type_input)
             {
-                auto iev = mir_event_get_input_event(event);
+                auto iev = mir_event_get_input_event(event.get());
                 if (mir_input_event_get_type(iev) == mir_input_event_type_pointer)
                 {
                     auto pointer = mir_input_event_get_pointer_event(iev);

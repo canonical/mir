@@ -29,7 +29,7 @@ void mrn::SeatReport::seat_remove_device(uint64_t /*id*/)
 {
 }
 
-void mrn::SeatReport::seat_dispatch_event(MirEvent const* /*event*/)
+void mrn::SeatReport::seat_dispatch_event(std::shared_ptr<MirEvent const> const& /*event*/)
 {
 }
 
