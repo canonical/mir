@@ -68,6 +68,7 @@ set(
   test_presentation_chain.cpp
   test_render_surface.cpp
   test_buffer_stream_arrangement1.cpp
+  test_seat_report.cpp
 )
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
