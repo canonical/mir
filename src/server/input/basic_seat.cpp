@@ -172,7 +172,7 @@ void mi::BasicSeat::remove_device(input::Device const& device)
     input_state_tracker.remove_device(device.id());
 }
 
-void mi::BasicSeat::dispatch_event(MirEvent& event)
+void mi::BasicSeat::dispatch_event(std::shared_ptr<MirEvent> const& event)
 {
     input_state_tracker.dispatch(event);
 }

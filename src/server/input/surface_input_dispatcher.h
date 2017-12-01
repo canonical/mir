@@ -47,7 +47,7 @@ public:
     ~SurfaceInputDispatcher();
 
     // mir::input::InputDispatcher
-    bool dispatch(MirEvent const& event) override;
+    bool dispatch(std::shared_ptr<MirEvent const> const& event) override;
     void start() override;
     void stop() override;
 

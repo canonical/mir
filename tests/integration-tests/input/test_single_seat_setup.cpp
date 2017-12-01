@@ -202,7 +202,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_posts_events_to_input_dispatche
 
     EXPECT_CALL(mock_dispatcher, dispatch(AllOf(mt::InputDeviceIdMatches(handle->id()), mt::MirKeyboardEventMatches(event.get()))));
 
-    sink->handle_input(*event);
+    sink->handle_input(std::move(event));
 }
 
 TEST_F(SingleSeatInputDeviceHubSetup, forwards_touch_spots_to_visualizer)
@@ -241,10 +241,10 @@ TEST_F(SingleSeatInputDeviceHubSetup, forwards_touch_spots_to_visualizer)
     EXPECT_CALL(mock_visualizer, visualize_touches(ElementsAreArray({Spot{{70,30}, 50}})));
     EXPECT_CALL(mock_visualizer, visualize_touches(ElementsAreArray(std::vector<Spot>())));
 
-    sink->handle_input(*touch_event_1);
-    sink->handle_input(*touch_event_2);
-    sink->handle_input(*touch_event_3);
-    sink->handle_input(*touch_event_4);
+    sink->handle_input(std::move(touch_event_1));
+    sink->handle_input(std::move(touch_event_2));
+    sink->handle_input(std::move(touch_event_3));
+    sink->handle_input(std::move(touch_event_4));
 }
 
 TEST_F(SingleSeatInputDeviceHubSetup, tracks_pointer_position)
@@ -260,11 +260,11 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_pointer_position)
 
     hub.add_device(mt::fake_shared(device));
     sink->handle_input(
-        *builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 10.0f));
+        builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 10.0f));
     sink->handle_input(
-        *builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 10.0f));
+        builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 10.0f));
     sink->handle_input(
-        *builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, -10.0f, 10.0f));
+        builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, -10.0f, 10.0f));
 }
 
 TEST_F(SingleSeatInputDeviceHubSetup, confines_pointer_movement)
@@ -280,9 +280,9 @@ TEST_F(SingleSeatInputDeviceHubSetup, confines_pointer_movement)
     hub.add_device(mt::fake_shared(device));
 
     sink->handle_input(
-        *builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 20.0f));
+        builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 20.0f));
     sink->handle_input(
-        *builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 10.0f));
+        builder->pointer_event(arbitrary_timestamp, mir_pointer_action_motion, 0, 0.0f, 0.0f, 10.0f, 10.0f));
 }
 
 TEST_F(SingleSeatInputDeviceHubSetup, forwards_pointer_updates_to_cursor_listener)
@@ -298,7 +298,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, forwards_pointer_updates_to_cursor_listene
 
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(move_x, move_y)).Times(1);
 
-    sink->handle_input(*event);
+    sink->handle_input(std::move(event));
 }
 
 TEST_F(SingleSeatInputDeviceHubSetup, forwards_pointer_settings_to_input_device)
@@ -359,8 +359,8 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_tracks_modifier)
     EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(shift_left)));
     EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(mir_input_event_modifier_none)));
 
-    key_board_sink->handle_input(*shift_down);
-    key_board_sink->handle_input(*shift_up);
+    key_board_sink->handle_input(std::move(shift_down));
+    key_board_sink->handle_input(std::move(shift_up));
 }
 
 TEST_F(SingleSeatInputDeviceHubSetup, input_sink_unifies_modifier_state_accross_devices)
@@ -395,8 +395,8 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_unifies_modifier_state_accross_
     EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(r_alt_modifier)));
     EXPECT_CALL(mock_dispatcher, dispatch(mt::PointerEventWithModifiers(r_alt_modifier)));
 
-    key_board_sink->handle_input(*key);
-    mouse_sink->handle_input(*motion);
+    key_board_sink->handle_input(std::move(key));
+    mouse_sink->handle_input(std::move(motion));
 
     EXPECT_THAT(key_handle->id(), Ne(mouse_handle->id()));
 }
@@ -450,11 +450,11 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_sink_reduces_modifier_state_accross_
     EXPECT_CALL(mock_dispatcher, dispatch(mt::KeyWithModifiers(mir_input_event_modifier_none)));
     EXPECT_CALL(mock_dispatcher, dispatch(mt::PointerEventWithModifiers(r_alt_modifier)));
 
-    key_board_sink_1->handle_input(*alt_down);
-    key_board_sink_2->handle_input(*ctrl_down);
-    mouse_sink->handle_input(*motion_1);
-    key_board_sink_2->handle_input(*ctrl_up);
-    mouse_sink->handle_input(*motion_2);
+    key_board_sink_1->handle_input(std::move(alt_down));
+    key_board_sink_2->handle_input(std::move(ctrl_down));
+    mouse_sink->handle_input(std::move(motion_1));
+    key_board_sink_2->handle_input(std::move(ctrl_up));
+    mouse_sink->handle_input(std::move(motion_2));
 
     EXPECT_THAT(key_handle_1->id(), Ne(key_handle_2->id()));
 }
@@ -483,9 +483,9 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_cursor_position_from_multi
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(41, 10));
     EXPECT_CALL(mock_cursor_listener, cursor_moved_to(43, 20));
 
-    mouse_sink_1->handle_input(*motion_1);
-    mouse_sink_2->handle_input(*motion_2);
-    mouse_sink_1->handle_input(*motion_3);
+    mouse_sink_1->handle_input(std::move(motion_1));
+    mouse_sink_2->handle_input(std::move(motion_2));
+    mouse_sink_1->handle_input(std::move(motion_3));
 }
 
 TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_button_state_from_multiple_pointing_devices)
@@ -518,10 +518,10 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_button_state_from_multiple
     EXPECT_CALL(mock_dispatcher, dispatch(mt::ButtonsUp(x, y, mir_pointer_button_secondary)));
     EXPECT_CALL(mock_dispatcher, dispatch(mt::ButtonsUp(x, y, no_buttons)));
 
-    mouse_sink_1->handle_input(*motion_1);
-    mouse_sink_2->handle_input(*motion_2);
-    mouse_sink_1->handle_input(*motion_3);
-    mouse_sink_1->handle_input(*motion_4);
+    mouse_sink_1->handle_input(std::move(motion_1));
+    mouse_sink_2->handle_input(std::move(motion_2));
+    mouse_sink_1->handle_input(std::move(motion_3));
+    mouse_sink_1->handle_input(std::move(motion_4));
 }
 
 TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_session)

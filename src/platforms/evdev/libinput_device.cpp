@@ -147,19 +147,19 @@ void mie::LibInputDevice::process_event(libinput_event* event)
         switch(libinput_event_get_type(event))
         {
         case LIBINPUT_EVENT_KEYBOARD_KEY:
-            sink->handle_input(*convert_event(libinput_event_get_keyboard_event(event)));
+            sink->handle_input(convert_event(libinput_event_get_keyboard_event(event)));
             break;
         case LIBINPUT_EVENT_POINTER_MOTION:
-            sink->handle_input(*convert_motion_event(libinput_event_get_pointer_event(event)));
+            sink->handle_input(convert_motion_event(libinput_event_get_pointer_event(event)));
             break;
         case LIBINPUT_EVENT_POINTER_MOTION_ABSOLUTE:
-            sink->handle_input(*convert_absolute_motion_event(libinput_event_get_pointer_event(event)));
+            sink->handle_input(convert_absolute_motion_event(libinput_event_get_pointer_event(event)));
             break;
         case LIBINPUT_EVENT_POINTER_BUTTON:
-            sink->handle_input(*convert_button_event(libinput_event_get_pointer_event(event)));
+            sink->handle_input(convert_button_event(libinput_event_get_pointer_event(event)));
             break;
         case LIBINPUT_EVENT_POINTER_AXIS:
-            sink->handle_input(*convert_axis_event(libinput_event_get_pointer_event(event)));
+            sink->handle_input(convert_axis_event(libinput_event_get_pointer_event(event)));
             break;
         // touch events are processed as a batch of changes over all touch pointts
         case LIBINPUT_EVENT_TOUCH_DOWN:
@@ -177,7 +177,7 @@ void mie::LibInputDevice::process_event(libinput_event* event)
         case LIBINPUT_EVENT_TOUCH_FRAME:
             if (is_output_active())
             {
-                sink->handle_input(*convert_touch_frame(libinput_event_get_touch_event(event)));
+                sink->handle_input(convert_touch_frame(libinput_event_get_touch_event(event)));
             }
             break;
         default:

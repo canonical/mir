@@ -30,6 +30,8 @@ set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)
 
 add_library(mirplatform SHARED
   ${MIR_PLATFORM_OBJECTS}
+
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/input/input_sink.h
 )
 
 target_link_libraries(mirplatform

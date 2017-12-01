@@ -147,7 +147,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
 
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
-    sink->handle_input(*key_event);
+    sink->handle_input(std::move(key_event));
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonParameters const& button)
@@ -165,7 +165,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonP
 
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
-    sink->handle_input(*button_event);
+    sink->handle_input(std::move(button_event));
 }
 
 MirPointerAction mtf::FakeInputDeviceImpl::InputDevice::update_buttons(synthesis::EventAction action, MirPointerButton button)
@@ -204,7 +204,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
                                                 rel_x,
                                                 rel_y);
 
-    sink->handle_input(*pointer_event);
+    sink->handle_input(std::move(pointer_event));
 }
 
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchParameters const& touch)
@@ -231,7 +231,7 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
             event_time,
             {{MirTouchId{1}, touch_action, mir_touch_tooltype_finger, abs_x, abs_y, 1.0f, 8.0f, 5.0f, 0.0f}});
 
-        sink->handle_input(*touch_event);
+        sink->handle_input(std::move(touch_event));
     }
 }
 

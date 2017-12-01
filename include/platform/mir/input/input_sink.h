@@ -61,7 +61,7 @@ class InputSink
 public:
     InputSink() = default;
     virtual ~InputSink() = default;
-    virtual void handle_input(MirEvent& event) = 0;
+    virtual void handle_input(std::shared_ptr<MirEvent> const& event) = 0;
     /**!
      * Obtain the bounding rectangle of the destination area for this input sink
      */

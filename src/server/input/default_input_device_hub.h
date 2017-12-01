@@ -125,7 +125,7 @@ private:
                          std::shared_ptr<dispatch::ActionQueue> const& multiplexer,
                          std::shared_ptr<cookie::Authority> const& cookie_authority,
                          std::shared_ptr<DefaultDevice> const& handle);
-        void handle_input(MirEvent& event) override;
+        void handle_input(std::shared_ptr<MirEvent> const& event) override;
         geometry::Rectangle bounding_rectangle() const override;
         input::OutputInfo output_info(uint32_t output_id) const override;
         bool device_matches(std::shared_ptr<InputDevice> const& dev) const;

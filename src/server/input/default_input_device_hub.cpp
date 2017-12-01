@@ -278,9 +278,9 @@ MirInputDeviceId mi::DefaultInputDeviceHub::RegisteredDevice::id()
     return device_id;
 }
 
-void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(MirEvent& event)
+void mi::DefaultInputDeviceHub::RegisteredDevice::handle_input(std::shared_ptr<MirEvent> const& event)
 {
-    auto type = mir_event_get_type(&event);
+    auto type = mir_event_get_type(event.get());
 
     if (type != mir_event_type_input &&
         type != mir_event_type_input_device_state)
