@@ -110,6 +110,15 @@ void mtf::FakeInputDeviceImpl::emit_touch_sequence(std::function<mir::input::syn
         });
 }
 
+void mtf::FakeInputDeviceImpl::emit_key_state(std::vector<uint32_t> const& key_syms)
+{
+    queue->enqueue(
+        [this, key_syms]()
+        {
+            device->emit_key_state(key_syms);
+        });
+}
+
 void mtf::FakeInputDeviceImpl::on_new_configuration_do(std::function<void(mir::input::InputDevice const& device)> callback)
 {
     device->set_apply_settings_callback(callback);
@@ -233,6 +242,11 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
 
         sink->handle_input(std::move(touch_event));
     }
+}
+
+void mtf::FakeInputDeviceImpl::InputDevice::emit_key_state(std::vector<uint32_t> const& scan_codes)
+{
+    sink->key_state(scan_codes);
 }
 
 mir::optional_value<mi::PointerSettings> mtf::FakeInputDeviceImpl::InputDevice::get_pointer_settings() const

@@ -29,6 +29,7 @@
 
 #include <mutex>
 #include <functional>
+#include <vector>
 
 namespace mir
 {
@@ -57,6 +58,7 @@ public:
     void emit_touch_sequence(std::function<mir::input::synthesis::TouchParameters(int)> const& event_generator,
                              int count,
                              std::chrono::duration<double> delay) override;
+    void emit_key_state(std::vector<uint32_t> const& key_syms) override;
     virtual void on_new_configuration_do(std::function<void(mir::input::InputDevice const& device)> callback) override;
 
 private:
@@ -73,6 +75,8 @@ private:
         void synthesize_events(mir::input::synthesis::ButtonParameters const& button);
         void synthesize_events(mir::input::synthesis::MotionParameters const& motion);
         void synthesize_events(mir::input::synthesis::TouchParameters const& touch);
+
+        void emit_key_state(std::vector<uint32_t> const& scan_codes);
         mir::input::InputDeviceInfo get_device_info() override
         {
             return info;
