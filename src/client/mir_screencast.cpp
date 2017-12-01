@@ -244,13 +244,28 @@ void MirScreencast::screencast_done(ScreencastRequest* request)
     if (status == mir_screencast_error_failure)
         protobuf_screencast->set_error(request->response.error());
 
-    request->available_callback(status, reinterpret_cast<MirBuffer*>(request->buffer), request->available_context);
+    /*
+     * We need the request info to outlast the available_callback,
+     * but after the available_callback has been run the caller is free to call
+     * mir_screencast_release() and destroy this state.
+     *
+     * Do a two-phase remove; remove the request from the Screencast state,
+     * then call available_callback, then drop the no-longer referenced request.
+     */
+    std::unique_ptr<ScreencastRequest> request_holder;
+    {
+        std::unique_lock<decltype(mutex)> lk(mutex);
+        auto it = std::find_if(requests.begin(), requests.end(),
+                               [&request](auto const& it)
+                               { return it.get() == request; });
+        if (it != requests.end())
+        {
+            request_holder = std::move(*it);
+            requests.erase(it);
+        }
+    }
 
-    std::unique_lock<decltype(mutex)> lk(mutex);
-    auto it = std::find_if(requests.begin(), requests.end(),
-        [&request] (auto const& it) { return it.get() == request; } );
-    if (it != requests.end())
-        requests.erase(it);
+    request->available_callback(status, reinterpret_cast<MirBuffer*>(request->buffer), request->available_context);
 }
 
 void MirScreencast::screencast_to_buffer(
