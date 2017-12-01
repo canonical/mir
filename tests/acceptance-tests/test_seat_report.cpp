@@ -222,7 +222,7 @@ public:
     bool wait_for_expected_devices(std::chrono::duration<Period, Ratio> timeout)
     {
         return seen_expected_devices.wait_for(timeout);
-    };
+    }
 private:
     size_t const expected_devices;
     size_t devices_seen{0};
