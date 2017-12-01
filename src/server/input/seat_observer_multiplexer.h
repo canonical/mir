@@ -39,8 +39,6 @@ public:
 
     void seat_dispatch_event(std::shared_ptr<MirEvent const> const& event) override;
 
-    void seat_get_rectangle_for(uint64_t id, geometry::Rectangle const& out_rect) override;
-
     void seat_set_key_state(uint64_t id, std::vector<uint32_t> const& scan_codes) override;
 
     void seat_set_pointer_state(uint64_t id, unsigned buttons) override;

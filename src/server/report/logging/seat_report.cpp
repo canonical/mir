@@ -86,16 +86,6 @@ void mrl::SeatReport::seat_dispatch_event(std::shared_ptr<MirEvent const> const&
     log->log(ml::Severity::informational, ss.str(), component);
 }
 
-void mrl::SeatReport::seat_get_rectangle_for(uint64_t id, geometry::Rectangle const& out_rect)
-{
-    std::stringstream ss;
-    ss << "Get rectangle for"
-       << " device_id=" << id
-       << " out_rect=" << out_rect;
-
-    log->log(ml::Severity::informational, ss.str(), component);
-}
-
 void mrl::SeatReport::seat_set_key_state(uint64_t id, std::vector<uint32_t> const& scan_codes)
 {
     std::stringstream ss;
