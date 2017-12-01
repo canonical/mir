@@ -286,3 +286,80 @@ TEST_F(TestSeatReport, dispatch_event_received)
 
     EXPECT_TRUE(listener->wait_for_matching_input(30s));
 }
+
+TEST_F(TestSeatReport, key_state_received)
+{
+    class KeyStateListener : public DeviceAwaitingObserver
+    {
+    public:
+        KeyStateListener(size_t expected_devices)
+            : DeviceAwaitingObserver(expected_devices)
+        {
+        }
+
+
+        void seat_set_key_state(
+            uint64_t id,
+            std::vector<uint32_t> const& scan_codes) override
+        {
+            key_state = scan_codes;
+            this->id = id;
+            key_state_received.raise();
+        }
+
+        void wait_for_key_state(
+            std::chrono::seconds timeout,
+            uint64_t expected_id,
+            std::vector<uint32_t> const& expected_state)
+        {
+            if (!key_state_received.wait_for(timeout))
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error("Timeout waiting for key state event"));
+            }
+            EXPECT_THAT(key_state, ContainerEq(expected_state));
+            EXPECT_THAT(id, Eq(expected_id));
+        }
+
+    private:
+        mt::Signal key_state_received;
+        uint64_t id;
+        std::vector<uint32_t> key_state;
+    };
+
+    auto listener = std::make_shared<KeyStateListener>(1);
+    server.the_seat_observer_registrar()->register_interest(listener);
+
+    auto fake_keyboard = mtf::add_fake_input_device(
+        mi::InputDeviceInfo{
+            "name",
+            "uid",
+            mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric});
+
+    ASSERT_TRUE(listener->wait_for_expected_devices(30s));
+
+    std::vector<uint32_t> const sent_state{23, 32, 55, 9, 233};
+    {
+        /* Take a temporary copy of sent_state to ensure the lifetime of
+         * the value we send to emit_key_state expires before we expect
+         * the Observer to see the event...
+         */
+        auto temporary_copy = sent_state;
+        fake_keyboard->emit_key_state(temporary_copy);
+    }
+
+    uint64_t device_id{0};
+    bool seen_device{false};
+    server.the_input_device_hub()->for_each_input_device(
+        [&device_id, &seen_device](auto const& device)
+        {
+            if (seen_device)
+                FAIL() << "Unexpected input device seen";
+            device_id = device.id();
+            seen_device = true;
+        });
+
+    listener->wait_for_key_state(
+        30s,
+        device_id,
+        sent_state);
+}
