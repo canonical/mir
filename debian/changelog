@@ -1,10 +1,10 @@
-mir (0.28.2) UNRELEASED; urgency=medium
+mir (0.29.0) UNRELEASED; urgency=medium
 
-  * New upstream release 0.28.2(https://launchpad.net/mir/+milestone/0.28.2)
+  * New upstream release 0.29.0(https://launchpad.net/mir/+milestone/0.29.0)
     - ABI summary:
       . mirclient ABI unchanged at 9
       . miral ABI unchanged at 2
-      . mirserver ABI unchanged to 45
+      . mirserver ABI bumped to 46
       . mircommon ABI unchanged at 7
       . mirplatform ABI unchanged at 61
       . mirprotobuf ABI unchanged at 3
@@ -19,6 +19,8 @@ mir (0.28.2) UNRELEASED; urgency=medium
       . Fix build & runtime issues on Fedora 26, 27 & rawhide
       . benchmarks: Use standard options to install perf framework on
         non-Debian distros
+      . Test (and fix) SeatObserver
+      . Added the "smoke test" script from old CI
     - Bugs fixed:
       . [mir_demo_server] extend (not replace) the default error reporting.
         (LP: #1728581)
@@ -27,6 +29,8 @@ mir (0.28.2) UNRELEASED; urgency=medium
       . Check that user is logged into the VT before using it (LP: #1728574)
       . Allow alternative cursor themes to be specified in a list. (Fixes #16)
       . Enable screen capture to SHM buffers. (Fixes #47)
+      . Get mirscreencast working on Fedora. (Fixes #38)
+      . [miral-shell] Check for titlebars when placing windows. (Fixes #37)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 7 Nov 2017 11:13:47 +0000
 
