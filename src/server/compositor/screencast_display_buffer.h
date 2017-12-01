@@ -119,6 +119,7 @@ public:
     geometry::Size renderbuffer_size();
     void set_renderbuffer_size(geometry::Size);
     void set_transformation(glm::mat2 const& transform);
+    void commit();
 
 private:
     std::unique_ptr<renderer::gl::Context> gl_context;
