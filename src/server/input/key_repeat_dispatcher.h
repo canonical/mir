@@ -54,7 +54,7 @@ public:
                         bool disable_repeat_on_touchscreen);
 
     // InputDispatcher
-    bool dispatch(MirEvent const& event) override;
+    bool dispatch(std::shared_ptr<MirEvent const> const& event) override;
     void start() override;
     void stop() override;
 

@@ -37,9 +37,7 @@ public:
 
     void seat_remove_device(uint64_t id) override;
 
-    void seat_dispatch_event(MirEvent const* event) override;
-
-    void seat_get_rectangle_for(uint64_t id, geometry::Rectangle const& out_rect) override;
+    void seat_dispatch_event(std::shared_ptr<MirEvent const> const& event) override;
 
     void seat_set_key_state(uint64_t id, std::vector<uint32_t> const& scan_codes) override;
 

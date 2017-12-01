@@ -141,7 +141,7 @@ bool mix::XInputDevice::started() const
 void mix::XInputDevice::key_press(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code)
 {
     sink->handle_input(
-        *builder->key_event(
+        builder->key_event(
             event_time,
             mir_keyboard_action_down,
             key_sym,
@@ -154,7 +154,7 @@ void mix::XInputDevice::key_press(std::chrono::nanoseconds event_time, xkb_keysy
 void mix::XInputDevice::key_release(std::chrono::nanoseconds event_time, xkb_keysym_t key_sym, int32_t key_code)
 {
     sink->handle_input(
-        *builder->key_event(
+        builder->key_event(
             event_time,
             mir_keyboard_action_up,
             key_sym,
@@ -175,7 +175,7 @@ void mix::XInputDevice::pointer_press(std::chrono::nanoseconds event_time, int b
     auto const movement = pos - pointer_pos;
     pointer_pos = pos;
     sink->handle_input(
-        *builder->pointer_event(
+        builder->pointer_event(
             event_time,
             mir_pointer_action_button_down,
             button_state,
@@ -196,7 +196,7 @@ void mix::XInputDevice::pointer_release(std::chrono::nanoseconds event_time, int
     auto const movement = pos - pointer_pos;
     pointer_pos = pos;
     sink->handle_input(
-        *builder->pointer_event(
+        builder->pointer_event(
             event_time,
             mir_pointer_action_button_up,
             button_state,
@@ -216,7 +216,7 @@ void mix::XInputDevice::pointer_motion(std::chrono::nanoseconds event_time, mir:
     auto const movement = pos - pointer_pos;
     pointer_pos = pos;
     sink->handle_input(
-        *builder->pointer_event(
+        builder->pointer_event(
             event_time,
             mir_pointer_action_motion,
             button_state,

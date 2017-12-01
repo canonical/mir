@@ -110,16 +110,16 @@ mi::KeyRepeatDispatcher::KeyboardState& mi::KeyRepeatDispatcher::ensure_state_fo
     return repeat_state_by_device[id];
 }
 
-bool mi::KeyRepeatDispatcher::dispatch(MirEvent const& event)
+bool mi::KeyRepeatDispatcher::dispatch(std::shared_ptr<MirEvent const> const& event)
 {
     if (!repeat_enabled) // if we made this mutable we'd need a guard
     {
 	return next_dispatcher->dispatch(event);
     }
 
-    if (mir_event_get_type(&event) == mir_event_type_input)
+    if (mir_event_get_type(event.get()) == mir_event_type_input)
     {
-        auto iev = mir_event_get_input_event(&event);
+        auto iev = mir_event_get_input_event(event.get());
         if (mir_input_event_get_type(iev) != mir_input_event_type_key)
             return next_dispatcher->dispatch(event);
         auto device_id = mir_input_event_get_device_id(iev);
@@ -170,7 +170,7 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
                      key_code,
                      scan_code,
                      modifiers);
-                 next_dispatcher->dispatch(*new_event);
+                 next_dispatcher->dispatch(std::move(new_event));
              };
 
         auto it = device_state.repeat_alarms_by_scancode.find(scan_code);

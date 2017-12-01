@@ -43,7 +43,7 @@ public:
     void prepend(std::shared_ptr<EventFilter> const& filter) override;
 
     // InputDispatcher
-    bool dispatch(MirEvent const& event) override;
+    bool dispatch(std::shared_ptr<MirEvent const> const& event) override;
     void start() override;
     void stop() override;
     

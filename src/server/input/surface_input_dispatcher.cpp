@@ -416,21 +416,21 @@ bool mi::SurfaceInputDispatcher::dispatch_touch(MirInputDeviceId id, MirEvent co
     return false;
 }
 
-bool mi::SurfaceInputDispatcher::dispatch(MirEvent const& event)
+bool mi::SurfaceInputDispatcher::dispatch(std::shared_ptr<MirEvent const> const& event)
 {
-    if (mir_event_get_type(&event) != mir_event_type_input)
+    if (mir_event_get_type(event.get()) != mir_event_type_input)
         BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got an unexpected event type"));
     
-    auto iev = mir_event_get_input_event(&event);
+    auto iev = mir_event_get_input_event(event.get());
     auto id = mir_input_event_get_device_id(iev);
     switch (mir_input_event_get_type(iev))
     {
     case mir_input_event_type_key:
-        return dispatch_key(&event);
+        return dispatch_key(event.get());
     case mir_input_event_type_touch:
-        return dispatch_touch(id, &event);
+        return dispatch_touch(id, event.get());
     case mir_input_event_type_pointer:
-        return dispatch_pointer(id, &event);
+        return dispatch_pointer(id, event.get());
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got an input event of unknown type"));
     }

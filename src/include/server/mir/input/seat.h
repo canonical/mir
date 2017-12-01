@@ -42,7 +42,7 @@ public:
     virtual ~Seat() = default;
     virtual void add_device(Device const& device) = 0;
     virtual void remove_device(Device const& device) = 0;
-    virtual void dispatch_event(MirEvent& event) = 0;
+    virtual void dispatch_event(std::shared_ptr<MirEvent> const& event) = 0;
     virtual EventUPtr create_device_state() = 0;
 
     virtual void set_key_state(Device const& dev, std::vector<uint32_t> const& scan_codes) = 0;

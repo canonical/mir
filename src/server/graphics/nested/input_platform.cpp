@@ -81,7 +81,7 @@ private:
 void Postman::do_work()
 {
     while (auto const event = next_event())
-        destination->handle_input(*event);
+        destination->handle_input(event);
 }
 
 std::shared_ptr<MirEvent> Postman::next_event()
@@ -429,7 +429,7 @@ void mgn::InputPlatform::start()
                     auto device_state_event = front->builder->device_state_event(
                         mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_x),
                         mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_y));
-                    front->destination->handle_input(*device_state_event);
+                    front->destination->handle_input(std::move(device_state_event));
                 }
             }
         });

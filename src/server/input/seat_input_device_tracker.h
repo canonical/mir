@@ -64,7 +64,7 @@ public:
     void add_device(MirInputDeviceId);
     void remove_device(MirInputDeviceId);
 
-    void dispatch(MirEvent & event);
+    void dispatch(std::shared_ptr<MirEvent> const& event);
 
     MirPointerButtons button_state() const;
     geometry::Point cursor_position() const;

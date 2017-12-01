@@ -20,6 +20,7 @@
 #define MIR_INPUT_INPUT_DISPATCHER_H
 
 #include <chrono>
+#include <memory>
 
 #include "mir_toolkit/event.h"
 
@@ -38,7 +39,7 @@ namespace input
 class InputDispatcher
 {
 public:
-    virtual bool dispatch(MirEvent const& event) = 0;
+    virtual bool dispatch(std::shared_ptr<MirEvent const> const& event) = 0;
 
     virtual void start() = 0;
     virtual void stop() = 0;

@@ -59,7 +59,7 @@ public:
     // Seat methods:
     void add_device(Device const& device) override;
     void remove_device(Device const& device) override;
-    void dispatch_event(MirEvent& event) override;
+    void dispatch_event(std::shared_ptr<MirEvent> const& event) override;
     geometry::Rectangle bounding_rectangle() const override;
     input::OutputInfo output_info(uint32_t output_id) const override;
     EventUPtr create_device_state() override;

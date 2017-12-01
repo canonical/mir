@@ -16,11 +16,12 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
+#include <boost/asio/detail/shared_ptr.hpp>
 #include "null_input_dispatcher.h"
 
 namespace mi = mir::input;
 
-bool mi::NullInputDispatcher::dispatch(MirEvent const& /*event*/)
+bool mi::NullInputDispatcher::dispatch(std::shared_ptr<MirEvent const> const& /*event*/)
 {
     return true;
 }

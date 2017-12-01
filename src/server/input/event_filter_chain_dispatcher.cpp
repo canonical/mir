@@ -62,9 +62,9 @@ void mi::EventFilterChainDispatcher::prepend(std::shared_ptr<EventFilter> const&
     filters.insert(filters.begin(), filter);
 }
 
-bool mi::EventFilterChainDispatcher::dispatch(MirEvent const& event)
+bool mi::EventFilterChainDispatcher::dispatch(std::shared_ptr<MirEvent const> const& event)
 {
-    if (!handle(event))
+    if (!handle(*event))
         return next_dispatcher->dispatch(event);
     return true;
 }

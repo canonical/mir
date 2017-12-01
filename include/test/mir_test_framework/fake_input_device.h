@@ -23,6 +23,7 @@
 #include "mir/test/event_factory.h"
 #include <chrono>
 #include <functional>
+#include <vector>
 
 namespace mir
 {
@@ -60,6 +61,7 @@ public:
     virtual void emit_touch_sequence(std::function<mir::input::synthesis::TouchParameters(int)> const& generate_parameters,
                                      int count,
                                      std::chrono::duration<double> delay) = 0;
+    virtual void emit_key_state(std::vector<uint32_t> const& scan_codes) = 0;
     virtual void on_new_configuration_do(std::function<void(mir::input::InputDevice const& device)> callback) = 0;
 
     FakeInputDevice(FakeInputDevice const&) = delete;

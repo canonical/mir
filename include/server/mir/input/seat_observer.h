@@ -22,6 +22,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 class MirEvent;
 
@@ -41,8 +42,7 @@ public:
     
     virtual void seat_add_device(uint64_t id) = 0;
     virtual void seat_remove_device(uint64_t id) = 0;
-    virtual void seat_dispatch_event(MirEvent const* event) = 0;
-    virtual void seat_get_rectangle_for(uint64_t id, geometry::Rectangle const& out_rect) = 0;
+    virtual void seat_dispatch_event(std::shared_ptr<MirEvent const> const& event) = 0;
     virtual void seat_set_key_state(uint64_t id, std::vector<uint32_t> const& scan_codes) = 0;
     virtual void seat_set_pointer_state(uint64_t id, unsigned buttons) = 0;
     virtual void seat_set_cursor_position(float cursor_x, float cursor_y) = 0;

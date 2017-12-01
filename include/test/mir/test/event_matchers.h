@@ -27,6 +27,8 @@
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-keysyms.h>
 
+#include <memory>
+
 #include <gmock/gmock.h>
 
 
@@ -49,6 +51,11 @@ inline MirEvent const* to_address(MirEvent const* event)
 inline MirEvent const* to_address(MirEvent const& event)
 {
     return &event;
+}
+
+inline MirEvent const* to_address(std::shared_ptr<MirEvent const> const& event)
+{
+    return event.get();
 }
 
 inline MirEvent const& to_ref(MirEvent const* event)

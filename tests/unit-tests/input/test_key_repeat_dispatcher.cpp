@@ -184,11 +184,11 @@ TEST_F(KeyRepeatDispatcher, schedules_alarm_to_repeat_key_down)
     EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyUpEvent())).Times(1);
 
     // Schedule the repeat
-    dispatcher.dispatch(*a_key_down_event());
+    dispatcher.dispatch(a_key_down_event());
     // Trigger the repeat
     alarm_function();
     // Trigger the cancel
-    dispatcher.dispatch(*a_key_up_event());
+    dispatcher.dispatch(a_key_up_event());
 }
 
 TEST_F(KeyRepeatDispatcher, stops_repeat_on_device_removal)
@@ -207,7 +207,7 @@ TEST_F(KeyRepeatDispatcher, stops_repeat_on_device_removal)
     EXPECT_CALL(*mock_alarm, reschedule_in(repeat_delay)).Times(1).WillOnce(Return(true));
     ON_CALL(*mock_alarm, cancel()).WillByDefault(Invoke([&](){alarm_canceled = true; return true;}));
 
-    dispatcher.dispatch(*a_key_down_event());
+    dispatcher.dispatch(a_key_down_event());
 
     alarm_function();
     Mock::VerifyAndClearExpectations(mock_alarm); // mock_alarm will be deleted after this
@@ -223,7 +223,7 @@ TEST_F(KeyRepeatDispatcherOnArale, no_repeat_alarm_on_mtk_tpd)
     EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyRepeatEvent())).Times(0);
 
     add_mtk_tpd();
-    dispatcher.dispatch(*mtk_key_down_event());
+    dispatcher.dispatch(mtk_key_down_event());
 }
 
 TEST_F(KeyRepeatDispatcherOnArale, repeat_for_regular_keys)
@@ -240,6 +240,6 @@ TEST_F(KeyRepeatDispatcherOnArale, repeat_for_regular_keys)
     EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyRepeatEvent())).Times(1);
 
     add_mtk_tpd();
-    dispatcher.dispatch(*a_key_down_event());
+    dispatcher.dispatch(a_key_down_event());
     alarm_function();
 }

@@ -85,30 +85,30 @@ void mi::SeatInputDeviceTracker::remove_device(MirInputDeviceId id)
     observer->seat_remove_device(id);
 }
 
-void mi::SeatInputDeviceTracker::dispatch(MirEvent &event)
+void mi::SeatInputDeviceTracker::dispatch(std::shared_ptr<MirEvent> const& event)
 {
-    if (mir_event_get_type(&event) == mir_event_type_input)
+    if (mir_event_get_type(event.get()) == mir_event_type_input)
     {
         std::lock_guard<std::mutex> lock(device_state_mutex);
 
-        auto input_event = mir_event_get_input_event(&event);
+        auto input_event = mir_event_get_input_event(event.get());
 
         if (filter_input_event(input_event))
             return;
 
         update_seat_properties(input_event);
 
-        key_mapper->map_event(event);
+        key_mapper->map_event(*event);
 
         if (mir_input_event_type_pointer == mir_input_event_get_type(input_event))
         {
-            mev::set_cursor_position(event, cursor_x, cursor_y);
-            mev::set_button_state(event, buttons);
+            mev::set_cursor_position(*event, cursor_x, cursor_y);
+            mev::set_button_state(*event, buttons);
         }
     }
 
     dispatcher->dispatch(event);
-    observer->seat_dispatch_event(&event);
+    observer->seat_dispatch_event(event);
 }
 
 bool mi::SeatInputDeviceTracker::filter_input_event(MirInputEvent const* event)

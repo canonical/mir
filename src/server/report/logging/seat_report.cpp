@@ -77,21 +77,11 @@ void mrl::SeatReport::seat_remove_device(uint64_t id)
     log->log(ml::Severity::informational, ss.str(), component);
 }
 
-void mrl::SeatReport::seat_dispatch_event(MirEvent const* event)
+void mrl::SeatReport::seat_dispatch_event(std::shared_ptr<MirEvent const> const& event)
 {
     std::stringstream ss;
     ss << "Dispatch event"
        << " event_type=" << event->type();
-
-    log->log(ml::Severity::informational, ss.str(), component);
-}
-
-void mrl::SeatReport::seat_get_rectangle_for(uint64_t id, geometry::Rectangle const& out_rect)
-{
-    std::stringstream ss;
-    ss << "Get rectangle for"
-       << " device_id=" << id
-       << " out_rect=" << out_rect;
 
     log->log(ml::Severity::informational, ss.str(), component);
 }

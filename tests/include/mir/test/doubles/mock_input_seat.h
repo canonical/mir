@@ -36,7 +36,7 @@ struct MockInputSeat : input::Seat
 {
     MOCK_METHOD1(add_device, void(input::Device const& device));
     MOCK_METHOD1(remove_device, void(input::Device const& device));
-    MOCK_METHOD1(dispatch_event, void(MirEvent& event));
+    MOCK_METHOD1(dispatch_event, void(std::shared_ptr<MirEvent> const& event));
     MOCK_METHOD0(create_device_state, mir::EventUPtr());
     MOCK_METHOD2(set_key_state, void(input::Device const&, std::vector<uint32_t> const&));
     MOCK_METHOD2(set_pointer_state, void (input::Device const&, MirPointerButtons));

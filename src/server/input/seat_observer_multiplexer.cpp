@@ -31,19 +31,13 @@ void mi::SeatObserverMultiplexer::seat_add_device(uint64_t id)
 
 void mi::SeatObserverMultiplexer::seat_remove_device(uint64_t id)
 {
-    for_each_observer(&mi::SeatObserver::seat_add_device, id);
+    for_each_observer(&mi::SeatObserver::seat_remove_device, id);
 }
 
-void mi::SeatObserverMultiplexer::seat_dispatch_event(MirEvent const* event)
+void mi::SeatObserverMultiplexer::seat_dispatch_event(
+    std::shared_ptr<MirEvent const> const& event)
 {
     for_each_observer(&mi::SeatObserver::seat_dispatch_event, event);
-}
-
-void mi::SeatObserverMultiplexer::seat_get_rectangle_for(
-    uint64_t id,
-    geom::Rectangle const& out_rect)
-{
-    for_each_observer(&mi::SeatObserver::seat_get_rectangle_for, id, out_rect);
 }
 
 void mi::SeatObserverMultiplexer::seat_set_key_state(uint64_t id, std::vector<uint32_t> const& scan_codes)
