@@ -45,4 +45,5 @@ trap 'kill ${mirscreencast_pid}; rm -f -- "${tempfile}"; exit 0' INT TERM HUP EX
 sleep 1; # don't lose the next message in the spew from mirscreencast
 read -rsp $'\n\nPress enter when recording complete...'
 
+kill ${mirscreencast_pid}
 mencoder -demuxer rawvideo -rawvideo fps=60:w=${width}:h=${height}:format=bgra -ovc x264 -o ${output} ${tempfile}
