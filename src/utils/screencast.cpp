@@ -287,11 +287,11 @@ public:
                            ScreencastConfiguration* config,
                            MirBufferStream* buffer_stream)
         : Screencast(num_captures, capture_fps),
-          region(graphics_region_for(buffer_stream)),
-          line_size{region.width * MIR_BYTES_PER_PIXEL(region.pixel_format)},
           buffer_stream{buffer_stream},
           pixel_format_{mir_pixel_format_to_string(config->pixel_format)}
     {
+        // Don't complete construction unless this is going to work later!
+        graphics_region_for(buffer_stream);
     }
 
     std::string pixel_format() override
@@ -301,6 +301,9 @@ public:
 
     void capture_to(std::ostream& stream) override
     {
+        MirGraphicsRegion const region{graphics_region_for(buffer_stream)};
+        int const line_size{region.width * MIR_BYTES_PER_PIXEL(region.pixel_format)};
+
         // Contents are rendered up-side down, read them bottom to top
         auto addr = region.vaddr + (region.height - 1)*region.stride;
         for (int i = 0; i < region.height; i++)
@@ -313,10 +316,8 @@ public:
     }
 
 private:
-    MirGraphicsRegion const region;
-    int const line_size;
-    MirBufferStream* buffer_stream;
-    std::string pixel_format_;
+    MirBufferStream* const buffer_stream;
+    std::string const pixel_format_;
 };
 
 class EGLScreencast : public Screencast
