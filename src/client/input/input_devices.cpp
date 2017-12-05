@@ -41,46 +41,48 @@ std::unordered_set<MirInputDeviceId> get_removed_devices(MirInputConfig const& o
 }
 }
 
-mi::InputDevices::InputDevices(std::shared_ptr<client::SurfaceMap> const& windows)
-    : windows{windows}
+mi::InputDevices::InputDevices(std::shared_ptr<client::SurfaceMap> const& windows) :
+    windows{windows},
+    callback{[]{}}
 {
 }
 
 void mi::InputDevices::update_devices(std::string const& config_buffer)
 {
-    std::function<void()> stored_callback;
+    std::unordered_set<MirInputDeviceId> removed_devices;
+    decltype(callback) stored_callback;
 
-    std::unordered_set<MirInputDeviceId> ids;
     {
-        auto new_configuration = mi::deserialize_input_config(config_buffer);
-        std::unique_lock<std::mutex> lock(devices_access);
-        ids = get_removed_devices(new_configuration, configuration);
+        std::lock_guard<std::mutex> lock(devices_access);
+
+        auto const& new_configuration = mi::deserialize_input_config(config_buffer);
+        removed_devices = get_removed_devices(new_configuration, configuration);
         configuration = new_configuration;
         stored_callback = callback;
     }
 
-    auto window_map = windows.lock();
-    if (window_map)
-        window_map->with_all_windows_do(
-            [&ids](MirWindow* window)
+    if (auto const window_map = windows.lock())
+    {
+        window_map->with_all_windows_do([&removed_devices](MirWindow* window)
             {
-                auto keymapper = window->get_keymapper();
-                for (auto const& id : ids)
+                auto const& keymapper = window->get_keymapper();
+
+                for (auto const& id : removed_devices)
                     keymapper->clear_keymap_for_device(id);
             });
+    }
 
-    if (stored_callback)
-        stored_callback();
+    stored_callback();
 }
 
 MirInputConfig mi::InputDevices::devices()
 {
-    std::unique_lock<std::mutex> lock(devices_access);
+    std::lock_guard<std::mutex> lock(devices_access);
     return configuration;
 }
 
 void mi::InputDevices::set_change_callback(std::function<void()> const& new_callback)
 {
-    std::unique_lock<std::mutex> lock(devices_access);
+    std::lock_guard<std::mutex> lock(devices_access);
     callback = new_callback;
 }

@@ -4,8 +4,7 @@ height=1080
 output=screencast.mp4
 socket=${XDG_RUNTIME_DIR}/miral_socket
 if [ -v MIR_SERVER ]; then socket=${MIR_SERVER}; fi
-bindir=$(dirname $0)
-if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
+bindir="$( dirname "${BASH_SOURCE[0]}" )"
 
 while [ $# -gt 0 ]
 do
@@ -41,10 +40,12 @@ if [ -e ${output} ]; then echo "Output exists, moving to ${output}~"; mv ${outpu
 while [ ! -e "${socket}" ]; do echo "waiting for ${socket}"; sleep 1 ;done
 
 if [ ! -v tempfile ]; then tempfile=$(mktemp); fi
-${bindir}mirscreencast --size ${width} ${height} -m ${socket} -f ${tempfile}& mirscreencast_pid=$!
+${bindir}/mirscreencast --size ${width} ${height} -m ${socket} -f ${tempfile}& mirscreencast_pid=$!
 trap 'kill ${mirscreencast_pid}; rm -f -- "${tempfile}"; exit 0' INT TERM HUP EXIT
 
 sleep 1; # don't lose the next message in the spew from mirscreencast
 read -rsp $'\n\nPress enter when recording complete...'
 
+kill ${mirscreencast_pid}
+trap 'rm -f -- "${tempfile}"; exit 0' INT TERM HUP EXIT
 mencoder -demuxer rawvideo -rawvideo fps=60:w=${width}:h=${height}:format=bgra -ovc x264 -o ${output} ${tempfile}

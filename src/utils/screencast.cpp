@@ -290,6 +290,8 @@ public:
           buffer_stream{buffer_stream},
           pixel_format_{mir_pixel_format_to_string(config->pixel_format)}
     {
+        // Don't complete construction unless this is going to work later!
+        graphics_region_for(buffer_stream);
     }
 
     std::string pixel_format() override

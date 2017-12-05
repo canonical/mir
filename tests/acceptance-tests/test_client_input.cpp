@@ -1360,6 +1360,8 @@ TEST_F(TestClientInput, keyboard_config_is_mutable)
 
 TEST_F(TestClientInput, keyboard_config_can_be_changed)
 {
+    wait_for_input_devices();
+
     Client a_client(new_connection(), first);
     auto config = mir_connection_create_input_config(a_client.connection);
     auto keyboard = get_mutable_device_with_capabilities(
