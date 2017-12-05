@@ -5,13 +5,6 @@ install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_performance_tests
   DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-if (MIR_TEST_PLATFORM STREQUAL "mesa-kms")
-  add_definitions(-DMESA_KMS)
-endif()
-if (MIR_TEST_PLATFORM STREQUAL "mesa-x11")
-  add_definitions(-DMESA_X11)
-endif()
-
 mir_add_wrapped_executable(mir_glmark2_performance_test
   test_glmark2-es2-mir.cpp
 )

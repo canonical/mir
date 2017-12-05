@@ -97,7 +97,6 @@ add_subdirectory(loader-tests/)
 add_library(mir-test-assist STATIC
   $<TARGET_OBJECTS:mir-public-test>
   $<TARGET_OBJECTS:mir-public-test-doubles>
-  $<TARGET_OBJECTS:mir-public-test-doubles-platform>
   $<TARGET_OBJECTS:mir-public-test-framework>
 )
 
@@ -107,7 +106,6 @@ PUBLIC
   miral
   mirserver
 
-  mir-test-doubles-platform-static
   ${Boost_LIBRARIES}
   ${GTEST_BOTH_LIBRARIES}
 PRIVATE
