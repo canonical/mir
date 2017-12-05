@@ -28,6 +28,7 @@ target_link_libraries(
   libwlcs
   mirserver
   mir-test-assist
+  mir-test-doubles-platform-static
 )
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
