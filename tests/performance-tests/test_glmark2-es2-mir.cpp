@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2016 Canonical Ltd.
+ * Copyright © 2014-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -16,6 +16,7 @@
 
 #include "mir_test_framework/async_server_runner.h"
 #include "mir/test/popen.h"
+#include <mir_test_framework/executable_path.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -30,30 +31,32 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-struct GLMark2Test : testing::Test, mtf::AsyncServerRunner
-{
-    void SetUp() override
-    {
+struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
+    void SetUp() override {
         start_server();
     }
 
-    void TearDown() override
-    {
+    void TearDown() override {
         stop_server();
     }
 
-    enum ResultFileType {raw, json};
-    virtual int run_glmark2(char const* args)
-    {
+    enum ResultFileType {
+        raw, json
+    };
+
+    virtual char const *command() =0;
+
+    int run_glmark2(char const *args) {
         ResultFileType file_type = raw; // Should this still be selectable?
 
-        auto const cmd = "MIR_SOCKET=" + new_connection()
-                       + " glmark2-es2-mir -b build "
-                       + args;
+        auto const cmd = "MIR_SOCKET=" + new_connection() + " "
+                         + command()
+                         + " -b build "
+                         + args;
         mir::test::Popen p(cmd);
 
-        const ::testing::TestInfo* const test_info =
-          ::testing::UnitTest::GetInstance()->current_test_info();
+        const ::testing::TestInfo *const test_info =
+                ::testing::UnitTest::GetInstance()->current_test_info();
 
         char output_filename[256];
         snprintf(output_filename, sizeof(output_filename) - 1,
@@ -67,27 +70,23 @@ struct GLMark2Test : testing::Test, mtf::AsyncServerRunner
         std::ofstream glmark2_output;
         int score = -1;
         glmark2_output.open(output_filename);
-        while (p.get_line(line))
-        {
+        while (p.get_line(line)) {
             int match;
-            if (sscanf(line.c_str(), " glmark2 Score: %d", &match) == 1)
-            {
+            if (sscanf(line.c_str(), " glmark2 Score: %d", &match) == 1) {
                 score = match;
             }
 
-            if (file_type == raw)
-            {
+            if (file_type == raw) {
                 glmark2_output << line << std::endl;
             }
         }
-        
-        if (file_type == json)
-        {
-            std::string json =  "{";
-                json += "\"benchmark_name\":\"glmark2-es2-mir\"";
-                json += ",";
-                json += "\"score\":\"" + std::to_string(score) + "\"";
-                json += "}";
+
+        if (file_type == json) {
+            std::string json = "{";
+            json += "\"benchmark_name\":\"glmark2-es2-mir\"";
+            json += ",";
+            json += "\"score\":\"" + std::to_string(score) + "\"";
+            json += "}";
             glmark2_output << json;
         }
 
@@ -95,40 +94,112 @@ struct GLMark2Test : testing::Test, mtf::AsyncServerRunner
     }
 };
 
-TEST_F(GLMark2Test, fullscreen_default)
+struct GLMark2Mir : AbstractGLMark2Test
+{
+    char const* command() override
+    {
+        static char const* const command = "glmark2-es2-mir";
+        return command;
+    }
+};
+
+struct GLMark2Xrun : AbstractGLMark2Test
+{
+    char const* command() override
+    {
+        static auto command = mir_test_framework::executable_path() + "/miral-xrun glmark2-es2";
+        return command.c_str();
+    }
+};
+
+struct GLMark2Wayland : AbstractGLMark2Test
+{
+    GLMark2Wayland()
+    {
+        add_to_environment("MIR_SERVER_WAYLAND_SOCKET_NAME", "GLMark2Wayland");
+        add_to_environment("WAYLAND_DISPLAY",                "GLMark2Wayland");
+    }
+
+    char const* command() override
+    {
+        static char const* const command = "glmark2-es2-wayland";
+        return command;
+    }
+};
+
+TEST_F(GLMark2Mir, fullscreen_default)
 {
     EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
 }
 
-TEST_F(GLMark2Test, windowed_default)
+TEST_F(GLMark2Mir, windowed_default)
 {
     EXPECT_THAT(run_glmark2(""), ::testing::Ge(56));
 }
 
-TEST_F(GLMark2Test, fullscreen_interval1)
+TEST_F(GLMark2Mir, fullscreen_interval1)
 {
     add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "1");
     // Our devices seem to range 57-67Hz
     EXPECT_NEAR(60, run_glmark2("--fullscreen"), 10);
 }
 
-TEST_F(GLMark2Test, windowed_interval1)
+TEST_F(GLMark2Mir, windowed_interval1)
 {
     add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "1");
     // Our devices seem to range 57-67Hz
     EXPECT_NEAR(60, run_glmark2(""), 10);
 }
 
-TEST_F(GLMark2Test, fullscreen_interval0)
+TEST_F(GLMark2Mir, fullscreen_interval0)
 {
     add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "0");
     EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(100));
 }
 
-TEST_F(GLMark2Test, windowed_interval0)
+TEST_F(GLMark2Mir, windowed_interval0)
 {
     add_to_environment("MIR_CLIENT_FORCE_SWAP_INTERVAL", "0");
     EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
 }
 
+TEST_F(GLMark2Xrun, fullscreen_default)
+{
+    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
+}
+
+TEST_F(GLMark2Xrun, windowed_default)
+{
+    EXPECT_THAT(run_glmark2(""), ::testing::Ge(56));
+}
+
+TEST_F(GLMark2Xrun, fullscreen)
+{
+    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(100));
+}
+
+TEST_F(GLMark2Xrun, windowed)
+{
+    EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
+}
+
+TEST_F(GLMark2Wayland, fullscreen_default)
+{
+    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
+}
+
+TEST_F(GLMark2Wayland, windowed_default)
+{
+    EXPECT_THAT(run_glmark2(""), ::testing::Ge(56));
+}
+
+TEST_F(GLMark2Wayland, fullscreen)
+{
+    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(100));
+}
+
+TEST_F(GLMark2Wayland, windowed)
+{
+    EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
+}
 }
