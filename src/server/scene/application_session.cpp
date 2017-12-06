@@ -371,7 +371,8 @@ mf::BufferStreamId ms::ApplicationSession::create_buffer_stream(mg::BufferProper
 {
     auto const id = static_cast<mf::BufferStreamId>(next_id().as_value());
     auto stream = buffer_stream_factory->create_buffer_stream(id, props);
-    
+    session_listener->buffer_stream_created(*this, stream);
+
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     streams[id] = stream;
     return id;
@@ -384,6 +385,7 @@ void ms::ApplicationSession::destroy_buffer_stream(mf::BufferStreamId id)
     if (stream_it == streams.end())
         BOOST_THROW_EXCEPTION(std::runtime_error("cannot destroy stream: Invalid BufferStreamId"));
 
+    session_listener->buffer_stream_destroyed(*this, stream_it->second);
     streams.erase(stream_it);
 }
 

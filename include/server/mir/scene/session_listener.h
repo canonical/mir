@@ -23,6 +23,10 @@
 
 namespace mir
 {
+namespace frontend
+{
+class BufferStream;
+}
 namespace scene
 {
 class Surface;
@@ -38,6 +42,13 @@ public:
 
     virtual void surface_created(Session& session, std::shared_ptr<Surface> const& surface) = 0;
     virtual void destroying_surface(Session& session, std::shared_ptr<Surface> const& surface) = 0;
+
+    virtual void buffer_stream_created(
+        Session& session,
+        std::shared_ptr<frontend::BufferStream> const& stream) = 0;
+    virtual void buffer_stream_destroyed(
+        Session& session,
+        std::shared_ptr<frontend::BufferStream> const& stream) = 0;
 
 protected:
     SessionListener() = default;

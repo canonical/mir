@@ -41,6 +41,9 @@ struct MockSessionListener : public scene::SessionListener
 
     MOCK_METHOD2(surface_created, void(scene::Session&, std::shared_ptr<scene::Surface> const&));
     MOCK_METHOD2(destroying_surface, void(scene::Session&, std::shared_ptr<scene::Surface> const&));
+
+    MOCK_METHOD2(buffer_stream_created, void(scene::Session&, std::shared_ptr<frontend::BufferStream> const&));
+    MOCK_METHOD2(buffer_stream_destroyed, void(scene::Session&, std::shared_ptr<frontend::BufferStream> const&));
 };
 
 }
