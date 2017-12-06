@@ -305,6 +305,7 @@ struct TestClientInput : mtf::HeadlessInProcessServer
         HeadlessInProcessServer::SetUp();
 
         positions[first] = geom::Rectangle{{0,0}, {surface_width, surface_height}};
+        wait_for_input_devices();
     }
 
     std::shared_ptr<mir::scene::Surface> get_surface(std::string const& name)
@@ -328,6 +329,8 @@ struct TestClientInput : mtf::HeadlessInProcessServer
         mi::InputDeviceInfo{touchscreen_name, touchscreen_unique_id,
                             mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch})};
 
+    int expected_number_of_input_devices = 3;
+
     std::string first{"first"};
     std::string second{"second"};
     mtf::ClientInputRegions input_regions;
@@ -337,8 +340,9 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
     mt::Signal devices_available;
 
-    void wait_for_input_devices(int expected_number_of_input_devices = 3)
+    void wait_for_input_devices()
     {
+        devices_available.reset();
         // The fake input devices are registered from within the input thread, as soon as the
         // input manager starts. So clients may connect to the server before those additions
         // have been processed.
@@ -973,8 +977,6 @@ MATCHER_P3(ADeviceMatches, name, unique_id, caps, "")
 
 TEST_F(TestClientInput, client_input_config_request_receives_all_attached_devices)
 {
-    wait_for_input_devices();
-
     auto con = mir_connect_sync(new_connection().c_str(), first.c_str());
     auto config = mir_connection_create_input_config(con);
     int limit = 10;
@@ -1024,6 +1026,8 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_addition)
     std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
         mi::InputDeviceInfo{touchpad, touchpad_uid,
                             mi::DeviceCapability::touchpad | mi::DeviceCapability::pointer})};
+    ++expected_number_of_input_devices;
+    wait_for_input_devices();
 
     callback_triggered.wait_for(1s);
     EXPECT_THAT(callback_triggered.raised(), Eq(true));
@@ -1172,8 +1176,6 @@ TEST_F(TestClientInput, reestablishes_num_lock_state_in_client_with_surface_keym
 
 TEST_F(TestClientInput, initial_mouse_configuration_can_be_querried)
 {
-    wait_for_input_devices();
-
     Client a_client(new_connection(), first);
     auto config = mir_connection_create_input_config(a_client.connection);
     auto mouse = get_device_with_capabilities(config, mir_input_device_capability_pointer);
@@ -1190,8 +1192,6 @@ TEST_F(TestClientInput, initial_mouse_configuration_can_be_querried)
 
 TEST_F(TestClientInput, no_touchpad_config_on_mouse)
 {
-    wait_for_input_devices();
-
     Client a_client(new_connection(), first);
     auto config = mir_connection_create_input_config(a_client.connection);
     auto mouse = get_device_with_capabilities(config, mir_input_device_capability_pointer);
@@ -1202,8 +1202,6 @@ TEST_F(TestClientInput, no_touchpad_config_on_mouse)
 
 TEST_F(TestClientInput, pointer_config_is_mutable)
 {
-    wait_for_input_devices();
-
     Client a_client(new_connection(), first);
     auto config = mir_connection_create_input_config(a_client.connection);
     auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
@@ -1228,8 +1226,8 @@ TEST_F(TestClientInput, touchpad_config_can_be_querried)
     std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
         mi::InputDeviceInfo{"tpd", "tpd-id",
                             mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad})};
-
-    wait_for_input_devices(4);
+    ++expected_number_of_input_devices;
+    wait_for_input_devices();
 
     Client a_client(new_connection(), first);
     auto config = mir_connection_create_input_config(a_client.connection);
@@ -1256,6 +1254,8 @@ TEST_F(TestClientInput, touchpad_config_is_mutable)
     std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
         mi::InputDeviceInfo{"tpd", "tpd-id",
                             mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad})};
+    ++expected_number_of_input_devices;
+    wait_for_input_devices();
 
     Client a_client(new_connection(), first);
     auto config = mir_connection_create_input_config(a_client.connection);
@@ -1290,8 +1290,6 @@ TEST_F(TestClientInput, touchpad_config_is_mutable)
 
 TEST_F(TestClientInput, clients_can_apply_changed_input_configuration)
 {
-    wait_for_input_devices();
-
     Client a_client(new_connection(), first);
     auto config = mir_connection_create_input_config(a_client.connection);
     auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
@@ -1360,8 +1358,6 @@ TEST_F(TestClientInput, keyboard_config_is_mutable)
 
 TEST_F(TestClientInput, keyboard_config_can_be_changed)
 {
-    wait_for_input_devices();
-
     Client a_client(new_connection(), first);
     auto config = mir_connection_create_input_config(a_client.connection);
     auto keyboard = get_mutable_device_with_capabilities(
@@ -1395,8 +1391,6 @@ TEST_F(TestClientInput, keyboard_config_can_be_changed)
 
 TEST_F(TestClientInput, unfocused_client_can_change_base_configuration)
 {
-    wait_for_input_devices();
-
     Client unfocused_client(new_connection(), first);
     Client focused_client(new_connection(), second);
     auto config = mir_connection_create_input_config(unfocused_client.connection);
@@ -1424,8 +1418,6 @@ TEST_F(TestClientInput, unfocused_client_can_change_base_configuration)
 
 TEST_F(TestClientInput, unfocused_client_cannot_change_input_configuration)
 {
-    wait_for_input_devices();
-
     Client unfocused_client(new_connection(), first);
     Client focused_client(new_connection(), second);
     auto config = mir_connection_create_input_config(unfocused_client.connection);
@@ -1452,8 +1444,6 @@ TEST_F(TestClientInput, unfocused_client_cannot_change_input_configuration)
 
 TEST_F(TestClientInput, focused_client_can_change_base_configuration)
 {
-    wait_for_input_devices();
-
     Client focused_client(new_connection(), second);
     auto config = mir_connection_create_input_config(focused_client.connection);
     auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
@@ -1480,7 +1470,6 @@ TEST_F(TestClientInput, focused_client_can_change_base_configuration)
 
 TEST_F(TestClientInput, set_base_configuration_for_unauthorized_client_fails)
 {
-    wait_for_input_devices();
     stub_authorizer.allow_set_base_input_configuration = false;
 
     Client unauthed_client(new_connection(), second);
@@ -1504,7 +1493,6 @@ TEST_F(TestClientInput, set_base_configuration_for_unauthorized_client_fails)
 
 TEST_F(TestClientInput, set_configuration_for_unauthorized_client_fails)
 {
-    wait_for_input_devices();
     stub_authorizer.allow_configure_input = false;
 
     Client unauthed_client(new_connection(), second);
@@ -1528,8 +1516,6 @@ TEST_F(TestClientInput, set_configuration_for_unauthorized_client_fails)
 
 TEST_F(TestClientInput, error_callback_triggered_on_wrong_configuration)
 {
-    wait_for_input_devices();
-
     Client a_client(new_connection(), first);
     auto config = mir_connection_create_input_config(a_client.connection);
     auto mouse = get_mutable_device_with_capabilities(config, mir_input_device_capability_pointer);
@@ -1556,8 +1542,6 @@ TEST_F(TestClientInput, error_callback_triggered_on_wrong_configuration)
 
 TEST_F(TestClientInput, touchscreen_config_is_mutable)
 {
-    wait_for_input_devices();
-
     Client a_client(new_connection(), first);
     auto config = mir_connection_create_input_config(a_client.connection);
     auto touchscreen = get_mutable_device_with_capabilities(config,
@@ -1578,7 +1562,6 @@ TEST_F(TestClientInput, touchscreen_config_is_mutable)
 
 TEST_F(TestClientInputWithTwoScreens, touchscreen_can_be_mapped_to_second_output)
 {
-    wait_for_input_devices();
     uint32_t const second_output = 2;
     int const touch_x = 10;
     int const touch_y = 10;
@@ -1624,7 +1607,6 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_can_be_mapped_to_second_output
 
 TEST_F(TestClientInputWithTwoScreens, touchscreen_mapped_to_deactivated_output_is_filtered_out)
 {
-    wait_for_input_devices();
     uint32_t const second_output = 2;
     int const touch_x = 10;
     int const touch_y = 10;
