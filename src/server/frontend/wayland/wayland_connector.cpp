@@ -2329,3 +2329,10 @@ int mf::WaylandConnector::client_socket_fd(
 {
     return -1;
 }
+
+void mf::WaylandConnector::run_on_wayland_display(std::function<void(wl_display*)> const& functor)
+{
+    auto executor = WaylandExecutor::executor_for_event_loop(wl_display_get_event_loop(display.get()));
+
+    executor->spawn([display_ref = display.get(), functor]() { functor(display_ref); });
+}
