@@ -42,7 +42,10 @@ fi
 
 if [ "${x11_server}" == "Xmir" ];
 then
-  if   [ -e "${XDG_RUNTIME_DIR}/miral_socket" ];
+  if [ -v MIR_SOCKET ]
+  then
+    socket=${MIR_SOCKET}
+  elif [ -e "${XDG_RUNTIME_DIR}/miral_socket" ];
   then
     socket_value=${XDG_RUNTIME_DIR}/miral_socket
   elif [ -e "${XDG_RUNTIME_DIR}/mir_socket" ];

@@ -3,7 +3,7 @@ width=1920
 height=1080
 output=screencast.mp4
 socket=${XDG_RUNTIME_DIR}/miral_socket
-if [ -v MIR_SERVER ]; then socket=${MIR_SERVER}; fi
+if [ -v MIR_SOCKET ]; then socket=${MIR_SOCKET}; fi
 bindir="$( dirname "${BASH_SOURCE[0]}" )"
 
 while [ $# -gt 0 ]

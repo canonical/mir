@@ -31,6 +31,7 @@ mir (0.29.0) UNRELEASED; urgency=medium
       . Enable screen capture to SHM buffers. (Fixes #47)
       . Get mirscreencast working on Fedora. (Fixes #38)
       . [miral-shell] Check for titlebars when placing windows. (Fixes #37)
+      . Create a mir_performance_tests executable (Fixes #69, #70)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 7 Nov 2017 11:13:47 +0000
 
