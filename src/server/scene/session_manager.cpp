@@ -78,6 +78,14 @@ struct ms::SessionManager::SessionObservers : mir::Executor, mir::ObserverMultip
     {
         for_each_observer(&SessionListener::destroying_surface, std::ref(session), surface);
     }
+    void buffer_stream_created(Session& session, std::shared_ptr<mf::BufferStream> const& stream) override
+    {
+        for_each_observer(&SessionListener::buffer_stream_created, std::ref(session), stream);
+    }
+    void buffer_stream_destroyed(Session& session, std::shared_ptr<mf::BufferStream> const& stream) override
+    {
+        for_each_observer(&SessionListener::buffer_stream_destroyed, std::ref(session), stream);
+    }
 };
 
 ms::SessionManager::SessionManager(

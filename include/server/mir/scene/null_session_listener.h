@@ -39,6 +39,8 @@ public:
     void surface_created(Session&, std::shared_ptr<Surface> const&) override {}
     void destroying_surface(Session&, std::shared_ptr<Surface> const&) override {}
 
+    void buffer_stream_created(Session&, std::shared_ptr<frontend::BufferStream> const&) override {}
+    void buffer_stream_destroyed(Session&, std::shared_ptr<frontend::BufferStream> const&) override {}
 protected:
     NullSessionListener(const NullSessionListener&) = delete;
     NullSessionListener& operator=(const NullSessionListener&) = delete;
