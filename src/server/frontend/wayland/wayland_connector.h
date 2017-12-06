@@ -71,6 +71,7 @@ public:
     int client_socket_fd(
         std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const override;
 
+    void run_on_wayland_display(std::function<void(wl_display*)> const& functor);
 private:
     std::unique_ptr<wl_display, void(*)(wl_display*)> const display;
     mir::Fd const pause_signal;

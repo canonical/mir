@@ -40,6 +40,8 @@
 #include "mir/graphics/renderable.h"
 #include "mir/renderer/renderer_factory.h"
 
+#include "frontend/wayland/wayland_connector.h"
+
 #include <iostream>
 
 namespace mo = mir::options;
@@ -474,6 +476,15 @@ auto mir::Server::open_wayland_client_socket() -> Fd
         return Fd{config->the_wayland_connector()->client_socket_fd()};
 
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
+}
+
+void mir::Server::run_on_wayland_display(std::function<void(wl_display*)> const& functor)
+{
+    if (auto const config = self->server_config)
+    {
+        std::dynamic_pointer_cast<mir::frontend::WaylandConnector>(config->the_wayland_connector())
+            ->run_on_wayland_display(functor);
+    }
 }
 
 auto mir::Server::open_client_socket(ConnectHandler const& connect_handler) -> Fd
