@@ -10,6 +10,10 @@ mir_add_wrapped_executable(mir_performance_tests
     test_latency.cpp
 )
 
+if (MIR_EGL_SUPPORTED)
+    set_source_files_properties(test_glmark2-es2-mir.cpp PROPERTIES COMPILE_DEFINITIONS MIR_EGL_SUPPORTED)
+endif()
+
 target_link_libraries(mir_performance_tests
   mir-test-assist
   mirclient-debug-extension

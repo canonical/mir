@@ -94,6 +94,7 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
     }
 };
 
+#ifdef MIR_EGL_SUPPORTED
 struct GLMark2Mir : AbstractGLMark2Test
 {
     char const* command() override
@@ -103,11 +104,21 @@ struct GLMark2Mir : AbstractGLMark2Test
     }
 };
 
-struct GLMark2Xrun : AbstractGLMark2Test
+struct GLMark2Xmir : AbstractGLMark2Test
 {
     char const* command() override
     {
-        static auto command = mir_test_framework::executable_path() + "/miral-xrun glmark2-es2";
+        static auto command = mir_test_framework::executable_path() + "/miral-xrun -Xmir glmark2-es2";
+        return command.c_str();
+    }
+};
+#endif
+
+struct GLMark2Xwayland : AbstractGLMark2Test
+{
+    char const* command() override
+    {
+        static auto command = mir_test_framework::executable_path() + "/miral-xrun -Xwayland glmark2-es2";
         return command.c_str();
     }
 };
@@ -127,6 +138,7 @@ struct GLMark2Wayland : AbstractGLMark2Test
     }
 };
 
+#ifdef MIR_EGL_SUPPORTED
 TEST_F(GLMark2Mir, fullscreen_default)
 {
     EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
@@ -163,25 +175,26 @@ TEST_F(GLMark2Mir, windowed_interval0)
     EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
 }
 
-TEST_F(GLMark2Xrun, fullscreen_default)
+TEST_F(GLMark2Xmir, fullscreen_default)
 {
     EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
 }
 
-TEST_F(GLMark2Xrun, windowed_default)
+TEST_F(GLMark2Xmir, windowed_default)
 {
     EXPECT_THAT(run_glmark2(""), ::testing::Ge(56));
 }
 
-TEST_F(GLMark2Xrun, fullscreen)
+TEST_F(GLMark2Xmir, fullscreen)
 {
     EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(100));
 }
 
-TEST_F(GLMark2Xrun, windowed)
+TEST_F(GLMark2Xmir, windowed)
 {
     EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
 }
+#endif
 
 TEST_F(GLMark2Wayland, fullscreen_default)
 {
@@ -199,6 +212,26 @@ TEST_F(GLMark2Wayland, fullscreen)
 }
 
 TEST_F(GLMark2Wayland, windowed)
+{
+    EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
+}
+
+TEST_F(GLMark2Xwayland, fullscreen_default)
+{
+    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(56));
+}
+
+TEST_F(GLMark2Xwayland, windowed_default)
+{
+    EXPECT_THAT(run_glmark2(""), ::testing::Ge(56));
+}
+
+TEST_F(GLMark2Xwayland, fullscreen)
+{
+    EXPECT_THAT(run_glmark2("--fullscreen"), ::testing::Ge(100));
+}
+
+TEST_F(GLMark2Xwayland, windowed)
 {
     EXPECT_THAT(run_glmark2(""), ::testing::Ge(100));
 }
