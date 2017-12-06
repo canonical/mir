@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2015 Canonical Ltd.
+ * Copyright © 2013-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -37,6 +37,9 @@
 #include "mir/shell/display_configuration_controller.h"
 #include "mir/shell/host_lifecycle_event_listener.h"
 #include "mir/observer_registrar.h"
+#include "mir/input/input_device_observer.h"
+#include "mir/input/input_device_hub.h"
+#include "mir/raii.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
@@ -260,6 +263,7 @@ public:
         : NestedMirRunner(connection_string, true)
     {
         start_server();
+        setup_fake_input();
     }
 
     virtual ~NestedMirRunner()
@@ -338,11 +342,51 @@ private:
         }
     }
 
+    void setup_fake_input()
+    {
+        fake_input_device = mtf::add_fake_input_device(mi::InputDeviceInfo{
+                "test-devce", "test-device",
+                mi::DeviceCapability::pointer | mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric});
+
+        struct DeviceCounter : mi::InputDeviceObserver
+        {
+            DeviceCounter(std::function<void(size_t)> const& callback)
+                : callback{callback}
+            {}
+
+            void device_added(std::shared_ptr<mi::Device> const&)   override { ++count_devices; }
+            void device_changed(std::shared_ptr<mi::Device> const&) override {}
+            void device_removed(std::shared_ptr<mi::Device> const&) override { --count_devices; }
+            void changes_complete()                                 override { callback(count_devices); }
+            std::function<void(size_t)> const callback;
+            int count_devices{0};
+        };
+
+        auto const expected_number_of_input_devices = 1;
+        mir::test::Signal devices_available;
+
+        // The fake input devices are registered from within the input thread, as soon as the
+        // input manager starts. So clients may connect to the server before those additions
+        // have been processed.
+        auto counter = std::make_shared<DeviceCounter>(
+            [&](int count)
+                {
+                    if (count == expected_number_of_input_devices)
+                        devices_available.raise();
+                });
+
+        auto hub = server.the_input_device_hub();
+
+        auto const register_counter = mir::raii::paired_calls(
+            [&]{ hub->add_observer(counter); },
+            [&]{ hub->remove_observer(counter); });
+
+        devices_available.wait_for(5s);
+    }
+
     mir::CachedPtr<MockHostLifecycleEventListener> mock_host_lifecycle_event_listener;
     mir::CachedPtr<MockDisplayConfigurationPolicy> mock_display_configuration_policy_;
-    mir::UniqueModulePtr<mtf::FakeInputDevice> fake_input_device{mtf::add_fake_input_device(mi::InputDeviceInfo{
-        "test-devce", "test-device",
-        mi::DeviceCapability::pointer | mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric})};
+    mir::UniqueModulePtr<mtf::FakeInputDevice> fake_input_device;
     std::atomic<bool> surface_ready{false};
     std::atomic<int> probe_scancode{KEY_A};
 };

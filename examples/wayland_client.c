@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <signal.h>
 
 #include <wayland-client.h>
 #include <wayland-client-core.h>
@@ -345,6 +346,16 @@ static struct wl_output_listener const output_listener = {
     .scale = &output_scale,
 };
 
+static volatile sig_atomic_t running = 0;
+static void shutdown(int signum)
+{
+    if (running)
+    {
+        running = 0;
+        printf("Signal %d received. Good night.\n", signum);
+    }
+}
+
 int main()
 {
     struct wl_display* display = wl_display_connect(NULL);
@@ -384,7 +395,12 @@ int main()
 
     wl_output_add_listener(globals->output, &output_listener, NULL);
 
-    while (wl_display_dispatch(display))
+    signal(SIGINT, shutdown);
+    signal(SIGTERM, shutdown);
+    signal(SIGHUP, shutdown);
+    running = 1;
+
+    while (wl_display_dispatch(display) && running)
         ;
 
     return 0;
