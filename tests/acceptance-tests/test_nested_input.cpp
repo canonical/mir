@@ -207,16 +207,13 @@ struct NestedInput : public mtf::HeadlessInProcessServer, mtf::InputDeviceFaker
     void SetUp()
     {
         mtf::HeadlessInProcessServer::SetUp();
-
-        fake_keyboard = add_fake_input_device(
-            mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard});
-
         wait_for_input_devices();
     }
 
     mtd::NestedMockEGL mock_egl;
 
-    std::unique_ptr<mtf::FakeInputDevice> fake_keyboard;
+    std::unique_ptr<mtf::FakeInputDevice> const fake_keyboard{add_fake_input_device(
+        mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})};
 
     mir::test::Signal all_events_received;
     mir::test::Signal input_device_changes_complete;
@@ -227,14 +224,8 @@ struct NestedInput : public mtf::HeadlessInProcessServer, mtf::InputDeviceFaker
 
 struct NestedInputWithMouse : NestedInput
 {
-    void SetUp() override
-    {
-        NestedInput::SetUp();
-        fake_mouse = add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer});
-        wait_for_input_devices();
-    }
-
-    std::unique_ptr<mtf::FakeInputDevice> fake_mouse;
+    std::unique_ptr<mtf::FakeInputDevice> const fake_mouse{add_fake_input_device(
+        mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})};
     MockEventFilter nested_event_filter;
 };
 
