@@ -26,9 +26,9 @@
 #include "mir/input/mir_input_config.h"
 #include "mir/input/input_device.h"
 #include "mir/input/touchscreen_settings.h"
-#include <mir/raii.h>
 
 #include "mir_test_framework/headless_in_process_server.h"
+#include "mir_test_framework/input_device_faker.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/placement_applying_shell.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
@@ -41,7 +41,6 @@
 #include "mir/test/doubles/stub_session_authorizer.h"
 
 #include "mir/input/input_device_observer.h"
-#include "mir/input/input_device_hub.h"
 #include "mir_toolkit/mir_client_library.h"
 #include "mir/events/event_builders.h"
 
@@ -264,31 +263,10 @@ struct Client
     std::mutex client_status;
 };
 
-struct DeviceCounter : mi::InputDeviceObserver
+struct TestClientInput : mtf::HeadlessInProcessServer, mtf::InputDeviceFaker
 {
-    DeviceCounter(std::function<void(size_t)> const& callback)
-        : callback{callback}
-    {}
-    void device_added(std::shared_ptr<mi::Device> const&) override
-    {
-        ++count_devices;
-    }
-    void device_changed(std::shared_ptr<mi::Device> const&) override
-    {}
-    void device_removed(std::shared_ptr<mi::Device> const&) override
-    {
-        --count_devices;
-    }
-    void changes_complete()
-    {
-        callback(count_devices);
-    }
-    std::function<void(size_t)> const callback;
-    int count_devices{0};
-};
+    TestClientInput() : mtf::InputDeviceFaker{server} {}
 
-struct TestClientInput : mtf::HeadlessInProcessServer
-{
     void SetUp() override
     {
         initial_display_layout({screen_geometry});
@@ -321,15 +299,13 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     std::string const mouse_unique_id = "mouse-uid";
     std::string const touchscreen_name = "touchscreen";
     std::string const touchscreen_unique_id = "touchscreen-uid";
-    std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{mtf::add_fake_input_device(mi::InputDeviceInfo{
+    std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{add_fake_input_device(mi::InputDeviceInfo{
         keyboard_name, keyboard_unique_id, mi::DeviceCapability::keyboard | mi::DeviceCapability::alpha_numeric})};
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{mouse_name, mouse_unique_id, mi::DeviceCapability::pointer})};
-    std::unique_ptr<mtf::FakeInputDevice> fake_touch_screen{mtf::add_fake_input_device(
+        add_fake_input_device(mi::InputDeviceInfo{mouse_name, mouse_unique_id, mi::DeviceCapability::pointer})};
+    std::unique_ptr<mtf::FakeInputDevice> fake_touch_screen{add_fake_input_device(
         mi::InputDeviceInfo{touchscreen_name, touchscreen_unique_id,
                             mi::DeviceCapability::touchscreen | mi::DeviceCapability::multitouch})};
-
-    int expected_number_of_input_devices = 3;
 
     std::string first{"first"};
     std::string second{"second"};
@@ -338,30 +314,6 @@ struct TestClientInput : mtf::HeadlessInProcessServer
     StubAuthorizer stub_authorizer;
     geom::Rectangle screen_geometry{{0,0}, {1000,800}};
     std::shared_ptr<MockEventFilter> mock_event_filter = std::make_shared<MockEventFilter>();
-    mt::Signal devices_available;
-
-    void wait_for_input_devices()
-    {
-        devices_available.reset();
-        // The fake input devices are registered from within the input thread, as soon as the
-        // input manager starts. So clients may connect to the server before those additions
-        // have been processed.
-        auto counter = std::make_shared<DeviceCounter>(
-            [&](int count)
-            {
-                if (count == expected_number_of_input_devices)
-                    devices_available.raise();
-            });
-
-        auto hub = server.the_input_device_hub();
-
-        auto const register_counter = mir::raii::paired_calls(
-            [&]{ hub->add_observer(counter); },
-            [&]{ hub->remove_observer(counter); });
-
-        devices_available.wait_for(5s);
-        ASSERT_THAT(counter->count_devices, Eq(expected_number_of_input_devices));
-    }
 
     MirInputDevice const* get_device_with_capabilities(MirInputConfig const* config, MirInputDeviceCapabilities caps)
     {
@@ -1023,10 +975,9 @@ TEST_F(TestClientInput, callback_function_triggered_on_input_device_addition)
 
     std::string const touchpad{"touchpad"};
     std::string const touchpad_uid{"touchpad"};
-    std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
+    std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{add_fake_input_device(
         mi::InputDeviceInfo{touchpad, touchpad_uid,
                             mi::DeviceCapability::touchpad | mi::DeviceCapability::pointer})};
-    ++expected_number_of_input_devices;
     wait_for_input_devices();
 
     callback_triggered.wait_for(1s);
@@ -1223,10 +1174,9 @@ TEST_F(TestClientInput, pointer_config_is_mutable)
 TEST_F(TestClientInput, touchpad_config_can_be_querried)
 {
     MirTouchpadConfig const default_configuration;
-    std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
+    std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{add_fake_input_device(
         mi::InputDeviceInfo{"tpd", "tpd-id",
                             mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad})};
-    ++expected_number_of_input_devices;
     wait_for_input_devices();
 
     Client a_client(new_connection(), first);
@@ -1251,10 +1201,9 @@ TEST_F(TestClientInput, touchpad_config_can_be_querried)
 
 TEST_F(TestClientInput, touchpad_config_is_mutable)
 {
-    std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{mtf::add_fake_input_device(
+    std::unique_ptr<mtf::FakeInputDevice> fake_touchpad{add_fake_input_device(
         mi::InputDeviceInfo{"tpd", "tpd-id",
                             mi::DeviceCapability::pointer | mi::DeviceCapability::touchpad})};
-    ++expected_number_of_input_devices;
     wait_for_input_devices();
 
     Client a_client(new_connection(), first);
