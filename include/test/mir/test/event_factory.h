@@ -21,6 +21,9 @@
 
 #include "mir/geometry/point.h"
 
+#include <experimental/optional>
+#include <chrono>
+
 namespace mir
 {
 namespace input
@@ -70,10 +73,12 @@ public:
     MotionParameters();
     MotionParameters& from_device(int device_id);
     MotionParameters& with_movement(int rel_x, int rel_y);
+    MotionParameters& with_event_time(std::chrono::nanoseconds time);
 
     int device_id;
     int rel_x;
     int rel_y;
+    std::experimental::optional<std::chrono::nanoseconds> event_time;
 };
 MotionParameters a_pointer_event();
 

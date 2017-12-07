@@ -196,8 +196,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::MotionP
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
 
-    auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now().time_since_epoch());
+    auto event_time = pointer.event_time.value_or(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()));
     // constant scaling is used here to simplify checking for the
     // expected results. Default settings of the device lead to no
     // scaling at all.
