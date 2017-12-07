@@ -16,8 +16,6 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include "mir_test_framework/input_device_faker.h"
-
 #include "mir/input/input_device_info.h"
 #include "mir/input/event_filter.h"
 #include "mir/input/keymap.h"
@@ -30,10 +28,12 @@
 #include "mir/input/touchscreen_settings.h"
 
 #include "mir_test_framework/headless_in_process_server.h"
+#include "mir_test_framework/input_device_faker.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/placement_applying_shell.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/temporary_environment_value.h"
+#include "mir/test/signal.h"
 #include "mir/test/spin_wait.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/event_factory.h"
