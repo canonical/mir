@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2016 Canonical Ltd.
+ * Copyright © 2015-2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -28,6 +28,7 @@
 #include "mir/graphics/event_handler_register.h"
 
 #include "mir_test_framework/fake_input_device.h"
+#include "mir_test_framework/input_device_faker.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/headless_in_process_server.h"
@@ -194,10 +195,11 @@ struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
     std::shared_ptr<MockEventFilter> const mock_event_filter;
 };
 
-struct NestedInput : public mtf::HeadlessInProcessServer
+struct NestedInput : public mtf::HeadlessInProcessServer, mtf::InputDeviceFaker
 {
     Display display{display_geometry};
-    NestedInput()
+    NestedInput() :
+        mtf::InputDeviceFaker{server}
     {
         preset_display(mt::fake_shared(display));
     }
@@ -205,13 +207,16 @@ struct NestedInput : public mtf::HeadlessInProcessServer
     void SetUp()
     {
         mtf::HeadlessInProcessServer::SetUp();
+
+        fake_keyboard = add_fake_input_device(
+            mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard});
+
+        wait_for_input_devices();
     }
 
     mtd::NestedMockEGL mock_egl;
 
-    std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
-    };
+    std::unique_ptr<mtf::FakeInputDevice> fake_keyboard;
 
     mir::test::Signal all_events_received;
     mir::test::Signal input_device_changes_complete;
@@ -222,9 +227,14 @@ struct NestedInput : public mtf::HeadlessInProcessServer
 
 struct NestedInputWithMouse : NestedInput
 {
-    std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
-    };
+    void SetUp() override
+    {
+        NestedInput::SetUp();
+        fake_mouse = add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer});
+        wait_for_input_devices();
+    }
+
+    std::unique_ptr<mtf::FakeInputDevice> fake_mouse;
     MockEventFilter nested_event_filter;
 };
 
