@@ -40,7 +40,6 @@ fi
 
 GIT_REVISION=$( git rev-parse --short HEAD )
 
-# TODO: target release
 if [[ "${GIT_BRANCH}" =~ ^(release/|v)([0-9\.]+)$ ]]; then
   # we're on a release branch
   TARGET_PPA=ppa:mir-team/rc
@@ -65,6 +64,57 @@ if [[ "${GIT_BRANCH}" =~ ^(release/|v)([0-9\.]+)$ ]]; then
     MIR_VERSION=${MIR_VERSION}~rc${GIT_COMMITS}-g${GIT_REVISION}
   fi
 else
+  # look for a release tag within parents 2..n
+  PARENT=2
+  while git rev-parse HEAD^${PARENT} >/dev/null 2>&1; do
+    if [[ "$( git describe --exact-match HEAD^${PARENT} )" =~ ^v([0-9\.]+)$ ]]; then
+      # copy packages from ppa:mir-team/rc to ppa:mir-team/release_ppa
+      RELEASE_VERSION=${BASH_REMATCH[1]}-0ubuntu${UBUNTU_VERSION}
+      echo "Copying mir_${RELEASE_VERSION} from ppa:mir-team/rc to ppa:mir-team/release…"
+      python - ${RELEASE_VERSION} <<EOF
+import os
+import sys
+
+from launchpadlib.credentials import (RequestTokenAuthorizationEngine,
+                                      UnencryptedFileCredentialStore)
+from launchpadlib.launchpad import Launchpad
+
+try:
+  lp = Launchpad.login_with(
+    "mir-ci",
+    "production",
+    version="devel",
+    authorization_engine=RequestTokenAuthorizationEngine("production",
+                                                         "mir-ci"),
+    credential_store=UnencryptedFileCredentialStore(
+      os.path.expanduser("~/.launchpadlib/credentials")
+    )
+  )
+except NotImplementedError:
+  raise RuntimeError("Invalid credentials.")
+
+ubuntu = lp.distributions["ubuntu"]
+series = ubuntu.getSeries(name_or_version=os.environ['RELEASE'])
+
+mir_team = lp.people["mir-team"]
+rc_ppa = mir_team.getPPAByName(name="rc")
+release_ppa = mir_team.getPPAByName(name="release")
+
+release_ppa.copyPackage(source_name="mir",
+                        version=sys.argv[1],
+                        from_archive=rc_ppa,
+                        from_series=series.name,
+                        from_pocket="Release",
+                        to_series=series.name,
+                        to_pocket="Release",
+                        include_binaries=True)
+
+EOF
+      break
+    fi
+    PARENT=$(( ${PARENT} + 1 ))
+  done
+
   # upload to dev PPA
   TARGET_PPA=ppa:mir-team/dev
   GIT_VERSION=$( git describe | sed 's/^v//' )
