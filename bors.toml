@@ -1,4 +1,5 @@
 status = [ "continuous-integration/travis-ci/push" ]
+pr-status = [ "continuous-integration/travis-ci/pr" ]
 block-labels = [ "no-merge" ]
 timeout-sec = 12000
 delete-merged-branches = true
