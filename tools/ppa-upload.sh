@@ -22,7 +22,6 @@ from launchpadlib.launchpad import Launchpad
 
 lp = Launchpad.login_anonymously("mir-ci",
                                  "production",
-                                 "/tmp/lplib",
                                  version="devel")
 
 ubuntu = lp.distributions["ubuntu"]
