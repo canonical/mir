@@ -26,7 +26,8 @@ mir (0.29.0) UNRELEASED; urgency=medium
         (LP: #1728581)
       . Releasing Wayland buffers must occur on the executor thread.
         (LP: #1728069)
-      . Check that user is logged into the VT before using it (LP: #1728574)
+      . [miral-desktop] Check that user is logged into the VT before using it
+        (LP: #1728574)
       . Allow alternative cursor themes to be specified in a list. (Fixes #16)
       . Enable screen capture to SHM buffers. (Fixes #47)
       . Get mirscreencast working on Fedora. (Fixes #38)
@@ -62,7 +63,7 @@ mir (0.28.1) UNRELEASED; urgency=medium
       . Build process depends on Debian toolchain. (LP: #1724202)
       . XWayland clients updates not causing redraw (LP: #1720223)
 
- -- Alan Griffiths <alan@Octopull-desktop>  Tue, 17 Oct 2017 14:14:37 +0100
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 17 Oct 2017 14:14:37 +0100
 
 mir (0.28.0-0ubuntu1) UNRELEASED; urgency=medium
 
