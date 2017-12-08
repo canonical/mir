@@ -213,10 +213,9 @@ try
         // ensuring that the server has really and fully started.
         auto const main_loop = server->the_main_loop();
         main_loop->enqueue(this, start_callback);
-
-        server->run();
     }
 
+    server->run();
 
     return server->exited_normally() ? EXIT_SUCCESS : EXIT_FAILURE;
 }
