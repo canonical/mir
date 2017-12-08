@@ -493,12 +493,12 @@ private:
           size_{wl_shm_buffer_get_width(this->buffer), wl_shm_buffer_get_height(this->buffer)},
           stride_{wl_shm_buffer_get_stride(this->buffer)},
           format_{wl_format_to_mir_format(wl_shm_buffer_get_format(this->buffer))},
-          data{std::make_unique<uint8_t[]>(size_.height.as_int() * stride_.as_int() * MIR_BYTES_PER_PIXEL(format_))},
+          data{std::make_unique<uint8_t[]>(size_.height.as_int() * stride_.as_int())},
           consumed{false},
           on_consumed{std::move(on_consumed)}
     {
         wl_shm_buffer_begin_access(this->buffer);
-        std::memcpy(data.get(), wl_shm_buffer_get_data(this->buffer), size_.height.as_int() * stride_.as_int() * MIR_BYTES_PER_PIXEL(format_));
+        std::memcpy(data.get(), wl_shm_buffer_get_data(this->buffer), size_.height.as_int() * stride_.as_int());
         wl_shm_buffer_end_access(this->buffer);
     }
 
