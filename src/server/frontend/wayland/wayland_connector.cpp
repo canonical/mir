@@ -2110,6 +2110,18 @@ private:
         }
     }
 
+    std::function<void()> get_work()
+    {
+        std::lock_guard<std::recursive_mutex> lock{mutex};
+        if (!workqueue.empty())
+        {
+            auto const work = std::move(workqueue.front());
+            workqueue.pop_front();
+            return work;
+        }
+        return {};
+    }
+
     static int on_notify(int fd, uint32_t, void* data)
     {
         auto executor = static_cast<WaylandExecutor*>(data);
@@ -2123,10 +2135,8 @@ private:
                 err);
         }
 
-        std::lock_guard<std::recursive_mutex> lock{executor->mutex};
-        while (!executor->workqueue.empty())
+        while (auto work = executor->get_work())
         {
-            auto work = std::move(executor->workqueue.front());
             try
             {
                 work();
@@ -2139,8 +2149,6 @@ private:
                     std::current_exception(),
                     "Exception processing Wayland event loop work item");
             }
-
-            executor->workqueue.pop_front();
         }
 
         return 0;
