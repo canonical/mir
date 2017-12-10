@@ -378,7 +378,7 @@ int main()
 
     for (int i = 0; i < 4; ++i)
     {
-        ctx->buffers[i].buffer = wl_shm_pool_create_buffer(shm_pool, 0, 400, 400, 400, WL_SHM_FORMAT_ARGB8888);
+        ctx->buffers[i].buffer = wl_shm_pool_create_buffer(shm_pool, 0, 400, 400, 400*4, WL_SHM_FORMAT_ARGB8888);
         ctx->buffers[i].available = true;
         wl_buffer_add_listener(ctx->buffers[i].buffer, &buffer_listener, ctx);
     }
