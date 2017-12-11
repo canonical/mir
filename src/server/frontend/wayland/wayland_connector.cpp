@@ -497,6 +497,19 @@ private:
           consumed{false},
           on_consumed{std::move(on_consumed)}
     {
+        if (stride_.as_int() < size_.width.as_int() * MIR_BYTES_PER_PIXEL(format_))
+        {
+            wl_resource_post_error(
+                resource,
+                WL_SHM_ERROR_INVALID_STRIDE,
+                "Stride (%u) is less than width × bytes per pixel (%u×%u). "
+                "Did you accidentally specify stride in pixels?",
+                stride_.as_int(), size_.width.as_int(), MIR_BYTES_PER_PIXEL(format_));
+
+            BOOST_THROW_EXCEPTION((
+                std::runtime_error{"Buffer has invalid stride"}));
+        }
+
         wl_shm_buffer_begin_access(this->buffer);
         std::memcpy(data.get(), wl_shm_buffer_get_data(this->buffer), size_.height.as_int() * stride_.as_int());
         wl_shm_buffer_end_access(this->buffer);
