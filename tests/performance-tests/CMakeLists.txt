@@ -20,3 +20,11 @@ target_link_libraries(mir_performance_tests
 )
 
 add_dependencies(mir_performance_tests GMock)
+
+add_custom_target(mir-smoke-test-runner ALL
+    cp ${PROJECT_SOURCE_DIR}/tools/mir-smoke-test-runner.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-smoke-test-runner
+)
+
+install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir-smoke-test-runner
+    DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
+)
