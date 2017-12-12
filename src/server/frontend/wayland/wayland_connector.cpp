@@ -2326,21 +2326,19 @@ int mf::WaylandConnector::client_socket_fd() const
     enum { server, client, size };
     int socket_fd[size];
 
+    char const* error = nullptr;
+
     if (socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fd))
     {
-        BOOST_THROW_EXCEPTION((std::system_error{
-            errno,
-            std::system_category(),
-            "Could not create socket pair"}));
+        error = "Could not create socket pair";
+    }
+    else if (!wl_client_create(display.get(), socket_fd[server]))
+    {
+        error = "Failed to add server end of socketpair to Wayland display";
     }
 
-    if (!wl_client_create(display.get(), socket_fd[server]))
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{
-            errno,
-            std::system_category(),
-            "Failed to add server end of socketpair to Wayland display"}));
-    }
+    if (error)
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), error}));
 
     return socket_fd[client];
 }
