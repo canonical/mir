@@ -16,7 +16,11 @@ if (NOT GTEST_FOUND)
                 -DCMAKE_CXX_COMPILER_WORKS=1
                 -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS}'
                 -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
-            INSTALL_COMMAND true)
+            INSTALL_COMMAND true
+            BUILD_BYPRODUCTS
+                ${CMAKE_CURRENT_BINARY_DIR}/gtest/src/GTest-build/libgtest.a
+                ${CMAKE_CURRENT_BINARY_DIR}/gtest/src/GTest-build/libgtest_main.a
+                ${CMAKE_CURRENT_BINARY_DIR}/gtest/src/GMock-build/libgmock.a)
 
     ExternalProject_Get_Property(GTest binary_dir)
 
