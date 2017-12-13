@@ -9,13 +9,24 @@ branches:
   - staging
   - trying
   - master
+  # release branch
+  - /^release\/[\d\.]+$/
+  # release tag
+  - /^v[\d\.]+$/
 
 stages:
 - name: test
-  # everything is tested in staging first
-  if: NOT (branch = master AND type = push)
-- name: upload to ppa:mir-team/dev
-  if: branch = master AND type = push
+  # don't test on pushes to master or release pull requests or tag events
+  # TODO: enable release pull request testing when we have more CI power
+  if: NOT (( branch = master AND type = push )
+             OR ( head_branch =~ ^release/[\d\.]+$ ))
+      AND tag IS blank
+- name: upload to ppa:mir-team
+  if: type = push
+      AND repo = MirServer/mir
+      AND ( branch = master
+            OR branch =~ ^release/[\d\.]+$
+            OR tag =~ ^v[\d\.]+$ )
 
 env:
   global:
@@ -38,16 +49,16 @@ script:
 
 jobs:
   include:
-  - &dev-upload
-    stage: upload to ppa:mir-team/dev
+  - &ppa-upload
+    stage: upload to ppa:mir-team
     env: RELEASE=16.04
     before_install:
     - openssl aes-256-cbc -K $encrypted_ba35384b250b_key -iv $encrypted_ba35384b250b_iv
       -in tools/bot-data.tar.xz.enc -out tools/bot-data.tar.xz -d
     - tar --extract --xz --file tools/bot-data.tar.xz --directory ${HOME}
-    - git fetch --unshallow
+    - git fetch --unshallow origin master:master
     script:
-    - tools/dev-upload.sh
+    - tools/ppa-upload.sh
     addons:
       apt:
         packages:
@@ -56,9 +67,9 @@ jobs:
         - dput
         - fakeroot
         - python-launchpadlib
-  - <<: *dev-upload
+  - <<: *ppa-upload
     env: RELEASE=17.04
-  - <<: *dev-upload
+  - <<: *ppa-upload
     env: RELEASE=17.10
-  - <<: *dev-upload
+  - <<: *ppa-upload
     env: RELEASE=devel

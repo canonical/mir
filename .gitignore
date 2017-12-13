@@ -5,3 +5,5 @@ include/client/mir_toolkit/version.h
 include/miral/version.h
 build-*
 cmake-*
+
+tools/bot-data.tar.xz
