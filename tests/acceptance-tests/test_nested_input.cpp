@@ -159,20 +159,36 @@ std::vector<mir::geometry::Rectangle> const display_geometry
     {{  0, 0}, {1920, 1080}}
 };
 
-struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
+struct SurfaceTracker
 {
-    NestedServerWithMockEventFilter(std::string const& connection_string,
-        std::shared_ptr<MockEventFilter> const& event_filter)
-        : mtf::HeadlessNestedServerRunner(connection_string), mock_event_filter{event_filter}
+    SurfaceTracker(mir::Server& server)
     {
-        server.the_composite_event_filter()->prepend(mock_event_filter);
         server.wrap_shell(
             [this](std::shared_ptr<mir::shell::Shell> const& wrapped)
-            {
-                surfaces = std::make_shared<SurfaceTrackingShell>(wrapped);
-                return surfaces;
-            });
+                {
+                    surfaces = std::make_shared<SurfaceTrackingShell>(wrapped);
+                    return surfaces;
+                });
+    }
 
+    std::shared_ptr<mir::scene::Surface> get_surface(std::string const& name)
+    {
+        return surfaces->get_surface(name);
+    }
+
+    std::shared_ptr<SurfaceTrackingShell> surfaces;
+};
+
+struct NestedServerWithMockEventFilter  : mtf::HeadlessNestedServerRunner, SurfaceTracker
+{
+    NestedServerWithMockEventFilter(
+        std::string const& connection_string,
+        std::shared_ptr<MockEventFilter> const& event_filter) :
+        mtf::HeadlessNestedServerRunner(connection_string),
+        SurfaceTracker{server},
+        mock_event_filter{event_filter}
+    {
+        server.the_composite_event_filter()->prepend(mock_event_filter);
 
         start_server();
     }
@@ -186,18 +202,14 @@ struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
         stop_server();
     }
 
-    std::shared_ptr<mir::scene::Surface> get_surface(std::string const& name)
-    {
-        return surfaces->get_surface(name);
-    }
-    std::shared_ptr<SurfaceTrackingShell> surfaces;
     std::shared_ptr<MockEventFilter> const mock_event_filter;
 };
 
-struct NestedInput : public mtd::NestedMockEGL, mtf::HeadlessInProcessServer
+struct NestedInput : public mtd::NestedMockEGL, mtf::HeadlessInProcessServer, SurfaceTracker
 {
     Display display{display_geometry};
-    NestedInput()
+    NestedInput() :
+        SurfaceTracker{server}
     {
         preset_display(mt::fake_shared(display));
     }
@@ -227,6 +239,13 @@ struct NestedInput : public mtd::NestedMockEGL, mtf::HeadlessInProcessServer
 
     std::shared_ptr<NiceMock<mtd::MockInputDeviceObserver>> mock_observer{
         std::make_shared<NiceMock<mtd::MockInputDeviceObserver>>()};
+
+    bool wait_for_nested_server_to_have_focus()
+    {
+        auto const surface = get_surface("nested-mir@:none");
+
+        return mt::spin_wait_for_condition_or_timeout([&] { return surface->query(mir_window_attrib_focus); }, 1s);
+    }
 };
 
 struct NestedInputWithMouse : NestedInput
@@ -292,11 +311,7 @@ public:
     void test_and_raise()
     {
         if (exposed && focused && input_device_state_received)
-        {
-            if (!ready_to_accept_events.raised())
-                std::this_thread::sleep_for(1s); // TODO find a way to ensure the nested display has focus
             ready_to_accept_events.raise();
-        }
     }
 
     UniqueInputConfig get_input_config()
@@ -382,6 +397,8 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
 
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     ExposedSurface client(nested_mir.new_connection());
+    ASSERT_TRUE(wait_for_nested_server_to_have_focus());
+    ASSERT_TRUE(client.ready_to_accept_events.wait_for(10s));
 
     ASSERT_TRUE(devices_ready.wait_for(60s));
 
@@ -468,6 +485,8 @@ TEST_F(NestedInput, on_input_device_state_nested_server_emits_input_device_state
     ExposedSurface client_to_nested_mir(nested_mir.new_connection());
 
     client_to_nested_mir.ready_to_accept_events.wait_for(1s);
+    ASSERT_TRUE(wait_for_nested_server_to_have_focus());
+
     ExposedSurface client_to_host(new_connection());
     client_to_host.ready_to_accept_events.wait_for(1s);
 
@@ -506,6 +525,7 @@ TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_in_nested_server_are_accu
     ASSERT_TRUE(client_to_nested_mir.ready_to_accept_events.wait_for(60s));
 
     ASSERT_TRUE(devices_ready.wait_for(60s));
+    ASSERT_TRUE(wait_for_nested_server_to_have_focus());
 
     fake_mouse->emit_event(mis::a_pointer_event().with_movement(initial_movement_x, initial_movement_y));
     ASSERT_TRUE(event_received.wait_for(60s));
@@ -545,6 +565,7 @@ TEST_F(NestedInputWithMouse, mouse_pointer_position_is_in_sync_with_host_server)
 
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     ExposedSurface client_to_nested_mir(nested_mir.new_connection());
+    ASSERT_TRUE(wait_for_nested_server_to_have_focus());
     ASSERT_TRUE(client_to_nested_mir.ready_to_accept_events.wait_for(60s));
     ASSERT_TRUE(devices_ready.wait_for(60s));
 
@@ -567,6 +588,7 @@ TEST_F(NestedInput, nested_clients_can_change_host_device_configurations)
                 fake_device_received.raise();
         });
     client_to_nested.ready_to_accept_events.wait_for(4s);
+    ASSERT_TRUE(wait_for_nested_server_to_have_focus());
 
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", uid, mi::DeviceCapability::pointer})
@@ -601,8 +623,10 @@ TEST_F(NestedInput, pressed_keys_on_vt_switch_are_forgotten)
 
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     ExposedSurface client_to_nested(nested_mir.new_connection(), "with_keymap");
+
     ASSERT_TRUE(devices_ready.wait_for(10s));
     ASSERT_TRUE(client_to_nested.ready_to_accept_events.wait_for(10s));
+    ASSERT_TRUE(wait_for_nested_server_to_have_focus());
 
     {
         mt::Signal keymap_received;
