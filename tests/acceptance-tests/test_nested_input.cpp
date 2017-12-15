@@ -158,11 +158,11 @@ std::vector<mir::geometry::Rectangle> const display_geometry
 {
     {{  0, 0}, {1920, 1080}}
 };
-    
+
 struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
 {
     NestedServerWithMockEventFilter(std::string const& connection_string,
-                                    std::shared_ptr<MockEventFilter> const& event_filter)
+        std::shared_ptr<MockEventFilter> const& event_filter)
         : mtf::HeadlessNestedServerRunner(connection_string), mock_event_filter{event_filter}
     {
         server.the_composite_event_filter()->prepend(mock_event_filter);
@@ -194,7 +194,7 @@ struct NestedServerWithMockEventFilter : mtf::HeadlessNestedServerRunner
     std::shared_ptr<MockEventFilter> const mock_event_filter;
 };
 
-struct NestedInput : public mtf::HeadlessInProcessServer
+struct NestedInput : public mtd::NestedMockEGL, mtf::HeadlessInProcessServer
 {
     Display display{display_geometry};
     NestedInput()
@@ -202,12 +202,21 @@ struct NestedInput : public mtf::HeadlessInProcessServer
         preset_display(mt::fake_shared(display));
     }
 
+    ~NestedInput()
+    {
+        std::this_thread::sleep_for(1s); // TODO - fix race between shutdown and EGL calls
+    }
+
     void SetUp()
     {
         mtf::HeadlessInProcessServer::SetUp();
     }
 
-    mtd::NestedMockEGL mock_egl;
+    void TearDown() override
+    {
+        mock_observer.reset();
+        mtf::HeadlessInProcessServer::TearDown();
+    }
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
@@ -225,6 +234,12 @@ struct NestedInputWithMouse : NestedInput
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
         mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
     };
+
+    void TearDown() override
+    {
+        Mock::VerifyAndClearExpectations(&nested_event_filter);
+        NestedInput::TearDown();
+    }
     MockEventFilter nested_event_filter;
 };
 
@@ -277,7 +292,11 @@ public:
     void test_and_raise()
     {
         if (exposed && focused && input_device_state_received)
+        {
+            if (!ready_to_accept_events.raised())
+                std::this_thread::sleep_for(1s); // TODO find a way to ensure the nested display has focus
             ready_to_accept_events.raise();
+        }
     }
 
     UniqueInputConfig get_input_config()
