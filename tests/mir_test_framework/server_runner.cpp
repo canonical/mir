@@ -45,14 +45,14 @@ mtf::ServerRunner::ServerRunner() :
 
 void mtf::ServerRunner::start_server()
 {
-    auto const ml = start_mir_server();
+    auto ml = start_mir_server();
     if (ml == nullptr)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to start server thread"});
     }
 
     std::lock_guard<std::mutex> main_loop_lock{main_loop_mutex};
-    main_loop = ml;
+    std::swap(ml, main_loop);
 }
 
 std::string mtf::ServerRunner::new_connection()
@@ -71,18 +71,21 @@ std::string mtf::ServerRunner::new_prompt_connection()
 
 void mtf::ServerRunner::stop_server()
 {
-    decltype(main_loop) ml;
-
     {
-        std::lock_guard<std::mutex> main_loop_lock{main_loop_mutex};
-        ml = main_loop;
+        decltype(main_loop) ml;
+
+        {
+            std::lock_guard<std::mutex> main_loop_lock{main_loop_mutex};
+            std::swap(ml, main_loop);
+        }
+
+        if (ml == nullptr)
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error{"stop_server() called without calling start_server()?"});
+        }
+        ml->stop();
     }
 
-    if (ml == nullptr)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error{"stop_server() called without calling start_server()?"});
-    }
-    ml->stop();
     if (server_thread.joinable()) server_thread.join();
 }
 
