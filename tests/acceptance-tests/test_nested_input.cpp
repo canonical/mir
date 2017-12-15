@@ -593,37 +593,48 @@ TEST_F(NestedInput, nested_clients_can_change_host_device_configurations)
 
 TEST_F(NestedInput, pressed_keys_on_vt_switch_are_forgotten)
 {
-    mt::Signal keymap_received;
-    mt::Signal devices_ready;
-    mt::Signal initial_keys_received;
-    mt::Signal keys_without_modifier_received;
     NiceMock<MockEventFilter> nested_event_filter;
-    ON_CALL(nested_event_filter, handle(
-            mt::InputDeviceStateEvent()))
+
+    mt::Signal devices_ready;
+    ON_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent()))
         .WillByDefault(mt::WakeUp(&devices_ready));
 
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     ExposedSurface client_to_nested(nested_mir.new_connection(), "with_keymap");
-
     ASSERT_TRUE(devices_ready.wait_for(10s));
-    EXPECT_CALL(client_to_nested, handle_keymap())
-        .WillOnce(mt::WakeUp(&keymap_received));
-    EXPECT_CALL(client_to_nested, handle_input(mt::KeyOfScanCode(KEY_RIGHTALT)));
-    EXPECT_CALL(client_to_nested, handle_input(mt::KeyOfScanCode(KEY_RIGHTCTRL)))
-        .WillOnce(mt::WakeUp(&initial_keys_received));
-
-    nested_mir.get_surface("with_keymap")->set_keymap(MirInputDeviceId{0}, "pc105", "de", "", "");
-
     ASSERT_TRUE(client_to_nested.ready_to_accept_events.wait_for(10s));
-    EXPECT_TRUE(keymap_received.wait_for(10s));
 
-    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTALT));
-    fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTCTRL));
+    {
+        mt::Signal keymap_received;
 
-    EXPECT_TRUE(initial_keys_received.wait_for(10s));
+        EXPECT_CALL(client_to_nested, handle_keymap()).WillOnce(mt::WakeUp(&keymap_received));
+
+        nested_mir.get_surface("with_keymap")->set_keymap(MirInputDeviceId{0}, "pc105", "de", "", "");
+
+        EXPECT_TRUE(keymap_received.wait_for(10s));
+    }
+
+    {
+        mt::Signal initial_keys_received;
+
+        EXPECT_CALL(client_to_nested, handle_input(mt::KeyOfScanCode(KEY_RIGHTALT)));
+        EXPECT_CALL(client_to_nested, handle_input(mt::KeyOfScanCode(KEY_RIGHTCTRL)))
+            .WillOnce(mt::WakeUp(&initial_keys_received));
+
+        fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTALT));
+        fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTCTRL));
+
+        EXPECT_TRUE(initial_keys_received.wait_for(10s));
+    }
 
     display.trigger_pause();
     display.trigger_resume();
+
+    // The expectations above are abused to set up the test conditions,
+    // clearing them gives clearer errors from the actual test that follows.
+    Mock::VerifyAndClearExpectations(&client_to_nested);
+
+    mt::Signal keys_without_modifier_received;
 
     EXPECT_CALL(client_to_nested,
                 handle_input(AllOf(mt::KeyOfScanCode(KEY_A), mt::KeyWithModifiers(mir_input_event_modifier_none))))
