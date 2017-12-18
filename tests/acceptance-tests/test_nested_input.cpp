@@ -194,7 +194,7 @@ struct NestedServerWithMockEventFilter  : mtf::HeadlessNestedServerRunner, Surfa
         start_server();
     }
     NestedServerWithMockEventFilter(std::string const& connection_string)
-        : NestedServerWithMockEventFilter(connection_string, std::make_shared<MockEventFilter>())
+        : NestedServerWithMockEventFilter(connection_string, std::make_shared<NiceMock<MockEventFilter>>())
     {
     }
 
@@ -222,7 +222,6 @@ struct NestedInput : public mtd::NestedMockEGL, mtf::HeadlessInProcessServer, Su
 
     void TearDown() override
     {
-        mock_observer.reset();
         mtf::HeadlessInProcessServer::TearDown();
     }
 
@@ -231,9 +230,6 @@ struct NestedInput : public mtd::NestedMockEGL, mtf::HeadlessInProcessServer, Su
     };
 
     mir::test::Signal input_device_changes_complete;
-
-    std::shared_ptr<NiceMock<mtd::MockInputDeviceObserver>> mock_observer{
-        std::make_shared<NiceMock<mtd::MockInputDeviceObserver>>()};
 
     bool wait_for_nested_server_to_have_focus()
     {
@@ -284,7 +280,6 @@ public:
     }
 
     MOCK_METHOD1(handle_input, void(MirEvent const*));
-    MOCK_METHOD1(handle_device_state, void(MirEvent const*));
     MOCK_METHOD0(handle_keymap, void());
 
     void handle_window_event(MirWindowEvent const* event)
@@ -343,7 +338,6 @@ public:
         {
             client->input_device_state_received = true;
             client->test_and_raise();
-            client->handle_device_state(ev);
         }
 
     }
@@ -351,6 +345,7 @@ public:
     static void null_event_handler(MirWindow*, MirEvent const*, void*) {};
     ~ExposedSurface()
     {
+        mir_connection_set_input_config_change_callback(connection, [](MirConnection*, void*){}, nullptr);
         mir_window_set_event_handler(window, null_event_handler, nullptr);
         mir_window_release_sync(window);
         mir_connection_release(connection);
@@ -375,10 +370,12 @@ private:
 TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
 {
     NiceMock<MockEventFilter> nested_event_filter;
-    NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
-    wait_for_input_devices_added_to(nested_mir.server);
+    EXPECT_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent())).Times(AnyNumber());
 
+    NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     NiceMock<ExposedSurface> client(nested_mir.new_connection());
+
+    wait_for_input_devices_added_to(nested_mir.server);
     ASSERT_TRUE(wait_for_nested_server_to_have_focus());
     ASSERT_TRUE(client.ready_to_accept_events.wait_for(10s));
 
@@ -392,11 +389,6 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_RIGHTSHIFT));
 
     EXPECT_TRUE(all_events_received.wait_for(10s));
-
-    // TODO track down why teardown is racy
-    Mock::VerifyAndClearExpectations(&client);
-    Mock::VerifyAndClearExpectations(&nested_event_filter);
-    std::this_thread::sleep_for(1s);
 }
 
 TEST_F(NestedInput, nested_input_device_hub_lists_keyboard)
@@ -417,6 +409,9 @@ TEST_F(NestedInput, nested_input_device_hub_lists_keyboard)
 
 TEST_F(NestedInput, on_add_device_observer_gets_device_added_calls_on_existing_devices)
 {
+    std::shared_ptr<NiceMock<mtd::MockInputDeviceObserver>> mock_observer{
+        std::make_shared<NiceMock<mtd::MockInputDeviceObserver>>()};
+
     NestedServerWithMockEventFilter nested_mir{new_connection()};
     auto nested_hub = nested_mir.server.the_input_device_hub();
     wait_for_input_devices_added_to(nested_mir.server);
@@ -431,6 +426,9 @@ TEST_F(NestedInput, on_add_device_observer_gets_device_added_calls_on_existing_d
 
 TEST_F(NestedInput, device_added_on_host_triggeres_nested_device_observer)
 {
+    std::shared_ptr<NiceMock<mtd::MockInputDeviceObserver>> mock_observer{
+        std::make_shared<NiceMock<mtd::MockInputDeviceObserver>>()};
+
     NestedServerWithMockEventFilter nested_mir{new_connection()};
     auto nested_hub = nested_mir.server.the_input_device_hub();
 
@@ -542,6 +540,7 @@ TEST_F(NestedInputWithMouse, mouse_pointer_position_is_in_sync_with_host_server)
 
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     ExposedSurface client_to_nested_mir(nested_mir.new_connection());
+    wait_for_input_devices_added_to(nested_mir.server);
     ASSERT_TRUE(wait_for_nested_server_to_have_focus());
     ASSERT_TRUE(client_to_nested_mir.ready_to_accept_events.wait_for(60s));
     ASSERT_TRUE(devices_ready.wait_for(60s));
