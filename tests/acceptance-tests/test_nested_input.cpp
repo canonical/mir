@@ -31,6 +31,7 @@
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/headless_in_process_server.h"
+#include "mir_test_framework/input_device_faker.h"
 #include "mir_test_framework/any_surface.h"
 #include "mir/test/doubles/nested_mock_egl.h"
 #include "mir/test/doubles/mock_input_device_observer.h"
@@ -205,7 +206,7 @@ struct NestedServerWithMockEventFilter  : mtf::HeadlessNestedServerRunner, Surfa
     std::shared_ptr<MockEventFilter> const mock_event_filter;
 };
 
-struct NestedInput : public mtd::NestedMockEGL, mtf::HeadlessInProcessServer, SurfaceTracker
+struct NestedInput : public mtd::NestedMockEGL, mtf::HeadlessInProcessServer, SurfaceTracker, mtf::InputDeviceFaker
 {
     Display display{display_geometry};
     NestedInput() :
@@ -226,10 +227,9 @@ struct NestedInput : public mtd::NestedMockEGL, mtf::HeadlessInProcessServer, Su
     }
 
     std::unique_ptr<mtf::FakeInputDevice> fake_keyboard{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
+        add_fake_input_device(mi::InputDeviceInfo{"keyboard", "keyboard-uid" , mi::DeviceCapability::keyboard})
     };
 
-    mir::test::Signal all_events_received;
     mir::test::Signal input_device_changes_complete;
 
     std::shared_ptr<NiceMock<mtd::MockInputDeviceObserver>> mock_observer{
@@ -246,7 +246,7 @@ struct NestedInput : public mtd::NestedMockEGL, mtf::HeadlessInProcessServer, Su
 struct NestedInputWithMouse : NestedInput
 {
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
+        add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer})
     };
 
     void TearDown() override
@@ -374,55 +374,36 @@ private:
 
 TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
 {
-    MockEventFilter nested_event_filter;
-    std::atomic<int> num_key_a_events{0};
-    auto const increase_key_a_events = [&num_key_a_events] { ++num_key_a_events; };
-    mt::Signal devices_ready;
-
-    InSequence seq;
-    EXPECT_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent()))
-        .WillOnce(mt::WakeUp(&devices_ready));
-    EXPECT_CALL(nested_event_filter, handle(mt::KeyOfScanCode(KEY_A))).
-        Times(AtLeast(1)).
-        WillRepeatedly(InvokeWithoutArgs(increase_key_a_events));
-
-    EXPECT_CALL(nested_event_filter, handle(mt::KeyOfScanCode(KEY_RIGHTSHIFT))).
-        Times(2).
-        WillOnce(mt::WakeUp(&all_events_received));
-
+    NiceMock<MockEventFilter> nested_event_filter;
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
-    ExposedSurface client(nested_mir.new_connection());
+    wait_for_input_devices_added_to(nested_mir.server);
+
+    NiceMock<ExposedSurface> client(nested_mir.new_connection());
     ASSERT_TRUE(wait_for_nested_server_to_have_focus());
     ASSERT_TRUE(client.ready_to_accept_events.wait_for(10s));
 
-    ASSERT_TRUE(devices_ready.wait_for(60s));
-
-    // Because we are testing a nested setup, it's difficult to guarantee
-    // that the nested framebuffer window (and consenquently the client window
-    // contained in it) is going to be ready (i.e., exposed and focused) to receive
-    // events when we send them. We work around this issue by first sending some
-    // dummy events and waiting until we receive one of them.
-    auto const dummy_events_received = mt::spin_wait_for_condition_or_timeout(
-        [&]
-        {
-            if (num_key_a_events > 0) return true;
-            fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_A));
-            fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_A));
-            return false;
-        },
-        std::chrono::seconds{10});
-
-    EXPECT_TRUE(dummy_events_received);
+    mt::Signal all_events_received;
+    EXPECT_CALL(nested_event_filter, handle(mt::KeyOfScanCode(KEY_RIGHTSHIFT))).
+        Times(2).
+        WillOnce(Return()).
+        WillOnce(mt::WakeUp(&all_events_received));
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_RIGHTSHIFT));
     fake_keyboard->emit_event(mis::a_key_up_event().of_scancode(KEY_RIGHTSHIFT));
 
-    all_events_received.wait_for(std::chrono::seconds{10});
+    EXPECT_TRUE(all_events_received.wait_for(10s));
+
+    // TODO track down why teardown is racy
+    Mock::VerifyAndClearExpectations(&client);
+    Mock::VerifyAndClearExpectations(&nested_event_filter);
+    std::this_thread::sleep_for(1s);
 }
 
 TEST_F(NestedInput, nested_input_device_hub_lists_keyboard)
 {
     NestedServerWithMockEventFilter nested_mir{new_connection()};
+    wait_for_input_devices_added_to(nested_mir.server);
+
     auto nested_hub = nested_mir.server.the_input_device_hub();
 
     nested_hub->for_each_input_device(
@@ -438,6 +419,7 @@ TEST_F(NestedInput, on_add_device_observer_gets_device_added_calls_on_existing_d
 {
     NestedServerWithMockEventFilter nested_mir{new_connection()};
     auto nested_hub = nested_mir.server.the_input_device_hub();
+    wait_for_input_devices_added_to(nested_mir.server);
 
     EXPECT_CALL(*mock_observer, device_added(_))
         .WillOnce(mt::WakeUp(&input_device_changes_complete));
@@ -466,7 +448,7 @@ TEST_F(NestedInput, device_added_on_host_triggeres_nested_device_observer)
     EXPECT_CALL(*mock_observer, device_added(_)).Times(1)
         .WillOnce(mt::WakeUp(&input_device_changes_complete));
 
-    auto mouse = mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer});
+    auto mouse = add_fake_input_device(mi::InputDeviceInfo{"mouse", "mouse-uid" , mi::DeviceCapability::pointer});
 
     input_device_changes_complete.wait_for(10s);
 }
@@ -586,9 +568,10 @@ TEST_F(NestedInput, nested_clients_can_change_host_device_configurations)
     ASSERT_TRUE(wait_for_nested_server_to_have_focus());
 
     std::unique_ptr<mtf::FakeInputDevice> fake_mouse{
-        mtf::add_fake_input_device(mi::InputDeviceInfo{"mouse", uid, mi::DeviceCapability::pointer})
+        add_fake_input_device(mi::InputDeviceInfo{"mouse", uid, mi::DeviceCapability::pointer})
     };
 
+    wait_for_input_devices_added_to(nested_mir.server);
     ASSERT_TRUE(fake_device_received.wait_for(4s));
 
     auto device_config = client_to_nested.get_input_config();
@@ -612,14 +595,10 @@ TEST_F(NestedInput, pressed_keys_on_vt_switch_are_forgotten)
 {
     NiceMock<MockEventFilter> nested_event_filter;
 
-    mt::Signal devices_ready;
-    ON_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent()))
-        .WillByDefault(mt::WakeUp(&devices_ready));
-
     NestedServerWithMockEventFilter nested_mir{new_connection(), mt::fake_shared(nested_event_filter)};
     ExposedSurface client_to_nested(nested_mir.new_connection(), "with_keymap");
 
-    ASSERT_TRUE(devices_ready.wait_for(10s));
+    wait_for_input_devices_added_to(nested_mir.server);
     ASSERT_TRUE(client_to_nested.ready_to_accept_events.wait_for(10s));
     ASSERT_TRUE(wait_for_nested_server_to_have_focus());
 
@@ -661,4 +640,5 @@ TEST_F(NestedInput, pressed_keys_on_vt_switch_are_forgotten)
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_A));
     EXPECT_TRUE(keys_without_modifier_received.wait_for(10s));
+    std::this_thread::sleep_for(100ms);
 }
