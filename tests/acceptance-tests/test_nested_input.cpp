@@ -214,11 +214,6 @@ struct NestedInput : public mtd::NestedMockEGL, mtf::HeadlessInProcessServer, Su
         preset_display(mt::fake_shared(display));
     }
 
-    ~NestedInput()
-    {
-        std::this_thread::sleep_for(1s); // TODO - fix race between shutdown and EGL calls
-    }
-
     void SetUp()
     {
         mtf::HeadlessInProcessServer::SetUp();
