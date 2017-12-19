@@ -397,10 +397,13 @@ namespace
         ~AutoSendBuffer()
         {
             executor.spawn(
-                [maybe_sink = sink, to_send = std::move(buffer)]()
+                [maybe_sink = sink, maybe_to_send = std::weak_ptr<mg::Buffer>(buffer)]()
                 {
                     if (auto const live_sink = maybe_sink.lock())
-                        live_sink->update_buffer(*to_send);
+                    {
+                        if (auto const& to_send = maybe_to_send.lock())
+                            live_sink->update_buffer(*to_send);
+                    }
                 });
         }
 
