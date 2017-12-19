@@ -625,6 +625,7 @@ TEST_F(NestedInput, pressed_keys_on_vt_switch_are_forgotten)
     }
 
     display.trigger_pause();
+    std::this_thread::sleep_for(100ms); // This is a frig to allow work queues to empty
     display.trigger_resume();
 
     // The expectations above are abused to set up the test conditions,
@@ -639,5 +640,4 @@ TEST_F(NestedInput, pressed_keys_on_vt_switch_are_forgotten)
 
     fake_keyboard->emit_event(mis::a_key_down_event().of_scancode(KEY_A));
     EXPECT_TRUE(keys_without_modifier_received.wait_for(10s));
-    std::this_thread::sleep_for(100ms);
 }
