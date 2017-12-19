@@ -94,6 +94,26 @@ mg::GammaCurve convert_string_to_gamma_curve(std::string const& str_bytes)
     std::copy(std::begin(str_bytes), std::end(str_bytes), reinterpret_cast<char*>(out.data()));
     return out;
 }
+
+// This is ugly, but only runs on teardown.
+void complete_outstanding_work_on(mir::Executor& executor)
+{
+    // We don't know if the executor is shared and we can't identify "our" work, but
+    // we know the anything we spawn() will be processed after other work of ours.
+    std::mutex mutex;
+    std::condition_variable cv;
+    bool signalled{false};
+
+    executor.spawn([&]
+        {
+            std::lock_guard<decltype(mutex)> lock(mutex);
+            signalled = true;
+            cv.notify_all();
+        });
+
+    std::unique_lock<decltype(mutex)> lock(mutex);
+    cv.wait(lock, [&] { return signalled; });
+}
 }
 
 mf::SessionMediator::SessionMediator(
@@ -146,6 +166,8 @@ mf::SessionMediator::~SessionMediator() noexcept
         shell->close_session(session);
     }
     destroy_screencast_sessions();
+
+    complete_outstanding_work_on(executor);
 }
 
 void mf::SessionMediator::client_pid(int pid)
