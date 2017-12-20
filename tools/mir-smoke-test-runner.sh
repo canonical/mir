@@ -5,9 +5,18 @@ date --utc --iso-8601=seconds | xargs echo "[timestamp] Start time :"
 
 mir_rc=0
 timeout=3
-WAYLAND_DESKTOP=mir-smoke-test
-MIR_SERVER_WAYLAND_SOCKET=${WAYLAND_DESKTOP}
 
+if [ -v MIR_SOCKET ]
+then
+  if [ ! -e "${MIR_SOCKET}" ]
+  then
+    echo "Error: Host endpoint '${MIR_SOCKET}' does not exists"; exit 1
+  fi
+  export MIR_SERVER_HOST_SOCKET=${MIR_SOCKET}
+fi
+
+export WAYLAND_DISPLAY=mir-smoke-test
+export MIR_SERVER_WAYLAND_SOCKET_NAME=${WAYLAND_DISPLAY}
 root="$( dirname "${BASH_SOURCE[0]}" )"
 
 client_list=`find ${root} -name mir_demo_client_* | grep -v bin$ | sed s?${root}/??`
