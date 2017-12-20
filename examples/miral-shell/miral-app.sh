@@ -9,7 +9,7 @@ if [ -n "${MIR_SOCKET}" ]
 then
   if [ ! -e "${MIR_SOCKET}" ]
   then
-    echo "Error: Host endpoint '${MIR_SOCKET}' does not exists"; exit 1
+    echo "Error: Host endpoint '${MIR_SOCKET}' does not exist"; exit 1
   fi
   hostsocket='--host-socket ${MIR_SOCKET}'
 fi
