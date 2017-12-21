@@ -9,7 +9,7 @@ if [ -n "${MIR_SOCKET}" ]
 then
   if [ ! -e "${MIR_SOCKET}" ]
   then
-    echo "Error: Host endpoint '${MIR_SOCKET}' does not exists"; exit 1
+    echo "Error: Host endpoint '${MIR_SOCKET}' does not exist"; exit 1
   fi
   hostsocket='--host-socket ${MIR_SOCKET}'
 fi
@@ -60,5 +60,5 @@ while [ ! -e "${socket}" ]; do echo "waiting for ${socket}"; sleep 1 ;done
 
 unset QT_QPA_PLATFORMTHEME
 MIR_SOCKET=${socket} XDG_SESSION_TYPE=mir GDK_BACKEND=mir QT_QPA_PLATFORM=${qt_qpa_platform} SDL_VIDEODRIVER=wayland WAYLAND_DISPLAY=${wayland_display} dbus-run-session -- ${launcher}
-killall ${bindir}${miral_server}
+killall ${bindir}${miral_server} || killall ${bindir}${miral_server}.bin
 

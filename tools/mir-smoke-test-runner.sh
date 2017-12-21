@@ -5,8 +5,17 @@ date --utc --iso-8601=seconds | xargs echo "[timestamp] Start time :"
 
 mir_rc=0
 timeout=3
-WAYLAND_DESKTOP=mir-smoke-test
-MIR_SERVER_WAYLAND_SOCKET=${WAYLAND_DESKTOP}
+wayland_display="mir-smoke-test"
+options="--wayland-socket-name=${wayland_display} --test-timeout=${timeout}"
+
+if [ -v MIR_SOCKET ]
+then
+  if [ ! -e "${MIR_SOCKET}" ]
+  then
+    echo "Error: Host endpoint '${MIR_SOCKET}' does not exist"; exit 1
+  fi
+  options="${options} --host-socket ${MIR_SOCKET}"
+fi
 
 root="$( dirname "${BASH_SOURCE[0]}" )"
 
@@ -18,8 +27,8 @@ echo "I: client_list=" ${client_list}
 for client in ${client_list}; do
     echo running client ${client}
     date --utc --iso-8601=seconds | xargs echo "[timestamp] Start :" ${client}
-    echo ${root}/mir_demo_server --test-timeout=${timeout} --test-client ${root}/${client}
-    if   ${root}/mir_demo_server --test-timeout=${timeout} --test-client ${root}/${client}
+    echo WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client ${root}/${client}
+    if   WAYLAND_DISPLAY=${wayland_display} ${root}/mir_demo_server ${options} --test-client ${root}/${client}
     then
       echo "I: [PASSED]" ${root}/${client}
     else
