@@ -17,6 +17,8 @@
  */
 
 #include "decoration_provider.h"
+#include "mir_peace_wall.h"
+
 #include "titlebar_config.h"
 
 #include <mir/client/display_config.h>
@@ -243,7 +245,9 @@ void Printer::printhelp(MirGraphicsRegion const& region)
                 for (auto row = 0u; row != bitmap.rows; ++row)
                 {
                     for (auto col = 0u; col != 4 * bitmap.width; ++col)
-                        dest[col] |= src[col / 4]/2;
+                    {
+                        dest[col] = (0xff*src[col / 4] + (dest[col] * (0xff - src[col / 4])))/0xff;
+                    }
 
                     src += bitmap.pitch;
                     dest += region.stride;
@@ -261,19 +265,48 @@ void Printer::printhelp(MirGraphicsRegion const& region)
 
 void render_background(MirBufferStream* buffer_stream, MirGraphicsRegion& graphics_region)
 {
-    static uint8_t const pattern[4] = {0x00, 0x00, 0x00, 0x00 };
-
-    char* row = (&graphics_region)->vaddr;
-
-    for (int j = 0; j < (&graphics_region)->height; j++)
     {
-        uint32_t* pixel = (uint32_t*)row;
+        static uint8_t const pattern[4] = {0x00, 0x00, 0x00, 0x00 };
 
-        for (int i = 0; i < (&graphics_region)->width; i++)
-            memcpy(pixel + i, pattern, sizeof pixel[i]);
+        char* row = (&graphics_region)->vaddr;
 
-        row += (&graphics_region)->stride;
+        for (int j = 0; j < (&graphics_region)->height; j++)
+        {
+            uint32_t* pixel = (uint32_t*)row;
+
+            for (int i = 0; i < (&graphics_region)->width; i++)
+                memcpy(pixel + i, pattern, sizeof pixel[i]);
+
+            row += (&graphics_region)->stride;
+        }
     }
+
+    {
+        char unsigned const* src = mir_peace_wall.pixel_data;
+
+        char* row = (&graphics_region)->vaddr;
+
+        for (int j = 0; j < (&graphics_region)->height; j++)
+        {
+            auto const src_row = src + mir_peace_wall.bytes_per_pixel * ((j%mir_peace_wall.height)*mir_peace_wall.width);
+
+            for (int i = 0; i < (&graphics_region)->width; i++)
+            {
+                // src:  RGBA
+                // dest:XRGB
+                auto const src_pixel = src_row + mir_peace_wall.bytes_per_pixel * (i%mir_peace_wall.width);
+                auto const dst_pixel = row + 4*i;
+
+                dst_pixel[0] = src_pixel[2]; // blue
+                dst_pixel[1] = src_pixel[1]; // green
+                dst_pixel[2] = src_pixel[0]; // red
+                dst_pixel[3] = 0;
+            }
+
+            row += (&graphics_region)->stride;
+        }
+    }
+
 
     static Printer printer;
     printer.printhelp(*&graphics_region);
