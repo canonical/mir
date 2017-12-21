@@ -94,6 +94,43 @@ mg::GammaCurve convert_string_to_gamma_curve(std::string const& str_bytes)
     std::copy(std::begin(str_bytes), std::end(str_bytes), reinterpret_cast<char*>(out.data()));
     return out;
 }
+
+// This is ugly, but only runs on teardown.
+void complete_outstanding_work_on(mir::Executor& executor)
+{
+    using namespace std::chrono_literals;
+
+    // We don't know if the executor is shared and we can't identify "our" work, but
+    // we know the anything we spawn() will be processed after other work of ours.
+
+    struct Signal
+    {
+        void ready()
+        {
+            std::lock_guard<decltype(mutex)> lock(mutex);
+            signalled = true;
+            cv.notify_all();
+        };
+
+        void wait()
+        {
+            std::unique_lock<decltype(mutex)> lock(mutex);
+
+            // In normal usage this doesn't timeout, but when running multiple,
+            // nested, servers in a process (for example, in testing) we need to
+            // avoid deadlocking with the far end of the "host-nested connection".
+            cv.wait_for(lock, 100ms, [&] { return signalled; });
+        }
+
+        std::mutex mutex;
+        std::condition_variable cv;
+        bool signalled{false};
+    };
+
+    auto const signal = std::make_shared<Signal>();
+    executor.spawn([signal] { signal->ready(); });
+    signal->wait();
+}
 }
 
 mf::SessionMediator::SessionMediator(
@@ -146,6 +183,8 @@ mf::SessionMediator::~SessionMediator() noexcept
         shell->close_session(session);
     }
     destroy_screencast_sessions();
+
+    complete_outstanding_work_on(executor);
 }
 
 void mf::SessionMediator::client_pid(int pid)

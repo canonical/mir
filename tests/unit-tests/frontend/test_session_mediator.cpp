@@ -1383,6 +1383,8 @@ TEST_F(SessionMediator, buffer_releases_are_sent_from_specified_executor)
     EXPECT_CALL(executor, spawn_thunk(_)).Times(1);
 
     mediator.submit_buffer(&submit_request, &null, null_callback.get());
+
+    Mock::VerifyAndClearExpectations(&executor);
 }
 
 namespace
