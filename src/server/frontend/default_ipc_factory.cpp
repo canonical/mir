@@ -31,6 +31,7 @@
 #include "mir/cookie/authority.h"
 #include "mir/executor.h"
 #include "mir/signal_blocker.h"
+#include "mir/thread_name.h"
 
 #include <deque>
 
@@ -51,6 +52,7 @@ public:
 
     void do_work() noexcept
     {
+        mir::set_thread_name("IPC Executor");
         std::unique_lock<std::mutex> lock{queue_mutex};
         for(;;)
         {
