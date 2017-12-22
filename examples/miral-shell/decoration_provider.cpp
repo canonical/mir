@@ -219,6 +219,7 @@ void Printer::printhelp(MirGraphicsRegion const& region)
     }
 
     int base_y = (region.height - help_height)/2;
+    auto* const region_address = reinterpret_cast<char unsigned*>(region.vaddr);
 
     for (auto const* rawline : helptext)
     {
@@ -240,7 +241,7 @@ void Printer::printhelp(MirGraphicsRegion const& region)
                 unsigned char* src = bitmap.buffer;
 
                 auto const y = base_y - glyph->bitmap_top;
-                char* dest = region.vaddr + y * region.stride + 4 * x;
+                auto* dest = region_address + y * region.stride + 4 * x;
 
                 for (auto row = 0u; row != bitmap.rows; ++row)
                 {
@@ -252,7 +253,7 @@ void Printer::printhelp(MirGraphicsRegion const& region)
                     src += bitmap.pitch;
                     dest += region.stride;
 
-                    if (dest > region.vaddr + region.height * region.stride)
+                    if (dest > region_address + region.height * region.stride)
                         break;
                 }
             }
