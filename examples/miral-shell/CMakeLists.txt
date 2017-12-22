@@ -18,7 +18,7 @@ add_subdirectory(desktop)
 
 png2header(
     ${CMAKE_CURRENT_SOURCE_DIR}/mir-peace-wall.png
-    ${CMAKE_CURRENT_BINARY_DIR}/mir_peace_wall.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/mir_peace_wall.h
     mir_peace_wall
 )
 
@@ -67,11 +67,8 @@ add_library(miral-shell-lib STATIC
     floating_window_manager.cpp floating_window_manager.h
     decoration_provider.cpp     decoration_provider.h
     titlebar_config.cpp         titlebar_config.h
-    ${CMAKE_CURRENT_BINARY_DIR}/mir_peace_wall.h
+    mir_peace_wall.h
 )
-
-set_source_files_properties(decoration_provider.cpp PROPERTIES COMPILE_FLAGS
-        "${CMAKE_CXXFLAGS} -I ${CMAKE_CURRENT_BINARY_DIR}")
 
 pkg_check_modules(FREETYPE freetype2 REQUIRED)
 target_include_directories(miral-shell-lib PRIVATE ${FREETYPE_INCLUDE_DIRS})
