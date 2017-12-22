@@ -2349,9 +2349,21 @@ int mf::WaylandConnector::client_socket_fd() const
     {
         error = "Could not create socket pair";
     }
-    else if (!wl_client_create(display.get(), socket_fd[server]))
+    else
     {
-        error = "Failed to add server end of socketpair to Wayland display";
+        // TODO: Wait on the result of wl_client_create so we can throw an exception on failure.
+        WaylandExecutor::executor_for_event_loop(wl_display_get_event_loop(display.get()))
+            ->spawn(
+                [socket = socket_fd[server], display = display.get()]()
+                {
+                    if (!wl_client_create(display, socket))
+                    {
+                        mir::log_error(
+                            "Failed to create Wayland client object: %s (errno %i)",
+                            strerror(errno),
+                            errno);
+                    }
+                });
     }
 
     if (error)
