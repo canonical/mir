@@ -33,6 +33,7 @@ target_link_libraries(
   mirserver
   mir-test-assist
   mir-test-doubles-platform-static
+  ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
 )
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
