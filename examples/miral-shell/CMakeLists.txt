@@ -70,6 +70,9 @@ add_library(miral-shell-lib STATIC
     mir_peace_wall.h
 )
 
+set_source_files_properties(decoration_provider.cpp PROPERTIES COMPILE_FLAGS
+    "${CMAKE_CXX_FLAGS}  -Wno-overlength-strings")
+
 pkg_check_modules(FREETYPE freetype2 REQUIRED)
 target_include_directories(miral-shell-lib PRIVATE ${FREETYPE_INCLUDE_DIRS})
 target_compile_definitions(miral-shell-lib PRIVATE -DTYPO_SUPPORTS_FREETYPE)
