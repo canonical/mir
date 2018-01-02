@@ -1,3 +1,27 @@
+mir (0.29.1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.29.1
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 2
+      . mirserver ABI unchanged to 46
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 61
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 13
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+    - Enhancements:
+      . Update the "smoke test" script to work on Wayland desktops
+    - Bugs fixed:
+      . Intermittent test failure: mir_acceptance_tests.NestedInputWithMouse.*
+        (Fixes #84)
+      . Intermittent test failure: mir_acceptance_tests.NestedServer.*
+        (Fixes #53)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Fri, 22 Dec 2017 09:57:37 +0000
+
 mir (0.29.0) UNRELEASED; urgency=medium
 
   * New upstream release 0.29.0(https://launchpad.net/mir/+milestone/0.29.0)
