@@ -49,6 +49,7 @@ class OutputManager;
 
 class Shell;
 class DisplayChanger;
+class SessionAuthorizer;
 
 class WaylandConnector : public Connector
 {
@@ -59,6 +60,7 @@ public:
         DisplayChanger& display_config,
         std::shared_ptr<input::InputDeviceHub> const& input_hub,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         bool arw_socket);
 
     ~WaylandConnector() override;
