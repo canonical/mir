@@ -22,6 +22,8 @@
 
 #include "mir/frontend/shell.h"
 #include "mir/frontend/surface.h"
+#include "mir/frontend/session_credentials.h"
+#include "mir/frontend/session_authorizer.h"
 
 #include "mir/compositor/buffer_stream.h"
 
@@ -220,14 +222,17 @@ std::shared_ptr<mf::Session> session_for_client(wl_client* client)
 
 struct ClientSessionConstructor
 {
-    ClientSessionConstructor(std::shared_ptr<mf::Shell> const& shell)
-        : shell{shell}
+    ClientSessionConstructor(std::shared_ptr<mf::Shell> const& shell,
+                             std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
+        : shell{shell},
+          session_authorizer{session_authorizer}
     {
     }
 
     wl_listener construction_listener;
     wl_listener destruction_listener;
     std::shared_ptr<mf::Shell> const shell;
+    std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
 };
 
 static_assert(
@@ -244,7 +249,17 @@ void create_client_session(wl_listener* listener, void* data)
         wl_container_of(listener, construction_context, construction_listener);
 
     pid_t client_pid;
-    wl_client_get_credentials(client, &client_pid, nullptr, nullptr);
+    uid_t client_uid;
+    gid_t client_gid;
+    wl_client_get_credentials(client, &client_pid, &client_uid, &client_gid);
+
+    auto session_cred = new mf::SessionCredentials{client_pid,
+                                                   client_uid, client_gid};
+    if (!construction_context->session_authorizer->connection_is_allowed(*session_cred))
+    {
+      wl_client_destroy(client);
+      return;
+    }
 
     auto session = construction_context->shell->open_session(
         client_pid,
@@ -264,9 +279,10 @@ void cleanup_client_handler(wl_listener* listener, void*)
     delete construction_context;
 }
 
-void setup_new_client_handler(wl_display* display, std::shared_ptr<mf::Shell> const& shell)
+void setup_new_client_handler(wl_display* display, std::shared_ptr<mf::Shell> const& shell,
+                              std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
 {
-    auto context = new ClientSessionConstructor{shell};
+    auto context = new ClientSessionConstructor{shell, session_authorizer};
     context->construction_listener.notify = &create_client_session;
 
     wl_display_add_client_created_listener(display, &context->construction_listener);
@@ -2207,6 +2223,7 @@ mf::WaylandConnector::WaylandConnector(
     DisplayChanger& display_config,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     bool arw_socket)
     : display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
@@ -2282,7 +2299,7 @@ mf::WaylandConnector::WaylandConnector(
 
     auto wayland_loop = wl_display_get_event_loop(display.get());
 
-    setup_new_client_handler(display.get(), shell);
+    setup_new_client_handler(display.get(), shell, session_authorizer);
 
     pause_source = wl_event_loop_add_fd(wayland_loop, pause_signal, WL_EVENT_READABLE, &halt_eventloop, display.get());
 }

@@ -44,7 +44,7 @@ std::shared_ptr<mf::Connector>
                 *the_frontend_display_changer(),
                 the_input_device_hub(),
                 the_buffer_allocator(),
+                the_session_authorizer(),
                 arw_socket);
         });
 }
-
