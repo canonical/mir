@@ -16,18 +16,9 @@
 
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 find_package(GLESv2 REQUIRED)
-find_package(PIL REQUIRED)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-overlength-strings")
 
-
-function(png2header png header varname)
-  add_custom_command(
-    OUTPUT ${header}
-    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/png2header.py ${png} ${varname} > ${header}
-    DEPENDS ${png} ${CMAKE_CURRENT_SOURCE_DIR}/png2header.py
-  )
-endfunction()
 
 png2header(
   ${CMAKE_CURRENT_SOURCE_DIR}/spinner-glow.png
