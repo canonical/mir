@@ -1,0 +1,44 @@
+summary: Build (on Fedora)
+systems: [fedora-27]
+
+execute: |
+    dnf install --assumeyes \
+        cmake \
+        gcc-c++ \
+        boost-devel \
+        mesa-libEGL-devel \
+        mesa-libGLES-devel \
+        glm-devel \
+        protobuf-lite-devel \
+        protobuf-compiler \
+        capnproto-devel \
+        capnproto \
+        glog-devel \
+        gflags-devel \
+        systemd-devel \
+        glib2-devel \
+        wayland-devel \
+        mesa-libgbm-devel \
+        libepoxy-devel \
+        nettle-devel \
+        libinput-devel \
+        libxml++-devel \
+        libuuid-devel \
+        libxkbcommon-devel \
+        freetype-devel \
+        lttng-ust-devel \
+        libatomic \
+        qterminal \
+        qt5-qtwayland \
+        python3-pillow \
+        libevdev-devel \
+        umockdev-devel \
+        gtest-devel \
+        gmock-devel \
+        ninja-build
+
+    BUILD_DIR=$(mktemp --directory)
+    cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_USE_LD_GOLD=ON -G Ninja
+    cmake --build $BUILD_DIR
+    cmake --build $BUILD_DIR -- ptest
+
