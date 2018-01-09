@@ -864,7 +864,16 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 #undef COPY_IF_SET
 
     if (modifications.parent().is_set())
-        window_info_tmp.parent(info_for(modifications.parent().value()).window());
+    {
+        if (auto const& parent_window = modifications.parent().value().lock())
+        {
+            window_info_tmp.parent(info_for(parent_window).window());
+        }
+        else
+        {
+            window_info_tmp.parent(Window{});
+        }
+    }
 
     if (window_info.type() != window_info_tmp.type())
     {
