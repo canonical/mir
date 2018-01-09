@@ -32,6 +32,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     window_properties.cpp
     drag_active_window.cpp
     modify_window_state.cpp
+    modify_window_specification.cpp
     test_server.cpp         test_server.h
     test_window_manager_tools.h
     display_reconfiguration.cpp
