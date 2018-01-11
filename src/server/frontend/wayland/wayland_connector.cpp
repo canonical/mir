@@ -620,9 +620,9 @@ public:
         resize_handler = handler;
     }
 
-    void set_hide_handler(std::function<void(bool visible)> const& handler)
+    void set_visibility_handler(std::function<void(bool visible)> const& handler)
     {
-        hide_handler = handler;
+        visiblity_handler = handler;
     }
 
     mf::BufferStreamId stream_id;
@@ -634,7 +634,7 @@ private:
     std::shared_ptr<mir::Executor> const executor;
 
     std::function<void(Size)> resize_handler{[](Size){}};
-    std::function<void(bool visible)> hide_handler{[](bool){}};
+    std::function<void(bool visible)> visiblity_handler{[](bool){}};
 
     wl_resource* pending_buffer;
     std::shared_ptr<std::vector<wl_resource*>> const pending_frames;
@@ -664,7 +664,7 @@ void WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, 
         mir::log_warning("Client requested unimplemented non-zero attach offset. Rendering will be incorrect.");
     }
 
-    hide_handler(!!buffer);
+    visiblity_handler(!!buffer);
 
     pending_buffer = *buffer;
 }
@@ -2139,7 +2139,7 @@ private:
             }
         }
 
-        mir_surface->set_hide_handler(
+        mir_surface->set_visibility_handler(
             [shell=shell, session, id = surface_id](bool visible)
                 {
                     if (get_surface_for_id(session, id)->visible() == visible)
