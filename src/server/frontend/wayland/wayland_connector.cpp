@@ -1917,8 +1917,7 @@ public:
           destroyed{std::make_shared<bool>(false)},
           shell{shell}
     {
-        auto* tmp = wl_resource_get_user_data(surface);
-        auto* mir_surface = static_cast<WlSurface*>(tmp);
+        auto* const mir_surface = get_wlsurface(surface);
 
         auto const sink = std::make_shared<SurfaceEventSink>(&seat, client, surface, resource);
 
@@ -1961,8 +1960,7 @@ protected:
         uint32_t /*flags*/) override
     {
         auto const session = session_for_client(client);
-        auto* tmp = wl_resource_get_user_data(parent);
-        auto& parent_surface = *static_cast<WlSurface*>(tmp);
+        auto& parent_surface = *get_wlsurface(parent);
 
         if (surface_id.as_value())
         {
@@ -2024,8 +2022,7 @@ protected:
         uint32_t /*flags*/) override
     {
         auto const session = session_for_client(client);
-        auto* tmp = wl_resource_get_user_data(parent);
-        auto& parent_surface = *static_cast<WlSurface*>(tmp);
+        auto& parent_surface = *get_wlsurface(parent);
 
         if (surface_id.as_value())
         {
@@ -2148,6 +2145,12 @@ private:
                     hide_spec.state = visible ? mir_window_state_restored : mir_window_state_hidden;
                     shell->modify_surface(session, id, hide_spec);
                 });
+    }
+
+    WlSurface* get_wlsurface(wl_resource* surface) const
+    {
+        auto* tmp = wl_resource_get_user_data(surface);
+        return static_cast<WlSurface*>(static_cast<wayland::Surface*>(tmp));
     }
 
     std::shared_ptr<bool> const destroyed;
