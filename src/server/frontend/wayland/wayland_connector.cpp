@@ -82,9 +82,9 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
+namespace geom = mir::geometry;
 namespace mcl = mir::client;
 namespace mi = mir::input;
-using namespace mir::geometry;
 
 namespace mir
 {
@@ -108,7 +108,7 @@ public:
     void handle_error(ClientVisibleError const&) override {}
 
     void add_buffer(graphics::Buffer&) override {}
-    void error_buffer(Size, MirPixelFormat, std::string const& ) override {}
+    void error_buffer(geometry::Size, MirPixelFormat, std::string const& ) override {}
     void update_buffer(graphics::Buffer&) override {}
 
 private:
@@ -378,7 +378,7 @@ public:
         }
     }
 
-    static std::shared_ptr<Buffer> mir_buffer_from_wl_buffer(
+    static std::shared_ptr<graphics::Buffer> mir_buffer_from_wl_buffer(
         wl_resource* buffer,
         std::function<void()>&& on_consumed)
     {
@@ -421,7 +421,7 @@ public:
         return nullptr;
     }
 
-    Size size() const override
+    geometry::Size size() const override
     {
         return size_;
     }
@@ -431,7 +431,7 @@ public:
         return format_;
     }
 
-    NativeBufferBase *native_buffer_base() override
+    graphics::NativeBufferBase *native_buffer_base() override
     {
         return this;
     }
@@ -501,7 +501,7 @@ public:
         do_with_pixels(static_cast<unsigned char const*>(data.get()));
     }
 
-    Stride stride() const override
+    geometry::Stride stride() const override
     {
         return stride_;
     }
@@ -569,8 +569,8 @@ private:
     wl_shm_buffer* buffer;
     wl_resource* const resource;
 
-    Size const size_;
-    Stride const stride_;
+    geom::Size const size_;
+    geom::Stride const stride_;
     MirPixelFormat const format_;
 
     std::unique_ptr<uint8_t[]> const data;
@@ -597,7 +597,7 @@ public:
     {
         auto session = session_for_client(client);
         mg::BufferProperties const props{
-            Size{Width{0}, Height{0}},
+            geom::Size{geom::Width{0}, geom::Height{0}},
             mir_pixel_format_invalid,
             mg::BufferUsage::undefined
         };
@@ -616,7 +616,7 @@ public:
             session->destroy_buffer_stream(stream_id);
     }
 
-    void set_resize_handler(std::function<void(Size)> const& handler)
+    void set_resize_handler(std::function<void(geom::Size)> const& handler)
     {
         resize_handler = handler;
     }
@@ -634,7 +634,7 @@ private:
     std::shared_ptr<mg::WaylandAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
 
-    std::function<void(Size)> resize_handler{[](Size){}};
+    std::function<void(geom::Size)> resize_handler{[](geom::Size){}};
     std::function<void(bool visible)> visiblity_handler{[](bool){}};
 
     wl_resource* pending_buffer;
@@ -1670,10 +1670,10 @@ public:
 
     void send_buffer(frontend::BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType) override {}
     void add_buffer(graphics::Buffer&) override {}
-    void error_buffer(Size, MirPixelFormat, std::string const& ) override {}
+    void error_buffer(geometry::Size, MirPixelFormat, std::string const& ) override {}
     void update_buffer(graphics::Buffer&) override {}
 
-    void latest_resize(Size window_size)
+    void latest_resize(geometry::Size window_size)
     {
         this->window_size = window_size;
     }
@@ -1685,7 +1685,7 @@ protected:
     wl_client* const client;
     wl_resource* const target;
     wl_resource* const event_sink;
-    std::atomic<Size> window_size;
+    std::atomic<geometry::Size> window_size;
 };
 
 void BasicSurfaceEventSink::handle_event(MirEvent const& event)
@@ -1744,7 +1744,7 @@ public:
 
 void SurfaceEventSink::handle_resize_event(MirResizeEvent const* event)
 {
-    Size new_size{mir_resize_event_get_width(event), mir_resize_event_get_height(event)};
+    geom::Size new_size{mir_resize_event_get_width(event), mir_resize_event_get_height(event)};
     if (window_size != new_size)
     {
         seat->spawn([event_sink= event_sink,
@@ -1922,7 +1922,7 @@ public:
 
         auto const sink = std::make_shared<SurfaceEventSink>(&seat, client, surface, resource);
 
-        mir_surface->set_resize_handler([mir_surface, sink, &seat, this](Size initial_size)
+        mir_surface->set_resize_handler([mir_surface, sink, &seat, this](geom::Size initial_size)
                                             { resize_handler(mir_surface, sink, seat, initial_size); });
     }
 
@@ -1968,8 +1968,7 @@ protected:
         {
             shell::SurfaceSpecification new_spec;
             new_spec.parent_id = parent_surface.surface_id;
-            new_spec.aux_rect = Rectangle{{X{x},    Y{y}},
-                                          {Width{}, Height{}}};
+            new_spec.aux_rect = geom::Rectangle{{x, y}, {}};
             new_spec.surface_placement_gravity = mir_placement_gravity_northwest;
             new_spec.aux_rect_placement_gravity = mir_placement_gravity_southeast;
             new_spec.placement_hints = mir_placement_hints_slide_x;
@@ -1980,7 +1979,7 @@ protected:
         else
         {
             params.parent_id = parent_surface.surface_id;
-            params.aux_rect = Rectangle{{x, y}, {}};
+            params.aux_rect = geom::Rectangle{{x, y}, {}};
             params.surface_placement_gravity = mir_placement_gravity_northwest;
             params.aux_rect_placement_gravity = mir_placement_gravity_southeast;
             params.placement_hints = mir_placement_hints_slide_x;
@@ -2032,7 +2031,7 @@ protected:
         {
             shell::SurfaceSpecification new_spec;
             new_spec.parent_id = parent_surface.surface_id;
-            new_spec.aux_rect = Rectangle{{X{x}, Y{y}}, {Width{}, Height{}}};
+            new_spec.aux_rect = geom::Rectangle{{x, y}, {}};
             new_spec.surface_placement_gravity = mir_placement_gravity_northwest;
             new_spec.aux_rect_placement_gravity = mir_placement_gravity_southeast;
             new_spec.placement_hints = mir_placement_hints_slide_x;
@@ -2043,7 +2042,7 @@ protected:
         else
         {
             params.parent_id = parent_surface.surface_id;
-            params.aux_rect = Rectangle{{X{x}, Y{y}}, {Width{}, Height{}}};
+            params.aux_rect = geom::Rectangle{{x, y}, {}};
             params.surface_placement_gravity = mir_placement_gravity_northwest;
             params.aux_rect_placement_gravity = mir_placement_gravity_southeast;
             params.placement_hints = mir_placement_hints_slide_x;
@@ -2099,7 +2098,7 @@ private:
         WlSurface* mir_surface,
         std::shared_ptr<SurfaceEventSink> const& sink,
         WlSeat& seat,
-        Size initial_size)
+        geom::Size initial_size)
     {
         auto const session = session_for_client(client);
 
