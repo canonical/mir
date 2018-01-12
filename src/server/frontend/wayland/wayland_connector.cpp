@@ -509,15 +509,15 @@ public:
 private:
     WlShmBuffer(
         wl_resource* buffer,
-        std::function<void()>&& on_consumed) :
-        buffer{shm_buffer_from_resource_checked(buffer)},
-        resource{buffer},
-        size_{wl_shm_buffer_get_width(this->buffer), wl_shm_buffer_get_height(this->buffer)},
-        stride_{wl_shm_buffer_get_stride(this->buffer)},
-        format_{wl_format_to_mir_format(wl_shm_buffer_get_format(this->buffer))},
-        data{std::make_unique<uint8_t[]>(size_.height.as_int() * stride_.as_int())},
-        consumed{false},
-        on_consumed{std::move(on_consumed)}
+        std::function<void()>&& on_consumed)
+        : buffer{shm_buffer_from_resource_checked(buffer)},
+          resource{buffer},
+          size_{wl_shm_buffer_get_width(this->buffer), wl_shm_buffer_get_height(this->buffer)},
+          stride_{wl_shm_buffer_get_stride(this->buffer)},
+          format_{wl_format_to_mir_format(wl_shm_buffer_get_format(this->buffer))},
+          data{std::make_unique<uint8_t[]>(size_.height.as_int() * stride_.as_int())},
+          consumed{false},
+          on_consumed{std::move(on_consumed)}
     {
         if (stride_.as_int() < size_.width.as_int() * MIR_BYTES_PER_PIXEL(format_))
         {
@@ -528,7 +528,8 @@ private:
                 "Did you accidentally specify stride in pixels?",
                 stride_.as_int(), size_.width.as_int(), MIR_BYTES_PER_PIXEL(format_));
 
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Buffer has invalid stride"}));
+            BOOST_THROW_EXCEPTION((
+                std::runtime_error{"Buffer has invalid stride"}));
         }
 
         wl_shm_buffer_begin_access(this->buffer);
@@ -586,13 +587,13 @@ public:
         wl_resource* parent,
         uint32_t id,
         std::shared_ptr<mir::Executor> const& executor,
-        std::shared_ptr<mg::WaylandAllocator> const& allocator) :
-        Surface(client, parent, id),
-        allocator{allocator},
-        executor{executor},
-        pending_buffer{nullptr},
-        pending_frames{std::make_shared<std::vector<wl_resource*>>()},
-        destroyed{std::make_shared<bool>(false)}
+        std::shared_ptr<mg::WaylandAllocator> const& allocator)
+        : Surface(client, parent, id),
+          allocator{allocator},
+          executor{executor},
+          pending_buffer{nullptr},
+          pending_frames{std::make_shared<std::vector<wl_resource*>>()},
+          destroyed{std::make_shared<bool>(false)}
     {
         auto session = session_for_client(client);
         mg::BufferProperties const props{
@@ -852,14 +853,14 @@ public:
         uint32_t id,
         mir::input::Keymap const& initial_keymap,
         std::function<void(WlKeyboard*)> const& on_destroy,
-        std::shared_ptr<mir::Executor> const& executor) :
-        Keyboard(client, parent, id),
-        keymap{nullptr, &xkb_keymap_unref},
-        state{nullptr, &xkb_state_unref},
-        context{xkb_context_new(XKB_CONTEXT_NO_FLAGS), &xkb_context_unref},
-        executor{executor},
-        on_destroy{on_destroy},
-        destroyed{std::make_shared<bool>(false)}
+        std::shared_ptr<mir::Executor> const& executor)
+        : Keyboard(client, parent, id),
+          keymap{nullptr, &xkb_keymap_unref},
+          state{nullptr, &xkb_state_unref},
+          context{xkb_context_new(XKB_CONTEXT_NO_FLAGS), &xkb_context_unref},
+          executor{executor},
+          on_destroy{on_destroy},
+          destroyed{std::make_shared<bool>(false)}
     {
         // TODO: We should really grab the keymap for the focused surface when
         // we receive focus.
@@ -1451,7 +1452,7 @@ private:
             mir::input::Keymap const& keymap,
             std::function<void(mir::input::Keymap const&)> const& on_keymap_commit)
             : current_keymap{keymap},
-            on_keymap_commit{on_keymap_commit}
+              on_keymap_commit{on_keymap_commit}
         {
         }
 
@@ -1482,7 +1483,7 @@ private:
     {
         auto me = reinterpret_cast<WlSeat*>(data);
         auto resource = wl_resource_create(client, &wl_seat_interface,
-                                           std::min(version, 6u), id);
+            std::min(version, 6u), id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -1819,7 +1820,7 @@ private:
     {
         auto output = reinterpret_cast<Output*>(data);
         auto resource = wl_resource_create(client, &wl_output_interface,
-                                           std::min(version, 2u), id);
+            std::min(version, 2u), id);
         if (resource == NULL) {
             wl_client_post_no_memory(client);
             return;
@@ -1910,11 +1911,11 @@ public:
         wl_resource* parent,
         uint32_t id,
         wl_resource* surface,
-        std::shared_ptr<mf::Shell> const& shell_,
-        WlSeat& seat) :
-        ShellSurface(client, parent, id),
-        destroyed{std::make_shared<bool>(false)},
-        shell{shell_}
+        std::shared_ptr<mf::Shell> const& shell,
+        WlSeat& seat)
+        : ShellSurface(client, parent, id),
+          destroyed{std::make_shared<bool>(false)},
+          shell{shell}
     {
         auto* tmp = wl_resource_get_user_data(surface);
         auto* mir_surface = static_cast<WlSurface*>(tmp);
