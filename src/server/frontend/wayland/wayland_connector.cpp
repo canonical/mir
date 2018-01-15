@@ -1976,6 +1976,7 @@ protected:
         }
         else
         {
+            params.type = mir_window_type_gloss;
             params.parent_id = parent_surface.surface_id;
             params.aux_rect = geom::Rectangle{{x, y}, {}};
             params.surface_placement_gravity = mir_placement_gravity_northwest;
