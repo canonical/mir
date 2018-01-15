@@ -19,6 +19,7 @@
 #include "wayland_connector.h"
 
 #include "core_generated_interfaces.h"
+#include "xdg_shell_generated_interfaces.h"
 
 #include "mir/frontend/shell.h"
 #include "mir/frontend/surface.h"
@@ -1954,48 +1955,236 @@ private:
     WlSeat& seat;
 };
 
-struct DataDevice : wayland::DataDevice
+class XdgToplevelV6 : public wayland::XdgToplevelV6
 {
-    DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id) :
-        wayland::DataDevice(client, parent, id)
+public:
+    XdgToplevelV6(wl_client* client,
+        wl_resource* parent,
+        uint32_t id)
+        : wayland::XdgToplevelV6(client, parent, id),
+          destroyed{std::make_shared<bool>(false)}
+    {
+        // TODO: it appears an executer is used to run send the events at a later time elsewhere in the code. is this needed here?
+        send_configure();
+    }
+
+    ~XdgToplevelV6()
+    {
+        *destroyed = true;
+    }
+
+    void destroy() override
     {
     }
 
-    void start_drag(
-        std::experimental::optional<struct wl_resource*> const& source, struct wl_resource* origin,
-        std::experimental::optional<struct wl_resource*> const& icon, uint32_t serial) override
+    void set_parent(std::experimental::optional<struct wl_resource*> const& /*parent*/) override
     {
-        (void)source, (void)origin, (void)icon, (void)serial;
     }
 
-    void set_selection(std::experimental::optional<struct wl_resource*> const& source, uint32_t serial) override
+    void set_title(std::string const& /*title*/) override
     {
-        (void)source, (void)serial;
     }
 
-    void release() override
+    void set_app_id(std::string const& /*app_id*/) override
     {
     }
+
+    void show_window_menu(struct wl_resource* /*seat*/, uint32_t /*serial*/, int32_t /*x*/, int32_t /*y*/) override
+    {
+    }
+
+    void move(struct wl_resource* /*seat*/, uint32_t /*serial*/) override
+    {
+    }
+
+    void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t /*edges*/) override
+    {
+    }
+
+    void set_max_size(int32_t /*width*/, int32_t /*height*/) override
+    {
+    }
+
+    void set_min_size(int32_t /*width*/, int32_t /*height*/) override
+    {
+    }
+
+    void set_maximized() override
+    {
+    }
+
+    void unset_maximized() override
+    {
+    }
+
+    void set_fullscreen(std::experimental::optional<struct wl_resource*> const& /*output*/) override
+    {
+    }
+
+    void unset_fullscreen() override
+    {
+    }
+
+    void set_minimized() override
+    {
+    }
+
+private:
+    void send_configure()
+    {
+        wl_array config_array;
+        wl_array_init(&config_array);
+        auto item_ptr = static_cast<zxdg_toplevel_v6_state *>(wl_array_add(&config_array, sizeof(zxdg_toplevel_v6_state)));
+        *item_ptr = ZXDG_TOPLEVEL_V6_STATE_ACTIVATED;
+        zxdg_toplevel_v6_send_configure(resource, 0, 0, &config_array);
+        wl_array_release(&config_array);
+    }
+
+    std::shared_ptr<bool> const destroyed;
 };
 
-struct DataDeviceManager : wayland::DataDeviceManager
+class XdgSurfaceV6 : public wayland::XdgSurfaceV6
 {
-    DataDeviceManager(struct wl_display* display) :
-        wayland::DataDeviceManager(display, 3)
+public:
+    XdgSurfaceV6(
+        wl_display* display,
+        wl_client* client,
+        wl_resource* parent,
+        uint32_t id,
+        wl_resource* surface,
+        std::shared_ptr<mf::Shell> const& shell,
+        WlSeat& seat)
+        : wayland::XdgSurfaceV6(client, parent, id),
+          destroyed{std::make_shared<bool>(false)},
+          display{display},
+          shell{shell}
+    {
+        auto* tmp = wl_resource_get_user_data(surface);
+        auto& mir_surface = *static_cast<WlSurface*>(tmp);
+
+        auto const session = session_for_client(client);
+
+        auto params = ms::SurfaceCreationParameters()
+            .of_type(mir_window_type_freestyle)
+            .of_size(geom::Size{640, 480})
+            .with_buffer_stream(mir_surface.stream_id);
+
+        auto const sink = std::make_shared<SurfaceEventSink>(&seat, client, surface, resource);
+        surface_id = shell->create_surface(session, params, sink);
+
+        {
+            // The shell isn't guaranteed to respect the requested size
+            auto const window = session->get_surface(surface_id);
+            auto const size = window->client_size();
+            sink->latest_resize(size);
+        }
+
+        mir_surface.set_resize_handler(
+            [shell, session, id = surface_id, sink](geom::Size new_size)
+            {
+                sink->latest_resize(new_size);
+                shell::SurfaceSpecification new_size_spec;
+                new_size_spec.width = new_size.width;
+                new_size_spec.height = new_size.height;
+                shell->modify_surface(session, id, new_size_spec);
+            });
+
+        mir_surface.set_hide_handler(
+            [shell, session, id = surface_id]()
+            {
+                shell::SurfaceSpecification hide_spec;
+                hide_spec.state = mir_window_state_hidden;
+                shell->modify_surface(session, id, hide_spec);
+            });
+    }
+
+    ~XdgSurfaceV6()
+    {
+        *destroyed = true;
+        if (auto session = session_for_client(client))
+        {
+            shell->destroy_surface(session, surface_id);
+        }
+    }
+
+    void destroy() override
+    {
+        // TODO: do we need to destroy something?
+    }
+
+    void get_toplevel(uint32_t id) override
+    {
+        new XdgToplevelV6(client, resource, id);
+        zxdg_surface_v6_send_configure(resource, wl_display_next_serial(display));
+    }
+
+    void get_popup(uint32_t /*id*/, struct wl_resource* /*parent*/, struct wl_resource* /*positioner*/) override
+    {
+        // TODO
+    }
+
+    void set_window_geometry(int32_t /*x*/, int32_t /*y*/, int32_t /*width*/, int32_t /*height*/) override
+    {
+        // TODO
+    }
+
+    void ack_configure(uint32_t /*serial*/) override
+    {
+        // used to know when a client has responded to configure event, not needed for now
+    }
+
+private:
+    std::shared_ptr<bool> const destroyed;
+    wl_display* display;
+    std::shared_ptr<mf::Shell> const shell;
+    mf::SurfaceId surface_id;
+};
+
+class XdgShellV6 : public wayland::XdgShellV6
+{
+public:
+    XdgShellV6(
+        wl_display* display,
+        std::shared_ptr<mf::Shell> const& shell,
+        WlSeat& seat)
+        : wayland::XdgShellV6(display, 1), // not sure why, but always send 1 as the version
+          destroyed{std::make_shared<bool>(false)},
+          shell{shell},
+          seat{seat},
+          display{display}
     {
     }
 
-    void create_data_source(struct wl_client* client, struct wl_resource* resource, uint32_t id) override
+    ~XdgShellV6()
     {
-        (void)client, (void)resource, (void)id;
+        *destroyed = true;
     }
 
-    void get_data_device(
-        struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat) override
+    void destroy(struct wl_client* /*client*/, struct wl_resource* /*resource*/) override
     {
-        (void)seat;
-        new DataDevice{client, resource, id};
+        // TODO: do we need to destroy this resource somehow?
     }
+
+    void create_positioner(struct wl_client* /*client*/, struct wl_resource* /*resource*/, uint32_t /*id*/) override
+    {
+        // TODO
+    }
+
+    void get_xdg_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface) override
+    {
+        new XdgSurfaceV6(display, client, resource, id, surface, shell, seat);
+    }
+
+    void pong(struct wl_client* /*client*/, struct wl_resource* /*resource*/, uint32_t /*serial*/) override
+    {
+        // this is just to test responsiveness, fine to ignore for now
+    }
+
+private:
+    std::shared_ptr<bool> const destroyed;
+    std::shared_ptr<mf::Shell> const shell;
+    WlSeat& seat;
+    wl_display* display;
 };
 }
 }
@@ -2210,6 +2399,7 @@ mf::WaylandConnector::WaylandConnector(
         display_config);
     shell_global = std::make_unique<mf::WlShell>(display.get(), shell, *seat_global);
     data_device_manager_global = std::make_unique<DataDeviceManager>(display.get());
+    xdg_shell_global = std::make_unique<mf::XdgShellV6>(display.get(), shell, *seat_global);
 
     wl_display_init_shm(display.get());
 

@@ -44,6 +44,7 @@ namespace frontend
 class WlCompositor;
 class WlApplication;
 class WlShell;
+class XdgShellV6;
 class WlSeat;
 class OutputManager;
 
@@ -84,6 +85,7 @@ private:
     std::shared_ptr<graphics::WaylandAllocator> const allocator;
     std::unique_ptr<WlShell> shell_global;
     std::unique_ptr<DataDeviceManager> data_device_manager_global;
+    std::unique_ptr<XdgShellV6> xdg_shell_global;
     std::thread dispatch_thread;
     wl_event_source* pause_source;
 };

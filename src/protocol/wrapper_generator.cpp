@@ -37,22 +37,16 @@ void emit_comment_header(std::ostream& out)
     out << " */" << std::endl;
 }
 
-void emit_required_headers()
+void emit_required_headers(std::string const& custom_header)
 {
     std::cout << "#include <experimental/optional>" << std::endl;
     std::cout << "#include <boost/throw_exception.hpp>" << std::endl;
     std::cout << "#include <boost/exception/diagnostic_information.hpp>" << std::endl;
     std::cout << std::endl;
-    std::cout << "#include <wayland-server.h>" << std::endl;
-    std::cout << "#include <wayland-server-protocol.h>" << std::endl;
+    std::cout << "#include \"" << custom_header << "\"" << std::endl;
     std::cout << std::endl;
     std::cout << "#include \"mir/fd.h\"" << std::endl;
     std::cout << "#include \"mir/log.h\"" << std::endl;
-}
-
-std::string strip_wl_prefix(std::string const& name)
-{
-    return name.substr(3);
 }
 
 std::string camel_case_string(std::string const& name)
@@ -478,9 +472,14 @@ private:
     std::vector<Method> methods;
 };
 
+// arguments are:
+//  0: binary
+//  1: name prefix (such as wl_)
+//  2: header to include (such as wayland-server.h)
+//  3: input file path
 int main(int argc, char** argv)
 {
-    if (argc != 3)
+    if (argc != 4)
     {
         exit(1);
     }
@@ -497,7 +496,7 @@ int main(int argc, char** argv)
         return camel_case_string(transformed_name);
     };
 
-    xmlpp::DomParser parser(argv[2]);
+    xmlpp::DomParser parser(argv[3]);
 
     auto document = parser.get_document();
 
@@ -515,7 +514,8 @@ int main(int argc, char** argv)
 
     std::cout << std::endl;
 
-    emit_required_headers();
+    std::string const custom_header{argv[2]};
+    emit_required_headers(custom_header);
 
     std::cout << std::endl;
 
