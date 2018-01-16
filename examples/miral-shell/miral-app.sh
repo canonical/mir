@@ -45,20 +45,12 @@ if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
 if [ -e "${socket}" ]; then echo "Error: session endpoint '${socket}' already exists"; exit 1 ;fi
 if [ -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; then echo "Error: wayland endpoint '${wayland_display}' already exists"; exit 1 ;fi
 
-qt_qpa_platform=ubuntumirclient
-qtubuntu_desktop_installed=$(apt list qtubuntu-desktop 2>/dev/null | grep installed | wc -l)
-if [ "${qtubuntu_desktop_installed}" == "0" ]
-then
-    echo "** Warning ** defaulting to Wayland backend for Qt"
-    echo "For the best experience install qtubuntu-desktop - run \"sudo apt install qtubuntu-desktop\""
-    qt_qpa_platform=wayland
-fi
 
 sh -c "${bindir}${miral_server} $* ${hostsocket} --file ${socket} --wayland-socket-name ${wayland_display} --desktop_file_hint=miral-shell.desktop"&
 
 while [ ! -e "${socket}" ]; do echo "waiting for ${socket}"; sleep 1 ;done
 
 unset QT_QPA_PLATFORMTHEME
-MIR_SOCKET=${socket} XDG_SESSION_TYPE=mir GDK_BACKEND=mir QT_QPA_PLATFORM=${qt_qpa_platform} SDL_VIDEODRIVER=wayland WAYLAND_DISPLAY=${wayland_display} dbus-run-session -- ${launcher}
+MIR_SOCKET=${socket} XDG_SESSION_TYPE=mir GDK_BACKEND=mir QT_QPA_PLATFORM=wayland SDL_VIDEODRIVER=wayland WAYLAND_DISPLAY=${wayland_display} dbus-run-session -- ${launcher}
 killall ${bindir}${miral_server} || killall ${bindir}${miral_server}.bin
 
