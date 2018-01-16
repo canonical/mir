@@ -72,6 +72,7 @@ private:
     void set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<input::Surface> const&);
 
     void surface_removed(scene::Surface* surface);
+    void surface_geometry_changed();
 
     // Look in to homognizing index on KeyInputState and PointerInputState (wrt to device id)
     struct PointerInputState
@@ -94,6 +95,7 @@ private:
     std::shared_ptr<scene::Observer> scene_observer;
 
     std::mutex dispatcher_mutex;
+    std::shared_ptr<MirEvent const> last_pointer_event;
     std::weak_ptr<input::Surface> focus_surface;
     std::vector<uint8_t> drag_and_drop_handle;
     bool started;
