@@ -579,6 +579,19 @@ private:
     std::function<void()> on_consumed;
 };
 
+struct WlMirWindow
+{
+    virtual void commit(geom::Size const& buffer_size) = 0;
+    virtual void visiblity(bool visible) = 0;
+    virtual ~WlMirWindow() = default;
+};
+
+struct NullWlMirWindow : WlMirWindow
+{
+    void commit(geom::Size const& ) {}
+    virtual void visiblity(bool ) {}
+} nullwlmirwindow;
+
 class WlSurface : public wayland::Surface
 {
 public:
@@ -616,14 +629,9 @@ public:
             session->destroy_buffer_stream(stream_id);
     }
 
-    void set_resize_handler(std::function<void(geom::Size)> const& handler)
+    void set_role(WlMirWindow* role_)
     {
-        resize_handler = handler;
-    }
-
-    void set_visibility_handler(std::function<void(bool visible)> const& handler)
-    {
-        visiblity_handler = handler;
+        role = role_;
     }
 
     mf::BufferStreamId stream_id;
@@ -634,8 +642,7 @@ private:
     std::shared_ptr<mg::WaylandAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
 
-    std::function<void(geom::Size)> resize_handler{[](geom::Size){}};
-    std::function<void(bool visible)> visiblity_handler{[](bool){}};
+    WlMirWindow* role = &nullwlmirwindow;
 
     wl_resource* pending_buffer;
     std::shared_ptr<std::vector<wl_resource*>> const pending_frames;
@@ -665,7 +672,7 @@ void WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, 
         mir::log_warning("Client requested unimplemented non-zero attach offset. Rendering will be incorrect.");
     }
 
-    visiblity_handler(!!buffer);
+    role->visiblity(!!buffer);
 
     pending_buffer = *buffer;
 }
@@ -770,7 +777,7 @@ void WlSurface::commit()
          * TODO: Provide a mg::Buffer::logical_size() to do this properly.
          */
         stream->resize(mir_buffer->size());
-        resize_handler(mir_buffer->size());
+        role->commit(mir_buffer->size());
         stream->submit_buffer(mir_buffer);
 
         pending_buffer = nullptr;
@@ -1089,8 +1096,8 @@ public:
 
     ~WlPointer()
     {
-        on_destroy(this);
         *destroyed = true;
+        on_destroy(this);
     }
 
     void handle_event(MirInputEvent const* event, wl_resource* target)
@@ -1678,7 +1685,7 @@ public:
         this->window_size = window_size;
     }
 
-    virtual void handle_resize_event(MirResizeEvent const* event) = 0;
+    virtual void send_resize(geometry::Size const& new_size) const = 0;
 
 protected:
     WlSeat* const seat;
@@ -1694,7 +1701,8 @@ void BasicSurfaceEventSink::handle_event(MirEvent const& event)
     {
     case mir_event_type_resize:
     {
-        handle_resize_event(mir_event_get_resize_event(&event));
+        auto* const resize_event = mir_event_get_resize_event(&event);
+        send_resize({mir_resize_event_get_width(resize_event), mir_resize_event_get_height(resize_event)});
         break;
     }
     case mir_event_type_input:
@@ -1737,22 +1745,29 @@ void BasicSurfaceEventSink::handle_event(MirEvent const& event)
 class SurfaceEventSink : public BasicSurfaceEventSink
 {
 public:
-    using BasicSurfaceEventSink::BasicSurfaceEventSink;
+    SurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink,
+        std::shared_ptr<bool> const& destroyed) :
+        BasicSurfaceEventSink{seat, client, target, event_sink},
+        destroyed{destroyed}
+    {
+    }
 
-    void handle_resize_event(MirResizeEvent const* event) override;
+    void send_resize(geometry::Size const& new_size) const override;
+
+private:
+    std::shared_ptr<bool> const destroyed;
 };
 
-void SurfaceEventSink::handle_resize_event(MirResizeEvent const* event)
+void SurfaceEventSink::send_resize(geometry::Size const& new_size) const
 {
-    geom::Size new_size{mir_resize_event_get_width(event), mir_resize_event_get_height(event)};
     if (window_size != new_size)
     {
-        seat->spawn([event_sink= event_sink,
-                        width = mir_resize_event_get_width(event),
-                        height = mir_resize_event_get_height(event)]()
-                        {
-                            wl_shell_surface_send_configure(event_sink, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
-                        });
+        seat->spawn(run_unless(
+            destroyed,
+            [event_sink= event_sink, width = new_size.width.as_int(), height = new_size.height.as_int()]()
+            {
+                wl_shell_surface_send_configure(event_sink, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
+            }));
     }
 }
 
@@ -1903,29 +1918,20 @@ private:
     std::unordered_map<mg::DisplayConfigurationOutputId, std::unique_ptr<Output>> outputs;
 };
 
-class WlShellSurface : public wayland::ShellSurface
+class WlAbstractMirWindow : public WlMirWindow
 {
 public:
-    WlShellSurface(
-        wl_client* client,
-        wl_resource* parent,
-        uint32_t id,
-        wl_resource* surface,
-        std::shared_ptr<mf::Shell> const& shell,
-        WlSeat& seat)
-        : ShellSurface(client, parent, id),
-          destroyed{std::make_shared<bool>(false)},
-          shell{shell}
+    WlAbstractMirWindow(wl_client* client, wl_resource* surface, wl_resource* event_sink,
+        std::shared_ptr<mf::Shell> const& shell) :
+        destroyed{std::make_shared<bool>(false)},
+        client{client},
+        surface{surface},
+        event_sink{event_sink},
+        shell{shell}
     {
-        auto* const mir_surface = get_wlsurface(surface);
-
-        auto const sink = std::make_shared<SurfaceEventSink>(&seat, client, surface, resource);
-
-        mir_surface->set_resize_handler([mir_surface, sink, &seat, this](geom::Size initial_size)
-                                            { resize_handler(mir_surface, sink, seat, initial_size); });
     }
 
-    ~WlShellSurface() override
+    ~WlAbstractMirWindow() override
     {
         *destroyed = true;
         if (surface_id.as_value())
@@ -1936,21 +1942,91 @@ public:
             }
         }
     }
+
 protected:
-    void pong(uint32_t /*serial*/) override
+    WlSurface* get_wlsurface(wl_resource* surface) const
     {
+        auto* tmp = wl_resource_get_user_data(surface);
+        return static_cast<WlSurface*>(static_cast<wayland::Surface*>(tmp));
     }
 
-    void move(struct wl_resource* /*seat*/, uint32_t /*serial*/) override
+    std::shared_ptr<bool> const destroyed;
+    wl_client* const client;
+    wl_resource* const surface;
+    wl_resource* const event_sink;
+    std::shared_ptr<mf::Shell> const shell;
+    std::shared_ptr<BasicSurfaceEventSink> sink;
+
+    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters().of_type(mir_window_type_freestyle);
+    mf::SurfaceId surface_id;
+
+private:
+    void commit(geom::Size const& buffer_size) override
     {
+        auto const session = session_for_client(client);
+
+        if (surface_id.as_value())
+        {
+            auto const surface = get_surface_for_id(session, surface_id);
+            if (surface->size() == buffer_size)
+                return;
+            sink->latest_resize(buffer_size);
+            shell::SurfaceSpecification new_size_spec;
+            new_size_spec.width = buffer_size.width;
+            new_size_spec.height = buffer_size.height;
+            shell->modify_surface(session, surface_id, new_size_spec);
+            return;
+        }
+
+        auto* const mir_surface = get_wlsurface(surface);
+        if (params.size == geom::Size{}) params.size = buffer_size;
+        params.content_id = mir_surface->stream_id;
+        surface_id = shell->create_surface(session, params, sink);
+        mir_surface->surface_id = surface_id;
+
+        // The shell isn't guaranteed to respect the requested size
+        auto const window = session->get_surface(surface_id);
+        sink->send_resize(window->client_size());
     }
 
-    void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t /*edges*/) override
+    void visiblity(bool visible) override
     {
+        if (!surface_id.as_value())
+            return;
+
+        auto const session = session_for_client(client);
+
+        if (get_surface_for_id(session, surface_id)->visible() == visible)
+            return;
+        shell::SurfaceSpecification hide_spec;
+        hide_spec.state = visible ? mir_window_state_restored : mir_window_state_hidden;
+        shell->modify_surface(session, surface_id, hide_spec);
+    }
+};
+
+class WlShellSurface  : public wayland::ShellSurface, WlAbstractMirWindow
+{
+public:
+    WlShellSurface(
+        wl_client* client,
+        wl_resource* parent,
+        uint32_t id,
+        wl_resource* surface,
+        std::shared_ptr<mf::Shell> const& shell,
+        WlSeat& seat)
+        : ShellSurface(client, parent, id),
+        WlAbstractMirWindow{client, surface, resource, shell}
+    {
+        // We can't pass this to the WlAbstractMirWindow constructor as it needs creating *after* destroyed
+        sink = std::make_shared<SurfaceEventSink>(&seat, client, surface, event_sink, destroyed);
     }
 
+protected:
     void set_toplevel() override
     {
+        auto* const mir_surface = get_wlsurface(surface);
+
+        mir_surface->set_role(this);
     }
 
     void set_transient(
@@ -1984,6 +2060,9 @@ protected:
             params.placement_hints = mir_placement_hints_slide_x;
             params.aux_rect_placement_offset_x = 0;
             params.aux_rect_placement_offset_y = 0;
+
+            auto* const mir_surface = get_wlsurface(surface);
+            mir_surface->set_role(this);
         }
     }
 
@@ -2025,28 +2104,16 @@ protected:
         auto const session = session_for_client(client);
         auto& parent_surface = *get_wlsurface(parent);
 
-        if (surface_id.as_value())
-        {
-            shell::SurfaceSpecification new_spec;
-            new_spec.parent_id = parent_surface.surface_id;
-            new_spec.aux_rect = geom::Rectangle{{x, y}, {}};
-            new_spec.surface_placement_gravity = mir_placement_gravity_northwest;
-            new_spec.aux_rect_placement_gravity = mir_placement_gravity_southeast;
-            new_spec.placement_hints = mir_placement_hints_slide_x;
-            new_spec.aux_rect_placement_offset_x = 0;
-            new_spec.aux_rect_placement_offset_y = 0;
-            shell->modify_surface(session, surface_id, new_spec);
-        }
-        else
-        {
-            params.parent_id = parent_surface.surface_id;
-            params.aux_rect = geom::Rectangle{{x, y}, {}};
-            params.surface_placement_gravity = mir_placement_gravity_northwest;
-            params.aux_rect_placement_gravity = mir_placement_gravity_southeast;
-            params.placement_hints = mir_placement_hints_slide_x;
-            params.aux_rect_placement_offset_x = 0;
-            params.aux_rect_placement_offset_y = 0;
-        }
+        params.parent_id = parent_surface.surface_id;
+        params.aux_rect = geom::Rectangle{{x, y}, {}};
+        params.surface_placement_gravity = mir_placement_gravity_northwest;
+        params.aux_rect_placement_gravity = mir_placement_gravity_southeast;
+        params.placement_hints = mir_placement_hints_slide_x;
+        params.aux_rect_placement_offset_x = 0;
+        params.aux_rect_placement_offset_y = 0;
+
+        auto* const mir_surface = get_wlsurface(surface);
+        mir_surface->set_role(this);
     }
 
     void set_maximized(std::experimental::optional<struct wl_resource*> const& output) override
@@ -2087,78 +2154,23 @@ protected:
         }
     }
 
+    void pong(uint32_t /*serial*/) override
+    {
+    }
+
+    void move(struct wl_resource* /*seat*/, uint32_t /*serial*/) override
+    {
+    }
+
+    void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t /*edges*/) override
+    {
+    }
+
     void set_class(std::string const& /*class_*/) override
     {
     }
 
-private:
-    void resize_handler(
-        WlSurface* mir_surface,
-        std::shared_ptr<SurfaceEventSink> const& sink,
-        WlSeat& seat,
-        geom::Size initial_size)
-    {
-        auto const session = session_for_client(client);
-
-        if (surface_id.as_value())
-        {
-            auto const surface = get_surface_for_id(session, surface_id);
-            if (surface->size() == initial_size)
-                return;
-            sink->latest_resize(initial_size);
-            shell::SurfaceSpecification new_size_spec;
-            new_size_spec.width = initial_size.width;
-            new_size_spec.height = initial_size.height;
-            shell->modify_surface(session, surface_id, new_size_spec);
-            return;
-        }
-
-        params.size = initial_size;
-        params.content_id = mir_surface->stream_id;
-        surface_id = shell->create_surface(session, params, sink);
-        mir_surface->surface_id = surface_id;
-
-        {
-            // The shell isn't guaranteed to respect the requested size
-            auto const window = session->get_surface(surface_id);
-            auto const size = window->client_size();
-
-            if (size != initial_size)
-            {
-                sink->latest_resize(size);
-                seat.spawn(
-                    run_unless(
-                        destroyed,
-                        [resource = resource, height = size.height.as_int(), width = size.width.as_int()]()
-                            {
-                                wl_shell_surface_send_configure(
-                                    resource, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
-                            }));
-            }
-        }
-
-        mir_surface->set_visibility_handler(
-            [shell=shell, session, id = surface_id](bool visible)
-                {
-                    if (get_surface_for_id(session, id)->visible() == visible)
-                        return;
-                    shell::SurfaceSpecification hide_spec;
-                    hide_spec.state = visible ? mir_window_state_restored : mir_window_state_hidden;
-                    shell->modify_surface(session, id, hide_spec);
-                });
-    }
-
-    WlSurface* get_wlsurface(wl_resource* surface) const
-    {
-        auto* tmp = wl_resource_get_user_data(surface);
-        return static_cast<WlSurface*>(static_cast<wayland::Surface*>(tmp));
-    }
-
-    std::shared_ptr<bool> const destroyed;
-    std::shared_ptr<mf::Shell> const shell;
-    mf::SurfaceId surface_id;
-
-    ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters().of_type(mir_window_type_freestyle);
+    using WlAbstractMirWindow::client;
 };
 
 class WlShell : public wayland::Shell
