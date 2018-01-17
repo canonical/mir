@@ -101,7 +101,7 @@ void launch_startup_app(std::string socket_file, std::string app)
 
         setenv("MIR_SOCKET", socket_file.c_str(),  true);   // configure Mir socket
         setenv("GDK_BACKEND", "mir", true);                 // configure GTK to use Mir
-        setenv("QT_QPA_PLATFORM", "ubuntumirclient", true); // configure Qt to use Mir
+        setenv("QT_QPA_PLATFORM", "wayland", true);         // configure Qt to use Mir
         unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
         setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland
 

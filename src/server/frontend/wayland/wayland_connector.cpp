@@ -583,13 +583,15 @@ struct WlMirWindow
 {
     virtual void commit(geom::Size const& buffer_size) = 0;
     virtual void visiblity(bool visible) = 0;
+    virtual void destroy() = 0;
     virtual ~WlMirWindow() = default;
 };
 
 struct NullWlMirWindow : WlMirWindow
 {
     void commit(geom::Size const& ) {}
-    virtual void visiblity(bool ) {}
+    void visiblity(bool ) {}
+    void destroy() {}
 } nullwlmirwindow;
 
 class WlSurface : public wayland::Surface
@@ -631,7 +633,7 @@ public:
 
     void set_role(WlMirWindow* role_)
     {
-        role = role_;
+        role = role_ ? role_ : &nullwlmirwindow;
     }
 
     mf::BufferStreamId stream_id;
@@ -662,6 +664,8 @@ private:
 
 void WlSurface::destroy()
 {
+    *destroyed = true;
+    role->destroy();
     wl_resource_destroy(resource);
 }
 
@@ -1940,6 +1944,8 @@ public:
             {
                 shell->destroy_surface(session, surface_id);
             }
+
+            surface_id = {};
         }
     }
 
@@ -2021,7 +2027,18 @@ public:
         sink = std::make_shared<SurfaceEventSink>(&seat, client, surface, event_sink, destroyed);
     }
 
+    ~WlShellSurface() override
+    {
+        auto* const mir_surface = get_wlsurface(surface);
+        mir_surface->set_role(nullptr);
+    }
+
 protected:
+    void destroy() override
+    {
+        wl_resource_destroy(resource);
+    }
+
     void set_toplevel() override
     {
         auto* const mir_surface = get_wlsurface(surface);

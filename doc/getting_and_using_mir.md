@@ -27,8 +27,8 @@ To remove the PPA from your system:
 
 You can install the Mir examples along with the Mir graphics drivers as follows:
 
-    $ sudo apt install mir-demos qterminal
-    $ sudo apt install mir-graphics-drivers-desktop qtubuntu-desktop
+    $ sudo apt install mir-demos qterminal qtwayland5
+    $ sudo apt install mir-graphics-drivers-desktop
 
 ## Getting Mir examples on Fedora
 
