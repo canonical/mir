@@ -1,7 +1,7 @@
 Mir - cross-platform display manager
 ---------------------------------------
 
-**Mir** is a *display manager* that provides efficient support for graphics coprocessors.
+**Mir** is a *display manager* and a **Wayland** *Compositor* that provides efficient support for graphics coprocessors.
 
 License (server)
 -------
@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 Website
 -------
-Mir's website is hosted on <http://www.mirserver.io/>.
+Mir's *website* is hosted on <http://www.mirserver.io/>.
 
-\copyright Copyright © 2012 Canonical Ltd.
-\author Alan Griffiths <alan@octopull.co.uk>
+Copyright © 2012 Canonical Ltd.
+Author Alan Griffiths <alan@octopull.co.uk>
