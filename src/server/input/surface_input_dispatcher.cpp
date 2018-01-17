@@ -22,6 +22,7 @@
 #include "mir/input/surface.h"
 #include "mir/scene/observer.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_observer.h"
 #include "mir/events/event_builders.h"
 #include "mir_toolkit/mir_cookie.h"
 
@@ -38,36 +39,124 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct InputDispatcherSceneObserver : public ms::Observer
+struct InputDispatcherSceneObserver :
+    public ms::Observer,
+    public ms::SurfaceObserver,
+    public std::enable_shared_from_this<InputDispatcherSceneObserver>
 {
-    InputDispatcherSceneObserver(std::function<void(ms::Surface*)> const& on_removed)
-        : on_removed(on_removed)
+    InputDispatcherSceneObserver(
+        std::function<void(ms::Surface*)> const& on_removed,
+        std::function<void()> const& on_surface_moved)
+        : on_removed(on_removed),
+          on_surface_moved{on_surface_moved}
     {
     }
-    void surface_added(ms::Surface* surface)
+    void surface_added(ms::Surface* surface) override
     {
-        (void) surface;
+        surface->add_observer(shared_from_this());
     }
-    void surface_removed(ms::Surface* surface)
+    void surface_removed(ms::Surface* surface) override
     {
         on_removed(surface);
     }
-    void surfaces_reordered()
+    void surfaces_reordered() override
     {
     }
-    void scene_changed()
+    void scene_changed() override
     {
     }
 
-    void surface_exists(ms::Surface* surface)
+    void surface_exists(ms::Surface* surface) override
     {
-        (void) surface;
+        surface->add_observer(shared_from_this());
     }
-    void end_observation()
+    void end_observation() override
+    {
+    }
+
+    void attrib_changed(MirWindowAttrib /*attrib*/, int /*value*/) override
+    {
+        // TODO: Do we need to listen to visibility events?
+    }
+
+    void resized_to(mir::geometry::Size const& /*size*/) override
+    {
+        on_surface_moved();
+    }
+
+    void moved_to(mir::geometry::Point const& /*top_left*/) override
+    {
+        on_surface_moved();
+    }
+
+    void hidden_set_to(bool /*hide*/) override
+    {
+        // TODO: Do we need to listen to this?
+    }
+
+    void frame_posted(int, mir::geometry::Size const&) override
+    {
+
+    }
+
+    void alpha_set_to(float) override
+    {
+
+    }
+
+    void orientation_set_to(MirOrientation) override
+    {
+
+    }
+
+    void transformation_set_to(glm::mat4 const&) override
+    {
+
+    }
+
+    void reception_mode_set_to(mir::input::InputReceptionMode) override
+    {
+    }
+
+    void cursor_image_set_to(mir::graphics::CursorImage const&) override
+    {
+    }
+
+    void client_surface_close_requested() override
+    {
+    }
+
+    void keymap_changed(
+        MirInputDeviceId,
+        std::string const&,
+        std::string const&,
+        std::string const&,
+        std::string const&) override
+    {
+    }
+
+    void renamed(char const*) override
+    {
+    }
+
+    void cursor_image_removed() override
+    {
+    }
+
+    void placed_relative(mir::geometry::Rectangle const&) override
+    {
+    }
+
+    void input_consumed(MirEvent const*) override
+    {
+    }
+
+    void start_drag_and_drop(std::vector<uint8_t> const&) override
     {
     }
 
     std::function<void(ms::Surface*)> const on_removed;
+    std::function<void()> const on_surface_moved;
 };
 
 void deliver_without_relative_motion(
@@ -127,13 +216,26 @@ mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> co
     : scene(scene),
       started(false)
 {
-    scene_observer = std::make_shared<InputDispatcherSceneObserver>([this](ms::Surface* s){surface_removed(s);});
+    scene_observer = std::make_shared<InputDispatcherSceneObserver>(
+        [this](ms::Surface* s){surface_removed(s);},
+        std::bind(std::mem_fn(&SurfaceInputDispatcher::surface_geometry_changed), this));
     scene->add_observer(scene_observer);
 }
 
 mi::SurfaceInputDispatcher::~SurfaceInputDispatcher()
 {
     scene->remove_observer(scene_observer);
+    scene->for_each(
+        [this](auto surface)
+        {
+            // Everything *should* be a scene::Surface, but let's not crash if it isn't.
+            if (auto scene_surf = std::dynamic_pointer_cast<ms::Surface>(surface))
+            {
+                // We *know* scene_observer is an InputDispatcherSceneObserver
+                scene_surf->remove_observer(
+                    std::static_pointer_cast<InputDispatcherSceneObserver>(scene_observer));
+            }
+        });
 }
 
 namespace
@@ -168,6 +270,77 @@ void mi::SurfaceInputDispatcher::surface_removed(ms::Surface *surface)
         auto& state = kv.second;
         if (compare_surfaces(state.gesture_owner, surface))
             state.gesture_owner.reset();
+    }
+}
+
+void mi::SurfaceInputDispatcher::surface_geometry_changed()
+{
+    std::lock_guard<std::mutex> lock{dispatcher_mutex};
+
+    if (!last_pointer_event)
+        return;
+
+    auto const iev = mir_event_get_input_event(last_pointer_event.get());
+    auto const pev = mir_input_event_get_pointer_event(iev);
+    geom::Point const event_x_y = {
+        mir_pointer_event_axis_value(pev,mir_pointer_axis_x),
+        mir_pointer_event_axis_value(pev,mir_pointer_axis_y)
+    };
+    auto& pointer_state = ensure_pointer_state(mir_input_event_get_device_id(iev));
+
+    /*
+     * Check if the top-most surface that's under the pointer is the same as the last
+     * time we sent and input event…
+     */
+    auto const target_surface = find_target_surface(event_x_y);
+    if (pointer_state.current_target != target_surface)
+    {
+        if (pointer_state.current_target)
+        {
+            /*
+             * We have been sending pointer events to a surface, but it's no longer
+             * top-most under the cursor; we need to send a leave event.
+             */
+            auto const event = mev::make_event(
+                mir_input_event_get_device_id(iev),
+                std::chrono::nanoseconds{std::chrono::steady_clock::now().time_since_epoch()},
+                std::vector<uint8_t>{},
+                0, // TODO: We need the current keyboard state
+                mir_pointer_action_leave,
+                mir_pointer_event_buttons(pev),
+                mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
+                mir_pointer_event_axis_value(pev, mir_pointer_axis_y),
+                0, 0, // No scrolling
+                0, 0  // No relative motion
+            );
+
+            auto const synth_iev = mir_event_get_input_event(event.get());
+            auto const synth_pev = mir_input_event_get_pointer_event(synth_iev);
+            send_enter_exit_event(pointer_state.current_target, synth_pev, mir_pointer_action_leave);
+        }
+        if (target_surface)
+        {
+            /*
+             * A new surface is top-most underneath the cursor; send a pointer enter event
+             */
+            auto const event = mev::make_event(
+                mir_input_event_get_device_id(iev),
+                std::chrono::nanoseconds{std::chrono::steady_clock::now().time_since_epoch()},
+                std::vector<uint8_t>{},
+                0, // TODO: We need the current keyboard state
+                mir_pointer_action_enter,
+                mir_pointer_event_buttons(pev),
+                mir_pointer_event_axis_value(pev, mir_pointer_axis_x),
+                mir_pointer_event_axis_value(pev, mir_pointer_axis_y),
+                0, 0, // No scrolling
+                0, 0  // No relative motion
+            );
+
+            auto const synth_iev = mir_event_get_input_event(event.get());
+            auto const synth_pev = mir_input_event_get_pointer_event(synth_iev);
+            send_enter_exit_event(target_surface, synth_pev, mir_pointer_action_enter);
+        }
+        pointer_state.current_target = target_surface;
     }
 }
 
@@ -430,6 +603,7 @@ bool mi::SurfaceInputDispatcher::dispatch(std::shared_ptr<MirEvent const> const&
     case mir_input_event_type_touch:
         return dispatch_touch(id, event.get());
     case mir_input_event_type_pointer:
+        last_pointer_event = event;
         return dispatch_pointer(id, event.get());
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got an input event of unknown type"));
