@@ -181,6 +181,15 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
     int tmp_fd = -1;
     for (auto& device : drm_devices)
     {
+        if (device.devnode() == nullptr)
+        {
+            /* The display connectors attached to the card appear as subdevices
+             * of the card[0-9] node.
+             * These won't have a device node, so pass on anything that doesn't have
+             * a /dev/dri/card* node
+             */
+            continue;
+        }
         tmp_fd = open(device.devnode(), O_RDWR | O_CLOEXEC);
         if (tmp_fd >= 0)
             break;

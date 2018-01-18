@@ -9,6 +9,7 @@ backends:
             - ubuntu-17.10
             - ubuntu-18.04:
                 image: ubuntu-daily:18.04
+            - fedora-27
     linode:
         key: "$(HOST: echo $SPREAD_LINODE_KEY)"
         systems:
@@ -16,6 +17,7 @@ backends:
             - ubuntu-17.10
             - ubuntu-devel:
                 image: ubuntu-17.10
+            - fedora-27
 
 environment:
     ARCH: amd64

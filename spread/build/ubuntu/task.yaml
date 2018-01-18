@@ -2,6 +2,8 @@ environment:
     DEB_BUILD_OPTIONS: "parallel=$( nproc ) noopt"
     NO_PKG_MANGLE: 1
 
+systems: [-fedora-27]
+
 summary: Build Ubuntu packages
 
 execute: |
