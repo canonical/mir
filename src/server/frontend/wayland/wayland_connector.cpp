@@ -1964,31 +1964,55 @@ struct XdgPositionerV6 : wayland::XdgPositionerV6
 
     void destroy() override
     {
-        // TODO
+        wl_resource_destroy(resource);
     }
 
     void set_size(int32_t width, int32_t height) override
     {
-        (void)width, (void)height;
-        // TODO
+        size = geom::Size{width, height};
     }
 
     void set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) override
     {
-        (void)x, (void)y, (void)width, (void)height;
-        // TODO
+        aux_rect = geom::Rectangle{{x, y}, {width, height}};
     }
 
     void set_anchor(uint32_t anchor) override
     {
-        (void)anchor;
-        // TODO
+        MirPlacementGravity placement = mir_placement_gravity_center;
+
+        if (anchor & ZXDG_POSITIONER_V6_ANCHOR_TOP)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_north);
+
+        if (anchor & ZXDG_POSITIONER_V6_ANCHOR_BOTTOM)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_south);
+
+        if (anchor & ZXDG_POSITIONER_V6_ANCHOR_LEFT)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_west);
+
+        if (anchor & ZXDG_POSITIONER_V6_ANCHOR_RIGHT)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_east);
+
+        surface_placement_gravity = placement;
     }
 
     void set_gravity(uint32_t gravity) override
     {
-        (void)gravity;
-        // TODO
+        MirPlacementGravity placement = mir_placement_gravity_center;
+
+        if (gravity & ZXDG_POSITIONER_V6_GRAVITY_TOP)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_north);
+
+        if (gravity & ZXDG_POSITIONER_V6_GRAVITY_BOTTOM)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_south);
+
+        if (gravity & ZXDG_POSITIONER_V6_GRAVITY_LEFT)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_west);
+
+        if (gravity & ZXDG_POSITIONER_V6_GRAVITY_RIGHT)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_east);
+
+        aux_rect_placement_gravity = placement;
     }
 
     void set_constraint_adjustment(uint32_t constraint_adjustment) override
@@ -1999,9 +2023,16 @@ struct XdgPositionerV6 : wayland::XdgPositionerV6
 
     void set_offset(int32_t x, int32_t y) override
     {
-        (void)x, (void)y;
-        // TODO
+        aux_rect_placement_offset_x = x;
+        aux_rect_placement_offset_y = y;
     }
+
+    mir::optional_value<geometry::Size> size;
+    mir::optional_value<geometry::Rectangle> aux_rect;
+    optional_value<MirPlacementGravity> surface_placement_gravity;
+    optional_value<MirPlacementGravity> aux_rect_placement_gravity;
+    optional_value<int> aux_rect_placement_offset_x;
+    optional_value<int> aux_rect_placement_offset_y;
 };
 
 struct XdgSurfaceV6;
@@ -2179,20 +2210,21 @@ struct XdgSurfaceV6 : wayland::XdgSurfaceV6, WlAbstractMirWindow
 
     void get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner) override
     {
-        (void)positioner;
+        auto* tmp = wl_resource_get_user_data(positioner);
+        auto const* const pos =  static_cast<XdgPositionerV6*>(static_cast<wayland::XdgPositionerV6*>(tmp));
+
         auto const session = session_for_client(client);
         auto& parent_surface = *get_xdgsurface(parent);
 
         params.type = mir_window_type_freestyle;
         params.parent_id = parent_surface.surface_id;
-
-        // Presumably populated from the "positioner"
-//        params.aux_rect = geom::Rectangle{{x, y}, {}};
-//        params.surface_placement_gravity = mir_placement_gravity_northwest;
-//        params.aux_rect_placement_gravity = mir_placement_gravity_southeast;
-//        params.placement_hints = mir_placement_hints_slide_x;
-//        params.aux_rect_placement_offset_x = 0;
-//        params.aux_rect_placement_offset_y = 0;
+        if (pos->size.is_set()) params.size = pos->size.value();
+        params.aux_rect = pos->aux_rect;
+        params.surface_placement_gravity = pos->surface_placement_gravity;
+        params.aux_rect_placement_gravity = pos->aux_rect_placement_gravity;
+        params.aux_rect_placement_offset_x = pos->aux_rect_placement_offset_x;
+        params.aux_rect_placement_offset_y = pos->aux_rect_placement_offset_y;
+        params.placement_hints = mir_placement_hints_slide_any;
 
         new XdgPopupV6{client, parent, id};
         auto* const mir_surface = get_wlsurface(surface);
