@@ -2242,8 +2242,8 @@ struct DataDevice : wayland::DataDevice
 
 struct DataDeviceManager : wayland::DataDeviceManager
 {
-    DataDeviceManager(struct wl_display* display, uint32_t max_version) :
-        wayland::DataDeviceManager(display, max_version)
+    DataDeviceManager(struct wl_display* display) :
+        wayland::DataDeviceManager(display, 3)
     {
     }
 
@@ -2471,7 +2471,7 @@ mf::WaylandConnector::WaylandConnector(
         display.get(),
         display_config);
     shell_global = std::make_unique<mf::WlShell>(display.get(), shell, *seat_global);
-    data_device_manager_global = std::make_unique<DataDeviceManager>(display.get(), wl_data_device_interface.version);
+    data_device_manager_global = std::make_unique<DataDeviceManager>(display.get());
 
     wl_display_init_shm(display.get());
 
