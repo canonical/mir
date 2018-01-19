@@ -2215,6 +2215,50 @@ private:
     std::shared_ptr<mf::Shell> const shell;
     WlSeat& seat;
 };
+
+struct DataDevice : wayland::DataDevice
+{
+    DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id) :
+        wayland::DataDevice(client, parent, id)
+    {
+    }
+
+    void start_drag(
+        std::experimental::optional<struct wl_resource*> const& source, struct wl_resource* origin,
+        std::experimental::optional<struct wl_resource*> const& icon, uint32_t serial) override
+    {
+        (void)source, (void)origin, (void)icon, (void)serial;
+    }
+
+    void set_selection(std::experimental::optional<struct wl_resource*> const& source, uint32_t serial) override
+    {
+        (void)source, (void)serial;
+    }
+
+    void release() override
+    {
+    }
+};
+
+struct DataDeviceManager : wayland::DataDeviceManager
+{
+    DataDeviceManager(struct wl_display* display) :
+        wayland::DataDeviceManager(display, 3)
+    {
+    }
+
+    void create_data_source(struct wl_client* client, struct wl_resource* resource, uint32_t id) override
+    {
+        (void)client, (void)resource, (void)id;
+    }
+
+    void get_data_device(
+        struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat) override
+    {
+        (void)seat;
+        new DataDevice{client, resource, id};
+    }
+};
 }
 }
 
@@ -2427,6 +2471,7 @@ mf::WaylandConnector::WaylandConnector(
         display.get(),
         display_config);
     shell_global = std::make_unique<mf::WlShell>(display.get(), shell, *seat_global);
+    data_device_manager_global = std::make_unique<DataDeviceManager>(display.get());
 
     wl_display_init_shm(display.get());
 
