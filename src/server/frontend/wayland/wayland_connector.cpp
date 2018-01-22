@@ -327,12 +327,17 @@ public:
 
     void set_role(WlMirWindow* role_)
     {
-        role = role_ ? role_ : &nullwlmirwindow;
+        role = role_;
     }
 
     mf::BufferStreamId stream_id;
     std::shared_ptr<mf::BufferStream> stream;
     mf::SurfaceId surface_id;       // ID of any associated surface
+
+    std::shared_ptr<bool> destroyed_flag() const
+    {
+        return destroyed;
+    }
 
 private:
     std::shared_ptr<mg::WaylandAllocator> const allocator;
@@ -355,6 +360,12 @@ private:
     void set_buffer_transform(int32_t transform);
     void set_buffer_scale(int32_t scale);
 };
+
+WlSurface* get_wlsurface(wl_resource* surface)
+{
+    auto* tmp = wl_resource_get_user_data(surface);
+    return static_cast<WlSurface*>(static_cast<wayland::Surface*>(tmp));
+}
 
 void WlSurface::destroy()
 {
@@ -668,10 +679,14 @@ public:
                 destroyed,
                 [
                     target = target,
+                    target_window_destroyed = get_wlsurface(target)->destroyed_flag(),
                     focussed = mir_window_event_get_attribute_value(event),
                     this
                 ]()
                 {
+                    if (*target_window_destroyed)
+                        return;
+
                     auto const serial = wl_display_next_serial(wl_client_get_display(client));
                     if (focussed)
                     {
@@ -802,8 +817,16 @@ public:
     {
         executor->spawn(run_unless(
             destroyed,
-            [ev = mcl::Event{mir_input_event_get_event(event)}, target, this]()
+            [
+                ev = mcl::Event{mir_input_event_get_event(event)},
+                target,
+                target_window_destroyed = get_wlsurface(target)->destroyed_flag(),
+                this
+            ]()
             {
+                if (*target_window_destroyed)
+                    return;
+
                 auto const serial = wl_display_next_serial(display);
                 auto const event = mir_event_get_input_event(ev);
                 auto const pointer_event = mir_input_event_get_pointer_event(event);
@@ -957,8 +980,16 @@ public:
     {
         executor->spawn(run_unless(
             destroyed,
-            [ev = mcl::Event{mir_input_event_get_event(event)}, target = target, this]()
+            [
+                ev = mcl::Event{mir_input_event_get_event(event)},
+                target = target,
+                target_window_destroyed = get_wlsurface(target)->destroyed_flag(),
+                this
+            ]()
             {
+                if (*target_window_destroyed)
+                    return;
+
                 auto const input_ev = mir_event_get_input_event(ev);
                 auto const touch_ev = mir_input_event_get_touch_event(input_ev);
 
@@ -1644,12 +1675,6 @@ public:
     }
 
 protected:
-    WlSurface* get_wlsurface(wl_resource* surface) const
-    {
-        auto* tmp = wl_resource_get_user_data(surface);
-        return static_cast<WlSurface*>(static_cast<wayland::Surface*>(tmp));
-    }
-
     std::shared_ptr<bool> const destroyed;
     wl_client* const client;
     wl_resource* const surface;
@@ -1724,7 +1749,7 @@ public:
     ~WlShellSurface() override
     {
         auto* const mir_surface = get_wlsurface(surface);
-        mir_surface->set_role(nullptr);
+        mir_surface->set_role(&nullwlmirwindow);
     }
 
 protected:
