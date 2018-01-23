@@ -1687,8 +1687,14 @@ protected:
     mf::SurfaceId surface_id;
 
 private:
-    void commit(geom::Size const& buffer_size) override
+    void commit(geom::Size const& buffer_size_) override
     {
+        auto buffer_size = buffer_size_;
+
+        // Sometimes, when using xdg-shell, qterminal creates an insanely tall buffer
+        if (buffer_size.height > geom::Height{10000})
+            buffer_size.height = geom::Height{1000};
+
         auto const session = session_for_client(client);
 
         if (surface_id.as_value())
