@@ -40,9 +40,8 @@ if [ -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; then echo "Error: wayland end
 vt_login_session=$(who -u | grep tty${vt} | grep ${USER} | wc -l)
 if [ "${vt_login_session}" == "0" ]; then echo "Error: please log into tty${vt} first"; exit 1 ;fi
 
-sudo ls >> /dev/null
 oldvt=$(sudo fgconsole)
-sudo sh -c "LD_LIBRARY_PATH=${LD_LIBRARY_PATH} XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR} ${bindir}${miral_server} --wayland-socket-name ${wayland_display} --vt ${vt} --arw-file --file ${socket} $*; chvt ${oldvt}"&
+sudo --background --preserve-env sh -c "${bindir}${miral_server} --wayland-socket-name ${wayland_display} --vt ${vt} --arw-file --file ${socket} $*; chvt ${oldvt}"
 
 while [ ! -e "${socket}" ]; do echo "waiting for ${socket}"; sleep 1 ;done
 
