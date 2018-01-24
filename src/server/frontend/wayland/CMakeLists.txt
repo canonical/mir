@@ -8,7 +8,8 @@ set(
   wayland_default_configuration.cpp
   wayland_connector.cpp wayland_connector.h
   wlshmbuffer.cpp       wlshmbuffer.h
-  wayland_executor.cpp wayland_executor.h
+  wayland_executor.cpp  wayland_executor.h
+  null_event_sink.cpp   null_event_sink.h
 )
 
 add_library(
