@@ -18,6 +18,7 @@
 
 #include "wayland_connector.h"
 
+#include "basic_surface_event_sink.h"
 #include "null_event_sink.h"
 #include "wayland_executor.h"
 #include "wlshmbuffer.h"
@@ -1105,7 +1106,7 @@ private:
     std::vector<InputInterface*> listeners;
 };
 
-class WlSeat
+class WlSeat : public BasicWlSeat
 {
 public:
     WlSeat(
@@ -1142,11 +1143,13 @@ public:
         wl_global_destroy(global);
     }
 
-    InputCtx<WlPointer> const& acquire_pointer_reference(wl_client* client) const;
-    InputCtx<WlKeyboard> const& acquire_keyboard_reference(wl_client* client) const;
-    InputCtx<WlTouch> const& acquire_touch_reference(wl_client* client) const;
+    void handle_pointer_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const override;
+    void handle_keyboard_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const override;
+    void handle_touch_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const override;
+    void handle_event(wl_client* client, MirKeymapEvent const* keymap_event, wl_resource* target) const override;
+    void handle_event(wl_client* client, MirWindowEvent const* window_event, wl_resource* target) const override;
 
-    void spawn(std::function<void()>&& work)
+    void spawn(std::function<void()>&& work) override
     {
         executor->spawn(std::move(work));
     }
@@ -1283,19 +1286,29 @@ struct wl_seat_interface const WlSeat::vtable = {
     WlSeat::release
 };
 
-InputCtx<WlKeyboard> const& WlSeat::acquire_keyboard_reference(wl_client* client) const
+void WlSeat::handle_pointer_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
 {
-    return keyboard[client];
+    pointer[client].handle_event(input_event, target);
 }
 
-InputCtx<WlPointer> const& WlSeat::acquire_pointer_reference(wl_client* client) const
+void WlSeat::handle_keyboard_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
 {
-    return pointer[client];
+    keyboard[client].handle_event(input_event, target);
 }
 
-InputCtx<WlTouch> const& WlSeat::acquire_touch_reference(wl_client* client) const
+void WlSeat::handle_touch_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
 {
-    return touch[client];
+    touch[client].handle_event(input_event, target);
+}
+
+void WlSeat::handle_event(wl_client* client, MirKeymapEvent const* keymap_event, wl_resource* target) const
+{
+    keyboard[client].handle_event(keymap_event, target);
+}
+
+void WlSeat::handle_event(wl_client* client, MirWindowEvent const* window_event, wl_resource* target) const
+{
+    keyboard[client].handle_event(window_event, target);
 }
 
 void WlSeat::ConfigObserver::device_added(std::shared_ptr<input::Device> const& device)
@@ -1327,82 +1340,6 @@ void WlSeat::ConfigObserver::device_removed(std::shared_ptr<input::Device> const
 void WlSeat::ConfigObserver::changes_complete()
 {
     on_keymap_commit(pending_keymap);
-}
-
-class BasicSurfaceEventSink : public mf::NullEventSink
-{
-public:
-    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink)
-        : seat{seat},
-          client{client},
-          target{target},
-          event_sink{event_sink},
-          window_size{geometry::Size{0,0}}
-    {
-    }
-
-    void handle_event(MirEvent const& e) override;
-
-    void latest_resize(geometry::Size window_size)
-    {
-        this->window_size = window_size;
-    }
-
-    virtual void send_resize(geometry::Size const& new_size) const = 0;
-
-protected:
-    WlSeat* const seat;
-    wl_client* const client;
-    wl_resource* const target;
-    wl_resource* const event_sink;
-    std::atomic<geometry::Size> window_size;
-};
-
-void BasicSurfaceEventSink::handle_event(MirEvent const& event)
-{
-    switch (mir_event_get_type(&event))
-    {
-    case mir_event_type_resize:
-    {
-        auto* const resize_event = mir_event_get_resize_event(&event);
-        send_resize({mir_resize_event_get_width(resize_event), mir_resize_event_get_height(resize_event)});
-        break;
-    }
-    case mir_event_type_input:
-    {
-        auto input_event = mir_event_get_input_event(&event);
-        switch (mir_input_event_get_type(input_event))
-        {
-        case mir_input_event_type_key:
-            seat->acquire_keyboard_reference(client).handle_event(input_event, target);
-            break;
-        case mir_input_event_type_pointer:
-            seat->acquire_pointer_reference(client).handle_event(input_event, target);
-            break;
-        case mir_input_event_type_touch:
-            seat->acquire_touch_reference(client).handle_event(input_event, target);
-            break;
-        default:
-            break;
-        }
-        break;
-    }
-    case mir_event_type_keymap:
-    {
-        auto const map_ev = mir_event_get_keymap_event(&event);
-
-        seat->acquire_keyboard_reference(client).handle_event(map_ev, target);
-        break;
-    }
-    case mir_event_type_window:
-    {
-        auto const wev = mir_event_get_window_event(&event);
-
-        seat->acquire_keyboard_reference(client).handle_event(wev, target);
-    }
-    default:
-        break;
-    }
 }
 
 class SurfaceEventSink : public BasicSurfaceEventSink
