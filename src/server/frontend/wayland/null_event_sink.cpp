@@ -46,23 +46,22 @@ void mf::NullEventSink::send_ping(int32_t)
 {
 }
 
-void mir::frontend::NullEventSink::handle_input_config_change(MirInputConfig const&)
+void mf::NullEventSink::handle_input_config_change(MirInputConfig const&)
 {
 }
 
-void mir::frontend::NullEventSink::handle_error(mir::ClientVisibleError const&)
+void mf::NullEventSink::handle_error(mir::ClientVisibleError const&)
 {
 }
 
-void mir::frontend::NullEventSink::add_buffer(mir::graphics::Buffer&)
+void mf::NullEventSink::add_buffer(mir::graphics::Buffer&)
 {
 }
 
-void mir::frontend::NullEventSink::error_buffer(mir::geometry::Size, MirPixelFormat, std::string const&)
+void mf::NullEventSink::error_buffer(mir::geometry::Size, MirPixelFormat, std::string const&)
 {
 }
 
-void mir::frontend::NullEventSink::update_buffer(mir::graphics::Buffer&)
+void mf::NullEventSink::update_buffer(mir::graphics::Buffer&)
 {
 }
-
