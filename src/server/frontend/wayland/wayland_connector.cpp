@@ -19,6 +19,7 @@
 #include "wayland_connector.h"
 
 #include "core_generated_interfaces.h"
+#include "xdg_shell_generated_interfaces.h"
 
 #include "mir/frontend/shell.h"
 #include "mir/frontend/surface.h"
@@ -1686,8 +1687,18 @@ protected:
     mf::SurfaceId surface_id;
 
 private:
-    void commit(geom::Size const& buffer_size) override
+    void commit(geom::Size const& buffer_size_) override
     {
+        auto buffer_size = buffer_size_;
+
+        // Sometimes, when using xdg-shell, qterminal creates an insanely tall buffer
+        if (buffer_size.height > geom::Height{10000})
+        {
+            mir::log_warning("Insane buffer height sanitized: buffer_size.height = %d (was %d)",
+                 1000, buffer_size.height.as_int());
+            buffer_size.height = geom::Height{1000};
+        }
+
         auto const session = session_for_client(client);
 
         if (surface_id.as_value())
@@ -1954,6 +1965,532 @@ private:
     WlSeat& seat;
 };
 
+struct XdgPositionerV6 : wayland::XdgPositionerV6
+{
+    XdgPositionerV6(struct wl_client* client, struct wl_resource* parent, uint32_t id) :
+        wayland::XdgPositionerV6(client, parent, id)
+    {
+    }
+
+    void destroy() override
+    {
+        wl_resource_destroy(resource);
+    }
+
+    void set_size(int32_t width, int32_t height) override
+    {
+        size = geom::Size{width, height};
+    }
+
+    void set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) override
+    {
+        aux_rect = geom::Rectangle{{x, y}, {width, height}};
+    }
+
+    void set_anchor(uint32_t anchor) override
+    {
+        MirPlacementGravity placement = mir_placement_gravity_center;
+
+        if (anchor & ZXDG_POSITIONER_V6_ANCHOR_TOP)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_north);
+
+        if (anchor & ZXDG_POSITIONER_V6_ANCHOR_BOTTOM)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_south);
+
+        if (anchor & ZXDG_POSITIONER_V6_ANCHOR_LEFT)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_west);
+
+        if (anchor & ZXDG_POSITIONER_V6_ANCHOR_RIGHT)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_east);
+
+        surface_placement_gravity = placement;
+    }
+
+    void set_gravity(uint32_t gravity) override
+    {
+        MirPlacementGravity placement = mir_placement_gravity_center;
+
+        if (gravity & ZXDG_POSITIONER_V6_GRAVITY_TOP)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_north);
+
+        if (gravity & ZXDG_POSITIONER_V6_GRAVITY_BOTTOM)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_south);
+
+        if (gravity & ZXDG_POSITIONER_V6_GRAVITY_LEFT)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_west);
+
+        if (gravity & ZXDG_POSITIONER_V6_GRAVITY_RIGHT)
+            placement = MirPlacementGravity(placement | mir_placement_gravity_east);
+
+        aux_rect_placement_gravity = placement;
+    }
+
+    void set_constraint_adjustment(uint32_t constraint_adjustment) override
+    {
+        (void)constraint_adjustment;
+        // TODO
+    }
+
+    void set_offset(int32_t x, int32_t y) override
+    {
+        aux_rect_placement_offset_x = x;
+        aux_rect_placement_offset_y = y;
+    }
+
+    optional_value<geometry::Size> size;
+    optional_value<geometry::Rectangle> aux_rect;
+    optional_value<MirPlacementGravity> surface_placement_gravity;
+    optional_value<MirPlacementGravity> aux_rect_placement_gravity;
+    optional_value<int> aux_rect_placement_offset_x;
+    optional_value<int> aux_rect_placement_offset_y;
+};
+
+struct XdgSurfaceV6;
+
+struct XdgToplevelV6 : wayland::XdgToplevelV6
+{
+    XdgToplevelV6(struct wl_client* client, struct wl_resource* parent, uint32_t id,
+        std::shared_ptr<mf::Shell> const& shell, XdgSurfaceV6* self);
+
+    void destroy() override
+    {
+        wl_resource_destroy(resource);
+    }
+
+    void set_parent(std::experimental::optional<struct wl_resource*> const& parent) override;
+
+    void set_title(std::string const& title) override;
+
+    void set_app_id(std::string const& /*app_id*/) override
+    {
+        // Logically this sets the session name, but Mir doesn't allow this (currently) and
+        // allowing e.g. "session_for_client(client)->name(app_id);" would break the libmirserver ABI
+    }
+
+    void show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y) override
+    {
+        (void)seat, (void)serial, (void)x, (void)y;
+        // TODO
+    }
+
+    void move(struct wl_resource* seat, uint32_t serial) override
+    {
+        (void)seat, (void)serial;
+        // TODO
+    }
+
+    void resize(struct wl_resource* seat, uint32_t serial, uint32_t edges) override
+    {
+        (void)seat, (void)serial, (void)edges;
+        // TODO
+    }
+
+    void set_max_size(int32_t width, int32_t height) override;
+
+    void set_min_size(int32_t width, int32_t height) override;
+
+    void set_maximized() override;
+
+    void unset_maximized() override;
+
+    void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output) override
+    {
+        (void)output;
+        // TODO
+    }
+
+    void unset_fullscreen() override
+    {
+        // TODO
+    }
+
+    void set_minimized() override
+    {
+        // TODO
+    }
+
+private:
+    XdgToplevelV6* get_xdgtoplevel(wl_resource* surface) const
+    {
+        auto* tmp = wl_resource_get_user_data(surface);
+        return static_cast<XdgToplevelV6*>(static_cast<wayland::XdgToplevelV6*>(tmp));
+    }
+
+    std::shared_ptr<mf::Shell> const shell;
+    XdgSurfaceV6* const self;
+};
+
+struct XdgPopupV6 : wayland::XdgPopupV6
+{
+    XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id) :
+        wayland::XdgPopupV6(client, parent, id)
+    {
+    }
+
+    void grab(struct wl_resource* seat, uint32_t serial) override
+    {
+        (void)seat, (void)serial;
+        // TODO
+    }
+
+    void destroy() override
+    {
+        wl_resource_destroy(resource);
+    }
+};
+
+class XdgSurfaceV6EventSink : public BasicSurfaceEventSink
+{
+public:
+    using BasicSurfaceEventSink::BasicSurfaceEventSink;
+
+    XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink,
+        std::shared_ptr<bool> const& destroyed) :
+        BasicSurfaceEventSink(seat, client, target, event_sink),
+        destroyed{destroyed}
+    {
+        auto const serial = wl_display_next_serial(wl_client_get_display(client));
+        post_configure(serial);
+    }
+
+    void send_resize(geometry::Size const& new_size) const override
+    {
+        if (window_size != new_size)
+        {
+            auto const serial = wl_display_next_serial(wl_client_get_display(client));
+            notify_resize(new_size);
+            post_configure(serial);
+        }
+    }
+
+    std::function<void(geometry::Size const& new_size)> notify_resize = [](auto){};
+
+private:
+    void post_configure(int serial) const
+    {
+        seat->spawn(run_unless(destroyed, [event_sink= event_sink, serial]()
+            {
+                wl_resource_post_event(event_sink, 0, serial);
+            }));
+    }
+
+    std::shared_ptr<bool> const destroyed;
+};
+
+struct XdgSurfaceV6 : wayland::XdgSurfaceV6, WlAbstractMirWindow
+{
+    XdgSurfaceV6* get_xdgsurface(wl_resource* surface) const
+    {
+        auto* tmp = wl_resource_get_user_data(surface);
+        return static_cast<XdgSurfaceV6*>(static_cast<wayland::XdgSurfaceV6*>(tmp));
+    }
+
+    XdgSurfaceV6(wl_client* client,
+        wl_resource* parent,
+        uint32_t id,
+        wl_resource* surface,
+        std::shared_ptr<mf::Shell> const& shell,
+        WlSeat& seat) :
+        wayland::XdgSurfaceV6(client, parent, id),
+        WlAbstractMirWindow{client, surface, resource, shell},
+        parent{parent},
+        shell{shell},
+        sink{std::make_shared<XdgSurfaceV6EventSink>(&seat, client, surface, resource, destroyed)}
+    {
+        WlAbstractMirWindow::sink = sink;
+    }
+
+    ~XdgSurfaceV6() override
+    {
+        auto* const mir_surface = get_wlsurface(surface);
+        mir_surface->set_role(&nullwlmirwindow);
+    }
+
+    void destroy() override
+    {
+        wl_resource_destroy(resource);
+    }
+
+    void get_toplevel(uint32_t id) override
+    {
+        new XdgToplevelV6{client, parent, id, shell, this};
+        auto* const mir_surface = get_wlsurface(surface);
+        mir_surface->set_role(this);
+    }
+
+    void get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner) override
+    {
+        auto* tmp = wl_resource_get_user_data(positioner);
+        auto const* const pos =  static_cast<XdgPositionerV6*>(static_cast<wayland::XdgPositionerV6*>(tmp));
+
+        auto const session = session_for_client(client);
+        auto& parent_surface = *get_xdgsurface(parent);
+
+        params.type = mir_window_type_freestyle;
+        params.parent_id = parent_surface.surface_id;
+        if (pos->size.is_set()) params.size = pos->size.value();
+        params.aux_rect = pos->aux_rect;
+        params.surface_placement_gravity = pos->surface_placement_gravity;
+        params.aux_rect_placement_gravity = pos->aux_rect_placement_gravity;
+        params.aux_rect_placement_offset_x = pos->aux_rect_placement_offset_x;
+        params.aux_rect_placement_offset_y = pos->aux_rect_placement_offset_y;
+        params.placement_hints = mir_placement_hints_slide_any;
+
+        new XdgPopupV6{client, parent, id};
+        auto* const mir_surface = get_wlsurface(surface);
+        mir_surface->set_role(this);
+    }
+
+    void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override
+    {
+        geom::Rectangle const input_region{{x, y}, {width, height}};
+
+        if (surface_id.as_value())
+        {
+            auto const session = session_for_client(client);
+            auto const surface = get_surface_for_id(session, surface_id);
+
+            shell::SurfaceSpecification modifications;
+            modifications.input_shape = {input_region};
+            shell->modify_surface(session, surface_id, modifications);
+        }
+        else
+        {
+            params.input_shape = {input_region};
+        }
+    }
+
+    void ack_configure(uint32_t serial) override
+    {
+        (void)serial;
+        // TODO
+    }
+
+    void set_parent(optional_value<SurfaceId> parent_id);
+    void set_title(std::string const& title);
+    void set_max_size(int32_t width, int32_t height);
+    void set_min_size(int32_t width, int32_t height);
+    void set_maximized();
+    void unset_maximized();
+
+    using WlAbstractMirWindow::client;
+    using WlAbstractMirWindow::params;
+    using WlAbstractMirWindow::surface_id;
+    struct wl_resource* const parent;
+    std::shared_ptr<mf::Shell> const shell;
+    std::shared_ptr<XdgSurfaceV6EventSink> const sink;
+};
+
+XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* parent, uint32_t id,
+    std::shared_ptr<mf::Shell> const& shell, XdgSurfaceV6* self) :
+    wayland::XdgToplevelV6(client, parent, id),
+    shell{shell},
+    self{self}
+{
+    self->sink->notify_resize = [this](geom::Size const& new_size)
+        {
+            wl_array states;
+            wl_array_init(&states);
+
+            zxdg_toplevel_v6_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
+        };
+}
+
+
+void XdgSurfaceV6::set_title(std::string const& title)
+{
+    if (surface_id.as_value())
+    {
+        shell::SurfaceSpecification new_spec;
+        new_spec.name = title;
+        auto const session = session_for_client(client);
+        shell->modify_surface(session, surface_id, new_spec);
+    }
+    else
+    {
+        params.name = title;
+    }
+}
+
+
+void XdgSurfaceV6::set_parent(optional_value<SurfaceId> parent_id)
+{
+    if (surface_id.as_value())
+    {
+        shell::SurfaceSpecification new_spec;
+        new_spec.parent_id = parent_id;
+
+        auto const session = session_for_client(client);
+        shell->modify_surface(session, surface_id, new_spec);
+    }
+    else
+    {
+        params.parent_id = parent_id;
+    }
+}
+
+void XdgSurfaceV6::set_max_size(int32_t width, int32_t height)
+{
+    if (surface_id.as_value())
+    {
+        if (width == 0) width = std::numeric_limits<int>::max();
+        if (height == 0) height = std::numeric_limits<int>::max();
+
+        shell::SurfaceSpecification new_spec;
+        new_spec.max_width = geom::Width{width};
+        new_spec.max_height = geom::Height{height};
+        auto const session = session_for_client(client);
+        shell->modify_surface(session, surface_id, new_spec);
+    }
+    else
+    {
+        if (width == 0)
+        {
+            if (params.max_width.is_set())
+                params.max_width.consume();
+        }
+        else
+            params.max_width = geom::Width{width};
+
+        if (height == 0)
+        {
+            if (params.max_height.is_set())
+                params.max_height.consume();
+        }
+        else
+            params.max_height = geom::Height{height};
+    }
+}
+
+void XdgSurfaceV6::set_min_size(int32_t width, int32_t height)
+{
+    if (surface_id.as_value())
+    {
+        shell::SurfaceSpecification new_spec;
+        new_spec.min_width = geom::Width{width};
+        new_spec.min_height = geom::Height{height};
+        auto const session = session_for_client(client);
+        shell->modify_surface(session, surface_id, new_spec);
+    }
+    else
+    {
+        params.min_width = geom::Width{width};
+        params.min_height = geom::Height{height};
+    }
+}
+
+void XdgSurfaceV6::set_maximized()
+{
+    if (surface_id.as_value())
+    {
+        shell::SurfaceSpecification new_spec;
+        new_spec.state = mir_window_state_maximized;
+        auto const session = session_for_client(client);
+        shell->modify_surface(session, surface_id, new_spec);
+    }
+    else
+    {
+        params.state = mir_window_state_maximized;
+    }
+}
+
+void XdgSurfaceV6::unset_maximized()
+{
+    if (surface_id.as_value())
+    {
+        shell::SurfaceSpecification new_spec;
+        new_spec.state = mir_window_state_restored;
+        auto const session = session_for_client(client);
+        shell->modify_surface(session, surface_id, new_spec);
+    }
+    else
+    {
+        params.state = mir_window_state_restored;
+    }
+}
+
+
+void XdgToplevelV6::set_parent(std::experimental::optional<struct wl_resource*> const& parent)
+{
+    if (parent && parent.value())
+    {
+        self->set_parent(get_xdgtoplevel(parent.value())->self->surface_id);
+    }
+    else
+    {
+        self->set_parent({});
+    }
+
+}
+
+void XdgToplevelV6::set_title(std::string const& title)
+{
+    self->set_title(title);
+}
+
+void XdgToplevelV6::set_max_size(int32_t width, int32_t height)
+{
+    self->set_max_size(width, height);
+}
+
+void XdgToplevelV6::set_min_size(int32_t width, int32_t height)
+{
+    self->set_min_size(width, height);
+}
+
+void XdgToplevelV6::set_maximized()
+{
+    self->set_maximized();
+}
+
+void XdgToplevelV6::unset_maximized()
+{
+    self->unset_maximized();
+}
+
+struct XdgShellV6 : wayland::XdgShellV6
+{
+    XdgShellV6(
+        struct wl_display* display,
+        std::shared_ptr<mf::Shell> const shell,
+        WlSeat& seat) :
+        wayland::XdgShellV6(display, 1),
+        shell{shell},
+        seat{seat}
+    {
+    }
+
+    void destroy(struct wl_client* client, struct wl_resource* resource) override
+    {
+        (void)client, (void)resource;
+        // TODO
+    }
+
+    void create_positioner(struct wl_client* client, struct wl_resource* resource, uint32_t id) override
+    {
+        new XdgPositionerV6{client, resource, id};
+    }
+
+    void get_xdg_surface(
+        struct wl_client* client,
+        struct wl_resource* resource,
+        uint32_t id,
+        struct wl_resource* surface) override
+    {
+        new XdgSurfaceV6{client, resource, id, surface, shell, seat};
+    }
+
+    void pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial) override
+    {
+        (void)client, (void)resource, (void)serial;
+        // TODO
+    }
+
+private:
+    std::shared_ptr<mf::Shell> const shell;
+    WlSeat& seat;
+};
+
 struct DataDevice : wayland::DataDevice
 {
     DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id) :
@@ -2210,6 +2747,10 @@ mf::WaylandConnector::WaylandConnector(
         display_config);
     shell_global = std::make_unique<mf::WlShell>(display.get(), shell, *seat_global);
     data_device_manager_global = std::make_unique<DataDeviceManager>(display.get());
+
+    // The XDG shell support is currently too flaky to enable by default
+    if (getenv("MIR_EXPERIMENTAL_XDG_SHELL"))
+        xdg_shell_global = std::make_unique<XdgShellV6>(display.get(), shell, *seat_global);
 
     wl_display_init_shm(display.get());
 
