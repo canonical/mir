@@ -1693,7 +1693,11 @@ private:
 
         // Sometimes, when using xdg-shell, qterminal creates an insanely tall buffer
         if (buffer_size.height > geom::Height{10000})
+        {
+            mir::log_warning("Insane buffer height sanitized: buffer_size.height = %d (was %d)",
+                 1000, buffer_size.height.as_int());
             buffer_size.height = geom::Height{1000};
+        }
 
         auto const session = session_for_client(client);
 
@@ -2033,8 +2037,8 @@ struct XdgPositionerV6 : wayland::XdgPositionerV6
         aux_rect_placement_offset_y = y;
     }
 
-    mir::optional_value<geometry::Size> size;
-    mir::optional_value<geometry::Rectangle> aux_rect;
+    optional_value<geometry::Size> size;
+    optional_value<geometry::Rectangle> aux_rect;
     optional_value<MirPlacementGravity> surface_placement_gravity;
     optional_value<MirPlacementGravity> aux_rect_placement_gravity;
     optional_value<int> aux_rect_placement_offset_x;
