@@ -18,6 +18,7 @@
 
 #include "wayland_connector.h"
 
+#include "null_event_sink.h"
 #include "wayland_executor.h"
 #include "wlshmbuffer.h"
 
@@ -32,7 +33,6 @@
 #include "mir/compositor/buffer_stream.h"
 
 #include "mir/frontend/session.h"
-#include "mir/frontend/event_sink.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface.h"
 
@@ -86,31 +86,6 @@ namespace mir
 {
 namespace frontend
 {
-
-class WaylandEventSink : public mf::EventSink
-{
-public:
-    WaylandEventSink(std::function<void(MirLifecycleState)> const& lifecycle_handler)
-        : lifecycle_handler{lifecycle_handler}
-    {
-    }
-
-    void handle_event(const MirEvent& e) override;
-    void handle_lifecycle_event(MirLifecycleState state) override;
-    void handle_display_config_change(graphics::DisplayConfiguration const& config) override;
-    void send_ping(int32_t serial) override;
-    void send_buffer(BufferStreamId id, graphics::Buffer& buffer, graphics::BufferIpcMsgType type) override;
-    void handle_input_config_change(MirInputConfig const&) override {}
-    void handle_error(ClientVisibleError const&) override {}
-
-    void add_buffer(graphics::Buffer&) override {}
-    void error_buffer(geometry::Size, MirPixelFormat, std::string const& ) override {}
-    void update_buffer(graphics::Buffer&) override {}
-
-private:
-    std::function<void(MirLifecycleState)> const lifecycle_handler;
-};
-
 namespace
 {
 struct ClientPrivate
@@ -215,7 +190,7 @@ void create_client_session(wl_listener* listener, void* data)
     auto session = construction_context->shell->open_session(
         client_pid,
         "",
-        std::make_shared<WaylandEventSink>([](auto){}));
+        std::make_shared<NullEventSink>());
 
     auto client_context = new ClientPrivate{session, *construction_context->shell};
     client_context->destroy_listener.notify = &cleanup_private;
@@ -1354,34 +1329,7 @@ void WlSeat::ConfigObserver::changes_complete()
     on_keymap_commit(pending_keymap);
 }
 
-void WaylandEventSink::send_buffer(BufferStreamId /*id*/, graphics::Buffer& /*buffer*/, graphics::BufferIpcMsgType)
-{
-}
-
-void WaylandEventSink::handle_event(MirEvent const& e)
-{
-    switch(mir_event_get_type(&e))
-    {
-    default:
-        // Do nothing
-        break;
-    }
-}
-
-void WaylandEventSink::handle_lifecycle_event(MirLifecycleState state)
-{
-    lifecycle_handler(state);
-}
-
-void WaylandEventSink::handle_display_config_change(graphics::DisplayConfiguration const& /*config*/)
-{
-}
-
-void WaylandEventSink::send_ping(int32_t)
-{
-}
-
-class BasicSurfaceEventSink : public mf::EventSink
+class BasicSurfaceEventSink : public mf::NullEventSink
 {
 public:
     BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink)
@@ -1394,16 +1342,6 @@ public:
     }
 
     void handle_event(MirEvent const& e) override;
-    void handle_lifecycle_event(MirLifecycleState) override {}
-    void handle_display_config_change(graphics::DisplayConfiguration const&) override {}
-    void send_ping(int32_t) override {}
-    void handle_input_config_change(MirInputConfig const&) override {}
-    void handle_error(ClientVisibleError const&) override {}
-
-    void send_buffer(frontend::BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType) override {}
-    void add_buffer(graphics::Buffer&) override {}
-    void error_buffer(geometry::Size, MirPixelFormat, std::string const& ) override {}
-    void update_buffer(graphics::Buffer&) override {}
 
     void latest_resize(geometry::Size window_size)
     {
