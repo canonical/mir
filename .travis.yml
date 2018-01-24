@@ -31,9 +31,10 @@ stages:
 env:
   global:
     # SPREAD_LINODE_KEY
-  - secure: QmijX+AeqyYUJuiRkdCCXMZTAzokc7Y9a5Lwv1Y48SALuBLyMULrJxNVrHi/8whRX97PL5+31JazS8ZdfxucIaEy/JapwbmoKlJIjsvcm4azFgzATlXLKdqkfTOZ0qtYdSI910UjRT7EfBp2tyTz4zDnXysicr3K/CWx2P4MnIvNoH+hNz6ux/WpET9a+GFMmDJmyqyxDNLiHCpk7AUHARMsl6LC0SeGfabJjd59cRkG0Kdktr7nDooegB9aZPrMkIH9HIFRkib45/nTFHHa7jqX0CvJPMTBY/QljPOuNfhkaNtUTxCdfqFH7u8hM7d7ieX6PavjSgt4aTZC4LVJf6Y7xC/LA32yZELHKUexH1EaDkur0fypErDpRmjoPC9yBvpijL+bLlnDAHNc7xnelIhn6HHd8qM6OpEQUN6yl3J5KHRSuXPsBxwMQWoo3cXWRtLo0ESrZOm5KJ2+UA+JArofBwcyeygbBtYnvzTJB+nNPCmY5TrqA6wPeSaaZPMsESCGmgzCRTxg3B2YNbgX7VqZjwBcwRhNwGzLSlL40WSOa7bgDyQTm76l7Y/6Nav4vMrSFDycQz1n4keaD4b0Dy7rUTD5HTIu+IP7KiO/anu8IPCnG4kBfPw2r52GHMXlNE9cN8aC9exwuvfZOn3DbtREPeZUTaxqpWUvAIQ7nRs=
+  - secure: RCoJlG7Su7btAQDHoqDDkIGj3pXatGPeUnBQ3ZC2nfw40Tg7m3Rp21igW02x4hjWH7BtHM7AzyyAbr7Z87MA1KYVZ6bc1+LXjByiKWH+rurXchJupWusplZR1/6kbPMsOswH9bPf72FzfoG+Kt7Xg+14ePu34x0lvLHqIPQ40BdQVWWtonb9Af5IFpHz+6WU8wHxgjhaY84l2mlwIxu/IAqjxwvuMNrfHcoIdmwcITxZh1Dun8ckWTL8XDCxL4EHwhXj5tEOR51zE3wnvfNT1OfavtnIOpa35gx4oqpvb6748bPDbT1KScSrItsXRDelwZn5qAC/9oZwGZpF41F+uMPwty/X/P6AqWYz2UW/hoNIymFkcoU8HUkI2OtmlKW76bkJ+KHR+MW3uwOVQtZYkEolH/RYLlmMCJ2RhfD7MsKrrqOsOI7ROrMVp7bBzHkGT50vYi8hDGYRnb9jMgmHVuFejwQiFSFxOvN5aGo6dnmKV6fGXiTq3yUWSfwdC0/1K6OqT0giLByWLduLtEJSBIUWk8cWSIsx6CPh/TVrM3DPG7R1p6yuPyu9O13tRHYlLpGJOXbq6/eTLp6y9Jyh5f/mN3P1ydNfKH8iG1Sjj8pJbK2JAQ3zCnstHGpzFgjWncFqc1DuFIv/gJRact5fA7MnwjZMaexxhInq+4Thbl8=
   - DEBFULLNAME="Mir CI Bot"
   - DEBEMAIL="mir-ci-bot@canonical.com"
+  - SPREAD_PATH=/tmp/spread
   matrix:
   - SYSTEM=ubuntu-16.04 VARIANT=amd64
   - SYSTEM=ubuntu-16.04 VARIANT=arm64
@@ -42,11 +43,14 @@ env:
   - SYSTEM=fedora-27 VARIANT=amd64
 
 before_install:
-- sudo apt-get --yes install snapd
-- sudo snap install spread
+- mkdir -p ${SPREAD_PATH}
+- pushd "${SPREAD_PATH}"
+- curl -s -O https://niemeyer.s3.amazonaws.com/spread-amd64.tar.gz
+- tar xzvf spread-amd64.tar.gz
+- popd
 
 script:
-- /snap/bin/spread linode:$SYSTEM:...:$VARIANT
+- ${SPREAD_PATH}/spread -v linode:$SYSTEM:...:$VARIANT
 
 jobs:
   include:
