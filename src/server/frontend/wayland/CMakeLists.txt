@@ -7,7 +7,9 @@ set(
   xdg-shell-unstable-v6.c
   wayland_default_configuration.cpp
   wayland_connector.cpp wayland_connector.h
-  wlshmbuffer.cpp       wlshmbuffer.h)
+  wlshmbuffer.cpp       wlshmbuffer.h
+  wayland_executor.cpp wayland_executor.h
+)
 
 add_library(
   mirfrontend-wayland OBJECT
