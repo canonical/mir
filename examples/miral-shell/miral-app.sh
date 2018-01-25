@@ -30,14 +30,14 @@ do
     echo "    -wayland-socket-name <socket> set the wayland socket [${wayland_display}]"
     echo "    -bindir <bindir>              path to the miral executable [${bindir}]"
     exit 0
-    elif [ "$1" == "-kiosk" ];              then miral_server=miral-kiosk
-    elif [ "$1" == "-launcher" ];           then shift; launcher=$1
-    elif [ "$1" == "-socket" ];             then shift; socket=$1
-    elif [ "$1" == "-wayland-socket-name" ];then shift; wayland_display=$1
-    elif [ "$1" == "-bindir" ];             then shift; bindir=$1
-    elif [ "${1:0:2}" == "--" ];            then break
-    fi
-    shift
+  elif [ "$1" == "-kiosk" ];              then miral_server=miral-kiosk
+  elif [ "$1" == "-launcher" ];           then shift; launcher=$1
+  elif [ "$1" == "-socket" ];             then shift; socket=$1
+  elif [ "$1" == "-wayland-socket-name" ];then shift; wayland_display=$1
+  elif [ "$1" == "-bindir" ];             then shift; bindir=$1
+  elif [ "${1:0:2}" == "--" ];            then break
+  fi
+  shift
 done
 
 if [ "${bindir}" != "" ]; then bindir="${bindir}/"; fi
