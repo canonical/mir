@@ -91,9 +91,9 @@ namespace
 {
 struct ClientPrivate
 {
-    ClientPrivate(std::shared_ptr<mf::Session> const& session, mf::Shell& shell)
+    ClientPrivate(std::shared_ptr<mf::Session> const& session, mf::Shell* shell)
         : session{session},
-          shell{&shell}
+          shell{shell}
     {
     }
 
@@ -193,7 +193,7 @@ void create_client_session(wl_listener* listener, void* data)
         "",
         std::make_shared<NullEventSink>());
 
-    auto client_context = new ClientPrivate{session, *construction_context->shell};
+    auto client_context = new ClientPrivate{session, construction_context->shell.get()};
     client_context->destroy_listener.notify = &cleanup_private;
     wl_client_add_destroy_listener(client, &client_context->destroy_listener);
 }
