@@ -82,7 +82,7 @@ try
     }
 
     unsetenv("DISPLAY");                                // Discourage toolkits from using X11
-    setenv("GDK_BACKEND", "mir", true);                 // configure GTK to use Mir
+    setenv("GDK_BACKEND", "wayland,mir", true);         // configure GTK to use Mir
     setenv("QT_QPA_PLATFORM", "wayland", true);         // configure Qt to use Mir
     unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
     setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland

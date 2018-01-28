@@ -100,7 +100,7 @@ void launch_startup_app(std::string socket_file, std::string app)
         while (std::chrono::steady_clock::now() < time_limit);
 
         setenv("MIR_SOCKET", socket_file.c_str(),  true);   // configure Mir socket
-        setenv("GDK_BACKEND", "mir", true);                 // configure GTK to use Mir
+        setenv("GDK_BACKEND", "wayland,mir", true);         // configure GTK to use Mir
         setenv("QT_QPA_PLATFORM", "wayland", true);         // configure Qt to use Mir
         unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
         setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland
