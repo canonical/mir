@@ -247,7 +247,8 @@ auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callable)
 
 struct WlMirWindow
 {
-    virtual void commit(geom::Size const& buffer_size) = 0;
+    virtual void new_buffer_size(geometry::Size const& buffer_size) = 0;
+    virtual void commit() = 0;
     virtual void visiblity(bool visible) = 0;
     virtual void destroy() = 0;
     virtual ~WlMirWindow() = default;
@@ -255,7 +256,8 @@ struct WlMirWindow
 
 struct NullWlMirWindow : WlMirWindow
 {
-    void commit(geom::Size const& ) {}
+    void new_buffer_size(geom::Size const& ) {}
+    void commit() {}
     void visiblity(bool ) {}
     void destroy() {}
 } nullwlmirwindow;
@@ -458,11 +460,12 @@ void WlSurface::commit()
          * TODO: Provide a mg::Buffer::logical_size() to do this properly.
          */
         stream->resize(mir_buffer->size());
-        role->commit(mir_buffer->size());
+        role->new_buffer_size(mir_buffer->size());
         stream->submit_buffer(mir_buffer);
 
         pending_buffer = nullptr;
     }
+    role->commit();
 }
 
 void WlSurface::set_buffer_transform(int32_t transform)
@@ -1557,35 +1560,27 @@ protected:
     mf::SurfaceId surface_id;
 
 private:
-    void commit(geom::Size const& buffer_size_) override
+    geom::Size latest_buffer_size;
+
+    void commit() override
     {
-        auto buffer_size = buffer_size_;
-
-        // Sometimes, when using xdg-shell, qterminal creates an insanely tall buffer
-        if (buffer_size.height > geom::Height{10000})
-        {
-            mir::log_warning("Insane buffer height sanitized: buffer_size.height = %d (was %d)",
-                 1000, buffer_size.height.as_int());
-            buffer_size.height = geom::Height{1000};
-        }
-
         auto const session = session_for_client(client);
 
         if (surface_id.as_value())
         {
             auto const surface = get_surface_for_id(session, surface_id);
-            if (surface->size() == buffer_size)
+            if (surface->size() == latest_buffer_size)
                 return;
-            sink->latest_resize(buffer_size);
+            sink->latest_resize(latest_buffer_size);
             shell::SurfaceSpecification new_size_spec;
-            new_size_spec.width = buffer_size.width;
-            new_size_spec.height = buffer_size.height;
+            new_size_spec.width = latest_buffer_size.width;
+            new_size_spec.height = latest_buffer_size.height;
             shell->modify_surface(session, surface_id, new_size_spec);
             return;
         }
 
         auto* const mir_surface = get_wlsurface(surface);
-        if (params.size == geom::Size{}) params.size = buffer_size;
+        if (params.size == geom::Size{}) params.size = latest_buffer_size;
         params.content_id = mir_surface->stream_id;
         surface_id = shell->create_surface(session, params, sink);
         mir_surface->surface_id = surface_id;
@@ -1593,6 +1588,19 @@ private:
         // The shell isn't guaranteed to respect the requested size
         auto const window = session->get_surface(surface_id);
         sink->send_resize(window->client_size());
+    }
+
+    void new_buffer_size(geometry::Size const& buffer_size) override
+    {
+        latest_buffer_size = buffer_size;
+
+        // Sometimes, when using xdg-shell, qterminal creates an insanely tall buffer
+        if (latest_buffer_size.height > geometry::Height{10000})
+        {
+            log_warning("Insane buffer height sanitized: latest_buffer_size.height = %d (was %d)",
+                 1000, latest_buffer_size.height.as_int());
+            latest_buffer_size.height = geometry::Height{1000};
+        }
     }
 
     void visiblity(bool visible) override
