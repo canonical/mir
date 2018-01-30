@@ -72,7 +72,9 @@ private:
     void set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<input::Surface> const&);
 
     void surface_removed(scene::Surface* surface);
-    void surface_geometry_changed();
+
+    void surface_moved(scene::Surface* moved_surface);
+    void surface_resized();
 
     // Look in to homognizing index on KeyInputState and PointerInputState (wrt to device id)
     struct PointerInputState
