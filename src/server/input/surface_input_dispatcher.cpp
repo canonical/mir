@@ -430,12 +430,12 @@ void mi::SurfaceInputDispatcher::surface_moved(ms::Surface* moved_surface)
 
     auto ctx = context_for_event(
         last_pointer_event.get(),
-        [this](auto id) { return &ensure_pointer_state(id).current_target; },
-        [this](auto point) { return find_target_surface(point); });
+        [this](auto id) { return &this->ensure_pointer_state(id).current_target; },
+        [this](auto point) { return this->find_target_surface(point); });
 
     auto const entered_surface_changed = dispatch_scene_change_enter_exit_events(
         ctx,
-        [this](auto surf, auto pev, auto action) { send_enter_exit_event(surf, pev, action); });
+        [this](auto surf, auto pev, auto action) { this->send_enter_exit_event(surf, pev, action); });
     if (entered_surface_changed)
     {
         ctx.current_target = ctx.target_surface;
@@ -457,12 +457,12 @@ void mi::SurfaceInputDispatcher::surface_resized()
 
     auto ctx = context_for_event(
         last_pointer_event.get(),
-        [this](auto id) { return &ensure_pointer_state(id).current_target; },
-        [this](auto point) { return find_target_surface(point); });
+        [this](auto id) { return &this->ensure_pointer_state(id).current_target; },
+        [this](auto point) { return this->find_target_surface(point); });
 
     auto const entered_surface_changed = dispatch_scene_change_enter_exit_events(
         ctx,
-        [this](auto surf, auto pev, auto action) { send_enter_exit_event(surf, pev, action); });
+        [this](auto surf, auto pev, auto action) { this->send_enter_exit_event(surf, pev, action); });
 
     if (entered_surface_changed)
     {
