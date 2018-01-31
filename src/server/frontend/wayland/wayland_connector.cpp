@@ -247,7 +247,8 @@ auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callable)
 
 struct WlMirWindow
 {
-    virtual void commit(geom::Size const& buffer_size) = 0;
+    virtual void new_buffer_size(geometry::Size const& buffer_size) = 0;
+    virtual void commit() = 0;
     virtual void visiblity(bool visible) = 0;
     virtual void destroy() = 0;
     virtual ~WlMirWindow() = default;
@@ -255,7 +256,8 @@ struct WlMirWindow
 
 struct NullWlMirWindow : WlMirWindow
 {
-    void commit(geom::Size const& ) {}
+    void new_buffer_size(geom::Size const& ) {}
+    void commit() {}
     void visiblity(bool ) {}
     void destroy() {}
 } nullwlmirwindow;
@@ -458,11 +460,12 @@ void WlSurface::commit()
          * TODO: Provide a mg::Buffer::logical_size() to do this properly.
          */
         stream->resize(mir_buffer->size());
-        role->commit(mir_buffer->size());
+        role->new_buffer_size(mir_buffer->size());
         stream->submit_buffer(mir_buffer);
 
         pending_buffer = nullptr;
     }
+    role->commit();
 }
 
 void WlSurface::set_buffer_transform(int32_t transform)
@@ -1556,36 +1559,47 @@ protected:
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters().of_type(mir_window_type_freestyle);
     mf::SurfaceId surface_id;
 
-private:
-    void commit(geom::Size const& buffer_size_) override
+    shell::SurfaceSpecification& spec()
     {
-        auto buffer_size = buffer_size_;
+        if (!pending_changes)
+            pending_changes = std::make_unique<shell::SurfaceSpecification>();
 
-        // Sometimes, when using xdg-shell, qterminal creates an insanely tall buffer
-        if (buffer_size.height > geom::Height{10000})
-        {
-            mir::log_warning("Insane buffer height sanitized: buffer_size.height = %d (was %d)",
-                 1000, buffer_size.height.as_int());
-            buffer_size.height = geom::Height{1000};
-        }
+        return *pending_changes;
+    }
 
+private:
+    geom::Size latest_buffer_size;
+    std::unique_ptr<shell::SurfaceSpecification> pending_changes;
+
+    void commit() override
+    {
         auto const session = session_for_client(client);
 
         if (surface_id.as_value())
         {
             auto const surface = get_surface_for_id(session, surface_id);
-            if (surface->size() == buffer_size)
-                return;
-            sink->latest_resize(buffer_size);
-            shell::SurfaceSpecification new_size_spec;
-            new_size_spec.width = buffer_size.width;
-            new_size_spec.height = buffer_size.height;
-            shell->modify_surface(session, surface_id, new_size_spec);
+
+            if (surface->size() != latest_buffer_size)
+            {
+                sink->latest_resize(latest_buffer_size);
+                auto& new_size_spec = spec();
+                new_size_spec.width = latest_buffer_size.width;
+                new_size_spec.height = latest_buffer_size.height;
+            }
+
+            if (pending_changes)
+                shell->modify_surface(session, surface_id, *pending_changes);
+
+            pending_changes.reset();
             return;
         }
 
+        // Until we've seen a buffer we don't create a surface
+        if (latest_buffer_size == geom::Size{})
+            return;
+
         auto* const mir_surface = get_wlsurface(surface);
-        if (params.size == geom::Size{}) params.size = buffer_size;
+        if (params.size == geom::Size{}) params.size = latest_buffer_size;
         params.content_id = mir_surface->stream_id;
         surface_id = shell->create_surface(session, params, sink);
         mir_surface->surface_id = surface_id;
@@ -1593,6 +1607,19 @@ private:
         // The shell isn't guaranteed to respect the requested size
         auto const window = session->get_surface(surface_id);
         sink->send_resize(window->client_size());
+    }
+
+    void new_buffer_size(geometry::Size const& buffer_size) override
+    {
+        latest_buffer_size = buffer_size;
+
+        // Sometimes, when using xdg-shell, qterminal creates an insanely tall buffer
+        if (latest_buffer_size.height > geometry::Height{10000})
+        {
+            log_warning("Insane buffer height sanitized: latest_buffer_size.height = %d (was %d)",
+                 1000, latest_buffer_size.height.as_int());
+            latest_buffer_size.height = geometry::Height{1000};
+        }
     }
 
     void visiblity(bool visible) override
@@ -1604,9 +1631,8 @@ private:
 
         if (get_surface_for_id(session, surface_id)->visible() == visible)
             return;
-        shell::SurfaceSpecification hide_spec;
-        hide_spec.state = visible ? mir_window_state_restored : mir_window_state_hidden;
-        shell->modify_surface(session, surface_id, hide_spec);
+
+        spec().state = visible ? mir_window_state_restored : mir_window_state_hidden;
     }
 };
 
@@ -1657,15 +1683,14 @@ protected:
 
         if (surface_id.as_value())
         {
-            shell::SurfaceSpecification new_spec;
-            new_spec.parent_id = parent_surface.surface_id;
-            new_spec.aux_rect = geom::Rectangle{{x, y}, {}};
-            new_spec.surface_placement_gravity = mir_placement_gravity_northwest;
-            new_spec.aux_rect_placement_gravity = mir_placement_gravity_southeast;
-            new_spec.placement_hints = mir_placement_hints_slide_x;
-            new_spec.aux_rect_placement_offset_x = 0;
-            new_spec.aux_rect_placement_offset_y = 0;
-            shell->modify_surface(session, surface_id, new_spec);
+            auto& mods = spec();
+            mods.parent_id = parent_surface.surface_id;
+            mods.aux_rect = geom::Rectangle{{x, y}, {}};
+            mods.surface_placement_gravity = mir_placement_gravity_northwest;
+            mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
+            mods.placement_hints = mir_placement_hints_slide_x;
+            mods.aux_rect_placement_offset_x = 0;
+            mods.aux_rect_placement_offset_y = 0;
         }
         else
         {
@@ -1691,15 +1716,12 @@ protected:
     {
         if (surface_id.as_value())
         {
-            mir::shell::SurfaceSpecification mods;
+            auto& mods = spec();
             mods.state = mir_window_state_fullscreen;
             if (output)
             {
                 // TODO{alan_g} mods.output_id = DisplayConfigurationOutputId_from(output)
             }
-
-            auto const session = session_for_client(client);
-            shell->modify_surface(session, surface_id, mods);
         }
         else
         {
@@ -1724,15 +1746,14 @@ protected:
 
         if (surface_id.as_value())
         {
-            shell::SurfaceSpecification new_spec;
-            new_spec.parent_id = parent_surface.surface_id;
-            new_spec.aux_rect = geom::Rectangle{{x, y}, {}};
-            new_spec.surface_placement_gravity = mir_placement_gravity_northwest;
-            new_spec.aux_rect_placement_gravity = mir_placement_gravity_southeast;
-            new_spec.placement_hints = mir_placement_hints_slide_x;
-            new_spec.aux_rect_placement_offset_x = 0;
-            new_spec.aux_rect_placement_offset_y = 0;
-            shell->modify_surface(session, surface_id, new_spec);
+            auto& mods = spec();
+            mods.parent_id = parent_surface.surface_id;
+            mods.aux_rect = geom::Rectangle{{x, y}, {}};
+            mods.surface_placement_gravity = mir_placement_gravity_northwest;
+            mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
+            mods.placement_hints = mir_placement_hints_slide_x;
+            mods.aux_rect_placement_offset_x = 0;
+            mods.aux_rect_placement_offset_y = 0;
         }
         else
         {
@@ -1756,14 +1777,12 @@ protected:
     {
         if (surface_id.as_value())
         {
-            mir::shell::SurfaceSpecification mods;
+            auto& mods = spec();
             mods.state = mir_window_state_maximized;
             if (output)
             {
                 // TODO{alan_g} mods.output_id = DisplayConfigurationOutputId_from(output)
             }
-            auto const session = session_for_client(client);
-            shell->modify_surface(session, surface_id, mods);
         }
         else
         {
@@ -1779,10 +1798,7 @@ protected:
     {
         if (surface_id.as_value())
         {
-            shell::SurfaceSpecification new_spec;
-            new_spec.name = title;
-            auto const session = session_for_client(client);
-            shell->modify_surface(session, surface_id, new_spec);
+            spec().name = title;
         }
         else
         {
@@ -2117,12 +2133,7 @@ struct XdgSurfaceV6 : wayland::XdgSurfaceV6, WlAbstractMirWindow
 
         if (surface_id.as_value())
         {
-            auto const session = session_for_client(client);
-            auto const surface = get_surface_for_id(session, surface_id);
-
-            shell::SurfaceSpecification modifications;
-            modifications.input_shape = {input_region};
-            shell->modify_surface(session, surface_id, modifications);
+            spec().input_shape = {input_region};
         }
         else
         {
@@ -2171,10 +2182,7 @@ void XdgSurfaceV6::set_title(std::string const& title)
 {
     if (surface_id.as_value())
     {
-        shell::SurfaceSpecification new_spec;
-        new_spec.name = title;
-        auto const session = session_for_client(client);
-        shell->modify_surface(session, surface_id, new_spec);
+        spec().name = title;
     }
     else
     {
@@ -2187,11 +2195,7 @@ void XdgSurfaceV6::set_parent(optional_value<SurfaceId> parent_id)
 {
     if (surface_id.as_value())
     {
-        shell::SurfaceSpecification new_spec;
-        new_spec.parent_id = parent_id;
-
-        auto const session = session_for_client(client);
-        shell->modify_surface(session, surface_id, new_spec);
+        spec().parent_id = parent_id;
     }
     else
     {
@@ -2206,11 +2210,9 @@ void XdgSurfaceV6::set_max_size(int32_t width, int32_t height)
         if (width == 0) width = std::numeric_limits<int>::max();
         if (height == 0) height = std::numeric_limits<int>::max();
 
-        shell::SurfaceSpecification new_spec;
-        new_spec.max_width = geom::Width{width};
-        new_spec.max_height = geom::Height{height};
-        auto const session = session_for_client(client);
-        shell->modify_surface(session, surface_id, new_spec);
+        auto& mods = spec();
+        mods.max_width = geom::Width{width};
+        mods.max_height = geom::Height{height};
     }
     else
     {
@@ -2236,11 +2238,9 @@ void XdgSurfaceV6::set_min_size(int32_t width, int32_t height)
 {
     if (surface_id.as_value())
     {
-        shell::SurfaceSpecification new_spec;
-        new_spec.min_width = geom::Width{width};
-        new_spec.min_height = geom::Height{height};
-        auto const session = session_for_client(client);
-        shell->modify_surface(session, surface_id, new_spec);
+        auto& mods = spec();
+        mods.min_width = geom::Width{width};
+        mods.min_height = geom::Height{height};
     }
     else
     {
@@ -2253,10 +2253,7 @@ void XdgSurfaceV6::set_maximized()
 {
     if (surface_id.as_value())
     {
-        shell::SurfaceSpecification new_spec;
-        new_spec.state = mir_window_state_maximized;
-        auto const session = session_for_client(client);
-        shell->modify_surface(session, surface_id, new_spec);
+        spec().state = mir_window_state_maximized;
     }
     else
     {
@@ -2268,10 +2265,7 @@ void XdgSurfaceV6::unset_maximized()
 {
     if (surface_id.as_value())
     {
-        shell::SurfaceSpecification new_spec;
-        new_spec.state = mir_window_state_restored;
-        auto const session = session_for_client(client);
-        shell->modify_surface(session, surface_id, new_spec);
+        spec().state = mir_window_state_restored;
     }
     else
     {
