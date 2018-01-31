@@ -101,11 +101,12 @@ void mf::Output::resource_destructor(wl_resource* resource)
         wl_resource_get_user_data(resource));
 
     auto& client_resource_list = map[wl_resource_get_client(resource)];
-    std::remove_if(
+    auto erase_from = std::remove_if(
         client_resource_list.begin(),
         client_resource_list.end(),
         [resource](auto candidate)
             { return candidate == resource; });
+    client_resource_list.erase(erase_from, client_resource_list.end());
 }
 
 
