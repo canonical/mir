@@ -20,6 +20,7 @@
 
 #include "basic_surface_event_sink.h"
 #include "null_event_sink.h"
+#include "output_manager.h"
 #include "wayland_executor.h"
 #include "wlshmbuffer.h"
 
@@ -39,13 +40,11 @@
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer.h"
-#include "mir/graphics/display_configuration.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/wayland_allocator.h"
 
 #include "mir/renderer/gl/texture_target.h"
 #include "mir/frontend/buffer_stream_id.h"
-#include "mir/frontend/display_changer.h"
 
 #include "mir/client/event.h"
 
@@ -65,7 +64,6 @@
 
 #include <xkbcommon/xkbcommon.h>
 #include <linux/input.h>
-#include <algorithm>
 #include <mir/log.h>
 #include <cstring>
 
@@ -1373,153 +1371,6 @@ void SurfaceEventSink::send_resize(geometry::Size const& new_size) const
             }));
     }
 }
-
-class Output
-{
-public:
-    Output(
-        wl_display* display,
-        mg::DisplayConfigurationOutput const& initial_configuration)
-        : output{make_output(display)},
-          current_config{initial_configuration}
-    {
-    }
-
-    ~Output()
-    {
-        wl_global_destroy(output);
-    }
-
-    void handle_configuration_changed(mg::DisplayConfigurationOutput const& /*config*/)
-    {
-
-    }
-
-private:
-    static void send_initial_config(
-        wl_resource* client_resource,
-        mg::DisplayConfigurationOutput const& config)
-    {
-        wl_output_send_geometry(
-            client_resource,
-            config.top_left.x.as_int(),
-            config.top_left.y.as_int(),
-            config.physical_size_mm.width.as_int(),
-            config.physical_size_mm.height.as_int(),
-            WL_OUTPUT_SUBPIXEL_UNKNOWN,
-            "Fake manufacturer",
-            "Fake model",
-            WL_OUTPUT_TRANSFORM_NORMAL);
-        for (size_t i = 0; i < config.modes.size(); ++i)
-        {
-            auto const& mode = config.modes[i];
-            wl_output_send_mode(
-                client_resource,
-                ((i == config.preferred_mode_index ? WL_OUTPUT_MODE_PREFERRED : 0) |
-                 (i == config.current_mode_index ? WL_OUTPUT_MODE_CURRENT : 0)),
-                mode.size.width.as_int(),
-                mode.size.height.as_int(),
-                mode.vrefresh_hz * 1000);
-        }
-        wl_output_send_scale(client_resource, 1);
-        wl_output_send_done(client_resource);
-    }
-
-    wl_global* make_output(wl_display* display)
-    {
-        return wl_global_create(
-            display,
-            &wl_output_interface,
-            2,
-            this, &on_bind);
-    }
-
-    static void on_bind(wl_client* client, void* data, uint32_t version, uint32_t id)
-    {
-        auto output = reinterpret_cast<Output*>(data);
-        auto resource = wl_resource_create(client, &wl_output_interface,
-            std::min(version, 2u), id);
-        if (resource == NULL) {
-            wl_client_post_no_memory(client);
-            return;
-        }
-
-        output->resource_map[client].push_back(resource);
-        wl_resource_set_destructor(resource, &resource_destructor);
-        wl_resource_set_user_data(resource, &(output->resource_map));
-
-        send_initial_config(resource, output->current_config);
-    }
-
-    static void resource_destructor(wl_resource* resource)
-    {
-        auto& map = *reinterpret_cast<decltype(resource_map)*>(
-            wl_resource_get_user_data(resource));
-
-        auto& client_resource_list = map[wl_resource_get_client(resource)];
-        std::remove_if(
-            client_resource_list.begin(),
-            client_resource_list.end(),
-            [resource](auto candidate) { return candidate == resource; });
-    }
-
-private:
-    wl_global* const output;
-    mg::DisplayConfigurationOutput current_config;
-    std::unordered_map<wl_client*, std::vector<wl_resource*>> resource_map;
-};
-
-class OutputManager
-{
-public:
-    OutputManager(
-        wl_display* display,
-        mf::DisplayChanger& display_config)
-        : display{display}
-    {
-        // TODO: Also register display configuration listeners
-        display_config.base_configuration()->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
-    }
-
-private:
-    void create_output(mg::DisplayConfigurationOutput const& initial_config)
-    {
-        if (initial_config.used)
-        {
-            outputs.emplace(
-                initial_config.id,
-                std::make_unique<Output>(
-                    display,
-                    initial_config));
-        }
-    }
-
-    void handle_configuration_change(mg::DisplayConfiguration const& config)
-    {
-        config.for_each_output([this](mg::DisplayConfigurationOutput const& output_config)
-            {
-                auto output_iter = outputs.find(output_config.id);
-                if (output_iter != outputs.end())
-                {
-                    if (output_config.used)
-                    {
-                        output_iter->second->handle_configuration_changed(output_config);
-                    }
-                    else
-                    {
-                        outputs.erase(output_iter);
-                    }
-                }
-                else if (output_config.used)
-                {
-                    outputs[output_config.id] = std::make_unique<Output>(display, output_config);
-                }
-            });
-    }
-
-    wl_display* const display;
-    std::unordered_map<mg::DisplayConfigurationOutputId, std::unique_ptr<Output>> outputs;
-};
 
 class WlAbstractMirWindow : public WlMirWindow
 {
