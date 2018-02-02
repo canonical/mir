@@ -234,8 +234,8 @@ struct MockDisplay : mtd::FakeDisplay
 
 struct StubSurfaceObserver : msc::NullSurfaceObserver
 {
-    void cursor_image_set_to(mg::CursorImage const&) override {}
-    void cursor_image_removed() override
+    void cursor_image_set_to(msc::Surface const*, mg::CursorImage const&) override {}
+    void cursor_image_removed(msc::Surface const*) override
     {
         std::unique_lock<decltype(mutex)> lk(mutex);
         removed = true;

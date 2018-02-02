@@ -47,107 +47,110 @@ namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 namespace mrs = mir::renderer::software;
 
-void ms::SurfaceObservers::attrib_changed(MirWindowAttrib attrib, int value)
+void ms::SurfaceObservers::attrib_changed(Surface const* surf, MirWindowAttrib attrib, int value)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->attrib_changed(attrib, value); });
+        { observer->attrib_changed(surf, attrib, value); });
 }
 
-void ms::SurfaceObservers::resized_to(geometry::Size const& size)
+void ms::SurfaceObservers::resized_to(Surface const* surf, geometry::Size const& size)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->resized_to(size); });
+        { observer->resized_to(surf, size); });
 }
 
-void ms::SurfaceObservers::moved_to(geometry::Point const& top_left)
+void ms::SurfaceObservers::moved_to(Surface const* surf, geometry::Point const& top_left)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->moved_to(top_left); });
+        { observer->moved_to(surf, top_left); });
 }
 
-void ms::SurfaceObservers::hidden_set_to(bool hide)
+void ms::SurfaceObservers::hidden_set_to(Surface const* surf, bool hide)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->hidden_set_to(hide); });
+        { observer->hidden_set_to(surf, hide); });
 }
 
-void ms::SurfaceObservers::frame_posted(int frames_available, geometry::Size const& size)
+void ms::SurfaceObservers::frame_posted(Surface const* surf, int frames_available, geometry::Size const& size)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->frame_posted(frames_available, size); });
+        { observer->frame_posted(surf, frames_available, size); });
 }
 
-void ms::SurfaceObservers::alpha_set_to(float alpha)
+void ms::SurfaceObservers::alpha_set_to(Surface const* surf, float alpha)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->alpha_set_to(alpha); });
+        { observer->alpha_set_to(surf, alpha); });
 }
 
-void ms::SurfaceObservers::orientation_set_to(MirOrientation orientation)
+void ms::SurfaceObservers::orientation_set_to(Surface const* surf, MirOrientation orientation)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->orientation_set_to(orientation); });
+        { observer->orientation_set_to(surf, orientation); });
 }
 
-void ms::SurfaceObservers::transformation_set_to(glm::mat4 const& t)
+void ms::SurfaceObservers::transformation_set_to(Surface const* surf, glm::mat4 const& t)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->transformation_set_to(t); });
+        { observer->transformation_set_to(surf, t); });
 }
 
-void ms::SurfaceObservers::cursor_image_set_to(mg::CursorImage const& image)
+void ms::SurfaceObservers::cursor_image_set_to(Surface const* surf, graphics::CursorImage const& image)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->cursor_image_set_to(image); });
+        { observer->cursor_image_set_to(surf, image); });
 }
 
-void ms::SurfaceObservers::reception_mode_set_to(mi::InputReceptionMode mode)
+void ms::SurfaceObservers::reception_mode_set_to(Surface const* surf, input::InputReceptionMode mode)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->reception_mode_set_to(mode); });
+        { observer->reception_mode_set_to(surf, mode); });
 }
 
-void ms::SurfaceObservers::client_surface_close_requested()
+void ms::SurfaceObservers::client_surface_close_requested(Surface const* surf)
 {
-    for_each([](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->client_surface_close_requested(); });
+    for_each([&surf](std::shared_ptr<SurfaceObserver> const& observer)
+        { observer->client_surface_close_requested(surf); });
 }
 
-void ms::SurfaceObservers::keymap_changed(MirInputDeviceId id, std::string const& model, std::string const& layout,
-                                          std::string const& variant, std::string const& options)
-{
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->keymap_changed(id, model, layout, variant, options); });
-}
-
-void ms::SurfaceObservers::renamed(char const* name)
-{
-    for_each([name](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->renamed(name); });
-}
-
-void ms::SurfaceObservers::cursor_image_removed()
-{
-    for_each([](std::shared_ptr<SurfaceObserver> const& observer)
-        { observer->cursor_image_removed(); });
-}
-
-void ms::SurfaceObservers::placed_relative(geometry::Rectangle const& placement)
+void ms::SurfaceObservers::keymap_changed(
+    Surface const* surf, MirInputDeviceId id, std::string const& model,
+    std::string const& layout,
+    std::string const& variant,
+    std::string const& options)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-                 { observer->placed_relative(placement); });
+        { observer->keymap_changed(surf, id, model, layout, variant, options); });
 }
 
-void ms::SurfaceObservers::input_consumed(MirEvent const* event)
+void ms::SurfaceObservers::renamed(Surface const* surf, char const* name)
 {
-    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-                 { observer->input_consumed(event); });
+    for_each([&surf, name](std::shared_ptr<SurfaceObserver> const& observer)
+        { observer->renamed(surf, name); });
 }
 
-void ms::SurfaceObservers::start_drag_and_drop(std::vector<uint8_t> const& handle)
+void ms::SurfaceObservers::cursor_image_removed(Surface const* surf)
+{
+    for_each([&surf](std::shared_ptr<SurfaceObserver> const& observer)
+        { observer->cursor_image_removed(surf); });
+}
+
+void ms::SurfaceObservers::placed_relative(Surface const* surf, geometry::Rectangle const& placement)
 {
     for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-                 { observer->start_drag_and_drop(handle); });
+                 { observer->placed_relative(surf, placement); });
+}
+
+void ms::SurfaceObservers::input_consumed(Surface const* surf, MirEvent const* event)
+{
+    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+                 { observer->input_consumed(surf, event); });
+}
+
+void ms::SurfaceObservers::start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle)
+{
+    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+                 { observer->start_drag_and_drop(surf, handle); });
 }
 
 
@@ -248,7 +251,7 @@ ms::BasicSurface::BasicSurface(
         layer.stream->set_frame_posted_callback(
             [this](auto const& size)
             {
-                observers.frame_posted(1, size);
+                observers.frame_posted(this, 1, size);
             });
     }
     report->surface_created(this, surface_name);
@@ -282,7 +285,7 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
         std::unique_lock<std::mutex> lk(guard);
         surface_rect.top_left = top_left;
     }
-    observers.moved_to(top_left);
+    observers.moved_to(this, top_left);
 }
 
 void ms::BasicSurface::set_hidden(bool hide)
@@ -291,7 +294,7 @@ void ms::BasicSurface::set_hidden(bool hide)
         std::unique_lock<std::mutex> lk(guard);
         hidden = hide;
     }
-    observers.hidden_set_to(hide);
+    observers.hidden_set_to(this, hide);
 }
 
 mir::geometry::Size ms::BasicSurface::size() const
@@ -339,7 +342,7 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
         std::unique_lock<std::mutex> lock(guard);
         surface_rect.size = new_size;
     }
-    observers.resized_to(new_size);
+    observers.resized_to(this, new_size);
 }
 
 geom::Point ms::BasicSurface::top_left() const
@@ -386,12 +389,12 @@ void ms::BasicSurface::set_alpha(float alpha)
         std::unique_lock<std::mutex> lk(guard);
         surface_alpha = alpha;
     }
-    observers.alpha_set_to(alpha);
+    observers.alpha_set_to(this, alpha);
 }
 
 void ms::BasicSurface::set_orientation(MirOrientation orientation)
 {
-    observers.orientation_set_to(orientation);
+    observers.orientation_set_to(this, orientation);
 }
 
 void ms::BasicSurface::set_transformation(glm::mat4 const& t)
@@ -400,7 +403,7 @@ void ms::BasicSurface::set_transformation(glm::mat4 const& t)
         std::unique_lock<std::mutex> lk(guard);
         transformation_matrix = t;
     }
-    observers.transformation_set_to(t);
+    observers.transformation_set_to(this, t);
 }
 
 bool ms::BasicSurface::visible() const
@@ -428,7 +431,7 @@ void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
         std::lock_guard<std::mutex> lk(guard);
         input_mode = mode;
     }
-    observers.reception_mode_set_to(mode);
+    observers.reception_mode_set_to(this, mode);
 }
 
 MirWindowType ms::BasicSurface::type() const
@@ -452,7 +455,7 @@ MirWindowType ms::BasicSurface::set_type(MirWindowType t)
         type_ = t;
         lg.unlock();
 
-        observers.attrib_changed(mir_window_attrib_type, type_);
+        observers.attrib_changed(this, mir_window_attrib_type, type_);
     }
 
     return t;
@@ -474,7 +477,7 @@ MirWindowState ms::BasicSurface::set_state(MirWindowState s)
     {
         state_ = s;
         lg.unlock();
-        observers.attrib_changed(mir_window_attrib_state, s);
+        observers.attrib_changed(this, mir_window_attrib_state, s);
     }
 
     return s;
@@ -496,7 +499,7 @@ int ms::BasicSurface::set_swap_interval(int interval)
             info.stream->allow_framedropping(allow_dropping);
 
         lg.unlock();
-        observers.attrib_changed(mir_window_attrib_swapinterval, interval);
+        observers.attrib_changed(this, mir_window_attrib_swapinterval, interval);
     }
 
     return interval;
@@ -516,7 +519,7 @@ MirWindowFocusState ms::BasicSurface::set_focus_state(MirWindowFocusState new_st
         focus_ = new_state;
 
         lg.unlock();
-        observers.attrib_changed(mir_window_attrib_focus, new_state);
+        observers.attrib_changed(this, mir_window_attrib_focus, new_state);
     }
 
     return new_state;
@@ -535,7 +538,7 @@ MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMod
         pref_orientation_mode = new_orientation_mode;
         lg.unlock();
 
-        observers.attrib_changed(mir_window_attrib_preferred_orientation, new_orientation_mode);
+        observers.attrib_changed(this, mir_window_attrib_preferred_orientation, new_orientation_mode);
     }
 
     return new_orientation_mode;
@@ -611,9 +614,9 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
     }
 
     if (image)
-        observers.cursor_image_set_to(*image);
+        observers.cursor_image_set_to(this, *image);
     else
-        observers.cursor_image_removed();
+        observers.cursor_image_removed(this);
 }
 
 std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const
@@ -677,7 +680,7 @@ void ms::BasicSurface::set_cursor_from_buffer(mg::Buffer& buffer, geom::Displace
         std::unique_lock<std::mutex> lock(guard);
         cursor_image_ = image;
     }
-    observers.cursor_image_set_to(*image);
+    observers.cursor_image_set_to(this, *image);
 }
 
 // In order to set the cursor image from a buffer stream, we use an adapter pattern,
@@ -695,7 +698,7 @@ void ms::BasicSurface::set_cursor_stream(std::shared_ptr<mf::BufferStream> const
 
 void ms::BasicSurface::request_client_surface_close()
 {
-    observers.client_surface_close_requested();
+    observers.client_surface_close_requested(this);
 }
 
 int ms::BasicSurface::dpi() const
@@ -716,7 +719,7 @@ int ms::BasicSurface::set_dpi(int new_dpi)
     {
         dpi_ = new_dpi;
         lg.unlock();
-        observers.attrib_changed(mir_window_attrib_dpi, new_dpi);
+        observers.attrib_changed(this, mir_window_attrib_dpi, new_dpi);
     }
 
     return new_dpi;
@@ -740,7 +743,7 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
             for (auto& info : layers)
                 info.stream->drop_old_buffers();
         }
-        observers.attrib_changed(mir_window_attrib_visibility, visibility_);
+        observers.attrib_changed(this, mir_window_attrib_visibility, visibility_);
     }
 
     return new_visibility;
@@ -839,13 +842,13 @@ int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 
 void ms::BasicSurface::consume(MirEvent const* event)
 {
-    observers.input_consumed(event);
+    observers.input_consumed(this, event);
 }
 
 void ms::BasicSurface::set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
                                   std::string const& variant, std::string const& options)
 {
-    observers.keymap_changed(id, model, layout, variant, options);
+    observers.keymap_changed(this, id, model, layout, variant, options);
 }
 
 void ms::BasicSurface::rename(std::string const& title)
@@ -853,7 +856,7 @@ void ms::BasicSurface::rename(std::string const& title)
     if (surface_name != title)
     {
         surface_name = title;
-        observers.renamed(surface_name.c_str());
+        observers.renamed(this, surface_name.c_str());
     }
 }
 
@@ -870,10 +873,10 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
             layer.stream->set_frame_posted_callback(
                 [this](auto const& size)
                 {
-                    observers.frame_posted(1, size);
+                    observers.frame_posted(this, 1, size);
                 });
     }
-    observers.moved_to(surface_rect.top_left);
+    observers.moved_to(this, surface_rect.top_left);
 }
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
@@ -911,10 +914,10 @@ MirPointerConfinementState ms::BasicSurface::confine_pointer_state() const
 
 void ms::BasicSurface::placed_relative(geometry::Rectangle const& placement)
 {
-    observers.placed_relative(placement);
+    observers.placed_relative(this, placement);
 }
 
 void mir::scene::BasicSurface::start_drag_and_drop(std::vector<uint8_t> const& handle)
 {
-    observers.start_drag_and_drop(handle);
+    observers.start_drag_and_drop(this, handle);
 }

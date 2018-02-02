@@ -34,24 +34,29 @@ public:
     using BasicObservers<SurfaceObserver>::remove;
     using BasicObservers<SurfaceObserver>::for_each;
 
-    void attrib_changed(MirWindowAttrib attrib, int value) override;
-    void resized_to(geometry::Size const& size) override;
-    void moved_to(geometry::Point const& top_left) override;
-    void hidden_set_to(bool hide) override;
-    void frame_posted(int frames_available, geometry::Size const& size) override;
-    void alpha_set_to(float alpha) override;
-    void orientation_set_to(MirOrientation orientation) override;
-    void transformation_set_to(glm::mat4 const& t) override;
-    void reception_mode_set_to(input::InputReceptionMode mode) override;
-    void cursor_image_set_to(graphics::CursorImage const& image) override;
-    void client_surface_close_requested() override;
-    void keymap_changed(MirInputDeviceId id, std::string const& model, std::string const& layout,
-                        std::string const& variant, std::string const& options) override;
-    void renamed(char const*) override;
-    void cursor_image_removed() override;
-    void placed_relative(geometry::Rectangle const& placement) override;
-    void input_consumed(MirEvent const* event) override;
-    void start_drag_and_drop(std::vector<uint8_t> const& handle) override;
+    void attrib_changed(Surface const* surf, MirWindowAttrib attrib, int value) override;
+    void resized_to(Surface const* surf, geometry::Size const& size) override;
+    void moved_to(Surface const* surf, geometry::Point const& top_left) override;
+    void hidden_set_to(Surface const* surf, bool hide) override;
+    void frame_posted(Surface const* surf, int frames_available, geometry::Size const& size) override;
+    void alpha_set_to(Surface const* surf, float alpha) override;
+    void orientation_set_to(Surface const* surf, MirOrientation orientation) override;
+    void transformation_set_to(Surface const* surf, glm::mat4 const& t) override;
+    void reception_mode_set_to(Surface const* surf, input::InputReceptionMode mode) override;
+    void cursor_image_set_to(Surface const* surf, graphics::CursorImage const& image) override;
+    void client_surface_close_requested(Surface const* surf) override;
+    void keymap_changed(
+        Surface const* surf,
+        MirInputDeviceId id,
+        std::string const& model,
+        std::string const& layout,
+        std::string const& variant,
+        std::string const& options) override;
+    void renamed(Surface const* surf, char const*) override;
+    void cursor_image_removed(Surface const* surf) override;
+    void placed_relative(Surface const* surf, geometry::Rectangle const& placement) override;
+    void input_consumed(Surface const* surf, MirEvent const* event) override;
+    void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) override;
 };
 
 }

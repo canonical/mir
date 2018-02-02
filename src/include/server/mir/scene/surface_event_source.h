@@ -42,16 +42,21 @@ public:
         OutputPropertiesCache const& outputs,
         std::shared_ptr<frontend::EventSink> const& event_sink);
 
-    void attrib_changed(MirWindowAttrib attrib, int value) override;
-    void resized_to(geometry::Size const& size) override;
-    void moved_to(geometry::Point const& top_left) override;
-    void orientation_set_to(MirOrientation orientation) override;
-    void client_surface_close_requested() override;
-    void keymap_changed(MirInputDeviceId id, std::string const& model, std::string const& layout,
-                        std::string const& variant, std::string const& options) override;
-    void placed_relative(geometry::Rectangle const& placement) override;
-    void input_consumed(MirEvent const* event) override;
-    void start_drag_and_drop(std::vector<uint8_t> const& handle) override;
+    void attrib_changed(Surface const* surf, MirWindowAttrib attrib, int value) override;
+    void resized_to(Surface const* surf, geometry::Size const& size) override;
+    void moved_to(Surface const* surf, geometry::Point const& top_left) override;
+    void orientation_set_to(Surface const* surf, MirOrientation orientation) override;
+    void client_surface_close_requested(Surface const* surf) override;
+    void keymap_changed(
+        Surface const* surf,
+        MirInputDeviceId id,
+        std::string const& model,
+        std::string const& layout,
+        std::string const& variant,
+        std::string const& options) override;
+    void placed_relative(Surface const* surf, geometry::Rectangle const& placement) override;
+    void input_consumed(Surface const* surf, MirEvent const* event) override;
+    void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) override;
 
 private:
     frontend::SurfaceId const id;
