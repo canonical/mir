@@ -820,51 +820,44 @@ TEST_F(BasicSurfaceTest, can_set_streams_not_containing_originally_created_with_
     EXPECT_THAT(renderables.size(), Eq(2));
 }
 
-TEST_F(BasicSurfaceTest, stream_observers_are_added_and_removed_appropriately)
+TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_construction)
 {
     using namespace testing;
 
-    surface.add_observer(observer);
+    auto buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    std::list<ms::StreamInfo> streams = {
+        { buffer_stream0, {0,0}, {} },
+        { buffer_stream1, {0,0}, {} }
+    };
+
+    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_));
+    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_));
+
+    ms::BasicSurface child{
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        std::weak_ptr<ms::Surface>{},
+        mir_pointer_unconfined,
+        streams,
+        std::shared_ptr<mg::CursorImage>(),
+        report};
+}
+
+TEST_F(BasicSurfaceTest, registers_frame_callbacks_on_set_streams)
+{
+    using namespace testing;
 
     auto buffer_stream0 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     auto buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-
-
-    Sequence seq0;
-    EXPECT_CALL(*buffer_stream0, add_observer(_))
-        .InSequence(seq0);
-    EXPECT_CALL(*buffer_stream0, remove_observer(_))
-        .InSequence(seq0);
-    EXPECT_CALL(*buffer_stream0, add_observer(_))
-        .InSequence(seq0);
-    EXPECT_CALL(*buffer_stream0, remove_observer(_))
-        .InSequence(seq0);
-    EXPECT_CALL(*buffer_stream0, add_observer(_))
-        .InSequence(seq0);
-
-    Sequence seq1;
-    EXPECT_CALL(*buffer_stream1, add_observer(_))
-        .InSequence(seq1);
-    EXPECT_CALL(*buffer_stream1, remove_observer(_))
-        .InSequence(seq1);
-    EXPECT_CALL(*buffer_stream1, add_observer(_))
-        .InSequence(seq1);
-    EXPECT_CALL(*buffer_stream1, remove_observer(_))
-        .InSequence(seq1);
-
     std::list<ms::StreamInfo> streams = {
         { buffer_stream0, {0,0}, {} },
-        { buffer_stream1, {0,0}, {} },
+        { buffer_stream1, {0,0}, {} }
     };
-    surface.set_streams(streams);
 
-    streams = { { buffer_stream0, {0,0}, {} } };
-    surface.set_streams(streams);
+    EXPECT_CALL(*buffer_stream0, set_frame_posted_callback(_));
+    EXPECT_CALL(*buffer_stream1, set_frame_posted_callback(_));
 
-    streams = { { buffer_stream1, {0,0}, {} } };
-    surface.set_streams(streams);
-
-    streams = { { buffer_stream0, {0,0}, {} } };
     surface.set_streams(streams);
 }
 

@@ -154,8 +154,7 @@ void ms::SurfaceObservers::start_drag_and_drop(std::vector<uint8_t> const& handl
 struct ms::CursorStreamImageAdapter
 {
     CursorStreamImageAdapter(ms::BasicSurface &surface)
-        : surface(surface),
-          observer{std::make_shared<FramePostObserver>(this)}
+        : surface(surface)
     {
     }
 
@@ -168,7 +167,7 @@ struct ms::CursorStreamImageAdapter
     {
         if (stream)
         {
-            stream->remove_observer(observer);
+            stream->set_frame_posted_callback([](auto){});
             stream.reset();
         }
     }
@@ -181,10 +180,15 @@ struct ms::CursorStreamImageAdapter
         }
         else if (new_stream != stream)
         {
-            if (stream) stream->remove_observer(observer);
+            if (stream)
+                stream->set_frame_posted_callback([](auto){});
 
             stream = std::dynamic_pointer_cast<mc::BufferStream>(new_stream);
-            stream->add_observer(observer);
+            stream->set_frame_posted_callback(
+                [this](auto)
+                {
+                    this->post_cursor_image_from_current_buffer();
+                });
         }
 
         hotspot = new_hotspot;
@@ -192,28 +196,12 @@ struct ms::CursorStreamImageAdapter
     }
 
 private:
-    struct FramePostObserver : public ms::NullSurfaceObserver
-    {
-        FramePostObserver(CursorStreamImageAdapter const* self)
-            : self(self)
-        {
-        }
-
-        void frame_posted(int /* available */, geometry::Size const& /* size */)
-        {
-            self->post_cursor_image_from_current_buffer();
-        }
-
-        CursorStreamImageAdapter const* const self;
-    };
-
     void post_cursor_image_from_current_buffer() const
     {
         surface.set_cursor_from_buffer(*stream->lock_compositor_buffer(this), hotspot);
     }
 
     ms::BasicSurface& surface;
-    std::shared_ptr<FramePostObserver> const observer;
 
     std::shared_ptr<mc::BufferStream> stream;
     geom::Displacement hotspot;
@@ -255,6 +243,14 @@ ms::BasicSurface::BasicSurface(
     confine_pointer_state_(state),
     cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)}
 {
+    for (auto& layer : layers)
+    {
+        layer.stream->set_frame_posted_callback(
+            [this](auto const& size)
+            {
+                observers.frame_posted(1, size);
+            });
+    }
     report->surface_created(this, surface_name);
 }
 
@@ -753,8 +749,6 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
 void ms::BasicSurface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
 {
     observers.add(observer);
-    for (auto& info : layers)
-        info.stream->add_observer(observer);
 }
 
 void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& observer)
@@ -763,8 +757,6 @@ void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& obs
     if (!o)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid observer (previously destroyed)"));
     observers.remove(o);
-    for (auto& info : layers)
-        info.stream->remove_observer(observer);
 }
 
 std::shared_ptr<ms::Surface> ms::BasicSurface::parent() const
@@ -870,18 +862,16 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
     {
         std::unique_lock<std::mutex> lk(guard);
         for(auto& layer : layers)
-            observers.for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-            {
-                layer.stream->remove_observer(observer);
-            });
+            layer.stream->set_frame_posted_callback([](auto){});
 
         layers = s;
 
         for(auto& layer : layers)
-            observers.for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
-            {
-                layer.stream->add_observer(observer);
-            });
+            layer.stream->set_frame_posted_callback(
+                [this](auto const& size)
+                {
+                    observers.frame_posted(1, size);
+                });
     }
     observers.moved_to(surface_rect.top_left);
 }

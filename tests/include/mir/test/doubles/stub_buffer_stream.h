@@ -76,8 +76,7 @@ public:
         fn(*stub_compositor_buffer);
     }
     MirPixelFormat pixel_format() const override { return mir_pixel_format_abgr_8888; }
-    void add_observer(std::shared_ptr<scene::SurfaceObserver> const&) override {}
-    void remove_observer(std::weak_ptr<scene::SurfaceObserver> const&) override {}
+    void set_frame_posted_callback(std::function<void(geometry::Size const&)> const&) override {}
     bool has_submitted_buffer() const override { return true; }
     void set_scale(float) override {}
 
