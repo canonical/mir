@@ -73,7 +73,7 @@ private:
 
     void surface_removed(scene::Surface* surface);
 
-    void surface_moved(scene::Surface* moved_surface);
+    void surface_moved(scene::Surface const* moved_surface);
     void surface_resized();
 
     // Look in to homognizing index on KeyInputState and PointerInputState (wrt to device id)

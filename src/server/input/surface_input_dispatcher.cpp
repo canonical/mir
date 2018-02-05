@@ -39,22 +39,23 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct InputDispatcherSceneObserver : public ms::Observer
+struct InputDispatcherSceneObserver :
+    public ms::Observer,
+    public ms::SurfaceObserver,
+    public std::enable_shared_from_this<InputDispatcherSceneObserver>
 {
     InputDispatcherSceneObserver(
         std::function<void(ms::Surface*)> const& on_removed,
-        std::function<void(ms::Surface*)> const& on_surface_moved,
+        std::function<void(ms::Surface const*)> const& on_surface_moved,
         std::function<void()> const& on_surface_resized)
         : on_removed(on_removed),
-          dispatch_functions{std::make_shared<DispatchTable>(
-              on_surface_moved,
-              on_surface_resized)}
+          on_surface_moved{on_surface_moved},
+          on_surface_resized{on_surface_resized}
     {
     }
     void surface_added(ms::Surface* surface) override
     {
-        surface->add_observer(
-            std::make_shared<SurfaceObserver>(dispatch_functions, surface));
+        surface->add_observer(shared_from_this());
     }
     void surface_removed(ms::Surface* surface) override
     {
@@ -69,125 +70,97 @@ struct InputDispatcherSceneObserver : public ms::Observer
 
     void surface_exists(ms::Surface* surface) override
     {
-        surface->add_observer(
-            std::make_shared<SurfaceObserver>(dispatch_functions, surface));
+        surface->add_observer(shared_from_this());
     }
     void end_observation() override
     {
     }
 
-private:
-    struct DispatchTable;
-    class SurfaceObserver : public ms::SurfaceObserver
+    void attrib_changed(ms::Surface const*, MirWindowAttrib /*attrib*/, int /*value*/) override
     {
-    public:
-        SurfaceObserver(
-            std::shared_ptr<DispatchTable const> const& dispatch,
-            ms::Surface* this_surface) :
-            dispatch{dispatch},
-            this_surface{this_surface}
-        {
-        }
+        // TODO: Do we need to listen to visibility events?
+    }
 
-        void attrib_changed(ms::Surface const*, MirWindowAttrib /*attrib*/, int /*value*/) override
-        {
-            // TODO: Do we need to listen to visibility events?
-        }
+    void resized_to(ms::Surface const*, mir::geometry::Size const& /*size*/) override
+    {
+        on_surface_resized();
+    }
 
-        void resized_to(ms::Surface const*, mir::geometry::Size const& /*size*/) override
-        {
-            dispatch->on_surface_resized();
-        }
+    void moved_to(ms::Surface const* surf, mir::geometry::Point const& /*top_left*/) override
+    {
+        on_surface_moved(surf);
+    }
 
-        void moved_to(ms::Surface const*, mir::geometry::Point const& /*top_left*/) override
-        {
-            dispatch->on_surface_moved(this_surface);
-        }
+    void hidden_set_to(ms::Surface const*, bool /*hide*/) override
+    {
+        // TODO: Do we need to listen to this?
+    }
 
-        void hidden_set_to(ms::Surface const*, bool /*hide*/) override
-        {
-            // TODO: Do we need to listen to this?
-        }
+    void frame_posted(ms::Surface const*, int, mir::geometry::Size const&) override
+    {
 
-        void frame_posted(ms::Surface const*, int, mir::geometry::Size const&) override
-        {
-        }
+    }
 
-        void alpha_set_to(ms::Surface const*, float) override
-        {
-        }
+    void alpha_set_to(ms::Surface const*, float) override
+    {
 
-        void orientation_set_to(ms::Surface const*, MirOrientation) override
-        {
-        }
+    }
 
-        void transformation_set_to(ms::Surface const*, glm::mat4 const&) override
-        {
-            // TODO: Do we need to listen to this?
-        }
+    void orientation_set_to(ms::Surface const*, MirOrientation) override
+    {
 
-        void reception_mode_set_to(ms::Surface const*, mir::input::InputReceptionMode) override
-        {
-        }
+    }
 
-        void cursor_image_set_to(ms::Surface const*, mir::graphics::CursorImage const&) override
-        {
-        }
+    void transformation_set_to(ms::Surface const*, glm::mat4 const&) override
+    {
 
-        void client_surface_close_requested(ms::Surface const*) override
-        {
-        }
+    }
 
-        void keymap_changed(
-                ms::Surface const*,
-                MirInputDeviceId,
-                std::string const&,
-                std::string const&,
-                std::string const&,
-                std::string const&) override
-        {
-        }
+    void reception_mode_set_to(ms::Surface const*, mir::input::InputReceptionMode) override
+    {
+    }
 
-        void renamed(ms::Surface const*, char const*) override
-        {
-        }
+    void cursor_image_set_to(ms::Surface const*, mir::graphics::CursorImage const&) override
+    {
+    }
 
-        void cursor_image_removed(ms::Surface const*) override
-        {
-        }
+    void client_surface_close_requested(ms::Surface const*) override
+    {
+    }
 
-        void placed_relative(ms::Surface const*, mir::geometry::Rectangle const&) override
-        {
-        }
+    void keymap_changed(
+        ms::Surface const*,
+        MirInputDeviceId,
+        std::string const&,
+        std::string const&,
+        std::string const&,
+        std::string const&) override
+    {
+    }
 
-        void input_consumed(ms::Surface const*, MirEvent const*) override
-        {
-        }
+    void renamed(ms::Surface const*, char const*) override
+    {
+    }
 
-        void start_drag_and_drop(ms::Surface const*, std::vector<uint8_t> const&) override
-        {
-        }
+    void cursor_image_removed(ms::Surface const*) override
+    {
+    }
 
-    private:
-        std::shared_ptr<DispatchTable const> const dispatch;
-        ms::Surface* const this_surface;
-    };
+    void placed_relative(ms::Surface const*, mir::geometry::Rectangle const&) override
+    {
+    }
+
+    void input_consumed(ms::Surface const*, MirEvent const*) override
+    {
+    }
+
+    void start_drag_and_drop(ms::Surface const*, std::vector<uint8_t> const&) override
+    {
+    }
 
     std::function<void(ms::Surface*)> const on_removed;
-    struct DispatchTable
-    {
-        DispatchTable(
-            std::function<void(ms::Surface*)> const& moved,
-            std::function<void()> const& resized) :
-            on_surface_moved{moved},
-            on_surface_resized{resized}
-        {
-        }
-
-        std::function<void(ms::Surface*)> const on_surface_moved;
-        std::function<void()> const on_surface_resized;
-    };
-    std::shared_ptr<DispatchTable const> const dispatch_functions;
+    std::function<void(ms::Surface const*)> const on_surface_moved;
+    std::function<void()> const on_surface_resized;
 };
 
 void deliver_without_relative_motion(
@@ -262,6 +235,17 @@ mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> co
 mi::SurfaceInputDispatcher::~SurfaceInputDispatcher()
 {
     scene->remove_observer(scene_observer);
+    scene->for_each(
+        [this](auto surface)
+        {
+            // Everything *should* be a scene::Surface, but let's not crash if it isn't.
+            if (auto scene_surf = std::dynamic_pointer_cast<ms::Surface>(surface))
+            {
+                // We *know* scene_observer is an InputDispatcherSceneObserver
+                scene_surf->remove_observer(
+                    std::static_pointer_cast<InputDispatcherSceneObserver>(scene_observer));
+            }
+        });
 }
 
 namespace
@@ -393,7 +377,7 @@ bool dispatch_scene_change_enter_exit_events(
 
 void send_motion_event_to_moved_surface(
     SceneChangeContext const& ctx,
-    ms::Surface* moved_surface,
+    ms::Surface const* moved_surface,
     std::function<void(std::shared_ptr<mi::Surface> const&, MirEvent const*)> const& send_motion)
 {
     if ((ctx.target_surface.get() == moved_surface) &&
@@ -422,7 +406,7 @@ void send_motion_event_to_moved_surface(
 }
 }
 
-void mi::SurfaceInputDispatcher::surface_moved(ms::Surface* moved_surface)
+void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
 {
     std::lock_guard<std::mutex> lock{dispatcher_mutex};
 
