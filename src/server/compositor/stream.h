@@ -45,8 +45,8 @@ public:
     void submit_buffer(std::shared_ptr<graphics::Buffer> const& buffer) override;
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& exec) override;
     MirPixelFormat pixel_format() const override;
-    void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) override;
-    void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) override;
+    void set_frame_posted_callback(
+        std::function<void(geometry::Size const&)> const& callback) override;
     std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(void const* user_id) override;
     geometry::Size stream_size() override;
@@ -70,7 +70,8 @@ private:
     MirPixelFormat pf;
     bool first_frame_posted;
 
-    scene::SurfaceObservers observers;
+    std::mutex callback_mutex;
+    std::function<void(geometry::Size const&)> frame_callback;
 };
 }
 }

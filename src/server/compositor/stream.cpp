@@ -41,7 +41,8 @@ mc::Stream::Stream(
     arbiter(std::make_shared<mc::MultiMonitorArbiter>(schedule)),
     size(size),
     pf(pf),
-    first_frame_posted(false)
+    first_frame_posted(false),
+    frame_callback{[](auto){}}
 {
 }
 
@@ -58,7 +59,10 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
         pf = buffer->pixel_format();
         schedule->schedule(buffer);
     }
-    observers.frame_posted(1, buffer->size());
+    {
+        std::lock_guard<decltype(callback_mutex)> lock{callback_mutex};
+        frame_callback(buffer->size());
+    }
 }
 
 void mc::Stream::with_most_recent_buffer_do(std::function<void(mg::Buffer&)> const& fn)
@@ -73,15 +77,11 @@ MirPixelFormat mc::Stream::pixel_format() const
     return pf;
 }
 
-void mc::Stream::add_observer(std::shared_ptr<ms::SurfaceObserver> const& observer)
+void mc::Stream::set_frame_posted_callback(
+    std::function<void(geometry::Size const&)> const& callback)
 {
-    observers.add(observer);
-}
-
-void mc::Stream::remove_observer(std::weak_ptr<ms::SurfaceObserver> const& observer)
-{
-    if (auto o = observer.lock())
-        observers.remove(o);
+    std::lock_guard<decltype(callback_mutex)> lock{callback_mutex};
+    frame_callback = callback;
 }
 
 std::shared_ptr<mg::Buffer> mc::Stream::lock_compositor_buffer(void const* id)
