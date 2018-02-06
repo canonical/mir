@@ -609,38 +609,7 @@ public:
                     default:
                         break;
                 }
-
-                auto new_depressed_mods = xkb_state_serialize_mods(
-                    state.get(),
-                    XKB_STATE_MODS_DEPRESSED);
-                auto new_latched_mods = xkb_state_serialize_mods(
-                    state.get(),
-                    XKB_STATE_MODS_LATCHED);
-                auto new_locked_mods = xkb_state_serialize_mods(
-                    state.get(),
-                    XKB_STATE_MODS_LOCKED);
-                auto new_group = xkb_state_serialize_layout(
-                    state.get(),
-                    XKB_STATE_LAYOUT_EFFECTIVE);
-
-                if ((new_depressed_mods != mods_depressed) ||
-                    (new_latched_mods != mods_latched) ||
-                    (new_locked_mods != mods_locked) ||
-                    (new_group != group))
-                {
-                    mods_depressed = new_depressed_mods;
-                    mods_latched = new_latched_mods;
-                    mods_locked = new_locked_mods;
-                    group = new_group;
-
-                    wl_keyboard_send_modifiers(
-                        resource,
-                        wl_display_get_serial(wl_client_get_display(client)),
-                        mods_depressed,
-                        mods_latched,
-                        mods_locked,
-                        group);
-                }
+                update_modifier_state();
             }));
     }
 
@@ -741,6 +710,44 @@ public:
     }
 
 private:
+    void update_modifier_state()
+    {
+        // TODO?
+        // assert_on_wayland_event_loop()
+
+        auto new_depressed_mods = xkb_state_serialize_mods(
+            state.get(),
+            XKB_STATE_MODS_DEPRESSED);
+        auto new_latched_mods = xkb_state_serialize_mods(
+            state.get(),
+            XKB_STATE_MODS_LATCHED);
+        auto new_locked_mods = xkb_state_serialize_mods(
+            state.get(),
+            XKB_STATE_MODS_LOCKED);
+        auto new_group = xkb_state_serialize_layout(
+            state.get(),
+            XKB_STATE_LAYOUT_EFFECTIVE);
+
+        if ((new_depressed_mods != mods_depressed) ||
+            (new_latched_mods != mods_latched) ||
+            (new_locked_mods != mods_locked) ||
+            (new_group != group))
+        {
+            mods_depressed = new_depressed_mods;
+            mods_latched = new_latched_mods;
+            mods_locked = new_locked_mods;
+            group = new_group;
+
+            wl_keyboard_send_modifiers(
+                resource,
+                wl_display_get_serial(wl_client_get_display(client)),
+                mods_depressed,
+                mods_latched,
+                mods_locked,
+                group);
+        }
+    }
+
     std::unique_ptr<xkb_keymap, decltype(&xkb_keymap_unref)> keymap;
     std::unique_ptr<xkb_state, decltype(&xkb_state_unref)> state;
     std::unique_ptr<xkb_context, decltype(&xkb_context_unref)> const context;
