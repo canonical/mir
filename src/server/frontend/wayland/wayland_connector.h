@@ -32,6 +32,7 @@ namespace mir
 namespace input
 {
 class InputDeviceHub;
+class Seat;
 }
 namespace graphics
 {
@@ -61,6 +62,7 @@ public:
         std::shared_ptr<Shell> const& shell,
         DisplayChanger& display_config,
         std::shared_ptr<input::InputDeviceHub> const& input_hub,
+        std::shared_ptr<input::Seat> const& seat,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         bool arw_socket);
