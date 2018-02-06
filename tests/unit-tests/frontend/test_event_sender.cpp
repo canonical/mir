@@ -182,7 +182,6 @@ TEST_F(EventSender, sends_input_events)
 TEST_F(EventSender, packs_buffer_with_platform_packer)
 {
     using namespace testing;
-    mf::BufferStreamId id{8};
     auto msg_type = mir::graphics::BufferIpcMsgType::update_msg;
     mtd::StubBuffer buffer;
 
