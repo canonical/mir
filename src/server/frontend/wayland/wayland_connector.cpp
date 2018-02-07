@@ -48,6 +48,7 @@
 
 #include "mir/client/event.h"
 
+#include "mir/input/seat.h"
 #include "mir/input/device.h"
 #include "mir/input/mir_keyboard_config.h"
 #include "mir/input/input_device_hub.h"
@@ -71,6 +72,7 @@
 
 #include <sys/stat.h>
 #include <sys/socket.h>
+#include <unordered_set>
 #include "mir/anonymous_shm_file.h"
 
 namespace mf = mir::frontend;
@@ -542,6 +544,7 @@ public:
         uint32_t id,
         mir::input::Keymap const& initial_keymap,
         std::function<void(WlKeyboard*)> const& on_destroy,
+        std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state,
         std::shared_ptr<mir::Executor> const& executor)
         : Keyboard(client, parent, id),
           keymap{nullptr, &xkb_keymap_unref},
@@ -549,6 +552,7 @@ public:
           context{xkb_context_new(XKB_CONTEXT_NO_FLAGS), &xkb_context_unref},
           executor{executor},
           on_destroy{on_destroy},
+          acquire_current_keyboard_state{acquire_current_keyboard_state},
           destroyed{std::make_shared<bool>(false)}
     {
         // TODO: We should really grab the keymap for the focused surface when
@@ -609,38 +613,7 @@ public:
                     default:
                         break;
                 }
-
-                auto new_depressed_mods = xkb_state_serialize_mods(
-                    state.get(),
-                    XKB_STATE_MODS_DEPRESSED);
-                auto new_latched_mods = xkb_state_serialize_mods(
-                    state.get(),
-                    XKB_STATE_MODS_LATCHED);
-                auto new_locked_mods = xkb_state_serialize_mods(
-                    state.get(),
-                    XKB_STATE_MODS_LOCKED);
-                auto new_group = xkb_state_serialize_layout(
-                    state.get(),
-                    XKB_STATE_LAYOUT_EFFECTIVE);
-
-                if ((new_depressed_mods != mods_depressed) ||
-                    (new_latched_mods != mods_latched) ||
-                    (new_locked_mods != mods_locked) ||
-                    (new_group != group))
-                {
-                    mods_depressed = new_depressed_mods;
-                    mods_latched = new_latched_mods;
-                    mods_locked = new_locked_mods;
-                    group = new_group;
-
-                    wl_keyboard_send_modifiers(
-                        resource,
-                        wl_display_get_serial(wl_client_get_display(client)),
-                        mods_depressed,
-                        mods_latched,
-                        mods_locked,
-                        group);
-                }
+                update_modifier_state();
             }));
     }
 
@@ -665,11 +638,34 @@ public:
                     {
                         /*
                          * TODO:
-                         *  *) Send the actual modifier state here.
                          *  *) Send the surface's keymap here.
                          */
+                        auto const keyboard_state = acquire_current_keyboard_state();
+
                         wl_array key_state;
                         wl_array_init(&key_state);
+
+                        auto* const array_storage = wl_array_add(
+                            &key_state,
+                            keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
+                        if (!array_storage)
+                        {
+                            wl_resource_post_no_memory(resource);
+                            BOOST_THROW_EXCEPTION(std::bad_alloc());
+                        }
+                        std::memcpy(
+                            array_storage,
+                            keyboard_state.data(),
+                            keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
+
+                        // Rebuild xkb state
+                        state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
+                        for (auto scancode : keyboard_state)
+                        {
+                            xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
+                        }
+                        update_modifier_state();
+
                         wl_keyboard_send_enter(resource, serial, target, &key_state);
                         wl_array_release(&key_state);
                     }
@@ -741,12 +737,51 @@ public:
     }
 
 private:
+    void update_modifier_state()
+    {
+        // TODO?
+        // assert_on_wayland_event_loop()
+
+        auto new_depressed_mods = xkb_state_serialize_mods(
+            state.get(),
+            XKB_STATE_MODS_DEPRESSED);
+        auto new_latched_mods = xkb_state_serialize_mods(
+            state.get(),
+            XKB_STATE_MODS_LATCHED);
+        auto new_locked_mods = xkb_state_serialize_mods(
+            state.get(),
+            XKB_STATE_MODS_LOCKED);
+        auto new_group = xkb_state_serialize_layout(
+            state.get(),
+            XKB_STATE_LAYOUT_EFFECTIVE);
+
+        if ((new_depressed_mods != mods_depressed) ||
+            (new_latched_mods != mods_latched) ||
+            (new_locked_mods != mods_locked) ||
+            (new_group != group))
+        {
+            mods_depressed = new_depressed_mods;
+            mods_latched = new_latched_mods;
+            mods_locked = new_locked_mods;
+            group = new_group;
+
+            wl_keyboard_send_modifiers(
+                resource,
+                wl_display_get_serial(wl_client_get_display(client)),
+                mods_depressed,
+                mods_latched,
+                mods_locked,
+                group);
+        }
+    }
+
     std::unique_ptr<xkb_keymap, decltype(&xkb_keymap_unref)> keymap;
     std::unique_ptr<xkb_state, decltype(&xkb_state_unref)> state;
     std::unique_ptr<xkb_context, decltype(&xkb_context_unref)> const context;
 
     std::shared_ptr<mir::Executor> const executor;
     std::function<void(WlKeyboard*)> on_destroy;
+    std::function<std::vector<uint32_t>()> const acquire_current_keyboard_state;
     std::shared_ptr<bool> const destroyed;
 
     uint32_t mods_depressed{0};
@@ -1113,6 +1148,7 @@ public:
     WlSeat(
         wl_display* display,
         std::shared_ptr<mi::InputDeviceHub> const& input_hub,
+        std::shared_ptr<mi::Seat> const& seat,
         std::shared_ptr<mir::Executor> const& executor)
         : config_observer{
               std::make_shared<ConfigObserver>(
@@ -1120,9 +1156,9 @@ public:
                   [this](mir::input::Keymap const& new_keymap)
                   {
                       keymap = new_keymap;
-
                   })},
           input_hub{input_hub},
+          seat{seat},
           executor{executor},
           global{wl_global_create(
               display,
@@ -1186,6 +1222,7 @@ private:
     std::unordered_map<wl_client*, InputCtx<WlTouch>> mutable touch;
 
     std::shared_ptr<mi::InputDeviceHub> const input_hub;
+    std::shared_ptr<mi::Seat> const seat;
 
 
     std::shared_ptr<mir::Executor> const executor;
@@ -1252,6 +1289,32 @@ private:
                 [&input_ctx](WlKeyboard* listener)
                 {
                     input_ctx.unregister_listener(listener);
+                },
+                [me]()
+                {
+                    std::unordered_set<uint32_t> pressed_keys;
+
+                    auto const ev = me->seat->create_device_state();
+                    auto const state_event = mir_event_get_input_device_state_event(ev.get());
+                    for (
+                        auto dev = 0u;
+                        dev < mir_input_device_state_event_device_count(state_event);
+                        ++dev)
+                    {
+                        for (
+                            auto idx = 0u;
+                            idx < mir_input_device_state_event_device_pressed_keys_count(state_event, dev);
+                            ++idx)
+                        {
+                            pressed_keys.insert(
+                                mir_input_device_state_event_device_pressed_keys_for_index(
+                                    state_event,
+                                    dev,
+                                    idx));
+                        }
+                    }
+
+                    return std::vector<uint32_t>{pressed_keys.begin(), pressed_keys.end()};
                 },
                 me->executor});
     }
@@ -2285,6 +2348,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mf::Shell> const& shell,
     DisplayChanger& display_config,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
+    std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     bool arw_socket)
@@ -2320,7 +2384,7 @@ mf::WaylandConnector::WaylandConnector(
         display.get(),
         executor,
         this->allocator);
-    seat_global = std::make_unique<mf::WlSeat>(display.get(), input_hub, executor);
+    seat_global = std::make_unique<mf::WlSeat>(display.get(), input_hub, seat, executor);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         display_config);
