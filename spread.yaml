@@ -32,6 +32,20 @@ environment:
     VALGRIND: 0
     VALGRIND/valgrind: 1
 
+prepare: |
+    # NOTE: This part of the code needs to be in spread.yaml as it runs before
+    # the rest of the source code (including the tests/lib directory) is
+    # around. The purpose of this code is to fix some connectivity issues and
+    # then apply the delta of the git repository.
+    # apt update is hanging on security.ubuntu.com with IPv6, prefer IPv4 over IPv6
+    cat <<EOF > /etc/gai.conf
+    precedence  ::1/128       50
+    precedence  ::/0          40
+    precedence  2002::/16     30
+    precedence ::/96          20
+    precedence ::ffff:0:0/96 100
+    EOF
+
 suites:
     spread/build/:
         summary: Build Mir
