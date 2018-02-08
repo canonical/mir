@@ -123,7 +123,7 @@ void mu::Enumerator::iterator::increment()
         {
             current = ctx->device_from_syspath(udev_list_entry_get_name(entry));
         }
-        catch (std::runtime_error)
+        catch (std::runtime_error const&)
         {
             // The Device throws a runtime_error if the device does not exist
             // This can happen if it has been removed since the iterator was created.

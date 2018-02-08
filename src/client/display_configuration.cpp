@@ -55,7 +55,11 @@ mcl::DisplayOutput::DisplayOutput(size_t num_modes_, size_t num_formats)
 
 mcl::DisplayOutput::DisplayOutput(DisplayOutput&& rhs)
 {
-    std::memcpy(this, &rhs, sizeof(*this));
+    std::memcpy(
+        static_cast<MirDisplayOutput*>(this),
+        static_cast<MirDisplayOutput*>(&rhs),
+        sizeof(MirDisplayOutput));
+
     rhs.modes = nullptr;
     rhs.output_formats = nullptr;
 }

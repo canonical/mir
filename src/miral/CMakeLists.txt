@@ -64,6 +64,15 @@ add_library(miral SHARED
                                         window_info_defaults.h
 )
 
+set_source_files_properties(
+    canonical_window_manager.cpp
+    internal_client.cpp
+    set_window_management_policy.cpp
+    window_info.cpp
+    window_management_policy.cpp
+    window_manager_tools.cpp
+    PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} -Wno-attribute-alias")
+
 target_include_directories(mirclientcpp
     INTERFACE "${miral_include}" ${MIRCLIENT_INCLUDE_DIRS}
 )
