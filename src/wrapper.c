@@ -23,7 +23,7 @@
 
 static void appendenv(const char* varname, const char* append)
 {
-    char buf[1024] = "";
+    char buf[2048] = "";
     const char* value = append;
     const char* old = getenv(varname);
     if (old != NULL)

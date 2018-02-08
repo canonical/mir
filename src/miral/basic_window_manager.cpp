@@ -1923,6 +1923,7 @@ void miral::BasicWindowManager::validate_modification_request(WindowSpecificatio
             default:
                 BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
             }
+	    // Falls through.
 
         case mir_window_type_menu:
             switch (target_type)
@@ -1934,6 +1935,7 @@ void miral::BasicWindowManager::validate_modification_request(WindowSpecificatio
             default:
                 BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
             }
+	    // Falls through.
 
         case mir_window_type_gloss:
         case mir_window_type_freestyle:

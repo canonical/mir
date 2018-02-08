@@ -265,7 +265,7 @@ TYPED_TEST(StreamTransportTest, notices_remote_disconnect_while_reading)
         char buffer[8];
         this->transport->receive_data(buffer, sizeof(buffer));
     }
-    catch (std::runtime_error)
+    catch (std::runtime_error const&)
     {
         receive_error_detected = true;
     }

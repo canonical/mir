@@ -431,9 +431,9 @@ void md::FdSources::add(
 
     g_source_set_callback(
         gsource,
-        reinterpret_cast<GSourceFunc>(&FdContext::static_call),
+        (GSourceFunc)(void*)(&FdContext::static_call),
         fd_context,
-        reinterpret_cast<GDestroyNotify>(&FdContext::static_destroy));
+        (GDestroyNotify)(void*)(&FdContext::static_destroy));
 
     std::lock_guard<std::mutex> lock{sources_mutex};
 
