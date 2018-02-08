@@ -161,7 +161,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
         default_content_map[id] = stream_id;
     }
 
-    observer->moved_to(surface->top_left());
+    observer->moved_to(surface.get(), surface->top_left());
 
     session_listener->surface_created(*this, surface);
     return id;

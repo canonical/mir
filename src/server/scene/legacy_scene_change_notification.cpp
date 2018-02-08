@@ -57,8 +57,8 @@ public:
         std::function<void(int frames, mir::geometry::Rectangle const& damage)> const& damage_notify_change,
         ms::Surface* surface);
 
-    void moved_to(mir::geometry::Point const& /*top_left*/) override;
-    void frame_posted(int frames_available, mir::geometry::Size const& size) override;
+    void moved_to(ms::Surface const* surf, const mir::geometry::Point&) override;
+    void frame_posted(ms::Surface const* surf, int frames_available, const mir::geometry::Size& size) override;
 
 private:
     mir::geometry::Point top_left;
@@ -75,13 +75,13 @@ NonLegacySurfaceChangeNotification::NonLegacySurfaceChangeNotification(
     top_left = surface->top_left();
 }
 
-void NonLegacySurfaceChangeNotification::moved_to(mir::geometry::Point const& top_left)
+void NonLegacySurfaceChangeNotification::moved_to(ms::Surface const* surf, const mir::geometry::Point& top_left)
 {
     this->top_left = top_left;
-    ms::LegacySurfaceChangeNotification::moved_to(top_left);
+    ms::LegacySurfaceChangeNotification::moved_to(surf, top_left);
 }
 
-void NonLegacySurfaceChangeNotification::frame_posted(int frames_available, mir::geometry::Size const& size)
+void NonLegacySurfaceChangeNotification::frame_posted(ms::Surface const*, int frames_available, const mir::geometry::Size& size)
 {
     mir::geometry::Rectangle const update_region{top_left, size};
     damage_notify_change(frames_available, update_region);

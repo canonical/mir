@@ -47,9 +47,9 @@ namespace
     class MockSurfaceObserver : public ms::NullSurfaceObserver
     {
     public:
-        MOCK_METHOD1(renamed, void(char const*));
-        MOCK_METHOD2(attrib_changed, void(MirWindowAttrib attrib, int value));
-        MOCK_METHOD1(resized_to, void(Size const& size));
+        MOCK_METHOD2(renamed, void(ms::Surface const*, char const*));
+        MOCK_METHOD3(attrib_changed, void(ms::Surface const*, MirWindowAttrib attrib, int value));
+        MOCK_METHOD2(resized_to, void(ms::Surface const*, Size const& size));
     };
 
     struct SurfaceSpecification : mtf::ConnectedClientHeadlessServer
@@ -153,7 +153,7 @@ namespace
         {
             auto const new_title = __PRETTY_FUNCTION__;
 
-            EXPECT_CALL(surface_observer, renamed(StrEq(new_title))).
+            EXPECT_CALL(surface_observer, renamed(_, StrEq(new_title))).
                     WillOnce(InvokeWithoutArgs([&]{ change_observed(); }));
 
             signal_change.reset();
@@ -226,7 +226,7 @@ TEST_F(SurfaceSpecification, surface_spec_min_width_is_respected)
 
     auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
 
-    EXPECT_CALL(surface_observer, resized_to(WidthEq(min_width)));
+    EXPECT_CALL(surface_observer, resized_to(_, WidthEq(min_width)));
 
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(shell_surface->top_left());
@@ -254,7 +254,7 @@ TEST_F(SurfaceSpecification, surface_spec_min_height_is_respected)
 
     auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
 
-    EXPECT_CALL(surface_observer, resized_to(HeightEq(min_height)));
+    EXPECT_CALL(surface_observer, resized_to(_, HeightEq(min_height)));
 
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(shell_surface->top_left());
@@ -282,7 +282,7 @@ TEST_F(SurfaceSpecification, surface_spec_max_width_is_respected)
 
     auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
 
-    EXPECT_CALL(surface_observer, resized_to(WidthEq(max_width)));
+    EXPECT_CALL(surface_observer, resized_to(_, WidthEq(max_width)));
 
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(bottom_right + DeltaX(max_width));
@@ -310,7 +310,7 @@ TEST_F(SurfaceSpecification, surface_spec_max_height_is_respected)
 
     auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
 
-    EXPECT_CALL(surface_observer, resized_to(HeightEq(max_height)));
+    EXPECT_CALL(surface_observer, resized_to(_, HeightEq(max_height)));
 
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(bottom_right + DeltaY(max_height));
@@ -339,7 +339,7 @@ TEST_F(SurfaceSpecification, surface_spec_width_inc_is_respected)
     auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
 
     Size actual;
-    EXPECT_CALL(surface_observer, resized_to(_)).WillOnce(SaveArg<0>(&actual));
+    EXPECT_CALL(surface_observer, resized_to(_, _)).WillOnce(SaveArg<1>(&actual));
 
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(bottom_right + DeltaX(16));
@@ -372,7 +372,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_width_and_width_inc_is_respec
     auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
 
     Size actual;
-    EXPECT_CALL(surface_observer, resized_to(_)).WillOnce(SaveArg<0>(&actual));
+    EXPECT_CALL(surface_observer, resized_to(_, _)).WillOnce(SaveArg<1>(&actual));
 
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(bottom_right + DeltaX(16));
@@ -403,7 +403,7 @@ TEST_F(SurfaceSpecification, surface_spec_height_inc_is_respected)
     auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
 
     Size actual;
-    EXPECT_CALL(surface_observer, resized_to(_)).WillOnce(SaveArg<0>(&actual));
+    EXPECT_CALL(surface_observer, resized_to(_, _)).WillOnce(SaveArg<1>(&actual));
 
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(bottom_right + DeltaY(16));
@@ -436,7 +436,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_height_and_height_inc_is_resp
     auto const bottom_right = shell_surface->input_bounds().bottom_right() - Displacement{1,1};
 
     Size actual;
-    EXPECT_CALL(surface_observer, resized_to(_)).WillOnce(SaveArg<0>(&actual));
+    EXPECT_CALL(surface_observer, resized_to(_, _)).WillOnce(SaveArg<1>(&actual));
 
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(bottom_right + DeltaY(16));
@@ -469,7 +469,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_min_aspect_ratio_is_respected)
     auto const bottom_left = shell_surface->input_bounds().bottom_left() + Displacement{1,-1};
 
     Size actual;
-    EXPECT_CALL(surface_observer, resized_to(_)).WillOnce(SaveArg<0>(&actual));
+    EXPECT_CALL(surface_observer, resized_to(_, _)).WillOnce(SaveArg<1>(&actual));
 
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(bottom_left);
@@ -502,7 +502,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_max_aspect_ratio_is_respected)
     auto const top_right = shell_surface->input_bounds().top_right() - Displacement{1,-1};
 
     Size actual;
-    EXPECT_CALL(surface_observer, resized_to(_)).WillOnce(SaveArg<0>(&actual));
+    EXPECT_CALL(surface_observer, resized_to(_, _)).WillOnce(SaveArg<1>(&actual));
 
     generate_alt_click_at(bottom_right);
     generate_alt_move_to(top_right);
@@ -553,7 +553,7 @@ TEST_F(SurfaceSpecification, surface_spec_with_fixed_aspect_ratio_and_size_range
     shell_surface->add_observer(mt::fake_shared(surface_observer));
 
     Size actual;
-    EXPECT_CALL(surface_observer, resized_to(_)).Times(AnyNumber()).WillRepeatedly(SaveArg<0>(&actual));
+    EXPECT_CALL(surface_observer, resized_to(_, _)).Times(AnyNumber()).WillRepeatedly(SaveArg<1>(&actual));
 
     for (int delta = 1; delta != 20; ++delta)
     {

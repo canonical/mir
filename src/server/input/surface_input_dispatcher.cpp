@@ -89,56 +89,57 @@ private:
         {
         }
 
-        void attrib_changed(MirWindowAttrib /*attrib*/, int /*value*/) override
+        void attrib_changed(ms::Surface const*, MirWindowAttrib /*attrib*/, int /*value*/) override
         {
             // TODO: Do we need to listen to visibility events?
         }
 
-        void resized_to(mir::geometry::Size const& /*size*/) override
+        void resized_to(ms::Surface const*, mir::geometry::Size const& /*size*/) override
         {
             dispatch->on_surface_resized();
         }
 
-        void moved_to(mir::geometry::Point const& /*top_left*/) override
+        void moved_to(ms::Surface const*, mir::geometry::Point const& /*top_left*/) override
         {
             dispatch->on_surface_moved(this_surface);
         }
 
-        void hidden_set_to(bool /*hide*/) override
+        void hidden_set_to(ms::Surface const*, bool /*hide*/) override
         {
             // TODO: Do we need to listen to this?
         }
 
-        void frame_posted(int, mir::geometry::Size const&) override
+        void frame_posted(ms::Surface const*, int, mir::geometry::Size const&) override
         {
         }
 
-        void alpha_set_to(float) override
+        void alpha_set_to(ms::Surface const*, float) override
         {
         }
 
-        void orientation_set_to(MirOrientation) override
+        void orientation_set_to(ms::Surface const*, MirOrientation) override
         {
         }
 
-        void transformation_set_to(glm::mat4 const&) override
+        void transformation_set_to(ms::Surface const*, glm::mat4 const&) override
         {
             // TODO: Do we need to listen to this?
         }
 
-        void reception_mode_set_to(mir::input::InputReceptionMode) override
+        void reception_mode_set_to(ms::Surface const*, mir::input::InputReceptionMode) override
         {
         }
 
-        void cursor_image_set_to(mir::graphics::CursorImage const&) override
+        void cursor_image_set_to(ms::Surface const*, mir::graphics::CursorImage const&) override
         {
         }
 
-        void client_surface_close_requested() override
+        void client_surface_close_requested(ms::Surface const*) override
         {
         }
 
         void keymap_changed(
+                ms::Surface const*,
                 MirInputDeviceId,
                 std::string const&,
                 std::string const&,
@@ -147,23 +148,23 @@ private:
         {
         }
 
-        void renamed(char const*) override
+        void renamed(ms::Surface const*, char const*) override
         {
         }
 
-        void cursor_image_removed() override
+        void cursor_image_removed(ms::Surface const*) override
         {
         }
 
-        void placed_relative(mir::geometry::Rectangle const&) override
+        void placed_relative(ms::Surface const*, mir::geometry::Rectangle const&) override
         {
         }
 
-        void input_consumed(MirEvent const*) override
+        void input_consumed(ms::Surface const*, MirEvent const*) override
         {
         }
 
-        void start_drag_and_drop(std::vector<uint8_t> const&) override
+        void start_drag_and_drop(ms::Surface const*, std::vector<uint8_t> const&) override
         {
         }
 

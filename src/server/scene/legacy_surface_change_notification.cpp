@@ -31,84 +31,85 @@ ms::LegacySurfaceChangeNotification::LegacySurfaceChangeNotification(
 {
 }
 
-void ms::LegacySurfaceChangeNotification::resized_to(geom::Size const& /*size*/)
+void ms::LegacySurfaceChangeNotification::resized_to(Surface const*, geometry::Size const&)
 {
     notify_scene_change();
 }
 
-void ms::LegacySurfaceChangeNotification::moved_to(geom::Point const& /*top_left*/)
+void ms::LegacySurfaceChangeNotification::moved_to(Surface const*, geometry::Point const&)
 {
     notify_scene_change();
 }
 
-void ms::LegacySurfaceChangeNotification::hidden_set_to(bool /*hide*/)
+void ms::LegacySurfaceChangeNotification::hidden_set_to(Surface const*, bool)
 {
     notify_scene_change();
 }
 
-void ms::LegacySurfaceChangeNotification::frame_posted(int frames_available, geom::Size const& /* size */)
+void ms::LegacySurfaceChangeNotification::frame_posted(Surface const*, int frames_available, geometry::Size const&)
 {
     notify_buffer_change(frames_available);
 }
 
-void ms::LegacySurfaceChangeNotification::alpha_set_to(float /*alpha*/)
+void ms::LegacySurfaceChangeNotification::alpha_set_to(Surface const*, float)
 {
     notify_scene_change();
 }
 
 // An orientation change alone is not enough to trigger recomposition.
-void ms::LegacySurfaceChangeNotification::orientation_set_to(MirOrientation /*orientation*/)
+void ms::LegacySurfaceChangeNotification::orientation_set_to(Surface const*, MirOrientation)
 {
 }
 
-void ms::LegacySurfaceChangeNotification::transformation_set_to(glm::mat4 const& /*t*/)
+void ms::LegacySurfaceChangeNotification::transformation_set_to(Surface const*, glm::mat4 const&)
 {
     notify_scene_change();
 }
 
 // An attrib change alone is not enough to trigger recomposition.
-void ms::LegacySurfaceChangeNotification::attrib_changed(MirWindowAttrib /* attrib */, int /* value */)
+void ms::LegacySurfaceChangeNotification::attrib_changed(Surface const*, MirWindowAttrib, int)
 {
 }
 
 // Cursor image change request is not enough to trigger recomposition.
-void ms::LegacySurfaceChangeNotification::cursor_image_set_to(mg::CursorImage const& /* image */)
+void ms::LegacySurfaceChangeNotification::cursor_image_set_to(Surface const*, graphics::CursorImage const&)
 {
 }
 
-void ms::LegacySurfaceChangeNotification::cursor_image_removed()
+void ms::LegacySurfaceChangeNotification::cursor_image_removed(Surface const*)
 {
 }
 
-void ms::LegacySurfaceChangeNotification::placed_relative(geometry::Rectangle const& /*placement*/)
+void ms::LegacySurfaceChangeNotification::placed_relative(Surface const*, geometry::Rectangle const&)
 {
 }
 
-void ms::LegacySurfaceChangeNotification::reception_mode_set_to(mi::InputReceptionMode /*mode*/)
+void ms::LegacySurfaceChangeNotification::reception_mode_set_to(Surface const*, input::InputReceptionMode)
 {
     notify_scene_change();
 }
 
 // A client close request is not enough to trigger recomposition.
-void ms::LegacySurfaceChangeNotification::client_surface_close_requested()
+void ms::LegacySurfaceChangeNotification::client_surface_close_requested(Surface const*)
 {
 }
 
 // A keymap change is not enough to trigger recomposition
-void ms::LegacySurfaceChangeNotification::keymap_changed(MirInputDeviceId, std::string const&, std::string const&,
-                                                         std::string const&, std::string const&)
+void ms::LegacySurfaceChangeNotification::keymap_changed(Surface const*, MirInputDeviceId, std::string const&,
+                                                         std::string const&, std::string const&,
+                                                         std::string const&)
 {
 }
 
-void ms::LegacySurfaceChangeNotification::renamed(char const*)
+void ms::LegacySurfaceChangeNotification::renamed(Surface const*, char const*)
 {
     notify_scene_change();
 }
 
-void ms::LegacySurfaceChangeNotification::input_consumed(MirEvent const*)
+void ms::LegacySurfaceChangeNotification::input_consumed(Surface const*, MirEvent const*)
 {
 }
 
-void ms::LegacySurfaceChangeNotification::start_drag_and_drop(std::vector<uint8_t> const& /*handle*/)
+void ms::LegacySurfaceChangeNotification::start_drag_and_drop(Surface const*, std::vector<uint8_t> const&)
 {
 }

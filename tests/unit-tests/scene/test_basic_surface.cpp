@@ -62,12 +62,12 @@ public:
 class MockSurfaceObserver : public ms::NullSurfaceObserver
 {
 public:
-    MOCK_METHOD2(attrib_changed, void(MirWindowAttrib, int));
-    MOCK_METHOD1(hidden_set_to, void(bool));
-    MOCK_METHOD1(renamed, void(char const*));
-    MOCK_METHOD0(client_surface_close_requested, void());
-    MOCK_METHOD1(cursor_image_set_to, void(mir::graphics::CursorImage const& image));
-    MOCK_METHOD0(cursor_image_removed, void());
+    MOCK_METHOD3(attrib_changed, void(ms::Surface const*, MirWindowAttrib, int));
+    MOCK_METHOD2(hidden_set_to, void(ms::Surface const*, bool));
+    MOCK_METHOD2(renamed, void(ms::Surface const*, char const*));
+    MOCK_METHOD1(client_surface_close_requested, void(ms::Surface const*));
+    MOCK_METHOD2(cursor_image_set_to, void(ms::Surface const*, mir::graphics::CursorImage const& image));
+    MOCK_METHOD1(cursor_image_removed, void(ms::Surface const*));
 };
 
 struct BasicSurfaceTest : public testing::Test
@@ -561,9 +561,9 @@ TEST_P(BasicSurfaceAttributeTest, notifies_about_attrib_changes)
     NiceMock<MockSurfaceObserver> mock_surface_observer;
 
     InSequence s;
-    EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, value1))
+    EXPECT_CALL(mock_surface_observer, attrib_changed(_, attribute, value1))
         .Times(1);
-    EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, value2))
+    EXPECT_CALL(mock_surface_observer, attrib_changed(_, attribute, value2))
         .Times(1);
 
     surface.add_observer(mt::fake_shared(mock_surface_observer));
@@ -583,7 +583,7 @@ TEST_P(BasicSurfaceAttributeTest, does_not_notify_if_attrib_is_unchanged)
 
     NiceMock<MockSurfaceObserver> mock_surface_observer;
 
-    EXPECT_CALL(mock_surface_observer, attrib_changed(attribute, another_value))
+    EXPECT_CALL(mock_surface_observer, attrib_changed(_, attribute, another_value))
         .Times(1);
 
     surface.add_observer(mt::fake_shared(mock_surface_observer));
@@ -634,7 +634,7 @@ TEST_F(BasicSurfaceTest, notifies_about_cursor_image_change)
     NiceMock<MockSurfaceObserver> mock_surface_observer;
 
     auto cursor_image = std::make_shared<mtd::StubCursorImage>();
-    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_));
+    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_, _));
 
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_cursor_image(cursor_image);
@@ -646,8 +646,8 @@ TEST_F(BasicSurfaceTest, notifies_about_cursor_image_removal)
 
     NiceMock<MockSurfaceObserver> mock_surface_observer;
 
-    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_)).Times(0);
-    EXPECT_CALL(mock_surface_observer, cursor_image_removed());
+    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_, _)).Times(0);
+    EXPECT_CALL(mock_surface_observer, cursor_image_removed(_));
 
     surface.add_observer(mt::fake_shared(mock_surface_observer));
     surface.set_cursor_image({});
@@ -685,14 +685,14 @@ TEST_F(BasicSurfaceTest, observer_can_remove_itself_within_notification)
 
     //Both of these observers should still get their notifications
     //regardless of the unregistration of observer2
-    EXPECT_CALL(observer1, hidden_set_to(true)).Times(2);
-    EXPECT_CALL(observer3, hidden_set_to(true)).Times(2);
+    EXPECT_CALL(observer1, hidden_set_to(_, true)).Times(2);
+    EXPECT_CALL(observer3, hidden_set_to(_, true)).Times(2);
 
     auto const remove_observer = [&]{
         surface.remove_observer(mt::fake_shared(observer2));
     };
 
-    EXPECT_CALL(observer2, hidden_set_to(true)).Times(1)
+    EXPECT_CALL(observer2, hidden_set_to(_, true)).Times(1)
         .WillOnce(InvokeWithoutArgs(remove_observer));
 
     surface.add_observer(mt::fake_shared(observer1));
@@ -709,7 +709,7 @@ TEST_F(BasicSurfaceTest, notifies_of_client_close_request)
 
     MockSurfaceObserver mock_surface_observer;
 
-    EXPECT_CALL(mock_surface_observer, client_surface_close_requested()).Times(1);
+    EXPECT_CALL(mock_surface_observer, client_surface_close_requested(_)).Times(1);
 
     surface.add_observer(mt::fake_shared(mock_surface_observer));
 
@@ -723,7 +723,7 @@ TEST_F(BasicSurfaceTest, notifies_of_rename)
     MockSurfaceObserver mock_surface_observer;
     surface.add_observer(mt::fake_shared(mock_surface_observer));
 
-    EXPECT_CALL(mock_surface_observer, renamed(StrEq("Steve")));
+    EXPECT_CALL(mock_surface_observer, renamed(_, StrEq("Steve")));
 
     surface.rename("Steve");
 }
@@ -1056,7 +1056,7 @@ namespace
 {
 struct VisibilityObserver : ms::NullSurfaceObserver
 {
-    void attrib_changed(MirWindowAttrib attrib, int value) override
+    void attrib_changed(mir::scene::Surface const*, MirWindowAttrib attrib, int value) override
     {
         if (attrib == mir_window_attrib_visibility)
         {

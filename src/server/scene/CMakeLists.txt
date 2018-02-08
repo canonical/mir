@@ -34,4 +34,5 @@ ADD_LIBRARY(
   output_properties_cache.cpp
   output_properties_cache.h
   application_not_responding_detector_wrapper.cpp
+  ${CMAKE_SOURCE_DIR}/include/server/mir/scene/surface_observer.h
 )

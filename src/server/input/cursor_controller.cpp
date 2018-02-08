@@ -44,23 +44,23 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
     {
     }
 
-    void attrib_changed(MirWindowAttrib, int) override
+    void attrib_changed(ms::Surface const*, MirWindowAttrib, int) override
     {
         // Attribute changing alone wont trigger a cursor update
     }
-    void resized_to(geom::Size const&) override
+    void resized_to(ms::Surface const*, geom::Size const&) override
     {
         cursor_controller->update_cursor_image();
     }
-    void moved_to(geom::Point const&) override
+    void moved_to(ms::Surface const*, geom::Point const&) override
     {
         cursor_controller->update_cursor_image();
     }
-    void hidden_set_to(bool) override
+    void hidden_set_to(ms::Surface const*, bool) override
     {
         cursor_controller->update_cursor_image();
     }
-    void frame_posted(int, geom::Size const&) override
+    void frame_posted(ms::Surface const*, int, geom::Size const&) override
     {
         // The first frame posted will trigger a cursor update, since it
         // changes the visibility status of the surface, and can thus affect
@@ -71,31 +71,31 @@ struct UpdateCursorOnSurfaceChanges : ms::NullSurfaceObserver
             cursor_controller->update_cursor_image();
         }
     }
-    void alpha_set_to(float) override
+    void alpha_set_to(ms::Surface const*, float) override
     {
         cursor_controller->update_cursor_image();
     }
-    void transformation_set_to(glm::mat4 const&) override
+    void transformation_set_to(ms::Surface const*, glm::mat4 const&) override
     {
         cursor_controller->update_cursor_image();
     }
-    void reception_mode_set_to(mi::InputReceptionMode) override
+    void reception_mode_set_to(ms::Surface const*, mi::InputReceptionMode) override
     {
         cursor_controller->update_cursor_image();
     }
-    void cursor_image_set_to(mg::CursorImage const&) override
+    void cursor_image_set_to(ms::Surface const*, const mir::graphics::CursorImage&) override
     {
         cursor_controller->update_cursor_image();
     }
-    void cursor_image_removed() override
+    void cursor_image_removed(ms::Surface const*) override
     {
         cursor_controller->update_cursor_image();
     }
-    void orientation_set_to(MirOrientation /* orientation */) override
+    void orientation_set_to(ms::Surface const*, MirOrientation) override
     {
         // No need to update cursor for orientation property change alone.
     }
-    void client_surface_close_requested() override
+    void client_surface_close_requested(ms::Surface const*) override
     {
         // No need to update cursor for client close requests
     }

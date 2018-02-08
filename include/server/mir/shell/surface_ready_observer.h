@@ -47,7 +47,7 @@ public:
     ~SurfaceReadyObserver();
 
 private:
-    void frame_posted(int, geometry::Size const&) override;
+    void frame_posted(scene::Surface const* surf, int, geometry::Size const&) override;
 
     ActivateFunction const activate;
     std::weak_ptr<scene::Session> const session;
