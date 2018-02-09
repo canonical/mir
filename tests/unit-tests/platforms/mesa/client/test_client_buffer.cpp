@@ -197,12 +197,12 @@ TEST_F(MesaClientBufferTest, suggests_dma_import)
     static EGLint expected_image_attrs[] =
     {
         EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-        EGL_WIDTH, static_cast<const EGLint>(package->width),
-        EGL_HEIGHT, static_cast<const EGLint>(package->height),
-        EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(GBM_FORMAT_ABGR8888),
+        EGL_WIDTH, static_cast<EGLint>(package->width),
+        EGL_HEIGHT, static_cast<EGLint>(package->height),
+        EGL_LINUX_DRM_FOURCC_EXT, static_cast<EGLint>(GBM_FORMAT_ABGR8888),
         EGL_DMA_BUF_PLANE0_FD_EXT, package->fd[0],
         EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
-        EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(package->stride),
+        EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<EGLint>(package->stride),
         EGL_NONE
     };
 
@@ -225,12 +225,12 @@ TEST_F(MesaClientBufferTest, suggests_dma_import_with_native_format)
     static EGLint expected_image_attrs[] =
     {
         EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-        EGL_WIDTH, static_cast<const EGLint>(package->width),
-        EGL_HEIGHT, static_cast<const EGLint>(package->height),
-        EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(format),
+        EGL_WIDTH, static_cast<EGLint>(package->width),
+        EGL_HEIGHT, static_cast<EGLint>(package->height),
+        EGL_LINUX_DRM_FOURCC_EXT, static_cast<EGLint>(format),
         EGL_DMA_BUF_PLANE0_FD_EXT, package->fd[0],
         EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
-        EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(package->stride),
+        EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<EGLint>(package->stride),
         EGL_NONE
     };
 

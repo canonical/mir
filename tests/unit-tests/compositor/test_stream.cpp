@@ -35,11 +35,6 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace
 {
-struct MockSurfaceObserver : mir::scene::NullSurfaceObserver
-{
-    MOCK_METHOD2(frame_posted, void(int, geom::Size const&));
-};
-
 struct Stream : Test
 {
     Stream() :
