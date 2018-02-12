@@ -461,11 +461,15 @@ void WlSurface::commit()
          */
         stream->resize(mir_buffer->size());
         role->new_buffer_size(mir_buffer->size());
+        role->commit();
         stream->submit_buffer(mir_buffer);
 
         pending_buffer = nullptr;
     }
-    role->commit();
+    else
+    {
+        role->commit();
+    }
 }
 
 void WlSurface::set_buffer_transform(int32_t transform)
