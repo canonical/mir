@@ -33,7 +33,8 @@ target_link_libraries(
   mir-test-doubles-static
   mir-test-doubles-platform-static
   mirsharedmesaservercommon-static
-  mircommon
+
+  server_platform_common
 
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )
