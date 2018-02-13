@@ -32,7 +32,6 @@
 #include <mir/observer_registrar.h>
 #include <mir/shell/abstract_shell.h>
 #include <mir/shell/window_manager.h>
-#include <mir/version.h>
 
 #include <boost/bimap.hpp>
 #include <boost/bimap/multiset_of.hpp>
@@ -109,7 +108,6 @@ public:
         std::shared_ptr<mir::scene::Surface> const& surface,
         uint64_t timestamp) override;
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     void handle_request_drag_and_drop(
         std::shared_ptr<mir::scene::Session> const& session,
         std::shared_ptr<mir::scene::Surface> const& surface,
@@ -119,7 +117,6 @@ public:
         std::shared_ptr<mir::scene::Session> const& session,
         std::shared_ptr<mir::scene::Surface> const& surface,
         uint64_t timestamp) override;
-#endif
 
     int set_surface_attribute(
         std::shared_ptr<mir::scene::Session> const& /*application*/,
@@ -219,9 +216,7 @@ private:
     mir::geometry::Rectangles outputs;
     mir::geometry::Point cursor;
     uint64_t last_input_event_timestamp{0};
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     MirEvent const* last_input_event{nullptr};
-#endif
     miral::MRUWindowList mru_active_windows;
     std::set<Window> fullscreen_surfaces;
     std::set<Window> maximized_surfaces;

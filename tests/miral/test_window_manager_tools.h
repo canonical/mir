@@ -27,7 +27,6 @@
 #include <mir/shell/display_layout.h>
 #include <mir/shell/focus_controller.h>
 #include <mir/shell/persistent_surface_store.h>
-#include <mir/version.h>
 
 #include <mir/test/doubles/stub_session.h>
 #include <mir/test/doubles/stub_surface.h>
@@ -55,11 +54,9 @@ struct StubFocusController : mir::shell::FocusController
     virtual auto surface_at(mir::geometry::Point /*cursor*/) const -> std::shared_ptr<mir::scene::Surface> override
         { return {}; }
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     void set_drag_and_drop_handle(std::vector<uint8_t> const& /*handle*/) override {}
 
     void clear_drag_and_drop_handle() override {}
-#endif
 };
 
 struct StubDisplayLayout : mir::shell::DisplayLayout

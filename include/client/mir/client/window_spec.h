@@ -90,35 +90,12 @@ public:
 
     static auto for_satellite(MirConnection* connection, int width, int height, MirWindow* parent)
     {
-#if MIR_CLIENT_API_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
         return WindowSpec{mir_create_satellite_window_spec(connection, width, height, parent)};
-#else
-        // There's no mir_create_satellite_window_spec()
-        auto spec = WindowSpec{mir_create_window_spec(connection)}
-            .set_size(width, height)
-            .set_type(mir_window_type_satellite)
-            .set_parent(parent);
-
-        mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware); // Required protobuf field for create_window()
-        mir_window_spec_set_pixel_format(spec, mir_pixel_format_invalid);  // Required protobuf field for create_window()
-        return spec;
-#endif
     }
 
     static auto for_gloss(MirConnection* connection, int width, int height)
     {
-#if MIR_CLIENT_API_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
         return WindowSpec{mir_create_gloss_window_spec(connection, width, height)};
-#else
-        // There's no mir_create_gloss_window_spec()
-        auto spec = WindowSpec{mir_create_window_spec(connection)}
-            .set_size(width, height)
-            .set_type(mir_window_type_gloss);
-
-        mir_window_spec_set_buffer_usage(spec, mir_buffer_usage_hardware); // Required protobuf field for create_window()
-        mir_window_spec_set_pixel_format(spec, mir_pixel_format_invalid);  // Required protobuf field for create_window()
-        return spec;
-#endif
     }
 
     static auto for_changes(MirConnection* connection) -> WindowSpec
@@ -210,14 +187,7 @@ public:
     auto add_surface(MirRenderSurface* surface, int width, int height, int displacement_x, int displacement_y)
     -> WindowSpec&
     {
-#if MIR_CLIENT_API_VERSION < MIR_VERSION_NUMBER(0, 27, 0)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
         mir_window_spec_add_render_surface(*this, surface, width, height, displacement_x, displacement_y);
-#if MIR_CLIENT_API_VERSION < MIR_VERSION_NUMBER(0, 27, 0)
-#pragma GCC diagnostic pop
-#endif
         return *this;
     }
 

@@ -21,7 +21,6 @@
 #include <mir/frontend/session_credentials.h>
 #include <mir/frontend/session_authorizer.h>
 #include <mir/server.h>
-#include <mir/version.h>
 
 namespace mf = mir::frontend;
 
@@ -59,7 +58,6 @@ struct SessionAuthorizerAdapter : mf::SessionAuthorizer
         return app_auth->prompt_session_is_allowed(creds);
     }
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     bool configure_input_is_allowed(mf::SessionCredentials const& creds) override
     {
         return a1 == nullptr || a1->configure_input_is_allowed(creds);
@@ -69,7 +67,6 @@ struct SessionAuthorizerAdapter : mf::SessionAuthorizer
     {
         return a1 == nullptr || a1->set_base_input_configuration_is_allowed(creds);
     }
-#endif
 
     std::shared_ptr<miral::ApplicationAuthorizer> const app_auth;
     miral::ApplicationAuthorizer1* const a1;
