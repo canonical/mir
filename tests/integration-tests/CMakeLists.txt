@@ -57,13 +57,14 @@ add_dependencies(mir_integration_tests GMock)
 target_link_libraries(
   mir_integration_tests
 
+  mirclient-static
+  mirclientlttng-static
+
   mir-test-static
   mir-test-framework-static
   mir-test-doubles-static
   mirclient-debug-extension
-  mirclient-static
   mirdraw
-  mirclientlttng-static
 
   mircommon
 
