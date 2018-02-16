@@ -23,7 +23,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/wlcs/include)
 mir_add_wrapped_executable(
   mir_wlcs_tests
 
-  wlcs/example/mir_integration.cpp
+  mir_integration.cpp
 )
 
 target_link_libraries(
