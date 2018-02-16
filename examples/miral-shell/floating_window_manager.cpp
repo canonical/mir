@@ -77,6 +77,23 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
     bool consumes_event = false;
     bool is_resize_event = false;
 
+    if (csd_move)
+    {
+        if (action == mir_pointer_action_motion &&
+            modifiers == csd_modifiers &&
+            mir_pointer_event_button_state(event, mir_pointer_button_primary))
+        {
+            if (auto const target = tools.window_at(old_cursor))
+            {
+                if (tools.select_active_window(target) == target)
+                    tools.drag_active_window(cursor - old_cursor);
+            }
+            consumes_event = true;
+        }
+        else
+            csd_move = false;
+    }
+
     if (action == mir_pointer_action_button_down)
     {
         if (auto const window = tools.window_at(cursor))
@@ -812,13 +829,16 @@ void FloatingWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, 
     CanonicalWindowManagerPolicy::handle_modify_window(window_info, mods);
 }
 
-void FloatingWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& window_info)
+void FloatingWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*window_info*/)
 {
-    puts((std::string{"FloatingWindowManagerPolicy::handle_request_drag_and_drop("} + window_info.name() + ")").c_str());
 }
 
-void FloatingWindowManagerPolicy::handle_request_move(WindowInfo& window_info, MirInputEvent const* /*input_event*/)
+void FloatingWindowManagerPolicy::handle_request_move(WindowInfo& /*window_info*/, MirInputEvent const* input_event)
 {
-    puts((std::string{"FloatingWindowManagerPolicy::handle_request_move("} + window_info.name() + ")").c_str());
+    if (mir_input_event_get_type(input_event) == mir_input_event_type_pointer)
+    {
+        csd_move = true;
+        csd_modifiers = mir_pointer_event_modifiers(mir_input_event_get_pointer_event(input_event)) & modifier_mask;
+    }
 }
 

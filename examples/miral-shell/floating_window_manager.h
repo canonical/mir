@@ -102,6 +102,8 @@ private:
 
     Point old_cursor{};
 
+    bool csd_move = false;
+    unsigned csd_modifiers = 0;
     bool resizing = false;
     bool left_resize = false;
     bool top_resize  = false;
