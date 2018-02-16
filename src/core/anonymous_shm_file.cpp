@@ -29,6 +29,9 @@
 #include <cstring>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <linux/memfd.h>
+#include <sys/syscall.h>
+
 
 namespace
 {
@@ -43,25 +46,33 @@ bool error_indicates_tmpfile_not_supported(int error)
                             // that incorrectly returns EINVAL. Yay.
 }
 
+int memfd_create(char const* name, unsigned int flags)
+{
+    return static_cast<int>(syscall(SYS_memfd_create, name, flags));
+}
+
 mir::Fd create_anonymous_file(size_t size)
 {
-    auto raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL | O_CLOEXEC, S_IRWXU);
-
-    // Workaround for filesystems that don't support O_TMPFILE
-    if (raw_fd == -1 && error_indicates_tmpfile_not_supported(errno))
+    auto raw_fd = memfd_create("mir-buffer", MFD_CLOEXEC);
+    if (raw_fd == -1 && errno == ENOSYS)
     {
-        char template_filename[] = "/dev/shm/mir-buffer-XXXXXX";
-        raw_fd = mkostemp(template_filename, O_CLOEXEC);
-        if (raw_fd != -1)
+        auto raw_fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL | O_CLOEXEC, S_IRWXU);
+
+        // Workaround for filesystems that don't support O_TMPFILE
+        if (raw_fd == -1 && error_indicates_tmpfile_not_supported(errno))
         {
-            if (unlink(template_filename) < 0)
+            char template_filename[] = "/dev/shm/mir-buffer-XXXXXX";
+            raw_fd = mkostemp(template_filename, O_CLOEXEC);
+            if (raw_fd != -1)
             {
-                close(raw_fd);
-                raw_fd = -1;
+                if (unlink(template_filename) < 0)
+                {
+                    close(raw_fd);
+                    raw_fd = -1;
+                }
             }
         }
     }
-
     if (raw_fd == -1)
     {
         BOOST_THROW_EXCEPTION(
