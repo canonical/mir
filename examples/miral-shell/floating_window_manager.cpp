@@ -77,10 +77,10 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
     bool consumes_event = false;
     bool is_resize_event = false;
 
-    if (csd_move)
+    if (moving)
     {
         if (action == mir_pointer_action_motion &&
-            modifiers == csd_modifiers &&
+            modifiers == move_modifiers &&
             mir_pointer_event_button_state(event, mir_pointer_button_primary))
         {
             if (auto const target = tools.window_at(old_cursor))
@@ -91,27 +91,24 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
             consumes_event = true;
         }
         else
-            csd_move = false;
+            moving = false;
     }
-
-    if (action == mir_pointer_action_button_down)
+    else if (action == mir_pointer_action_button_down)
     {
         if (auto const window = tools.window_at(cursor))
             tools.select_active_window(window);
+
+        if (modifiers == mir_input_event_modifier_alt &&
+            mir_pointer_event_button_state(event, mir_pointer_button_primary))
+        {
+            moving = true;
+            move_modifiers = modifiers;
+            consumes_event = true;
+        }
     }
     else if (action == mir_pointer_action_motion &&
              modifiers == mir_input_event_modifier_alt)
     {
-        if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
-        {
-            if (auto const target = tools.window_at(old_cursor))
-            {
-                if (tools.select_active_window(target) == target)
-                    tools.drag_active_window(cursor - old_cursor);
-            }
-            consumes_event = true;
-        }
-
         if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
         {
             {   // Workaround for lp:1627697
@@ -837,8 +834,8 @@ void FloatingWindowManagerPolicy::handle_request_move(WindowInfo& /*window_info*
 {
     if (mir_input_event_get_type(input_event) == mir_input_event_type_pointer)
     {
-        csd_move = true;
-        csd_modifiers = mir_pointer_event_modifiers(mir_input_event_get_pointer_event(input_event)) & modifier_mask;
+        moving = true;
+        move_modifiers = mir_pointer_event_modifiers(mir_input_event_get_pointer_event(input_event)) & modifier_mask;
     }
 }
 
