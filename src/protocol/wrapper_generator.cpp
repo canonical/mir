@@ -383,10 +383,28 @@ public:
         if (has_vtable)
         {
             emit_indented_lines(out, indent + "    ",
-                {{"wl_resource_set_implementation(resource, &vtable, me, nullptr);"}});
+                {{"wl_resource_set_implementation(resource, get_vtable(), me, nullptr);"}});
         }
         emit_indented_lines(out, indent, {
             {"}"}
+        });
+    }
+
+    void emit_get_vtable(std::ostream& out, std::string const& indent)
+    {
+        emit_indented_lines(out, indent, {
+            {"static inline struct " + wl_name + "_interface const* get_vtable()"},
+            {"{"},
+            {"    static struct " + wl_name + "_interface const vtable = {"},
+        });
+        for (auto const& method : methods)
+        {
+            method.emit_vtable_initialiser(out, indent + "        ");
+        }
+        emit_indented_lines(out, indent, {
+            {"    };"},
+            {"    return &vtable;"},
+            {"}"},
         });
     }
 
@@ -433,6 +451,8 @@ public:
             emit_indented_lines(out, "    ", {
                 { "uint32_t const max_version;" }
             });
+            if (!methods.empty())
+                out << std::endl;
         }
 
         if (!methods.empty())
@@ -445,26 +465,12 @@ public:
                     {"    delete static_cast<", generated_name, "*>(wl_resource_get_user_data(us));"},
                     {"}"}
                 });
+                out << std::endl;
             }
 
-            emit_indented_lines(out, "    ", {
-                { "static struct ", wl_name, "_interface const vtable;" }
-            });
+            emit_get_vtable(out, "    ");
         }
-
         out << "};" << std::endl;
-
-        out << std::endl;
-
-        if (!methods.empty())
-        {
-            out << "struct " << wl_name << "_interface const " << generated_name << "::vtable = {" << std::endl;
-            for (auto const& method : methods)
-            {
-                method.emit_vtable_initialiser(out, "    ");
-            }
-            out << "};" << std::endl;
-        }
     }
 
 private:
@@ -501,7 +507,7 @@ private:
         if (has_vtable)
         {
             emit_indented_lines(out, indent + "    ",
-                {{ "wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);" }});
+                {{ "wl_resource_set_implementation(resource, get_vtable(), this, &resource_destroyed_thunk);" }});
         }
         emit_indented_lines(out, indent, {
             { "}" }
