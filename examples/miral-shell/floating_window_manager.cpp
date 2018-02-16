@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2017 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -98,12 +98,27 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
         if (auto const window = tools.window_at(cursor))
             tools.select_active_window(window);
 
-        if (modifiers == mir_input_event_modifier_alt &&
-            mir_pointer_event_button_state(event, mir_pointer_button_primary))
+        if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
         {
-            moving = true;
-            move_modifiers = modifiers;
-            consumes_event = true;
+            if (modifiers == mir_input_event_modifier_alt)
+            {
+                moving = true;
+                move_modifiers = modifiers;
+                consumes_event = true;
+            }
+            else if (modifiers == 0)
+            {
+                if (auto const possible_titlebar = tools.window_at(old_cursor))
+                {
+                    auto const& info = tools.info_for(possible_titlebar);
+                    if (decoration_provider->is_titlebar(info))
+                    {
+                        moving = true;
+                        move_modifiers = modifiers;
+                        consumes_event = true;
+                    }
+                }
+            }
         }
     }
     else if (action == mir_pointer_action_motion &&
@@ -123,23 +138,6 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
                 tools.select_active_window(tools.window_at(old_cursor));
             is_resize_event = resize(tools.active_window(), cursor, old_cursor);
             consumes_event = true;
-        }
-    }
-
-    if (!consumes_event && action == mir_pointer_action_motion && !modifiers)
-    {
-        if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
-        {
-            if (auto const possible_titlebar = tools.window_at(old_cursor))
-            {
-                auto const& info = tools.info_for(possible_titlebar);
-                if (decoration_provider->is_titlebar(info))
-                {
-                    if (tools.select_active_window(info.parent()) == info.parent())
-                        tools.drag_active_window(cursor - old_cursor);
-                    consumes_event = true;
-                }
-            }
         }
     }
 
