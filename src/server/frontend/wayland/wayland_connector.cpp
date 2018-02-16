@@ -1730,6 +1730,13 @@ protected:
 
     void move(struct wl_resource* /*seat*/, uint32_t /*serial*/) override
     {
+        if (surface_id.as_value())
+        {
+            if (auto session = session_for_client(client))
+            {
+                shell->request_operation(session, surface_id, sink->latest_timestamp(), Shell::UserRequest::move);
+            }
+        }
     }
 
     void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t /*edges*/) override
@@ -1877,11 +1884,7 @@ struct XdgToplevelV6 : wayland::XdgToplevelV6
         // TODO
     }
 
-    void move(struct wl_resource* seat, uint32_t serial) override
-    {
-        (void)seat, (void)serial;
-        // TODO
-    }
+    void move(struct wl_resource* seat, uint32_t serial) override;
 
     void resize(struct wl_resource* seat, uint32_t serial, uint32_t edges) override
     {
@@ -2067,6 +2070,7 @@ struct XdgSurfaceV6 : wayland::XdgSurfaceV6, WlAbstractMirWindow
 
     void set_parent(optional_value<SurfaceId> parent_id);
     void set_title(std::string const& title);
+    void move(struct wl_resource* seat, uint32_t serial);
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
     void set_maximized();
@@ -2108,6 +2112,16 @@ void XdgSurfaceV6::set_title(std::string const& title)
     }
 }
 
+void XdgSurfaceV6::move(struct wl_resource* /*seat*/, uint32_t /*serial*/)
+{
+    if (surface_id.as_value())
+    {
+        if (auto session = session_for_client(client))
+        {
+            shell->request_operation(session, surface_id, sink->latest_timestamp(), Shell::UserRequest::move);
+        }
+    }
+}
 
 void XdgSurfaceV6::set_parent(optional_value<SurfaceId> parent_id)
 {
@@ -2208,6 +2222,11 @@ void XdgToplevelV6::set_parent(std::experimental::optional<struct wl_resource*> 
 void XdgToplevelV6::set_title(std::string const& title)
 {
     self->set_title(title);
+}
+
+void XdgToplevelV6::move(struct wl_resource* seat, uint32_t serial)
+{
+    self->move(seat, serial);
 }
 
 void XdgToplevelV6::set_max_size(int32_t width, int32_t height)

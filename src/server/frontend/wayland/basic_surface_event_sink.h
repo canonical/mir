@@ -64,6 +64,11 @@ public:
         this->window_size = window_size;
     }
 
+    auto latest_timestamp() const -> uint64_t
+    {
+        return timestamp;
+    }
+
     virtual void send_resize(geometry::Size const& new_size) const = 0;
 
 protected:
@@ -72,6 +77,7 @@ protected:
     wl_resource* const target;
     wl_resource* const event_sink;
     std::atomic<geometry::Size> window_size;
+    std::atomic<int64_t> timestamp{0};
 };
 }
 }

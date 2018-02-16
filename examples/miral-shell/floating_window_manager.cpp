@@ -812,3 +812,13 @@ void FloatingWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, 
     CanonicalWindowManagerPolicy::handle_modify_window(window_info, mods);
 }
 
+void FloatingWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& window_info)
+{
+    puts((std::string{"FloatingWindowManagerPolicy::handle_request_drag_and_drop("} + window_info.name() + ")").c_str());
+}
+
+void FloatingWindowManagerPolicy::handle_request_move(WindowInfo& window_info, MirInputEvent const* /*input_event*/)
+{
+    puts((std::string{"FloatingWindowManagerPolicy::handle_request_move("} + window_info.name() + ")").c_str());
+}
+

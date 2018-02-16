@@ -20,6 +20,7 @@
 #define MIRAL_SHELL_FLOATING_WINDOW_MANAGER_H
 
 #include <miral/canonical_window_manager.h>
+#include <miral/window_management_policy_addendum2.h>
 #include <miral/window_management_policy_addendum3.h>
 #include <miral/workspace_policy.h>
 
@@ -36,7 +37,8 @@ using namespace mir::geometry;
 class DecorationProvider;
 
 class FloatingWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy,
-    public miral::WorkspacePolicy, public miral::WindowManagementPolicyAddendum3
+    public miral::WorkspacePolicy, public miral::WindowManagementPolicyAddendum3,
+    public miral::WindowManagementPolicyAddendum2
 {
 public:
     FloatingWindowManagerPolicy(
@@ -76,6 +78,13 @@ public:
     void advise_delete_window(miral::WindowInfo const& window_info) override;
 
     void handle_modify_window(miral::WindowInfo& window_info, miral::WindowSpecification const& modifications) override;
+    /** @} */
+
+    /** @name support for CSD invoked sizing and movement
+     *  @{ */
+    void handle_request_drag_and_drop(miral::WindowInfo& window_info) override;
+
+    void handle_request_move(miral::WindowInfo& window_info, MirInputEvent const* input_event) override;
     /** @} */
 
 protected:
