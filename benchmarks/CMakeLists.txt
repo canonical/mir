@@ -25,6 +25,9 @@ target_link_libraries(benchmark_multiplexing_dispatchable
   mircommon
 )
 
+# Configure the version in the setup.py
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mir_perf_framework_setup.py.in ${CMAKE_CURRENT_SOURCE_DIR}/mir_perf_framework_setup.py @ONLY)
+
 # Note: We need to write \$ENV{DESTDIR} (note the \$) to make
 # CMake replace the DESTDIR variable at installation time rather
 # than configuration time
