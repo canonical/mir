@@ -34,6 +34,7 @@ public:
     explicit Cookie(MirCookie const* cookie) : self{cookie, deleter} {}
 
     operator MirCookie const*() const { return self.get(); }
+    auto get() const -> MirCookie const*{ return self.get(); }
 
     void reset() { self.reset(); }
     void reset(MirCookie const* cookie) { self.reset(cookie, deleter); }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2017 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -20,6 +20,7 @@
 #define MIRAL_SHELL_FLOATING_WINDOW_MANAGER_H
 
 #include <miral/canonical_window_manager.h>
+#include <miral/window_management_policy_addendum2.h>
 #include <miral/window_management_policy_addendum3.h>
 #include <miral/workspace_policy.h>
 
@@ -36,7 +37,8 @@ using namespace mir::geometry;
 class DecorationProvider;
 
 class FloatingWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy,
-    public miral::WorkspacePolicy, public miral::WindowManagementPolicyAddendum3
+    public miral::WorkspacePolicy, public miral::WindowManagementPolicyAddendum3,
+    public miral::WindowManagementPolicyAddendum2
 {
 public:
     FloatingWindowManagerPolicy(
@@ -78,6 +80,13 @@ public:
     void handle_modify_window(miral::WindowInfo& window_info, miral::WindowSpecification const& modifications) override;
     /** @} */
 
+    /** @name support for CSD invoked sizing and movement
+     *  @{ */
+    void handle_request_drag_and_drop(miral::WindowInfo& window_info) override;
+
+    void handle_request_move(miral::WindowInfo& window_info, MirInputEvent const* input_event) override;
+    /** @} */
+
 protected:
     static const int modifier_mask =
         mir_input_event_modifier_alt |
@@ -93,6 +102,8 @@ private:
 
     Point old_cursor{};
 
+    bool moving = false;
+    unsigned move_modifiers = 0;
     bool resizing = false;
     bool left_resize = false;
     bool top_resize  = false;

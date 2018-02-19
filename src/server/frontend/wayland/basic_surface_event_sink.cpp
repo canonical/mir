@@ -33,6 +33,11 @@ void mf::BasicSurfaceEventSink::handle_event(MirEvent const& event)
     case mir_event_type_input:
     {
         auto input_event = mir_event_get_input_event(&event);
+
+        // Remember the timestamp of any events "signed" with a cookie
+        if (mir_input_event_has_cookie(input_event))
+            timestamp = mir_input_event_get_event_time(input_event);
+
         switch (mir_input_event_get_type(input_event))
         {
         case mir_input_event_type_key:

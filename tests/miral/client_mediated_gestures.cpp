@@ -18,6 +18,7 @@
 
 #include <mir/client/surface.h>
 #include <mir/client/window_spec.h>
+#include <mir/client/cookie.h>
 
 #include <mir_toolkit/mir_window.h>
 #include <mir_toolkit/mir_blob.h>
@@ -48,32 +49,10 @@ using namespace mir::geometry;
 using namespace testing;
 using mir::test::fake_shared;
 using mir::test::Signal;
+using mir::client::Cookie;
 
 namespace
 {
-class Cookie
-{
-public:
-    Cookie() = default;
-
-    explicit Cookie(MirCookie const* cookie) : self{cookie, deleter} {}
-
-    operator MirCookie const*() const { return self.get(); }
-
-    auto get() const -> MirCookie const* { return self.get(); }
-
-    void reset() { self.reset(); }
-
-    void reset(MirCookie const* cookie) { self.reset(cookie, deleter); }
-
-private:
-    static void deleter(MirCookie const* cookie) { mir_cookie_release(cookie); }
-
-    std::shared_ptr<MirCookie const> self;
-};
-
-void mir_cookie_release(Cookie const&) = delete;
-
 struct MockWindowManagementPolicy : mir_test_framework::CanonicalWindowManagerPolicy,
                                     miral::WindowManagementPolicyAddendum2
 {
