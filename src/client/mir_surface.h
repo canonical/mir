@@ -201,6 +201,7 @@ public:
 
     void raise_surface(MirCookie const* cookie);
     void request_user_move(MirCookie const* cookie);
+    void request_user_resize(MirCookie const* cookie);
     void request_drag_and_drop(MirCookie const* cookie);
     void set_drag_and_drop_start_handler(std::function<void(MirWindowEvent const*)> const& callback);
 

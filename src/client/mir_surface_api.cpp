@@ -731,6 +731,20 @@ void mir_window_request_user_move(MirWindow* window, MirCookie const* cookie)
     }
 }
 
+void mir_window_request_user_resize(MirWindow* window, MirCookie const* cookie)
+{
+    mir::require(mir_window_is_valid(window));
+
+    try
+    {
+        window->request_user_resize(cookie);
+    }
+    catch (std::exception const& ex)
+    {
+        MIR_LOG_UNCAUGHT_EXCEPTION(ex);
+    }
+}
+
 MirWindowType mir_window_get_type(MirWindow* window)
 {
     MirWindowType type = mir_window_type_normal;

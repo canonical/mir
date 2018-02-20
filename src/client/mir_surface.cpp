@@ -593,6 +593,11 @@ void MirSurface::request_user_move(MirCookie const* cookie)
     request_operation(cookie, mp::RequestOperation::USER_MOVE);
 }
 
+void MirSurface::request_user_resize(MirCookie const* cookie)
+{
+    request_operation(cookie, mp::RequestOperation::USER_RESIZE);
+}
+
 void MirSurface::request_drag_and_drop(MirCookie const* cookie)
 {
     request_operation(cookie, mp::RequestOperation::START_DRAG_AND_DROP);
