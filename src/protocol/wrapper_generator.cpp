@@ -37,7 +37,7 @@ void emit_comment_header(std::ostream& out, std::string const& input_file_path)
     out << " */" << std::endl;
 }
 
-// remove the path from a file path, laving only the base name
+// remove the path from a file path, leaving only the base name
 std::string remove_file_path(std::string const& path)
 {
     size_t i = path.find_last_of("/");
@@ -452,7 +452,7 @@ public:
                 { "uint32_t const max_version;" }
             });
             if (!methods.empty())
-                out << std::endl;
+                out << '\n';
         }
 
         if (!methods.empty())
@@ -537,7 +537,7 @@ int main(int argc, char** argv)
     auto name_transform = [prefix](std::string protocol_name)
     {
         std::string transformed_name = protocol_name;
-        if (protocol_name.find(prefix) == 0) // if the fist instance of prefix is at the start of protocol_name
+        if (protocol_name.find(prefix) == 0) // if the first instance of prefix is at the start of protocol_name
         {
             // cut off the prefix
             transformed_name = protocol_name.substr(prefix.length());
