@@ -1,7 +1,16 @@
 summary: Build (on Fedora)
-systems: [fedora-27]
+systems: [fedora-27, fedora-rawhide]
 
 execute: |
+    if [ "${SPREAD_SYSTEM}" = "fedora-rawhide" -a "${SPREAD_REBOOT}" -eq 0 ]; then
+      # upgrade to rawhide
+      dnf upgrade --assumeyes --refresh
+      dnf install --assumeyes fedora-gpg-keys
+      rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-28-primary
+      dnf distro-sync --assumeyes --releasever=rawhide
+      REBOOT
+    fi
+
     dnf install --assumeyes \
         cmake \
         gcc-c++ \

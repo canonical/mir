@@ -41,6 +41,7 @@ env:
   - SYSTEM=ubuntu-17.10 VARIANT=amd64
   - SYSTEM=ubuntu-devel VARIANT=clang
   - SYSTEM=fedora-27 VARIANT=amd64
+  - SYSTEM=fedora-rawhide VARIANT=amd64
 
 before_install:
 - mkdir -p ${SPREAD_PATH}

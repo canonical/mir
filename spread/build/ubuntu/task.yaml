@@ -2,7 +2,7 @@ environment:
     DEB_BUILD_OPTIONS: "parallel=$( nproc ) noopt"
     NO_PKG_MANGLE: 1
 
-systems: [-fedora-27]
+systems: [-fedora-27, -fedora-rawhide]
 
 summary: Build Ubuntu packages
 
