@@ -4,6 +4,7 @@ miral_server=miral-shell
 launcher=qterminal
 hostsocket=
 bindir=$(dirname $0)
+qt_qpa=wayland
 
 if [ -n "${MIR_SOCKET}" ]
 then
@@ -29,12 +30,14 @@ do
     echo "    -socket <socket>              set the legacy mir socket [${socket}]"
     echo "    -wayland-socket-name <socket> set the wayland socket [${wayland_display}]"
     echo "    -bindir <bindir>              path to the miral executable [${bindir}]"
+    echo "    -qt-mirclient                 use ubuntumirclient instead of qtwayland"
     exit 0
   elif [ "$1" == "-kiosk" ];              then miral_server=miral-kiosk
   elif [ "$1" == "-launcher" ];           then shift; launcher=$1
   elif [ "$1" == "-socket" ];             then shift; socket=$1
   elif [ "$1" == "-wayland-socket-name" ];then shift; wayland_display=$1
   elif [ "$1" == "-bindir" ];             then shift; bindir=$1
+  elif [ "$1" == "-qt-mirclient" ];       then qt_qpa=ubuntumirclient
   elif [ "${1:0:2}" == "--" ];            then break
   fi
   shift
@@ -51,6 +54,5 @@ sh -c "${bindir}${miral_server} $* ${hostsocket} --file ${socket} --wayland-sock
 while [ ! -e "${socket}" ]; do echo "waiting for ${socket}"; sleep 1 ;done
 
 unset QT_QPA_PLATFORMTHEME
-MIR_SOCKET=${socket} XDG_SESSION_TYPE=mir GDK_BACKEND=wayland,mir QT_QPA_PLATFORM=wayland SDL_VIDEODRIVER=wayland WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 dbus-run-session -- ${launcher}
+MIR_SOCKET=${socket} XDG_SESSION_TYPE=mir GDK_BACKEND=wayland,mir QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=wayland WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 dbus-run-session -- ${launcher}
 killall ${bindir}${miral_server} || killall ${bindir}${miral_server}.bin
-
