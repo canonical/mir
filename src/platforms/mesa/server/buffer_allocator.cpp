@@ -561,7 +561,8 @@ void mgm::BufferAllocator::bind_display(wl_display* display)
 
     if (egl_extensions->wayland->eglBindWaylandDisplayWL(dpy, display) == EGL_FALSE)
     {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to bind Wayland display"));
+        mir::log_warning("Failed to bind Wayland display");
+        return;
     }
     else
     {
