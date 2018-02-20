@@ -21,7 +21,7 @@ do
     echo "    -socket <socket>              set the legacy mir socket [${socket}]"
     echo "    -wayland-socket-name <socket> set the wayland socket [${wayland_display}]"
     echo "    -bindir <bindir>              path to the miral executable [${bindir}]"
-    echo "    -qtmir                        use qtmir instead of qtwayland"
+    echo "    -qt-mirclient                 use ubuntumirclient instead of qtwayland"
     exit 0
   elif [ "$1" == "-kiosk" ];              then miral_server=miral-kiosk
   elif [ "$1" == "-launcher" ];           then shift; launcher=$1
@@ -29,7 +29,7 @@ do
   elif [ "$1" == "-socket" ];             then shift; socket=$1
   elif [ "$1" == "-wayland-socket-name" ];then shift; wayland_display=$1
   elif [ "$1" == "-bindir" ];             then shift; bindir=$1
-  elif [ "$1" == "-qtmir" ];              then qt_qpa=ubuntumirclient
+  elif [ "$1" == "-qt-mirclient" ];       then qt_qpa=ubuntumirclient
   elif [ "${1:0:2}" == "--" ];            then break
   fi
   shift
