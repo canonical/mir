@@ -10,6 +10,8 @@ ExternalProject_Add(
     -DCMAKE_CXX_FLAGS='${CMAKE_CXX_FLAGS}'
     -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
     -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+  GIT_REPOSITORY https://github.com/MirServer/wlcs.git
+  GIT_TAG 3974b0bca8130adacae47347fb697622c9caaff5
   BUILD_BYPRODUCTS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwlcs.so
   INSTALL_COMMAND true
   BUILD_ALWAYS TRUE)
@@ -23,7 +25,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/wlcs/include)
 mir_add_wrapped_executable(
   mir_wlcs_tests
 
-  wlcs/example/mir_integration.cpp
+  mir_integration.cpp
 )
 
 target_link_libraries(
