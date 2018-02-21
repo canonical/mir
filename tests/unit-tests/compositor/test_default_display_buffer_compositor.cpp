@@ -51,7 +51,7 @@ namespace mtd = mir::test::doubles;
 namespace
 {
 
-glm::mat2 const no_transformation;
+glm::mat2 const no_transformation{};
 
 struct StubSceneElement : mc::SceneElement
 {

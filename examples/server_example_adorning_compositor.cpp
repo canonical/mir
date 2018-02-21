@@ -127,7 +127,7 @@ bool renderable_is_occluded(
     mir::geometry::Rectangle const& area,
     std::vector<mir::geometry::Rectangle>& coverage)
 {
-    static glm::mat4 const identity;
+    static glm::mat4 const identity{};
     static mir::geometry::Rectangle const empty{};
 
     if (renderable.transformation() != identity)

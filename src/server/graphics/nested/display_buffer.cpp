@@ -74,7 +74,8 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     area{best_output.extents()},
     egl_surface{egl_display, host_stream->egl_native_window(), egl_config},
     passthrough_option(option),
-    content{BackingContent::stream}
+    content{BackingContent::stream},
+    identity()
 {
     host_surface->set_event_handler(event_thunk, this);
 }
