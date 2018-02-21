@@ -581,7 +581,7 @@ void mgm::DisplayBuffer::set_transformation(glm::mat2 const& t, geometry::Rectan
 
 bool mgm::DisplayBuffer::overlay(RenderableList const& renderable_list)
 {
-    glm::mat2 static const no_transformation;
+    glm::mat2 static const no_transformation{};
     if (transform == no_transformation &&
        (bypass_option == mgm::BypassOption::allowed))
     {

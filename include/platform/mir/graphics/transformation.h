@@ -39,7 +39,7 @@ inline glm::mat2 transformation(MirOrientation ori)
 
 inline glm::mat2 transformation(MirMirrorMode mode)
 {
-    glm::mat2 mat;
+    glm::mat2 mat{};
     if (mode == mir_mirror_mode_horizontal)
         mat[0][0] = -1;
     else if (mode == mir_mirror_mode_vertical)

@@ -25,7 +25,8 @@ namespace mgm = mir::graphics::mesa;
 
 mgm::BypassMatch::BypassMatch(geometry::Rectangle const& rect)
     : view_area(rect),
-      bypass_is_feasible(true)
+      bypass_is_feasible(true),
+      identity()
 {
 }
 
