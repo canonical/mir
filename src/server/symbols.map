@@ -1,4 +1,4 @@
-MIR_SERVER_1.0 {
+MIR_SERVER_0.31 {
  global:
   extern "C++" {
 # Symbols not yet picked up by script
@@ -178,6 +178,7 @@ MIR_SERVER_1.0 {
     mir::Server::get_options*;
     mir::Server::open_client_socket*;
     mir::Server::open_prompt_socket*;
+    mir::Server::open_wayland_client_socket*;
     mir::Server::override_the_application_not_responding_detector*;
     mir::Server::override_the_compositor*;
     mir::Server::override_the_cookie_authority*;
@@ -354,6 +355,7 @@ MIR_SERVER_1.0 {
     mir::shell::ShellWrapper::remove_display*;
     mir::shell::ShellWrapper::request_drag_and_drop*;
     mir::shell::ShellWrapper::request_move*;
+    mir::shell::ShellWrapper::request_resize*;
     mir::shell::ShellWrapper::set_drag_and_drop_handle*;
     mir::shell::ShellWrapper::set_focus_to*;
     mir::shell::ShellWrapper::set_surface_attribute*;
@@ -391,6 +393,7 @@ MIR_SERVER_1.0 {
     mir::shell::SystemCompositorWindowManager::handle_raise_surface*;
     mir::shell::SystemCompositorWindowManager::handle_request_drag_and_drop*;
     mir::shell::SystemCompositorWindowManager::handle_request_move*;
+    mir::shell::SystemCompositorWindowManager::handle_request_resize*;
     mir::shell::SystemCompositorWindowManager::handle_touch_event*;
     mir::shell::SystemCompositorWindowManager::modify_surface*;
     mir::shell::SystemCompositorWindowManager::on_session_added*;
@@ -569,6 +572,7 @@ MIR_SERVER_1.0 {
     non-virtual?thunk?to?mir::shell::ShellWrapper::remove_display*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::request_drag_and_drop*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::request_move*;
+    non-virtual?thunk?to?mir::shell::ShellWrapper::request_resize*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::set_drag_and_drop_handle*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::set_focus_to*;
     non-virtual?thunk?to?mir::shell::ShellWrapper::set_surface_attribute*;
@@ -589,6 +593,7 @@ MIR_SERVER_1.0 {
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_raise_surface*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_request_drag_and_drop*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_request_move*;
+    non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_request_resize*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::handle_touch_event*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::modify_surface*;
     non-virtual?thunk?to?mir::shell::SystemCompositorWindowManager::on_session_added*;
@@ -819,15 +824,8 @@ MIR_SERVER_1.0 {
  local: *;
 };
 
-MIR_SERVER_0.29 {
- global:
-  extern "C++" {
-    mir::Server::open_wayland_client_socket*;
-  };
-} MIR_SERVER_1.0;
-
-# these symbols are needed by the "throwback" tests and mir_proving_server but are not intended to be public
-MIR_SERVER_DETAIL_FOR_TESTING_1.0 {
+# these symbols are needed by the "throwback" tests but are not intended to be public
+MIR_SERVER_DETAIL_FOR_TESTING_0.31 {
  global:
   extern "C++" {
     mir::DefaultServerConfiguration::clock*;
@@ -936,4 +934,4 @@ MIR_SERVER_DETAIL_FOR_TESTING_1.0 {
 
     mir::run_mir*;
   };
-} MIR_SERVER_1.0;
+} MIR_SERVER_0.31;

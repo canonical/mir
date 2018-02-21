@@ -109,7 +109,6 @@ public:
         std::shared_ptr<mir::scene::Surface> const& surface,
         uint64_t timestamp) override;
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     void handle_request_drag_and_drop(
         std::shared_ptr<mir::scene::Session> const& session,
         std::shared_ptr<mir::scene::Surface> const& surface,
@@ -119,7 +118,12 @@ public:
         std::shared_ptr<mir::scene::Session> const& session,
         std::shared_ptr<mir::scene::Surface> const& surface,
         uint64_t timestamp) override;
-#endif
+
+    void handle_request_resize(
+        std::shared_ptr<mir::scene::Session> const& session,
+        std::shared_ptr<mir::scene::Surface> const& surface,
+        uint64_t timestamp,
+        MirResizeEdge edge) override;
 
     int set_surface_attribute(
         std::shared_ptr<mir::scene::Session> const& /*application*/,

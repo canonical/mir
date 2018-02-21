@@ -1324,6 +1324,13 @@ void mir::frontend::SessionMediator::request_operation(
             Shell::UserRequest::move);
         break;
 
+    case mir::protobuf::RequestOperation::USER_RESIZE:
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::resize);
+        break;
+
     default:
         break;
     }

@@ -100,7 +100,11 @@ int mf::ShellWrapper::get_surface_attribute(
 }
 
 void mf::ShellWrapper::request_operation(
-    std::shared_ptr<Session> const& session, SurfaceId surface_id, uint64_t timestamp, UserRequest request)
+    std::shared_ptr<Session> const& session,
+    SurfaceId surface_id,
+    uint64_t timestamp,
+    UserRequest request,
+    optional_value <uint32_t> hint)
 {
-    wrapped->request_operation(session, surface_id, timestamp, request);
+    wrapped->request_operation(session, surface_id, timestamp, request, hint);
 }

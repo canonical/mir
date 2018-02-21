@@ -1736,6 +1736,23 @@ protected:
 
     void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t /*edges*/) override
     {
+        //    <enum name="resize" bitfield="true">
+        //      <description summary="edge values for resizing">
+        //	These values are used to indicate which edge of a surface
+        //	is being dragged in a resize operation. The server may
+        //	use this information to adapt its behavior, e.g. choose
+        //	an appropriate cursor image.
+        //      </description>
+        //      <entry name="none" value="0" summary="no edge"/>
+        //      <entry name="top" value="1" summary="top edge"/>
+        //      <entry name="bottom" value="2" summary="bottom edge"/>
+        //      <entry name="left" value="4" summary="left edge"/>
+        //      <entry name="top_left" value="5" summary="top and left edges"/>
+        //      <entry name="bottom_left" value="6" summary="bottom and left edges"/>
+        //      <entry name="right" value="8" summary="right edge"/>
+        //      <entry name="top_right" value="9" summary="top and right edges"/>
+        //      <entry name="bottom_right" value="10" summary="bottom and right edges"/>
+        //    </enum>
     }
 
     void set_class(std::string const& /*class_*/) override
@@ -1883,6 +1900,21 @@ struct XdgToplevelV6 : wayland::XdgToplevelV6
 
     void resize(struct wl_resource* seat, uint32_t serial, uint32_t edges) override
     {
+        //    <enum name="resize_edge">
+        //      <description summary="edge values for resizing">
+        //	These values are used to indicate which edge of a surface
+        //	is being dragged in a resize operation.
+        //      </description>
+        //      <entry name="none" value="0"/>
+        //      <entry name="top" value="1"/>
+        //      <entry name="bottom" value="2"/>
+        //      <entry name="left" value="4"/>
+        //      <entry name="top_left" value="5"/>
+        //      <entry name="bottom_left" value="6"/>
+        //      <entry name="right" value="8"/>
+        //      <entry name="top_right" value="9"/>
+        //      <entry name="bottom_right" value="10"/>
+        //    </enum>
         (void)seat, (void)serial, (void)edges;
         // TODO
     }
