@@ -15,6 +15,7 @@ set(
   wl_mir_window.cpp             wl_mir_window.h
   wl_surface.cpp                wl_surface.h
   wl_seat.cpp                   wl_seat.h
+  wl_keybaord.cpp               wl_keybaord.h
 )
 
 add_library(

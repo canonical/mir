@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
- *              William Wold <william.wold@canonical.com>
  */
 
 #ifndef WL_SEAT_H
@@ -24,6 +23,7 @@
 
 #include <unordered_map>
 
+// from <wayland-server-core.h>
 struct wl_client;
 struct wl_resource;
 
@@ -40,7 +40,7 @@ class Keymap;
 namespace frontend
 {
 template<class InputInterface>
-class InputCtx;
+class InputCtx; // defined in wl_seat.cpp
 
 class WlPointer;
 class WlKeyboard;
@@ -77,7 +77,6 @@ private:
 
     std::shared_ptr<input::InputDeviceHub> const input_hub;
     std::shared_ptr<input::Seat> const seat;
-
 
     std::shared_ptr<mir::Executor> const executor;
 
