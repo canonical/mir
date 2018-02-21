@@ -22,8 +22,8 @@
 #include "wl_surface.h"
 
 #include "mir/executor.h"
-#include "mir/anonymous_shm_file.h"
 #include "mir/client/event.h"
+#include "mir/anonymous_shm_file.h"
 #include "mir/input/keymap.h"
 
 #include <xkbcommon/xkbcommon.h>
