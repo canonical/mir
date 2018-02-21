@@ -439,9 +439,8 @@ void WlSurface::commit()
                         [buffer](){ wl_resource_queue_event(buffer, WL_BUFFER_RELEASE); }));
                 };
 
-            if (allocator &&
-                (mir_buffer = allocator->buffer_from_resource(
-                    pending_buffer, std::move(send_frame_notifications), std::move(release_buffer))))
+            if (mir_buffer = allocator->buffer_from_resource(
+                    pending_buffer, std::move(send_frame_notifications), std::move(release_buffer)))
             {
             }
             else
@@ -2364,6 +2363,53 @@ void cleanup_display(wl_display *display)
     wl_display_flush_clients(display);
     wl_display_destroy(display);
 }
+
+class ThrowingAllocator : public mg::WaylandAllocator
+{
+public:
+    void bind_display(wl_display*) override
+    {
+    }
+
+    std::shared_ptr<mir::graphics::Buffer> buffer_from_resource(
+        wl_resource*,
+        std::function<void()>&&,
+        std::function<void()>&&) override
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"buffer_from_resource called on invalid allocator."}));
+    }
+};
+
+std::shared_ptr<mg::WaylandAllocator> allocator_for_display(
+    std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
+    wl_display* display)
+{
+    if (auto allocator = std::dynamic_pointer_cast<mg::WaylandAllocator>(buffer_allocator))
+    {
+        try
+        {
+            allocator->bind_display(display);
+            return allocator;
+        }
+        catch (...)
+        {
+            mir::log(
+                mir::logging::Severity::warning,
+                "Wayland",
+                std::current_exception(),
+                "Failed to bind Wayland EGL display. Accelerated EGL will be unavailable.");
+        }
+    }
+    /*
+     * If we don't have a WaylandAllocator or it failed to bind to the display then there *should*
+     * be no way for a client to send a non-shm buffer.
+     *
+     * In case a client manages to do something stupid return a valid allocator that will
+     * just throw an exception (and disconnect the client) if something somehow tries to
+     * import a buffer.
+     */
+    return std::make_shared<ThrowingAllocator>();
+}
 }
 
 mf::WaylandConnector::WaylandConnector(
@@ -2377,7 +2423,7 @@ mf::WaylandConnector::WaylandConnector(
     bool arw_socket)
     : display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
-      allocator{std::dynamic_pointer_cast<mg::WaylandAllocator>(allocator)}
+      allocator{allocator_for_display(allocator, display.get())}
 {
     if (pause_signal == mir::Fd::invalid)
     {
@@ -2419,15 +2465,6 @@ mf::WaylandConnector::WaylandConnector(
         xdg_shell_global = std::make_unique<XdgShellV6>(display.get(), shell, *seat_global);
 
     wl_display_init_shm(display.get());
-
-    if (this->allocator)
-    {
-        this->allocator->bind_display(display.get());
-    }
-    else
-    {
-        mir::log_warning("No WaylandAllocator EGL support!");
-    }
 
     char const* wayland_display = nullptr;
 
