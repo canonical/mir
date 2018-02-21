@@ -21,14 +21,18 @@
 
 #include "core_generated_interfaces.h"
 
-#include "mir_toolkit/events/event.h"
-
 #include <vector>
 
 // from <xkbcommon/xkbcommon.h>
 struct xkb_keymap;
 struct xkb_state;
 struct xkb_context;
+
+// from "mir_toolkit/events/event.h"
+struct MirInputEvent;
+struct MirSurfaceEvent;
+typedef struct MirSurfaceEvent MirWindowEvent;
+struct MirKeymapEvent;
 
 namespace mir
 {
