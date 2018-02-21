@@ -36,14 +36,17 @@ struct MirKeymapEvent;
 
 namespace mir
 {
+
 class Executor;
 
 namespace input
 {
 class Keymap;
 }
+
 namespace frontend
 {
+
 class WlKeyboard : public wayland::Keyboard
 {
 public:
