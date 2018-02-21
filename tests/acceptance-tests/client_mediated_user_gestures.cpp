@@ -275,7 +275,7 @@ TEST_F(ClientMediatedUserGestures, when_client_initiates_resize_nothing_bad_happ
 {
     auto const cookie = user_initiates_gesture();
 
-    mir_window_request_user_resize(window, cookie);
+    mir_window_request_user_resize(window, mir_resize_edge_east, cookie);
 }
 
 TEST_F(ClientMediatedUserGestures, when_user_initiates_gesture_client_receives_cookie)

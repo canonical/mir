@@ -731,13 +731,13 @@ void mir_window_request_user_move(MirWindow* window, MirCookie const* cookie)
     }
 }
 
-void mir_window_request_user_resize(MirWindow* window, MirCookie const* cookie)
+void mir_window_request_user_resize(MirWindow* window, MirResizeEdge edge, MirCookie const* cookie)
 {
     mir::require(mir_window_is_valid(window));
 
     try
     {
-        window->request_user_resize(cookie);
+        window->request_user_resize(edge, cookie);
     }
     catch (std::exception const& ex)
     {

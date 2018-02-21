@@ -465,6 +465,7 @@ message RequestWithAuthority {
   required Cookie authority = 1;
   required SurfaceId surface_id = 2;
   required RequestOperation operation = 3;
+  optional uint32 hint = 4;
 }
 
 message InputDevices {
