@@ -1286,15 +1286,16 @@ protected:
     Seat(struct wl_display* display, uint32_t max_version)
         : max_version{max_version}
     {
-        if (!wl_global_create(display, 
+        if (!wl_global_create(display,
                               &wl_seat_interface, max_version,
-                              this, &Seat::bind))
+                              this, &Seat::bind_thunk))
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_seat interface"}));
         }
     }
     virtual ~Seat() = default;
 
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) = 0;
     virtual void get_pointer(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
     virtual void get_keyboard(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
     virtual void get_touch(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
@@ -1369,7 +1370,7 @@ private:
         }
     }
 
-    static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
+    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Seat*>(data);
         auto resource = wl_resource_create(client, &wl_seat_interface,
@@ -1380,6 +1381,19 @@ private:
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
         wl_resource_set_implementation(resource, get_vtable(), me, nullptr);
+
+        try
+        {
+            me->bind(client, resource);
+        }
+        catch(...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                std::current_exception(),
+                "Exception processing Seat::bind() request");
+        }
     }
 
     uint32_t const max_version;
@@ -1589,14 +1603,18 @@ protected:
     Output(struct wl_display* display, uint32_t max_version)
         : max_version{max_version}
     {
-        if (!wl_global_create(display, 
-                              &wl_output_interface, max_version,
-                              this, &Output::bind))
+        global = wl_global_create(display,
+                                  &wl_output_interface, max_version,
+                                  this, &Output::bind);
+        if (global == nullptr)
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_output interface"}));
         }
     }
-    virtual ~Output() = default;
+    virtual ~Output()
+    {
+        wl_global_destroy(global);
+    }
 
     virtual void release(struct wl_client* client, struct wl_resource* resource) = 0;
 
@@ -1640,6 +1658,8 @@ private:
         };
         return &vtable;
     }
+
+    wl_global * global = nullptr;
 };
 
 

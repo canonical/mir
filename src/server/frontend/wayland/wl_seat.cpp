@@ -159,19 +159,13 @@ void mf::WlSeat::ConfigObserver::changes_complete()
     on_keymap_commit(pending_keymap);
 }
 
-struct wl_seat_interface const mf::WlSeat::vtable = {
-    WlSeat::get_pointer,
-    WlSeat::get_keyboard,
-    WlSeat::get_touch,
-    WlSeat::release
-};
-
 mf::WlSeat::WlSeat(
     wl_display* display,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<mir::Executor> const& executor)
-    :   keymap{std::make_unique<input::Keymap>()},
+    :   Seat(display, 5),
+        keymap{std::make_unique<input::Keymap>()},
         config_observer{
             std::make_shared<ConfigObserver>(
                 *keymap,
@@ -184,25 +178,14 @@ mf::WlSeat::WlSeat(
         touch{std::make_unique<std::unordered_map<wl_client*, InputCtx<WlTouch>>>()},
         input_hub{input_hub},
         seat{seat},
-        executor{executor},
-        global{wl_global_create(
-            display,
-            &wl_seat_interface,
-            5,
-            this,
-            &WlSeat::bind)}
+        executor{executor}
 {
-    if (!global)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to export wl_seat interface"));
-    }
     input_hub->add_observer(config_observer);
 }
 
 mf::WlSeat::~WlSeat()
 {
     input_hub->remove_observer(config_observer);
-    wl_global_destroy(global);
 }
 
 void mf::WlSeat::handle_pointer_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
@@ -235,21 +218,10 @@ void mf::WlSeat::spawn(std::function<void()>&& work)
     executor->spawn(std::move(work));
 }
 
-void mf::WlSeat::bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
+void mf::WlSeat::bind(wl_client* /*client*/, wl_resource* resource)
 {
-    auto me = reinterpret_cast<WlSeat*>(data);
-    auto resource = wl_resource_create(client, &wl_seat_interface,
-        std::min(version, 6u), id);
-    if (resource == nullptr)
-    {
-        wl_client_post_no_memory(client);
-        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-    }
-    wl_resource_set_implementation(resource, &vtable, me, nullptr);
-
-    /*
-        * TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
-        */
+    // TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
+    int version = wl_resource_get_version(resource);
     if (version >= WL_SEAT_CAPABILITIES_SINCE_VERSION)
     {
         wl_seat_send_capabilities(
@@ -260,18 +232,13 @@ void mf::WlSeat::bind(struct wl_client* client, void* data, uint32_t version, ui
     }
     if (version >= WL_SEAT_NAME_SINCE_VERSION)
     {
-        wl_seat_send_name(
-            resource,
-            "seat0");
+        wl_seat_send_name(resource, "seat0");
     }
-
-    wl_resource_set_user_data(resource, me);
 }
 
 void mf::WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
-    auto& input_ctx = (*me->pointer)[client];
+    auto& input_ctx = (*pointer)[client];
     input_ctx.register_listener(
         new WlPointer{
             client,
@@ -281,29 +248,28 @@ void mf::WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t 
             {
                 input_ctx.unregister_listener(listener);
             },
-            me->executor});
+            executor});
 }
 
 void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
-    auto& input_ctx = (*me->keyboard)[client];
+    auto& input_ctx = (*keyboard)[client];
 
     input_ctx.register_listener(
         new WlKeyboard{
             client,
             resource,
             id,
-            *me->keymap,
+            *keymap,
             [&input_ctx](WlKeyboard* listener)
             {
                 input_ctx.unregister_listener(listener);
             },
-            [me]()
+            [this]()
             {
                 std::unordered_set<uint32_t> pressed_keys;
 
-                auto const ev = me->seat->create_device_state();
+                auto const ev = seat->create_device_state();
                 auto const state_event = mir_event_get_input_device_state_event(ev.get());
                 for (
                     auto dev = 0u;
@@ -325,13 +291,12 @@ void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t
 
                 return std::vector<uint32_t>{pressed_keys.begin(), pressed_keys.end()};
             },
-            me->executor});
+            executor});
 }
 
 void mf::WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
-    auto& input_ctx = (*me->touch)[client];
+    auto& input_ctx = (*touch)[client];
 
     input_ctx.register_listener(
         new WlTouch{
@@ -342,7 +307,7 @@ void mf::WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id
             {
                 input_ctx.unregister_listener(listener);
             },
-            me->executor});
+            executor});
 }
 
 void mf::WlSeat::release(struct wl_client* /*client*/, struct wl_resource* us)

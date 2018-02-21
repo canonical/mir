@@ -19,13 +19,15 @@
 #ifndef MIR_FRONTEND_WL_SEAT_H
 #define MIR_FRONTEND_WL_SEAT_H
 
-#include "basic_surface_event_sink.h"
+#include "core_generated_interfaces.h"
 
 #include <unordered_map>
 
-// from <wayland-server-core.h>
-struct wl_client;
-struct wl_resource;
+// from "mir_toolkit/events/event.h"
+struct MirInputEvent;
+struct MirSurfaceEvent;
+typedef struct MirSurfaceEvent MirWindowEvent;
+struct MirKeymapEvent;
 
 namespace mir
 {
@@ -46,7 +48,7 @@ class WlPointer;
 class WlKeyboard;
 class WlTouch;
 
-class WlSeat : public BasicWlSeat
+class WlSeat : public wayland::Seat
 {
 public:
     WlSeat(
@@ -57,13 +59,13 @@ public:
 
     ~WlSeat();
 
-    void handle_pointer_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const override;
-    void handle_keyboard_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const override;
-    void handle_touch_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const override;
-    void handle_event(wl_client* client, MirKeymapEvent const* keymap_event, wl_resource* target) const override;
-    void handle_event(wl_client* client, MirWindowEvent const* window_event, wl_resource* target) const override;
+    void handle_pointer_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const;
+    void handle_keyboard_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const;
+    void handle_touch_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const;
+    void handle_event(wl_client* client, MirKeymapEvent const* keymap_event, wl_resource* target) const;
+    void handle_event(wl_client* client, MirWindowEvent const* window_event, wl_resource* target) const;
 
-    void spawn(std::function<void()>&& work) override;
+    void spawn(std::function<void()>&& work);
 
 private:
     class ConfigObserver;
@@ -80,14 +82,11 @@ private:
 
     std::shared_ptr<mir::Executor> const executor;
 
-    static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id);
-    static void get_pointer(wl_client* client, wl_resource* resource, uint32_t id);
-    static void get_keyboard(wl_client* client, wl_resource* resource, uint32_t id);
-    static void get_touch(wl_client* client, wl_resource* resource, uint32_t id);
-    static void release(struct wl_client* /*client*/, struct wl_resource* us);
-
-    wl_global* const global;
-    static struct wl_seat_interface const vtable;
+    void bind(wl_client* client, wl_resource* resource) override;
+    void get_pointer(wl_client* client, wl_resource* resource, uint32_t id) override;
+    void get_keyboard(wl_client* client, wl_resource* resource, uint32_t id) override;
+    void get_touch(wl_client* client, wl_resource* resource, uint32_t id) override;
+    void release(struct wl_client* /*client*/, struct wl_resource* us) override;
 };
 }
 }

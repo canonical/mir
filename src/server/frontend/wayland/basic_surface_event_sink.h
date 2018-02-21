@@ -32,23 +32,13 @@ namespace mir
 {
 namespace frontend
 {
-class BasicWlSeat
-{
-public:
-    virtual ~BasicWlSeat() = default;
 
-    virtual void handle_pointer_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const = 0;
-    virtual void handle_keyboard_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const = 0;
-    virtual void handle_touch_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const = 0;
-    virtual void handle_event(wl_client* client, MirKeymapEvent const* keymap_event, wl_resource* target) const = 0;
-    virtual void handle_event(wl_client* client, MirWindowEvent const* window_event, wl_resource* target) const = 0;
-    virtual void spawn(std::function<void()>&& work) = 0;
-};
+class WlSeat;
 
 class BasicSurfaceEventSink : public NullEventSink
 {
 public:
-    BasicSurfaceEventSink(BasicWlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink)
+    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink)
         : seat{seat},
         client{client},
         target{target},
@@ -72,7 +62,7 @@ public:
     virtual void send_resize(geometry::Size const& new_size) const = 0;
 
 protected:
-    BasicWlSeat* const seat;
+    WlSeat* const seat;
     wl_client* const client;
     wl_resource* const target;
     wl_resource* const event_sink;
