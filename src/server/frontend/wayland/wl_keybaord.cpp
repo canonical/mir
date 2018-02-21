@@ -34,6 +34,7 @@ namespace mir
 {
 namespace frontend
 {
+
 WlKeyboard::WlKeyboard(
     wl_client* client,
     wl_resource* parent,
@@ -274,5 +275,6 @@ void WlKeyboard::release()
 {
     wl_resource_destroy(resource);
 }
+
 }
 }

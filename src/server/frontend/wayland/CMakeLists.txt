@@ -17,6 +17,7 @@ set(
   wl_seat.cpp                   wl_seat.h
   wl_keybaord.cpp               wl_keybaord.h
   wl_pointer.cpp                wl_pointer.h
+  wl_touch.cpp                  wl_touch.h
 )
 
 add_library(
