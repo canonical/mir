@@ -555,14 +555,12 @@ void mgm::BufferAllocator::bind_display(wl_display* display)
 
     if (!egl_extensions->wayland)
     {
-        mir::log_warning("No EGL_WL_bind_wayland_display support");
-        return;
+        BOOST_THROW_EXCEPTION((std::runtime_error{"No EGL_WL_bind_wayland_display support"}));
     }
 
     if (egl_extensions->wayland->eglBindWaylandDisplayWL(dpy, display) == EGL_FALSE)
     {
-        mir::log_warning("Failed to bind Wayland display");
-        return;
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to bind Wayland EGL display"));
     }
     else
     {
@@ -575,12 +573,10 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource(
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release)
 {
-    if (egl_extensions->wayland)
-        return WaylandBuffer::mir_buffer_from_wl_buffer(
-            dpy,
-            buffer,
-            egl_extensions,
-            std::move(on_consumed),
-            std::move(on_release));
-    return nullptr;
+    return WaylandBuffer::mir_buffer_from_wl_buffer(
+        dpy,
+        buffer,
+        egl_extensions,
+        std::move(on_consumed),
+        std::move(on_release));
 }
