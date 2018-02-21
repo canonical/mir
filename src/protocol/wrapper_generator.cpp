@@ -169,7 +169,7 @@ void emit_indented_lines(std::ostream& out, std::string const& indent,
         {
             out << fragment;
         }
-        out << std::endl;
+        out << "\n";
     }
 }
 
@@ -367,7 +367,7 @@ public:
     void emit_bind(std::ostream& out, std::string const& indent, bool has_vtable)
     {
         emit_indented_lines(out, indent, {
-            {"static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)"},
+            {"static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)"},
             {"{"},
         });
         emit_indented_lines(out, indent + "    ", {
@@ -385,6 +385,20 @@ public:
             emit_indented_lines(out, indent + "    ",
                 {{"wl_resource_set_implementation(resource, get_vtable(), me, nullptr);"}});
         }
+        emit_indented_lines(out, indent + "    ", {
+            {"try"},
+            {"{"},
+            {"  me->bind(client, resource);"},
+            {"}"},
+            {"catch(...)"},
+            {"{"},
+            {"    ::mir::log("},
+            {"        ::mir::logging::Severity::critical,"},
+            {"        \"frontend:Wayland\","},
+            {"        std::current_exception(),"},
+            {"        \"Exception processing ", generated_name, "::bind() request\");"},
+            {"}"},
+        });
         emit_indented_lines(out, indent, {
             {"}"}
         });
@@ -415,23 +429,50 @@ public:
         out << "protected:" << std::endl;
 
         emit_constructor(out, "    ", !methods.empty());
-        out << "    virtual ~" << generated_name << "() = default;" << std::endl;
-        out << std::endl;
+        if (is_global)
+        {
+            emit_indented_lines(out, "    ", {
+                {"virtual ~", generated_name, "()"},
+                {"{"},
+                {"    wl_global_destroy(global);"},
+                {"}"},
+            });
+        }
+        else
+        {
+            emit_indented_lines(out, "    ", {
+                {"virtual ~", generated_name, "() = default;"},
+            });
+        }
+        out << '\n';
 
+        if (is_global)
+        {
+            emit_indented_lines(out, "    ", {
+                {"virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }"}
+            });
+        }
         for (auto const& method : methods)
         {
             method.emit_virtual_prototype(out, "    ", is_global);
         }
         out << std::endl;
 
-        if (!is_global)
+        if (is_global)
         {
             emit_indented_lines(out, "    ", {
-                { "struct wl_client* const client;" },
-                { "struct wl_resource* const resource;"}
+                {"struct wl_global* const global;"},
+                {"uint32_t const max_version;"},
             });
-            out << std::endl;
         }
+        else
+        {
+            emit_indented_lines(out, "    ", {
+                {"struct wl_client* const client;"},
+                {"struct wl_resource* const resource;"}
+            });
+        }
+        out << '\n';
 
         if (!methods.empty())
         {
@@ -447,10 +488,6 @@ public:
         if (is_global)
         {
             emit_bind(out, "    ", !methods.empty());
-            out << std::endl;
-            emit_indented_lines(out, "    ", {
-                { "uint32_t const max_version;" }
-            });
             if (!methods.empty())
                 out << '\n';
         }
@@ -460,33 +497,35 @@ public:
             if (!is_global)
             {
                 emit_indented_lines(out, "    ", {
-                    {"static void resource_destroyed_thunk(wl_resource* us)"},
+                    {"static void resource_destroyed_thunk(wl_resource* resource)"},
                     {"{"},
-                    {"    delete static_cast<", generated_name, "*>(wl_resource_get_user_data(us));"},
+                    {"    delete static_cast<", generated_name, "*>(wl_resource_get_user_data(resource));"},
                     {"}"}
                 });
-                out << std::endl;
+                out << '\n';
             }
 
             emit_get_vtable(out, "    ");
         }
-        out << "};" << std::endl;
+        out << "};" << '\n';
     }
 
 private:
     void emit_constructor_for_global(std::ostream& out, std::string const& indent)
     {
-        out << indent << generated_name << "(struct wl_display* display, uint32_t max_version)" << std::endl;
-        out << indent << "    : max_version{max_version}" << std::endl;
-        out << indent << "{" << std::endl;
-        out << indent << "    if (!wl_global_create(display, " << std::endl;
-        out << indent << "                          &" << wl_name << "_interface, max_version," << std::endl;
-        out << indent << "                          this, &" << generated_name << "::bind))" << std::endl;
-        out << indent << "    {" << std::endl;
-        out << indent << "        BOOST_THROW_EXCEPTION((std::runtime_error{\"Failed to export "
-                      << wl_name << " interface\"}));" << std::endl;
-        out << indent << "    }" << std::endl;
-        out << indent << "}" << std::endl;
+        emit_indented_lines(out, indent, {
+            {generated_name, "(struct wl_display* display, uint32_t max_version)"},
+            {"    : global{wl_global_create(display, &", wl_name, "_interface, max_version,"},
+            {"                              this, &", generated_name, "::bind_thunk)},"},
+            {"        max_version{max_version}"},
+            {"{" },
+            {"    if (global == nullptr)"},
+            {"    {" },
+            {"        BOOST_THROW_EXCEPTION((std::runtime_error{"},
+            {"            \"Failed to export ", wl_name, " interface\"}));"},
+            {"    }" },
+            {"}"},
+        });
     }
 
     void emit_constructor_for_regular(std::ostream& out, std::string const& indent, bool has_vtable)

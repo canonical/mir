@@ -49,19 +49,27 @@ class Compositor
 {
 protected:
     Compositor(struct wl_display* display, uint32_t max_version)
-        : max_version{max_version}
+        : global{wl_global_create(display, &wl_compositor_interface, max_version,
+                                  this, &Compositor::bind_thunk)},
+            max_version{max_version}
     {
-        if (!wl_global_create(display, 
-                              &wl_compositor_interface, max_version,
-                              this, &Compositor::bind))
+        if (global == nullptr)
         {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_compositor interface"}));
+            BOOST_THROW_EXCEPTION((std::runtime_error{
+                "Failed to export wl_compositor interface"}));
         }
     }
-    virtual ~Compositor() = default;
+    virtual ~Compositor()
+    {
+        wl_global_destroy(global);
+    }
 
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
     virtual void create_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
     virtual void create_region(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
+
+    struct wl_global* const global;
+    uint32_t const max_version;
 
 private:
     static void create_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
@@ -98,7 +106,7 @@ private:
         }
     }
 
-    static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
+    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Compositor*>(data);
         auto resource = wl_resource_create(client, &wl_compositor_interface,
@@ -109,9 +117,19 @@ private:
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
         wl_resource_set_implementation(resource, get_vtable(), me, nullptr);
+        try
+        {
+          me->bind(client, resource);
+        }
+        catch(...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                std::current_exception(),
+                "Exception processing Compositor::bind() request");
+        }
     }
-
-    uint32_t const max_version;
 
     static inline struct wl_compositor_interface const* get_vtable()
     {
@@ -199,9 +217,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<ShmPool*>(wl_resource_get_user_data(us));
+        delete static_cast<ShmPool*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct wl_shm_pool_interface const* get_vtable()
@@ -220,18 +238,26 @@ class Shm
 {
 protected:
     Shm(struct wl_display* display, uint32_t max_version)
-        : max_version{max_version}
+        : global{wl_global_create(display, &wl_shm_interface, max_version,
+                                  this, &Shm::bind_thunk)},
+            max_version{max_version}
     {
-        if (!wl_global_create(display, 
-                              &wl_shm_interface, max_version,
-                              this, &Shm::bind))
+        if (global == nullptr)
         {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_shm interface"}));
+            BOOST_THROW_EXCEPTION((std::runtime_error{
+                "Failed to export wl_shm interface"}));
         }
     }
-    virtual ~Shm() = default;
+    virtual ~Shm()
+    {
+        wl_global_destroy(global);
+    }
 
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
     virtual void create_pool(struct wl_client* client, struct wl_resource* resource, uint32_t id, mir::Fd fd, int32_t size) = 0;
+
+    struct wl_global* const global;
+    uint32_t const max_version;
 
 private:
     static void create_pool_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int fd, int32_t size)
@@ -252,7 +278,7 @@ private:
         }
     }
 
-    static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
+    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Shm*>(data);
         auto resource = wl_resource_create(client, &wl_shm_interface,
@@ -263,9 +289,19 @@ private:
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
         wl_resource_set_implementation(resource, get_vtable(), me, nullptr);
+        try
+        {
+          me->bind(client, resource);
+        }
+        catch(...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                std::current_exception(),
+                "Exception processing Shm::bind() request");
+        }
     }
-
-    uint32_t const max_version;
 
     static inline struct wl_shm_interface const* get_vtable()
     {
@@ -316,9 +352,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<Buffer*>(wl_resource_get_user_data(us));
+        delete static_cast<Buffer*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct wl_buffer_interface const* get_vtable()
@@ -448,9 +484,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<DataOffer*>(wl_resource_get_user_data(us));
+        delete static_cast<DataOffer*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct wl_data_offer_interface const* get_vtable()
@@ -542,9 +578,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<DataSource*>(wl_resource_get_user_data(us));
+        delete static_cast<DataSource*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct wl_data_source_interface const* get_vtable()
@@ -649,9 +685,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<DataDevice*>(wl_resource_get_user_data(us));
+        delete static_cast<DataDevice*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct wl_data_device_interface const* get_vtable()
@@ -670,19 +706,27 @@ class DataDeviceManager
 {
 protected:
     DataDeviceManager(struct wl_display* display, uint32_t max_version)
-        : max_version{max_version}
+        : global{wl_global_create(display, &wl_data_device_manager_interface, max_version,
+                                  this, &DataDeviceManager::bind_thunk)},
+            max_version{max_version}
     {
-        if (!wl_global_create(display, 
-                              &wl_data_device_manager_interface, max_version,
-                              this, &DataDeviceManager::bind))
+        if (global == nullptr)
         {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_data_device_manager interface"}));
+            BOOST_THROW_EXCEPTION((std::runtime_error{
+                "Failed to export wl_data_device_manager interface"}));
         }
     }
-    virtual ~DataDeviceManager() = default;
+    virtual ~DataDeviceManager()
+    {
+        wl_global_destroy(global);
+    }
 
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
     virtual void create_data_source(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
     virtual void get_data_device(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat) = 0;
+
+    struct wl_global* const global;
+    uint32_t const max_version;
 
 private:
     static void create_data_source_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
@@ -719,7 +763,7 @@ private:
         }
     }
 
-    static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
+    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<DataDeviceManager*>(data);
         auto resource = wl_resource_create(client, &wl_data_device_manager_interface,
@@ -730,9 +774,19 @@ private:
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
         wl_resource_set_implementation(resource, get_vtable(), me, nullptr);
+        try
+        {
+          me->bind(client, resource);
+        }
+        catch(...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                std::current_exception(),
+                "Exception processing DataDeviceManager::bind() request");
+        }
     }
-
-    uint32_t const max_version;
 
     static inline struct wl_data_device_manager_interface const* get_vtable()
     {
@@ -749,18 +803,26 @@ class Shell
 {
 protected:
     Shell(struct wl_display* display, uint32_t max_version)
-        : max_version{max_version}
+        : global{wl_global_create(display, &wl_shell_interface, max_version,
+                                  this, &Shell::bind_thunk)},
+            max_version{max_version}
     {
-        if (!wl_global_create(display, 
-                              &wl_shell_interface, max_version,
-                              this, &Shell::bind))
+        if (global == nullptr)
         {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_shell interface"}));
+            BOOST_THROW_EXCEPTION((std::runtime_error{
+                "Failed to export wl_shell interface"}));
         }
     }
-    virtual ~Shell() = default;
+    virtual ~Shell()
+    {
+        wl_global_destroy(global);
+    }
 
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
     virtual void get_shell_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface) = 0;
+
+    struct wl_global* const global;
+    uint32_t const max_version;
 
 private:
     static void get_shell_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
@@ -780,7 +842,7 @@ private:
         }
     }
 
-    static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
+    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Shell*>(data);
         auto resource = wl_resource_create(client, &wl_shell_interface,
@@ -791,9 +853,19 @@ private:
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
         wl_resource_set_implementation(resource, get_vtable(), me, nullptr);
+        try
+        {
+          me->bind(client, resource);
+        }
+        catch(...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                std::current_exception(),
+                "Exception processing Shell::bind() request");
+        }
     }
-
-    uint32_t const max_version;
 
     static inline struct wl_shell_interface const* get_vtable()
     {
@@ -1016,9 +1088,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<ShellSurface*>(wl_resource_get_user_data(us));
+        delete static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct wl_shell_surface_interface const* get_vtable()
@@ -1256,9 +1328,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<Surface*>(wl_resource_get_user_data(us));
+        delete static_cast<Surface*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct wl_surface_interface const* get_vtable()
@@ -1284,22 +1356,29 @@ class Seat
 {
 protected:
     Seat(struct wl_display* display, uint32_t max_version)
-        : max_version{max_version}
+        : global{wl_global_create(display, &wl_seat_interface, max_version,
+                                  this, &Seat::bind_thunk)},
+            max_version{max_version}
     {
-        if (!wl_global_create(display,
-                              &wl_seat_interface, max_version,
-                              this, &Seat::bind_thunk))
+        if (global == nullptr)
         {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_seat interface"}));
+            BOOST_THROW_EXCEPTION((std::runtime_error{
+                "Failed to export wl_seat interface"}));
         }
     }
-    virtual ~Seat() = default;
+    virtual ~Seat()
+    {
+        wl_global_destroy(global);
+    }
 
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) = 0;
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
     virtual void get_pointer(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
     virtual void get_keyboard(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
     virtual void get_touch(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
     virtual void release(struct wl_client* client, struct wl_resource* resource) = 0;
+
+    struct wl_global* const global;
+    uint32_t const max_version;
 
 private:
     static void get_pointer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
@@ -1381,10 +1460,9 @@ private:
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
         wl_resource_set_implementation(resource, get_vtable(), me, nullptr);
-
         try
         {
-            me->bind(client, resource);
+          me->bind(client, resource);
         }
         catch(...)
         {
@@ -1395,8 +1473,6 @@ private:
                 "Exception processing Seat::bind() request");
         }
     }
-
-    uint32_t const max_version;
 
     static inline struct wl_seat_interface const* get_vtable()
     {
@@ -1473,9 +1549,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<Pointer*>(wl_resource_get_user_data(us));
+        delete static_cast<Pointer*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct wl_pointer_interface const* get_vtable()
@@ -1528,9 +1604,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<Keyboard*>(wl_resource_get_user_data(us));
+        delete static_cast<Keyboard*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct wl_keyboard_interface const* get_vtable()
@@ -1582,9 +1658,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<Touch*>(wl_resource_get_user_data(us));
+        delete static_cast<Touch*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct wl_touch_interface const* get_vtable()
@@ -1601,14 +1677,14 @@ class Output
 {
 protected:
     Output(struct wl_display* display, uint32_t max_version)
-        : max_version{max_version}
+        : global{wl_global_create(display, &wl_output_interface, max_version,
+                                  this, &Output::bind_thunk)},
+            max_version{max_version}
     {
-        global = wl_global_create(display,
-                                  &wl_output_interface, max_version,
-                                  this, &Output::bind);
         if (global == nullptr)
         {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_output interface"}));
+            BOOST_THROW_EXCEPTION((std::runtime_error{
+                "Failed to export wl_output interface"}));
         }
     }
     virtual ~Output()
@@ -1616,7 +1692,11 @@ protected:
         wl_global_destroy(global);
     }
 
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
     virtual void release(struct wl_client* client, struct wl_resource* resource) = 0;
+
+    struct wl_global* const global;
+    uint32_t const max_version;
 
 private:
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
@@ -1636,7 +1716,7 @@ private:
         }
     }
 
-    static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
+    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Output*>(data);
         auto resource = wl_resource_create(client, &wl_output_interface,
@@ -1647,9 +1727,19 @@ private:
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
         wl_resource_set_implementation(resource, get_vtable(), me, nullptr);
+        try
+        {
+          me->bind(client, resource);
+        }
+        catch(...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                std::current_exception(),
+                "Exception processing Output::bind() request");
+        }
     }
-
-    uint32_t const max_version;
 
     static inline struct wl_output_interface const* get_vtable()
     {
@@ -1658,8 +1748,6 @@ private:
         };
         return &vtable;
     }
-
-    wl_global * global = nullptr;
 };
 
 
@@ -1738,9 +1826,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<Region*>(wl_resource_get_user_data(us));
+        delete static_cast<Region*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct wl_region_interface const* get_vtable()
@@ -1759,19 +1847,27 @@ class Subcompositor
 {
 protected:
     Subcompositor(struct wl_display* display, uint32_t max_version)
-        : max_version{max_version}
+        : global{wl_global_create(display, &wl_subcompositor_interface, max_version,
+                                  this, &Subcompositor::bind_thunk)},
+            max_version{max_version}
     {
-        if (!wl_global_create(display, 
-                              &wl_subcompositor_interface, max_version,
-                              this, &Subcompositor::bind))
+        if (global == nullptr)
         {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_subcompositor interface"}));
+            BOOST_THROW_EXCEPTION((std::runtime_error{
+                "Failed to export wl_subcompositor interface"}));
         }
     }
-    virtual ~Subcompositor() = default;
+    virtual ~Subcompositor()
+    {
+        wl_global_destroy(global);
+    }
 
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
     virtual void destroy(struct wl_client* client, struct wl_resource* resource) = 0;
     virtual void get_subsurface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* parent) = 0;
+
+    struct wl_global* const global;
+    uint32_t const max_version;
 
 private:
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
@@ -1808,7 +1904,7 @@ private:
         }
     }
 
-    static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
+    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Subcompositor*>(data);
         auto resource = wl_resource_create(client, &wl_subcompositor_interface,
@@ -1819,9 +1915,19 @@ private:
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
         wl_resource_set_implementation(resource, get_vtable(), me, nullptr);
+        try
+        {
+          me->bind(client, resource);
+        }
+        catch(...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                std::current_exception(),
+                "Exception processing Subcompositor::bind() request");
+        }
     }
-
-    uint32_t const max_version;
 
     static inline struct wl_subcompositor_interface const* get_vtable()
     {
@@ -1963,9 +2069,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<Subsurface*>(wl_resource_get_user_data(us));
+        delete static_cast<Subsurface*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct wl_subsurface_interface const* get_vtable()
