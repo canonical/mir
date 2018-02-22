@@ -22,8 +22,8 @@
 #include <miral/canonical_window_manager.h>
 #include <miral/window_management_policy_addendum2.h>
 #include <miral/window_management_policy_addendum3.h>
+#include <miral/window_management_policy_addendum4.h>
 #include <miral/workspace_policy.h>
-
 
 #include "spinner/splash.h"
 
@@ -38,7 +38,7 @@ class DecorationProvider;
 
 class FloatingWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy,
     public miral::WorkspacePolicy, public miral::WindowManagementPolicyAddendum3,
-    public miral::WindowManagementPolicyAddendum2
+    public miral::WindowManagementPolicyAddendum2, public miral::WindowManagementPolicyAddendum4
 {
 public:
     FloatingWindowManagerPolicy(
@@ -85,6 +85,9 @@ public:
     void handle_request_drag_and_drop(miral::WindowInfo& window_info) override;
 
     void handle_request_move(miral::WindowInfo& window_info, MirInputEvent const* input_event) override;
+
+    void handle_request_resize(
+        miral::WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) override;
     /** @} */
 
 protected:
@@ -113,6 +116,10 @@ private:
     int old_touch_pinch_width = 0;
     int old_touch_pinch_height = 0;
     bool pinching = false;
+
+    bool csd_resizing = false;
+    MirResizeEdge csd_resize_edge = mir_resize_edge_none;
+    miral::Window csd_resize_window;
 
     SpinnerSplash const spinner;
 
