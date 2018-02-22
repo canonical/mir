@@ -78,7 +78,7 @@ struct WlMirWindow
     virtual void visiblity(bool visible) = 0;
     virtual void destroy() = 0;
     virtual ~WlMirWindow() = default;
-} extern * const nullWlMirWindowPtr;
+} extern * const null_wl_mir_window_ptr;
 
 class WaylandConnector : public Connector
 {

@@ -47,8 +47,8 @@ public:
     WlSurface(wl_client* client,
               wl_resource* parent,
               uint32_t id,
-              const std::shared_ptr< mir::Executor >& executor,
-              const std::shared_ptr< mir::graphics::WaylandAllocator >& allocator);
+              std::shared_ptr<mir::Executor> const& executor,
+              std::shared_ptr<mir::graphics::WaylandAllocator> const& allocator);
 
     ~WlSurface();
 

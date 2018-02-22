@@ -89,17 +89,18 @@ namespace mir
 {
 namespace frontend
 {
+
+namespace
+{
 struct NullWlMirWindow : WlMirWindow
 {
     void new_buffer_size(mir::geometry::Size const& ) {}
     void commit() {}
     void visiblity(bool ) {}
     void destroy() {}
-
-    static NullWlMirWindow instance;
-} NullWlMirWindow::instance;
-
-WlMirWindow * const nullWlMirWindowPtr = &NullWlMirWindow::instance;
+} null_wl_mir_window_instance;
+}
+WlMirWindow* const null_wl_mir_window_ptr = &null_wl_mir_window_instance;
 
 namespace
 {
@@ -1337,7 +1338,7 @@ public:
     ~WlShellSurface() override
     {
         auto* const mir_surface = WlSurface::from(surface);
-        mir_surface->set_role(nullWlMirWindowPtr);
+        mir_surface->set_role(null_wl_mir_window_ptr);
     }
 
 protected:
@@ -1773,7 +1774,7 @@ struct XdgSurfaceV6 : wayland::XdgSurfaceV6, WlAbstractMirWindow
     ~XdgSurfaceV6() override
     {
         auto* const mir_surface = WlSurface::from(surface);
-        mir_surface->set_role(nullWlMirWindowPtr);
+        mir_surface->set_role(null_wl_mir_window_ptr);
     }
 
     void destroy() override

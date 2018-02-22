@@ -43,7 +43,7 @@ WlSurface::WlSurface(
     : Surface(client, parent, id),
         allocator{allocator},
         executor{executor},
-        role{nullWlMirWindowPtr},
+        role{null_wl_mir_window_ptr},
         pending_buffer{nullptr},
         pending_frames{std::make_shared<std::vector<wl_resource*>>()},
         destroyed{std::make_shared<bool>(false)}
@@ -128,12 +128,12 @@ void WlSurface::frame(uint32_t callback)
         wl_resource_create(client, &wl_callback_interface, 1, callback));
 }
 
-void WlSurface::set_opaque_region(const std::experimental::optional<wl_resource*>& region)
+void WlSurface::set_opaque_region(std::experimental::optional<wl_resource*> const& region)
 {
     (void)region;
 }
 
-void WlSurface::set_input_region(const std::experimental::optional<wl_resource*>& region)
+void WlSurface::set_input_region(std::experimental::optional<wl_resource*> const& region)
 {
     (void)region;
 }
