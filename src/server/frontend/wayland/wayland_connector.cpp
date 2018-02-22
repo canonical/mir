@@ -439,14 +439,10 @@ void WlSurface::commit()
                         [buffer](){ wl_resource_queue_event(buffer, WL_BUFFER_RELEASE); }));
                 };
 
-            if (mir_buffer = allocator->buffer_from_resource(
-                    pending_buffer, std::move(send_frame_notifications), std::move(release_buffer)))
-            {
-            }
-            else
-            {
-                BOOST_THROW_EXCEPTION((std::runtime_error{"Received unhandled buffer type"}));
-            }
+            mir_buffer = allocator->buffer_from_resource(
+                    pending_buffer,
+                    std::move(send_frame_notifications),
+                    std::move(release_buffer));
         }
 
         /*
