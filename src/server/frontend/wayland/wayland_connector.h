@@ -71,15 +71,6 @@ inline auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callab
 
 std::shared_ptr<mir::frontend::Session> session_for_client(wl_client* client);
 
-struct WlMirWindow
-{
-    virtual void new_buffer_size(geometry::Size const& buffer_size) = 0;
-    virtual void commit() = 0;
-    virtual void visiblity(bool visible) = 0;
-    virtual void destroy() = 0;
-    virtual ~WlMirWindow() = default;
-} extern * const null_wl_mir_window_ptr;
-
 class WaylandConnector : public Connector
 {
 public:

@@ -12,6 +12,7 @@ set(
   null_event_sink.cpp           null_event_sink.h
   basic_surface_event_sink.cpp  basic_surface_event_sink.h
   output_manager.cpp            output_manager.h
+  wl_mir_window.cpp             wl_mir_window.h
   wl_surface.cpp                wl_surface.h
 )
 

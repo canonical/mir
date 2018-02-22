@@ -20,6 +20,7 @@
 #include "wl_surface.h"
 
 #include "core_generated_interfaces.h"
+#include "wl_mir_window.h"
 #include "wayland_connector.h"
 #include "wlshmbuffer.h"
 
