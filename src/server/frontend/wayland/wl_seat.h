@@ -68,7 +68,7 @@ public:
 private:
     class ConfigObserver;
 
-    std::unique_ptr<input::Keymap> const keymap;
+    std::unique_ptr<mir::input::Keymap> const keymap;
     std::shared_ptr<ConfigObserver> const config_observer;
 
     std::unique_ptr<std::unordered_map<wl_client*, InputCtx<WlPointer>>> const pointer;

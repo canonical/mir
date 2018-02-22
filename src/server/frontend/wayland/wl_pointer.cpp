@@ -26,12 +26,9 @@
 
 #include <linux/input-event-codes.h>
 
-namespace mir
-{
-namespace frontend
-{
+namespace mf = mir::frontend;
 
-WlPointer::WlPointer(
+mf::WlPointer::WlPointer(
     wl_client* client,
     wl_resource* parent,
     uint32_t id,
@@ -45,13 +42,13 @@ WlPointer::WlPointer(
 {
 }
 
-WlPointer::~WlPointer()
+mf::WlPointer::~WlPointer()
 {
     *destroyed = true;
     on_destroy(this);
 }
 
-void WlPointer::handle_event(MirInputEvent const* event, wl_resource* target)
+void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target)
 {
     executor->spawn(run_unless(
         destroyed,
@@ -164,7 +161,7 @@ void WlPointer::handle_event(MirInputEvent const* event, wl_resource* target)
         }));
 }
 
-void WlPointer::set_cursor(uint32_t serial, std::experimental::optional<wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y)
+void mf::WlPointer::set_cursor(uint32_t serial, std::experimental::optional<wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y)
 {
     (void)serial;
     (void)surface;
@@ -172,10 +169,7 @@ void WlPointer::set_cursor(uint32_t serial, std::experimental::optional<wl_resou
     (void)hotspot_y;
 }
 
-void WlPointer::release()
+void mf::WlPointer::release()
 {
     wl_resource_destroy(resource);
-}
-
-}
 }
