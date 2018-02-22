@@ -30,12 +30,9 @@
 
 #include <cstring> // memcpy
 
-namespace mir
-{
-namespace frontend
-{
+namespace mf = mir::frontend;
 
-WlKeyboard::WlKeyboard(
+mf::WlKeyboard::WlKeyboard(
     wl_client* client,
     wl_resource* parent,
     uint32_t id,
@@ -65,13 +62,13 @@ WlKeyboard::WlKeyboard(
     set_keymap(initial_keymap);
 }
 
-WlKeyboard::~WlKeyboard()
+mf::WlKeyboard::~WlKeyboard()
 {
     on_destroy(this);
     *destroyed = true;
 }
 
-void WlKeyboard::handle_event(MirInputEvent const* event, wl_resource* /*target*/)
+void mf::WlKeyboard::handle_event(MirInputEvent const* event, wl_resource* /*target*/)
 {
     executor->spawn(run_unless(
         destroyed,
@@ -114,7 +111,7 @@ void WlKeyboard::handle_event(MirInputEvent const* event, wl_resource* /*target*
         }));
 }
 
-void WlKeyboard::handle_event(MirWindowEvent const* event, wl_resource* target)
+void mf::WlKeyboard::handle_event(MirWindowEvent const* event, wl_resource* target)
 {
     if (mir_window_event_get_attribute(event) == mir_window_attrib_focus)
     {
@@ -174,7 +171,7 @@ void WlKeyboard::handle_event(MirWindowEvent const* event, wl_resource* target)
     }
 }
 
-void WlKeyboard::handle_event(MirKeymapEvent const* event, wl_resource* /*target*/)
+void mf::WlKeyboard::handle_event(MirKeymapEvent const* event, wl_resource* /*target*/)
 {
     char const* buffer;
     size_t length;
@@ -201,7 +198,7 @@ void WlKeyboard::handle_event(MirKeymapEvent const* event, wl_resource* /*target
     state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
 }
 
-void WlKeyboard::set_keymap(mir::input::Keymap const& new_keymap)
+void mf::WlKeyboard::set_keymap(mir::input::Keymap const& new_keymap)
 {
     xkb_rule_names const names = {
         "evdev",
@@ -233,7 +230,7 @@ void WlKeyboard::set_keymap(mir::input::Keymap const& new_keymap)
         length);
 }
 
-void WlKeyboard::update_modifier_state()
+void mf::WlKeyboard::update_modifier_state()
 {
     // TODO?
     // assert_on_wayland_event_loop()
@@ -271,10 +268,7 @@ void WlKeyboard::update_modifier_state()
     }
 }
 
-void WlKeyboard::release()
+void mf::WlKeyboard::release()
 {
     wl_resource_destroy(resource);
-}
-
-}
 }

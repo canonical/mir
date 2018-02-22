@@ -24,12 +24,9 @@
 #include "mir/executor.h"
 #include "mir/client/event.h"
 
-namespace mir
-{
-namespace frontend
-{
+namespace mf = mir::frontend;
 
-WlTouch::WlTouch(
+mf::WlTouch::WlTouch(
     wl_client* client,
     wl_resource* parent,
     uint32_t id,
@@ -42,13 +39,13 @@ WlTouch::WlTouch(
 {
 }
 
-WlTouch::~WlTouch()
+mf::WlTouch::~WlTouch()
 {
     on_destroy(this);
     *destroyed = true;
 }
 
-void WlTouch::handle_event(MirInputEvent const* event, wl_resource* target)
+void mf::WlTouch::handle_event(MirInputEvent const* event, wl_resource* target)
 {
     executor->spawn(run_unless(
         destroyed,
@@ -133,10 +130,8 @@ void WlTouch::handle_event(MirInputEvent const* event, wl_resource* target)
         ));
 }
 
-void WlTouch::release()
+void mf::WlTouch::release()
 {
     wl_resource_destroy(resource);
 }
 
-}
-}

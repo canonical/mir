@@ -39,15 +39,16 @@
 #include <mutex>
 #include <unordered_set>
 
+namespace mf = mir::frontend;
+namespace mi = mir::input;
+
 namespace mir
 {
 class Executor;
-
-namespace frontend
-{
+}
 
 template<class InputInterface>
-class InputCtx
+class mf::InputCtx
 {
 public:
     InputCtx() = default;
@@ -105,12 +106,12 @@ private:
     std::vector<InputInterface*> listeners;
 };
 
-class WlSeat::ConfigObserver : public mir::input::InputDeviceObserver
+class mf::WlSeat::ConfigObserver : public mi::InputDeviceObserver
 {
 public:
     ConfigObserver(
-        mir::input::Keymap const& keymap,
-        std::function<void(mir::input::Keymap const&)> const& on_keymap_commit)
+        mi::Keymap const& keymap,
+        std::function<void(mi::Keymap const&)> const& on_keymap_commit)
         : current_keymap{keymap},
             on_keymap_commit{on_keymap_commit}
     {
@@ -122,12 +123,12 @@ public:
     void changes_complete() override;
 
 private:
-    mir::input::Keymap const& current_keymap;
-    mir::input::Keymap pending_keymap;
-    std::function<void(mir::input::Keymap const&)> const on_keymap_commit;
+    mi::Keymap const& current_keymap;
+    mi::Keymap pending_keymap;
+    std::function<void(mi::Keymap const&)> const on_keymap_commit;
 };
 
-void WlSeat::ConfigObserver::device_added(std::shared_ptr<input::Device> const& device)
+void mf::WlSeat::ConfigObserver::device_added(std::shared_ptr<input::Device> const& device)
 {
     if (auto keyboard_config = device->keyboard_configuration())
     {
@@ -138,7 +139,7 @@ void WlSeat::ConfigObserver::device_added(std::shared_ptr<input::Device> const& 
     }
 }
 
-void WlSeat::ConfigObserver::device_changed(std::shared_ptr<input::Device> const& device)
+void mf::WlSeat::ConfigObserver::device_changed(std::shared_ptr<input::Device> const& device)
 {
     if (auto keyboard_config = device->keyboard_configuration())
     {
@@ -149,32 +150,32 @@ void WlSeat::ConfigObserver::device_changed(std::shared_ptr<input::Device> const
     }
 }
 
-void WlSeat::ConfigObserver::device_removed(std::shared_ptr<input::Device> const& /*device*/)
+void mf::WlSeat::ConfigObserver::device_removed(std::shared_ptr<input::Device> const& /*device*/)
 {
 }
 
-void WlSeat::ConfigObserver::changes_complete()
+void mf::WlSeat::ConfigObserver::changes_complete()
 {
     on_keymap_commit(pending_keymap);
 }
 
-struct wl_seat_interface const WlSeat::vtable = {
+struct wl_seat_interface const mf::WlSeat::vtable = {
     WlSeat::get_pointer,
     WlSeat::get_keyboard,
     WlSeat::get_touch,
     WlSeat::release
 };
 
-WlSeat::WlSeat(
+mf::WlSeat::WlSeat(
     wl_display* display,
-    std::shared_ptr<mir::input::InputDeviceHub> const& input_hub,
-    std::shared_ptr<mir::input::Seat> const& seat,
+    std::shared_ptr<mi::InputDeviceHub> const& input_hub,
+    std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<mir::Executor> const& executor)
     :   keymap{std::make_unique<input::Keymap>()},
         config_observer{
             std::make_shared<ConfigObserver>(
                 *keymap,
-                [this](mir::input::Keymap const& new_keymap)
+                [this](mi::Keymap const& new_keymap)
                 {
                     *keymap = new_keymap;
                 })},
@@ -198,43 +199,43 @@ WlSeat::WlSeat(
     input_hub->add_observer(config_observer);
 }
 
-WlSeat::~WlSeat()
+mf::WlSeat::~WlSeat()
 {
     input_hub->remove_observer(config_observer);
     wl_global_destroy(global);
 }
 
-void WlSeat::handle_pointer_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
+void mf::WlSeat::handle_pointer_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
 {
     (*pointer)[client].handle_event(input_event, target);
 }
 
-void WlSeat::handle_keyboard_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
+void mf::WlSeat::handle_keyboard_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
 {
     (*keyboard)[client].handle_event(input_event, target);
 }
 
-void WlSeat::handle_touch_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
+void mf::WlSeat::handle_touch_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
 {
     (*touch)[client].handle_event(input_event, target);
 }
 
-void WlSeat::handle_event(wl_client* client, MirKeymapEvent const* keymap_event, wl_resource* target) const
+void mf::WlSeat::handle_event(wl_client* client, MirKeymapEvent const* keymap_event, wl_resource* target) const
 {
     (*keyboard)[client].handle_event(keymap_event, target);
 }
 
-void WlSeat::handle_event(wl_client* client, MirWindowEvent const* window_event, wl_resource* target) const
+void mf::WlSeat::handle_event(wl_client* client, MirWindowEvent const* window_event, wl_resource* target) const
 {
     (*keyboard)[client].handle_event(window_event, target);
 }
 
-void WlSeat::spawn(std::function<void()>&& work)
+void mf::WlSeat::spawn(std::function<void()>&& work)
 {
     executor->spawn(std::move(work));
 }
 
-void WlSeat::bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
+void mf::WlSeat::bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
 {
     auto me = reinterpret_cast<WlSeat*>(data);
     auto resource = wl_resource_create(client, &wl_seat_interface,
@@ -267,7 +268,7 @@ void WlSeat::bind(struct wl_client* client, void* data, uint32_t version, uint32
     wl_resource_set_user_data(resource, me);
 }
 
-void WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t id)
+void mf::WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t id)
 {
     auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
     auto& input_ctx = (*me->pointer)[client];
@@ -283,7 +284,7 @@ void WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t id)
             me->executor});
 }
 
-void WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t id)
+void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t id)
 {
     auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
     auto& input_ctx = (*me->keyboard)[client];
@@ -327,7 +328,7 @@ void WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t id)
             me->executor});
 }
 
-void WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id)
+void mf::WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id)
 {
     auto me = reinterpret_cast<WlSeat*>(wl_resource_get_user_data(resource));
     auto& input_ctx = (*me->touch)[client];
@@ -344,9 +345,7 @@ void WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id)
             me->executor});
 }
 
-void WlSeat::release(struct wl_client* /*client*/, struct wl_resource* us)
+void mf::WlSeat::release(struct wl_client* /*client*/, struct wl_resource* us)
 {
     wl_resource_destroy(us);
-}
-}
 }
