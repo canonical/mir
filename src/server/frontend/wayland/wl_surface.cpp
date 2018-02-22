@@ -19,9 +19,9 @@
 
 #include "wl_surface.h"
 
+#include "wayland_utils.h"
 #include "core_generated_interfaces.h"
 #include "wl_mir_window.h"
-#include "wayland_connector.h"
 #include "wlshmbuffer.h"
 
 #include "mir/graphics/buffer_properties.h"
@@ -49,7 +49,7 @@ WlSurface::WlSurface(
         pending_frames{std::make_shared<std::vector<wl_resource*>>()},
         destroyed{std::make_shared<bool>(false)}
 {
-    auto session = session_for_client(client);
+    auto session = get_session(client);
     graphics::BufferProperties const props{
         geometry::Size{geometry::Width{0}, geometry::Height{0}},
         mir_pixel_format_invalid,
@@ -66,7 +66,7 @@ WlSurface::WlSurface(
 WlSurface::~WlSurface()
 {
     *destroyed = true;
-    if (auto session = session_for_client(client))
+    if (auto session = get_session(client))
         session->destroy_buffer_stream(stream_id);
 }
 

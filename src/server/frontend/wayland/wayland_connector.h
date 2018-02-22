@@ -56,21 +56,6 @@ class DisplayChanger;
 class SessionAuthorizer;
 class DataDeviceManager;
 
-template<typename Callable>
-inline auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callable)
-{
-    return
-        [callable = std::move(callable), condition]()
-        {
-            if (*condition)
-                return;
-
-            callable();
-        };
-}
-
-std::shared_ptr<mir::frontend::Session> session_for_client(wl_client* client);
-
 class WaylandConnector : public Connector
 {
 public:

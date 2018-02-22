@@ -18,7 +18,7 @@
 
 #include "wl_mir_window.h"
 
-#include "wayland_connector.h"
+#include "wayland_utils.h"
 #include "wl_surface.h"
 #include "basic_surface_event_sink.h"
 
@@ -73,7 +73,7 @@ WlAbstractMirWindow::~WlAbstractMirWindow()
     *destroyed = true;
     if (surface_id.as_value())
     {
-        if (auto session = session_for_client(client))
+        if (auto session = get_session(client))
         {
             shell->destroy_surface(session, surface_id);
         }
@@ -92,7 +92,7 @@ shell::SurfaceSpecification& WlAbstractMirWindow::spec()
 
 void WlAbstractMirWindow::commit()
 {
-    auto const session = session_for_client(client);
+    auto const session = get_session(client);
 
     if (surface_id.as_value())
     {
@@ -147,7 +147,7 @@ void WlAbstractMirWindow::visiblity(bool visible)
     if (!surface_id.as_value())
         return;
 
-    auto const session = session_for_client(client);
+    auto const session = get_session(client);
 
     if (get_surface_for_id(session, surface_id)->visible() == visible)
         return;

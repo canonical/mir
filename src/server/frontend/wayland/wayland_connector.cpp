@@ -18,9 +18,9 @@
 
 #include "wayland_connector.h"
 
+#include "wayland_utils.h"
 #include "wl_mir_window.h"
 #include "wl_surface.h"
-
 #include "basic_surface_event_sink.h"
 #include "null_event_sink.h"
 #include "output_manager.h"
@@ -222,7 +222,7 @@ std::shared_ptr<mf::BufferStream> create_buffer_stream(mf::Session& session)
 */
 }
 
-std::shared_ptr<mir::frontend::Session> session_for_client(wl_client* client)
+std::shared_ptr<mir::frontend::Session> get_session(wl_client* client)
 {
     auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
 
@@ -1229,7 +1229,7 @@ protected:
         int32_t y,
         uint32_t flags) override
     {
-        auto const session = session_for_client(client);
+        auto const session = get_session(client);
         auto& parent_surface = *WlSurface::from(parent);
 
         if (surface_id.as_value())
@@ -1292,7 +1292,7 @@ protected:
         int32_t y,
         uint32_t flags) override
     {
-        auto const session = session_for_client(client);
+        auto const session = get_session(client);
         auto& parent_surface = *WlSurface::from(parent);
 
         if (surface_id.as_value())
@@ -1365,7 +1365,7 @@ protected:
     {
         if (surface_id.as_value())
         {
-            if (auto session = session_for_client(client))
+            if (auto session = get_session(client))
             {
                 shell->request_operation(session, surface_id, sink->latest_timestamp(), Shell::UserRequest::move);
             }
@@ -1663,7 +1663,7 @@ struct XdgSurfaceV6 : wayland::XdgSurfaceV6, WlAbstractMirWindow
         auto* tmp = wl_resource_get_user_data(positioner);
         auto const* const pos =  static_cast<XdgPositionerV6*>(static_cast<wayland::XdgPositionerV6*>(tmp));
 
-        auto const session = session_for_client(client);
+        auto const session = get_session(client);
         auto& parent_surface = *get_xdgsurface(parent);
 
         params->type = mir_window_type_freestyle;
@@ -1749,7 +1749,7 @@ void XdgSurfaceV6::move(struct wl_resource* /*seat*/, uint32_t /*serial*/)
 {
     if (surface_id.as_value())
     {
-        if (auto session = session_for_client(client))
+        if (auto session = get_session(client))
         {
             shell->request_operation(session, surface_id, sink->latest_timestamp(), Shell::UserRequest::move);
         }
