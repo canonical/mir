@@ -51,6 +51,7 @@ namespace miral
 class WorkspacePolicy;
 class WindowManagementPolicyAddendum2;
 class WindowManagementPolicyAddendum3;
+class WindowManagementPolicyAddendum4;
 class DisplayConfigurationListeners;
 
 using mir::shell::SurfaceSet;
@@ -216,6 +217,7 @@ private:
     WorkspacePolicy* const workspace_policy;
     WindowManagementPolicyAddendum2* const policy2;
     WindowManagementPolicyAddendum3* const policy3;
+    WindowManagementPolicyAddendum4* const policy4;
 
     std::mutex mutex;
     SessionInfoMap app_info;
