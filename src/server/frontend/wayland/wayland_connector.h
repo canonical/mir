@@ -28,7 +28,6 @@
 
 namespace mir
 {
-
 namespace input
 {
 class InputDeviceHub;
@@ -39,7 +38,10 @@ namespace graphics
 class GraphicBufferAllocator;
 class WaylandAllocator;
 }
-
+namespace geometry
+{
+struct Size;
+}
 namespace frontend
 {
 class WlCompositor;
@@ -78,6 +80,7 @@ public:
         std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const override;
 
     void run_on_wayland_display(std::function<void(wl_display*)> const& functor);
+
 private:
     std::unique_ptr<wl_display, void(*)(wl_display*)> const display;
     mir::Fd const pause_signal;
@@ -91,8 +94,6 @@ private:
     std::thread dispatch_thread;
     wl_event_source* pause_source;
 };
-
-
 }
 }
 
