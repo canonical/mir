@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef WL_TOUCH_H
-#define WL_TOUCH_H
+#ifndef MIR_FRONTEND_WL_TOUCH_H
+#define MIR_FRONTEND_WL_TOUCH_H
 
 #include "core_generated_interfaces.h"
 
@@ -57,4 +57,4 @@ private:
 }
 }
 
-#endif // WL_TOUCH_H
+#endif // MIR_FRONTEND_WL_TOUCH_H

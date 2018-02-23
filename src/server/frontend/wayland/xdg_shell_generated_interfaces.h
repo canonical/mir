@@ -5,8 +5,8 @@
  * To regenerate, run the “refresh-wayland-wrapper” target.
  */
 
-#ifndef XDG_SHELL_UNSTABLE_V6_XML_WRAPPER
-#define XDG_SHELL_UNSTABLE_V6_XML_WRAPPER
+#ifndef MIR_FRONTEND_WAYLAND_XDG_SHELL_UNSTABLE_V6_XML_WRAPPER
+#define MIR_FRONTEND_WAYLAND_XDG_SHELL_UNSTABLE_V6_XML_WRAPPER
 
 #include <experimental/optional>
 #include <boost/throw_exception.hpp>
@@ -826,4 +826,4 @@ private:
 }
 }
 
-#endif // XDG_SHELL_UNSTABLE_V6_XML_WRAPPER
+#endif // MIR_FRONTEND_WAYLAND_XDG_SHELL_UNSTABLE_V6_XML_WRAPPER

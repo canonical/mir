@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef WL_KEYBOARD_H
-#define WL_KEYBOARD_H
+#ifndef MIR_FRONTEND_WL_KEYBOARD_H
+#define MIR_FRONTEND_WL_KEYBOARD_H
 
 #include "core_generated_interfaces.h"
 
@@ -88,4 +88,4 @@ private:
 }
 }
 
-#endif // WL_KEYBOARD_H
+#endif // MIR_FRONTEND_WL_KEYBOARD_H

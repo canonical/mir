@@ -564,7 +564,7 @@ int main(int argc, char** argv)
 
     std::cout << std::endl;
 
-    std::string const include_guard_macro = macro_string(remove_file_path(input_file_path) + "_wrapper");
+    std::string const include_guard_macro = macro_string("MIR_FRONTEND_WAYLAND_" + remove_file_path(input_file_path) + "_WRAPPER");
     emit_include_guard_top(std::cout, include_guard_macro);
 
     std::cout << std::endl;

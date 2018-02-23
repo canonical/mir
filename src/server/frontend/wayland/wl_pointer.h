@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef WL_POINTER_H
-#define WL_POINTER_H
+#ifndef MIR_FRONTEND_WL_POINTER_H
+#define MIR_FRONTEND_WL_POINTER_H
 
 #include "core_generated_interfaces.h"
 
@@ -64,4 +64,4 @@ private:
 }
 }
 
-#endif // WL_POINTER_H
+#endif // MIR_FRONTEND_WL_POINTER_H

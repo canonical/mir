@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef WL_SEAT_H
-#define WL_SEAT_H
+#ifndef MIR_FRONTEND_WL_SEAT_H
+#define MIR_FRONTEND_WL_SEAT_H
 
 #include "basic_surface_event_sink.h"
 
@@ -92,4 +92,4 @@ private:
 }
 }
 
-#endif // WL_SEAT_H
+#endif // MIR_FRONTEND_WL_SEAT_H
