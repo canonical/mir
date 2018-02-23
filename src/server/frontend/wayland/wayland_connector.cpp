@@ -1683,16 +1683,8 @@ struct XdgSurfaceV6 : wayland::XdgSurfaceV6, WlAbstractMirWindow
 
     void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override
     {
-        geom::Rectangle const input_region{{x, y}, {width, height}};
-
-        if (surface_id.as_value())
-        {
-            spec().input_shape = {input_region};
-        }
-        else
-        {
-            params->input_shape = {input_region};
-        }
+        buffer_offset = geom::Displacement{-x, -y};
+        window_size = geom::Size{width, height};
     }
 
     void ack_configure(uint32_t serial) override
