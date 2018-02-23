@@ -1376,7 +1376,7 @@ protected:
     {
         if (surface_id.as_value())
         {
-            if (auto session = session_for_client(client))
+            if (auto session = get_session(client))
             {
                 MirResizeEdge edge = mir_resize_edge_none;
 
@@ -1808,7 +1808,7 @@ void XdgSurfaceV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uin
 {
     if (surface_id.as_value())
     {
-        if (auto session = session_for_client(client))
+        if (auto session = get_session(client))
         {
             MirResizeEdge edge = mir_resize_edge_none;
 
