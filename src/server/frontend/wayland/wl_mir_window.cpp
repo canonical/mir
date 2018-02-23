@@ -16,6 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include <mir/shell/surface_specification.h>
 #include "wl_mir_window.h"
 
 #include "wayland_utils.h"
@@ -93,12 +94,13 @@ shell::SurfaceSpecification& WlAbstractMirWindow::spec()
 void WlAbstractMirWindow::commit()
 {
     auto const session = get_session(client);
+    auto const latest_window_size = window_size.is_set() ? window_size.value() : latest_buffer_size;
 
     if (surface_id.as_value())
     {
         auto const surface = get_surface_for_id(session, surface_id);
 
-        if (surface->size() != latest_buffer_size)
+        if (!window_size.is_set() && surface->size() != latest_buffer_size)
         {
             sink->latest_resize(latest_buffer_size);
             auto& new_size_spec = spec();
@@ -113,14 +115,16 @@ void WlAbstractMirWindow::commit()
         return;
     }
 
-    // Until we've seen a buffer we don't create a surface
-    if (latest_buffer_size == geometry::Size{})
+    // Until we know the size we don't create a surface
+    if (latest_window_size == geometry::Size{})
         return;
 
     auto* const mir_surface = WlSurface::from(surface);
     if (params->size == geometry::Size{})
-        params->size = latest_buffer_size;
-    params->content_id = mir_surface->stream_id;
+        params->size = latest_window_size;
+
+    params->streams = std::move(std::vector<shell::StreamSpecification>{{mir_surface->stream_id, buffer_offset, {}}});
+
     surface_id = shell->create_surface(session, *params, sink);
     mir_surface->surface_id = surface_id;
 

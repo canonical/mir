@@ -20,7 +20,9 @@
 #define WL_MIR_WINDOW_H
 
 #include "mir/frontend/surface_id.h"
+#include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
+#include "mir/optional_value.h"
 
 #include <memory>
 
@@ -70,6 +72,8 @@ protected:
 
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
     SurfaceId surface_id;
+    optional_value<geometry::Size> window_size;
+    geometry::Displacement buffer_offset;
 
     shell::SurfaceSpecification& spec();
 
