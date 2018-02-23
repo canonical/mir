@@ -90,7 +90,7 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
                     auto const top_left = csd_resize_window.top_left();
                     Rectangle const old_pos{top_left, csd_resize_window.size()};
 
-                    auto movement = cursor-old_cursor;
+                    auto movement = cursor - old_cursor;
 
                     auto new_width = old_pos.size.width;
                     auto new_height = old_pos.size.height;
