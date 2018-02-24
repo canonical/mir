@@ -16,7 +16,7 @@ desktop. On the armhf or arm64 target device just follow these steps:
        $ make
        $ make install
 
-The addional cmake option -DMIR_ENABLE_TESTS=off can be used to avoid building
+The additional cmake option -DMIR_ENABLE_TESTS=off can be used to avoid building
 the test suite to save time.
 
 Building for ARM from a PC (cross compiling)
