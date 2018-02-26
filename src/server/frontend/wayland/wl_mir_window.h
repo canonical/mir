@@ -73,7 +73,6 @@ protected:
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
     SurfaceId surface_id;
     optional_value<geometry::Size> window_size;
-    geometry::Displacement buffer_offset;
 
     shell::SurfaceSpecification& spec();
 

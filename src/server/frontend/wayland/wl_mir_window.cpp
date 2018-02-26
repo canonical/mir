@@ -123,7 +123,7 @@ void WlAbstractMirWindow::commit()
     if (params->size == geometry::Size{})
         params->size = latest_window_size;
 
-    params->streams = std::move(std::vector<shell::StreamSpecification>{{mir_surface->stream_id, buffer_offset, {}}});
+    params->streams = std::move(std::vector<shell::StreamSpecification>{{mir_surface->stream_id, mir_surface->buffer_offset, {}}});
 
     surface_id = shell->create_surface(session, *params, sink);
     mir_surface->surface_id = surface_id;
