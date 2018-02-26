@@ -20,6 +20,8 @@ set(
   wl_touch.cpp                  wl_touch.h
   xdg_shell_v6.cpp              xdg_shell_v6.h
   xdg_surface_v6.cpp            xdg_surface_v6.h
+  xdg_positioner_v6.cpp         xdg_positioner_v6.h
+  xdg_toplevel_v6.cpp           xdg_toplevel_v6.h
 )
 
 add_library(
