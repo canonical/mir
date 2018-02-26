@@ -27,7 +27,6 @@
 #include "wl_surface.h"
 
 #include "mir/scene/surface_creation_parameters.h"
-#include "mir/frontend/surface_id.h"
 #include "mir/frontend/shell.h"
 
 namespace mf = mir::frontend;

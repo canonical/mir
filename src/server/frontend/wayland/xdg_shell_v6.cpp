@@ -21,18 +21,6 @@
 #include "xdg_surface_v6.h"
 #include "xdg_positioner_v6.h"
 
-#include "wayland_utils.h"
-#include "wl_mir_window.h"
-#include "xdg_surface_v6.h"
-
-#include "mir/geometry/size.h"
-#include "mir/geometry/rectangle.h"
-#include "mir/scene/surface_creation_parameters.h"
-#include "mir/frontend/surface_id.h"
-#include "mir/frontend/shell.h"
-
-#include "mir/optional_value.h"
-
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 

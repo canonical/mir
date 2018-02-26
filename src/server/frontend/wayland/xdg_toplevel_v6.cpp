@@ -18,17 +18,9 @@
 
 #include "xdg_toplevel_v6.h"
 
-#include "xdg_positioner_v6.h"
 #include "xdg_surface_v6.h"
 
-#include "wayland_utils.h"
-#include "basic_surface_event_sink.h"
-#include "wl_seat.h"
-#include "wl_surface.h"
-
-#include "mir/scene/surface_creation_parameters.h"
-#include "mir/frontend/surface_id.h"
-#include "mir/frontend/shell.h"
+#include "mir/geometry/size.h"
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;

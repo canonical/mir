@@ -20,13 +20,6 @@
 #define MIR_FRONTEND_XDG_TOPLEVEL_V6_H
 
 #include "xdg_shell_generated_interfaces.h"
-#include "wl_mir_window.h"
-
-#include "mir/geometry/size.h"
-#include "mir/geometry/rectangle.h"
-
-#include "mir/optional_value.h"
-#include "mir_toolkit/common.h" // for MirPlacementGravity
 
 namespace mir
 {
@@ -34,6 +27,7 @@ namespace frontend
 {
 
 class XdgSurfaceV6;
+class Shell;
 
 class XdgToplevelV6 : public wayland::XdgToplevelV6
 {
