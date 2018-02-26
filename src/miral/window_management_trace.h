@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -24,12 +24,21 @@
 #include "miral/window_manager_tools.h"
 #include "miral/window_management_options.h"
 #include "miral/window_management_policy.h"
+#include "miral/workspace_policy.h"
+#include "miral/window_management_policy_addendum2.h"
+#include "miral/window_management_policy_addendum3.h"
+#include "miral/window_management_policy_addendum4.h"
 
 #include <atomic>
 
 namespace miral
 {
-class WindowManagementTrace : public WindowManagementPolicy, WindowManagerToolsImplementation
+class WindowManagementTrace : public WindowManagementPolicy,
+    public miral::WorkspacePolicy,
+    public miral::WindowManagementPolicyAddendum2,
+    public miral::WindowManagementPolicyAddendum3,
+    public miral::WindowManagementPolicyAddendum4,
+    WindowManagerToolsImplementation
 {
 public:
     WindowManagementTrace(WindowManagerTools const& wrapped, WindowManagementPolicyBuilder const& builder);
@@ -110,6 +119,23 @@ private:
     void for_each_window_in_workspace(
         std::shared_ptr<Workspace> const& workspace, std::function<void(Window const&)> const& callback) override;
 
+    void handle_request_drag_and_drop(WindowInfo& window_info) override;
+
+    void handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event) override;
+
+    void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) override;
+
+    void advise_adding_to_workspace(
+        std::shared_ptr<Workspace> const& workspace, std::vector<Window> const& windows) override;
+
+    void advise_removing_from_workspace(
+        std::shared_ptr<Workspace> const& workspace, std::vector<Window> const& windows) override;
+
+    auto confirm_placement_on_display(
+        WindowInfo const& window_info,
+        MirWindowState new_state,
+        Rectangle const& new_placement) -> Rectangle override;
+
 public:
     virtual void advise_begin() override;
 
@@ -138,6 +164,10 @@ public:
 private:
     WindowManagerTools wrapped;
     std::unique_ptr<miral::WindowManagementPolicy> const policy;
+    WorkspacePolicy* const policy1;
+    WindowManagementPolicyAddendum2* const policy2;
+    WindowManagementPolicyAddendum3* const policy3;
+    WindowManagementPolicyAddendum4* const policy4;
     std::atomic<unsigned> mutable trace_count;
     std::function<void()> log_input;
 };

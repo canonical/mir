@@ -330,13 +330,79 @@ auto dump_of(mir::geometry::Size const size) -> std::string
     out << size;
     return out.str();
 }
+
+auto find_policy_addendum1(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WorkspacePolicy*
+{
+    miral::WorkspacePolicy* result = dynamic_cast<miral::WorkspacePolicy*>(policy.get());
+
+    if (result)
+        return result;
+
+    static miral::WorkspacePolicy null_workspace_policy;
+
+    return &null_workspace_policy;
+}
+
+auto find_policy_addendum2(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum2*
+{
+    miral::WindowManagementPolicyAddendum2* result = dynamic_cast<miral::WindowManagementPolicyAddendum2*>(policy.get());
+
+    if (result)
+        return result;
+
+    struct NullWindowManagementPolicyAddendum2 : miral::WindowManagementPolicyAddendum2
+    {
+        void handle_request_drag_and_drop(miral::WindowInfo&) override {}
+        void handle_request_move(miral::WindowInfo&, MirInputEvent const*) override {}
+    };
+    static NullWindowManagementPolicyAddendum2 null_workspace_policy;
+
+    return &null_workspace_policy;
+}
+
+auto find_policy_addendum3(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum3*
+{
+    miral::WindowManagementPolicyAddendum3* result = dynamic_cast<miral::WindowManagementPolicyAddendum3*>(policy.get());
+
+    if (result)
+        return result;
+
+    struct NullWindowManagementPolicyAddendum3 : miral::WindowManagementPolicyAddendum3
+    {
+        auto confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::Rectangle const& r)
+        -> mir::geometry::Rectangle { return  r; }
+    };
+    static NullWindowManagementPolicyAddendum3 null_workspace_policy;
+
+    return &null_workspace_policy;
+}
+
+auto find_policy_addendum4(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum4*
+{
+    miral::WindowManagementPolicyAddendum4* result = dynamic_cast<miral::WindowManagementPolicyAddendum4*>(policy.get());
+
+    if (result)
+        return result;
+
+    struct NullWindowManagementPolicyAddendum4 : miral::WindowManagementPolicyAddendum4
+    {
+        void handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge) override {}
+    };
+    static NullWindowManagementPolicyAddendum4 null_workspace_policy;
+
+    return &null_workspace_policy;
+}
 }
 
 miral::WindowManagementTrace::WindowManagementTrace(
     WindowManagerTools const& wrapped,
     WindowManagementPolicyBuilder const& builder) :
     wrapped{wrapped},
-    policy(builder(WindowManagerTools{this}))
+    policy(builder(WindowManagerTools{this})),
+    policy1{find_policy_addendum1(policy)},
+    policy2{find_policy_addendum2(policy)},
+    policy3{find_policy_addendum3(policy)},
+    policy4{find_policy_addendum4(policy)}
 {
 }
 
@@ -796,5 +862,54 @@ void miral::WindowManagementTrace::advise_raise(std::vector<miral::Window> const
 try {
     mir::log_info("%s window_info=%s", __func__, dump_of(windows).c_str());
     policy->advise_raise(windows);
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::handle_request_drag_and_drop(miral::WindowInfo& window_info)
+try {
+    mir::log_info("%s window_info=%s", __func__, dump_of(window_info).c_str());
+    policy2->handle_request_drag_and_drop(window_info);
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::handle_request_move(miral::WindowInfo& window_info, MirInputEvent const* input_event)
+try {
+    mir::log_info("%s window_info=%s", __func__, dump_of(window_info).c_str());
+    policy2->handle_request_move(window_info, input_event);
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::handle_request_resize(
+    miral::WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge)
+try {
+    mir::log_info("%s window_info=%s, edge=0x%1x", __func__, dump_of(window_info).c_str(), edge);
+    policy4->handle_request_resize(window_info, input_event, edge);
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::advise_adding_to_workspace(
+    std::shared_ptr<miral::Workspace> const& workspace, std::vector<miral::Window> const& windows)
+try {
+    mir::log_info("%s workspace=%p, windows=%s", __func__, workspace.get(), dump_of(windows).c_str());
+    policy1->advise_adding_to_workspace(workspace, windows);
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::advise_removing_from_workspace(
+    std::shared_ptr<miral::Workspace> const& workspace, std::vector<miral::Window> const& windows)
+try {
+    mir::log_info("%s workspace=%p, windows=%s", __func__, workspace.get(), dump_of(windows).c_str());
+    policy1->advise_removing_from_workspace(workspace, windows);
+}
+MIRAL_TRACE_EXCEPTION
+
+
+auto miral::WindowManagementTrace::confirm_placement_on_display(
+    WindowInfo const& window_info,
+    MirWindowState new_state,
+    Rectangle const& new_placement) -> Rectangle
+try {
+    mir::log_info("%s window_info=%s", __func__, dump_of(window_info).c_str());
+    return policy3->confirm_placement_on_display(window_info, new_state, new_placement);
 }
 MIRAL_TRACE_EXCEPTION
