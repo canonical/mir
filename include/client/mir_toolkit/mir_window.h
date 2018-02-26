@@ -747,6 +747,16 @@ void mir_window_raise(MirWindow* window, MirCookie const* cookie);
 void mir_window_request_user_move(MirWindow* window, MirCookie const* cookie);
 
 /**
+ * Informs the window manager that the user is resizing the window.
+ *
+ * \param [in] window  The window to resize
+ * \param [in/ edge    The edge being dragged
+ * \param [in] cookie  A cookie instance obtained from an input event.
+ *                     An invalid cookie will terminate the client connection.
+ */
+void mir_window_request_user_resize(MirWindow* window, MirResizeEdge edge, MirCookie const* cookie);
+
+/**
  * Get the type (purpose) of a window.
  *   \param [in] window   The window to query
  *   \return              The type of the window

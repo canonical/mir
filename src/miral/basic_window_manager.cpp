@@ -23,6 +23,7 @@
 #include "miral/workspace_policy.h"
 #include "miral/window_management_policy_addendum2.h"
 #include "miral/window_management_policy_addendum3.h"
+#include "miral/window_management_policy_addendum4.h"
 
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
@@ -119,6 +120,22 @@ auto find_policy_addendum3(std::unique_ptr<miral::WindowManagementPolicy> const&
 
     return &null_workspace_policy;
 }
+
+auto find_policy_addendum4(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum4*
+{
+    miral::WindowManagementPolicyAddendum4* result = dynamic_cast<miral::WindowManagementPolicyAddendum4*>(policy.get());
+
+    if (result)
+        return result;
+
+    struct NullWindowManagementPolicyAddendum4 : miral::WindowManagementPolicyAddendum4
+    {
+        void handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge) override {}
+    };
+    static NullWindowManagementPolicyAddendum4 null_workspace_policy;
+
+    return &null_workspace_policy;
+}
 }
 
 
@@ -135,6 +152,7 @@ miral::BasicWindowManager::BasicWindowManager(
     workspace_policy{find_workspace_policy(policy)},
     policy2{find_policy_addendum2(policy)},
     policy3{find_policy_addendum3(policy)},
+    policy4{find_policy_addendum4(policy)},
     display_config_monitor{std::make_shared<DisplayConfigurationListeners>()}
 {
     display_config_monitor->add_listener(this);
@@ -405,7 +423,6 @@ void miral::BasicWindowManager::handle_raise_surface(
         policy->handle_raise_window(info_for(surface));
 }
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
 void miral::BasicWindowManager::handle_request_drag_and_drop(
     std::shared_ptr<mir::scene::Session> const& /*session*/,
     std::shared_ptr<mir::scene::Surface> const& surface,
@@ -427,7 +444,19 @@ void miral::BasicWindowManager::handle_request_move(
         policy2->handle_request_move(info_for(surface), mir_event_get_input_event(last_input_event));
     }
 }
-#endif
+
+void miral::BasicWindowManager::handle_request_resize(
+    std::shared_ptr<mir::scene::Session> const& /*session*/,
+    std::shared_ptr<mir::scene::Surface> const& surface,
+    uint64_t timestamp,
+    MirResizeEdge edge)
+{
+    std::lock_guard<decltype(mutex)> lock(mutex);
+    if (timestamp >= last_input_event_timestamp && last_input_event)
+    {
+        policy4->handle_request_resize(info_for(surface), mir_event_get_input_event(last_input_event), edge);
+    }
+}
 
 int miral::BasicWindowManager::set_surface_attribute(
     std::shared_ptr<scene::Session> const& /*application*/,

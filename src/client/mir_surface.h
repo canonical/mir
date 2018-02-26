@@ -201,6 +201,7 @@ public:
 
     void raise_surface(MirCookie const* cookie);
     void request_user_move(MirCookie const* cookie);
+    void request_user_resize(MirResizeEdge edge, MirCookie const* cookie);
     void request_drag_and_drop(MirCookie const* cookie);
     void set_drag_and_drop_start_handler(std::function<void(MirWindowEvent const*)> const& callback);
 
@@ -232,6 +233,7 @@ private:
     void on_cursor_configured();
     void acquired_persistent_id(MirWindowIdCallback callback, void* context);
     void request_operation(MirCookie const* cookie, mir::protobuf::RequestOperation operation) const;
+    void request_operation(MirCookie const* cookie, mir::protobuf::RequestOperation operation, mir::optional_value<uint32_t> hint) const;
 
     mir::client::rpc::DisplayServer* const server{nullptr};
     mir::client::rpc::DisplayServerDebug* const debug{nullptr};

@@ -152,7 +152,8 @@ void msh::FrontendShell::request_operation(
     std::shared_ptr<mf::Session> const& session,
     mf::SurfaceId surface_id,
     uint64_t timestamp,
-    UserRequest request)
+    UserRequest request,
+    optional_value <uint32_t> hint)
 {
     auto const scene_session = std::dynamic_pointer_cast<ms::Session>(session);
     auto const surface = scene_session->surface(surface_id);
@@ -173,6 +174,12 @@ void msh::FrontendShell::request_operation(
 
     case UserRequest::move:
         wrapped->request_move(scene_session, surface, timestamp);
+        break;
+
+    case UserRequest::resize:
+        if (!hint.is_set())
+            BOOST_THROW_EXCEPTION(std::logic_error("Resize request must identify edge(s)"));
+        wrapped->request_resize(scene_session, surface, timestamp, MirResizeEdge(hint.value()));
         break;
 
     default:

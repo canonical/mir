@@ -51,6 +51,7 @@ namespace miral
 class WorkspacePolicy;
 class WindowManagementPolicyAddendum2;
 class WindowManagementPolicyAddendum3;
+class WindowManagementPolicyAddendum4;
 class DisplayConfigurationListeners;
 
 using mir::shell::SurfaceSet;
@@ -109,7 +110,6 @@ public:
         std::shared_ptr<mir::scene::Surface> const& surface,
         uint64_t timestamp) override;
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     void handle_request_drag_and_drop(
         std::shared_ptr<mir::scene::Session> const& session,
         std::shared_ptr<mir::scene::Surface> const& surface,
@@ -119,7 +119,12 @@ public:
         std::shared_ptr<mir::scene::Session> const& session,
         std::shared_ptr<mir::scene::Surface> const& surface,
         uint64_t timestamp) override;
-#endif
+
+    void handle_request_resize(
+        std::shared_ptr<mir::scene::Session> const& session,
+        std::shared_ptr<mir::scene::Surface> const& surface,
+        uint64_t timestamp,
+        MirResizeEdge edge) override;
 
     int set_surface_attribute(
         std::shared_ptr<mir::scene::Session> const& /*application*/,
@@ -212,6 +217,7 @@ private:
     WorkspacePolicy* const workspace_policy;
     WindowManagementPolicyAddendum2* const policy2;
     WindowManagementPolicyAddendum3* const policy3;
+    WindowManagementPolicyAddendum4* const policy4;
 
     std::mutex mutex;
     SessionInfoMap app_info;

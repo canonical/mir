@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 Canonical Ltd.
+ * Copyright © 2017-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -24,6 +24,7 @@
 #include <mir_toolkit/mir_blob.h>
 
 #include <miral/window_management_policy_addendum2.h>
+#include <miral/window_management_policy_addendum4.h>
 
 #include <mir/geometry/displacement.h>
 #include <mir/input/input_device_info.h>
@@ -54,7 +55,8 @@ using mir::client::Cookie;
 namespace
 {
 struct MockWindowManagementPolicy : mir_test_framework::CanonicalWindowManagerPolicy,
-                                    miral::WindowManagementPolicyAddendum2
+                                    miral::WindowManagementPolicyAddendum2,
+                                    miral::WindowManagementPolicyAddendum4
 {
     MockWindowManagementPolicy(
         miral::WindowManagerTools const& tools,
@@ -66,6 +68,7 @@ struct MockWindowManagementPolicy : mir_test_framework::CanonicalWindowManagerPo
 
     MOCK_METHOD2(handle_request_move, void(miral::WindowInfo&, MirInputEvent const*));
     MOCK_METHOD1(handle_request_drag_and_drop, void(miral::WindowInfo&));
+    MOCK_METHOD3(handle_request_resize, void(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge));
 };
 
 struct MouseMoverAndFaker
@@ -273,6 +276,17 @@ TEST_F(ClientMediatedUserGestures, when_client_initiates_move_window_manager_han
     EXPECT_CALL(*mock_wm_policy, handle_request_move(_, _)).WillOnce(InvokeWithoutArgs([&]{ have_request.raise(); }));
 
     mir_window_request_user_move(window, cookie);
+
+    EXPECT_THAT(have_request.wait_for(receive_event_timeout), Eq(true));
+}
+
+TEST_F(ClientMediatedUserGestures, when_client_initiates_resize_window_manager_handles_request)
+{
+    auto const cookie = user_initiates_gesture();
+    Signal have_request;
+    EXPECT_CALL(*mock_wm_policy, handle_request_resize(_, _, _)).WillOnce(InvokeWithoutArgs([&]{ have_request.raise(); }));
+
+    mir_window_request_user_resize(window, mir_resize_edge_east, cookie);
 
     EXPECT_THAT(have_request.wait_for(receive_event_timeout), Eq(true));
 }
