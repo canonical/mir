@@ -27,21 +27,29 @@ class XdgShellV6
 {
 protected:
     XdgShellV6(struct wl_display* display, uint32_t max_version)
-        : max_version{max_version}
+        : global{wl_global_create(display, &zxdg_shell_v6_interface, max_version,
+                                  this, &XdgShellV6::bind_thunk)},
+            max_version{max_version}
     {
-        if (!wl_global_create(display, 
-                              &zxdg_shell_v6_interface, max_version,
-                              this, &XdgShellV6::bind))
+        if (global == nullptr)
         {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export zxdg_shell_v6 interface"}));
+            BOOST_THROW_EXCEPTION((std::runtime_error{
+                "Failed to export zxdg_shell_v6 interface"}));
         }
     }
-    virtual ~XdgShellV6() = default;
+    virtual ~XdgShellV6()
+    {
+        wl_global_destroy(global);
+    }
 
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
     virtual void destroy(struct wl_client* client, struct wl_resource* resource) = 0;
     virtual void create_positioner(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
     virtual void get_xdg_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface) = 0;
     virtual void pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial) = 0;
+
+    struct wl_global* const global;
+    uint32_t const max_version;
 
 private:
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
@@ -112,7 +120,7 @@ private:
         }
     }
 
-    static void bind(struct wl_client* client, void* data, uint32_t version, uint32_t id)
+    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<XdgShellV6*>(data);
         auto resource = wl_resource_create(client, &zxdg_shell_v6_interface,
@@ -123,9 +131,19 @@ private:
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
         wl_resource_set_implementation(resource, get_vtable(), me, nullptr);
+        try
+        {
+          me->bind(client, resource);
+        }
+        catch(...)
+        {
+            ::mir::log(
+                ::mir::logging::Severity::critical,
+                "frontend:Wayland",
+                std::current_exception(),
+                "Exception processing XdgShellV6::bind() request");
+        }
     }
-
-    uint32_t const max_version;
 
     static inline struct zxdg_shell_v6_interface const* get_vtable()
     {
@@ -287,9 +305,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<XdgPositionerV6*>(wl_resource_get_user_data(us));
+        delete static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct zxdg_positioner_v6_interface const* get_vtable()
@@ -419,9 +437,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<XdgSurfaceV6*>(wl_resource_get_user_data(us));
+        delete static_cast<XdgSurfaceV6*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct zxdg_surface_v6_interface const* get_vtable()
@@ -721,9 +739,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<XdgToplevelV6*>(wl_resource_get_user_data(us));
+        delete static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct zxdg_toplevel_v6_interface const* get_vtable()
@@ -806,9 +824,9 @@ private:
         }
     }
 
-    static void resource_destroyed_thunk(wl_resource* us)
+    static void resource_destroyed_thunk(wl_resource* resource)
     {
-        delete static_cast<XdgPopupV6*>(wl_resource_get_user_data(us));
+        delete static_cast<XdgPopupV6*>(wl_resource_get_user_data(resource));
     }
 
     static inline struct zxdg_popup_v6_interface const* get_vtable()

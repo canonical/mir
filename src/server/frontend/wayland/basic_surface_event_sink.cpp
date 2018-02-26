@@ -17,6 +17,7 @@
  */
 
 #include "basic_surface_event_sink.h"
+#include "wl_seat.h"
 
 namespace mf = mir::frontend;
 
