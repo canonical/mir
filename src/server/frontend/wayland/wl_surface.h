@@ -17,8 +17,8 @@
  *              William Wold <william.wold@canonical.com>
  */
 
-#ifndef WL_SURFACE_H
-#define WL_SURFACE_H
+#ifndef MIR_FRONTEND_WL_SURFACE_H
+#define MIR_FRONTEND_WL_SURFACE_H
 
 #include "core_generated_interfaces.h"
 
@@ -86,4 +86,4 @@ private:
 }
 }
 
-#endif // WL_SURFACE_H
+#endif // MIR_FRONTEND_WL_SURFACE_H
