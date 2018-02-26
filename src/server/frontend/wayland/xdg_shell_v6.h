@@ -30,7 +30,7 @@ namespace frontend
 class Shell;
 class WlSeat;
 
-class XdgShellV6 : wayland::XdgShellV6
+class XdgShellV6 : public wayland::XdgShellV6
 {
 public:
     XdgShellV6(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat);
