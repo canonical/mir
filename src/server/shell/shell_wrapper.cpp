@@ -136,6 +136,15 @@ void msh::ShellWrapper::request_move(
     wrapped->request_move(session, surface, timestamp);
 }
 
+void msh::ShellWrapper::request_resize(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<scene::Surface> const& surface,
+    uint64_t timestamp,
+    MirResizeEdge edge)
+{
+    wrapped->request_resize(session, surface, timestamp, edge);
+}
+
 void msh::ShellWrapper::add_display(geometry::Rectangle const& area)
 {
     wrapped->add_display(area);

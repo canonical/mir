@@ -16,14 +16,14 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef WAYLAND_UTILS_H
-#define WAYLAND_UTILS_H
+#ifndef MIR_FRONTEND_WAYLAND_UTILS_H
+#define MIR_FRONTEND_WAYLAND_UTILS_H
 
 #include "wayland_utils.h"
 
 #include <memory>
 
-class wl_client;
+struct wl_client;
 
 namespace mir
 {
@@ -47,4 +47,4 @@ std::shared_ptr<frontend::Session> get_session(wl_client* client);
 }
 }
 
-#endif // WAYLAND_UTILS_H
+#endif // MIR_FRONTEND_WAYLAND_UTILS_H

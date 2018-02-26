@@ -399,6 +399,26 @@ typedef enum MirPlacementHints
     mir_placement_hints_resize_any = mir_placement_hints_resize_x|mir_placement_hints_resize_y,
 } MirPlacementHints;
 
+
+/**
+ * Hints for resizing a window.
+ *
+ * These values are used to indicate which edge(s) of a surface
+ * is being dragged in a resize operation.
+ */
+typedef enum MirResizeEdge
+{
+    mir_resize_edge_none      = 0,
+    mir_resize_edge_west      = 1 << 0,
+    mir_resize_edge_east      = 1 << 1,
+    mir_resize_edge_north     = 1 << 2,
+    mir_resize_edge_south     = 1 << 3,
+    mir_resize_edge_northwest = mir_resize_edge_north | mir_resize_edge_west,
+    mir_resize_edge_northeast = mir_resize_edge_north | mir_resize_edge_east,
+    mir_resize_edge_southwest = mir_resize_edge_south | mir_resize_edge_west,
+    mir_resize_edge_southeast = mir_resize_edge_south | mir_resize_edge_east
+} MirResizeEdge;
+
 /**
  * Form factor associated with a physical output
  */

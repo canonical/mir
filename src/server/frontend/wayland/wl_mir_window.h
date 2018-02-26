@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef WL_MIR_WINDOW_H
-#define WL_MIR_WINDOW_H
+#ifndef MIR_FRONTEND_WL_MIR_WINDOW_H
+#define MIR_FRONTEND_WL_MIR_WINDOW_H
 
 #include "mir/frontend/surface_id.h"
 #include "mir/geometry/displacement.h"
@@ -88,4 +88,4 @@ private:
 }
 }
 
-#endif // WL_MIR_WINDOW_H
+#endif // MIR_FRONTEND_WL_MIR_WINDOW_H

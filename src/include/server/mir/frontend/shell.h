@@ -20,6 +20,7 @@
 #define MIR_FRONTEND_SHELL_H_
 
 #include "mir/frontend/surface_id.h"
+#include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
 
 #include <sys/types.h>
@@ -87,12 +88,22 @@ public:
         drag_and_drop,
         move,
         activate,
+        resize,
     };
 
     virtual void request_operation(
         std::shared_ptr<Session> const& session,
         SurfaceId surface_id, uint64_t timestamp,
-        UserRequest request) = 0;
+        UserRequest request,
+        optional_value<uint32_t> hint) = 0;
+
+    void request_operation(
+        std::shared_ptr<Session> const& session,
+        SurfaceId surface_id, uint64_t timestamp,
+        UserRequest request)
+    {
+        request_operation(session, surface_id, timestamp, request, optional_value<uint32_t>{});
+    }
 
 protected:
     Shell() = default;

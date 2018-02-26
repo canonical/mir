@@ -60,6 +60,7 @@ struct MockWindowManager : shell::WindowManager
     MOCK_METHOD3(handle_raise_surface, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, uint64_t));
     MOCK_METHOD3(handle_request_drag_and_drop, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, uint64_t));
     MOCK_METHOD3(handle_request_move, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, uint64_t));
+    MOCK_METHOD4(handle_request_resize, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, uint64_t, MirResizeEdge));
 
     MOCK_METHOD4(set_surface_attribute,
         int(std::shared_ptr<scene::Session> const& session,

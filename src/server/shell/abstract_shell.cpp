@@ -274,6 +274,15 @@ void msh::AbstractShell::request_move(
     window_manager->handle_request_move(session, surface, timestamp);
 }
 
+void msh::AbstractShell::request_resize(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<scene::Surface> const& surface,
+    uint64_t timestamp,
+    MirResizeEdge edge)
+{
+    window_manager->handle_request_resize(session, surface, timestamp, edge);
+}
+
 void msh::AbstractShell::focus_next_session()
 {
     std::unique_lock<std::mutex> lock(focus_mutex);
