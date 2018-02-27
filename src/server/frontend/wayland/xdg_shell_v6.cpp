@@ -247,16 +247,8 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
 
 void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    geom::Rectangle const input_region{{x, y}, {width, height}};
-
-    if (surface_id.as_value())
-    {
-        spec().input_shape = {input_region};
-    }
-    else
-    {
-        params->input_shape = {input_region};
-    }
+    WlSurface::from(surface)->buffer_offset = geom::Displacement{-x, -y};
+    window_size = geom::Size{width, height};
 }
 
 void mf::XdgSurfaceV6::ack_configure(uint32_t serial)

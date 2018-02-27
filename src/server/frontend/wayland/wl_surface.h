@@ -24,6 +24,7 @@
 
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/frontend/surface_id.h"
+#include <mir/geometry/displacement.h>
 
 #include <vector>
 
@@ -55,6 +56,7 @@ public:
     void set_role(WlMirWindow* role_);
 
     mir::frontend::BufferStreamId stream_id;
+    geometry::Displacement buffer_offset;
     std::shared_ptr<mir::frontend::BufferStream> stream;
     mir::frontend::SurfaceId surface_id;       // ID of any associated surface
 

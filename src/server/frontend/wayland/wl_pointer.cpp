@@ -65,6 +65,7 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
             auto const serial = wl_display_next_serial(display);
             auto const event = mir_event_get_input_event(ev);
             auto const pointer_event = mir_input_event_get_pointer_event(event);
+            auto const buffer_offset = WlSurface::from(target)->buffer_offset;
 
             switch(mir_pointer_event_action(pointer_event))
             {
@@ -105,8 +106,8 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
                         resource,
                         serial,
                         target,
-                        wl_fixed_from_double(mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x)),
-                        wl_fixed_from_double(mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y)));
+                        wl_fixed_from_double(mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x)-buffer_offset.dx.as_int()),
+                        wl_fixed_from_double(mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y)-buffer_offset.dy.as_int()));
                     break;
                 }
                 case mir_pointer_action_leave:
@@ -119,8 +120,8 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
                 }
                 case mir_pointer_action_motion:
                 {
-                    auto x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x);
-                    auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y);
+                    auto x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x)-buffer_offset.dx.as_int();
+                    auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y)-buffer_offset.dy.as_int();
                     auto vscroll = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_vscroll);
                     auto hscroll = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_hscroll);
 
