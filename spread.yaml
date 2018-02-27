@@ -24,6 +24,18 @@ backends:
             - fedora-27
             - fedora-rawhide:
                 image: fedora-27
+    google:
+        key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
+        plan: n1-highcpu-8
+        location: computeengine/us-east1-b
+        systems:
+            - ubuntu-16.04
+            - ubuntu-17.10
+            - ubuntu-devel:
+                image: ubuntu-17.10
+            - fedora-27
+            - fedora-rawhide:
+                image: fedora-27
 
 environment:
     ARCH: amd64
