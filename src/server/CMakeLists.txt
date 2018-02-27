@@ -30,6 +30,7 @@ add_subdirectory(input/)
 add_subdirectory(report/)
 add_subdirectory(scene/)
 add_subdirectory(frontend/)
+add_subdirectory(frontend_wayland/)
 add_subdirectory(shell/)
 add_subdirectory(thread/)
 
