@@ -32,16 +32,18 @@ env:
   global:
     # SPREAD_LINODE_KEY
   - secure: RCoJlG7Su7btAQDHoqDDkIGj3pXatGPeUnBQ3ZC2nfw40Tg7m3Rp21igW02x4hjWH7BtHM7AzyyAbr7Z87MA1KYVZ6bc1+LXjByiKWH+rurXchJupWusplZR1/6kbPMsOswH9bPf72FzfoG+Kt7Xg+14ePu34x0lvLHqIPQ40BdQVWWtonb9Af5IFpHz+6WU8wHxgjhaY84l2mlwIxu/IAqjxwvuMNrfHcoIdmwcITxZh1Dun8ckWTL8XDCxL4EHwhXj5tEOR51zE3wnvfNT1OfavtnIOpa35gx4oqpvb6748bPDbT1KScSrItsXRDelwZn5qAC/9oZwGZpF41F+uMPwty/X/P6AqWYz2UW/hoNIymFkcoU8HUkI2OtmlKW76bkJ+KHR+MW3uwOVQtZYkEolH/RYLlmMCJ2RhfD7MsKrrqOsOI7ROrMVp7bBzHkGT50vYi8hDGYRnb9jMgmHVuFejwQiFSFxOvN5aGo6dnmKV6fGXiTq3yUWSfwdC0/1K6OqT0giLByWLduLtEJSBIUWk8cWSIsx6CPh/TVrM3DPG7R1p6yuPyu9O13tRHYlLpGJOXbq6/eTLp6y9Jyh5f/mN3P1ydNfKH8iG1Sjj8pJbK2JAQ3zCnstHGpzFgjWncFqc1DuFIv/gJRact5fA7MnwjZMaexxhInq+4Thbl8=
+    # SPREAD_GOOGLE_KEY
+  - secure: C+R+J6LFdpge/aRDiCSVmU+Ps4sA0BhibQZgHi2iy20QkuD3NFiKcU7mISiEfWzsrRyLxtxYadWrfXXovyaSKDkIzuArVi/l5PyYRlLh7DYM/chk0CEbcoBpRKllgH57wU8ki7mCvksIbMdjZZo8iFIL79JUMaMvCK/QOwjqvj7d0I0qsJRT228G3n1KXKgRRL/9cafnjnzjHorrPpVJAkg8T7/QLO7uh7D5L5+KcHcf2Ws2/V05lhFXApCxL2QPLTCjn7cONKCaRfg35MkeFxWwTNm+JhGEW70A8Uk3qFWObWMPDEGrLkS5RF1Gw4zXrlqOyZRtK6VCaqsnJPVhqhLXliq9jNd/dbr/6L7hSa/t8ewbkXFuOqJzq240bEn4OCUFJOl9mwhklj14/Y+/xV3wRxIF6qdCDB99nirJKtwPjeYsKdCHLwKN/kj6yHhAU9JBDm+D5Odo9ny33eFPfQ+6SyGHL6BZKg7sVi8wbZwiTjmoN3wFZwSVto/4w1JiUHhJkMkEeIOlsQyfzJZl1DOTQDl4UiEAa8lhjvfqz8TqdXdu/3UPC9tokjnm45Joa5WkcnnvVsBoro+mSar6DipC6nb/+5yuguIEzcGha8iNyNMpMY0Ei0V+PwCl+M5k/vFtdA+HbSGs6VI4JvRd9awQ7geohn5ram5l4as67Sg=
   - DEBFULLNAME="Mir CI Bot"
   - DEBEMAIL="mir-ci-bot@canonical.com"
   - SPREAD_PATH=/tmp/spread
   matrix:
-  - SYSTEM=ubuntu-16.04 VARIANT=amd64
-  - SYSTEM=ubuntu-16.04 VARIANT=arm64
-  - SYSTEM=ubuntu-17.10 VARIANT=amd64
-  - SYSTEM=ubuntu-devel VARIANT=clang
-  - SYSTEM=fedora-27 VARIANT=amd64
-  - SYSTEM=fedora-rawhide VARIANT=amd64
+  - SYSTEM=google:ubuntu-16.04 VARIANT=amd64
+  - SYSTEM=google:ubuntu-16.04 VARIANT=arm64
+  - SYSTEM=google:ubuntu-17.10 VARIANT=amd64
+  - SYSTEM=google:ubuntu-devel VARIANT=clang
+  - SYSTEM=linode:fedora-27 VARIANT=amd64
+  - SYSTEM=linode:fedora-rawhide VARIANT=amd64
 
 before_install:
 - mkdir -p ${SPREAD_PATH}
@@ -51,7 +53,7 @@ before_install:
 - popd
 
 script:
-- ${SPREAD_PATH}/spread -v linode:$SYSTEM:...:$VARIANT
+- ${SPREAD_PATH}/spread -v $SYSTEM:...:$VARIANT
 
 jobs:
   include:
