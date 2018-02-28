@@ -78,6 +78,7 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirgraphics>
   $<TARGET_OBJECTS:mirfrontend>
   $<TARGET_OBJECTS:mirfrontend-wayland>
+  $<TARGET_OBJECTS:mirfrontend-waylandgenerated>
   $<TARGET_OBJECTS:mirshell>
   $<TARGET_OBJECTS:mirlttng>
   $<TARGET_OBJECTS:mirreport>

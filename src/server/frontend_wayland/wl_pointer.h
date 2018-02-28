@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_WL_POINTER_H
 #define MIR_FRONTEND_WL_POINTER_H
 
-#include "core_generated_interfaces.h"
+#include "generated/wayland_wrapper.h"
 
 struct MirInputEvent;
 typedef unsigned int MirPointerButtons;

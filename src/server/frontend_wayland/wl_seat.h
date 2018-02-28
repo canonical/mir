@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_WL_SEAT_H
 #define MIR_FRONTEND_WL_SEAT_H
 
-#include "core_generated_interfaces.h"
+#include "generated/wayland_wrapper.h"
 
 #include <unordered_map>
 

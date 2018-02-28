@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_WL_TOUCH_H
 #define MIR_FRONTEND_WL_TOUCH_H
 
-#include "core_generated_interfaces.h"
+#include "generated/wayland_wrapper.h"
 
 // from "mir_toolkit/events/event.h"
 struct MirInputEvent;
