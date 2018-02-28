@@ -39,7 +39,8 @@ class StubRenderable : public graphics::Renderable
 {
 public:
     StubRenderable(std::shared_ptr<graphics::Buffer> const& buffer, geometry::Rectangle const& rect)
-        : rect(rect),
+        : trans(1),
+          rect(rect),
           stub_buffer(buffer)
     {}
 

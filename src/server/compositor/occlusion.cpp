@@ -34,7 +34,7 @@ bool renderable_is_occluded(
     Rectangle const& area,
     std::vector<Rectangle>& coverage)
 {
-    static glm::mat4 const identity{};
+    static glm::mat4 const identity(1);
     static Rectangle const empty{};
 
     if (renderable.transformation() != identity)

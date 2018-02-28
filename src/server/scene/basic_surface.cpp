@@ -234,6 +234,7 @@ ms::BasicSurface::BasicSurface(
     std::shared_ptr<SceneReport> const& report) :
     surface_name(name),
     surface_rect(rect),
+    transformation_matrix(1),
     surface_alpha(1.0f),
     hidden(false),
     input_mode(mi::InputReceptionMode::normal),

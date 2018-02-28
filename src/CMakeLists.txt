@@ -25,7 +25,6 @@ set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(capnproto/)
 add_subdirectory(common/)
 add_subdirectory(protobuf/)
-add_subdirectory(protocol/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(platform/)

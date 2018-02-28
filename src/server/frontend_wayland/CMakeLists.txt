@@ -1,3 +1,5 @@
+add_subdirectory(protocol/)
+
 set(
   WAYLAND_SOURCES
 
@@ -18,6 +20,7 @@ set(
   wl_keybaord.cpp               wl_keybaord.h
   wl_pointer.cpp                wl_pointer.h
   wl_touch.cpp                  wl_touch.h
+  xdg_shell_v6.cpp              xdg_shell_v6.h
 )
 
 add_library(

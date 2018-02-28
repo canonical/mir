@@ -38,6 +38,7 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                   GLConfig const& gl_config)
                                   : report{r},
                                     area{{0,0},view_area_size},
+                                    transform(1),
                                     egl{gl_config},
                                     last_frame{f},
                                     eglGetSyncValues{nullptr}
