@@ -40,7 +40,7 @@
 #include "mir/graphics/renderable.h"
 #include "mir/renderer/renderer_factory.h"
 
-#include "frontend/wayland/wayland_connector.h"
+#include "frontend_wayland/wayland_connector.h"
 
 #include <iostream>
 

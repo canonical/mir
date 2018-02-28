@@ -13,25 +13,25 @@ target_link_libraries(wrapper-generator
 )
 
 get_filename_component(
-  CORE_GENERATED_HEADER src/server/frontend/wayland/core_generated_interfaces.h
+  CORE_GENERATED_HEADER src/server/frontend_wayland/core_generated_interfaces.h
   ABSOLUTE
   BASE_DIR ${PROJECT_SOURCE_DIR}
 )
 
 get_filename_component(
-  XDG_SHELL_GENERATED_HEADER src/server/frontend/wayland/xdg_shell_generated_interfaces.h
+  XDG_SHELL_GENERATED_HEADER src/server/frontend_wayland/xdg_shell_generated_interfaces.h
   ABSOLUTE
   BASE_DIR ${PROJECT_SOURCE_DIR}
 )
 
 get_filename_component(
-  XDG_SHELL_HEADER src/server/frontend/wayland/xdg-shell-unstable-v6.h
+  XDG_SHELL_HEADER src/server/frontend_wayland/xdg-shell-unstable-v6.h
   ABSOLUTE
   BASE_DIR ${PROJECT_SOURCE_DIR}
 )
 
 get_filename_component(
-  XDG_SHELL_CODE src/server/frontend/wayland/xdg-shell-unstable-v6.c
+  XDG_SHELL_CODE src/server/frontend_wayland/xdg-shell-unstable-v6.c
   ABSOLUTE
   BASE_DIR ${PROJECT_SOURCE_DIR}
 )

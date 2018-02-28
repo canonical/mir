@@ -37,8 +37,6 @@ set(
   ${PROJECT_SOURCE_DIR}/include/server/mir/frontend/buffer_stream.h
 )
 
-add_subdirectory(wayland)
-
 add_library(
   mirfrontend OBJECT
 

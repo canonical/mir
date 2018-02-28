@@ -1,3 +1,5 @@
+add_subdirectory(protocol/)
+
 set(
   WAYLAND_SOURCES
 
