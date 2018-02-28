@@ -136,7 +136,8 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
       clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
-      texture_cache(mgl::DefaultProgramFactory().create_texture_cache())
+      texture_cache(mgl::DefaultProgramFactory().create_texture_cache()),
+      display_transform(1)
 {
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     EGLDisplay disp = eglGetCurrentDisplay();
