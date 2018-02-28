@@ -41,7 +41,7 @@ class XdgSurfaceV6;
 class WlSeat;
 class XdgSurfaceV6EventSink;
 
-class XdgSurfaceV6 : wayland::XdgSurfaceV6, WlAbstractMirWindow
+class XdgSurfaceV6 : wayland::XdgSurface, WlAbstractMirWindow
 {
 public:
     XdgSurfaceV6* get_xdgsurface(wl_resource* surface) const;
@@ -52,7 +52,8 @@ public:
 
     void destroy() override;
     void get_toplevel(uint32_t id) override;
-    void get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner) override;
+    void get_popup(uint32_t id, std::experimental::optional<struct wl_resource*> const& parent,
+                   struct wl_resource* positioner) override;
     void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void ack_configure(uint32_t serial) override;
 
@@ -93,7 +94,7 @@ private:
     std::shared_ptr<bool> const destroyed;
 };
 
-class XdgPopupV6 : wayland::XdgPopupV6
+class XdgPopupV6 : wayland::XdgPopup
 {
 public:
     XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -102,7 +103,7 @@ public:
     void destroy() override;
 };
 
-class XdgToplevelV6 : public wayland::XdgToplevelV6
+class XdgToplevelV6 : public wayland::XdgToplevel
 {
 public:
     XdgToplevelV6(struct wl_client* client, struct wl_resource* parent, uint32_t id,
@@ -130,7 +131,7 @@ private:
     XdgSurfaceV6* const self;
 };
 
-class XdgPositionerV6 : public wayland::XdgPositionerV6
+class XdgPositionerV6 : public wayland::XdgPositioner
 {
 public:
     XdgPositionerV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -157,7 +158,7 @@ public:
 // XdgShellV6
 
 mf::XdgShellV6::XdgShellV6(struct wl_display* display, std::shared_ptr<mf::Shell> const shell, WlSeat& seat)
-    : wayland::XdgShellV6(display, 1),
+    : wayland::XdgWmBase(display, 1),
       shell{shell},
       seat{seat}
 {}
@@ -190,12 +191,12 @@ void mf::XdgShellV6::pong(struct wl_client* client, struct wl_resource* resource
 mf::XdgSurfaceV6* mf::XdgSurfaceV6::get_xdgsurface(wl_resource* surface) const
 {
     auto* tmp = wl_resource_get_user_data(surface);
-    return static_cast<XdgSurfaceV6*>(static_cast<wayland::XdgSurfaceV6*>(tmp));
+    return static_cast<XdgSurfaceV6*>(static_cast<wayland::XdgSurface*>(tmp));
 }
 
 mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t id, wl_resource* surface,
-                               std::shared_ptr<mf::Shell> const& shell, WlSeat& seat)
-    : wayland::XdgSurfaceV6(client, parent, id),
+                           std::shared_ptr<mf::Shell> const& shell, WlSeat& seat)
+    : wayland::XdgSurface(client, parent, id),
       WlAbstractMirWindow{client, surface, resource, shell},
       parent{parent},
       shell{shell},
@@ -222,16 +223,17 @@ void mf::XdgSurfaceV6::get_toplevel(uint32_t id)
     mir_surface->set_role(this);
 }
 
-void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner)
+void mf::XdgSurfaceV6::get_popup(uint32_t id, std::experimental::optional<struct wl_resource*> const& parent,
+                                 struct wl_resource* positioner)
 {
     auto* tmp = wl_resource_get_user_data(positioner);
-    auto const* const pos =  static_cast<XdgPositionerV6*>(static_cast<wayland::XdgPositionerV6*>(tmp));
+    auto const* const pos =  static_cast<XdgPositionerV6*>(static_cast<wayland::XdgPositioner*>(tmp));
 
     auto const session = get_session(client);
-    auto& parent_surface = *get_xdgsurface(parent);
 
     params->type = mir_window_type_freestyle;
-    params->parent_id = parent_surface.surface_id;
+    if (parent)
+        params->parent_id = get_xdgsurface(parent.value())->surface_id;
     if (pos->size.is_set()) params->size = pos->size.value();
     params->aux_rect = pos->aux_rect;
     params->surface_placement_gravity = pos->surface_placement_gravity;
@@ -240,7 +242,7 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
     params->aux_rect_placement_offset_y = pos->aux_rect_placement_offset_y;
     params->placement_hints = mir_placement_hints_slide_any;
 
-    new XdgPopupV6{client, parent, id};
+    new XdgPopupV6{client, resource, id};
     auto* const mir_surface = WlSurface::from(surface);
     mir_surface->set_role(this);
 }
@@ -291,35 +293,35 @@ void mf::XdgSurfaceV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/,
 
             switch (edges)
             {
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP:
+            case XDG_TOPLEVEL_RESIZE_EDGE_TOP:
                 edge = mir_resize_edge_north;
                 break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM:
+            case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM:
                 edge = mir_resize_edge_south;
                 break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_LEFT:
+            case XDG_TOPLEVEL_RESIZE_EDGE_LEFT:
                 edge = mir_resize_edge_west;
                 break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_LEFT:
+            case XDG_TOPLEVEL_RESIZE_EDGE_TOP_LEFT:
                 edge = mir_resize_edge_northwest;
                 break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_LEFT:
+            case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_LEFT:
                 edge = mir_resize_edge_southwest;
                 break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_RIGHT:
+            case XDG_TOPLEVEL_RESIZE_EDGE_RIGHT:
                 edge = mir_resize_edge_east;
                 break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_RIGHT:
+            case XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT:
                 edge = mir_resize_edge_northeast;
                 break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_RIGHT:
+            case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT:
                 edge = mir_resize_edge_southeast;
                 break;
 
@@ -455,7 +457,7 @@ void mf::XdgSurfaceV6EventSink::post_configure(int serial) const
 // XdgPopupV6
 
 mf::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : wayland::XdgPopupV6(client, parent, id)
+    : wayland::XdgPopup(client, parent, id)
 {}
 
 void mf::XdgPopupV6::grab(struct wl_resource* seat, uint32_t serial)
@@ -473,7 +475,7 @@ void mf::XdgPopupV6::destroy()
 
 mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* parent, uint32_t id,
                                  std::shared_ptr<mf::Shell> const& shell, XdgSurfaceV6* self)
-    : wayland::XdgToplevelV6(client, parent, id),
+    : wayland::XdgToplevel(client, parent, id),
       shell{shell},
       self{self}
 {
@@ -483,7 +485,7 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
             wl_array states;
             wl_array_init(&states);
 
-            zxdg_toplevel_v6_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
+            xdg_toplevel_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
         });
 }
 
@@ -571,13 +573,13 @@ void mf::XdgToplevelV6::set_minimized()
 mf::XdgToplevelV6* mf::XdgToplevelV6::get_xdgtoplevel(wl_resource* surface) const
 {
     auto* tmp = wl_resource_get_user_data(surface);
-    return static_cast<XdgToplevelV6*>(static_cast<wayland::XdgToplevelV6*>(tmp));
+    return static_cast<XdgToplevelV6*>(static_cast<wayland::XdgToplevel*>(tmp));
 }
 
 // XdgPositionerV6
 
 mf::XdgPositionerV6::XdgPositionerV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : wayland::XdgPositionerV6(client, parent, id)
+    : wayland::XdgPositioner(client, parent, id)
 {}
 
 void mf::XdgPositionerV6::destroy()
@@ -599,17 +601,33 @@ void mf::XdgPositionerV6::set_anchor(uint32_t anchor)
 {
     MirPlacementGravity placement = mir_placement_gravity_center;
 
-    if (anchor & ZXDG_POSITIONER_V6_ANCHOR_TOP)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_north);
-
-    if (anchor & ZXDG_POSITIONER_V6_ANCHOR_BOTTOM)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_south);
-
-    if (anchor & ZXDG_POSITIONER_V6_ANCHOR_LEFT)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_west);
-
-    if (anchor & ZXDG_POSITIONER_V6_ANCHOR_RIGHT)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_east);
+    switch (anchor)
+    {
+        case XDG_POSITIONER_ANCHOR_TOP:
+            placement = mir_placement_gravity_north;
+            break;
+        case XDG_POSITIONER_ANCHOR_BOTTOM:
+            placement = mir_placement_gravity_south;
+            break;
+        case XDG_POSITIONER_ANCHOR_LEFT:
+            placement = mir_placement_gravity_west;
+            break;
+        case XDG_POSITIONER_ANCHOR_RIGHT:
+            placement = mir_placement_gravity_east;
+            break;
+        case XDG_POSITIONER_ANCHOR_TOP_LEFT:
+            placement = mir_placement_gravity_northwest;
+            break;
+        case XDG_POSITIONER_ANCHOR_TOP_RIGHT:
+            placement = mir_placement_gravity_northeast;
+            break;
+        case XDG_POSITIONER_ANCHOR_BOTTOM_LEFT:
+            placement = mir_placement_gravity_southwest;
+            break;
+        case XDG_POSITIONER_ANCHOR_BOTTOM_RIGHT:
+            placement = mir_placement_gravity_southeast;
+            break;
+    }
 
     surface_placement_gravity = placement;
 }
@@ -618,17 +636,33 @@ void mf::XdgPositionerV6::set_gravity(uint32_t gravity)
 {
     MirPlacementGravity placement = mir_placement_gravity_center;
 
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_TOP)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_north);
-
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_BOTTOM)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_south);
-
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_LEFT)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_west);
-
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_RIGHT)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_east);
+    switch (gravity)
+    {
+        case XDG_POSITIONER_GRAVITY_TOP:
+            placement = mir_placement_gravity_north;
+            break;
+        case XDG_POSITIONER_GRAVITY_BOTTOM:
+            placement = mir_placement_gravity_south;
+            break;
+        case XDG_POSITIONER_GRAVITY_LEFT:
+            placement = mir_placement_gravity_west;
+            break;
+        case XDG_POSITIONER_GRAVITY_RIGHT:
+            placement = mir_placement_gravity_east;
+            break;
+        case XDG_POSITIONER_GRAVITY_TOP_LEFT:
+            placement = mir_placement_gravity_northwest;
+            break;
+        case XDG_POSITIONER_GRAVITY_TOP_RIGHT:
+            placement = mir_placement_gravity_northeast;
+            break;
+        case XDG_POSITIONER_GRAVITY_BOTTOM_LEFT:
+            placement = mir_placement_gravity_southwest;
+            break;
+        case XDG_POSITIONER_GRAVITY_BOTTOM_RIGHT:
+            placement = mir_placement_gravity_southeast;
+            break;
+    }
 
     aux_rect_placement_gravity = placement;
 }

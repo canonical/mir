@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_XDG_SHELL_V6_H
 #define MIR_FRONTEND_XDG_SHELL_V6_H
 
-#include "generated/xdg-shell-unstable-v6_wrapper.h"
+#include "generated/xdg-shell_wrapper.h"
 
 namespace mir
 {
@@ -30,10 +30,10 @@ namespace frontend
 class Shell;
 class WlSeat;
 
-class XdgShellV6 : public wayland::XdgShellV6
+class XdgShellV6 : public wayland::XdgWmBase
 {
 public:
-    XdgShellV6(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat);
+    XdgShellV6(wl_display* display, const std::shared_ptr< mir::frontend::Shell > shell, WlSeat& seat);
 
     void destroy(struct wl_client* client, struct wl_resource* resource) override;
     void create_positioner(struct wl_client* client, struct wl_resource* resource, uint32_t id) override;
