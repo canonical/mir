@@ -228,6 +228,10 @@ void mf::WlKeyboard::set_keymap(mir::input::Keymap const& new_keymap)
         WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,
         shm_buffer.fd(),
         length);
+
+    // I don't know where to get "real" rate and delay args. These are better than nothing.
+    if (wl_resource_get_version(resource) >= WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION)
+        wl_keyboard_send_repeat_info(resource, 30, 200);
 }
 
 void mf::WlKeyboard::update_modifier_state()
