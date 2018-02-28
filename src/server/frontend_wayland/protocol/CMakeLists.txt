@@ -3,48 +3,57 @@ pkg_check_modules(XMLPP libxml++-2.6 REQUIRED)
 include_directories(SYSTEM ${XMLPP_INCLUDE_DIRS})
 
 add_executable(wrapper-generator
-
   wrapper_generator.cpp
 )
 
 target_link_libraries(wrapper-generator
-
   ${XMLPP_LDFLAGS} ${XMLPP_LIBRARIES}
 )
 
 get_filename_component(
-  CORE_GENERATED_HEADER src/server/frontend_wayland/core_generated_interfaces.h
+  PROTOCOL_DIR src/server/frontend_wayland/protocol/
   ABSOLUTE
   BASE_DIR ${PROJECT_SOURCE_DIR}
 )
 
 get_filename_component(
-  XDG_SHELL_GENERATED_HEADER src/server/frontend_wayland/xdg_shell_generated_interfaces.h
+  GENERATED_DIR src/server/frontend_wayland/generated/
   ABSOLUTE
   BASE_DIR ${PROJECT_SOURCE_DIR}
 )
 
-get_filename_component(
-  XDG_SHELL_HEADER src/server/frontend_wayland/xdg-shell-unstable-v6.h
-  ABSOLUTE
-  BASE_DIR ${PROJECT_SOURCE_DIR}
-)
+set(GENERATED_FILES "")
 
-get_filename_component(
-  XDG_SHELL_CODE src/server/frontend_wayland/xdg-shell-unstable-v6.c
-  ABSOLUTE
-  BASE_DIR ${PROJECT_SOURCE_DIR}
-)
+macro(GENERATE_PROTOCOL NAME_PREFIX PROTOCOL_NAME)
+  set(PROTOCOL_PATH "${PROTOCOL_DIR}/${PROTOCOL_NAME}.xml")
+  set(OUTPUT_PATH_C "${GENERATED_DIR}/${PROTOCOL_NAME}.c")
+  set(OUTPUT_PATH_H "${GENERATED_DIR}/${PROTOCOL_NAME}.h")
+  set(OUTPUT_PATH_WRAPPER "${GENERATED_DIR}/${PROTOCOL_NAME}_wrapper.h")
+  add_custom_command(OUTPUT "${OUTPUT_PATH_C}"
+    VERBATIM
+    COMMAND "wayland-scanner" "--include-core-only" "code" "${PROTOCOL_PATH}" "${OUTPUT_PATH_C}"
+    DEPENDS "${PROTOCOL_PATH}"
+  )
+  add_custom_command(OUTPUT "${OUTPUT_PATH_H}"
+    VERBATIM
+    COMMAND "wayland-scanner" "--include-core-only" "server-header" "${PROTOCOL_PATH}" "${OUTPUT_PATH_H}"
+    DEPENDS "${PROTOCOL_PATH}"
+  )
+  add_custom_command(OUTPUT "${OUTPUT_PATH_WRAPPER}"
+    VERBATIM
+    COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator ${NAME_PREFIX} ${PROTOCOL_NAME}.h ${PROTOCOL_PATH} > ${OUTPUT_PATH_WRAPPER}"
+    DEPENDS "${PROTOCOL_PATH}"
+  )
+  set(GENERATED_FILES ${GENERATED_FILES} "${OUTPUT_PATH_H}" "${OUTPUT_PATH_C}" "${OUTPUT_PATH_WRAPPER}")
+endmacro()
+
+# when adding a protocol, don't forget to add the generated .c file to CMake
+GENERATE_PROTOCOL("wl_" "wayland")
+GENERATE_PROTOCOL("z" "xdg-shell-unstable-v6")
 
 add_custom_target(refresh-wayland-wrapper
-  COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator wl_ wayland-server.h /usr/share/wayland/wayland.xml >${CORE_GENERATED_HEADER}"
-  COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator z xdg-shell-unstable-v6.h /usr/share/wayland-protocols/unstable/xdg-shell/xdg-shell-unstable-v6.xml >${XDG_SHELL_GENERATED_HEADER}"
-  COMMAND "wayland-scanner" "--include-core-only" "server-header" "/usr/share/wayland-protocols/unstable/xdg-shell/xdg-shell-unstable-v6.xml" "${XDG_SHELL_HEADER}"
-  COMMAND "wayland-scanner" "--include-core-only" "code" "/usr/share/wayland-protocols/unstable/xdg-shell/xdg-shell-unstable-v6.xml" "${XDG_SHELL_CODE}"
-  VERBATIM
+  DEPENDS ${GENERATED_FILES}
   DEPENDS wrapper-generator
-  DEPENDS /usr/share/wayland/wayland.xml
-  DEPENDS /usr/share/wayland-protocols/unstable/xdg-shell/xdg-shell-unstable-v6.xml
-  SOURCES ${CORE_GENERATED_HEADER} ${XDG_SHELL_GENERATED_HEADER}
+  SOURCES ${GENERATED_FILES}
 )
 

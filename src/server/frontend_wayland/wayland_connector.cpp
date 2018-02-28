@@ -30,8 +30,7 @@
 #include "wayland_executor.h"
 #include "wlshmbuffer.h"
 
-#include "core_generated_interfaces.h"
-#include "xdg_shell_generated_interfaces.h"
+#include "generated/wayland_wrapper.h"
 
 #include "mir/frontend/shell.h"
 #include "mir/frontend/surface.h"

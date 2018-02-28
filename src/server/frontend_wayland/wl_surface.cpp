@@ -20,9 +20,10 @@
 #include "wl_surface.h"
 
 #include "wayland_utils.h"
-#include "core_generated_interfaces.h"
 #include "wl_mir_window.h"
 #include "wlshmbuffer.h"
+
+#include "generated/wayland_wrapper.h"
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/frontend/session.h"
