@@ -75,7 +75,7 @@ mgn::detail::DisplayBuffer::DisplayBuffer(
     egl_surface{egl_display, host_stream->egl_native_window(), egl_config},
     passthrough_option(option),
     content{BackingContent::stream},
-    identity()
+    identity(1)
 {
     host_surface->set_event_handler(event_thunk, this);
 }
@@ -186,7 +186,7 @@ void mgn::detail::DisplayBuffer::release_buffer(MirBuffer* b, MirPresentationCha
 
 glm::mat2 mgn::detail::DisplayBuffer::transformation() const
 {
-    return {};
+    return glm::mat2(1);
 }
 
 mgn::detail::DisplayBuffer::~DisplayBuffer() noexcept

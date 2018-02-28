@@ -157,7 +157,7 @@ bool mgo::DisplayBuffer::overlay(RenderableList const&)
 
 glm::mat2 mgo::DisplayBuffer::transformation() const
 {
-    return glm::mat2{};
+    return glm::mat2(1);
 }
 
 mg::NativeDisplayBuffer* mgo::DisplayBuffer::native_display_buffer()
