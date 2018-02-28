@@ -367,7 +367,7 @@ private:
 
 }
 
-TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
+TEST_F(NestedInput, DISABLED_nested_event_filter_receives_keyboard_from_host)
 {
     NiceMock<MockEventFilter> nested_event_filter;
     EXPECT_CALL(nested_event_filter, handle(mt::InputDeviceStateEvent())).Times(AnyNumber());
@@ -391,7 +391,7 @@ TEST_F(NestedInput, nested_event_filter_receives_keyboard_from_host)
     EXPECT_TRUE(all_events_received.wait_for(10s));
 }
 
-TEST_F(NestedInput, nested_input_device_hub_lists_keyboard)
+TEST_F(NestedInput, DISABLED_nested_input_device_hub_lists_keyboard)
 {
     NestedServerWithMockEventFilter nested_mir{new_connection()};
     wait_for_input_devices_added_to(nested_mir.server);
@@ -407,7 +407,7 @@ TEST_F(NestedInput, nested_input_device_hub_lists_keyboard)
         });
 }
 
-TEST_F(NestedInput, on_add_device_observer_gets_device_added_calls_on_existing_devices)
+TEST_F(NestedInput, DISABLED_on_add_device_observer_gets_device_added_calls_on_existing_devices)
 {
     std::shared_ptr<NiceMock<mtd::MockInputDeviceObserver>> mock_observer{
         std::make_shared<NiceMock<mtd::MockInputDeviceObserver>>()};
@@ -424,7 +424,7 @@ TEST_F(NestedInput, on_add_device_observer_gets_device_added_calls_on_existing_d
     nested_hub->remove_observer(mock_observer);
 }
 
-TEST_F(NestedInput, device_added_on_host_triggeres_nested_device_observer)
+TEST_F(NestedInput, DISABLED_device_added_on_host_triggeres_nested_device_observer)
 {
     std::shared_ptr<NiceMock<mtd::MockInputDeviceObserver>> mock_observer{
         std::make_shared<NiceMock<mtd::MockInputDeviceObserver>>()};
@@ -451,7 +451,7 @@ TEST_F(NestedInput, device_added_on_host_triggeres_nested_device_observer)
     input_device_changes_complete.wait_for(10s);
 }
 
-TEST_F(NestedInput, on_input_device_state_nested_server_emits_input_device_state)
+TEST_F(NestedInput, DISABLED_on_input_device_state_nested_server_emits_input_device_state)
 {
     mir::test::Signal client_to_host_event_received;
     mir::test::Signal client_to_nested_event_received;
@@ -478,7 +478,7 @@ TEST_F(NestedInput, on_input_device_state_nested_server_emits_input_device_state
     client_to_host_event_received.wait_for(2s);
 }
 
-TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_in_nested_server_are_accumulated)
+TEST_F(NestedInputWithMouse, DISABLED_mouse_pointer_coordinates_in_nested_server_are_accumulated)
 {
     auto const initial_movement_x = 30;
     auto const initial_movement_y = 30;
@@ -516,7 +516,7 @@ TEST_F(NestedInputWithMouse, mouse_pointer_coordinates_in_nested_server_are_accu
     ASSERT_TRUE(event_received.wait_for(60s));
 }
 
-TEST_F(NestedInputWithMouse, mouse_pointer_position_is_in_sync_with_host_server)
+TEST_F(NestedInputWithMouse, DISABLED_mouse_pointer_position_is_in_sync_with_host_server)
 {
     int const x[] = {30, -10, 10};
     int const y[] = {30, 100, 50};
@@ -549,7 +549,7 @@ TEST_F(NestedInputWithMouse, mouse_pointer_position_is_in_sync_with_host_server)
     ASSERT_TRUE(event_received.wait_for(60s));
 }
 
-TEST_F(NestedInput, nested_clients_can_change_host_device_configurations)
+TEST_F(NestedInput, DISABLED_nested_clients_can_change_host_device_configurations)
 {
     auto const acceleration_bias = 0.9f;
     std::string const uid{"mouse-uid"};
@@ -590,7 +590,7 @@ TEST_F(NestedInput, nested_clients_can_change_host_device_configurations)
     EXPECT_THAT(mir_pointer_config_get_acceleration_bias(ptr_conf), acceleration_bias);
 }
 
-TEST_F(NestedInput, pressed_keys_on_vt_switch_are_forgotten)
+TEST_F(NestedInput, DISABLED_pressed_keys_on_vt_switch_are_forgotten)
 {
     NiceMock<MockEventFilter> nested_event_filter;
 
