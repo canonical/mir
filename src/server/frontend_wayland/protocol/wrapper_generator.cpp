@@ -568,6 +568,7 @@ int main(int argc, char** argv)
 {
     if (argc != 4)
     {
+        std::cout << "// wrapper_generator given " << argc << " args instead of 4" << std::endl;
         exit(1);
     }
 
