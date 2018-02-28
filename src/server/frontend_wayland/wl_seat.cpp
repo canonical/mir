@@ -22,7 +22,7 @@
 
 #include "wayland_utils.h"
 #include "wl_surface.h"
-#include "wl_keybaord.h"
+#include "wl_keyboard.h"
 #include "wl_pointer.h"
 #include "wl_touch.h"
 

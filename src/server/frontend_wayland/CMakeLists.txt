@@ -17,7 +17,7 @@ set(
   wl_mir_window.cpp             wl_mir_window.h
   wl_surface.cpp                wl_surface.h
   wl_seat.cpp                   wl_seat.h
-  wl_keybaord.cpp               wl_keybaord.h
+  wl_keyboard.cpp               wl_keyboard.h
   wl_pointer.cpp                wl_pointer.h
   wl_touch.cpp                  wl_touch.h
   xdg_shell_v6.cpp              xdg_shell_v6.h
