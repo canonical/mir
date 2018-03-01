@@ -53,12 +53,12 @@ public:
     {
     public:
         virtual wl_resource* get_resource() const = 0;
-        virtual void create_toplevel(uint32_t id) const = 0; // new XdgToplevel{client, resource, id};
-        virtual void create_popup(uint32_t id) const = 0; // new XdgPopup{client, resource, id};
+        virtual void create_toplevel(uint32_t id) = 0;
+        virtual void create_popup(uint32_t id) = 0;
         virtual ~AdapterInterface() = default;
     };
 
-    XdgSurfaceBase(AdapterInterface const& adapter, wl_client* client, wl_resource* resource, wl_resource* parent,
+    XdgSurfaceBase(AdapterInterface* const adapter, wl_client* client, wl_resource* resource, wl_resource* parent,
                    wl_resource* surface, std::shared_ptr<Shell> const& shell, WlSeat& seat);
     ~XdgSurfaceBase() override;
 
@@ -72,13 +72,18 @@ public:
 
     void set_parent(optional_value<SurfaceId> parent_id);
     void set_title(std::string const& title);
-    void move();
-    void resize(MirResizeEdge edge);
+    void set_app_id(std::string const& app_id);
+    void show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y);
+    void move(wl_resource* seat, uint32_t serial);
+    void resize(wl_resource* seat, uint32_t serial, MirResizeEdge edge);
     void set_notify_resize(std::function<void(geometry::Size const& new_size)> notify_resize);
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
     void set_maximized();
     void unset_maximized();
+    void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output);
+    void unset_fullscreen();
+    void set_minimized();
 
     using WlAbstractMirWindow::client;
     using WlAbstractMirWindow::params;
@@ -87,7 +92,7 @@ public:
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<XdgSurfaceBaseEventSink> const sink;
-    AdapterInterface const& adapter;
+    AdapterInterface* const adapter;
 };
 
 struct XdgPositionerBase

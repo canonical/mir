@@ -65,7 +65,7 @@ private:
 //    return static_cast<XdgSurfaceBase*>(static_cast<wayland::XdgSurface*>(tmp));
 //}
 
-mf::XdgSurfaceBase::XdgSurfaceBase(AdapterInterface const& adapter, wl_client* client, wl_resource* resource,
+mf::XdgSurfaceBase::XdgSurfaceBase(AdapterInterface* const adapter, wl_client* client, wl_resource* resource,
                                    wl_resource* parent, wl_resource* surface,
                                    std::shared_ptr<mf::Shell> const& shell, WlSeat& seat)
     : WlAbstractMirWindow{client, surface, resource, shell},
@@ -84,12 +84,12 @@ mf::XdgSurfaceBase::~XdgSurfaceBase()
 
 void mf::XdgSurfaceBase::destroy()
 {
-    wl_resource_destroy(adapter.get_resource());
+    wl_resource_destroy(adapter->get_resource());
 }
 
 void mf::XdgSurfaceBase::become_toplevel(uint32_t id)
 {
-    adapter.create_toplevel(id);
+    adapter->create_toplevel(id);
     WlSurface::from(surface)->set_role(this);
 }
 
@@ -112,7 +112,7 @@ void mf::XdgSurfaceBase::become_popup(uint32_t id,
     params->aux_rect_placement_offset_y = positioner.aux_rect_placement_offset_y;
     params->placement_hints = mir_placement_hints_slide_any;
 
-    adapter.create_popup(id);
+    adapter->create_popup(id);
     WlSurface::from(surface)->set_role(this);
 }
 
@@ -128,6 +128,18 @@ void mf::XdgSurfaceBase::ack_configure(uint32_t serial)
     // TODO
 }
 
+void mf::XdgSurfaceBase::set_parent(optional_value<SurfaceId> parent_id)
+{
+    if (surface_id.as_value())
+    {
+        spec().parent_id = parent_id;
+    }
+    else
+    {
+        params->parent_id = parent_id;
+    }
+}
+
 void mf::XdgSurfaceBase::set_title(std::string const& title)
 {
     if (surface_id.as_value())
@@ -140,7 +152,21 @@ void mf::XdgSurfaceBase::set_title(std::string const& title)
     }
 }
 
-void mf::XdgSurfaceBase::move()
+void mf::XdgSurfaceBase::set_app_id(std::string const& app_id)
+{
+    (void)app_id;
+    // TODO
+    // Logically this sets the session name, but Mir doesn't allow this (currently) and
+    // allowing e.g. "session_for_client(client)->name(app_id);" would break the libmirserver ABI
+}
+
+void mf::XdgSurfaceBase::show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y)
+{
+    (void)seat, (void)serial, (void)x, (void)y;
+    // TODO
+}
+
+void mf::XdgSurfaceBase::move(wl_resource* /*seat*/, uint32_t /*serial*/)
 {
     if (surface_id.as_value())
     {
@@ -151,7 +177,7 @@ void mf::XdgSurfaceBase::move()
     }
 }
 
-void mf::XdgSurfaceBase::resize(MirResizeEdge edge)
+void mf::XdgSurfaceBase::resize(wl_resource* /*seat*/, uint32_t /*serial*/, MirResizeEdge edge)
 {
     if (surface_id.as_value())
     {
@@ -167,16 +193,9 @@ void mf::XdgSurfaceBase::resize(MirResizeEdge edge)
     }
 }
 
-void mf::XdgSurfaceBase::set_parent(optional_value<SurfaceId> parent_id)
+void mf::XdgSurfaceBase::set_notify_resize(std::function<void(geometry::Size const& new_size)> notify_resize)
 {
-    if (surface_id.as_value())
-    {
-        spec().parent_id = parent_id;
-    }
-    else
-    {
-        params->parent_id = parent_id;
-    }
+    sink->notify_resize = notify_resize;
 }
 
 void mf::XdgSurfaceBase::set_max_size(int32_t width, int32_t height)
@@ -247,6 +266,22 @@ void mf::XdgSurfaceBase::unset_maximized()
     {
         params->state = mir_window_state_restored;
     }
+}
+
+void mf::XdgSurfaceBase::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
+{
+    (void)output;
+    // TODO
+}
+
+void mf::XdgSurfaceBase::unset_fullscreen()
+{
+    // TODO
+}
+
+void mf::XdgSurfaceBase::set_minimized()
+{
+    // TODO
 }
 
 // XdgSurfaceBaseEventSink

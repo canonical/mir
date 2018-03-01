@@ -17,6 +17,7 @@
  */
 
 #include "xdg_shell_unstable_v6.h"
+#include "xdg_shell_base.h"
 
 #include "wayland_utils.h"
 #include "basic_surface_event_sink.h"
@@ -41,56 +42,28 @@ class XdgSurfaceUnstableV6;
 class WlSeat;
 class XdgSurfaceUnstableV6EventSink;
 
-class XdgSurfaceUnstableV6 : wayland::XdgSurfaceV6, WlAbstractMirWindow
+class XdgSurfaceUnstableV6 : XdgSurfaceBase::AdapterInterface, wayland::XdgSurfaceV6
 {
 public:
-    XdgSurfaceUnstableV6* get_xdgsurface(wl_resource* surface) const;
+    static XdgSurfaceUnstableV6* from(wl_resource* surface);
 
     XdgSurfaceUnstableV6(wl_client* client, wl_resource* parent, uint32_t id, wl_resource* surface,
-                 std::shared_ptr<Shell> const& shell, WlSeat& seat);
+                         std::shared_ptr<Shell> const& shell, WlSeat& seat);
     ~XdgSurfaceUnstableV6() override;
 
+    // from wayland::XdgSurfaceV6
     void destroy() override;
     void get_toplevel(uint32_t id) override;
     void get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner) override;
     void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void ack_configure(uint32_t serial) override;
 
-    void set_parent(optional_value<SurfaceId> parent_id);
-    void set_title(std::string const& title);
-    void move(struct wl_resource* seat, uint32_t serial);
-    void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges);
-    void set_notify_resize(std::function<void(geometry::Size const& new_size)> notify_resize);
-    void set_max_size(int32_t width, int32_t height);
-    void set_min_size(int32_t width, int32_t height);
-    void set_maximized();
-    void unset_maximized();
+    // from XdgSurfaceBase::AdapterInterface
+    wl_resource* get_resource() const override;
+    void create_toplevel(uint32_t id) override;
+    void create_popup(uint32_t id) override;
 
-    using WlAbstractMirWindow::client;
-    using WlAbstractMirWindow::params;
-    using WlAbstractMirWindow::surface_id;
-
-    struct wl_resource* const parent;
-    std::shared_ptr<Shell> const shell;
-    std::shared_ptr<XdgSurfaceUnstableV6EventSink> const sink;
-};
-
-class XdgSurfaceUnstableV6EventSink : public BasicSurfaceEventSink
-{
-public:
-    using BasicSurfaceEventSink::BasicSurfaceEventSink;
-
-    XdgSurfaceUnstableV6EventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink,
-                          std::shared_ptr<bool> const& destroyed);
-
-    void send_resize(geometry::Size const& new_size) const override;
-
-    std::function<void(geometry::Size const& new_size)> notify_resize = [](auto){};
-
-private:
-    void post_configure(int serial) const;
-
-    std::shared_ptr<bool> const destroyed;
+    XdgSurfaceBase base;
 };
 
 class XdgPopupUnstableV6 : wayland::XdgPopupV6
@@ -106,7 +79,7 @@ class XdgToplevelUnstableV6 : public wayland::XdgToplevelV6
 {
 public:
     XdgToplevelUnstableV6(struct wl_client* client, struct wl_resource* parent, uint32_t id,
-                  std::shared_ptr<frontend::Shell> const& shell, XdgSurfaceUnstableV6* self);
+                          std::shared_ptr<frontend::Shell> const& shell, XdgSurfaceBase* const xdg_surface);
 
     void destroy() override;
     void set_parent(std::experimental::optional<struct wl_resource*> const& parent) override;
@@ -124,15 +97,16 @@ public:
     void set_minimized() override;
 
 private:
-    XdgToplevelUnstableV6* get_xdgtoplevel(wl_resource* surface) const;
+    static XdgToplevelUnstableV6* from(wl_resource* surface);
 
-    std::shared_ptr<frontend::Shell> const shell;
-    XdgSurfaceUnstableV6* const self;
+    XdgSurfaceBase* const base;
 };
 
 class XdgPositionerUnstableV6 : public wayland::XdgPositionerV6
 {
 public:
+    static XdgPositionerUnstableV6* from(wl_resource* resource);
+
     XdgPositionerUnstableV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
 
     void destroy() override;
@@ -143,12 +117,7 @@ public:
     void set_constraint_adjustment(uint32_t constraint_adjustment) override;
     void set_offset(int32_t x, int32_t y) override;
 
-    optional_value<geometry::Size> size;
-    optional_value<geometry::Rectangle> aux_rect;
-    optional_value<MirPlacementGravity> surface_placement_gravity;
-    optional_value<MirPlacementGravity> aux_rect_placement_gravity;
-    optional_value<int> aux_rect_placement_offset_x;
-    optional_value<int> aux_rect_placement_offset_y;
+    XdgPositionerBase base;
 };
 
 }
@@ -187,28 +156,21 @@ void mf::XdgShellUnstableV6::pong(struct wl_client* client, struct wl_resource* 
 
 // XdgSurfaceUnstableV6
 
-mf::XdgSurfaceUnstableV6* mf::XdgSurfaceUnstableV6::get_xdgsurface(wl_resource* surface) const
+mf::XdgSurfaceUnstableV6* mf::XdgSurfaceUnstableV6::from(wl_resource* surface)
 {
     auto* tmp = wl_resource_get_user_data(surface);
     return static_cast<XdgSurfaceUnstableV6*>(static_cast<wayland::XdgSurfaceV6*>(tmp));
 }
 
-mf::XdgSurfaceUnstableV6::XdgSurfaceUnstableV6(wl_client* client, wl_resource* parent, uint32_t id, wl_resource* surface,
-                               std::shared_ptr<mf::Shell> const& shell, WlSeat& seat)
+mf::XdgSurfaceUnstableV6::XdgSurfaceUnstableV6(wl_client* client, wl_resource* parent, uint32_t id,
+                                               wl_resource* surface, std::shared_ptr<mf::Shell> const& shell,
+                                               WlSeat& seat)
     : wayland::XdgSurfaceV6(client, parent, id),
-      WlAbstractMirWindow{client, surface, resource, shell},
-      parent{parent},
-      shell{shell},
-      sink{std::make_shared<XdgSurfaceUnstableV6EventSink>(&seat, client, surface, resource, destroyed)}
-{
-    WlAbstractMirWindow::sink = sink;
-}
+      base{this, client, resource, parent, surface, shell, seat}
+{}
 
 mf::XdgSurfaceUnstableV6::~XdgSurfaceUnstableV6()
-{
-    auto* const mir_surface = WlSurface::from(surface);
-    mir_surface->set_role(null_wl_mir_window_ptr);
-}
+{}
 
 void mf::XdgSurfaceUnstableV6::destroy()
 {
@@ -217,239 +179,39 @@ void mf::XdgSurfaceUnstableV6::destroy()
 
 void mf::XdgSurfaceUnstableV6::get_toplevel(uint32_t id)
 {
-    new XdgToplevelUnstableV6{client, parent, id, shell, this};
-    auto* const mir_surface = WlSurface::from(surface);
-    mir_surface->set_role(this);
+    base.become_toplevel(id);
 }
 
 void mf::XdgSurfaceUnstableV6::get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner)
 {
-    auto* tmp = wl_resource_get_user_data(positioner);
-    auto const* const pos =  static_cast<XdgPositionerUnstableV6*>(static_cast<wayland::XdgPositionerV6*>(tmp));
-
-    auto const session = get_session(client);
-    auto& parent_surface = *get_xdgsurface(parent);
-
-    params->type = mir_window_type_freestyle;
-    params->parent_id = parent_surface.surface_id;
-    if (pos->size.is_set()) params->size = pos->size.value();
-    params->aux_rect = pos->aux_rect;
-    params->surface_placement_gravity = pos->surface_placement_gravity;
-    params->aux_rect_placement_gravity = pos->aux_rect_placement_gravity;
-    params->aux_rect_placement_offset_x = pos->aux_rect_placement_offset_x;
-    params->aux_rect_placement_offset_y = pos->aux_rect_placement_offset_y;
-    params->placement_hints = mir_placement_hints_slide_any;
-
-    new XdgPopupUnstableV6{client, parent, id};
-    auto* const mir_surface = WlSurface::from(surface);
-    mir_surface->set_role(this);
+    XdgSurfaceBase const* parent_base = &XdgSurfaceUnstableV6::from(parent)->base;
+    XdgPositionerBase const& positioner_base = XdgPositionerUnstableV6::from(positioner)->base;
+    base.become_popup(id, parent_base, positioner_base);
 }
 
 void mf::XdgSurfaceUnstableV6::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    WlSurface::from(surface)->buffer_offset = geom::Displacement{-x, -y};
-    window_size = geom::Size{width, height};
+    base.set_window_geometry(x, y, width, height);
 }
 
 void mf::XdgSurfaceUnstableV6::ack_configure(uint32_t serial)
 {
-    (void)serial;
-    // TODO
+    base.ack_configure(serial);
 }
 
-
-void mf::XdgSurfaceUnstableV6::set_title(std::string const& title)
+wl_resource* mf::XdgSurfaceUnstableV6::get_resource() const
 {
-    if (surface_id.as_value())
-    {
-        spec().name = title;
-    }
-    else
-    {
-        params->name = title;
-    }
+    return resource;
 }
 
-void mf::XdgSurfaceUnstableV6::move(struct wl_resource* /*seat*/, uint32_t /*serial*/)
+void mf::XdgSurfaceUnstableV6::create_toplevel(uint32_t id)
 {
-    if (surface_id.as_value())
-    {
-        if (auto session = get_session(client))
-        {
-            shell->request_operation(session, surface_id, sink->latest_timestamp(), Shell::UserRequest::move);
-        }
-    }
+    new XdgToplevelUnstableV6{client, base.parent, id, base.shell, &base};
 }
 
-void mf::XdgSurfaceUnstableV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges)
+void mf::XdgSurfaceUnstableV6::create_popup(uint32_t id)
 {
-    if (surface_id.as_value())
-    {
-        if (auto session = get_session(client))
-        {
-            MirResizeEdge edge = mir_resize_edge_none;
-
-            switch (edges)
-            {
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP:
-                edge = mir_resize_edge_north;
-                break;
-
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM:
-                edge = mir_resize_edge_south;
-                break;
-
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_LEFT:
-                edge = mir_resize_edge_west;
-                break;
-
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_LEFT:
-                edge = mir_resize_edge_northwest;
-                break;
-
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_LEFT:
-                edge = mir_resize_edge_southwest;
-                break;
-
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_RIGHT:
-                edge = mir_resize_edge_east;
-                break;
-
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_RIGHT:
-                edge = mir_resize_edge_northeast;
-                break;
-
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_RIGHT:
-                edge = mir_resize_edge_southeast;
-                break;
-
-            default:;
-            }
-
-            shell->request_operation(
-                session,
-                surface_id,
-                sink->latest_timestamp(),
-                Shell::UserRequest::resize,
-                edge);
-        }
-    }
-}
-
-void mf::XdgSurfaceUnstableV6::set_notify_resize(std::function<void(geometry::Size const& new_size)> notify_resize)
-{
-    sink->notify_resize = notify_resize;
-}
-
-void mf::XdgSurfaceUnstableV6::set_parent(optional_value<SurfaceId> parent_id)
-{
-    if (surface_id.as_value())
-    {
-        spec().parent_id = parent_id;
-    }
-    else
-    {
-        params->parent_id = parent_id;
-    }
-}
-
-void mf::XdgSurfaceUnstableV6::set_max_size(int32_t width, int32_t height)
-{
-    if (surface_id.as_value())
-    {
-        if (width == 0) width = std::numeric_limits<int>::max();
-        if (height == 0) height = std::numeric_limits<int>::max();
-
-        auto& mods = spec();
-        mods.max_width = geom::Width{width};
-        mods.max_height = geom::Height{height};
-    }
-    else
-    {
-        if (width == 0)
-        {
-            if (params->max_width.is_set())
-                params->max_width.consume();
-        }
-        else
-            params->max_width = geom::Width{width};
-
-        if (height == 0)
-        {
-            if (params->max_height.is_set())
-                params->max_height.consume();
-        }
-        else
-            params->max_height = geom::Height{height};
-    }
-}
-
-void mf::XdgSurfaceUnstableV6::set_min_size(int32_t width, int32_t height)
-{
-    if (surface_id.as_value())
-    {
-        auto& mods = spec();
-        mods.min_width = geom::Width{width};
-        mods.min_height = geom::Height{height};
-    }
-    else
-    {
-        params->min_width = geom::Width{width};
-        params->min_height = geom::Height{height};
-    }
-}
-
-void mf::XdgSurfaceUnstableV6::set_maximized()
-{
-    if (surface_id.as_value())
-    {
-        spec().state = mir_window_state_maximized;
-    }
-    else
-    {
-        params->state = mir_window_state_maximized;
-    }
-}
-
-void mf::XdgSurfaceUnstableV6::unset_maximized()
-{
-    if (surface_id.as_value())
-    {
-        spec().state = mir_window_state_restored;
-    }
-    else
-    {
-        params->state = mir_window_state_restored;
-    }
-}
-
-// XdgSurfaceUnstableV6EventSink
-
-mf::XdgSurfaceUnstableV6EventSink::XdgSurfaceUnstableV6EventSink(WlSeat* seat, wl_client* client, wl_resource* target,
-                                                 wl_resource* event_sink, std::shared_ptr<bool> const& destroyed)
-    : BasicSurfaceEventSink(seat, client, target, event_sink),
-      destroyed{destroyed}
-{
-    auto const serial = wl_display_next_serial(wl_client_get_display(client));
-    post_configure(serial);
-}
-
-void mf::XdgSurfaceUnstableV6EventSink::send_resize(geometry::Size const& new_size) const
-{
-    if (window_size != new_size)
-    {
-        auto const serial = wl_display_next_serial(wl_client_get_display(client));
-        notify_resize(new_size);
-        post_configure(serial);
-    }
-}
-
-void mf::XdgSurfaceUnstableV6EventSink::post_configure(int serial) const
-{
-    seat->spawn(run_unless(destroyed, [event_sink= event_sink, serial]()
-        {
-            wl_resource_post_event(event_sink, 0, serial);
-        }));
+    new XdgPopupUnstableV6{client, resource, id};
 }
 
 // XdgPopupUnstableV6
@@ -472,13 +234,12 @@ void mf::XdgPopupUnstableV6::destroy()
 // XdgToplevelUnstableV6
 
 mf::XdgToplevelUnstableV6::XdgToplevelUnstableV6(struct wl_client* client, struct wl_resource* parent, uint32_t id,
-                                 std::shared_ptr<mf::Shell> const& shell, XdgSurfaceUnstableV6* self)
+                                                 std::shared_ptr<mf::Shell> const& /*shell*/,
+                                                 XdgSurfaceBase* const xdg_surface)
     : wayland::XdgToplevelV6(client, parent, id),
-      shell{shell},
-      self{self}
+      base{xdg_surface}
 {
-    self->set_notify_resize(
-        [this](geom::Size const& new_size)
+    base->set_notify_resize([this](geom::Size const& new_size)
         {
             wl_array states;
             wl_array_init(&states);
@@ -496,85 +257,127 @@ void mf::XdgToplevelUnstableV6::set_parent(std::experimental::optional<struct wl
 {
     if (parent && parent.value())
     {
-        self->set_parent(get_xdgtoplevel(parent.value())->self->surface_id);
+        base->set_parent(XdgToplevelUnstableV6::from(parent.value())->base->surface_id);
     }
     else
     {
-        self->set_parent({});
+        base->set_parent({});
     }
 
 }
 
 void mf::XdgToplevelUnstableV6::set_title(std::string const& title)
 {
-    self->set_title(title);
+    base->set_title(title);
 }
 
-void mf::XdgToplevelUnstableV6::set_app_id(std::string const& /*app_id*/)
+void mf::XdgToplevelUnstableV6::set_app_id(std::string const& app_id)
 {
-    // Logically this sets the session name, but Mir doesn't allow this (currently) and
-    // allowing e.g. "session_for_client(client)->name(app_id);" would break the libmirserver ABI
+    base->set_app_id(app_id);
 }
 
 void mf::XdgToplevelUnstableV6::show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y)
 {
-    (void)seat, (void)serial, (void)x, (void)y;
-    // TODO
+    base->show_window_menu(seat, serial, x, y);
 }
 
 void mf::XdgToplevelUnstableV6::move(struct wl_resource* seat, uint32_t serial)
 {
-    self->move(seat, serial);
+    base->move(seat, serial);
 }
 
 void mf::XdgToplevelUnstableV6::resize(struct wl_resource* seat, uint32_t serial, uint32_t edges)
 {
-    self->resize(seat, serial, edges);
+    MirResizeEdge mir_edges = mir_resize_edge_none;
+
+    switch (edges)
+    {
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP:
+        mir_edges = mir_resize_edge_north;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM:
+        mir_edges = mir_resize_edge_south;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_LEFT:
+        mir_edges = mir_resize_edge_west;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_LEFT:
+        mir_edges = mir_resize_edge_northwest;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_LEFT:
+        mir_edges = mir_resize_edge_southwest;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_RIGHT:
+        mir_edges = mir_resize_edge_east;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_RIGHT:
+        mir_edges = mir_resize_edge_northeast;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_RIGHT:
+        mir_edges = mir_resize_edge_southeast;
+        break;
+
+    default:;
+    }
+
+    base->resize(seat, serial, mir_edges);
 }
 
 void mf::XdgToplevelUnstableV6::set_max_size(int32_t width, int32_t height)
 {
-    self->set_max_size(width, height);
+    base->set_max_size(width, height);
 }
 
 void mf::XdgToplevelUnstableV6::set_min_size(int32_t width, int32_t height)
 {
-    self->set_min_size(width, height);
+    base->set_min_size(width, height);
 }
 
 void mf::XdgToplevelUnstableV6::set_maximized()
 {
-    self->set_maximized();
+    base->set_maximized();
 }
 
 void mf::XdgToplevelUnstableV6::unset_maximized()
 {
-    self->unset_maximized();
+    base->unset_maximized();
 }
 
 void mf::XdgToplevelUnstableV6::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
 {
-    (void)output;
-    // TODO
+    base->set_fullscreen(output);
 }
 
 void mf::XdgToplevelUnstableV6::unset_fullscreen()
 {
-    // TODO
+    base->unset_fullscreen();
 }
 
 void mf::XdgToplevelUnstableV6::set_minimized()
 {
-    // TODO
+    base->set_minimized();
 }
 
-mf::XdgToplevelUnstableV6* mf::XdgToplevelUnstableV6::get_xdgtoplevel(wl_resource* surface) const
+mf::XdgToplevelUnstableV6* mf::XdgToplevelUnstableV6::from(wl_resource* surface)
 {
     auto* tmp = wl_resource_get_user_data(surface);
     return static_cast<XdgToplevelUnstableV6*>(static_cast<wayland::XdgToplevelV6*>(tmp));
 }
 
 // XdgPositionerUnstableV6
+
+mf::XdgPositionerUnstableV6* mf::XdgPositionerUnstableV6::from(wl_resource* resource)
+{
+    auto* tmp = wl_resource_get_user_data(resource);
+    return static_cast<XdgPositionerUnstableV6*>(static_cast<wayland::XdgPositionerV6*>(tmp));
+}
 
 mf::XdgPositionerUnstableV6::XdgPositionerUnstableV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : wayland::XdgPositionerV6(client, parent, id)
@@ -587,12 +390,12 @@ void mf::XdgPositionerUnstableV6::destroy()
 
 void mf::XdgPositionerUnstableV6::set_size(int32_t width, int32_t height)
 {
-    size = geom::Size{width, height};
+    base.size = geom::Size{width, height};
 }
 
 void mf::XdgPositionerUnstableV6::set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    aux_rect = geom::Rectangle{{x, y}, {width, height}};
+    base.aux_rect = geom::Rectangle{{x, y}, {width, height}};
 }
 
 void mf::XdgPositionerUnstableV6::set_anchor(uint32_t anchor)
@@ -611,7 +414,7 @@ void mf::XdgPositionerUnstableV6::set_anchor(uint32_t anchor)
     if (anchor & ZXDG_POSITIONER_V6_ANCHOR_RIGHT)
         placement = MirPlacementGravity(placement | mir_placement_gravity_east);
 
-    surface_placement_gravity = placement;
+    base.surface_placement_gravity = placement;
 }
 
 void mf::XdgPositionerUnstableV6::set_gravity(uint32_t gravity)
@@ -630,7 +433,7 @@ void mf::XdgPositionerUnstableV6::set_gravity(uint32_t gravity)
     if (gravity & ZXDG_POSITIONER_V6_GRAVITY_RIGHT)
         placement = MirPlacementGravity(placement | mir_placement_gravity_east);
 
-    aux_rect_placement_gravity = placement;
+    base.aux_rect_placement_gravity = placement;
 }
 
 void mf::XdgPositionerUnstableV6::set_constraint_adjustment(uint32_t constraint_adjustment)
@@ -641,7 +444,7 @@ void mf::XdgPositionerUnstableV6::set_constraint_adjustment(uint32_t constraint_
 
 void mf::XdgPositionerUnstableV6::set_offset(int32_t x, int32_t y)
 {
-    aux_rect_placement_offset_x = x;
-    aux_rect_placement_offset_y = y;
+    base.aux_rect_placement_offset_x = x;
+    base.aux_rect_placement_offset_y = y;
 }
 
