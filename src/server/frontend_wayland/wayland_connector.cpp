@@ -22,7 +22,7 @@
 #include "wl_mir_window.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
-#include "xdg_shell_base.h"
+#include "xdg_shell_unstable_v6.h"
 
 #include "basic_surface_event_sink.h"
 #include "null_event_sink.h"
@@ -758,8 +758,8 @@ mf::WaylandConnector::WaylandConnector(
     data_device_manager_global = std::make_unique<DataDeviceManager>(display.get());
 
     // The XDG shell support is currently too flaky to enable by default
-    //if (getenv("MIR_EXPERIMENTAL_XDG_SHELL"))
-    //    xdg_shell_global = std::make_unique<XdgShellV6>(display.get(), shell, *seat_global);
+    if (getenv("MIR_EXPERIMENTAL_XDG_SHELL"))
+        xdg_shell_unstable_v6_global = std::make_unique<XdgShellUnstableV6>(display.get(), shell, *seat_global);
 
     wl_display_init_shm(display.get());
 
