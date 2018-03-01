@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "wl_keybaord.h"
+#include "wl_keyboard.h"
 
 #include "wayland_utils.h"
 #include "wl_surface.h"
