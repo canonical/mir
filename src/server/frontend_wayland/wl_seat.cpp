@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "core_generated_interfaces.h"
+#include "generated/wayland_wrapper.h"
 
 #include "wl_seat.h"
 

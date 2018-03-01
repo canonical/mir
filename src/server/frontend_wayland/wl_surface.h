@@ -20,7 +20,7 @@
 #ifndef MIR_FRONTEND_WL_SURFACE_H
 #define MIR_FRONTEND_WL_SURFACE_H
 
-#include "core_generated_interfaces.h"
+#include "generated/wayland_wrapper.h"
 
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/frontend/surface_id.h"
