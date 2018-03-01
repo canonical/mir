@@ -23,6 +23,7 @@
 #include "wl_surface.h"
 #include "wl_seat.h"
 #include "xdg_shell_unstable_v6.h"
+#include "xdg_shell_stable.h"
 
 #include "basic_surface_event_sink.h"
 #include "null_event_sink.h"
@@ -759,7 +760,10 @@ mf::WaylandConnector::WaylandConnector(
 
     // The XDG shell support is currently too flaky to enable by default
     if (getenv("MIR_EXPERIMENTAL_XDG_SHELL"))
+    {
         xdg_shell_unstable_v6_global = std::make_unique<XdgShellUnstableV6>(display.get(), shell, *seat_global);
+        xdg_shell_stable_global = std::make_unique<XdgShellStable>(display.get(), shell, *seat_global);
+    }
 
     wl_display_init_shm(display.get());
 

@@ -18,6 +18,7 @@ set(
   wl_pointer.cpp                wl_pointer.h
   wl_touch.cpp                  wl_touch.h
   xdg_shell_base.cpp            xdg_shell_base.h
+  xdg_shell_stable.cpp          xdg_shell_stable.h
   xdg_shell_unstable_v6.cpp     xdg_shell_unstable_v6.h
 )
 
