@@ -217,11 +217,11 @@ void mf::WlKeyboard::set_keymap(mir::input::Keymap const& new_keymap)
     // TODO: We might need to copy across the existing depressed keys?
     state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
 
-    auto buffer = xkb_keymap_get_as_string(keymap.get(), XKB_KEYMAP_FORMAT_TEXT_V1);
-    auto length = strlen(buffer);
+    std::unique_ptr<char, void(*)(void*)> buffer{xkb_keymap_get_as_string(keymap.get(), XKB_KEYMAP_FORMAT_TEXT_V1), free};
+    auto length = strlen(buffer.get());
 
     mir::AnonymousShmFile shm_buffer{length};
-    memcpy(shm_buffer.base_ptr(), buffer, length);
+    memcpy(shm_buffer.base_ptr(), buffer.get(), length);
 
     wl_keyboard_send_keymap(
         resource,
