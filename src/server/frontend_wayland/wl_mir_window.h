@@ -58,7 +58,7 @@ class WlAbstractMirWindow : public WlMirWindow
 {
 public:
     WlAbstractMirWindow(wl_client* client, wl_resource* surface, wl_resource* event_sink,
-        std::shared_ptr<frontend::Shell> const& shell);
+                        std::shared_ptr<frontend::Shell> const& shell);
 
     ~WlAbstractMirWindow() override;
 
