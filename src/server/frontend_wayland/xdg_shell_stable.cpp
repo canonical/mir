@@ -479,7 +479,7 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
         break;
     }
 
-    base.surface_placement_gravity = placement;
+    base.aux_rect_placement_gravity = placement;
 }
 
 void mf::XdgPositionerStable::set_gravity(uint32_t gravity)
@@ -489,39 +489,39 @@ void mf::XdgPositionerStable::set_gravity(uint32_t gravity)
     switch (gravity)
     {
     case XDG_POSITIONER_GRAVITY_TOP:
-        placement = mir_placement_gravity_north;
-        break;
-
-    case XDG_POSITIONER_GRAVITY_BOTTOM:
         placement = mir_placement_gravity_south;
         break;
 
-    case XDG_POSITIONER_GRAVITY_LEFT:
-        placement = mir_placement_gravity_west;
+    case XDG_POSITIONER_GRAVITY_BOTTOM:
+        placement = mir_placement_gravity_north;
         break;
 
-    case XDG_POSITIONER_GRAVITY_RIGHT:
+    case XDG_POSITIONER_GRAVITY_LEFT:
         placement = mir_placement_gravity_east;
         break;
 
+    case XDG_POSITIONER_GRAVITY_RIGHT:
+        placement = mir_placement_gravity_west;
+        break;
+
     case XDG_POSITIONER_GRAVITY_TOP_LEFT:
-        placement = mir_placement_gravity_northwest;
+        placement = mir_placement_gravity_southeast;
         break;
 
     case XDG_POSITIONER_GRAVITY_TOP_RIGHT:
-        placement = mir_placement_gravity_northeast;
-        break;
-
-    case XDG_POSITIONER_GRAVITY_BOTTOM_LEFT:
         placement = mir_placement_gravity_southwest;
         break;
 
+    case XDG_POSITIONER_GRAVITY_BOTTOM_LEFT:
+        placement = mir_placement_gravity_northeast;
+        break;
+
     case XDG_POSITIONER_GRAVITY_BOTTOM_RIGHT:
-        placement = mir_placement_gravity_southeast;
+        placement = mir_placement_gravity_northwest;
         break;
     }
 
-    base.aux_rect_placement_gravity = placement;
+    base.surface_placement_gravity = placement;
 }
 
 void mf::XdgPositionerStable::set_constraint_adjustment(uint32_t constraint_adjustment)

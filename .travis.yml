@@ -45,6 +45,11 @@ env:
   - SYSTEM=linode:fedora-27 VARIANT=amd64
   - SYSTEM=linode:fedora-rawhide VARIANT=amd64
 
+matrix:
+  allow_failures:
+  - env: SYSTEM=linode:fedora-rawhide VARIANT=amd64
+  fast_finish: true
+
 before_install:
 - mkdir -p ${SPREAD_PATH}
 - pushd "${SPREAD_PATH}"
