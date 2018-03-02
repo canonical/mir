@@ -614,7 +614,7 @@ void mf::XdgPositionerV6::set_anchor(uint32_t anchor)
     if (anchor & ZXDG_POSITIONER_V6_ANCHOR_RIGHT)
         placement = MirPlacementGravity(placement | mir_placement_gravity_east);
 
-    surface_placement_gravity = placement;
+    aux_rect_placement_gravity = placement;
 }
 
 void mf::XdgPositionerV6::set_gravity(uint32_t gravity)
@@ -622,18 +622,18 @@ void mf::XdgPositionerV6::set_gravity(uint32_t gravity)
     MirPlacementGravity placement = mir_placement_gravity_center;
 
     if (gravity & ZXDG_POSITIONER_V6_GRAVITY_TOP)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_north);
-
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_BOTTOM)
         placement = MirPlacementGravity(placement | mir_placement_gravity_south);
 
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_LEFT)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_west);
+    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_BOTTOM)
+        placement = MirPlacementGravity(placement | mir_placement_gravity_north);
 
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_RIGHT)
+    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_LEFT)
         placement = MirPlacementGravity(placement | mir_placement_gravity_east);
 
-    aux_rect_placement_gravity = placement;
+    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_RIGHT)
+        placement = MirPlacementGravity(placement | mir_placement_gravity_west);
+
+    surface_placement_gravity = placement;
 }
 
 void mf::XdgPositionerV6::set_constraint_adjustment(uint32_t constraint_adjustment)
