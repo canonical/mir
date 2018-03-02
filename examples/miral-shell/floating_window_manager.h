@@ -101,15 +101,7 @@ protected:
 private:
     void toggle(MirWindowState state);
 
-    bool resize(miral::Window const& window, Point cursor, Point old_cursor);
-
     Point old_cursor{};
-
-    bool moving = false;
-    unsigned move_modifiers = 0;
-    bool resizing = false;
-    bool left_resize = false;
-    bool top_resize  = false;
 
     int old_touch_pinch_top = 0;
     int old_touch_pinch_left = 0;
@@ -117,10 +109,12 @@ private:
     int old_touch_pinch_height = 0;
     bool pinching = false;
 
-    bool csd_resizing = false;
-    MirResizeEdge csd_resize_edge = mir_resize_edge_none;
-    miral::Window csd_resize_window;
-    MirPointerButton csd_resize_button;
+    bool pointer_moving = false;
+    bool pointer_resizing = false;
+    MirPointerButton active_pointer_button;
+    unsigned active_pointer_modifiers = 0;
+    MirResizeEdge resize_edge = mir_resize_edge_none;
+    miral::Window resize_window;
 
     SpinnerSplash const spinner;
 
