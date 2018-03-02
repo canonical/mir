@@ -6,7 +6,6 @@ execute: |
       # upgrade to rawhide
       dnf upgrade --assumeyes --refresh
       dnf install --assumeyes fedora-gpg-keys
-      rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-fedora-28-primary
       # rawhide being rolling breaks from time to time, fall through an incomplete upgrade
       dnf distro-sync --assumeyes --releasever=rawhide || /bin/true
       REBOOT
