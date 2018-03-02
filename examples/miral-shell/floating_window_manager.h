@@ -120,6 +120,7 @@ private:
     bool csd_resizing = false;
     MirResizeEdge csd_resize_edge = mir_resize_edge_none;
     miral::Window csd_resize_window;
+    MirPointerButton csd_resize_button;
 
     SpinnerSplash const spinner;
 
