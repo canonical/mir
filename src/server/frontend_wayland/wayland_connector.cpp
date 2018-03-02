@@ -287,34 +287,31 @@ void WlCompositor::create_region(wl_client* client, wl_resource* resource, uint3
     new Region{client, resource, id};
 }
 
-class SurfaceEventSink : public BasicSurfaceEventSink
+class WlShellSurfaceEventSink : public BasicSurfaceEventSink
 {
 public:
-    SurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink,
-        std::shared_ptr<bool> const& destroyed) :
-        BasicSurfaceEventSink{seat, client, target, event_sink},
-        destroyed{destroyed}
-    {
-    }
+    WlShellSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* wl_shell_surface,
+                            std::shared_ptr<bool> const& destroyed)
+        : BasicSurfaceEventSink{seat, client, target, destroyed},
+          wl_shell_surface{wl_shell_surface}
+    {}
 
-    void send_resize(geometry::Size const& new_size) const override;
+    void send_resize(geometry::Size const& new_size) const override
+    {
+        if (window_size != new_size)
+        {
+            run_unless_destroyed([this, new_size]()
+                {
+                    wl_shell_surface_send_configure(wl_shell_surface,
+                                                    WL_SHELL_SURFACE_RESIZE_NONE,
+                                                    new_size.width.as_int(), new_size.height.as_int());
+                });
+        }
+    }
 
 private:
-    std::shared_ptr<bool> const destroyed;
+    wl_resource* wl_shell_surface;
 };
-
-void SurfaceEventSink::send_resize(geometry::Size const& new_size) const
-{
-    if (window_size != new_size)
-    {
-        seat->spawn(run_unless(
-            destroyed,
-            [event_sink= event_sink, width = new_size.width.as_int(), height = new_size.height.as_int()]()
-            {
-                wl_shell_surface_send_configure(event_sink, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
-            }));
-    }
-}
 
 class WlShellSurface  : public wayland::ShellSurface, WlAbstractMirWindow
 {
@@ -327,10 +324,10 @@ public:
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat)
         : ShellSurface(client, parent, id),
-        WlAbstractMirWindow{client, surface, resource, shell}
+          WlAbstractMirWindow{client, surface, resource, shell}
     {
-        // We can't pass this to the WlAbstractMirWindow constructor as it needs creating *after* destroyed
-        sink = std::make_shared<SurfaceEventSink>(&seat, client, surface, event_sink, destroyed);
+        // We can't pass this to the WlAbstractMirWindow constructor as it needs creating *after* `destroyed` is created
+        sink = std::make_shared<WlShellSurfaceEventSink>(&seat, client, surface, event_sink, destroyed);
     }
 
     ~WlShellSurface() override

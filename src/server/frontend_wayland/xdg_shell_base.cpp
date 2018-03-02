@@ -36,46 +36,16 @@ namespace mir
 namespace frontend
 {
 
-class XdgSurfaceBaseEventSink : public BasicSurfaceEventSink
-{
-public:
-    using BasicSurfaceEventSink::BasicSurfaceEventSink;
-
-    XdgSurfaceBaseEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink,
-                            std::shared_ptr<bool> const& destroyed);
-
-    void send_resize(geometry::Size const& new_size) const override;
-
-    std::function<void(geometry::Size const& new_size)> notify_resize = [](auto){};
-
-private:
-    void post_configure(int serial) const;
-
-    std::shared_ptr<bool> const destroyed;
-};
-
 }
 }
-
-// XdgSurfaceBase
-
-//mf::XdgSurfaceBase* mf::XdgSurfaceBase::get_xdgsurface(wl_resource* surface) const
-//{
-//    auto* tmp = wl_resource_get_user_data(surface);
-//    return static_cast<XdgSurfaceBase*>(static_cast<wayland::XdgSurface*>(tmp));
-//}
 
 mf::XdgSurfaceBase::XdgSurfaceBase(AdapterInterface* const adapter, wl_client* client, wl_resource* resource,
-                                   wl_resource* parent, wl_resource* surface,
-                                   std::shared_ptr<mf::Shell> const& shell, WlSeat& seat)
+                                   wl_resource* parent, wl_resource* surface, std::shared_ptr<mf::Shell> const& shell)
     : WlAbstractMirWindow{client, surface, resource, shell},
       parent{parent},
       shell{shell},
-      sink{std::make_shared<XdgSurfaceBaseEventSink>(&seat, client, surface, resource, destroyed)},
       adapter{adapter}
-{
-    WlAbstractMirWindow::sink = sink;
-}
+{}
 
 mf::XdgSurfaceBase::~XdgSurfaceBase()
 {
@@ -193,11 +163,6 @@ void mf::XdgSurfaceBase::resize(wl_resource* /*seat*/, uint32_t /*serial*/, MirR
     }
 }
 
-void mf::XdgSurfaceBase::set_notify_resize(std::function<void(geometry::Size const& new_size)> notify_resize)
-{
-    sink->notify_resize = notify_resize;
-}
-
 void mf::XdgSurfaceBase::set_max_size(int32_t width, int32_t height)
 {
     if (surface_id.as_value())
@@ -282,33 +247,4 @@ void mf::XdgSurfaceBase::unset_fullscreen()
 void mf::XdgSurfaceBase::set_minimized()
 {
     // TODO
-}
-
-// XdgSurfaceBaseEventSink
-
-mf::XdgSurfaceBaseEventSink::XdgSurfaceBaseEventSink(WlSeat* seat, wl_client* client, wl_resource* target,
-                                                 wl_resource* event_sink, std::shared_ptr<bool> const& destroyed)
-    : BasicSurfaceEventSink(seat, client, target, event_sink),
-      destroyed{destroyed}
-{
-    auto const serial = wl_display_next_serial(wl_client_get_display(client));
-    post_configure(serial);
-}
-
-void mf::XdgSurfaceBaseEventSink::send_resize(geometry::Size const& new_size) const
-{
-    if (window_size != new_size)
-    {
-        auto const serial = wl_display_next_serial(wl_client_get_display(client));
-        notify_resize(new_size);
-        post_configure(serial);
-    }
-}
-
-void mf::XdgSurfaceBaseEventSink::post_configure(int serial) const
-{
-    seat->spawn(run_unless(destroyed, [event_sink= event_sink, serial]()
-        {
-            wl_resource_post_event(event_sink, 0, serial);
-        }));
 }

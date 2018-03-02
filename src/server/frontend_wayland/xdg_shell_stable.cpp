@@ -64,6 +64,7 @@ public:
     void create_toplevel(uint32_t id) override;
     void create_popup(uint32_t id) override;
 
+    std::shared_ptr<XdgSurfaceStableEventSink> sink;
     XdgSurfaceBase base;
 };
 
@@ -80,7 +81,7 @@ class XdgToplevelStable : public wayland::XdgToplevel
 {
 public:
     XdgToplevelStable(struct wl_client* client, struct wl_resource* parent, uint32_t id,
-                          std::shared_ptr<frontend::Shell> const& shell, XdgSurfaceBase* const xdg_surface);
+                          std::shared_ptr<frontend::Shell> const& shell, XdgSurfaceStable* const xdg_surface);
 
     void destroy() override;
     void set_parent(std::experimental::optional<struct wl_resource*> const& parent) override;
@@ -119,6 +120,42 @@ public:
     void set_offset(int32_t x, int32_t y) override;
 
     XdgPositionerBase base;
+};
+
+class XdgSurfaceStableEventSink : public BasicSurfaceEventSink
+{
+public:
+    using BasicSurfaceEventSink::BasicSurfaceEventSink;
+
+    XdgSurfaceStableEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* xdg_surface_stable,
+                                  std::shared_ptr<bool> const& destroyed)
+        : BasicSurfaceEventSink(seat, client, target, destroyed),
+          xdg_surface_stable{xdg_surface_stable}
+    {
+        run_unless_destroyed([this]()
+            {
+                uint32_t serial = wl_display_next_serial(wl_client_get_display(this->client));
+                xdg_surface_send_configure(this->xdg_surface_stable, serial);
+            });
+    }
+
+    void send_resize(geometry::Size const& new_size) const override
+    {
+        if (window_size != new_size)
+        {
+            run_unless_destroyed([this, new_size]()
+                {
+                    auto const serial = wl_display_next_serial(wl_client_get_display(client));
+                    notify_resize(new_size);
+                    xdg_surface_send_configure(xdg_surface_stable, serial);
+                });
+        }
+    }
+
+    std::function<void(geometry::Size const& new_size)> notify_resize = [](auto){};
+
+private:
+    wl_resource* xdg_surface_stable;
 };
 
 }
@@ -163,12 +200,15 @@ mf::XdgSurfaceStable* mf::XdgSurfaceStable::from(wl_resource* surface)
     return static_cast<XdgSurfaceStable*>(static_cast<wayland::XdgSurface*>(tmp));
 }
 
-mf::XdgSurfaceStable::XdgSurfaceStable(wl_client* client, wl_resource* parent, uint32_t id,
-                                               wl_resource* surface, std::shared_ptr<mf::Shell> const& shell,
-                                               WlSeat& seat)
+mf::XdgSurfaceStable::XdgSurfaceStable(wl_client* client, wl_resource* parent, uint32_t id, wl_resource* surface,
+                                       std::shared_ptr<mf::Shell> const& shell, WlSeat& seat)
     : wayland::XdgSurface(client, parent, id),
-      base{this, client, resource, parent, surface, shell, seat}
-{}
+      base{this, client, resource, parent, surface, shell}
+{
+    // must be constructed after XdgShellBase and WlAbstractMirWindow
+    sink = std::make_shared<XdgSurfaceStableEventSink>(&seat, client, surface, resource, base.destroyed);
+    base.sink = sink;
+}
 
 mf::XdgSurfaceStable::~XdgSurfaceStable()
 {}
@@ -210,7 +250,7 @@ wl_resource* mf::XdgSurfaceStable::get_resource() const
 
 void mf::XdgSurfaceStable::create_toplevel(uint32_t id)
 {
-    new XdgToplevelStable{client, base.parent, id, base.shell, &base};
+    new XdgToplevelStable{client, base.parent, id, base.shell, this};
 }
 
 void mf::XdgSurfaceStable::create_popup(uint32_t id)
@@ -238,18 +278,18 @@ void mf::XdgPopupStable::destroy()
 // XdgToplevelStable
 
 mf::XdgToplevelStable::XdgToplevelStable(struct wl_client* client, struct wl_resource* parent, uint32_t id,
-                                                 std::shared_ptr<mf::Shell> const& /*shell*/,
-                                                 XdgSurfaceBase* const xdg_surface)
+                                         std::shared_ptr<mf::Shell> const& /*shell*/,
+                                         XdgSurfaceStable* const xdg_surface_stable)
     : wayland::XdgToplevel(client, parent, id),
-      base{xdg_surface}
+      base{&xdg_surface_stable->base}
 {
-    base->set_notify_resize([this](geom::Size const& new_size)
+    xdg_surface_stable->sink->notify_resize = [this](geom::Size const& new_size)
         {
             wl_array states;
             wl_array_init(&states);
 
             xdg_toplevel_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
-        });
+        };
 }
 
 void mf::XdgToplevelStable::destroy()

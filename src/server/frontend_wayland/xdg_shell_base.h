@@ -38,15 +38,13 @@ namespace mir
 namespace frontend
 {
 
-class Shell;
 class XdgSurfaceBase;
 class XdgPositionerBase;
 class WlSeat;
-class XdgSurfaceBaseEventSink;
 
 // a base class for the shell itself would not be useful
 
-class XdgSurfaceBase : WlAbstractMirWindow
+class XdgSurfaceBase : public WlAbstractMirWindow
 {
 public:
     class AdapterInterface
@@ -59,7 +57,7 @@ public:
     };
 
     XdgSurfaceBase(AdapterInterface* const adapter, wl_client* client, wl_resource* resource, wl_resource* parent,
-                   wl_resource* surface, std::shared_ptr<Shell> const& shell, WlSeat& seat);
+                   wl_resource* surface, std::shared_ptr<Shell> const& shell);
     ~XdgSurfaceBase() override;
 
     void destroy() override; // overrides from WlMirWindow but can also be called from destroy request
@@ -76,7 +74,6 @@ public:
     void show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y);
     void move(wl_resource* seat, uint32_t serial);
     void resize(wl_resource* seat, uint32_t serial, MirResizeEdge edge);
-    void set_notify_resize(std::function<void(geometry::Size const& new_size)> notify_resize);
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
     void set_maximized();
@@ -91,7 +88,6 @@ public:
 
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
-    std::shared_ptr<XdgSurfaceBaseEventSink> const sink;
     AdapterInterface* const adapter;
 };
 

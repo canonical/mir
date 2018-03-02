@@ -20,32 +20,33 @@
 #define MIR_FRONTEND_BASIC_EVENT_SINK_H_
 
 #include "null_event_sink.h"
+#include "wayland_utils.h"
+#include "wl_seat.h"
 
 #include <mir_toolkit/event.h>
 
-#include <wayland-server-core.h>
-
 #include <atomic>
 #include <functional>
+
+struct WlSeat;
+struct wl_client;
+struct wl_resource;
 
 namespace mir
 {
 namespace frontend
 {
 
-class WlSeat;
-
 class BasicSurfaceEventSink : public NullEventSink
 {
 public:
-    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink)
+    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, std::shared_ptr<bool> const& destroyed)
         : seat{seat},
-        client{client},
-        target{target},
-        event_sink{event_sink},
-        window_size{geometry::Size{0,0}}
-    {
-    }
+          client{client},
+          target{target},
+          window_size{geometry::Size{0,0}},
+          destroyed{destroyed}
+    {}
 
     void handle_event(MirEvent const& e) override;
 
@@ -59,15 +60,21 @@ public:
         return timestamp;
     }
 
+    template<typename Callable>
+    inline void run_unless_destroyed(Callable&& callable) const
+    {
+        seat->spawn(run_unless(destroyed, callable));
+    }
+
     virtual void send_resize(geometry::Size const& new_size) const = 0;
 
 protected:
     WlSeat* const seat;
     wl_client* const client;
     wl_resource* const target;
-    wl_resource* const event_sink;
     std::atomic<geometry::Size> window_size;
     std::atomic<int64_t> timestamp{0};
+    std::shared_ptr<bool> const destroyed;
 };
 }
 }

@@ -63,6 +63,7 @@ public:
     void create_toplevel(uint32_t id) override;
     void create_popup(uint32_t id) override;
 
+    std::shared_ptr<XdgSurfaceUnstableV6EventSink> sink;
     XdgSurfaceBase base;
 };
 
@@ -79,7 +80,7 @@ class XdgToplevelUnstableV6 : public wayland::XdgToplevelV6
 {
 public:
     XdgToplevelUnstableV6(struct wl_client* client, struct wl_resource* parent, uint32_t id,
-                          std::shared_ptr<frontend::Shell> const& shell, XdgSurfaceBase* const xdg_surface);
+                          std::shared_ptr<frontend::Shell> const& shell, XdgSurfaceUnstableV6* const xdg_surface);
 
     void destroy() override;
     void set_parent(std::experimental::optional<struct wl_resource*> const& parent) override;
@@ -118,6 +119,42 @@ public:
     void set_offset(int32_t x, int32_t y) override;
 
     XdgPositionerBase base;
+};
+
+class XdgSurfaceUnstableV6EventSink : public BasicSurfaceEventSink
+{
+public:
+    using BasicSurfaceEventSink::BasicSurfaceEventSink;
+
+    XdgSurfaceUnstableV6EventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* xdg_surface_unstable_v6,
+                                  std::shared_ptr<bool> const& destroyed)
+        : BasicSurfaceEventSink(seat, client, target, destroyed),
+          xdg_surface_unstable_v6{xdg_surface_unstable_v6}
+    {
+        run_unless_destroyed([this]()
+            {
+                uint32_t serial = wl_display_next_serial(wl_client_get_display(this->client));
+                zxdg_surface_v6_send_configure(this->xdg_surface_unstable_v6, serial);
+            });
+    }
+
+    void send_resize(geometry::Size const& new_size) const override
+    {
+        if (window_size != new_size)
+        {
+            run_unless_destroyed([this, new_size]()
+                {
+                    auto const serial = wl_display_next_serial(wl_client_get_display(client));
+                    notify_resize(new_size);
+                    zxdg_surface_v6_send_configure(xdg_surface_unstable_v6, serial);
+                });
+        }
+    }
+
+    std::function<void(geometry::Size const& new_size)> notify_resize = [](auto){};
+
+private:
+    wl_resource* xdg_surface_unstable_v6;
 };
 
 }
@@ -166,8 +203,12 @@ mf::XdgSurfaceUnstableV6::XdgSurfaceUnstableV6(wl_client* client, wl_resource* p
                                                wl_resource* surface, std::shared_ptr<mf::Shell> const& shell,
                                                WlSeat& seat)
     : wayland::XdgSurfaceV6(client, parent, id),
-      base{this, client, resource, parent, surface, shell, seat}
-{}
+      base{this, client, resource, parent, surface, shell}
+{
+    // must be constructed after XdgShellBase and WlAbstractMirWindow
+    sink = std::make_shared<XdgSurfaceUnstableV6EventSink>(&seat, client, surface, resource, base.destroyed);
+    base.sink = sink;
+}
 
 mf::XdgSurfaceUnstableV6::~XdgSurfaceUnstableV6()
 {}
@@ -206,7 +247,7 @@ wl_resource* mf::XdgSurfaceUnstableV6::get_resource() const
 
 void mf::XdgSurfaceUnstableV6::create_toplevel(uint32_t id)
 {
-    new XdgToplevelUnstableV6{client, base.parent, id, base.shell, &base};
+    new XdgToplevelUnstableV6{client, base.parent, id, base.shell, this};
 }
 
 void mf::XdgSurfaceUnstableV6::create_popup(uint32_t id)
@@ -235,17 +276,17 @@ void mf::XdgPopupUnstableV6::destroy()
 
 mf::XdgToplevelUnstableV6::XdgToplevelUnstableV6(struct wl_client* client, struct wl_resource* parent, uint32_t id,
                                                  std::shared_ptr<mf::Shell> const& /*shell*/,
-                                                 XdgSurfaceBase* const xdg_surface)
+                                                 XdgSurfaceUnstableV6* const xdg_surface_unstable_v6)
     : wayland::XdgToplevelV6(client, parent, id),
-      base{xdg_surface}
+      base{&xdg_surface_unstable_v6->base}
 {
-    base->set_notify_resize([this](geom::Size const& new_size)
+    xdg_surface_unstable_v6->sink->notify_resize = [this](geom::Size const& new_size)
         {
             wl_array states;
             wl_array_init(&states);
 
             zxdg_toplevel_v6_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
-        });
+        };
 }
 
 void mf::XdgToplevelUnstableV6::destroy()
