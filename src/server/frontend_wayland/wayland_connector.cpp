@@ -759,6 +759,10 @@ mf::WaylandConnector::WaylandConnector(
     if (getenv("MIR_EXPERIMENTAL_XDG_SHELL"))
     {
         xdg_shell_unstable_v6_global = std::make_unique<XdgShellUnstableV6>(display.get(), shell, *seat_global);
+    }
+
+    if (getenv("MIR_EXPERIMENTAL_XDG_SHELL_STABLE"))
+    {
         xdg_shell_stable_global = std::make_unique<XdgShellStable>(display.get(), shell, *seat_global);
     }
 
