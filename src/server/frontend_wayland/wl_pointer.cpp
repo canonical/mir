@@ -94,6 +94,8 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
                                                 WL_POINTER_BUTTON_STATE_RELEASED;
 
                             wl_pointer_send_button(resource, serial, current_time, mapping.second, action);
+                            if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
+                                wl_pointer_send_frame(resource);
                         }
                     }
 
@@ -108,6 +110,8 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
                         target,
                         wl_fixed_from_double(mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x)-buffer_offset.dx.as_int()),
                         wl_fixed_from_double(mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y)-buffer_offset.dy.as_int()));
+                    if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
+                        wl_pointer_send_frame(resource);
                     break;
                 }
                 case mir_pointer_action_leave:
@@ -116,10 +120,16 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
                         resource,
                         serial,
                         target);
+                    if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
+                        wl_pointer_send_frame(resource);
                     break;
                 }
                 case mir_pointer_action_motion:
                 {
+                    // TODO: properly group vscroll and hscroll events in the same frame (as described by the frame
+                    //  event description in wayland.xml) and send axis_source, axis_stop and axis_discrete events where
+                    //  appropriate (may require significant reworking of the input system)
+
                     auto x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x)-buffer_offset.dx.as_int();
                     auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y)-buffer_offset.dy.as_int();
                     auto vscroll = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_vscroll);
@@ -135,6 +145,9 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
 
                         last_x = x;
                         last_y = y;
+
+                        if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
+                            wl_pointer_send_frame(resource);
                     }
                     if (vscroll != last_vscroll)
                     {
@@ -143,7 +156,11 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
                             mir_input_event_get_event_time(event) / 1000,
                             WL_POINTER_AXIS_VERTICAL_SCROLL,
                             wl_fixed_from_double(vscroll));
+
                         last_vscroll = vscroll;
+
+                        if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
+                            wl_pointer_send_frame(resource);
                     }
                     if (hscroll != last_hscroll)
                     {
@@ -152,7 +169,11 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
                             mir_input_event_get_event_time(event) / 1000,
                             WL_POINTER_AXIS_HORIZONTAL_SCROLL,
                             wl_fixed_from_double(hscroll));
+
                         last_hscroll = hscroll;
+
+                        if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
+                            wl_pointer_send_frame(resource);
                     }
                     break;
                 }
