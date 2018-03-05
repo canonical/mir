@@ -304,15 +304,12 @@ private:
 
 void SurfaceEventSink::send_resize(geometry::Size const& new_size) const
 {
-    if (window_size != new_size)
-    {
-        seat->spawn(run_unless(
-            destroyed,
-            [event_sink= event_sink, width = new_size.width.as_int(), height = new_size.height.as_int()]()
-            {
-                wl_shell_surface_send_configure(event_sink, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
-            }));
-    }
+    seat->spawn(run_unless(
+        destroyed,
+        [event_sink= event_sink, width = new_size.width.as_int(), height = new_size.height.as_int()]()
+        {
+            wl_shell_surface_send_configure(event_sink, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
+        }));
 }
 
 class WlShellSurface  : public wayland::ShellSurface, WlAbstractMirWindow

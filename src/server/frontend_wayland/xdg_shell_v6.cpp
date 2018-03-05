@@ -446,15 +446,12 @@ mf::XdgSurfaceV6EventSink::XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client
 
 void mf::XdgSurfaceV6EventSink::send_resize(geometry::Size const& new_size) const
 {
-    if (window_size != new_size)
-    {
-        seat->spawn(run_unless(destroyed, [this, new_size]()
-            {
-                auto const serial = wl_display_next_serial(wl_client_get_display(client));
-                notify_resize(new_size);
-                zxdg_surface_v6_send_configure(event_sink, serial);
-            }));
-    }
+    seat->spawn(run_unless(destroyed, [this, new_size]()
+        {
+            auto const serial = wl_display_next_serial(wl_client_get_display(client));
+            notify_resize(new_size);
+            zxdg_surface_v6_send_configure(event_sink, serial);
+        }));
 }
 
 void mf::XdgSurfaceV6EventSink::post_configure(int serial) const

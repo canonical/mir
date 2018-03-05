@@ -94,20 +94,9 @@ shell::SurfaceSpecification& WlAbstractMirWindow::spec()
 void WlAbstractMirWindow::commit()
 {
     auto const session = get_session(client);
-    auto const latest_window_size = window_size.is_set() ? window_size.value() : latest_buffer_size;
 
     if (surface_id.as_value())
     {
-        auto const surface = get_surface_for_id(session, surface_id);
-
-        if (!window_size.is_set() && surface->size() != latest_buffer_size)
-        {
-            sink->latest_resize(latest_buffer_size);
-            auto& new_size_spec = spec();
-            new_size_spec.width = latest_buffer_size.width;
-            new_size_spec.height = latest_buffer_size.height;
-        }
-
         if (pending_changes)
             shell->modify_surface(session, surface_id, *pending_changes);
 
@@ -117,7 +106,7 @@ void WlAbstractMirWindow::commit()
 
     auto* const mir_surface = WlSurface::from(surface);
     if (params->size == geometry::Size{})
-        params->size = latest_window_size;
+        params->size = window_size.is_set() ? window_size.value() : latest_buffer_size;
     if (params->size == geometry::Size{})
         params->size = geometry::Size{640, 480};
 
