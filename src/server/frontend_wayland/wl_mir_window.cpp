@@ -126,6 +126,14 @@ void WlAbstractMirWindow::commit()
 void WlAbstractMirWindow::new_buffer_size(geometry::Size const& buffer_size)
 {
     latest_buffer_size = buffer_size;
+
+    // Sometimes, when using xdg-shell, qterminal creates an insanely tall buffer
+    if (latest_buffer_size.height > geometry::Height{10000})
+    {
+        log_warning("Insane buffer height sanitized: latest_buffer_size.height = %d (was %d)",
+                    1000, latest_buffer_size.height.as_int());
+        latest_buffer_size.height = geometry::Height{1000};
+    }
 }
 
 void WlAbstractMirWindow::visiblity(bool visible)
