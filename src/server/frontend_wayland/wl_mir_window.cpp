@@ -97,6 +97,17 @@ void WlAbstractMirWindow::commit()
 
     if (surface_id.as_value())
     {
+        auto const surface = get_surface_for_id(session, surface_id);
+
+        // If the window side isn't set explicitly assume it matches the latest buffer
+        if (!window_size.is_set() && surface->size() != latest_buffer_size)
+        {
+            sink->latest_resize(latest_buffer_size);
+            auto& new_size_spec = spec();
+            new_size_spec.width = latest_buffer_size.width;
+            new_size_spec.height = latest_buffer_size.height;
+        }
+
         if (pending_changes)
             shell->modify_surface(session, surface_id, *pending_changes);
 
