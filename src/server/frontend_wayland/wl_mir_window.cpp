@@ -115,13 +115,11 @@ void WlAbstractMirWindow::commit()
         return;
     }
 
-    // Until we know the size we don't create a surface
-    if (latest_window_size == geometry::Size{})
-        return;
-
     auto* const mir_surface = WlSurface::from(surface);
     if (params->size == geometry::Size{})
         params->size = latest_window_size;
+    if (params->size == geometry::Size{})
+        params->size = geometry::Size{640, 480};
 
     params->streams = std::move(std::vector<shell::StreamSpecification>{{mir_surface->stream_id, mir_surface->buffer_offset, {}}});
 
@@ -130,20 +128,15 @@ void WlAbstractMirWindow::commit()
 
     // The shell isn't guaranteed to respect the requested size
     auto const window = session->get_surface(surface_id);
-    sink->send_resize(window->client_size());
+    auto const client_size = window->client_size();
+
+    if (client_size != params->size)
+        sink->send_resize(client_size);
 }
 
 void WlAbstractMirWindow::new_buffer_size(geometry::Size const& buffer_size)
 {
     latest_buffer_size = buffer_size;
-
-    // Sometimes, when using xdg-shell, qterminal creates an insanely tall buffer
-    if (latest_buffer_size.height > geometry::Height{10000})
-    {
-        log_warning("Insane buffer height sanitized: latest_buffer_size.height = %d (was %d)",
-                1000, latest_buffer_size.height.as_int());
-        latest_buffer_size.height = geometry::Height{1000};
-    }
 }
 
 void WlAbstractMirWindow::visiblity(bool visible)

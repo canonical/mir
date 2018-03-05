@@ -247,8 +247,18 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
 
 void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    WlSurface::from(surface)->buffer_offset = geom::Displacement{-x, -y};
+    auto* const mir_surface = WlSurface::from(surface);
+    geom::Displacement const buffer_offset{-x, -y};
+
+    mir_surface->buffer_offset = buffer_offset;
     window_size = geom::Size{width, height};
+
+    if (surface_id.as_value())
+    {
+        spec().width = geom::Width{width};
+        spec().height = geom::Height{height};
+        spec().streams = std::move(std::vector<shell::StreamSpecification>{{mir_surface->stream_id, buffer_offset, {}}});
+    }
 }
 
 void mf::XdgSurfaceV6::ack_configure(uint32_t serial)
