@@ -75,77 +75,76 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
 
     bool consumes_event = false;
-    bool is_resize_event = false;
 
-    if (csd_resizing)
+    if (pointer_resizing)
     {
         if (action == mir_pointer_action_motion &&
-            modifiers == move_modifiers &&
-            mir_pointer_event_button_state(event, mir_pointer_button_primary))
+            modifiers == active_pointer_modifiers &&
+            mir_pointer_event_button_state(event, active_pointer_button))
         {
-            if (csd_resize_window)
+            if (resize_window)
             {
-                if (tools.select_active_window(csd_resize_window) == csd_resize_window)
+                if (tools.select_active_window(resize_window) == resize_window)
                 {
-                    auto const top_left = csd_resize_window.top_left();
-                    Rectangle const old_pos{top_left, csd_resize_window.size()};
+                    auto const top_left = resize_window.top_left();
+                    Rectangle const old_pos{top_left, resize_window.size()};
 
                     auto movement = cursor - old_cursor;
 
                     auto new_width = old_pos.size.width;
                     auto new_height = old_pos.size.height;
 
-                    if (csd_resize_edge & mir_resize_edge_east)
+                    if (resize_edge & mir_resize_edge_east)
                         new_width = old_pos.size.width + movement.dx;
 
-                    if (csd_resize_edge & mir_resize_edge_west)
+                    if (resize_edge & mir_resize_edge_west)
                         new_width = old_pos.size.width - movement.dx;
 
-                    if (csd_resize_edge & mir_resize_edge_north)
+                    if (resize_edge & mir_resize_edge_north)
                         new_height = old_pos.size.height - movement.dy;
 
-                    if (csd_resize_edge & mir_resize_edge_south)
+                    if (resize_edge & mir_resize_edge_south)
                         new_height = old_pos.size.height + movement.dy;
 
-                    keep_window_within_constraints(tools.info_for(csd_resize_window), movement, new_width, new_height);
+                    keep_window_within_constraints(tools.info_for(resize_window), movement, new_width, new_height);
 
                     Size new_size{new_width, new_height};
 
                     Point new_pos = top_left;
 
-                    if (csd_resize_edge & mir_resize_edge_west)
+                    if (resize_edge & mir_resize_edge_west)
                         new_pos.x = top_left.x + movement.dx;
 
-                    if (csd_resize_edge & mir_resize_edge_north)
+                    if (resize_edge & mir_resize_edge_north)
                         new_pos.y = top_left.y + movement.dy;
 
                     WindowSpecification modifications;
                     modifications.top_left() = new_pos;
                     modifications.size() = new_size;
-                    tools.modify_window(csd_resize_window, modifications);
+                    tools.modify_window(resize_window, modifications);
                 }
                 else
                 {
-                    csd_resizing = false;
+                    pointer_resizing = false;
                 }
             }
             else
             {
-                csd_resizing = false;
+                pointer_resizing = false;
             }
 
             consumes_event = true;
         }
         else
         {
-            csd_resizing = false;
+            pointer_resizing = false;
         }
     }
-    else if (moving)
+    else if (pointer_moving)
     {
         if (action == mir_pointer_action_motion &&
-            modifiers == move_modifiers &&
-            mir_pointer_event_button_state(event, mir_pointer_button_primary))
+            modifiers == active_pointer_modifiers &&
+            mir_pointer_event_button_state(event, active_pointer_button))
         {
             if (auto const target = tools.window_at(old_cursor))
             {
@@ -155,7 +154,7 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
             consumes_event = true;
         }
         else
-            moving = false;
+            pointer_moving = false;
     }
     else if (action == mir_pointer_action_button_down)
     {
@@ -166,8 +165,8 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
         {
             if (modifiers == mir_input_event_modifier_alt)
             {
-                moving = true;
-                move_modifiers = modifiers;
+                pointer_moving = true;
+                active_pointer_modifiers = modifiers;
                 consumes_event = true;
             }
             else if (modifiers == 0)
@@ -177,45 +176,58 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
                     auto const& info = tools.info_for(possible_titlebar);
                     if (decoration_provider->is_titlebar(info))
                     {
-                        moving = true;
-                        move_modifiers = modifiers;
+                        pointer_moving = true;
+                        active_pointer_modifiers = modifiers;
                         consumes_event = true;
                     }
                 }
             }
         }
-    }
-    else if (action == mir_pointer_action_motion &&
-             modifiers == mir_input_event_modifier_alt)
-    {
-        if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
+        else if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
         {
-            {   // Workaround for lp:1627697
-                auto now = std::chrono::steady_clock::now();
-                if (resizing && now < last_resize+std::chrono::milliseconds(20))
-                    return true;
+            auto const window = tools.active_window();
 
-                last_resize = now;
+            if (modifiers == mir_input_event_modifier_alt)
+            {
+                Rectangle const old_pos{window.top_left(), window.size()};
+
+                pointer_resizing = true;
+
+                auto anchor = old_pos.bottom_right();
+                auto edge = mir_resize_edge_northwest;
+
+                struct Corner { Point point; MirResizeEdge edge; };
+
+                for (auto const& corner : {
+                    Corner{old_pos.top_right(), mir_resize_edge_southwest},
+                    Corner{old_pos.bottom_left(), mir_resize_edge_northeast},
+                    Corner{old_pos.top_left, mir_resize_edge_southeast}})
+                {
+                    if ((cursor - anchor).length_squared() <
+                        (cursor - corner.point).length_squared())
+                    {
+                        anchor = corner.point;
+                        edge = corner.edge;
+                    }
+                }
+
+                resize_edge = edge;
+                resize_window = window;
+                active_pointer_button = mir_pointer_button_tertiary;
+                active_pointer_modifiers = mir_pointer_event_modifiers(event) & modifier_mask;
+
+                consumes_event = true;
             }
-
-            if (!resizing)
-                tools.select_active_window(tools.window_at(old_cursor));
-            is_resize_event = resize(tools.active_window(), cursor, old_cursor);
-            consumes_event = true;
         }
     }
 
-    if (resizing && !is_resize_event)
-        end_resize();
-
-    resizing = is_resize_event;
     old_cursor = cursor;
     return consumes_event;
 }
 
 void FloatingWindowManagerPolicy::end_resize()
 {
-    if (!resizing  && !pinching)
+    if (!pinching)
         return;
 
     if (auto window = tools.active_window())
@@ -232,7 +244,6 @@ void FloatingWindowManagerPolicy::end_resize()
         tools.modify_window(window_info, modifications);
     }
 
-    resizing = false;
     pinching = false;
 }
 
@@ -614,57 +625,6 @@ void FloatingWindowManagerPolicy::toggle(MirWindowState state)
     }
 }
 
-bool FloatingWindowManagerPolicy::resize(Window const& window, Point cursor, Point old_cursor)
-{
-    if (!window)
-        return false;
-
-    auto& window_info = tools.info_for(window);
-
-    auto const top_left = window.top_left();
-    Rectangle const old_pos{top_left, window.size()};
-
-    if (!resizing)
-    {
-        auto anchor = old_pos.bottom_right();
-
-        for (auto const& corner : {
-            old_pos.top_right(),
-            old_pos.bottom_left(),
-            top_left})
-        {
-            if ((old_cursor - anchor).length_squared() <
-                (old_cursor - corner).length_squared())
-            {
-                anchor = corner;
-            }
-        }
-
-        left_resize = anchor.x != top_left.x;
-        top_resize  = anchor.y != top_left.y;
-    }
-
-    int const x_sign = left_resize? -1 : 1;
-    int const y_sign = top_resize?  -1 : 1;
-
-    auto movement = cursor-old_cursor;
-
-    auto new_width = old_pos.size.width + x_sign * movement.dx;
-    auto new_height = old_pos.size.height + y_sign * movement.dy;
-
-    keep_window_within_constraints(window_info, movement, new_width, new_height);
-
-    Size new_size{new_width, new_height};
-    Point new_pos = top_left + left_resize*movement.dx + top_resize*movement.dy;
-
-    WindowSpecification modifications;
-    modifications.top_left() = new_pos;
-    modifications.size() = new_size;
-    tools.modify_window(window, modifications);
-
-    return true;
-}
-
 void FloatingWindowManagerPolicy::keep_window_within_constraints(
     WindowInfo const& window_info, Displacement& movement, Width& new_width, Height& new_height) const
 {
@@ -892,12 +852,30 @@ void FloatingWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*win
 {
 }
 
+namespace
+{
+auto find_active_pointer_button(MirPointerEvent const* pointer_event) -> MirPointerButton
+{
+    for (auto button : { mir_pointer_button_primary, mir_pointer_button_secondary, mir_pointer_button_tertiary })
+    {
+        if (mir_pointer_event_button_state(pointer_event, button))
+            return button;
+    }
+
+    // Should never get here but we have to return something
+    return mir_pointer_button_primary;
+}
+}
+
 void FloatingWindowManagerPolicy::handle_request_move(WindowInfo& /*window_info*/, MirInputEvent const* input_event)
 {
     if (mir_input_event_get_type(input_event) == mir_input_event_type_pointer)
     {
-        moving = true;
-        move_modifiers = mir_pointer_event_modifiers(mir_input_event_get_pointer_event(input_event)) & modifier_mask;
+        MirPointerEvent const* const pointer_event = mir_input_event_get_pointer_event(input_event);
+
+        pointer_moving = true;
+        active_pointer_button = find_active_pointer_button(pointer_event);
+        active_pointer_modifiers = mir_pointer_event_modifiers(pointer_event) & modifier_mask;
     }
 }
 
@@ -906,10 +884,13 @@ void FloatingWindowManagerPolicy::handle_request_resize(
 {
     if (mir_input_event_get_type(input_event) == mir_input_event_type_pointer)
     {
-        csd_resizing = true;
-        csd_resize_edge = edge;
-        csd_resize_window = window_info.window();
-        move_modifiers = mir_pointer_event_modifiers(mir_input_event_get_pointer_event(input_event)) & modifier_mask;
+        MirPointerEvent const* const pointer_event = mir_input_event_get_pointer_event(input_event);
+
+        pointer_resizing = true;
+        resize_edge = edge;
+        resize_window = window_info.window();
+        active_pointer_button = find_active_pointer_button(pointer_event);
+        active_pointer_modifiers = mir_pointer_event_modifiers(pointer_event) & modifier_mask;
     }
 }
 
