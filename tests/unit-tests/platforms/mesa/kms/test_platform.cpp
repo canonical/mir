@@ -78,7 +78,7 @@ public:
     {
         return std::make_shared<mgm::Platform>(
                 mir::report::null_display_report(),
-                std::make_shared<mtd::NullVirtualTerminal>(),
+                std::make_shared<mtd::NullConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgm::BypassOption::allowed);
     }
@@ -242,7 +242,7 @@ TEST_F(MesaGraphicsPlatform, restores_vt_on_emergency_cleanup)
 {
     using namespace testing;
 
-    auto const mock_vt = std::make_shared<mtd::MockVirtualTerminal>();
+    auto const mock_vt = std::make_shared<mtd::MockConsoleServices>();
     StubEmergencyCleanupRegistry emergency_cleanup_registry;
     mgm::Platform platform{
         mir::report::null_display_report(),
@@ -261,7 +261,7 @@ TEST_F(MesaGraphicsPlatform, releases_drm_on_emergency_cleanup)
 {
     using namespace testing;
 
-    auto const null_vt = std::make_shared<mtd::NullVirtualTerminal>();
+    auto const null_vt = std::make_shared<mtd::NullConsoleServices>();
     StubEmergencyCleanupRegistry emergency_cleanup_registry;
     mgm::Platform platform{
         mir::report::null_display_report(),
@@ -286,7 +286,7 @@ TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
 
 
 
-    auto const mock_vt = std::make_shared<mtd::MockVirtualTerminal>();
+    auto const mock_vt = std::make_shared<mtd::MockConsoleServices>();
     StubEmergencyCleanupRegistry emergency_cleanup_registry;
     mgm::Platform platform{
         mir::report::null_display_report(),

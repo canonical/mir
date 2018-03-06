@@ -69,7 +69,7 @@ public:
     {
       return std::make_shared<mgm::Platform>(
               mir::report::null_display_report(),
-              std::make_shared<mtd::NullVirtualTerminal>(),
+              std::make_shared<mtd::NullConsoleServices>(),
               *std::make_shared<mtd::NullEmergencyCleanup>(),
               mgm::BypassOption::allowed);
     }

@@ -74,7 +74,7 @@ protected:
     PosixProcessOperations& operator=(PosixProcessOperations const&) = delete;
 };
 
-class LinuxVirtualTerminal : public VirtualTerminal
+class LinuxVirtualTerminal : public ConsoleServices
 {
 public:
     LinuxVirtualTerminal(std::shared_ptr<VTFileOperations> const& fops,

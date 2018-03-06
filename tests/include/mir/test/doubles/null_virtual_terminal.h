@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-class NullVirtualTerminal : public graphics::mesa::VirtualTerminal
+class NullConsoleServices : public graphics::mesa::ConsoleServices
 {
 public:
     void set_graphics_mode() override {}

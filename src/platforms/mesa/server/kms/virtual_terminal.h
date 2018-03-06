@@ -33,10 +33,10 @@ class EventHandlerRegister;
 namespace mesa
 {
 
-class VirtualTerminal
+class ConsoleServices
 {
 public:
-    virtual ~VirtualTerminal() = default;
+    virtual ~ConsoleServices() = default;
 
     virtual void set_graphics_mode() = 0;
     virtual void register_switch_handlers(
@@ -54,9 +54,9 @@ public:
     virtual boost::unique_future<Fd> acquire_device(int major, int minor) = 0;
 
 protected:
-    VirtualTerminal() = default;
-    VirtualTerminal(VirtualTerminal const&) = delete;
-    VirtualTerminal& operator=(VirtualTerminal const&) = delete;
+    ConsoleServices() = default;
+    ConsoleServices(ConsoleServices const&) = delete;
+    ConsoleServices& operator=(ConsoleServices const&) = delete;
 };
 
 }

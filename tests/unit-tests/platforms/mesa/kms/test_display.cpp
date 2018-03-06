@@ -114,7 +114,7 @@ public:
     {
         return std::make_shared<mgm::Platform>(
                mir::report::null_display_report(),
-               std::make_shared<mtd::NullVirtualTerminal>(),
+               std::make_shared<mtd::NullConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
                mgm::BypassOption::allowed);
     }
@@ -660,7 +660,7 @@ TEST_F(MesaDisplayTest, constructor_sets_vt_graphics_mode)
 {
     using namespace testing;
 
-    auto mock_vt = std::make_shared<mtd::MockVirtualTerminal>();
+    auto mock_vt = std::make_shared<mtd::MockConsoleServices>();
 
     EXPECT_CALL(*mock_vt, set_graphics_mode())
         .Times(1);
@@ -713,7 +713,7 @@ TEST_F(MesaDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
 
     auto platform = std::make_shared<mgm::Platform>(
         mock_report,
-        std::make_shared<mtd::NullVirtualTerminal>(),
+        std::make_shared<mtd::NullConsoleServices>(),
         *std::make_shared<mtd::NullEmergencyCleanup>(),
         mgm::BypassOption::allowed);
     auto display = platform->create_display(

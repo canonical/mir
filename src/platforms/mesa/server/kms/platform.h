@@ -34,14 +34,14 @@ namespace graphics
 namespace mesa
 {
 
-class VirtualTerminal;
+class ConsoleServices;
 class Platform : public graphics::Platform,
                  public graphics::NativeRenderingPlatform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
     explicit Platform(std::shared_ptr<DisplayReport> const& reporter,
-                      std::shared_ptr<VirtualTerminal> const& vt,
+                      std::shared_ptr<ConsoleServices> const& vt,
                       EmergencyCleanupRegistry& emergency_cleanup_registry,
                       BypassOption bypass_option);
 
@@ -63,7 +63,7 @@ public:
     std::shared_ptr<helpers::GBMHelper> const gbm;
 
     std::shared_ptr<DisplayReport> const listener;
-    std::shared_ptr<VirtualTerminal> const vt;
+    std::shared_ptr<ConsoleServices> const vt;
 
     BypassOption bypass_option() const;
 private:

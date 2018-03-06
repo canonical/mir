@@ -171,7 +171,7 @@ void log_drm_details(std::vector<std::shared_ptr<mgm::helpers::DRMHelper>> const
 
 mgm::Display::Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& drm,
                       std::shared_ptr<helpers::GBMHelper> const& gbm,
-                      std::shared_ptr<VirtualTerminal> const& vt,
+                      std::shared_ptr<ConsoleServices> const& vt,
                       mgm::BypassOption bypass_option,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,

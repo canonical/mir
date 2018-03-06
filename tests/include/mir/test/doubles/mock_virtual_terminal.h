@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-class MockVirtualTerminal : public graphics::mesa::VirtualTerminal
+class MockConsoleServices : public graphics::mesa::ConsoleServices
 {
 public:
     MOCK_METHOD0(set_graphics_mode, void());
