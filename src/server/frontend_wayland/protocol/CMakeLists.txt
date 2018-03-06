@@ -50,6 +50,7 @@ endmacro()
 # when adding a protocol, don't forget to add the generated .c file to CMake
 GENERATE_PROTOCOL("wl_" "wayland")
 GENERATE_PROTOCOL("z" "xdg-shell-unstable-v6")
+GENERATE_PROTOCOL("_" "xdg-shell")
 
 add_custom_target(refresh-wayland-wrapper
   DEPENDS ${GENERATED_FILES}

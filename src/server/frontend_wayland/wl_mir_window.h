@@ -58,17 +58,18 @@ class WlAbstractMirWindow : public WlMirWindow
 {
 public:
     WlAbstractMirWindow(wl_client* client, wl_resource* surface, wl_resource* event_sink,
-        std::shared_ptr<frontend::Shell> const& shell);
+                        std::shared_ptr<frontend::Shell> const& shell);
 
     ~WlAbstractMirWindow() override;
 
-protected:
     std::shared_ptr<bool> const destroyed;
+    std::shared_ptr<BasicSurfaceEventSink> sink;
+
+protected:
     wl_client* const client;
     wl_resource* const surface;
     wl_resource* const event_sink;
     std::shared_ptr<frontend::Shell> const shell;
-    std::shared_ptr<BasicSurfaceEventSink> sink;
 
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
     SurfaceId surface_id;
