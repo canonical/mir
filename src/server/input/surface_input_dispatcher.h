@@ -61,7 +61,7 @@ public:
 private:
     void device_reset(MirInputDeviceId reset_device_id, std::chrono::nanoseconds when);
     bool dispatch_key(MirEvent const* kev);
-    bool dispatch_pointer(MirInputDeviceId id, MirEvent const* ev);
+    bool dispatch_pointer(MirInputDeviceId id, std::shared_ptr<MirEvent const> const& ev);
     bool dispatch_touch(MirInputDeviceId id, MirEvent const* tev);
 
     void send_enter_exit_event(std::shared_ptr<input::Surface> const& surface,

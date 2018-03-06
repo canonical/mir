@@ -556,9 +556,11 @@ mi::SurfaceInputDispatcher::TouchInputState& mi::SurfaceInputDispatcher::ensure_
     return touch_state_by_id[id];
 }
 
-bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirEvent const* ev)
+bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shared_ptr<MirEvent const> const& event)
 {
+    auto const ev = event.get();
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    last_pointer_event = event;
     auto const* input_ev = mir_event_get_input_event(ev);
     auto const* pev = mir_input_event_get_pointer_event(input_ev);
     auto action = mir_pointer_event_action(pev);
@@ -714,8 +716,7 @@ bool mi::SurfaceInputDispatcher::dispatch(std::shared_ptr<MirEvent const> const&
     case mir_input_event_type_touch:
         return dispatch_touch(id, event.get());
     case mir_input_event_type_pointer:
-        last_pointer_event = event;
-        return dispatch_pointer(id, event.get());
+        return dispatch_pointer(id, event);
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got an input event of unknown type"));
     }
