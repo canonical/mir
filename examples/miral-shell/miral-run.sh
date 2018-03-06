@@ -28,4 +28,10 @@ then extras='--app-id com.canonical.miral.Terminal'
 fi
 unset QT_QPA_PLATFORMTHEME
 
-MIR_SOCKET=${mir_socket} WAYLAND_DISPLAY=${wayland_socket} XDG_SESSION_TYPE=mir GDK_BACKEND=wayland,mir QT_QPA_PLATFORM=wayland SDL_VIDEODRIVER=wayland NO_AT_BRIDGE=1 "$@" ${extras}&
+if [ "$1" = "gdb" ]
+then
+  MIR_SOCKET=${mir_socket} WAYLAND_DISPLAY=${wayland_socket} XDG_SESSION_TYPE=mir GDK_BACKEND=wayland,mir QT_QPA_PLATFORM=wayland SDL_VIDEODRIVER=wayland NO_AT_BRIDGE=1 "$@" ${extras}
+else
+  MIR_SOCKET=${mir_socket} WAYLAND_DISPLAY=${wayland_socket} XDG_SESSION_TYPE=mir GDK_BACKEND=wayland,mir QT_QPA_PLATFORM=wayland SDL_VIDEODRIVER=wayland NO_AT_BRIDGE=1 "$@" ${extras}&
+fi
+
