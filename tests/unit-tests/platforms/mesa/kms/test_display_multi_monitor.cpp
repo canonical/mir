@@ -25,7 +25,7 @@
 
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/null_console_services.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/graphics/display_configuration_policy.h"

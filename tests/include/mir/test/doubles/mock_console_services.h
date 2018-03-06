@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_VIRTUAL_TERMINAL_H_
-#define MIR_TEST_DOUBLES_MOCK_VIRTUAL_TERMINAL_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_CONSOLE_SERVICES_H_
+#define MIR_TEST_DOUBLES_MOCK_CONSOLE_SERVICES_H_
 
 #include "mir/console_services.h"
 

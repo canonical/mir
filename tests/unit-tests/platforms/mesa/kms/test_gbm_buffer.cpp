@@ -30,7 +30,7 @@
 #include "mir/graphics/buffer_properties.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/null_console_services.h"
 
 #include <gbm.h>
 

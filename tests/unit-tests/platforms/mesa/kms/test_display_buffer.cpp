@@ -17,7 +17,7 @@
  */
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/null_console_services.h"
 #include "src/platforms/mesa/server/kms/platform.h"
 #include "src/platforms/mesa/server/kms/display_buffer.h"
 #include "src/platforms/mesa/include/native_buffer.h"

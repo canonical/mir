@@ -28,8 +28,8 @@
 
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/mock_buffer_ipc_message.h"
-#include "mir/test/doubles/mock_virtual_terminal.h"
-#include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/mock_console_services.h"
+#include "mir/test/doubles/null_console_services.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 
 #include <gtest/gtest.h>

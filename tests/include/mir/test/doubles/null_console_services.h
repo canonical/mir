@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_
-#define MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_
+#ifndef MIR_TEST_DOUBLES_NULL_CONSOLE_SERVICES_H_
+#define MIR_TEST_DOUBLES_NULL_CONSOLE_SERVICES_H_
 
 #include "mir/fd.h"
 #include "mir/console_services.h"
@@ -49,4 +49,4 @@ public:
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_ */
+#endif /* MIR_TEST_DOUBLES_NULL_CONSOLE_SERVICES_H_ */

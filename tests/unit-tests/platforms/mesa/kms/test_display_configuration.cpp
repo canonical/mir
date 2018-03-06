@@ -34,7 +34,7 @@
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
-#include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/null_console_services.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/stub_gl_program_factory.h"
 

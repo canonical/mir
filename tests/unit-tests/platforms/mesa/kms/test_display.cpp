@@ -33,10 +33,10 @@
 #include "mir/test/doubles/mock_gl.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/mock_display_report.h"
-#include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/null_console_services.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/mock_gl_config.h"
-#include "mir/test/doubles/mock_virtual_terminal.h"
+#include "mir/test/doubles/mock_console_services.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "mir/test/doubles/mock_event_handler_register.h"
 
