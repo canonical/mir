@@ -42,8 +42,8 @@ env:
   - SYSTEM=google:ubuntu-16.04 VARIANT=arm64
   - SYSTEM=google:ubuntu-17.10 VARIANT=clang
   - SYSTEM=google:ubuntu-devel VARIANT=amd64
-  - SYSTEM=linode:fedora-27 VARIANT=amd64
-  - SYSTEM=linode:fedora-rawhide VARIANT=amd64
+  - SYSTEM=google:fedora-27 VARIANT=amd64
+  - SYSTEM=google:fedora-rawhide VARIANT=amd64
 
 matrix:
   allow_failures:
