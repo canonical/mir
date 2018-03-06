@@ -94,12 +94,12 @@ shell::SurfaceSpecification& WlAbstractMirWindow::spec()
 void WlAbstractMirWindow::commit()
 {
     auto const session = get_session(client);
-    auto const latest_window_size = window_size.is_set() ? window_size.value() : latest_buffer_size;
 
     if (surface_id.as_value())
     {
         auto const surface = get_surface_for_id(session, surface_id);
 
+        // If the window side isn't set explicitly assume it matches the latest buffer
         if (!window_size.is_set() && surface->size() != latest_buffer_size)
         {
             sink->latest_resize(latest_buffer_size);
@@ -115,13 +115,11 @@ void WlAbstractMirWindow::commit()
         return;
     }
 
-    // Until we know the size we don't create a surface
-    if (latest_window_size == geometry::Size{})
-        return;
-
     auto* const mir_surface = WlSurface::from(surface);
     if (params->size == geometry::Size{})
-        params->size = latest_window_size;
+        params->size = window_size.is_set() ? window_size.value() : latest_buffer_size;
+    if (params->size == geometry::Size{})
+        params->size = geometry::Size{640, 480};
 
     params->streams = std::move(std::vector<shell::StreamSpecification>{{mir_surface->stream_id, mir_surface->buffer_offset, {}}});
 
@@ -130,7 +128,10 @@ void WlAbstractMirWindow::commit()
 
     // The shell isn't guaranteed to respect the requested size
     auto const window = session->get_surface(surface_id);
-    sink->send_resize(window->client_size());
+    auto const client_size = window->client_size();
+
+    if (client_size != params->size)
+        sink->send_resize(client_size);
 }
 
 void WlAbstractMirWindow::new_buffer_size(geometry::Size const& buffer_size)
@@ -141,7 +142,7 @@ void WlAbstractMirWindow::new_buffer_size(geometry::Size const& buffer_size)
     if (latest_buffer_size.height > geometry::Height{10000})
     {
         log_warning("Insane buffer height sanitized: latest_buffer_size.height = %d (was %d)",
-                1000, latest_buffer_size.height.as_int());
+                    1000, latest_buffer_size.height.as_int());
         latest_buffer_size.height = geometry::Height{1000};
     }
 }

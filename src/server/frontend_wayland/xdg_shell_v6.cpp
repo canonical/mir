@@ -247,8 +247,18 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
 
 void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    WlSurface::from(surface)->buffer_offset = geom::Displacement{-x, -y};
+    auto* const mir_surface = WlSurface::from(surface);
+    geom::Displacement const buffer_offset{-x, -y};
+
+    mir_surface->buffer_offset = buffer_offset;
     window_size = geom::Size{width, height};
+
+    if (surface_id.as_value())
+    {
+        spec().width = geom::Width{width};
+        spec().height = geom::Height{height};
+        spec().streams = std::move(std::vector<shell::StreamSpecification>{{mir_surface->stream_id, buffer_offset, {}}});
+    }
 }
 
 void mf::XdgSurfaceV6::ack_configure(uint32_t serial)
@@ -436,15 +446,12 @@ mf::XdgSurfaceV6EventSink::XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client
 
 void mf::XdgSurfaceV6EventSink::send_resize(geometry::Size const& new_size) const
 {
-    if (window_size != new_size)
-    {
-        seat->spawn(run_unless(destroyed, [this, new_size]()
-            {
-                auto const serial = wl_display_next_serial(wl_client_get_display(client));
-                notify_resize(new_size);
-                zxdg_surface_v6_send_configure(event_sink, serial);
-            }));
-    }
+    seat->spawn(run_unless(destroyed, [this, new_size]()
+        {
+            auto const serial = wl_display_next_serial(wl_client_get_display(client));
+            notify_resize(new_size);
+            zxdg_surface_v6_send_configure(event_sink, serial);
+        }));
 }
 
 void mf::XdgSurfaceV6EventSink::post_configure(int serial) const

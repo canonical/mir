@@ -247,13 +247,13 @@ ms::BasicSurface::BasicSurface(
     confine_pointer_state_(state),
     cursor_stream_adapter{std::make_unique<ms::CursorStreamImageAdapter>(*this)}
 {
+    auto callback = [this](auto const& size) { observers.frame_posted(this, 1, size); };
+
     for (auto& layer : layers)
     {
-        layer.stream->set_frame_posted_callback(
-            [this](auto const& size)
-            {
-                observers.frame_posted(this, 1, size);
-            });
+        if (layer.stream->has_submitted_buffer())
+            callback(layer.stream->stream_size());
+        layer.stream->set_frame_posted_callback(callback);
     }
     report->surface_created(this, surface_name);
 }
