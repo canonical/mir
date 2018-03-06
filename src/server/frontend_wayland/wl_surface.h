@@ -40,7 +40,7 @@ class WaylandAllocator;
 namespace frontend
 {
 class BufferStream;
-struct WlMirWindow;
+class WlMirWindow;
 
 class WlSurface : public wayland::Surface
 {
@@ -74,16 +74,16 @@ private:
     std::shared_ptr<std::vector<wl_resource*>> const pending_frames;
     std::shared_ptr<bool> const destroyed;
 
-    void destroy();
-    void attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y);
-    void damage(int32_t x, int32_t y, int32_t width, int32_t height);
-    void frame(uint32_t callback);
-    void set_opaque_region(std::experimental::optional<wl_resource*> const& region);
-    void set_input_region(std::experimental::optional<wl_resource*> const& region);
-    void commit();
-    void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height);
-    void set_buffer_transform(int32_t transform);
-    void set_buffer_scale(int32_t scale);
+    void destroy() override;
+    void attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y) override;
+    void damage(int32_t x, int32_t y, int32_t width, int32_t height) override;
+    void frame(uint32_t callback) override;
+    void set_opaque_region(std::experimental::optional<wl_resource*> const& region) override;
+    void set_input_region(std::experimental::optional<wl_resource*> const& region) override;
+    void commit() override;
+    void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) override;
+    void set_buffer_transform(int32_t transform) override;
+    void set_buffer_scale(int32_t scale) override;
 };
 }
 }

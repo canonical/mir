@@ -21,11 +21,14 @@
 #define MIR_FRONTEND_WL_SUBSURFACE_H
 
 #include "generated/wayland_wrapper.h"
+#include "wl_mir_window.h"
 
 namespace mir
 {
 namespace frontend
 {
+
+class WlSurface;
 
 class WlSubcompositor: wayland::Subcompositor
 {
@@ -36,6 +39,30 @@ private:
     void destroy(struct wl_client* client, struct wl_resource* resource) override;
     void get_subsurface(struct wl_client* client, struct wl_resource* resource, uint32_t id,
                         struct wl_resource* surface, struct wl_resource* parent) override;
+};
+
+class WlSubsurface: public WlMirWindow, wayland::Subsurface
+{
+public:
+    WlSubsurface(struct wl_client* client, struct wl_resource* object_parent, uint32_t id, WlSurface* surface,
+                 WlSurface* parent_surface);
+    ~WlSubsurface();
+
+private:
+    void set_position(int32_t x, int32_t y) override;
+    void place_above(struct wl_resource* sibling) override;
+    void place_below(struct wl_resource* sibling) override;
+    void set_sync() override;
+    void set_desync() override;
+
+    void destroy() override; // overrides function in both WlMirWindow and wayland::Subsurface
+
+    virtual void new_buffer_size(geometry::Size const& buffer_size) override;
+    virtual void commit() override;
+    virtual void visiblity(bool visible) override;
+
+    WlSurface* surface;
+    WlSurface* parent;
 };
 
 }
