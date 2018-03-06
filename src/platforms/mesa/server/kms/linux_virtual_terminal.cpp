@@ -96,22 +96,27 @@ mgm::LinuxVirtualTerminal::LinuxVirtualTerminal(std::shared_ptr<VTFileOperations
     tcattr.c_cc[VTIME] = 0;
     tcattr.c_cc[VMIN] = 1;
     fops->tcsetattr(vt_fd.fd(), TCSANOW, &tcattr);
+
+    if (fops->ioctl(vt_fd.fd(), KDSETMODE, KD_GRAPHICS) < 0)
+    {
+        try
+        {
+            restore();
+        }
+        catch(...)
+        {
+        }
+
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to set VT to graphics mode"))
+                << boost::errinfo_errno(errno));
+    }
 }
 
 mgm::LinuxVirtualTerminal::~LinuxVirtualTerminal() noexcept(true)
 {
     restore();
-}
-
-void mgm::LinuxVirtualTerminal::set_graphics_mode()
-{
-    if (fops->ioctl(vt_fd.fd(), KDSETMODE, KD_GRAPHICS) < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to set VT to graphics mode"))
-                    << boost::errinfo_errno(errno));
-    }
 }
 
 void mgm::LinuxVirtualTerminal::register_switch_handlers(

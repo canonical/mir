@@ -202,8 +202,6 @@ mgm::Display::Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& dr
       bypass_option(bypass_option),
       gl_config{gl_config}
 {
-    vt->set_graphics_mode();
-
     shared_egl.setup(*gbm);
 
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");

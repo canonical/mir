@@ -154,8 +154,23 @@ public:
         set_up_expectations_for_vt_setup(vt_num, activate, fake_vt_mode_auto);
     }
 
-    void set_up_expectations_for_vt_setup(int vt_num, bool activate,
-                                          vt_mode const& vtm)
+    void set_up_expectations_for_vt_setup(
+        int vt_num,
+        bool activate,
+        vt_mode const& vtm)
+    {
+        set_up_expectations_for_vt_setup(
+            vt_num,
+            activate,
+            vtm,
+            true);
+    }
+
+    void set_up_expectations_for_vt_setup(
+        int vt_num,
+        bool activate,
+        vt_mode const& vtm,
+        bool set_graphics_mode_succeeds)
     {
         using namespace testing;
 
@@ -186,6 +201,8 @@ public:
             .WillOnce(DoAll(SetTcAttrPointee<struct termios>(fake_tc_attr), Return(0)));
         EXPECT_CALL(mock_fops, tcsetattr(fake_vt_fd, TCSANOW, An<const struct termios *>()))
             .WillOnce(Return(0));
+        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSETMODE, KD_GRAPHICS))
+            .WillOnce(Return(set_graphics_mode_succeeds ? 0 : -1));
     }
 
     void set_up_expectations_for_switch_handler(int sig)
@@ -334,30 +351,6 @@ TEST_F(LinuxVirtualTerminalTest, does_not_restore_vt_mode_if_vt_process)
     mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
 }
 
-TEST_F(LinuxVirtualTerminalTest, sets_graphics_mode)
-{
-    using namespace testing;
-
-    int const vt_num{7};
-
-    InSequence s;
-
-    set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num, false);
-
-    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSETMODE, KD_GRAPHICS))
-        .WillOnce(Return(0));
-
-    set_up_expectations_for_vt_teardown();
-
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
-    auto null_report = mr::null_display_report();
-
-    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
-    vt.set_graphics_mode();
-}
-
 TEST_F(LinuxVirtualTerminalTest, failure_to_set_graphics_mode_throws)
 {
     using namespace testing;
@@ -367,10 +360,7 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_set_graphics_mode_throws)
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num, false);
-
-    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSETMODE, KD_GRAPHICS))
-        .WillOnce(Return(-1));
+    set_up_expectations_for_vt_setup(vt_num, false, fake_vt_mode_auto, false);
 
     set_up_expectations_for_vt_teardown();
 
@@ -378,9 +368,8 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_set_graphics_mode_throws)
     auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
     EXPECT_THROW({
-        vt.set_graphics_mode();
+        mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
     }, std::runtime_error);
 }
 

@@ -83,7 +83,6 @@ public:
                          std::shared_ptr<DisplayReport> const& report);
     ~LinuxVirtualTerminal() noexcept(true);
 
-    void set_graphics_mode() override;
     void register_switch_handlers(
         EventHandlerRegister& handlers,
         std::function<bool()> const& switch_away,

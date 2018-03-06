@@ -36,7 +36,6 @@ class ConsoleServices
 public:
     virtual ~ConsoleServices() = default;
 
-    virtual void set_graphics_mode() = 0;
     virtual void register_switch_handlers(
         graphics::EventHandlerRegister& handlers,
         std::function<bool()> const& switch_away,
