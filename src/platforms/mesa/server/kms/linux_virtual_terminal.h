@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_MESA_LINUX_VIRTUAL_TERMINAL_H_
 #define MIR_GRAPHICS_MESA_LINUX_VIRTUAL_TERMINAL_H_
 
-#include "virtual_terminal.h"
+#include "mir/console_services.h"
 
 #include <memory>
 

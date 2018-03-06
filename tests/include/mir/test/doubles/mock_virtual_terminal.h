@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_VIRTUAL_TERMINAL_H_
 #define MIR_TEST_DOUBLES_MOCK_VIRTUAL_TERMINAL_H_
 
-#include "src/platforms/mesa/server/kms/virtual_terminal.h"
+#include "mir/console_services.h"
 
 #include <gmock/gmock.h>
 
@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-class MockConsoleServices : public graphics::mesa::ConsoleServices
+class MockConsoleServices : public ConsoleServices
 {
 public:
     MOCK_METHOD0(set_graphics_mode, void());

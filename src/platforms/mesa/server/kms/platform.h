@@ -29,12 +29,13 @@
 namespace mir
 {
 class EmergencyCleanupRegistry;
+class ConsoleServices;
+
 namespace graphics
 {
 namespace mesa
 {
 
-class ConsoleServices;
 class Platform : public graphics::Platform,
                  public graphics::NativeRenderingPlatform,
                  public mir::renderer::gl::EGLPlatform

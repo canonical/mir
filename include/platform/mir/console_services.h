@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_VIRTUAL_TERMINAL_H_
-#define MIR_GRAPHICS_MESA_VIRTUAL_TERMINAL_H_
+#ifndef MIR_PLATFORM_CONSOLE_SERVICES_H_
+#define MIR_PLATFORM_CONSOLE_SERVICES_H_
 
 #include <functional>
 #include <boost/thread/future.hpp>
@@ -29,9 +29,7 @@ class Fd;
 namespace graphics
 {
 class EventHandlerRegister;
-
-namespace mesa
-{
+}
 
 class ConsoleServices
 {
@@ -40,7 +38,7 @@ public:
 
     virtual void set_graphics_mode() = 0;
     virtual void register_switch_handlers(
-        EventHandlerRegister& handlers,
+        graphics::EventHandlerRegister& handlers,
         std::function<bool()> const& switch_away,
         std::function<bool()> const& switch_back) = 0;
     virtual void restore() = 0;
@@ -60,7 +58,5 @@ protected:
 };
 
 }
-}
-}
 
-#endif /* MIR_GRAPHICS_MESA_VIRTUAL_TERMINAL_H_ */
+#endif /* MIR_PLATFORM_CONSOLE_SERVICES_H_*/

@@ -19,8 +19,8 @@
 #ifndef MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_
 #define MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_
 
-#include "src/platforms/mesa/server/kms/virtual_terminal.h"
 #include "mir/fd.h"
+#include "mir/console_services.h"
 
 namespace mir
 {
@@ -29,7 +29,7 @@ namespace test
 namespace doubles
 {
 
-class NullConsoleServices : public graphics::mesa::ConsoleServices
+class NullConsoleServices : public ConsoleServices
 {
 public:
     void set_graphics_mode() override {}

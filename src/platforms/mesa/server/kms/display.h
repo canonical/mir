@@ -33,6 +33,7 @@
 
 namespace mir
 {
+class ConsoleServices;
 namespace geometry
 {
 struct Rectangle;
@@ -56,7 +57,6 @@ class GBMHelper;
 }
 
 class DisplayBuffer;
-class ConsoleServices;
 class KMSOutput;
 class Cursor;
 

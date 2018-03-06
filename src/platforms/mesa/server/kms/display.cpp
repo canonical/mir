@@ -23,7 +23,7 @@
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 #include "kms_page_flipper.h"
-#include "virtual_terminal.h"
+#include "mir/console_services.h"
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/event_handler_register.h"
 
