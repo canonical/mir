@@ -5,37 +5,37 @@ kill-timeout: 50m
 backends:
     lxd:
         systems:
-            - ubuntu-16.04
-            - ubuntu-17.10
-            - ubuntu-18.04:
-                image: ubuntu-daily:18.04
-            - fedora-27
-            - fedora-rawhide:
-                image: images:fedora/27
+            - ubuntu-16.04-64
+            - ubuntu-17.10-64
+            - ubuntu-18.04-64:
+                image: ubuntu-daily:18.04/amd64
+            - fedora-27-64
+            - fedora-rawhide-64:
+                image: images:fedora/27/amd64
     linode:
         key: "$(HOST: echo $SPREAD_LINODE_KEY)"
         plan: 8GB
         location: fremont
         systems:
-            - ubuntu-16.04
-            - ubuntu-17.10
-            - ubuntu-devel:
-                image: ubuntu-17.10
-            - fedora-27
-            - fedora-rawhide:
-                image: fedora-27
+            - ubuntu-16.04-64
+            - ubuntu-17.10-64
+            - ubuntu-devel-64:
+                image: ubuntu-17.10/amd64
+            - fedora-27-64
+            - fedora-rawhide-64:
+                image: fedora-27-64
     google:
         key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
         plan: n1-highcpu-8
         location: computeengine/us-east1-b
         systems:
-            - ubuntu-16.04
-            - ubuntu-17.10
-            - ubuntu-devel:
-                image: ubuntu-17.10
-            - fedora-27
-            - fedora-rawhide:
-                image: fedora-27
+            - ubuntu-16.04-64
+            - ubuntu-17.10-64
+            - ubuntu-devel-64:
+                image: ubuntu-17.10-64
+            - fedora-27-64
+            - fedora-rawhide-64:
+                image: fedora-27-64
 
 environment:
     ARCH: amd64
