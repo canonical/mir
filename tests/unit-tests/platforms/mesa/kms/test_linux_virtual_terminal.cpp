@@ -19,6 +19,7 @@
 #include "src/platforms/mesa/server/kms/linux_virtual_terminal.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/event_handler_register.h"
+#include "mir/anonymous_shm_file.h"
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_display_report.h"
@@ -33,12 +34,15 @@
 
 #include <linux/vt.h>
 #include <linux/kd.h>
+#include <fcntl.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mr = mir::report;
+
+#include <boost/exception/diagnostic_information.hpp>
 
 namespace
 {
@@ -673,4 +677,135 @@ TEST_F(LinuxVirtualTerminalTest, restores_keyboard_and_graphics)
     Mock::VerifyAndClearExpectations(&mock_fops);
 
     set_up_expectations_for_vt_teardown();
+}
+
+TEST_F(LinuxVirtualTerminalTest, throws_expected_error_when_opening_file_fails)
+{
+    using namespace testing;
+
+    auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
+
+    int const major = 123;
+    int const minor = 321;
+    char const* const expected_filename = "/sys/dev/char/123:321/uevent";
+
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+        .WillOnce(Return(-1));
+
+    try
+    {
+        vt.acquire_device(major, minor);
+    }
+    catch (std::system_error const&)
+    {
+    }
+}
+
+TEST_F(LinuxVirtualTerminalTest, throws_error_when_parsing_fails)
+{
+    using namespace testing;
+
+    auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
+
+    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
+    char const* const uevent_content =
+        "MAJOR=56\n"
+        "MINOR=61\n"
+        "I_AINT_NO_DEVNAME=fb0";
+
+    mir::AnonymousShmFile uevent{strlen(uevent_content)};
+    ::memcpy(uevent.base_ptr(), uevent_content, strlen(uevent_content));
+
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+        .WillOnce(Return(uevent.fd()));
+
+    try
+    {
+        vt.acquire_device(55, 61);
+    }
+    catch (std::runtime_error const&)
+    {
+    }
+}
+
+TEST_F(LinuxVirtualTerminalTest, opens_correct_device_node)
+{
+    using namespace testing;
+
+    auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
+
+    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
+    char const* const uevent_content =
+        "MAJOR=55\n"
+        "MINOR=61\n"
+        "DEVNAME=fb0";
+
+    mir::AnonymousShmFile uevent{strlen(uevent_content)};
+    ::memcpy(uevent.base_ptr(), uevent_content, strlen(uevent_content));
+
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+        .WillOnce(Return(uevent.fd()));
+    EXPECT_CALL(*fops, open(StrEq("/dev/fb0"), O_RDWR | O_CLOEXEC))
+        .WillOnce(Return(-1));
+
+    auto device = vt.acquire_device(55, 61);
+
+    try
+    {
+        device.get();
+    }
+    catch(...)
+    {
+        // boost::unique_future appears to lose the type of the exception?
+    }
+}
+
+TEST_F(LinuxVirtualTerminalTest, callback_receives_correct_device_fd)
+{
+    using namespace testing;
+
+    auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
+
+    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
+    char const uevent_content[] =
+        "MAJOR=55\n"
+        "MINOR=61\n"
+        "DEVNAME=input/event3";
+
+    mir::AnonymousShmFile uevent{sizeof(uevent_content)};
+    ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
+
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+        .WillOnce(Return(uevent.fd()));
+
+    char const device_content[] =
+        "I am the very model of a modern major general";
+    mir::AnonymousShmFile fake_device_node(sizeof(device_content));
+    ::memcpy(fake_device_node.base_ptr(), device_content, sizeof(device_content));
+
+    EXPECT_CALL(*fops, open(StrEq("/dev/input/event3"), O_RDWR | O_CLOEXEC))
+        .WillOnce(Return(fake_device_node.fd()));
+
+    auto fd = vt.acquire_device(55, 61).get();
+    char buffer[sizeof(device_content)];
+
+    auto read_bytes = read(fd, buffer, sizeof(device_content));
+    EXPECT_THAT(read_bytes, Eq(sizeof(device_content)));
+    EXPECT_THAT(buffer, StrEq(device_content));
 }

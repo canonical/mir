@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_
 
 #include "src/platforms/mesa/server/kms/virtual_terminal.h"
+#include "mir/fd.h"
 
 namespace mir
 {
@@ -40,6 +41,8 @@ public:
     }
 
     void restore() override {}
+
+    boost::unique_future<Fd> acquire_device(int, int) override { return boost::unique_future<Fd>(); }
 };
 
 }

@@ -89,6 +89,7 @@ public:
         std::function<bool()> const& switch_away,
         std::function<bool()> const& switch_back) override;
     void restore() override;
+    boost::unique_future<Fd> acquire_device(int major, int minor) override;
 
 private:
     class FDWrapper

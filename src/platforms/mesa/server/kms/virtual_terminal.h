@@ -20,9 +20,12 @@
 #define MIR_GRAPHICS_MESA_VIRTUAL_TERMINAL_H_
 
 #include <functional>
+#include <boost/thread/future.hpp>
 
 namespace mir
 {
+class Fd;
+
 namespace graphics
 {
 class EventHandlerRegister;
@@ -41,6 +44,14 @@ public:
         std::function<bool()> const& switch_away,
         std::function<bool()> const& switch_back) = 0;
     virtual void restore() = 0;
+
+    /**
+     * Asynchronously acquire access to a device node
+     *
+     * \param major             [in] major number of requested device node
+     * \param minor             [in] minor number of requested device node
+     */
+    virtual boost::unique_future<Fd> acquire_device(int major, int minor) = 0;
 
 protected:
     VirtualTerminal() = default;

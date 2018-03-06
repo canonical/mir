@@ -19,10 +19,13 @@
 #include "linux_virtual_terminal.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/event_handler_register.h"
+#include "mir/fd.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/exception/errinfo_file_name.hpp>
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/stream.hpp>
 
 #include <vector>
 #include <string>
@@ -296,4 +299,58 @@ int mgm::LinuxVirtualTerminal::open_vt(int vt_number)
     }
 
     return vt_fd;
+}
+
+boost::unique_future<mir::Fd> mgm::LinuxVirtualTerminal::acquire_device(int major, int minor)
+{
+    std::stringstream filename;
+    filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
+    mir::Fd const fd{fops->open(filename.str().c_str(), O_RDONLY | O_CLOEXEC)};
+
+    if (fd == mir::Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION((boost::enable_error_info(std::system_error{
+            errno,
+            std::system_category(),
+            "Failed to open /sys file to discover devnode"})
+                << boost::errinfo_file_name(filename.str())));
+    }
+
+    auto const devnode =
+        [](auto const& fd)
+        {
+            using namespace boost::iostreams;
+            char line_buffer[1024];
+            stream<file_descriptor_source> uevent{fd, file_descriptor_flags::never_close_handle};
+
+            while (uevent.getline(line_buffer, sizeof(line_buffer)))
+            {
+                if (strncmp(line_buffer, "DEVNAME=", strlen("DEVNAME=")) == 0)
+                {
+                    return std::string{"/dev/"} + std::string{line_buffer + strlen("DEVNAME=")};
+                }
+            }
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to read DEVNAME"}));
+        }(fd);
+
+    boost::promise<mir::Fd> promise;
+    auto dev_fd = mir::Fd{fops->open(devnode.c_str(), O_RDWR | O_CLOEXEC)};
+    if (dev_fd != mir::Fd::invalid)
+    {
+        promise.set_value(std::move(dev_fd));
+    }
+    else
+    {
+        promise.set_exception(
+            std::make_exception_ptr(
+                boost::enable_error_info(
+                    std::system_error{
+                        errno,
+                        std::system_category(),
+                        "Failed to open device node"})
+                    << boost::errinfo_file_name(devnode.c_str())
+                ));
+    }
+
+    return promise.get_future();
 }

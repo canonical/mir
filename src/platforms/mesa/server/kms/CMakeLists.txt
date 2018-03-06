@@ -62,6 +62,8 @@ target_link_libraries(
   mirplatform
   mirsharedmesaservercommon-static
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  ${Boost_IOSTREAMS_LIBRARY}
+  ${Boost_THREAD_LIBRARY}
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
