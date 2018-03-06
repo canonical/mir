@@ -115,6 +115,8 @@ private:
     unsigned active_pointer_modifiers = 0;
     MirResizeEdge resize_edge = mir_resize_edge_none;
     miral::Window resize_window;
+    Point resize_top_left;
+    Size resize_size;
 
     SpinnerSplash const spinner;
 

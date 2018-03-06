@@ -86,8 +86,8 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
             {
                 if (tools.select_active_window(resize_window) == resize_window)
                 {
-                    auto const top_left = resize_window.top_left();
-                    Rectangle const old_pos{top_left, resize_window.size()};
+                    auto const top_left = resize_top_left;
+                    Rectangle const old_pos{top_left, resize_size};
 
                     auto movement = cursor - old_cursor;
 
@@ -122,6 +122,8 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
                     modifications.top_left() = new_pos;
                     modifications.size() = new_size;
                     tools.modify_window(resize_window, modifications);
+                    resize_top_left = new_pos;
+                    resize_size = new_size;
                 }
                 else
                 {
@@ -213,6 +215,8 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
 
                 resize_edge = edge;
                 resize_window = window;
+                resize_top_left = window.top_left();
+                resize_size = window.size();
                 active_pointer_button = mir_pointer_button_tertiary;
                 active_pointer_modifiers = mir_pointer_event_modifiers(event) & modifier_mask;
 
@@ -889,6 +893,8 @@ void FloatingWindowManagerPolicy::handle_request_resize(
         pointer_resizing = true;
         resize_edge = edge;
         resize_window = window_info.window();
+        resize_top_left = resize_window.top_left();
+        resize_size = resize_window.size();
         active_pointer_button = find_active_pointer_button(pointer_event);
         active_pointer_modifiers = mir_pointer_event_modifiers(pointer_event) & modifier_mask;
     }
