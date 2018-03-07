@@ -28,7 +28,9 @@ void mf::BasicSurfaceEventSink::handle_event(MirEvent const& event)
     case mir_event_type_resize:
     {
         auto* const resize_event = mir_event_get_resize_event(&event);
-        send_resize({mir_resize_event_get_width(resize_event), mir_resize_event_get_height(resize_event)});
+        geometry::Size const size{mir_resize_event_get_width(resize_event), mir_resize_event_get_height(resize_event)};
+        if (size != window_size)
+            send_resize(size);
         break;
     }
     case mir_event_type_input:
