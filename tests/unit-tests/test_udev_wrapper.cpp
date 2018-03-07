@@ -21,11 +21,13 @@
 #include "mir/test/death.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 #include <memory>
 #include <stdexcept>
 #include <umockdev.h>
 #include <libudev.h>
 #include <poll.h>
+#include <sys/sysmacros.h>
 
 namespace mtf=mir_test_framework;
 
@@ -132,6 +134,21 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectProperties)
     ASSERT_STREQ("absolutely", dev->property("REALLY"));
     ASSERT_EQ(NULL, dev->property("SOMETHING_ELSE"));
 }
+
+TEST_F(UdevWrapperTest, UdevDeviceHasCorrectMajorMinorNumbers)
+{
+    using namespace testing;
+    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {},
+                                                  {"MAJOR", "22", "MINOR", "42"});
+
+    mir::udev::Context ctx;
+    auto dev = ctx.device_from_syspath(sysfs_path);
+
+    dev_t devnum = dev->devnum();
+    EXPECT_THAT(major(devnum), Eq(22));
+    EXPECT_THAT(minor(devnum), Eq(42));
+}
+
 
 TEST_F(UdevWrapperTest, UdevDeviceComparisonIsReflexive)
 {
