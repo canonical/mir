@@ -20,6 +20,7 @@
 
 #include "wayland_utils.h"
 #include "wl_mir_window.h"
+#include "wl_subcompositor.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
 #include "xdg_shell_v6.h"
@@ -747,6 +748,7 @@ mf::WaylandConnector::WaylandConnector(
         display.get(),
         executor,
         this->allocator);
+    subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
     seat_global = std::make_unique<mf::WlSeat>(display.get(), input_hub, seat, executor);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),

@@ -45,6 +45,7 @@ struct Size;
 namespace frontend
 {
 class WlCompositor;
+class WlSubcompositor;
 class WlApplication;
 class WlShell;
 class XdgShellV6;
@@ -85,6 +86,7 @@ private:
     std::unique_ptr<wl_display, void(*)(wl_display*)> const display;
     mir::Fd const pause_signal;
     std::unique_ptr<WlCompositor> compositor_global;
+    std::unique_ptr<WlSubcompositor> subcompositor_global;
     std::unique_ptr<WlSeat> seat_global;
     std::unique_ptr<OutputManager> output_manager;
     std::shared_ptr<graphics::WaylandAllocator> const allocator;
