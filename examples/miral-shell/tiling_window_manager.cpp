@@ -147,7 +147,7 @@ auto TilingWindowManagerPolicy::place_new_window(
 
 void TilingWindowManagerPolicy::advise_new_window(WindowInfo const& window_info)
 {
-    if (window_info.type() == mir_window_type_normal &&
+    if ((window_info.type() == mir_window_type_normal || window_info.type() == mir_window_type_freestyle) &&
         !window_info.parent() &&
         window_info.state() == mir_window_state_restored)
     {

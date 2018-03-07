@@ -25,6 +25,8 @@
 #include "wl_mir_window.h"
 
 #include "mir/scene/surface_creation_parameters.h"
+#include "mir/frontend/session.h"
+#include "mir/scene/surface.h"
 #include "mir/frontend/shell.h"
 #include "mir/optional_value.h"
 
@@ -489,13 +491,28 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
       self{self}
 {
     self->set_notify_resize(
-        [this](geom::Size const& new_size)
+        [this, self, client](geom::Size const& new_size)
         {
             wl_array states;
             wl_array_init(&states);
 
-//            if (uint32_t* state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-//                *state = ZXDG_TOPLEVEL_V6_STATE_MAXIMIZED;
+            auto const session = get_session(client);
+            auto const surface = std::dynamic_pointer_cast<scene::Surface>(session->get_surface(self->surface_id));
+
+            switch (surface->state())
+            {
+            default:
+                if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
+                    *state = ZXDG_TOPLEVEL_V6_STATE_RESIZING;
+                break;
+
+            case mir_window_state_maximized:
+            case mir_window_state_horizmaximized:
+            case mir_window_state_vertmaximized:
+            case mir_window_state_fullscreen:
+                if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
+                    *state = ZXDG_TOPLEVEL_V6_STATE_MAXIMIZED;
+            }
 
             zxdg_toplevel_v6_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
 
