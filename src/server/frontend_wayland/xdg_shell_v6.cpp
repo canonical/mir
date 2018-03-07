@@ -494,6 +494,8 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
             wl_array_init(&states);
 
             zxdg_toplevel_v6_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
+
+            wl_array_release(&states);
         });
 }
 
