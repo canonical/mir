@@ -153,6 +153,7 @@ public:
 
 }
 }
+namespace mf = mir::frontend;  // Keep CLion's parsing happy
 
 // XdgShellV6
 
@@ -492,6 +493,9 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
         {
             wl_array states;
             wl_array_init(&states);
+
+//            if (uint32_t* state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
+//                *state = ZXDG_TOPLEVEL_V6_STATE_MAXIMIZED;
 
             zxdg_toplevel_v6_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
 
