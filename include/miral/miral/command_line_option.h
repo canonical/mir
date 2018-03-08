@@ -95,7 +95,7 @@ public:
             Lambda&& callback,
             std::string const& option,
             std::string const& description) :
-            CommandLineOption(lambda_as_function(callback), option, description) {}
+            CommandLineOption(lambda_as_function(std::forward<Lambda>(callback)), option, description) {}
 
     void operator()(mir::Server& server) const;
 
