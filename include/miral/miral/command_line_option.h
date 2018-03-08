@@ -20,6 +20,7 @@
 #define MIRAL_COMMAND_LINE_OPTION_H
 
 #include <mir/optional_value.h>
+#include <miral/lambda_as_function.h>
 
 #include <functional>
 #include <memory>
@@ -88,6 +89,13 @@ public:
         std::function<void(bool is_set)> callback,
         std::string const& option,
         std::string const& description);
+
+    template<typename Lambda>
+    CommandLineOption(
+            Lambda&& callback,
+            std::string const& option,
+            std::string const& description) :
+            CommandLineOption(lambda_as_function(callback), option, description) {}
 
     void operator()(mir::Server& server) const;
 
