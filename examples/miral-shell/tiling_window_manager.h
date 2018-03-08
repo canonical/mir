@@ -73,6 +73,9 @@ public:
     void advise_new_app(miral::ApplicationInfo& application) override;
     void advise_delete_app(miral::ApplicationInfo const& application) override;
 
+    void handle_request_drag_and_drop(miral::WindowInfo& window_info) override;
+    void handle_request_move(miral::WindowInfo& window_info, MirInputEvent const* input_event) override;
+
     auto confirm_inherited_move(miral::WindowInfo const& window_info, Displacement movement) -> Rectangle override;
 
 private:

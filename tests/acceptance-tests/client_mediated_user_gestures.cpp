@@ -19,8 +19,6 @@
 #include <mir_toolkit/mir_window.h>
 #include <mir_toolkit/mir_blob.h>
 
-#include <miral/window_management_policy_addendum2.h>
-
 #include <mir/geometry/displacement.h>
 #include <mir/input/input_device_info.h>
 #include <mir/input/device_capability.h>
@@ -71,8 +69,7 @@ private:
 
 void mir_cookie_release(Cookie const&) = delete;
 
-struct MockWindowManagementPolicy : mir_test_framework::CanonicalWindowManagerPolicy,
-    miral::WindowManagementPolicyAddendum2
+struct MockWindowManagementPolicy : mir_test_framework::CanonicalWindowManagerPolicy
 {
     MockWindowManagementPolicy(
         miral::WindowManagerTools const& tools,

@@ -20,7 +20,6 @@
 #include "display_configuration_listeners.h"
 
 #include "miral/window_manager_tools.h"
-#include "miral/window_management_policy_addendum2.h"
 #include "miral/window_management_policy_addendum3.h"
 #include "miral/window_management_policy_addendum4.h"
 
@@ -74,23 +73,6 @@ miral::BasicWindowManager::Locker::Locker(BasicWindowManager* self) :
 
 namespace
 {
-auto find_policy_addendum2(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum2*
-{
-    miral::WindowManagementPolicyAddendum2* result = dynamic_cast<miral::WindowManagementPolicyAddendum2*>(policy.get());
-
-    if (result)
-        return result;
-
-    struct NullWindowManagementPolicyAddendum2 : miral::WindowManagementPolicyAddendum2
-    {
-        void handle_request_drag_and_drop(miral::WindowInfo&) override {}
-        void handle_request_move(miral::WindowInfo&, MirInputEvent const*) override {}
-    };
-    static NullWindowManagementPolicyAddendum2 null_workspace_policy;
-
-    return &null_workspace_policy;
-}
-
 auto find_policy_addendum3(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum3*
 {
     miral::WindowManagementPolicyAddendum3* result = dynamic_cast<miral::WindowManagementPolicyAddendum3*>(policy.get());
@@ -136,7 +118,6 @@ miral::BasicWindowManager::BasicWindowManager(
     display_layout(display_layout),
     persistent_surface_store{persistent_surface_store},
     policy(build(WindowManagerTools{this})),
-    policy2{find_policy_addendum2(policy)},
     policy3{find_policy_addendum3(policy)},
     policy4{find_policy_addendum4(policy)},
     display_config_monitor{std::make_shared<DisplayConfigurationListeners>()}
@@ -149,10 +130,8 @@ miral::BasicWindowManager::~BasicWindowManager()
 {
     display_config_monitor->delete_listener(this);
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     if (last_input_event)
         mir_event_unref(last_input_event);
-#endif
 }
 void miral::BasicWindowManager::add_session(std::shared_ptr<scene::Session> const& session)
 {
@@ -416,7 +395,7 @@ void miral::BasicWindowManager::handle_request_drag_and_drop(
 {
     Locker lock{this};
     if (timestamp >= last_input_event_timestamp)
-        policy2->handle_request_drag_and_drop(info_for(surface));
+        policy->handle_request_drag_and_drop(info_for(surface));
 }
 
 void miral::BasicWindowManager::handle_request_move(
@@ -427,7 +406,7 @@ void miral::BasicWindowManager::handle_request_move(
     std::lock_guard<decltype(mutex)> lock(mutex);
     if (timestamp >= last_input_event_timestamp && last_input_event)
     {
-        policy2->handle_request_move(info_for(surface), mir_event_get_input_event(last_input_event));
+        policy->handle_request_move(info_for(surface), mir_event_get_input_event(last_input_event));
     }
 }
 

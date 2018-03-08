@@ -214,7 +214,6 @@ private:
     std::shared_ptr<DeadWorkspaces> const dead_workspaces{std::make_shared<DeadWorkspaces>()};
 
     std::unique_ptr<WindowManagementPolicy> const policy;
-    WindowManagementPolicyAddendum2* const policy2;
     WindowManagementPolicyAddendum3* const policy3;
     WindowManagementPolicyAddendum4* const policy4;
 
@@ -224,9 +223,7 @@ private:
     mir::geometry::Rectangles outputs;
     mir::geometry::Point cursor;
     uint64_t last_input_event_timestamp{0};
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     MirEvent const* last_input_event{nullptr};
-#endif
     miral::MRUWindowList mru_active_windows;
     std::set<Window> fullscreen_surfaces;
     std::set<Window> maximized_surfaces;

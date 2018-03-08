@@ -148,6 +148,9 @@ struct MockWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
     MOCK_METHOD2(advise_move_to, void(miral::WindowInfo const& window_info, mir::geometry::Point top_left));
     MOCK_METHOD2(advise_resize, void(miral::WindowInfo const& window_info, mir::geometry::Size const& new_size));
     MOCK_METHOD1(advise_raise, void(std::vector<miral::Window> const&));
+
+    void handle_request_drag_and_drop(miral::WindowInfo& /*window_info*/) {}
+    void handle_request_move(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/) {}
 };
 
 struct StubDisplayConfigurationObserver : mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>

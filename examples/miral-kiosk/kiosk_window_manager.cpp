@@ -162,3 +162,11 @@ void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, Win
 
     CanonicalWindowManagerPolicy::handle_modify_window(window_info, specification);
 }
+
+void KioskWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*window_info*/)
+{
+}
+
+void KioskWindowManagerPolicy::handle_request_move(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/)
+{
+}

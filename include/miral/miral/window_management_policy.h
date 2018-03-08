@@ -207,6 +207,25 @@ public:
         std::vector<Window> const& windows);
 /** @} */
 
+/** @name handle requests originating from the client
+ * The policy is expected to update the model as appropriate
+ *  @{ */
+    /** request from client to initiate drag and drop
+     * \note the request has already been validated against the requesting event
+     *
+     * @param window_info   the window
+     */
+    virtual void handle_request_drag_and_drop(WindowInfo& window_info) = 0;
+
+    /** request from client to initiate move
+     * \note the request has already been validated against the requesting event
+     *
+     * @param window_info   the window
+     * @param input_event   the requesting event
+     */
+    virtual void handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event) = 0;
+/** @} */
+
     /** Confirm (and optionally adjust) the motion of a child window when the parent is moved.
      *
      * @param window_info   the window

@@ -708,3 +708,11 @@ void TilingWindowManagerPolicy::advise_output_end()
         dirty_displays = false;
     }
 }
+
+void TilingWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*window_info*/)
+{
+}
+
+void TilingWindowManagerPolicy::handle_request_move(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/)
+{
+}

@@ -331,23 +331,6 @@ auto dump_of(mir::geometry::Size const size) -> std::string
     return out.str();
 }
 
-auto find_policy_addendum2(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum2*
-{
-    miral::WindowManagementPolicyAddendum2* result = dynamic_cast<miral::WindowManagementPolicyAddendum2*>(policy.get());
-
-    if (result)
-        return result;
-
-    struct NullWindowManagementPolicyAddendum2 : miral::WindowManagementPolicyAddendum2
-    {
-        void handle_request_drag_and_drop(miral::WindowInfo&) override {}
-        void handle_request_move(miral::WindowInfo&, MirInputEvent const*) override {}
-    };
-    static NullWindowManagementPolicyAddendum2 null_workspace_policy;
-
-    return &null_workspace_policy;
-}
-
 auto find_policy_addendum3(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum3*
 {
     miral::WindowManagementPolicyAddendum3* result = dynamic_cast<miral::WindowManagementPolicyAddendum3*>(policy.get());
@@ -387,7 +370,6 @@ miral::WindowManagementTrace::WindowManagementTrace(
     WindowManagementPolicyBuilder const& builder) :
     wrapped{wrapped},
     policy(builder(WindowManagerTools{this})),
-    policy2{find_policy_addendum2(policy)},
     policy3{find_policy_addendum3(policy)},
     policy4{find_policy_addendum4(policy)}
 {
@@ -855,14 +837,14 @@ MIRAL_TRACE_EXCEPTION
 void miral::WindowManagementTrace::handle_request_drag_and_drop(miral::WindowInfo& window_info)
 try {
     mir::log_info("%s window_info=%s", __func__, dump_of(window_info).c_str());
-    policy2->handle_request_drag_and_drop(window_info);
+    policy->handle_request_drag_and_drop(window_info);
 }
 MIRAL_TRACE_EXCEPTION
 
 void miral::WindowManagementTrace::handle_request_move(miral::WindowInfo& window_info, MirInputEvent const* input_event)
 try {
     mir::log_info("%s window_info=%s", __func__, dump_of(window_info).c_str());
-    policy2->handle_request_move(window_info, input_event);
+    policy->handle_request_move(window_info, input_event);
 }
 MIRAL_TRACE_EXCEPTION
 
