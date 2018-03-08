@@ -28,9 +28,9 @@ void mf::BasicSurfaceEventSink::handle_event(MirEvent const& event)
     case mir_event_type_resize:
     {
         auto* const resize_event = mir_event_get_resize_event(&event);
-        geometry::Size const size{mir_resize_event_get_width(resize_event), mir_resize_event_get_height(resize_event)};
-        if (size != window_size)
-            send_resize(size);
+        requested_size = {mir_resize_event_get_width(resize_event), mir_resize_event_get_height(resize_event)};
+        if (requested_size != window_size)
+            send_resize(requested_size);
         break;
     }
     case mir_event_type_input:
@@ -67,6 +67,21 @@ void mf::BasicSurfaceEventSink::handle_event(MirEvent const& event)
     case mir_event_type_window:
     {
         auto const wev = mir_event_get_window_event(&event);
+
+        switch (mir_window_event_get_attribute(wev))
+        {
+        case mir_window_attrib_focus:
+            has_focus = mir_window_event_get_attribute_value(wev);
+            send_resize(requested_size);
+            break;
+
+        case mir_window_attrib_state:
+            current_state = MirWindowState(mir_window_event_get_attribute_value(wev));
+            send_resize(requested_size);
+            break;
+
+        default:;
+        }
 
         seat->handle_event(client, wev, target);
     }
