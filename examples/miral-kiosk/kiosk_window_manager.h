@@ -41,8 +41,10 @@ public:
     void handle_modify_window(miral::WindowInfo& window_info, miral::WindowSpecification const& modifications) override;
 
     void handle_request_drag_and_drop(miral::WindowInfo& window_info) override;
-
     void handle_request_move(miral::WindowInfo& window_info, MirInputEvent const* input_event) override;
+
+    void handle_request_resize(miral::WindowInfo& window_info, MirInputEvent const* input_event,
+        MirResizeEdge edge) override;
 
 private:
     static const int modifier_mask =

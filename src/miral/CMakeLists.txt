@@ -58,10 +58,8 @@ add_library(miral SHARED
     set_window_management_policy.cpp    ${miral_include}/miral/set_window_management_policy.h
     window_management_policy.cpp        ${miral_include}/miral/window_management_policy.h
     window_manager_tools.cpp            ${miral_include}/miral/window_manager_tools.h
-                                        ${miral_include}/miral/window_management_policy_addendum2.h
                                         ${miral_include}/miral/window_management_policy_addendum3.h
                                         ${miral_include}/miral/window_management_policy_addendum4.h
-                                        ${miral_include}/miral/lambda_as_function.h
                                         window_info_defaults.h
 )
 

@@ -347,22 +347,6 @@ auto find_policy_addendum3(std::unique_ptr<miral::WindowManagementPolicy> const&
 
     return &null_workspace_policy;
 }
-
-auto find_policy_addendum4(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum4*
-{
-    miral::WindowManagementPolicyAddendum4* result = dynamic_cast<miral::WindowManagementPolicyAddendum4*>(policy.get());
-
-    if (result)
-        return result;
-
-    struct NullWindowManagementPolicyAddendum4 : miral::WindowManagementPolicyAddendum4
-    {
-        void handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge) override {}
-    };
-    static NullWindowManagementPolicyAddendum4 null_workspace_policy;
-
-    return &null_workspace_policy;
-}
 }
 
 miral::WindowManagementTrace::WindowManagementTrace(
@@ -370,8 +354,7 @@ miral::WindowManagementTrace::WindowManagementTrace(
     WindowManagementPolicyBuilder const& builder) :
     wrapped{wrapped},
     policy(builder(WindowManagerTools{this})),
-    policy3{find_policy_addendum3(policy)},
-    policy4{find_policy_addendum4(policy)}
+    policy3{find_policy_addendum3(policy)}
 {
 }
 
@@ -852,7 +835,7 @@ void miral::WindowManagementTrace::handle_request_resize(
     miral::WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge)
 try {
     mir::log_info("%s window_info=%s, edge=0x%1x", __func__, dump_of(window_info).c_str(), edge);
-    policy4->handle_request_resize(window_info, input_event, edge);
+    policy->handle_request_resize(window_info, input_event, edge);
 }
 MIRAL_TRACE_EXCEPTION
 

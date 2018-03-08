@@ -215,7 +215,6 @@ private:
 
     std::unique_ptr<WindowManagementPolicy> const policy;
     WindowManagementPolicyAddendum3* const policy3;
-    WindowManagementPolicyAddendum4* const policy4;
 
     std::mutex mutex;
     SessionInfoMap app_info;

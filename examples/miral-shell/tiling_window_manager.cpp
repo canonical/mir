@@ -716,3 +716,7 @@ void TilingWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*windo
 void TilingWindowManagerPolicy::handle_request_move(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/)
 {
 }
+
+void TilingWindowManagerPolicy::handle_request_resize(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/, MirResizeEdge /*edge*/)
+{
+}

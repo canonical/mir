@@ -21,7 +21,6 @@
 
 #include "miral/window_manager_tools.h"
 #include "miral/window_management_policy_addendum3.h"
-#include "miral/window_management_policy_addendum4.h"
 
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
@@ -89,22 +88,6 @@ auto find_policy_addendum3(std::unique_ptr<miral::WindowManagementPolicy> const&
 
     return &null_workspace_policy;
 }
-
-auto find_policy_addendum4(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum4*
-{
-    miral::WindowManagementPolicyAddendum4* result = dynamic_cast<miral::WindowManagementPolicyAddendum4*>(policy.get());
-
-    if (result)
-        return result;
-
-    struct NullWindowManagementPolicyAddendum4 : miral::WindowManagementPolicyAddendum4
-    {
-        void handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge) override {}
-    };
-    static NullWindowManagementPolicyAddendum4 null_workspace_policy;
-
-    return &null_workspace_policy;
-}
 }
 
 
@@ -119,7 +102,6 @@ miral::BasicWindowManager::BasicWindowManager(
     persistent_surface_store{persistent_surface_store},
     policy(build(WindowManagerTools{this})),
     policy3{find_policy_addendum3(policy)},
-    policy4{find_policy_addendum4(policy)},
     display_config_monitor{std::make_shared<DisplayConfigurationListeners>()}
 {
     display_config_monitor->add_listener(this);
@@ -419,7 +401,7 @@ void miral::BasicWindowManager::handle_request_resize(
     std::lock_guard<decltype(mutex)> lock(mutex);
     if (timestamp >= last_input_event_timestamp && last_input_event)
     {
-        policy4->handle_request_resize(info_for(surface), mir_event_get_input_event(last_input_event), edge);
+        policy->handle_request_resize(info_for(surface), mir_event_get_input_event(last_input_event), edge);
     }
 }
 

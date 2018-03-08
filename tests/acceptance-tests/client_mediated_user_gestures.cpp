@@ -81,6 +81,7 @@ struct MockWindowManagementPolicy : mir_test_framework::CanonicalWindowManagerPo
 
     MOCK_METHOD2(handle_request_move, void(miral::WindowInfo&, MirInputEvent const*));
     MOCK_METHOD1(handle_request_drag_and_drop, void(miral::WindowInfo&));
+    MOCK_METHOD3(handle_request_resize, void(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge));
 };
 
 struct MouseMoverAndFaker

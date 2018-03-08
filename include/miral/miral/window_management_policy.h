@@ -224,6 +224,15 @@ public:
      * @param input_event   the requesting event
      */
     virtual void handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event) = 0;
+
+    /** request from client to initiate resize
+     * \note the request has already been validated against the requesting event
+     *
+     * @param window_info   the window
+     * @param input_event   the requesting event
+     * @param edge          the edge(s) being dragged
+     */
+    virtual void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) = 0;
 /** @} */
 
     /** Confirm (and optionally adjust) the motion of a child window when the parent is moved.

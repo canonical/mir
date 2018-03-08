@@ -433,3 +433,17 @@ global:
     vtable?for?miral::WindowManagementPolicyAddendum3;
   };
 } MIRAL_1.4.0;
+
+MIRAL_2.0.0 {
+global:
+  extern "C++" {
+    miral::WindowManagementPolicyAddendum3::?WindowManagementPolicyAddendum3*;
+    miral::WindowManagementPolicyAddendum3::WindowManagementPolicyAddendum3*;
+    miral::WindowManagementPolicyAddendum3::operator*;
+    miral::WindowManagerTools::active_output*;
+    miral::pre_init*;
+    non-virtual?thunk?to?miral::WindowManagementPolicyAddendum3::?WindowManagementPolicyAddendum3*;
+    typeinfo?for?miral::WindowManagementPolicyAddendum3;
+    vtable?for?miral::WindowManagementPolicyAddendum3;
+  };
+} MIRAL_1.5.0;

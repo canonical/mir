@@ -64,6 +64,7 @@ struct MockWindowManagementPolicy : mtf::CanonicalWindowManagerPolicy
 
     void handle_request_drag_and_drop(miral::WindowInfo& /*window_info*/) {}
     void handle_request_move(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/) {}
+    void handle_request_resize(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/, MirResizeEdge /*edge*/) {}
 };
 
 struct ClientSurfaces : mtf::ConnectedClientHeadlessServer
