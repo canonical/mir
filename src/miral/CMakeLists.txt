@@ -62,6 +62,7 @@ add_library(miral SHARED
                                         ${miral_include}/miral/window_management_policy_addendum2.h
                                         ${miral_include}/miral/window_management_policy_addendum3.h
                                         ${miral_include}/miral/window_management_policy_addendum4.h
+                                        ${miral_include}/miral/lambda_as_function.h
                                         window_info_defaults.h
 )
 
