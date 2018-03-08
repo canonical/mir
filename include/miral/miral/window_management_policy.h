@@ -83,6 +83,21 @@ public:
      * @param window_info   the window
      */
     virtual void handle_raise_window(WindowInfo& window_info) = 0;
+
+    /** Confirm (and optionally adjust) the placement of a window on the display.
+     * Called when (re)placing fullscreen, maximized, horizontally maximised and
+     * vertically maximized windows to allow adjustment for decorations.
+     *
+     * @param window_info   the window
+     * @param new_state     the new state
+     * @param new_placement the suggested placement
+     *
+     * @return the confirmed placement of the window
+     */
+    virtual auto confirm_placement_on_display(
+        WindowInfo const& window_info,
+        MirWindowState new_state,
+        Rectangle const& new_placement) -> Rectangle = 0;
 /** @} */
 
 /** @name handle events originating from user

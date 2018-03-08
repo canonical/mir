@@ -42,9 +42,11 @@ public:
 
     void handle_request_drag_and_drop(miral::WindowInfo& window_info) override;
     void handle_request_move(miral::WindowInfo& window_info, MirInputEvent const* input_event) override;
-
     void handle_request_resize(miral::WindowInfo& window_info, MirInputEvent const* input_event,
         MirResizeEdge edge) override;
+
+    Rectangle confirm_placement_on_display(const miral::WindowInfo& window_info, MirWindowState new_state,
+        Rectangle const& new_placement) override;
 
 private:
     static const int modifier_mask =

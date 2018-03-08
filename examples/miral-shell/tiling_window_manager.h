@@ -79,6 +79,9 @@ public:
 
     auto confirm_inherited_move(miral::WindowInfo const& window_info, Displacement movement) -> Rectangle override;
 
+    Rectangle confirm_placement_on_display(const miral::WindowInfo& window_info, MirWindowState new_state,
+        Rectangle const& new_placement) override;
+
 private:
     void advise_output_create(miral::Output const& output) override;
     void advise_output_update(miral::Output const& updated, miral::Output const& original) override;

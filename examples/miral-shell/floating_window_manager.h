@@ -20,7 +20,6 @@
 #define MIRAL_SHELL_FLOATING_WINDOW_MANAGER_H
 
 #include <miral/canonical_window_manager.h>
-#include <miral/window_management_policy_addendum3.h>
 
 #include "spinner/splash.h"
 
@@ -33,8 +32,7 @@ using namespace mir::geometry;
 
 class DecorationProvider;
 
-class FloatingWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy,
-    public miral::WindowManagementPolicyAddendum3
+class FloatingWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy
 {
 public:
     FloatingWindowManagerPolicy(

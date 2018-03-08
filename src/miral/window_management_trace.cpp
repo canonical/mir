@@ -330,31 +330,13 @@ auto dump_of(mir::geometry::Size const size) -> std::string
     out << size;
     return out.str();
 }
-
-auto find_policy_addendum3(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum3*
-{
-    miral::WindowManagementPolicyAddendum3* result = dynamic_cast<miral::WindowManagementPolicyAddendum3*>(policy.get());
-
-    if (result)
-        return result;
-
-    struct NullWindowManagementPolicyAddendum3 : miral::WindowManagementPolicyAddendum3
-    {
-        auto confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::Rectangle const& r)
-        -> mir::geometry::Rectangle { return  r; }
-    };
-    static NullWindowManagementPolicyAddendum3 null_workspace_policy;
-
-    return &null_workspace_policy;
-}
 }
 
 miral::WindowManagementTrace::WindowManagementTrace(
     WindowManagerTools const& wrapped,
     WindowManagementPolicyBuilder const& builder) :
     wrapped{wrapped},
-    policy(builder(WindowManagerTools{this})),
-    policy3{find_policy_addendum3(policy)}
+    policy(builder(WindowManagerTools{this}))
 {
 }
 
@@ -862,6 +844,6 @@ auto miral::WindowManagementTrace::confirm_placement_on_display(
     Rectangle const& new_placement) -> Rectangle
 try {
     mir::log_info("%s window_info=%s", __func__, dump_of(window_info).c_str());
-    return policy3->confirm_placement_on_display(window_info, new_state, new_placement);
+    return policy->confirm_placement_on_display(window_info, new_state, new_placement);
 }
 MIRAL_TRACE_EXCEPTION

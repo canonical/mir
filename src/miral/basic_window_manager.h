@@ -214,7 +214,6 @@ private:
     std::shared_ptr<DeadWorkspaces> const dead_workspaces{std::make_shared<DeadWorkspaces>()};
 
     std::unique_ptr<WindowManagementPolicy> const policy;
-    WindowManagementPolicyAddendum3* const policy3;
 
     std::mutex mutex;
     SessionInfoMap app_info;

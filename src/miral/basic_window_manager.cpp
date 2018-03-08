@@ -20,7 +20,6 @@
 #include "display_configuration_listeners.h"
 
 #include "miral/window_manager_tools.h"
-#include "miral/window_management_policy_addendum3.h"
 
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
@@ -70,27 +69,6 @@ miral::BasicWindowManager::Locker::Locker(BasicWindowManager* self) :
         self->workspaces_to_windows.left.erase(workspace);
 }
 
-namespace
-{
-auto find_policy_addendum3(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum3*
-{
-    miral::WindowManagementPolicyAddendum3* result = dynamic_cast<miral::WindowManagementPolicyAddendum3*>(policy.get());
-
-    if (result)
-        return result;
-
-    struct NullWindowManagementPolicyAddendum3 : miral::WindowManagementPolicyAddendum3
-    {
-        auto confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, Rectangle const& r)
-            -> Rectangle { return  r; }
-    };
-    static NullWindowManagementPolicyAddendum3 null_workspace_policy;
-
-    return &null_workspace_policy;
-}
-}
-
-
 miral::BasicWindowManager::BasicWindowManager(
     shell::FocusController* focus_controller,
     std::shared_ptr<shell::DisplayLayout> const& display_layout,
@@ -101,7 +79,6 @@ miral::BasicWindowManager::BasicWindowManager(
     display_layout(display_layout),
     persistent_surface_store{persistent_surface_store},
     policy(build(WindowManagerTools{this})),
-    policy3{find_policy_addendum3(policy)},
     display_config_monitor{std::make_shared<DisplayConfigurationListeners>()}
 {
     display_config_monitor->add_listener(this);
@@ -1075,24 +1052,24 @@ void miral::BasicWindowManager::place_and_size_for_state(
         break;
 
     case mir_window_state_maximized:
-        rect = policy3->confirm_placement_on_display(window_info, new_state, display_area);
+        rect = policy->confirm_placement_on_display(window_info, new_state, display_area);
         break;
 
     case mir_window_state_horizmaximized:
         rect.top_left = {display_area.top_left.x, restore_rect.top_left.y};
         rect.size = {display_area.size.width, restore_rect.size.height};
-        rect = policy3->confirm_placement_on_display(window_info, new_state, rect);
+        rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;
 
     case mir_window_state_vertmaximized:
         rect.top_left = {restore_rect.top_left.x, display_area.top_left.y};
         rect.size = {restore_rect.size.width, display_area.size.height};
-        rect = policy3->confirm_placement_on_display(window_info, new_state, rect);
+        rect = policy->confirm_placement_on_display(window_info, new_state, rect);
         break;
 
     case mir_window_state_fullscreen:
     {
-        rect = policy3->confirm_placement_on_display(window_info, new_state, fullscreen_rect_for(window_info));
+        rect = policy->confirm_placement_on_display(window_info, new_state, fullscreen_rect_for(window_info));
         break;
     }
 
@@ -2174,7 +2151,7 @@ void miral::BasicWindowManager::update_windows_for_outputs()
         {
             auto& info = info_for(window);
             auto const rect =
-                policy3->confirm_placement_on_display(info, mir_window_state_fullscreen, fullscreen_rect_for(info));
+                policy->confirm_placement_on_display(info, mir_window_state_fullscreen, fullscreen_rect_for(info));
             place_and_size(info, rect.top_left, rect.size);
         }
     }
@@ -2195,21 +2172,21 @@ void miral::BasicWindowManager::update_windows_for_outputs()
             switch (info1.state())
             {
             case mir_window_state_maximized:
-                rect = policy3->confirm_placement_on_display(info1, mir_window_state_maximized, display_area);
+                rect = policy->confirm_placement_on_display(info1, mir_window_state_maximized, display_area);
                 place_and_size(info1, rect.top_left, rect.size);
                 break;
 
             case mir_window_state_horizmaximized:
                 rect.top_left.x = display_area.top_left.x;
                 rect.size.width = display_area.size.width;
-                rect = policy3->confirm_placement_on_display(info1, mir_window_state_horizmaximized, rect);
+                rect = policy->confirm_placement_on_display(info1, mir_window_state_horizmaximized, rect);
                 place_and_size(info1, rect.top_left, rect.size);
                 break;
 
             case mir_window_state_vertmaximized:
                 rect.top_left.y = display_area.top_left.y;
                 rect.size.height = display_area.size.height;
-                rect = policy3->confirm_placement_on_display(info1, mir_window_state_vertmaximized, rect);
+                rect = policy->confirm_placement_on_display(info1, mir_window_state_vertmaximized, rect);
                 place_and_size(info1, rect.top_left, rect.size);
                 break;
 
