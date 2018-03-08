@@ -99,10 +99,14 @@ void WlAbstractMirWindow::commit()
     {
         auto const surface = get_surface_for_id(session, surface_id);
 
-        // If the window side isn't set explicitly assume it matches the latest buffer
-        if (!window_size.is_set() && surface->size() != latest_buffer_size)
+        if (window_size.is_set())
         {
-            sink->latest_resize(latest_buffer_size);
+            sink->latest_client_size(window_size.value());
+        }
+        else if (surface->size() != latest_buffer_size)
+        {
+            // If the window side isn't set explicitly assume it matches the latest buffer
+            sink->latest_client_size(latest_buffer_size);
             auto& new_size_spec = spec();
             new_size_spec.width = latest_buffer_size.width;
             new_size_spec.height = latest_buffer_size.height;

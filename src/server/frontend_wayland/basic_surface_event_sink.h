@@ -49,7 +49,7 @@ public:
 
     void handle_event(MirEvent const& e) override;
 
-    void latest_resize(geometry::Size window_size)
+    void latest_client_size(geometry::Size window_size)
     {
         this->window_size = window_size;
     }
@@ -57,6 +57,16 @@ public:
     auto latest_timestamp() const -> uint64_t
     {
         return timestamp;
+    }
+
+    auto is_active() const -> bool
+    {
+        return has_focus;
+    }
+
+    auto state() const -> MirWindowState
+    {
+        return current_state;
     }
 
     virtual void send_resize(geometry::Size const& new_size) const = 0;
@@ -68,6 +78,9 @@ protected:
     wl_resource* const event_sink;
     std::atomic<geometry::Size> window_size;
     std::atomic<int64_t> timestamp{0};
+    std::atomic<geometry::Size> requested_size;
+    std::atomic<bool> has_focus{false};
+    std::atomic<MirWindowState> current_state{mir_window_state_unknown};
 };
 }
 }
