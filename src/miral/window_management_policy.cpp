@@ -17,7 +17,6 @@
  */
 
 #include "miral/window_management_policy.h"
-#include "both_versions.h"
 
 void miral::WindowManagementPolicy::advise_begin() {}
 void miral::WindowManagementPolicy::advise_end() {}

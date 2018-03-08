@@ -18,7 +18,6 @@
 
 #include "miral/window_manager_tools.h"
 #include "window_manager_tools_implementation.h"
-#include "both_versions.h"
 
 miral::WindowManagerTools::WindowManagerTools(WindowManagerToolsImplementation* tools) :
     tools{tools}
@@ -78,9 +77,6 @@ void miral::WindowManagerTools::focus_prev_within_application()
 auto miral::WindowManagerTools::window_at(mir::geometry::Point cursor) const -> Window
 { return tools->window_at(cursor); }
 
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZN5miral18WindowManagerTools14active_displayEv,
-    _ZN5miral18WindowManagerTools13active_outputEv)
 auto miral::WindowManagerTools::active_output() -> mir::geometry::Rectangle const
 { return tools->active_output(); }
 

@@ -13,7 +13,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
 )
 
-set(MIRAL_ABI 2)
+set(MIRAL_ABI 3)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
@@ -27,7 +27,6 @@ add_library(miral-internal STATIC
     window_management_trace.cpp         window_management_trace.h
     xcursor_loader.cpp                  xcursor_loader.h
     xcursor.c                           xcursor.h
-                                        both_versions.h
                                         join_client_threads.h
 )
 
@@ -58,8 +57,6 @@ add_library(miral SHARED
     set_window_management_policy.cpp    ${miral_include}/miral/set_window_management_policy.h
     window_management_policy.cpp        ${miral_include}/miral/window_management_policy.h
     window_manager_tools.cpp            ${miral_include}/miral/window_manager_tools.h
-                                        ${miral_include}/miral/window_management_policy_addendum3.h
-                                        ${miral_include}/miral/window_management_policy_addendum4.h
                                         window_info_defaults.h
 )
 

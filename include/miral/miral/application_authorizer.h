@@ -68,9 +68,10 @@ public:
     virtual bool configure_input_is_allowed(ApplicationCredentials const& creds) = 0;
     virtual bool set_base_input_configuration_is_allowed(ApplicationCredentials const& creds) = 0;
 
-#if MIRAL_VERSION >= MIR_VERSION_NUMBER(2, 0, 0)
-#error "We've presumably broken ABI - please roll this interface into ApplicationAuthorizer"
-#endif
+// TODO{arg}
+//#if MIRAL_VERSION >= MIR_VERSION_NUMBER(2, 0, 0)
+//#error "We've presumably broken ABI - please roll this interface into ApplicationAuthorizer"
+//#endif
 };
 
 class BasicSetApplicationAuthorizer
