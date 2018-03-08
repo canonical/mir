@@ -22,6 +22,7 @@
 #include "mir/options/configuration.h"
 #include "mir/options/program_option.h"
 #include <boost/program_options/options_description.hpp>
+#include <vector>
 
 namespace mir
 {
@@ -49,7 +50,7 @@ public:
 private:
     // MUST be the first member to ensure it's destroyed last, lest we attempt to
     // call destructors in DSOs we've unloaded.
-    std::shared_ptr<SharedLibrary> platform_graphics_library;
+    std::vector<std::shared_ptr<SharedLibrary>> platform_libraries;
 
     std::string const config_file;
 
