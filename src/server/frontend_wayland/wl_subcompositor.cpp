@@ -21,6 +21,7 @@
 #include "wl_surface.h"
 
 namespace mf = mir::frontend;
+namespace geom = mir::geometry;
 
 mf::WlSubcompositor::WlSubcompositor(struct wl_display* display)
     : wayland::Subcompositor(display, 1)
@@ -61,7 +62,7 @@ void mf::WlSubsurface::populate_buffer_list(std::vector<shell::StreamSpecificati
 
 void mf::WlSubsurface::set_position(int32_t x, int32_t y)
 {
-    (void)x; (void)y;
+    surface->set_buffer_offset(geom::Displacement{x, y});
     // TODO
 }
 
