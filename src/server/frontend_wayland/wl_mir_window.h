@@ -33,11 +33,11 @@ namespace mir
 {
 namespace scene
 {
-class SurfaceCreationParameters;
+struct SurfaceCreationParameters;
 }
 namespace shell
 {
-class SurfaceSpecification;
+struct SurfaceSpecification;
 }
 namespace frontend
 {

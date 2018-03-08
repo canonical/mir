@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
- *              William Wold <william.wold@canonical.com>
  */
 
 #ifndef MIR_FRONTEND_WL_SURFACE_H
@@ -26,7 +25,8 @@
 
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/frontend/surface_id.h"
-#include <mir/geometry/displacement.h>
+
+#include "mir/geometry/displacement.h"
 
 #include <vector>
 

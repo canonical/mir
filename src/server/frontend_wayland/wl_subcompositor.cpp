@@ -37,7 +37,8 @@ void mf::WlSubcompositor::get_subsurface(struct wl_client* client, struct wl_res
     new WlSubsurface(client, resource, id, WlSurface::from(surface), WlSurface::from(parent));
 }
 
-mf::WlSubsurface::WlSubsurface(struct wl_client* client, struct wl_resource* object_parent, uint32_t id, WlSurface* surface, WlSurface* parent_surface)
+mf::WlSubsurface::WlSubsurface(struct wl_client* client, struct wl_resource* object_parent, uint32_t id,
+                               WlSurface* surface, WlSurface* parent_surface)
     : wayland::Subsurface(client, object_parent, id),
       surface{surface},
       parent{parent_surface->add_child(this)}

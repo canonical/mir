@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
- *              William Wold <william.wold@canonical.com>
  */
 
 #include "wl_surface.h"
@@ -33,12 +32,9 @@
 #include "mir/graphics/wayland_allocator.h"
 #include "mir/shell/surface_specification.h"
 
-namespace mir
-{
-namespace frontend
-{
+namespace mf = mir::frontend;
 
-WlSurface::WlSurface(
+mf::WlSurface::WlSurface(
     wl_client* client,
     wl_resource* parent,
     uint32_t id,
@@ -66,19 +62,19 @@ WlSurface::WlSurface(
     stream->allow_framedropping(true);
 }
 
-WlSurface::~WlSurface()
+mf::WlSurface::~WlSurface()
 {
     *destroyed = true;
     if (auto session = get_session(client))
         session->destroy_buffer_stream(stream_id);
 }
 
-void WlSurface::set_role(WlMirWindow* role_)
+void mf::WlSurface::set_role(WlMirWindow* role_)
 {
     role = role_;
 }
 
-std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> WlSurface::add_child(WlSubsurface* child)
+std::unique_ptr<mf::WlSurface, std::function<void(mf::WlSurface*)>> mf::WlSurface::add_child(WlSubsurface* child)
 {
     children.push_back(child);
     return std::unique_ptr<WlSurface, std::function<void(WlSurface*)>>(
@@ -89,12 +85,12 @@ std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> WlSurface::add_child
         });
 }
 
-void WlSurface::invalidate_buffer_list()
+void mf::WlSurface::invalidate_buffer_list()
 {
     role->invalidate_buffer_list();
 }
 
-void WlSurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const
+void mf::WlSurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const
 {
     buffers.push_back({stream_id, buffer_offset_, {}});
     for (WlSubsurface* subsurface : children)
@@ -103,25 +99,25 @@ void WlSurface::populate_buffer_list(std::vector<shell::StreamSpecification>& bu
     }
 }
 
-WlSurface* WlSurface::from(wl_resource* resource)
+mf::WlSurface* mf::WlSurface::from(wl_resource* resource)
 {
     void* raw_surface = wl_resource_get_user_data(resource);
     return static_cast<WlSurface*>(static_cast<wayland::Surface*>(raw_surface));
 }
 
-void WlSurface::remove_child(WlSubsurface* child)
+void mf::WlSurface::remove_child(WlSubsurface* child)
 {
     children.erase(std::remove(children.begin(), children.end(), child), children.end());
 }
 
-void WlSurface::destroy()
+void mf::WlSurface::destroy()
 {
     *destroyed = true;
     role->destroy();
     wl_resource_destroy(resource);
 }
 
-void WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y)
+void mf::WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y)
 {
     if (x != 0 || y != 0)
     {
@@ -133,7 +129,7 @@ void WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, 
     pending_buffer = buffer.value_or(nullptr);
 }
 
-void WlSurface::damage(int32_t x, int32_t y, int32_t width, int32_t height)
+void mf::WlSurface::damage(int32_t x, int32_t y, int32_t width, int32_t height)
 {
     (void)x;
     (void)y;
@@ -142,7 +138,7 @@ void WlSurface::damage(int32_t x, int32_t y, int32_t width, int32_t height)
     // This isn't essential, but could enable optimizations
 }
 
-void WlSurface::damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height)
+void mf::WlSurface::damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height)
 {
     (void)x;
     (void)y;
@@ -151,23 +147,23 @@ void WlSurface::damage_buffer(int32_t x, int32_t y, int32_t width, int32_t heigh
     // This isn't essential, but could enable optimizations
 }
 
-void WlSurface::frame(uint32_t callback)
+void mf::WlSurface::frame(uint32_t callback)
 {
     pending_frames->emplace_back(
         wl_resource_create(client, &wl_callback_interface, 1, callback));
 }
 
-void WlSurface::set_opaque_region(std::experimental::optional<wl_resource*> const& region)
+void mf::WlSurface::set_opaque_region(std::experimental::optional<wl_resource*> const& region)
 {
     (void)region;
 }
 
-void WlSurface::set_input_region(std::experimental::optional<wl_resource*> const& region)
+void mf::WlSurface::set_input_region(std::experimental::optional<wl_resource*> const& region)
 {
     (void)region;
 }
 
-void WlSurface::commit()
+void mf::WlSurface::commit()
 {
     buffer_offset_.commit();
     if (pending_buffer)
@@ -241,17 +237,14 @@ void WlSurface::commit()
     }
 }
 
-void WlSurface::set_buffer_transform(int32_t transform)
+void mf::WlSurface::set_buffer_transform(int32_t transform)
 {
     (void)transform;
     // TODO
 }
 
-void WlSurface::set_buffer_scale(int32_t scale)
+void mf::WlSurface::set_buffer_scale(int32_t scale)
 {
     (void)scale;
     // TODO
-}
-
-}
 }
