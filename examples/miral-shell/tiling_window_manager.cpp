@@ -116,8 +116,6 @@ auto TilingWindowManagerPolicy::place_new_window(
     auto parameters = request_parameters;
 
     parameters.userdata() = app_info.userdata();
-    parameters.state() = parameters.state().is_set() ?
-                         transform_set_state(parameters.state().value()) : mir_window_state_restored;
 
     if (app_info.application() != spinner.session())
     {
@@ -127,11 +125,15 @@ auto TilingWindowManagerPolicy::place_new_window(
         {
             if (app_info.windows().empty())
             {
+                parameters.state() = mir_window_state_maximized;
                 parameters.top_left() = tile.top_left;
                 parameters.size() = tile.size;
             }
             else
             {
+                parameters.state() = parameters.state().is_set() ?
+                                     transform_set_state(parameters.state().value()) : mir_window_state_restored;
+
                 auto top_level_windows = count_if(begin(app_info.windows()), end(app_info.windows()), [this]
                     (Window const& window){ return !tools.info_for(window).parent(); });
 
@@ -149,7 +151,7 @@ void TilingWindowManagerPolicy::advise_new_window(WindowInfo const& window_info)
 {
     if ((window_info.type() == mir_window_type_normal || window_info.type() == mir_window_type_freestyle) &&
         !window_info.parent() &&
-        window_info.state() == mir_window_state_restored)
+        (window_info.state() == mir_window_state_restored || window_info.state() == mir_window_state_maximized))
     {
         WindowSpecification specification;
 
@@ -190,6 +192,15 @@ void TilingWindowManagerPolicy::handle_modify_window(
     auto const tile = tile_for(window_info);
     auto mods = modifications;
 
+    if (mods.state().is_set())
+    {
+        if (window_info.state() == mir_window_state_maximized &&
+            (mods.parent().is_set() ? !mods.parent().value().lock() : !window_info.parent()))
+        {
+            mods.state() = mir_window_state_maximized;
+        }
+    }
+
     constrain_size_and_place(mods, window, tile);
 
     reset(mods.output_id());
@@ -200,6 +211,13 @@ void TilingWindowManagerPolicy::handle_modify_window(
 void TilingWindowManagerPolicy::constrain_size_and_place(
     WindowSpecification& mods, Window const& window, Rectangle const& tile) const
 {
+    if ((mods.state().is_set() ? mods.state().value() : tools.info_for(window).state()) == mir_window_state_maximized)
+    {
+        mods.top_left() = tile.top_left;
+        mods.size() = tile.size;
+        return;
+    }
+
     if (mods.size().is_set())
     {
         auto width = std::min(tile.size.width, mods.size().value().width);
