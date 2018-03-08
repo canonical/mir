@@ -23,7 +23,6 @@
 #include <miral/window_management_policy_addendum2.h>
 #include <miral/window_management_policy_addendum3.h>
 #include <miral/window_management_policy_addendum4.h>
-#include <miral/workspace_policy.h>
 
 #include "spinner/splash.h"
 

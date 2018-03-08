@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -23,12 +23,20 @@
 #include <mir/geometry/rectangles.h>
 #include <mir_toolkit/event.h>
 
+#include <memory>
+
 namespace miral
 {
 class Window;
 class WindowSpecification;
 struct ApplicationInfo;
 struct WindowInfo;
+
+/**
+ * Workspace is intentionally opaque in the miral API. Its only purpose is to
+ * provide a shared_ptr which is used as an identifier.
+ */
+class Workspace;
 
 using namespace mir::geometry;
 
@@ -171,6 +179,32 @@ public:
      * \note The relative Z-order of these windows will be maintained, they will be raised en bloc.
      */
     virtual void advise_raise(std::vector<Window> const& windows);
+/** @} */
+
+/** @name notification of WM events that the policy may need to track.
+ *  @{ */
+
+    /** Notification that windows are being added to a workspace.
+     *  These windows are ordered with parents before children,
+     *  and form a single tree rooted at the first element.
+     *
+     * @param workspace   the workspace
+     * @param windows   the windows
+     */
+    virtual void advise_adding_to_workspace(
+        std::shared_ptr<Workspace> const& workspace,
+        std::vector<Window> const& windows);
+
+    /** Notification that windows are being removed from a workspace.
+     *  These windows are ordered with parents before children,
+     *  and form a single tree rooted at the first element.
+     *
+     * @param workspace   the workspace
+     * @param windows   the windows
+     */
+    virtual void advise_removing_from_workspace(
+        std::shared_ptr<Workspace> const& workspace,
+        std::vector<Window> const& windows);
 /** @} */
 
     /** Confirm (and optionally adjust) the motion of a child window when the parent is moved.

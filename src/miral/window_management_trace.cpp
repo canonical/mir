@@ -331,18 +331,6 @@ auto dump_of(mir::geometry::Size const size) -> std::string
     return out.str();
 }
 
-auto find_policy_addendum1(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WorkspacePolicy*
-{
-    miral::WorkspacePolicy* result = dynamic_cast<miral::WorkspacePolicy*>(policy.get());
-
-    if (result)
-        return result;
-
-    static miral::WorkspacePolicy null_workspace_policy;
-
-    return &null_workspace_policy;
-}
-
 auto find_policy_addendum2(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum2*
 {
     miral::WindowManagementPolicyAddendum2* result = dynamic_cast<miral::WindowManagementPolicyAddendum2*>(policy.get());
@@ -399,7 +387,6 @@ miral::WindowManagementTrace::WindowManagementTrace(
     WindowManagementPolicyBuilder const& builder) :
     wrapped{wrapped},
     policy(builder(WindowManagerTools{this})),
-    policy1{find_policy_addendum1(policy)},
     policy2{find_policy_addendum2(policy)},
     policy3{find_policy_addendum3(policy)},
     policy4{find_policy_addendum4(policy)}
@@ -891,7 +878,7 @@ void miral::WindowManagementTrace::advise_adding_to_workspace(
     std::shared_ptr<miral::Workspace> const& workspace, std::vector<miral::Window> const& windows)
 try {
     mir::log_info("%s workspace=%p, windows=%s", __func__, workspace.get(), dump_of(windows).c_str());
-    policy1->advise_adding_to_workspace(workspace, windows);
+    policy->advise_adding_to_workspace(workspace, windows);
 }
 MIRAL_TRACE_EXCEPTION
 
@@ -899,7 +886,7 @@ void miral::WindowManagementTrace::advise_removing_from_workspace(
     std::shared_ptr<miral::Workspace> const& workspace, std::vector<miral::Window> const& windows)
 try {
     mir::log_info("%s workspace=%p, windows=%s", __func__, workspace.get(), dump_of(windows).c_str());
-    policy1->advise_removing_from_workspace(workspace, windows);
+    policy->advise_removing_from_workspace(workspace, windows);
 }
 MIRAL_TRACE_EXCEPTION
 

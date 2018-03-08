@@ -24,7 +24,6 @@
 #include "miral/window_manager_tools.h"
 #include "miral/window_management_options.h"
 #include "miral/window_management_policy.h"
-#include "miral/workspace_policy.h"
 #include "miral/window_management_policy_addendum2.h"
 #include "miral/window_management_policy_addendum3.h"
 #include "miral/window_management_policy_addendum4.h"
@@ -34,7 +33,6 @@
 namespace miral
 {
 class WindowManagementTrace : public WindowManagementPolicy,
-    public miral::WorkspacePolicy,
     public miral::WindowManagementPolicyAddendum2,
     public miral::WindowManagementPolicyAddendum3,
     public miral::WindowManagementPolicyAddendum4,
@@ -164,7 +162,6 @@ public:
 private:
     WindowManagerTools wrapped;
     std::unique_ptr<miral::WindowManagementPolicy> const policy;
-    WorkspacePolicy* const policy1;
     WindowManagementPolicyAddendum2* const policy2;
     WindowManagementPolicyAddendum3* const policy3;
     WindowManagementPolicyAddendum4* const policy4;

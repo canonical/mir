@@ -20,7 +20,6 @@
 #include "display_configuration_listeners.h"
 
 #include "miral/window_manager_tools.h"
-#include "miral/workspace_policy.h"
 #include "miral/window_management_policy_addendum2.h"
 #include "miral/window_management_policy_addendum3.h"
 #include "miral/window_management_policy_addendum4.h"
@@ -75,18 +74,6 @@ miral::BasicWindowManager::Locker::Locker(BasicWindowManager* self) :
 
 namespace
 {
-auto find_workspace_policy(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WorkspacePolicy*
-{
-    miral::WorkspacePolicy* result = dynamic_cast<miral::WorkspacePolicy*>(policy.get());
-
-    if (result)
-        return result;
-
-    static miral::WorkspacePolicy null_workspace_policy;
-
-    return &null_workspace_policy;
-}
-
 auto find_policy_addendum2(std::unique_ptr<miral::WindowManagementPolicy> const& policy) -> miral::WindowManagementPolicyAddendum2*
 {
     miral::WindowManagementPolicyAddendum2* result = dynamic_cast<miral::WindowManagementPolicyAddendum2*>(policy.get());
@@ -149,7 +136,6 @@ miral::BasicWindowManager::BasicWindowManager(
     display_layout(display_layout),
     persistent_surface_store{persistent_surface_store},
     policy(build(WindowManagerTools{this})),
-    workspace_policy{find_workspace_policy(policy)},
     policy2{find_policy_addendum2(policy)},
     policy3{find_policy_addendum3(policy)},
     policy4{find_policy_addendum4(policy)},
@@ -280,7 +266,7 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
 
         for (auto const& workspace : workspaces_containing_window)
         {
-            workspace_policy->advise_removing_from_workspace(workspace, windows_removed);
+            policy->advise_removing_from_workspace(workspace, windows_removed);
         }
 
         workspaces_to_windows.right.erase(info.window());
@@ -2085,7 +2071,7 @@ void miral::BasicWindowManager::add_tree_to_workspace(
     }
 
     if (!windows_added.empty())
-        workspace_policy->advise_adding_to_workspace(workspace, windows_added);
+        policy->advise_adding_to_workspace(workspace, windows_added);
 }
 
 void miral::BasicWindowManager::remove_tree_from_workspace(
@@ -2131,7 +2117,7 @@ void miral::BasicWindowManager::remove_tree_from_workspace(
     }
 
     if (!windows_removed.empty())
-        workspace_policy->advise_removing_from_workspace(workspace, windows_removed);
+        policy->advise_removing_from_workspace(workspace, windows_removed);
 }
 
 void miral::BasicWindowManager::move_workspace_content_to_workspace(
@@ -2148,7 +2134,7 @@ void miral::BasicWindowManager::move_workspace_content_to_workspace(
     }
 
     if (!windows_removed.empty())
-        workspace_policy->advise_removing_from_workspace(from_workspace, windows_removed);
+        policy->advise_removing_from_workspace(from_workspace, windows_removed);
 
     std::vector<Window> windows_added;
 
@@ -2164,7 +2150,7 @@ void miral::BasicWindowManager::move_workspace_content_to_workspace(
     }
 
     if (!windows_added.empty())
-        workspace_policy->advise_adding_to_workspace(to_workspace, windows_added);
+        policy->advise_adding_to_workspace(to_workspace, windows_added);
 }
 
 void miral::BasicWindowManager::for_each_workspace_containing(

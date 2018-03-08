@@ -56,7 +56,6 @@ add_library(miral SHARED
     set_command_line_handler.cpp        ${miral_include}/miral/set_command_line_handler.h
     set_terminator.cpp                  ${miral_include}/miral/set_terminator.h
     set_window_management_policy.cpp    ${miral_include}/miral/set_window_management_policy.h
-    workspace_policy.cpp                ${miral_include}/miral/workspace_policy.h
     window_management_policy.cpp        ${miral_include}/miral/window_management_policy.h
     window_manager_tools.cpp            ${miral_include}/miral/window_manager_tools.h
                                         ${miral_include}/miral/window_management_policy_addendum2.h

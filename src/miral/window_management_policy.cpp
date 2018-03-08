@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -26,12 +26,10 @@ void miral::WindowManagementPolicy::advise_delete_app(ApplicationInfo const& /*a
 void miral::WindowManagementPolicy::advise_new_window(WindowInfo const& /*window_info*/) {}
 void miral::WindowManagementPolicy::advise_focus_lost(WindowInfo const& /*info*/) {}
 void miral::WindowManagementPolicy::advise_focus_gained(WindowInfo const& /*info*/) {}
-
-MIRAL_BOTH_VERSIONS(
-    _ZN5miral22WindowManagementPolicy19advise_state_changeERKNS_10WindowInfoE15MirSurfaceState,
-    _ZN5miral22WindowManagementPolicy19advise_state_changeERKNS_10WindowInfoE14MirWindowState)
 void miral::WindowManagementPolicy::advise_state_change(WindowInfo const& /*window_info*/, MirWindowState /*state*/) {}
 void miral::WindowManagementPolicy::advise_move_to(WindowInfo const& /*window_info*/, Point /*top_left*/) {}
 void miral::WindowManagementPolicy::advise_resize(WindowInfo const& /*window_info*/, Size const& /*new_size*/) {}
 void miral::WindowManagementPolicy::advise_delete_window(WindowInfo const& /*window_info*/) {}
 void miral::WindowManagementPolicy::advise_raise(std::vector<Window> const& /*windows*/) {}
+void miral::WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<Workspace> const&, std::vector<Window> const&) {}
+void miral::WindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<Workspace> const&, std::vector<Window> const&) {}

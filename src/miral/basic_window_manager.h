@@ -214,7 +214,6 @@ private:
     std::shared_ptr<DeadWorkspaces> const dead_workspaces{std::make_shared<DeadWorkspaces>()};
 
     std::unique_ptr<WindowManagementPolicy> const policy;
-    WorkspacePolicy* const workspace_policy;
     WindowManagementPolicyAddendum2* const policy2;
     WindowManagementPolicyAddendum3* const policy3;
     WindowManagementPolicyAddendum4* const policy4;
