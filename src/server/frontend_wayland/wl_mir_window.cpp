@@ -139,7 +139,7 @@ void WlAbstractMirWindow::commit()
     if (params->size == geometry::Size{})
         params->size = geometry::Size{640, 480};
 
-    params->streams = std::vector<shell::StreamSpecification>();
+    params->streams = std::vector<shell::StreamSpecification>{};
     mir_surface->populate_buffer_list(params->streams.value());
     buffer_list_needs_refresh = false;
 

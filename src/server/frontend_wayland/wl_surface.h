@@ -60,6 +60,8 @@ public:
 
     void set_role(WlMirWindow* role_);
     std::shared_ptr<bool> destroyed_flag() const;
+    std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> add_child(WlSubsurface* child);
+    void invalidate_buffer_list();
     void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const;
 
     mir::frontend::BufferStreamId stream_id;
@@ -70,9 +72,6 @@ public:
     static WlSurface* from(wl_resource* resource);
 
 private:
-    friend WlSubsurface;
-
-    void add_child(WlSubsurface* child);
     void remove_child(WlSubsurface* child);
 
     std::shared_ptr<mir::graphics::WaylandAllocator> const allocator;
