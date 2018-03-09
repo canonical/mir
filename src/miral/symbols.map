@@ -268,7 +268,6 @@ global:
     typeinfo?for?miral::AddInitCallback;
     typeinfo?for?miral::AppendEventFilter;
     typeinfo?for?miral::ApplicationAuthorizer;
-    typeinfo?for?miral::ApplicationAuthorizer1;
     typeinfo?for?miral::ApplicationCredentials;
     typeinfo?for?miral::ApplicationInfo;
     typeinfo?for?miral::BasicSetApplicationAuthorizer;
@@ -299,7 +298,6 @@ global:
     vtable?for?miral::AddInitCallback;
     vtable?for?miral::AppendEventFilter;
     vtable?for?miral::ApplicationAuthorizer;
-    vtable?for?miral::ApplicationAuthorizer1;
     vtable?for?miral::ApplicationCredentials;
     vtable?for?miral::ApplicationInfo;
     vtable?for?miral::BasicSetApplicationAuthorizer;

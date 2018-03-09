@@ -302,8 +302,6 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::Window::Window()@MIRAL_2.0" 2.0.0
  (c++)"miral::Window::Window(std::shared_ptr<mir::scene::Session> const&, std::shared_ptr<mir::scene::Surface> const&)@MIRAL_2.0" 2.0.0
  (c++)"typeinfo for miral::ActiveOutputsListener@MIRAL_2.0" 2.0.0
- (c++)"typeinfo for miral::ApplicationAuthorizer1@MIRAL_2.0" 2.0.0
- (c++)"typeinfo for miral::ApplicationAuthorizer@MIRAL_2.0" 2.0.0
  (c++)"typeinfo for miral::CanonicalWindowManagerPolicy@MIRAL_2.0" 2.0.0
  (c++)"typeinfo for miral::WindowManagementPolicy@MIRAL_2.0" 2.0.0
  (c++)"vtable for miral::ActiveOutputsListener@MIRAL_2.0" 2.0.0
