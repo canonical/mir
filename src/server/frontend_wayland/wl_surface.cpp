@@ -78,11 +78,6 @@ void WlSurface::set_role(WlMirWindow* role_)
     role = role_;
 }
 
-std::shared_ptr<bool> WlSurface::destroyed_flag() const
-{
-    return destroyed;
-}
-
 std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> WlSurface::add_child(WlSubsurface* child)
 {
     children.push_back(child);
@@ -101,7 +96,7 @@ void WlSurface::invalidate_buffer_list()
 
 void WlSurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const
 {
-    buffers.push_back({stream_id, buffer_offset, {}});
+    buffers.push_back({stream_id, buffer_offset_, {}});
     for (WlSubsurface* subsurface : children)
     {
         subsurface->populate_buffer_list(buffers);
@@ -174,6 +169,7 @@ void WlSurface::set_input_region(std::experimental::optional<wl_resource*> const
 
 void WlSurface::commit()
 {
+    buffer_offset_.commit();
     if (pending_buffer)
     {
         auto send_frame_notifications =

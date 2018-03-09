@@ -19,6 +19,7 @@ set(
   wl_pointer.cpp                wl_pointer.h
   wl_touch.cpp                  wl_touch.h
   xdg_shell_v6.cpp              xdg_shell_v6.h
+                                double_buffered.h
 )
 
 add_library(

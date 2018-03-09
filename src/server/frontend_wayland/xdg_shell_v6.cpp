@@ -254,7 +254,7 @@ void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, 
     auto* const mir_surface = WlSurface::from(surface);
     geom::Displacement const buffer_offset{-x, -y};
 
-    mir_surface->buffer_offset = buffer_offset;
+    mir_surface->set_buffer_offset(buffer_offset);
     window_size = geom::Size{width, height};
 
     if (surface_id.as_value())

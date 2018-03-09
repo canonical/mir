@@ -65,7 +65,7 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
             auto const serial = wl_display_next_serial(display);
             auto const event = mir_event_get_input_event(ev);
             auto const pointer_event = mir_input_event_get_pointer_event(event);
-            auto const buffer_offset = WlSurface::from(target)->buffer_offset;
+            auto const buffer_offset = WlSurface::from(target)->buffer_offset();
 
             switch(mir_pointer_event_action(pointer_event))
             {
