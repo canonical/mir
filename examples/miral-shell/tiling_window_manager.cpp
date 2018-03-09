@@ -664,25 +664,25 @@ void TilingWindowManagerPolicy::advise_end()
 
 void TilingWindowManagerPolicy::advise_output_create(const Output& output)
 {
-    live_displays.add(output.extents());
-    dirty_displays = true;
+    displays.add(output.extents());
+    dirty_tiles = true;
 }
 
 void TilingWindowManagerPolicy::advise_output_update(const Output& updated, const Output& original)
 {
     if (!equivalent_display_area(updated, original))
     {
-        live_displays.remove(original.extents());
-        live_displays.add(updated.extents());
+        displays.remove(original.extents());
+        displays.add(updated.extents());
 
-        dirty_displays = true;
+        dirty_tiles = true;
     }
 }
 
 void TilingWindowManagerPolicy::advise_output_delete(Output const& output)
 {
-    live_displays.remove(output.extents());
-    dirty_displays = true;
+    displays.remove(output.extents());
+    dirty_tiles = true;
 }
 
 void TilingWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*window_info*/)
