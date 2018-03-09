@@ -61,6 +61,32 @@ namespace
 
 const char probe_platform[] = "probe_graphics_platform";
 
+class StubConsoleServices : public mir::ConsoleServices
+{
+public:
+    void
+    register_switch_handlers(
+        mir::graphics::EventHandlerRegister&,
+        std::function<bool()> const&,
+        std::function<bool()> const&) override
+    {
+    }
+
+    void restore() override
+    {
+    }
+
+    boost::unique_future<mir::Fd> acquire_device(int major, int minor) override
+    {
+        /* NOTE: This uses the behaviour that MockDRM will intercept any open() call
+         * under /dev/dri/
+         */
+        std::stringstream filename;
+        filename << "/dev/dri/" << major << ":" << minor;
+        return boost::make_ready_future<mir::Fd>(::open(filename.str().c_str(), O_RDWR | O_CLOEXEC));
+    }
+};
+
 class MesaGraphicsPlatform : public ::testing::Test
 {
 public:
@@ -78,7 +104,7 @@ public:
     {
         return std::make_shared<mgm::Platform>(
                 mir::report::null_display_report(),
-                std::make_shared<mtd::NullConsoleServices>(),
+                std::make_shared<StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgm::BypassOption::allowed);
     }
@@ -283,8 +309,6 @@ TEST_F(MesaGraphicsPlatform, releases_drm_on_emergency_cleanup)
 TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
 {
     using namespace testing;
-
-
 
     auto const mock_vt = std::make_shared<mtd::MockConsoleServices>();
     StubEmergencyCleanupRegistry emergency_cleanup_registry;

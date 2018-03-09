@@ -1,16 +1,16 @@
 /*
  * Copyright © 2013 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 2 or 3,
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 or 3 as
+ * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
@@ -37,12 +37,11 @@
 #include <linux/kd.h>
 #include <fcntl.h>
 
-namespace mgm = mir::graphics::mesa;
-
-mgm::LinuxVirtualTerminal::LinuxVirtualTerminal(std::shared_ptr<VTFileOperations> const& fops,
+mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
+    std::shared_ptr<VTFileOperations> const& fops,
     std::unique_ptr<PosixProcessOperations> pops,
     int vt_number,
-    std::shared_ptr<DisplayReport> const& report)
+    std::shared_ptr<graphics::DisplayReport> const& report)
     : fops{fops},
       pops{std::move(pops)},
       report{report},
@@ -114,13 +113,13 @@ mgm::LinuxVirtualTerminal::LinuxVirtualTerminal(std::shared_ptr<VTFileOperations
     }
 }
 
-mgm::LinuxVirtualTerminal::~LinuxVirtualTerminal() noexcept(true)
+mir::LinuxVirtualTerminal::~LinuxVirtualTerminal() noexcept(true)
 {
     restore();
 }
 
-void mgm::LinuxVirtualTerminal::register_switch_handlers(
-    EventHandlerRegister& handlers,
+void mir::LinuxVirtualTerminal::register_switch_handlers(
+    graphics::EventHandlerRegister& handlers,
     std::function<bool()> const& switch_away,
     std::function<bool()> const& switch_back)
 {
@@ -175,7 +174,7 @@ void mgm::LinuxVirtualTerminal::register_switch_handlers(
     }
 }
 
-void mgm::LinuxVirtualTerminal::restore()
+void mir::LinuxVirtualTerminal::restore()
 {
     if (vt_fd.fd() >= 0)
     {
@@ -197,7 +196,7 @@ void mgm::LinuxVirtualTerminal::restore()
 }
 
 
-int mgm::LinuxVirtualTerminal::find_active_vt_number()
+int mir::LinuxVirtualTerminal::find_active_vt_number()
 {
     static std::vector<std::string> const paths{"/dev/tty", "/dev/tty0"};
     int active_vt{-1};
@@ -231,7 +230,7 @@ int mgm::LinuxVirtualTerminal::find_active_vt_number()
     return active_vt;
 }
 
-int mgm::LinuxVirtualTerminal::open_vt(int vt_number)
+int mir::LinuxVirtualTerminal::open_vt(int vt_number)
 {
     auto activate = true;
     if (vt_number <= 0)
@@ -306,7 +305,7 @@ int mgm::LinuxVirtualTerminal::open_vt(int vt_number)
     return vt_fd;
 }
 
-boost::unique_future<mir::Fd> mgm::LinuxVirtualTerminal::acquire_device(int major, int minor)
+boost::unique_future<mir::Fd> mir::LinuxVirtualTerminal::acquire_device(int major, int minor)
 {
     std::stringstream filename;
     filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";

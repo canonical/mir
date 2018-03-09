@@ -18,13 +18,13 @@
 
 #include "platform.h"
 #include "gbm_platform.h"
-#include "linux_virtual_terminal.h"
 #include "mir/options/program_option.h"
 #include "mir/options/option.h"
 #include "mir/udev/wrapper.h"
 #include "mir/module_deleter.h"
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
+#include "mir/console_services.h"
 
 #include <EGL/egl.h>
 #include <fcntl.h>

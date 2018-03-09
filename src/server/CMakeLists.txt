@@ -61,6 +61,8 @@ add_library(mirserverobjects OBJECT
   server.cpp
   lockable_callback_wrapper.cpp
   basic_callback.cpp
+  linux_virtual_terminal.cpp
+  linux_virtual_terminal.h
   ${PROJECT_SOURCE_DIR}/include/server/mir/time/alarm_factory.h
   ${PROJECT_SOURCE_DIR}/include/server/mir/time/alarm.h
   ${PROJECT_SOURCE_DIR}/include/server/mir/observer_registrar.h

@@ -43,8 +43,14 @@
 #include "default_emergency_cleanup.h"
 #include "mir/graphics/platform.h"
 #include "mir/scene/coordinate_translator.h"
+#include "mir/console_services.h"
+
+#include "linux_virtual_terminal.h"
+#include "null_console_services.h"
 
 #include <type_traits>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 
 namespace mc = mir::compositor;
 namespace geom = mir::geometry;
@@ -238,4 +244,88 @@ std::vector<mir::ExtensionDescription> mir::DefaultServerConfiguration::the_exte
     if (the_coordinate_translator()->translation_supported())
         extensions.push_back(mir::ExtensionDescription{"mir_extension_window_coordinate_translation", {1}});
     return extensions;
+}
+
+namespace
+{
+struct RealVTFileOperations : public mir::VTFileOperations
+{
+    int open(char const* pathname, int flags)
+    {
+        return ::open(pathname, flags);
+    }
+
+    int close(int fd)
+    {
+        return ::close(fd);
+    }
+
+    int ioctl(int d, int request, int val)
+    {
+        return ::ioctl(d, request, val);
+    }
+
+    int ioctl(int d, int request, void* p_val)
+    {
+        return ::ioctl(d, request, p_val);
+    }
+
+    int tcsetattr(int d, int acts, const struct termios *tcattr)
+    {
+        return ::tcsetattr(d, acts, tcattr);
+    }
+
+    int tcgetattr(int d, struct termios *tcattr)
+    {
+        return ::tcgetattr(d, tcattr);
+    }
+};
+
+struct RealPosixProcessOperations : public mir::PosixProcessOperations
+{
+    pid_t getpid() const override
+    {
+        return ::getpid();
+    }
+    pid_t getppid() const override
+    {
+        return ::getppid();
+    }
+    pid_t getpgid(pid_t process) const override
+    {
+        return ::getpgid(process);
+    }
+    pid_t getsid(pid_t process) const override
+    {
+        return ::getsid(process);
+    }
+    int setpgid(pid_t process, pid_t group) override
+    {
+        return ::setpgid(process, group);
+    }
+    pid_t setsid() override
+    {
+        return ::setsid();
+    }
+};
+}
+
+std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_console_services()
+{
+    return console_services(
+        [this]() -> std::shared_ptr<ConsoleServices>
+        {
+            try
+            {
+                return std::make_shared<mir::LinuxVirtualTerminal>(
+                    std::make_unique<RealVTFileOperations>(),
+                    std::make_unique<RealPosixProcessOperations>(),
+                    the_options()->get<int>(options::vt_option_name),
+                    the_display_report());
+            }
+            catch(...)
+            {
+                return std::make_shared<mir::NullConsoleServices>();
+            }
+        });
 }

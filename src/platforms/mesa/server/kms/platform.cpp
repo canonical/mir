@@ -19,7 +19,7 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
-#include "linux_virtual_terminal.h"
+#include "mir/console_services.h"
 #include "ipc_operations.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"

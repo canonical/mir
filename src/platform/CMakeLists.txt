@@ -24,6 +24,7 @@ set(MIR_PLATFORM_REFERENCES
 add_subdirectory(graphics/)
 add_subdirectory(options)
 add_subdirectory(udev)
+add_subdirectory(console)
 
 set(MIR_PLATFORM_OBJECTS ${MIR_PLATFORM_OBJECTS} PARENT_SCOPE)
 set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)

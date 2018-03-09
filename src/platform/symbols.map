@@ -160,3 +160,11 @@ MIRPLATFORM_1.0 {
     mir::options::wayland_socket_name_opt*;
   };
 } MIRPLATFORM_0.27;
+
+# Uuuuh, 1.0 is not yet a thing.
+MIR_PLATFORM_0.31 {
+ global:
+  extern "C++" {
+    mir::options::vt_option_name*;
+  };
+} MIRPLATFORM_1.0;

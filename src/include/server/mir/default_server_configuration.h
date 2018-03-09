@@ -38,6 +38,8 @@ class ObserverRegistrar;
 template<class Observer>
 class ObserverMultiplexer;
 
+class ConsoleServices;
+
 namespace cookie
 {
 class Authority;
@@ -343,6 +345,8 @@ public:
     virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
     virtual std::shared_ptr<SharedLibraryProberReport>  the_shared_library_prober_report();
 
+    virtual std::shared_ptr<ConsoleServices> the_console_services();
+
 private:
     // We need to ensure the platform library is destroyed last as the
     // DisplayConfiguration can hold weak_ptrs to objects created from the library
@@ -444,6 +448,7 @@ protected:
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::KeyMapper> key_mapper;
+    CachedPtr<ConsoleServices> console_services;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
