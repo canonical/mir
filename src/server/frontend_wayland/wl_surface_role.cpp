@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "wl_mir_window.h"
+#include "wl_surface_role.h"
 
 #include "wayland_utils.h"
 #include "wl_surface.h"
@@ -38,7 +38,7 @@ namespace frontend
 
 namespace
 {
-class NullWlMirWindow : public WlMirWindow
+class NullWlSurfaceRole : public WlSurfaceRole
 {
 public:
     void new_buffer_size(geometry::Size const& /*buffer_size*/) override {}
@@ -46,10 +46,10 @@ public:
     void commit() override {}
     void visiblity(bool /*visible*/) override {}
     void destroy() override {}
-} null_wl_mir_window_instance;
+} null_wl_surface_role_instance;
 }
 
-WlMirWindow* const null_wl_mir_window_ptr = &null_wl_mir_window_instance;
+WlSurfaceRole* const null_wl_surface_role_ptr = &null_wl_surface_role_instance;
 
 namespace
 {

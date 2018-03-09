@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_WL_MIR_WINDOW_H
-#define MIR_FRONTEND_WL_MIR_WINDOW_H
+#ifndef MIR_FRONTEND_WL_SURFACE_ROLE_H
+#define MIR_FRONTEND_WL_SURFACE_ROLE_H
 
 #include "mir/frontend/surface_id.h"
 #include "mir/geometry/displacement.h"
@@ -44,7 +44,7 @@ namespace frontend
 class Shell;
 class BasicSurfaceEventSink;
 
-class WlMirWindow
+class WlSurfaceRole
 {
 public:
     virtual void new_buffer_size(geometry::Size const& buffer_size) = 0;
@@ -52,10 +52,10 @@ public:
     virtual void commit() = 0;
     virtual void visiblity(bool visible) = 0;
     virtual void destroy() = 0;
-    virtual ~WlMirWindow() = default;
-} extern * const null_wl_mir_window_ptr;
+    virtual ~WlSurfaceRole() = default;
+} extern * const null_wl_surface_role_ptr;
 
-class WlAbstractMirWindow : public WlMirWindow
+class WlAbstractMirWindow : public WlSurfaceRole
 {
 public:
     WlAbstractMirWindow(wl_client* client, wl_resource* surface, wl_resource* event_sink,
@@ -92,4 +92,4 @@ private:
 }
 }
 
-#endif // MIR_FRONTEND_WL_MIR_WINDOW_H
+#endif // MIR_FRONTEND_WL_SURFACE_ROLE_H

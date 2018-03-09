@@ -19,7 +19,7 @@
 #include "wl_surface.h"
 
 #include "wayland_utils.h"
-#include "wl_mir_window.h"
+#include "wl_surface_role.h"
 #include "wl_subcompositor.h"
 #include "wlshmbuffer.h"
 
@@ -43,7 +43,7 @@ mf::WlSurface::WlSurface(
     : Surface(client, parent, id),
         allocator{allocator},
         executor{executor},
-        role{null_wl_mir_window_ptr},
+        role{null_wl_surface_role_ptr},
         pending_buffer{nullptr},
         pending_frames{std::make_shared<std::vector<wl_resource*>>()},
         destroyed{std::make_shared<bool>(false)}
@@ -69,7 +69,7 @@ mf::WlSurface::~WlSurface()
         session->destroy_buffer_stream(stream_id);
 }
 
-void mf::WlSurface::set_role(WlMirWindow* role_)
+void mf::WlSurface::set_role(WlSurfaceRole* role_)
 {
     role = role_;
 }

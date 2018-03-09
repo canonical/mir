@@ -21,7 +21,7 @@
 #define MIR_FRONTEND_WL_SUBSURFACE_H
 
 #include "generated/wayland_wrapper.h"
-#include "wl_mir_window.h"
+#include "wl_surface_role.h"
 
 #include <vector>
 #include <memory>
@@ -48,7 +48,7 @@ private:
                         struct wl_resource* surface, struct wl_resource* parent) override;
 };
 
-class WlSubsurface: public WlMirWindow, wayland::Subsurface
+class WlSubsurface: public WlSurfaceRole, wayland::Subsurface
 {
 public:
     WlSubsurface(struct wl_client* client, struct wl_resource* object_parent, uint32_t id, WlSurface* surface,
@@ -64,7 +64,7 @@ private:
     void set_sync() override;
     void set_desync() override;
 
-    void destroy() override; // overrides function in both WlMirWindow and wayland::Subsurface
+    void destroy() override; // overrides function in both WlSurfaceRole and wayland::Subsurface
 
     virtual void new_buffer_size(geometry::Size const& buffer_size) override;
     void invalidate_buffer_list() override;
