@@ -23,8 +23,15 @@
 #include "generated/wayland_wrapper.h"
 #include "wl_mir_window.h"
 
+#include <vector>
+#include <memory>
+
 namespace mir
 {
+namespace shell
+{
+class StreamSpecification;
+}
 namespace frontend
 {
 
@@ -48,6 +55,8 @@ public:
                  WlSurface* parent_surface);
     ~WlSubsurface();
 
+    void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const;
+
 private:
     void set_position(int32_t x, int32_t y) override;
     void place_above(struct wl_resource* sibling) override;
@@ -58,11 +67,15 @@ private:
     void destroy() override; // overrides function in both WlMirWindow and wayland::Subsurface
 
     virtual void new_buffer_size(geometry::Size const& buffer_size) override;
+    void invalidate_buffer_list() override;
     virtual void commit() override;
     virtual void visiblity(bool visible) override;
 
     WlSurface* surface;
-    WlSurface* parent;
+
+    // manages parent/child relationship, but does not manage parent's memory
+    // see WlSurface::add_child() for details
+    std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> parent;
 };
 
 }

@@ -48,6 +48,7 @@ class WlMirWindow
 {
 public:
     virtual void new_buffer_size(geometry::Size const& buffer_size) = 0;
+    virtual void invalidate_buffer_list() = 0;
     virtual void commit() = 0;
     virtual void visiblity(bool visible) = 0;
     virtual void destroy() = 0;
@@ -61,6 +62,8 @@ public:
         std::shared_ptr<frontend::Shell> const& shell);
 
     ~WlAbstractMirWindow() override;
+
+    void invalidate_buffer_list() override;
 
 protected:
     std::shared_ptr<bool> const destroyed;
@@ -79,6 +82,7 @@ protected:
 private:
     geometry::Size latest_buffer_size;
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
+    bool buffer_list_needs_refresh = true;
 
     void commit() override;
     void new_buffer_size(geometry::Size const& buffer_size) override;

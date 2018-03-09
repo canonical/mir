@@ -40,15 +40,22 @@ void mf::WlSubcompositor::get_subsurface(struct wl_client* client, struct wl_res
 mf::WlSubsurface::WlSubsurface(struct wl_client* client, struct wl_resource* object_parent, uint32_t id, WlSurface* surface, WlSurface* parent_surface)
     : wayland::Subsurface(client, object_parent, id),
       surface{surface},
-      parent{parent_surface}
+      parent{parent_surface->add_child(this)}
 {
     surface->set_role(this);
-    (void)parent;
 }
 
 mf::WlSubsurface::~WlSubsurface()
 {
+    // unique pointer automatically removes `this` from parent child list
+
+    invalidate_buffer_list();
     surface->set_role(null_wl_mir_window_ptr);
+}
+
+void mf::WlSubsurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const
+{
+    surface->populate_buffer_list(buffers);
 }
 
 void mf::WlSubsurface::set_position(int32_t x, int32_t y)
@@ -81,7 +88,7 @@ void mf::WlSubsurface::set_desync()
 
 void mf::WlSubsurface::destroy()
 {
-    //wl_resource_destroy(resource);
+    wl_resource_destroy(resource);
 }
 
 void mf::WlSubsurface::new_buffer_size(geometry::Size const& buffer_size)
@@ -90,9 +97,15 @@ void mf::WlSubsurface::new_buffer_size(geometry::Size const& buffer_size)
     // TODO
 }
 
+void mf::WlSubsurface::invalidate_buffer_list()
+{
+    parent->invalidate_buffer_list();
+}
+
 void mf::WlSubsurface::commit()
 {
-    // TODO
+    invalidate_buffer_list();
+    // TODO: if in desync mode, immediately make the buffer get rendered
 }
 
 void mf::WlSubsurface::visiblity(bool visible)
