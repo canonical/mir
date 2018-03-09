@@ -248,7 +248,7 @@ void mo::DefaultConfiguration::add_platform_options()
                 }
             }();
 
-        for (auto platform : platform_libraries)
+        for (auto& platform : platform_libraries)
         {
             /* Ideally we'd namespace these options with the platform,
              * and display them in a group as $FOO-platform-specific.
@@ -260,8 +260,20 @@ void mo::DefaultConfiguration::add_platform_options()
             }
             catch (std::runtime_error&)
             {
+                /* We've failed to add the options - probably because it's not a graphics platform,
+                 * or because it's got the wrong version - unload it; it's unnecessary.
+                 */
+                platform.reset();
             }
         }
+
+        // Remove the shared_ptrs to the libraries we've unloaded from the vector.
+        platform_libraries.erase(
+            std::remove(
+                platform_libraries.begin(),
+                platform_libraries.end(),
+                std::shared_ptr<mir::SharedLibrary>{}),
+            platform_libraries.end());
     }
     catch(...)
     {
