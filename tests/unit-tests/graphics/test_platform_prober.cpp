@@ -17,6 +17,7 @@
  */
 
 #include <gtest/gtest.h>
+#include <fcntl.h>
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_probe.h"
@@ -31,6 +32,7 @@
 #ifdef MIR_BUILD_PLATFORM_MESA_KMS
 #include "mir/test/doubles/mock_gbm.h"
 #endif
+#include "mir/test/doubles/null_console_services.h"
 
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
@@ -78,6 +80,32 @@ std::shared_ptr<void> ensure_mesa_probing_succeeds()
     return env;
 }
 
+class StubConsoleServices : public mir::ConsoleServices
+{
+public:
+    void
+    register_switch_handlers(
+        mir::graphics::EventHandlerRegister&,
+        std::function<bool()> const&,
+        std::function<bool()> const&) override
+    {
+    }
+
+    void restore() override
+    {
+    }
+
+    boost::unique_future<mir::Fd> acquire_device(int major, int minor) override
+    {
+        /* NOTE: This uses the behaviour that MockDRM will intercept any open() call
+         * under /dev/dri/
+         */
+        std::stringstream filename;
+        filename << "/dev/dri/" << major << ":" << minor;
+        return boost::make_ready_future<mir::Fd>(::open(filename.str().c_str(), O_RDWR | O_CLOEXEC));
+    }
+};
+
 class ServerPlatformProbeMockDRM : public ::testing::Test
 {
 #if defined(MIR_BUILD_PLATFORM_MESA_KMS) || defined(MIR_BUILD_PLATFORM_MESA_X11)
@@ -93,7 +121,7 @@ TEST(ServerPlatformProbe, ConstructingWithNoModulesIsAnError)
     std::vector<std::shared_ptr<mir::SharedLibrary>> empty_modules;
     mir::options::ProgramOption options;
 
-    EXPECT_THROW(mir::graphics::module_for_device(empty_modules, options),
+    EXPECT_THROW(mir::graphics::module_for_device(empty_modules, options, nullptr),
                  std::runtime_error);
 }
 
@@ -106,7 +134,10 @@ TEST_F(ServerPlatformProbeMockDRM, LoadsMesaPlatformWhenDrmMasterCanBeAcquired)
 
     auto modules = available_platforms();
 
-    auto module = mir::graphics::module_for_device(modules, options);
+    auto module = mir::graphics::module_for_device(
+        modules,
+        options,
+        std::make_shared<StubConsoleServices>());
     ASSERT_NE(nullptr, module);
 
     auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
@@ -133,7 +164,10 @@ TEST_F(ServerPlatformProbeMockDRM, returns_kms_platform_when_nested)
 
     auto modules = available_platforms();
 
-    auto module = mir::graphics::module_for_device(modules, options);
+    auto module = mir::graphics::module_for_device(
+        modules,
+        options,
+        std::make_shared<StubConsoleServices>());
     ASSERT_NE(nullptr, module);
 
     auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
@@ -149,9 +183,12 @@ TEST(ServerPlatformProbe, ThrowsExceptionWhenNothingProbesSuccessfully)
     mir::options::ProgramOption options;
     auto block_mesa = ensure_mesa_probing_fails();
 
-
-    EXPECT_THROW(mir::graphics::module_for_device(available_platforms(), options),
-                 std::runtime_error);
+    EXPECT_THROW(
+        mir::graphics::module_for_device(
+            available_platforms(),
+            options,
+            std::make_shared<mtd::NullConsoleServices>()),
+        std::runtime_error);
 }
 
 TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
@@ -163,7 +200,10 @@ TEST(ServerPlatformProbe, LoadsSupportedModuleWhenNoBestModule)
     auto modules = available_platforms();
     add_dummy_platform(modules);
 
-    auto module = mir::graphics::module_for_device(modules, options);
+    auto module = mir::graphics::module_for_device(
+        modules,
+        options,
+        std::make_shared<mtd::NullConsoleServices>());
     ASSERT_NE(nullptr, module);
 
     auto descriptor = module->load_function<mir::graphics::DescribeModule>(describe_module);
@@ -185,6 +225,9 @@ TEST_F(ServerPlatformProbeMockDRM, IgnoresNonPlatformModules)
     // due to protobuf throwing a screaming hissy fit if it gets loaded twice.
     modules.push_back(std::make_shared<mir::SharedLibrary>(mtf::client_platform("dummy.so")));
 
-    auto module = mir::graphics::module_for_device(modules, options);
+    auto module = mir::graphics::module_for_device(
+        modules,
+        options,
+        std::make_shared<StubConsoleServices>());
     EXPECT_NE(nullptr, module);
 }

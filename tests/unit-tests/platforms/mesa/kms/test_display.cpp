@@ -656,24 +656,6 @@ TEST_F(MesaDisplayTest, for_each_display_buffer_calls_callback)
     EXPECT_NE(0, callback_count);
 }
 
-TEST_F(MesaDisplayTest, constructor_sets_vt_graphics_mode)
-{
-    using namespace testing;
-
-    auto mock_vt = std::make_shared<mtd::MockConsoleServices>();
-
-    EXPECT_CALL(*mock_vt, set_graphics_mode())
-        .Times(1);
-
-    auto platform = std::make_shared<mgm::Platform>(
-        null_report,
-        mock_vt,
-        *std::make_shared<mtd::NullEmergencyCleanup>(),
-        mgm::BypassOption::allowed);
-
-    auto display = create_display(platform);
-}
-
 TEST_F(MesaDisplayTest, pause_drops_drm_master)
 {
     using namespace testing;

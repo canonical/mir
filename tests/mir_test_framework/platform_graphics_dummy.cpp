@@ -28,7 +28,9 @@ class ProgramOption;
 }
 }
 
-mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& /*options*/)
+mir::graphics::PlatformPriority probe_graphics_platform(
+    std::shared_ptr<mir::ConsoleServices> const&,
+    mir::options::ProgramOption const& /*options*/)
 {
     mir::assert_entry_point_signature<mir::graphics::PlatformProbe>(&probe_graphics_platform);
     return mir::graphics::PlatformPriority::dummy;

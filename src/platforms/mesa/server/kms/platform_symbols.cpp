@@ -37,116 +37,43 @@ namespace mo = mir::options;
 namespace
 {
 char const* bypass_option_name{"bypass"};
-char const* vt_option_name{"vt"};
 char const* host_socket{"host-socket"};
 
-struct RealVTFileOperations : public mgm::VTFileOperations
-{
-    int open(char const* pathname, int flags)
-    {
-        return ::open(pathname, flags);
-    }
-
-    int close(int fd)
-    {
-        return ::close(fd);
-    }
-
-    int ioctl(int d, int request, int val)
-    {
-        return ::ioctl(d, request, val);
-    }
-
-    int ioctl(int d, int request, void* p_val)
-    {
-        return ::ioctl(d, request, p_val);
-    }
-
-    int tcsetattr(int d, int acts, const struct termios *tcattr)
-    {
-        return ::tcsetattr(d, acts, tcattr);
-    }
-
-    int tcgetattr(int d, struct termios *tcattr)
-    {
-        return ::tcgetattr(d, tcattr);
-    }
-};
-
-struct RealPosixProcessOperations : public mgm::PosixProcessOperations
-{
-    pid_t getpid() const override
-    {
-        return ::getpid();
-    }
-    pid_t getppid() const override
-    {
-        return ::getppid();
-    }
-    pid_t getpgid(pid_t process) const override
-    {
-        return ::getpgid(process);
-    }
-    pid_t getsid(pid_t process) const override
-    {
-        return ::getsid(process);
-    }
-    int setpgid(pid_t process, pid_t group) override
-    {
-        return ::setpgid(process, group);
-    }
-    pid_t setsid() override
-    {
-        return ::setsid();
-    }
-};
 }
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mg::DisplayReport> const& report,
     std::shared_ptr<mir::logging::Logger> const& /*logger*/)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     // ensure mesa finds the mesa mir-platform symbols
-    auto real_fops = std::make_shared<RealVTFileOperations>();
-    auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
-    auto const vtnum = options->is_set(vt_option_name) ? options->get<int>(vt_option_name) : 0;
-    auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(
-        real_fops,
-        std::move(real_pops),
-        vtnum,
-        report);
 
     auto bypass_option = mgm::BypassOption::allowed;
     if (!options->get<bool>(bypass_option_name))
         bypass_option = mgm::BypassOption::prohibited;
 
     return mir::make_module_ptr<mgm::Platform>(
-        report, vt, *emergency_cleanup_registry, bypass_option);
+        report, console, *emergency_cleanup_registry, bypass_option);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)
 {
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
     config.add_options()
-        (vt_option_name,
-         boost::program_options::value<int>(),
-         "[platform-specific] VT to run on.")
         (bypass_option_name,
          boost::program_options::value<bool>()->default_value(true),
          "[platform-specific] utilize the bypass optimization for fullscreen surfaces.");
 }
 
-mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
+mg::PlatformPriority probe_graphics_platform(
+    std::shared_ptr<mir::ConsoleServices> const& console,
+    mo::ProgramOption const& options)
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
-    auto const unparsed_arguments = options.unparsed_command_line();
-    auto platform_option_used = false;
 
-    if (options.is_set(vt_option_name))
-        platform_option_used = true;
     auto nested = options.is_set(host_socket);
 
     auto udev = std::make_shared<mir::udev::Context>();
@@ -173,10 +100,11 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
     }
 
     // Check for master
-    int tmp_fd = -1;
+    mir::Fd tmp_fd;
     for (auto& device : drm_devices)
     {
-        if (device.devnode() == nullptr)
+        auto const devnum = device.devnum();
+        if (devnum == makedev(0, 0))
         {
             /* The display connectors attached to the card appear as subdevices
              * of the card[0-9] node.
@@ -185,13 +113,17 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
              */
             continue;
         }
-        tmp_fd = open(device.devnode(), O_RDWR | O_CLOEXEC);
-        if (tmp_fd >= 0)
+
+        try
+        {
+            tmp_fd = console->acquire_device(major(devnum), minor(devnum)).get();
             break;
+        }
+        catch (...)
+        {
+        }
     }
 
-    if (nested && platform_option_used)
-        return mg::PlatformPriority::best;
     if (nested)
         return mg::PlatformPriority::supported;
 
@@ -200,15 +132,9 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
         if (drmSetMaster(tmp_fd) >= 0)
         {
             drmDropMaster(tmp_fd);
-            drmClose(tmp_fd);
             return mg::PlatformPriority::best;
         }
-        else
-            drmClose(tmp_fd);
     }
-
-    if (platform_option_used)
-        return mg::PlatformPriority::best;
 
     /* We failed to set mastership. However, still on most systems mesa-kms
      * is the right driver to choose. Landing here just means the user did
@@ -251,25 +177,19 @@ mir::ModuleProperties const* describe_graphics_module()
 mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mg::DisplayReport> const& report,
     std::shared_ptr<mir::logging::Logger> const&)
 {
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
     // ensure mesa finds the mesa mir-platform symbols
-    auto real_fops = std::make_shared<RealVTFileOperations>();
-    auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
-    auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(
-        real_fops,
-        std::move(real_pops),
-        options->get<int>(vt_option_name),
-        report);
 
     auto bypass_option = mgm::BypassOption::allowed;
     if (!options->get<bool>(bypass_option_name))
         bypass_option = mgm::BypassOption::prohibited;
 
     return mir::make_module_ptr<mgm::Platform>(
-        report, vt, *emergency_cleanup_registry, bypass_option);
+        report, console, *emergency_cleanup_registry, bypass_option);
 }
 
 mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(
