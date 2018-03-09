@@ -29,6 +29,7 @@ add_library(miral-internal STATIC
     xcursor_loader.cpp                  xcursor_loader.h
     xcursor.c                           xcursor.h
                                         join_client_threads.h
+                                        window_info_defaults.h
 )
 
 set_source_files_properties(xcursor.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
@@ -57,7 +58,7 @@ add_library(miral SHARED
     set_window_management_policy.cpp    ${miral_include}/miral/set_window_management_policy.h
     window_management_policy.cpp        ${miral_include}/miral/window_management_policy.h
     window_manager_tools.cpp            ${miral_include}/miral/window_manager_tools.h
-                                        window_info_defaults.h
+                                        ${miral_include}/miral/lambda_as_function.h
 )
 
 check_cxx_compiler_flag(-Wno-attribute-alias HAS_W_NO_ATTRIBUTE_ALIAS)
