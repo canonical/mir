@@ -43,11 +43,13 @@ mf::WlSubsurface::WlSubsurface(struct wl_client* client, struct wl_resource* obj
       parent{parent_surface}
 {
     surface->set_role(this);
-    (void)parent;
+    parent_surface->add_child(this);
 }
 
 mf::WlSubsurface::~WlSubsurface()
 {
+    parent->remove_child(this);
+    invalidate_buffer_list();
     surface->set_role(null_wl_mir_window_ptr);
 }
 
@@ -81,7 +83,7 @@ void mf::WlSubsurface::set_desync()
 
 void mf::WlSubsurface::destroy()
 {
-    //wl_resource_destroy(resource);
+    wl_resource_destroy(resource);
 }
 
 void mf::WlSubsurface::new_buffer_size(geometry::Size const& buffer_size)
@@ -90,9 +92,14 @@ void mf::WlSubsurface::new_buffer_size(geometry::Size const& buffer_size)
     // TODO
 }
 
+void mf::WlSubsurface::invalidate_buffer_list()
+{
+    parent->role->invalidate_buffer_list();
+}
+
 void mf::WlSubsurface::commit()
 {
-    // TODO
+    invalidate_buffer_list();
 }
 
 void mf::WlSubsurface::visiblity(bool visible)

@@ -41,6 +41,7 @@ class NullWlMirWindow : public WlMirWindow
 {
 public:
     void new_buffer_size(geometry::Size const& /*buffer_size*/) {}
+    void invalidate_buffer_list() {}
     void commit() {}
     void visiblity(bool /*visible*/) {}
     void destroy() {}
@@ -83,6 +84,11 @@ WlAbstractMirWindow::~WlAbstractMirWindow()
     }
 }
 
+void WlAbstractMirWindow::invalidate_buffer_list()
+{
+    buffer_list_needs_refresh = true;
+}
+
 shell::SurfaceSpecification& WlAbstractMirWindow::spec()
 {
     if (!pending_changes)
@@ -97,19 +103,27 @@ void WlAbstractMirWindow::commit()
 
     if (surface_id.as_value())
     {
-        auto const surface = get_surface_for_id(session, surface_id);
+        auto const scene_surface = get_surface_for_id(session, surface_id);
 
         if (window_size.is_set())
         {
             sink->latest_client_size(window_size.value());
         }
-        else if (surface->size() != latest_buffer_size)
+        else if (scene_surface->size() != latest_buffer_size)
         {
             // If the window side isn't set explicitly assume it matches the latest buffer
             sink->latest_client_size(latest_buffer_size);
             auto& new_size_spec = spec();
             new_size_spec.width = latest_buffer_size.width;
             new_size_spec.height = latest_buffer_size.height;
+        }
+
+        if (buffer_list_needs_refresh)
+        {
+            auto& buffer_list_spec = spec();
+            buffer_list_spec.streams = std::vector<shell::StreamSpecification>();
+            WlSurface::from(surface)->populate_buffer_list(buffer_list_spec.streams.value());
+            buffer_list_needs_refresh = false;
         }
 
         if (pending_changes)
@@ -125,7 +139,9 @@ void WlAbstractMirWindow::commit()
     if (params->size == geometry::Size{})
         params->size = geometry::Size{640, 480};
 
-    params->streams = std::move(std::vector<shell::StreamSpecification>{{mir_surface->stream_id, mir_surface->buffer_offset, {}}});
+    params->streams = std::vector<shell::StreamSpecification>();
+    mir_surface->populate_buffer_list(params->streams.value());
+    buffer_list_needs_refresh = false;
 
     surface_id = shell->create_surface(session, *params, sink);
     mir_surface->surface_id = surface_id;

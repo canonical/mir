@@ -49,6 +49,8 @@ public:
     ~WlSubsurface();
 
 private:
+    friend WlSurface;
+
     void set_position(int32_t x, int32_t y) override;
     void place_above(struct wl_resource* sibling) override;
     void place_below(struct wl_resource* sibling) override;
@@ -58,6 +60,7 @@ private:
     void destroy() override; // overrides function in both WlMirWindow and wayland::Subsurface
 
     virtual void new_buffer_size(geometry::Size const& buffer_size) override;
+    void invalidate_buffer_list() override;
     virtual void commit() override;
     virtual void visiblity(bool visible) override;
 

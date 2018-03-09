@@ -36,11 +36,16 @@ namespace graphics
 {
 class WaylandAllocator;
 }
+namespace shell
+{
+struct StreamSpecification;
+}
 
 namespace frontend
 {
 class BufferStream;
 class WlMirWindow;
+class WlSubsurface;
 
 class WlSurface : public wayland::Surface
 {
@@ -54,21 +59,27 @@ public:
     ~WlSurface();
 
     void set_role(WlMirWindow* role_);
+    std::shared_ptr<bool> destroyed_flag() const;
+    void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const;
 
     mir::frontend::BufferStreamId stream_id;
     geometry::Displacement buffer_offset;
     std::shared_ptr<mir::frontend::BufferStream> stream;
     mir::frontend::SurfaceId surface_id;       // ID of any associated surface
 
-    std::shared_ptr<bool> destroyed_flag() const;
-
     static WlSurface* from(wl_resource* resource);
 
 private:
+    friend WlSubsurface;
+
+    void add_child(WlSubsurface* child);
+    void remove_child(WlSubsurface* child);
+
     std::shared_ptr<mir::graphics::WaylandAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
 
     WlMirWindow* role;
+    std::vector<WlSubsurface*> children;
 
     wl_resource* pending_buffer;
     std::shared_ptr<std::vector<wl_resource*>> const pending_frames;

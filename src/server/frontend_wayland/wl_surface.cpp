@@ -21,6 +21,7 @@
 
 #include "wayland_utils.h"
 #include "wl_mir_window.h"
+#include "wl_subcompositor.h"
 #include "wlshmbuffer.h"
 
 #include "generated/wayland_wrapper.h"
@@ -30,6 +31,7 @@
 #include "mir/compositor/buffer_stream.h"
 #include "mir/executor.h"
 #include "mir/graphics/wayland_allocator.h"
+#include "mir/shell/surface_specification.h"
 
 namespace mir
 {
@@ -81,10 +83,29 @@ std::shared_ptr<bool> WlSurface::destroyed_flag() const
     return destroyed;
 }
 
+void WlSurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const
+{
+    buffers.push_back({stream_id, buffer_offset, {}});
+    for (WlSubsurface* subsurface : children)
+    {
+        subsurface->surface->populate_buffer_list(buffers);
+    }
+}
+
 WlSurface* WlSurface::from(wl_resource* resource)
 {
     void* raw_surface = wl_resource_get_user_data(resource);
     return static_cast<WlSurface*>(static_cast<wayland::Surface*>(raw_surface));
+}
+
+void WlSurface::add_child(WlSubsurface* child)
+{
+    children.push_back(child);
+}
+
+void WlSurface::remove_child(WlSubsurface* child)
+{
+    children.erase(std::remove(children.begin(), children.end(), child), children.end());
 }
 
 void WlSurface::destroy()
