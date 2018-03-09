@@ -2124,6 +2124,7 @@ void miral::BasicWindowManager::advise_output_create(miral::Output const& output
     outputs.add(output.extents());
 
     update_windows_for_outputs();
+    policy->advise_output_create(output);
 }
 
 void miral::BasicWindowManager::advise_output_update(miral::Output const& updated, miral::Output const& original)
@@ -2133,6 +2134,7 @@ void miral::BasicWindowManager::advise_output_update(miral::Output const& update
     outputs.add(updated.extents());
 
     update_windows_for_outputs();
+    policy->advise_output_update(updated, original);
 }
 
 void miral::BasicWindowManager::advise_output_delete(miral::Output const& output)
@@ -2141,6 +2143,7 @@ void miral::BasicWindowManager::advise_output_delete(miral::Output const& output
     outputs.remove(output.extents());
 
     update_windows_for_outputs();
+    policy->advise_output_delete(output);
 }
 
 void miral::BasicWindowManager::update_windows_for_outputs()

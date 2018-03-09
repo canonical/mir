@@ -1,18 +1,5 @@
 libmiral.so.3 libmiral3 #MINVER#
  MIRAL_2.0@MIRAL_2.0 2.0.0
- (c++)"miral::ActiveOutputsListener::advise_output_begin()@MIRAL_2.0" 2.0.0
- (c++)"miral::ActiveOutputsListener::advise_output_create(miral::Output const&)@MIRAL_2.0" 2.0.0
- (c++)"miral::ActiveOutputsListener::advise_output_delete(miral::Output const&)@MIRAL_2.0" 2.0.0
- (c++)"miral::ActiveOutputsListener::advise_output_end()@MIRAL_2.0" 2.0.0
- (c++)"miral::ActiveOutputsListener::advise_output_update(miral::Output const&, miral::Output const&)@MIRAL_2.0" 2.0.0
- (c++)"miral::ActiveOutputsMonitor::~ActiveOutputsMonitor()@MIRAL_2.0" 2.0.0
- (c++)"miral::ActiveOutputsMonitor::ActiveOutputsMonitor()@MIRAL_2.0" 2.0.0
- (c++)"miral::ActiveOutputsMonitor::ActiveOutputsMonitor(miral::ActiveOutputsMonitor const&)@MIRAL_2.0" 2.0.0
- (c++)"miral::ActiveOutputsMonitor::add_listener(miral::ActiveOutputsListener*)@MIRAL_2.0" 2.0.0
- (c++)"miral::ActiveOutputsMonitor::delete_listener(miral::ActiveOutputsListener*)@MIRAL_2.0" 2.0.0
- (c++)"miral::ActiveOutputsMonitor::operator=(miral::ActiveOutputsMonitor const&)@MIRAL_2.0" 2.0.0
- (c++)"miral::ActiveOutputsMonitor::operator()(mir::Server&)@MIRAL_2.0" 2.0.0
- (c++)"miral::ActiveOutputsMonitor::process_outputs(std::function<void (std::vector<miral::Output, std::allocator<miral::Output> > const&)> const&) const@MIRAL_2.0" 2.0.0
  (c++)"miral::AddInitCallback::~AddInitCallback()@MIRAL_2.0" 2.0.0
  (c++)"miral::AddInitCallback::AddInitCallback(std::function<void ()> const&)@MIRAL_2.0" 2.0.0
  (c++)"miral::AddInitCallback::operator()(mir::Server&) const@MIRAL_2.0" 2.0.0
@@ -191,6 +178,9 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::WindowManagementPolicy::advise_move_to(miral::WindowInfo const&, mir::geometry::Point)@MIRAL_2.0" 2.0.0
  (c++)"miral::WindowManagementPolicy::advise_new_app(miral::ApplicationInfo&)@MIRAL_2.0" 2.0.0
  (c++)"miral::WindowManagementPolicy::advise_new_window(miral::WindowInfo const&)@MIRAL_2.0" 2.0.0
+ (c++)"miral::WindowManagementPolicy::advise_output_create(miral::Output const&)@MIRAL_2.0" 2.0.0
+ (c++)"miral::WindowManagementPolicy::advise_output_delete(miral::Output const&)@MIRAL_2.0" 2.0.0
+ (c++)"miral::WindowManagementPolicy::advise_output_update(miral::Output const&, miral::Output const&)@MIRAL_2.0" 2.0.0 (c++)"miral::WindowManagementPolicy::advise_raise(std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_2.0" 2.0.0
  (c++)"miral::WindowManagementPolicy::advise_raise(std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_2.0" 2.0.0
  (c++)"miral::WindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const&, std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_2.0" 2.0.0
  (c++)"miral::WindowManagementPolicy::advise_resize(miral::WindowInfo const&, mir::geometry::Size const&)@MIRAL_2.0" 2.0.0
@@ -301,9 +291,7 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::Window::~Window()@MIRAL_2.0" 2.0.0
  (c++)"miral::Window::Window()@MIRAL_2.0" 2.0.0
  (c++)"miral::Window::Window(std::shared_ptr<mir::scene::Session> const&, std::shared_ptr<mir::scene::Surface> const&)@MIRAL_2.0" 2.0.0
- (c++)"typeinfo for miral::ActiveOutputsListener@MIRAL_2.0" 2.0.0
  (c++)"typeinfo for miral::CanonicalWindowManagerPolicy@MIRAL_2.0" 2.0.0
  (c++)"typeinfo for miral::WindowManagementPolicy@MIRAL_2.0" 2.0.0
- (c++)"vtable for miral::ActiveOutputsListener@MIRAL_2.0" 2.0.0
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_2.0" 2.0.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_2.0" 2.0.0

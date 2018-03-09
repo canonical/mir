@@ -18,7 +18,7 @@
 
 #include "display_configuration_listeners.h"
 
-#include "miral/active_outputs.h"
+#include "active_outputs.h"
 
 #include <mir/graphics/display_configuration.h>
 

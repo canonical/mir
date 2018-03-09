@@ -2,20 +2,6 @@
 MIRAL_2.0 {
 global:
   extern "C++" {
-    miral::ActiveOutputsListener::?ActiveOutputsListener*;
-    miral::ActiveOutputsListener::ActiveOutputsListener*;
-    miral::ActiveOutputsListener::advise_output_begin*;
-    miral::ActiveOutputsListener::advise_output_create*;
-    miral::ActiveOutputsListener::advise_output_delete*;
-    miral::ActiveOutputsListener::advise_output_end*;
-    miral::ActiveOutputsListener::advise_output_update*;
-    miral::ActiveOutputsListener::operator*;
-    miral::ActiveOutputsMonitor::?ActiveOutputsMonitor*;
-    miral::ActiveOutputsMonitor::ActiveOutputsMonitor*;
-    miral::ActiveOutputsMonitor::add_listener*;
-    miral::ActiveOutputsMonitor::delete_listener*;
-    miral::ActiveOutputsMonitor::operator*;
-    miral::ActiveOutputsMonitor::process_outputs*;
     miral::AddInitCallback::?AddInitCallback*;
     miral::AddInitCallback::AddInitCallback*;
     miral::AddInitCallback::operator*;
@@ -154,6 +140,9 @@ global:
     miral::WindowManagementPolicy::advise_move_to*;
     miral::WindowManagementPolicy::advise_new_app*;
     miral::WindowManagementPolicy::advise_new_window*;
+    miral::WindowManagementPolicy::advise_output_create*;
+    miral::WindowManagementPolicy::advise_output_delete*;
+    miral::WindowManagementPolicy::advise_output_update*;
     miral::WindowManagementPolicy::advise_raise*;
     miral::WindowManagementPolicy::advise_removing_from_workspace*;
     miral::WindowManagementPolicy::advise_resize*;
@@ -234,12 +223,6 @@ global:
     miral::operator*;
     miral::pid_of*;
     miral::pre_init*;
-    non-virtual?thunk?to?miral::ActiveOutputsListener::?ActiveOutputsListener*;
-    non-virtual?thunk?to?miral::ActiveOutputsListener::advise_output_begin*;
-    non-virtual?thunk?to?miral::ActiveOutputsListener::advise_output_create*;
-    non-virtual?thunk?to?miral::ActiveOutputsListener::advise_output_delete*;
-    non-virtual?thunk?to?miral::ActiveOutputsListener::advise_output_end*;
-    non-virtual?thunk?to?miral::ActiveOutputsListener::advise_output_update*;
     non-virtual?thunk?to?miral::ApplicationAuthorizer::?ApplicationAuthorizer*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::advise_focus_gained*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::confirm_inherited_move*;
@@ -258,13 +241,14 @@ global:
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_move_to*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_new_app*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_new_window*;
+    non-virtual?thunk?to?miral::WindowManagementPolicy::advise_output_create*;
+    non-virtual?thunk?to?miral::WindowManagementPolicy::advise_output_delete*;
+    non-virtual?thunk?to?miral::WindowManagementPolicy::advise_output_update*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_raise*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_removing_from_workspace*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_resize*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_state_change*;
     non-virtual?thunk?to?miral::WorkspacePolicy::?WorkspacePolicy*;
-    typeinfo?for?miral::ActiveOutputsListener;
-    typeinfo?for?miral::ActiveOutputsMonitor;
     typeinfo?for?miral::AddInitCallback;
     typeinfo?for?miral::AppendEventFilter;
     typeinfo?for?miral::ApplicationAuthorizer;
@@ -293,8 +277,6 @@ global:
     typeinfo?for?miral::WindowSpecification;
     typeinfo?for?miral::WindowSpecification::AspectRatio;
     typeinfo?for?miral::WorkspacePolicy;
-    vtable?for?miral::ActiveOutputsListener;
-    vtable?for?miral::ActiveOutputsMonitor;
     vtable?for?miral::AddInitCallback;
     vtable?for?miral::AppendEventFilter;
     vtable?for?miral::ApplicationAuthorizer;

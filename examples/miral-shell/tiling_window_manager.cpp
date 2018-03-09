@@ -73,19 +73,11 @@ void TilingWindowManagerPolicy::MRUTileList::enumerate(Enumerator const& enumera
 TilingWindowManagerPolicy::TilingWindowManagerPolicy(
     WindowManagerTools const& tools,
     SpinnerSplash const& spinner,
-    miral::InternalClientLauncher const& launcher,
-    miral::ActiveOutputsMonitor& outputs_monitor) :
+    miral::InternalClientLauncher const& launcher) :
     tools{tools},
     spinner{spinner},
-    launcher{launcher},
-    outputs_monitor{outputs_monitor}
+    launcher{launcher}
 {
-    outputs_monitor.add_listener(this);
-}
-
-TilingWindowManagerPolicy::~TilingWindowManagerPolicy()
-{
-    outputs_monitor.delete_listener(this);
 }
 
 void TilingWindowManagerPolicy::click(Point cursor)
@@ -691,22 +683,6 @@ void TilingWindowManagerPolicy::advise_output_delete(Output const& output)
 {
     live_displays.remove(output.extents());
     dirty_displays = true;
-}
-
-void TilingWindowManagerPolicy::advise_output_end()
-{
-    if (dirty_displays)
-    {
-        // Need to acquire lock before accessing outputs & dirty_tiles
-        tools.invoke_under_lock([this]
-            {
-                displays = live_displays;
-                update_tiles(displays);
-                dirty_tiles = false;
-            });
-
-        dirty_displays = false;
-    }
 }
 
 void TilingWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*window_info*/)

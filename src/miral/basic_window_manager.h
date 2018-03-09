@@ -23,7 +23,7 @@
 
 #include "miral/window_management_policy.h"
 #include "miral/window_info.h"
-#include "miral/active_outputs.h"
+#include "active_outputs.h"
 #include "miral/application.h"
 #include "miral/application_info.h"
 #include "mru_window_list.h"

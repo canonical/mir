@@ -24,7 +24,6 @@
 #include <miral/application.h>
 #include <miral/window_management_policy.h>
 #include <miral/window_manager_tools.h>
-#include <miral/active_outputs.h>
 
 #include <mir/geometry/displacement.h>
 #include <miral/internal_client.h>
@@ -45,14 +44,11 @@ using namespace mir::geometry;
 //  o Maximize/restore current window (to tile height): Shift-F11
 //  o Maximize/restore current window (to tile width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class TilingWindowManagerPolicy : public miral::WindowManagementPolicy,
-    miral::ActiveOutputsListener
+class TilingWindowManagerPolicy : public miral::WindowManagementPolicy
 {
 public:
     explicit TilingWindowManagerPolicy(miral::WindowManagerTools const& tools, SpinnerSplash const& spinner,
-        miral::InternalClientLauncher const& launcher, miral::ActiveOutputsMonitor& outputs_monitor);
-
-    ~TilingWindowManagerPolicy();
+        miral::InternalClientLauncher const& launcher);
 
     auto place_new_window(
         miral::ApplicationInfo const& app_info,
@@ -86,7 +82,6 @@ private:
     void advise_output_create(miral::Output const& output) override;
     void advise_output_update(miral::Output const& updated, miral::Output const& original) override;
     void advise_output_delete(miral::Output const& output) override;
-    void advise_output_end() override;
 
     static const int modifier_mask =
         mir_input_event_modifier_alt |
@@ -116,7 +111,6 @@ private:
     SpinnerSplash spinner;
     miral::InternalClientLauncher const launcher;
     Point old_cursor{};
-    miral::ActiveOutputsMonitor& outputs_monitor;
     Rectangles displays;
     bool dirty_tiles = false;
 

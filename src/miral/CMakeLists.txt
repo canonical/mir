@@ -20,6 +20,7 @@ set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 add_library(mirclientcpp INTERFACE)
 
 add_library(miral-internal STATIC
+    active_outputs.cpp                  active_outputs.h
     basic_window_manager.cpp            basic_window_manager.h window_manager_tools_implementation.h
     coordinate_translator.cpp           coordinate_translator.h
     display_configuration_listeners.cpp display_configuration_listeners.h
@@ -33,7 +34,6 @@ add_library(miral-internal STATIC
 set_source_files_properties(xcursor.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 
 add_library(miral SHARED
-    active_outputs.cpp                  ${miral_include}/miral/active_outputs.h
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
     application.cpp                     ${miral_include}/miral/application.h
     application_authorizer.cpp          ${miral_include}/miral/application_authorizer.h

@@ -32,3 +32,6 @@ void miral::WindowManagementPolicy::advise_delete_window(WindowInfo const& /*win
 void miral::WindowManagementPolicy::advise_raise(std::vector<Window> const& /*windows*/) {}
 void miral::WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<Workspace> const&, std::vector<Window> const&) {}
 void miral::WindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<Workspace> const&, std::vector<Window> const&) {}
+void miral::WindowManagementPolicy::advise_output_create(Output const& /*output*/) {}
+void miral::WindowManagementPolicy::advise_output_update(Output const& /*updated*/, Output const& /*original*/) {}
+void miral::WindowManagementPolicy::advise_output_delete(Output const& /*output*/) {}

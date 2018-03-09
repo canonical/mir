@@ -30,6 +30,7 @@ namespace miral
 class Window;
 class WindowSpecification;
 struct ApplicationInfo;
+class Output;
 struct WindowInfo;
 
 /**
@@ -248,6 +249,14 @@ public:
      * @param edge          the edge(s) being dragged
      */
     virtual void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) = 0;
+/** @} */
+
+/** @name notification of changes to the (connected, active) outputs.
+ *  @{ */
+    virtual void advise_output_create(Output const& output);
+    virtual void advise_output_update(Output const& updated, Output const& original);
+    virtual void advise_output_delete(Output const& output);
+
 /** @} */
 
     /** Confirm (and optionally adjust) the motion of a child window when the parent is moved.
