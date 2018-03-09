@@ -755,9 +755,7 @@ mf::WaylandConnector::WaylandConnector(
         display_config);
     shell_global = std::make_unique<mf::WlShell>(display.get(), shell, *seat_global);
     data_device_manager_global = std::make_unique<DataDeviceManager>(display.get());
-
-    // The XDG shell support is currently too flaky to enable by default
-    if (getenv("MIR_EXPERIMENTAL_XDG_SHELL"))
+    if (!getenv("MIR_DISABLE_XDG_SHELL_V6_UNSTABLE"))
         xdg_shell_global = std::make_unique<XdgShellV6>(display.get(), shell, *seat_global);
 
     wl_display_init_shm(display.get());
