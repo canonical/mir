@@ -97,7 +97,7 @@ public:
                 MirBufferCallback, void*) override
             {
             }
-            void cancel_requests_with_context(void*) {}
+            void cancel_requests_with_context(void*) override {}
         };
         return std::make_shared<StubBufferFactory>(); 
     }

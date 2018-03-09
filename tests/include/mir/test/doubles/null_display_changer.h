@@ -57,7 +57,7 @@ public:
     {
     }
     void cancel_base_configuration_preview(
-        std::shared_ptr<frontend::Session> const&)
+        std::shared_ptr<frontend::Session> const&) override
     {
     }
 };

@@ -48,7 +48,7 @@ struct StubConnectionConfiguration : client::DefaultConnectionConfiguration
         void wait_for_outstanding_calls() override
         {
         }
-        mir::Fd watch_fd() const
+        mir::Fd watch_fd() const override
         {
             int fd[2];
             if (pipe(fd))
@@ -56,11 +56,11 @@ struct StubConnectionConfiguration : client::DefaultConnectionConfiguration
             mir::Fd{fd[1]};
             return mir::Fd{fd[0]};
         }
-        bool dispatch(mir::dispatch::FdEvents)
+        bool dispatch(mir::dispatch::FdEvents) override
         {
             return true;
         }
-        mir::dispatch::FdEvents relevant_events() const { return {}; }
+        mir::dispatch::FdEvents relevant_events() const override { return {}; }
         int channel_call_count = 0;
     };
 

@@ -144,60 +144,50 @@ public:
     };
     std::shared_ptr<graphics::nested::HostSurface> const surface;
     
-    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(graphics::BufferProperties const&)
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(graphics::BufferProperties const&) override
     {
         return nullptr;
     }
-    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(geometry::Size, MirPixelFormat)
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(geometry::Size, MirPixelFormat) override
     {
         return nullptr;
     }
-    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(geometry::Size, uint32_t, uint32_t)
-    {
-        return nullptr;
-    }
-
-    MirNativeBuffer* get_native_handle(MirBuffer*)
+    std::shared_ptr<graphics::nested::NativeBuffer> create_buffer(geometry::Size, uint32_t, uint32_t) override
     {
         return nullptr;
     }
 
-    MirGraphicsRegion get_graphics_region(MirBuffer*)
-    {
-        return MirGraphicsRegion{ 0, 0, 0, mir_pixel_format_invalid, nullptr } ;
-    }
-
-    std::unique_ptr<graphics::nested::HostSurfaceSpec> create_surface_spec()
+    std::unique_ptr<graphics::nested::HostSurfaceSpec> create_surface_spec() override
     {
         struct NullSpec : graphics::nested::HostSurfaceSpec
         {
             void add_chain(graphics::nested::HostChain&, geometry::Displacement, geometry::Size) override {}
             void add_stream(graphics::nested::HostStream&, geometry::Displacement, geometry::Size) override {}
-            MirWindowSpec* handle() { return nullptr; }
+            MirWindowSpec* handle() override { return nullptr; }
         }; 
         return std::make_unique<NullSpec>();
     }
-    bool supports_passthrough(graphics::BufferUsage)
+    bool supports_passthrough(graphics::BufferUsage) override
     {
         return true;
     }
-    void apply_input_configuration(MirInputConfig const*)
+    void apply_input_configuration(MirInputConfig const*) override
     {
     }
-    optional_value<std::shared_ptr<graphics::MesaAuthExtension>> auth_extension()
-    {
-        return {};
-    }
-    optional_value<std::shared_ptr<graphics::SetGbmExtension>> set_gbm_extension()
+    optional_value<std::shared_ptr<graphics::MesaAuthExtension>> auth_extension() override
     {
         return {};
     }
-    optional_value<mir::Fd> drm_fd()
+    optional_value<std::shared_ptr<graphics::SetGbmExtension>> set_gbm_extension() override
+    {
+        return {};
+    }
+    optional_value<mir::Fd> drm_fd() override
     {
         return {};
     }
     void* request_interface(char const*, int) { return nullptr; }
-    std::vector<mir::ExtensionDescription> extensions() const { return {}; }
+    std::vector<mir::ExtensionDescription> extensions() const override { return {}; }
 };
 
 struct MockHostConnection : StubHostConnection

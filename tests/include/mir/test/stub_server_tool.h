@@ -126,14 +126,14 @@ struct StubServerTool : doubles::StubDisplayServer
     virtual void allocate_buffers(
         mir::protobuf::BufferAllocation const* /*request*/,
         mir::protobuf::Void* /*response*/,
-        google::protobuf::Closure* done)
+        google::protobuf::Closure* done) override
     {
         done->Run();
     }
     void release_buffers(
         mir::protobuf::BufferRelease const* /*request*/,
         mir::protobuf::Void* /*response*/,
-        google::protobuf::Closure* done)
+        google::protobuf::Closure* done) override
     {
         done->Run();
     }

@@ -100,7 +100,7 @@ public:
         return stub_platform->native_display_platform();
     }
 
-    std::vector<mir::ExtensionDescription> extensions() const
+    std::vector<mir::ExtensionDescription> extensions() const override
     {
         return {};
     }
