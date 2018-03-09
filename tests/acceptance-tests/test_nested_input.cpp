@@ -215,7 +215,7 @@ struct NestedInput : public mtd::NestedMockEGL, mtf::HeadlessInProcessServer, Su
         preset_display(mt::fake_shared(display));
     }
 
-    void SetUp()
+    void SetUp() override
     {
         mtf::HeadlessInProcessServer::SetUp();
     }

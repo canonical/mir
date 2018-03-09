@@ -53,7 +53,7 @@ public:
         return mt::build_trivial_configuration();
     }
 
-    std::vector<mir::ExtensionDescription> extensions() const { return {}; }
+    std::vector<mir::ExtensionDescription> extensions() const override { return {}; }
 };
 
 class MockApplyDisplayConfigHostConnection : public SingleDisplayHostConnection
