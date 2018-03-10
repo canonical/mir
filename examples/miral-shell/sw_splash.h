@@ -16,22 +16,21 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIRAL_SHELL_SPINNER_SPLASH_H
-#define MIRAL_SHELL_SPINNER_SPLASH_H
+#ifndef MIRAL_SHELL_SW_SPLASH_H
+#define MIRAL_SHELL_SW_SPLASH_H
 
 #include <mir_toolkit/client_types.h>
 
 #include <memory>
 
-namespace mir { namespace scene { class Session; }}
-
 namespace mir { class Server; namespace scene { class Session; }}
 
-class SpinnerSplash
+// A very simple s/w rendered splash animation
+class SwSplash
 {
 public:
-    SpinnerSplash();
-    ~SpinnerSplash();
+    SwSplash();
+    ~SwSplash();
 
     void operator()(MirConnection* connection);
     void operator()(std::weak_ptr<mir::scene::Session> const& session);
@@ -42,4 +41,4 @@ private:
     std::shared_ptr<Self> const self;
 };
 
-#endif //MIRAL_SHELL_SPINNER_SPLASH_H
+#endif //MIRAL_SHELL_SW_SPLASH_H

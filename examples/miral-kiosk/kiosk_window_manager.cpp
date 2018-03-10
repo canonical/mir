@@ -119,7 +119,7 @@ void KioskWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
 {
     CanonicalWindowManagerPolicy::advise_focus_gained(info);
 
-    if (auto session = splash.session().lock())
+    if (auto session = splash.session())
     {
         auto const& app_info = tools.info_for(session);
 

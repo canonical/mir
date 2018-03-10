@@ -120,10 +120,10 @@ void SwSplash::operator()(std::weak_ptr<mir::scene::Session> const& session)
     self->session = session;
 }
 
-auto SwSplash::session() const -> std::weak_ptr<mir::scene::Session>
+auto SwSplash::session() const -> std::shared_ptr<mir::scene::Session>
 {
     std::lock_guard<decltype(self->mutex)> lock{self->mutex};
-    return self->session;
+    return self->session.lock();
 }
 
 void SwSplash::operator()(MirConnection* connection)

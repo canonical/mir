@@ -38,7 +38,7 @@ struct KioskAuthorizer : miral::ApplicationAuthorizer
     {
         // Allow internal applications and (optionally) only ones that start "immediately"
         // (For the sake of an example "immediately" means while the spash is running)
-        return getpid() == creds.pid() || !startup_only || splash.session().lock();
+        return getpid() == creds.pid() || !startup_only || splash.session();
     }
 
     virtual bool configure_display_is_allowed(miral::ApplicationCredentials const& /*creds*/) override

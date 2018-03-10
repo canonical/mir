@@ -48,7 +48,7 @@ inline PolicyData& policy_data_for(WindowInfo const& info)
 
 FloatingWindowManagerPolicy::FloatingWindowManagerPolicy(
     WindowManagerTools const& tools,
-    SpinnerSplash const& spinner,
+    SwSplash const& spinner,
     miral::InternalClientLauncher const& launcher,
     std::function<void()>& shutdown_hook) :
     CanonicalWindowManagerPolicy(tools),
