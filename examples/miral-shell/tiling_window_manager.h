@@ -19,7 +19,7 @@
 #ifndef MIRAL_SHELL_TILING_WINDOW_MANAGER_H
 #define MIRAL_SHELL_TILING_WINDOW_MANAGER_H
 
-#include "spinner/splash.h"
+#include "sw_splash.h"
 
 #include <miral/application.h>
 #include <miral/window_management_policy.h>
@@ -47,7 +47,7 @@ using namespace mir::geometry;
 class TilingWindowManagerPolicy : public miral::WindowManagementPolicy
 {
 public:
-    explicit TilingWindowManagerPolicy(miral::WindowManagerTools const& tools, SpinnerSplash const& spinner,
+    explicit TilingWindowManagerPolicy(miral::WindowManagerTools const& tools, SwSplash const& spinner,
         miral::InternalClientLauncher const& launcher);
 
     auto place_new_window(
@@ -108,7 +108,7 @@ private:
     void constrain_size_and_place(miral::WindowSpecification& mods, miral::Window const& window, Rectangle const& tile) const;
 
     miral::WindowManagerTools tools;
-    SpinnerSplash spinner;
+    SwSplash spinner;
     miral::InternalClientLauncher const launcher;
     Point old_cursor{};
     Rectangles displays;

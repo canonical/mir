@@ -1,5 +1,5 @@
-add_subdirectory(miral-kiosk)
 add_subdirectory(miral-shell)
+add_subdirectory(miral-kiosk)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
