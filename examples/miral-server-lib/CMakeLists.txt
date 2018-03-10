@@ -1,4 +1,5 @@
 find_package(PIL REQUIRED)
+pkg_check_modules(FREETYPE freetype2 REQUIRED)
 
 function(png2header png header varname)
     add_custom_command(
@@ -26,7 +27,11 @@ add_library(miral-shell-lib STATIC
 set_source_files_properties(decoration_provider.cpp PROPERTIES COMPILE_FLAGS
     "${CMAKE_CXX_FLAGS}  -Wno-overlength-strings")
 
-pkg_check_modules(FREETYPE freetype2 REQUIRED)
-target_include_directories(miral-shell-lib PRIVATE ${FREETYPE_INCLUDE_DIRS})
-target_compile_definitions(miral-shell-lib PRIVATE -DTYPO_SUPPORTS_FREETYPE)
-target_link_libraries(miral-shell-lib miral ${FREETYPE_LIBRARIES})
+target_include_directories(miral-shell-lib
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${PROJECT_SOURCE_DIR}/include/client
+    PRIVATE
+        ${FREETYPE_INCLUDE_DIRS}
+)
+target_link_libraries(miral-shell-lib PUBLIC miral mirclient PRIVATE ${FREETYPE_LIBRARIES})
