@@ -1,13 +1,3 @@
-find_package(PIL REQUIRED)
-
-function(png2header png header varname)
-    add_custom_command(
-        OUTPUT ${header}
-        COMMAND python3 ${PROJECT_SOURCE_DIR}/tools/png2header.py ${png} ${varname} > ${header}
-        DEPENDS ${png}  ${PROJECT_SOURCE_DIR}/tools/png2header.py
-    )
-endfunction()
-
 add_subdirectory(desktop)
 
 add_custom_target(miral-run ALL
@@ -58,4 +48,3 @@ target_link_libraries(miral-shell
     miral-shell-lib
     miral
 )
-

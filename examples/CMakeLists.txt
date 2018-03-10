@@ -1,3 +1,5 @@
+add_subdirectory(mirclient)
+
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/miral
   ${PROJECT_SOURCE_DIR}/include/client
@@ -11,4 +13,4 @@ include_directories(
 
 add_subdirectory(miral-shell)
 add_subdirectory(miral-kiosk)
-add_subdirectory(mirclient)
+add_subdirectory(mir_demo_server)
