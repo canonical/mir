@@ -22,7 +22,7 @@
 #include "basic_surface_event_sink.h"
 #include "wl_seat.h"
 #include "wl_surface.h"
-#include "wl_mir_window.h"
+#include "wl_surface_role.h"
 
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/frontend/session.h"
@@ -211,7 +211,7 @@ mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t 
 mf::XdgSurfaceV6::~XdgSurfaceV6()
 {
     auto* const mir_surface = WlSurface::from(surface);
-    mir_surface->set_role(null_wl_mir_window_ptr);
+    mir_surface->set_role(null_wl_surface_role_ptr);
 }
 
 void mf::XdgSurfaceV6::destroy()

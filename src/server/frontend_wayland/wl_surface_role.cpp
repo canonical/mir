@@ -16,12 +16,13 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include <mir/shell/surface_specification.h>
-#include "wl_mir_window.h"
+#include "wl_surface_role.h"
 
 #include "wayland_utils.h"
 #include "wl_surface.h"
 #include "basic_surface_event_sink.h"
+
+#include "mir/shell/surface_specification.h"
 
 #include "mir/frontend/shell.h"
 #include "mir/frontend/session.h"
@@ -37,18 +38,18 @@ namespace frontend
 
 namespace
 {
-class NullWlMirWindow : public WlMirWindow
+class NullWlSurfaceRole : public WlSurfaceRole
 {
 public:
-    void new_buffer_size(geometry::Size const& /*buffer_size*/) {}
-    void invalidate_buffer_list() {}
-    void commit() {}
-    void visiblity(bool /*visible*/) {}
-    void destroy() {}
-} null_wl_mir_window_instance;
+    void new_buffer_size(geometry::Size const& /*buffer_size*/) override {}
+    void invalidate_buffer_list() override {}
+    void commit() override {}
+    void visiblity(bool /*visible*/) override {}
+    void destroy() override {}
+} null_wl_surface_role_instance;
 }
 
-WlMirWindow* const null_wl_mir_window_ptr = &null_wl_mir_window_instance;
+WlSurfaceRole* const null_wl_surface_role_ptr = &null_wl_surface_role_instance;
 
 namespace
 {
@@ -133,18 +134,18 @@ void WlAbstractMirWindow::commit()
         return;
     }
 
-    auto* const mir_surface = WlSurface::from(surface);
+    auto* const wl_surface = WlSurface::from(surface);
     if (params->size == geometry::Size{})
         params->size = window_size.is_set() ? window_size.value() : latest_buffer_size;
     if (params->size == geometry::Size{})
         params->size = geometry::Size{640, 480};
 
     params->streams = std::vector<shell::StreamSpecification>{};
-    mir_surface->populate_buffer_list(params->streams.value());
+    wl_surface->populate_buffer_list(params->streams.value());
     buffer_list_needs_refresh = false;
 
     surface_id = shell->create_surface(session, *params, sink);
-    mir_surface->surface_id = surface_id;
+    wl_surface->surface_id = surface_id;
 
     // The shell isn't guaranteed to respect the requested size
     auto const window = session->get_surface(surface_id);

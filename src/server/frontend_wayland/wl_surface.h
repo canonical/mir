@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
- *              William Wold <william.wold@canonical.com>
  */
 
 #ifndef MIR_FRONTEND_WL_SURFACE_H
@@ -26,7 +25,8 @@
 
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/frontend/surface_id.h"
-#include <mir/geometry/displacement.h>
+
+#include "mir/geometry/displacement.h"
 
 #include <vector>
 
@@ -46,7 +46,7 @@ struct StreamSpecification;
 namespace frontend
 {
 class BufferStream;
-class WlMirWindow;
+class WlSurfaceRole;
 class WlSubsurface;
 
 class WlSurface : public wayland::Surface
@@ -63,7 +63,7 @@ public:
     std::shared_ptr<bool> destroyed_flag() const { return destroyed; }
     geometry::Displacement const& buffer_offset() const { return buffer_offset_; }
 
-    void set_role(WlMirWindow* role_);
+    void set_role(WlSurfaceRole* role_);
     void set_buffer_offset(geometry::Displacement const& offset) { return buffer_offset_ = offset; }
     std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> add_child(WlSubsurface* child);
     void invalidate_buffer_list();
@@ -81,7 +81,7 @@ private:
     std::shared_ptr<mir::graphics::WaylandAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
 
-    WlMirWindow* role;
+    WlSurfaceRole* role;
     std::vector<WlSubsurface*> children;
 
     wl_resource* pending_buffer;

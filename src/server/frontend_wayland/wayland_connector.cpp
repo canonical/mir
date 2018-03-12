@@ -19,7 +19,7 @@
 #include "wayland_connector.h"
 
 #include "wayland_utils.h"
-#include "wl_mir_window.h"
+#include "wl_surface_role.h"
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
@@ -333,7 +333,7 @@ public:
     ~WlShellSurface() override
     {
         auto* const mir_surface = WlSurface::from(surface);
-        mir_surface->set_role(null_wl_mir_window_ptr);
+        mir_surface->set_role(null_wl_surface_role_ptr);
     }
 
 protected:

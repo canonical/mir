@@ -87,7 +87,7 @@ struct SurfaceSpecification
     optional_value<std::weak_ptr<scene::Surface>> parent;
 
     optional_value<std::vector<geometry::Rectangle>> input_shape;
-    
+
     // TODO scene::SurfaceCreationParameters overlaps this content but has additional fields:
     //    geometry::Point top_left;
     //    input::InputReceptionMode input_mode;
