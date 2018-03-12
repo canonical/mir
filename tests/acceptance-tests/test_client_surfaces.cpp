@@ -61,6 +61,14 @@ struct MockWindowManagementPolicy : mtf::CanonicalWindowManagerPolicy
         miral::WindowSpecification(miral::ApplicationInfo const& app_info, miral::WindowSpecification const& request_parameters));
 
     MOCK_METHOD1(advise_new_window, void (miral::WindowInfo const& window_info));
+
+    void handle_request_drag_and_drop(miral::WindowInfo& /*window_info*/) {}
+    void handle_request_move(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/) {}
+    void handle_request_resize(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/, MirResizeEdge /*edge*/) {}
+    mg::Rectangle confirm_placement_on_display(const miral::WindowInfo&, MirWindowState, mir::geometry::Rectangle const& new_placement)
+    {
+        return new_placement;
+    }
 };
 
 struct ClientSurfaces : mtf::ConnectedClientHeadlessServer

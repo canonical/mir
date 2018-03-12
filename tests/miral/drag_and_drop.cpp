@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include <miral/window_management_policy_addendum2.h>
+#include <miral/window_management_policy.h>
 
 #include <mir/client/blob.h>
 #include <mir/client/cookie.h>
@@ -546,7 +546,7 @@ auto DragAndDrop::count_of_handles_when_moving_mouse() -> int
 
 auto DragAndDrop::build_window_manager_policy(miral::WindowManagerTools const& tools) -> std::unique_ptr<TestWindowManagerPolicy>
 {
-    struct DnDWindowManagerPolicy : miral::TestServer::TestWindowManagerPolicy, miral::WindowManagementPolicyAddendum2
+    struct DnDWindowManagerPolicy : miral::TestServer::TestWindowManagerPolicy
     {
         using miral::TestServer::TestWindowManagerPolicy::TestWindowManagerPolicy;
 

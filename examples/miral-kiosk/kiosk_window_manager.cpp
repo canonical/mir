@@ -162,3 +162,22 @@ void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, Win
 
     CanonicalWindowManagerPolicy::handle_modify_window(window_info, specification);
 }
+
+void KioskWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*window_info*/)
+{
+}
+
+void KioskWindowManagerPolicy::handle_request_move(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/)
+{
+}
+
+void KioskWindowManagerPolicy::handle_request_resize(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/, MirResizeEdge /*edge*/)
+{
+}
+
+Rectangle
+KioskWindowManagerPolicy::confirm_placement_on_display(WindowInfo const& /*window_info*/, MirWindowState /*new_state*/,
+    Rectangle const& new_placement)
+{
+    return new_placement;
+}

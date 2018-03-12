@@ -61,6 +61,16 @@ struct KioskAuthorizer : miral::ApplicationAuthorizer
         return false;
     }
 
+    bool configure_input_is_allowed(miral::ApplicationCredentials const& /*creds*/) override
+    {
+        return false;
+    }
+
+    bool set_base_input_configuration_is_allowed(miral::ApplicationCredentials const& /*creds*/) override
+    {
+        return false;
+    }
+
     static std::atomic<bool> startup_only;
 
     SwSplash splash;

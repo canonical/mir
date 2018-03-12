@@ -19,8 +19,6 @@
 #include "miral/window_info.h"
 #include "window_info_defaults.h"
 
-#include "both_versions.h"
-
 #include <mir/scene/surface.h>
 #include <mir/version.h>
 
@@ -195,9 +193,6 @@ bool miral::WindowInfo::must_have_parent() const
     }
 }
 
-MIRAL_BOTH_VERSIONS(
-    _ZNK5miral10WindowInfo12can_morph_toE14MirSurfaceType,
-    _ZNK5miral10WindowInfo12can_morph_toE13MirWindowType)
 bool miral::WindowInfo::can_morph_to(MirWindowType new_type) const
 {
     switch (new_type)
@@ -390,9 +385,6 @@ void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_s
     requested_size = new_size;
 }
 
-MIRAL_BOTH_VERSIONS(
-    _ZN5miral10WindowInfo14needs_titlebarE14MirSurfaceType,
-    _ZN5miral10WindowInfo14needs_titlebarE13MirWindowType)
 bool miral::WindowInfo::needs_titlebar(MirWindowType type)
 {
     switch (type)
@@ -414,9 +406,6 @@ auto miral::WindowInfo::type() const -> MirWindowType
     return self->type;
 }
 
-MIRAL_BOTH_VERSIONS(
-    _ZN5miral10WindowInfo4typeE14MirSurfaceType,
-    _ZN5miral10WindowInfo4typeE13MirWindowType)
 void miral::WindowInfo::type(MirWindowType type)
 {
     self->type = type;
@@ -427,9 +416,6 @@ auto miral::WindowInfo::state() const -> MirWindowState
     return self->state;
 }
 
-MIRAL_BOTH_VERSIONS(
-    _ZN5miral10WindowInfo5stateE15MirSurfaceState,
-    _ZN5miral10WindowInfo5stateE14MirWindowState)
 void miral::WindowInfo::state(MirWindowState state)
 {
     self->state = state;
