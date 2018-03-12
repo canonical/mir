@@ -61,7 +61,7 @@ void mf::WlTouch::handle_event(MirInputEvent const* event, wl_resource* target)
 
             auto const input_ev = mir_event_get_input_event(ev);
             auto const touch_ev = mir_input_event_get_touch_event(input_ev);
-            auto const buffer_offset = WlSurface::from(target)->buffer_offset;
+            auto const buffer_offset = WlSurface::from(target)->buffer_offset();
 
             for (auto i = 0u; i < mir_touch_event_point_count(touch_ev); ++i)
             {

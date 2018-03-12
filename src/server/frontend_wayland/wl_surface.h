@@ -22,6 +22,8 @@
 
 #include "generated/wayland_wrapper.h"
 
+#include "double_buffered.h"
+
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/frontend/surface_id.h"
 #include <mir/geometry/displacement.h>
@@ -58,14 +60,16 @@ public:
 
     ~WlSurface();
 
+    std::shared_ptr<bool> destroyed_flag() const { return destroyed; }
+    geometry::Displacement const& buffer_offset() const { return buffer_offset_; }
+
     void set_role(WlMirWindow* role_);
-    std::shared_ptr<bool> destroyed_flag() const;
+    void set_buffer_offset(geometry::Displacement const& offset) { return buffer_offset_ = offset; }
     std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> add_child(WlSubsurface* child);
     void invalidate_buffer_list();
     void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const;
 
     mir::frontend::BufferStreamId stream_id;
-    geometry::Displacement buffer_offset;
     std::shared_ptr<mir::frontend::BufferStream> stream;
     mir::frontend::SurfaceId surface_id;       // ID of any associated surface
 
@@ -81,6 +85,7 @@ private:
     std::vector<WlSubsurface*> children;
 
     wl_resource* pending_buffer;
+    DoubleBuffered<geometry::Displacement> buffer_offset_;
     std::shared_ptr<std::vector<wl_resource*>> const pending_frames;
     std::shared_ptr<bool> const destroyed;
 
