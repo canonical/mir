@@ -27,7 +27,7 @@
 #include "miral-shell/tiling_window_manager.h"
 #include "miral-shell/floating_window_manager.h"
 #include "miral-shell/titlebar_config.h"
-#include "miral-shell/spinner/splash.h"
+#include "miral-shell/sw_splash.h"
 
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
@@ -129,13 +129,12 @@ try
     std::function<void()> shutdown_hook{[]{}};
     runner.add_stop_callback([&] { shutdown_hook(); });
 
-    SpinnerSplash spinner;
+    SwSplash spinner;
     miral::InternalClientLauncher launcher;
-    miral::ActiveOutputsMonitor outputs_monitor;
     miral::WindowManagerOptions window_managers
         {
             miral::add_window_manager_policy<FloatingWindowManagerPolicy>("floating", spinner, launcher, shutdown_hook),
-            miral::add_window_manager_policy<TilingWindowManagerPolicy>("tiling", spinner, launcher, outputs_monitor),
+            miral::add_window_manager_policy<TilingWindowManagerPolicy>("tiling", spinner, launcher),
         };
 
     InputFilters input_filters;

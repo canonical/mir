@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -23,12 +23,21 @@
 #include <mir/geometry/rectangles.h>
 #include <mir_toolkit/event.h>
 
+#include <memory>
+
 namespace miral
 {
 class Window;
 class WindowSpecification;
 struct ApplicationInfo;
+class Output;
 struct WindowInfo;
+
+/**
+ * Workspace is intentionally opaque in the miral API. Its only purpose is to
+ * provide a shared_ptr which is used as an identifier.
+ */
+class Workspace;
 
 using namespace mir::geometry;
 
@@ -75,6 +84,21 @@ public:
      * @param window_info   the window
      */
     virtual void handle_raise_window(WindowInfo& window_info) = 0;
+
+    /** Confirm (and optionally adjust) the placement of a window on the display.
+     * Called when (re)placing fullscreen, maximized, horizontally maximised and
+     * vertically maximized windows to allow adjustment for decorations.
+     *
+     * @param window_info   the window
+     * @param new_state     the new state
+     * @param new_placement the suggested placement
+     *
+     * @return the confirmed placement of the window
+     */
+    virtual auto confirm_placement_on_display(
+        WindowInfo const& window_info,
+        MirWindowState new_state,
+        Rectangle const& new_placement) -> Rectangle = 0;
 /** @} */
 
 /** @name handle events originating from user
@@ -171,6 +195,68 @@ public:
      * \note The relative Z-order of these windows will be maintained, they will be raised en bloc.
      */
     virtual void advise_raise(std::vector<Window> const& windows);
+/** @} */
+
+/** @name notification of WM events that the policy may need to track.
+ *  @{ */
+
+    /** Notification that windows are being added to a workspace.
+     *  These windows are ordered with parents before children,
+     *  and form a single tree rooted at the first element.
+     *
+     * @param workspace   the workspace
+     * @param windows   the windows
+     */
+    virtual void advise_adding_to_workspace(
+        std::shared_ptr<Workspace> const& workspace,
+        std::vector<Window> const& windows);
+
+    /** Notification that windows are being removed from a workspace.
+     *  These windows are ordered with parents before children,
+     *  and form a single tree rooted at the first element.
+     *
+     * @param workspace   the workspace
+     * @param windows   the windows
+     */
+    virtual void advise_removing_from_workspace(
+        std::shared_ptr<Workspace> const& workspace,
+        std::vector<Window> const& windows);
+/** @} */
+
+/** @name handle requests originating from the client
+ * The policy is expected to update the model as appropriate
+ *  @{ */
+    /** request from client to initiate drag and drop
+     * \note the request has already been validated against the requesting event
+     *
+     * @param window_info   the window
+     */
+    virtual void handle_request_drag_and_drop(WindowInfo& window_info) = 0;
+
+    /** request from client to initiate move
+     * \note the request has already been validated against the requesting event
+     *
+     * @param window_info   the window
+     * @param input_event   the requesting event
+     */
+    virtual void handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event) = 0;
+
+    /** request from client to initiate resize
+     * \note the request has already been validated against the requesting event
+     *
+     * @param window_info   the window
+     * @param input_event   the requesting event
+     * @param edge          the edge(s) being dragged
+     */
+    virtual void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) = 0;
+/** @} */
+
+/** @name notification of changes to the (connected, active) outputs.
+ *  @{ */
+    virtual void advise_output_create(Output const& output);
+    virtual void advise_output_update(Output const& updated, Output const& original);
+    virtual void advise_output_delete(Output const& output);
+
 /** @} */
 
     /** Confirm (and optionally adjust) the motion of a child window when the parent is moved.
