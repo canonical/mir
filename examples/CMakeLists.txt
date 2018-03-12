@@ -11,6 +11,8 @@ include_directories(
   ${GL_INCLUDE_DIRS}
 )
 
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
+
 if (MIR_ENABLE_TESTS)
   add_executable(mir_symbol_test
       uses_non_client_symbol.cpp
