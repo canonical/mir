@@ -23,7 +23,7 @@
 
 #include "miral/window_management_policy.h"
 #include "miral/window_info.h"
-#include "miral/active_outputs.h"
+#include "active_outputs.h"
 #include "miral/application.h"
 #include "miral/application_info.h"
 #include "mru_window_list.h"
@@ -214,10 +214,6 @@ private:
     std::shared_ptr<DeadWorkspaces> const dead_workspaces{std::make_shared<DeadWorkspaces>()};
 
     std::unique_ptr<WindowManagementPolicy> const policy;
-    WorkspacePolicy* const workspace_policy;
-    WindowManagementPolicyAddendum2* const policy2;
-    WindowManagementPolicyAddendum3* const policy3;
-    WindowManagementPolicyAddendum4* const policy4;
 
     std::mutex mutex;
     SessionInfoMap app_info;
@@ -225,9 +221,7 @@ private:
     mir::geometry::Rectangles outputs;
     mir::geometry::Point cursor;
     uint64_t last_input_event_timestamp{0};
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     MirEvent const* last_input_event{nullptr};
-#endif
     miral::MRUWindowList mru_active_windows;
     std::set<Window> fullscreen_surfaces;
     std::set<Window> maximized_surfaces;

@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include <miral/workspace_policy.h>
+#include <miral/window_management_policy.h>
 #include <miral/window_manager_tools.h>
 
 #include <mir/client/surface.h>
@@ -45,7 +45,7 @@ std::string const another_window{"another window"};
 
 struct Workspaces;
 
-struct WorkspacesWindowManagerPolicy : miral::TestServer::TestWindowManagerPolicy, miral::WorkspacePolicy
+struct WorkspacesWindowManagerPolicy : miral::TestServer::TestWindowManagerPolicy
 {
     WorkspacesWindowManagerPolicy(WindowManagerTools const& tools, Workspaces& test_fixture);
     ~WorkspacesWindowManagerPolicy();

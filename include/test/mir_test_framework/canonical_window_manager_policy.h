@@ -32,6 +32,14 @@ struct CanonicalWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
     bool handle_pointer_event(MirPointerEvent const*) override { return false; }
 
     bool handle_touch_event(MirTouchEvent const*) override { return false; }
+
+    mir::geometry::Rectangle confirm_placement_on_display(
+        miral::WindowInfo const&,
+        MirWindowState,
+        mir::geometry::Rectangle const& new_placement)
+    {
+        return new_placement;
+    }
 };
 }
 

@@ -20,12 +20,8 @@
 #define MIRAL_SHELL_FLOATING_WINDOW_MANAGER_H
 
 #include <miral/canonical_window_manager.h>
-#include <miral/window_management_policy_addendum2.h>
-#include <miral/window_management_policy_addendum3.h>
-#include <miral/window_management_policy_addendum4.h>
-#include <miral/workspace_policy.h>
 
-#include "spinner/splash.h"
+#include "sw_splash.h"
 
 #include <chrono>
 #include <map>
@@ -36,14 +32,12 @@ using namespace mir::geometry;
 
 class DecorationProvider;
 
-class FloatingWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy,
-    public miral::WorkspacePolicy, public miral::WindowManagementPolicyAddendum3,
-    public miral::WindowManagementPolicyAddendum2, public miral::WindowManagementPolicyAddendum4
+class FloatingWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy
 {
 public:
     FloatingWindowManagerPolicy(
         miral::WindowManagerTools const& tools,
-        SpinnerSplash const& spinner,
+        SwSplash const& spinner,
         miral::InternalClientLauncher const& launcher,
         std::function<void()>& shutdown_hook);
     ~FloatingWindowManagerPolicy();
@@ -118,7 +112,7 @@ private:
     Point resize_top_left;
     Size resize_size;
 
-    SpinnerSplash const spinner;
+    SwSplash const spinner;
 
     std::unique_ptr<DecorationProvider> const decoration_provider;
 

@@ -72,20 +72,12 @@ void TilingWindowManagerPolicy::MRUTileList::enumerate(Enumerator const& enumera
 
 TilingWindowManagerPolicy::TilingWindowManagerPolicy(
     WindowManagerTools const& tools,
-    SpinnerSplash const& spinner,
-    miral::InternalClientLauncher const& launcher,
-    miral::ActiveOutputsMonitor& outputs_monitor) :
+    SwSplash const& spinner,
+    miral::InternalClientLauncher const& launcher) :
     tools{tools},
     spinner{spinner},
-    launcher{launcher},
-    outputs_monitor{outputs_monitor}
+    launcher{launcher}
 {
-    outputs_monitor.add_listener(this);
-}
-
-TilingWindowManagerPolicy::~TilingWindowManagerPolicy()
-{
-    outputs_monitor.delete_listener(this);
 }
 
 void TilingWindowManagerPolicy::click(Point cursor)
@@ -672,39 +664,43 @@ void TilingWindowManagerPolicy::advise_end()
 
 void TilingWindowManagerPolicy::advise_output_create(const Output& output)
 {
-    live_displays.add(output.extents());
-    dirty_displays = true;
+    displays.add(output.extents());
+    dirty_tiles = true;
 }
 
 void TilingWindowManagerPolicy::advise_output_update(const Output& updated, const Output& original)
 {
     if (!equivalent_display_area(updated, original))
     {
-        live_displays.remove(original.extents());
-        live_displays.add(updated.extents());
+        displays.remove(original.extents());
+        displays.add(updated.extents());
 
-        dirty_displays = true;
+        dirty_tiles = true;
     }
 }
 
 void TilingWindowManagerPolicy::advise_output_delete(Output const& output)
 {
-    live_displays.remove(output.extents());
-    dirty_displays = true;
+    displays.remove(output.extents());
+    dirty_tiles = true;
 }
 
-void TilingWindowManagerPolicy::advise_output_end()
+void TilingWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*window_info*/)
 {
-    if (dirty_displays)
-    {
-        // Need to acquire lock before accessing outputs & dirty_tiles
-        tools.invoke_under_lock([this]
-            {
-                displays = live_displays;
-                update_tiles(displays);
-                dirty_tiles = false;
-            });
+}
 
-        dirty_displays = false;
-    }
+void TilingWindowManagerPolicy::handle_request_move(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/)
+{
+}
+
+void TilingWindowManagerPolicy::handle_request_resize(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/, MirResizeEdge /*edge*/)
+{
+}
+
+Rectangle TilingWindowManagerPolicy::confirm_placement_on_display(
+    WindowInfo const& /*window_info*/,
+    MirWindowState /*new_state*/,
+    Rectangle const& new_placement)
+{
+    return new_placement; // TODO constrain this
 }

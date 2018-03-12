@@ -83,6 +83,16 @@ struct TestServer::TestWindowManagerPolicy : CanonicalWindowManagerPolicy
     bool handle_keyboard_event(MirKeyboardEvent const*) override { return false; }
     bool handle_pointer_event(MirPointerEvent const*) override { return false; }
     bool handle_touch_event(MirTouchEvent const*) override { return false; }
+    void handle_request_drag_and_drop(miral::WindowInfo&) override {}
+    void handle_request_move(miral::WindowInfo&, MirInputEvent const*) override {}
+    void handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge) override {}
+    mir::geometry::Rectangle confirm_placement_on_display(
+        const miral::WindowInfo&,
+        MirWindowState,
+        mir::geometry::Rectangle const& new_placement)
+    {
+        return new_placement;
+    }
 };
 
 }

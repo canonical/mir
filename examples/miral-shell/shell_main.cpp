@@ -19,7 +19,7 @@
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "titlebar_config.h"
-#include "spinner/splash.h"
+#include "sw_splash.h"
 
 #include <miral/display_configuration_option.h>
 #include <miral/runner.h>
@@ -39,13 +39,12 @@ int main(int argc, char const* argv[])
 
     std::function<void()> shutdown_hook{[]{}};
 
-    SpinnerSplash spinner;
+    SwSplash spinner;
     InternalClientLauncher launcher;
-    ActiveOutputsMonitor outputs_monitor;
     WindowManagerOptions window_managers
         {
             add_window_manager_policy<FloatingWindowManagerPolicy>("floating", spinner, launcher, shutdown_hook),
-            add_window_manager_policy<TilingWindowManagerPolicy>("tiling", spinner, launcher, outputs_monitor),
+            add_window_manager_policy<TilingWindowManagerPolicy>("tiling", spinner, launcher),
         };
 
     MirRunner runner{argc, argv};
@@ -87,7 +86,6 @@ int main(int argc, char const* argv[])
             window_managers,
             display_configuration_options,
             launcher,
-            outputs_monitor,
             config_keymap,
             debug_extensions,
             AppendEventFilter{quit_on_ctrl_alt_bksp},
