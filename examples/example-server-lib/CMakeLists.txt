@@ -15,7 +15,7 @@ png2header(
     mir_peace_wall
 )
 
-add_library(miral-shell-lib STATIC
+add_library(example-shell-lib STATIC
     tiling_window_manager.cpp   tiling_window_manager.h
     floating_window_manager.cpp floating_window_manager.h
     decoration_provider.cpp     decoration_provider.h
@@ -27,11 +27,11 @@ add_library(miral-shell-lib STATIC
 set_source_files_properties(decoration_provider.cpp PROPERTIES COMPILE_FLAGS
     "${CMAKE_CXX_FLAGS}  -Wno-overlength-strings")
 
-target_include_directories(miral-shell-lib
+target_include_directories(example-shell-lib
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/include/client
     PRIVATE
         ${FREETYPE_INCLUDE_DIRS}
 )
-target_link_libraries(miral-shell-lib PUBLIC miral mirclient PRIVATE ${FREETYPE_LIBRARIES})
+target_link_libraries(example-shell-lib PUBLIC miral mirclient PRIVATE ${FREETYPE_LIBRARIES})

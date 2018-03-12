@@ -45,6 +45,5 @@ mir_add_wrapped_executable(miral-shell
 )
 
 target_link_libraries(miral-shell
-    miral-shell-lib
-    miral
+    example-shell-lib
 )

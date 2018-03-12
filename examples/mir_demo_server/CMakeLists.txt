@@ -27,8 +27,7 @@ add_library(mir_demo_server_loadable MODULE
 )
 
 target_link_libraries(mir_demo_server_loadable
-  miral-shell-lib
-  miral
+  example-shell-lib
   exampleserverconfig
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
