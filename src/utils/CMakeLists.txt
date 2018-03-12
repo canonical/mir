@@ -12,7 +12,7 @@ target_link_libraries(mirout mirclient m)
 
 if (MIR_EGL_SUPPORTED)
 mir_add_wrapped_executable(mirvanity vanity.c)
-target_include_directories(mirvanity PRIVATE ${PROJECT_SOURCE_DIR}/examples/mirclient)
+target_include_directories(mirvanity PRIVATE ${PROJECT_SOURCE_DIR}/examples)
 target_link_libraries(mirvanity eglapp)
 endif()
 
