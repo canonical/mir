@@ -1,5 +1,9 @@
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -Wall -fno-strict-aliasing -Wextra")
 
+include_directories(
+  ${PROJECT_SOURCE_DIR}/include/client
+)
+
 add_library(mirdraw STATIC graphics_utils.cpp graphics.h)
 target_include_directories(mirdraw PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -23,16 +27,6 @@ target_link_libraries     (mir_demo_client_flicker mirclient ${Boost_LIBRARIES} 
 
 mir_add_wrapped_executable(mir_demo_client_prompt_session prompt_session.c)
 target_link_libraries     (mir_demo_client_prompt_session mirclient)
-
-include_directories(
-  ${PROJECT_SOURCE_DIR}/include/miral
-  ${PROJECT_SOURCE_DIR}/include/server
-  ${PROJECT_SOURCE_DIR}/include/client
-  ${PROJECT_SOURCE_DIR}/include/platform
-  ${PROJECT_SOURCE_DIR}/include/renderers/gl
-  ${PROJECT_SOURCE_DIR}/include/renderers/sw
-  ${GL_INCLUDE_DIRS}
-)
 
 if (MIR_ENABLE_TESTS)
   add_executable(mir_symbol_test

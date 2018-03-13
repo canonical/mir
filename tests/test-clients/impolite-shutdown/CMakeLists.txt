@@ -1,5 +1,3 @@
-include_directories(${PROJECT_SOURCE_DIR}/examples)
-
 mir_add_wrapped_executable(mir_test_client_impolite_shutdown
   scroll.cpp
 )
