@@ -94,12 +94,14 @@ void mf::WlSurface::invalidate_buffer_list()
     role->invalidate_buffer_list();
 }
 
-void mf::WlSurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const
+void mf::WlSurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers,
+                                         geometry::Displacement const& parent_offset) const
 {
-    buffers.push_back({stream_id, buffer_offset_, {}});
+    geometry::Displacement offset = parent_offset + buffer_offset_;
+    buffers.push_back({stream_id, offset, {}});
     for (WlSubsurface* subsurface : children)
     {
-        subsurface->populate_buffer_list(buffers);
+        subsurface->populate_buffer_list(buffers, offset);
     }
 }
 

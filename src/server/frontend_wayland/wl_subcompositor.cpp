@@ -55,9 +55,10 @@ mf::WlSubsurface::~WlSubsurface()
     surface->set_role(null_wl_surface_role_ptr);
 }
 
-void mf::WlSubsurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const
+void mf::WlSubsurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers,
+                                            geometry::Displacement const& parent_offset) const
 {
-    surface->populate_buffer_list(buffers);
+    surface->populate_buffer_list(buffers, parent_offset);
 }
 
 void mf::WlSubsurface::set_position(int32_t x, int32_t y)

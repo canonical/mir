@@ -55,7 +55,8 @@ public:
                  WlSurface* parent_surface);
     ~WlSubsurface();
 
-    void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const;
+    void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers,
+                              geometry::Displacement const& parent_offset) const;
 
 private:
     void set_position(int32_t x, int32_t y) override;

@@ -81,7 +81,8 @@ public:
     void set_buffer_offset(geometry::Displacement const& offset) { pending.buffer_offset = offset; }
     std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> add_child(WlSubsurface* child);
     void invalidate_buffer_list();
-    void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const;
+    void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers,
+                              geometry::Displacement const& parent_offset) const;
     void commit(WlSurfaceState const& state);
 
     mir::frontend::BufferStreamId stream_id;
