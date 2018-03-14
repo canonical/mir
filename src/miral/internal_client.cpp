@@ -18,7 +18,6 @@
 
 #include "miral/internal_client.h"
 #include "join_client_threads.h"
-#include "both_versions.h"
 
 #include <mir/fd.h>
 #include <mir/server.h>
@@ -148,16 +147,6 @@ void InternalClientRunner::join_client_thread()
     }
 }
 
-#ifndef __clang__
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZN5miral21StartupInternalClientC1ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt8functionIFvNS_7toolkit10ConnectionEEES7_IFvSt8weak_ptrIN3mir5scene7SessionEEEE,
-    _ZN5miral21StartupInternalClientC1ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt8functionIFvN3mir6client10ConnectionEEES7_IFvSt8weak_ptrINS8_5scene7SessionEEEE)
-#else
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZN5miral21StartupInternalClientC1ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt8functionIFvNS_7toolkit10ConnectionEEES7_IFvSt8weak_ptrIN3mir5scene7SessionEEEE,
-    _ZN5miral21StartupInternalClientC2ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt8functionIFvN3mir6client10ConnectionEEES7_IFvSt8weak_ptrINS8_5scene7SessionEEEE)
-// clang emits a different symbol ---^
-#endif
 miral::StartupInternalClient::StartupInternalClient(
     std::string name,
     std::function<void(mir::client::Connection connection)> client_code,
@@ -192,10 +181,6 @@ void miral::InternalClientLauncher::operator()(mir::Server& server)
     self->server = &server;
 }
 
-
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZNK5miral22InternalClientLauncher6launchERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKSt8functionIFvNS_7toolkit10ConnectionEEERKS9_IFvSt8weak_ptrIN3mir5scene7SessionEEEE,
-    _ZNK5miral22InternalClientLauncher6launchERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKSt8functionIFvN3mir6client10ConnectionEEERKS9_IFvSt8weak_ptrINSA_5scene7SessionEEEE)
 void miral::InternalClientLauncher::launch(
     std::string const& name,
     std::function<void(mir::client::Connection connection)> const& client_code,

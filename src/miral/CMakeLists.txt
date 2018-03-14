@@ -13,13 +13,14 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/server
 )
 
-set(MIRAL_ABI 2)
+set(MIRAL_ABI 3)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
 add_library(mirclientcpp INTERFACE)
 
 add_library(miral-internal STATIC
+    active_outputs.cpp                  active_outputs.h
     basic_window_manager.cpp            basic_window_manager.h window_manager_tools_implementation.h
     coordinate_translator.cpp           coordinate_translator.h
     display_configuration_listeners.cpp display_configuration_listeners.h
@@ -27,14 +28,13 @@ add_library(miral-internal STATIC
     window_management_trace.cpp         window_management_trace.h
     xcursor_loader.cpp                  xcursor_loader.h
     xcursor.c                           xcursor.h
-                                        both_versions.h
                                         join_client_threads.h
+                                        window_info_defaults.h
 )
 
 set_source_files_properties(xcursor.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 
 add_library(miral SHARED
-    active_outputs.cpp                  ${miral_include}/miral/active_outputs.h
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
     application.cpp                     ${miral_include}/miral/application.h
     application_authorizer.cpp          ${miral_include}/miral/application_authorizer.h
@@ -56,14 +56,9 @@ add_library(miral SHARED
     set_command_line_handler.cpp        ${miral_include}/miral/set_command_line_handler.h
     set_terminator.cpp                  ${miral_include}/miral/set_terminator.h
     set_window_management_policy.cpp    ${miral_include}/miral/set_window_management_policy.h
-    workspace_policy.cpp                ${miral_include}/miral/workspace_policy.h
     window_management_policy.cpp        ${miral_include}/miral/window_management_policy.h
     window_manager_tools.cpp            ${miral_include}/miral/window_manager_tools.h
-                                        ${miral_include}/miral/window_management_policy_addendum2.h
-                                        ${miral_include}/miral/window_management_policy_addendum3.h
-                                        ${miral_include}/miral/window_management_policy_addendum4.h
                                         ${miral_include}/miral/lambda_as_function.h
-                                        window_info_defaults.h
 )
 
 check_cxx_compiler_flag(-Wno-attribute-alias HAS_W_NO_ATTRIBUTE_ALIAS)

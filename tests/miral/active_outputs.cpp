@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "miral/active_outputs.h"
+#include "active_outputs.h"
 #include "miral/output.h"
 
 #include <mir/shell/display_configuration_controller.h>
