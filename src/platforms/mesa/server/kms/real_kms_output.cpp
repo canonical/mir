@@ -578,7 +578,7 @@ void mgm::RealKMSOutput::update_from_hardware_state(
 
     /* Fallback for VMWare which fails to specify a matching current mode (bug:1661295) */
     if (current_mode_index == invalid_mode_index) {
-        for (int m = 0; m < connector->count_modes; m++) {
+        for (int m = 0; m != connector->count_modes; ++m) {
             drmModeModeInfo &mode_info = connector->modes[m];
 
             if (strcmp(mode_info.name, "preferred") == 0)
@@ -586,9 +586,10 @@ void mgm::RealKMSOutput::update_from_hardware_state(
         }
     }
 
-    if (current_mode_index == invalid_mode_index)
+    if (current_mode_index == invalid_mode_index) {
         mir::log_warning(
-            "Unable to determine the current mode.");
+            "Unable to determine the current display mode.");
+    }
 
     output.type = type;
     output.modes = modes;
