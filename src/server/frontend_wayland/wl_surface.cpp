@@ -42,21 +42,14 @@ mf::WlSurface::WlSurface(
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<graphics::WaylandAllocator> const& allocator)
     : Surface(client, parent, id),
+        session{mf::get_session(client)},
+        stream_id{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
+        stream{session->get_buffer_stream(stream_id)},
         allocator{allocator},
         executor{executor},
         role{null_wl_surface_role_ptr},
         destroyed{std::make_shared<bool>(false)}
 {
-    auto session = get_session(client);
-    graphics::BufferProperties const props{
-        geometry::Size{geometry::Width{0}, geometry::Height{0}},
-        mir_pixel_format_invalid,
-        graphics::BufferUsage::undefined
-    };
-
-    stream_id = session->create_buffer_stream(props);
-    stream = session->get_buffer_stream(stream_id);
-
     // wl_surface is specified to act in mailbox mode
     stream->allow_framedropping(true);
 }
@@ -64,8 +57,7 @@ mf::WlSurface::WlSurface(
 mf::WlSurface::~WlSurface()
 {
     *destroyed = true;
-    if (auto session = get_session(client))
-        session->destroy_buffer_stream(stream_id);
+    session->destroy_buffer_stream(stream_id);
 }
 
 void mf::WlSurface::set_role(WlSurfaceRole* role_)

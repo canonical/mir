@@ -45,6 +45,7 @@ struct StreamSpecification;
 namespace frontend
 {
 class BufferStream;
+class Session;
 class WlSurfaceRole;
 class WlSubsurface;
 
@@ -84,8 +85,9 @@ public:
     void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const;
     void commit(WlSurfaceState const& state);
 
-    mir::frontend::BufferStreamId stream_id;
-    std::shared_ptr<mir::frontend::BufferStream> stream;
+    std::shared_ptr<mir::frontend::Session> const session;
+    mir::frontend::BufferStreamId const stream_id;
+    std::shared_ptr<mir::frontend::BufferStream> const stream;
     mir::frontend::SurfaceId surface_id;       // ID of any associated surface
 
     static WlSurface* from(wl_resource* resource);
