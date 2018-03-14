@@ -19,13 +19,13 @@
 #ifndef MIR_GRAPHICS_MESA_LINUX_VIRTUAL_TERMINAL_H_
 #define MIR_GRAPHICS_MESA_LINUX_VIRTUAL_TERMINAL_H_
 
-#include "../../../include/platform/mir/console_services.h"
+#include "mir/console_services.h"
 
-#include "../../../../../../../../usr/include/c++/8/memory"
+#include <memory>
 
-#include "../../../../../../../../usr/include/linux/vt.h"
-#include "../../../../../../../../usr/include/termios.h"
-#include "../../../../../../../../usr/include/unistd.h"
+#include <linux/vt.h>
+#include <termios.h>
+#include <unistd.h>
 
 namespace mir
 {
