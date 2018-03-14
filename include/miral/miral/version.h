@@ -31,7 +31,7 @@
  *
  * See also: http://semver.org/
  */
-#define MIRAL_MAJOR_VERSION (3)
+#define MIRAL_MAJOR_VERSION (2)
 
 /**
  * MIRAL_MINOR_VERSION
