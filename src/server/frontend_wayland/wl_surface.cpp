@@ -44,8 +44,6 @@ mf::WlSurface::WlSurface(
         allocator{allocator},
         executor{executor},
         role{null_wl_surface_role_ptr},
-        pending_buffer{nullptr},
-        pending_frames{std::make_shared<std::vector<wl_resource*>>()},
         destroyed{std::make_shared<bool>(false)}
 {
     auto session = get_session(client);
@@ -77,11 +75,16 @@ void mf::WlSurface::set_role(WlSurfaceRole* role_)
 std::unique_ptr<mf::WlSurface, std::function<void(mf::WlSurface*)>> mf::WlSurface::add_child(WlSubsurface* child)
 {
     children.push_back(child);
+
     return std::unique_ptr<WlSurface, std::function<void(WlSurface*)>>(
         this,
         [child=child](WlSurface* self)
         {
-            self->remove_child(child);
+            // remove the child from the vector
+            self->children.erase(std::remove(self->children.begin(),
+                                             self->children.end(),
+                                             child),
+                                 self->children.end());
         });
 }
 
@@ -105,11 +108,6 @@ mf::WlSurface* mf::WlSurface::from(wl_resource* resource)
     return static_cast<WlSurface*>(static_cast<wayland::Surface*>(raw_surface));
 }
 
-void mf::WlSurface::remove_child(WlSubsurface* child)
-{
-    children.erase(std::remove(children.begin(), children.end(), child), children.end());
-}
-
 void mf::WlSurface::destroy()
 {
     *destroyed = true;
@@ -126,7 +124,7 @@ void mf::WlSurface::attach(std::experimental::optional<wl_resource*> const& buff
 
     role->visiblity(!!buffer);
 
-    pending_buffer = buffer.value_or(nullptr);
+    pending.buffer = buffer.value_or(nullptr);
 }
 
 void mf::WlSurface::damage(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -149,7 +147,7 @@ void mf::WlSurface::damage_buffer(int32_t x, int32_t y, int32_t width, int32_t h
 
 void mf::WlSurface::frame(uint32_t callback)
 {
-    pending_frames->emplace_back(
+    pending.frame_callbacks->emplace_back(
         wl_resource_create(client, &wl_callback_interface, 1, callback));
 }
 
@@ -165,15 +163,19 @@ void mf::WlSurface::set_input_region(std::experimental::optional<wl_resource*> c
 
 void mf::WlSurface::commit()
 {
-    buffer_offset_.commit();
-    if (pending_buffer)
+    wl_resource * pending_buffer = pending.buffer.value_or(nullptr);
+
+    if (pending.buffer_offset)
+        buffer_offset_ = pending.buffer_offset.value();
+
+    if (pending_buffer != nullptr)
     {
         auto send_frame_notifications =
-            [executor = executor, frames = pending_frames, destroyed = destroyed]()
+            [executor = executor, frames = std::move(*pending.frame_callbacks), destroyed = destroyed]() mutable
             {
                 executor->spawn(run_unless(
                     destroyed,
-                    [frames]()
+                    [frames = std::move(frames)]()
                     {
                         /*
                          * There is no synchronisation required here -
@@ -183,12 +185,11 @@ void mf::WlSurface::commit()
                          * The only other accessors of WlSurface are also on the wl_event_loop,
                          * so this is guaranteed not to be reentrant.
                          */
-                        for (auto frame : *frames)
+                        for (auto frame : frames)
                         {
                             wl_callback_send_done(frame, 0);
                             wl_resource_destroy(frame);
                         }
-                        frames->clear();
                     }));
             };
 
@@ -235,6 +236,8 @@ void mf::WlSurface::commit()
     {
         role->commit();
     }
+
+    pending = WlSurfaceState();
 }
 
 void mf::WlSurface::set_buffer_transform(int32_t transform)
