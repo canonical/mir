@@ -112,10 +112,11 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     // ensure mesa finds the mesa mir-platform symbols
     auto real_fops = std::make_shared<RealVTFileOperations>();
     auto real_pops = std::unique_ptr<RealPosixProcessOperations>(new RealPosixProcessOperations{});
+    auto const vtnum = options->is_set(vt_option_name) ? options->get<int>(vt_option_name) : 0;
     auto vt = std::make_shared<mgm::LinuxVirtualTerminal>(
         real_fops,
         std::move(real_pops),
-        options->get<int>(vt_option_name),
+        vtnum,
         report);
 
     auto bypass_option = mgm::BypassOption::allowed;
@@ -131,8 +132,8 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
     config.add_options()
         (vt_option_name,
-         boost::program_options::value<int>()->default_value(0),
-         "[platform-specific] VT to run on or 0 to use current.")
+         boost::program_options::value<int>(),
+         "[platform-specific] VT to run on.")
         (bypass_option_name,
          boost::program_options::value<bool>()->default_value(true),
          "[platform-specific] utilize the bypass optimization for fullscreen surfaces.");
@@ -143,12 +144,6 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
     auto const unparsed_arguments = options.unparsed_command_line();
     auto platform_option_used = false;
-
-    for (auto const& token : unparsed_arguments)
-    {
-        if (token == (std::string("--") + vt_option_name))
-            platform_option_used = true;
-    }
 
     if (options.is_set(vt_option_name))
         platform_option_used = true;
