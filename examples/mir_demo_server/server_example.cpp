@@ -24,10 +24,10 @@
 #include "server_example_test_client.h"
 #include "server_example_input_device_config.h"
 
-#include "miral-shell/tiling_window_manager.h"
-#include "miral-shell/floating_window_manager.h"
-#include "miral-shell/titlebar_config.h"
-#include "miral-shell/spinner/splash.h"
+#include "tiling_window_manager.h"
+#include "floating_window_manager.h"
+#include "titlebar_config.h"
+#include "sw_splash.h"
 
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
@@ -129,7 +129,7 @@ try
     std::function<void()> shutdown_hook{[]{}};
     runner.add_stop_callback([&] { shutdown_hook(); });
 
-    SpinnerSplash spinner;
+    SwSplash spinner;
     miral::InternalClientLauncher launcher;
     miral::WindowManagerOptions window_managers
         {

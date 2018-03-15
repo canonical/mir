@@ -72,7 +72,7 @@ void TilingWindowManagerPolicy::MRUTileList::enumerate(Enumerator const& enumera
 
 TilingWindowManagerPolicy::TilingWindowManagerPolicy(
     WindowManagerTools const& tools,
-    SpinnerSplash const& spinner,
+    SwSplash const& spinner,
     miral::InternalClientLauncher const& launcher) :
     tools{tools},
     spinner{spinner},

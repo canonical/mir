@@ -19,7 +19,7 @@
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "titlebar_config.h"
-#include "spinner/splash.h"
+#include "sw_splash.h"
 
 #include <miral/display_configuration_option.h>
 #include <miral/runner.h>
@@ -39,7 +39,7 @@ int main(int argc, char const* argv[])
 
     std::function<void()> shutdown_hook{[]{}};
 
-    SpinnerSplash spinner;
+    SwSplash spinner;
     InternalClientLauncher launcher;
     WindowManagerOptions window_managers
         {
