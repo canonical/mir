@@ -145,12 +145,6 @@ mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& options)
     auto const unparsed_arguments = options.unparsed_command_line();
     auto platform_option_used = false;
 
-    for (auto const& token : unparsed_arguments)
-    {
-        if (token == (std::string("--") + vt_option_name))
-            platform_option_used = true;
-    }
-
     if (options.is_set(vt_option_name))
         platform_option_used = true;
     auto nested = options.is_set(host_socket);
