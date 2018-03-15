@@ -132,8 +132,12 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
 
                     auto x = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x)-buffer_offset.dx.as_int();
                     auto y = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y)-buffer_offset.dy.as_int();
-                    auto vscroll = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_vscroll);
-                    auto hscroll = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_hscroll);
+
+                    // libinput < 0.8 sent wheel click events with value 10. Since 0.8 the value is the angle of the click in
+                    // degrees. To keep backwards-compat with existing clients, we just send multiples of the click count.
+                    // Ref: https://github.com/wayland-project/weston/blob/master/libweston/libinput-device.c#L184
+                    auto vscroll = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_vscroll) * 10;
+                    auto hscroll = mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_hscroll) * 10;
 
                     if ((x != last_x) || (y != last_y))
                     {
@@ -149,7 +153,7 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
                         if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
                             wl_pointer_send_frame(resource);
                     }
-                    if (vscroll != last_vscroll)
+                    if (vscroll != 0)
                     {
                         wl_pointer_send_axis(
                             resource,
@@ -157,20 +161,16 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
                             WL_POINTER_AXIS_VERTICAL_SCROLL,
                             wl_fixed_from_double(vscroll));
 
-                        last_vscroll = vscroll;
-
                         if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
                             wl_pointer_send_frame(resource);
                     }
-                    if (hscroll != last_hscroll)
+                    if (hscroll != 0)
                     {
                         wl_pointer_send_axis(
                             resource,
                             mir_input_event_get_event_time(event) / 1000,
                             WL_POINTER_AXIS_HORIZONTAL_SCROLL,
                             wl_fixed_from_double(hscroll));
-
-                        last_hscroll = hscroll;
 
                         if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
                             wl_pointer_send_frame(resource);
