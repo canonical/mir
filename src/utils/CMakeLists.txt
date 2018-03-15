@@ -11,8 +11,12 @@ mir_add_wrapped_executable(mirout out.c)
 target_link_libraries(mirout mirclient m)
 
 if (MIR_EGL_SUPPORTED)
-mir_add_wrapped_executable(mirvanity vanity.c)
-target_link_libraries(mirvanity eglapp)
+    mir_add_wrapped_executable(mirvanity vanity.c)
+    target_link_libraries(mirvanity eglapp)
+else()
+    add_custom_target(mirvanity ALL
+        cp ${CMAKE_CURRENT_SOURCE_DIR}/mirvanity.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mirvanity
+    )
 endif()
 
 mir_add_wrapped_executable(mirin in.cpp)
