@@ -25,7 +25,7 @@ mir (0.31.0) UNRELEASED; urgency=medium
       . Explicitly initialise glm matricies, (Fixes #200)
       . KMS platform - fallback if crtc mode invalid (LP: #1661295)
 
- -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 15 Mar 2018 11:00:00 +0000
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 15 Mar 2018 11:21:00 +0000
 
 mir (0.29.0) UNRELEASED; urgency=medium
 
