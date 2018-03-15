@@ -55,7 +55,7 @@ private:
     std::shared_ptr<bool> const destroyed;
 
     MirPointerButtons last_set{0};
-    float last_x{0}, last_y{0}, last_vscroll{0}, last_hscroll{0};
+    float last_x{0}, last_y{0};
 
     void set_cursor(uint32_t serial, std::experimental::optional<wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) override;
     void release() override;
