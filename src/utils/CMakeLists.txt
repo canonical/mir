@@ -17,6 +17,9 @@ else()
     add_custom_target(mirvanity ALL
         cp ${CMAKE_CURRENT_SOURCE_DIR}/mirvanity.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mirvanity
     )
+    install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mirvanity
+        DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
 endif()
 
 mir_add_wrapped_executable(mirin in.cpp)
