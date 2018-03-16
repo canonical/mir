@@ -88,9 +88,11 @@ ifneq ($(filter bionic,$(DEB_DISTRIBUTION)),)
 else
 ifneq ($(filter artful,$(DEB_DISTRIBUTION)),)
 	dh_install -pmir-utils usr/bin/mirvanity
+	dh_install
 else
 	# xenial, yakkety & zesty predate dh_missing
 	dh_install --fail-missing -pmir-utils usr/bin/mirvanity
+	dh_install --fail-missing
 endif
 endif
 
