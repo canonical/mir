@@ -64,7 +64,6 @@ public:
 class WlSurface : public wayland::Surface
 {
 public:
-
     WlSurface(wl_client* client,
               wl_resource* parent,
               uint32_t id,
@@ -81,6 +80,7 @@ public:
     std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> add_child(WlSubsurface* child);
     void invalidate_buffer_list();
     void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const;
+    void commit(WlSurfaceState const& state);
 
     mir::frontend::BufferStreamId stream_id;
     std::shared_ptr<mir::frontend::BufferStream> stream;

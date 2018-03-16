@@ -22,6 +22,7 @@
 #include "wl_surface_role.h"
 #include "wl_subcompositor.h"
 #include "wlshmbuffer.h"
+#include "deleted_for_resource.h"
 
 #include "generated/wayland_wrapper.h"
 
@@ -161,20 +162,20 @@ void mf::WlSurface::set_input_region(std::experimental::optional<wl_resource*> c
     (void)region;
 }
 
-void mf::WlSurface::commit()
+void mf::WlSurface::commit(WlSurfaceState const& state)
 {
-    wl_resource * pending_buffer = pending.buffer.value_or(nullptr);
+    if (state.buffer_offset)
+        buffer_offset_ = state.buffer_offset.value();
 
-    if (pending.buffer_offset)
-        buffer_offset_ = pending.buffer_offset.value();
+    wl_resource * buffer = state.buffer.value_or(nullptr);
 
-    if (pending_buffer != nullptr)
+    if (buffer != nullptr)
     {
         auto send_frame_notifications =
-            [executor = executor, frames = std::move(*pending.frame_callbacks), destroyed = destroyed]() mutable
+            [executor = executor, frames = std::move(*state.frame_callbacks)]() mutable
             {
-                executor->spawn(run_unless(
-                    destroyed,
+                executor->spawn(
+                    // no run_unless() is needed because no object is used but frames and they are not destroyed elsewhere
                     [frames = std::move(frames)]()
                     {
                         /*
@@ -190,20 +191,22 @@ void mf::WlSurface::commit()
                             wl_callback_send_done(frame, 0);
                             wl_resource_destroy(frame);
                         }
-                    }));
+                    });
             };
 
         std::shared_ptr<graphics::Buffer> mir_buffer;
 
-        if (wl_shm_buffer_get(pending_buffer))
+        if (wl_shm_buffer_get(buffer))
         {
             mir_buffer = WlShmBuffer::mir_buffer_from_wl_buffer(
-                pending_buffer,
+                buffer,
                 std::move(send_frame_notifications));
         }
         else
         {
-            auto release_buffer = [executor = executor, buffer = pending_buffer, destroyed = destroyed]()
+            std::shared_ptr<bool> buffer_destroyed = deleted_flag_for_resource(buffer);
+
+            auto release_buffer = [executor = executor, buffer = buffer, destroyed = buffer_destroyed]()
                 {
                     executor->spawn(run_unless(
                         destroyed,
@@ -211,7 +214,7 @@ void mf::WlSurface::commit()
                 };
 
             mir_buffer = allocator->buffer_from_resource(
-                    pending_buffer,
+                    buffer,
                     std::move(send_frame_notifications),
                     std::move(release_buffer));
         }
@@ -226,17 +229,14 @@ void mf::WlSurface::commit()
          * TODO: Provide a mg::Buffer::logical_size() to do this properly.
          */
         stream->resize(mir_buffer->size());
-        role->new_buffer_size(mir_buffer->size());
-        role->commit();
         stream->submit_buffer(mir_buffer);
-
-        pending_buffer = nullptr;
+        role->new_buffer_size(mir_buffer->size());
     }
-    else
-    {
-        role->commit();
-    }
+}
 
+void mf::WlSurface::commit()
+{
+    role->commit(std::move(pending));
     pending = WlSurfaceState();
 }
 
