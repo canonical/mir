@@ -32,9 +32,11 @@ ifeq ($(DEB_HOST_ARCH),s390x)
 endif
 
 # Disable Mir EGL on Ubuntu 18.04 even if mesa has "Mir EGL" patch
-ifneq ($(filter buster/sid,$(call dpkg_late_eval,DEBIAN_VERSION,cat /etc/debian_version)),)
+ifneq ($(filter bionic,$(call dpkg_late_eval,UBUNTU_RELEASE,lsb_release --codename --short)),)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_EGL_SUPPORTED=OFF
 endif
+
+$(info COMMON_CONFIGURE_OPTIONS: ${COMMON_CONFIGURE_OPTIONS})
 
 override_dh_auto_configure:
 ifneq ($(filter armhf,$(DEB_HOST_ARCH)),)
