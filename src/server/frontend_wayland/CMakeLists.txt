@@ -20,7 +20,7 @@ set(
   wl_touch.cpp                  wl_touch.h
   xdg_shell_v6.cpp              xdg_shell_v6.h
                                 double_buffered.h
-)
+  deleted_for_resource.cpp       deleted_for_resource.h)
 
 add_library(
   mirfrontend-wayland OBJECT
