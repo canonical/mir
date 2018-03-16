@@ -82,18 +82,11 @@ override_dh_install:
 # Delete the symlink so that --fail-missing doesn't think we've missed it
 # accidentally.
 	-rm debian/tmp/usr/lib/*/libmirprotobuf.so
-
-ifneq ($(filter bionic,$(DEB_DISTRIBUTION)),)
-	dh_install
-else
-ifneq ($(filter artful,$(DEB_DISTRIBUTION)),)
+ifneq ($(filter xenial artful,$(DEB_DISTRIBUTION)),)
 	dh_install -pmir-utils usr/bin/mirvanity
 	dh_install
 else
-	# xenial, yakkety & zesty predate dh_missing
-	dh_install --fail-missing -pmir-utils usr/bin/mirvanity
-	dh_install --fail-missing
-endif
+	dh_install
 endif
 
 # Don't try to strip libraries used as test data
