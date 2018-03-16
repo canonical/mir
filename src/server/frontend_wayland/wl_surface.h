@@ -25,6 +25,7 @@
 #include "mir/frontend/surface_id.h"
 
 #include "mir/geometry/displacement.h"
+#include "mir/geometry/size.h"
 
 #include <vector>
 
@@ -74,6 +75,7 @@ public:
 
     std::shared_ptr<bool> destroyed_flag() const { return destroyed; }
     geometry::Displacement buffer_offset() const { return buffer_offset_; }
+    geometry::Size buffer_size() const { return buffer_size_; }
 
     void set_role(WlSurfaceRole* role_);
     void set_buffer_offset(geometry::Displacement const& offset) { pending.buffer_offset = offset; }
@@ -97,6 +99,7 @@ private:
 
     WlSurfaceState pending;
     geometry::Displacement buffer_offset_;
+    geometry::Size buffer_size_;
     std::shared_ptr<bool> const destroyed;
 
     void destroy() override;

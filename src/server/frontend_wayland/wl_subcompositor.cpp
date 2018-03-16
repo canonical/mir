@@ -92,12 +92,6 @@ void mf::WlSubsurface::destroy()
     wl_resource_destroy(resource);
 }
 
-void mf::WlSubsurface::new_buffer_size(geometry::Size const& buffer_size)
-{
-    (void)buffer_size;
-    // TODO
-}
-
 void mf::WlSubsurface::invalidate_buffer_list()
 {
     parent->invalidate_buffer_list();

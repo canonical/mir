@@ -332,8 +332,7 @@ public:
 
     ~WlShellSurface() override
     {
-        auto* const mir_surface = WlSurface::from(surface);
-        mir_surface->set_role(null_wl_surface_role_ptr);
+        surface->set_role(null_wl_surface_role_ptr);
     }
 
 protected:
@@ -344,9 +343,7 @@ protected:
 
     void set_toplevel() override
     {
-        auto* const mir_surface = WlSurface::from(surface);
-
-        mir_surface->set_role(this);
+        surface->set_role(this);
     }
 
     void set_transient(
@@ -381,8 +378,7 @@ protected:
             params->aux_rect_placement_offset_x = 0;
             params->aux_rect_placement_offset_y = 0;
 
-            auto* const mir_surface = WlSurface::from(surface);
-            mir_surface->set_role(this);
+            surface->set_role(this);
         }
     }
 
@@ -445,8 +441,7 @@ protected:
             params->aux_rect_placement_offset_x = 0;
             params->aux_rect_placement_offset_y = 0;
 
-            auto* const mir_surface = WlSurface::from(surface);
-            mir_surface->set_role(this);
+            surface->set_role(this);
         }
     }
 
