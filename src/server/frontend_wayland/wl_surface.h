@@ -48,10 +48,12 @@ class BufferStream;
 class WlSurfaceRole;
 class WlSubsurface;
 
-class WlSurfaceState
+struct WlSurfaceState
 {
-public:
     WlSurfaceState(): frame_callbacks{std::make_unique<std::vector<wl_resource*>>()} {}
+
+    // if you add variables, don't forget to update this
+    void update_from(WlSurfaceState const& source);
 
     // NOTE: buffer can be both nullopt and nullptr (I know, sounds dumb, but bare with me)
     // if it's nullopt, there is not a new buffer and no value should be copied to current state

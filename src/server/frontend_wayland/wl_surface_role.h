@@ -44,7 +44,7 @@ namespace frontend
 class Shell;
 class BasicSurfaceEventSink;
 class WlSurface;
-class WlSurfaceState;
+struct WlSurfaceState;
 
 class WlSurfaceRole
 {

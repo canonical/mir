@@ -67,10 +67,18 @@ bool mf::WlSubsurface::synchronized() const
     return synchronized_ || parent->synchronized();
 }
 
+void mf::WlSubsurface::parent_has_committed()
+{
+    if (cached_state && synchronized())
+    {
+        surface->commit(std::move(cached_state.value()));
+        cached_state = std::experimental::nullopt;
+    }
+}
+
 void mf::WlSubsurface::set_position(int32_t x, int32_t y)
 {
     surface->set_buffer_offset(geom::Displacement{x, y});
-    // TODO
 }
 
 void mf::WlSubsurface::place_above(struct wl_resource* sibling)
@@ -87,12 +95,12 @@ void mf::WlSubsurface::place_below(struct wl_resource* sibling)
 
 void mf::WlSubsurface::set_sync()
 {
-    // TODO
+    synchronized_ = true;
 }
 
 void mf::WlSubsurface::set_desync()
 {
-    // TODO
+    synchronized_ = false;
 }
 
 void mf::WlSubsurface::destroy()
@@ -107,9 +115,25 @@ void mf::WlSubsurface::invalidate_buffer_list()
 
 void mf::WlSubsurface::commit(WlSurfaceState const& state)
 {
-    surface->commit(state);
-    invalidate_buffer_list();
-    // TODO: if in desync mode, immediately make the buffer get rendered
+    if (synchronized())
+    {
+        if (!cached_state)
+            cached_state = WlSurfaceState();
+
+        cached_state.value().update_from(state);
+    }
+    else
+    {
+        if (cached_state) // unusual
+        {
+            cached_state.value().update_from(state);
+            surface->commit(std::move(cached_state.value()));
+        }
+        else
+        {
+            surface->commit(state);
+        }
+    }
 }
 
 void mf::WlSubsurface::visiblity(bool visible)

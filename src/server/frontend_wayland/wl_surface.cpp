@@ -35,6 +35,19 @@
 
 namespace mf = mir::frontend;
 
+void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
+{
+    if (source.buffer)
+        buffer = source.buffer;
+
+    if (source.buffer_offset)
+        buffer_offset = source.buffer_offset;
+
+    frame_callbacks->insert(frame_callbacks->end(),
+                            source.frame_callbacks->begin(),
+                            source.frame_callbacks->end());
+}
+
 mf::WlSurface::WlSurface(
     wl_client* client,
     wl_resource* parent,
@@ -242,6 +255,11 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         buffer_size_ = mir_buffer->size();
         stream->resize(buffer_size_);
         stream->submit_buffer(mir_buffer);
+    }
+
+    for (WlSubsurface* child: children)
+    {
+        child->parent_has_committed();
     }
 }
 

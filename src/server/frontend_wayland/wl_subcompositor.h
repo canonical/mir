@@ -22,6 +22,7 @@
 
 #include "generated/wayland_wrapper.h"
 #include "wl_surface_role.h"
+#include "wl_surface.h"
 
 #include <vector>
 #include <memory>
@@ -60,6 +61,8 @@ public:
 
     bool synchronized() const override;
 
+    void parent_has_committed();
+
 private:
     void set_position(int32_t x, int32_t y) override;
     void place_above(struct wl_resource* sibling) override;
@@ -78,6 +81,7 @@ private:
     // see WlSurface::add_child() for details
     std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> parent;
     bool synchronized_;
+    std::experimental::optional<WlSurfaceState> cached_state;
 };
 
 }
