@@ -68,6 +68,11 @@ mf::WlSurface::~WlSurface()
         session->destroy_buffer_stream(stream_id);
 }
 
+bool mf::WlSurface::synchronized() const
+{
+    return role->synchronized();
+}
+
 void mf::WlSurface::set_role(WlSurfaceRole* role_)
 {
     role = role_;
@@ -171,7 +176,11 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
     wl_resource * buffer = state.buffer.value_or(nullptr);
 
-    if (buffer != nullptr)
+    if (buffer == nullptr)
+    {
+        // TODO: unmap surface, and unmap all subsurfaces
+    }
+    else
     {
         auto send_frame_notifications =
             [executor = executor, frames = std::move(*state.frame_callbacks)]() mutable

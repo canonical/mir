@@ -42,7 +42,8 @@ mf::WlSubsurface::WlSubsurface(struct wl_client* client, struct wl_resource* obj
                                WlSurface* surface, WlSurface* parent_surface)
     : wayland::Subsurface(client, object_parent, id),
       surface{surface},
-      parent{parent_surface->add_child(this)}
+      parent{parent_surface->add_child(this)},
+      synchronized_{true}
 {
     surface->set_role(this);
 }
@@ -59,6 +60,11 @@ void mf::WlSubsurface::populate_buffer_list(std::vector<shell::StreamSpecificati
                                             geometry::Displacement const& parent_offset) const
 {
     surface->populate_buffer_list(buffers, parent_offset);
+}
+
+bool mf::WlSubsurface::synchronized() const
+{
+    return synchronized_ || parent->synchronized();
 }
 
 void mf::WlSubsurface::set_position(int32_t x, int32_t y)

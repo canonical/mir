@@ -76,6 +76,7 @@ public:
     std::shared_ptr<bool> destroyed_flag() const { return destroyed; }
     geometry::Displacement buffer_offset() const { return buffer_offset_; }
     geometry::Size buffer_size() const { return buffer_size_; }
+    bool synchronized() const;
 
     void set_role(WlSurfaceRole* role_);
     void set_buffer_offset(geometry::Displacement const& offset) { pending.buffer_offset = offset; }

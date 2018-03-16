@@ -58,6 +58,8 @@ public:
     void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers,
                               geometry::Displacement const& parent_offset) const;
 
+    bool synchronized() const override;
+
 private:
     void set_position(int32_t x, int32_t y) override;
     void place_above(struct wl_resource* sibling) override;
@@ -72,10 +74,10 @@ private:
     virtual void visiblity(bool visible) override;
 
     WlSurface* surface;
-
     // manages parent/child relationship, but does not manage parent's memory
     // see WlSurface::add_child() for details
     std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> parent;
+    bool synchronized_;
 };
 
 }
