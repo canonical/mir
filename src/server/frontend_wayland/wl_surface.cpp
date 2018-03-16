@@ -225,9 +225,9 @@ void mf::WlSurface::commit()
          * TODO: Provide a mg::Buffer::logical_size() to do this properly.
          */
         stream->resize(mir_buffer->size());
+        stream->submit_buffer(mir_buffer);
         role->new_buffer_size(mir_buffer->size());
         role->commit();
-        stream->submit_buffer(mir_buffer);
 
         pending_buffer = nullptr;
     }
