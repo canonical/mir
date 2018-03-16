@@ -84,6 +84,7 @@ override_dh_install:
 	-rm debian/tmp/usr/lib/*/libmirprotobuf.so
 ifneq ($(filter xenial artful,$(DEB_DISTRIBUTION)),)
 	dh_install -pmir-utils usr/bin/mirvanity
+	-rm -f debian/tmp/usr/bin/mirvanity
 	dh_install
 else
 	dh_install
