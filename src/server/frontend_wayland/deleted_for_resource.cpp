@@ -74,7 +74,7 @@ static_assert(
  * \note    Not threadsafe! Specifically, the value of the flag is only guaranteed to be correct
  *          on the thread handling the Wayland event loop.
  */
-std::shared_ptr<bool> mir::frontend::wayland::deleted_flag_for_resource(wl_resource* resource)
+std::shared_ptr<bool> mir::frontend::deleted_flag_for_resource(wl_resource* resource)
 {
     return DestructionShim::flag_for_resource(resource);
 }

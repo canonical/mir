@@ -16,8 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_WAYLAND_DELETED_FOR_RESOURCE_H_
-#define MIR_FRONTEND_WAYLAND_DELETED_FOR_RESOURCE_H_
+#ifndef MIR_FRONTEND_DELETED_FOR_RESOURCE_H_
+#define MIR_FRONTEND_DELETED_FOR_RESOURCE_H_
 
 #include <memory>
 
@@ -27,11 +27,8 @@ namespace mir
 {
 namespace frontend
 {
-namespace wayland
-{
 std::shared_ptr<bool> deleted_flag_for_resource(wl_resource*resource);
 }
 }
-}
 
-#endif //MIR_FRONTEND_WAYLAND_DELETED_FOR_RESOURCE_H_
+#endif //MIR_FRONTEND_DELETED_FOR_RESOURCE_H_
