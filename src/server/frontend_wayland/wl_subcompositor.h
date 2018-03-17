@@ -68,7 +68,7 @@ private:
 
     virtual void new_buffer_size(geometry::Size const& buffer_size) override;
     void invalidate_buffer_list() override;
-    virtual void commit() override;
+    virtual void commit(WlSurfaceState const& state) override;
     virtual void visiblity(bool visible) override;
 
     WlSurface* surface;

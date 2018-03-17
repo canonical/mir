@@ -43,7 +43,7 @@ class NullWlSurfaceRole : public WlSurfaceRole
 public:
     void new_buffer_size(geometry::Size const& /*buffer_size*/) override {}
     void invalidate_buffer_list() override {}
-    void commit() override {}
+    void commit(WlSurfaceState const& /*state*/) override {}
     void visiblity(bool /*visible*/) override {}
     void destroy() override {}
 } null_wl_surface_role_instance;
@@ -98,8 +98,10 @@ shell::SurfaceSpecification& WlAbstractMirWindow::spec()
     return *pending_changes;
 }
 
-void WlAbstractMirWindow::commit()
+void WlAbstractMirWindow::commit(WlSurfaceState const& state)
 {
+    WlSurface::from(surface)->commit(state);
+
     auto const session = get_session(client);
 
     if (surface_id.as_value())
