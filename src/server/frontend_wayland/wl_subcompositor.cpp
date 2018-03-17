@@ -103,8 +103,9 @@ void mf::WlSubsurface::invalidate_buffer_list()
     parent->invalidate_buffer_list();
 }
 
-void mf::WlSubsurface::commit()
+void mf::WlSubsurface::commit(WlSurfaceState const& state)
 {
+    surface->commit(state);
     invalidate_buffer_list();
     // TODO: if in desync mode, immediately make the buffer get rendered
 }

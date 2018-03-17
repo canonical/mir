@@ -21,8 +21,6 @@
 
 #include "generated/wayland_wrapper.h"
 
-#include "double_buffered.h"
-
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/frontend/surface_id.h"
 
@@ -49,6 +47,20 @@ class BufferStream;
 class WlSurfaceRole;
 class WlSubsurface;
 
+class WlSurfaceState
+{
+public:
+    WlSurfaceState(): frame_callbacks{std::make_unique<std::vector<wl_resource*>>()} {}
+
+    // NOTE: buffer can be both nullopt and nullptr (I know, sounds dumb, but bare with me)
+    // if it's nullopt, there is not a new buffer and no value should be copied to current state
+    // if it's nullptr, there is a new buffer and it is a null buffer, which should replace the current buffer
+    std::experimental::optional<wl_resource*> buffer;
+
+    std::experimental::optional<geometry::Displacement> buffer_offset;
+    std::unique_ptr<std::vector<wl_resource*>> frame_callbacks;
+};
+
 class WlSurface : public wayland::Surface
 {
 public:
@@ -61,13 +73,14 @@ public:
     ~WlSurface();
 
     std::shared_ptr<bool> destroyed_flag() const { return destroyed; }
-    geometry::Displacement const& buffer_offset() const { return buffer_offset_; }
+    geometry::Displacement buffer_offset() const { return buffer_offset_; }
 
     void set_role(WlSurfaceRole* role_);
-    void set_buffer_offset(geometry::Displacement const& offset) { return buffer_offset_ = offset; }
+    void set_buffer_offset(geometry::Displacement const& offset) { pending.buffer_offset = offset; }
     std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> add_child(WlSubsurface* child);
     void invalidate_buffer_list();
     void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const;
+    void commit(WlSurfaceState const& state);
 
     mir::frontend::BufferStreamId stream_id;
     std::shared_ptr<mir::frontend::BufferStream> stream;
@@ -76,17 +89,14 @@ public:
     static WlSurface* from(wl_resource* resource);
 
 private:
-    void remove_child(WlSubsurface* child);
-
     std::shared_ptr<mir::graphics::WaylandAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
 
     WlSurfaceRole* role;
     std::vector<WlSubsurface*> children;
 
-    wl_resource* pending_buffer;
-    DoubleBuffered<geometry::Displacement> buffer_offset_;
-    std::shared_ptr<std::vector<wl_resource*>> const pending_frames;
+    WlSurfaceState pending;
+    geometry::Displacement buffer_offset_;
     std::shared_ptr<bool> const destroyed;
 
     void destroy() override;

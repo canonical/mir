@@ -43,13 +43,15 @@ namespace frontend
 {
 class Shell;
 class BasicSurfaceEventSink;
+class WlSurface;
+class WlSurfaceState;
 
 class WlSurfaceRole
 {
 public:
     virtual void new_buffer_size(geometry::Size const& buffer_size) = 0;
     virtual void invalidate_buffer_list() = 0;
-    virtual void commit() = 0;
+    virtual void commit(WlSurfaceState const& state) = 0;
     virtual void visiblity(bool visible) = 0;
     virtual void destroy() = 0;
     virtual ~WlSurfaceRole() = default;
@@ -84,7 +86,7 @@ private:
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
     bool buffer_list_needs_refresh = true;
 
-    void commit() override;
+    void commit(WlSurfaceState const& state) override;
     void new_buffer_size(geometry::Size const& buffer_size) override;
     void visiblity(bool visible) override;
 };
