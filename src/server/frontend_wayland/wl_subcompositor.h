@@ -66,7 +66,6 @@ private:
 
     void destroy() override; // overrides function in both WlSurfaceRole and wayland::Subsurface
 
-    virtual void new_buffer_size(geometry::Size const& buffer_size) override;
     void invalidate_buffer_list() override;
     virtual void commit(WlSurfaceState const& state) override;
     virtual void visiblity(bool visible) override;

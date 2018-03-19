@@ -228,9 +228,9 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
          *
          * TODO: Provide a mg::Buffer::logical_size() to do this properly.
          */
-        stream->resize(mir_buffer->size());
+        buffer_size_ = mir_buffer->size();
+        stream->resize(buffer_size_);
         stream->submit_buffer(mir_buffer);
-        role->new_buffer_size(mir_buffer->size());
     }
 }
 

@@ -210,8 +210,7 @@ mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t 
 
 mf::XdgSurfaceV6::~XdgSurfaceV6()
 {
-    auto* const mir_surface = WlSurface::from(surface);
-    mir_surface->set_role(null_wl_surface_role_ptr);
+    surface->set_role(null_wl_surface_role_ptr);
 }
 
 void mf::XdgSurfaceV6::destroy()
@@ -222,8 +221,7 @@ void mf::XdgSurfaceV6::destroy()
 void mf::XdgSurfaceV6::get_toplevel(uint32_t id)
 {
     new XdgToplevelV6{client, parent, id, shell, this};
-    auto* const mir_surface = WlSurface::from(surface);
-    mir_surface->set_role(this);
+    surface->set_role(this);
 }
 
 void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner)
@@ -245,17 +243,15 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
     params->placement_hints = mir_placement_hints_slide_any;
 
     new XdgPopupV6{client, parent, id};
-    auto* const mir_surface = WlSurface::from(surface);
-    mir_surface->set_role(this);
+    surface->set_role(this);
 }
 
 void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    auto* const mir_surface = WlSurface::from(surface);
     geom::Displacement const buffer_offset{-x, -y};
 
-    mir_surface->set_buffer_offset(buffer_offset);
-    window_size = geom::Size{width, height};
+    surface->set_buffer_offset(buffer_offset);
+    window_size_ = geom::Size{width, height};
 
     if (surface_id.as_value())
     {

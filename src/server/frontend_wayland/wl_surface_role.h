@@ -49,7 +49,6 @@ class WlSurfaceState;
 class WlSurfaceRole
 {
 public:
-    virtual void new_buffer_size(geometry::Size const& buffer_size) = 0;
     virtual void invalidate_buffer_list() = 0;
     virtual void commit(WlSurfaceState const& state) = 0;
     virtual void visiblity(bool visible) = 0;
@@ -70,24 +69,23 @@ public:
 protected:
     std::shared_ptr<bool> const destroyed;
     wl_client* const client;
-    wl_resource* const surface;
+    WlSurface* const surface;
     wl_resource* const event_sink;
     std::shared_ptr<frontend::Shell> const shell;
     std::shared_ptr<BasicSurfaceEventSink> sink;
 
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
     SurfaceId surface_id;
-    optional_value<geometry::Size> window_size;
+    optional_value<geometry::Size> window_size_;
 
+    geometry::Size window_size();
     shell::SurfaceSpecification& spec();
 
 private:
-    geometry::Size latest_buffer_size;
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
     bool buffer_list_needs_refresh = true;
 
     void commit(WlSurfaceState const& state) override;
-    void new_buffer_size(geometry::Size const& buffer_size) override;
     void visiblity(bool visible) override;
 };
 
