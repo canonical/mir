@@ -41,7 +41,6 @@ namespace
 class NullWlSurfaceRole : public WlSurfaceRole
 {
 public:
-    void new_buffer_size(geometry::Size const& /*buffer_size*/) override {}
     void invalidate_buffer_list() override {}
     void commit(WlSurfaceState const& /*state*/) override {}
     void visiblity(bool /*visible*/) override {}
@@ -63,7 +62,7 @@ WlAbstractMirWindow::WlAbstractMirWindow(wl_client* client, wl_resource* surface
     std::shared_ptr<Shell> const& shell)
         : destroyed{std::make_shared<bool>(false)},
           client{client},
-          surface{surface},
+          surface{WlSurface::from(surface)},
           event_sink{event_sink},
           shell{shell},
           params{std::make_unique<scene::SurfaceCreationParameters>(
@@ -100,7 +99,7 @@ shell::SurfaceSpecification& WlAbstractMirWindow::spec()
 
 void WlAbstractMirWindow::commit(WlSurfaceState const& state)
 {
-    WlSurface::from(surface)->commit(state);
+    surface->commit(state);
 
     auto const session = get_session(client);
 
@@ -108,24 +107,20 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
     {
         auto const scene_surface = get_surface_for_id(session, surface_id);
 
-        if (window_size.is_set())
+        sink->latest_client_size(window_size());
+
+        if (!window_size_.is_set())
         {
-            sink->latest_client_size(window_size.value());
-        }
-        else if (scene_surface->size() != latest_buffer_size)
-        {
-            // If the window side isn't set explicitly assume it matches the latest buffer
-            sink->latest_client_size(latest_buffer_size);
             auto& new_size_spec = spec();
-            new_size_spec.width = latest_buffer_size.width;
-            new_size_spec.height = latest_buffer_size.height;
+            new_size_spec.width = window_size().width;
+            new_size_spec.height = window_size().height;
         }
 
         if (buffer_list_needs_refresh)
         {
             auto& buffer_list_spec = spec();
             buffer_list_spec.streams = std::vector<shell::StreamSpecification>();
-            WlSurface::from(surface)->populate_buffer_list(buffer_list_spec.streams.value());
+            surface->populate_buffer_list(buffer_list_spec.streams.value());
             buffer_list_needs_refresh = false;
         }
 
@@ -136,18 +131,17 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
         return;
     }
 
-    auto* const wl_surface = WlSurface::from(surface);
     if (params->size == geometry::Size{})
-        params->size = window_size.is_set() ? window_size.value() : latest_buffer_size;
+        params->size = window_size();
     if (params->size == geometry::Size{})
         params->size = geometry::Size{640, 480};
 
     params->streams = std::vector<shell::StreamSpecification>{};
-    wl_surface->populate_buffer_list(params->streams.value());
+    surface->populate_buffer_list(params->streams.value());
     buffer_list_needs_refresh = false;
 
     surface_id = shell->create_surface(session, *params, sink);
-    wl_surface->surface_id = surface_id;
+    surface->surface_id = surface_id;
 
     // The shell isn't guaranteed to respect the requested size
     auto const window = session->get_surface(surface_id);
@@ -157,16 +151,28 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
         sink->send_resize(client_size);
 }
 
-void WlAbstractMirWindow::new_buffer_size(geometry::Size const& buffer_size)
+geometry::Size WlAbstractMirWindow::window_size()
 {
-    latest_buffer_size = buffer_size;
-
-    // Sometimes, when using xdg-shell, qterminal creates an insanely tall buffer
-    if (latest_buffer_size.height > geometry::Height{10000})
+    if (window_size_.is_set())
     {
-        log_warning("Insane buffer height sanitized: latest_buffer_size.height = %d (was %d)",
-                    1000, latest_buffer_size.height.as_int());
-        latest_buffer_size.height = geometry::Height{1000};
+        return window_size_.value();
+    }
+    else
+    {
+        auto buffer_size = surface->buffer_size();
+
+        // Sometimes, when using xdg-shell, qterminal creates an insanely tall buffer
+        const auto max_allowed_buffer_height = geometry::Height{10000};
+        const auto corrected_buffer_height   = geometry::Height{1000};
+
+        if (buffer_size.height > max_allowed_buffer_height)
+        {
+            log_warning("Insane buffer height sanitized: buffer_size.height = %d (was %d)",
+                        corrected_buffer_height.as_int(), buffer_size.height.as_int());
+            buffer_size.height = corrected_buffer_height;
+        }
+
+        return buffer_size;
     }
 }
 
