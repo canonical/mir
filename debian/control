@@ -334,7 +334,7 @@ Description: Display server for Ubuntu - shared library
  Contains the shared libraries required for the Mir server and client.
 
 # Longer-term these drivers should move out-of-tree
-Package: mir-platform-graphics-mesa-x13
+Package: mir-platform-graphics-mesa-x14
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -348,7 +348,7 @@ Description: Display server for Ubuntu - platform library for X11 Mesa
  Contains the shared libraries required for the Mir server to interact with
  the X11 platform using the Mesa drivers.
 
-Package: mir-platform-graphics-mesa-kms13
+Package: mir-platform-graphics-mesa-kms14
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -410,8 +410,8 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-mesa-kms13,
-         mir-platform-graphics-mesa-x13,
+         mir-platform-graphics-mesa-kms14,
+         mir-platform-graphics-mesa-x14,
          mir-client-platform-mesa5,
          mir-platform-input-evdev7,
 Description: Display server for Ubuntu - desktop driver metapackage
