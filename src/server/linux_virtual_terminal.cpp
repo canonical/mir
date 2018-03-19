@@ -337,15 +337,14 @@ boost::future<mir::Fd> mir::LinuxVirtualTerminal::acquire_device(int major, int 
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to read DEVNAME"}));
         }(fd);
 
-    boost::promise<mir::Fd> promise;
     auto dev_fd = mir::Fd{fops->open(devnode.c_str(), O_RDWR | O_CLOEXEC)};
     if (dev_fd != mir::Fd::invalid)
     {
-        promise.set_value(std::move(dev_fd));
+        return boost::make_ready_future<Fd>(std::move(dev_fd));
     }
     else
     {
-        promise.set_exception(
+        return boost::make_exceptional_future<Fd>(
             std::make_exception_ptr(
                 boost::enable_error_info(
                     std::system_error{
@@ -355,6 +354,4 @@ boost::future<mir::Fd> mir::LinuxVirtualTerminal::acquire_device(int major, int 
                     << boost::errinfo_file_name(devnode.c_str())
                 ));
     }
-
-    return promise.get_future();
 }
