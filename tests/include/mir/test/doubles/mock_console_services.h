@@ -39,7 +39,19 @@ public:
                       std::function<bool()> const&,
                       std::function<bool()> const&));
     MOCK_METHOD0(restore, void());
-    MOCK_METHOD2(acquire_device, boost::future<mir::Fd>(int,int));
+    MOCK_METHOD2(acquire_device_immediate, mir::Fd(int,int));
+
+    boost::future<mir::Fd> acquire_device(int major, int minor)
+    {
+        try
+        {
+            return boost::make_ready_future(acquire_device_immediate(major, minor));
+        }
+        catch (...)
+        {
+            return boost::make_exceptional_future<mir::Fd>(std::current_exception());
+        }
+    }
 };
 
 }
