@@ -79,6 +79,7 @@ mf::WlSurface::~WlSurface()
     *destroyed = true;
     if (auto session = get_session(client))
         session->destroy_buffer_stream(stream_id);
+    role->destroy();
 }
 
 bool mf::WlSurface::synchronized() const
@@ -132,7 +133,6 @@ mf::WlSurface* mf::WlSurface::from(wl_resource* resource)
 void mf::WlSurface::destroy()
 {
     *destroyed = true;
-    role->destroy();
     wl_resource_destroy(resource);
 }
 
