@@ -42,21 +42,14 @@ mf::WlSurface::WlSurface(
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<graphics::WaylandAllocator> const& allocator)
     : Surface(client, parent, id),
+        session{mf::get_session(client)},
+        stream_id{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
+        stream{session->get_buffer_stream(stream_id)},
         allocator{allocator},
         executor{executor},
         role{null_wl_surface_role_ptr},
         destroyed{std::make_shared<bool>(false)}
 {
-    auto session = get_session(client);
-    graphics::BufferProperties const props{
-        geometry::Size{geometry::Width{0}, geometry::Height{0}},
-        mir_pixel_format_invalid,
-        graphics::BufferUsage::undefined
-    };
-
-    stream_id = session->create_buffer_stream(props);
-    stream = session->get_buffer_stream(stream_id);
-
     // wl_surface is specified to act in mailbox mode
     stream->allow_framedropping(true);
 }
@@ -64,8 +57,7 @@ mf::WlSurface::WlSurface(
 mf::WlSurface::~WlSurface()
 {
     *destroyed = true;
-    if (auto session = get_session(client))
-        session->destroy_buffer_stream(stream_id);
+    session->destroy_buffer_stream(stream_id);
 }
 
 void mf::WlSurface::set_role(WlSurfaceRole* role_)
@@ -148,7 +140,7 @@ void mf::WlSurface::damage_buffer(int32_t x, int32_t y, int32_t width, int32_t h
 
 void mf::WlSurface::frame(uint32_t callback)
 {
-    pending.frame_callbacks->emplace_back(
+    pending.frame_callbacks.emplace_back(
         wl_resource_create(client, &wl_callback_interface, 1, callback));
 }
 
@@ -172,7 +164,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     if (buffer != nullptr)
     {
         auto send_frame_notifications =
-            [executor = executor, frames = std::move(*state.frame_callbacks)]() mutable
+            [executor = executor, frames = std::move(state.frame_callbacks)]() mutable
             {
                 executor->spawn(
                     // no run_unless() is needed because no object is used but frames and they are not destroyed elsewhere

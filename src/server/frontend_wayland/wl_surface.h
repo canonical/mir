@@ -45,21 +45,20 @@ struct StreamSpecification;
 namespace frontend
 {
 class BufferStream;
+class Session;
 class WlSurfaceRole;
 class WlSubsurface;
 
 class WlSurfaceState
 {
 public:
-    WlSurfaceState(): frame_callbacks{std::make_unique<std::vector<wl_resource*>>()} {}
-
     // NOTE: buffer can be both nullopt and nullptr (I know, sounds dumb, but bare with me)
     // if it's nullopt, there is not a new buffer and no value should be copied to current state
     // if it's nullptr, there is a new buffer and it is a null buffer, which should replace the current buffer
     std::experimental::optional<wl_resource*> buffer;
 
     std::experimental::optional<geometry::Displacement> buffer_offset;
-    std::unique_ptr<std::vector<wl_resource*>> frame_callbacks;
+    std::vector<wl_resource*> frame_callbacks;
 };
 
 class WlSurface : public wayland::Surface
@@ -84,8 +83,9 @@ public:
     void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const;
     void commit(WlSurfaceState const& state);
 
-    mir::frontend::BufferStreamId stream_id;
-    std::shared_ptr<mir::frontend::BufferStream> stream;
+    std::shared_ptr<mir::frontend::Session> const session;
+    mir::frontend::BufferStreamId const stream_id;
+    std::shared_ptr<mir::frontend::BufferStream> const stream;
     mir::frontend::SurfaceId surface_id;       // ID of any associated surface
 
     static WlSurface* from(wl_resource* resource);
