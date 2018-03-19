@@ -95,7 +95,7 @@ public:
     {
     }
 
-    boost::unique_future<mir::Fd> acquire_device(int major, int minor) override
+    boost::future<mir::Fd> acquire_device(int major, int minor) override
     {
         /* NOTE: This uses the behaviour that MockDRM will intercept any open() call
          * under /dev/dri/

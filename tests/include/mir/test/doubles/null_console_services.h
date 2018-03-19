@@ -40,7 +40,7 @@ public:
 
     void restore() override {}
 
-    boost::unique_future<Fd> acquire_device(int, int) override { return boost::unique_future<Fd>(); }
+    boost::future<Fd> acquire_device(int, int) override { return boost::future<Fd> (); }
 };
 
 }

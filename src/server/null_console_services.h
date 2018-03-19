@@ -34,7 +34,7 @@ public:
 
     void restore() override {}
 
-    boost::unique_future<Fd> acquire_device(int, int) override
+    boost::future<Fd> acquire_device(int, int) override
     {
         return boost::make_ready_future<Fd>(-1);
     }

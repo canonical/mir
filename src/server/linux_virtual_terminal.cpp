@@ -305,7 +305,7 @@ int mir::LinuxVirtualTerminal::open_vt(int vt_number)
     return vt_fd;
 }
 
-boost::unique_future<mir::Fd> mir::LinuxVirtualTerminal::acquire_device(int major, int minor)
+boost::future<mir::Fd> mir::LinuxVirtualTerminal::acquire_device(int major, int minor)
 {
     std::stringstream filename;
     filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";

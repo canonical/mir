@@ -20,6 +20,8 @@
 #define MIR_PLATFORM_CONSOLE_SERVICES_H_
 
 #include <functional>
+
+#define BOOST_THREAD_PROVIDES_FUTURE
 #include <boost/thread/future.hpp>
 
 namespace mir
@@ -48,7 +50,7 @@ public:
      * \param major             [in] major number of requested device node
      * \param minor             [in] minor number of requested device node
      */
-    virtual boost::unique_future<Fd> acquire_device(int major, int minor) = 0;
+    virtual boost::future<Fd> acquire_device(int major, int minor) = 0;
 
 protected:
     ConsoleServices() = default;

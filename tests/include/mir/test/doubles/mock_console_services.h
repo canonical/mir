@@ -39,7 +39,7 @@ public:
                       std::function<bool()> const&,
                       std::function<bool()> const&));
     MOCK_METHOD0(restore, void());
-    MOCK_METHOD2(acquire_device, boost::unique_future<mir::Fd>(int,int));
+    MOCK_METHOD2(acquire_device, boost::future<mir::Fd>(int,int));
 };
 
 }
