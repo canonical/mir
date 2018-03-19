@@ -33,7 +33,6 @@ namespace doubles
 class MockConsoleServices : public ConsoleServices
 {
 public:
-    MOCK_METHOD0(set_graphics_mode, void());
     MOCK_METHOD3(register_switch_handlers,
                  void(graphics::EventHandlerRegister&,
                       std::function<bool()> const&,
