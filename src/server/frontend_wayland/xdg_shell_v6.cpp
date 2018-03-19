@@ -492,7 +492,7 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
       self{self}
 {
     self->set_notify_resize(
-        [this, client](geom::Size const& new_size, MirWindowState state, bool active)
+        [this](geom::Size const& new_size, MirWindowState state, bool active)
         {
             wl_array states;
             wl_array_init(&states);
