@@ -140,7 +140,7 @@ void mf::WlSurface::damage_buffer(int32_t x, int32_t y, int32_t width, int32_t h
 
 void mf::WlSurface::frame(uint32_t callback)
 {
-    pending.frame_callbacks->emplace_back(
+    pending.frame_callbacks.emplace_back(
         wl_resource_create(client, &wl_callback_interface, 1, callback));
 }
 
@@ -164,7 +164,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     if (buffer != nullptr)
     {
         auto send_frame_notifications =
-            [executor = executor, frames = std::move(*state.frame_callbacks)]() mutable
+            [executor = executor, frames = std::move(state.frame_callbacks)]() mutable
             {
                 executor->spawn(
                     // no run_unless() is needed because no object is used but frames and they are not destroyed elsewhere
