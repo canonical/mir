@@ -141,4 +141,4 @@ dpkg-buildpackage \
     -i"^.git|^build" \
     -d -S
 
-dput ${TARGET_PPA} ../mir_${PPA_VERSION}_source.changes
+dput --debug --debug ${TARGET_PPA} ../mir_${PPA_VERSION}_source.changes
