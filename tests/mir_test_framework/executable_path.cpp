@@ -44,16 +44,16 @@ std::string mir_test_framework::executable_path()
 
 std::string mir_test_framework::library_path()
 {
-    static char libpath[1024];
+    static std::string libpath;
 
-    if (!libpath[0])
+    if (libpath.empty())
     {
         // Try to find the location of libmircommon.so
         Dl_info library_info{nullptr, nullptr, nullptr, nullptr};
         dladdr(reinterpret_cast<void*>(&mir::fatal_error_abort), &library_info);
 
-        strncpy(libpath, library_info.dli_fname, sizeof libpath);
-        dirname(libpath);
+        std::unique_ptr<char, decltype(&std::free)> const tmp{strdup(library_info.dli_fname), &std::free};
+        libpath = dirname(tmp.get());
     }
 
     return libpath;
