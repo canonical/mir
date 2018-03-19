@@ -143,7 +143,12 @@ private:
         memset(prop.get(), 0, sizeof(*prop));
 
         prop->prop_id = id;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas" // Don't worry if g++ doesn't recognise the next
+#pragma GCC diagnostic ignored "-Wstringop-truncation"
         strncpy(prop->name, property.c_str(), sizeof(prop->name));
+#pragma GCC diagnostic pop
 
         allocated_props.insert(prop.get());
         return prop.release();
