@@ -73,6 +73,7 @@ jobs:
     - git fetch --unshallow origin master:master
     script:
     - tools/ppa-upload.sh
+    - lftp -e "help;quit" ppa.launchpad.net
     addons:
       apt:
         packages:
@@ -81,6 +82,7 @@ jobs:
         - dput
         - fakeroot
         - python-launchpadlib
+        - lftp
   - <<: *ppa-upload
     env: RELEASE=17.10
   - <<: *ppa-upload
