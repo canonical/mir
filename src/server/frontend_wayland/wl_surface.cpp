@@ -35,6 +35,19 @@
 
 namespace mf = mir::frontend;
 
+void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
+{
+    if (source.buffer)
+        buffer = source.buffer;
+
+    if (source.buffer_offset)
+        buffer_offset = source.buffer_offset;
+
+    frame_callbacks.insert(end(frame_callbacks),
+                           begin(source.frame_callbacks),
+                           end(source.frame_callbacks));
+}
+
 mf::WlSurface::WlSurface(
     wl_client* client,
     wl_resource* parent,
@@ -58,6 +71,11 @@ mf::WlSurface::~WlSurface()
 {
     *destroyed = true;
     session->destroy_buffer_stream(stream_id);
+}
+
+bool mf::WlSurface::synchronized() const
+{
+    return role->synchronized();
 }
 
 void mf::WlSurface::set_role(WlSurfaceRole* role_)
@@ -86,12 +104,14 @@ void mf::WlSurface::invalidate_buffer_list()
     role->invalidate_buffer_list();
 }
 
-void mf::WlSurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers) const
+void mf::WlSurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers,
+                                         geometry::Displacement const& parent_offset) const
 {
-    buffers.push_back({stream_id, buffer_offset_, {}});
+    geometry::Displacement offset = parent_offset + buffer_offset_;
+    buffers.push_back({stream_id, offset, {}});
     for (WlSubsurface* subsurface : children)
     {
-        subsurface->populate_buffer_list(buffers);
+        subsurface->populate_buffer_list(buffers, offset);
     }
 }
 
@@ -104,7 +124,6 @@ mf::WlSurface* mf::WlSurface::from(wl_resource* resource)
 void mf::WlSurface::destroy()
 {
     *destroyed = true;
-    role->destroy();
     wl_resource_destroy(resource);
 }
 
@@ -161,7 +180,11 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
     wl_resource * buffer = state.buffer.value_or(nullptr);
 
-    if (buffer != nullptr)
+    if (buffer == nullptr)
+    {
+        // TODO: unmap surface, and unmap all subsurfaces
+    }
+    else
     {
         auto send_frame_notifications =
             [executor = executor, frames = std::move(state.frame_callbacks)]() mutable
@@ -223,6 +246,11 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         buffer_size_ = mir_buffer->size();
         stream->resize(buffer_size_);
         stream->submit_buffer(mir_buffer);
+    }
+
+    for (WlSubsurface* child: children)
+    {
+        child->parent_has_committed();
     }
 }
 
