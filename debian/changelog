@@ -1,3 +1,32 @@
+mir (0.31.0) UNRELEASED; urgency=medium
+
+  * New upstream release 0.31.0(https://github.com/orgs/MirServer/projects/1)
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI bumped to 3
+      . mirserver ABI bumped to 46
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 16
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 13
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+    - Enhancements:
+      . Miral version 2.0 - API cleanup and support for CSD initiated "resize"
+      . Reorganized examples and reworked miral server examples
+      . Better organization of, and fixes to, Wayland server code
+      . Initial support for Wayland xdg-shell
+    - Bugs fixed:
+      . [miral] CommandLineOption should accept lambdas (Fixes #215)
+      . [miral] Implement the policy addenda in WindowManagementTrace
+        (Fixes #192)
+      . [Wayland] Send repeat info (Fixes #180)
+      . Explicitly initialise glm matricies, (Fixes #200)
+      . KMS platform - fallback if crtc mode invalid (LP: #1661295)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 15 Mar 2018 11:21:00 +0000
+
 mir (0.29.0) UNRELEASED; urgency=medium
 
   * New upstream release 0.29.0(https://launchpad.net/mir/+milestone/0.29.0)
