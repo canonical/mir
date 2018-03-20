@@ -45,13 +45,12 @@ struct StreamSpecification;
 namespace frontend
 {
 class BufferStream;
+class Session;
 class WlSurfaceRole;
 class WlSubsurface;
 
 struct WlSurfaceState
 {
-    WlSurfaceState(): frame_callbacks{std::make_unique<std::vector<wl_resource*>>()} {}
-
     // if you add variables, don't forget to update this
     void update_from(WlSurfaceState const& source);
 
@@ -61,7 +60,7 @@ struct WlSurfaceState
     std::experimental::optional<wl_resource*> buffer;
 
     std::experimental::optional<geometry::Displacement> buffer_offset;
-    std::unique_ptr<std::vector<wl_resource*>> frame_callbacks;
+    std::vector<wl_resource*> frame_callbacks;
 };
 
 class WlSurface : public wayland::Surface
@@ -88,8 +87,9 @@ public:
                               geometry::Displacement const& parent_offset) const;
     void commit(WlSurfaceState const& state);
 
-    mir::frontend::BufferStreamId stream_id;
-    std::shared_ptr<mir::frontend::BufferStream> stream;
+    std::shared_ptr<mir::frontend::Session> const session;
+    mir::frontend::BufferStreamId const stream_id;
+    std::shared_ptr<mir::frontend::BufferStream> const stream;
     mir::frontend::SurfaceId surface_id;       // ID of any associated surface
 
     static WlSurface* from(wl_resource* resource);

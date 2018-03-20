@@ -31,8 +31,8 @@ ifeq ($(DEB_HOST_ARCH),s390x)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
 endif
 
-# Disable Mir EGL on Ubuntu 18.04 even if mesa has "Mir EGL" patch
-ifneq ($(filter bionic,$(call dpkg_late_eval,UBUNTU_RELEASE,lsb_release --codename --short)),)
+# Disable Mir EGL outside of Ubuntu 16.04 and 17.10
+ifneq ($(filter-out xenial artful,$(DEB_DISTRIBUTION)),)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_EGL_SUPPORTED=OFF
 endif
 
@@ -82,13 +82,13 @@ override_dh_install:
 # Delete the symlink so that --fail-missing doesn't think we've missed it
 # accidentally.
 	-rm debian/tmp/usr/lib/*/libmirprotobuf.so
-ifneq ($(filter xenial yakkety zesty artful,$(DEB_DISTRIBUTION)),)
-	dh_install -pmir-utils usr/bin/mirvanity
-endif
+	-dh_install -pmir-utils usr/bin/mirvanity
+
 ifeq ($(filter xenial yakkety zesty,$(DEB_DISTRIBUTION)),)
 	dh_install
 else
 	# xenial, yakkety & zesty predate dh_missing
+	rm debian/tmp/usr/bin/mirvanity
 	dh_install --fail-missing
 endif
 
