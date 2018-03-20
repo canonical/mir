@@ -44,11 +44,12 @@ namespace frontend
 class Shell;
 class BasicSurfaceEventSink;
 class WlSurface;
-class WlSurfaceState;
+struct WlSurfaceState;
 
 class WlSurfaceRole
 {
 public:
+    virtual bool synchronized() const { return false; }
     virtual void invalidate_buffer_list() = 0;
     virtual void commit(WlSurfaceState const& state) = 0;
     virtual void visiblity(bool visible) = 0;

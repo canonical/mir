@@ -120,7 +120,7 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
         {
             auto& buffer_list_spec = spec();
             buffer_list_spec.streams = std::vector<shell::StreamSpecification>();
-            surface->populate_buffer_list(buffer_list_spec.streams.value());
+            surface->populate_buffer_list(buffer_list_spec.streams.value(), {});
             buffer_list_needs_refresh = false;
         }
 
@@ -137,7 +137,7 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
         params->size = geometry::Size{640, 480};
 
     params->streams = std::vector<shell::StreamSpecification>{};
-    surface->populate_buffer_list(params->streams.value());
+    surface->populate_buffer_list(params->streams.value(), {});
     buffer_list_needs_refresh = false;
 
     surface_id = shell->create_surface(session, *params, sink);
