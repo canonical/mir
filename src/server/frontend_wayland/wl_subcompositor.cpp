@@ -53,7 +53,7 @@ mf::WlSubsurface::~WlSubsurface()
     // unique pointer automatically removes `this` from parent child list
 
     invalidate_buffer_list();
-    surface->set_role(null_wl_surface_role_ptr);
+    surface->clear_role();
 }
 
 void mf::WlSubsurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers,
