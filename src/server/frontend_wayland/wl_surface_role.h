@@ -55,7 +55,7 @@ public:
     virtual void visiblity(bool visible) = 0;
     virtual void destroy() = 0;
     virtual ~WlSurfaceRole() = default;
-} extern * const null_wl_surface_role_ptr;
+};
 
 class WlAbstractMirWindow : public WlSurfaceRole
 {

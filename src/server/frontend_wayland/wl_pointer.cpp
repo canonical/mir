@@ -23,10 +23,33 @@
 
 #include "mir/executor.h"
 #include "mir/client/event.h"
+#include "mir/frontend/session.h"
+#include "mir/frontend/surface.h"
+#include "mir/frontend/buffer_stream.h"
+#include "mir/geometry/displacement.h"
 
 #include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;
+using namespace mir::geometry;
+
+struct mf::WlPointer::Cursor
+{
+    virtual void apply_to(wl_resource* target) = 0;
+    virtual ~Cursor() = default;
+    Cursor() = default;
+
+    Cursor(Cursor const&) = delete;
+    Cursor& operator=(Cursor const&) = delete;
+};
+
+namespace
+{
+struct NullCursor : mf::WlPointer::Cursor
+{
+    void apply_to(wl_resource*) override {}
+};
+}
 
 mf::WlPointer::WlPointer(
     wl_client* client,
@@ -38,7 +61,8 @@ mf::WlPointer::WlPointer(
         display{wl_client_get_display(client)},
         executor{executor},
         on_destroy{on_destroy},
-        destroyed{std::make_shared<bool>(false)}
+        destroyed{std::make_shared<bool>(false)},
+        cursor{std::make_unique<NullCursor>()}
 {
 }
 
@@ -61,6 +85,8 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
         {
             if (*target_window_destroyed)
                 return;
+
+            cursor->apply_to(target);
 
             auto const serial = wl_display_next_serial(display);
             auto const event = mir_event_get_input_event(ev);
@@ -183,15 +209,74 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
         }));
 }
 
+namespace
+{
+struct WlStreamCursor : mf::WlPointer::Cursor
+{
+    WlStreamCursor(std::shared_ptr<mf::Session> const session, std::shared_ptr<mf::BufferStream> const& stream, Displacement hotspot);
+    void apply_to(wl_resource* target) override;
+
+    std::shared_ptr<mf::Session>        const session;
+    std::shared_ptr<mf::BufferStream>   const stream;
+    Displacement        const hotspot;
+};
+
+struct WlHiddenCursor : mf::WlPointer::Cursor
+{
+    WlHiddenCursor(std::shared_ptr<mf::Session> const session);
+    void apply_to(wl_resource* target) override;
+
+    std::shared_ptr<mf::Session>        const session;
+};
+}
+
+
 void mf::WlPointer::set_cursor(uint32_t serial, std::experimental::optional<wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y)
 {
+    if (surface)
+    {
+        auto const cursor_stream = WlSurface::from(*surface)->stream;
+        Displacement const cursor_hotspot{hotspot_x, hotspot_y};
+
+        cursor = std::make_unique<WlStreamCursor>(get_session(client), cursor_stream, cursor_hotspot);
+    }
+    else
+    {
+        cursor = std::make_unique<WlHiddenCursor>(get_session(client));
+    }
+
     (void)serial;
-    (void)surface;
-    (void)hotspot_x;
-    (void)hotspot_y;
 }
 
 void mf::WlPointer::release()
 {
     wl_resource_destroy(resource);
+}
+
+WlStreamCursor::WlStreamCursor(
+    std::shared_ptr<mf::Session> const session,
+    std::shared_ptr<mf::BufferStream> const& stream,
+    Displacement hotspot) :
+    session{session},
+    stream{stream},
+    hotspot{hotspot}
+{
+}
+
+void WlStreamCursor::apply_to(wl_resource* target)
+{
+    auto const mir_window = session->get_surface(mf::WlSurface::from(target)->surface_id);
+    mir_window->set_cursor_stream(stream, hotspot);
+}
+
+WlHiddenCursor::WlHiddenCursor(
+    std::shared_ptr<mf::Session> const session) :
+    session{session}
+{
+}
+
+void WlHiddenCursor::apply_to(wl_resource* target)
+{
+    auto const mir_window = session->get_surface(mf::WlSurface::from(target)->surface_id);
+    mir_window->set_cursor_image({});
 }

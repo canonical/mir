@@ -60,7 +60,8 @@ mf::WlSurface::WlSurface(
         stream{session->get_buffer_stream(stream_id)},
         allocator{allocator},
         executor{executor},
-        role{null_wl_surface_role_ptr},
+        null_role{this},
+        role{&null_role},
         destroyed{std::make_shared<bool>(false)}
 {
     // wl_surface is specified to act in mailbox mode
@@ -81,6 +82,11 @@ bool mf::WlSurface::synchronized() const
 void mf::WlSurface::set_role(WlSurfaceRole* role_)
 {
     role = role_;
+}
+
+void mf::WlSurface::clear_role()
+{
+    role = &null_role;
 }
 
 std::unique_ptr<mf::WlSurface, std::function<void(mf::WlSurface*)>> mf::WlSurface::add_child(WlSubsurface* child)
@@ -267,3 +273,13 @@ void mf::WlSurface::set_buffer_scale(int32_t scale)
     (void)scale;
     // TODO
 }
+
+mf::NullWlSurfaceRole::NullWlSurfaceRole(WlSurface* surface) :
+    surface{surface}
+{
+}
+
+void mf::NullWlSurfaceRole::invalidate_buffer_list() {}
+void mf::NullWlSurfaceRole::commit(WlSurfaceState const& state) { surface->commit(state); }
+void mf::NullWlSurfaceRole::visiblity(bool /*visible*/) {}
+void mf::NullWlSurfaceRole::destroy() {}
