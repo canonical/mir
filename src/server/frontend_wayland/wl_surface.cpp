@@ -159,8 +159,9 @@ void mf::WlSurface::damage_buffer(int32_t x, int32_t y, int32_t width, int32_t h
 
 void mf::WlSurface::frame(uint32_t callback)
 {
-    pending.frame_callbacks.emplace_back(
-        wl_resource_create(client, &wl_callback_interface, 1, callback));
+    auto callback_resource = wl_resource_create(client, &wl_callback_interface, 1, callback);
+    auto callback_destroyed = deleted_flag_for_resource(callback_resource);
+    pending.frame_callbacks.emplace_back(WlSurfaceState::Callback{callback_resource, callback_destroyed});
 }
 
 void mf::WlSurface::set_opaque_region(std::experimental::optional<wl_resource*> const& region)
@@ -190,21 +191,16 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             [executor = executor, frames = std::move(state.frame_callbacks)]() mutable
             {
                 executor->spawn(
-                    // no run_unless() is needed because no object is used but frames and they are not destroyed elsewhere
+                    // no run_unless() needed because no objects are used except callbacks and they are checked individually
                     [frames = std::move(frames)]()
                     {
-                        /*
-                         * There is no synchronisation required here -
-                         * This is run on the WaylandExecutor, and is guaranteed to run on the
-                         * wl_event_loop's thread.
-                         *
-                         * The only other accessors of WlSurface are also on the wl_event_loop,
-                         * so this is guaranteed not to be reentrant.
-                         */
                         for (auto frame : frames)
                         {
-                            wl_callback_send_done(frame, 0);
-                            wl_resource_destroy(frame);
+                            if (!*frame.destroyed)
+                            {
+                                wl_callback_send_done(frame.resource, 0);
+                                wl_resource_destroy(frame.resource);
+                            }
                         }
                     });
             };
