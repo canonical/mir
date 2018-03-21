@@ -210,7 +210,7 @@ mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t 
 
 mf::XdgSurfaceV6::~XdgSurfaceV6()
 {
-    surface->set_role(null_wl_surface_role_ptr);
+    surface->clear_role();
 }
 
 void mf::XdgSurfaceV6::destroy()

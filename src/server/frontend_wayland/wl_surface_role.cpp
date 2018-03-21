@@ -38,20 +38,6 @@ namespace frontend
 
 namespace
 {
-class NullWlSurfaceRole : public WlSurfaceRole
-{
-public:
-    void invalidate_buffer_list() override {}
-    void commit(WlSurfaceState const& /*state*/) override {}
-    void visiblity(bool /*visible*/) override {}
-    void destroy() override {}
-} null_wl_surface_role_instance;
-}
-
-WlSurfaceRole* const null_wl_surface_role_ptr = &null_wl_surface_role_instance;
-
-namespace
-{
 std::shared_ptr<scene::Surface> get_surface_for_id(std::shared_ptr<Session> const& session, SurfaceId surface_id)
 {
     return std::dynamic_pointer_cast<scene::Surface>(session->get_surface(surface_id));
