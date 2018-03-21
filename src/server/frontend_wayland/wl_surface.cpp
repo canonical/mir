@@ -33,25 +33,6 @@
 #include "mir/graphics/wayland_allocator.h"
 #include "mir/shell/surface_specification.h"
 
-namespace mir
-{
-namespace frontend
-{
-class NullWlSurfaceRole : public WlSurfaceRole
-{
-public:
-    NullWlSurfaceRole(WlSurface* surface): surface{surface} {}
-    void invalidate_buffer_list() override {}
-    void commit(WlSurfaceState const& state) override { surface->commit(state); }
-    void visiblity(bool /*visible*/) override {}
-    void destroy() override {}
-
-private:
-    WlSurface* const surface;
-};
-}
-}
-
 namespace mf = mir::frontend;
 
 void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
@@ -79,8 +60,8 @@ mf::WlSurface::WlSurface(
         stream{session->get_buffer_stream(stream_id)},
         allocator{allocator},
         executor{executor},
-        null_role{std::make_unique<NullWlSurfaceRole>(this)},
-        role{null_role.get()},
+        null_role{this},
+        role{&null_role},
         destroyed{std::make_shared<bool>(false)}
 {
     // wl_surface is specified to act in mailbox mode
@@ -105,7 +86,7 @@ void mf::WlSurface::set_role(WlSurfaceRole* role_)
 
 void mf::WlSurface::clear_role()
 {
-    role = null_role.get();
+    role = &null_role;
 }
 
 std::unique_ptr<mf::WlSurface, std::function<void(mf::WlSurface*)>> mf::WlSurface::add_child(WlSubsurface* child)
@@ -292,3 +273,13 @@ void mf::WlSurface::set_buffer_scale(int32_t scale)
     (void)scale;
     // TODO
 }
+
+mf::NullWlSurfaceRole::NullWlSurfaceRole(WlSurface* surface) :
+    surface{surface}
+{
+}
+
+void mf::NullWlSurfaceRole::invalidate_buffer_list() {}
+void mf::NullWlSurfaceRole::commit(WlSurfaceState const& state) { surface->commit(state); }
+void mf::NullWlSurfaceRole::visiblity(bool /*visible*/) {}
+void mf::NullWlSurfaceRole::destroy() {}

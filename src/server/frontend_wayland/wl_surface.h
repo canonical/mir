@@ -21,6 +21,8 @@
 
 #include "generated/wayland_wrapper.h"
 
+#include "wl_surface_role.h"
+
 #include "mir/frontend/buffer_stream_id.h"
 #include "mir/frontend/surface_id.h"
 
@@ -46,8 +48,6 @@ namespace frontend
 {
 class BufferStream;
 class Session;
-class WlSurfaceRole;
-class NullWlSurfaceRole;
 class WlSubsurface;
 
 struct WlSurfaceState
@@ -69,6 +69,20 @@ struct WlSurfaceState
     std::experimental::optional<geometry::Displacement> buffer_offset;
     std::vector<Callback> frame_callbacks;
 };
+
+class NullWlSurfaceRole : public WlSurfaceRole
+{
+public:
+    NullWlSurfaceRole(WlSurface* surface);
+    void invalidate_buffer_list() override;
+    void commit(WlSurfaceState const& state) override;
+    void visiblity(bool /*visible*/) override;
+    void destroy() override;
+
+private:
+    WlSurface* const surface;
+};
+
 
 class WlSurface : public wayland::Surface
 {
@@ -106,7 +120,7 @@ private:
     std::shared_ptr<mir::graphics::WaylandAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
 
-    std::unique_ptr<NullWlSurfaceRole> const null_role;
+    NullWlSurfaceRole null_role;
     WlSurfaceRole* role;
     std::vector<WlSubsurface*> children;
 
