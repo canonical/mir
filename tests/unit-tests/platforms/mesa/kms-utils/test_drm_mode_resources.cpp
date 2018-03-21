@@ -143,7 +143,7 @@ private:
         memset(prop.get(), 0, sizeof(*prop));
 
         prop->prop_id = id;
-        strncpy(prop->name, property.c_str(), sizeof(prop->name));
+        strncpy(prop->name, property.c_str(), sizeof(prop->name) - 1);
 
         allocated_props.insert(prop.get());
         return prop.release();
