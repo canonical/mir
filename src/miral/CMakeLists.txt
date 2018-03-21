@@ -96,16 +96,19 @@ set_target_properties(miral
 
 # clang generates slightly different symbols (but we don't care)
 if (CMAKE_COMPILER_IS_GNUCXX)
-    # Using dpkg-gensymbols only makes sense on Debian based distros
-    if (EXISTS /etc/debian_version)
-        find_program(MIR_DPKG_GENSYMBOLS dpkg-gensymbols)
-        if (MIR_DPKG_GENSYMBOLS)
-            add_custom_target(check-miral-symbols ALL
-                DEPENDS miral ${PROJECT_SOURCE_DIR}/debian/libmiral${MIRAL_ABI}.symbols
-                COMMAND rm -f ${CMAKE_CURRENT_BINARY_DIR}/libmiral${MIRAL_ABI}.symbols
-                COMMAND dpkg-gensymbols -e${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libmiral.so.${MIRAL_ABI} -plibmiral${MIRAL_ABI} -v${MIRAL_VERSION} -O${CMAKE_CURRENT_BINARY_DIR}/libmiral${MIRAL_ABI}.symbols
-                WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-                VERBATIM)
+    # g++ generates slightly different symbols without LTO (but we don't care)
+    if (MIR_LINK_TIME_OPTIMIZATION)
+        # Using dpkg-gensymbols only makes sense on Debian based distros
+        if (EXISTS /etc/debian_version)
+            find_program(MIR_DPKG_GENSYMBOLS dpkg-gensymbols)
+            if (MIR_DPKG_GENSYMBOLS)
+                add_custom_target(check-miral-symbols ALL
+                    DEPENDS miral ${PROJECT_SOURCE_DIR}/debian/libmiral${MIRAL_ABI}.symbols
+                    COMMAND rm -f ${CMAKE_CURRENT_BINARY_DIR}/libmiral${MIRAL_ABI}.symbols
+                    COMMAND dpkg-gensymbols -e${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libmiral.so.${MIRAL_ABI} -plibmiral${MIRAL_ABI} -v${MIRAL_VERSION} -O${CMAKE_CURRENT_BINARY_DIR}/libmiral${MIRAL_ABI}.symbols
+                    WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+                    VERBATIM)
+            endif()
         endif()
     endif()
 endif()
