@@ -51,6 +51,12 @@ class WlSubsurface;
 
 struct WlSurfaceState
 {
+    struct Callback
+    {
+        wl_resource* resource;
+        std::shared_ptr<bool> destroyed;
+    };
+
     // if you add variables, don't forget to update this
     void update_from(WlSurfaceState const& source);
 
@@ -60,7 +66,7 @@ struct WlSurfaceState
     std::experimental::optional<wl_resource*> buffer;
 
     std::experimental::optional<geometry::Displacement> buffer_offset;
-    std::vector<wl_resource*> frame_callbacks;
+    std::vector<Callback> frame_callbacks;
 };
 
 class WlSurface : public wayland::Surface
