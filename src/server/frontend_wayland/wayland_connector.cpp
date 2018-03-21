@@ -332,7 +332,7 @@ public:
 
     ~WlShellSurface() override
     {
-        surface->set_role(null_wl_surface_role_ptr);
+        surface->clear_role();
     }
 
 protected:

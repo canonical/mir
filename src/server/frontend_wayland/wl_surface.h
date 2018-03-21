@@ -47,6 +47,7 @@ namespace frontend
 class BufferStream;
 class Session;
 class WlSurfaceRole;
+class NullWlSurfaceRole;
 class WlSubsurface;
 
 struct WlSurfaceState
@@ -86,6 +87,7 @@ public:
     bool synchronized() const;
 
     void set_role(WlSurfaceRole* role_);
+    void clear_role();
     void set_buffer_offset(geometry::Displacement const& offset) { pending.buffer_offset = offset; }
     std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> add_child(WlSubsurface* child);
     void invalidate_buffer_list();
@@ -104,6 +106,7 @@ private:
     std::shared_ptr<mir::graphics::WaylandAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
 
+    std::unique_ptr<NullWlSurfaceRole> const null_role;
     WlSurfaceRole* role;
     std::vector<WlSubsurface*> children;
 
