@@ -40,7 +40,7 @@ $(info COMMON_CONFIGURE_OPTIONS: ${COMMON_CONFIGURE_OPTIONS})
 
 override_dh_auto_configure:
 ifneq ($(filter armhf,$(DEB_HOST_ARCH)),)
-	dh_auto_configure -- \
+	dh_auto_configure -Bbuild-$(DEB_HOST_ARCH) -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
 	  -DMIR_RUN_ACCEPTANCE_TESTS=OFF \
 	  -DMIR_RUN_INTEGRATION_TESTS=OFF \
@@ -48,17 +48,19 @@ ifneq ($(filter armhf,$(DEB_HOST_ARCH)),)
 	  $(OVERRIDE_CONFIGURE_OPTIONS)
 else
 ifneq ($(filter amd64 i386,$(DEB_HOST_ARCH)),)
-	dh_auto_configure -- \
+	dh_auto_configure -Bbuild-$(DEB_HOST_ARCH) -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
 	  -DMIR_PLATFORM=mesa-kms\;mesa-x11 \
 	  $(OVERRIDE_CONFIGURE_OPTIONS)
 else
-	dh_auto_configure -- \
+	dh_auto_configure -Bbuild-$(DEB_HOST_ARCH) -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
 	  -DMIR_PLATFORM=mesa-kms\;mesa-x11 \
 	  $(OVERRIDE_CONFIGURE_OPTIONS)
 endif
 endif
+	# Run cmake again to pick up wlcs tests, because reasons?
+	cmake build-$(DEB_HOST_ARCH)
 
 # Only build the docs when we need them
 override_dh_auto_build-indep:
