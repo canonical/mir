@@ -737,6 +737,7 @@ void mi::SurfaceInputDispatcher::stop()
 
     pointer_state_by_id.clear();
     touch_state_by_id.clear();
+    last_pointer_event.reset();
     
     started = false;
 }
