@@ -73,7 +73,6 @@ jobs:
     - git fetch --unshallow origin master:master
     script:
     - tools/ppa-upload.sh
-    - lftp -e "set net:timeout 5;set net:max-retries 2;ls;quit" ppa.launchpad.net
     addons:
       apt:
         packages:
@@ -81,8 +80,9 @@ jobs:
         - devscripts
         - dput
         - fakeroot
+        - python-bzrlib
         - python-launchpadlib
-        - lftp
+        - python-paramiko
   - <<: *ppa-upload
     env: RELEASE=17.10
   - <<: *ppa-upload
