@@ -139,15 +139,6 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
 
     surface_stack->add_surface(surface, params.input_mode);
 
-    if (params.state.is_set())
-        surface->configure(mir_window_attrib_state, params.state.value());
-    if (params.type.is_set())
-        surface->configure(mir_window_attrib_type, params.type.value());
-    if (params.preferred_orientation.is_set())
-        surface->configure(mir_window_attrib_preferred_orientation, params.preferred_orientation.value());
-    if (params.input_shape.is_set())
-        surface->set_input_region(params.input_shape.value());
-
     auto const observer = std::make_shared<scene::SurfaceEventSource>(
         id,
         *surface,
@@ -164,6 +155,16 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     observer->moved_to(surface.get(), surface->top_left());
 
     session_listener->surface_created(*this, surface);
+
+    if (params.state.is_set())
+        surface->configure(mir_window_attrib_state, params.state.value());
+    if (params.type.is_set())
+        surface->configure(mir_window_attrib_type, params.type.value());
+    if (params.preferred_orientation.is_set())
+        surface->configure(mir_window_attrib_preferred_orientation, params.preferred_orientation.value());
+    if (params.input_shape.is_set())
+        surface->set_input_region(params.input_shape.value());
+
     return id;
 }
 
