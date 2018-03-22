@@ -80,7 +80,9 @@ jobs:
         - devscripts
         - dput
         - fakeroot
+        - python-bzrlib
         - python-launchpadlib
+        - python-paramiko
   - <<: *ppa-upload
     env: RELEASE=17.10
   - <<: *ppa-upload
