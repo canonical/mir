@@ -6,7 +6,7 @@ include debian/opts.mk
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
 %:
-	dh $@ --parallel --fail-missing --with python3
+	dh $@ -Bbuild-$(DEB_HOST_ARCH) --parallel --fail-missing --with python3
 
 # Enable verbose debugging output from the testsuite
 export MIR_SERVER_LOGGING = on
@@ -59,6 +59,8 @@ else
 	  $(OVERRIDE_CONFIGURE_OPTIONS)
 endif
 endif
+	# Run cmake again to pick up wlcs tests, because reasons?
+	cmake build-$(DEB_HOST_ARCH)
 
 # Only build the docs when we need them
 override_dh_auto_build-indep:

@@ -48,6 +48,8 @@ execute: |
 
     BUILD_DIR=$(mktemp --directory)
     cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_USE_LD_GOLD=ON -G Ninja
+    # Run cmake again to pick up wlcs?!?!?!?!
+    cmake $BUILD_DIR
     cmake --build $BUILD_DIR
     cmake --build $BUILD_DIR -- ptest
 
