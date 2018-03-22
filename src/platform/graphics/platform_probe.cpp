@@ -52,7 +52,15 @@ mir::graphics::module_for_device(
 
                         return [obsolete_probe](auto, auto const& options)
                             {
-                                return obsolete_probe(options);
+                                auto const priority = static_cast<unsigned int>(obsolete_probe(options));
+
+                                /*
+                                 * Cap obsolete modules to just less than PlatformPriority::supported.
+                                 * If *any* current module that will work, we want that instead.
+                                 */
+                                return priority >= PlatformPriority::supported ?
+                                    static_cast<PlatformPriority>(PlatformPriority::supported - 1) :
+                                    static_cast<PlatformPriority>(priority);
                             };
                     }
                 }();
