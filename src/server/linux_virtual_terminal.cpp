@@ -1,16 +1,16 @@
 /*
  * Copyright © 2013 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 2 or 3,
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 or 3 as
+ * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
@@ -19,10 +19,13 @@
 #include "linux_virtual_terminal.h"
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/event_handler_register.h"
+#include "mir/fd.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/exception/errinfo_file_name.hpp>
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/stream.hpp>
 
 #include <vector>
 #include <string>
@@ -34,12 +37,11 @@
 #include <linux/kd.h>
 #include <fcntl.h>
 
-namespace mgm = mir::graphics::mesa;
-
-mgm::LinuxVirtualTerminal::LinuxVirtualTerminal(std::shared_ptr<VTFileOperations> const& fops,
+mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
+    std::shared_ptr<VTFileOperations> const& fops,
     std::unique_ptr<PosixProcessOperations> pops,
     int vt_number,
-    std::shared_ptr<DisplayReport> const& report)
+    std::shared_ptr<graphics::DisplayReport> const& report)
     : fops{fops},
       pops{std::move(pops)},
       report{report},
@@ -93,26 +95,31 @@ mgm::LinuxVirtualTerminal::LinuxVirtualTerminal(std::shared_ptr<VTFileOperations
     tcattr.c_cc[VTIME] = 0;
     tcattr.c_cc[VMIN] = 1;
     fops->tcsetattr(vt_fd.fd(), TCSANOW, &tcattr);
+
+    if (fops->ioctl(vt_fd.fd(), KDSETMODE, KD_GRAPHICS) < 0)
+    {
+        try
+        {
+            restore();
+        }
+        catch(...)
+        {
+        }
+
+        BOOST_THROW_EXCEPTION(
+            boost::enable_error_info(
+                std::runtime_error("Failed to set VT to graphics mode"))
+                << boost::errinfo_errno(errno));
+    }
 }
 
-mgm::LinuxVirtualTerminal::~LinuxVirtualTerminal() noexcept(true)
+mir::LinuxVirtualTerminal::~LinuxVirtualTerminal() noexcept(true)
 {
     restore();
 }
 
-void mgm::LinuxVirtualTerminal::set_graphics_mode()
-{
-    if (fops->ioctl(vt_fd.fd(), KDSETMODE, KD_GRAPHICS) < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Failed to set VT to graphics mode"))
-                    << boost::errinfo_errno(errno));
-    }
-}
-
-void mgm::LinuxVirtualTerminal::register_switch_handlers(
-    EventHandlerRegister& handlers,
+void mir::LinuxVirtualTerminal::register_switch_handlers(
+    graphics::EventHandlerRegister& handlers,
     std::function<bool()> const& switch_away,
     std::function<bool()> const& switch_back)
 {
@@ -167,7 +174,7 @@ void mgm::LinuxVirtualTerminal::register_switch_handlers(
     }
 }
 
-void mgm::LinuxVirtualTerminal::restore()
+void mir::LinuxVirtualTerminal::restore()
 {
     if (vt_fd.fd() >= 0)
     {
@@ -189,7 +196,7 @@ void mgm::LinuxVirtualTerminal::restore()
 }
 
 
-int mgm::LinuxVirtualTerminal::find_active_vt_number()
+int mir::LinuxVirtualTerminal::find_active_vt_number()
 {
     static std::vector<std::string> const paths{"/dev/tty", "/dev/tty0"};
     int active_vt{-1};
@@ -223,7 +230,7 @@ int mgm::LinuxVirtualTerminal::find_active_vt_number()
     return active_vt;
 }
 
-int mgm::LinuxVirtualTerminal::open_vt(int vt_number)
+int mir::LinuxVirtualTerminal::open_vt(int vt_number)
 {
     auto activate = true;
     if (vt_number <= 0)
@@ -296,4 +303,55 @@ int mgm::LinuxVirtualTerminal::open_vt(int vt_number)
     }
 
     return vt_fd;
+}
+
+boost::future<mir::Fd> mir::LinuxVirtualTerminal::acquire_device(int major, int minor)
+{
+    std::stringstream filename;
+    filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
+    mir::Fd const fd{fops->open(filename.str().c_str(), O_RDONLY | O_CLOEXEC)};
+
+    if (fd == mir::Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION((boost::enable_error_info(std::system_error{
+            errno,
+            std::system_category(),
+            "Failed to open /sys file to discover devnode"})
+                << boost::errinfo_file_name(filename.str())));
+    }
+
+    auto const devnode =
+        [](auto const& fd)
+        {
+            using namespace boost::iostreams;
+            char line_buffer[1024];
+            stream<file_descriptor_source> uevent{fd, file_descriptor_flags::never_close_handle};
+
+            while (uevent.getline(line_buffer, sizeof(line_buffer)))
+            {
+                if (strncmp(line_buffer, "DEVNAME=", strlen("DEVNAME=")) == 0)
+                {
+                    return std::string{"/dev/"} + std::string{line_buffer + strlen("DEVNAME=")};
+                }
+            }
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to read DEVNAME"}));
+        }(fd);
+
+    auto dev_fd = mir::Fd{fops->open(devnode.c_str(), O_RDWR | O_CLOEXEC)};
+    if (dev_fd != mir::Fd::invalid)
+    {
+        return boost::make_ready_future<Fd>(std::move(dev_fd));
+    }
+    else
+    {
+        return boost::make_exceptional_future<Fd>(
+            std::make_exception_ptr(
+                boost::enable_error_info(
+                    std::system_error{
+                        errno,
+                        std::system_category(),
+                        "Failed to open device node"})
+                    << boost::errinfo_file_name(devnode.c_str())
+                ));
+    }
 }

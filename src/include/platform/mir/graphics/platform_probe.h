@@ -26,13 +26,16 @@
 
 namespace mir
 {
+class ConsoleServices;
+
 namespace graphics
 {
 class Platform;
 
 std::shared_ptr<SharedLibrary> module_for_device(
-         std::vector<std::shared_ptr<SharedLibrary>> const& modules,
-         options::ProgramOption const& options);
+    std::vector<std::shared_ptr<SharedLibrary>> const& modules,
+    options::ProgramOption const& options,
+    std::shared_ptr<ConsoleServices> const& console);
 
 }
 }

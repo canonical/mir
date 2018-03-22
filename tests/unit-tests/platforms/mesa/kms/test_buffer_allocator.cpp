@@ -18,7 +18,7 @@
 
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/null_console_services.h"
 #include "src/platforms/mesa/server/kms/platform.h"
 #include "src/platforms/mesa/include/native_buffer.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -66,7 +66,7 @@ protected:
 
         platform = std::make_shared<mgm::Platform>(
                 mir::report::null_display_report(),
-                std::make_shared<mtd::NullVirtualTerminal>(),
+                std::make_shared<mtd::NullConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgm::BypassOption::allowed);
         allocator.reset(new mgm::BufferAllocator(

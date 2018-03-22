@@ -28,8 +28,8 @@
 
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/mock_buffer_ipc_message.h"
-#include "mir/test/doubles/mock_virtual_terminal.h"
-#include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/mock_console_services.h"
+#include "mir/test/doubles/null_console_services.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 
 #include <gtest/gtest.h>
@@ -61,6 +61,32 @@ namespace
 
 const char probe_platform[] = "probe_graphics_platform";
 
+class StubConsoleServices : public mir::ConsoleServices
+{
+public:
+    void
+    register_switch_handlers(
+        mir::graphics::EventHandlerRegister&,
+        std::function<bool()> const&,
+        std::function<bool()> const&) override
+    {
+    }
+
+    void restore() override
+    {
+    }
+
+    boost::future<mir::Fd> acquire_device(int major, int minor) override
+    {
+        /* NOTE: This uses the behaviour that MockDRM will intercept any open() call
+         * under /dev/dri/
+         */
+        std::stringstream filename;
+        filename << "/dev/dri/" << major << ":" << minor;
+        return boost::make_ready_future<mir::Fd>(::open(filename.str().c_str(), O_RDWR | O_CLOEXEC));
+    }
+};
+
 class MesaGraphicsPlatform : public ::testing::Test
 {
 public:
@@ -78,7 +104,7 @@ public:
     {
         return std::make_shared<mgm::Platform>(
                 mir::report::null_display_report(),
-                std::make_shared<mtd::NullVirtualTerminal>(),
+                std::make_shared<StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgm::BypassOption::allowed);
     }
@@ -242,7 +268,7 @@ TEST_F(MesaGraphicsPlatform, restores_vt_on_emergency_cleanup)
 {
     using namespace testing;
 
-    auto const mock_vt = std::make_shared<mtd::MockVirtualTerminal>();
+    auto const mock_vt = std::make_shared<mtd::MockConsoleServices>();
     StubEmergencyCleanupRegistry emergency_cleanup_registry;
     mgm::Platform platform{
         mir::report::null_display_report(),
@@ -261,7 +287,7 @@ TEST_F(MesaGraphicsPlatform, releases_drm_on_emergency_cleanup)
 {
     using namespace testing;
 
-    auto const null_vt = std::make_shared<mtd::NullVirtualTerminal>();
+    auto const null_vt = std::make_shared<mtd::NullConsoleServices>();
     StubEmergencyCleanupRegistry emergency_cleanup_registry;
     mgm::Platform platform{
         mir::report::null_display_report(),
@@ -284,9 +310,7 @@ TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
 {
     using namespace testing;
 
-
-
-    auto const mock_vt = std::make_shared<mtd::MockVirtualTerminal>();
+    auto const mock_vt = std::make_shared<mtd::MockConsoleServices>();
     StubEmergencyCleanupRegistry emergency_cleanup_registry;
     mgm::Platform platform{
         mir::report::null_display_report(),
@@ -308,10 +332,11 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_no_drm_udev_devices)
 {
     mtf::UdevEnvironment udev_environment;
     mir::options::ProgramOption options;
+    auto const stub_vt = std::make_shared<StubConsoleServices>();
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(stub_vt, options));
 }
 
 TEST_F(MesaGraphicsPlatform, probe_returns_best_when_master)
@@ -319,12 +344,13 @@ TEST_F(MesaGraphicsPlatform, probe_returns_best_when_master)
     mtf::UdevEnvironment udev_environment;
     boost::program_options::options_description po;
     mir::options::ProgramOption options;
+    auto const stub_vt = std::make_shared<StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::best, probe(options));
+    EXPECT_EQ(mg::PlatformPriority::best, probe(stub_vt, options));
 }
 
 TEST_F(MesaGraphicsPlatform, probe_returns_in_between_when_cant_set_master)
@@ -334,6 +360,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_in_between_when_cant_set_master)
     mtf::UdevEnvironment udev_environment;
     boost::program_options::options_description po;
     mir::options::ProgramOption options;
+    auto const stub_vt = std::make_shared<StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");
 
@@ -342,24 +369,9 @@ TEST_F(MesaGraphicsPlatform, probe_returns_in_between_when_cant_set_master)
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    auto prio = probe(options);
+    auto prio = probe(stub_vt, options);
     EXPECT_THAT(prio, Gt(mg::PlatformPriority::unsupported));
     EXPECT_THAT(prio, Lt(mg::PlatformPriority::supported));
-}
-
-TEST_F(MesaGraphicsPlatform, probe_returns_best_when_drm_devices_vt_option_exist)
-{
-    mtf::UdevEnvironment udev_environment;
-    boost::program_options::options_description po;
-    mir::options::ProgramOption options;
-    const char *argv[] = {"dummy", "--vt"};
-    options.parse_arguments(po, 2, argv);
-
-    udev_environment.add_standard_device("standard-drm-devices");
-
-    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
-    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::best, probe(options));
 }
 
 TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_egl_client_extensions_not_supported)
@@ -371,6 +383,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_egl_client_extension
     mir::options::ProgramOption options;
     const char *argv[] = {"dummy", "--vt"};
     options.parse_arguments(po, 2, argv);
+    auto const stub_vt = std::make_shared<StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");
 
@@ -379,7 +392,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_egl_client_extension
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(stub_vt, options));
 }
 
 TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_gbm_platform_not_supported)
@@ -391,6 +404,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_gbm_platform_not_sup
     mir::options::ProgramOption options;
     const char *argv[] = {"dummy", "--vt"};
     options.parse_arguments(po, 2, argv);
+    auto const stub_vt = std::make_shared<StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");
 
@@ -399,5 +413,5 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_gbm_platform_not_sup
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
-    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(options));
+    EXPECT_EQ(mg::PlatformPriority::unsupported, probe(stub_vt, options));
 }

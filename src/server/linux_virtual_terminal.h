@@ -1,16 +1,16 @@
 /*
  * Copyright © 2013 Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU Lesser General Public License version 2 or 3,
- * as published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 or 3 as
+ * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
@@ -19,7 +19,7 @@
 #ifndef MIR_GRAPHICS_MESA_LINUX_VIRTUAL_TERMINAL_H_
 #define MIR_GRAPHICS_MESA_LINUX_VIRTUAL_TERMINAL_H_
 
-#include "virtual_terminal.h"
+#include "mir/console_services.h"
 
 #include <memory>
 
@@ -31,11 +31,9 @@ namespace mir
 {
 namespace graphics
 {
-
 class DisplayReport;
-
-namespace mesa
-{
+class EventHandlerRegistrar;
+}
 
 class VTFileOperations
 {
@@ -74,21 +72,21 @@ protected:
     PosixProcessOperations& operator=(PosixProcessOperations const&) = delete;
 };
 
-class LinuxVirtualTerminal : public VirtualTerminal
+class LinuxVirtualTerminal : public ConsoleServices
 {
 public:
     LinuxVirtualTerminal(std::shared_ptr<VTFileOperations> const& fops,
                          std::unique_ptr<PosixProcessOperations> pops,
                          int vt_number,
-                         std::shared_ptr<DisplayReport> const& report);
+                         std::shared_ptr<graphics::DisplayReport> const& report);
     ~LinuxVirtualTerminal() noexcept(true);
 
-    void set_graphics_mode() override;
     void register_switch_handlers(
-        EventHandlerRegister& handlers,
+        graphics::EventHandlerRegister& handlers,
         std::function<bool()> const& switch_away,
         std::function<bool()> const& switch_back) override;
     void restore() override;
+    boost::future<Fd> acquire_device(int major, int minor) override;
 
 private:
     class FDWrapper
@@ -111,7 +109,7 @@ private:
 
     std::shared_ptr<VTFileOperations> const fops;
     std::unique_ptr<PosixProcessOperations> const pops;
-    std::shared_ptr<DisplayReport> const report;
+    std::shared_ptr<graphics::DisplayReport> const report;
     FDWrapper const vt_fd;
     int prev_kd_mode;
     struct vt_mode prev_vt_mode;
@@ -120,8 +118,6 @@ private:
     bool active;
 };
 
-}
-}
 }
 
 #endif /* MIR_GRAPHICS_MESA_LINUX_VIRTUAL_TERMINAL_H_ */

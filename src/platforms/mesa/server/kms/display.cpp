@@ -23,7 +23,7 @@
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 #include "kms_page_flipper.h"
-#include "virtual_terminal.h"
+#include "mir/console_services.h"
 #include "mir/graphics/overlapping_output_grouping.h"
 #include "mir/graphics/event_handler_register.h"
 
@@ -171,7 +171,7 @@ void log_drm_details(std::vector<std::shared_ptr<mgm::helpers::DRMHelper>> const
 
 mgm::Display::Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& drm,
                       std::shared_ptr<helpers::GBMHelper> const& gbm,
-                      std::shared_ptr<VirtualTerminal> const& vt,
+                      std::shared_ptr<ConsoleServices> const& vt,
                       mgm::BypassOption bypass_option,
                       std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
                       std::shared_ptr<GLConfig> const& gl_config,
@@ -202,8 +202,6 @@ mgm::Display::Display(std::vector<std::shared_ptr<helpers::DRMHelper>> const& dr
       bypass_option(bypass_option),
       gl_config{gl_config}
 {
-    vt->set_graphics_mode();
-
     shared_egl.setup(*gbm);
 
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");

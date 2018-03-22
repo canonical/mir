@@ -844,6 +844,7 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.31 {
     mir::DefaultServerConfiguration::the_connection_creator*;
     mir::DefaultServerConfiguration::the_connector*;
     mir::DefaultServerConfiguration::the_connector_report*;
+    mir::DefaultServerConfiguration::the_console_services*;
     mir::DefaultServerConfiguration::the_coordinate_translator*;
     mir::DefaultServerConfiguration::the_cursor*;
     mir::DefaultServerConfiguration::the_cursor_images*;

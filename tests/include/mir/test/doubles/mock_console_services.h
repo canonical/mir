@@ -16,10 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_MOCK_VIRTUAL_TERMINAL_H_
-#define MIR_TEST_DOUBLES_MOCK_VIRTUAL_TERMINAL_H_
+#ifndef MIR_TEST_DOUBLES_MOCK_CONSOLE_SERVICES_H_
+#define MIR_TEST_DOUBLES_MOCK_CONSOLE_SERVICES_H_
 
-#include "src/platforms/mesa/server/kms/virtual_terminal.h"
+#include "mir/console_services.h"
 
 #include <gmock/gmock.h>
 
@@ -30,15 +30,27 @@ namespace test
 namespace doubles
 {
 
-class MockVirtualTerminal : public graphics::mesa::VirtualTerminal
+class MockConsoleServices : public ConsoleServices
 {
 public:
-    MOCK_METHOD0(set_graphics_mode, void());
     MOCK_METHOD3(register_switch_handlers,
                  void(graphics::EventHandlerRegister&,
                       std::function<bool()> const&,
                       std::function<bool()> const&));
     MOCK_METHOD0(restore, void());
+    MOCK_METHOD2(acquire_device_immediate, mir::Fd(int,int));
+
+    boost::future<mir::Fd> acquire_device(int major, int minor)
+    {
+        try
+        {
+            return boost::make_ready_future(acquire_device_immediate(major, minor));
+        }
+        catch (...)
+        {
+            return boost::make_exceptional_future<mir::Fd>(std::current_exception());
+        }
+    }
 };
 
 }

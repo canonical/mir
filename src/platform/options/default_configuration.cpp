@@ -63,6 +63,8 @@ char const* const mo::lttng_opt_value = "lttng";
 char const* const mo::platform_graphics_lib = "platform-graphics-lib";
 char const* const mo::platform_input_lib = "platform-input-lib";
 char const* const mo::platform_path = "platform-path";
+char const* const mo::vt_option_name = "vt";
+
 
 namespace
 {
@@ -201,7 +203,10 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (fatal_except_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
             "in unexpected ways] throw an exception (instead of a core dump)")
         (debug_opt, "Enable extra development debugging. "
-            "This is only interesting for people doing Mir server or client development.");
+            "This is only interesting for people doing Mir server or client development.")
+        (vt_option_name,
+            boost::program_options::value<int>()->default_value(0),
+            "When running on a VT, VT to run on or 0 to use current.");
 
         add_platform_options();
 }

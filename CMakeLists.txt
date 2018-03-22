@@ -168,7 +168,7 @@ include_directories(include/common)
 include_directories(include/cookie)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem iostreams thread REQUIRED)
 include_directories (SYSTEM
   ${Boost_INCLUDE_DIRS}
 )

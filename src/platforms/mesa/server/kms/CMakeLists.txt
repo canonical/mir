@@ -32,7 +32,6 @@ add_library(
   display_buffer.cpp
   page_flipper.h
   kms_page_flipper.cpp
-  linux_virtual_terminal.cpp
   platform.cpp
   kms_display_configuration.h
   real_kms_display_configuration.cpp
@@ -62,6 +61,8 @@ target_link_libraries(
   mirplatform
   mirsharedmesaservercommon-static
   ${Boost_PROGRAM_OPTIONS_LIBRARY}
+  ${Boost_IOSTREAMS_LIBRARY}
+  ${Boost_THREAD_LIBRARY}
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${GBM_LDFLAGS} ${GBM_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}

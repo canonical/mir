@@ -19,7 +19,7 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
-#include "linux_virtual_terminal.h"
+#include "mir/console_services.h"
 #include "ipc_operations.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
@@ -52,7 +52,7 @@ namespace mgm = mg::mesa;
 namespace mgmh = mgm::helpers;
 
 mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
-                        std::shared_ptr<VirtualTerminal> const& vt,
+                        std::shared_ptr<ConsoleServices> const& vt,
                         EmergencyCleanupRegistry& emergency_cleanup_registry,
                         BypassOption bypass_option)
     : udev{std::make_shared<mir::udev::Context>()},
@@ -68,7 +68,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
     // TODO: expose multiple rendering GPUs to the shell.
     gbm->setup(*drm.front());
 
-    std::weak_ptr<VirtualTerminal> weak_vt = vt;
+    std::weak_ptr<ConsoleServices> weak_vt = vt;
     std::vector<std::weak_ptr<mgmh::DRMHelper>> weak_drm;
 
     for (auto const &helper : drm)

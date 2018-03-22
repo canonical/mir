@@ -16,9 +16,10 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "src/platforms/mesa/server/kms/linux_virtual_terminal.h"
+#include "src/server/linux_virtual_terminal.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/graphics/event_handler_register.h"
+#include "mir/anonymous_shm_file.h"
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_display_report.h"
@@ -33,17 +34,19 @@
 
 #include <linux/vt.h>
 #include <linux/kd.h>
+#include <fcntl.h>
 
 namespace mg = mir::graphics;
-namespace mgm = mir::graphics::mesa;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mr = mir::report;
 
+#include <boost/exception/diagnostic_information.hpp>
+
 namespace
 {
 
-class MockVTFileOperations : public mgm::VTFileOperations
+class MockVTFileOperations : public mir::VTFileOperations
 {
 public:
     ~MockVTFileOperations() noexcept {}
@@ -55,7 +58,7 @@ public:
     MOCK_METHOD2(tcgetattr, int(int, struct termios*));
 };
 
-class MockPosixProcessOperations : public mgm::PosixProcessOperations
+class MockPosixProcessOperations : public mir::PosixProcessOperations
 {
 public:
     ~MockPosixProcessOperations() = default;
@@ -150,8 +153,23 @@ public:
         set_up_expectations_for_vt_setup(vt_num, activate, fake_vt_mode_auto);
     }
 
-    void set_up_expectations_for_vt_setup(int vt_num, bool activate,
-                                          vt_mode const& vtm)
+    void set_up_expectations_for_vt_setup(
+        int vt_num,
+        bool activate,
+        vt_mode const& vtm)
+    {
+        set_up_expectations_for_vt_setup(
+            vt_num,
+            activate,
+            vtm,
+            true);
+    }
+
+    void set_up_expectations_for_vt_setup(
+        int vt_num,
+        bool activate,
+        vt_mode const& vtm,
+        bool set_graphics_mode_succeeds)
     {
         using namespace testing;
 
@@ -182,6 +200,8 @@ public:
             .WillOnce(DoAll(SetTcAttrPointee<struct termios>(fake_tc_attr), Return(0)));
         EXPECT_CALL(mock_fops, tcsetattr(fake_vt_fd, TCSANOW, An<const struct termios *>()))
             .WillOnce(Return(0));
+        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSETMODE, KD_GRAPHICS))
+            .WillOnce(Return(set_graphics_mode_succeeds ? 0 : -1));
     }
 
     void set_up_expectations_for_switch_handler(int sig)
@@ -257,11 +277,11 @@ TEST_F(LinuxVirtualTerminalTest, use_provided_vt)
     set_up_expectations_for_vt_setup(vt_num, true);
     set_up_expectations_for_vt_teardown();
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt{fops, std::move(pops), vt_num, null_report};
+    mir::LinuxVirtualTerminal vt{fops, std::move(pops), vt_num, null_report};
 }
 
 TEST_F(LinuxVirtualTerminalTest, sets_up_current_vt)
@@ -276,11 +296,11 @@ TEST_F(LinuxVirtualTerminalTest, sets_up_current_vt)
     set_up_expectations_for_vt_setup(vt_num, false);
     set_up_expectations_for_vt_teardown();
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt{fops, std::move(pops), 0, null_report};
+    mir::LinuxVirtualTerminal vt{fops, std::move(pops), 0, null_report};
 }
 
 TEST_F(LinuxVirtualTerminalTest, failure_to_find_current_vt_throws)
@@ -302,12 +322,12 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_find_current_vt_throws)
         .WillOnce(Return(-1))
         .WillOnce(Return(-1));
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
     auto null_report = mr::null_display_report();
 
     EXPECT_THROW({
-        mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
+        mir::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
     }, std::runtime_error);
 }
 
@@ -323,35 +343,11 @@ TEST_F(LinuxVirtualTerminalTest, does_not_restore_vt_mode_if_vt_process)
     set_up_expectations_for_vt_setup(vt_num, false, fake_vt_mode_process);
     set_up_expectations_for_vt_teardown(fake_vt_mode_process);
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
-}
-
-TEST_F(LinuxVirtualTerminalTest, sets_graphics_mode)
-{
-    using namespace testing;
-
-    int const vt_num{7};
-
-    InSequence s;
-
-    set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num, false);
-
-    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSETMODE, KD_GRAPHICS))
-        .WillOnce(Return(0));
-
-    set_up_expectations_for_vt_teardown();
-
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
-    auto null_report = mr::null_display_report();
-
-    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
-    vt.set_graphics_mode();
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
 }
 
 TEST_F(LinuxVirtualTerminalTest, failure_to_set_graphics_mode_throws)
@@ -363,20 +359,16 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_set_graphics_mode_throws)
     InSequence s;
 
     set_up_expectations_for_current_vt_search(vt_num);
-    set_up_expectations_for_vt_setup(vt_num, false);
-
-    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSETMODE, KD_GRAPHICS))
-        .WillOnce(Return(-1));
+    set_up_expectations_for_vt_setup(vt_num, false, fake_vt_mode_auto, false);
 
     set_up_expectations_for_vt_teardown();
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
     EXPECT_THROW({
-        vt.set_graphics_mode();
+        mir::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
     }, std::runtime_error);
 }
 
@@ -393,11 +385,11 @@ TEST_F(LinuxVirtualTerminalTest, uses_sigusr1_for_switch_handling)
     set_up_expectations_for_switch_handler(SIGUSR1);
     set_up_expectations_for_vt_teardown();
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
 
     auto null_handler = [] { return true; };
     vt.register_switch_handlers(mock_event_handler_register, null_handler, null_handler);
@@ -420,11 +412,11 @@ TEST_F(LinuxVirtualTerminalTest, allows_vt_switch_on_switch_away_handler_success
 
     set_up_expectations_for_vt_teardown();
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
 
     auto succeeding_handler = [] { return true; };
     vt.register_switch_handlers(mock_event_handler_register, succeeding_handler, succeeding_handler);
@@ -459,10 +451,10 @@ TEST_F(LinuxVirtualTerminalTest, disallows_vt_switch_on_switch_away_handler_fail
 
     set_up_expectations_for_vt_teardown();
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
 
-    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, mt::fake_shared(mock_report));
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 0, mt::fake_shared(mock_report));
 
     auto failing_handler = [] { return false; };
     vt.register_switch_handlers(mock_event_handler_register, failing_handler, failing_handler);
@@ -496,10 +488,10 @@ TEST_F(LinuxVirtualTerminalTest, reports_failed_vt_switch_back_attempt)
 
     set_up_expectations_for_vt_teardown();
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
 
-    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), 0, mt::fake_shared(mock_report));
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 0, mt::fake_shared(mock_report));
 
     auto succeeding_handler = [] { return true; };
     auto failing_handler = [] { return false; };
@@ -519,8 +511,8 @@ TEST_F(LinuxVirtualTerminalTest, does_not_try_to_reaquire_session_leader)
 
     InSequence s;
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<NiceMock<MockPosixProcessOperations>>(new NiceMock<MockPosixProcessOperations>());
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<NiceMock<MockPosixProcessOperations>>();
     auto null_report = mr::null_display_report();
 
     pid_t const mockpid{1234};
@@ -535,7 +527,7 @@ TEST_F(LinuxVirtualTerminalTest, does_not_try_to_reaquire_session_leader)
     set_up_expectations_for_vt_setup(vt_num, true);
     set_up_expectations_for_vt_teardown();
 
-    mgm::LinuxVirtualTerminal vt{fops, std::move(pops), vt_num, null_report};
+    mir::LinuxVirtualTerminal vt{fops, std::move(pops), vt_num, null_report};
 }
 
 TEST_F(LinuxVirtualTerminalTest, relinquishes_group_leader_before_claiming_session_leader)
@@ -546,8 +538,8 @@ TEST_F(LinuxVirtualTerminalTest, relinquishes_group_leader_before_claiming_sessi
 
     InSequence s;
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<NiceMock<MockPosixProcessOperations>>(new NiceMock<MockPosixProcessOperations>());
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<NiceMock<MockPosixProcessOperations>>();
     auto null_report = mr::null_display_report();
 
     pid_t const mockpid{1234};
@@ -574,7 +566,7 @@ TEST_F(LinuxVirtualTerminalTest, relinquishes_group_leader_before_claiming_sessi
     set_up_expectations_for_vt_setup(vt_num, true);
     set_up_expectations_for_vt_teardown();
 
-    mgm::LinuxVirtualTerminal vt{fops, std::move(pops), vt_num, null_report};
+    mir::LinuxVirtualTerminal vt{fops, std::move(pops), vt_num, null_report};
 }
 
 TEST_F(LinuxVirtualTerminalTest, exception_if_setting_process_group_fails)
@@ -585,8 +577,8 @@ TEST_F(LinuxVirtualTerminalTest, exception_if_setting_process_group_fails)
 
     InSequence s;
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<NiceMock<MockPosixProcessOperations>>(new NiceMock<MockPosixProcessOperations>());
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<NiceMock<MockPosixProcessOperations>>();
     auto null_report = mr::null_display_report();
 
     pid_t const mockpid{1234};
@@ -608,7 +600,7 @@ TEST_F(LinuxVirtualTerminalTest, exception_if_setting_process_group_fails)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        mgm::LinuxVirtualTerminal vt(fops, std::move(pops), vt_num, null_report);
+        mir::LinuxVirtualTerminal vt(fops, std::move(pops), vt_num, null_report);
     }, std::runtime_error);
 }
 
@@ -620,7 +612,7 @@ TEST_F(LinuxVirtualTerminalTest, exception_if_becoming_session_leader_fails)
 
     InSequence s;
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
     auto pops = std::unique_ptr<NiceMock<MockPosixProcessOperations>>(new NiceMock<MockPosixProcessOperations>());
     auto null_report = mr::null_display_report();
 
@@ -646,7 +638,7 @@ TEST_F(LinuxVirtualTerminalTest, exception_if_becoming_session_leader_fails)
         .WillOnce(Return(-1));
 
     EXPECT_THROW({
-        mgm::LinuxVirtualTerminal vt(fops, std::move(pops), vt_num, null_report);
+        mir::LinuxVirtualTerminal vt(fops, std::move(pops), vt_num, null_report);
     }, std::runtime_error);
 }
 
@@ -662,15 +654,146 @@ TEST_F(LinuxVirtualTerminalTest, restores_keyboard_and_graphics)
 
     set_up_expectations_for_vt_restore(fake_vt_mode_auto);
 
-    auto fops = mt::fake_shared<mgm::VTFileOperations>(mock_fops);
-    auto pops = std::unique_ptr<mgm::PosixProcessOperations>(new StubPosixProcessOperations());
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
     auto null_report = mr::null_display_report();
 
-    mgm::LinuxVirtualTerminal vt(fops, std::move(pops), vt_num, null_report);
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), vt_num, null_report);
 
     vt.restore();
 
     Mock::VerifyAndClearExpectations(&mock_fops);
 
     set_up_expectations_for_vt_teardown();
+}
+
+TEST_F(LinuxVirtualTerminalTest, throws_expected_error_when_opening_file_fails)
+{
+    using namespace testing;
+
+    auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
+
+    int const major = 123;
+    int const minor = 321;
+    char const* const expected_filename = "/sys/dev/char/123:321/uevent";
+
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+        .WillOnce(Return(-1));
+
+    try
+    {
+        vt.acquire_device(major, minor);
+    }
+    catch (std::system_error const&)
+    {
+    }
+}
+
+TEST_F(LinuxVirtualTerminalTest, throws_error_when_parsing_fails)
+{
+    using namespace testing;
+
+    auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
+
+    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
+    char const* const uevent_content =
+        "MAJOR=56\n"
+        "MINOR=61\n"
+        "I_AINT_NO_DEVNAME=fb0";
+
+    mir::AnonymousShmFile uevent{strlen(uevent_content)};
+    ::memcpy(uevent.base_ptr(), uevent_content, strlen(uevent_content));
+
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+        .WillOnce(Return(uevent.fd()));
+
+    try
+    {
+        vt.acquire_device(55, 61);
+    }
+    catch (std::runtime_error const&)
+    {
+    }
+}
+
+TEST_F(LinuxVirtualTerminalTest, opens_correct_device_node)
+{
+    using namespace testing;
+
+    auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
+
+    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
+    char const* const uevent_content =
+        "MAJOR=55\n"
+        "MINOR=61\n"
+        "DEVNAME=fb0";
+
+    mir::AnonymousShmFile uevent{strlen(uevent_content)};
+    ::memcpy(uevent.base_ptr(), uevent_content, strlen(uevent_content));
+
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+        .WillOnce(Return(uevent.fd()));
+    EXPECT_CALL(*fops, open(StrEq("/dev/fb0"), O_RDWR | O_CLOEXEC))
+        .WillOnce(Return(-1));
+
+    auto device = vt.acquire_device(55, 61);
+
+    try
+    {
+        device.get();
+    }
+    catch(...)
+    {
+        // boost::unique_future appears to lose the type of the exception?
+    }
+}
+
+TEST_F(LinuxVirtualTerminalTest, callback_receives_correct_device_fd)
+{
+    using namespace testing;
+
+    auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
+
+    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
+    char const uevent_content[] =
+        "MAJOR=55\n"
+        "MINOR=61\n"
+        "DEVNAME=input/event3";
+
+    mir::AnonymousShmFile uevent{sizeof(uevent_content)};
+    ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
+
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+        .WillOnce(Return(uevent.fd()));
+
+    char const device_content[] =
+        "I am the very model of a modern major general";
+    mir::AnonymousShmFile fake_device_node(sizeof(device_content));
+    ::memcpy(fake_device_node.base_ptr(), device_content, sizeof(device_content));
+
+    EXPECT_CALL(*fops, open(StrEq("/dev/input/event3"), O_RDWR | O_CLOEXEC))
+        .WillOnce(Return(fake_device_node.fd()));
+
+    auto fd = vt.acquire_device(55, 61).get();
+    char buffer[sizeof(device_content)];
+
+    auto read_bytes = read(fd, buffer, sizeof(device_content));
+    EXPECT_THAT(read_bytes, Eq(sizeof(device_content)));
+    EXPECT_THAT(buffer, StrEq(device_content));
 }

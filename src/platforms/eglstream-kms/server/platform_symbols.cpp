@@ -72,7 +72,8 @@ EGLDeviceEXT find_device()
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const&,
-    std::shared_ptr<mir::EmergencyCleanupRegistry> const&, 
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
+    std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mg::DisplayReport> const&, 
     std::shared_ptr<mir::logging::Logger> const&)
 {
@@ -85,6 +86,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const&, 
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
+    std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mg::DisplayReport> const&, 
     std::shared_ptr<mir::logging::Logger> const&) 
 {
@@ -118,7 +120,9 @@ char const* drm_node_for_device(EGLDeviceEXT device)
 }
 }
 
-mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
+mg::PlatformPriority probe_graphics_platform(
+    std::shared_ptr<mir::ConsoleServices> const&,
+    mo::ProgramOption const& /*options*/)
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
 

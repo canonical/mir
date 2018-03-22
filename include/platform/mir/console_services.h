@@ -16,40 +16,48 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_VIRTUAL_TERMINAL_H_
-#define MIR_GRAPHICS_MESA_VIRTUAL_TERMINAL_H_
+#ifndef MIR_PLATFORM_CONSOLE_SERVICES_H_
+#define MIR_PLATFORM_CONSOLE_SERVICES_H_
 
 #include <functional>
 
+#define BOOST_THREAD_PROVIDES_FUTURE
+#include <boost/thread/future.hpp>
+
 namespace mir
 {
+class Fd;
+
 namespace graphics
 {
 class EventHandlerRegister;
+}
 
-namespace mesa
-{
-
-class VirtualTerminal
+class ConsoleServices
 {
 public:
-    virtual ~VirtualTerminal() = default;
+    virtual ~ConsoleServices() = default;
 
-    virtual void set_graphics_mode() = 0;
     virtual void register_switch_handlers(
-        EventHandlerRegister& handlers,
+        graphics::EventHandlerRegister& handlers,
         std::function<bool()> const& switch_away,
         std::function<bool()> const& switch_back) = 0;
     virtual void restore() = 0;
 
+    /**
+     * Asynchronously acquire access to a device node
+     *
+     * \param major             [in] major number of requested device node
+     * \param minor             [in] minor number of requested device node
+     */
+    virtual boost::future<Fd> acquire_device(int major, int minor) = 0;
+
 protected:
-    VirtualTerminal() = default;
-    VirtualTerminal(VirtualTerminal const&) = delete;
-    VirtualTerminal& operator=(VirtualTerminal const&) = delete;
+    ConsoleServices() = default;
+    ConsoleServices(ConsoleServices const&) = delete;
+    ConsoleServices& operator=(ConsoleServices const&) = delete;
 };
 
 }
-}
-}
 
-#endif /* MIR_GRAPHICS_MESA_VIRTUAL_TERMINAL_H_ */
+#endif /* MIR_PLATFORM_CONSOLE_SERVICES_H_*/

@@ -16,10 +16,11 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_
-#define MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_
+#ifndef MIR_TEST_DOUBLES_NULL_CONSOLE_SERVICES_H_
+#define MIR_TEST_DOUBLES_NULL_CONSOLE_SERVICES_H_
 
-#include "src/platforms/mesa/server/kms/virtual_terminal.h"
+#include "mir/fd.h"
+#include "mir/console_services.h"
 
 namespace mir
 {
@@ -28,11 +29,9 @@ namespace test
 namespace doubles
 {
 
-class NullVirtualTerminal : public graphics::mesa::VirtualTerminal
+class NullConsoleServices : public ConsoleServices
 {
 public:
-    void set_graphics_mode() override {}
-
     void register_switch_handlers(graphics::EventHandlerRegister&,
                                   std::function<bool()> const&,
                                   std::function<bool()> const&) override
@@ -40,10 +39,12 @@ public:
     }
 
     void restore() override {}
+
+    boost::future<Fd> acquire_device(int, int) override { return boost::future<Fd> (); }
 };
 
 }
 }
 }
 
-#endif /* MIR_TEST_DOUBLES_NULL_VIRTUAL_TERMINAL_H_ */
+#endif /* MIR_TEST_DOUBLES_NULL_CONSOLE_SERVICES_H_ */
