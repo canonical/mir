@@ -135,7 +135,8 @@ void mf::WlSurface::destroy()
 
 void mf::WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y)
 {
-    if (x != 0 || y != 0)
+    throw std::runtime_error("Hello!");
+	if (x != 0 || y != 0)
     {
         mir::log_warning("Client requested unimplemented non-zero attach offset. Rendering will be incorrect.");
     }
