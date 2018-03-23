@@ -786,6 +786,10 @@ INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/README.md \
                          @CMAKE_CURRENT_SOURCE_DIR@/doc \
                          @CMAKE_CURRENT_SOURCE_DIR@/examples/miral-kiosk \
                          @CMAKE_CURRENT_SOURCE_DIR@/examples/miral-shell \
+                         @CMAKE_CURRENT_SOURCE_DIR@/examples/example-server-lib \
+                         @CMAKE_CURRENT_SOURCE_DIR@/include/core \
+                         @CMAKE_CURRENT_SOURCE_DIR@/include/client \
+                         @CMAKE_CURRENT_SOURCE_DIR@/include/miral \
                          @CMAKE_CURRENT_SOURCE_DIR@/include \
                          @MIR_GENERATED_INCLUDE_DIRECTORIES_FLATTENED@
 
