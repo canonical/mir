@@ -31,11 +31,6 @@ ifeq ($(DEB_HOST_ARCH),s390x)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
 endif
 
-# Disable Mir EGL outside of Ubuntu 16.04 and 17.10
-ifneq ($(filter-out xenial artful,$(DEB_DISTRIBUTION)),)
-	COMMON_CONFIGURE_OPTIONS += -DMIR_EGL_SUPPORTED=OFF
-endif
-
 $(info COMMON_CONFIGURE_OPTIONS: ${COMMON_CONFIGURE_OPTIONS})
 
 override_dh_auto_configure:
