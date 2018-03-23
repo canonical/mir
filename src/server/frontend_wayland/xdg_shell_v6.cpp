@@ -65,6 +65,7 @@ public:
     void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges);
     void set_notify_resize(std::function<void(geometry::Size const& new_size, MirWindowState state, bool active)> notify_resize);
     void on_next_commit(std::function<void()> deferred);
+    void clear_on_next_commit();
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
     void set_maximized();
@@ -94,8 +95,6 @@ public:
         [](auto, auto, auto){};
 
 private:
-    void post_configure(int serial) const;
-
     std::shared_ptr<bool> const destroyed;
 };
 
@@ -436,18 +435,26 @@ void mf::XdgSurfaceV6::unset_maximized()
     }
 }
 
+void mir::frontend::XdgSurfaceV6::clear_on_next_commit()
+{
+    commit_action = []{};
+}
+
 void mir::frontend::XdgSurfaceV6::on_next_commit(std::function<void()> deferred)
 {
-    commit_action = deferred;
+    commit_action = [this, deferred]
+    {
+        deferred();
+        auto const serial = wl_display_next_serial(wl_client_get_display(client));
+        zxdg_surface_v6_send_configure(event_sink, serial);
+    };
 }
 
 void mir::frontend::XdgSurfaceV6::commit(mir::frontend::WlSurfaceState const& state)
 {
     WlAbstractMirWindow::commit(state);
-    auto const serial = wl_display_next_serial(wl_client_get_display(client));
     commit_action();
     commit_action = []{};
-    zxdg_surface_v6_send_configure(event_sink, serial);
 }
 
 // XdgSurfaceV6EventSink
@@ -465,14 +472,6 @@ void mf::XdgSurfaceV6EventSink::send_resize(geometry::Size const& new_size) cons
         {
             auto const serial = wl_display_next_serial(wl_client_get_display(client));
             notify_resize(new_size, state(), is_active());
-            zxdg_surface_v6_send_configure(event_sink, serial);
-        }));
-}
-
-void mf::XdgSurfaceV6EventSink::post_configure(int serial) const
-{
-    seat->spawn(run_unless(destroyed, [event_sink= event_sink, serial]()
-        {
             zxdg_surface_v6_send_configure(event_sink, serial);
         }));
 }
@@ -505,7 +504,7 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
     self->set_notify_resize(
         [this](geom::Size const& new_size, MirWindowState state, bool active)
         {
-            this->self->on_next_commit([]{});
+            this->self->clear_on_next_commit();
 
             wl_array states;
             wl_array_init(&states);
@@ -539,7 +538,7 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
             wl_array_release(&states);
         });
 
-    self->on_next_commit([resource=this->resource]
+    self->on_next_commit([resource=this->resource, self]
         {
             wl_array states;
             wl_array_init(&states);
