@@ -57,12 +57,14 @@ public:
     void get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner) override;
     void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void ack_configure(uint32_t serial) override;
+    void commit(WlSurfaceState const& state) override;
 
     void set_parent(optional_value<SurfaceId> parent_id);
     void set_title(std::string const& title);
     void move(struct wl_resource* seat, uint32_t serial);
     void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges);
     void set_notify_resize(std::function<void(geometry::Size const& new_size, MirWindowState state, bool active)> notify_resize);
+    void on_next_commit(std::function<void()> deferred);
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
     void set_maximized();
@@ -75,6 +77,7 @@ public:
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<XdgSurfaceV6EventSink> const sink;
+    std::function<void()> commit_action{[]{}};
 };
 
 class XdgSurfaceV6EventSink : public BasicSurfaceEventSink
@@ -433,6 +436,20 @@ void mf::XdgSurfaceV6::unset_maximized()
     }
 }
 
+void mir::frontend::XdgSurfaceV6::on_next_commit(std::function<void()> deferred)
+{
+    commit_action = deferred;
+}
+
+void mir::frontend::XdgSurfaceV6::commit(mir::frontend::WlSurfaceState const& state)
+{
+    WlAbstractMirWindow::commit(state);
+    auto const serial = wl_display_next_serial(wl_client_get_display(client));
+    commit_action();
+    commit_action = []{};
+    zxdg_surface_v6_send_configure(event_sink, serial);
+}
+
 // XdgSurfaceV6EventSink
 
 mf::XdgSurfaceV6EventSink::XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client, wl_resource* target,
@@ -440,8 +457,6 @@ mf::XdgSurfaceV6EventSink::XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client
     : BasicSurfaceEventSink(seat, client, target, event_sink),
       destroyed{destroyed}
 {
-    auto const serial = wl_display_next_serial(wl_client_get_display(client));
-    post_configure(serial);
 }
 
 void mf::XdgSurfaceV6EventSink::send_resize(geometry::Size const& new_size) const
@@ -490,6 +505,8 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
     self->set_notify_resize(
         [this](geom::Size const& new_size, MirWindowState state, bool active)
         {
+            this->self->on_next_commit([]{});
+
             wl_array states;
             wl_array_init(&states);
 
@@ -519,6 +536,14 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
 
             zxdg_toplevel_v6_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
 
+            wl_array_release(&states);
+        });
+
+    self->on_next_commit([resource=this->resource]
+        {
+            wl_array states;
+            wl_array_init(&states);
+            zxdg_toplevel_v6_send_configure(resource, 0, 0, &states);
             wl_array_release(&states);
         });
 }
