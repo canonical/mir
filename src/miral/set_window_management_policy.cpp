@@ -22,7 +22,6 @@
 
 #include <mir/server.h>
 #include <mir/options/option.h>
-#include <mir/version.h>
 
 namespace msh = mir::shell;
 

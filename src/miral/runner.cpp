@@ -23,7 +23,6 @@
 #include <mir/main_loop.h>
 #include <mir/report_exception.h>
 #include <mir/options/option.h>
-#include <mir/version.h>
 
 #include <chrono>
 #include <cstdlib>

@@ -20,7 +20,6 @@
 #include "window_info_defaults.h"
 
 #include <mir/scene/surface.h>
-#include <mir/version.h>
 
 #include <limits>
 

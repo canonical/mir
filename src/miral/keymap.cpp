@@ -23,7 +23,6 @@
 #include <mir/input/device.h>
 #include <mir/options/option.h>
 #include <mir/server.h>
-#include <mir/version.h>
 
 #include <mir/input/keymap.h>
 #include <mir/input/mir_keyboard_config.h>

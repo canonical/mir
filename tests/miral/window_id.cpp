@@ -22,8 +22,6 @@
 
 #include <miral/application_info.h>
 
-#include <mir/version.h>
-
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
