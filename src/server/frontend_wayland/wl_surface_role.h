@@ -81,12 +81,12 @@ protected:
 
     geometry::Size window_size();
     shell::SurfaceSpecification& spec();
+    void commit(WlSurfaceState const& state) override;
 
 private:
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
     bool buffer_list_needs_refresh = true;
 
-    void commit(WlSurfaceState const& state) override;
     void visiblity(bool visible) override;
 };
 
