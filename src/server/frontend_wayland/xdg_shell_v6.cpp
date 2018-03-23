@@ -64,8 +64,8 @@ public:
     void move(struct wl_resource* seat, uint32_t serial);
     void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges);
     void set_notify_resize(std::function<void(geometry::Size const& new_size, MirWindowState state, bool active)> notify_resize);
-    void on_next_commit(std::function<void()> deferred);
-    void clear_on_next_commit();
+    void set_next_commit_action(std::function<void()> action);
+    void clear_next_commit_action();
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
     void set_maximized();
@@ -78,7 +78,7 @@ public:
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<XdgSurfaceV6EventSink> const sink;
-    std::function<void()> commit_action{[]{}};
+    std::function<void()> next_commit_action{[]{}};
 };
 
 class XdgSurfaceV6EventSink : public BasicSurfaceEventSink
@@ -435,16 +435,16 @@ void mf::XdgSurfaceV6::unset_maximized()
     }
 }
 
-void mir::frontend::XdgSurfaceV6::clear_on_next_commit()
+void mir::frontend::XdgSurfaceV6::clear_next_commit_action()
 {
-    commit_action = []{};
+    next_commit_action = []{};
 }
 
-void mir::frontend::XdgSurfaceV6::on_next_commit(std::function<void()> deferred)
+void mir::frontend::XdgSurfaceV6::set_next_commit_action(std::function<void()> action)
 {
-    commit_action = [this, deferred]
+    next_commit_action = [this, action]
     {
-        deferred();
+        action();
         auto const serial = wl_display_next_serial(wl_client_get_display(client));
         zxdg_surface_v6_send_configure(event_sink, serial);
     };
@@ -453,8 +453,8 @@ void mir::frontend::XdgSurfaceV6::on_next_commit(std::function<void()> deferred)
 void mir::frontend::XdgSurfaceV6::commit(mir::frontend::WlSurfaceState const& state)
 {
     WlAbstractMirWindow::commit(state);
-    commit_action();
-    commit_action = []{};
+    next_commit_action();
+    clear_next_commit_action();
 }
 
 // XdgSurfaceV6EventSink
@@ -504,7 +504,7 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
     self->set_notify_resize(
         [this](geom::Size const& new_size, MirWindowState state, bool active)
         {
-            this->self->clear_on_next_commit();
+                this->self->clear_next_commit_action();
 
             wl_array states;
             wl_array_init(&states);
@@ -538,13 +538,14 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
             wl_array_release(&states);
         });
 
-    self->on_next_commit([resource=this->resource, self]
-        {
-            wl_array states;
-            wl_array_init(&states);
-            zxdg_toplevel_v6_send_configure(resource, 0, 0, &states);
-            wl_array_release(&states);
-        });
+    self->set_next_commit_action(
+        [resource = this->resource, self]
+            {
+                wl_array states;
+                wl_array_init(&states);
+                zxdg_toplevel_v6_send_configure(resource, 0, 0, &states);
+                wl_array_release(&states);
+            });
 }
 
 void mf::XdgToplevelV6::destroy()
