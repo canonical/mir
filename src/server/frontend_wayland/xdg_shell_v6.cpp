@@ -101,7 +101,7 @@ private:
 class XdgPopupV6 : wayland::XdgPopupV6
 {
 public:
-    XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id, XdgSurfaceV6* self);
 
     void grab(struct wl_resource* seat, uint32_t serial) override;
     void destroy() override;
@@ -244,7 +244,7 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
     params->aux_rect_placement_offset_y = pos->aux_rect_placement_offset_y;
     params->placement_hints = mir_placement_hints_slide_any;
 
-    new XdgPopupV6{client, parent, id};
+    new XdgPopupV6{client, parent, id, this};
     surface->set_role(this);
 }
 
@@ -478,9 +478,13 @@ void mf::XdgSurfaceV6EventSink::send_resize(geometry::Size const& new_size) cons
 
 // XdgPopupV6
 
-mf::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mf::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id, XdgSurfaceV6* self)
     : wayland::XdgPopupV6(client, parent, id)
-{}
+{
+    // TODO Make this readable!!! This "works" by exploiting the non-obvious side-effect
+    // of causing a zxdg_surface_v6_send_configure() event to become pending.
+    self->set_next_commit_action([]{});
+}
 
 void mf::XdgPopupV6::grab(struct wl_resource* seat, uint32_t serial)
 {
