@@ -32,7 +32,6 @@
 #include <mir/observer_registrar.h>
 #include <mir/shell/abstract_shell.h>
 #include <mir/shell/window_manager.h>
-#include <mir/version.h>
 
 #include <boost/bimap.hpp>
 #include <boost/bimap/multiset_of.hpp>

@@ -20,7 +20,6 @@
 
 #include <mir/shell/surface_specification.h>
 #include <mir/scene/surface_creation_parameters.h>
-#include <mir/version.h>
 
 struct miral::WindowSpecification::Self
 {

@@ -21,7 +21,6 @@
 #include <mir/frontend/session_credentials.h>
 #include <mir/frontend/session_authorizer.h>
 #include <mir/server.h>
-#include <mir/version.h>
 
 namespace mf = mir::frontend;
 

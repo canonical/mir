@@ -25,7 +25,6 @@
 #include <mir/server.h>
 #include <mir/options/option.h>
 #include <mir/shell/system_compositor_window_manager.h>
-#include <mir/version.h>
 
 namespace msh = mir::shell;
 
