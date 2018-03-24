@@ -57,12 +57,15 @@ public:
     void get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner) override;
     void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void ack_configure(uint32_t serial) override;
+    void commit(WlSurfaceState const& state) override;
 
     void set_parent(optional_value<SurfaceId> parent_id);
     void set_title(std::string const& title);
     void move(struct wl_resource* seat, uint32_t serial);
     void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges);
     void set_notify_resize(std::function<void(geometry::Size const& new_size, MirWindowState state, bool active)> notify_resize);
+    void set_next_commit_action(std::function<void()> action);
+    void clear_next_commit_action();
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
     void set_maximized();
@@ -75,6 +78,7 @@ public:
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
     std::shared_ptr<XdgSurfaceV6EventSink> const sink;
+    std::function<void()> next_commit_action{[]{}};
 };
 
 class XdgSurfaceV6EventSink : public BasicSurfaceEventSink
@@ -91,15 +95,13 @@ public:
         [](auto, auto, auto){};
 
 private:
-    void post_configure(int serial) const;
-
     std::shared_ptr<bool> const destroyed;
 };
 
 class XdgPopupV6 : wayland::XdgPopupV6
 {
 public:
-    XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id, XdgSurfaceV6* self);
 
     void grab(struct wl_resource* seat, uint32_t serial) override;
     void destroy() override;
@@ -242,7 +244,7 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
     params->aux_rect_placement_offset_y = pos->aux_rect_placement_offset_y;
     params->placement_hints = mir_placement_hints_slide_any;
 
-    new XdgPopupV6{client, parent, id};
+    new XdgPopupV6{client, parent, id, this};
     surface->set_role(this);
 }
 
@@ -433,6 +435,28 @@ void mf::XdgSurfaceV6::unset_maximized()
     }
 }
 
+void mir::frontend::XdgSurfaceV6::clear_next_commit_action()
+{
+    next_commit_action = []{};
+}
+
+void mir::frontend::XdgSurfaceV6::set_next_commit_action(std::function<void()> action)
+{
+    next_commit_action = [this, action]
+    {
+        action();
+        auto const serial = wl_display_next_serial(wl_client_get_display(client));
+        zxdg_surface_v6_send_configure(event_sink, serial);
+    };
+}
+
+void mir::frontend::XdgSurfaceV6::commit(mir::frontend::WlSurfaceState const& state)
+{
+    WlAbstractMirWindow::commit(state);
+    next_commit_action();
+    clear_next_commit_action();
+}
+
 // XdgSurfaceV6EventSink
 
 mf::XdgSurfaceV6EventSink::XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client, wl_resource* target,
@@ -440,8 +464,6 @@ mf::XdgSurfaceV6EventSink::XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client
     : BasicSurfaceEventSink(seat, client, target, event_sink),
       destroyed{destroyed}
 {
-    auto const serial = wl_display_next_serial(wl_client_get_display(client));
-    post_configure(serial);
 }
 
 void mf::XdgSurfaceV6EventSink::send_resize(geometry::Size const& new_size) const
@@ -454,19 +476,15 @@ void mf::XdgSurfaceV6EventSink::send_resize(geometry::Size const& new_size) cons
         }));
 }
 
-void mf::XdgSurfaceV6EventSink::post_configure(int serial) const
-{
-    seat->spawn(run_unless(destroyed, [event_sink= event_sink, serial]()
-        {
-            zxdg_surface_v6_send_configure(event_sink, serial);
-        }));
-}
-
 // XdgPopupV6
 
-mf::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mf::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id, XdgSurfaceV6* self)
     : wayland::XdgPopupV6(client, parent, id)
-{}
+{
+    // TODO Make this readable!!! This "works" by exploiting the non-obvious side-effect
+    // of causing a zxdg_surface_v6_send_configure() event to become pending.
+    self->set_next_commit_action([]{});
+}
 
 void mf::XdgPopupV6::grab(struct wl_resource* seat, uint32_t serial)
 {
@@ -490,6 +508,8 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
     self->set_notify_resize(
         [this](geom::Size const& new_size, MirWindowState state, bool active)
         {
+                this->self->clear_next_commit_action();
+
             wl_array states;
             wl_array_init(&states);
 
@@ -521,6 +541,15 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
 
             wl_array_release(&states);
         });
+
+    self->set_next_commit_action(
+        [resource = this->resource, self]
+            {
+                wl_array states;
+                wl_array_init(&states);
+                zxdg_toplevel_v6_send_configure(resource, 0, 0, &states);
+                wl_array_release(&states);
+            });
 }
 
 void mf::XdgToplevelV6::destroy()

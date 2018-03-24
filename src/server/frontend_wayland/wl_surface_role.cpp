@@ -139,27 +139,7 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
 
 geometry::Size WlAbstractMirWindow::window_size()
 {
-    if (window_size_.is_set())
-    {
-        return window_size_.value();
-    }
-    else
-    {
-        auto buffer_size = surface->buffer_size();
-
-        // Sometimes, when using xdg-shell, qterminal creates an insanely tall buffer
-        const auto max_allowed_buffer_height = geometry::Height{10000};
-        const auto corrected_buffer_height   = geometry::Height{1000};
-
-        if (buffer_size.height > max_allowed_buffer_height)
-        {
-            log_warning("Insane buffer height sanitized: buffer_size.height = %d (was %d)",
-                        corrected_buffer_height.as_int(), buffer_size.height.as_int());
-            buffer_size.height = corrected_buffer_height;
-        }
-
-        return buffer_size;
-    }
+     return window_size_.is_set()? window_size_.value() : surface->buffer_size();
 }
 
 void WlAbstractMirWindow::visiblity(bool visible)
