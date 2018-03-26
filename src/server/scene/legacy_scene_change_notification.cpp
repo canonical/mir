@@ -27,15 +27,6 @@ namespace ms = mir::scene;
 
 ms::LegacySceneChangeNotification::LegacySceneChangeNotification(
     std::function<void()> const& scene_notify_change,
-    std::function<void(int)> const& buffer_notify_change)
-    : scene_notify_change(scene_notify_change),
-      buffer_notify_change(buffer_notify_change)
-      
-{
-}
-
-ms::LegacySceneChangeNotification::LegacySceneChangeNotification(
-    std::function<void()> const& scene_notify_change,
     std::function<void(int frames, mir::geometry::Rectangle const& damage)> const& damage_notify_change) :
     scene_notify_change(scene_notify_change),
     damage_notify_change(damage_notify_change)
@@ -97,22 +88,11 @@ void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surfac
             was_visible = surface->visible();
         };
 
-    if (buffer_notify_change)
-    {
-        auto observer = std::make_shared<LegacySurfaceChangeNotification>(notifier, buffer_notify_change);
-        surface->add_observer(observer);
+    auto observer = std::make_shared<NonLegacySurfaceChangeNotification>(notifier, damage_notify_change, surface);
+    surface->add_observer(observer);
 
-        std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
-        surface_observers[surface] = observer;
-    }
-    else
-    {
-        auto observer = std::make_shared<NonLegacySurfaceChangeNotification>(notifier, damage_notify_change, surface);
-        surface->add_observer(observer);
-
-        std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
-        surface_observers[surface] = observer;
-    }
+    std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
+    surface_observers[surface] = observer;
 }
 
 void ms::LegacySceneChangeNotification::surface_added(ms::Surface* surface)
