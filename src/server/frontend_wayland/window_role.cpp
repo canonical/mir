@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "wl_surface_role.h"
+#include "window_role.h"
 
 #include "wayland_utils.h"
 #include "wl_surface.h"
@@ -44,7 +44,7 @@ std::shared_ptr<scene::Surface> get_surface_for_id(std::shared_ptr<Session> cons
 }
 }
 
-WlAbstractMirWindow::WlAbstractMirWindow(wl_client* client, wl_resource* surface, wl_resource* event_sink,
+WindowRole::WindowRole(wl_client* client, wl_resource* surface, wl_resource* event_sink,
     std::shared_ptr<Shell> const& shell)
         : destroyed{std::make_shared<bool>(false)},
           client{client},
@@ -56,7 +56,7 @@ WlAbstractMirWindow::WlAbstractMirWindow(wl_client* client, wl_resource* surface
 {
 }
 
-WlAbstractMirWindow::~WlAbstractMirWindow()
+WindowRole::~WindowRole()
 {
     *destroyed = true;
     if (surface_id.as_value())
@@ -70,12 +70,12 @@ WlAbstractMirWindow::~WlAbstractMirWindow()
     }
 }
 
-void WlAbstractMirWindow::invalidate_buffer_list()
+void WindowRole::invalidate_buffer_list()
 {
     buffer_list_needs_refresh = true;
 }
 
-shell::SurfaceSpecification& WlAbstractMirWindow::spec()
+shell::SurfaceSpecification& WindowRole::spec()
 {
     if (!pending_changes)
         pending_changes = std::make_unique<shell::SurfaceSpecification>();
@@ -83,7 +83,7 @@ shell::SurfaceSpecification& WlAbstractMirWindow::spec()
     return *pending_changes;
 }
 
-void WlAbstractMirWindow::commit(WlSurfaceState const& state)
+void WindowRole::commit(WlSurfaceState const& state)
 {
     surface->commit(state);
 
@@ -137,12 +137,12 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
         sink->send_resize(client_size);
 }
 
-geometry::Size WlAbstractMirWindow::window_size()
+geometry::Size WindowRole::window_size()
 {
      return window_size_.is_set()? window_size_.value() : surface->buffer_size();
 }
 
-void WlAbstractMirWindow::visiblity(bool visible)
+void WindowRole::visiblity(bool visible)
 {
     if (!surface_id.as_value())
         return;

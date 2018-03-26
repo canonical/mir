@@ -22,7 +22,7 @@
 #include "basic_surface_event_sink.h"
 #include "wl_seat.h"
 #include "wl_surface.h"
-#include "wl_surface_role.h"
+#include "window_role.h"
 
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/frontend/session.h"
@@ -43,7 +43,7 @@ class XdgSurfaceV6;
 class WlSeat;
 class XdgSurfaceV6EventSink;
 
-class XdgSurfaceV6 : wayland::XdgSurfaceV6, WlAbstractMirWindow
+class XdgSurfaceV6 : wayland::XdgSurfaceV6, WindowRole
 {
 public:
     XdgSurfaceV6* get_xdgsurface(wl_resource* surface) const;
@@ -71,9 +71,9 @@ public:
     void set_maximized();
     void unset_maximized();
 
-    using WlAbstractMirWindow::client;
-    using WlAbstractMirWindow::params;
-    using WlAbstractMirWindow::surface_id;
+    using WindowRole::client;
+    using WindowRole::params;
+    using WindowRole::surface_id;
 
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
@@ -202,12 +202,12 @@ mf::XdgSurfaceV6* mf::XdgSurfaceV6::get_xdgsurface(wl_resource* surface) const
 mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t id, wl_resource* surface,
                                std::shared_ptr<mf::Shell> const& shell, WlSeat& seat)
     : wayland::XdgSurfaceV6(client, parent, id),
-      WlAbstractMirWindow{client, surface, resource, shell},
+      WindowRole{client, surface, resource, shell},
       parent{parent},
       shell{shell},
       sink{std::make_shared<XdgSurfaceV6EventSink>(&seat, client, surface, resource, destroyed)}
 {
-    WlAbstractMirWindow::sink = sink;
+    WindowRole::sink = sink;
 }
 
 mf::XdgSurfaceV6::~XdgSurfaceV6()
@@ -452,7 +452,7 @@ void mir::frontend::XdgSurfaceV6::set_next_commit_action(std::function<void()> a
 
 void mir::frontend::XdgSurfaceV6::commit(mir::frontend::WlSurfaceState const& state)
 {
-    WlAbstractMirWindow::commit(state);
+    WindowRole::commit(state);
     next_commit_action();
     clear_next_commit_action();
 }

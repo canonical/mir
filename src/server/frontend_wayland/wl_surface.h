@@ -70,20 +70,6 @@ struct WlSurfaceState
     std::vector<Callback> frame_callbacks;
 };
 
-class NullWlSurfaceRole : public WlSurfaceRole
-{
-public:
-    NullWlSurfaceRole(WlSurface* surface);
-    void invalidate_buffer_list() override;
-    void commit(WlSurfaceState const& state) override;
-    void visiblity(bool /*visible*/) override;
-    void destroy() override;
-
-private:
-    WlSurface* const surface;
-};
-
-
 class WlSurface : public wayland::Surface
 {
 public:
@@ -117,10 +103,23 @@ public:
     static WlSurface* from(wl_resource* resource);
 
 private:
+    class NullRole : public WlSurfaceRole
+    {
+    public:
+        NullRole(WlSurface* surface): surface{surface} {}
+        void invalidate_buffer_list() override {}
+        void commit(WlSurfaceState const& state) override { surface->commit(state); }
+        void visiblity(bool /*visible*/) override {}
+        void destroy() override {}
+
+    private:
+        WlSurface* const surface;
+    };
+
     std::shared_ptr<mir::graphics::WaylandAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
 
-    NullWlSurfaceRole null_role;
+    NullRole null_role;
     WlSurfaceRole* role;
     std::vector<WlSubsurface*> children;
 
