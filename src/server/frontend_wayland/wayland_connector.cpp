@@ -19,7 +19,7 @@
 #include "wayland_connector.h"
 
 #include "wayland_utils.h"
-#include "wl_surface_role.h"
+#include "window_role.h"
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
@@ -313,7 +313,7 @@ void SurfaceEventSink::send_resize(geometry::Size const& new_size) const
         }));
 }
 
-class WlShellSurface  : public wayland::ShellSurface, WlAbstractMirWindow
+class WlShellSurface  : public wayland::ShellSurface, WindowRole
 {
 public:
     WlShellSurface(
@@ -324,7 +324,7 @@ public:
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat)
         : ShellSurface(client, parent, id),
-        WlAbstractMirWindow{client, surface, resource, shell}
+        WindowRole{client, surface, resource, shell}
     {
         // We can't pass this to the WlAbstractMirWindow constructor as it needs creating *after* destroyed
         sink = std::make_shared<SurfaceEventSink>(&seat, client, surface, event_sink, destroyed);
@@ -552,7 +552,7 @@ protected:
     {
     }
 
-    using WlAbstractMirWindow::client;
+    using WindowRole::client;
 };
 
 class WlShell : public wayland::Shell

@@ -273,13 +273,3 @@ void mf::WlSurface::set_buffer_scale(int32_t scale)
     (void)scale;
     // TODO
 }
-
-mf::NullWlSurfaceRole::NullWlSurfaceRole(WlSurface* surface) :
-    surface{surface}
-{
-}
-
-void mf::NullWlSurfaceRole::invalidate_buffer_list() {}
-void mf::NullWlSurfaceRole::commit(WlSurfaceState const& state) { surface->commit(state); }
-void mf::NullWlSurfaceRole::visiblity(bool /*visible*/) {}
-void mf::NullWlSurfaceRole::destroy() {}

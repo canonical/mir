@@ -19,31 +19,10 @@
 #ifndef MIR_FRONTEND_WL_SURFACE_ROLE_H
 #define MIR_FRONTEND_WL_SURFACE_ROLE_H
 
-#include "mir/frontend/surface_id.h"
-#include "mir/geometry/displacement.h"
-#include "mir/geometry/size.h"
-#include "mir/optional_value.h"
-
-#include <memory>
-
-struct wl_client;
-struct wl_resource;
-
 namespace mir
 {
-namespace scene
-{
-struct SurfaceCreationParameters;
-}
-namespace shell
-{
-struct SurfaceSpecification;
-}
 namespace frontend
 {
-class Shell;
-class BasicSurfaceEventSink;
-class WlSurface;
 struct WlSurfaceState;
 
 class WlSurfaceRole
@@ -55,39 +34,6 @@ public:
     virtual void visiblity(bool visible) = 0;
     virtual void destroy() = 0;
     virtual ~WlSurfaceRole() = default;
-};
-
-class WlAbstractMirWindow : public WlSurfaceRole
-{
-public:
-    WlAbstractMirWindow(wl_client* client, wl_resource* surface, wl_resource* event_sink,
-        std::shared_ptr<frontend::Shell> const& shell);
-
-    ~WlAbstractMirWindow() override;
-
-    void invalidate_buffer_list() override;
-
-protected:
-    std::shared_ptr<bool> const destroyed;
-    wl_client* const client;
-    WlSurface* const surface;
-    wl_resource* const event_sink;
-    std::shared_ptr<frontend::Shell> const shell;
-    std::shared_ptr<BasicSurfaceEventSink> sink;
-
-    std::unique_ptr<scene::SurfaceCreationParameters> const params;
-    SurfaceId surface_id;
-    optional_value<geometry::Size> window_size_;
-
-    geometry::Size window_size();
-    shell::SurfaceSpecification& spec();
-    void commit(WlSurfaceState const& state) override;
-
-private:
-    std::unique_ptr<shell::SurfaceSpecification> pending_changes;
-    bool buffer_list_needs_refresh = true;
-
-    void visiblity(bool visible) override;
 };
 
 }
