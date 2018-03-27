@@ -62,6 +62,7 @@ mf::WlSurface::WlSurface(
         executor{executor},
         null_role{this},
         role{&null_role},
+        pending_frames{std::make_shared<std::vector<WlSurfaceState::Callback>>()},
         destroyed{std::make_shared<bool>(false)}
 {
     // wl_surface is specified to act in mailbox mode
@@ -142,7 +143,7 @@ void mf::WlSurface::attach(std::experimental::optional<wl_resource*> const& buff
 
     role->visiblity(!!buffer);
 
-    pending.buffer = buffer.value_or(nullptr);
+    pending.buffer = buffer;
 }
 
 void mf::WlSurface::damage(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -182,72 +183,78 @@ void mf::WlSurface::set_input_region(std::experimental::optional<wl_resource*> c
 
 void mf::WlSurface::commit(WlSurfaceState const& state)
 {
+    // We're going to lose the value of state, so copy the frame_callbacks first
+    pending_frames->insert(end(*pending_frames), begin(state.frame_callbacks), end(state.frame_callbacks));
+
     if (state.buffer_offset)
         buffer_offset_ = state.buffer_offset.value();
 
-    wl_resource * buffer = state.buffer.value_or(nullptr);
-
-    if (buffer == nullptr)
+    if (state.buffer)
     {
-        // TODO: unmap surface, and unmap all subsurfaces
-    }
-    else
-    {
-        auto send_frame_notifications =
-            [executor = executor, frames = std::move(state.frame_callbacks)]() mutable
-            {
-                executor->spawn(
-                    // no run_unless() needed because no objects are used except callbacks and they are checked individually
-                    [frames = std::move(frames)]()
-                    {
-                        for (auto frame : frames)
-                        {
-                            if (!*frame.destroyed)
-                            {
-                                wl_callback_send_done(frame.resource, 0);
-                                wl_resource_destroy(frame.resource);
-                            }
-                        }
-                    });
-            };
+        wl_resource * buffer = *state.buffer;
 
-        std::shared_ptr<graphics::Buffer> mir_buffer;
-
-        if (wl_shm_buffer_get(buffer))
+        if (buffer == nullptr)
         {
-            mir_buffer = WlShmBuffer::mir_buffer_from_wl_buffer(
-                buffer,
-                std::move(send_frame_notifications));
+            // TODO: unmap surface, and unmap all subsurfaces
         }
         else
         {
-            std::shared_ptr<bool> buffer_destroyed = deleted_flag_for_resource(buffer);
+            auto send_frame_notifications =
+                [executor = executor, frames = pending_frames, destroyed = destroyed]() mutable
+                    {
+                        executor->spawn(
+                            [frames]()
+                                {
+                                    for (auto const& frame : *frames)
+                                    {
+                                        if (!*frame.destroyed)
+                                        {
+                                            wl_callback_send_done(frame.resource, 0);
+                                            wl_resource_destroy(frame.resource);
+                                        }
+                                    }
+                                    frames->clear();
+                                });
+                    };
 
-            auto release_buffer = [executor = executor, buffer = buffer, destroyed = buffer_destroyed]()
-                {
-                    executor->spawn(run_unless(
-                        destroyed,
-                        [buffer](){ wl_resource_queue_event(buffer, WL_BUFFER_RELEASE); }));
-                };
+            std::shared_ptr<graphics::Buffer> mir_buffer;
 
-            mir_buffer = allocator->buffer_from_resource(
+            if (wl_shm_buffer_get(buffer))
+            {
+                mir_buffer = WlShmBuffer::mir_buffer_from_wl_buffer(
+                    buffer,
+                    std::move(send_frame_notifications));
+            }
+            else
+            {
+                std::shared_ptr<bool> buffer_destroyed = deleted_flag_for_resource(buffer);
+
+                auto release_buffer = [executor = executor, buffer = buffer, destroyed = buffer_destroyed]()
+                    {
+                        executor->spawn(run_unless(
+                            destroyed,
+                            [buffer](){ wl_resource_queue_event(buffer, WL_BUFFER_RELEASE); }));
+                    };
+
+                mir_buffer = allocator->buffer_from_resource(
                     buffer,
                     std::move(send_frame_notifications),
                     std::move(release_buffer));
-        }
+            }
 
-        /*
-         * This is technically incorrect - the resize and submit_buffer *should* be atomic,
-         * but are not, so a client in the process of resizing can have buffers rendered at
-         * an unexpected size.
-         *
-         * It should be good enough for now, though.
-         *
-         * TODO: Provide a mg::Buffer::logical_size() to do this properly.
-         */
-        buffer_size_ = mir_buffer->size();
-        stream->resize(buffer_size_);
-        stream->submit_buffer(mir_buffer);
+            /*
+             * This is technically incorrect - the resize and submit_buffer *should* be atomic,
+             * but are not, so a client in the process of resizing can have buffers rendered at
+             * an unexpected size.
+             *
+             * It should be good enough for now, though.
+             *
+             * TODO: Provide a mg::Buffer::logical_size() to do this properly.
+             */
+            buffer_size_ = mir_buffer->size();
+            stream->resize(buffer_size_);
+            stream->submit_buffer(mir_buffer);
+        }
     }
 
     for (WlSubsurface* child: children)
