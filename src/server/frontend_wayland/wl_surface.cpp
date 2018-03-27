@@ -143,7 +143,7 @@ void mf::WlSurface::attach(std::experimental::optional<wl_resource*> const& buff
 
     role->visiblity(!!buffer);
 
-    pending.buffer = buffer;
+    pending.buffer = buffer.value_or(nullptr);
 }
 
 void mf::WlSurface::damage(int32_t x, int32_t y, int32_t width, int32_t height)
