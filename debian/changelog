@@ -1,3 +1,40 @@
+mir (0.31.1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.31.1(https://github.com/orgs/MirServer/projects/4)
+
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 3
+      . mirserver ABI unchanged at 46
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 16
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 13
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+    - Enhancements:
+    - Bugs fixed:
+      . Fix a couple of warnings from g++ 8.0.1
+      . src/miral/CMakeLists.txt has some hardcoded compile flags.
+        These should be inherited from the parent project instead. (Fixes #266)
+      . [Wayland] Subcompositor fixes: subsurface offset issue and sync behavior
+      . [Wayland] stopped frame.done being called if frame has been destroyed
+      . [Wayland] Implement WlSurface::set_cursor(): Enable Wayland clients to
+        set and hide the cursor
+      . [Wayland] Configure new surfaces after attaching observers: For tiling,
+        we need to set the surface state to "maximized" so that Wayland clients
+        obey exactly. That wasn't working as the wayland_frontend wasn't being
+        notified of the actual state.
+      . [Wayland] Don't remember recent surface events after the input
+        dispatcher is stopped: The event "goes stale" and can cause a segfault.
+        (Fixes #276)
+      . [Wayland] Sequence xdg-top-level and xdg-surface configure events
+        correctly: qtwayland gets confused by receiving these event out of
+        order. (Fixes #280)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 27 Mar 2018 11:21:00 +0000
+
 mir (0.31.0) UNRELEASED; urgency=medium
 
   * New upstream release 0.31.0(https://github.com/orgs/MirServer/projects/1)
