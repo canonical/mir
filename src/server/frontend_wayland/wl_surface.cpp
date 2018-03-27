@@ -71,6 +71,7 @@ mf::WlSurface::WlSurface(
 mf::WlSurface::~WlSurface()
 {
     *destroyed = true;
+    role->destroy();
     session->destroy_buffer_stream(stream_id);
 }
 
