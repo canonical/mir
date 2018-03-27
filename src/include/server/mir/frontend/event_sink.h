@@ -21,6 +21,7 @@
 
 #include "mir_toolkit/event.h"
 #include "mir/frontend/buffer_sink.h"
+#include "mir/events/event_builders.h"
 
 #include <vector>
 
@@ -40,7 +41,7 @@ class EventSink : public BufferSink
 public:
     virtual ~EventSink() = default;
 
-    virtual void handle_event(MirEvent const& e) = 0;
+    virtual void handle_event(EventUPtr&& event) = 0;
     virtual void handle_lifecycle_event(MirLifecycleState state) = 0;
     virtual void handle_display_config_change(graphics::DisplayConfiguration const& config) = 0;
     virtual void send_ping(int32_t serial) = 0;

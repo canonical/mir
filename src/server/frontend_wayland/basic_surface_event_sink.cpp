@@ -21,13 +21,13 @@
 
 namespace mf = mir::frontend;
 
-void mf::BasicSurfaceEventSink::handle_event(MirEvent const& event)
+void mf::BasicSurfaceEventSink::handle_event(EventUPtr&& event)
 {
-    switch (mir_event_get_type(&event))
+    switch (mir_event_get_type(event.get()))
     {
     case mir_event_type_resize:
     {
-        auto* const resize_event = mir_event_get_resize_event(&event);
+        auto* const resize_event = mir_event_get_resize_event(event.get());
         requested_size = {mir_resize_event_get_width(resize_event), mir_resize_event_get_height(resize_event)};
         if (requested_size != window_size)
             send_resize(requested_size);
@@ -35,7 +35,7 @@ void mf::BasicSurfaceEventSink::handle_event(MirEvent const& event)
     }
     case mir_event_type_input:
     {
-        auto input_event = mir_event_get_input_event(&event);
+        auto input_event = mir_event_get_input_event(event.get());
 
         // Remember the timestamp of any events "signed" with a cookie
         if (mir_input_event_has_cookie(input_event))
@@ -59,14 +59,14 @@ void mf::BasicSurfaceEventSink::handle_event(MirEvent const& event)
     }
     case mir_event_type_keymap:
     {
-        auto const map_ev = mir_event_get_keymap_event(&event);
+        auto const map_ev = mir_event_get_keymap_event(event.get());
 
         seat->handle_event(client, map_ev, target);
         break;
     }
     case mir_event_type_window:
     {
-        auto const wev = mir_event_get_window_event(&event);
+        auto const wev = mir_event_get_window_event(event.get());
 
         switch (mir_window_event_get_attribute(wev))
         {

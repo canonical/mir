@@ -35,6 +35,12 @@ namespace doubles
 {
 struct MockEventSink : public frontend::EventSink
 {
+    // relay function to handle gmock not having support for move only types
+    void handle_event(EventUPtr&& event)
+    {
+        handle_event(*event);
+    }
+
     MOCK_METHOD1(handle_event, void(MirEvent const&));
     MOCK_METHOD1(handle_lifecycle_event, void(MirLifecycleState));
     MOCK_METHOD1(handle_display_config_change, void(graphics::DisplayConfiguration const&));

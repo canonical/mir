@@ -204,7 +204,7 @@ struct StubEventSink : public mf::EventSink
         ipc->client_bound_transfer(request);
     }
     void error_buffer(geom::Size, MirPixelFormat, std::string const&) {}
-    void handle_event(MirEvent const&) {}
+    void handle_event(mir::EventUPtr&&) {}
     void handle_lifecycle_event(MirLifecycleState) {}
     void handle_display_config_change(mg::DisplayConfiguration const&) {}
     void handle_error(mir::ClientVisibleError const&) {}

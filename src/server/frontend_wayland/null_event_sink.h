@@ -30,7 +30,7 @@ class NullEventSink : public EventSink
 public:
     NullEventSink() {}
 
-    void handle_event(const MirEvent& e) override;
+    void handle_event(EventUPtr&& event) override;
 
     void handle_lifecycle_event(MirLifecycleState state) override;
 

@@ -376,9 +376,9 @@ struct SessionMediator : public ::testing::Test
             {
             }
 
-            void handle_event(MirEvent const &e) override
+            void handle_event(mir::EventUPtr&& event) override
             {
-                wrapped->handle_event(e);
+                wrapped->handle_event(move(event));
             }
 
             void handle_lifecycle_event(MirLifecycleState state) override

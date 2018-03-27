@@ -43,7 +43,7 @@ public:
     explicit EventSender(
         std::shared_ptr<MessageSender> const& socket_sender,
         std::shared_ptr<graphics::PlatformIpcOperations> const& buffer_packer);
-    void handle_event(MirEvent const& e) override;
+    void handle_event(EventUPtr&& event) override;
     void handle_lifecycle_event(MirLifecycleState state) override;
     void handle_display_config_change(graphics::DisplayConfiguration const& config) override;
     void handle_error(ClientVisibleError const& error) override;

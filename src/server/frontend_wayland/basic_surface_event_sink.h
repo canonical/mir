@@ -47,7 +47,7 @@ public:
     {
     }
 
-    void handle_event(MirEvent const& e) override;
+    void handle_event(EventUPtr&& event) override;
 
     void latest_client_size(geometry::Size window_size)
     {
