@@ -22,6 +22,7 @@
 
 #include "null_console_services.h"
 #include "linux_virtual_terminal.h"
+#include "logind_console_services.h"
 
 #include <fcntl.h>
 #include <sys/ioctl.h>

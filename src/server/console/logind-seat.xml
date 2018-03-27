@@ -1,0 +1,40 @@
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+ <interface name="org.freedesktop.login1.Seat">
+  <property name="Id" type="s" access="read">
+   <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"/>
+  </property>
+  <property name="ActiveSession" type="(so)" access="read">
+  </property>
+  <property name="CanMultiSession" type="b" access="read">
+   <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"/>
+  </property>
+  <property name="CanTTY" type="b" access="read">
+   <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="const"/>
+  </property>
+  <property name="CanGraphical" type="b" access="read">
+  </property>
+  <property name="Sessions" type="a(so)" access="read">
+   <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="false"/>
+  </property>
+  <property name="IdleHint" type="b" access="read">
+  </property>
+  <property name="IdleSinceHint" type="t" access="read">
+  </property>
+  <property name="IdleSinceHintMonotonic" type="t" access="read">
+  </property>
+  <method name="Terminate">
+  </method>
+  <method name="ActivateSession">
+   <arg type="s" direction="in"/>
+  </method>
+  <method name="SwitchTo">
+   <arg type="u" direction="in"/>
+  </method>
+  <method name="SwitchToNext">
+  </method>
+  <method name="SwitchToPrevious">
+  </method>
+ </interface>
+</node>
