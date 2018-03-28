@@ -97,7 +97,7 @@ void mf::WlTouch::handle_event(MirInputEvent const* event, wl_resource* target)
                     break;
                 case mir_touch_action_change:
                     wl_touch_send_motion(
-                        resource,./bind
+                        resource,
                         mir_input_event_get_event_time_ms(input_ev),
                         touch_id,
                         wl_fixed_from_double(x),
