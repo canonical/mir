@@ -39,7 +39,7 @@ void mf::BasicSurfaceEventSink::handle_event(MirEvent const& event)
 
         // Remember the timestamp of any events "signed" with a cookie
         if (mir_input_event_has_cookie(input_event))
-            timestamp = mir_input_event_get_event_time(input_event);
+            timestamp_ns = mir_input_event_get_event_time(input_event);
 
         switch (mir_input_event_get_type(input_event))
         {

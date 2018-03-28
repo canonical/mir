@@ -82,7 +82,7 @@ void mf::WlTouch::handle_event(MirInputEvent const* event, wl_resource* target)
                     wl_touch_send_down(
                         resource,
                         wl_display_get_serial(wl_client_get_display(client)),
-                        mir_input_event_get_event_time(input_ev) / 1000,
+                        mir_input_event_get_event_time_ms(input_ev),
                         target,
                         touch_id,
                         wl_fixed_from_double(x),
@@ -92,13 +92,13 @@ void mf::WlTouch::handle_event(MirInputEvent const* event, wl_resource* target)
                     wl_touch_send_up(
                         resource,
                         wl_display_get_serial(wl_client_get_display(client)),
-                        mir_input_event_get_event_time(input_ev) / 1000,
+                        mir_input_event_get_event_time_ms(input_ev),
                         touch_id);
                     break;
                 case mir_touch_action_change:
                     wl_touch_send_motion(
-                        resource,
-                        mir_input_event_get_event_time(input_ev) / 1000,
+                        resource,./bind
+                        mir_input_event_get_event_time_ms(input_ev),
                         touch_id,
                         wl_fixed_from_double(x),
                         wl_fixed_from_double(y));
