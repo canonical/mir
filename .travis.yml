@@ -1,7 +1,3 @@
-# Needed so we can install snaps
-sudo: required
-dist: trusty
-
 language: cpp
 
 branches:
@@ -38,12 +34,12 @@ env:
   - DEBEMAIL="mir-ci-bot@canonical.com"
   - SPREAD_PATH=/tmp/spread
   matrix:
+  - SYSTEM=google:ubuntu-devel-64 VARIANT=amd64
+  - SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
   - SYSTEM=google:ubuntu-16.04-64 VARIANT=amd64
   - SYSTEM=google:ubuntu-16.04-64 VARIANT=arm64
   - SYSTEM=google:ubuntu-17.10-64 VARIANT=clang
-  - SYSTEM=google:ubuntu-devel-64 VARIANT=amd64
   - SYSTEM=google:fedora-27-64 VARIANT=amd64
-  - SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
 
 matrix:
   allow_failures:
