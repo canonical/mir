@@ -54,9 +54,9 @@ public:
         this->window_size = window_size;
     }
 
-    auto latest_timestamp() const -> uint64_t
+    auto latest_timestamp_ns() const -> uint64_t
     {
-        return timestamp;
+        return timestamp_ns;
     }
 
     auto is_active() const -> bool
@@ -77,7 +77,7 @@ protected:
     wl_resource* const target;
     wl_resource* const event_sink;
     std::atomic<geometry::Size> window_size;
-    std::atomic<int64_t> timestamp{0};
+    std::atomic<int64_t> timestamp_ns{0};
     std::atomic<geometry::Size> requested_size;
     std::atomic<bool> has_focus{false};
     std::atomic<MirWindowState> current_state{mir_window_state_unknown};

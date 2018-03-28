@@ -96,7 +96,7 @@ void mf::WlKeyboard::handle_event(MirInputEvent const* event, wl_resource* /*tar
                     xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_UP);
                     wl_keyboard_send_key(resource,
                         serial,
-                        mir_input_event_get_event_time(event) / 1000,
+                        mir_input_event_get_event_time_ms(event),
                         mir_keyboard_event_scan_code(key_event),
                         WL_KEYBOARD_KEY_STATE_RELEASED);
                     break;
@@ -104,7 +104,7 @@ void mf::WlKeyboard::handle_event(MirInputEvent const* event, wl_resource* /*tar
                     xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
                     wl_keyboard_send_key(resource,
                         serial,
-                        mir_input_event_get_event_time(event) / 1000,
+                        mir_input_event_get_event_time_ms(event),
                         mir_keyboard_event_scan_code(key_event),
                         WL_KEYBOARD_KEY_STATE_PRESSED);
                     break;

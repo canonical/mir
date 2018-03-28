@@ -235,6 +235,11 @@ std::shared_ptr<mir::frontend::Session> get_session(wl_client* client)
     return nullptr;
 }
 
+int64_t mir_input_event_get_event_time_ms(const MirInputEvent* event)
+{
+    return mir_input_event_get_event_time(event) / 1000000;
+}
+
 class WlCompositor : public wayland::Compositor
 {
 public:
@@ -488,7 +493,7 @@ protected:
         {
             if (auto session = get_session(client))
             {
-                shell->request_operation(session, surface_id, sink->latest_timestamp(), Shell::UserRequest::move);
+                shell->request_operation(session, surface_id, sink->latest_timestamp_ns(), Shell::UserRequest::move);
             }
         }
     }
@@ -541,7 +546,7 @@ protected:
                 shell->request_operation(
                     session,
                     surface_id,
-                    sink->latest_timestamp(),
+                    sink->latest_timestamp_ns(),
                     Shell::UserRequest::resize,
                     edge);
             }

@@ -288,7 +288,7 @@ void mf::XdgSurfaceV6::move(struct wl_resource* /*seat*/, uint32_t /*serial*/)
     {
         if (auto session = get_session(client))
         {
-            shell->request_operation(session, surface_id, sink->latest_timestamp(), Shell::UserRequest::move);
+            shell->request_operation(session, surface_id, sink->latest_timestamp_ns(), Shell::UserRequest::move);
         }
     }
 }
@@ -341,7 +341,7 @@ void mf::XdgSurfaceV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/,
             shell->request_operation(
                 session,
                 surface_id,
-                sink->latest_timestamp(),
+                sink->latest_timestamp_ns(),
                 Shell::UserRequest::resize,
                 edge);
         }
