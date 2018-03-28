@@ -26,6 +26,7 @@
 #include "nested/cursor.h"
 #include "nested/display.h"
 #include "nested/platform.h"
+#include "null_cursor.h"
 #include "offscreen/display.h"
 #include "software_cursor.h"
 
@@ -222,7 +223,12 @@ mir::DefaultServerConfiguration::the_cursor()
 
             auto cursor_choice = the_options()->get<std::string>(options::cursor_opt);
 
-            if (the_options()->is_set(options::host_socket_opt))
+            if (cursor_choice == "null")
+            {
+                mir::log_info("Cursor disabled");
+                primary_cursor = std::make_shared<mg::NullCursor>();
+            }
+            else if (the_options()->is_set(options::host_socket_opt))
             {
                 mir::log_info("Using nested cursor");
                 primary_cursor = std::make_shared<mgn::Cursor>(

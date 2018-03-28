@@ -197,7 +197,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Display visualization of touchspots (e.g. for screencasting).")
         (cursor_opt,
             po::value<std::string>()->default_value("auto"),
-            "Cursor (mouse pointer) to use [{auto,software}]")
+            "Cursor (mouse pointer) to use [{auto,null,software}]")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
         (fatal_except_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
