@@ -99,7 +99,7 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
                 case mir_pointer_action_button_up:
                 {
                     auto const current_set  = mir_pointer_event_buttons(pointer_event);
-                    auto const current_time = mir_input_event_get_event_time(event) / 1000;
+                    auto const current_time = mir_input_event_get_event_time_ms(event);
 
                     for (auto const& mapping :
                         {
@@ -169,7 +169,7 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
                     {
                         wl_pointer_send_motion(
                             resource,
-                            mir_input_event_get_event_time(event) / 1000,
+                            mir_input_event_get_event_time_ms(event),
                             wl_fixed_from_double(x),
                             wl_fixed_from_double(y));
 
@@ -183,7 +183,7 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
                     {
                         wl_pointer_send_axis(
                             resource,
-                            mir_input_event_get_event_time(event) / 1000,
+                            mir_input_event_get_event_time_ms(event),
                             WL_POINTER_AXIS_VERTICAL_SCROLL,
                             wl_fixed_from_double(vscroll));
 
@@ -194,7 +194,7 @@ void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target
                     {
                         wl_pointer_send_axis(
                             resource,
-                            mir_input_event_get_event_time(event) / 1000,
+                            mir_input_event_get_event_time_ms(event),
                             WL_POINTER_AXIS_HORIZONTAL_SCROLL,
                             wl_fixed_from_double(hscroll));
 

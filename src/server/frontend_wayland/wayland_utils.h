@@ -24,6 +24,7 @@
 #include <memory>
 
 struct wl_client;
+struct MirInputEvent;
 
 namespace mir
 {
@@ -43,6 +44,8 @@ inline auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callab
 }
 
 std::shared_ptr<frontend::Session> get_session(wl_client* client);
+
+int64_t mir_input_event_get_event_time_ms(const MirInputEvent* event);
 
 }
 }
