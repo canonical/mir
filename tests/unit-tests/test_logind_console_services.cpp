@@ -189,6 +189,13 @@ public:
             auto error_msg = error ? error->message : "Unknown error";
             BOOST_THROW_EXCEPTION((std::runtime_error{error_msg}));
         }
+
+        /*
+         * TODO: python-dbusmock unconditionally sets the seat's ActiveSession to
+         * the last created session, regardless of whether the session is marked as
+         * "active" or not.
+         */
+
     }
 
     void ensure_mock_logind()
@@ -287,4 +294,22 @@ TEST_F(LogindConsoleServices, construction_fails_if_cannot_claim_control)
     EXPECT_THROW(
         mir::LogindConsoleServices test{};,
         std::runtime_error);
+}
+
+TEST_F(LogindConsoleServices, selects_active_session)
+{
+    ensure_mock_logind();
+
+    add_session(
+        "S3",
+        "seat0",
+        1001,
+        "testy",
+        false,
+        "raise dbus.exceptions.DBusException('Device or resource busy (36)', name='System.Error.EBUSY')");
+
+    // DBusMock will set the active session to the last-created one
+    add_any_active_session();
+
+    mir::LogindConsoleServices test{};
 }
