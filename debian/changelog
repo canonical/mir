@@ -26,12 +26,12 @@ mir (0.31.1) UNRELEASED; urgency=medium
         we need to set the surface state to "maximized" so that Wayland clients
         obey exactly. That wasn't working as the wayland_frontend wasn't being
         notified of the actual state.
-      . [Wayland] Don't remember recent surface events after the input
-        dispatcher is stopped: The event "goes stale" and can cause a segfault.
-        (Fixes #276)
+      . Don't remember recent surface events after the input dispatcher is
+        stopped: The event "goes stale" and can cause a segfault.  (Fixes #276)
       . [Wayland] Sequence xdg-top-level and xdg-surface configure events
         correctly: qtwayland gets confused by receiving these event out of
         order. (Fixes #280)
+      . [Wayland] fixed timestamp scaling. Fixes double-click.
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 27 Mar 2018 11:21:00 +0000
 
