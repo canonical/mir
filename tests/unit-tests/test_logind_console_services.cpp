@@ -196,9 +196,14 @@ public:
         if (dbusmock)
             return;
 
+        mir::test::Pipe stdout_pipe;
+        mock_stdout = stdout_pipe.read_fd();
+
         dbusmock = mtf::fork_and_run_in_a_different_process(
-            []()
+            [stdout_fd = stdout_pipe.write_fd()]()
             {
+                ::dup2(stdout_fd, 1);
+
                 execlp(
                     "python3",
                     "python3",
@@ -243,6 +248,7 @@ private:
     mtf::TemporaryEnvironmentValue starter_bus_env;
     std::unique_ptr<GDBusConnection, decltype(&g_object_unref)> bus_connection;
     std::shared_ptr<mtf::Process> dbusmock;
+    mir::Fd mock_stdout;
 };
 
 TEST_F(LogindConsoleServices, happy_path_succeeds)
