@@ -216,7 +216,7 @@ public:
                 return EXIT_FAILURE;
             });
 
-        bool mock_on_bus{false};
+        bool mock_on_bus{false}, timeout{false};
         auto const watch_id = g_bus_watch_name(
             G_BUS_TYPE_SYSTEM,
             "org.freedesktop.login1",
@@ -231,9 +231,22 @@ public:
             &mock_on_bus,
             nullptr);
 
+        g_timeout_add_seconds(
+            10,
+            [](gpointer ctx)
+            {
+                *static_cast<bool*>(ctx) = true;
+                return static_cast<gboolean>(false);
+            },
+            &timeout);
+
         while (!mock_on_bus)
         {
             g_main_context_iteration(g_main_context_default(), true);
+            if (timeout)
+            {
+                BOOST_THROW_EXCEPTION((std::runtime_error{"Timeout waiting for dbusmock to start"}));
+            }
         }
 
         g_bus_unwatch_name(watch_id);
