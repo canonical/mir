@@ -78,6 +78,7 @@ set(
   test_posix_timestamp.cpp
   test_observer_multiplexer.cpp
   test_edid.cpp
+  test_logind_console_services.cpp
 )
 
 CMAKE_DEPENDENT_OPTION(
@@ -222,3 +223,9 @@ add_dependencies(mir_unit_tests loadable_test_dso)
 mir_add_test(NAME unit-tests-do-not-link-with-GL-or-EGL
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
       COMMAND /bin/sh -c "!(objdump -p *unit_tests* | grep NEEDED | grep GL)")
+
+add_custom_command(TARGET mir_unit_tests POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_CURRENT_SOURCE_DIR}/dbus ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/dbus
+  COMMENT "Copying dbus-daemon configuration to build dir..."
+)
