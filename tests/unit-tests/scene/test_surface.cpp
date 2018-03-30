@@ -26,6 +26,7 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface_event_source.h"
 
+#include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/mock_input_surface.h"
 #include "mir/test/doubles/stub_buffer.h"
@@ -171,11 +172,6 @@ TEST(SurfaceCreationParametersTest, inequality)
 
 namespace
 {
-struct MockEventSink : mtd::NullEventSink
-{
-    MOCK_METHOD1(handle_event, void(MirEvent const&));
-};
-
 struct SurfaceCreation : public ::testing::Test
 {
     SurfaceCreation()
@@ -249,7 +245,7 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
     EXPECT_CALL(*mock_buffer_stream, resize(new_size))
         .Times(1);
 
-    auto const mock_event_sink = std::make_shared<MockEventSink>();
+    auto const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), surface, cache, mock_event_sink);
 
@@ -266,7 +262,7 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
 {
     using namespace testing;
     geom::Size const new_size{123, 456};
-    auto const mock_event_sink = std::make_shared<MockEventSink>();
+    auto const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), surface, cache, mock_event_sink);
 
@@ -349,7 +345,7 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
     mev::add_touch(*touch_event, 0, mir_touch_action_down, mir_touch_tooltype_finger, 0, 0,
         0, 0, 0, 0);
 
-    auto const mock_event_sink = std::make_shared<MockEventSink>();
+    auto const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), surface, cache, mock_event_sink);
 
