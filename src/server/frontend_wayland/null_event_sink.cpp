@@ -24,9 +24,9 @@ void mf::NullEventSink::send_buffer(BufferStreamId /*id*/, graphics::Buffer& /*b
 {
 }
 
-void mf::NullEventSink::handle_event(MirEvent const& e)
+void mf::NullEventSink::handle_event(EventUPtr&& event)
 {
-    switch(mir_event_get_type(&e))
+    switch(mir_event_get_type(event.get()))
     {
     default:
         // Do nothing

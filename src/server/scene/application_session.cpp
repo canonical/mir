@@ -319,7 +319,7 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
         if (output_properties)
         {
             event_sink->handle_event(
-                *mev::make_event(
+                mev::make_event(
                     surface.first,
                     output_properties->dpi,
                     output_properties->scale,
@@ -344,17 +344,17 @@ void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
 void ms::ApplicationSession::start_prompt_session()
 {
     // All sessions which are part of the prompt session get this event.
-    event_sink->handle_event(*mev::make_event(mir_prompt_session_state_started));
+    event_sink->handle_event(mev::make_event(mir_prompt_session_state_started));
 }
 
 void ms::ApplicationSession::stop_prompt_session()
 {
-    event_sink->handle_event(*mev::make_event(mir_prompt_session_state_stopped));
+    event_sink->handle_event(mev::make_event(mir_prompt_session_state_stopped));
 }
 
 void ms::ApplicationSession::suspend_prompt_session()
 {
-    event_sink->handle_event(*mev::make_event(mir_prompt_session_state_suspended));
+    event_sink->handle_event(mev::make_event(mir_prompt_session_state_suspended));
 }
 
 void ms::ApplicationSession::resume_prompt_session()

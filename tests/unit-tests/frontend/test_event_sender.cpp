@@ -163,8 +163,8 @@ TEST_F(EventSender, sends_noninput_events)
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(2);
-    event_sender.handle_event(*surface_ev);
-    event_sender.handle_event(*resize_ev);
+    event_sender.handle_event(move(surface_ev));
+    event_sender.handle_event(move(resize_ev));
 }
 
 TEST_F(EventSender, sends_input_events)
@@ -176,7 +176,7 @@ TEST_F(EventSender, sends_input_events)
 
     EXPECT_CALL(mock_msg_sender, send(_, _, _))
         .Times(1);
-    event_sender.handle_event(*ev);
+    event_sender.handle_event(move(ev));
 }
 
 TEST_F(EventSender, packs_buffer_with_platform_packer)

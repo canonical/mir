@@ -33,7 +33,7 @@ class GlobalEventSender : public frontend::EventSink
 public:
     GlobalEventSender(std::shared_ptr<SessionContainer> const&);
 
-    void handle_event(MirEvent const& e) override;
+    void handle_event(EventUPtr&& event) override;
     void handle_lifecycle_event(MirLifecycleState state) override;
     void handle_display_config_change(graphics::DisplayConfiguration const& config) override;
     void handle_error(ClientVisibleError const& error) override;
