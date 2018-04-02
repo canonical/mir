@@ -53,16 +53,16 @@ void mf::BasicSurfaceEventSink::handle_event(EventUPtr&& event)
             switch (mir_event_get_type(event->get()))
             {
                 case mir_event_type_resize:
-                    handle_event(mir_event_get_resize_event(event->get()));
+                    handle_resize_event(mir_event_get_resize_event(event->get()));
                     break;
                 case mir_event_type_input:
-                    handle_event(mir_event_get_input_event(event->get()));
+                    handle_input_event(mir_event_get_input_event(event->get()));
                     break;
                 case mir_event_type_keymap:
-                    handle_event(mir_event_get_keymap_event(event->get()));
+                    handle_keymap_event(mir_event_get_keymap_event(event->get()));
                     break;
                 case mir_event_type_window:
-                    handle_event(mir_event_get_window_event(event->get()));
+                    handle_window_event(mir_event_get_window_event(event->get()));
                     break;
                 default:
                     break;
@@ -70,14 +70,14 @@ void mf::BasicSurfaceEventSink::handle_event(EventUPtr&& event)
         }));
 }
 
-void mf::BasicSurfaceEventSink::handle_event(MirResizeEvent const* event)
+void mf::BasicSurfaceEventSink::handle_resize_event(MirResizeEvent const* event)
 {
     requested_size = {mir_resize_event_get_width(event), mir_resize_event_get_height(event)};
     if (requested_size != window_size)
         send_resize(requested_size);
 }
 
-void mf::BasicSurfaceEventSink::handle_event(MirInputEvent const* event)
+void mf::BasicSurfaceEventSink::handle_input_event(MirInputEvent const* event)
 {
     // Remember the timestamp of any events "signed" with a cookie
     if (mir_input_event_has_cookie(event))
@@ -92,7 +92,7 @@ void mf::BasicSurfaceEventSink::handle_event(MirInputEvent const* event)
             });
         break;
     case mir_input_event_type_pointer:
-        handle_event(mir_input_event_get_pointer_event(event));
+        handle_pointer_event(mir_input_event_get_pointer_event(event));
         break;
     case mir_input_event_type_touch:
         seat->for_each_listener(client, [this, event](WlTouch* touch)
@@ -105,38 +105,7 @@ void mf::BasicSurfaceEventSink::handle_event(MirInputEvent const* event)
     }
 }
 
-void mf::BasicSurfaceEventSink::handle_event(MirKeymapEvent const* event)
-{
-    seat->for_each_listener(client, [this, event](WlKeyboard* keyboard)
-        {
-            keyboard->handle_event(event, target);
-        });
-}
-
-void mf::BasicSurfaceEventSink::handle_event(MirWindowEvent const* event)
-{
-    switch (mir_window_event_get_attribute(event))
-    {
-    case mir_window_attrib_focus:
-        has_focus = mir_window_event_get_attribute_value(event);
-        send_resize(requested_size);
-        break;
-
-    case mir_window_attrib_state:
-        current_state = MirWindowState(mir_window_event_get_attribute_value(event));
-        send_resize(requested_size);
-        break;
-
-    default:;
-    }
-
-    seat->for_each_listener(client, [this, event](WlKeyboard* keyboard)
-        {
-            keyboard->handle_event(event, target);
-        });
-}
-
-void mf::BasicSurfaceEventSink::handle_event(const MirPointerEvent* event)
+void mf::BasicSurfaceEventSink::handle_pointer_event(const MirPointerEvent* event)
 {
     switch(mir_pointer_event_action(event))
     {
@@ -218,5 +187,36 @@ void mf::BasicSurfaceEventSink::handle_event(const MirPointerEvent* event)
         case mir_pointer_actions:
             break;
     }
+}
+
+void mf::BasicSurfaceEventSink::handle_keymap_event(MirKeymapEvent const* event)
+{
+    seat->for_each_listener(client, [this, event](WlKeyboard* keyboard)
+        {
+            keyboard->handle_event(event, target);
+        });
+}
+
+void mf::BasicSurfaceEventSink::handle_window_event(MirWindowEvent const* event)
+{
+    switch (mir_window_event_get_attribute(event))
+    {
+    case mir_window_attrib_focus:
+        has_focus = mir_window_event_get_attribute_value(event);
+        send_resize(requested_size);
+        break;
+
+    case mir_window_attrib_state:
+        current_state = MirWindowState(mir_window_event_get_attribute_value(event));
+        send_resize(requested_size);
+        break;
+
+    default:;
+    }
+
+    seat->for_each_listener(client, [this, event](WlKeyboard* keyboard)
+        {
+            keyboard->handle_event(event, target);
+        });
 }
 

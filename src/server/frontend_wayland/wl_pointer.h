@@ -42,12 +42,9 @@ public:
         wl_client* client,
         wl_resource* parent,
         uint32_t id,
-        std::function<void(WlPointer*)> const& on_destroy,
-        std::shared_ptr<mir::Executor> const& executor);
+        std::function<void(WlPointer*)> const& on_destroy);
 
     ~WlPointer();
-
-    void handle_event(MirInputEvent const* event, wl_resource* target);
 
     void handle_button(uint32_t time, uint32_t button, wl_pointer_button_state state);
     void handle_enter(mir::geometry::Point position, wl_resource* target);
@@ -59,13 +56,9 @@ public:
 
 private:
     wl_display* const display;
-    std::shared_ptr<mir::Executor> const executor;
-
     std::function<void(WlPointer*)> on_destroy;
-    std::shared_ptr<bool> const destroyed;
 
-    MirPointerButtons last_set{0};
-    float last_x{0}, last_y{0};
+    std::experimental::optional<mir::geometry::Point> last_position;
 
     void set_cursor(uint32_t serial, std::experimental::optional<wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) override;
     void release() override;

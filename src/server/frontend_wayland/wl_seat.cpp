@@ -214,8 +214,7 @@ void mf::WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t 
             [listeners = pointer_listeners, client](WlPointer* listener)
             {
                 listeners->unregister_listener(client, listener);
-            },
-            executor});
+            }});
 }
 
 void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t id)
