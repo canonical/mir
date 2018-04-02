@@ -21,11 +21,13 @@
 #include "wl_pointer.h"
 #include "wl_keyboard.h"
 #include "wl_touch.h"
+#include "wl_surface.h"
 #include "wayland_utils.h"
 
 #include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;
+namespace geom = mir::geometry;
 
 mf::BasicSurfaceEventSink::BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink)
     : seat{seat},
@@ -170,29 +172,26 @@ void mf::BasicSurfaceEventSink::handle_event(const MirPointerEvent* event)
             last_pointer_buttons = current_pointer_buttons;
             break;
         }
-        /*case mir_pointer_action_enter:
+        case mir_pointer_action_enter:
         {
-            wl_pointer_send_enter(
-                resource,
-                serial,
-                target,
-                wl_fixed_from_double(mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_x)-buffer_offset.dx.as_int()),
-                wl_fixed_from_double(mir_pointer_event_axis_value(pointer_event, mir_pointer_axis_y)-buffer_offset.dy.as_int()));
-            if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
-                wl_pointer_send_frame(resource);
+            seat->for_each_listener(client, [&](WlPointer* pointer)
+                {
+                    auto point = geom::Point{mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+                                             mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+                    //auto transformed = WlSurface::from(target)->transform_point(point);
+                    pointer->handle_enter(point + WlSurface::from(target)->buffer_offset(), target);
+                });
             break;
         }
         case mir_pointer_action_leave:
         {
-            wl_pointer_send_leave(
-                resource,
-                serial,
-                target);
-            if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
-                wl_pointer_send_frame(resource);
+            seat->for_each_listener(client, [&](WlPointer* pointer)
+                {
+                    pointer->handle_leave(target);
+                });
             break;
         }
-        case mir_pointer_action_motion:
+        /*case mir_pointer_action_motion:
         {
             // TODO: properly group vscroll and hscroll events in the same frame (as described by the frame
             //  event description in wayland.xml) and send axis_source, axis_stop and axis_discrete events where

@@ -19,6 +19,8 @@
 #ifndef MIR_FRONTEND_WL_POINTER_H
 #define MIR_FRONTEND_WL_POINTER_H
 
+#include "mir/geometry/point.h"
+
 #include "generated/wayland_wrapper.h"
 
 struct MirInputEvent;
@@ -48,7 +50,8 @@ public:
     void handle_event(MirInputEvent const* event, wl_resource* target);
 
     void handle_button(uint32_t time, uint32_t button, bool is_pressed);
-    void handle_enter(mir::Geometry::Point position, wl_resource* resource);
+    void handle_enter(mir::geometry::Point position, wl_resource* target);
+    void handle_leave(wl_resource* target);
 
     struct Cursor;
 

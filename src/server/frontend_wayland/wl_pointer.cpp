@@ -83,6 +83,30 @@ void mf::WlPointer::handle_button(uint32_t time, uint32_t button, bool is_presse
         wl_pointer_send_frame(resource);
 }
 
+void mf::WlPointer::handle_enter(Point position, wl_resource* target)
+{
+    auto const serial = wl_display_next_serial(display);
+    wl_pointer_send_enter(
+        resource,
+        serial,
+        target,
+        wl_fixed_from_double(position.x.as_int()),
+        wl_fixed_from_double(position.y.as_int()));
+    if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
+        wl_pointer_send_frame(resource);
+}
+
+void mf::WlPointer::handle_leave(wl_resource* target)
+{
+    auto const serial = wl_display_next_serial(display);
+    wl_pointer_send_leave(
+        resource,
+        serial,
+        target);
+    if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
+        wl_pointer_send_frame(resource);
+}
+
 void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target)
 {
     executor->spawn(run_unless(

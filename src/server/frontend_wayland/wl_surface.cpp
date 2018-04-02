@@ -34,6 +34,7 @@
 #include "mir/shell/surface_specification.h"
 
 namespace mf = mir::frontend;
+namespace geom = mir::geometry;
 
 void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
 {
@@ -79,6 +80,11 @@ mf::WlSurface::~WlSurface()
 bool mf::WlSurface::synchronized() const
 {
     return role->synchronized();
+}
+
+std::pair<geom::Point, wl_resource*> mf::WlSurface::transform_point(geom::Point point) const
+{
+    return std::make_pair(point + buffer_offset_, resource);
 }
 
 void mf::WlSurface::set_role(WlSurfaceRole* role_)
