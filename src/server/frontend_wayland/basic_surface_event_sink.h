@@ -72,6 +72,7 @@ protected:
     wl_client* const client;
     wl_resource* const target;
     wl_resource* const event_sink;
+    MirPointerButtons last_pointer_buttons{0};
     std::atomic<geometry::Size> window_size;
     std::atomic<int64_t> timestamp_ns{0};
     std::atomic<geometry::Size> requested_size;
@@ -84,6 +85,8 @@ private:
     void handle_event(MirInputEvent const* event);
     void handle_event(MirKeymapEvent const* event);
     void handle_event(MirWindowEvent const* event);
+
+    void handle_event(MirPointerEvent const* event);
 };
 }
 }

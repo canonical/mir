@@ -72,6 +72,17 @@ mf::WlPointer::~WlPointer()
     on_destroy(this);
 }
 
+void mf::WlPointer::handle_button(uint32_t time, uint32_t button, bool is_pressed)
+{
+    auto const serial = wl_display_next_serial(display);
+    auto const action = is_pressed ?
+                        WL_POINTER_BUTTON_STATE_PRESSED :
+                        WL_POINTER_BUTTON_STATE_RELEASED;
+    wl_pointer_send_button(resource, serial, time, button, action);
+    if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
+        wl_pointer_send_frame(resource);
+}
+
 void mf::WlPointer::handle_event(MirInputEvent const* event, wl_resource* target)
 {
     executor->spawn(run_unless(
