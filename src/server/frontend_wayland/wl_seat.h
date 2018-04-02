@@ -73,9 +73,10 @@ private:
     std::unique_ptr<mir::input::Keymap> const keymap;
     std::shared_ptr<ConfigObserver> const config_observer;
 
-    std::unique_ptr<ListenerList<WlPointer>> const pointer_listeners;
-    std::unique_ptr<ListenerList<WlKeyboard>> const keyboard_listeners;
-    std::unique_ptr<ListenerList<WlTouch>> const touch_listeners;
+    // these are shared pointers so devices can hold week pointers
+    std::shared_ptr<ListenerList<WlPointer>> const pointer_listeners;
+    std::shared_ptr<ListenerList<WlKeyboard>> const keyboard_listeners;
+    std::shared_ptr<ListenerList<WlTouch>> const touch_listeners;
 
     std::shared_ptr<input::InputDeviceHub> const input_hub;
     std::shared_ptr<input::Seat> const seat;

@@ -150,9 +150,9 @@ mf::WlSeat::WlSeat(
                 {
                     *keymap = new_keymap;
                 })},
-        pointer_listeners{std::make_unique<ListenerList<WlPointer>>()},
-        keyboard_listeners{std::make_unique<ListenerList<WlKeyboard>>()},
-        touch_listeners{std::make_unique<ListenerList<WlTouch>>()},
+        pointer_listeners{std::make_shared<ListenerList<WlPointer>>()},
+        keyboard_listeners{std::make_shared<ListenerList<WlKeyboard>>()},
+        touch_listeners{std::make_shared<ListenerList<WlTouch>>()},
         input_hub{input_hub},
         seat{seat},
         executor{executor}
@@ -236,9 +236,11 @@ void mf::WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t 
             client,
             resource,
             id,
-            [this, client](WlPointer* listener)
+            [pointer_listeners = std::weak_ptr<ListenerList<WlPointer>>(pointer_listeners), client = client]
+            (WlPointer* listener)
             {
-                pointer_listeners->unregister_listener(client, listener);
+                if (auto listeners = pointer_listeners.lock())
+                    listeners->unregister_listener(client, listener);
             },
             executor});
 }
@@ -252,11 +254,13 @@ void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t
             resource,
             id,
             *keymap,
-            [this, client](WlKeyboard* listener)
+            [keyboard_listeners = std::weak_ptr<ListenerList<WlKeyboard>>(keyboard_listeners), client = client]
+            (WlKeyboard* listener)
             {
-                keyboard_listeners->unregister_listener(client, listener);
+                if (auto listeners = keyboard_listeners.lock())
+                    listeners->unregister_listener(client, listener);
             },
-            [this]()
+            [seat = seat]()
             {
                 std::unordered_set<uint32_t> pressed_keys;
 
@@ -293,9 +297,11 @@ void mf::WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id
             client,
             resource,
             id,
-            [this, client](WlTouch* listener)
+            [touch_listeners = std::weak_ptr<ListenerList<WlTouch>>(touch_listeners), client = client]
+            (WlTouch* listener)
             {
-                touch_listeners->unregister_listener(client, listener);
+                if (auto listeners = touch_listeners.lock())
+                    listeners->unregister_listener(client, listener);
             },
             executor});
 }
