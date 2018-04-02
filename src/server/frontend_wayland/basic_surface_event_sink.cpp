@@ -92,7 +92,10 @@ void mf::BasicSurfaceEventSink::handle_input_event(MirInputEvent const* event)
             });
         break;
     case mir_input_event_type_pointer:
-        handle_pointer_event(mir_input_event_get_pointer_event(event));
+        seat->for_each_listener(client, [this, event](WlPointer* pointer)
+            {
+                pointer->handle_event(mir_input_event_get_pointer_event(event), target);
+            });
         break;
     case mir_input_event_type_touch:
         seat->for_each_listener(client, [this, event](WlTouch* touch)
@@ -102,90 +105,6 @@ void mf::BasicSurfaceEventSink::handle_input_event(MirInputEvent const* event)
         break;
     default:
         break;
-    }
-}
-
-void mf::BasicSurfaceEventSink::handle_pointer_event(const MirPointerEvent* event)
-{
-    switch(mir_pointer_event_action(event))
-    {
-        case mir_pointer_action_button_down:
-        case mir_pointer_action_button_up:
-        {
-            auto const current_pointer_buttons  = mir_pointer_event_buttons(event);
-            auto const timestamp = mir_input_event_get_event_time_ms(mir_pointer_event_input_event(event));
-
-            for (auto const& mapping :
-                {
-                    std::make_pair(mir_pointer_button_primary, BTN_LEFT),
-                    std::make_pair(mir_pointer_button_secondary, BTN_RIGHT),
-                    std::make_pair(mir_pointer_button_tertiary, BTN_MIDDLE),
-                    std::make_pair(mir_pointer_button_back, BTN_BACK),
-                    std::make_pair(mir_pointer_button_forward, BTN_FORWARD),
-                    std::make_pair(mir_pointer_button_side, BTN_SIDE),
-                    std::make_pair(mir_pointer_button_task, BTN_TASK),
-                    std::make_pair(mir_pointer_button_extra, BTN_EXTRA)
-                })
-            {
-                if (mapping.first & (current_pointer_buttons ^ last_pointer_buttons))
-                {
-                    auto const state = (mapping.first & current_pointer_buttons) ?
-                        WL_POINTER_BUTTON_STATE_PRESSED :
-                        WL_POINTER_BUTTON_STATE_RELEASED;
-
-                    seat->for_each_listener(client, [&](WlPointer* pointer)
-                        {
-                            pointer->handle_button(timestamp, mapping.second, state);
-                        });
-                }
-            }
-
-            last_pointer_buttons = current_pointer_buttons;
-            break;
-        }
-        case mir_pointer_action_enter:
-        {
-            seat->for_each_listener(client, [&](WlPointer* pointer)
-                {
-                    auto point = geom::Point{mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-                                             mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
-                    //auto transformed = WlSurface::from(target)->transform_point(point);
-                    pointer->handle_enter(point - WlSurface::from(target)->buffer_offset(), target);
-                });
-            break;
-        }
-        case mir_pointer_action_leave:
-        {
-            seat->for_each_listener(client, [&](WlPointer* pointer)
-                {
-                    pointer->handle_leave(target);
-                });
-            break;
-        }
-        case mir_pointer_action_motion:
-        {
-            // TODO: properly group vscroll and hscroll events in the same frame (as described by the frame
-            //  event description in wayland.xml) and send axis_source, axis_stop and axis_discrete events where
-            //  appropriate (may require significant reworking of the input system)
-
-            auto const timestamp = mir_input_event_get_event_time_ms(mir_pointer_event_input_event(event));
-
-            seat->for_each_listener(client, [&](WlPointer* pointer)
-                {
-                    auto point = geom::Point{mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-                                             mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
-                    //auto transformed = WlSurface::from(target)->transform_point(point);
-                    pointer->handle_motion(timestamp, point - WlSurface::from(target)->buffer_offset());
-
-                    auto hscroll = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll) * 10;
-                    pointer->handle_axis(timestamp, WL_POINTER_AXIS_HORIZONTAL_SCROLL, hscroll);
-
-                    auto vscroll = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll) * 10;
-                    pointer->handle_axis(timestamp, WL_POINTER_AXIS_VERTICAL_SCROLL, vscroll);
-                });
-        }
-        case mir_pointer_actions:
-            break;
     }
 }
 

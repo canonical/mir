@@ -68,6 +68,79 @@ mf::WlPointer::~WlPointer()
     on_destroy(this);
 }
 
+void mf::WlPointer::handle_event(MirPointerEvent const* event, wl_resource* target)
+{
+    switch(mir_pointer_event_action(event))
+    {
+        case mir_pointer_action_button_down:
+        case mir_pointer_action_button_up:
+        {
+            auto const current_pointer_buttons  = mir_pointer_event_buttons(event);
+            auto const timestamp = mir_input_event_get_event_time_ms(mir_pointer_event_input_event(event));
+
+            for (auto const& mapping :
+                {
+                    std::make_pair(mir_pointer_button_primary, BTN_LEFT),
+                    std::make_pair(mir_pointer_button_secondary, BTN_RIGHT),
+                    std::make_pair(mir_pointer_button_tertiary, BTN_MIDDLE),
+                    std::make_pair(mir_pointer_button_back, BTN_BACK),
+                    std::make_pair(mir_pointer_button_forward, BTN_FORWARD),
+                    std::make_pair(mir_pointer_button_side, BTN_SIDE),
+                    std::make_pair(mir_pointer_button_task, BTN_TASK),
+                    std::make_pair(mir_pointer_button_extra, BTN_EXTRA)
+                })
+            {
+                if (mapping.first & (current_pointer_buttons ^ last_buttons))
+                {
+                    auto const state = (mapping.first & current_pointer_buttons) ?
+                        WL_POINTER_BUTTON_STATE_PRESSED :
+                        WL_POINTER_BUTTON_STATE_RELEASED;
+
+                    handle_button(timestamp, mapping.second, state);
+                }
+            }
+
+            last_buttons = current_pointer_buttons;
+            break;
+        }
+        case mir_pointer_action_enter:
+        {
+            auto point = Point{mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+                                        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+            //auto transformed = WlSurface::from(target)->transform_point(point);
+            handle_enter(point - WlSurface::from(target)->buffer_offset(), target);
+            break;
+        }
+        case mir_pointer_action_leave:
+        {
+            handle_leave(target);
+            break;
+        }
+        case mir_pointer_action_motion:
+        {
+            // TODO: properly group vscroll and hscroll events in the same frame (as described by the frame
+            //  event description in wayland.xml) and send axis_source, axis_stop and axis_discrete events where
+            //  appropriate (may require significant reworking of the input system)
+
+            auto const timestamp = mir_input_event_get_event_time_ms(mir_pointer_event_input_event(event));
+
+            auto point = Point{mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+                                        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+            //auto transformed = WlSurface::from(target)->transform_point(point);
+            handle_motion(timestamp, point - WlSurface::from(target)->buffer_offset());
+
+            auto hscroll = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll) * 10;
+            handle_axis(timestamp, WL_POINTER_AXIS_HORIZONTAL_SCROLL, hscroll);
+
+            auto vscroll = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll) * 10;
+            handle_axis(timestamp, WL_POINTER_AXIS_VERTICAL_SCROLL, vscroll);
+            break;
+        }
+        case mir_pointer_actions:
+            break;
+    }
+}
+
 void mf::WlPointer::handle_button(uint32_t time, uint32_t button, wl_pointer_button_state state)
 {
     auto const serial = wl_display_next_serial(display);
