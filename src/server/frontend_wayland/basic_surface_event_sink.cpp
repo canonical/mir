@@ -86,19 +86,19 @@ void mf::BasicSurfaceEventSink::handle_input_event(MirInputEvent const* event)
     switch (mir_input_event_get_type(event))
     {
     case mir_input_event_type_key:
-        seat->for_each_listener(client, [this, event](WlKeyboard* keyboard)
+        seat->for_each_listener(client, [this, event = mir_input_event_get_keyboard_event(event)](WlKeyboard* keyboard)
             {
                 keyboard->handle_event(event, target);
             });
         break;
     case mir_input_event_type_pointer:
-        seat->for_each_listener(client, [this, event](WlPointer* pointer)
+        seat->for_each_listener(client, [this, event = mir_input_event_get_pointer_event(event)](WlPointer* pointer)
             {
-                pointer->handle_event(mir_input_event_get_pointer_event(event), target);
+                pointer->handle_event(event, target);
             });
         break;
     case mir_input_event_type_touch:
-        seat->for_each_listener(client, [this, event](WlTouch* touch)
+        seat->for_each_listener(client, [this, event = mir_input_event_get_touch_event(event)](WlTouch* touch)
             {
                 touch->handle_event(event, target);
             });

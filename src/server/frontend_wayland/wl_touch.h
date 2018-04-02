@@ -22,7 +22,7 @@
 #include "generated/wayland_wrapper.h"
 
 // from "mir_toolkit/events/event.h"
-struct MirInputEvent;
+struct MirTouchEvent;
 
 namespace mir
 {
@@ -43,7 +43,7 @@ public:
 
     ~WlTouch();
 
-    void handle_event(MirInputEvent const* event, wl_resource* target);
+    void handle_event(MirTouchEvent const* event, wl_resource* target);
 
 private:
     std::function<void(WlTouch*)> on_destroy;

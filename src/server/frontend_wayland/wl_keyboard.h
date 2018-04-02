@@ -29,7 +29,7 @@ struct xkb_state;
 struct xkb_context;
 
 // from "mir_toolkit/events/event.h"
-struct MirInputEvent;
+struct MirKeyboardEvent;
 struct MirSurfaceEvent;
 typedef struct MirSurfaceEvent MirWindowEvent;
 struct MirKeymapEvent;
@@ -60,7 +60,7 @@ public:
 
     ~WlKeyboard();
 
-    void handle_event(MirInputEvent const* event, wl_resource* /*target*/);
+    void handle_event(MirKeyboardEvent const* event, wl_resource* /*target*/);
     void handle_event(MirWindowEvent const* event, wl_resource* target);
     void handle_event(MirKeymapEvent const* event, wl_resource* /*target*/);
     void set_keymap(mir::input::Keymap const& new_keymap);

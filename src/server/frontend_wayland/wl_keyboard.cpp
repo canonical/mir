@@ -68,11 +68,11 @@ mf::WlKeyboard::~WlKeyboard()
     on_destroy(this);
 }
 
-void mf::WlKeyboard::handle_event(MirInputEvent const* event, wl_resource* /*target*/)
+void mf::WlKeyboard::handle_event(MirKeyboardEvent const* key_event, wl_resource* /*target*/)
 {
-    auto const ev = mir::client::Event{mir_event_ref(mir_input_event_get_event(event))};
+    auto const input_ev = mir_keyboard_event_input_event(key_event);
+    auto const ev = mir::client::Event{mir_event_ref(mir_input_event_get_event(input_ev))};
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
-    auto const key_event = mir_input_event_get_keyboard_event(event);
     auto const scancode = mir_keyboard_event_scan_code(key_event);
     /*
         * HACK! Maintain our own XKB state, so we can serialise it for
@@ -85,7 +85,7 @@ void mf::WlKeyboard::handle_event(MirInputEvent const* event, wl_resource* /*tar
             xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_UP);
             wl_keyboard_send_key(resource,
                 serial,
-                mir_input_event_get_event_time_ms(event),
+                mir_input_event_get_event_time_ms(input_ev),
                 mir_keyboard_event_scan_code(key_event),
                 WL_KEYBOARD_KEY_STATE_RELEASED);
             break;
@@ -93,7 +93,7 @@ void mf::WlKeyboard::handle_event(MirInputEvent const* event, wl_resource* /*tar
             xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
             wl_keyboard_send_key(resource,
                 serial,
-                mir_input_event_get_event_time_ms(event),
+                mir_input_event_get_event_time_ms(input_ev),
                 mir_keyboard_event_scan_code(key_event),
                 WL_KEYBOARD_KEY_STATE_PRESSED);
             break;
