@@ -73,9 +73,9 @@ private:
     std::unique_ptr<mir::input::Keymap> const keymap;
     std::shared_ptr<ConfigObserver> const config_observer;
 
-    std::unique_ptr<std::unordered_map<wl_client*, ListenerList<WlPointer>>> const pointer_listeners;
-    std::unique_ptr<std::unordered_map<wl_client*, ListenerList<WlKeyboard>>> const keyboard_listeners;
-    std::unique_ptr<std::unordered_map<wl_client*, ListenerList<WlTouch>>> const touch_listeners;
+    std::unique_ptr<ListenerList<WlPointer>> const pointer_listeners;
+    std::unique_ptr<ListenerList<WlKeyboard>> const keyboard_listeners;
+    std::unique_ptr<ListenerList<WlTouch>> const touch_listeners;
 
     std::shared_ptr<input::InputDeviceHub> const input_hub;
     std::shared_ptr<input::Seat> const seat;

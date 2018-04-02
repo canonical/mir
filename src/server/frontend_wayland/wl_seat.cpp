@@ -57,29 +57,30 @@ public:
     ListenerList(ListenerList const&) = delete;
     ListenerList& operator=(ListenerList const&) = delete;
 
-    void register_listener(T* listener)
+    void register_listener(wl_client* client, T* listener)
     {
-        listeners.push_back(listener);
+        listeners[client].push_back(listener);
     }
 
-    void unregister_listener(T const* listener)
+    void unregister_listener(wl_client* client, T const* listener)
     {
-        listeners.erase(
+        std::vector<T*> client_listeners = listeners[client];
+        client_listeners.erase(
             std::remove(
-                listeners.begin(),
-                listeners.end(),
+                client_listeners.begin(),
+                client_listeners.end(),
                 listener),
-            listeners.end());
+            client_listeners.end());
     }
 
-    void for_each(std::function<void(T*)> lambda)
+    void for_each(wl_client* client, std::function<void(T*)> lambda)
     {
-        for (auto listener: listeners)
+        for (auto listener: listeners[client])
             lambda(listener);
     }
 
 private:
-    std::vector<T*> listeners;
+    std::unordered_map<wl_client*, std::vector<T*>> listeners;
 };
 
 class mf::WlSeat::ConfigObserver : public mi::InputDeviceObserver
@@ -149,9 +150,9 @@ mf::WlSeat::WlSeat(
                 {
                     *keymap = new_keymap;
                 })},
-        pointer_listeners{std::make_unique<std::unordered_map<wl_client*, ListenerList<WlPointer>>>()},
-        keyboard_listeners{std::make_unique<std::unordered_map<wl_client*, ListenerList<WlKeyboard>>>()},
-        touch_listeners{std::make_unique<std::unordered_map<wl_client*, ListenerList<WlTouch>>>()},
+        pointer_listeners{std::make_unique<ListenerList<WlPointer>>()},
+        keyboard_listeners{std::make_unique<ListenerList<WlKeyboard>>()},
+        touch_listeners{std::make_unique<ListenerList<WlTouch>>()},
         input_hub{input_hub},
         seat{seat},
         executor{executor}
@@ -166,7 +167,7 @@ mf::WlSeat::~WlSeat()
 
 void mf::WlSeat::handle_pointer_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
 {
-    (*pointer_listeners)[client].for_each([&](WlPointer* pointer)
+    pointer_listeners->for_each(client, [&](WlPointer* pointer)
         {
             pointer->handle_event(input_event, target);
         });
@@ -174,7 +175,7 @@ void mf::WlSeat::handle_pointer_event(wl_client* client, MirInputEvent const* in
 
 void mf::WlSeat::handle_keyboard_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
 {
-    (*keyboard_listeners)[client].for_each([&](WlKeyboard* keyboard)
+    keyboard_listeners->for_each(client, [&](WlKeyboard* keyboard)
         {
             keyboard->handle_event(input_event, target);
         });
@@ -182,7 +183,7 @@ void mf::WlSeat::handle_keyboard_event(wl_client* client, MirInputEvent const* i
 
 void mf::WlSeat::handle_touch_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
 {
-    (*touch_listeners)[client].for_each([&](WlTouch* touch)
+    touch_listeners->for_each(client, [&](WlTouch* touch)
         {
             touch->handle_event(input_event, target);
         });
@@ -190,7 +191,7 @@ void mf::WlSeat::handle_touch_event(wl_client* client, MirInputEvent const* inpu
 
 void mf::WlSeat::handle_event(wl_client* client, MirKeymapEvent const* keymap_event, wl_resource* target) const
 {
-    (*keyboard_listeners)[client].for_each([&](WlKeyboard* keyboard)
+    keyboard_listeners->for_each(client, [&](WlKeyboard* keyboard)
         {
             keyboard->handle_event(keymap_event, target);
         });
@@ -198,7 +199,7 @@ void mf::WlSeat::handle_event(wl_client* client, MirKeymapEvent const* keymap_ev
 
 void mf::WlSeat::handle_event(wl_client* client, MirWindowEvent const* window_event, wl_resource* target) const
 {
-    (*keyboard_listeners)[client].for_each([&](WlKeyboard* keyboard)
+    keyboard_listeners->for_each(client, [&](WlKeyboard* keyboard)
         {
             keyboard->handle_event(window_event, target);
         });
@@ -229,32 +230,31 @@ void mf::WlSeat::bind(wl_client* /*client*/, wl_resource* resource)
 
 void mf::WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    auto& listeners = (*pointer_listeners)[client];
-    listeners.register_listener(
+    pointer_listeners->register_listener(
+        client,
         new WlPointer{
             client,
             resource,
             id,
-            [&listeners](WlPointer* listener)
+            [this, client](WlPointer* listener)
             {
-                listeners.unregister_listener(listener);
+                pointer_listeners->unregister_listener(client, listener);
             },
             executor});
 }
 
 void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    auto& listeners = (*keyboard_listeners)[client];
-
-    listeners.register_listener(
+    keyboard_listeners->register_listener(
+        client,
         new WlKeyboard{
             client,
             resource,
             id,
             *keymap,
-            [&listeners](WlKeyboard* listener)
+            [this, client](WlKeyboard* listener)
             {
-                listeners.unregister_listener(listener);
+                keyboard_listeners->unregister_listener(client, listener);
             },
             [this]()
             {
@@ -287,16 +287,15 @@ void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t
 
 void mf::WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    auto& listeners = (*touch_listeners)[client];
-
-    listeners.register_listener(
+    touch_listeners->register_listener(
+        client,
         new WlTouch{
             client,
             resource,
             id,
-            [&listeners](WlTouch* listener)
+            [this, client](WlTouch* listener)
             {
-                listeners.unregister_listener(listener);
+                touch_listeners->unregister_listener(client, listener);
             },
             executor});
 }
