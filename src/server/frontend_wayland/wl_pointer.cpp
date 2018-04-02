@@ -72,13 +72,10 @@ mf::WlPointer::~WlPointer()
     on_destroy(this);
 }
 
-void mf::WlPointer::handle_button(uint32_t time, uint32_t button, bool is_pressed)
+void mf::WlPointer::handle_button(uint32_t time, uint32_t button, wl_pointer_button_state state)
 {
     auto const serial = wl_display_next_serial(display);
-    auto const action = is_pressed ?
-                        WL_POINTER_BUTTON_STATE_PRESSED :
-                        WL_POINTER_BUTTON_STATE_RELEASED;
-    wl_pointer_send_button(resource, serial, time, button, action);
+    wl_pointer_send_button(resource, serial, time, button, state);
     if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
         wl_pointer_send_frame(resource);
 }
@@ -94,6 +91,36 @@ void mf::WlPointer::handle_enter(Point position, wl_resource* target)
         wl_fixed_from_double(position.y.as_int()));
     if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
         wl_pointer_send_frame(resource);
+}
+
+void mf::WlPointer::handle_motion(uint32_t time, mir::geometry::Point position)
+{
+    if ((position.x.as_int() != last_x) || (position.y.as_int() != last_y))
+    {
+        wl_pointer_send_motion(
+            resource,
+            time,
+            wl_fixed_from_double(position.x.as_int()),
+            wl_fixed_from_double(position.y.as_int()));
+        if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
+            wl_pointer_send_frame(resource);
+        last_x = position.x.as_int();
+        last_y = position.y.as_int();
+    }
+}
+
+void mf::WlPointer::handle_axis(uint32_t time, wl_pointer_axis axis, double distance)
+{
+    if (distance != 0)
+    {
+        wl_pointer_send_axis(
+            resource,
+            time,
+            axis,
+            wl_fixed_from_double(distance));
+        if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
+            wl_pointer_send_frame(resource);
+    }
 }
 
 void mf::WlPointer::handle_leave(wl_resource* target)

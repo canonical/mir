@@ -49,8 +49,10 @@ public:
 
     void handle_event(MirInputEvent const* event, wl_resource* target);
 
-    void handle_button(uint32_t time, uint32_t button, bool is_pressed);
+    void handle_button(uint32_t time, uint32_t button, wl_pointer_button_state state);
     void handle_enter(mir::geometry::Point position, wl_resource* target);
+    void handle_motion(uint32_t time, mir::geometry::Point position);
+    void handle_axis(uint32_t time, wl_pointer_axis axis, double distance);
     void handle_leave(wl_resource* target);
 
     struct Cursor;
