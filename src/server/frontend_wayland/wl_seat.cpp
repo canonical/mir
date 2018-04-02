@@ -73,10 +73,10 @@ public:
             client_listeners.end());
     }
 
-    void for_each(wl_client* client, std::function<void(T*)> lambda)
+    void for_each(wl_client* client, std::function<void(T*)> func)
     {
         for (auto listener: listeners[client])
-            lambda(listener);
+            func(listener);
     }
 
 private:
@@ -165,44 +165,19 @@ mf::WlSeat::~WlSeat()
     input_hub->remove_observer(config_observer);
 }
 
-void mf::WlSeat::handle_pointer_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
+void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlPointer*)> func)
 {
-    pointer_listeners->for_each(client, [&](WlPointer* pointer)
-        {
-            pointer->handle_event(input_event, target);
-        });
+    pointer_listeners->for_each(client, func);
 }
 
-void mf::WlSeat::handle_keyboard_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
+void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlKeyboard*)> func)
 {
-    keyboard_listeners->for_each(client, [&](WlKeyboard* keyboard)
-        {
-            keyboard->handle_event(input_event, target);
-        });
+    keyboard_listeners->for_each(client, func);
 }
 
-void mf::WlSeat::handle_touch_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
+void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlTouch*)> func)
 {
-    touch_listeners->for_each(client, [&](WlTouch* touch)
-        {
-            touch->handle_event(input_event, target);
-        });
-}
-
-void mf::WlSeat::handle_event(wl_client* client, MirKeymapEvent const* keymap_event, wl_resource* target) const
-{
-    keyboard_listeners->for_each(client, [&](WlKeyboard* keyboard)
-        {
-            keyboard->handle_event(keymap_event, target);
-        });
-}
-
-void mf::WlSeat::handle_event(wl_client* client, MirWindowEvent const* window_event, wl_resource* target) const
-{
-    keyboard_listeners->for_each(client, [&](WlKeyboard* keyboard)
-        {
-            keyboard->handle_event(window_event, target);
-        });
+    touch_listeners->for_each(client, func);
 }
 
 void mf::WlSeat::spawn(std::function<void()>&& work)

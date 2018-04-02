@@ -56,11 +56,9 @@ public:
 
     ~WlSeat();
 
-    void handle_pointer_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const;
-    void handle_keyboard_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const;
-    void handle_touch_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const;
-    void handle_event(wl_client* client, MirKeymapEvent const* keymap_event, wl_resource* target) const;
-    void handle_event(wl_client* client, MirWindowEvent const* window_event, wl_resource* target) const;
+    void for_each_listener(wl_client* client, std::function<void(WlPointer*)> func);
+    void for_each_listener(wl_client* client, std::function<void(WlKeyboard*)> func);
+    void for_each_listener(wl_client* client, std::function<void(WlTouch*)> func);
 
     void spawn(std::function<void()>&& work);
 

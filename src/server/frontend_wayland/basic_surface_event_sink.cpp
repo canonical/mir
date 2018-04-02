@@ -18,6 +18,9 @@
 
 #include "basic_surface_event_sink.h"
 #include "wl_seat.h"
+#include "wl_pointer.h"
+#include "wl_keyboard.h"
+#include "wl_touch.h"
 #include "wayland_utils.h"
 
 namespace mf = mir::frontend;
@@ -82,13 +85,22 @@ void mf::BasicSurfaceEventSink::handle_event_on_wayland_thread(EventUPtr&& event
         switch (mir_input_event_get_type(input_event))
         {
         case mir_input_event_type_key:
-            seat->handle_keyboard_event(client, input_event, target);
+            seat->for_each_listener(client, [this, input_event](WlKeyboard* keyboard)
+                {
+                    keyboard->handle_event(input_event, target);
+                });
             break;
         case mir_input_event_type_pointer:
-            seat->handle_pointer_event(client, input_event, target);
+            seat->for_each_listener(client, [this, input_event](WlPointer* pointer)
+                {
+                    pointer->handle_event(input_event, target);
+                });
             break;
         case mir_input_event_type_touch:
-            seat->handle_touch_event(client, input_event, target);
+            seat->for_each_listener(client, [this, input_event](WlTouch* touch)
+                {
+                    touch->handle_event(input_event, target);
+                });
             break;
         default:
             break;
@@ -99,7 +111,10 @@ void mf::BasicSurfaceEventSink::handle_event_on_wayland_thread(EventUPtr&& event
     {
         auto const map_ev = mir_event_get_keymap_event(event.get());
 
-        seat->handle_event(client, map_ev, target);
+        seat->for_each_listener(client, [this, map_ev](WlKeyboard* keyboard)
+            {
+                keyboard->handle_event(map_ev, target);
+            });
         break;
     }
     case mir_event_type_window:
@@ -121,7 +136,11 @@ void mf::BasicSurfaceEventSink::handle_event_on_wayland_thread(EventUPtr&& event
         default:;
         }
 
-        seat->handle_event(client, wev, target);
+        seat->for_each_listener(client, [this, wev](WlKeyboard* keyboard)
+            {
+                keyboard->handle_event(wev, target);
+            });
+        break;
     }
     default:
         break;
