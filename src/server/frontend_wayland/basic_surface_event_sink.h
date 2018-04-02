@@ -80,7 +80,10 @@ protected:
     std::shared_ptr<bool> const destroyed;
 
 private:
-    void handle_event_on_wayland_thread(EventUPtr&& event);
+    void handle_event(MirResizeEvent const* event);
+    void handle_event(MirInputEvent const* event);
+    void handle_event(MirKeymapEvent const* event);
+    void handle_event(MirWindowEvent const* event);
 };
 }
 }
