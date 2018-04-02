@@ -236,11 +236,9 @@ void mf::WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t 
             client,
             resource,
             id,
-            [pointer_listeners = std::weak_ptr<ListenerList<WlPointer>>(pointer_listeners), client = client]
-            (WlPointer* listener)
+            [listeners = pointer_listeners, client](WlPointer* listener)
             {
-                if (auto listeners = pointer_listeners.lock())
-                    listeners->unregister_listener(client, listener);
+                listeners->unregister_listener(client, listener);
             },
             executor});
 }
@@ -254,11 +252,9 @@ void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t
             resource,
             id,
             *keymap,
-            [keyboard_listeners = std::weak_ptr<ListenerList<WlKeyboard>>(keyboard_listeners), client = client]
-            (WlKeyboard* listener)
+            [listeners = keyboard_listeners, client](WlKeyboard* listener)
             {
-                if (auto listeners = keyboard_listeners.lock())
-                    listeners->unregister_listener(client, listener);
+                listeners->unregister_listener(client, listener);
             },
             [seat = seat]()
             {
@@ -297,11 +293,9 @@ void mf::WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id
             client,
             resource,
             id,
-            [touch_listeners = std::weak_ptr<ListenerList<WlTouch>>(touch_listeners), client = client]
-            (WlTouch* listener)
+            [listeners = touch_listeners, client](WlTouch* listener)
             {
-                if (auto listeners = touch_listeners.lock())
-                    listeners->unregister_listener(client, listener);
+                listeners->unregister_listener(client, listener);
             },
             executor});
 }
