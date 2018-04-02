@@ -41,9 +41,6 @@ class Keymap;
 }
 namespace frontend
 {
-template<class InputInterface>
-class InputCtx; // defined in wl_seat.cpp
-
 class WlPointer;
 class WlKeyboard;
 class WlTouch;
@@ -68,14 +65,17 @@ public:
     void spawn(std::function<void()>&& work);
 
 private:
+    template<class T>
+    class ListenerList;
+
     class ConfigObserver;
 
     std::unique_ptr<mir::input::Keymap> const keymap;
     std::shared_ptr<ConfigObserver> const config_observer;
 
-    std::unique_ptr<std::unordered_map<wl_client*, InputCtx<WlPointer>>> const pointer;
-    std::unique_ptr<std::unordered_map<wl_client*, InputCtx<WlKeyboard>>> const keyboard;
-    std::unique_ptr<std::unordered_map<wl_client*, InputCtx<WlTouch>>> const touch;
+    std::unique_ptr<std::unordered_map<wl_client*, ListenerList<WlPointer>>> const pointer_listeners;
+    std::unique_ptr<std::unordered_map<wl_client*, ListenerList<WlKeyboard>>> const keyboard_listeners;
+    std::unique_ptr<std::unordered_map<wl_client*, ListenerList<WlTouch>>> const touch_listeners;
 
     std::shared_ptr<input::InputDeviceHub> const input_hub;
     std::shared_ptr<input::Seat> const seat;

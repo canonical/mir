@@ -47,25 +47,23 @@ namespace mir
 class Executor;
 }
 
-template<class InputInterface>
-class mf::InputCtx
+template<class T>
+class mf::WlSeat::ListenerList
 {
 public:
-    InputCtx() = default;
+    ListenerList() = default;
 
-    InputCtx(InputCtx&&) = delete;
-    InputCtx(InputCtx const&) = delete;
-    InputCtx& operator=(InputCtx const&) = delete;
+    ListenerList(ListenerList&&) = delete;
+    ListenerList(ListenerList const&) = delete;
+    ListenerList& operator=(ListenerList const&) = delete;
 
-    void register_listener(InputInterface* listener)
+    void register_listener(T* listener)
     {
-        std::lock_guard<std::mutex> lock{mutex};
         listeners.push_back(listener);
     }
 
-    void unregister_listener(InputInterface const* listener)
+    void unregister_listener(T const* listener)
     {
-        std::lock_guard<std::mutex> lock{mutex};
         listeners.erase(
             std::remove(
                 listeners.begin(),
@@ -74,36 +72,14 @@ public:
             listeners.end());
     }
 
-    void handle_event(MirInputEvent const* event, wl_resource* target) const
+    void for_each(std::function<void(T*)> lambda)
     {
-        std::lock_guard<std::mutex> lock{mutex};
-        for (auto listener : listeners)
-        {
-            listener->handle_event(event, target);
-        }
-    }
-
-    void handle_event(MirWindowEvent const* event, wl_resource* target) const
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        for (auto& listener : listeners)
-        {
-            listener->handle_event(event, target);
-        }
-    }
-
-    void handle_event(MirKeymapEvent const* event, wl_resource* target) const
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        for (auto& listener : listeners)
-        {
-            listener->handle_event(event, target);
-        }
+        for (auto listener: listeners)
+            lambda(listener);
     }
 
 private:
-    std::mutex mutable mutex;
-    std::vector<InputInterface*> listeners;
+    std::vector<T*> listeners;
 };
 
 class mf::WlSeat::ConfigObserver : public mi::InputDeviceObserver
@@ -173,9 +149,9 @@ mf::WlSeat::WlSeat(
                 {
                     *keymap = new_keymap;
                 })},
-        pointer{std::make_unique<std::unordered_map<wl_client*, InputCtx<WlPointer>>>()},
-        keyboard{std::make_unique<std::unordered_map<wl_client*, InputCtx<WlKeyboard>>>()},
-        touch{std::make_unique<std::unordered_map<wl_client*, InputCtx<WlTouch>>>()},
+        pointer_listeners{std::make_unique<std::unordered_map<wl_client*, ListenerList<WlPointer>>>()},
+        keyboard_listeners{std::make_unique<std::unordered_map<wl_client*, ListenerList<WlKeyboard>>>()},
+        touch_listeners{std::make_unique<std::unordered_map<wl_client*, ListenerList<WlTouch>>>()},
         input_hub{input_hub},
         seat{seat},
         executor{executor}
@@ -190,27 +166,42 @@ mf::WlSeat::~WlSeat()
 
 void mf::WlSeat::handle_pointer_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
 {
-    (*pointer)[client].handle_event(input_event, target);
+    (*pointer_listeners)[client].for_each([&](WlPointer* pointer)
+        {
+            pointer->handle_event(input_event, target);
+        });
 }
 
 void mf::WlSeat::handle_keyboard_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
 {
-    (*keyboard)[client].handle_event(input_event, target);
+    (*keyboard_listeners)[client].for_each([&](WlKeyboard* keyboard)
+        {
+            keyboard->handle_event(input_event, target);
+        });
 }
 
 void mf::WlSeat::handle_touch_event(wl_client* client, MirInputEvent const* input_event, wl_resource* target) const
 {
-    (*touch)[client].handle_event(input_event, target);
+    (*touch_listeners)[client].for_each([&](WlTouch* touch)
+        {
+            touch->handle_event(input_event, target);
+        });
 }
 
 void mf::WlSeat::handle_event(wl_client* client, MirKeymapEvent const* keymap_event, wl_resource* target) const
 {
-    (*keyboard)[client].handle_event(keymap_event, target);
+    (*keyboard_listeners)[client].for_each([&](WlKeyboard* keyboard)
+        {
+            keyboard->handle_event(keymap_event, target);
+        });
 }
 
 void mf::WlSeat::handle_event(wl_client* client, MirWindowEvent const* window_event, wl_resource* target) const
 {
-    (*keyboard)[client].handle_event(window_event, target);
+    (*keyboard_listeners)[client].for_each([&](WlKeyboard* keyboard)
+        {
+            keyboard->handle_event(window_event, target);
+        });
 }
 
 void mf::WlSeat::spawn(std::function<void()>&& work)
@@ -238,32 +229,32 @@ void mf::WlSeat::bind(wl_client* /*client*/, wl_resource* resource)
 
 void mf::WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    auto& input_ctx = (*pointer)[client];
-    input_ctx.register_listener(
+    auto& listeners = (*pointer_listeners)[client];
+    listeners.register_listener(
         new WlPointer{
             client,
             resource,
             id,
-            [&input_ctx](WlPointer* listener)
+            [&listeners](WlPointer* listener)
             {
-                input_ctx.unregister_listener(listener);
+                listeners.unregister_listener(listener);
             },
             executor});
 }
 
 void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    auto& input_ctx = (*keyboard)[client];
+    auto& listeners = (*keyboard_listeners)[client];
 
-    input_ctx.register_listener(
+    listeners.register_listener(
         new WlKeyboard{
             client,
             resource,
             id,
             *keymap,
-            [&input_ctx](WlKeyboard* listener)
+            [&listeners](WlKeyboard* listener)
             {
-                input_ctx.unregister_listener(listener);
+                listeners.unregister_listener(listener);
             },
             [this]()
             {
@@ -296,16 +287,16 @@ void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t
 
 void mf::WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    auto& input_ctx = (*touch)[client];
+    auto& listeners = (*touch_listeners)[client];
 
-    input_ctx.register_listener(
+    listeners.register_listener(
         new WlTouch{
             client,
             resource,
             id,
-            [&input_ctx](WlTouch* listener)
+            [&listeners](WlTouch* listener)
             {
-                input_ctx.unregister_listener(listener);
+                listeners.unregister_listener(listener);
             },
             executor});
 }
