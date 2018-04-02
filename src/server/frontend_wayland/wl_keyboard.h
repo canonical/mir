@@ -56,8 +56,7 @@ public:
         uint32_t id,
         mir::input::Keymap const& initial_keymap,
         std::function<void(WlKeyboard*)> const& on_destroy,
-        std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state,
-        std::shared_ptr<mir::Executor> const& executor);
+        std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state);
 
     ~WlKeyboard();
 
@@ -73,10 +72,8 @@ private:
     std::unique_ptr<xkb_state, void (*)(xkb_state *)> state;
     std::unique_ptr<xkb_context, void (*)(xkb_context *)> const context;
 
-    std::shared_ptr<mir::Executor> const executor;
     std::function<void(WlKeyboard*)> on_destroy;
     std::function<std::vector<uint32_t>()> const acquire_current_keyboard_state;
-    std::shared_ptr<bool> const destroyed;
 
     uint32_t mods_depressed{0};
     uint32_t mods_latched{0};

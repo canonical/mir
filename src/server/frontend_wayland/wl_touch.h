@@ -39,17 +39,14 @@ public:
         wl_client* client,
         wl_resource* parent,
         uint32_t id,
-        std::function<void(WlTouch*)> const& on_destroy,
-        std::shared_ptr<mir::Executor> const& executor);
+        std::function<void(WlTouch*)> const& on_destroy);
 
     ~WlTouch();
 
     void handle_event(MirInputEvent const* event, wl_resource* target);
 
 private:
-    std::shared_ptr<mir::Executor> const executor;
     std::function<void(WlTouch*)> on_destroy;
-    std::shared_ptr<bool> const destroyed;
 
     void release() override;
 };

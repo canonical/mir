@@ -255,8 +255,7 @@ void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t
                 }
 
                 return std::vector<uint32_t>{pressed_keys.begin(), pressed_keys.end()};
-            },
-            executor});
+            }});
 }
 
 void mf::WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id)
@@ -270,8 +269,7 @@ void mf::WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id
             [listeners = touch_listeners, client](WlTouch* listener)
             {
                 listeners->unregister_listener(client, listener);
-            },
-            executor});
+            }});
 }
 
 void mf::WlSeat::release(struct wl_client* /*client*/, struct wl_resource* us)
