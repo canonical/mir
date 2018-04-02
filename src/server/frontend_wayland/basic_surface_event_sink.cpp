@@ -18,11 +18,49 @@
 
 #include "basic_surface_event_sink.h"
 #include "wl_seat.h"
+#include "wayland_utils.h"
 
 namespace mf = mir::frontend;
 
+mf::BasicSurfaceEventSink::BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink)
+    : seat{seat},
+      client{client},
+      target{target},
+      event_sink{event_sink},
+      window_size{geometry::Size{0,0}},
+      destroyed{std::make_shared<bool>(false)}
+{
+}
+
+mf::BasicSurfaceEventSink::~BasicSurfaceEventSink()
+{
+    *destroyed = true;
+}
+
 void mf::BasicSurfaceEventSink::handle_event(EventUPtr&& event)
 {
+    switch (mir_event_get_type(event.get()))
+    {
+        case mir_event_type_resize:
+        case mir_event_type_input:
+        case mir_event_type_keymap:
+        case mir_event_type_window:
+            seat->spawn(run_unless(
+                destroyed,
+                [this, event = std::make_shared<EventUPtr>(move(event))]()
+                {
+                    handle_event_on_wayland_thread(move(*event));
+                }));
+            break;
+        default:
+            break;
+    }
+}
+
+void mf::BasicSurfaceEventSink::handle_event_on_wayland_thread(EventUPtr&& event)
+{
+    // NOTE: to add a type of event we care about here, you must add it to this switch statement as well as the one in
+    //       handle_event()
     switch (mir_event_get_type(event.get()))
     {
     case mir_event_type_resize:

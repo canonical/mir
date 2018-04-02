@@ -21,12 +21,14 @@
 
 #include "null_event_sink.h"
 
-#include <mir_toolkit/event.h>
+#include "mir/executor.h"
+#include "mir_toolkit/event.h"
 
 #include <wayland-server-core.h>
 
 #include <atomic>
 #include <functional>
+#include <memory>
 
 namespace mir
 {
@@ -38,14 +40,8 @@ class WlSeat;
 class BasicSurfaceEventSink : public NullEventSink
 {
 public:
-    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink)
-        : seat{seat},
-        client{client},
-        target{target},
-        event_sink{event_sink},
-        window_size{geometry::Size{0,0}}
-    {
-    }
+    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink);
+    ~BasicSurfaceEventSink();
 
     void handle_event(EventUPtr&& event) override;
 
@@ -81,6 +77,10 @@ protected:
     std::atomic<geometry::Size> requested_size;
     std::atomic<bool> has_focus{false};
     std::atomic<MirWindowState> current_state{mir_window_state_unknown};
+    std::shared_ptr<bool> const destroyed;
+
+private:
+    void handle_event_on_wayland_thread(EventUPtr&& event);
 };
 }
 }
