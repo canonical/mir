@@ -1,4 +1,5 @@
 
+
 MIRAL_2.0 {
 global:
   extern "C++" {
@@ -308,3 +309,11 @@ global:
   };
   local: *;
 };
+
+MIRAL_2.1 {
+global:
+  extern "C++" {
+    miral::CanonicalWindowManagerPolicy::confirm_placement_on_display*;
+    non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::confirm_placement_on_display*;
+  };
+} MIRAL_2.0;
