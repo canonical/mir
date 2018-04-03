@@ -64,13 +64,15 @@ public:
 
     void unregister_listener(wl_client* client, T const* listener)
     {
-        std::vector<T*> client_listeners = listeners[client];
+        std::vector<T*>& client_listeners = listeners[client];
         client_listeners.erase(
             std::remove(
                 client_listeners.begin(),
                 client_listeners.end(),
                 listener),
             client_listeners.end());
+        if (client_listeners.size() == 0)
+            listeners.erase(client);
     }
 
     void for_each(wl_client* client, std::function<void(T*)> func)
