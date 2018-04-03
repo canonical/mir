@@ -70,6 +70,9 @@ public:
     void set_min_size(int32_t width, int32_t height);
     void set_maximized();
     void unset_maximized();
+    void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output);
+    void unset_fullscreen();
+    void set_minimized();
 
     using WlAbstractMirWindow::client;
     using WlAbstractMirWindow::params;
@@ -429,6 +432,7 @@ void mf::XdgSurfaceV6::set_maximized()
 
 void mf::XdgSurfaceV6::unset_maximized()
 {
+    puts(__PRETTY_FUNCTION__);
     if (surface_id.as_value())
     {
         // We must process this request immediately (i.e. don't defer until commit())
@@ -440,6 +444,55 @@ void mf::XdgSurfaceV6::unset_maximized()
     else
     {
         params->state = mir_window_state_restored;
+    }
+}
+
+void mf::XdgSurfaceV6::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
+{
+    (void)output;
+    if (surface_id.as_value())
+    {
+        // We must process this request immediately (i.e. don't defer until commit())
+        shell::SurfaceSpecification mods;
+        mods.state = mir_window_state_fullscreen;
+        auto const session = get_session(client);
+        shell->modify_surface(session, surface_id, mods);
+    }
+    else
+    {
+        params->state = mir_window_state_fullscreen;
+    }
+}
+
+void mf::XdgSurfaceV6::unset_fullscreen()
+{
+    if (surface_id.as_value())
+    {
+        // We must process this request immediately (i.e. don't defer until commit())
+        shell::SurfaceSpecification mods;
+        mods.state = mir_window_state_restored;
+        auto const session = get_session(client);
+        shell->modify_surface(session, surface_id, mods);
+    }
+    else
+    {
+        params->state = mir_window_state_restored;
+    }
+}
+
+void mf::XdgSurfaceV6::set_minimized()
+{
+    if (surface_id.as_value())
+    {
+        // We must process this request immediately (i.e. don't defer until commit())
+        shell::SurfaceSpecification mods;
+        mods.state = mir_window_state_minimized;
+        auto const session = get_session(client);
+        shell->modify_surface(session, surface_id, mods);
+    }
+    else
+    {
+        params->state = mir_window_state_minimized;
     }
 }
 
@@ -627,18 +680,17 @@ void mf::XdgToplevelV6::unset_maximized()
 
 void mf::XdgToplevelV6::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
 {
-    (void)output;
-    // TODO
+    self->set_fullscreen(output);
 }
 
 void mf::XdgToplevelV6::unset_fullscreen()
 {
-    // TODO
+    self->unset_fullscreen();
 }
 
 void mf::XdgToplevelV6::set_minimized()
 {
-    // TODO
+    self->set_minimized();
 }
 
 mf::XdgToplevelV6* mf::XdgToplevelV6::get_xdgtoplevel(wl_resource* surface) const
