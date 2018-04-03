@@ -83,7 +83,6 @@ The Mir coding guidelines are [here](cppguide/index.html).
  - \ref md_HACKING "Mir hacking guide"
  - \ref component_reports
  - \ref dso_versioning_guide
- - \ref abi_compatibility_tools
  - \ref performance_framework
  - \ref latency "Measuring visual latency"
 
