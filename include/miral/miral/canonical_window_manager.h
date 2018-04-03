@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2016 Canonical Ltd.
+ * Copyright © 2015-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -50,6 +50,11 @@ public:
 
     /// Move the child window with the parent
     auto confirm_inherited_move(WindowInfo const& window_info, Displacement movement) -> Rectangle override;
+
+    auto confirm_placement_on_display(
+        WindowInfo const& window_info,
+        MirWindowState new_state,
+        Rectangle const& new_placement) -> Rectangle override;
 
 protected:
     WindowManagerTools tools;
