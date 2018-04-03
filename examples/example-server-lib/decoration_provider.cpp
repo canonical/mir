@@ -276,7 +276,7 @@ void render_background(MirBufferStream* buffer_stream, MirGraphicsRegion& graphi
             uint8_t pattern[4];
 
             for (auto i = 0; i != 3; ++i)
-                pattern[i] = (j*bottom_colour[i] + (graphics_region.height-j)*top_colour[i])/graphics_region.height;
+                pattern[i] = (j*bottom_colour[i] + (graphics_region.height-j)*top_colour[i])/(2*graphics_region.height);
             pattern[3] = 0xff;
 
             uint32_t* pixel = (uint32_t*)row;
