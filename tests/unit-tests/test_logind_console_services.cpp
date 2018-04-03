@@ -114,9 +114,9 @@ public:
         }
     }
 
-    void add_any_active_session()
+    std::string add_any_active_session()
     {
-        add_session(
+        return add_session(
             "42",
             "seat0",
             1000,
@@ -125,7 +125,7 @@ public:
             "");
     }
 
-    void add_session(
+    std::string add_session(
         char const* id,
         char const* seat,
         uint32_t uid,
@@ -195,7 +195,41 @@ public:
          * the last created session, regardless of whether the session is marked as
          * "active" or not.
          */
+        return session_path;
+    }
 
+    void add_take_device_to_session(
+        char const* session_path,
+        char const* mock_code)
+    {
+        std::unique_ptr<GVariant, decltype(&g_variant_unref)> result{nullptr, &g_variant_unref};
+
+        GError* error{nullptr};
+        result.reset(
+            g_dbus_connection_call_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                session_path,
+                "org.freedesktop.DBus.Mock",
+                "AddMethod",
+                g_variant_new(
+                    "(sssss)",
+                    "org.freedesktop.login1.Session",
+                    "TakeDevice",
+                    "uu",
+                    "hb",
+                    mock_code),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NONE,
+                1000,
+                nullptr,
+                &error));
+
+        if (!result)
+        {
+            auto error_msg = error ? error->message : "Unknown error";
+            BOOST_THROW_EXCEPTION((std::runtime_error{error_msg}));
+        }
     }
 
     void ensure_mock_logind()
@@ -271,6 +305,8 @@ private:
     mir::Fd mock_stdout;
 };
 
+using namespace testing;
+
 TEST_F(LogindConsoleServices, happy_path_succeeds)
 {
     ensure_mock_logind();
@@ -312,4 +348,46 @@ TEST_F(LogindConsoleServices, selects_active_session)
     add_any_active_session();
 
     mir::LogindConsoleServices test{};
+}
+
+TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
+{
+    ensure_mock_logind();
+
+    auto session_path = add_any_active_session();
+    add_take_device_to_session(
+        session_path.c_str(),
+        "ret = (os.open('/dev/zero', os.O_RDONLY), True)");
+
+    mir::LogindConsoleServices services;
+
+    auto device = services.acquire_device(22, 33);
+    while (!device.is_ready())
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+    EXPECT_THAT(device.get(), Not(Eq(mir::Fd::invalid)));
+}
+
+TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
+{
+    ensure_mock_logind();
+
+    auto session_path = add_any_active_session();
+    add_take_device_to_session(
+        session_path.c_str(),
+        "raise dbus.exceptions.DBusException('No such file or directory (2)', name='System.Error.ENOENT')");
+
+    mir::LogindConsoleServices services;
+
+    auto device = services.acquire_device(22, 33);
+    while (!device.is_ready())
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+
+    // Somehow boost::future entirely erases the exception type?
+    EXPECT_ANY_THROW(
+        device.get()
+    );
 }
