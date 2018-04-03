@@ -415,7 +415,11 @@ void mf::XdgSurfaceV6::set_maximized()
 {
     if (surface_id.as_value())
     {
-        spec().state = mir_window_state_maximized;
+        // We must process this request immediately (i.e. don't defer until commit())
+        shell::SurfaceSpecification mods;
+        mods.state = mir_window_state_maximized;
+        auto const session = get_session(client);
+        shell->modify_surface(session, surface_id, mods);
     }
     else
     {
@@ -427,7 +431,11 @@ void mf::XdgSurfaceV6::unset_maximized()
 {
     if (surface_id.as_value())
     {
-        spec().state = mir_window_state_restored;
+        // We must process this request immediately (i.e. don't defer until commit())
+        shell::SurfaceSpecification mods;
+        mods.state = mir_window_state_restored;
+        auto const session = get_session(client);
+        shell->modify_surface(session, surface_id, mods);
     }
     else
     {
