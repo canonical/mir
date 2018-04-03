@@ -98,33 +98,16 @@ LogindSeat* simple_seat_proxy_on_system_bus(
 
 std::string object_path_for_current_session(LogindSeat* seat_proxy)
 {
-    auto const session_property = std::unique_ptr<GVariant, decltype(&g_variant_unref)>{
-        logind_seat_get_active_session(seat_proxy),
-        &g_variant_unref};
+    auto const session_property = logind_seat_get_active_session(seat_proxy);
 
     if (!session_property)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find active session"}));
     }
 
-    auto const expected_type = std::unique_ptr<GVariantType, decltype(&g_variant_type_free)>{
-        g_variant_type_new("(so)"),
-        &g_variant_type_free};
+    auto const object_path_variant = g_variant_get_child_value(session_property, 1);
 
-    if (!g_variant_is_of_type(session_property.get(), expected_type.get()))
-    {
-        BOOST_THROW_EXCEPTION((
-            std::runtime_error{
-                std::string{"ActiveSession property had unexpected type (expected (so), found "} +
-                g_variant_get_type_string(session_property.get()) +
-                ")"}));
-    }
-
-    auto const object_path_variant = std::unique_ptr<GVariant, decltype(&g_variant_unref)>{
-        g_variant_get_child_value(session_property.get(), 1),
-        &g_variant_unref};
-
-    return g_variant_get_string(object_path_variant.get(), nullptr);
+    return g_variant_get_string(object_path_variant, nullptr);
 }
 }
 
@@ -135,11 +118,13 @@ mir::LogindConsoleServices::LogindConsoleServices()
         object_path_for_current_session(seat_proxy.get()).c_str()),
         &g_object_unref}
 {
-    GError*error{nullptr};
+    GError* error{nullptr};
 
     if (!logind_session_call_take_control_sync(session_proxy.get(), false, nullptr, &error))
     {
         auto error_msg = error ? error->message : "unknown error";
+
+        g_error_free(error);
 
         BOOST_THROW_EXCEPTION((
             std::runtime_error{
@@ -187,9 +172,7 @@ void complete_take_device_call(
         result,
         &error))
     {
-        g_variant_unref(fd_holder);
         auto error_msg = error ? error->message : "unknown error";
-
         promise->set_exception(
             MIR_MAKE_EXCEPTION_PTR((
                 std::runtime_error{
@@ -198,10 +181,16 @@ void complete_take_device_call(
     }
 
     auto fd = mir::Fd{g_variant_get_handle(fd_holder)};
-    g_variant_unref(fd_holder);
 
     if (fd == mir::Fd::invalid)
     {
+        /*
+         * I don't believe we can get here - the proxy checks that the DBus return value
+         * has type (fd, boolean), and gdbus will error if it can't read the fd out of the
+         * auxiliary channel.
+         *
+         * Better safe than sorry, though
+         */
         promise->set_exception(
             MIR_MAKE_EXCEPTION_PTR((
                 std::runtime_error{"TakeDevice call returned invalid FD"})));
