@@ -43,13 +43,13 @@ execute: |
         libevdev-devel \
         umockdev-devel \
         gtest-devel \
-        gmock-devel \
-        ninja-build
+        gmock-devel
 
     BUILD_DIR=$(mktemp --directory)
-    cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_USE_LD_GOLD=ON -G Ninja
+    cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_USE_LD_GOLD=ON
     # Run cmake again to pick up wlcs?!?!?!?!
     cmake $BUILD_DIR
-    cmake --build $BUILD_DIR
+    export VERBOSE=1
+    cmake --build $BUILD_DIR -- -j`nproc`
     cmake --build $BUILD_DIR -- ptest
 
