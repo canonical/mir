@@ -84,7 +84,7 @@ bool mf::WlSurface::synchronized() const
 
 std::pair<geom::Point, wl_resource*> mf::WlSurface::transform_point(geom::Point point) const
 {
-    return std::make_pair(point + buffer_offset_, resource);
+    return std::make_pair(point - buffer_offset_, resource);
 }
 
 void mf::WlSurface::set_role(WlSurfaceRole* role_)

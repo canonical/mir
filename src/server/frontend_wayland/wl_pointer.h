@@ -35,6 +35,7 @@ class Executor;
 
 namespace frontend
 {
+class WlSurface;
 
 class WlPointer : public wayland::Pointer
 {
@@ -48,7 +49,7 @@ public:
 
     ~WlPointer();
 
-    void handle_event(MirPointerEvent const* event, wl_resource* target);
+    void handle_event(MirPointerEvent const* event, WlSurface* surface);
 
     struct Cursor;
 

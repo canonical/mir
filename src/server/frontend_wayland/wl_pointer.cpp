@@ -68,7 +68,7 @@ mf::WlPointer::~WlPointer()
     on_destroy(this);
 }
 
-void mf::WlPointer::handle_event(MirPointerEvent const* event, wl_resource* target)
+void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surface)
 {
     switch(mir_pointer_event_action(event))
     {
@@ -107,13 +107,13 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, wl_resource* targ
         {
             auto point = Point{mir_pointer_event_axis_value(event, mir_pointer_axis_x),
                                         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
-            //auto transformed = WlSurface::from(target)->transform_point(point);
-            handle_enter(point - WlSurface::from(target)->buffer_offset(), target);
+            auto transformed = surface->transform_point(point);
+            handle_enter(transformed.first, transformed.second);
             break;
         }
         case mir_pointer_action_leave:
         {
-            handle_leave(target);
+            handle_leave(surface->raw_resource());
             break;
         }
         case mir_pointer_action_motion:
@@ -126,8 +126,8 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, wl_resource* targ
 
             auto point = Point{mir_pointer_event_axis_value(event, mir_pointer_axis_x),
                                         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
-            //auto transformed = WlSurface::from(target)->transform_point(point);
-            handle_motion(timestamp, point - WlSurface::from(target)->buffer_offset());
+            auto transformed = surface->transform_point(point);
+            handle_motion(timestamp, transformed.first);
 
             auto hscroll = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll) * 10;
             handle_axis(timestamp, WL_POINTER_AXIS_HORIZONTAL_SCROLL, hscroll);

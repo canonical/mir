@@ -68,7 +68,7 @@ mf::WlKeyboard::~WlKeyboard()
     on_destroy(this);
 }
 
-void mf::WlKeyboard::handle_event(MirKeyboardEvent const* key_event, wl_resource* /*target*/)
+void mf::WlKeyboard::handle_event(MirKeyboardEvent const* key_event, WlSurface* /*surface*/)
 {
     auto const input_ev = mir_keyboard_event_input_event(key_event);
     auto const ev = mir::client::Event{mir_event_ref(mir_input_event_get_event(input_ev))};
@@ -103,7 +103,7 @@ void mf::WlKeyboard::handle_event(MirKeyboardEvent const* key_event, wl_resource
     update_modifier_state();
 }
 
-void mf::WlKeyboard::handle_event(MirWindowEvent const* event, wl_resource* target)
+void mf::WlKeyboard::handle_event(MirWindowEvent const* event, WlSurface* surface)
 {
     if (mir_window_event_get_attribute(event) == mir_window_attrib_focus)
     {
@@ -141,17 +141,17 @@ void mf::WlKeyboard::handle_event(MirWindowEvent const* event, wl_resource* targ
             }
             update_modifier_state();
 
-            wl_keyboard_send_enter(resource, serial, target, &key_state);
+            wl_keyboard_send_enter(resource, serial, surface->raw_resource(), &key_state);
             wl_array_release(&key_state);
         }
         else
         {
-            wl_keyboard_send_leave(resource, serial, target);
+            wl_keyboard_send_leave(resource, serial, surface->raw_resource());
         }
     }
 }
 
-void mf::WlKeyboard::handle_event(MirKeymapEvent const* event, wl_resource* /*target*/)
+void mf::WlKeyboard::handle_event(MirKeymapEvent const* event, WlSurface* /*surface*/)
 {
     char const* buffer;
     size_t length;

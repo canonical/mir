@@ -26,11 +26,11 @@ struct MirTouchEvent;
 
 namespace mir
 {
-
 class Executor;
 
 namespace frontend
 {
+class WlSurface;
 
 class WlTouch : public wayland::Touch
 {
@@ -43,7 +43,7 @@ public:
 
     ~WlTouch();
 
-    void handle_event(MirTouchEvent const* event, wl_resource* target);
+    void handle_event(MirTouchEvent const* touch_ev, WlSurface* surface);
 
 private:
     std::function<void(WlTouch*)> on_destroy;

@@ -41,11 +41,12 @@ mf::WlTouch::~WlTouch()
     on_destroy(this);
 }
 
-void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, wl_resource* target)
+void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* surface)
 {
+    // TODO: support for touches on subsurfaces
     auto const input_ev = mir_touch_event_input_event(touch_ev);
     auto const ev = mir::client::Event{mir_input_event_get_event(input_ev)};
-    auto const buffer_offset = WlSurface::from(target)->buffer_offset();
+    auto const buffer_offset = surface->buffer_offset();
 
     for (auto i = 0u; i < mir_touch_event_point_count(touch_ev); ++i)
     {
@@ -67,7 +68,7 @@ void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, wl_resource* targe
                 resource,
                 wl_display_get_serial(wl_client_get_display(client)),
                 mir_input_event_get_event_time_ms(input_ev),
-                target,
+                surface->raw_resource(),
                 touch_id,
                 wl_fixed_from_double(x),
                 wl_fixed_from_double(y));

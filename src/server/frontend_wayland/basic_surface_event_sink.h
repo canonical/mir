@@ -34,7 +34,7 @@ namespace mir
 {
 namespace frontend
 {
-
+class WlSurface;
 class WlSeat;
 
 class BasicSurfaceEventSink : public NullEventSink
@@ -70,7 +70,7 @@ public:
 protected:
     WlSeat* const seat;
     wl_client* const client;
-    wl_resource* const target;
+    WlSurface* const surface;
     wl_resource* const event_sink;
     std::atomic<geometry::Size> window_size;
     std::atomic<int64_t> timestamp_ns{0};

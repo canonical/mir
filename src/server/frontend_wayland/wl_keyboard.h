@@ -46,6 +46,7 @@ class Keymap;
 
 namespace frontend
 {
+class WlSurface;
 
 class WlKeyboard : public wayland::Keyboard
 {
@@ -60,9 +61,9 @@ public:
 
     ~WlKeyboard();
 
-    void handle_event(MirKeyboardEvent const* event, wl_resource* /*target*/);
-    void handle_event(MirWindowEvent const* event, wl_resource* target);
-    void handle_event(MirKeymapEvent const* event, wl_resource* /*target*/);
+    void handle_event(MirKeyboardEvent const* event, WlSurface* surface);
+    void handle_event(MirWindowEvent const* event, WlSurface* surface);
+    void handle_event(MirKeymapEvent const* event, WlSurface* surface);
     void set_keymap(mir::input::Keymap const& new_keymap);
 
 private:

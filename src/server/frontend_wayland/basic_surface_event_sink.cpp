@@ -32,7 +32,7 @@ namespace geom = mir::geometry;
 mf::BasicSurfaceEventSink::BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink)
     : seat{seat},
       client{client},
-      target{target},
+      surface{WlSurface::from(target)},
       event_sink{event_sink},
       window_size{geometry::Size{0,0}},
       destroyed{std::make_shared<bool>(false)}
@@ -88,19 +88,19 @@ void mf::BasicSurfaceEventSink::handle_input_event(MirInputEvent const* event)
     case mir_input_event_type_key:
         seat->for_each_listener(client, [this, event = mir_input_event_get_keyboard_event(event)](WlKeyboard* keyboard)
             {
-                keyboard->handle_event(event, target);
+                keyboard->handle_event(event, surface);
             });
         break;
     case mir_input_event_type_pointer:
         seat->for_each_listener(client, [this, event = mir_input_event_get_pointer_event(event)](WlPointer* pointer)
             {
-                pointer->handle_event(event, target);
+                pointer->handle_event(event, surface);
             });
         break;
     case mir_input_event_type_touch:
         seat->for_each_listener(client, [this, event = mir_input_event_get_touch_event(event)](WlTouch* touch)
             {
-                touch->handle_event(event, target);
+                touch->handle_event(event, surface);
             });
         break;
     default:
@@ -112,7 +112,7 @@ void mf::BasicSurfaceEventSink::handle_keymap_event(MirKeymapEvent const* event)
 {
     seat->for_each_listener(client, [this, event](WlKeyboard* keyboard)
         {
-            keyboard->handle_event(event, target);
+            keyboard->handle_event(event, surface);
         });
 }
 
@@ -135,7 +135,7 @@ void mf::BasicSurfaceEventSink::handle_window_event(MirWindowEvent const* event)
 
     seat->for_each_listener(client, [this, event](WlKeyboard* keyboard)
         {
-            keyboard->handle_event(event, target);
+            keyboard->handle_event(event, surface);
         });
 }
 
