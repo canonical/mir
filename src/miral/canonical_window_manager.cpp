@@ -77,3 +77,7 @@ auto miral::CanonicalWindowManagerPolicy::confirm_placement_on_display(
 {
     return new_placement;
 }
+
+void miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*window_info*/)
+{
+}
