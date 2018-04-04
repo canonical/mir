@@ -31,6 +31,52 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 
+void mir::frontend::WlAbstractMirWindow::set_maximized()
+{
+    // We must process this request immediately (i.e. don't defer until commit())
+    set_state_now(mir_window_state_maximized);
+}
+
+void mir::frontend::WlAbstractMirWindow::unset_maximized()
+{
+    // We must process this request immediately (i.e. don't defer until commit())
+    set_state_now(mir_window_state_restored);
+}
+
+void mir::frontend::WlAbstractMirWindow::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
+{
+    (void)output; // TODO specify the output when setting fullscreen
+    // We must process this request immediately (i.e. don't defer until commit())
+    set_state_now(mir_window_state_fullscreen);
+}
+
+void mir::frontend::WlAbstractMirWindow::unset_fullscreen()
+{
+    // We must process this request immediately (i.e. don't defer until commit())
+    set_state_now(mir_window_state_restored);
+}
+
+void mir::frontend::WlAbstractMirWindow::set_minimized()
+{
+    // We must process this request immediately (i.e. don't defer until commit())
+    set_state_now(mir_window_state_minimized);
+}
+
+void mir::frontend::WlAbstractMirWindow::set_state_now(MirWindowState state)
+{
+    if (surface_id.as_value())
+    {
+        shell::SurfaceSpecification mods;
+        mods.state = state;
+        auto const session = get_session(client);
+        shell->modify_surface(session, surface_id, mods);
+    }
+    else
+    {
+        params->state = state;
+    }
+}
+
 namespace mir
 {
 namespace frontend

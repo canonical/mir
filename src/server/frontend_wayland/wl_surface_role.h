@@ -24,6 +24,9 @@
 #include "mir/geometry/size.h"
 #include "mir/optional_value.h"
 
+#include <mir_toolkit/common.h>
+
+#include <experimental/optional>
 #include <memory>
 
 struct wl_client;
@@ -66,6 +69,18 @@ public:
     ~WlAbstractMirWindow() override;
 
     void invalidate_buffer_list() override;
+
+    void set_maximized();
+
+    void unset_maximized();
+
+    void set_fullscreen(std::experimental::optional<wl_resource*> const& output);
+
+    void unset_fullscreen();
+
+    void set_minimized();
+
+    void set_state_now(MirWindowState state);
 
 protected:
     std::shared_ptr<bool> const destroyed;
