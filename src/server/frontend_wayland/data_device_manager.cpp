@@ -22,6 +22,29 @@ namespace mf = mir::frontend;
 
 namespace
 {
+struct DataSource : mf::wayland::DataSource
+{
+    DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id) :
+        mf::wayland::DataSource{client, parent, id}
+    {
+    }
+
+    void offer(std::string const& mime_type) override
+    {
+        (void)mime_type;
+    }
+
+    void destroy() override
+    {
+        wl_resource_destroy(resource);
+    }
+
+    void set_actions(uint32_t dnd_actions) override
+    {
+        (void)dnd_actions;
+    }
+};
+
 struct DataDevice : mf::wayland::DataDevice
 {
     DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id) :
@@ -43,6 +66,7 @@ struct DataDevice : mf::wayland::DataDevice
 
     void release() override
     {
+        wl_resource_destroy(resource);
     }
 };
 }
@@ -55,6 +79,7 @@ mf::DataDeviceManager::DataDeviceManager(struct wl_display* display) :
 void mf::DataDeviceManager::create_data_source(struct wl_client* client, struct wl_resource* resource, uint32_t id)
 {
     (void)client, (void)resource, (void)id;
+    new DataSource{client, resource, id};
 }
 
 void mf::DataDeviceManager::get_data_device(
