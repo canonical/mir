@@ -43,7 +43,7 @@ class XdgSurfaceV6;
 class WlSeat;
 class XdgSurfaceV6EventSink;
 
-class XdgSurfaceV6 : wayland::XdgSurfaceV6, WlAbstractMirWindow
+class XdgSurfaceV6 : wayland::XdgSurfaceV6, public WlAbstractMirWindow
 {
 public:
     XdgSurfaceV6* get_xdgsurface(wl_resource* surface) const;
@@ -90,10 +90,10 @@ class XdgSurfaceV6EventSink : public BasicSurfaceEventSink
 public:
     using BasicSurfaceEventSink::BasicSurfaceEventSink;
 
-    XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink,
+    XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink, WlAbstractMirWindow* window,
                           std::shared_ptr<bool> const& destroyed);
 
-    void send_resize(geometry::Size const& new_size) const override;
+    void send_resize_(geometry::Size const& new_size) const override;
 
     std::function<void(geometry::Size const& new_size, MirWindowState state, bool active)> notify_resize =
         [](auto, auto, auto){};
@@ -209,7 +209,7 @@ mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t 
       WlAbstractMirWindow{client, surface, resource, shell},
       parent{parent},
       shell{shell},
-      sink{std::make_shared<XdgSurfaceV6EventSink>(&seat, client, surface, resource, destroyed)}
+      sink{std::make_shared<XdgSurfaceV6EventSink>(&seat, client, surface, resource, this, destroyed)}
 {
     WlAbstractMirWindow::sink = sink;
 }
@@ -440,13 +440,13 @@ void mir::frontend::XdgSurfaceV6::commit(mir::frontend::WlSurfaceState const& st
 // XdgSurfaceV6EventSink
 
 mf::XdgSurfaceV6EventSink::XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client, wl_resource* target,
-                                                 wl_resource* event_sink, std::shared_ptr<bool> const& destroyed)
-    : BasicSurfaceEventSink(seat, client, target, event_sink),
+                                                 wl_resource* event_sink, WlAbstractMirWindow* window, std::shared_ptr<bool> const& destroyed)
+    : BasicSurfaceEventSink(seat, client, target, event_sink, window),
       destroyed{destroyed}
 {
 }
 
-void mf::XdgSurfaceV6EventSink::send_resize(geometry::Size const& new_size) const
+void mf::XdgSurfaceV6EventSink::send_resize_(geometry::Size const& new_size) const
 {
     seat->spawn(run_unless(destroyed, [this, new_size]()
         {

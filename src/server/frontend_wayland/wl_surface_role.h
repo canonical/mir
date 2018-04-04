@@ -82,6 +82,8 @@ public:
 
     void set_state_now(MirWindowState state);
 
+    virtual void handle_resize(geometry::Size const& new_size);
+
 protected:
     std::shared_ptr<bool> const destroyed;
     wl_client* const client;

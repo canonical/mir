@@ -36,11 +36,12 @@ namespace frontend
 {
 class WlSurface;
 class WlSeat;
+class WlAbstractMirWindow;
 
 class BasicSurfaceEventSink : public NullEventSink
 {
 public:
-    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink);
+    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink, WlAbstractMirWindow* window);
     ~BasicSurfaceEventSink();
 
     void handle_event(EventUPtr&& event) override;
@@ -65,13 +66,14 @@ public:
         return current_state;
     }
 
-    virtual void send_resize(geometry::Size const& new_size) const = 0;
+    virtual void send_resize_(geometry::Size const& new_size) const = 0;
 
 protected:
     WlSeat* const seat;
     wl_client* const client;
     WlSurface* const surface;
     wl_resource* const event_sink;
+    WlAbstractMirWindow* window;
     std::atomic<geometry::Size> window_size;
     std::atomic<int64_t> timestamp_ns{0};
     std::atomic<geometry::Size> requested_size;

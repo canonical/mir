@@ -122,6 +122,11 @@ void WlAbstractMirWindow::invalidate_buffer_list()
     buffer_list_needs_refresh = true;
 }
 
+void WlAbstractMirWindow::handle_resize(geometry::Size const& new_size)
+{
+    sink->send_resize_(new_size);
+}
+
 shell::SurfaceSpecification& WlAbstractMirWindow::spec()
 {
     if (!pending_changes)
@@ -188,7 +193,7 @@ void WlAbstractMirWindow::create_mir_window()
     auto const client_size = window->client_size();
 
     if (client_size != params->size)
-        sink->send_resize(client_size);
+        sink->send_resize_(client_size);
 }
 
 geometry::Size WlAbstractMirWindow::window_size()

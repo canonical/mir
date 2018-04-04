@@ -29,11 +29,12 @@
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
-mf::BasicSurfaceEventSink::BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink)
+mf::BasicSurfaceEventSink::BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink, WlAbstractMirWindow* window)
     : seat{seat},
       client{client},
       surface{WlSurface::from(target)},
       event_sink{event_sink},
+      window{window},
       window_size{geometry::Size{0,0}},
       destroyed{std::make_shared<bool>(false)}
 {
@@ -74,7 +75,7 @@ void mf::BasicSurfaceEventSink::handle_resize_event(MirResizeEvent const* event)
 {
     requested_size = {mir_resize_event_get_width(event), mir_resize_event_get_height(event)};
     if (requested_size != window_size)
-        send_resize(requested_size);
+        window->handle_resize(requested_size);
 }
 
 void mf::BasicSurfaceEventSink::handle_input_event(MirInputEvent const* event)
@@ -122,12 +123,12 @@ void mf::BasicSurfaceEventSink::handle_window_event(MirWindowEvent const* event)
     {
     case mir_window_attrib_focus:
         has_focus = mir_window_event_get_attribute_value(event);
-        send_resize(requested_size);
+        window->handle_resize(requested_size);
         break;
 
     case mir_window_attrib_state:
         current_state = MirWindowState(mir_window_event_get_attribute_value(event));
-        send_resize(requested_size);
+        window->handle_resize(requested_size);
         break;
 
     default:;
