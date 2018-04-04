@@ -41,7 +41,6 @@ namespace frontend
 class Shell;
 class XdgSurfaceV6;
 class WlSeat;
-class XdgSurfaceV6EventSink;
 
 class XdgSurfaceV6 : wayland::XdgSurfaceV6, public WlAbstractMirWindow
 {
@@ -58,6 +57,8 @@ public:
     void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void ack_configure(uint32_t serial) override;
     void commit(WlSurfaceState const& state) override;
+
+    void handle_resize(const geometry::Size & new_size) override;
 
     void set_parent(optional_value<SurfaceId> parent_id);
     void set_title(std::string const& title);
@@ -81,25 +82,10 @@ public:
 
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
-    std::shared_ptr<XdgSurfaceV6EventSink> const sink;
+    std::shared_ptr<BasicSurfaceEventSink> const sink;
     std::function<void()> next_commit_action{[]{}};
-};
-
-class XdgSurfaceV6EventSink : public BasicSurfaceEventSink
-{
-public:
-    using BasicSurfaceEventSink::BasicSurfaceEventSink;
-
-    XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink, WlAbstractMirWindow* window,
-                          std::shared_ptr<bool> const& destroyed);
-
-    void send_resize_(geometry::Size const& new_size) const override;
-
     std::function<void(geometry::Size const& new_size, MirWindowState state, bool active)> notify_resize =
         [](auto, auto, auto){};
-
-private:
-    std::shared_ptr<bool> const destroyed;
 };
 
 class XdgPopupV6 : wayland::XdgPopupV6
@@ -209,7 +195,7 @@ mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t 
       WlAbstractMirWindow{client, surface, resource, shell},
       parent{parent},
       shell{shell},
-      sink{std::make_shared<XdgSurfaceV6EventSink>(&seat, client, surface, resource, this, destroyed)}
+      sink{std::make_shared<BasicSurfaceEventSink>(&seat, client, surface, resource, this)}
 {
     WlAbstractMirWindow::sink = sink;
 }
@@ -352,9 +338,9 @@ void mf::XdgSurfaceV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/,
     }
 }
 
-void mf::XdgSurfaceV6::set_notify_resize(std::function<void(geometry::Size const&, MirWindowState, bool)> notify_resize)
+void mf::XdgSurfaceV6::set_notify_resize(std::function<void(geometry::Size const&, MirWindowState, bool)> notify_resize_)
 {
-    sink->notify_resize = notify_resize;
+    notify_resize = notify_resize_;
 }
 
 void mf::XdgSurfaceV6::set_parent(optional_value<SurfaceId> parent_id)
@@ -415,12 +401,12 @@ void mf::XdgSurfaceV6::set_min_size(int32_t width, int32_t height)
     }
 }
 
-void mir::frontend::XdgSurfaceV6::clear_next_commit_action()
+void mf::XdgSurfaceV6::clear_next_commit_action()
 {
     next_commit_action = []{};
 }
 
-void mir::frontend::XdgSurfaceV6::set_next_commit_action(std::function<void()> action)
+void mf::XdgSurfaceV6::set_next_commit_action(std::function<void()> action)
 {
     next_commit_action = [this, action]
     {
@@ -430,30 +416,18 @@ void mir::frontend::XdgSurfaceV6::set_next_commit_action(std::function<void()> a
     };
 }
 
-void mir::frontend::XdgSurfaceV6::commit(mir::frontend::WlSurfaceState const& state)
+void mf::XdgSurfaceV6::commit(mf::WlSurfaceState const& state)
 {
     WlAbstractMirWindow::commit(state);
     next_commit_action();
     clear_next_commit_action();
 }
 
-// XdgSurfaceV6EventSink
-
-mf::XdgSurfaceV6EventSink::XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client, wl_resource* target,
-                                                 wl_resource* event_sink, WlAbstractMirWindow* window, std::shared_ptr<bool> const& destroyed)
-    : BasicSurfaceEventSink(seat, client, target, event_sink, window),
-      destroyed{destroyed}
+void mf::XdgSurfaceV6::handle_resize(geometry::Size const& new_size)
 {
-}
-
-void mf::XdgSurfaceV6EventSink::send_resize_(geometry::Size const& new_size) const
-{
-    seat->spawn(run_unless(destroyed, [this, new_size]()
-        {
-            auto const serial = wl_display_next_serial(wl_client_get_display(client));
-            notify_resize(new_size, state(), is_active());
-            zxdg_surface_v6_send_configure(event_sink, serial);
-        }));
+    auto const serial = wl_display_next_serial(wl_client_get_display(client));
+    notify_resize(new_size, sink->state(), sink->is_active());
+    zxdg_surface_v6_send_configure(event_sink, serial);
 }
 
 // XdgPopupV6

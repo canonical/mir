@@ -66,7 +66,7 @@ public:
         return current_state;
     }
 
-    virtual void send_resize_(geometry::Size const& new_size) const = 0;
+    virtual void send_resize_(geometry::Size const& /*new_size*/) const {};
 
 protected:
     WlSeat* const seat;
