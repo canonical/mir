@@ -82,7 +82,6 @@ public:
 
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
-    std::shared_ptr<BasicSurfaceEventSink> const sink;
     std::function<void()> next_commit_action{[]{}};
     std::function<void(geometry::Size const& new_size, MirWindowState state, bool active)> notify_resize =
         [](auto, auto, auto){};
@@ -192,12 +191,10 @@ mf::XdgSurfaceV6* mf::XdgSurfaceV6::get_xdgsurface(wl_resource* surface) const
 mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t id, wl_resource* surface,
                                std::shared_ptr<mf::Shell> const& shell, WlSeat& seat)
     : wayland::XdgSurfaceV6(client, parent, id),
-      WlAbstractMirWindow{client, surface, resource, shell},
+      WlAbstractMirWindow{&seat, client, surface, resource, shell},
       parent{parent},
-      shell{shell},
-      sink{std::make_shared<BasicSurfaceEventSink>(&seat, client, surface, resource, this)}
+      shell{shell}
 {
-    WlAbstractMirWindow::sink = sink;
 }
 
 mf::XdgSurfaceV6::~XdgSurfaceV6()

@@ -47,6 +47,7 @@ namespace frontend
 class Shell;
 class BasicSurfaceEventSink;
 class WlSurface;
+class WlSeat;
 struct WlSurfaceState;
 
 class WlSurfaceRole
@@ -63,8 +64,8 @@ public:
 class WlAbstractMirWindow : public WlSurfaceRole
 {
 public:
-    WlAbstractMirWindow(wl_client* client, wl_resource* surface, wl_resource* event_sink,
-        std::shared_ptr<frontend::Shell> const& shell);
+    WlAbstractMirWindow(WlSeat* seat, wl_client* client, wl_resource* surface, wl_resource* event_sink,
+                        std::shared_ptr<frontend::Shell> const& shell);
 
     ~WlAbstractMirWindow() override;
 
@@ -82,7 +83,7 @@ public:
 
     void set_state_now(MirWindowState state);
 
-    virtual void handle_resize(geometry::Size const& new_size);
+    virtual void handle_resize(geometry::Size const& new_size) = 0;
 
 protected:
     std::shared_ptr<bool> const destroyed;
@@ -90,7 +91,7 @@ protected:
     WlSurface* const surface;
     wl_resource* const event_sink;
     std::shared_ptr<frontend::Shell> const shell;
-    std::shared_ptr<BasicSurfaceEventSink> sink;
+    std::shared_ptr<BasicSurfaceEventSink> const sink;
 
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
     SurfaceId surface_id;

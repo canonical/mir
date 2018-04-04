@@ -29,11 +29,10 @@
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
-mf::BasicSurfaceEventSink::BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink, WlAbstractMirWindow* window)
+mf::BasicSurfaceEventSink::BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, WlAbstractMirWindow* window)
     : seat{seat},
       client{client},
       surface{WlSurface::from(target)},
-      event_sink{event_sink},
       window{window},
       window_size{geometry::Size{0,0}},
       destroyed{std::make_shared<bool>(false)}
