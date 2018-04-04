@@ -88,7 +88,7 @@ void mf::BasicSurfaceEventSink::handle_input_event(MirInputEvent const* event)
     case mir_input_event_type_key:
         seat->for_each_listener(client, [this, event = mir_input_event_get_keyboard_event(event)](WlKeyboard* keyboard)
             {
-                keyboard->handle_event(event, surface);
+                keyboard->handle_keyboard_event(event, surface);
             });
         break;
     case mir_input_event_type_pointer:
@@ -112,7 +112,7 @@ void mf::BasicSurfaceEventSink::handle_keymap_event(MirKeymapEvent const* event)
 {
     seat->for_each_listener(client, [this, event](WlKeyboard* keyboard)
         {
-            keyboard->handle_event(event, surface);
+            keyboard->handle_keymap_event(event, surface);
         });
 }
 
@@ -135,7 +135,7 @@ void mf::BasicSurfaceEventSink::handle_window_event(MirWindowEvent const* event)
 
     seat->for_each_listener(client, [this, event](WlKeyboard* keyboard)
         {
-            keyboard->handle_event(event, surface);
+            keyboard->handle_window_event(event, surface);
         });
 }
 

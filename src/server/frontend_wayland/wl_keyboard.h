@@ -61,9 +61,9 @@ public:
 
     ~WlKeyboard();
 
-    void handle_event(MirKeyboardEvent const* event, WlSurface* surface);
-    void handle_event(MirWindowEvent const* event, WlSurface* surface);
-    void handle_event(MirKeymapEvent const* event, WlSurface* surface);
+    void handle_keyboard_event(MirKeyboardEvent const* event, WlSurface* surface);
+    void handle_window_event(MirWindowEvent const* event, WlSurface* surface);
+    void handle_keymap_event(MirKeymapEvent const* event, WlSurface* surface);
     void set_keymap(mir::input::Keymap const& new_keymap);
 
 private:
