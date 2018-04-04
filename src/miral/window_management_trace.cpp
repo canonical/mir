@@ -332,11 +332,16 @@ auto dump_of(mir::geometry::Size const size) -> std::string
     return out.str();
 }
 
-auto dump_of(miral::Output const& output) -> std::string
+auto dump_of(mir::geometry::Rectangle const& rect) -> std::string
 {
     std::stringstream out;
-    out << output.extents();
+    out << rect;
     return out.str();
+}
+
+auto dump_of(miral::Output const& output) -> std::string
+{
+    return dump_of(output.extents());
 }
 }
 
@@ -851,8 +856,10 @@ auto miral::WindowManagementTrace::confirm_placement_on_display(
     MirWindowState new_state,
     Rectangle const& new_placement) -> Rectangle
 try {
-    mir::log_info("%s window_info=%s", __func__, dump_of(window_info).c_str());
-    return policy->confirm_placement_on_display(window_info, new_state, new_placement);
+    auto const& result = policy->confirm_placement_on_display(window_info, new_state, new_placement);
+    mir::log_info("%s window_info=%s, new_state= %s, new_placement= %s -> %s", __func__,
+        dump_of(window_info).c_str(), dump_of(new_state).c_str(), dump_of(new_placement).c_str(), dump_of(result).c_str());
+    return result;
 }
 MIRAL_TRACE_EXCEPTION
 
