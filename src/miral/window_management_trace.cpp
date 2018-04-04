@@ -20,6 +20,7 @@
 #include "window_info_defaults.h"
 
 #include <miral/application_info.h>
+#include <miral/output.h>
 #include <miral/window_info.h>
 
 #include <mir/scene/session.h>
@@ -329,6 +330,18 @@ auto dump_of(mir::geometry::Size const size) -> std::string
     std::stringstream out;
     out << size;
     return out.str();
+}
+
+auto dump_of(mir::geometry::Rectangle const& rect) -> std::string
+{
+    std::stringstream out;
+    out << rect;
+    return out.str();
+}
+
+auto dump_of(miral::Output const& output) -> std::string
+{
+    return dump_of(output.extents());
 }
 }
 
@@ -843,7 +856,30 @@ auto miral::WindowManagementTrace::confirm_placement_on_display(
     MirWindowState new_state,
     Rectangle const& new_placement) -> Rectangle
 try {
-    mir::log_info("%s window_info=%s", __func__, dump_of(window_info).c_str());
-    return policy->confirm_placement_on_display(window_info, new_state, new_placement);
+    auto const& result = policy->confirm_placement_on_display(window_info, new_state, new_placement);
+    mir::log_info("%s window_info=%s, new_state= %s, new_placement= %s -> %s", __func__,
+        dump_of(window_info).c_str(), dump_of(new_state).c_str(), dump_of(new_placement).c_str(), dump_of(result).c_str());
+    return result;
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::advise_output_create(Output const& output)
+try {
+    mir::log_info("%s output=%s", __func__, dump_of(output).c_str());
+    return policy->advise_output_create(output);
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::advise_output_update(Output const& updated, Output const& original)
+try {
+    mir::log_info("%s updated=%s, original=%s", __func__, dump_of(updated).c_str(), dump_of(original).c_str());
+    return policy->advise_output_update(updated, original);
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::advise_output_delete(Output const& output)
+try {
+    mir::log_info("%s output=%s", __func__, dump_of(output).c_str());
+    return policy->advise_output_delete(output);
 }
 MIRAL_TRACE_EXCEPTION

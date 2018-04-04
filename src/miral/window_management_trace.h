@@ -153,6 +153,12 @@ public:
 
     virtual void advise_raise(std::vector<Window> const& windows) override;
 
+    void advise_output_create(Output const& output) override;
+
+    void advise_output_update(Output const& updated, Output const& original) override;
+
+    void advise_output_delete(Output const& output) override;
+
 private:
     WindowManagerTools wrapped;
     std::unique_ptr<miral::WindowManagementPolicy> const policy;
