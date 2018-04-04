@@ -392,23 +392,7 @@ protected:
         uint32_t /*framerate*/,
         std::experimental::optional<struct wl_resource*> const& output) override
     {
-        if (surface_id.as_value())
-        {
-            auto& mods = spec();
-            mods.state = mir_window_state_fullscreen;
-            if (output)
-            {
-                // TODO{alan_g} mods.output_id = DisplayConfigurationOutputId_from(output)
-            }
-        }
-        else
-        {
-            params->state = mir_window_state_fullscreen;
-            if (output)
-            {
-                // TODO{alan_g} params->output_id = DisplayConfigurationOutputId_from(output)
-            }
-        }
+        WlAbstractMirWindow::set_fullscreen(output);
     }
 
     void set_popup(
@@ -452,23 +436,8 @@ protected:
 
     void set_maximized(std::experimental::optional<struct wl_resource*> const& output) override
     {
-        if (surface_id.as_value())
-        {
-            auto& mods = spec();
-            mods.state = mir_window_state_maximized;
-            if (output)
-            {
-                // TODO{alan_g} mods.output_id = DisplayConfigurationOutputId_from(output)
-            }
-        }
-        else
-        {
-            params->state = mir_window_state_maximized;
-            if (output)
-            {
-                // TODO{alan_g} params->output_id = DisplayConfigurationOutputId_from(output)
-            }
-        }
+        (void)output;
+        WlAbstractMirWindow::set_maximized();
     }
 
     void set_title(std::string const& title) override
