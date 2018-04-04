@@ -64,7 +64,7 @@ public:
 class WlAbstractMirWindow : public WlSurfaceRole
 {
 public:
-    WlAbstractMirWindow(WlSeat* seat, wl_client* client, wl_resource* surface, wl_resource* event_sink,
+    WlAbstractMirWindow(WlSeat* seat, wl_client* client, WlSurface* surface,
                         std::shared_ptr<frontend::Shell> const& shell);
 
     ~WlAbstractMirWindow() override;
@@ -89,7 +89,6 @@ protected:
     std::shared_ptr<bool> const destroyed;
     wl_client* const client;
     WlSurface* const surface;
-    wl_resource* const event_sink;
     std::shared_ptr<frontend::Shell> const shell;
     std::shared_ptr<BasicSurfaceEventSink> const sink;
 

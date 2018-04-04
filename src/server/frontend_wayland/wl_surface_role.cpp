@@ -91,16 +91,15 @@ std::shared_ptr<scene::Surface> get_surface_for_id(std::shared_ptr<Session> cons
 }
 }
 
-WlAbstractMirWindow::WlAbstractMirWindow(WlSeat* seat, wl_client* client, wl_resource* surface, wl_resource* event_sink,
+WlAbstractMirWindow::WlAbstractMirWindow(WlSeat* seat, wl_client* client, WlSurface* surface,
                                          std::shared_ptr<Shell> const& shell)
         : destroyed{std::make_shared<bool>(false)},
           client{client},
-          surface{WlSurface::from(surface)},
-          event_sink{event_sink},
+          surface{surface},
           shell{shell},
           sink{std::make_shared<BasicSurfaceEventSink>(seat, client, surface, this)},
           params{std::make_unique<scene::SurfaceCreationParameters>(
-              scene::SurfaceCreationParameters().of_type(mir_window_type_freestyle))}
+                 scene::SurfaceCreationParameters().of_type(mir_window_type_freestyle))}
 {
 }
 

@@ -299,11 +299,11 @@ public:
         wl_client* client,
         wl_resource* parent,
         uint32_t id,
-        wl_resource* surface,
+        WlSurface* surface,
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat)
         : ShellSurface(client, parent, id),
-          WlAbstractMirWindow{&seat, client, surface, resource, shell}
+          WlAbstractMirWindow{&seat, client, surface, shell}
     {
     }
 
@@ -361,7 +361,7 @@ protected:
 
     void handle_resize(const geometry::Size & new_size) override
     {
-        wl_shell_surface_send_configure(event_sink, WL_SHELL_SURFACE_RESIZE_NONE, new_size.width.as_int(),
+        wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, new_size.width.as_int(),
                                         new_size.height.as_int());
     }
 
@@ -526,7 +526,7 @@ public:
         uint32_t id,
         wl_resource* surface) override
     {
-        new WlShellSurface(client, resource, id, surface, shell, seat);
+        new WlShellSurface(client, resource, id, WlSurface::from(surface), shell, seat);
     }
 private:
     std::shared_ptr<mf::Shell> const shell;

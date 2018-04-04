@@ -19,16 +19,9 @@
 #ifndef MIR_FRONTEND_BASIC_EVENT_SINK_H_
 #define MIR_FRONTEND_BASIC_EVENT_SINK_H_
 
-#include "null_event_sink.h"
+#include "mir/frontend/event_sink.h"
 
-#include "mir/executor.h"
-#include "mir_toolkit/event.h"
-
-#include <wayland-server-core.h>
-
-#include <atomic>
-#include <functional>
-#include <memory>
+struct wl_client;
 
 namespace mir
 {
@@ -38,13 +31,23 @@ class WlSurface;
 class WlSeat;
 class WlAbstractMirWindow;
 
-class BasicSurfaceEventSink : public NullEventSink
+class BasicSurfaceEventSink : public EventSink
 {
 public:
-    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, WlAbstractMirWindow* window);
+    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, WlSurface* surface, WlAbstractMirWindow* window);
     ~BasicSurfaceEventSink();
 
     void handle_event(EventUPtr&& event) override;
+
+    void handle_lifecycle_event(MirLifecycleState) override {}
+    void handle_display_config_change(graphics::DisplayConfiguration const&) override {}
+    void send_ping(int32_t) override {}
+    void send_buffer(BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType) override {}
+    void handle_input_config_change(MirInputConfig const&) override {}
+    void handle_error(ClientVisibleError const&) override {}
+    void add_buffer(graphics::Buffer&) override {}
+    void error_buffer(geometry::Size, MirPixelFormat, std::string const&) override {}
+    void update_buffer(graphics::Buffer&) override {}
 
     void latest_client_size(geometry::Size window_size)
     {
@@ -71,11 +74,11 @@ protected:
     wl_client* const client;
     WlSurface* const surface;
     WlAbstractMirWindow* window;
-    std::atomic<geometry::Size> window_size;
-    std::atomic<int64_t> timestamp_ns{0};
-    std::atomic<geometry::Size> requested_size;
-    std::atomic<bool> has_focus{false};
-    std::atomic<MirWindowState> current_state{mir_window_state_unknown};
+    geometry::Size window_size;
+    int64_t timestamp_ns{0};
+    geometry::Size requested_size;
+    bool has_focus{false};
+    MirWindowState current_state{mir_window_state_unknown};
     std::shared_ptr<bool> const destroyed;
 
 private:
@@ -83,7 +86,6 @@ private:
     void handle_input_event(MirInputEvent const* event);
     void handle_keymap_event(MirKeymapEvent const* event);
     void handle_window_event(MirWindowEvent const* event);
-
 };
 }
 }
