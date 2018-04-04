@@ -149,10 +149,21 @@ void WlAbstractMirWindow::visiblity(bool visible)
 
     auto const session = get_session(client);
 
-    if (get_surface_for_id(session, surface_id)->visible() == visible)
+    auto surface = get_surface_for_id(session, surface_id);
+
+    if (surface->visible() == visible)
         return;
 
-    spec().state = visible ? mir_window_state_restored : mir_window_state_hidden;
+    if (visible)
+    {
+        if (surface->state() == mir_window_state_hidden)
+            spec().state = mir_window_state_restored;
+    }
+    else
+    {
+        if (surface->state() != mir_window_state_hidden)
+            spec().state = mir_window_state_hidden;
+    }
 }
 
 }
