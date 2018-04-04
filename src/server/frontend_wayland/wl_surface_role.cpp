@@ -74,6 +74,7 @@ void mir::frontend::WlAbstractMirWindow::set_state_now(MirWindowState state)
     else
     {
         params->state = state;
+        create_mir_window();
     }
 }
 
@@ -162,6 +163,13 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
         pending_changes.reset();
         return;
     }
+
+    create_mir_window();
+}
+
+void WlAbstractMirWindow::create_mir_window()
+{
+    auto const session = get_session(client);
 
     if (params->size == geometry::Size{})
         params->size = window_size();

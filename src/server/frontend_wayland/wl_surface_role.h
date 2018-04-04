@@ -103,6 +103,8 @@ private:
     bool buffer_list_needs_refresh = true;
 
     void visiblity(bool visible) override;
+
+    void create_mir_window();
 };
 
 }
