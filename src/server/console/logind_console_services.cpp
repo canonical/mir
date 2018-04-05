@@ -138,9 +138,12 @@ std::string object_path_for_current_session(LogindSeat* seat_proxy)
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find active session"}));
     }
 
-    auto const object_path_variant = g_variant_get_child_value(session_property, 1);
+    auto const object_path_variant = std::unique_ptr<GVariant, decltype(&g_variant_unref)>{
+        g_variant_get_child_value(session_property, 1),
+        &g_variant_unref
+    };
 
-    return g_variant_get_string(object_path_variant, nullptr);
+    return g_variant_get_string(object_path_variant.get(), nullptr);
 }
 }
 
@@ -212,6 +215,8 @@ void complete_take_device_call(
     }
 
     auto fd = mir::Fd{g_variant_get_handle(fd_holder)};
+
+    g_variant_unref(fd_holder);
 
     if (fd == mir::Fd::invalid)
     {

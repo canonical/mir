@@ -160,8 +160,12 @@ public:
         }
 
         // Result is a 1-tuple (session_object_path, )
+        auto const session_path_variant = std::unique_ptr<GVariant, decltype(&g_variant_unref)>{
+            g_variant_get_child_value(result.get(), 0),
+            &g_variant_unref
+        };
         auto const session_path =
-            g_variant_get_string(g_variant_get_child_value(result.get(), 0), nullptr);
+            g_variant_get_string(session_path_variant.get(), nullptr);
 
         GError* error{nullptr};
         result.reset(
