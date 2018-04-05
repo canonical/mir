@@ -30,12 +30,45 @@
 
 namespace
 {
+class GErrorPtr
+{
+public:
+    GErrorPtr()
+        : raw_error{nullptr}
+    {
+    }
+
+    ~GErrorPtr()
+    {
+        if (raw_error)
+            g_error_free(raw_error);
+    }
+
+    GError** operator&()
+    {
+        return &raw_error;
+    }
+
+    GError* operator->()
+    {
+        return raw_error;
+    }
+
+    operator bool()
+    {
+        return raw_error;
+    }
+
+private:
+    GError* raw_error;
+};
+
 LogindSession* simple_proxy_on_system_bus(
     char const* object_path)
 {
     using namespace std::literals::string_literals;
 
-    GError* error{nullptr};
+    GErrorPtr error;
 
     auto const proxy = logind_session_proxy_new_for_bus_sync(
         G_BUS_TYPE_SYSTEM,
@@ -68,7 +101,7 @@ LogindSeat* simple_seat_proxy_on_system_bus(
 {
     using namespace std::literals::string_literals;
 
-    GError* error{nullptr};
+    GErrorPtr error;
 
     auto const proxy = logind_seat_proxy_new_for_bus_sync(
         G_BUS_TYPE_SYSTEM,
@@ -118,13 +151,11 @@ mir::LogindConsoleServices::LogindConsoleServices()
         object_path_for_current_session(seat_proxy.get()).c_str()),
         &g_object_unref}
 {
-    GError* error{nullptr};
+    GErrorPtr error;
 
     if (!logind_session_call_take_control_sync(session_proxy.get(), false, nullptr, &error))
     {
-        auto error_msg = error ? error->message : "unknown error";
-
-        g_error_free(error);
+        std::string const error_msg = error ? error->message : "unknown error";
 
         BOOST_THROW_EXCEPTION((
             std::runtime_error{
@@ -161,7 +192,7 @@ void complete_take_device_call(
     std::unique_ptr<boost::promise<mir::Fd>> const promise{
         static_cast<boost::promise<mir::Fd>*>(ctx)};
 
-    GError* error{nullptr};
+    GErrorPtr error;
     GVariant* fd_holder;
     gboolean inactive;      // TODO: What do we need to do about this?
 
@@ -172,7 +203,7 @@ void complete_take_device_call(
         result,
         &error))
     {
-        auto error_msg = error ? error->message : "unknown error";
+        std::string error_msg = error ? error->message : "unknown error";
         promise->set_exception(
             MIR_MAKE_EXCEPTION_PTR((
                 std::runtime_error{
