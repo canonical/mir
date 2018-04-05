@@ -25,16 +25,13 @@ namespace mir
 {
 namespace frontend
 {
-class DataDeviceManager : wayland::DataDeviceManager
+class DataDeviceManager : public wayland::DataDeviceManager
 {
 public:
-    DataDeviceManager(struct wl_display* display);
-
-    void create_data_source(struct wl_client* client, struct wl_resource* resource, uint32_t id) override;
-
-    void get_data_device(
-        struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat) override;
+    using wayland::DataDeviceManager::DataDeviceManager;
 };
+
+auto create_data_device_manager(struct wl_display* display) -> std::unique_ptr<DataDeviceManager>;
 }
 }
 

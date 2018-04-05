@@ -34,6 +34,17 @@ namespace mf = mir::frontend;
 
 namespace
 {
+class DataDeviceManager : public mf::DataDeviceManager
+{
+public:
+    DataDeviceManager(struct wl_display* display);
+
+    void create_data_source(struct wl_client* client, struct wl_resource* resource, uint32_t id) override;
+
+    void get_data_device(
+        struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat) override;
+};
+
 struct DataOffer : mf::wayland::DataOffer
 {
 protected:
@@ -128,23 +139,29 @@ struct DataDevice : mf::wayland::DataDevice
 };
 }
 
-mf::DataDeviceManager::DataDeviceManager(struct wl_display* display) :
-    wayland::DataDeviceManager(display, 3)
+DataDeviceManager::DataDeviceManager(struct wl_display* display) :
+    mf::DataDeviceManager(display, 3)
 {
     puts(__PRETTY_FUNCTION__);
 }
 
-void mf::DataDeviceManager::create_data_source(struct wl_client* client, struct wl_resource* resource, uint32_t id)
+void DataDeviceManager::create_data_source(struct wl_client* client, struct wl_resource* resource, uint32_t id)
 {
     puts(__PRETTY_FUNCTION__);
     (void)client, (void)resource, (void)id;
     new DataSource{client, resource, id};
 }
 
-void mf::DataDeviceManager::get_data_device(
+void DataDeviceManager::get_data_device(
     struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat)
 {
     puts(__PRETTY_FUNCTION__);
     (void)seat;
     new DataDevice{client, resource, id};
+}
+
+auto mf::create_data_device_manager(struct wl_display* display)
+-> std::unique_ptr<DataDeviceManager>
+{
+    return std::unique_ptr<DataDeviceManager>{new ::DataDeviceManager(display)};
 }

@@ -658,7 +658,7 @@ mf::WaylandConnector::WaylandConnector(
         display.get(),
         display_config);
     shell_global = std::make_unique<mf::WlShell>(display.get(), shell, *seat_global);
-    data_device_manager_global = std::make_unique<DataDeviceManager>(display.get());
+    data_device_manager_global = mf::create_data_device_manager(display.get());
     if (!getenv("MIR_DISABLE_XDG_SHELL_V6_UNSTABLE"))
         xdg_shell_global = std::make_unique<XdgShellV6>(display.get(), shell, *seat_global);
 
