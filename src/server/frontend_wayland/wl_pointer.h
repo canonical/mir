@@ -65,6 +65,7 @@ private:
     void handle_motion(uint32_t time, mir::geometry::Point position);
     void handle_axis(uint32_t time, wl_pointer_axis axis, double distance);
     void handle_leave(wl_resource* target);
+    void handle_frame();
 
     void set_cursor(uint32_t serial, std::experimental::optional<wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) override;
     void release() override;

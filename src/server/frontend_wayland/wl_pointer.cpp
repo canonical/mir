@@ -97,6 +97,7 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
                         WL_POINTER_BUTTON_STATE_RELEASED;
 
                     handle_button(timestamp, mapping.second, state);
+                    handle_frame();
                 }
             }
 
@@ -109,11 +110,13 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
                                         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
             auto transformed = surface->transform_point(point);
             handle_enter(transformed.first, transformed.second);
+            handle_frame();
             break;
         }
         case mir_pointer_action_leave:
         {
             handle_leave(surface->raw_resource());
+            handle_frame();
             break;
         }
         case mir_pointer_action_motion:
@@ -122,18 +125,36 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
             //  event description in wayland.xml) and send axis_source, axis_stop and axis_discrete events where
             //  appropriate (may require significant reworking of the input system)
 
+            bool needs_frame = false;
             auto const timestamp = mir_input_event_get_event_time_ms(mir_pointer_event_input_event(event));
-
             auto point = Point{mir_pointer_event_axis_value(event, mir_pointer_axis_x),
                                         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
             auto transformed = surface->transform_point(point);
-            handle_motion(timestamp, transformed.first);
+
+            if (!last_position || transformed.first != last_position.value())
+            {
+                handle_motion(timestamp, transformed.first);
+                needs_frame = true;
+            }
 
             auto hscroll = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll) * 10;
-            handle_axis(timestamp, WL_POINTER_AXIS_HORIZONTAL_SCROLL, hscroll);
+            if (hscroll != 0)
+            {
+                handle_axis(timestamp, WL_POINTER_AXIS_HORIZONTAL_SCROLL, hscroll);
+                needs_frame = true;
+            }
 
             auto vscroll = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll) * 10;
-            handle_axis(timestamp, WL_POINTER_AXIS_VERTICAL_SCROLL, vscroll);
+            if (vscroll != 0)
+            {
+                handle_axis(timestamp, WL_POINTER_AXIS_VERTICAL_SCROLL, vscroll);
+                needs_frame = true;
+            }
+
+            if (needs_frame)
+            {
+                handle_frame();
+            }
             break;
         }
         case mir_pointer_actions:
@@ -145,8 +166,6 @@ void mf::WlPointer::handle_button(uint32_t time, uint32_t button, wl_pointer_but
 {
     auto const serial = wl_display_next_serial(display);
     wl_pointer_send_button(resource, serial, time, button, state);
-    if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
-        wl_pointer_send_frame(resource);
 }
 
 void mf::WlPointer::handle_enter(Point position, wl_resource* target)
@@ -159,37 +178,25 @@ void mf::WlPointer::handle_enter(Point position, wl_resource* target)
         target,
         wl_fixed_from_double(position.x.as_int()),
         wl_fixed_from_double(position.y.as_int()));
-    if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
-        wl_pointer_send_frame(resource);
 }
 
 void mf::WlPointer::handle_motion(uint32_t time, mir::geometry::Point position)
 {
-    if (!last_position || position != last_position.value())
-    {
-        wl_pointer_send_motion(
-            resource,
-            time,
-            wl_fixed_from_double(position.x.as_int()),
-            wl_fixed_from_double(position.y.as_int()));
-        if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
-            wl_pointer_send_frame(resource);
-        last_position = position;
-    }
+    wl_pointer_send_motion(
+        resource,
+        time,
+        wl_fixed_from_double(position.x.as_int()),
+        wl_fixed_from_double(position.y.as_int()));
+    last_position = position;
 }
 
 void mf::WlPointer::handle_axis(uint32_t time, wl_pointer_axis axis, double distance)
 {
-    if (distance != 0)
-    {
-        wl_pointer_send_axis(
-            resource,
-            time,
-            axis,
-            wl_fixed_from_double(distance));
-        if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
-            wl_pointer_send_frame(resource);
-    }
+    wl_pointer_send_axis(
+        resource,
+        time,
+        axis,
+        wl_fixed_from_double(distance));
 }
 
 void mf::WlPointer::handle_leave(wl_resource* target)
@@ -199,9 +206,13 @@ void mf::WlPointer::handle_leave(wl_resource* target)
         resource,
         serial,
         target);
+    last_position = std::experimental::nullopt;
+}
+
+void mf::WlPointer::handle_frame()
+{
     if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
         wl_pointer_send_frame(resource);
-    last_position = std::experimental::nullopt;
 }
 
 namespace
