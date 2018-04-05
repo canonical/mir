@@ -116,7 +116,7 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
         }
         case mir_pointer_action_leave:
         {
-            handle_leave(surface->raw_resource());
+            handle_leave(focused_surface);
             handle_frame();
             break;
         }
@@ -132,14 +132,23 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
                                         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
             auto transformed = surface->transform_point(point);
 
-            if (!last_position || transformed.first != last_position.value())
+            if (transformed.second == focused_surface)
             {
-                wl_pointer_send_motion(
-                    resource,
-                    timestamp,
-                    wl_fixed_from_double(transformed.first.x.as_int()),
-                    wl_fixed_from_double(transformed.first.y.as_int()));
-                last_position = transformed.first;
+                if (!last_position || transformed.first != last_position.value())
+                {
+                    wl_pointer_send_motion(
+                        resource,
+                        timestamp,
+                        wl_fixed_from_double(transformed.first.x.as_int()),
+                        wl_fixed_from_double(transformed.first.y.as_int()));
+                    last_position = transformed.first;
+                    needs_frame = true;
+                }
+            }
+            else
+            {
+                handle_leave(focused_surface);
+                handle_enter(transformed.first, transformed.second);
                 needs_frame = true;
             }
 
@@ -179,6 +188,7 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
 void mf::WlPointer::handle_enter(Point position, wl_resource* target)
 {
     cursor->apply_to(target);
+    focused_surface = target;
     auto const serial = wl_display_next_serial(display);
     wl_pointer_send_enter(
         resource,
@@ -190,6 +200,7 @@ void mf::WlPointer::handle_enter(Point position, wl_resource* target)
 
 void mf::WlPointer::handle_leave(wl_resource* target)
 {
+    focused_surface = nullptr;
     auto const serial = wl_display_next_serial(display);
     wl_pointer_send_leave(
         resource,
