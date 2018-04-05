@@ -151,6 +151,7 @@ void mf::WlPointer::handle_button(uint32_t time, uint32_t button, wl_pointer_but
 
 void mf::WlPointer::handle_enter(Point position, wl_resource* target)
 {
+    cursor->apply_to(target);
     auto const serial = wl_display_next_serial(display);
     wl_pointer_send_enter(
         resource,
