@@ -16,8 +16,8 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_DATA_DEVICE_MANAGER_H
-#define MIR_DATA_DEVICE_MANAGER_H
+#ifndef MIR_FRONTEND_DATA_DEVICE_H_
+#define MIR_FRONTEND_DATA_DEVICE_H_
 
 #include "generated/wayland_wrapper.h"
 
@@ -35,4 +35,4 @@ auto create_data_device_manager(struct wl_display* display) -> std::unique_ptr<D
 }
 }
 
-#endif //MIR_DATA_DEVICE_MANAGER_H
+#endif //MIR_FRONTEND_DATA_DEVICE_H_

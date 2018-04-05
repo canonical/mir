@@ -18,7 +18,7 @@
 
 #include "wayland_connector.h"
 
-#include "data_device_manager.h"
+#include "data_device.h"
 #include "wayland_utils.h"
 #include "wl_surface_role.h"
 #include "wl_subcompositor.h"

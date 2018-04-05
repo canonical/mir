@@ -167,6 +167,11 @@ mf::WlSeat::~WlSeat()
     input_hub->remove_observer(config_observer);
 }
 
+auto mf::WlSeat::from(struct wl_resource* seat) -> WlSeat*
+{
+    return static_cast<mf::WlSeat*>(static_cast<mf::wayland::Seat*>(wl_resource_get_user_data(seat)));
+}
+
 void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlPointer*)> func)
 {
     pointer_listeners->for_each(client, func);
@@ -180,6 +185,12 @@ void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlKeybo
 void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlTouch*)> func)
 {
     touch_listeners->for_each(client, func);
+}
+
+void mf::WlSeat::notify_focus(wl_client *focus) const
+{
+    for (auto const listener : focus_listeners)
+        listener->focus_on(focus);
 }
 
 void mf::WlSeat::spawn(std::function<void()>&& work)
@@ -277,4 +288,14 @@ void mf::WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id
 void mf::WlSeat::release(struct wl_client* /*client*/, struct wl_resource* us)
 {
     wl_resource_destroy(us);
+}
+
+void mf::WlSeat::add_focus_listener(ListenerTracker* listener)
+{
+    focus_listeners.push_back(listener);
+}
+
+void mf::WlSeat::remove_focus_listener(ListenerTracker* listener)
+{
+    focus_listeners.erase(remove(begin(focus_listeners), end(focus_listeners), listener), end(focus_listeners));
 }

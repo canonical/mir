@@ -22,6 +22,7 @@
 #include "generated/wayland_wrapper.h"
 
 #include <unordered_map>
+#include <vector>
 
 // from "mir_toolkit/events/event.h"
 struct MirInputEvent;
@@ -56,13 +57,32 @@ public:
 
     ~WlSeat();
 
+    static auto from(struct wl_resource* seat) -> WlSeat*;
+
     void for_each_listener(wl_client* client, std::function<void(WlPointer*)> func);
     void for_each_listener(wl_client* client, std::function<void(WlKeyboard*)> func);
     void for_each_listener(wl_client* client, std::function<void(WlTouch*)> func);
 
     void spawn(std::function<void()>&& work);
 
+    class ListenerTracker
+    {
+    public:
+        virtual void focus_on(wl_client* client) = 0;
+
+        ListenerTracker() = default;
+        virtual ~ListenerTracker() = default;
+        ListenerTracker(ListenerTracker const&) = delete;
+        ListenerTracker& operator=(ListenerTracker const&) = delete;
+    };
+
+    void add_focus_listener(ListenerTracker* listener);
+    void remove_focus_listener(ListenerTracker* listener);
+    void notify_focus(wl_client* focus) const;
+
 private:
+    std::vector<ListenerTracker*> focus_listeners;
+
     template<class T>
     class ListenerList;
 

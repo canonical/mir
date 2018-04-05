@@ -122,6 +122,8 @@ void mf::BasicSurfaceEventSink::handle_window_event(MirWindowEvent const* event)
     {
     case mir_window_attrib_focus:
         has_focus = mir_window_event_get_attribute_value(event);
+        if (has_focus)
+            seat->notify_focus(client);
         window->handle_resize(requested_size);
         break;
 
