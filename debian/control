@@ -48,7 +48,6 @@ Build-Depends: cmake,
                libepoxy-dev,
                python3-pil:native,
                linux-libc-dev,
-               libglib2.0-dev-bin,
                dbus,
                python3-dbusmock
 Standards-Version: 3.9.4
