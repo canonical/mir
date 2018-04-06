@@ -45,6 +45,10 @@ public:
     /// Tries to focus on the newly ready window
     void handle_raise_window(WindowInfo& window_info) override;
 
+    /// request from client to initiate drag and drop
+    /// \note this is a legacy of Unity8's content-hub and should probably be ignored going forward
+    void handle_request_drag_and_drop(WindowInfo& window_info) override;
+
     /// Raises the window (and any children)
     void advise_focus_gained(WindowInfo const& info) override;
 
