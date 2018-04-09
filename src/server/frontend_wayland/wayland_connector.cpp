@@ -292,47 +292,19 @@ void WlCompositor::create_region(wl_client* client, wl_resource* resource, uint3
     new Region{client, resource, id};
 }
 
-class SurfaceEventSink : public BasicSurfaceEventSink
-{
-public:
-    SurfaceEventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink,
-        std::shared_ptr<bool> const& destroyed) :
-        BasicSurfaceEventSink{seat, client, target, event_sink},
-        destroyed{destroyed}
-    {
-    }
-
-    void send_resize(geometry::Size const& new_size) const override;
-
-private:
-    std::shared_ptr<bool> const destroyed;
-};
-
-void SurfaceEventSink::send_resize(geometry::Size const& new_size) const
-{
-    seat->spawn(run_unless(
-        destroyed,
-        [event_sink= event_sink, width = new_size.width.as_int(), height = new_size.height.as_int()]()
-        {
-            wl_shell_surface_send_configure(event_sink, WL_SHELL_SURFACE_RESIZE_NONE, width, height);
-        }));
-}
-
-class WlShellSurface  : public wayland::ShellSurface, WlAbstractMirWindow
+class WlShellSurface  : public wayland::ShellSurface, public WlAbstractMirWindow
 {
 public:
     WlShellSurface(
         wl_client* client,
         wl_resource* parent,
         uint32_t id,
-        wl_resource* surface,
+        WlSurface* surface,
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat)
         : ShellSurface(client, parent, id),
-        WlAbstractMirWindow{client, surface, resource, shell}
+          WlAbstractMirWindow{&seat, client, surface, shell}
     {
-        // We can't pass this to the WlAbstractMirWindow constructor as it needs creating *after* destroyed
-        sink = std::make_shared<SurfaceEventSink>(&seat, client, surface, event_sink, destroyed);
     }
 
     ~WlShellSurface() override
@@ -385,6 +357,12 @@ protected:
 
             surface->set_role(this);
         }
+    }
+
+    void handle_resize(const geometry::Size & new_size) override
+    {
+        wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, new_size.width.as_int(),
+                                        new_size.height.as_int());
     }
 
     void set_fullscreen(
@@ -548,7 +526,7 @@ public:
         uint32_t id,
         wl_resource* surface) override
     {
-        new WlShellSurface(client, resource, id, surface, shell, seat);
+        new WlShellSurface(client, resource, id, WlSurface::from(surface), shell, seat);
     }
 private:
     std::shared_ptr<mf::Shell> const shell;

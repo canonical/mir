@@ -29,7 +29,7 @@ struct xkb_state;
 struct xkb_context;
 
 // from "mir_toolkit/events/event.h"
-struct MirInputEvent;
+struct MirKeyboardEvent;
 struct MirSurfaceEvent;
 typedef struct MirSurfaceEvent MirWindowEvent;
 struct MirKeymapEvent;
@@ -46,6 +46,7 @@ class Keymap;
 
 namespace frontend
 {
+class WlSurface;
 
 class WlKeyboard : public wayland::Keyboard
 {
@@ -56,14 +57,13 @@ public:
         uint32_t id,
         mir::input::Keymap const& initial_keymap,
         std::function<void(WlKeyboard*)> const& on_destroy,
-        std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state,
-        std::shared_ptr<mir::Executor> const& executor);
+        std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state);
 
     ~WlKeyboard();
 
-    void handle_event(MirInputEvent const* event, wl_resource* /*target*/);
-    void handle_event(MirWindowEvent const* event, wl_resource* target);
-    void handle_event(MirKeymapEvent const* event, wl_resource* /*target*/);
+    void handle_keyboard_event(MirKeyboardEvent const* event, WlSurface* surface);
+    void handle_window_event(MirWindowEvent const* event, WlSurface* surface);
+    void handle_keymap_event(MirKeymapEvent const* event, WlSurface* surface);
     void set_keymap(mir::input::Keymap const& new_keymap);
 
 private:
@@ -73,10 +73,8 @@ private:
     std::unique_ptr<xkb_state, void (*)(xkb_state *)> state;
     std::unique_ptr<xkb_context, void (*)(xkb_context *)> const context;
 
-    std::shared_ptr<mir::Executor> const executor;
     std::function<void(WlKeyboard*)> on_destroy;
     std::function<std::vector<uint32_t>()> const acquire_current_keyboard_state;
-    std::shared_ptr<bool> const destroyed;
 
     uint32_t mods_depressed{0};
     uint32_t mods_latched{0};

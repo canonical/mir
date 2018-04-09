@@ -38,16 +38,13 @@ mf::WlKeyboard::WlKeyboard(
     uint32_t id,
     mir::input::Keymap const& initial_keymap,
     std::function<void(WlKeyboard*)> const& on_destroy,
-    std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state,
-    std::shared_ptr<mir::Executor> const& executor)
+    std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state)
     : Keyboard(client, parent, id),
-        keymap{nullptr, &xkb_keymap_unref},
-        state{nullptr, &xkb_state_unref},
-        context{xkb_context_new(XKB_CONTEXT_NO_FLAGS), &xkb_context_unref},
-        executor{executor},
-        on_destroy{on_destroy},
-        acquire_current_keyboard_state{acquire_current_keyboard_state},
-        destroyed{std::make_shared<bool>(false)}
+      keymap{nullptr, &xkb_keymap_unref},
+      state{nullptr, &xkb_state_unref},
+      context{xkb_context_new(XKB_CONTEXT_NO_FLAGS), &xkb_context_unref},
+      on_destroy{on_destroy},
+      acquire_current_keyboard_state{acquire_current_keyboard_state}
 {
     // TODO: We should really grab the keymap for the focused surface when
     // we receive focus.
@@ -56,9 +53,9 @@ mf::WlKeyboard::WlKeyboard(
     // sending an event from a keyboard with a different map.
 
     /* The wayland::Keyboard constructor has already run, creating the keyboard
-        * resource. It is thus safe to send a keymap event to it; the client will receive
-        * the keyboard object before this event.
-        */
+     * resource. It is thus safe to send a keymap event to it; the client will receive
+     * the keyboard object before this event.
+     */
     set_keymap(initial_keymap);
 
     // I don't know where to get "real" rate and delay args. These are better than nothing.
@@ -69,113 +66,92 @@ mf::WlKeyboard::WlKeyboard(
 mf::WlKeyboard::~WlKeyboard()
 {
     on_destroy(this);
-    *destroyed = true;
 }
 
-void mf::WlKeyboard::handle_event(MirInputEvent const* event, wl_resource* /*target*/)
+void mf::WlKeyboard::handle_keyboard_event(MirKeyboardEvent const* key_event, WlSurface* /*surface*/)
 {
-    executor->spawn(run_unless(
-        destroyed,
-        [
-            ev = mir::client::Event{mir_event_ref(mir_input_event_get_event(event))},
-            this
-        ] ()
-        {
-            auto const serial = wl_display_next_serial(wl_client_get_display(client));
-            auto const event = mir_event_get_input_event(ev);
-            auto const key_event = mir_input_event_get_keyboard_event(event);
-            auto const scancode = mir_keyboard_event_scan_code(key_event);
-            /*
-                * HACK! Maintain our own XKB state, so we can serialise it for
-                * wl_keyboard_send_modifiers
-                */
+    auto const input_ev = mir_keyboard_event_input_event(key_event);
+    auto const ev = mir::client::Event{mir_event_ref(mir_input_event_get_event(input_ev))};
+    auto const serial = wl_display_next_serial(wl_client_get_display(client));
+    auto const scancode = mir_keyboard_event_scan_code(key_event);
+    /*
+     * HACK! Maintain our own XKB state, so we can serialise it for
+     * wl_keyboard_send_modifiers
+     */
 
-            switch (mir_keyboard_event_action(key_event))
-            {
-                case mir_keyboard_action_up:
-                    xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_UP);
-                    wl_keyboard_send_key(resource,
-                        serial,
-                        mir_input_event_get_event_time_ms(event),
-                        mir_keyboard_event_scan_code(key_event),
-                        WL_KEYBOARD_KEY_STATE_RELEASED);
-                    break;
-                case mir_keyboard_action_down:
-                    xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
-                    wl_keyboard_send_key(resource,
-                        serial,
-                        mir_input_event_get_event_time_ms(event),
-                        mir_keyboard_event_scan_code(key_event),
-                        WL_KEYBOARD_KEY_STATE_PRESSED);
-                    break;
-                default:
-                    break;
-            }
-            update_modifier_state();
-        }));
+    switch (mir_keyboard_event_action(key_event))
+    {
+        case mir_keyboard_action_up:
+            xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_UP);
+            wl_keyboard_send_key(resource,
+                serial,
+                mir_input_event_get_event_time_ms(input_ev),
+                mir_keyboard_event_scan_code(key_event),
+                WL_KEYBOARD_KEY_STATE_RELEASED);
+            break;
+        case mir_keyboard_action_down:
+            xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
+            wl_keyboard_send_key(resource,
+                serial,
+                mir_input_event_get_event_time_ms(input_ev),
+                mir_keyboard_event_scan_code(key_event),
+                WL_KEYBOARD_KEY_STATE_PRESSED);
+            break;
+        default:
+            break;
+    }
+    update_modifier_state();
 }
 
-void mf::WlKeyboard::handle_event(MirWindowEvent const* event, wl_resource* target)
+void mf::WlKeyboard::handle_window_event(MirWindowEvent const* event, WlSurface* surface)
 {
     if (mir_window_event_get_attribute(event) == mir_window_attrib_focus)
     {
-        executor->spawn(run_unless(
-            destroyed,
-            [
-                target = target,
-                target_window_destroyed = WlSurface::from(target)->destroyed_flag(),
-                focussed = mir_window_event_get_attribute_value(event),
-                this
-            ]()
+        auto const focussed = mir_window_event_get_attribute_value(event);
+        auto const serial = wl_display_next_serial(wl_client_get_display(client));
+        if (focussed)
+        {
+            /*
+                * TODO:
+                *  *) Send the surface's keymap here.
+                */
+            auto const keyboard_state = acquire_current_keyboard_state();
+
+            wl_array key_state;
+            wl_array_init(&key_state);
+
+            auto* const array_storage = wl_array_add(
+                &key_state,
+                keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
+            if (!array_storage)
             {
-                if (*target_window_destroyed)
-                    return;
+                wl_resource_post_no_memory(resource);
+                BOOST_THROW_EXCEPTION(std::bad_alloc());
+            }
+            std::memcpy(
+                array_storage,
+                keyboard_state.data(),
+                keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
 
-                auto const serial = wl_display_next_serial(wl_client_get_display(client));
-                if (focussed)
-                {
-                    /*
-                        * TODO:
-                        *  *) Send the surface's keymap here.
-                        */
-                    auto const keyboard_state = acquire_current_keyboard_state();
+            // Rebuild xkb state
+            state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
+            for (auto scancode : keyboard_state)
+            {
+                xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
+            }
+            update_modifier_state();
 
-                    wl_array key_state;
-                    wl_array_init(&key_state);
-
-                    auto* const array_storage = wl_array_add(
-                        &key_state,
-                        keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
-                    if (!array_storage)
-                    {
-                        wl_resource_post_no_memory(resource);
-                        BOOST_THROW_EXCEPTION(std::bad_alloc());
-                    }
-                    std::memcpy(
-                        array_storage,
-                        keyboard_state.data(),
-                        keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
-
-                    // Rebuild xkb state
-                    state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
-                    for (auto scancode : keyboard_state)
-                    {
-                        xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
-                    }
-                    update_modifier_state();
-
-                    wl_keyboard_send_enter(resource, serial, target, &key_state);
-                    wl_array_release(&key_state);
-                }
-                else
-                {
-                    wl_keyboard_send_leave(resource, serial, target);
-                }
-            }));
+            wl_keyboard_send_enter(resource, serial, surface->raw_resource(), &key_state);
+            wl_array_release(&key_state);
+        }
+        else
+        {
+            wl_keyboard_send_leave(resource, serial, surface->raw_resource());
+        }
     }
 }
 
-void mf::WlKeyboard::handle_event(MirKeymapEvent const* event, wl_resource* /*target*/)
+void mf::WlKeyboard::handle_keymap_event(MirKeymapEvent const* event, WlSurface* /*surface*/)
 {
     char const* buffer;
     size_t length;

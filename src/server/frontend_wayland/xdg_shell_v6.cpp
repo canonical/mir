@@ -41,14 +41,13 @@ namespace frontend
 class Shell;
 class XdgSurfaceV6;
 class WlSeat;
-class XdgSurfaceV6EventSink;
 
-class XdgSurfaceV6 : wayland::XdgSurfaceV6, WlAbstractMirWindow
+class XdgSurfaceV6 : wayland::XdgSurfaceV6, public WlAbstractMirWindow
 {
 public:
-    XdgSurfaceV6* get_xdgsurface(wl_resource* surface) const;
+    static XdgSurfaceV6* from(wl_resource* surface);
 
-    XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t id, wl_resource* surface,
+    XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t id, WlSurface* surface,
                  std::shared_ptr<Shell> const& shell, WlSeat& seat);
     ~XdgSurfaceV6() override;
 
@@ -58,6 +57,8 @@ public:
     void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void ack_configure(uint32_t serial) override;
     void commit(WlSurfaceState const& state) override;
+
+    void handle_resize(const geometry::Size & new_size) override;
 
     void set_parent(optional_value<SurfaceId> parent_id);
     void set_title(std::string const& title);
@@ -81,25 +82,9 @@ public:
 
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
-    std::shared_ptr<XdgSurfaceV6EventSink> const sink;
     std::function<void()> next_commit_action{[]{}};
-};
-
-class XdgSurfaceV6EventSink : public BasicSurfaceEventSink
-{
-public:
-    using BasicSurfaceEventSink::BasicSurfaceEventSink;
-
-    XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client, wl_resource* target, wl_resource* event_sink,
-                          std::shared_ptr<bool> const& destroyed);
-
-    void send_resize(geometry::Size const& new_size) const override;
-
     std::function<void(geometry::Size const& new_size, MirWindowState state, bool active)> notify_resize =
         [](auto, auto, auto){};
-
-private:
-    std::shared_ptr<bool> const destroyed;
 };
 
 class XdgPopupV6 : wayland::XdgPopupV6
@@ -133,7 +118,7 @@ public:
     void set_minimized() override;
 
 private:
-    XdgToplevelV6* get_xdgtoplevel(wl_resource* surface) const;
+    static XdgToplevelV6* from(wl_resource* surface);
 
     std::shared_ptr<frontend::Shell> const shell;
     XdgSurfaceV6* const self;
@@ -186,7 +171,7 @@ void mf::XdgShellV6::create_positioner(struct wl_client* client, struct wl_resou
 void mf::XdgShellV6::get_xdg_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id,
                                      struct wl_resource* surface)
 {
-    new XdgSurfaceV6{client, resource, id, surface, shell, seat};
+    new XdgSurfaceV6{client, resource, id, WlSurface::from(surface), shell, seat};
 }
 
 void mf::XdgShellV6::pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
@@ -197,21 +182,19 @@ void mf::XdgShellV6::pong(struct wl_client* client, struct wl_resource* resource
 
 // XdgSurfaceV6
 
-mf::XdgSurfaceV6* mf::XdgSurfaceV6::get_xdgsurface(wl_resource* surface) const
+mf::XdgSurfaceV6* mf::XdgSurfaceV6::from(wl_resource* surface)
 {
     auto* tmp = wl_resource_get_user_data(surface);
     return static_cast<XdgSurfaceV6*>(static_cast<wayland::XdgSurfaceV6*>(tmp));
 }
 
-mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t id, wl_resource* surface,
+mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t id, WlSurface* surface,
                                std::shared_ptr<mf::Shell> const& shell, WlSeat& seat)
     : wayland::XdgSurfaceV6(client, parent, id),
-      WlAbstractMirWindow{client, surface, resource, shell},
+      WlAbstractMirWindow{&seat, client, surface, shell},
       parent{parent},
-      shell{shell},
-      sink{std::make_shared<XdgSurfaceV6EventSink>(&seat, client, surface, resource, destroyed)}
+      shell{shell}
 {
-    WlAbstractMirWindow::sink = sink;
 }
 
 mf::XdgSurfaceV6::~XdgSurfaceV6()
@@ -236,7 +219,7 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
     auto const* const pos =  static_cast<XdgPositionerV6*>(static_cast<wayland::XdgPositionerV6*>(tmp));
 
     auto const session = get_session(client);
-    auto& parent_surface = *get_xdgsurface(parent);
+    auto& parent_surface = *XdgSurfaceV6::from(parent);
 
     params->type = mir_window_type_freestyle;
     params->parent_id = parent_surface.surface_id;
@@ -352,9 +335,9 @@ void mf::XdgSurfaceV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/,
     }
 }
 
-void mf::XdgSurfaceV6::set_notify_resize(std::function<void(geometry::Size const&, MirWindowState, bool)> notify_resize)
+void mf::XdgSurfaceV6::set_notify_resize(std::function<void(geometry::Size const&, MirWindowState, bool)> notify_resize_)
 {
-    sink->notify_resize = notify_resize;
+    notify_resize = notify_resize_;
 }
 
 void mf::XdgSurfaceV6::set_parent(optional_value<SurfaceId> parent_id)
@@ -415,45 +398,33 @@ void mf::XdgSurfaceV6::set_min_size(int32_t width, int32_t height)
     }
 }
 
-void mir::frontend::XdgSurfaceV6::clear_next_commit_action()
+void mf::XdgSurfaceV6::clear_next_commit_action()
 {
     next_commit_action = []{};
 }
 
-void mir::frontend::XdgSurfaceV6::set_next_commit_action(std::function<void()> action)
+void mf::XdgSurfaceV6::set_next_commit_action(std::function<void()> action)
 {
     next_commit_action = [this, action]
     {
         action();
         auto const serial = wl_display_next_serial(wl_client_get_display(client));
-        zxdg_surface_v6_send_configure(event_sink, serial);
+        zxdg_surface_v6_send_configure(resource, serial);
     };
 }
 
-void mir::frontend::XdgSurfaceV6::commit(mir::frontend::WlSurfaceState const& state)
+void mf::XdgSurfaceV6::commit(mf::WlSurfaceState const& state)
 {
     WlAbstractMirWindow::commit(state);
     next_commit_action();
     clear_next_commit_action();
 }
 
-// XdgSurfaceV6EventSink
-
-mf::XdgSurfaceV6EventSink::XdgSurfaceV6EventSink(WlSeat* seat, wl_client* client, wl_resource* target,
-                                                 wl_resource* event_sink, std::shared_ptr<bool> const& destroyed)
-    : BasicSurfaceEventSink(seat, client, target, event_sink),
-      destroyed{destroyed}
+void mf::XdgSurfaceV6::handle_resize(geometry::Size const& new_size)
 {
-}
-
-void mf::XdgSurfaceV6EventSink::send_resize(geometry::Size const& new_size) const
-{
-    seat->spawn(run_unless(destroyed, [this, new_size]()
-        {
-            auto const serial = wl_display_next_serial(wl_client_get_display(client));
-            notify_resize(new_size, state(), is_active());
-            zxdg_surface_v6_send_configure(event_sink, serial);
-        }));
+    auto const serial = wl_display_next_serial(wl_client_get_display(client));
+    notify_resize(new_size, sink->state(), sink->is_active());
+    zxdg_surface_v6_send_configure(resource, serial);
 }
 
 // XdgPopupV6
@@ -541,7 +512,7 @@ void mf::XdgToplevelV6::set_parent(std::experimental::optional<struct wl_resourc
 {
     if (parent && parent.value())
     {
-        self->set_parent(get_xdgtoplevel(parent.value())->self->surface_id);
+        self->set_parent(XdgToplevelV6::from(parent.value())->self->surface_id);
     }
     else
     {
@@ -612,7 +583,7 @@ void mf::XdgToplevelV6::set_minimized()
     self->set_minimized();
 }
 
-mf::XdgToplevelV6* mf::XdgToplevelV6::get_xdgtoplevel(wl_resource* surface) const
+mf::XdgToplevelV6* mf::XdgToplevelV6::from(wl_resource* surface)
 {
     auto* tmp = wl_resource_get_user_data(surface);
     return static_cast<XdgToplevelV6*>(static_cast<wayland::XdgToplevelV6*>(tmp));

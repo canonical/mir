@@ -28,6 +28,7 @@
 
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
+#include "mir/geometry/point.h"
 
 #include <vector>
 
@@ -99,6 +100,8 @@ public:
     geometry::Displacement buffer_offset() const { return buffer_offset_; }
     geometry::Size buffer_size() const { return buffer_size_; }
     bool synchronized() const;
+    std::pair<geometry::Point, wl_resource*> transform_point(geometry::Point point) const;
+    wl_resource* raw_resource() { return resource; }
 
     void set_role(WlSurfaceRole* role_);
     void clear_role();
