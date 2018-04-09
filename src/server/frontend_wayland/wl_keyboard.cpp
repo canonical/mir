@@ -53,9 +53,9 @@ mf::WlKeyboard::WlKeyboard(
     // sending an event from a keyboard with a different map.
 
     /* The wayland::Keyboard constructor has already run, creating the keyboard
-        * resource. It is thus safe to send a keymap event to it; the client will receive
-        * the keyboard object before this event.
-        */
+     * resource. It is thus safe to send a keymap event to it; the client will receive
+     * the keyboard object before this event.
+     */
     set_keymap(initial_keymap);
 
     // I don't know where to get "real" rate and delay args. These are better than nothing.
@@ -75,9 +75,9 @@ void mf::WlKeyboard::handle_keyboard_event(MirKeyboardEvent const* key_event, Wl
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
     auto const scancode = mir_keyboard_event_scan_code(key_event);
     /*
-        * HACK! Maintain our own XKB state, so we can serialise it for
-        * wl_keyboard_send_modifiers
-        */
+     * HACK! Maintain our own XKB state, so we can serialise it for
+     * wl_keyboard_send_modifiers
+     */
 
     switch (mir_keyboard_event_action(key_event))
     {

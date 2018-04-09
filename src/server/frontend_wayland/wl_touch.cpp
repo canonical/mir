@@ -90,13 +90,13 @@ void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* surface
             break;
         case mir_touch_actions:
             /*
-                * We should never receive an event with this action set;
-                * the only way would be if a *new* action has been added
-                * to the enum, and this hasn't been updated.
-                *
-                * There's nothing to do here, but don't use default: so
-                * that the compiler will warn if a new enum value is added.
-                */
+             * We should never receive an event with this action set;
+             * the only way would be if a *new* action has been added
+             * to the enum, and this hasn't been updated.
+             *
+             * There's nothing to do here, but don't use default: so
+             * that the compiler will warn if a new enum value is added.
+             */
             break;
         }
     }
@@ -104,12 +104,12 @@ void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* surface
     if (mir_touch_event_point_count(touch_ev) > 0)
     {
         /*
-            * This is mostly paranoia; I assume we won't actually be called
-            * with an empty touch event.
-            *
-            * Regardless, the Wayland protocol requires that there be at least
-            * one event sent before we send the ending frame, so make that explicit.
-            */
+         * This is mostly paranoia; I assume we won't actually be called
+         * with an empty touch event.
+         *
+         * Regardless, the Wayland protocol requires that there be at least
+         * one event sent before we send the ending frame, so make that explicit.
+         */
         wl_touch_send_frame(resource);
     }
 }

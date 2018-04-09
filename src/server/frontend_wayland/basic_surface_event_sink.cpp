@@ -48,21 +48,21 @@ void mf::BasicSurfaceEventSink::handle_event(EventUPtr&& event)
 {
     seat->spawn(run_unless(
         destroyed,
-        [this, event = std::make_shared<EventUPtr>(move(event))]()
+        [this, event = std::shared_ptr<MirEvent>{move(event)}]()
         {
-            switch (mir_event_get_type(event->get()))
+            switch (mir_event_get_type(event.get()))
             {
                 case mir_event_type_resize:
-                    handle_resize_event(mir_event_get_resize_event(event->get()));
+                    handle_resize_event(mir_event_get_resize_event(event.get()));
                     break;
                 case mir_event_type_input:
-                    handle_input_event(mir_event_get_input_event(event->get()));
+                    handle_input_event(mir_event_get_input_event(event.get()));
                     break;
                 case mir_event_type_keymap:
-                    handle_keymap_event(mir_event_get_keymap_event(event->get()));
+                    handle_keymap_event(mir_event_get_keymap_event(event.get()));
                     break;
                 case mir_event_type_window:
-                    handle_window_event(mir_event_get_window_event(event->get()));
+                    handle_window_event(mir_event_get_window_event(event.get()));
                     break;
                 default:
                     break;
