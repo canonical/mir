@@ -63,6 +63,8 @@ struct DataSource : mf::wayland::DataSource
     {
     }
 
+    ~DataSource();
+
     void offer(std::string const& mime_type) override;
 
     void destroy() override;
@@ -173,6 +175,12 @@ void DataSource::remove_listener(DataOffer* listener)
 void DataSource::send_send(std::string const& mime_type, mir::Fd fd)
 {
     wl_data_source_send_send(resource, mime_type.c_str(), fd);
+}
+
+DataSource::~DataSource()
+{
+    if (!destroyed)
+        manager->notify_destroyed(this);
 }
 
 DataDeviceManager::DataDeviceManager(struct wl_display* display) :
