@@ -222,6 +222,7 @@ find_package(LTTngUST REQUIRED)
 
 pkg_check_modules(UDEV REQUIRED libudev)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
+pkg_check_modules(GIO REQUIRED gio-2.0 gio-unix-2.0)
 pkg_check_modules(WAYLAND_SERVER REQUIRED wayland-server)
 pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
 
