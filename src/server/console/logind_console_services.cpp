@@ -37,6 +37,8 @@ public:
         : raw_error{nullptr}
     {
     }
+    GErrorPtr(GErrorPtr const&) = delete;
+    GErrorPtr& operator=(GErrorPtr const&) = delete;
 
     ~GErrorPtr()
     {
