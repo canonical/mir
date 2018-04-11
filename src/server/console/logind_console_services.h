@@ -20,6 +20,7 @@
 
 #include "mir/console_services.h"
 
+#include "glib.h"
 #include "logind-seat.h"
 #include "logind-session.h"
 
@@ -40,8 +41,13 @@ public:
     boost::future<Fd> acquire_device(int major, int minor) override;
 
 private:
+    static void on_state_change(GObject* session_proxy, GParamSpec*, gpointer ctx);
+
     std::unique_ptr<LogindSeat, decltype(&g_object_unref)> const seat_proxy;
     std::unique_ptr<LogindSession, decltype(&g_object_unref)> const session_proxy;
+    std::function<bool()> switch_away;
+    std::function<bool()> switch_to;
+    bool active;
 };
 }
 
