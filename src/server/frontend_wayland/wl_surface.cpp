@@ -103,8 +103,10 @@ std::unique_ptr<mf::WlSurface, std::function<void(mf::WlSurface*)>> mf::WlSurfac
 
     return std::unique_ptr<WlSurface, std::function<void(WlSurface*)>>(
         this,
-        [child=child](WlSurface* self)
+        [child=child, destroyed=destroyed](WlSurface* self)
         {
+            if (*destroyed)
+                return;
             // remove the child from the vector
             self->children.erase(std::remove(self->children.begin(),
                                              self->children.end(),

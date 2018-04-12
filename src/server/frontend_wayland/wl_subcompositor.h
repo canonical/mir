@@ -76,10 +76,11 @@ private:
     virtual void commit(WlSurfaceState const& state) override;
     virtual void visiblity(bool visible) override;
 
-    WlSurface* surface;
+    WlSurface* const surface;
     // manages parent/child relationship, but does not manage parent's memory
     // see WlSurface::add_child() for details
-    std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> parent;
+    std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> const parent;
+    std::shared_ptr<bool> const parent_destroyed;
     bool synchronized_;
     std::experimental::optional<WlSurfaceState> cached_state;
 };
