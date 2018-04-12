@@ -65,6 +65,8 @@ mf::WlPointer::WlPointer(
 
 mf::WlPointer::~WlPointer()
 {
+    if (focused_surface)
+        focused_surface->remove_destroy_listener(this);
     on_destroy(this);
 }
 
@@ -116,7 +118,7 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
         }
         case mir_pointer_action_leave:
         {
-            handle_leave(focused_surface);
+            handle_leave();
             handle_frame();
             break;
         }
@@ -147,7 +149,7 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
             }
             else
             {
-                handle_leave(focused_surface);
+                handle_leave();
                 handle_enter(transformed.first, transformed.second);
                 needs_frame = true;
             }
@@ -185,27 +187,34 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
     }
 }
 
-void mf::WlPointer::handle_enter(Point position, wl_resource* target)
+void mf::WlPointer::handle_enter(Point position, WlSurface* surface)
 {
-    cursor->apply_to(target);
-    focused_surface = target;
+    cursor->apply_to(surface->raw_resource());
     auto const serial = wl_display_next_serial(display);
     wl_pointer_send_enter(
         resource,
         serial,
-        target,
+        surface->raw_resource(),
         wl_fixed_from_double(position.x.as_int()),
         wl_fixed_from_double(position.y.as_int()));
+    focused_surface = surface;
+    focused_surface->add_destroy_listener(this, [this]()
+        {
+            handle_leave();
+        });
 }
 
-void mf::WlPointer::handle_leave(wl_resource* target)
+void mf::WlPointer::handle_leave()
 {
-    focused_surface = nullptr;
+    if (!focused_surface)
+        return;
+    focused_surface->remove_destroy_listener(this);
     auto const serial = wl_display_next_serial(display);
     wl_pointer_send_leave(
         resource,
         serial,
-        target);
+        focused_surface->raw_resource());
+    focused_surface = nullptr;
     last_position = std::experimental::nullopt;
 }
 

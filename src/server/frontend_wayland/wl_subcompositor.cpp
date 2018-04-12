@@ -85,6 +85,11 @@ void mf::WlSubsurface::parent_has_committed()
     }
 }
 
+std::pair<geom::Point, mf::WlSurface*> mf::WlSubsurface::transform_point(geom::Point point)
+{
+    return surface->transform_point(point);
+}
+
 void mf::WlSubsurface::set_position(int32_t x, int32_t y)
 {
     surface->set_pending_offset(geom::Displacement{x, y});

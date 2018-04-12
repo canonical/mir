@@ -59,10 +59,10 @@ private:
 
     MirPointerButtons last_buttons{0};
     std::experimental::optional<mir::geometry::Point> last_position;
-    wl_resource* focused_surface = nullptr;
+    WlSurface* focused_surface = nullptr;
 
-    void handle_enter(mir::geometry::Point position, wl_resource* target);
-    void handle_leave(wl_resource* target);
+    void handle_enter(mir::geometry::Point position, WlSurface* surface);
+    void handle_leave();
     void handle_frame();
 
     void set_cursor(uint32_t serial, std::experimental::optional<wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) override;
