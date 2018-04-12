@@ -43,6 +43,7 @@ mf::WlSubsurface::WlSubsurface(struct wl_client* client, struct wl_resource* obj
     : wayland::Subsurface(client, object_parent, id),
       surface{surface},
       parent{parent_surface->add_child(this)},
+      parent_destroyed{parent_surface->destroyed_flag()},
       synchronized_{true}
 {
     surface->set_role(this);
@@ -110,7 +111,8 @@ void mf::WlSubsurface::destroy()
 
 void mf::WlSubsurface::invalidate_buffer_list()
 {
-    parent->invalidate_buffer_list();
+    if (!*parent_destroyed)
+        parent->invalidate_buffer_list();
 }
 
 void mf::WlSubsurface::commit(WlSurfaceState const& state)
