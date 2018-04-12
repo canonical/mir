@@ -154,7 +154,10 @@ mir::LogindConsoleServices::LogindConsoleServices()
         &g_object_unref},
       session_proxy{simple_proxy_on_system_bus(
         object_path_for_current_session(seat_proxy.get()).c_str()),
-        &g_object_unref}
+        &g_object_unref},
+      switch_away{[](){ return true; }},
+      switch_to{[](){ return true; }},
+      active{strncmp("active", logind_session_get_state(session_proxy.get()), strlen("active")) == 0}
 {
     GErrorPtr error;
 
@@ -166,14 +169,21 @@ mir::LogindConsoleServices::LogindConsoleServices()
             std::runtime_error{
                 std::string{"Logind TakeControl call failed: "} + error_msg}));
     }
+
+    g_signal_connect(
+        G_OBJECT(session_proxy.get()),
+        "notify::state",
+        G_CALLBACK(&LogindConsoleServices::on_state_change),
+        this);
 }
 
 void mir::LogindConsoleServices::register_switch_handlers(
     mir::graphics::EventHandlerRegister& /*handlers*/,
-    std::function<bool()> const& /*switch_away*/,
-    std::function<bool()> const& /*switch_back*/)
+    std::function<bool()> const& switch_away,
+    std::function<bool()> const& switch_back)
 {
-
+    this->switch_away = switch_away;
+    this->switch_to = switch_back;
 }
 
 void mir::LogindConsoleServices::restore()
@@ -252,4 +262,33 @@ boost::future<mir::Fd> mir::LogindConsoleServices::acquire_device(int major, int
         pending_device.release());
 
     return device_future;
+}
+
+void mir::LogindConsoleServices::on_state_change(
+    GObject* session_proxy,
+    GParamSpec*,
+    gpointer ctx)
+{
+    // No threadsafety concerns, as this is only ever called from the glib mainloop.
+    auto me = static_cast<LogindConsoleServices*>(ctx);
+
+    auto const state = logind_session_get_state(LOGIND_SESSION(session_proxy));
+    if (strncmp(state, "active", strlen("active")) == 0)
+    {
+        // “active” means running and foregrounded.
+        if (!me->active)
+        {
+            me->switch_to();
+        }
+        me->active = true;
+    }
+    else
+    {
+        // Everything else is not foreground.
+        if (me->active)
+        {
+            me->switch_away();
+        }
+        me->active = false;
+    }
 }

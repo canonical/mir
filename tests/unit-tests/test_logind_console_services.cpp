@@ -27,10 +27,12 @@
 #include "mir_test_framework/temporary_environment_value.h"
 #include "mir/test/pipe.h"
 #include "mir/test/signal.h"
+#include "mir/test/doubles/mock_event_handler_register.h"
 
 #include "src/server/console/logind_console_services.h"
 
 namespace mtf = mir_test_framework;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -88,6 +90,40 @@ DBusDaemon spawn_bus_with_config(std::string const& config_path)
         daemon
     };
 }
+
+class GLibTimeout
+{
+public:
+    template<typename Period, typename Rep>
+    GLibTimeout(std::chrono::duration<Period, Rep> timeout)
+        : timed_out{false}
+    {
+        timer_source = g_timeout_add_seconds(
+            std::chrono::duration_cast<std::chrono::seconds>(timeout).count(),
+            [](gpointer ctx)
+            {
+                *static_cast<bool*>(ctx) = true;
+                return static_cast<gboolean>(false);
+            },
+            &timed_out);
+    }
+
+    ~GLibTimeout()
+    {
+        if (!timed_out)
+        {
+            g_source_remove(timer_source);
+        }
+    }
+
+    operator bool()
+    {
+        return timed_out;
+    }
+private:
+    gint timer_source;
+    bool timed_out;
+};
 
 }
 
@@ -261,7 +297,7 @@ public:
                 return EXIT_FAILURE;
             });
 
-        bool mock_on_bus{false}, timeout{false};
+        bool mock_on_bus{false};
         auto const watch_id = g_bus_watch_name(
             G_BUS_TYPE_SYSTEM,
             "org.freedesktop.login1",
@@ -276,14 +312,7 @@ public:
             &mock_on_bus,
             nullptr);
 
-        g_timeout_add_seconds(
-            10,
-            [](gpointer ctx)
-            {
-                *static_cast<bool*>(ctx) = true;
-                return static_cast<gboolean>(false);
-            },
-            &timeout);
+        GLibTimeout timeout{std::chrono::seconds{30}};
 
         while (!mock_on_bus)
         {
@@ -295,6 +324,86 @@ public:
         }
 
         g_bus_unwatch_name(watch_id);
+    }
+
+    enum class SessionState {
+        Online,
+        Active,
+        Closing
+    };
+
+    void set_logind_session_state(std::string const& session_path, SessionState state)
+    {
+        std::unique_ptr<GVariant, decltype(&g_variant_unref)> result{nullptr, &g_variant_unref};
+
+        GError* error{nullptr};
+        // Set the Active property appropriately
+        result.reset(
+            g_dbus_connection_call_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                session_path.c_str(),
+                "org.freedesktop.DBus.Properties",
+                "Set",
+                g_variant_new(
+                    "(ssv)",
+                    "org.freedesktop.login1.Session",
+                    "Active",
+                    g_variant_new(
+                        "b",
+                        state == SessionState::Active)),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NONE,
+                1000,
+                nullptr,
+                &error));
+
+        if (!result)
+        {
+            auto error_msg = error ? error->message : "Unknown error";
+            BOOST_THROW_EXCEPTION((std::runtime_error{error_msg}));
+        }
+
+        auto const state_string =
+            [state]()
+            {
+                switch(state)
+                {
+                case SessionState::Active:
+                    return "active";
+                case SessionState::Online:
+                    return "online";
+                case SessionState::Closing:
+                    return "closing";
+                }
+                BOOST_THROW_EXCEPTION((std::logic_error{"GCC doesn't accept that the above switch is exhaustive"}));
+            }();
+        // Then set the State
+        result.reset(
+            g_dbus_connection_call_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                session_path.c_str(),
+                "org.freedesktop.DBus.Properties",
+                "Set",
+                g_variant_new(
+                    "(ssv)",
+                    "org.freedesktop.login1.Session",
+                    "State",
+                    g_variant_new(
+                        "s",
+                        state_string)),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NONE,
+                1000,
+                nullptr,
+                &error));
+
+        if (!result)
+        {
+            auto error_msg = error ? error->message : "Unknown error";
+            BOOST_THROW_EXCEPTION((std::runtime_error{error_msg}));
+        }
     }
 
 private:
@@ -394,4 +503,240 @@ TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
     EXPECT_ANY_THROW(
         device.get()
     );
+}
+
+TEST_F(LogindConsoleServices, calls_pause_handler_on_pause)
+{
+    ensure_mock_logind();
+
+    auto session_path = add_any_active_session();
+
+    bool paused{false};
+    testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
+    mir::LogindConsoleServices services;
+
+    services.register_switch_handlers(
+        registrar,
+        [&paused]()
+        {
+            paused = true;
+            return true;
+        },
+        [&paused]()
+        {
+            paused = false;
+            return true;
+        });
+
+    set_logind_session_state(session_path, SessionState::Online);
+
+    GLibTimeout timeout{std::chrono::seconds{10}};
+
+    while (!paused && !timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+
+    if (timeout)
+    {
+        FAIL() << "Timeout waiting for pause signal";
+    }
+}
+
+TEST_F(LogindConsoleServices, calls_resume_handler_on_resume)
+{
+    ensure_mock_logind();
+
+    auto session_path = add_any_active_session();
+
+    bool paused{false};
+    testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
+    mir::LogindConsoleServices services;
+
+    services.register_switch_handlers(
+        registrar,
+        [&paused]()
+        {
+            paused = true;
+            return true;
+        },
+        [&paused]()
+        {
+            paused = false;
+            return true;
+        });
+
+    set_logind_session_state(session_path, SessionState::Online);
+
+    GLibTimeout change_to_online_timeout{std::chrono::seconds{10}};
+
+    while (!paused && !change_to_online_timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+
+    if (change_to_online_timeout)
+    {
+        FAIL() << "Test precondition failure: Failed to switch-from the current session";
+    }
+
+    set_logind_session_state(session_path, SessionState::Active);
+
+    GLibTimeout change_to_active_timeout{std::chrono::seconds{10}};
+
+    while (paused && !change_to_active_timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+
+    if (change_to_active_timeout)
+    {
+        FAIL() << "Timeout while waiting for resume signal";
+    }
+}
+
+TEST_F(LogindConsoleServices, calls_pause_handler_on_closing_state)
+{
+    ensure_mock_logind();
+
+    auto session_path = add_any_active_session();
+
+    bool paused{false};
+    testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
+    mir::LogindConsoleServices services;
+
+    services.register_switch_handlers(
+        registrar,
+        [&paused]()
+        {
+            paused = true;
+            return true;
+        },
+        [&paused]()
+        {
+            paused = false;
+            return true;
+        });
+
+    set_logind_session_state(session_path, SessionState::Closing);
+
+    GLibTimeout timeout{std::chrono::seconds{10}};
+
+    while (!paused && !timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+
+    if (timeout)
+    {
+        FAIL() << "Timeout waiting for pause signal";
+    }
+}
+
+TEST_F(LogindConsoleServices, spurious_online_state_transitions_are_ignored)
+{
+    ensure_mock_logind();
+
+    auto session_path = add_any_active_session();
+
+    bool paused{false};
+    testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
+    mir::LogindConsoleServices services;
+
+    services.register_switch_handlers(
+        registrar,
+        [&paused]()
+        {
+            paused = true;
+            return true;
+        },
+        [&paused]()
+        {
+            paused = false;
+            return true;
+        });
+
+    set_logind_session_state(session_path, SessionState::Online);
+
+    GLibTimeout switch_to_online_timeout{std::chrono::seconds{10}};
+
+    while (!paused && !switch_to_online_timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+
+    if (switch_to_online_timeout)
+    {
+        FAIL() << "Test precondition failure: Failed to switch-from the current session";
+    }
+
+    paused = false;
+    set_logind_session_state(session_path, SessionState::Online);
+
+    /*
+     * We're waiting for something to *not* happen, so use a smaller timeout;
+    * this can only false-pass, not false-fail.
+    */
+    GLibTimeout timeout{std::chrono::seconds{5}};
+
+    while (!paused && !timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+
+    EXPECT_FALSE(paused) << "Unexpectedly received pause notification";
+}
+
+TEST_F(LogindConsoleServices, online_to_closing_state_transition_is_ignored)
+{
+    ensure_mock_logind();
+
+    auto session_path = add_any_active_session();
+
+    bool paused{false};
+    mtd::MockEventHandlerRegister registrar;
+    mir::LogindConsoleServices services;
+
+    services.register_switch_handlers(
+        registrar,
+        [&paused]()
+        {
+            paused = true;
+            return true;
+        },
+        [&paused]()
+        {
+            paused = false;
+            return true;
+        });
+
+    set_logind_session_state(session_path, SessionState::Online);
+
+    GLibTimeout switch_to_online_timeout{std::chrono::seconds{10}};
+
+    while (!paused && !switch_to_online_timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+
+    if (switch_to_online_timeout)
+    {
+        FAIL() << "Test precondition failure: Failed to switch-from the current session";
+    }
+
+    paused = false;
+    set_logind_session_state(session_path, SessionState::Closing);
+
+    /*
+     * We're waiting for something to *not* happen, so use a smaller timeout;
+     * this can only false-pass, not false-fail.
+     */
+    GLibTimeout timeout{std::chrono::seconds{5}};
+
+    while (!paused && !timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+
+    EXPECT_FALSE(paused) << "Unexpectedly received pause notification";
 }
