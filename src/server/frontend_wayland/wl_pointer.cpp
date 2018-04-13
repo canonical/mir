@@ -35,7 +35,7 @@ using namespace mir::geometry;
 
 struct mf::WlPointer::Cursor
 {
-    virtual void apply_to(wl_resource* target) = 0;
+    virtual void apply_to(WlSurface* surface) = 0;
     virtual ~Cursor() = default;
     Cursor() = default;
 
@@ -47,7 +47,7 @@ namespace
 {
 struct NullCursor : mf::WlPointer::Cursor
 {
-    void apply_to(wl_resource*) override {}
+    void apply_to(mf::WlSurface*) override {}
 };
 }
 
@@ -189,7 +189,7 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
 
 void mf::WlPointer::handle_enter(Point position, WlSurface* surface)
 {
-    cursor->apply_to(surface->raw_resource());
+    cursor->apply_to(surface);
     auto const serial = wl_display_next_serial(display);
     wl_pointer_send_enter(
         resource,
@@ -229,7 +229,7 @@ namespace
 struct WlStreamCursor : mf::WlPointer::Cursor
 {
     WlStreamCursor(std::shared_ptr<mf::Session> const session, std::shared_ptr<mf::BufferStream> const& stream, Displacement hotspot);
-    void apply_to(wl_resource* target) override;
+    void apply_to(mf::WlSurface* surface) override;
 
     std::shared_ptr<mf::Session>        const session;
     std::shared_ptr<mf::BufferStream>   const stream;
@@ -239,7 +239,7 @@ struct WlStreamCursor : mf::WlPointer::Cursor
 struct WlHiddenCursor : mf::WlPointer::Cursor
 {
     WlHiddenCursor(std::shared_ptr<mf::Session> const session);
-    void apply_to(wl_resource* target) override;
+    void apply_to(mf::WlSurface* surface) override;
 
     std::shared_ptr<mf::Session>        const session;
 };
@@ -278,9 +278,9 @@ WlStreamCursor::WlStreamCursor(
 {
 }
 
-void WlStreamCursor::apply_to(wl_resource* target)
+void WlStreamCursor::apply_to(mf::WlSurface* surface)
 {
-    auto id = mf::WlSurface::from(target)->surface_id();
+    auto id = surface->surface_id();
     if (id.as_value())
     {
         auto const mir_window = session->get_surface(id);
@@ -294,9 +294,9 @@ WlHiddenCursor::WlHiddenCursor(
 {
 }
 
-void WlHiddenCursor::apply_to(wl_resource* target)
+void WlHiddenCursor::apply_to(mf::WlSurface* surface)
 {
-    auto id = mf::WlSurface::from(target)->surface_id();
+    auto id = surface->surface_id();
     if (id.as_value())
     {
         auto const mir_window = session->get_surface(id);
