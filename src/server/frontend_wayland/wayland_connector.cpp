@@ -333,10 +333,10 @@ protected:
         auto const session = get_session(client);
         auto& parent_surface = *WlSurface::from(parent);
 
-        if (surface_id.as_value())
+        if (surface_id().as_value())
         {
             auto& mods = spec();
-            mods.parent_id = parent_surface.surface_id;
+            mods.parent_id = parent_surface.surface_id();
             mods.aux_rect = geom::Rectangle{{x, y}, {}};
             mods.surface_placement_gravity = mir_placement_gravity_northwest;
             mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
@@ -348,7 +348,7 @@ protected:
         {
             if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
                 params->type = mir_window_type_gloss;
-            params->parent_id = parent_surface.surface_id;
+            params->parent_id = parent_surface.surface_id();
             params->aux_rect = geom::Rectangle{{x, y}, {}};
             params->surface_placement_gravity = mir_placement_gravity_northwest;
             params->aux_rect_placement_gravity = mir_placement_gravity_southeast;
@@ -385,10 +385,10 @@ protected:
         auto const session = get_session(client);
         auto& parent_surface = *WlSurface::from(parent);
 
-        if (surface_id.as_value())
+        if (surface_id().as_value())
         {
             auto& mods = spec();
-            mods.parent_id = parent_surface.surface_id;
+            mods.parent_id = parent_surface.surface_id();
             mods.aux_rect = geom::Rectangle{{x, y}, {}};
             mods.surface_placement_gravity = mir_placement_gravity_northwest;
             mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
@@ -401,7 +401,7 @@ protected:
             if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
                 params->type = mir_window_type_gloss;
 
-            params->parent_id = parent_surface.surface_id;
+            params->parent_id = parent_surface.surface_id();
             params->aux_rect = geom::Rectangle{{x, y}, {}};
             params->surface_placement_gravity = mir_placement_gravity_northwest;
             params->aux_rect_placement_gravity = mir_placement_gravity_southeast;
@@ -421,7 +421,7 @@ protected:
 
     void set_title(std::string const& title) override
     {
-        if (surface_id.as_value())
+        if (surface_id().as_value())
         {
             spec().name = title;
         }
@@ -437,18 +437,18 @@ protected:
 
     void move(struct wl_resource* /*seat*/, uint32_t /*serial*/) override
     {
-        if (surface_id.as_value())
+        if (surface_id().as_value())
         {
             if (auto session = get_session(client))
             {
-                shell->request_operation(session, surface_id, sink->latest_timestamp_ns(), Shell::UserRequest::move);
+                shell->request_operation(session, surface_id(), sink->latest_timestamp_ns(), Shell::UserRequest::move);
             }
         }
     }
 
     void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges) override
     {
-        if (surface_id.as_value())
+        if (surface_id().as_value())
         {
             if (auto session = get_session(client))
             {
@@ -493,7 +493,7 @@ protected:
 
                 shell->request_operation(
                     session,
-                    surface_id,
+                    surface_id(),
                     sink->latest_timestamp_ns(),
                     Shell::UserRequest::resize,
                     edge);

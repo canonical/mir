@@ -61,6 +61,8 @@ public:
 
     bool synchronized() const override;
 
+    SurfaceId surface_id() const override;
+
     void parent_has_committed();
 
 private:

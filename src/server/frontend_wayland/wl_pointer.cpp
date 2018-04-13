@@ -260,8 +260,12 @@ WlStreamCursor::WlStreamCursor(
 
 void WlStreamCursor::apply_to(wl_resource* target)
 {
-    auto const mir_window = session->get_surface(mf::WlSurface::from(target)->surface_id);
-    mir_window->set_cursor_stream(stream, hotspot);
+    auto id = mf::WlSurface::from(target)->surface_id();
+    if (id.as_value())
+    {
+        auto const mir_window = session->get_surface(id);
+        mir_window->set_cursor_stream(stream, hotspot);
+    }
 }
 
 WlHiddenCursor::WlHiddenCursor(
@@ -272,6 +276,10 @@ WlHiddenCursor::WlHiddenCursor(
 
 void WlHiddenCursor::apply_to(wl_resource* target)
 {
-    auto const mir_window = session->get_surface(mf::WlSurface::from(target)->surface_id);
-    mir_window->set_cursor_image({});
+    auto id = mf::WlSurface::from(target)->surface_id();
+    if (id.as_value())
+    {
+        auto const mir_window = session->get_surface(id);
+        mir_window->set_cursor_image({});
+    }
 }

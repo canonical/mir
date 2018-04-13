@@ -87,6 +87,11 @@ std::pair<geom::Point, wl_resource*> mf::WlSurface::transform_point(geom::Point 
     return std::make_pair(point - buffer_offset_, resource);
 }
 
+mf::SurfaceId mf::WlSurface::surface_id() const
+{
+    return role->surface_id();
+}
+
 void mf::WlSurface::set_role(WlSurfaceRole* role_)
 {
     role = role_;
@@ -295,6 +300,7 @@ mf::NullWlSurfaceRole::NullWlSurfaceRole(WlSurface* surface) :
 {
 }
 
+mf::SurfaceId mf::NullWlSurfaceRole::surface_id() const { return {}; }
 void mf::NullWlSurfaceRole::invalidate_buffer_list() {}
 void mf::NullWlSurfaceRole::commit(WlSurfaceState const& state) { surface->commit(state); }
 void mf::NullWlSurfaceRole::visiblity(bool /*visible*/) {}
