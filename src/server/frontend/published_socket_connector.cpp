@@ -182,6 +182,11 @@ void mf::PublishedSocketConnector::on_new_connection(
     start_accept();
 }
 
+auto mir::frontend::PublishedSocketConnector::socket_name() const -> optional_value<std::string>
+{
+    return socket_file;
+}
+
 mf::BasicConnector::BasicConnector(
     std::shared_ptr<ConnectionCreator> const& connection_creator,
     std::shared_ptr<ConnectorReport> const& report)
@@ -273,5 +278,10 @@ int mf::BasicConnector::client_socket_fd(std::function<void(std::shared_ptr<Sess
 mf::BasicConnector::~BasicConnector() noexcept
 {
     stop();
+}
+
+auto mf::BasicConnector::socket_name() const -> optional_value<std::string>
+{
+    return {};
 }
 
