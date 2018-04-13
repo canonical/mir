@@ -25,6 +25,7 @@
 #include "wl_surface.h"
 #include "wl_seat.h"
 #include "xdg_shell_v6.h"
+#include "wl_region.h"
 
 #include "basic_surface_event_sink.h"
 #include "null_event_sink.h"
@@ -267,30 +268,9 @@ void WlCompositor::create_surface(wl_client* client, wl_resource* resource, uint
     new WlSurface{client, resource, id, executor, allocator};
 }
 
-class Region : public wayland::Region
-{
-public:
-    Region(wl_client* client, wl_resource* parent, uint32_t id)
-        : wayland::Region(client, parent, id)
-    {
-    }
-protected:
-
-    void destroy() override
-    {
-    }
-    void add(int32_t /*x*/, int32_t /*y*/, int32_t /*width*/, int32_t /*height*/) override
-    {
-    }
-    void subtract(int32_t /*x*/, int32_t /*y*/, int32_t /*width*/, int32_t /*height*/) override
-    {
-    }
-
-};
-
 void WlCompositor::create_region(wl_client* client, wl_resource* resource, uint32_t id)
 {
-    new Region{client, resource, id};
+    new WlRegion{client, resource, id};
 }
 
 class WlShellSurface  : public wayland::ShellSurface, public WlAbstractMirWindow

@@ -20,7 +20,8 @@ set(
   wl_pointer.cpp                wl_pointer.h
   wl_touch.cpp                  wl_touch.h
   xdg_shell_v6.cpp              xdg_shell_v6.h
-  deleted_for_resource.cpp       deleted_for_resource.h)
+  deleted_for_resource.cpp      deleted_for_resource.h
+  wl_region.cpp                 wl_region.h)
 
 add_library(
   mirfrontend-wayland OBJECT
