@@ -68,6 +68,11 @@ bool mf::WlSubsurface::synchronized() const
     return synchronized_ || parent->synchronized();
 }
 
+mf::SurfaceId mf::WlSubsurface::surface_id() const
+{
+    return parent->surface_id();
+}
+
 void mf::WlSubsurface::parent_has_committed()
 {
     if (cached_state && synchronized())

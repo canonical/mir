@@ -222,7 +222,7 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
     auto& parent_surface = *XdgSurfaceV6::from(parent);
 
     params->type = mir_window_type_freestyle;
-    params->parent_id = parent_surface.surface_id;
+    params->parent_id = parent_surface.surface_id();
     if (pos->size.is_set()) params->size = pos->size.value();
     params->aux_rect = pos->aux_rect;
     params->surface_placement_gravity = pos->surface_placement_gravity;
@@ -242,7 +242,7 @@ void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, 
     surface->set_buffer_offset(buffer_offset);
     window_size_ = geom::Size{width, height};
 
-    if (surface_id.as_value())
+    if (surface_id().as_value())
     {
         spec().width = geom::Width{width};
         spec().height = geom::Height{height};
@@ -259,7 +259,7 @@ void mf::XdgSurfaceV6::ack_configure(uint32_t serial)
 
 void mf::XdgSurfaceV6::set_title(std::string const& title)
 {
-    if (surface_id.as_value())
+    if (surface_id().as_value())
     {
         spec().name = title;
     }
@@ -271,18 +271,18 @@ void mf::XdgSurfaceV6::set_title(std::string const& title)
 
 void mf::XdgSurfaceV6::move(struct wl_resource* /*seat*/, uint32_t /*serial*/)
 {
-    if (surface_id.as_value())
+    if (surface_id().as_value())
     {
         if (auto session = get_session(client))
         {
-            shell->request_operation(session, surface_id, sink->latest_timestamp_ns(), Shell::UserRequest::move);
+            shell->request_operation(session, surface_id(), sink->latest_timestamp_ns(), Shell::UserRequest::move);
         }
     }
 }
 
 void mf::XdgSurfaceV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges)
 {
-    if (surface_id.as_value())
+    if (surface_id().as_value())
     {
         if (auto session = get_session(client))
         {
@@ -327,7 +327,7 @@ void mf::XdgSurfaceV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/,
 
             shell->request_operation(
                 session,
-                surface_id,
+                surface_id(),
                 sink->latest_timestamp_ns(),
                 Shell::UserRequest::resize,
                 edge);
@@ -342,7 +342,7 @@ void mf::XdgSurfaceV6::set_notify_resize(std::function<void(geometry::Size const
 
 void mf::XdgSurfaceV6::set_parent(optional_value<SurfaceId> parent_id)
 {
-    if (surface_id.as_value())
+    if (surface_id().as_value())
     {
         spec().parent_id = parent_id;
     }
@@ -354,7 +354,7 @@ void mf::XdgSurfaceV6::set_parent(optional_value<SurfaceId> parent_id)
 
 void mf::XdgSurfaceV6::set_max_size(int32_t width, int32_t height)
 {
-    if (surface_id.as_value())
+    if (surface_id().as_value())
     {
         if (width == 0) width = std::numeric_limits<int>::max();
         if (height == 0) height = std::numeric_limits<int>::max();
@@ -385,7 +385,7 @@ void mf::XdgSurfaceV6::set_max_size(int32_t width, int32_t height)
 
 void mf::XdgSurfaceV6::set_min_size(int32_t width, int32_t height)
 {
-    if (surface_id.as_value())
+    if (surface_id().as_value())
     {
         auto& mods = spec();
         mods.min_width = geom::Width{width};
@@ -512,7 +512,7 @@ void mf::XdgToplevelV6::set_parent(std::experimental::optional<struct wl_resourc
 {
     if (parent && parent.value())
     {
-        self->set_parent(XdgToplevelV6::from(parent.value())->self->surface_id);
+        self->set_parent(XdgToplevelV6::from(parent.value())->self->surface_id());
     }
     else
     {

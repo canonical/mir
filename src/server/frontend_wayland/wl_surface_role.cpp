@@ -64,12 +64,12 @@ void mir::frontend::WlAbstractMirWindow::set_minimized()
 
 void mir::frontend::WlAbstractMirWindow::set_state_now(MirWindowState state)
 {
-    if (surface_id.as_value())
+    if (surface_id_.as_value())
     {
         shell::SurfaceSpecification mods;
         mods.state = state;
         auto const session = get_session(client);
-        shell->modify_surface(session, surface_id, mods);
+        shell->modify_surface(session, surface_id_, mods);
     }
     else
     {
@@ -106,14 +106,14 @@ WlAbstractMirWindow::WlAbstractMirWindow(WlSeat* seat, wl_client* client, WlSurf
 WlAbstractMirWindow::~WlAbstractMirWindow()
 {
     *destroyed = true;
-    if (surface_id.as_value())
+    if (surface_id_.as_value())
     {
         if (auto session = get_session(client))
         {
-            shell->destroy_surface(session, surface_id);
+            shell->destroy_surface(session, surface_id_);
         }
 
-        surface_id = {};
+        surface_id_ = {};
     }
 }
 
@@ -136,9 +136,9 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
 
     auto const session = get_session(client);
 
-    if (surface_id.as_value())
+    if (surface_id_.as_value())
     {
-        auto const scene_surface = get_surface_for_id(session, surface_id);
+        auto const scene_surface = get_surface_for_id(session, surface_id_);
 
         sink->latest_client_size(window_size());
 
@@ -158,7 +158,7 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
         }
 
         if (pending_changes)
-            shell->modify_surface(session, surface_id, *pending_changes);
+            shell->modify_surface(session, surface_id_, *pending_changes);
 
         pending_changes.reset();
         return;
@@ -180,11 +180,10 @@ void WlAbstractMirWindow::create_mir_window()
     surface->populate_buffer_list(params->streams.value(), {});
     buffer_list_needs_refresh = false;
 
-    surface_id = shell->create_surface(session, *params, sink);
-    surface->surface_id = surface_id;
+    surface_id_ = shell->create_surface(session, *params, sink);
 
     // The shell isn't guaranteed to respect the requested size
-    auto const window = session->get_surface(surface_id);
+    auto const window = session->get_surface(surface_id_);
     auto const client_size = window->client_size();
 
     if (client_size != params->size)
@@ -198,12 +197,12 @@ geometry::Size WlAbstractMirWindow::window_size()
 
 void WlAbstractMirWindow::visiblity(bool visible)
 {
-    if (!surface_id.as_value())
+    if (!surface_id_.as_value())
         return;
 
     auto const session = get_session(client);
 
-    auto surface = get_surface_for_id(session, surface_id);
+    auto surface = get_surface_for_id(session, surface_id_);
 
     if (surface->visible() == visible)
         return;

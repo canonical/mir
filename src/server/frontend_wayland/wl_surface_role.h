@@ -54,6 +54,7 @@ class WlSurfaceRole
 {
 public:
     virtual bool synchronized() const { return false; }
+    virtual SurfaceId surface_id() const = 0;
     virtual void invalidate_buffer_list() = 0;
     virtual void commit(WlSurfaceState const& state) = 0;
     virtual void visiblity(bool visible) = 0;
@@ -68,6 +69,8 @@ public:
                         std::shared_ptr<frontend::Shell> const& shell);
 
     ~WlAbstractMirWindow() override;
+
+    SurfaceId surface_id() const override { return surface_id_; };
 
     void invalidate_buffer_list() override;
 
@@ -93,7 +96,6 @@ protected:
     std::shared_ptr<BasicSurfaceEventSink> const sink;
 
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
-    SurfaceId surface_id;
     optional_value<geometry::Size> window_size_;
 
     geometry::Size window_size();
@@ -101,6 +103,7 @@ protected:
     void commit(WlSurfaceState const& state) override;
 
 private:
+    SurfaceId surface_id_;
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
     bool buffer_list_needs_refresh = true;
 

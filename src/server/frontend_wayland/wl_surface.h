@@ -75,6 +75,7 @@ class NullWlSurfaceRole : public WlSurfaceRole
 {
 public:
     NullWlSurfaceRole(WlSurface* surface);
+    SurfaceId surface_id() const override;
     void invalidate_buffer_list() override;
     void commit(WlSurfaceState const& state) override;
     void visiblity(bool /*visible*/) override;
@@ -102,6 +103,7 @@ public:
     bool synchronized() const;
     std::pair<geometry::Point, wl_resource*> transform_point(geometry::Point point) const;
     wl_resource* raw_resource() { return resource; }
+    mir::frontend::SurfaceId surface_id() const;
 
     void set_role(WlSurfaceRole* role_);
     void clear_role();
@@ -115,7 +117,6 @@ public:
     std::shared_ptr<mir::frontend::Session> const session;
     mir::frontend::BufferStreamId const stream_id;
     std::shared_ptr<mir::frontend::BufferStream> const stream;
-    mir::frontend::SurfaceId surface_id;       // ID of any associated surface
 
     static WlSurface* from(wl_resource* resource);
 
