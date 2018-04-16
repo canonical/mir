@@ -159,6 +159,12 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
             surface->populate_surface_data(buffer_list_spec.streams.value(), {});
         }
 
+        if (state.input_shape)
+        {
+            auto& input_shape_spec = spec();
+            input_shape_spec.input_shape = move(state.input_shape.value());
+        }
+
         if (pending_changes)
             shell->modify_surface(session, surface_id_, *pending_changes);
 

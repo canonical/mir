@@ -44,6 +44,10 @@ namespace shell
 {
 struct StreamSpecification;
 }
+namespace geometry
+{
+class Rectangle;
+}
 
 namespace frontend
 {
@@ -72,6 +76,7 @@ struct WlSurfaceState
     std::experimental::optional<wl_resource*> buffer;
 
     std::experimental::optional<geometry::Displacement> offset;
+    std::experimental::optional<std::vector<geometry::Rectangle>> input_shape;
     std::vector<Callback> frame_callbacks;
 
 private:

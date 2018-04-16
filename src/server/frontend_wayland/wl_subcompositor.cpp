@@ -17,8 +17,9 @@
  */
 
 #include "wl_subcompositor.h"
-
 #include "wl_surface.h"
+
+#include "mir/geometry/rectangle.h"
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;

@@ -44,6 +44,9 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
     if (source.offset)
         offset = source.offset;
 
+    if (source.input_shape)
+        input_shape = source.input_shape;
+
     frame_callbacks.insert(end(frame_callbacks),
                            begin(source.frame_callbacks),
                            end(source.frame_callbacks));
@@ -55,6 +58,7 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
 bool mf::WlSurfaceState::surface_data_needs_refresh() const
 {
     return offset ||
+           input_shape ||
            surface_data_invalidated;
 }
 
