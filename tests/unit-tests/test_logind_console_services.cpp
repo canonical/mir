@@ -139,8 +139,12 @@ public:
           starter_bus_type_env{"DBUS_STARTER_BUS_TYPE", "session"},
           starter_bus_env{"DBUS_STARTER_BUS_ADDRESS", session_bus.address.c_str()},
           bus_connection{
-              g_bus_get_sync(
-                  G_BUS_TYPE_SYSTEM,
+              g_dbus_connection_new_for_address_sync(
+                  system_bus.address.c_str(),
+                  static_cast<GDBusConnectionFlags>(
+                      G_DBUS_CONNECTION_FLAGS_MESSAGE_BUS_CONNECTION |
+                      G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT),
+                  nullptr,
                   nullptr,
                   nullptr),
               &g_object_unref}
