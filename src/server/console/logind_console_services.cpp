@@ -20,6 +20,7 @@
 #include <boost/throw_exception.hpp>
 #include <boost/current_function.hpp>
 #include <boost/exception/info.hpp>
+#include <fcntl.h>
 
 #include "logind_console_services.h"
 
@@ -268,22 +269,35 @@ void complete_take_device_call(
         return;
     }
 
-    auto fd = mir::Fd{g_variant_get_handle(fd_holder)};
+    errno = 0;
+    auto fd = mir::Fd{fcntl(g_variant_get_handle(fd_holder), F_DUPFD_CLOEXEC, 0)};
 
     g_variant_unref(fd_holder);
 
     if (fd == mir::Fd::invalid)
     {
-        /*
-         * I don't believe we can get here - the proxy checks that the DBus return value
-         * has type (fd, boolean), and gdbus will error if it can't read the fd out of the
-         * auxiliary channel.
-         *
-         * Better safe than sorry, though
-         */
-        context->promise.set_exception(
-            MIR_MAKE_EXCEPTION_PTR((
-                std::runtime_error{"TakeDevice call returned invalid FD"})));
+        if (errno != 0)
+        {
+            context->promise.set_exception(
+                MIR_MAKE_EXCEPTION_PTR((
+                    std::system_error{
+                        errno,
+                        std::system_category(),
+                        "Failed to dup logind file descriptor"})));
+        }
+        else
+        {
+            /*
+             * I don't believe we can get here - the proxy checks that the DBus return value
+             * has type (fd, boolean), and gdbus will error if it can't read the fd out of the
+             * auxiliary channel.
+             *
+             * Better safe than sorry, though
+             */
+            context->promise.set_exception(
+                MIR_MAKE_EXCEPTION_PTR((
+                    std::runtime_error{"TakeDevice call returned invalid FD"})));
+        }
         return;
     }
 
