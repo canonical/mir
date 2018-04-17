@@ -76,7 +76,7 @@ struct WlSurfaceState
     std::experimental::optional<wl_resource*> buffer;
 
     std::experimental::optional<geometry::Displacement> offset;
-    std::experimental::optional<std::vector<geometry::Rectangle>> input_shape;
+    std::experimental::optional<std::experimental::optional<std::vector<geometry::Rectangle>>> input_shape;
     std::vector<Callback> frame_callbacks;
 
 private:
@@ -126,6 +126,7 @@ public:
     void refresh_surface_data_now();
     void pending_invalidate_surface_data() { pending.invalidate_surface_data(); }
     void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
+                               std::vector<mir::geometry::Rectangle>& input_shape_accumulator,
                                geometry::Displacement const& parent_offset) const;
     void commit(WlSurfaceState const& state);
 
@@ -147,6 +148,7 @@ private:
     geometry::Displacement offset_;
     geometry::Size buffer_size_;
     std::vector<WlSurfaceState::Callback> frame_callbacks;
+    std::experimental::optional<std::vector<mir::geometry::Rectangle>> input_shape;
     std::shared_ptr<bool> const destroyed;
 
     void send_frame_callbacks();

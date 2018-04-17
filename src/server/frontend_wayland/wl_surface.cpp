@@ -21,6 +21,7 @@
 #include "wayland_utils.h"
 #include "wl_surface_role.h"
 #include "wl_subcompositor.h"
+#include "wl_region.h"
 #include "wlshmbuffer.h"
 #include "deleted_for_resource.h"
 
@@ -138,13 +139,27 @@ void mf::WlSurface::refresh_surface_data_now()
 }
 
 void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
+                                          std::vector<geom::Rectangle>& input_shape_accumulator,
                                           geometry::Displacement const& parent_offset) const
 {
     geometry::Displacement offset = parent_offset + offset_;
     buffer_streams.push_back({stream_id, offset, {}});
+    if (input_shape)
+    {
+        for (auto rect : input_shape.value())
+        {
+            rect.top_left = rect.top_left + offset;
+            input_shape_accumulator.push_back(rect);
+        }
+    }
+    else
+    {
+        // TODO: make fill the whole surface
+        log_warning("WlSurface has empty input shape");
+    }
     for (WlSubsurface* subsurface : children)
     {
-        subsurface->populate_surface_data(buffer_streams, offset);
+        subsurface->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
     }
 }
 
@@ -214,11 +229,19 @@ void mf::WlSurface::frame(uint32_t callback)
 void mf::WlSurface::set_opaque_region(std::experimental::optional<wl_resource*> const& region)
 {
     (void)region;
+    // This isn't essential, but could enable optimizations
 }
 
 void mf::WlSurface::set_input_region(std::experimental::optional<wl_resource*> const& region)
 {
-    (void)region;
+    if (region)
+    {
+        pending.input_shape = WlRegion::from(region.value())->rectangle_vector();
+    }
+    else
+    {
+        pending.input_shape = {std::experimental::nullopt};
+    }
 }
 
 void mf::WlSurface::commit(WlSurfaceState const& state)
@@ -230,6 +253,9 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
     if (state.offset)
         offset_ = state.offset.value();
+
+    if (state.input_shape)
+        input_shape = state.input_shape.value();
 
     if (state.buffer)
     {

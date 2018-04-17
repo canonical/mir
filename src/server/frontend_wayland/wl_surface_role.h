@@ -72,6 +72,7 @@ public:
 
     SurfaceId surface_id() const override { return surface_id_; };
 
+    void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
     void refresh_surface_data_now() override;
 
     void set_maximized();

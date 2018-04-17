@@ -22,6 +22,10 @@
 
 #include "generated/wayland_wrapper.h"
 
+#include "mir/geometry/rectangle.h"
+
+#include <vector>
+
 namespace mir
 {
 namespace frontend
@@ -33,10 +37,16 @@ public:
     WlRegion(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     ~WlRegion();
 
+    std::vector<geometry::Rectangle> rectangle_vector();
+
+    static WlRegion* from(wl_resource* resource);
+
 private:
     void destroy() override;
     void add(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void subtract(int32_t x, int32_t y, int32_t width, int32_t height) override;
+
+    std::vector<geometry::Rectangle> rects;
 };
 
 }
