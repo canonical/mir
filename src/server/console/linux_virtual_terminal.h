@@ -25,6 +25,7 @@
 #include <linux/vt.h>
 #include <termios.h>
 #include <unistd.h>
+#include <future>
 
 namespace mir
 {
@@ -85,7 +86,11 @@ public:
         std::function<bool()> const& switch_away,
         std::function<bool()> const& switch_back) override;
     void restore() override;
-    boost::future<Fd> acquire_device(int major, int minor) override;
+    std::future<std::unique_ptr<Device>> acquire_device(
+        int major, int minor,
+        Device::OnDeviceActivated const& on_activated,
+        Device::OnDeviceSuspended const& on_suspended,
+        Device::OnDeviceRemoved const& on_removed) override;
 
 private:
     class FDWrapper

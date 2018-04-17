@@ -18,6 +18,7 @@
 #ifndef MIR_LOGIND_CONSOLE_SERVICES_H_
 #define MIR_LOGIND_CONSOLE_SERVICES_H_
 
+#include <future>
 #include "mir/console_services.h"
 
 #include "glib.h"
@@ -38,7 +39,11 @@ public:
 
     void restore() override;
 
-    boost::future<Fd> acquire_device(int major, int minor) override;
+    std::future<std::unique_ptr<Device>> acquire_device(
+        int major, int minor,
+        Device::OnDeviceActivated const& on_activated,
+        Device::OnDeviceSuspended const& on_suspended,
+        Device::OnDeviceRemoved const& on_removed) override;
 
 private:
     static void on_state_change(GObject* session_proxy, GParamSpec*, gpointer ctx);

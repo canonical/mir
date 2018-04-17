@@ -21,6 +21,7 @@
 
 #include <gio/gio.h>
 #include <cstdio>
+#include <boost/throw_exception.hpp>
 
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/process.h"
@@ -405,7 +406,6 @@ public:
             BOOST_THROW_EXCEPTION((std::runtime_error{error_msg}));
         }
     }
-
 private:
     DBusDaemon const system_bus;
     DBusDaemon const session_bus;
@@ -413,12 +413,13 @@ private:
     mtf::TemporaryEnvironmentValue session_bus_env;
     mtf::TemporaryEnvironmentValue starter_bus_type_env;
     mtf::TemporaryEnvironmentValue starter_bus_env;
-    std::unique_ptr<GDBusConnection, decltype(&g_object_unref)> bus_connection;
     std::shared_ptr<mtf::Process> dbusmock;
+    std::unique_ptr<GDBusConnection, decltype(&g_object_unref)> bus_connection;
     mir::Fd mock_stdout;
 };
 
 using namespace testing;
+using namespace std::literals::chrono_literals;
 
 TEST_F(LogindConsoleServices, happy_path_succeeds)
 {
@@ -470,16 +471,55 @@ TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
     auto session_path = add_any_active_session();
     add_take_device_to_session(
         session_path.c_str(),
+        "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
+
+    mir::LogindConsoleServices services;
+
+    mir::Fd resolved_fd;
+    auto device = services.acquire_device(
+        22, 33,
+        [&resolved_fd](mir::Fd&& fd)
+        {
+            resolved_fd = std::move(fd);
+        },
+        [](){},
+        [](){});
+    while (device.wait_for(0ms) == std::future_status::timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+    ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
+    EXPECT_THAT(resolved_fd, Not(Eq(mir::Fd::invalid)));
+    device.get();
+}
+
+TEST_F(LogindConsoleServices, take_device_calls_suspended_callback_when_initially_suspended)
+{
+    ensure_mock_logind();
+
+    auto session_path = add_any_active_session();
+    add_take_device_to_session(
+        session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), True)");
 
     mir::LogindConsoleServices services;
 
-    auto device = services.acquire_device(22, 33);
-    while (!device.is_ready())
+    bool suspend_called{false};
+    auto device = services.acquire_device(
+        22, 33,
+        [](mir::Fd&&)
+        {
+            FAIL() << "Unexpectedly called Active callback";
+        },
+        [&suspend_called](){ suspend_called = true; },
+        [](){});
+    while (device.wait_for(0ms) == std::future_status::timeout)
     {
         g_main_context_iteration(g_main_context_default(), true);
     }
-    EXPECT_THAT(device.get(), Not(Eq(mir::Fd::invalid)));
+    ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
+    EXPECT_TRUE(suspend_called);
+    device.get();
 }
 
 TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
@@ -493,15 +533,20 @@ TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
 
     mir::LogindConsoleServices services;
 
-    auto device = services.acquire_device(22, 33);
-    while (!device.is_ready())
+    auto device = services.acquire_device(
+        22, 33,
+        [](auto){},
+        [](){},
+        [](){});
+    while (device.wait_for(0ms) == std::future_status::timeout)
     {
         g_main_context_iteration(g_main_context_default(), true);
     }
 
     // Somehow boost::future entirely erases the exception type?
-    EXPECT_ANY_THROW(
-        device.get()
+    EXPECT_THROW(
+        device.get(),
+        std::runtime_error
     );
 }
 
