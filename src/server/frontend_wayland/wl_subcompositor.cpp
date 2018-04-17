@@ -47,6 +47,7 @@ mf::WlSubsurface::WlSubsurface(struct wl_client* client, struct wl_resource* obj
       synchronized_{true}
 {
     surface->set_role(this);
+    surface->invalidate_child_buffers();
 }
 
 mf::WlSubsurface::~WlSubsurface()

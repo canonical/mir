@@ -54,8 +54,7 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
 
 bool mf::WlSurfaceState::buffer_list_needs_refresh() const
 {
-    return buffer ||
-           buffer_offset ||
+    return buffer_offset ||
            child_buffers_changed;
 }
 
