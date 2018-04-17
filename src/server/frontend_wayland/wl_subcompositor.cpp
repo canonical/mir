@@ -122,32 +122,22 @@ void mf::WlSubsurface::invalidate_buffer_list()
 
 void mf::WlSubsurface::commit(WlSurfaceState const& state)
 {
+    if (!cached_state)
+        cached_state = WlSurfaceState();
+
+    cached_state.value().update_from(state);
+
     if (synchronized())
     {
-        if (!cached_state)
-            cached_state = WlSurfaceState();
-
-        cached_state.value().update_from(state);
-
         if (cached_state.value().buffer_list_needs_refresh() && !*parent_destroyed)
             parent->invalidate_child_buffers();
     }
     else
     {
-        if (cached_state) // unusual
-        {
-            cached_state.value().update_from(state);
-            surface->commit(cached_state.value());
-            if (cached_state.value().buffer_list_needs_refresh())
-                invalidate_buffer_list();
-            cached_state = std::experimental::nullopt;
-        }
-        else
-        {
-            surface->commit(state);
-            if (state.buffer_list_needs_refresh())
-                invalidate_buffer_list();
-        }
+        surface->commit(cached_state.value());
+        if (cached_state.value().buffer_list_needs_refresh())
+            invalidate_buffer_list();
+        cached_state = std::experimental::nullopt;
     }
 }
 
