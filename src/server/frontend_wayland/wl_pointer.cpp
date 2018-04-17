@@ -96,7 +96,8 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
                         WL_POINTER_BUTTON_STATE_PRESSED :
                         WL_POINTER_BUTTON_STATE_RELEASED;
 
-                    handle_button(timestamp, mapping.second, state);
+                    auto const serial = wl_display_next_serial(display);
+                    wl_pointer_send_button(resource, serial, timestamp, mapping.second, state);
                     handle_frame();
                 }
             }
@@ -133,21 +134,34 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
 
             if (!last_position || transformed.first != last_position.value())
             {
-                handle_motion(timestamp, transformed.first);
+                wl_pointer_send_motion(
+                    resource,
+                    timestamp,
+                    wl_fixed_from_double(transformed.first.x.as_int()),
+                    wl_fixed_from_double(transformed.first.y.as_int()));
+                last_position = transformed.first;
                 needs_frame = true;
             }
 
             auto hscroll = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll) * 10;
             if (hscroll != 0)
             {
-                handle_axis(timestamp, WL_POINTER_AXIS_HORIZONTAL_SCROLL, hscroll);
+                wl_pointer_send_axis(
+                    resource,
+                    timestamp,
+                    WL_POINTER_AXIS_HORIZONTAL_SCROLL,
+                    wl_fixed_from_double(hscroll));
                 needs_frame = true;
             }
 
             auto vscroll = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll) * 10;
             if (vscroll != 0)
             {
-                handle_axis(timestamp, WL_POINTER_AXIS_VERTICAL_SCROLL, vscroll);
+                wl_pointer_send_axis(
+                    resource,
+                    timestamp,
+                    WL_POINTER_AXIS_VERTICAL_SCROLL,
+                    wl_fixed_from_double(vscroll));
                 needs_frame = true;
             }
 
@@ -162,12 +176,6 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
     }
 }
 
-void mf::WlPointer::handle_button(uint32_t time, uint32_t button, wl_pointer_button_state state)
-{
-    auto const serial = wl_display_next_serial(display);
-    wl_pointer_send_button(resource, serial, time, button, state);
-}
-
 void mf::WlPointer::handle_enter(Point position, wl_resource* target)
 {
     cursor->apply_to(target);
@@ -178,25 +186,6 @@ void mf::WlPointer::handle_enter(Point position, wl_resource* target)
         target,
         wl_fixed_from_double(position.x.as_int()),
         wl_fixed_from_double(position.y.as_int()));
-}
-
-void mf::WlPointer::handle_motion(uint32_t time, mir::geometry::Point position)
-{
-    wl_pointer_send_motion(
-        resource,
-        time,
-        wl_fixed_from_double(position.x.as_int()),
-        wl_fixed_from_double(position.y.as_int()));
-    last_position = position;
-}
-
-void mf::WlPointer::handle_axis(uint32_t time, wl_pointer_axis axis, double distance)
-{
-    wl_pointer_send_axis(
-        resource,
-        time,
-        axis,
-        wl_fixed_from_double(distance));
 }
 
 void mf::WlPointer::handle_leave(wl_resource* target)
