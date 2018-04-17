@@ -53,8 +53,8 @@ mf::WlSubsurface::~WlSubsurface()
 {
     // unique pointer automatically removes `this` from parent child list
 
-    invalidate_buffer_list();
     surface->clear_role();
+    invalidate_buffer_list();
 }
 
 void mf::WlSubsurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers,
@@ -77,7 +77,7 @@ void mf::WlSubsurface::parent_has_committed()
 {
     if (cached_state && synchronized())
     {
-        surface->commit(std::move(cached_state.value()));
+        surface->commit(cached_state.value());
         cached_state = std::experimental::nullopt;
     }
 }
@@ -128,17 +128,25 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
             cached_state = WlSurfaceState();
 
         cached_state.value().update_from(state);
+
+        if (cached_state.value().buffer_list_needs_refresh() && !*parent_destroyed)
+            parent->invalidate_child_buffers();
     }
     else
     {
         if (cached_state) // unusual
         {
             cached_state.value().update_from(state);
-            surface->commit(std::move(cached_state.value()));
+            surface->commit(cached_state.value());
+            if (cached_state.value().buffer_list_needs_refresh())
+                invalidate_buffer_list();
+            cached_state = std::experimental::nullopt;
         }
         else
         {
             surface->commit(state);
+            if (state.buffer_list_needs_refresh())
+                invalidate_buffer_list();
         }
     }
 }

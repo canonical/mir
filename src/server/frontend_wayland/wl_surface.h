@@ -62,6 +62,10 @@ struct WlSurfaceState
     // if you add variables, don't forget to update this
     void update_from(WlSurfaceState const& source);
 
+    void invalidate_child_buffers() { child_buffers_changed = true; }
+
+    bool buffer_list_needs_refresh() const;
+
     // NOTE: buffer can be both nullopt and nullptr (I know, sounds dumb, but bare with me)
     // if it's nullopt, there is not a new buffer and no value should be copied to current state
     // if it's nullptr, there is a new buffer and it is a null buffer, which should replace the current buffer
@@ -69,6 +73,9 @@ struct WlSurfaceState
 
     std::experimental::optional<geometry::Displacement> buffer_offset;
     std::vector<Callback> frame_callbacks;
+
+private:
+    bool child_buffers_changed{false};
 };
 
 class NullWlSurfaceRole : public WlSurfaceRole
@@ -110,6 +117,7 @@ public:
     void set_buffer_offset(geometry::Displacement const& offset) { pending.buffer_offset = offset; }
     std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> add_child(WlSubsurface* child);
     void invalidate_buffer_list();
+    void invalidate_child_buffers() { pending.invalidate_child_buffers(); }
     void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers,
                               geometry::Displacement const& parent_offset) const;
     void commit(WlSurfaceState const& state);
