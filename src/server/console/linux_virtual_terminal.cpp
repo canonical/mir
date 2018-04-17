@@ -36,6 +36,7 @@
 #include <linux/vt.h>
 #include <linux/kd.h>
 #include <fcntl.h>
+#include <xf86drm.h>
 
 mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
     std::shared_ptr<VTFileOperations> const& fops,
@@ -305,7 +306,11 @@ int mir::LinuxVirtualTerminal::open_vt(int vt_number)
     return vt_fd;
 }
 
-boost::future<mir::Fd> mir::LinuxVirtualTerminal::acquire_device(int major, int minor)
+std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_device(
+    int major, int minor,
+    Device::OnDeviceActivated const& on_activated,
+    Device::OnDeviceSuspended const&,
+    Device::OnDeviceRemoved const&)
 {
     std::stringstream filename;
     filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
@@ -320,31 +325,61 @@ boost::future<mir::Fd> mir::LinuxVirtualTerminal::acquire_device(int major, int 
                 << boost::errinfo_file_name(filename.str())));
     }
 
-    auto const devnode =
-        [](auto const& fd)
-        {
-            using namespace boost::iostreams;
-            char line_buffer[1024];
-            stream<file_descriptor_source> uevent{fd, file_descriptor_flags::never_close_handle};
+    std::string devnode;
+    bool needs_master_set{false};
+    {
+        using namespace boost::iostreams;
+        char line_buffer[1024];
+        stream<file_descriptor_source> uevent{fd, file_descriptor_flags::never_close_handle};
 
-            while (uevent.getline(line_buffer, sizeof(line_buffer)))
+        while (uevent.getline(line_buffer, sizeof(line_buffer)))
+        {
+            if (strncmp(line_buffer, "DEVNAME=", strlen("DEVNAME=")) == 0)
             {
-                if (strncmp(line_buffer, "DEVNAME=", strlen("DEVNAME=")) == 0)
-                {
-                    return std::string{"/dev/"} + std::string{line_buffer + strlen("DEVNAME=")};
-                }
+                devnode = std::string{"/dev/"} + std::string{line_buffer + strlen("DEVNAME=")};
             }
+            else if (strncmp(line_buffer, "DEVTYPE=", strlen("DEVTYPE=")) == 0)
+            {
+                needs_master_set = strncmp(
+                    line_buffer + strlen("DEVTYPE="),
+                    "drm_minor",
+                    strlen("drm_minor")) == 0;
+            }
+        }
+        if (devnode.empty())
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to read DEVNAME"}));
-        }(fd);
+    }
 
     auto dev_fd = mir::Fd{fops->open(devnode.c_str(), O_RDWR | O_CLOEXEC)};
+    std::promise<std::unique_ptr<Device>> device_promise;
     if (dev_fd != mir::Fd::invalid)
     {
-        return boost::make_ready_future<Fd>(std::move(dev_fd));
+        // If our device node is not a DRM node we don't need to do anything;
+        // If our device *is* a DRM node we need drmSetMaster to succeed.
+        if ((!needs_master_set) ||
+            (drmSetMaster(dev_fd) == 0))
+        {
+            on_activated(std::move(dev_fd));
+            // Our “device” needs no cleanup, so nullptr is fine.
+            device_promise.set_value(nullptr);
+        }
+        else
+        {
+            // Oops! drmSetMaster() failed!
+            device_promise.set_exception(
+                std::make_exception_ptr(
+                    boost::enable_error_info(
+                        std::system_error{
+                            errno,
+                            std::system_category(),
+                            "drmSetMaster() failed"})
+                        << boost::errinfo_file_name(devnode.c_str())
+                ));
+        }
     }
     else
     {
-        return boost::make_exceptional_future<Fd>(
+        device_promise.set_exception(
             std::make_exception_ptr(
                 boost::enable_error_info(
                     std::system_error{
@@ -354,4 +389,5 @@ boost::future<mir::Fd> mir::LinuxVirtualTerminal::acquire_device(int major, int 
                     << boost::errinfo_file_name(devnode.c_str())
                 ));
     }
+    return device_promise.get_future();
 }

@@ -17,6 +17,9 @@
  */
 
 #include <cinttypes>
+#include <boost/throw_exception.hpp>
+#include <boost/current_function.hpp>
+#include <boost/exception/info.hpp>
 
 #include "logind_console_services.h"
 
@@ -193,6 +196,45 @@ void mir::LogindConsoleServices::restore()
 
 namespace
 {
+class LogindDevice : public mir::Device
+{
+public:
+    LogindDevice(
+        Device::OnDeviceActivated on_activated,
+        Device::OnDeviceSuspended on_suspended,
+        Device::OnDeviceRemoved on_removed)
+        : on_activated{std::move(on_activated)},
+          on_suspended{std::move(on_suspended)},
+          on_removed{std::move(on_removed)}
+    {
+    }
+
+    void emit_activated(mir::Fd&& device_fd)
+    {
+        on_activated(std::move(device_fd));
+    }
+
+    void emit_suspended()
+    {
+        on_suspended();
+    }
+
+    void emit_removed()
+    {
+        on_removed();
+    }
+private:
+    Device::OnDeviceActivated const on_activated;
+    Device::OnDeviceSuspended const on_suspended;
+    Device::OnDeviceRemoved const on_removed;
+};
+
+struct TakeDeviceContext
+{
+    std::unique_ptr<LogindDevice> device;
+    std::promise<std::unique_ptr<mir::Device>> promise;
+};
+
 #define MIR_MAKE_EXCEPTION_PTR(x)\
     std::make_exception_ptr(::boost::enable_error_info(x) <<\
     ::boost::throw_function(BOOST_CURRENT_FUNCTION) <<\
@@ -204,12 +246,12 @@ void complete_take_device_call(
     GAsyncResult* result,
     gpointer ctx)
 {
-    std::unique_ptr<boost::promise<mir::Fd>> const promise{
-        static_cast<boost::promise<mir::Fd>*>(ctx)};
+    std::unique_ptr<TakeDeviceContext> const context{
+        static_cast<TakeDeviceContext*>(ctx)};
 
     GErrorPtr error;
     GVariant* fd_holder;
-    gboolean inactive;      // TODO: What do we need to do about this?
+    gboolean inactive;
 
     if (!logind_session_call_take_device_finish(
         LOGIND_SESSION(proxy),
@@ -219,7 +261,7 @@ void complete_take_device_call(
         &error))
     {
         std::string error_msg = error ? error->message : "unknown error";
-        promise->set_exception(
+        context->promise.set_exception(
             MIR_MAKE_EXCEPTION_PTR((
                 std::runtime_error{
                     std::string{"TakeDevice call failed: "} + error_msg})));
@@ -239,29 +281,45 @@ void complete_take_device_call(
          *
          * Better safe than sorry, though
          */
-        promise->set_exception(
+        context->promise.set_exception(
             MIR_MAKE_EXCEPTION_PTR((
                 std::runtime_error{"TakeDevice call returned invalid FD"})));
         return;
     }
 
-    promise->set_value(std::move(fd));
+    if (!inactive)
+    {
+        context->device->emit_activated(std::move(fd));
+    }
+    else
+    {
+        context->device->emit_suspended();
+    }
+    context->promise.set_value(std::move(context->device));
 }
 }
 
-boost::future<mir::Fd> mir::LogindConsoleServices::acquire_device(int major, int minor)
+std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_device(
+    int major, int minor,
+    Device::OnDeviceActivated const& on_activated,
+    Device::OnDeviceSuspended const& on_suspended,
+    Device::OnDeviceRemoved const& on_removed)
 {
-    auto pending_device = std::make_unique<boost::promise<Fd>>();
-    auto device_future = pending_device->get_future();
+    auto context = std::make_unique<TakeDeviceContext>();
+    context->device = std::make_unique<LogindDevice>(
+        on_activated,
+        on_suspended,
+        on_removed);
+    auto future = context->promise.get_future();
 
     logind_session_call_take_device(
         session_proxy.get(),
         major, minor,
         nullptr,
         &complete_take_device_call,
-        pending_device.release());
+        context.release());
 
-    return device_future;
+    return future;
 }
 
 void mir::LogindConsoleServices::on_state_change(
