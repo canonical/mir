@@ -47,7 +47,7 @@ mf::WlSubsurface::WlSubsurface(struct wl_client* client, struct wl_resource* obj
       synchronized_{true}
 {
     surface->set_role(this);
-    surface->invalidate_child_buffers();
+    surface->pending_invalidate_surface_data();
 }
 
 mf::WlSubsurface::~WlSubsurface()
@@ -55,13 +55,13 @@ mf::WlSubsurface::~WlSubsurface()
     // unique pointer automatically removes `this` from parent child list
 
     surface->clear_role();
-    invalidate_buffer_list();
+    refresh_surface_data_now();
 }
 
-void mf::WlSubsurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers,
-                                            geometry::Displacement const& parent_offset) const
+void mf::WlSubsurface::populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
+                                             geometry::Displacement const& parent_offset) const
 {
-    surface->populate_buffer_list(buffers, parent_offset);
+    surface->populate_surface_data(buffer_streams, parent_offset);
 }
 
 bool mf::WlSubsurface::synchronized() const
@@ -85,7 +85,7 @@ void mf::WlSubsurface::parent_has_committed()
 
 void mf::WlSubsurface::set_position(int32_t x, int32_t y)
 {
-    surface->set_buffer_offset(geom::Displacement{x, y});
+    surface->set_pending_offset(geom::Displacement{x, y});
 }
 
 void mf::WlSubsurface::place_above(struct wl_resource* sibling)
@@ -115,10 +115,10 @@ void mf::WlSubsurface::destroy()
     wl_resource_destroy(resource);
 }
 
-void mf::WlSubsurface::invalidate_buffer_list()
+void mf::WlSubsurface::refresh_surface_data_now()
 {
     if (!*parent_destroyed)
-        parent->invalidate_buffer_list();
+        parent->refresh_surface_data_now();
 }
 
 void mf::WlSubsurface::commit(WlSurfaceState const& state)
@@ -130,14 +130,14 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 
     if (synchronized())
     {
-        if (cached_state.value().buffer_list_needs_refresh() && !*parent_destroyed)
-            parent->invalidate_child_buffers();
+        if (cached_state.value().surface_data_needs_refresh() && !*parent_destroyed)
+            parent->pending_invalidate_surface_data();
     }
     else
     {
         surface->commit(cached_state.value());
-        if (cached_state.value().buffer_list_needs_refresh())
-            invalidate_buffer_list();
+        if (cached_state.value().surface_data_needs_refresh())
+            refresh_surface_data_now();
         cached_state = std::experimental::nullopt;
     }
 }

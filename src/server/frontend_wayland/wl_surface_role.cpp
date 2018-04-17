@@ -117,11 +117,11 @@ WlAbstractMirWindow::~WlAbstractMirWindow()
     }
 }
 
-void WlAbstractMirWindow::invalidate_buffer_list()
+void WlAbstractMirWindow::refresh_surface_data_now()
 {
     shell::SurfaceSpecification buffer_list_spec;
     buffer_list_spec.streams = std::vector<shell::StreamSpecification>();
-    surface->populate_buffer_list(buffer_list_spec.streams.value(), {});
+    surface->populate_surface_data(buffer_list_spec.streams.value(), {});
     shell->modify_surface(get_session(client), surface_id_, buffer_list_spec);
 }
 
@@ -152,11 +152,11 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
             new_size_spec.height = window_size().height;
         }
 
-        if (state.buffer_list_needs_refresh())
+        if (state.surface_data_needs_refresh())
         {
             auto& buffer_list_spec = spec();
             buffer_list_spec.streams = std::vector<shell::StreamSpecification>();
-            surface->populate_buffer_list(buffer_list_spec.streams.value(), {});
+            surface->populate_surface_data(buffer_list_spec.streams.value(), {});
         }
 
         if (pending_changes)
@@ -179,7 +179,7 @@ void WlAbstractMirWindow::create_mir_window()
         params->size = geometry::Size{640, 480};
 
     params->streams = std::vector<shell::StreamSpecification>{};
-    surface->populate_buffer_list(params->streams.value(), {});
+    surface->populate_surface_data(params->streams.value(), {});
 
     surface_id_ = shell->create_surface(session, *params, sink);
 
@@ -203,19 +203,19 @@ void WlAbstractMirWindow::visiblity(bool visible)
 
     auto const session = get_session(client);
 
-    auto surface = get_surface_for_id(session, surface_id_);
+    auto mir_surface = get_surface_for_id(session, surface_id_);
 
-    if (surface->visible() == visible)
+    if (mir_surface->visible() == visible)
         return;
 
     if (visible)
     {
-        if (surface->state() == mir_window_state_hidden)
+        if (mir_surface->state() == mir_window_state_hidden)
             spec().state = mir_window_state_restored;
     }
     else
     {
-        if (surface->state() != mir_window_state_hidden)
+        if (mir_surface->state() != mir_window_state_hidden)
             spec().state = mir_window_state_hidden;
     }
 }

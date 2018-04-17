@@ -56,8 +56,8 @@ public:
                  WlSurface* parent_surface);
     ~WlSubsurface();
 
-    void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers,
-                              geometry::Displacement const& parent_offset) const;
+    void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
+                               geometry::Displacement const& parent_offset) const;
 
     bool synchronized() const override;
     SurfaceId surface_id() const override;
@@ -73,7 +73,7 @@ private:
 
     void destroy() override; // overrides function in both WlSurfaceRole and wayland::Subsurface
 
-    void invalidate_buffer_list() override;
+    void refresh_surface_data_now() override;
     virtual void commit(WlSurfaceState const& state) override;
     virtual void visiblity(bool visible) override;
 

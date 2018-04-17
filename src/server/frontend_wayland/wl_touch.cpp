@@ -46,7 +46,7 @@ void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* surface
     // TODO: support for touches on subsurfaces
     auto const input_ev = mir_touch_event_input_event(touch_ev);
     auto const ev = mir::client::Event{mir_input_event_get_event(input_ev)};
-    auto const buffer_offset = surface->buffer_offset();
+    auto const surface_offset = surface->offset();
 
     for (auto i = 0u; i < mir_touch_event_point_count(touch_ev); ++i)
     {
@@ -55,11 +55,11 @@ void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* surface
         auto const x = mir_touch_event_axis_value(
             touch_ev,
             i,
-            mir_touch_axis_x) - buffer_offset.dx.as_int();
+            mir_touch_axis_x) - surface_offset.dx.as_int();
         auto const y = mir_touch_event_axis_value(
             touch_ev,
             i,
-            mir_touch_axis_y) - buffer_offset.dy.as_int();
+            mir_touch_axis_y) - surface_offset.dy.as_int();
 
         switch (action)
         {

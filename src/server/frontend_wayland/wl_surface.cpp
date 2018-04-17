@@ -41,21 +41,21 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
     if (source.buffer)
         buffer = source.buffer;
 
-    if (source.buffer_offset)
-        buffer_offset = source.buffer_offset;
+    if (source.offset)
+        offset = source.offset;
 
     frame_callbacks.insert(end(frame_callbacks),
                            begin(source.frame_callbacks),
                            end(source.frame_callbacks));
 
-    if (source.child_buffers_changed)
-        child_buffers_changed = true;
+    if (source.surface_data_invalidated)
+        surface_data_invalidated = true;
 }
 
-bool mf::WlSurfaceState::buffer_list_needs_refresh() const
+bool mf::WlSurfaceState::surface_data_needs_refresh() const
 {
-    return buffer_offset ||
-           child_buffers_changed;
+    return offset ||
+           surface_data_invalidated;
 }
 
 mf::WlSurface::WlSurface(
@@ -93,7 +93,7 @@ bool mf::WlSurface::synchronized() const
 
 std::pair<geom::Point, wl_resource*> mf::WlSurface::transform_point(geom::Point point) const
 {
-    return std::make_pair(point - buffer_offset_, resource);
+    return std::make_pair(point - offset_, resource);
 }
 
 mf::SurfaceId mf::WlSurface::surface_id() const
@@ -129,19 +129,19 @@ std::unique_ptr<mf::WlSurface, std::function<void(mf::WlSurface*)>> mf::WlSurfac
         });
 }
 
-void mf::WlSurface::invalidate_buffer_list()
+void mf::WlSurface::refresh_surface_data_now()
 {
-    role->invalidate_buffer_list();
+    role->refresh_surface_data_now();
 }
 
-void mf::WlSurface::populate_buffer_list(std::vector<shell::StreamSpecification>& buffers,
-                                         geometry::Displacement const& parent_offset) const
+void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
+                                          geometry::Displacement const& parent_offset) const
 {
-    geometry::Displacement offset = parent_offset + buffer_offset_;
-    buffers.push_back({stream_id, offset, {}});
+    geometry::Displacement offset = parent_offset + offset_;
+    buffer_streams.push_back({stream_id, offset, {}});
     for (WlSubsurface* subsurface : children)
     {
-        subsurface->populate_buffer_list(buffers, offset);
+        subsurface->populate_surface_data(buffer_streams, offset);
     }
 }
 
@@ -209,8 +209,8 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     // We're going to lose the value of state, so copy the frame_callbacks first
     pending_frames->insert(end(*pending_frames), begin(state.frame_callbacks), end(state.frame_callbacks));
 
-    if (state.buffer_offset)
-        buffer_offset_ = state.buffer_offset.value();
+    if (state.offset)
+        offset_ = state.offset.value();
 
     if (state.buffer)
     {
@@ -310,7 +310,7 @@ mf::NullWlSurfaceRole::NullWlSurfaceRole(WlSurface* surface) :
 }
 
 mf::SurfaceId mf::NullWlSurfaceRole::surface_id() const { return {}; }
-void mf::NullWlSurfaceRole::invalidate_buffer_list() {}
+void mf::NullWlSurfaceRole::refresh_surface_data_now() {}
 void mf::NullWlSurfaceRole::commit(WlSurfaceState const& state) { surface->commit(state); }
 void mf::NullWlSurfaceRole::visiblity(bool /*visible*/) {}
 void mf::NullWlSurfaceRole::destroy() {}
