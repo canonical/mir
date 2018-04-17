@@ -60,11 +60,9 @@ private:
     MirPointerButtons last_buttons{0};
     std::experimental::optional<mir::geometry::Point> last_position;
 
-    void handle_button(uint32_t time, uint32_t button, wl_pointer_button_state state);
     void handle_enter(mir::geometry::Point position, wl_resource* target);
-    void handle_motion(uint32_t time, mir::geometry::Point position);
-    void handle_axis(uint32_t time, wl_pointer_axis axis, double distance);
     void handle_leave(wl_resource* target);
+    void handle_frame();
 
     void set_cursor(uint32_t serial, std::experimental::optional<wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) override;
     void release() override;
