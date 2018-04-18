@@ -20,9 +20,11 @@
 #include <gmock/gmock.h>
 
 #include <gio/gio.h>
+#include <gio/gunixfdlist.h>
 #include <cstdio>
 #include <boost/throw_exception.hpp>
 
+#include "mir/anonymous_shm_file.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/process.h"
 #include "mir_test_framework/temporary_environment_value.h"
@@ -410,6 +412,87 @@ public:
             BOOST_THROW_EXCEPTION((std::runtime_error{error_msg}));
         }
     }
+
+    void emit_device_suspended(char const* session_path, int major, int minor)
+    {
+        std::unique_ptr<GVariant, decltype(&g_variant_unref)> result{nullptr, &g_variant_unref};
+
+        GError* error{nullptr};
+        result.reset(
+            g_dbus_connection_call_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                session_path,
+                "org.freedesktop.DBus.Mock",
+                "EmitSignal",
+                g_variant_new(
+                    "(sssv)",
+                    "org.freedesktop.login1.Session",
+                    "PauseDevice",
+                    "uus",
+                    g_variant_new(
+                        "(uus)",
+                        major,
+                        minor,
+                        "pause")),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NONE,
+                1000,
+                nullptr,
+                &error));
+
+        if (!result)
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{error->message}));
+        }
+    }
+
+    void emit_device_activated(char const* session_path, int major, int minor, int fd)
+    {
+        std::unique_ptr<GVariant, decltype(&g_variant_unref)> result{nullptr, &g_variant_unref};
+
+        std::unique_ptr<GUnixFDList, decltype(&g_object_unref)> fd_list{
+            g_unix_fd_list_new(),
+            &g_object_unref};
+
+        GError* error{nullptr};
+
+        int handle;
+        if ((handle = g_unix_fd_list_append(fd_list.get(), fd, &error)) == -1)
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{error->message}));
+        }
+
+        result.reset(
+            g_dbus_connection_call_with_unix_fd_list_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                session_path,
+                "org.freedesktop.DBus.Mock",
+                "EmitSignal",
+                g_variant_new(
+                    "(sssv)",
+                    "org.freedesktop.login1.Session",
+                    "ResumeDevice",
+                    "uuh",
+                    g_variant_new(
+                        "(uuh)",
+                        major,
+                        minor,
+                        handle)),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NONE,
+                1000,
+                fd_list.get(),
+                nullptr,
+                nullptr,
+                &error));
+
+        if (!result)
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{error->message}));
+        }
+    }
 private:
     DBusDaemon const system_bus;
     DBusDaemon const session_bus;
@@ -547,11 +630,115 @@ TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
         g_main_context_iteration(g_main_context_default(), true);
     }
 
-    // Somehow boost::future entirely erases the exception type?
     EXPECT_THROW(
         device.get(),
         std::runtime_error
     );
+}
+
+TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
+{
+    ensure_mock_logind();
+
+    auto session_path = add_any_active_session();
+    add_take_device_to_session(
+        session_path.c_str(),
+        "ret = (os.open('/dev/zero', os.O_RDONLY), True)");
+
+    mir::LogindConsoleServices services;
+
+    enum class DeviceState
+    {
+        Active,
+        Suspended
+    } state;
+
+    mir::Fd received_fd;
+    auto device = services.acquire_device(
+        22, 33,
+        [&state, &received_fd](mir::Fd&& device_fd)
+        {
+            received_fd = std::move(device_fd);
+            state = DeviceState::Active;
+        },
+        [&state]()
+        {
+            state = DeviceState::Suspended;
+        },
+        [](){});
+    while (device.wait_for(0ms) == std::future_status::timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+    ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
+    ASSERT_THAT(state, Eq(DeviceState::Suspended));
+    auto handle = device.get();
+
+    char const device_content[] =
+        "I am the very model of a modern major general";
+    mir::AnonymousShmFile fake_device_node(sizeof(device_content));
+    ::memcpy(fake_device_node.base_ptr(), device_content, sizeof(device_content));
+
+    emit_device_activated(session_path.c_str(), 22, 33, fake_device_node.fd());
+
+    GLibTimeout timeout{10s};
+    while (state != DeviceState::Active && !timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+    ASSERT_THAT(state, Eq(DeviceState::Active));
+
+    char buffer[sizeof(device_content)];
+    auto read_bytes = read(received_fd, buffer, sizeof(buffer));
+    EXPECT_THAT(read_bytes, Eq(sizeof(device_content)));
+    EXPECT_THAT(buffer, StrEq(device_content));
+}
+
+TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
+{
+    ensure_mock_logind();
+
+    auto session_path = add_any_active_session();
+    add_take_device_to_session(
+        session_path.c_str(),
+        "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
+
+    mir::LogindConsoleServices services;
+
+    enum class DeviceState
+    {
+        Active,
+        Suspended
+    } state;
+
+    auto device = services.acquire_device(
+        22, 33,
+        [&state](mir::Fd&&)
+        {
+            // We don't actually care about the fd.
+            state = DeviceState::Active;
+        },
+        [&state]()
+        {
+            state = DeviceState::Suspended;
+        },
+        [](){});
+    while (device.wait_for(0ms) == std::future_status::timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+    ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
+    ASSERT_THAT(state, Eq(DeviceState::Active));
+    auto handle = device.get();
+
+    emit_device_suspended(session_path.c_str(), 22, 33);
+
+    GLibTimeout timeout{10s};
+    while (state != DeviceState::Suspended && !timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+    EXPECT_THAT(state, Eq(DeviceState::Suspended));
 }
 
 TEST_F(LogindConsoleServices, calls_pause_handler_on_pause)

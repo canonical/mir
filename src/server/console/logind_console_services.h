@@ -19,6 +19,7 @@
 #define MIR_LOGIND_CONSOLE_SERVICES_H_
 
 #include <future>
+#include <unordered_map>
 #include "mir/console_services.h"
 
 #include "glib.h"
@@ -39,14 +40,35 @@ public:
 
     void restore() override;
 
-    std::future<std::unique_ptr<Device>> acquire_device(
+    std::future<std::unique_ptr<mir::Device>> acquire_device(
         int major, int minor,
-        Device::OnDeviceActivated const& on_activated,
-        Device::OnDeviceSuspended const& on_suspended,
-        Device::OnDeviceRemoved const& on_removed) override;
+        mir::Device::OnDeviceActivated const& on_activated,
+        mir::Device::OnDeviceSuspended const& on_suspended,
+        mir::Device::OnDeviceRemoved const& on_removed) override;
 
+    class Device;
 private:
-    static void on_state_change(GObject* session_proxy, GParamSpec*, gpointer ctx);
+    static void on_state_change(GObject* session_proxy, GParamSpec*, gpointer ctx) noexcept;
+    static void on_pause_device(
+        LogindSession*,
+        unsigned major,
+        unsigned minor,
+        gchar const* type,
+        gpointer ctx) noexcept;
+#ifdef MIR_GDBUS_SIGNALS_SUPPORT_FDS
+    static void on_resume_device(
+        LogindSession*,
+        unsigned major,
+        unsigned minor,
+        GVariant* fd,
+        gpointer ctx);
+#else
+    static GDBusMessage* resume_device_dbus_filter(
+        GDBusConnection* connection,
+        GDBusMessage* message,
+        gboolean incoming,
+        gpointer ctx) noexcept;
+#endif
 
     std::unique_ptr<GDBusConnection, decltype(&g_object_unref)> const connection;
     std::unique_ptr<LogindSeat, decltype(&g_object_unref)> const seat_proxy;
@@ -54,6 +76,7 @@ private:
     std::function<bool()> switch_away;
     std::function<bool()> switch_to;
     bool active;
+    std::unordered_map<dev_t, Device const* const> acquired_devices;
 };
 }
 
