@@ -32,6 +32,7 @@
 namespace mir
 {
 class EmergencyCleanupRegistry;
+class ConsoleServices;
 
 namespace dispatch
 {
@@ -99,6 +100,7 @@ typedef mir::UniqueModulePtr<Platform>(*CreatePlatform)(
     options::Option const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
+    std::shared_ptr<ConsoleServices> const& console,
     std::shared_ptr<InputReport> const& report);
 
 typedef void(*AddPlatformOptions)(
@@ -137,6 +139,7 @@ mir::UniqueModulePtr<mir::input::Platform> create_input_platform(
     mir::options::Option const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry,
+    std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::input::InputReport> const& report);
 
 /**
