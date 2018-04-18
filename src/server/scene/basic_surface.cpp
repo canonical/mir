@@ -251,8 +251,6 @@ ms::BasicSurface::BasicSurface(
 
     for (auto& layer : layers)
     {
-        if (layer.stream->has_submitted_buffer())
-            callback(layer.stream->stream_size());
         layer.stream->set_frame_posted_callback(callback);
     }
     report->surface_created(this, surface_name);
