@@ -70,14 +70,15 @@ private:
 };
 
 LogindSession* simple_proxy_on_system_bus(
+    GDBusConnection* connection,
     char const* object_path)
 {
     using namespace std::literals::string_literals;
 
     GErrorPtr error;
 
-    auto const proxy = logind_session_proxy_new_for_bus_sync(
-        G_BUS_TYPE_SYSTEM,
+    auto const proxy = logind_session_proxy_new_sync(
+        connection,
         G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
         "org.freedesktop.login1",
         object_path,
@@ -103,14 +104,15 @@ LogindSession* simple_proxy_on_system_bus(
 }
 
 LogindSeat* simple_seat_proxy_on_system_bus(
+    GDBusConnection* connection,
     char const* object_path)
 {
     using namespace std::literals::string_literals;
 
     GErrorPtr error;
 
-    auto const proxy = logind_seat_proxy_new_for_bus_sync(
-        G_BUS_TYPE_SYSTEM,
+    auto const proxy = logind_seat_proxy_new_sync(
+        connection,
         G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
         "org.freedesktop.login1",
         object_path,
@@ -151,13 +153,59 @@ std::string object_path_for_current_session(LogindSeat* seat_proxy)
 
     return g_variant_get_string(object_path_variant.get(), nullptr);
 }
+
+GDBusConnection* connect_to_system_bus()
+{
+    using namespace std::literals::string_literals;
+    GErrorPtr error;
+
+    std::unique_ptr<gchar, decltype(&g_free)> system_bus_address{
+        g_dbus_address_get_for_bus_sync(
+            G_BUS_TYPE_SYSTEM,
+            nullptr,
+            &error),
+        &g_free};
+
+    if (!system_bus_address)
+    {
+        auto error_msg = error ? error->message : "unknown error";
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{
+                "Failed to find address of DBus system bus: "s + error_msg}));
+    }
+
+    auto bus = g_dbus_connection_new_for_address_sync(
+        system_bus_address.get(),
+        static_cast<GDBusConnectionFlags>(
+            G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT |
+            G_DBUS_CONNECTION_FLAGS_MESSAGE_BUS_CONNECTION),
+        nullptr,
+        nullptr,
+        &error);
+
+    if (!bus)
+    {
+        auto error_msg = error ? error->message : "unknown error";
+        BOOST_THROW_EXCEPTION((
+          std::runtime_error{
+              "Failed to connect to DBus system bus: "s + error_msg}));
+    }
+
+    return bus;
+}
 }
 
 mir::LogindConsoleServices::LogindConsoleServices()
-    : seat_proxy{simple_seat_proxy_on_system_bus("/org/freedesktop/login1/seat/seat0"),
+    : connection{
+        connect_to_system_bus(),
         &g_object_unref},
-      session_proxy{simple_proxy_on_system_bus(
-        object_path_for_current_session(seat_proxy.get()).c_str()),
+      seat_proxy{
+        simple_seat_proxy_on_system_bus(connection.get(), "/org/freedesktop/login1/seat/seat0"),
+        &g_object_unref},
+      session_proxy{
+        simple_proxy_on_system_bus(
+            connection.get(),
+            object_path_for_current_session(seat_proxy.get()).c_str()),
         &g_object_unref},
       switch_away{[](){ return true; }},
       switch_to{[](){ return true; }},
