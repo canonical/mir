@@ -104,13 +104,21 @@ bool mf::WlSurface::synchronized() const
     return role->synchronized();
 }
 
-std::pair<geom::Point, mf::WlSurface*> mf::WlSurface::transform_point(geom::Point point)
+std::experimental::optional<std::pair<geom::Point, mf::WlSurface*>> mf::WlSurface::transform_point(geom::Point point)
 {
-    if (children.size() > 0)
+    point = point - offset_;
+    for (auto child : children)
     {
-        return children[0]->transform_point(point);
+        auto result = child->transform_point(point);
+        if (result)
+            return result;
     }
-    return std::make_pair(point - offset_, this);
+    for (auto& rect : input_shape.value_or(std::vector<geom::Rectangle>{{{}, buffer_size_}}))
+    {
+        if (rect.contains(point))
+            return std::make_pair(point, this);
+    }
+    return std::experimental::nullopt;
 }
 
 mf::SurfaceId mf::WlSurface::surface_id() const
