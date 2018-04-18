@@ -144,18 +144,19 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
 {
     geometry::Displacement offset = parent_offset + offset_;
     buffer_streams.push_back({stream_id, offset, {}});
+    geom::Rectangle surface_rect = {geom::Point{} + offset, buffer_size_};
     if (input_shape)
     {
         for (auto rect : input_shape.value())
         {
             rect.top_left = rect.top_left + offset;
+            rect = rect.intersection_with(surface_rect); // clip to surface
             input_shape_accumulator.push_back(rect);
         }
     }
     else
     {
-        // TODO: make fill the whole surface
-        log_warning("WlSurface has empty input shape");
+        input_shape_accumulator.push_back(surface_rect);
     }
     for (WlSubsurface* subsurface : children)
     {
