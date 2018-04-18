@@ -219,13 +219,23 @@ mir::DefaultServerConfiguration::the_input_manager()
                 // Maybe the graphics platform also supplies input (e.g. mesa-x11 or nested)
                 // NB this makes the (valid) assumption that graphics initializes before input
                 auto platform = mi::input_platform_from_graphics_module(
-                    *the_graphics_platform(), *options, emergency_cleanup, device_registry, input_report);
+                    *the_graphics_platform(),
+                    *options,
+                    emergency_cleanup,
+                    device_registry,
+                    the_console_services(),
+                    input_report);
 
                 // otherwise (usually) we probe for it
                 if (!platform)
                 {
-                    platform = probe_input_platforms(*options, emergency_cleanup, device_registry,
-                                                     input_report, *the_shared_library_prober_report());
+                    platform = probe_input_platforms(
+                        *options,
+                        emergency_cleanup,
+                        device_registry,
+                        the_console_services(),
+                        input_report,
+                        *the_shared_library_prober_report());
                 }
 
                 return std::make_shared<mi::DefaultInputManager>(the_input_reading_multiplexer(), std::move(platform));
