@@ -834,7 +834,7 @@ TEST_F(LinuxVirtualTerminalTest, calls_set_master_on_drm_node)
     EXPECT_THAT(device_fd, Eq(fake_device_fd));
 }
 
-TEST_F(LinuxVirtualTerminalTest, acquire_device_returns_exceptionаl_future_on_set_master_failure)
+TEST_F(LinuxVirtualTerminalTest, acquire_device_returns_exceptional_future_on_set_master_failure)
 {
     using namespace testing;
 

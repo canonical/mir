@@ -21,6 +21,8 @@
 #include <boost/current_function.hpp>
 #include <boost/exception/info.hpp>
 #include <fcntl.h>
+#include <sys/sysmacros.h>
+#include <gio/gunixfdlist.h>
 
 #include "logind_console_services.h"
 
@@ -227,6 +229,31 @@ mir::LogindConsoleServices::LogindConsoleServices()
         "notify::state",
         G_CALLBACK(&LogindConsoleServices::on_state_change),
         this);
+    g_signal_connect(
+        G_OBJECT(session_proxy.get()),
+        "pause-device",
+        G_CALLBACK(&LogindConsoleServices::on_pause_device),
+        this);
+
+#ifdef MIR_GDBUS_SIGNALS_SUPPORT_FDS
+    g_signal_connect(
+        G_OBJECT(session_proxy.get()),
+        "resume-device",
+        G_CALLBACK(&LogindConsoleServices::on_resume_device),
+        this);
+#else
+    /*
+     * GDBus does not handle file descriptors in signals!
+     *
+     * We need to use a manual filter to slurp up the incoming Signal messages,
+     * check if they're for ResumeDevice, and process them directly if so.
+     */
+    g_dbus_connection_add_filter(
+        connection.get(),
+        &LogindConsoleServices::resume_device_dbus_filter,
+        this,
+        nullptr);
+#endif
 }
 
 void mir::LogindConsoleServices::register_switch_handlers(
@@ -243,32 +270,37 @@ void mir::LogindConsoleServices::restore()
     logind_session_call_release_control_sync(session_proxy.get(), nullptr, nullptr);
 }
 
-namespace
-{
-class LogindDevice : public mir::Device
+class mir::LogindConsoleServices::Device : public mir::Device
 {
 public:
-    LogindDevice(
+    Device(
         Device::OnDeviceActivated on_activated,
         Device::OnDeviceSuspended on_suspended,
-        Device::OnDeviceRemoved on_removed)
+        Device::OnDeviceRemoved on_removed,
+        std::function<void(Device const*)> on_destroy)
         : on_activated{std::move(on_activated)},
           on_suspended{std::move(on_suspended)},
-          on_removed{std::move(on_removed)}
+          on_removed{std::move(on_removed)},
+          on_destroy{std::move(on_destroy)}
     {
     }
 
-    void emit_activated(mir::Fd&& device_fd)
+    ~Device() noexcept
+    {
+        on_destroy(this);
+    }
+
+    void emit_activated(mir::Fd&& device_fd) const
     {
         on_activated(std::move(device_fd));
     }
 
-    void emit_suspended()
+    void emit_suspended() const
     {
         on_suspended();
     }
 
-    void emit_removed()
+    void emit_removed() const
     {
         on_removed();
     }
@@ -276,11 +308,14 @@ private:
     Device::OnDeviceActivated const on_activated;
     Device::OnDeviceSuspended const on_suspended;
     Device::OnDeviceRemoved const on_removed;
+    std::function<void(Device const*)> const on_destroy;
 };
 
+namespace
+{
 struct TakeDeviceContext
 {
-    std::unique_ptr<LogindDevice> device;
+    std::unique_ptr<mir::LogindConsoleServices::Device> device;
     std::promise<std::unique_ptr<mir::Device>> promise;
 };
 
@@ -368,10 +403,25 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
     Device::OnDeviceRemoved const& on_removed)
 {
     auto context = std::make_unique<TakeDeviceContext>();
-    context->device = std::make_unique<LogindDevice>(
+    context->device = std::make_unique<Device>(
         on_activated,
         on_suspended,
-        on_removed);
+        on_removed,
+        [this, devnum = makedev(major, minor)](Device const* destroying)
+        {
+            auto const it = acquired_devices.find(devnum);
+            // Device could have been removed from the map by a PauseDevice("gone") signal
+            if (it != acquired_devices.end())
+            {
+                // It could have been removed and then re-added by a subsequent acquire_device…
+                if (it->second == destroying)
+                {
+                    acquired_devices.erase(it);
+                }
+            }
+        });
+    acquired_devices.insert(std::make_pair(makedev(major, minor), context->device.get()));
+
     auto future = context->promise.get_future();
 
     logind_session_call_take_device(
@@ -387,7 +437,7 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
 void mir::LogindConsoleServices::on_state_change(
     GObject* session_proxy,
     GParamSpec*,
-    gpointer ctx)
+    gpointer ctx) noexcept
 {
     // No threadsafety concerns, as this is only ever called from the glib mainloop.
     auto me = static_cast<LogindConsoleServices*>(ctx);
@@ -412,3 +462,103 @@ void mir::LogindConsoleServices::on_state_change(
         me->active = false;
     }
 }
+
+void mir::LogindConsoleServices::on_pause_device(
+    LogindSession*,
+    unsigned major, unsigned minor,
+    gchar const*,
+    gpointer ctx) noexcept
+{
+    // No threadsafety concerns, as this is only ever called from the glib mainloop.
+    auto me = static_cast<LogindConsoleServices*>(ctx);
+
+    auto const it = me->acquired_devices.find(makedev(major, minor));
+    if (it != me->acquired_devices.end())
+    {
+        it->second->emit_suspended();
+    }
+}
+
+#ifdef MIR_GDBUS_SIGNALS_SUPPORT_FDS
+void mir::LogindConsoleServices::on_resume_device(
+    LogindSession*,
+    unsigned major, unsigned minor,
+    GVariant* fd,
+    gpointer ctx) noexcept
+{
+    // No threadsafety concerns, as this is only ever called from the glib mainloop.
+    auto me = static_cast<LogindConsoleServices*>(ctx);
+
+    auto const it = me->acquired_devices.find(makedev(major, minor));
+    if (it != me->acquired_devices.end())
+    {
+        it->second->emit_activated(mir::Fd{g_variant_get_handle(fd)});
+    }
+}
+#else
+GDBusMessage* mir::LogindConsoleServices::resume_device_dbus_filter(
+    GDBusConnection* /*connection*/,
+    GDBusMessage* message,
+    gboolean incoming,
+    gpointer ctx) noexcept
+{
+    // If this isn't an incoming message it's definitely not a ResumeDevice signal…
+    if (!incoming)
+        return message;
+
+    // …if this isn't a signal, then it's not a ResumeDevice signal…
+    if (g_dbus_message_get_message_type(message) != G_DBUS_MESSAGE_TYPE_SIGNAL)
+        return message;
+
+    // …if it's a signal, but it's not ResumeDevice, we don't need to process it.
+    if (strncmp(g_dbus_message_get_member(message), "ResumeDevice", strlen("ResumeDevice")) != 0)
+        return message;
+
+    // We've definitely got a ResumeDevice signal! Now to extract the parameters, and
+    // hook up the fd.
+
+    auto body = g_dbus_message_get_body(message);
+
+    unsigned major, minor;
+    int handle_index;
+
+    g_variant_get(
+        body,
+        "(uuh)",
+        &major,
+        &minor,
+        &handle_index);
+
+    int num_fds;
+    std::unique_ptr<gint[], std::function<void(gint*)>> fd_list{
+        g_unix_fd_list_steal_fds(g_dbus_message_get_unix_fd_list(message), &num_fds),
+        [&num_fds](gint* fd_list)
+        {
+            // First close any open fds…
+            for (int i = 0; i < num_fds; ++i)
+            {
+                if (fd_list[i] != -1)
+                {
+                    ::close(fd_list[i]);
+                }
+            }
+            // …then free the list itself.
+            g_free(fd_list);
+        }};
+
+    // No threadsafety concerns, as this is only ever called from the glib mainloop.
+    auto me = static_cast<LogindConsoleServices*>(ctx);
+
+    auto const it = me->acquired_devices.find(makedev(major, minor));
+    if (it != me->acquired_devices.end())
+    {
+        it->second->emit_activated(mir::Fd{fd_list[handle_index]});
+        // Don't close the file descriptor we've just handed out.
+        fd_list[handle_index] = -1;
+    }
+
+    // We don't need to further process this message.
+    g_object_unref(message);
+    return nullptr;
+}
+#endif
