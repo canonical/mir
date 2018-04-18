@@ -113,7 +113,7 @@ std::experimental::optional<std::pair<geom::Point, mf::WlSurface*>> mf::WlSurfac
         if (result)
             return result;
     }
-    for (auto& rect : input_shape.value_or(std::vector<geom::Rectangle>{{{}, buffer_size_}}))
+    for (auto& rect : input_shape.value_or(std::vector<geom::Rectangle>{{{}, buffer_size()}}))
     {
         if (rect.contains(point))
             return std::make_pair(point, this);

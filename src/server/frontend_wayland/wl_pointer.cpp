@@ -66,7 +66,7 @@ mf::WlPointer::WlPointer(
 mf::WlPointer::~WlPointer()
 {
     if (focused_surface)
-        focused_surface->remove_destroy_listener(this);
+        focused_surface.value()->remove_destroy_listener(this);
     on_destroy(this);
 }
 
@@ -141,7 +141,7 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
                                         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
             auto transformed = surface->transform_point(point);
 
-            if (transformed && transformed.value().second == focused_surface)
+            if (transformed && focused_surface && transformed.value().second == focused_surface.value())
             {
                 if (!last_position || transformed.value().first != last_position.value())
                 {
@@ -208,24 +208,24 @@ void mf::WlPointer::handle_enter(Point position, WlSurface* surface)
         surface->raw_resource(),
         wl_fixed_from_double(position.x.as_int()),
         wl_fixed_from_double(position.y.as_int()));
-    focused_surface = surface;
-    focused_surface->add_destroy_listener(this, [this]()
+    surface->add_destroy_listener(this, [this]()
         {
             handle_leave();
         });
+    focused_surface = surface;
 }
 
 void mf::WlPointer::handle_leave()
 {
     if (!focused_surface)
         return;
-    focused_surface->remove_destroy_listener(this);
+    focused_surface.value()->remove_destroy_listener(this);
     auto const serial = wl_display_next_serial(display);
     wl_pointer_send_leave(
         resource,
         serial,
-        focused_surface->raw_resource());
-    focused_surface = nullptr;
+        focused_surface.value()->raw_resource());
+    focused_surface = std::experimental::nullopt;
     last_position = std::experimental::nullopt;
 }
 

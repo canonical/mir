@@ -59,7 +59,7 @@ private:
 
     MirPointerButtons last_buttons{0};
     std::experimental::optional<mir::geometry::Point> last_position;
-    WlSurface* focused_surface = nullptr;
+    std::experimental::optional<WlSurface*> focused_surface;
 
     void handle_enter(mir::geometry::Point position, WlSurface* surface);
     void handle_leave();
