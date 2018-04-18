@@ -118,6 +118,10 @@ void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surfac
 void ms::LegacySceneChangeNotification::surface_added(ms::Surface* surface)
 {
     add_surface_observer(surface);
+
+    // If the surface already has content we need to (re)composite
+    if (!buffer_notify_change && surface->visible())
+        scene_notify_change();
 }
 
 void ms::LegacySceneChangeNotification::surface_exists(ms::Surface* surface)
