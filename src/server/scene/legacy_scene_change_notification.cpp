@@ -110,10 +110,6 @@ void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surfac
         auto observer = std::make_shared<NonLegacySurfaceChangeNotification>(notifier, damage_notify_change, surface);
         surface->add_observer(observer);
 
-        // If the surface already has content we need to (re)composite
-        if (surface->visible())
-            scene_notify_change();
-
         std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
         surface_observers[surface] = observer;
     }
@@ -122,6 +118,10 @@ void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surfac
 void ms::LegacySceneChangeNotification::surface_added(ms::Surface* surface)
 {
     add_surface_observer(surface);
+
+    // If the surface already has content we need to (re)composite
+    if (!buffer_notify_change && surface->visible())
+        scene_notify_change();
 }
 
 void ms::LegacySceneChangeNotification::surface_exists(ms::Surface* surface)
