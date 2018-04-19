@@ -237,9 +237,9 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
 
 void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    geom::Displacement const buffer_offset{-x, -y};
+    geom::Displacement const offset{-x, -y};
 
-    surface->set_buffer_offset(buffer_offset);
+    surface->set_pending_offset(offset);
     window_size_ = geom::Size{width, height};
 
     if (surface_id().as_value())

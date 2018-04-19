@@ -62,20 +62,22 @@ struct WlSurfaceState
     // if you add variables, don't forget to update this
     void update_from(WlSurfaceState const& source);
 
-    void invalidate_child_buffers() { child_buffers_changed = true; }
+    void invalidate_surface_data() { surface_data_invalidated = true; }
 
-    bool buffer_list_needs_refresh() const;
+    bool surface_data_needs_refresh() const;
 
     // NOTE: buffer can be both nullopt and nullptr (I know, sounds dumb, but bare with me)
     // if it's nullopt, there is not a new buffer and no value should be copied to current state
     // if it's nullptr, there is a new buffer and it is a null buffer, which should replace the current buffer
     std::experimental::optional<wl_resource*> buffer;
 
-    std::experimental::optional<geometry::Displacement> buffer_offset;
+    std::experimental::optional<geometry::Displacement> offset;
     std::vector<Callback> frame_callbacks;
 
 private:
-    bool child_buffers_changed{false};
+    // only set to true if invalidate_surface_data() is called
+    // surface_data_needs_refresh() returns true if this is true, or if other things are changed which mandate a refresh
+    bool surface_data_invalidated{false};
 };
 
 class NullWlSurfaceRole : public WlSurfaceRole
@@ -83,7 +85,7 @@ class NullWlSurfaceRole : public WlSurfaceRole
 public:
     NullWlSurfaceRole(WlSurface* surface);
     SurfaceId surface_id() const override;
-    void invalidate_buffer_list() override;
+    void refresh_surface_data_now() override;
     void commit(WlSurfaceState const& state) override;
     void visiblity(bool /*visible*/) override;
     void destroy() override;
@@ -105,7 +107,7 @@ public:
     ~WlSurface();
 
     std::shared_ptr<bool> destroyed_flag() const { return destroyed; }
-    geometry::Displacement buffer_offset() const { return buffer_offset_; }
+    geometry::Displacement offset() const { return offset_; }
     geometry::Size buffer_size() const { return buffer_size_; }
     bool synchronized() const;
     std::pair<geometry::Point, wl_resource*> transform_point(geometry::Point point) const;
@@ -114,12 +116,12 @@ public:
 
     void set_role(WlSurfaceRole* role_);
     void clear_role();
-    void set_buffer_offset(geometry::Displacement const& offset) { pending.buffer_offset = offset; }
+    void set_pending_offset(geometry::Displacement const& offset) { pending.offset = offset; }
     std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> add_child(WlSubsurface* child);
-    void invalidate_buffer_list();
-    void invalidate_child_buffers() { pending.invalidate_child_buffers(); }
-    void populate_buffer_list(std::vector<shell::StreamSpecification>& buffers,
-                              geometry::Displacement const& parent_offset) const;
+    void refresh_surface_data_now();
+    void pending_invalidate_surface_data() { pending.invalidate_surface_data(); }
+    void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
+                               geometry::Displacement const& parent_offset) const;
     void commit(WlSurfaceState const& state);
 
     std::shared_ptr<mir::frontend::Session> const session;
@@ -137,7 +139,7 @@ private:
     std::vector<WlSubsurface*> children;
 
     WlSurfaceState pending;
-    geometry::Displacement buffer_offset_;
+    geometry::Displacement offset_;
     geometry::Size buffer_size_;
     std::shared_ptr<std::vector<WlSurfaceState::Callback>> const pending_frames;
     std::shared_ptr<bool> const destroyed;

@@ -55,7 +55,7 @@ class WlSurfaceRole
 public:
     virtual bool synchronized() const { return false; }
     virtual SurfaceId surface_id() const = 0;
-    virtual void invalidate_buffer_list() = 0;
+    virtual void refresh_surface_data_now() = 0;
     virtual void commit(WlSurfaceState const& state) = 0;
     virtual void visiblity(bool visible) = 0;
     virtual void destroy() = 0;
@@ -72,7 +72,7 @@ public:
 
     SurfaceId surface_id() const override { return surface_id_; };
 
-    void invalidate_buffer_list() override;
+    void refresh_surface_data_now() override;
 
     void set_maximized();
     void unset_maximized();
