@@ -75,13 +75,9 @@ public:
     void invalidate_buffer_list() override;
 
     void set_maximized();
-
     void unset_maximized();
-
     void set_fullscreen(std::experimental::optional<wl_resource*> const& output);
-
     void unset_fullscreen();
-
     void set_minimized();
 
     void set_state_now(MirWindowState state);
@@ -105,7 +101,6 @@ protected:
 private:
     SurfaceId surface_id_;
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
-    bool buffer_list_needs_refresh = true;
 
     void visiblity(bool visible) override;
 

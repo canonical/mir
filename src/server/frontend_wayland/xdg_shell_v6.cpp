@@ -246,7 +246,6 @@ void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, 
     {
         spec().width = geom::Width{width};
         spec().height = geom::Height{height};
-        invalidate_buffer_list();
     }
 }
 

@@ -119,7 +119,10 @@ WlAbstractMirWindow::~WlAbstractMirWindow()
 
 void WlAbstractMirWindow::invalidate_buffer_list()
 {
-    buffer_list_needs_refresh = true;
+    shell::SurfaceSpecification buffer_list_spec;
+    buffer_list_spec.streams = std::vector<shell::StreamSpecification>();
+    surface->populate_buffer_list(buffer_list_spec.streams.value(), {});
+    shell->modify_surface(get_session(client), surface_id_, buffer_list_spec);
 }
 
 shell::SurfaceSpecification& WlAbstractMirWindow::spec()
@@ -149,12 +152,11 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
             new_size_spec.height = window_size().height;
         }
 
-        if (buffer_list_needs_refresh)
+        if (state.buffer_list_needs_refresh())
         {
             auto& buffer_list_spec = spec();
             buffer_list_spec.streams = std::vector<shell::StreamSpecification>();
             surface->populate_buffer_list(buffer_list_spec.streams.value(), {});
-            buffer_list_needs_refresh = false;
         }
 
         if (pending_changes)
@@ -178,7 +180,6 @@ void WlAbstractMirWindow::create_mir_window()
 
     params->streams = std::vector<shell::StreamSpecification>{};
     surface->populate_buffer_list(params->streams.value(), {});
-    buffer_list_needs_refresh = false;
 
     surface_id_ = shell->create_surface(session, *params, sink);
 

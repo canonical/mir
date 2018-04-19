@@ -60,7 +60,6 @@ public:
                               geometry::Displacement const& parent_offset) const;
 
     bool synchronized() const override;
-
     SurfaceId surface_id() const override;
 
     void parent_has_committed();

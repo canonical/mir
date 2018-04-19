@@ -47,6 +47,15 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
     frame_callbacks.insert(end(frame_callbacks),
                            begin(source.frame_callbacks),
                            end(source.frame_callbacks));
+
+    if (source.child_buffers_changed)
+        child_buffers_changed = true;
+}
+
+bool mf::WlSurfaceState::buffer_list_needs_refresh() const
+{
+    return buffer_offset ||
+           child_buffers_changed;
 }
 
 mf::WlSurface::WlSurface(
