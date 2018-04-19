@@ -128,6 +128,31 @@ private:
     bool timed_out;
 };
 
+enum class DeviceState
+{
+    Active,
+    Suspended,
+    Gone
+};
+
+// Define operator<< so we get more readable GTest failures
+std::ostream& operator<<(std::ostream& out, DeviceState const& state)
+{
+    switch (state)
+    {
+    case DeviceState::Active:
+        out << "Active";
+        break;
+    case DeviceState::Suspended:
+        out << "Suspended";
+        break;
+    case DeviceState::Gone:
+        out << "Gone";
+        break;
+    }
+    return out;
+}
+
 }
 
 class LogindConsoleServices : public testing::Test
@@ -413,9 +438,28 @@ public:
         }
     }
 
-    void emit_device_suspended(char const* session_path, int major, int minor)
+    enum class SuspendType
+    {
+        Paused,
+        Gone
+    };
+
+    void emit_device_suspended(char const* session_path, int major, int minor, SuspendType type)
     {
         std::unique_ptr<GVariant, decltype(&g_variant_unref)> result{nullptr, &g_variant_unref};
+
+        auto const suspend_type_str =
+            [type]()
+            {
+                switch (type)
+                {
+                    case SuspendType::Paused:
+                        return "pause";
+                    case SuspendType::Gone:
+                        return "gone";
+                }
+                BOOST_THROW_EXCEPTION((std::logic_error{"GCC doesn't accept that the above switch is exhaustive"}));
+            }();
 
         GError* error{nullptr};
         result.reset(
@@ -434,7 +478,7 @@ public:
                         "(uus)",
                         major,
                         minor,
-                        "pause")),
+                        suspend_type_str)),
                 nullptr,
                 G_DBUS_CALL_FLAGS_NONE,
                 1000,
@@ -647,11 +691,7 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
 
     mir::LogindConsoleServices services;
 
-    enum class DeviceState
-    {
-        Active,
-        Suspended
-    } state;
+    DeviceState state;
 
     mir::Fd received_fd;
     auto device = services.acquire_device(
@@ -705,11 +745,7 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
 
     mir::LogindConsoleServices services;
 
-    enum class DeviceState
-    {
-        Active,
-        Suspended
-    } state;
+    DeviceState state;
 
     auto device = services.acquire_device(
         22, 33,
@@ -731,7 +767,7 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
     ASSERT_THAT(state, Eq(DeviceState::Active));
     auto handle = device.get();
 
-    emit_device_suspended(session_path.c_str(), 22, 33);
+    emit_device_suspended(session_path.c_str(), 22, 33, SuspendType::Paused);
 
     GLibTimeout timeout{10s};
     while (state != DeviceState::Suspended && !timeout)
@@ -739,6 +775,52 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
         g_main_context_iteration(g_main_context_default(), true);
     }
     EXPECT_THAT(state, Eq(DeviceState::Suspended));
+}
+
+TEST_F(LogindConsoleServices, device_removed_callback_called_on_remove)
+{
+    ensure_mock_logind();
+
+    auto session_path = add_any_active_session();
+    add_take_device_to_session(
+        session_path.c_str(),
+        "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
+
+    mir::LogindConsoleServices services;
+
+    DeviceState state;
+
+    auto device = services.acquire_device(
+        22, 33,
+        [&state](mir::Fd&&)
+        {
+            // We don't actually care about the fd.
+            state = DeviceState::Active;
+        },
+        [&state]()
+        {
+            state = DeviceState::Suspended;
+        },
+        [&state]()
+        {
+            state = DeviceState::Gone;
+        });
+    while (device.wait_for(0ms) == std::future_status::timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+    ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
+    ASSERT_THAT(state, Eq(DeviceState::Active));
+    auto handle = device.get();
+
+    emit_device_suspended(session_path.c_str(), 22, 33, SuspendType::Gone);
+
+    GLibTimeout timeout{10s};
+    while (state != DeviceState::Gone && !timeout)
+    {
+        g_main_context_iteration(g_main_context_default(), true);
+    }
+    EXPECT_THAT(state, Eq(DeviceState::Gone));
 }
 
 TEST_F(LogindConsoleServices, calls_pause_handler_on_pause)
