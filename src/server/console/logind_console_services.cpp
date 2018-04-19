@@ -466,7 +466,7 @@ void mir::LogindConsoleServices::on_state_change(
 void mir::LogindConsoleServices::on_pause_device(
     LogindSession*,
     unsigned major, unsigned minor,
-    gchar const*,
+    gchar const* suspend_type,
     gpointer ctx) noexcept
 {
     // No threadsafety concerns, as this is only ever called from the glib mainloop.
@@ -475,7 +475,21 @@ void mir::LogindConsoleServices::on_pause_device(
     auto const it = me->acquired_devices.find(makedev(major, minor));
     if (it != me->acquired_devices.end())
     {
-        it->second->emit_suspended();
+        using namespace std::literals::string_literals;
+        if ("pause"s == suspend_type)
+        {
+            it->second->emit_suspended();
+        }
+        else if ("gone"s == suspend_type)
+        {
+            it->second->emit_removed();
+            // The device is gone; logind promises not to send further events for it
+            me->acquired_devices.erase(it);
+        }
+        else
+        {
+            mir::log_warning("Received unhandled PauseDevice type: %s", suspend_type);
+        }
     }
 }
 
