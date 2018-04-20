@@ -113,7 +113,7 @@ public:
 
     std::shared_ptr<bool> destroyed_flag() const { return destroyed; }
     geometry::Displacement offset() const { return offset_; }
-    geometry::Size buffer_size() const { return buffer_size_; }
+    geometry::Size buffer_size() const { return buffer_size_.value_or(geometry::Size{}); }
     bool synchronized() const;
     std::pair<geometry::Point, wl_resource*> transform_point(geometry::Point point) const;
     wl_resource* raw_resource() { return resource; }
@@ -146,7 +146,7 @@ private:
 
     WlSurfaceState pending;
     geometry::Displacement offset_;
-    geometry::Size buffer_size_;
+    std::experimental::optional<geometry::Size> buffer_size_;
     std::vector<WlSurfaceState::Callback> frame_callbacks;
     std::experimental::optional<std::vector<mir::geometry::Rectangle>> input_shape;
     std::shared_ptr<bool> const destroyed;

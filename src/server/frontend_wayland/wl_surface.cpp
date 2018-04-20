@@ -143,21 +143,32 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
                                           geometry::Displacement const& parent_offset) const
 {
     geometry::Displacement offset = parent_offset + offset_;
+
     buffer_streams.push_back({stream_id, offset, {}});
-    geom::Rectangle surface_rect = {geom::Point{} + offset, buffer_size_};
-    if (input_shape)
+
+    if (buffer_size_)
     {
-        for (auto rect : input_shape.value())
+        geom::Rectangle surface_rect = {geom::Point{} + offset, buffer_size_.value()};
+        if (input_shape)
         {
-            rect.top_left = rect.top_left + offset;
-            rect = rect.intersection_with(surface_rect); // clip to surface
-            input_shape_accumulator.push_back(rect);
+            for (auto rect : input_shape.value())
+            {
+                rect.top_left = rect.top_left + offset;
+                rect = rect.intersection_with(surface_rect); // clip to surface
+                input_shape_accumulator.push_back(rect);
+            }
+        }
+        else
+        {
+            input_shape_accumulator.push_back(surface_rect);
         }
     }
     else
     {
-        input_shape_accumulator.push_back(surface_rect);
+        // swing by next time and see if we have a buffer size then
+        pending.surface_data_needs_refresh();
     }
+
     for (WlSubsurface* subsurface : children)
     {
         subsurface->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
@@ -265,6 +276,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         if (buffer == nullptr)
         {
             // TODO: unmap surface, and unmap all subsurfaces
+            buffer_size_ = std::experimental::nullopt;
             send_frame_callbacks();
         }
         else
@@ -314,7 +326,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
              * TODO: Provide a mg::Buffer::logical_size() to do this properly.
              */
             buffer_size_ = mir_buffer->size();
-            stream->resize(buffer_size_);
+            stream->resize(buffer_size_.value());
             stream->submit_buffer(mir_buffer);
         }
     }
@@ -331,8 +343,10 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
 void mf::WlSurface::commit()
 {
-    role->commit(pending);
+    // order is important
+    auto const state = std::move(pending);
     pending = WlSurfaceState();
+    role->commit(state);
 }
 
 void mf::WlSurface::set_buffer_transform(int32_t transform)
