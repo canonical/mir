@@ -204,10 +204,11 @@ mir::LogindConsoleServices::LogindConsoleServices()
       seat_proxy{
         simple_seat_proxy_on_system_bus(connection.get(), "/org/freedesktop/login1/seat/seat0"),
         &g_object_unref},
+      session_path{object_path_for_current_session(seat_proxy.get())},
       session_proxy{
         simple_proxy_on_system_bus(
             connection.get(),
-            object_path_for_current_session(seat_proxy.get()).c_str()),
+            session_path.c_str()),
         &g_object_unref},
       switch_away{[](){ return true; }},
       switch_to{[](){ return true; }},
@@ -326,23 +327,24 @@ struct TakeDeviceContext
     ::boost::throw_line((int)__LINE__))
 
 void complete_take_device_call(
-    GObject* proxy,
+    GObject* connection,
     GAsyncResult* result,
-    gpointer ctx)
+    gpointer ctx) noexcept
 {
     std::unique_ptr<TakeDeviceContext> const context{
         static_cast<TakeDeviceContext*>(ctx)};
 
     GErrorPtr error;
-    GVariant* fd_holder;
-    gboolean inactive;
+    GUnixFDList* fd_list;
 
-    if (!logind_session_call_take_device_finish(
-        LOGIND_SESSION(proxy),
-        &fd_holder,
-        &inactive,
-        result,
-        &error))
+    std::unique_ptr<GVariant, decltype(&g_variant_unref)> dbus_result{
+        g_dbus_connection_call_with_unix_fd_list_finish(
+            G_DBUS_CONNECTION(connection),
+            &fd_list,
+            result,
+            &error),
+        &g_variant_unref};
+    if (!dbus_result)
     {
         std::string error_msg = error ? error->message : "unknown error";
         context->promise.set_exception(
@@ -352,35 +354,45 @@ void complete_take_device_call(
         return;
     }
 
-    errno = 0;
-    auto fd = mir::Fd{fcntl(g_variant_get_handle(fd_holder), F_DUPFD_CLOEXEC, 0)};
+    int num_fds;
+    std::unique_ptr<gint[], std::function<void(gint*)>> fds{
+        g_unix_fd_list_steal_fds(fd_list, &num_fds),
+        [&num_fds](gint* fd_list)
+        {
+            // First close any open fds…
+            for (int i = 0; i < num_fds; ++i)
+            {
+                if (fd_list[i] != -1)
+                {
+                    ::close(fd_list[i]);
+                }
+            }
+            // …then free the list itself.
+            g_free(fd_list);
+        }};
+    g_object_unref(fd_list);
 
-    g_variant_unref(fd_holder);
+    bool inactive;
+    int fd_index;
+
+    g_variant_get(dbus_result.get(), "(hb)", &fd_index, &inactive);
+
+    mir::Fd fd{fds[fd_index]};
+    // We don't want our FD to be closed by the fds destructor
+    fds[fd_index] = -1;
 
     if (fd == mir::Fd::invalid)
     {
-        if (errno != 0)
-        {
-            context->promise.set_exception(
-                MIR_MAKE_EXCEPTION_PTR((
-                    std::system_error{
-                        errno,
-                        std::system_category(),
-                        "Failed to dup logind file descriptor"})));
-        }
-        else
-        {
-            /*
-             * I don't believe we can get here - the proxy checks that the DBus return value
-             * has type (fd, boolean), and gdbus will error if it can't read the fd out of the
-             * auxiliary channel.
-             *
-             * Better safe than sorry, though
-             */
-            context->promise.set_exception(
-                MIR_MAKE_EXCEPTION_PTR((
-                    std::runtime_error{"TakeDevice call returned invalid FD"})));
-        }
+        /*
+         * I don't believe we can get here - the proxy checks that the DBus return value
+         * has type (fd, boolean), and gdbus will error if it can't read the fd out of the
+         * auxiliary channel.
+         *
+         * Better safe than sorry, though
+         */
+        context->promise.set_exception(
+            MIR_MAKE_EXCEPTION_PTR((
+                std::runtime_error{"TakeDevice call returned invalid FD"})));
         return;
     }
 
@@ -424,9 +436,24 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
 
     auto future = context->promise.get_future();
 
-    logind_session_call_take_device(
-        session_proxy.get(),
-        major, minor,
+    std::unique_ptr<GVariantType, decltype(&g_variant_type_free)> return_type{
+        g_variant_type_new("(hb)"),
+        &g_variant_type_free};
+
+    g_dbus_connection_call_with_unix_fd_list(
+        connection.get(),
+        "org.freedesktop.login1",
+        session_path.c_str(),
+        "org.freedesktop.login1.Session",
+        "TakeDevice",
+        g_variant_new(
+            "(uu)",
+            major,
+            minor),
+        return_type.get(),
+        G_DBUS_CALL_FLAGS_NO_AUTO_START,
+        G_MAXINT,
+        nullptr,
         nullptr,
         &complete_take_device_call,
         context.release());
