@@ -66,7 +66,7 @@ struct WlSurfaceState
     // if you add variables, don't forget to update this
     void update_from(WlSurfaceState const& source);
 
-    void invalidate_surface_data() { surface_data_invalidated = true; }
+    void invalidate_surface_data() const { surface_data_invalidated = true; }
 
     bool surface_data_needs_refresh() const;
 
@@ -82,7 +82,9 @@ struct WlSurfaceState
 private:
     // only set to true if invalidate_surface_data() is called
     // surface_data_needs_refresh() returns true if this is true, or if other things are changed which mandate a refresh
-    bool surface_data_invalidated{false};
+    // is marked mutable so invalidate_surface_data() can be const and be called from a const reference
+    // (this is the only thing we need to modify from the const reference)
+    bool mutable surface_data_invalidated{false};
 };
 
 class NullWlSurfaceRole : public WlSurfaceRole

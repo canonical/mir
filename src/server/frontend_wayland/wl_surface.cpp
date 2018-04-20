@@ -145,28 +145,19 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
     geometry::Displacement offset = parent_offset + offset_;
 
     buffer_streams.push_back({stream_id, offset, {}});
-
-    if (buffer_size_)
+    geom::Rectangle surface_rect = {geom::Point{} + offset, buffer_size_.value_or(geom::Size{})};
+    if (input_shape)
     {
-        geom::Rectangle surface_rect = {geom::Point{} + offset, buffer_size_.value()};
-        if (input_shape)
+        for (auto rect : input_shape.value())
         {
-            for (auto rect : input_shape.value())
-            {
-                rect.top_left = rect.top_left + offset;
-                rect = rect.intersection_with(surface_rect); // clip to surface
-                input_shape_accumulator.push_back(rect);
-            }
-        }
-        else
-        {
-            input_shape_accumulator.push_back(surface_rect);
+            rect.top_left = rect.top_left + offset;
+            rect = rect.intersection_with(surface_rect); // clip to surface
+            input_shape_accumulator.push_back(rect);
         }
     }
     else
     {
-        // swing by next time and see if we have a buffer size then
-        pending.surface_data_needs_refresh();
+        input_shape_accumulator.push_back(surface_rect);
     }
 
     for (WlSubsurface* subsurface : children)
@@ -325,6 +316,10 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
              *
              * TODO: Provide a mg::Buffer::logical_size() to do this properly.
              */
+            if (!input_shape && (!buffer_size_ || mir_buffer->size() != buffer_size_.value()))
+            {
+                state.invalidate_surface_data(); // input shape needs to be recalculated for the new size
+            }
             buffer_size_ = mir_buffer->size();
             stream->resize(buffer_size_.value());
             stream->submit_buffer(mir_buffer);
