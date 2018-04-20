@@ -72,6 +72,7 @@ private:
 
     std::unique_ptr<GDBusConnection, decltype(&g_object_unref)> const connection;
     std::unique_ptr<LogindSeat, decltype(&g_object_unref)> const seat_proxy;
+    std::string const session_path;
     std::unique_ptr<LogindSession, decltype(&g_object_unref)> const session_proxy;
     std::function<bool()> switch_away;
     std::function<bool()> switch_to;
