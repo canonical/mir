@@ -72,7 +72,6 @@ mf::WlSurface::WlSurface(
         executor{executor},
         null_role{this},
         role{&null_role},
-        pending_frames{std::make_shared<std::vector<WlSurfaceState::Callback>>()},
         destroyed{std::make_shared<bool>(false)}
 {
     // wl_surface is specified to act in mailbox mode
@@ -151,6 +150,20 @@ mf::WlSurface* mf::WlSurface::from(wl_resource* resource)
     return static_cast<WlSurface*>(static_cast<wayland::Surface*>(raw_surface));
 }
 
+void mf::WlSurface::send_frame_callbacks()
+{
+    for (auto const& frame : frame_callbacks)
+    {
+        if (!*frame.destroyed)
+        {
+            // TODO: argument should be a timestamp
+            wl_callback_send_done(frame.resource, 0);
+            wl_resource_destroy(frame.resource);
+        }
+    }
+    frame_callbacks.clear();
+}
+
 void mf::WlSurface::destroy()
 {
     *destroyed = true;
@@ -206,8 +219,10 @@ void mf::WlSurface::set_input_region(std::experimental::optional<wl_resource*> c
 
 void mf::WlSurface::commit(WlSurfaceState const& state)
 {
-    // We're going to lose the value of state, so copy the frame_callbacks first
-    pending_frames->insert(end(*pending_frames), begin(state.frame_callbacks), end(state.frame_callbacks));
+    // We're going to lose the value of state, so copy the frame_callbacks first. We have to maintain a list of
+    // callbacks in wl_surface because if a client commits multiple times before the first buffer is handled, all the
+    // callbacks should be sent at once.
+    frame_callbacks.insert(end(frame_callbacks), begin(state.frame_callbacks), end(state.frame_callbacks));
 
     if (state.offset)
         offset_ = state.offset.value();
@@ -219,26 +234,19 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         if (buffer == nullptr)
         {
             // TODO: unmap surface, and unmap all subsurfaces
+            send_frame_callbacks();
         }
         else
         {
-            auto send_frame_notifications =
-                [executor = executor, frames = pending_frames, destroyed = destroyed]() mutable
-                    {
-                        executor->spawn(
-                            [frames]()
-                                {
-                                    for (auto const& frame : *frames)
-                                    {
-                                        if (!*frame.destroyed)
-                                        {
-                                            wl_callback_send_done(frame.resource, 0);
-                                            wl_resource_destroy(frame.resource);
-                                        }
-                                    }
-                                    frames->clear();
-                                });
-                    };
+            auto const executor_send_frame_callbacks = [this, executor = executor, destroyed = destroyed]()
+                {
+                    executor->spawn(run_unless(
+                        destroyed,
+                        [this]()
+                        {
+                            send_frame_callbacks();
+                        }));
+                };
 
             std::shared_ptr<graphics::Buffer> mir_buffer;
 
@@ -246,7 +254,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             {
                 mir_buffer = WlShmBuffer::mir_buffer_from_wl_buffer(
                     buffer,
-                    std::move(send_frame_notifications));
+                    std::move(executor_send_frame_callbacks));
             }
             else
             {
@@ -261,7 +269,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
                 mir_buffer = allocator->buffer_from_resource(
                     buffer,
-                    std::move(send_frame_notifications),
+                    std::move(executor_send_frame_callbacks),
                     std::move(release_buffer));
             }
 
@@ -279,6 +287,10 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             stream->submit_buffer(mir_buffer);
         }
     }
+    else
+    {
+        send_frame_callbacks();
+    }
 
     for (WlSubsurface* child: children)
     {
@@ -288,7 +300,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
 void mf::WlSurface::commit()
 {
-    role->commit(std::move(pending));
+    role->commit(pending);
     pending = WlSurfaceState();
 }
 

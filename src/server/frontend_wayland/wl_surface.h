@@ -141,8 +141,10 @@ private:
     WlSurfaceState pending;
     geometry::Displacement offset_;
     geometry::Size buffer_size_;
-    std::shared_ptr<std::vector<WlSurfaceState::Callback>> const pending_frames;
+    std::vector<WlSurfaceState::Callback> frame_callbacks;
     std::shared_ptr<bool> const destroyed;
+
+    void send_frame_callbacks();
 
     void destroy() override;
     void attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y) override;
