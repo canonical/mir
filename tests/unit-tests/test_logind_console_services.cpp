@@ -305,6 +305,83 @@ public:
         }
     }
 
+    void add_take_device_to_session(
+        char const* session_path,
+        int fd_to_return)
+    {
+        std::unique_ptr<GVariant, decltype(&g_variant_unref)> result{nullptr, &g_variant_unref};
+
+        GError* error{nullptr};
+
+        result.reset(
+            g_dbus_connection_call_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                session_path,
+                "org.freedesktop.DBus.Mock",
+                "AddMethod",
+                g_variant_new(
+                    "(sssss)",
+                    "org.freedesktop.DBus.Mock",
+                    "SetTakeDeviceFd",
+                    "h",
+                    "",
+                    "self.take_device_fd = args[0]"),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NONE,
+                1000,
+                nullptr,
+                &error));
+
+        result.reset(
+            g_dbus_connection_call_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                session_path,
+                "org.freedesktop.DBus.Mock",
+                "AddMethod",
+                g_variant_new(
+                    "(sssss)",
+                    "org.freedesktop.login1.Session",
+                    "TakeDevice",
+                    "uu",
+                    "hb",
+                    "ret = (self.take_device_fd, False)"),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NONE,
+                1000,
+                nullptr,
+                &error));
+
+        std::unique_ptr<GUnixFDList, decltype(&g_object_unref)> fd_list{
+            g_unix_fd_list_new_from_array(&fd_to_return, 1),
+            &g_object_unref};
+
+        result.reset(
+            g_dbus_connection_call_with_unix_fd_list_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                session_path,
+                "org.freedesktop.DBus.Mock",
+                "SetTakeDeviceFd",
+                g_variant_new(
+                    "(h)",
+                    0),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NONE,
+                1000,
+                fd_list.get(),
+                nullptr,
+                nullptr,
+                &error));
+
+        if (!result)
+        {
+            auto error_msg = error ? error->message : "Unknown error";
+            BOOST_THROW_EXCEPTION((std::runtime_error{error_msg}));
+        }
+    }
+
     void ensure_mock_logind()
     {
         if (dbusmock)
@@ -601,9 +678,18 @@ TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
     ensure_mock_logind();
 
     auto session_path = add_any_active_session();
-    add_take_device_to_session(
-        session_path.c_str(),
-        "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
+
+    char const device_content[] =
+        "Hello, my name is Chris";
+
+    {
+        mir::AnonymousShmFile fake_device_node(sizeof(device_content));
+        ::memcpy(fake_device_node.base_ptr(), device_content, sizeof(device_content));
+
+        add_take_device_to_session(
+            session_path.c_str(),
+            fake_device_node.fd());
+    }
 
     mir::LogindConsoleServices services;
 
@@ -623,6 +709,14 @@ TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
     ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
     EXPECT_THAT(resolved_fd, Not(Eq(mir::Fd::invalid)));
     device.get();
+
+    auto const current_flags = fcntl(resolved_fd, F_GETFL);
+    fcntl(resolved_fd, F_SETFL, current_flags | O_NONBLOCK);
+
+    char buffer[sizeof(device_content)];
+    auto read_bytes = read(resolved_fd, buffer, sizeof(buffer));
+    EXPECT_THAT(read_bytes, Eq(sizeof(device_content)));
+    EXPECT_THAT(buffer, StrEq(device_content));
 }
 
 TEST_F(LogindConsoleServices, take_device_calls_suspended_callback_when_initially_suspended)
