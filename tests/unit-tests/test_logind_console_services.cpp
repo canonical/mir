@@ -22,6 +22,7 @@
 #include <gio/gio.h>
 #include <gio/gunixfdlist.h>
 #include <cstdio>
+#include <fcntl.h>
 #include <boost/throw_exception.hpp>
 
 #include "mir/anonymous_shm_file.h"
@@ -727,6 +728,9 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
         g_main_context_iteration(g_main_context_default(), true);
     }
     ASSERT_THAT(state, Eq(DeviceState::Active));
+
+    auto const current_flags = fcntl(received_fd, F_GETFL);
+    fcntl(received_fd, F_SETFL, current_flags | O_NONBLOCK);
 
     char buffer[sizeof(device_content)];
     auto read_bytes = read(received_fd, buffer, sizeof(buffer));
