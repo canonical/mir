@@ -17,6 +17,7 @@
  */
 
 #include <cinttypes>
+#include <cstring>
 #include <boost/throw_exception.hpp>
 #include <boost/current_function.hpp>
 #include <boost/exception/info.hpp>
