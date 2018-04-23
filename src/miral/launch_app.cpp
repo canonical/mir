@@ -25,8 +25,8 @@
 
 
 void miral::launch_app(std::vector<std::string> const& app,
-                mir::optional_value<std::string> const& wayland_display,
-                mir::optional_value<std::string> const& mir_socket)
+                       mir::optional_value<std::string> const& wayland_display,
+                       mir::optional_value<std::string> const& mir_socket)
 {
     pid_t pid = fork();
 
@@ -55,8 +55,8 @@ void miral::launch_app(std::vector<std::string> const& app,
             unsetenv("WAYLAND_DISPLAY");
         }
 
-        setenv("GDK_BACKEND", "wayland,mir", true);         // configure GTK to use Mir
-        setenv("QT_QPA_PLATFORM", "wayland", true);         // configure Qt to use Mir
+        setenv("GDK_BACKEND", "wayland,mir", true);         // configure GTK to use Wayland (or Mir)
+        setenv("QT_QPA_PLATFORM", "wayland", true);         // configure Qt to use Wayland
         unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
         setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland
 
