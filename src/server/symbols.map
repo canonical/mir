@@ -936,3 +936,11 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.31 {
     mir::run_mir*;
   };
 } MIR_SERVER_0.31;
+
+MIR_SERVER_0.32 {
+ global:
+  extern "C++" {
+    mir::Server::mir_socket_name*;
+    mir::Server::wayland_display*;
+  };
+} MIR_SERVER_0.31;
