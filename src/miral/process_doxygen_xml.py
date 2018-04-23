@@ -395,10 +395,20 @@ global:
 
 MIRAL_2.1 {
 global:
+  extern "C++" {
+    miral::CanonicalWindowManagerPolicy::confirm_placement_on_display*;
+    miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
+    non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::confirm_placement_on_display*;
+    non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
+  };
+} MIRAL_2.0;
+
+MIRAL_2.2 {
+global:
   extern "C++" {'''
 
 END_NEW_STANZA = '''  };
-} MIRAL_2.0;'''
+} MIRAL_2.1;'''
 
 def _print_report():
     print(OLD_STANZAS)

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -19,6 +19,7 @@
 #ifndef MIR_FRONTEND_CONNECTOR_H_
 #define MIR_FRONTEND_CONNECTOR_H_
 
+#include <mir/optional_value.h>
 #include <functional>
 #include <memory>
 
@@ -38,6 +39,8 @@ public:
     virtual int client_socket_fd() const = 0;
 
     virtual int client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const = 0;
+
+    virtual auto socket_name() const -> optional_value<std::string> = 0;
 
 protected:
     Connector() = default;

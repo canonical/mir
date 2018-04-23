@@ -114,6 +114,7 @@ public:
     void stop() override {}
 
     int client_socket_fd() const override { return 0; }
+    auto socket_name() const -> mir::optional_value<std::string> override { return {}; }
 
     MOCK_CONST_METHOD1(client_socket_fd, int (std::function<void(std::shared_ptr<mf::Session> const&)> const&));
 };

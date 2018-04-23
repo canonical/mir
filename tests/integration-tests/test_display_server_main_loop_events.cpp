@@ -69,6 +69,7 @@ public:
     int client_socket_fd() const override { return 0; }
     int client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const override { return 0; }
     void remove_endpoint() const {}
+    auto socket_name() const -> mir::optional_value<std::string> override { return {}; }
 };
 
 class MockDisplay : public mtd::NullDisplay

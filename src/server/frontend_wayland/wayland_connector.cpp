@@ -685,6 +685,8 @@ mf::WaylandConnector::WaylandConnector(
             chmod((std::string{getenv("XDG_RUNTIME_DIR")} + "/" + wayland_display).c_str(),
                   S_IRUSR|S_IWUSR| S_IRGRP|S_IWGRP | S_IROTH|S_IWOTH);
         };
+
+        this->wayland_display = wayland_display;
     }
 
     auto wayland_loop = wl_display_get_event_loop(display.get());
@@ -773,4 +775,9 @@ void mf::WaylandConnector::run_on_wayland_display(std::function<void(wl_display*
     auto executor = executor_for_event_loop(wl_display_get_event_loop(display.get()));
 
     executor->spawn([display_ref = display.get(), functor]() { functor(display_ref); });
+}
+
+auto mf::WaylandConnector::socket_name() const -> optional_value<std::string>
+{
+    return wayland_display;
 }

@@ -478,6 +478,22 @@ auto mir::Server::open_wayland_client_socket() -> Fd
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
+auto mir::Server::mir_socket_name() const -> optional_value<std::string>
+{
+    if (auto const config = self->server_config)
+        return config->the_connector()->socket_name();
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
+}
+
+auto mir::Server::wayland_display() const -> optional_value<std::string>
+{
+    if (auto const config = self->server_config)
+        return config->the_wayland_connector()->socket_name();
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
+}
+
 void mir::Server::run_on_wayland_display(std::function<void(wl_display*)> const& functor)
 {
     if (auto const config = self->server_config)
