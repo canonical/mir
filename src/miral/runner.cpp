@@ -77,7 +77,9 @@ void enable_startup_applications(::mir::Server& server)
     server.add_configuration_option(startup_apps, "Colon separated list of startup apps", mir::OptionType::string);
 }
 
-void launch_startup_app(mir::optional_value<std::string> const& wayland_socket, mir::optional_value<std::string> const& mir_socket, std::string app)
+void launch_app(std::vector<std::string> const& app,
+                mir::optional_value<std::string> const& wayland_display,
+                mir::optional_value<std::string> const& mir_socket)
 {
     pid_t pid = fork();
 
@@ -97,9 +99,9 @@ void launch_startup_app(mir::optional_value<std::string> const& wayland_socket, 
             unsetenv("MIR_SOCKET");
         }
 
-        if (wayland_socket)
+        if (wayland_display)
         {
-            setenv("WAYLAND_DISPLAY", wayland_socket.value().c_str(),  true);   // configure Wayland socket
+            setenv("WAYLAND_DISPLAY", wayland_display.value().c_str(),  true);   // configure Wayland socket
         }
         else
         {
@@ -111,16 +113,14 @@ void launch_startup_app(mir::optional_value<std::string> const& wayland_socket, 
         unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
         setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland
 
-        // gnome-terminal is the (only known) special case
-        char const* exec_args[] = { "gnome-terminal", "--app-id", "com.canonical.miral.Terminal", nullptr };
+        std::vector<char const*> exec_args;
 
-        if (app != exec_args[0])
-        {
-            exec_args[0] = app.c_str();
-            exec_args[1] = nullptr;
-        }
+        for (auto const& arg : app)
+            exec_args.push_back(arg.c_str());
 
-        execvp(exec_args[0], const_cast<char*const*>(exec_args));
+        exec_args.push_back(nullptr);
+
+        execvp(exec_args[0], const_cast<char*const*>(exec_args.data()));
 
         throw std::logic_error(std::string("Failed to execute client (") + exec_args[0] + ") error: " + strerror(errno));
     }
@@ -179,7 +179,14 @@ void miral::MirRunner::Self::launch_startup_applications(::mir::Server& server)
                 {
                     auto const j = find(i, end(value), ':');
 
-                    launch_startup_app(wayland_display, mir_socket, std::string{i, j});
+                    std::vector<std::string> app{std::string{i, j}};
+
+                    // gnome-terminal is the (only known) special case
+                    // TODO this hack doesn't work on Fedora
+                    if (app[0] == "gnome-terminal")
+                        app.push_back("--app-id"),app.push_back("com.canonical.miral.Terminal");
+
+                    launch_app(app, wayland_display, mir_socket);
 
                     if ((i = j) != end(value)) ++i;
                 }
