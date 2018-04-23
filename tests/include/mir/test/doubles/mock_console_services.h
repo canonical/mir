@@ -21,6 +21,7 @@
 
 #include "mir/console_services.h"
 
+#include "mir/test/gmock_fixes.h"
 #include <gmock/gmock.h>
 
 namespace mir
