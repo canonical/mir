@@ -41,7 +41,7 @@
  *
  * See also: http://semver.org/
  */
-#define MIRAL_MINOR_VERSION (1)
+#define MIRAL_MINOR_VERSION (2)
 
 /**
  * MIRAL_MICRO_VERSION

@@ -319,3 +319,15 @@ global:
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
   };
 } MIRAL_2.0;
+
+MIRAL_2.2 {
+global:
+  extern "C++" {
+    miral::ExternalClientLauncher::?ExternalClientLauncher*;
+    miral::ExternalClientLauncher::ExternalClientLauncher*;
+    miral::ExternalClientLauncher::launch*;
+    miral::ExternalClientLauncher::operator*;
+    typeinfo?for?miral::ExternalClientLauncher;
+    vtable?for?miral::ExternalClientLauncher;
+  };
+} MIRAL_2.1;

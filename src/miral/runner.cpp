@@ -18,6 +18,7 @@
 
 #include "miral/runner.h"
 #include "join_client_threads.h"
+#include "launch_app.h"
 
 #include <mir/server.h>
 #include <mir/main_loop.h>
@@ -25,7 +26,6 @@
 #include <mir/options/option.h>
 
 #include <chrono>
-#include <cstdlib>
 #include <mutex>
 #include <thread>
 
@@ -75,55 +75,6 @@ auto const startup_apps = "startup-apps";
 void enable_startup_applications(::mir::Server& server)
 {
     server.add_configuration_option(startup_apps, "Colon separated list of startup apps", mir::OptionType::string);
-}
-
-void launch_app(std::vector<std::string> const& app,
-                mir::optional_value<std::string> const& wayland_display,
-                mir::optional_value<std::string> const& mir_socket)
-{
-    pid_t pid = fork();
-
-    if (pid < 0)
-    {
-        throw std::runtime_error("Failed to fork process");
-    }
-
-    if (pid == 0)
-    {
-        if (mir_socket)
-        {
-            setenv("MIR_SOCKET", mir_socket.value().c_str(),  true);   // configure Mir socket
-        } 
-        else
-        {
-            unsetenv("MIR_SOCKET");
-        }
-
-        if (wayland_display)
-        {
-            setenv("WAYLAND_DISPLAY", wayland_display.value().c_str(),  true);   // configure Wayland socket
-        }
-        else
-        {
-            unsetenv("WAYLAND_DISPLAY");
-        }
-
-        setenv("GDK_BACKEND", "wayland,mir", true);         // configure GTK to use Mir
-        setenv("QT_QPA_PLATFORM", "wayland", true);         // configure Qt to use Mir
-        unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
-        setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland
-
-        std::vector<char const*> exec_args;
-
-        for (auto const& arg : app)
-            exec_args.push_back(arg.c_str());
-
-        exec_args.push_back(nullptr);
-
-        execvp(exec_args[0], const_cast<char*const*>(exec_args.data()));
-
-        throw std::logic_error(std::string("Failed to execute client (") + exec_args[0] + ") error: " + strerror(errno));
-    }
 }
 
 auto const env_hacks = "env-hacks";
