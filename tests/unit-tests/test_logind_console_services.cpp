@@ -702,7 +702,9 @@ TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
         },
         [](){},
         [](){});
-    while (device.wait_for(0ms) == std::future_status::timeout)
+
+    GLibTimeout timeout{10s};
+    while ((device.wait_for(0ms) == std::future_status::timeout) && !timeout)
     {
         g_main_context_iteration(g_main_context_default(), true);
     }
@@ -739,7 +741,9 @@ TEST_F(LogindConsoleServices, take_device_calls_suspended_callback_when_initiall
         },
         [&suspend_called](){ suspend_called = true; },
         [](){});
-    while (device.wait_for(0ms) == std::future_status::timeout)
+
+    GLibTimeout timeout{10s};
+    while ((device.wait_for(0ms) == std::future_status::timeout) && !timeout)
     {
         g_main_context_iteration(g_main_context_default(), true);
     }
@@ -764,7 +768,9 @@ TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
         [](auto){},
         [](){},
         [](){});
-    while (device.wait_for(0ms) == std::future_status::timeout)
+
+    GLibTimeout timeout{10s};
+    while ((device.wait_for(0ms) == std::future_status::timeout) && !timeout)
     {
         g_main_context_iteration(g_main_context_default(), true);
     }
@@ -801,10 +807,15 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
             state = DeviceState::Suspended;
         },
         [](){});
-    while (device.wait_for(0ms) == std::future_status::timeout)
+
     {
-        g_main_context_iteration(g_main_context_default(), true);
+        GLibTimeout timeout{10s};
+        while ((device.wait_for(0ms) == std::future_status::timeout) && !timeout)
+        {
+            g_main_context_iteration(g_main_context_default(), true);
+        }
     }
+
     ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
     ASSERT_THAT(state, Eq(DeviceState::Suspended));
     auto handle = device.get();
@@ -816,10 +827,12 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
 
     emit_device_activated(session_path.c_str(), 22, 33, fake_device_node.fd());
 
-    GLibTimeout timeout{10s};
-    while (state != DeviceState::Active && !timeout)
     {
-        g_main_context_iteration(g_main_context_default(), true);
+        GLibTimeout timeout{10s};
+        while (state != DeviceState::Active && !timeout)
+        {
+            g_main_context_iteration(g_main_context_default(), true);
+        }
     }
     ASSERT_THAT(state, Eq(DeviceState::Active));
 
@@ -857,20 +870,27 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
             state = DeviceState::Suspended;
         },
         [](){});
-    while (device.wait_for(0ms) == std::future_status::timeout)
+
     {
-        g_main_context_iteration(g_main_context_default(), true);
+        GLibTimeout timeout{10s};
+        while ((device.wait_for(0ms) == std::future_status::timeout) && !timeout)
+        {
+            g_main_context_iteration(g_main_context_default(), true);
+        }
     }
+
     ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
     ASSERT_THAT(state, Eq(DeviceState::Active));
     auto handle = device.get();
 
     emit_device_suspended(session_path.c_str(), 22, 33, SuspendType::Paused);
 
-    GLibTimeout timeout{10s};
-    while (state != DeviceState::Suspended && !timeout)
     {
-        g_main_context_iteration(g_main_context_default(), true);
+        GLibTimeout timeout{10s};
+        while (state != DeviceState::Suspended && !timeout)
+        {
+            g_main_context_iteration(g_main_context_default(), true);
+        }
     }
     EXPECT_THAT(state, Eq(DeviceState::Suspended));
 }
@@ -903,20 +923,27 @@ TEST_F(LogindConsoleServices, device_removed_callback_called_on_remove)
         {
             state = DeviceState::Gone;
         });
-    while (device.wait_for(0ms) == std::future_status::timeout)
+
     {
-        g_main_context_iteration(g_main_context_default(), true);
+        GLibTimeout timeout{10s};
+        while ((device.wait_for(0ms) == std::future_status::timeout) && !timeout)
+        {
+            g_main_context_iteration(g_main_context_default(), true);
+        }
     }
+
     ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
     ASSERT_THAT(state, Eq(DeviceState::Active));
     auto handle = device.get();
 
     emit_device_suspended(session_path.c_str(), 22, 33, SuspendType::Gone);
 
-    GLibTimeout timeout{10s};
-    while (state != DeviceState::Gone && !timeout)
     {
-        g_main_context_iteration(g_main_context_default(), true);
+        GLibTimeout timeout{10s};
+        while (state != DeviceState::Gone && !timeout)
+        {
+            g_main_context_iteration(g_main_context_default(), true);
+        }
     }
     EXPECT_THAT(state, Eq(DeviceState::Gone));
 }
