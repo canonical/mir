@@ -183,6 +183,32 @@ public:
         }
     }
 
+    void TearDown() override
+    {
+        // Print the dbusmock output if we've failed.
+        auto const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
+        if (test_info->result()->Failed())
+        {
+            char buffer[1024];
+            ssize_t bytes_read;
+
+            // Kill the dbusmock process so it closes its stdout
+            dbusmock->terminate();
+
+            std::cout << "Messages from DBusMock: " << std::endl;
+            while ((bytes_read = ::read(mock_stdout, buffer, sizeof(buffer))) > 0)
+            {
+                ::write(STDOUT_FILENO, buffer, bytes_read);
+            }
+            if (bytes_read < 0)
+            {
+                std::cout << "Failed to read dbusmock output: "
+                    << strerror(errno)
+                    << "(" << errno << ")" << std::endl;
+            }
+        }
+    }
+
     std::string add_any_active_session()
     {
         return add_session(
