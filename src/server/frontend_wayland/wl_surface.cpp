@@ -239,11 +239,29 @@ void mf::WlSurface::set_input_region(std::experimental::optional<wl_resource*> c
 {
     if (region)
     {
-        pending.input_shape = WlRegion::from(region.value())->rectangle_vector();
+        // On Ubuntu 17.10 and later, the following two statements do the same thing.
+        // The former fails to compile on Ubuntu 16.04.
+
+        // pending.input_shape = WlRegion::from(region.value())->rectangle_vector();
+
+        pending.input_shape =
+            std::experimental::optional<std::experimental::optional<std::vector<geom::Rectangle>>>{
+                std::experimental::optional<std::vector<geom::Rectangle>>{
+                    WlRegion::from(region.value())->rectangle_vector()}};
     }
     else
     {
-        pending.input_shape = {std::experimental::nullopt};
+        // set the inner optional to nullopt to indicate the input region should be updated to null
+
+        // On Ubuntu 17.10 and later, the following two statements do the same thing.
+        // The former fails to compile on Ubuntu 16.04.
+
+        // pending.input_shape = {std::experimental::nullopt};
+
+        pending.input_shape =
+            std::experimental::optional<std::experimental::optional<std::vector<geom::Rectangle>>>{
+                std::experimental::optional<std::vector<geom::Rectangle>>{
+                    std::experimental::nullopt}};
     }
 }
 
