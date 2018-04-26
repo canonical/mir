@@ -388,7 +388,7 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
             false,
             display_area);
 
-        apply_resize(surface, top_left, new_size);
+        surface->resize(new_size);
     }
 
     if (modifications.input_shape.is_set())
@@ -402,6 +402,11 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
             rect.top_left = rect.top_left - displacement;
         }
         surface->set_input_region(rectangles);
+    }
+
+    if (modifications.width.is_set() || modifications.height.is_set())
+    {
+        move_tree(surface, {});
     }
 
     if (modifications.state.is_set())

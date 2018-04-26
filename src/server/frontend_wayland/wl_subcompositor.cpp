@@ -17,8 +17,9 @@
  */
 
 #include "wl_subcompositor.h"
-
 #include "wl_surface.h"
+
+#include "mir/geometry/rectangle.h"
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -59,9 +60,10 @@ mf::WlSubsurface::~WlSubsurface()
 }
 
 void mf::WlSubsurface::populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
+                                             std::vector<mir::geometry::Rectangle>& input_shape_accumulator,
                                              geometry::Displacement const& parent_offset) const
 {
-    surface->populate_surface_data(buffer_streams, parent_offset);
+    surface->populate_surface_data(buffer_streams, input_shape_accumulator, parent_offset);
 }
 
 bool mf::WlSubsurface::synchronized() const

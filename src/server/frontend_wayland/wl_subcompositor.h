@@ -57,6 +57,7 @@ public:
     ~WlSubsurface();
 
     void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
+                               std::vector<mir::geometry::Rectangle>& input_shape_accumulator,
                                geometry::Displacement const& parent_offset) const;
 
     bool synchronized() const override;

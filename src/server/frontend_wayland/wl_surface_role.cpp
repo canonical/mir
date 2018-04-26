@@ -31,6 +31,8 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 
+namespace geom = mir::geometry;
+
 void mir::frontend::WlAbstractMirWindow::set_maximized()
 {
     // We must process this request immediately (i.e. don't defer until commit())
@@ -117,12 +119,18 @@ WlAbstractMirWindow::~WlAbstractMirWindow()
     }
 }
 
+void WlAbstractMirWindow::populate_spec_with_surface_data(shell::SurfaceSpecification& spec)
+{
+    spec.streams = std::vector<shell::StreamSpecification>();
+    spec.input_shape = std::vector<geom::Rectangle>();
+    surface->populate_surface_data(spec.streams.value(), spec.input_shape.value(), {});
+}
+
 void WlAbstractMirWindow::refresh_surface_data_now()
 {
-    shell::SurfaceSpecification buffer_list_spec;
-    buffer_list_spec.streams = std::vector<shell::StreamSpecification>();
-    surface->populate_surface_data(buffer_list_spec.streams.value(), {});
-    shell->modify_surface(get_session(client), surface_id_, buffer_list_spec);
+    shell::SurfaceSpecification surface_data_spec;
+    populate_spec_with_surface_data(surface_data_spec);
+    shell->modify_surface(get_session(client), surface_id_, surface_data_spec);
 }
 
 shell::SurfaceSpecification& WlAbstractMirWindow::spec()
@@ -154,9 +162,7 @@ void WlAbstractMirWindow::commit(WlSurfaceState const& state)
 
         if (state.surface_data_needs_refresh())
         {
-            auto& buffer_list_spec = spec();
-            buffer_list_spec.streams = std::vector<shell::StreamSpecification>();
-            surface->populate_surface_data(buffer_list_spec.streams.value(), {});
+            populate_spec_with_surface_data(spec());
         }
 
         if (pending_changes)
@@ -179,7 +185,8 @@ void WlAbstractMirWindow::create_mir_window()
         params->size = geometry::Size{640, 480};
 
     params->streams = std::vector<shell::StreamSpecification>{};
-    surface->populate_surface_data(params->streams.value(), {});
+    params->input_shape = std::vector<geom::Rectangle>{};
+    surface->populate_surface_data(params->streams.value(), params->input_shape.value(), {});
 
     surface_id_ = shell->create_surface(session, *params, sink);
 

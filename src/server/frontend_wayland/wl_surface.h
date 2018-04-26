@@ -44,6 +44,10 @@ namespace shell
 {
 struct StreamSpecification;
 }
+namespace geometry
+{
+class Rectangle;
+}
 
 namespace frontend
 {
@@ -62,7 +66,7 @@ struct WlSurfaceState
     // if you add variables, don't forget to update this
     void update_from(WlSurfaceState const& source);
 
-    void invalidate_surface_data() { surface_data_invalidated = true; }
+    void invalidate_surface_data() const { surface_data_invalidated = true; }
 
     bool surface_data_needs_refresh() const;
 
@@ -72,12 +76,15 @@ struct WlSurfaceState
     std::experimental::optional<wl_resource*> buffer;
 
     std::experimental::optional<geometry::Displacement> offset;
+    std::experimental::optional<std::experimental::optional<std::vector<geometry::Rectangle>>> input_shape;
     std::vector<Callback> frame_callbacks;
 
 private:
     // only set to true if invalidate_surface_data() is called
     // surface_data_needs_refresh() returns true if this is true, or if other things are changed which mandate a refresh
-    bool surface_data_invalidated{false};
+    // is marked mutable so invalidate_surface_data() can be const and be called from a const reference
+    // (this is the only thing we need to modify from the const reference)
+    bool mutable surface_data_invalidated{false};
 };
 
 class NullWlSurfaceRole : public WlSurfaceRole
@@ -108,7 +115,7 @@ public:
 
     std::shared_ptr<bool> destroyed_flag() const { return destroyed; }
     geometry::Displacement offset() const { return offset_; }
-    geometry::Size buffer_size() const { return buffer_size_; }
+    geometry::Size buffer_size() const { return buffer_size_.value_or(geometry::Size{}); }
     bool synchronized() const;
     std::pair<geometry::Point, wl_resource*> transform_point(geometry::Point point) const;
     wl_resource* raw_resource() { return resource; }
@@ -121,6 +128,7 @@ public:
     void refresh_surface_data_now();
     void pending_invalidate_surface_data() { pending.invalidate_surface_data(); }
     void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
+                               std::vector<mir::geometry::Rectangle>& input_shape_accumulator,
                                geometry::Displacement const& parent_offset) const;
     void commit(WlSurfaceState const& state);
 
@@ -140,8 +148,9 @@ private:
 
     WlSurfaceState pending;
     geometry::Displacement offset_;
-    geometry::Size buffer_size_;
+    std::experimental::optional<geometry::Size> buffer_size_;
     std::vector<WlSurfaceState::Callback> frame_callbacks;
+    std::experimental::optional<std::vector<mir::geometry::Rectangle>> input_shape;
     std::shared_ptr<bool> const destroyed;
 
     void send_frame_callbacks();
