@@ -86,6 +86,15 @@ mf::WlSurface::WlSurface(
 mf::WlSurface::~WlSurface()
 {
     *destroyed = true;
+
+    // so that unregister_destroy_listener calls invoked from destroy listeners don't screw up the iterator
+    auto listeners = move(destroy_listeners);
+    destroy_listeners.clear();
+    for (auto listener: listeners)
+    {
+        listener.second();
+    }
+
     role->destroy();
     session->destroy_buffer_stream(stream_id);
 }
@@ -95,9 +104,21 @@ bool mf::WlSurface::synchronized() const
     return role->synchronized();
 }
 
-std::pair<geom::Point, wl_resource*> mf::WlSurface::transform_point(geom::Point point) const
+std::experimental::optional<std::pair<geom::Point, mf::WlSurface*>> mf::WlSurface::transform_point(geom::Point point)
 {
-    return std::make_pair(point - offset_, resource);
+    point = point - offset_;
+    for (auto child : children)
+    {
+        auto result = child->transform_point(point);
+        if (result)
+            return result;
+    }
+    for (auto& rect : input_shape.value_or(std::vector<geom::Rectangle>{{{}, buffer_size()}}))
+    {
+        if (rect.contains(point))
+            return std::make_pair(point, this);
+    }
+    return std::experimental::nullopt;
 }
 
 mf::SurfaceId mf::WlSurface::surface_id() const
@@ -164,6 +185,16 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
     {
         subsurface->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
     }
+}
+
+void mf::WlSurface::add_destroy_listener(void const* key, std::function<void()> listener)
+{
+    destroy_listeners[key] = listener;
+}
+
+void mf::WlSurface::remove_destroy_listener(void const* key)
+{
+    destroy_listeners.erase(key);
 }
 
 mf::WlSurface* mf::WlSurface::from(wl_resource* resource)

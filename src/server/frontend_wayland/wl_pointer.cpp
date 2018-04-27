@@ -35,7 +35,7 @@ using namespace mir::geometry;
 
 struct mf::WlPointer::Cursor
 {
-    virtual void apply_to(wl_resource* target) = 0;
+    virtual void apply_to(WlSurface* surface) = 0;
     virtual ~Cursor() = default;
     Cursor() = default;
 
@@ -47,7 +47,7 @@ namespace
 {
 struct NullCursor : mf::WlPointer::Cursor
 {
-    void apply_to(wl_resource*) override {}
+    void apply_to(mf::WlSurface*) override {}
 };
 }
 
@@ -65,6 +65,8 @@ mf::WlPointer::WlPointer(
 
 mf::WlPointer::~WlPointer()
 {
+    if (focused_surface)
+        focused_surface.value()->remove_destroy_listener(this);
     on_destroy(this);
 }
 
@@ -110,13 +112,20 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
             auto point = Point{mir_pointer_event_axis_value(event, mir_pointer_axis_x),
                                         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
             auto transformed = surface->transform_point(point);
-            handle_enter(transformed.first, transformed.second);
-            handle_frame();
+            if (transformed)
+            {
+                handle_enter(transformed.value().first, transformed.value().second);
+                handle_frame();
+            }
+            else
+            {
+                log_warning("surface->transform_point() returned nullopt for enter action");
+            }
             break;
         }
         case mir_pointer_action_leave:
         {
-            handle_leave(surface->raw_resource());
+            handle_leave();
             handle_frame();
             break;
         }
@@ -132,14 +141,27 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
                                         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
             auto transformed = surface->transform_point(point);
 
-            if (!last_position || transformed.first != last_position.value())
+            if (transformed && focused_surface && transformed.value().second == focused_surface.value())
             {
-                wl_pointer_send_motion(
-                    resource,
-                    timestamp,
-                    wl_fixed_from_double(transformed.first.x.as_int()),
-                    wl_fixed_from_double(transformed.first.y.as_int()));
-                last_position = transformed.first;
+                if (!last_position || transformed.value().first != last_position.value())
+                {
+                    wl_pointer_send_motion(
+                        resource,
+                        timestamp,
+                        wl_fixed_from_double(transformed.value().first.x.as_int()),
+                        wl_fixed_from_double(transformed.value().first.y.as_int()));
+                    last_position = transformed.value().first;
+                    needs_frame = true;
+                }
+            }
+            else
+            {
+                if (focused_surface)
+                    handle_leave();
+                if (transformed)
+                    handle_enter(transformed.value().first, transformed.value().second);
+                else
+                    log_warning("surface->transform_point() returned nullopt for motion action");
                 needs_frame = true;
             }
 
@@ -176,25 +198,34 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
     }
 }
 
-void mf::WlPointer::handle_enter(Point position, wl_resource* target)
+void mf::WlPointer::handle_enter(Point position, WlSurface* surface)
 {
-    cursor->apply_to(target);
+    cursor->apply_to(surface);
     auto const serial = wl_display_next_serial(display);
     wl_pointer_send_enter(
         resource,
         serial,
-        target,
+        surface->raw_resource(),
         wl_fixed_from_double(position.x.as_int()),
         wl_fixed_from_double(position.y.as_int()));
+    surface->add_destroy_listener(this, [this]()
+        {
+            handle_leave();
+        });
+    focused_surface = surface;
 }
 
-void mf::WlPointer::handle_leave(wl_resource* target)
+void mf::WlPointer::handle_leave()
 {
+    if (!focused_surface)
+        return;
+    focused_surface.value()->remove_destroy_listener(this);
     auto const serial = wl_display_next_serial(display);
     wl_pointer_send_leave(
         resource,
         serial,
-        target);
+        focused_surface.value()->raw_resource());
+    focused_surface = std::experimental::nullopt;
     last_position = std::experimental::nullopt;
 }
 
@@ -209,7 +240,7 @@ namespace
 struct WlStreamCursor : mf::WlPointer::Cursor
 {
     WlStreamCursor(std::shared_ptr<mf::Session> const session, std::shared_ptr<mf::BufferStream> const& stream, Displacement hotspot);
-    void apply_to(wl_resource* target) override;
+    void apply_to(mf::WlSurface* surface) override;
 
     std::shared_ptr<mf::Session>        const session;
     std::shared_ptr<mf::BufferStream>   const stream;
@@ -219,7 +250,7 @@ struct WlStreamCursor : mf::WlPointer::Cursor
 struct WlHiddenCursor : mf::WlPointer::Cursor
 {
     WlHiddenCursor(std::shared_ptr<mf::Session> const session);
-    void apply_to(wl_resource* target) override;
+    void apply_to(mf::WlSurface* surface) override;
 
     std::shared_ptr<mf::Session>        const session;
 };
@@ -258,9 +289,9 @@ WlStreamCursor::WlStreamCursor(
 {
 }
 
-void WlStreamCursor::apply_to(wl_resource* target)
+void WlStreamCursor::apply_to(mf::WlSurface* surface)
 {
-    auto id = mf::WlSurface::from(target)->surface_id();
+    auto id = surface->surface_id();
     if (id.as_value())
     {
         auto const mir_window = session->get_surface(id);
@@ -274,9 +305,9 @@ WlHiddenCursor::WlHiddenCursor(
 {
 }
 
-void WlHiddenCursor::apply_to(wl_resource* target)
+void WlHiddenCursor::apply_to(mf::WlSurface* surface)
 {
-    auto id = mf::WlSurface::from(target)->surface_id();
+    auto id = surface->surface_id();
     if (id.as_value())
     {
         auto const mir_window = session->get_surface(id);

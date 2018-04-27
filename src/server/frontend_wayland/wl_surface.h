@@ -117,8 +117,8 @@ public:
     geometry::Displacement offset() const { return offset_; }
     geometry::Size buffer_size() const { return buffer_size_.value_or(geometry::Size{}); }
     bool synchronized() const;
-    std::pair<geometry::Point, wl_resource*> transform_point(geometry::Point point) const;
-    wl_resource* raw_resource() { return resource; }
+    std::experimental::optional<std::pair<geometry::Point, WlSurface*>> transform_point(geometry::Point point);
+    wl_resource* raw_resource() const { return resource; }
     mir::frontend::SurfaceId surface_id() const;
 
     void set_role(WlSurfaceRole* role_);
@@ -131,6 +131,8 @@ public:
                                std::vector<mir::geometry::Rectangle>& input_shape_accumulator,
                                geometry::Displacement const& parent_offset) const;
     void commit(WlSurfaceState const& state);
+    void add_destroy_listener(void const* key, std::function<void()> listener);
+    void remove_destroy_listener(void const* key);
 
     std::shared_ptr<mir::frontend::Session> const session;
     mir::frontend::BufferStreamId const stream_id;
@@ -151,6 +153,7 @@ private:
     std::experimental::optional<geometry::Size> buffer_size_;
     std::vector<WlSurfaceState::Callback> frame_callbacks;
     std::experimental::optional<std::vector<mir::geometry::Rectangle>> input_shape;
+    std::map<void const*, std::function<void()>> destroy_listeners;
     std::shared_ptr<bool> const destroyed;
 
     void send_frame_callbacks();
