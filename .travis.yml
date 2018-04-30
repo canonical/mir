@@ -43,7 +43,7 @@ env:
 
 matrix:
   allow_failures:
-  - env: SYSTEM=linode:fedora-rawhide-64 VARIANT=amd64
+  - env: SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
   - env: SYSTEM=google:ubuntu-devel-64 VARIANT=amd64
   fast_finish: true
 
