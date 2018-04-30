@@ -12,18 +12,6 @@ backends:
             - fedora-27-64
             - fedora-rawhide-64:
                 image: images:fedora/27/amd64
-    linode:
-        key: "$(HOST: echo $SPREAD_LINODE_KEY)"
-        plan: 8GB
-        location: fremont
-        systems:
-            - ubuntu-16.04-64
-            - ubuntu-17.10-64
-            - ubuntu-devel-64:
-                image: ubuntu-17.10/amd64
-            - fedora-27-64
-            - fedora-rawhide-64:
-                image: fedora-27-64
     google:
         key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
         plan: n1-highcpu-8
