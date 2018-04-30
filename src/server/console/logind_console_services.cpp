@@ -373,7 +373,7 @@ void complete_take_device_call(
         }};
     g_object_unref(fd_list);
 
-    bool inactive;
+    gboolean inactive;
     int fd_index;
 
     g_variant_get(dbus_result.get(), "(hb)", &fd_index, &inactive);
