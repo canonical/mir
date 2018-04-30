@@ -493,7 +493,7 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
         });
 
     self->set_next_commit_action(
-        [resource = this->resource, self]
+        [resource = this->resource]
             {
                 wl_array states;
                 wl_array_init(&states);
