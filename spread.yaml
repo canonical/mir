@@ -10,6 +10,7 @@ backends:
             - ubuntu-18.04-64:
                 image: ubuntu-daily:18.04/amd64
             - fedora-27-64
+            - fedora-28-64
             - fedora-rawhide-64:
                 image: images:fedora/27/amd64
     google:
@@ -22,6 +23,7 @@ backends:
             - ubuntu-devel-64:
                 image: ubuntu-17.10-64
             - fedora-27-64
+            - fedora-28-64
             - fedora-rawhide-64:
                 image: fedora-27-64
 

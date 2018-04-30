@@ -38,9 +38,11 @@ env:
   - SYSTEM=google:ubuntu-16.04-64 VARIANT=arm64
   - SYSTEM=google:ubuntu-17.10-64 VARIANT=clang
   - SYSTEM=google:fedora-27-64 VARIANT=amd64
+  - SYSTEM=google:fedora-28-64 VARIANT=amd64
 
 matrix:
   allow_failures:
+  - env: SYSTEM=google:fedora-28-64 VARIANT=amd64
   - env: SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
   - env: SYSTEM=google:ubuntu-devel-64 VARIANT=amd64
   fast_finish: true
