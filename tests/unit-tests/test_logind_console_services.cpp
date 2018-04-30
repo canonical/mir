@@ -681,6 +681,13 @@ TEST_F(LogindConsoleServices, construction_fails_if_cannot_claim_control)
         std::runtime_error);
 }
 
+TEST_F(LogindConsoleServices, construction_fails_if_no_logind)
+{
+    EXPECT_THROW(
+        mir::LogindConsoleServices test{},
+        std::runtime_error);
+}
+
 TEST_F(LogindConsoleServices, selects_active_session)
 {
     ensure_mock_logind();
