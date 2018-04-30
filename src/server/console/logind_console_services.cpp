@@ -328,7 +328,7 @@ struct TakeDeviceContext
     ::boost::throw_line((int)__LINE__))
 
 void complete_take_device_call(
-    GObject* connection,
+    GObject* proxy,
     GAsyncResult* result,
     gpointer ctx) noexcept
 {
@@ -339,8 +339,8 @@ void complete_take_device_call(
     GUnixFDList* fd_list;
 
     std::unique_ptr<GVariant, decltype(&g_variant_unref)> dbus_result{
-        g_dbus_connection_call_with_unix_fd_list_finish(
-            G_DBUS_CONNECTION(connection),
+        g_dbus_proxy_call_with_unix_fd_list_finish(
+            G_DBUS_PROXY(proxy),
             &fd_list,
             result,
             &error),
@@ -437,21 +437,13 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
 
     auto future = context->promise.get_future();
 
-    std::unique_ptr<GVariantType, decltype(&g_variant_type_free)> return_type{
-        g_variant_type_new("(hb)"),
-        &g_variant_type_free};
-
-    g_dbus_connection_call_with_unix_fd_list(
-        connection.get(),
-        "org.freedesktop.login1",
-        session_path.c_str(),
-        "org.freedesktop.login1.Session",
+    g_dbus_proxy_call_with_unix_fd_list(
+        G_DBUS_PROXY(session_proxy.get()),
         "TakeDevice",
         g_variant_new(
             "(uu)",
             major,
             minor),
-        return_type.get(),
         G_DBUS_CALL_FLAGS_NO_AUTO_START,
         G_MAXINT,
         nullptr,
