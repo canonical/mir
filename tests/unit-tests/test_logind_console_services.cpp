@@ -187,7 +187,7 @@ public:
     {
         // Print the dbusmock output if we've failed.
         auto const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
-        if (test_info->result()->Failed())
+        if (test_info->result()->Failed() && dbusmock)
         {
             char buffer[1024];
             ssize_t bytes_read;
