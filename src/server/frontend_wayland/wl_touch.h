@@ -21,6 +21,10 @@
 
 #include "generated/wayland_wrapper.h"
 
+#include "mir/geometry/point.h"
+
+#include <map>
+
 // from "mir_toolkit/events/event.h"
 struct MirTouchEvent;
 
@@ -47,6 +51,10 @@ public:
 
 private:
     std::function<void(WlTouch*)> on_destroy;
+    std::map<int32_t, WlSurface*> focused_surface_for_ids;
+
+    void handle_down(mir::geometry::Point position, WlSurface* surface, uint32_t time, int32_t id);
+    void handle_up(uint32_t time, int32_t id);
 
     void release() override;
 };

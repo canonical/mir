@@ -46,48 +46,65 @@ void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* surface
     // TODO: support for touches on subsurfaces
     auto const input_ev = mir_touch_event_input_event(touch_ev);
     auto const ev = mir::client::Event{mir_input_event_get_event(input_ev)};
-    auto const surface_offset = surface->offset();
 
     for (auto i = 0u; i < mir_touch_event_point_count(touch_ev); ++i)
     {
+        auto const point = geometry::Point{mir_touch_event_axis_value(touch_ev, i, mir_touch_axis_x),
+                                           mir_touch_event_axis_value(touch_ev, i, mir_touch_axis_y)};
         auto const touch_id = mir_touch_event_id(touch_ev, i);
         auto const action = mir_touch_event_action(touch_ev, i);
-        auto const x = mir_touch_event_axis_value(
-            touch_ev,
-            i,
-            mir_touch_axis_x) - surface_offset.dx.as_int();
-        auto const y = mir_touch_event_axis_value(
-            touch_ev,
-            i,
-            mir_touch_axis_y) - surface_offset.dy.as_int();
 
         switch (action)
         {
         case mir_touch_action_down:
-            wl_touch_send_down(
-                resource,
-                wl_display_get_serial(wl_client_get_display(client)),
-                mir_input_event_get_event_time_ms(input_ev),
-                surface->raw_resource(),
-                touch_id,
-                wl_fixed_from_double(x),
-                wl_fixed_from_double(y));
+        {
+            auto const transformed = surface->transform_point(point);
+            if (transformed)
+            {
+                handle_down(transformed.value().first,
+                            transformed.value().second,
+                            mir_input_event_get_event_time_ms(input_ev),
+                            touch_id);
+            }
+            else
+            {
+                log_warning("surface->transform_point() returned nullopt for touch down action");
+                return;
+            }
             break;
+        }
         case mir_touch_action_up:
-            wl_touch_send_up(
-                resource,
-                wl_display_get_serial(wl_client_get_display(client)),
-                mir_input_event_get_event_time_ms(input_ev),
-                touch_id);
+            handle_up(mir_input_event_get_event_time_ms(input_ev), touch_id);
             break;
         case mir_touch_action_change:
-            wl_touch_send_motion(
-                resource,
-                mir_input_event_get_event_time_ms(input_ev),
-                touch_id,
-                wl_fixed_from_double(x),
-                wl_fixed_from_double(y));
+        {
+            auto const transformed = surface->transform_point(point);
+            if (transformed)
+            {
+                if (focused_surface_for_ids[touch_id] == transformed.value().second)
+                {
+                    wl_touch_send_motion(resource,
+                                         mir_input_event_get_event_time_ms(input_ev),
+                                         touch_id,
+                                         wl_fixed_from_double(transformed.value().first.x.as_int()),
+                                         wl_fixed_from_double(transformed.value().first.y.as_int()));
+                }
+                else
+                {
+                    handle_up(mir_input_event_get_event_time_ms(input_ev), touch_id);
+                    handle_down(transformed.value().first,
+                                transformed.value().second,
+                                mir_input_event_get_event_time_ms(input_ev),
+                                touch_id);
+                }
+            }
+            else
+            {
+                log_warning("surface->transform_point() returned nullopt for touch change action");
+                return;
+            }
             break;
+        }
         case mir_touch_actions:
             /*
              * We should never receive an event with this action set;
@@ -117,5 +134,26 @@ void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* surface
 void mf::WlTouch::release()
 {
     wl_resource_destroy(resource);
+}
+
+void mf::WlTouch::handle_down(mir::geometry::Point position, WlSurface* surface, uint32_t time, int32_t id)
+{
+    focused_surface_for_ids[id] = surface;
+    wl_touch_send_down(resource,
+                       wl_display_get_serial(wl_client_get_display(client)),
+                       time,
+                       surface->raw_resource(),
+                       id,
+                       wl_fixed_from_double(position.x.as_int()),
+                       wl_fixed_from_double(position.y.as_int()));
+}
+
+void mf::WlTouch::handle_up(uint32_t time, int32_t id)
+{
+    focused_surface_for_ids.erase(id);
+    wl_touch_send_up(resource,
+                     wl_display_get_serial(wl_client_get_display(client)),
+                     time,
+                     id);
 }
 
