@@ -1,5 +1,5 @@
 summary: Build (on Fedora)
-systems: [fedora-27-64, fedora-rawhide-64]
+systems: [fedora-*]
 
 execute: |
     if [ "${SPREAD_SYSTEM}" = "fedora-rawhide-64" -a "${SPREAD_REBOOT}" -eq 0 ]; then
