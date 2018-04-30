@@ -93,7 +93,7 @@ public:
 
     glm::mat4 transformation() const override
     {
-        return glm::mat4();
+        return glm::mat4(1);
     }
 
     bool shaped() const override
