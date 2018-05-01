@@ -28,8 +28,10 @@
 namespace mf = mir::frontend;
 
 mf::XWaylandConnector::XWaylandConnector(const int xdisplay, std::shared_ptr<mf::WaylandConnector> wc)
-    : xwayland_server(std::make_shared<mf::XWaylandServer>(xdisplay, wc)), enabled(!!wc->get_xwayland_wm_shell())
+    : enabled(!!wc->get_xwayland_wm_shell())
 {
+  if (enabled)
+    xwayland_server = std::make_shared<mf::XWaylandServer>(xdisplay, wc);
 }
 
 void mf::XWaylandConnector::start()

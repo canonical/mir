@@ -45,9 +45,9 @@ public:
 
     auto socket_name() const -> optional_value<std::string> override;
 private:
+    bool enabled;
     std::shared_ptr<XWaylandServer> xwayland_server;
     std::unique_ptr<dispatch::ThreadedDispatcher> xserver_thread;
-    bool enabled;
 };
 } /* frontend */
 } /* mir */
