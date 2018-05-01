@@ -49,7 +49,11 @@ Build-Depends: cmake,
                python3-pil:native,
                linux-libc-dev,
                dbus,
-               python3-dbusmock
+               python3-dbusmock,
+               libxcb-composite0-dev,
+               libxcb-xfixes0-dev,
+               libxcb-render0-dev,
+               libxcursor-dev
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,

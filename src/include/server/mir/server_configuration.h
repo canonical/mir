@@ -70,6 +70,7 @@ public:
     // TODO ...some or all of them need narrowing
     virtual std::shared_ptr<frontend::Connector> the_connector() = 0;
     virtual std::shared_ptr<frontend::Connector> the_wayland_connector() = 0;
+    virtual std::shared_ptr<frontend::Connector> the_xwayland_connector() = 0;
     virtual std::shared_ptr<frontend::Connector> the_prompt_connector() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;

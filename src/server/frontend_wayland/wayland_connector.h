@@ -51,6 +51,7 @@ class WlShell;
 class XdgShellV6;
 class WlSeat;
 class OutputManager;
+class XWaylandWMShell;
 
 class Shell;
 class DisplayChanger;
@@ -81,6 +82,8 @@ public:
         std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const override;
 
     void run_on_wayland_display(std::function<void(wl_display*)> const& functor);
+    wl_display *get_wl_display();
+    std::shared_ptr<XWaylandWMShell> get_xwayland_wm_shell();
 
     auto socket_name() const -> optional_value<std::string> override;
 
@@ -95,6 +98,7 @@ private:
     std::unique_ptr<WlShell> shell_global;
     std::unique_ptr<DataDeviceManager> data_device_manager_global;
     std::unique_ptr<XdgShellV6> xdg_shell_global;
+    std::shared_ptr<XWaylandWMShell> xwayland_wm_shell;
     std::thread dispatch_thread;
     wl_event_source* pause_source;
     std::string wayland_display;

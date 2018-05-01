@@ -32,6 +32,7 @@ add_subdirectory(report/)
 add_subdirectory(scene/)
 add_subdirectory(frontend/)
 add_subdirectory(frontend_wayland/)
+add_subdirectory(frontend_xwayland/)
 add_subdirectory(shell/)
 add_subdirectory(thread/)
 add_subdirectory(console/)
@@ -81,6 +82,7 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirfrontend>
   $<TARGET_OBJECTS:mirfrontend-wayland>
   $<TARGET_OBJECTS:mirfrontend-waylandgenerated>
+  $<TARGET_OBJECTS:mirfrontend-xwayland>
   $<TARGET_OBJECTS:mirshell>
   $<TARGET_OBJECTS:mirlttng>
   $<TARGET_OBJECTS:mirreport>
@@ -129,6 +131,11 @@ target_link_libraries(mirserver LINK_PUBLIC
   ${GIO_LDFLAGS} ${GIO_LIBRARIES}
   ${UUID_LDFLAGS} ${UUID_LIBRARIES}
   ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
+  ${XCB_LDFLAGS} ${XCB_LIBRARIES}
+  ${XCB_COMPOSITE_LDFLAGS} ${XCB_COMPOSITE_LIBRARIES}
+  ${XCB_XFIXES_LDFLAGS} ${XCB_XFIXES_LIBRARIES}
+  ${XCB_RENDER_LDFLAGS} ${XCB_RENDER_LIBRARIES}
+  ${X11_XCURSOR_LDFLAGS} ${X11_XCURSOR_LIBRARIES}
   atomic
 )
 
