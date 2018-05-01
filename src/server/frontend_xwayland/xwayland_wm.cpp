@@ -111,7 +111,7 @@ void mf::XWaylandWM::start(wl_client *wlc, const int fd)
     dispatcher->add_watch(wm_dispatcher, mir::dispatch::DispatchReentrancy::sequential);
 
     event_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(
-        "Mir/X11 WM Reader", dispatcher, [this]() { mir::terminate_with_current_exception(); });
+        "Mir/X11 WM Reader", dispatcher, []() { mir::terminate_with_current_exception(); });
 
     wm_get_resources();
     setup_visual_and_colormap();

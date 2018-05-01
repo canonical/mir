@@ -157,12 +157,9 @@ private:
     bool fullscreen;
 
     bool overrideRedirect;
-    bool hasAlpha;
     bool destroyed;
-    int workspace;
-    uint32_t surfaceId;
 
-    XWaylandWMSurface *transientFor;
+    //XWaylandWMSurface *transientFor;
 
     struct
     {
@@ -171,11 +168,7 @@ private:
         int deleteWindow;
     } properties;
 
-    bool activated;
     bool decorate;
-
-    bool moving;
-    bool resizing;
 };
 } /* frontend */
 } /* mir */

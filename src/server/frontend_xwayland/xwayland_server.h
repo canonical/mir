@@ -64,7 +64,6 @@ private:
     std::shared_ptr<dispatch::ReadableFd> fd_dispatcher;
     int socket_fd;
     int abstract_socket_fd;
-    bool running;
 };
 } /* frontend */
 } /* mir */

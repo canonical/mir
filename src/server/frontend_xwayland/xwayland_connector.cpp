@@ -41,7 +41,7 @@ void mf::XWaylandConnector::start()
     xwayland_server->spawn_xserver_on_event_loop();
 
     xserver_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(
-        "Mir/X11 Reader", xwayland_server->get_dispatcher(), [this]() { mir::terminate_with_current_exception(); });
+        "Mir/X11 Reader", xwayland_server->get_dispatcher(), []() { mir::terminate_with_current_exception(); });
     mir::log_info("XWayland loop started");
 }
 void mf::XWaylandConnector::stop()
