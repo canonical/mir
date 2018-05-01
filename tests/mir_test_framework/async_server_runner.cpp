@@ -24,6 +24,7 @@
 #include "mir/main_loop.h"
 #include "mir/geometry/rectangle.h"
 #include "mir/options/option.h"
+#include <mir/thread_name.h>
 #include "mir/test/doubles/null_logger.h"
 #include <miral/set_window_management_policy.h>
 #include <mir/shell/canonical_window_manager.h>
@@ -112,6 +113,7 @@ void mtf::AsyncServerRunner::start_server()
         {
             try
             {
+                mir::set_thread_name("mtf/AsyncServer");
                 server.run();
             }
             catch (std::exception const& e)
