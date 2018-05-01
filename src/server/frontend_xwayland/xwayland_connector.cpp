@@ -21,6 +21,7 @@
 #include "mir/log.h"
 
 #include "mir/terminate_with_current_exception.h"
+#include "mir/optional_value.h"
 #include "wayland_connector.h"
 #include "xwayland_server.h"
 
@@ -59,4 +60,9 @@ int mf::XWaylandConnector::client_socket_fd(
     std::function<void(std::shared_ptr<Session> const& session)> const& /*connect_handler*/) const
 {
     return -1;
+}
+
+auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
+{
+  return optional_value<std::string>();
 }

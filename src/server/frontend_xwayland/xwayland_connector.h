@@ -43,6 +43,7 @@ public:
     int client_socket_fd(
         std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const override;
 
+    auto socket_name() const -> optional_value<std::string> override;
 private:
     std::shared_ptr<XWaylandServer> xwayland_server;
     std::unique_ptr<dispatch::ThreadedDispatcher> xserver_thread;
