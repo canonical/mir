@@ -18,10 +18,7 @@
 #ifndef MIR_FRONTEND_XWAYLAND_SERVER_H
 #define MIR_FRONTEND_XWAYLAND_SERVER_H
 
-#include <boost/process.hpp>
 #include <memory>
-
-namespace bp = boost::process;
 
 namespace mir
 {
@@ -58,7 +55,7 @@ private:
     std::shared_ptr<XWaylandWM> wm;
     int xdisplay;
     std::shared_ptr<WaylandConnector> wlc;
-    bp::child *xwayland_process;
+    pid_t pid;
     std::shared_ptr<dispatch::MultiplexingDispatchable> dispatcher;
     std::shared_ptr<dispatch::ReadableFd> afd_dispatcher;
     std::shared_ptr<dispatch::ReadableFd> fd_dispatcher;
