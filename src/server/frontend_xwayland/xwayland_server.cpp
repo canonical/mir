@@ -164,9 +164,10 @@ void mf::XWaylandServer::bind_to_socket()
 {
     struct sockaddr_un addr;
     socklen_t size, name_size;
-    addr.sun_family = AF_LOCAL;
+
     socket_fd = socket(PF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
 
+    addr.sun_family = AF_LOCAL;
     name_size = snprintf(addr.sun_path, sizeof addr.sun_path, "/tmp/.X11-unix/X%d", xdisplay) + 1;
     size = offsetof(struct sockaddr_un, sun_path) + name_size;
     unlink(addr.sun_path);
@@ -191,10 +192,10 @@ void mf::XWaylandServer::bind_to_abstract_socket()
 {
     struct sockaddr_un addr;
     socklen_t size, name_size;
-    addr.sun_family = AF_LOCAL;
 
     abstract_socket_fd = socket(PF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
 
+    addr.sun_family = AF_LOCAL;
     name_size = snprintf(addr.sun_path, sizeof addr.sun_path, "%c/tmp/.X11-unix/X%d", 0, xdisplay);
     size = offsetof(struct sockaddr_un, sun_path) + name_size;
     if (bind(abstract_socket_fd, (struct sockaddr *)&addr, size) < 0)
@@ -229,9 +230,8 @@ int mf::XWaylandServer::create_lockfile()
         {
             if (fd >= 0)
                 close(fd);
-
-            errno = EEXIST;
-            return -1;
+            mir::log_error("Lockfile exists!!");
+            return EEXIST;
         }
 
         /* Trim the trailing LF, or at least ensure it's NULL. */
@@ -244,29 +244,33 @@ int mf::XWaylandServer::create_lockfile()
             /* stale lock file; unlink and try again */
             close(fd);
             if (unlink(lockfile))
-                /* If we fail to unlink, return EEXIST
-                   so we try the next display number.*/
-                errno = EEXIST;
+            {
+                mir::log_error("Lockfile exists!!");
+                return EEXIST;
+            }
             else
-                errno = EAGAIN;
-            return -1;
+            {
+                mir::log_error("again!!");
+                return EAGAIN;
+            }
         }
 
         close(fd);
-        errno = EEXIST;
-        return -1;
+        return EEXIST;
     }
     else if (fd < 0)
     {
-        return -1;
+        mir::log_error("Lockfile exists1!!");
+        return EEXIST;
     }
 
     size = dprintf(fd, "%10d\n", getpid());
     if (size != 11)
     {
+        mir::log_error("Lockfile exists2!!");
         unlink(lockfile);
         close(fd);
-        return -1;
+        return EEXIST;
     }
 
     close(fd);
@@ -276,25 +280,13 @@ int mf::XWaylandServer::create_lockfile()
 
 void mf::XWaylandServer::setup_socket()
 {
-// TODO I dont really like goto's, should remove
-again:
-    if (create_lockfile() < 0)
+    int i = create_lockfile();
+    while (i == EAGAIN)
     {
-        if (errno == EAGAIN)
-        {
-            goto again;
-        }
-        else if (errno == EEXIST)
-        {
-            mir::log_error("X11 lock alredy exist!");
-            return;
-        }
-        else
-        {
-            mir::log_error("Failed to create X11 lockfile!");
-            return;
-        }
+        i = create_lockfile();
     }
+    if (i != 0)
+        mir::log_info("ERROR");
     bind_to_abstract_socket();
     bind_to_socket();
 }
