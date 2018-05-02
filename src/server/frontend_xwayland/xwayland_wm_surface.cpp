@@ -51,7 +51,6 @@ mf::XWaylandWMSurface::XWaylandWMSurface(XWaylandWM *wm, xcb_window_t window)
 mf::XWaylandWMSurface::~XWaylandWMSurface()
 {
     destroyed = true;
-    wlsurface->clear_role();
 }
 
 void mf::XWaylandWMSurface::dirty_properties()
