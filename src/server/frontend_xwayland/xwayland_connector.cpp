@@ -20,8 +20,8 @@
 #define MIR_LOG_COMPONENT "xwaylandconnector"
 #include "mir/log.h"
 
-#include "mir/terminate_with_current_exception.h"
 #include "mir/optional_value.h"
+#include "mir/terminate_with_current_exception.h"
 #include "wayland_connector.h"
 #include "xwayland_server.h"
 
@@ -30,8 +30,8 @@ namespace mf = mir::frontend;
 mf::XWaylandConnector::XWaylandConnector(const int xdisplay, std::shared_ptr<mf::WaylandConnector> wc)
     : enabled(!!wc->get_xwayland_wm_shell())
 {
-  if (enabled)
-    xwayland_server = std::make_shared<mf::XWaylandServer>(xdisplay, wc);
+    if (enabled)
+        xwayland_server = std::make_shared<mf::XWaylandServer>(xdisplay, wc);
 }
 
 void mf::XWaylandConnector::start()
@@ -39,9 +39,14 @@ void mf::XWaylandConnector::start()
     if (!enabled)
         return;
 
+    if (getenv("MIR_X11_LAZY"))
+    {
+        xwayland_server->spawn_lazy_xserver();
+        return;
+    }
+
     xwayland_server->setup_socket();
     xwayland_server->spawn_xserver_on_event_loop();
-
     xserver_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(
         "Mir/X11 Reader", xwayland_server->get_dispatcher(), []() { mir::terminate_with_current_exception(); });
     mir::log_info("XWayland loop started");
@@ -66,5 +71,5 @@ int mf::XWaylandConnector::client_socket_fd(
 
 auto mf::XWaylandConnector::socket_name() const -> optional_value<std::string>
 {
-  return optional_value<std::string>();
+    return optional_value<std::string>();
 }

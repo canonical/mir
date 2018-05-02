@@ -55,6 +55,9 @@ mf::XWaylandServer::XWaylandServer(const int xdisplay, std::shared_ptr<mf::Wayla
 
 mf::XWaylandServer::~XWaylandServer()
 {
+    if (lazy)
+      return;
+
     mir::log_info("deiniting xwayland server");
     char path[256];
 
@@ -128,6 +131,9 @@ void mf::XWaylandServer::spawn()
 
         // forward SIGUSR1 to parent thread (us)
         signal(SIGUSR1, SIG_IGN);
+        if (lazy)
+            execl("/usr/bin/Xwayland", "Xwayland", dsp_str.c_str(), "-rootless", "-wm", wm_fd_str.c_str(), NULL);
+        else
             execl("/usr/bin/Xwayland", "Xwayland", dsp_str.c_str(), "-rootless", "-terminate", "-listen",
                   abs_fd_str.c_str(), "-listen", fd_str.c_str(), "-wm", wm_fd_str.c_str(), NULL);
         break;
@@ -299,4 +305,10 @@ void mf::XWaylandServer::spawn_xserver_on_event_loop()
     fd_dispatcher = std::make_shared<md::ReadableFd>(mir::Fd{mir::IntOwnedFd{socket_fd}}, [this]() { spawn(); });
     dispatcher->add_watch(afd_dispatcher);
     dispatcher->add_watch(fd_dispatcher);
+}
+
+void mf::XWaylandServer::spawn_lazy_xserver()
+{
+    lazy = true;
+    lazy_thread = std::make_unique<std::thread>(&mf::XWaylandServer::spawn, this);
 }

@@ -19,6 +19,7 @@
 #define MIR_FRONTEND_XWAYLAND_SERVER_H
 
 #include <memory>
+#include <thread>
 
 namespace mir
 {
@@ -38,6 +39,7 @@ public:
     ~XWaylandServer();
     void setup_socket();
     void spawn_xserver_on_event_loop();
+    void spawn_lazy_xserver();
     std::shared_ptr<dispatch::MultiplexingDispatchable> const get_dispatcher()
     {
         return dispatcher;
@@ -59,8 +61,10 @@ private:
     std::shared_ptr<dispatch::MultiplexingDispatchable> dispatcher;
     std::shared_ptr<dispatch::ReadableFd> afd_dispatcher;
     std::shared_ptr<dispatch::ReadableFd> fd_dispatcher;
+    std::unique_ptr<std::thread> lazy_thread;
     int socket_fd;
     int abstract_socket_fd;
+    bool lazy;
 };
 } /* frontend */
 } /* mir */
