@@ -77,14 +77,26 @@ static const struct cursor_alternatives cursors[] = {
 namespace mf = mir::frontend;
 
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<mf::WaylandConnector> wc)
-    : wlc(wc), dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()}
+    : wlc(wc), dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()}, xcb_connection(nullptr)
 {
 }
 
 mf::XWaylandWM::~XWaylandWM()
 {
-    dispatcher->remove_watch(wm_dispatcher);
-    event_thread.reset();
+    if (event_thread) {
+      dispatcher->remove_watch(wm_dispatcher);
+      event_thread.reset();
+    }
+
+    // xcb_cursors == 2 when its empty
+    if (ARRAY_LENGTH(xcb_cursors) != 2) {
+      mir::log_info("Cleaning cursors");
+      for (unsigned long i = 0; i < ARRAY_LENGTH(xcb_cursors); i++)
+        xcb_free_cursor(xcb_connection, xcb_cursors[i]);
+    }
+    if (xcb_connection != nullptr)
+      xcb_disconnect(xcb_connection);
+    close(wm_fd);
 }
 
 void mf::XWaylandWM::start(wl_client *wlc, const int fd)

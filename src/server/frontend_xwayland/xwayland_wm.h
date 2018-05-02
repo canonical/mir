@@ -186,6 +186,8 @@ private:
     xcb_cursor_t xcb_cursor_images_load_cursor(const XcursorImages *images);
     xcb_cursor_t xcb_cursor_library_load_cursor(const char *file);
 
+    std::shared_ptr<WaylandConnector> wlc;
+    std::shared_ptr<dispatch::MultiplexingDispatchable> dispatcher;
     int wm_fd;
     xcb_connection_t *xcb_connection;
     xcb_screen_t *xcb_screen;
@@ -199,8 +201,6 @@ private:
     xcb_render_pictforminfo_t xcb_format_rgb, xcb_format_rgba;
     const xcb_query_extension_reply_t *xfixes;
     std::unique_ptr<dispatch::ThreadedDispatcher> event_thread;
-    std::shared_ptr<WaylandConnector> wlc;
-    std::shared_ptr<dispatch::MultiplexingDispatchable> dispatcher;
     bool running_event;
     wl_client *wlclient;
     xcb_visualid_t xcb_visual_id;
