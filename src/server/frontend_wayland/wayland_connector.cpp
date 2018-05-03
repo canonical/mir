@@ -26,6 +26,7 @@
 #include "wl_seat.h"
 #include "xdg_shell_v6.h"
 #include "wl_region.h"
+#include "xwayland_wm_shell.h"
 
 #include "basic_surface_event_sink.h"
 #include "null_event_sink.h"
@@ -642,6 +643,8 @@ mf::WaylandConnector::WaylandConnector(
     data_device_manager_global = mf::create_data_device_manager(display.get());
     if (!getenv("MIR_DISABLE_XDG_SHELL_V6_UNSTABLE"))
         xdg_shell_global = std::make_unique<XdgShellV6>(display.get(), shell, *seat_global);
+    if (getenv("MIR_ENABLE_EXPERIMENTAL_X11"))
+        xwayland_wm_shell = std::make_shared<mf::XWaylandWMShell>(shell, *seat_global);
 
     wl_display_init_shm(display.get());
 
@@ -767,4 +770,14 @@ void mf::WaylandConnector::run_on_wayland_display(std::function<void(wl_display*
 auto mf::WaylandConnector::socket_name() const -> optional_value<std::string>
 {
     return wayland_display;
+}
+
+wl_display *mf::WaylandConnector::get_wl_display()
+{
+    return display.get();
+}
+
+std::shared_ptr<mf::XWaylandWMShell> mf::WaylandConnector::get_xwayland_wm_shell()
+{
+    return xwayland_wm_shell;
 }

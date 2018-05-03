@@ -920,6 +920,7 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.31 {
     mir::DefaultServerConfiguration::the_surface_stack_model*;
     mir::DefaultServerConfiguration::the_touch_visualizer*;
     mir::DefaultServerConfiguration::the_wayland_connector*;
+    mir::DefaultServerConfiguration::the_xwayland_connector*;
     mir::DefaultServerConfiguration::the_window_manager_builder*;
     mir::DefaultServerConfiguration::wrap_cursor*;
     mir::DefaultServerConfiguration::wrap_cursor_listener*;

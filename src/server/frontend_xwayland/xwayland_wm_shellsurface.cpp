@@ -1,0 +1,116 @@
+/*
+ * Copyright (C) 2018 Marius Gripsgard <marius@ubports.com>
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 or 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+
+#define MIR_LOG_COMPONENT "xwaylandwm"
+#include "mir/log.h"
+#include "xwayland_log.h"
+
+#include "xwayland_wm_shellsurface.h"
+
+#include "mir/frontend/shell.h"
+#include "mir/scene/surface_creation_parameters.h"
+
+#include "basic_surface_event_sink.h"
+#include "wayland_utils.h"
+
+namespace mf = mir::frontend;
+
+mf::XWaylandWMShellSurface::XWaylandWMShellSurface(wl_client* client,
+                                                   WlSurface* surface,
+                                                   std::shared_ptr<mf::Shell> const& shell,
+                                                   WlSeat& seat)
+    : WlAbstractMirWindow{&seat, client, surface, shell}
+{
+    surface->set_role(this);
+    set_state_now(MirWindowState::mir_window_state_maximized);
+}
+
+mf::XWaylandWMShellSurface::~XWaylandWMShellSurface()
+{
+    surface->clear_role();
+}
+
+void mf::XWaylandWMShellSurface::destroy()
+{
+    surface->clear_role();
+}
+void mf::XWaylandWMShellSurface::set_toplevel()
+{
+    surface->set_role(this);
+    mir::log_verbose("set toplevel");
+}
+void mf::XWaylandWMShellSurface::set_transient(struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
+{
+    (void)parent;
+    (void)x;
+    (void)y;
+    (void)flags;
+    mir::log_verbose("set transidient");
+}
+void mf::XWaylandWMShellSurface::handle_resize(const geometry::Size& new_size)
+{
+    (void)new_size;
+    // TODO
+    mir::log_verbose("handle resize");
+}
+
+// This is just a wrapper to avoid needing nullptr to use this method
+void mf::XWaylandWMShellSurface::set_fullscreen()
+{
+    WlAbstractMirWindow::set_fullscreen(nullptr);
+    mir::log_verbose("set fullscreen");
+}
+
+void mf::XWaylandWMShellSurface::set_popup(
+    struct wl_resource* /*seat*/, uint32_t /*serial*/, struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
+{
+    (void)parent;
+    (void)x;
+    (void)y;
+    (void)flags;
+    // TODO
+}
+
+void mf::XWaylandWMShellSurface::set_title(std::string const& title)
+{
+    if (surface_id().as_value())
+    {
+        spec().name = title;
+    }
+    else
+    {
+        params->name = title;
+    }
+    mir::log_verbose("set title");
+}
+
+void mf::XWaylandWMShellSurface::move()
+{
+    if (surface_id().as_value())
+    {
+        if (auto session = get_session(client))
+        {
+            shell->request_operation(session, surface_id(), sink->latest_timestamp_ns(), Shell::UserRequest::move);
+        }
+    }
+    mir::log_verbose("move");
+}
+void mf::XWaylandWMShellSurface::resize(uint32_t edges)
+{
+    (void)edges;
+    // TODO
+}
