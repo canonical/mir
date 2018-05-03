@@ -195,7 +195,7 @@ private:
     std::map<xcb_window_t, XWaylandWMSurface *> surfaces;
     std::shared_ptr<dispatch::ReadableFd> wm_dispatcher;
     int xcb_cursor;
-    xcb_cursor_t *xcb_cursors;
+    std::vector<xcb_cursor_t> xcb_cursors;
     xcb_window_t xcb_selection_window;
     xcb_selection_request_event_t xcb_selection_request;
     xcb_render_pictforminfo_t xcb_format_rgb, xcb_format_rgba;

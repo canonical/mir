@@ -46,6 +46,7 @@
 #include "mir/frontend/session.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface.h"
+#include <mir/thread_name.h>
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer.h"
@@ -690,7 +691,13 @@ mf::WaylandConnector::~WaylandConnector()
 
 void mf::WaylandConnector::start()
 {
-    dispatch_thread = std::thread{wl_display_run, display.get()};
+    dispatch_thread = std::thread{
+        [](wl_display* d)
+        {
+            mir::set_thread_name("Mir/Wayland");
+            wl_display_run(d);
+        },
+        display.get()};
 }
 
 void mf::WaylandConnector::stop()
