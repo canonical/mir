@@ -78,7 +78,7 @@ mtf::LibInputEnvironment::LibInputEnvironment()
         device.second.properties[model] = device.first;
     }
 
-    ON_CALL(mock_libinput, libinput_udev_create_context(_,_,_))
+    ON_CALL(mock_libinput, libinput_path_create_context(_,_))
         .WillByDefault(Return(li_context));
     ON_CALL(mock_libinput, libinput_device_get_device_group(_))
             .WillByDefault(Return(nullptr));

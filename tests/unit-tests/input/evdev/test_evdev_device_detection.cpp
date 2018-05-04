@@ -41,9 +41,8 @@ TEST_P(EvdevDeviceDetection, evaluates_expected_input_class)
 {
     using namespace testing;
     auto const& param = GetParam();
-    udev* ctx = reinterpret_cast<udev*>(1);
     auto dev = env.setup_device(std::get<0>(param));
-    std::shared_ptr<libinput> lib = mie::make_libinput(ctx);
+    std::shared_ptr<libinput> lib = mie::make_libinput();
     mie::LibInputDevice device(mir::report::null_input_report(), mie::make_libinput_device(lib, dev));
     auto info = device.get_device_info();
     EXPECT_THAT(info.capabilities, Eq(std::get<1>(param)));
