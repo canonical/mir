@@ -62,6 +62,9 @@ public:
     virtual char const* devnode() const = 0;
     virtual char const* property(char const *name) const = 0;
     virtual dev_t devnum() const = 0;
+    virtual char const* sysname() const = 0;
+    virtual bool initialised() const = 0;
+    virtual char const* syspath() const = 0;
 protected:
     Device() = default;
 };
@@ -141,6 +144,7 @@ public:
     void filter_by_subsystem_and_type(std::string const& subsystem, std::string const& devtype);
 
     void process_events(std::function<void(EventType, Device const&)> const& handler) const;
+    void process_event(std::function<void(EventType, Device const&)> const& handler) const;
 
 private:
     udev_monitor* const monitor;

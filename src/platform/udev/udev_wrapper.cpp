@@ -41,6 +41,9 @@ public:
     virtual char const* devnode() const override;
     virtual char const* property(char const*) const override;
     virtual dev_t devnum() const override;
+    virtual char const* sysname() const override;
+    virtual bool initialised() const override;
+    virtual char const* syspath() const override;
 
     udev_device* const dev;
 };
@@ -80,6 +83,11 @@ char const* DeviceImpl::devnode() const
     return udev_device_get_devnode(dev);
 }
 
+char const* DeviceImpl::sysname() const
+{
+    return udev_device_get_sysname(dev);
+}
+
 char const* DeviceImpl::property(char const* name) const
 {
     return udev_device_get_property_value(dev, name);
@@ -88,6 +96,16 @@ char const* DeviceImpl::property(char const* name) const
 dev_t DeviceImpl::devnum() const
 {
     return udev_device_get_devnum(dev);
+}
+
+bool DeviceImpl::initialised() const
+{
+    return static_cast<bool>(udev_device_get_is_initialized(dev));
+}
+
+char const* DeviceImpl::syspath() const
+{
+    return udev_device_get_syspath(dev);
 }
 }
 
@@ -295,6 +313,15 @@ void mu::Monitor::process_events(std::function<void(mu::Monitor::EventType,
         if (dev != nullptr)
             handler(action_to_event_type(udev_device_get_action(dev)), DeviceImpl(dev));
     } while (dev != nullptr);
+}
+
+void mu::Monitor::process_event(
+    std::function<void(mu::Monitor::EventType, mu::Device const&)> const& handler) const
+{
+    udev_device *dev;
+    dev = udev_monitor_receive_device(monitor);
+    if (dev != nullptr)
+        handler(action_to_event_type(udev_device_get_action(dev)), DeviceImpl(dev));
 }
 
 int mu::Monitor::fd(void) const
