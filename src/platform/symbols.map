@@ -168,3 +168,13 @@ MIR_PLATFORM_0.31 {
     mir::options::vt_option_name*;
   };
 } MIRPLATFORM_1.0;
+
+MIR_PLATFORM_0.32 {
+ global:
+  extern "C++" {
+   mir::udev::Device::initialised*;
+   mir::udev::Device::sysname*;
+   mir::udev::Device::syspath*;
+   mir::udev::Monitor::process_event*;
+  };
+} MIR_PLATFORM_0.31;

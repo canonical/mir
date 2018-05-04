@@ -62,6 +62,9 @@ public:
     virtual char const* devnode() const = 0;
     virtual char const* property(char const *name) const = 0;
     virtual dev_t devnum() const = 0;
+    virtual char const* sysname() const = 0;
+    virtual bool initialised() const = 0;
+    virtual char const* syspath() const = 0;
 protected:
     Device() = default;
 };
