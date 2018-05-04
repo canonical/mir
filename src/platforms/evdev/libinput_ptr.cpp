@@ -53,14 +53,10 @@ void fd_close(int fd, void* /*userdata*/)
 }
 
 const libinput_interface fd_ops = {fd_open, fd_close};
-char const default_seat[] = "seat0";
 }
 
-mie::LibInputPtr mie::make_libinput(udev* context)
+mie::LibInputPtr mie::make_libinput()
 {
-    auto ret = mie::LibInputPtr{libinput_udev_create_context(&fd_ops, nullptr, context), libinput_unref};
-    // Temporary technical debt - pick the first seat as default.
-    if (libinput_udev_assign_seat(ret.get(), default_seat) != 0)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failure assigning udev seat"));
+    auto ret = mie::LibInputPtr{libinput_path_create_context(&fd_ops, nullptr), libinput_unref};
     return ret;
 }

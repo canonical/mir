@@ -135,7 +135,7 @@ struct LibInputDevice : public ::testing::Test
     {
         ON_CALL(mock_sink, bounding_rectangle())
             .WillByDefault(Return(geom::Rectangle({0,0}, {100,100})));
-        lib = mie::make_libinput(fake_udev);
+        lib = mie::make_libinput();
     }
 
     libinput_device* setup_laptop_keyboard()

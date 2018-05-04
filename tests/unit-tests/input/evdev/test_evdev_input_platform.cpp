@@ -195,6 +195,6 @@ TEST_F(EvdevInputPlatform, creates_new_context_on_resume)
     platform->start();
     platform->stop();
 
-    EXPECT_CALL(env.mock_libinput, libinput_udev_create_context(_,_,_));
+    EXPECT_CALL(env.mock_libinput, libinput_path_create_context(_,_));
     platform->start();
 }

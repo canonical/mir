@@ -35,7 +35,7 @@ namespace evdev
 {
 using LibInputPtr = std::unique_ptr<libinput, libinput*(*)(libinput*)>;
 
-LibInputPtr make_libinput(::udev* context);
+LibInputPtr make_libinput();
 }
 }
 }
