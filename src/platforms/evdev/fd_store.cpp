@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -13,33 +13,22 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVDEV_LIBINPUT_PTR_H_
-#define MIR_INPUT_EVDEV_LIBINPUT_PTR_H_
+#include "fd_store.h"
 
-#include "mir_toolkit/event.h"
-#include "mir/fd.h"
+namespace mie = mir::input::evdev;
 
-#include <unordered_map>
-#include <memory>
-#include <functional>
-
-struct libinput;
-
-namespace mir
+void mie::FdStore::store_fd(char const* path, mir::Fd&& fd)
 {
-namespace input
-{
-namespace evdev
-{
-using LibInputPtr = std::unique_ptr<libinput, libinput*(*)(libinput*)>;
-class FdStore;
-
-LibInputPtr make_libinput(FdStore* fd_store);
-}
-}
+    fds.insert(std::make_pair(path, std::move(fd)));
 }
 
-#endif
+mir::Fd&& mie::FdStore::take_fd(char const* path)
+{
+    auto fd = std::move(fds.at(path));
+    fds.erase(path);
+
+    return std::move(fd);
+}

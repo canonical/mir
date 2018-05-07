@@ -18,6 +18,7 @@
 
 #include "src/platforms/evdev/platform.h"
 #include "src/server/report/null_report_factory.h"
+#include "mir/console_services.h"
 
 #include "mir/input/input_device_registry.h"
 #include "mir/dispatch/dispatchable.h"
@@ -54,6 +55,36 @@ struct MockInputDeviceRegistry : public mi::InputDeviceRegistry
     MOCK_METHOD1(remove_device, void(std::shared_ptr<mi::InputDevice> const&));
 };
 
+class StubConsoleServices : public mir::ConsoleServices
+{
+public:
+    void
+    register_switch_handlers(
+        mir::graphics::EventHandlerRegister&,
+        std::function<bool()> const&,
+        std::function<bool()> const&) override
+    {
+    }
+
+    void restore() override
+    {
+    }
+
+    std::future<std::unique_ptr<mir::Device>> acquire_device(
+        int /*major*/, int /*minor*/,
+        mir::Device::OnDeviceActivated const& on_activated,
+        mir::Device::OnDeviceSuspended const&,
+        mir::Device::OnDeviceRemoved const&) override
+    {
+        std::promise<std::unique_ptr<mir::Device>> promise;
+        on_activated(mir::Fd{});
+        promise.set_value(nullptr);
+
+        return promise.get_future();
+    }
+};
+
+
 struct EvdevInputPlatform : public ::testing::TestWithParam<std::string>
 {
     testing::NiceMock<MockInputDeviceRegistry> mock_registry;
@@ -82,7 +113,11 @@ struct EvdevInputPlatform : public ::testing::TestWithParam<std::string>
     auto create_input_platform()
     {
         auto ctx = std::make_unique<mu::Context>();
-        return std::make_unique<mie::Platform>(mt::fake_shared(mock_registry), mr::null_input_report(), std::move(ctx));
+        return std::make_unique<mie::Platform>(
+            mt::fake_shared(mock_registry),
+            mr::null_input_report(),
+            std::move(ctx),
+            std::make_shared<StubConsoleServices>());
     }
 };
 

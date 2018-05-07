@@ -18,6 +18,7 @@
 
 #include "libinput.h"
 #include "libinput_ptr.h"
+#include "fd_store.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -31,20 +32,13 @@ namespace mie = mir::input::evdev;
 
 namespace
 {
-int use_monotonic_clock(int evdev)
+int fd_open(const char* path, int /*flags*/, void* userdata)
 {
-    if (evdev != -1)
-    {
-        int const clockId = CLOCK_MONOTONIC;
-        // Switch each evdev 'client' to MONOTONIC
-        ioctl(evdev, EVIOCSCLOCKID, &clockId);
-    }
-    return evdev;
-}
+    auto fd_store = static_cast<mie::FdStore*>(userdata);
 
-int fd_open(const char* path, int flags, void* /*userdata*/)
-{
-    return use_monotonic_clock(::open(path, flags));
+    auto fd = fd_store->take_fd(path);
+
+    return fcntl(fd, F_DUPFD_CLOEXEC, 0);
 }
 
 void fd_close(int fd, void* /*userdata*/)
@@ -55,8 +49,12 @@ void fd_close(int fd, void* /*userdata*/)
 const libinput_interface fd_ops = {fd_open, fd_close};
 }
 
-mie::LibInputPtr mie::make_libinput()
+mie::LibInputPtr mie::make_libinput(FdStore* fd_store)
 {
-    auto ret = mie::LibInputPtr{libinput_path_create_context(&fd_ops, nullptr), libinput_unref};
+    auto ret = mie::LibInputPtr{
+        libinput_path_create_context(
+            &fd_ops,
+            fd_store),
+        libinput_unref};
     return ret;
 }
