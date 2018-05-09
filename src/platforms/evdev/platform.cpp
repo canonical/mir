@@ -108,7 +108,7 @@ public:
             return false;
         }
 
-        monitor.process_event(on_event);
+        monitor.process_events(on_event);
         return true;
     }
 
@@ -185,13 +185,7 @@ void mie::Platform::start()
                                 {
                                     device_fds.store_fd(devnode.c_str(), std::move(device_fd));
 
-                                    auto input_device = libinput_path_add_device(lib.get(), devnode.c_str());
-                                    if (input_device)
-                                    {
-                                        this->device_added(input_device);
-                                    }
-                                    device_watchers.insert(std::make_pair(devnum, pending_devices.at(devnum).get()));
-                                    pending_devices.erase(devnum);
+                                    libinput_path_add_device(lib.get(), devnode.c_str());
                                 },
                                 [this, devnum = device.devnum(), syspath = std::string{device.syspath()}]()
                                 {
@@ -239,6 +233,7 @@ void mie::Platform::start()
                             if (strcmp(device.syspath(), udev_device_get_syspath(device_udev)) == 0)
                             {
                                 libinput_path_remove_device(input_device->device());
+                                device_watchers.erase(device.devnum());
                             }
                         }
                     }
@@ -303,6 +298,10 @@ void mie::Platform::device_added(libinput_device* dev)
 
     log_info("Added %s", describe(dev).c_str());
 
+    auto const devnum = udev_device_get_devnum(libinput_device_get_udev_device(device_ptr.get()));
+    device_watchers.insert({devnum, pending_devices.at(devnum).get()});
+    pending_devices.erase(devnum);
+
     auto device_it = find_device(libinput_device_get_device_group(device_ptr.get()));
     if (end(devices) != device_it)
     {
@@ -354,8 +353,14 @@ auto mie::Platform::find_device(libinput_device_group const* devgroup) -> declty
 
 void mie::Platform::stop()
 {
-    platform_dispatchable->remove_watch(udev_dispatchable);
-    platform_dispatchable->remove_watch(libinput_dispatchable);
+    if (udev_dispatchable)
+    {
+        platform_dispatchable->remove_watch(udev_dispatchable);
+    }
+    if (libinput_dispatchable)
+    {
+        platform_dispatchable->remove_watch(libinput_dispatchable);
+    }
     while (!devices.empty())
     {
         input_device_registry->remove_device(devices.back());

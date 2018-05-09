@@ -18,6 +18,9 @@
 
 #include "fd_store.h"
 
+#define MIR_LOG_COMPONENT "evdev-input"
+#include "mir/log.h"
+
 namespace mie = mir::input::evdev;
 
 void mie::FdStore::store_fd(char const* path, mir::Fd&& fd)
@@ -25,10 +28,15 @@ void mie::FdStore::store_fd(char const* path, mir::Fd&& fd)
     fds.insert(std::make_pair(path, std::move(fd)));
 }
 
-mir::Fd&& mie::FdStore::take_fd(char const* path)
+mir::Fd mie::FdStore::take_fd(char const* path)
 {
-    auto fd = std::move(fds.at(path));
-    fds.erase(path);
-
-    return std::move(fd);
+    try
+    {
+        return fds.at(path);
+    }
+    catch (std::out_of_range const&)
+    {
+        mir::log_warning("Failed to find requested fd for path %s", path);
+    }
+    return mir::Fd{};
 }

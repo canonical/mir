@@ -27,18 +27,25 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <linux/input.h>
+#include <iostream>
+#include <cstring>
 
 namespace mie = mir::input::evdev;
 
 namespace
 {
-int fd_open(const char* path, int /*flags*/, void* userdata)
+int fd_open(const char* path, int flags, void* userdata)
 {
     auto fd_store = static_cast<mie::FdStore*>(userdata);
 
     auto fd = fd_store->take_fd(path);
 
-    return fcntl(fd, F_DUPFD_CLOEXEC, 0);
+    if (fcntl(fd, F_SETFL, flags) == -1)
+    {
+        std::cerr << "Failed to set flags: " << strerror(errno) << " (" << errno << ")" << std::endl;
+    }
+
+    return fd_store->take_fd(path);
 }
 
 void fd_close(int fd, void* /*userdata*/)
