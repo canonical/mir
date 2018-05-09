@@ -107,6 +107,7 @@ WlAbstractMirWindow::WlAbstractMirWindow(WlSeat* seat, wl_client* client, WlSurf
 
 WlAbstractMirWindow::~WlAbstractMirWindow()
 {
+    sink->disconnect();
     *destroyed = true;
     if (surface_id_.as_value())
     {
