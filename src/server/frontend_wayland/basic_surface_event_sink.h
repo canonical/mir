@@ -69,6 +69,8 @@ public:
         return current_state;
     }
 
+    void disconnect() { *destroyed = true; }
+
 protected:
     WlSeat* const seat;
     wl_client* const client;
