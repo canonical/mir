@@ -72,38 +72,55 @@ private:
     GError* raw_error;
 };
 
-LogindSession* simple_proxy_on_system_bus(
+#define MIR_MAKE_EXCEPTION_PTR(x)\
+    std::make_exception_ptr(::boost::enable_error_info(x) <<\
+    ::boost::throw_function(BOOST_CURRENT_FUNCTION) <<\
+    ::boost::throw_file(__FILE__) <<\
+    ::boost::throw_line((int)__LINE__))
+
+std::unique_ptr<LogindSession, decltype(&g_object_unref)> simple_proxy_on_system_bus(
+    mir::MainLoop& ml,
     GDBusConnection* connection,
     char const* object_path)
 {
     using namespace std::literals::string_literals;
 
-    GErrorPtr error;
+    std::shared_ptr<std::promise<std::unique_ptr<LogindSession, decltype(&g_object_unref)>>> promise;
+    auto resolved_session = promise->get_future();
+    ml.spawn(
+        [promised_proxy = std::move(promise), connection, object_path]()
+        {
+            GErrorPtr error;
 
-    auto const proxy = logind_session_proxy_new_sync(
-        connection,
-        G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
-        "org.freedesktop.login1",
-        object_path,
-        nullptr,
-        &error);
+            auto const proxy = logind_session_proxy_new_sync(
+                connection,
+                G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+                "org.freedesktop.login1",
+                object_path,
+                nullptr,
+                &error);
 
-    if (!proxy)
-    {
-        auto error_msg = error ? error->message : "unknown error";
-        BOOST_THROW_EXCEPTION((
-            std::runtime_error{
-                "Failed to connect to DBus interface at "s +
-                object_path + ": " + error_msg
-            }));
-    }
+            if (!proxy)
+            {
+                auto error_msg = error ? error->message : "unknown error";
+                promised_proxy->set_exception(
+                    MIR_MAKE_EXCEPTION_PTR(
+                        std::runtime_error{
+                            "Failed to connect to DBus interface at "s +
+                            object_path + ": " + error_msg}));
+            }
+            else
+            {
+                promised_proxy->set_value({proxy, &g_object_unref});
+            }
 
-    if (error)
-    {
-        mir::log_error("Proxy is non-null, but has error set?! Error: %s", error->message);
-    }
+            if (error)
+            {
+                mir::log_error("Proxy is non-null, but has error set?! Error: %s", error->message);
+            }
+        });
 
-    return proxy;
+    return resolved_session.get();
 }
 
 LogindSeat* simple_seat_proxy_on_system_bus(
@@ -198,19 +215,19 @@ GDBusConnection* connect_to_system_bus()
 }
 }
 
-mir::LogindConsoleServices::LogindConsoleServices()
+mir::LogindConsoleServices::LogindConsoleServices(mir::MainLoop& ml)
     : connection{
-        connect_to_system_bus(),
+        connect_to_system_bus(ml),
         &g_object_unref},
       seat_proxy{
-        simple_seat_proxy_on_system_bus(connection.get(), "/org/freedesktop/login1/seat/seat0"),
+        simple_seat_proxy_on_system_bus(ml, connection.get(), "/org/freedesktop/login1/seat/seat0"),
         &g_object_unref},
       session_path{object_path_for_current_session(seat_proxy.get())},
       session_proxy{
         simple_proxy_on_system_bus(
+            ml,
             connection.get(),
-            session_path.c_str()),
-        &g_object_unref},
+            session_path.c_str())},
       switch_away{[](){ return true; }},
       switch_to{[](){ return true; }},
       active{strncmp("active", logind_session_get_state(session_proxy.get()), strlen("active")) == 0}
@@ -320,12 +337,6 @@ struct TakeDeviceContext
     std::unique_ptr<mir::LogindConsoleServices::Device> device;
     std::promise<std::unique_ptr<mir::Device>> promise;
 };
-
-#define MIR_MAKE_EXCEPTION_PTR(x)\
-    std::make_exception_ptr(::boost::enable_error_info(x) <<\
-    ::boost::throw_function(BOOST_CURRENT_FUNCTION) <<\
-    ::boost::throw_file(__FILE__) <<\
-    ::boost::throw_line((int)__LINE__))
 
 void complete_take_device_call(
     GObject* proxy,
