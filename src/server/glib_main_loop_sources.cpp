@@ -161,10 +161,11 @@ void md::add_idle_gsource(
         static gboolean static_call(IdleContext* ctx)
         {
             ctx->callback();
+            ctx->callback = []{};
             return G_SOURCE_REMOVE;
         }
-        static void static_destroy(IdleContext* ctx) { delete ctx; }
-        std::function<void()> const callback;
+        static void static_destroy(IdleContext* ctx) { ctx->callback(); delete ctx; }
+        std::function<void()> callback;
     };
 
     GSourceRef gsource{g_idle_source_new()};
