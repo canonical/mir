@@ -21,7 +21,7 @@ backends:
             - ubuntu-17.10-64
             - ubuntu-18.04-64
             - ubuntu-devel-64:
-                image: ubuntu-17.10-64
+                image: ubuntu-18.04-64
             - fedora-27-64
             - fedora-28-64
             - fedora-rawhide-64:
