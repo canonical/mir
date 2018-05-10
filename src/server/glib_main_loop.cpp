@@ -137,7 +137,10 @@ mir::GLibMainLoop::GLibMainLoop(
 void mir::GLibMainLoop::run()
 {
     main_loop_exception = nullptr;
-    running_ = true;
+    {
+        std::lock_guard<std::mutex> lock{run_on_halt_mutex};
+        running_ = true;
+    }
 
     while (running_)
     {
