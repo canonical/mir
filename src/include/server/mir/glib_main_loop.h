@@ -55,6 +55,7 @@ public:
 
     void run() override;
     void stop() override;
+    bool running() const override;
 
     void register_signal_handler(
         std::initializer_list<int> signals,
@@ -98,7 +99,7 @@ private:
 
     std::shared_ptr<time::Clock> const clock;
     detail::GMainContextHandle const main_context;
-    std::atomic<bool> running;
+    std::atomic<bool> running_;
     detail::FdSources fd_sources;
     detail::SignalSources signal_sources;
     std::mutex do_not_process_mutex;

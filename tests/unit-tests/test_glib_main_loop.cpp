@@ -1411,6 +1411,71 @@ TEST_F(GLibMainLoopTest, stress_emits_alarm_notification_with_zero_timeout)
     }
 }
 
+TEST_F(GLibMainLoopTest, running_returns_false_when_not_running)
+{
+    EXPECT_FALSE(ml.running());
+}
+
+TEST_F(GLibMainLoopTest, running_returns_true_from_ml)
+{
+    UnblockMainLoop unblocker{ml};
+
+    auto signal = std::make_shared<mt::Signal>();
+    ml.spawn(
+        [signal, this]()
+        {
+            EXPECT_TRUE(ml.running());
+            signal->raise();
+        });
+
+    EXPECT_TRUE(signal->wait_for(std::chrono::seconds{30}));
+}
+
+TEST_F(GLibMainLoopTest, running_returns_true_from_outside_ml_while_running)
+{
+    UnblockMainLoop unblocker{ml};
+
+    auto signal = std::make_shared<mt::Signal>();
+    ml.spawn(
+        [signal]()
+        {
+            signal->raise();
+        });
+
+    ASSERT_TRUE(signal->wait_for(std::chrono::seconds{30}));
+    EXPECT_TRUE(ml.running());
+}
+
+TEST_F(GLibMainLoopTest, running_returns_false_after_stopping)
+{
+    UnblockMainLoop unblocker{ml};
+
+    auto started = std::make_shared<mt::Signal>();
+    ml.spawn(
+        [started]()
+        {
+            started->raise();
+        });
+
+    ASSERT_TRUE(started->wait_for(std::chrono::seconds{30}));
+
+    auto stopped = std::make_shared<mt::Signal>();
+    ml.stop();
+    /*
+     * We rely on this source being enqueued after the ::stop() source:
+     * Either the ml.stop() has been processed, and this runs immediately, or
+     * it is queued and run during ml.stop() proccessing.
+     */
+    ml.enqueue_with_guaranteed_execution(
+        [stopped]()
+        {
+            stopped->raise();
+        });
+
+    ASSERT_TRUE(stopped->wait_for(std::chrono::seconds{30}));
+    EXPECT_FALSE(ml.running());
+}
+
 // This test recreates a scenario we get in our integration and acceptance test
 // runs, and which creates problems for the default glib signal source. The
 // scenario involves creating, running (with signal handling) and destroying
