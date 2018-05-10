@@ -127,7 +127,7 @@ mir::detail::GMainContextHandle::operator GMainContext*() const
 mir::GLibMainLoop::GLibMainLoop(
     std::shared_ptr<time::Clock> const& clock)
     : clock{clock},
-      running{false},
+      running_{false},
       fd_sources{main_context},
       signal_sources{fd_sources},
       before_iteration_hook{[]{}}
@@ -137,9 +137,12 @@ mir::GLibMainLoop::GLibMainLoop(
 void mir::GLibMainLoop::run()
 {
     main_loop_exception = nullptr;
-    running = true;
+    {
+        std::lock_guard<std::mutex> lock{run_on_halt_mutex};
+        running_ = true;
+    }
 
-    while (running)
+    while (running_)
     {
         before_iteration_hook();
         g_main_context_iteration(main_context, TRUE);
@@ -156,7 +159,7 @@ void mir::GLibMainLoop::stop()
         {
             {
                 std::lock_guard<std::mutex> lock{run_on_halt_mutex};
-                running = false;
+                running_ = false;
             }
             // We know any other thread sees running == false here, so don't need
             // to lock run_on_halt_queue.
@@ -169,6 +172,11 @@ void mir::GLibMainLoop::stop()
 
             g_main_context_wakeup(main_context);
         });
+}
+
+bool mir::GLibMainLoop::running() const
+{
+    return running_;
 }
 
 void mir::GLibMainLoop::register_signal_handler(
@@ -281,10 +289,11 @@ void mir::GLibMainLoop::enqueue_with_guaranteed_execution(mir::ServerAction cons
         };
 
     {
-        std::lock_guard<std::mutex> lock{run_on_halt_mutex};
+        std::unique_lock<std::mutex> lock{run_on_halt_mutex};
 
-        if (!running)
+        if (!running_)
         {
+            lock.release();
             action();
             return;
         }
@@ -387,6 +396,22 @@ void mir::GLibMainLoop::reprocess_all_sources()
 
     std::unique_lock<std::mutex> reprocessed_lock{reprocessed_mutex};
     reprocessed_cv.wait(reprocessed_lock, [&] { return reprocessed == true; });
+}
+
+mir::GLibMainLoop::TemporaryThreadContext::TemporaryThreadContext(GMainContext* context)
+    : context{context}
+{
+    g_main_context_push_thread_default(context);
+}
+
+mir::GLibMainLoop::TemporaryThreadContext::~TemporaryThreadContext()
+{
+    g_main_context_pop_thread_default(context);
+}
+
+mir::GLibMainLoop::TemporaryThreadContext mir::GLibMainLoop::make_default_main_context() const
+{
+    return TemporaryThreadContext{main_context};
 }
 
 void mir::GLibMainLoop::handle_exception(std::exception_ptr const& e)
