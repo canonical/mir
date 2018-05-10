@@ -289,10 +289,11 @@ void mir::GLibMainLoop::enqueue_with_guaranteed_execution(mir::ServerAction cons
         };
 
     {
-        std::lock_guard<std::mutex> lock{run_on_halt_mutex};
+        std::unique_lock<std::mutex> lock{run_on_halt_mutex};
 
         if (!running_)
         {
+            lock.release();
             action();
             return;
         }
