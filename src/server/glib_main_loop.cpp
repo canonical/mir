@@ -394,6 +394,22 @@ void mir::GLibMainLoop::reprocess_all_sources()
     reprocessed_cv.wait(reprocessed_lock, [&] { return reprocessed == true; });
 }
 
+mir::GLibMainLoop::TemporaryThreadContext::TemporaryThreadContext(GMainContext* context)
+    : context{context}
+{
+    g_main_context_push_thread_default(context);
+}
+
+mir::GLibMainLoop::TemporaryThreadContext::~TemporaryThreadContext()
+{
+    g_main_context_pop_thread_default(context);
+}
+
+mir::GLibMainLoop::TemporaryThreadContext mir::GLibMainLoop::make_default_main_context() const
+{
+    return TemporaryThreadContext{main_context};
+}
+
 void mir::GLibMainLoop::handle_exception(std::exception_ptr const& e)
 {
     main_loop_exception = e;

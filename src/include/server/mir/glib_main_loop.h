@@ -93,6 +93,30 @@ public:
 
     void reprocess_all_sources();
 
+    /**
+     * Handle class to temporarily replace the thread-default GMainContext.
+     */
+    class TemporaryThreadContext
+    {
+    public:
+        TemporaryThreadContext(GMainContext* context);
+        ~TemporaryThreadContext() noexcept;
+
+        TemporaryThreadContext(TemporaryThreadContext&&) = default;
+        TemporaryThreadContext& operator=(TemporaryThreadContext&&) = default;
+    private:
+        GMainContext* const context;
+        TemporaryThreadContext(TemporaryThreadContext const&) = delete;
+        TemporaryThreadContext& operator=(TemporaryThreadContext const&) = default;
+    };
+
+    /**
+     * Make the GLibMainLoop's GMainContext the thread-default context
+     *
+     * \return  A handle object; until this object is destroyed, this GMainLoop's
+     *          GMainContext is set as the thread-default context.
+     */
+    TemporaryThreadContext make_default_main_context() const;
 private:
     bool should_process_actions_for(void const* owner);
     void handle_exception(std::exception_ptr const& e);

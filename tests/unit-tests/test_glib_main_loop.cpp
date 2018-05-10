@@ -1476,6 +1476,35 @@ TEST_F(GLibMainLoopTest, running_returns_false_after_stopping)
     EXPECT_FALSE(ml.running());
 }
 
+TEST_F(GLibMainLoopTest, sets_thread_default_main_context_when_requested)
+{
+    using namespace testing;
+    auto const previous_default = g_main_context_get_thread_default();
+
+    {
+        auto temporary_context_handle = ml.make_default_main_context();
+        EXPECT_THAT(g_main_context_get_thread_default(), Ne(previous_default));
+    }
+
+    EXPECT_THAT(g_main_context_get_thread_default(), Eq(previous_default));
+}
+
+TEST_F(GLibMainLoopTest, set_thread_default_main_context_is_stable)
+{
+    using namespace testing;
+    auto const first_context =
+        [this]()
+        {
+            auto temporary_context_handle = ml.make_default_main_context();
+            return g_main_context_get_thread_default();
+        }();
+
+    // We should get the same context back each time.
+    auto temporary_context = ml.make_default_main_context();
+    EXPECT_THAT(g_main_context_get_thread_default(), Eq(first_context));
+}
+
+
 // This test recreates a scenario we get in our integration and acceptance test
 // runs, and which creates problems for the default glib signal source. The
 // scenario involves creating, running (with signal handling) and destroying
