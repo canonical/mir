@@ -93,6 +93,10 @@ public:
 
     void reprocess_all_sources();
 
+    /**
+     * Make the GLibMainLoop's GMainContext the thread-default context
+     */
+    void run_with_context_as_thread_default(std::function<void()> const& code);
 private:
     bool should_process_actions_for(void const* owner);
     void handle_exception(std::exception_ptr const& e);
