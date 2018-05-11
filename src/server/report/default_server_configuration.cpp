@@ -56,7 +56,7 @@ std::unique_ptr<mir::report::ReportFactory> mir::DefaultServerConfiguration::rep
     }
 }
 
-std::shared_ptr<void> mir::DefaultServerConfiguration::default_reports()
+std::shared_ptr<mir::report::Reports> mir::DefaultServerConfiguration::default_reports()
 {
     return std::make_unique<report::Reports>(*this, *the_options());
 }
