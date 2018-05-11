@@ -159,6 +159,7 @@ class Configuration;
 namespace report
 {
 class ReportFactory;
+class Reports;
 }
 
 namespace renderer
@@ -345,7 +346,7 @@ public:
     virtual std::shared_ptr<SharedLibraryProberReport>  the_shared_library_prober_report();
 
     virtual std::shared_ptr<ConsoleServices> the_console_services();
-    auto default_reports() -> std::shared_ptr<void>;
+    auto default_reports() -> std::shared_ptr<report::Reports>;
 
 private:
     // We need to ensure the platform library is destroyed last as the
