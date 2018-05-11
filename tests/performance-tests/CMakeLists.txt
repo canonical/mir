@@ -1,7 +1,3 @@
-install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_performance_tests
-  DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
-
 mir_add_wrapped_executable(mir_performance_tests
     test_glmark2-es2-mir.cpp
     test_compositor.cpp
