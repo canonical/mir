@@ -295,8 +295,8 @@ void mf::WlShmBuffer::on_buffer_destroyed(wl_listener *listener, void *)
     shim = wl_container_of(listener, shim, destruction_listener);
 
     {
-        std::lock_guard <std::mutex> lock{*shim->mutex};
         if (auto mir_buffer = shim->associated_buffer.lock()) {
+            std::lock_guard <std::mutex> lock{*shim->mutex};
             mir_buffer->buffer = nullptr;
         }
     }
