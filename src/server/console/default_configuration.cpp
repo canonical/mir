@@ -19,6 +19,7 @@
 #include "mir/default_server_configuration.h"
 #include "mir/options/configuration.h"
 #include "mir/log.h"
+#include "mir/glib_main_loop.h"
 
 #include "null_console_services.h"
 #include "linux_virtual_terminal.h"
@@ -101,7 +102,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                 try
                 {
                     auto const vt_services = std::make_shared<mir::LogindConsoleServices>(
-                        *the_main_loop());
+                        std::dynamic_pointer_cast<GLibMainLoop>(the_main_loop()));
                     mir::log_debug("Using logind for session management");
                     return vt_services;
                 }

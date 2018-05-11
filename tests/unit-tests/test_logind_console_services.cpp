@@ -24,7 +24,11 @@
 #include <cstdio>
 #include <fcntl.h>
 #include <boost/throw_exception.hpp>
+#include <mir/test/auto_unblock_thread.h>
+#include <src/include/common/mir/time/steady_clock.h>
 
+#include "mir/time/steady_clock.h"
+#include "mir/glib_main_loop.h"
 #include "mir/anonymous_shm_file.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/process.h"
@@ -32,11 +36,13 @@
 #include "mir/test/pipe.h"
 #include "mir/test/signal.h"
 #include "mir/test/doubles/mock_event_handler_register.h"
+#include "mir/test/auto_unblock_thread.h"
 
 #include "src/server/console/logind_console_services.h"
 
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
+namespace mt = mir::test;
 
 namespace
 {
@@ -175,7 +181,11 @@ public:
                   nullptr,
                   nullptr,
                   nullptr),
-              &g_object_unref}
+              &g_object_unref},
+          ml{std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>())},
+          ml_thread{
+              [this]() { ml->stop(); },
+              [this]() { ml->run(); }}
     {
         if (!bus_connection)
         {
@@ -641,6 +651,11 @@ public:
             BOOST_THROW_EXCEPTION((std::runtime_error{error->message}));
         }
     }
+    
+    std::shared_ptr<mir::GLibMainLoop   > the_main_loop()
+    {
+        return ml;
+    }
 private:
     DBusDaemon const system_bus;
     DBusDaemon const session_bus;
@@ -651,6 +666,9 @@ private:
     std::shared_ptr<mtf::Process> dbusmock;
     std::unique_ptr<GDBusConnection, decltype(&g_object_unref)> bus_connection;
     mir::Fd mock_stdout;
+
+    std::shared_ptr<mir::GLibMainLoop> const ml;
+    mt::AutoUnblockThread const ml_thread;
 };
 
 using namespace testing;
@@ -661,7 +679,7 @@ TEST_F(LogindConsoleServices, happy_path_succeeds)
     ensure_mock_logind();
     add_any_active_session();
 
-    mir::LogindConsoleServices test{};
+    mir::LogindConsoleServices test{the_main_loop()};
 }
 
 TEST_F(LogindConsoleServices, construction_fails_if_cannot_claim_control)
@@ -677,14 +695,14 @@ TEST_F(LogindConsoleServices, construction_fails_if_cannot_claim_control)
         "raise dbus.exceptions.DBusException('Device or resource busy (36)', name='System.Error.EBUSY')");
 
     EXPECT_THROW(
-        mir::LogindConsoleServices test{};,
+        mir::LogindConsoleServices test{the_main_loop()};,
         std::runtime_error);
 }
 
 TEST_F(LogindConsoleServices, construction_fails_if_no_logind)
 {
     EXPECT_THROW(
-        mir::LogindConsoleServices test{},
+        mir::LogindConsoleServices test{the_main_loop()},
         std::runtime_error);
 }
 
@@ -703,7 +721,7 @@ TEST_F(LogindConsoleServices, selects_active_session)
     // DBusMock will set the active session to the last-created one
     add_any_active_session();
 
-    mir::LogindConsoleServices test{};
+    mir::LogindConsoleServices test{the_main_loop()};
 }
 
 TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
@@ -724,7 +742,7 @@ TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
             fake_device_node.fd());
     }
 
-    mir::LogindConsoleServices services;
+    mir::LogindConsoleServices services{the_main_loop()};
 
     mir::Fd resolved_fd;
     auto device = services.acquire_device(
@@ -736,12 +754,8 @@ TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
         [](){},
         [](){});
 
-    GLibTimeout timeout{10s};
-    while ((device.wait_for(0ms) == std::future_status::timeout) && !timeout)
-    {
-        g_main_context_iteration(g_main_context_default(), true);
-    }
-    ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
+    ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
+
     EXPECT_THAT(resolved_fd, Not(Eq(mir::Fd::invalid)));
     device.get();
 
@@ -763,7 +777,7 @@ TEST_F(LogindConsoleServices, take_device_calls_suspended_callback_when_initiall
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), True)");
 
-    mir::LogindConsoleServices services;
+    mir::LogindConsoleServices services{the_main_loop()};
 
     bool suspend_called{false};
     auto device = services.acquire_device(
@@ -775,12 +789,7 @@ TEST_F(LogindConsoleServices, take_device_calls_suspended_callback_when_initiall
         [&suspend_called](){ suspend_called = true; },
         [](){});
 
-    GLibTimeout timeout{10s};
-    while ((device.wait_for(0ms) == std::future_status::timeout) && !timeout)
-    {
-        g_main_context_iteration(g_main_context_default(), true);
-    }
-    ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
+    ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
     EXPECT_TRUE(suspend_called);
     device.get();
 }
@@ -794,7 +803,7 @@ TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
         session_path.c_str(),
         "raise dbus.exceptions.DBusException('No such file or directory (2)', name='System.Error.ENOENT')");
 
-    mir::LogindConsoleServices services;
+    mir::LogindConsoleServices services{the_main_loop()};
 
     auto device = services.acquire_device(
         22, 33,
@@ -802,11 +811,7 @@ TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
         [](){},
         [](){});
 
-    GLibTimeout timeout{10s};
-    while ((device.wait_for(0ms) == std::future_status::timeout) && !timeout)
-    {
-        g_main_context_iteration(g_main_context_default(), true);
-    }
+    ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
 
     EXPECT_THROW(
         device.get(),
@@ -823,17 +828,18 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), True)");
 
-    mir::LogindConsoleServices services;
+    mir::LogindConsoleServices services{the_main_loop()};
 
     DeviceState state;
 
+    auto active = std::make_shared<mt::Signal>();
     mir::Fd received_fd;
     auto device = services.acquire_device(
         22, 33,
-        [&state, &received_fd](mir::Fd&& device_fd)
+        [active, &received_fd](mir::Fd&& device_fd)
         {
             received_fd = std::move(device_fd);
-            state = DeviceState::Active;
+            active->raise();
         },
         [&state]()
         {
@@ -841,15 +847,7 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
         },
         [](){});
 
-    {
-        GLibTimeout timeout{10s};
-        while ((device.wait_for(0ms) == std::future_status::timeout) && !timeout)
-        {
-            g_main_context_iteration(g_main_context_default(), true);
-        }
-    }
-
-    ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
+    ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
     ASSERT_THAT(state, Eq(DeviceState::Suspended));
     auto handle = device.get();
 
@@ -860,14 +858,7 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
 
     emit_device_activated(session_path.c_str(), 22, 33, fake_device_node.fd());
 
-    {
-        GLibTimeout timeout{10s};
-        while (state != DeviceState::Active && !timeout)
-        {
-            g_main_context_iteration(g_main_context_default(), true);
-        }
-    }
-    ASSERT_THAT(state, Eq(DeviceState::Active));
+    ASSERT_TRUE(active->wait_for(30s));
 
     auto const current_flags = fcntl(received_fd, F_GETFL);
     fcntl(received_fd, F_SETFL, current_flags | O_NONBLOCK);
@@ -887,9 +878,10 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
 
-    mir::LogindConsoleServices services;
+    mir::LogindConsoleServices services{the_main_loop()};
 
     DeviceState state;
+    auto suspended = std::make_shared<mt::Signal>();
 
     auto device = services.acquire_device(
         22, 33,
@@ -898,34 +890,19 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
             // We don't actually care about the fd.
             state = DeviceState::Active;
         },
-        [&state]()
+        [suspended]()
         {
-            state = DeviceState::Suspended;
+            suspended->raise();
         },
         [](){});
 
-    {
-        GLibTimeout timeout{10s};
-        while ((device.wait_for(0ms) == std::future_status::timeout) && !timeout)
-        {
-            g_main_context_iteration(g_main_context_default(), true);
-        }
-    }
-
-    ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
+    ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
     ASSERT_THAT(state, Eq(DeviceState::Active));
     auto handle = device.get();
 
     emit_device_suspended(session_path.c_str(), 22, 33, SuspendType::Paused);
 
-    {
-        GLibTimeout timeout{10s};
-        while (state != DeviceState::Suspended && !timeout)
-        {
-            g_main_context_iteration(g_main_context_default(), true);
-        }
-    }
-    EXPECT_THAT(state, Eq(DeviceState::Suspended));
+    EXPECT_TRUE(suspended->wait_for(30s));
 }
 
 TEST_F(LogindConsoleServices, device_removed_callback_called_on_remove)
@@ -937,10 +914,11 @@ TEST_F(LogindConsoleServices, device_removed_callback_called_on_remove)
         session_path.c_str(),
         "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
 
-    mir::LogindConsoleServices services;
+    mir::LogindConsoleServices services{the_main_loop()};
 
     DeviceState state;
 
+    auto gone_received = std::make_shared<mt::Signal>();
     auto device = services.acquire_device(
         22, 33,
         [&state](mir::Fd&&)
@@ -948,37 +926,19 @@ TEST_F(LogindConsoleServices, device_removed_callback_called_on_remove)
             // We don't actually care about the fd.
             state = DeviceState::Active;
         },
-        [&state]()
+        []() {},
+        [gone_received]()
         {
-            state = DeviceState::Suspended;
-        },
-        [&state]()
-        {
-            state = DeviceState::Gone;
+            gone_received->raise();
         });
 
-    {
-        GLibTimeout timeout{10s};
-        while ((device.wait_for(0ms) == std::future_status::timeout) && !timeout)
-        {
-            g_main_context_iteration(g_main_context_default(), true);
-        }
-    }
-
-    ASSERT_THAT(device.wait_for(0ms), Eq(std::future_status::ready));
+    ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
     ASSERT_THAT(state, Eq(DeviceState::Active));
     auto handle = device.get();
 
     emit_device_suspended(session_path.c_str(), 22, 33, SuspendType::Gone);
 
-    {
-        GLibTimeout timeout{10s};
-        while (state != DeviceState::Gone && !timeout)
-        {
-            g_main_context_iteration(g_main_context_default(), true);
-        }
-    }
-    EXPECT_THAT(state, Eq(DeviceState::Gone));
+    EXPECT_TRUE(gone_received->wait_for(30s));
 }
 
 TEST_F(LogindConsoleServices, calls_pause_handler_on_pause)
@@ -987,36 +947,25 @@ TEST_F(LogindConsoleServices, calls_pause_handler_on_pause)
 
     auto session_path = add_any_active_session();
 
-    bool paused{false};
     testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
-    mir::LogindConsoleServices services;
+    mir::LogindConsoleServices services{the_main_loop()};
 
+    auto paused = std::make_shared<mt::Signal>();
     services.register_switch_handlers(
         registrar,
-        [&paused]()
+        [paused]()
         {
-            paused = true;
+            paused->raise();
             return true;
         },
-        [&paused]()
+        []()
         {
-            paused = false;
             return true;
         });
 
     set_logind_session_state(session_path, SessionState::Online);
 
-    GLibTimeout timeout{std::chrono::seconds{10}};
-
-    while (!paused && !timeout)
-    {
-        g_main_context_iteration(g_main_context_default(), true);
-    }
-
-    if (timeout)
-    {
-        FAIL() << "Timeout waiting for pause signal";
-    }
+    EXPECT_TRUE(paused->wait_for(30s));
 }
 
 TEST_F(LogindConsoleServices, calls_resume_handler_on_resume)
@@ -1025,50 +974,31 @@ TEST_F(LogindConsoleServices, calls_resume_handler_on_resume)
 
     auto session_path = add_any_active_session();
 
-    bool paused{false};
     testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
-    mir::LogindConsoleServices services;
+    mir::LogindConsoleServices services{the_main_loop()};
 
+    auto paused = std::make_shared<mt::Signal>();
+    auto resumed = std::make_shared<mt::Signal>();
     services.register_switch_handlers(
         registrar,
-        [&paused]()
+        [paused]()
         {
-            paused = true;
+            paused->raise();
             return true;
         },
-        [&paused]()
+        [resumed]()
         {
-            paused = false;
+            resumed->raise();
             return true;
         });
 
     set_logind_session_state(session_path, SessionState::Online);
 
-    GLibTimeout change_to_online_timeout{std::chrono::seconds{10}};
-
-    while (!paused && !change_to_online_timeout)
-    {
-        g_main_context_iteration(g_main_context_default(), true);
-    }
-
-    if (change_to_online_timeout)
-    {
-        FAIL() << "Test precondition failure: Failed to switch-from the current session";
-    }
+    ASSERT_TRUE(paused->wait_for(30s)) << "Test precondition failure: Failed to switch-from the current session";
 
     set_logind_session_state(session_path, SessionState::Active);
 
-    GLibTimeout change_to_active_timeout{std::chrono::seconds{10}};
-
-    while (paused && !change_to_active_timeout)
-    {
-        g_main_context_iteration(g_main_context_default(), true);
-    }
-
-    if (change_to_active_timeout)
-    {
-        FAIL() << "Timeout while waiting for resume signal";
-    }
+    EXPECT_TRUE(resumed->wait_for(30s));
 }
 
 TEST_F(LogindConsoleServices, calls_pause_handler_on_closing_state)
@@ -1077,36 +1007,25 @@ TEST_F(LogindConsoleServices, calls_pause_handler_on_closing_state)
 
     auto session_path = add_any_active_session();
 
-    bool paused{false};
     testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
-    mir::LogindConsoleServices services;
+    mir::LogindConsoleServices services{the_main_loop()};
 
+    auto paused = std::make_shared<mt::Signal>();
     services.register_switch_handlers(
         registrar,
-        [&paused]()
+        [paused]()
         {
-            paused = true;
+            paused->raise();
             return true;
         },
-        [&paused]()
+        []()
         {
-            paused = false;
             return true;
         });
 
     set_logind_session_state(session_path, SessionState::Closing);
 
-    GLibTimeout timeout{std::chrono::seconds{10}};
-
-    while (!paused && !timeout)
-    {
-        g_main_context_iteration(g_main_context_default(), true);
-    }
-
-    if (timeout)
-    {
-        FAIL() << "Timeout waiting for pause signal";
-    }
+    EXPECT_TRUE(paused->wait_for(30s));
 }
 
 TEST_F(LogindConsoleServices, spurious_online_state_transitions_are_ignored)
@@ -1115,52 +1034,35 @@ TEST_F(LogindConsoleServices, spurious_online_state_transitions_are_ignored)
 
     auto session_path = add_any_active_session();
 
-    bool paused{false};
     testing::NiceMock<mtd::MockEventHandlerRegister> registrar;
-    mir::LogindConsoleServices services;
+    mir::LogindConsoleServices services{the_main_loop()};
 
+    auto paused = std::make_shared<mt::Signal>();
     services.register_switch_handlers(
         registrar,
-        [&paused]()
+        [paused]()
         {
-            paused = true;
+            paused->raise();
             return true;
         },
-        [&paused]()
+        []()
         {
-            paused = false;
             return true;
         });
 
     set_logind_session_state(session_path, SessionState::Online);
 
-    GLibTimeout switch_to_online_timeout{std::chrono::seconds{10}};
+    ASSERT_TRUE(paused->wait_for(30s)) << "Test precondition failure: Failed to switch-from the current session";
 
-    while (!paused && !switch_to_online_timeout)
-    {
-        g_main_context_iteration(g_main_context_default(), true);
-    }
+    paused->reset();
 
-    if (switch_to_online_timeout)
-    {
-        FAIL() << "Test precondition failure: Failed to switch-from the current session";
-    }
-
-    paused = false;
     set_logind_session_state(session_path, SessionState::Online);
 
     /*
      * We're waiting for something to *not* happen, so use a smaller timeout;
     * this can only false-pass, not false-fail.
     */
-    GLibTimeout timeout{std::chrono::seconds{5}};
-
-    while (!paused && !timeout)
-    {
-        g_main_context_iteration(g_main_context_default(), true);
-    }
-
-    EXPECT_FALSE(paused) << "Unexpectedly received pause notification";
+    EXPECT_FALSE(paused->wait_for(5s)) << "Unexpectedly received pause notification";
 }
 
 TEST_F(LogindConsoleServices, online_to_closing_state_transition_is_ignored)
@@ -1169,50 +1071,33 @@ TEST_F(LogindConsoleServices, online_to_closing_state_transition_is_ignored)
 
     auto session_path = add_any_active_session();
 
-    bool paused{false};
     mtd::MockEventHandlerRegister registrar;
-    mir::LogindConsoleServices services;
+    mir::LogindConsoleServices services{the_main_loop()};
 
+    auto paused = std::make_shared<mt::Signal>();
     services.register_switch_handlers(
         registrar,
-        [&paused]()
+        [paused]()
         {
-            paused = true;
+            paused->raise();
             return true;
         },
-        [&paused]()
+        []()
         {
-            paused = false;
             return true;
         });
 
     set_logind_session_state(session_path, SessionState::Online);
 
-    GLibTimeout switch_to_online_timeout{std::chrono::seconds{10}};
+    ASSERT_TRUE(paused->wait_for(30s)) << "Test precondition failure: Failed to switch-from the current session";
 
-    while (!paused && !switch_to_online_timeout)
-    {
-        g_main_context_iteration(g_main_context_default(), true);
-    }
+    paused->reset();
 
-    if (switch_to_online_timeout)
-    {
-        FAIL() << "Test precondition failure: Failed to switch-from the current session";
-    }
-
-    paused = false;
     set_logind_session_state(session_path, SessionState::Closing);
 
     /*
      * We're waiting for something to *not* happen, so use a smaller timeout;
      * this can only false-pass, not false-fail.
      */
-    GLibTimeout timeout{std::chrono::seconds{5}};
-
-    while (!paused && !timeout)
-    {
-        g_main_context_iteration(g_main_context_default(), true);
-    }
-
-    EXPECT_FALSE(paused) << "Unexpectedly received pause notification";
+    EXPECT_FALSE(paused->wait_for(5s)) << "Unexpectedly received pause notification";
 }
