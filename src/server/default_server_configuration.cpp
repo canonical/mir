@@ -69,14 +69,19 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::Configuration> const& configuration_options) :
     configuration_options(configuration_options),
-    default_filter(std::make_shared<mi::VTFilter>()),
-    reports{initialise_reports()}
+    default_filter(std::make_shared<mi::VTFilter>())
+
 {
 }
 
 auto mir::DefaultServerConfiguration::the_options() const
 ->std::shared_ptr<options::Option>
 {
+    if (!the_options_has_been_called)
+    {
+        the_options_has_been_called = true;
+        reports = initialise_reports();
+    }
     return configuration_options->the_options();
 }
 

@@ -56,9 +56,9 @@ std::unique_ptr<mir::report::ReportFactory> mir::DefaultServerConfiguration::rep
     }
 }
 
-std::shared_ptr<mir::report::Reports> mir::DefaultServerConfiguration::initialise_reports()
+std::shared_ptr<mir::report::Reports> mir::DefaultServerConfiguration::initialise_reports() const
 {
-    return std::make_unique<report::Reports>(*this, *the_options());
+    return std::make_unique<report::Reports>(const_cast<DefaultServerConfiguration&>(*this), *the_options());
 }
 
 auto mir::DefaultServerConfiguration::the_compositor_report() -> std::shared_ptr<mc::CompositorReport>
