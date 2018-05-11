@@ -397,6 +397,9 @@ void mir::Server::run()
         auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
         auto const composite_event_filter = self->server_config->the_composite_event_filter();
 
+        // keep the default_reports alive while the server is running
+        auto const default_reports = self->server_config->default_reports();
+
         self->temporary_event_filter->move_filters(composite_event_filter);
 
         if (self->emergency_cleanup_handler)

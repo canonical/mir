@@ -77,11 +77,6 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::
 auto mir::DefaultServerConfiguration::the_options() const
 ->std::shared_ptr<options::Option>
 {
-    if (!the_options_has_been_called)
-    {
-        the_options_has_been_called = true;
-        reports = initialise_reports();
-    }
     return configuration_options->the_options();
 }
 
