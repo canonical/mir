@@ -47,7 +47,7 @@ mir::ModuleProperties const description = {
     mir::libname()
 };
 
-bool can_open_input_devices()
+bool can_open_input_devices(mir::ConsoleServices& console)
 {
     mu::Enumerator input_enumerator{std::make_shared<mu::Context>()};
     input_enumerator.match_subsystem("input");
@@ -60,8 +60,15 @@ bool can_open_input_devices()
         if (device.devnode() != nullptr)
         {
             device_found = true;
+            mir::Fd input_device;
 
-            mir::Fd input_device(::open(device.devnode(), O_RDONLY|O_NONBLOCK));
+            console.acquire_device(
+                major(device.devnum()),
+                minor(device.devnum()),
+                [&input_device](auto&& fd){ input_device = std::move(fd); },
+                [](){},
+                [](){}).get();
+
             if (input_device > 0)
                 return true;
         }
@@ -94,7 +101,8 @@ void add_input_platform_options(
 }
 
 mi::PlatformPriority probe_input_platform(
-    mo::Option const& options)
+    mo::Option const& options,
+    mir::ConsoleServices& console)
 {
     mir::assert_entry_point_signature<mi::ProbePlatform>(&probe_input_platform);
     if (options.is_set(host_socket_opt))
@@ -102,7 +110,7 @@ mi::PlatformPriority probe_input_platform(
         return mi::PlatformPriority::unsupported;
     }
 
-    if (can_open_input_devices())
+    if (can_open_input_devices(console))
         return mi::PlatformPriority::supported;
 
     return mi::PlatformPriority::unsupported;

@@ -46,7 +46,8 @@ void add_input_platform_options(
 }
 
 mi::PlatformPriority probe_input_platform(
-    mo::Option const& /*options*/)
+    mo::Option const& /*options*/,
+    mir::ConsoleServices& /*console*/)
 {
     mir::assert_entry_point_signature<mi::ProbePlatform>(&probe_input_platform);
     return mi::PlatformPriority::dummy;
