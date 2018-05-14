@@ -76,14 +76,36 @@ public:
     {
     }
 
-    boost::future<mir::Fd> acquire_device(int major, int minor) override
+    std::future<std::unique_ptr<mir::Device>> acquire_device(
+        int major, int minor,
+        mir::Device::OnDeviceActivated const& on_activated,
+        mir::Device::OnDeviceSuspended const&,
+        mir::Device::OnDeviceRemoved const&) override
     {
         /* NOTE: This uses the behaviour that MockDRM will intercept any open() call
          * under /dev/dri/
          */
         std::stringstream filename;
         filename << "/dev/dri/" << major << ":" << minor;
-        return boost::make_ready_future<mir::Fd>(::open(filename.str().c_str(), O_RDWR | O_CLOEXEC));
+        mir::Fd device_fd{::open(filename.str().c_str(), O_RDWR | O_CLOEXEC)};
+        std::promise<std::unique_ptr<mir::Device>> promise;
+        if (drmSetMaster(device_fd) == 0)
+        {
+            on_activated(std::move(device_fd));
+            // The Device is *just* a handle; there's no reason for anything to dereference it
+            promise.set_value(nullptr);
+        }
+        else
+        {
+            promise.set_exception(
+                std::make_exception_ptr(
+                    std::system_error{
+                        errno,
+                        std::system_category(),
+                        "drmSetMaster failed"}));
+        }
+
+        return promise.get_future();
     }
 };
 
@@ -365,7 +387,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_in_between_when_cant_set_master)
     udev_environment.add_standard_device("standard-drm-devices");
 
     EXPECT_CALL(mock_drm, drmSetMaster(_))
-        .WillOnce(Return(-1));
+        .WillRepeatedly(Return(-1));
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);

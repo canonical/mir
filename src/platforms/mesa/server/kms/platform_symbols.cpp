@@ -116,8 +116,15 @@ mg::PlatformPriority probe_graphics_platform(
 
         try
         {
-            tmp_fd = console->acquire_device(major(devnum), minor(devnum)).get();
-            break;
+            // Rely on the console handing us a DRM master...
+            console->acquire_device(
+                major(devnum), minor(devnum),
+                [&tmp_fd](mir::Fd&& device_fd) { tmp_fd = std::move(device_fd); },
+                [](){},
+                [](){}).get();
+
+            if (tmp_fd != mir::Fd::invalid)
+                return mg::PlatformPriority::best;
         }
         catch (...)
         {

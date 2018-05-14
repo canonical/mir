@@ -19,12 +19,15 @@
 #include "platform.h"
 #include "libinput_device.h"
 #include "libinput_ptr.h"
+#include "fd_store.h"
+
 #include "mir/udev/wrapper.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/dispatch/readable_fd.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
 #include "mir/module_properties.h"
 #include "mir/assert_module_entry_point.h"
+#include "mir/console_services.h"
 
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_device.h"
@@ -65,14 +68,72 @@ std::string describe(libinput_device* dev)
     return desc;
 }
 
+class DispatchableUDevMonitor : public md::Dispatchable
+{
+public:
+    DispatchableUDevMonitor(
+        mu::Context& context,
+        std::function<void(mu::Monitor::EventType, mu::Device const&)> on_event)
+        : monitor(context),
+          fd{monitor.fd()},
+          on_event{std::move(on_event)}
+    {
+        monitor.filter_by_subsystem("input");
+        monitor.enable();
+
+        auto fake_shared_context = std::shared_ptr<mu::Context>{&context, [](auto){}};
+        mu::Enumerator device_enumerator{fake_shared_context};
+
+        device_enumerator.match_subsystem("input");
+        device_enumerator.scan_devices();
+
+        for (auto const& device : device_enumerator)
+        {
+            if (device.initialised())
+            {
+                this->on_event(mu::Monitor::EventType::ADDED, device);
+            }
+        }
+    }
+
+    mir::Fd watch_fd() const override
+    {
+        return fd;
+    }
+
+    bool dispatch(md::FdEvents events) override
+    {
+        if (events & md::FdEvent::error)
+        {
+            return false;
+        }
+
+        monitor.process_events(on_event);
+        return true;
+    }
+
+    md::FdEvents relevant_events() const override
+    {
+        return md::FdEvent::readable;
+    }
+
+private:
+    mu::Monitor monitor;
+    mir::Fd fd;
+    std::function<void(mu::Monitor::EventType, mu::Device const&)> const on_event;
+};
+
 } // namespace
 
-mie::Platform::Platform(std::shared_ptr<InputDeviceRegistry> const& registry,
-                              std::shared_ptr<InputReport> const& report,
-                              std::unique_ptr<udev::Context>&& udev_context) :
+mie::Platform::Platform(
+        std::shared_ptr<InputDeviceRegistry> const& registry,
+        std::shared_ptr<InputReport> const& report,
+        std::unique_ptr<udev::Context>&& udev_context,
+        std::shared_ptr<ConsoleServices> const& console) :
     report(report),
     udev_context(std::move(udev_context)),
     input_device_registry(registry),
+    console{console},
     platform_dispatchable{std::make_shared<md::MultiplexingDispatchable>()}
 {
 }
@@ -84,11 +145,105 @@ std::shared_ptr<mir::dispatch::Dispatchable> mie::Platform::dispatchable()
 
 void mie::Platform::start()
 {
-    lib = make_libinput(udev_context->ctx());
+    lib = make_libinput(&device_fds);
     libinput_dispatchable =
         std::make_shared<md::ReadableFd>(
             Fd{IntOwnedFd{libinput_get_fd(lib.get())}}, [this]{process_input_events();}
         );
+    udev_dispatchable =
+        std::make_shared<DispatchableUDevMonitor>(
+            *udev_context,
+            [this](auto type, auto const& device)
+            {
+                switch(type)
+                {
+                case mu::Monitor::ADDED:
+                {
+                    if (device.devnode())
+                    {
+                        std::string devnode{device.devnode()};
+                        // Libinput filters out anything without “event” as its name
+                        if (strncmp(device.sysname(), "event", strlen("event")) != 0)
+                        {
+                            return;
+                        }
+                        if (pending_devices.count(device.devnum()) > 0 ||
+                            device_watchers.count(device.devnum()) > 0)
+                        {
+                            // We're already handling this, ignore.
+                            return;
+                        }
+
+                        pending_devices.insert(
+                            {
+                            device.devnum(),
+                            console->acquire_device(
+                                major(device.devnum()),
+                                minor(device.devnum()),
+                                [this, devnode = std::move(devnode), devnum = device.devnum()]
+                                    (mir::Fd&& device_fd)
+                                {
+                                    device_fds.store_fd(devnode.c_str(), std::move(device_fd));
+
+                                    libinput_path_add_device(lib.get(), devnode.c_str());
+                                },
+                                [this, devnum = device.devnum(), syspath = std::string{device.syspath()}]()
+                                {
+                                    for (auto const& input_device : devices)
+                                    {
+                                        auto device_udev = libinput_device_get_udev_device(input_device->device());
+
+                                        if (device_udev)
+                                        {
+                                            if (syspath == udev_device_get_syspath(device_udev))
+                                            {
+                                                libinput_path_remove_device(input_device->device());
+                                            }
+                                        }
+                                    }
+                                    device_watchers.erase(devnum);
+                                },
+                                [this, devnum = device.devnum(), syspath = std::string{device.syspath()}]()
+                                {
+                                    for (auto const& input_device : devices)
+                                    {
+                                        auto device_udev = libinput_device_get_udev_device(input_device->device());
+
+                                        if (device_udev)
+                                        {
+                                            if (syspath == udev_device_get_syspath(device_udev))
+                                            {
+                                                libinput_path_remove_device(input_device->device());
+                                            }
+                                        }
+                                    }
+                                    device_watchers.erase(devnum);
+                                })});
+                    }
+                    break;
+                }
+                case mu::Monitor::REMOVED:
+                {
+                    for (auto const& input_device : this->devices)
+                    {
+                        auto device_udev = libinput_device_get_udev_device(input_device->device());
+
+                        if (device_udev)
+                        {
+                            if (strcmp(device.syspath(), udev_device_get_syspath(device_udev)) == 0)
+                            {
+                                libinput_path_remove_device(input_device->device());
+                                device_watchers.erase(device.devnum());
+                            }
+                        }
+                    }
+                    break;
+                }
+                default:
+                    break;
+                }
+            });
+    platform_dispatchable->add_watch(udev_dispatchable);
     platform_dispatchable->add_watch(libinput_dispatchable);
     process_input_events();
 }
@@ -143,6 +298,10 @@ void mie::Platform::device_added(libinput_device* dev)
 
     log_info("Added %s", describe(dev).c_str());
 
+    auto const devnum = udev_device_get_devnum(libinput_device_get_udev_device(device_ptr.get()));
+    device_watchers.insert({devnum, pending_devices.at(devnum).get()});
+    pending_devices.erase(devnum);
+
     auto device_it = find_device(libinput_device_get_device_group(device_ptr.get()));
     if (end(devices) != device_it)
     {
@@ -194,12 +353,20 @@ auto mie::Platform::find_device(libinput_device_group const* devgroup) -> declty
 
 void mie::Platform::stop()
 {
-    platform_dispatchable->remove_watch(libinput_dispatchable);
+    if (udev_dispatchable)
+    {
+        platform_dispatchable->remove_watch(udev_dispatchable);
+    }
+    if (libinput_dispatchable)
+    {
+        platform_dispatchable->remove_watch(libinput_dispatchable);
+    }
     while (!devices.empty())
     {
         input_device_registry->remove_device(devices.back());
         devices.pop_back();
     }
     libinput_dispatchable.reset();
+    udev_dispatchable.reset();
     lib.reset();
 }

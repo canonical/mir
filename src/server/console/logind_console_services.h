@@ -18,6 +18,8 @@
 #ifndef MIR_LOGIND_CONSOLE_SERVICES_H_
 #define MIR_LOGIND_CONSOLE_SERVICES_H_
 
+#include <future>
+#include <unordered_map>
 #include "mir/console_services.h"
 
 #include "glib.h"
@@ -26,10 +28,12 @@
 
 namespace mir
 {
+class GLibMainLoop;
+
 class LogindConsoleServices : public ConsoleServices
 {
 public:
-    LogindConsoleServices();
+    LogindConsoleServices(std::shared_ptr<GLibMainLoop> const& ml);
 
     void register_switch_handlers(
         graphics::EventHandlerRegister& handlers,
@@ -38,16 +42,45 @@ public:
 
     void restore() override;
 
-    boost::future<Fd> acquire_device(int major, int minor) override;
+    std::future<std::unique_ptr<mir::Device>> acquire_device(
+        int major, int minor,
+        mir::Device::OnDeviceActivated const& on_activated,
+        mir::Device::OnDeviceSuspended const& on_suspended,
+        mir::Device::OnDeviceRemoved const& on_removed) override;
 
+    class Device;
 private:
-    static void on_state_change(GObject* session_proxy, GParamSpec*, gpointer ctx);
+    static void on_state_change(GObject* session_proxy, GParamSpec*, gpointer ctx) noexcept;
+    static void on_pause_device(
+        LogindSession*,
+        unsigned major,
+        unsigned minor,
+        gchar const* type,
+        gpointer ctx) noexcept;
+#ifdef MIR_GDBUS_SIGNALS_SUPPORT_FDS
+    static void on_resume_device(
+        LogindSession*,
+        unsigned major,
+        unsigned minor,
+        GVariant* fd,
+        gpointer ctx);
+#else
+    static GDBusMessage* resume_device_dbus_filter(
+        GDBusConnection* connection,
+        GDBusMessage* message,
+        gboolean incoming,
+        gpointer ctx) noexcept;
+#endif
 
+    std::shared_ptr<GLibMainLoop> const ml;
+    std::unique_ptr<GDBusConnection, decltype(&g_object_unref)> const connection;
     std::unique_ptr<LogindSeat, decltype(&g_object_unref)> const seat_proxy;
+    std::string const session_path;
     std::unique_ptr<LogindSession, decltype(&g_object_unref)> const session_proxy;
     std::function<bool()> switch_away;
     std::function<bool()> switch_to;
     bool active;
+    std::unordered_map<dev_t, Device const* const> acquired_devices;
 };
 }
 

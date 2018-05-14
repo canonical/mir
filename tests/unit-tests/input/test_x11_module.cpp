@@ -18,6 +18,8 @@
 
 #include "mir/shared_library.h"
 #include "mir/input/platform.h"
+#include "mir/console_services.h"
+#include "mir/fd.h"
 
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/doubles/mock_option.h"
@@ -32,6 +34,35 @@ namespace mo = mir::options;
 using namespace ::testing;
 namespace
 {
+class StubConsoleServices : public mir::ConsoleServices
+{
+public:
+    void
+    register_switch_handlers(
+        mir::graphics::EventHandlerRegister&,
+        std::function<bool()> const&,
+        std::function<bool()> const&) override
+    {
+    }
+
+    void restore() override
+    {
+    }
+
+    std::future<std::unique_ptr<mir::Device>> acquire_device(
+        int /*major*/, int /*minor*/,
+        mir::Device::OnDeviceActivated const& on_activated,
+        mir::Device::OnDeviceSuspended const&,
+        mir::Device::OnDeviceRemoved const&) override
+    {
+        std::promise<std::unique_ptr<mir::Device>> promise;
+        on_activated(mir::Fd{mir::IntOwnedFd{42}});
+        promise.set_value(nullptr);
+
+        return promise.get_future();
+    }
+};
+
 auto get_x11_platform()
 {
     auto path = mtf::server_platform("server-mesa-x11");
@@ -47,6 +78,7 @@ struct X11Platform : Test
     NiceMock<mtd::MockOption> options;
     NiceMock<mtd::MockX11> mock_x11;
     std::shared_ptr<mir::SharedLibrary> library{get_x11_platform()};
+    std::shared_ptr<StubConsoleServices> const console{std::make_shared<StubConsoleServices>()};
 };
 
 }
@@ -57,7 +89,7 @@ TEST_F(X11Platform, probes_as_unsupported_without_display)
         .WillByDefault(Return(nullptr));
 
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
-    EXPECT_THAT(probe_fun(options), Eq(mir::input::PlatformPriority::unsupported));
+    EXPECT_THAT(probe_fun(options, *console), Eq(mir::input::PlatformPriority::unsupported));
 }
 
 TEST_F(X11Platform, probes_as_supported_with_display)
@@ -65,7 +97,7 @@ TEST_F(X11Platform, probes_as_supported_with_display)
     // default setup of MockX11 already provides fake objects
 
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
-    EXPECT_THAT(probe_fun(options), Ge(mir::input::PlatformPriority::supported));
+    EXPECT_THAT(probe_fun(options, *console), Ge(mir::input::PlatformPriority::supported));
 }
 
 TEST_F(X11Platform, probes_as_unsupported_on_nested_configs)
@@ -76,6 +108,6 @@ TEST_F(X11Platform, probes_as_unsupported_on_nested_configs)
         .WillByDefault(Return("something"));
 
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
-    EXPECT_THAT(probe_fun(options), Eq(mir::input::PlatformPriority::unsupported));
+    EXPECT_THAT(probe_fun(options, *console), Eq(mir::input::PlatformPriority::unsupported));
 }
 

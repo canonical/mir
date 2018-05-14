@@ -19,6 +19,7 @@
 #ifndef MIR_NULL_CONSOLE_SERVICES_H_
 #define MIR_NULL_CONSOLE_SERVICES_H_
 
+#include <future>
 #include "mir/console_services.h"
 #include "mir/fd.h"
 
@@ -35,9 +36,17 @@ public:
 
     void restore() override {}
 
-    boost::future<Fd> acquire_device(int, int) override
+    std::future<std::unique_ptr<Device>> acquire_device(
+        int, int,
+        Device::OnDeviceActivated const&,
+        Device::OnDeviceSuspended const&,
+        Device::OnDeviceRemoved const&) override
     {
-        return boost::make_ready_future<Fd>(-1);
+        std::promise<std::unique_ptr<Device>> exceptional;
+        exceptional.set_exception(
+            std::make_exception_ptr(
+                std::runtime_error{"Attempt to acquire device from NullConsoleServices."}));
+        return exceptional.get_future();
     }
 };
 
