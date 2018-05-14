@@ -147,7 +147,6 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
 struct mir::Server::Self
 {
     bool exit_status{false};
-    std::weak_ptr<options::Option> options;
     std::string config_file;
     std::shared_ptr<ServerConfiguration> server_config;
 
@@ -346,7 +345,7 @@ void mir::Server::set_config_filename(std::string const& config_file)
 auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 {
     verify_accessing_allowed(self->server_config);
-    return self->options.lock();
+    return self->server_config->the_options();
 }
 
 void mir::Server::set_exception_handler(std::function<void()> const& exception_handler)
@@ -384,7 +383,6 @@ void mir::Server::apply_settings()
 
     auto const config = std::make_shared<ServerConfiguration>(options, self);
     self->server_config = config;
-    self->options = config->the_options();
 
     mir::logging::set_logger(config->the_logger());
 }
@@ -398,6 +396,9 @@ void mir::Server::run()
 
         auto const emergency_cleanup = self->server_config->the_emergency_cleanup();
         auto const composite_event_filter = self->server_config->the_composite_event_filter();
+
+        // keep the default_reports alive while the server is running
+        auto const default_reports = self->server_config->default_reports();
 
         self->temporary_event_filter->move_filters(composite_event_filter);
 

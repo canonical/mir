@@ -942,5 +942,6 @@ MIR_SERVER_0.32 {
   extern "C++" {
     mir::Server::mir_socket_name*;
     mir::Server::wayland_display*;
+    mir::DefaultServerConfiguration::default_reports*;
   };
 } MIR_SERVER_0.31;

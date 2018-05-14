@@ -159,7 +159,6 @@ class Configuration;
 namespace report
 {
 class ReportFactory;
-class Reports;
 }
 
 namespace renderer
@@ -346,6 +345,7 @@ public:
     virtual std::shared_ptr<SharedLibraryProberReport>  the_shared_library_prober_report();
 
     virtual std::shared_ptr<ConsoleServices> the_console_services();
+    auto default_reports() -> std::shared_ptr<void>;
 
 private:
     // We need to ensure the platform library is destroyed last as the
@@ -459,7 +459,6 @@ private:
         seat_observer_multiplexer;
     CachedPtr<ObserverMultiplexer<frontend::SessionMediatorObserver>>
         session_mediator_observer_multiplexer;
-    std::shared_ptr<report::Reports> const reports;
 
     virtual std::string the_socket_file() const;
 
@@ -470,7 +469,6 @@ private:
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
-    auto initialise_reports() -> std::shared_ptr<report::Reports>;
 
     CachedPtr<shell::detail::FrontendShell> frontend_shell;
     std::vector<mir::ExtensionDescription> the_extensions();
