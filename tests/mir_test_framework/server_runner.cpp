@@ -103,12 +103,12 @@ std::shared_ptr<mir::MainLoop> mtf::ServerRunner::start_mir_server()
     bool started{false};
     auto const ml = server_config().the_main_loop();
     mir::logging::set_logger(server_config().the_logger());
-    auto const default_reports = server_config().default_reports();
 
     server_thread = std::thread([&]
     {
         try
         {
+            auto const default_reports = server_config().default_reports();
             mir::run_mir(server_config(), [&](mir::DisplayServer&)
             {
                 // By enqueuing the notification code in the main loop, we are
