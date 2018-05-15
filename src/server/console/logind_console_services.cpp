@@ -31,6 +31,7 @@
 
 #include "mir/fd.h"
 #include "mir/main_loop.h"
+#include "mir/glib_main_loop.h"
 
 #define MIR_LOG_COMPONTENT "logind"
 #include "mir/log.h"
@@ -72,7 +73,14 @@ private:
     GError* raw_error;
 };
 
-LogindSession* simple_proxy_on_system_bus(
+#define MIR_MAKE_EXCEPTION_PTR(x)\
+    std::make_exception_ptr(::boost::enable_error_info(x) <<\
+    ::boost::throw_function(BOOST_CURRENT_FUNCTION) <<\
+    ::boost::throw_file(__FILE__) <<\
+    ::boost::throw_line((int)__LINE__))
+
+std::unique_ptr<LogindSession, decltype(&g_object_unref)> simple_proxy_on_system_bus(
+    mir::GLibMainLoop& ml,
     GDBusConnection* connection,
     char const* object_path)
 {
@@ -80,22 +88,26 @@ LogindSession* simple_proxy_on_system_bus(
 
     GErrorPtr error;
 
-    auto const proxy = logind_session_proxy_new_sync(
-        connection,
-        G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
-        "org.freedesktop.login1",
-        object_path,
-        nullptr,
-        &error);
-
+    // GDBus proxies will use the thread-default main context at creation time.
+    LogindSession* proxy;
+    ml.run_with_context_as_thread_default(
+        [&proxy, connection, object_path, &error]()
+        {
+            proxy = logind_session_proxy_new_sync(
+                connection,
+                G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+                "org.freedesktop.login1",
+                object_path,
+                nullptr,
+                &error);
+        });
     if (!proxy)
     {
         auto error_msg = error ? error->message : "unknown error";
         BOOST_THROW_EXCEPTION((
             std::runtime_error{
                 "Failed to connect to DBus interface at "s +
-                object_path + ": " + error_msg
-            }));
+                object_path + ": " + error_msg}));
     }
 
     if (error)
@@ -103,10 +115,11 @@ LogindSession* simple_proxy_on_system_bus(
         mir::log_error("Proxy is non-null, but has error set?! Error: %s", error->message);
     }
 
-    return proxy;
+    return {proxy, &g_object_unref};
 }
 
-LogindSeat* simple_seat_proxy_on_system_bus(
+std::unique_ptr<LogindSeat, decltype(&g_object_unref)> simple_seat_proxy_on_system_bus(
+    mir::GLibMainLoop& ml,
     GDBusConnection* connection,
     char const* object_path)
 {
@@ -114,22 +127,25 @@ LogindSeat* simple_seat_proxy_on_system_bus(
 
     GErrorPtr error;
 
-    auto const proxy = logind_seat_proxy_new_sync(
-        connection,
-        G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
-        "org.freedesktop.login1",
-        object_path,
-        nullptr,
-        &error);
-
+    LogindSeat* proxy;
+    ml.run_with_context_as_thread_default(
+        [&proxy, connection, object_path, &error]()
+        {
+            proxy = logind_seat_proxy_new_sync(
+                connection,
+                G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+                "org.freedesktop.login1",
+                object_path,
+                nullptr,
+                &error);
+        });
     if (!proxy)
     {
         auto error_msg = error ? error->message : "unknown error";
         BOOST_THROW_EXCEPTION((
-                                  std::runtime_error{
-                                      "Failed to connect to DBus interface at "s +
-                                      object_path + ": " + error_msg
-                                  }));
+            std::runtime_error{
+                "Failed to connect to DBus interface at "s +
+                object_path + ": " + error_msg}));
     }
 
     if (error)
@@ -137,7 +153,7 @@ LogindSeat* simple_seat_proxy_on_system_bus(
         mir::log_error("Proxy is non-null, but has error set?! Error: %s", error->message);
     }
 
-    return proxy;
+    return {proxy, &g_object_unref};
 }
 
 std::string object_path_for_current_session(LogindSeat* seat_proxy)
@@ -157,7 +173,8 @@ std::string object_path_for_current_session(LogindSeat* seat_proxy)
     return g_variant_get_string(object_path_variant.get(), nullptr);
 }
 
-GDBusConnection* connect_to_system_bus()
+std::unique_ptr<GDBusConnection, decltype(&g_object_unref)>
+connect_to_system_bus(mir::GLibMainLoop& ml)
 {
     using namespace std::literals::string_literals;
     GErrorPtr error;
@@ -177,15 +194,19 @@ GDBusConnection* connect_to_system_bus()
                 "Failed to find address of DBus system bus: "s + error_msg}));
     }
 
-    auto bus = g_dbus_connection_new_for_address_sync(
-        system_bus_address.get(),
-        static_cast<GDBusConnectionFlags>(
-            G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT |
-            G_DBUS_CONNECTION_FLAGS_MESSAGE_BUS_CONNECTION),
-        nullptr,
-        nullptr,
-        &error);
-
+    GDBusConnection* bus;
+    ml.run_with_context_as_thread_default(
+        [&bus, &system_bus_address, &error]()
+        {
+            bus = g_dbus_connection_new_for_address_sync(
+                system_bus_address.get(),
+                static_cast<GDBusConnectionFlags>(
+                    G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT |
+                    G_DBUS_CONNECTION_FLAGS_MESSAGE_BUS_CONNECTION),
+                nullptr,
+                nullptr,
+                &error);
+        });
     if (!bus)
     {
         auto error_msg = error ? error->message : "unknown error";
@@ -194,23 +215,21 @@ GDBusConnection* connect_to_system_bus()
               "Failed to connect to DBus system bus: "s + error_msg}));
     }
 
-    return bus;
+    return {bus, &g_object_unref};
 }
 }
 
-mir::LogindConsoleServices::LogindConsoleServices()
-    : connection{
-        connect_to_system_bus(),
-        &g_object_unref},
+mir::LogindConsoleServices::LogindConsoleServices(std::shared_ptr<mir::GLibMainLoop> const& ml)
+    : ml{ml},
+      connection{connect_to_system_bus(*ml)},
       seat_proxy{
-        simple_seat_proxy_on_system_bus(connection.get(), "/org/freedesktop/login1/seat/seat0"),
-        &g_object_unref},
+        simple_seat_proxy_on_system_bus(*ml, connection.get(), "/org/freedesktop/login1/seat/seat0")},
       session_path{object_path_for_current_session(seat_proxy.get())},
       session_proxy{
         simple_proxy_on_system_bus(
+            *ml,
             connection.get(),
-            session_path.c_str()),
-        &g_object_unref},
+            session_path.c_str())},
       switch_away{[](){ return true; }},
       switch_to{[](){ return true; }},
       active{strncmp("active", logind_session_get_state(session_proxy.get()), strlen("active")) == 0}
@@ -320,12 +339,6 @@ struct TakeDeviceContext
     std::unique_ptr<mir::LogindConsoleServices::Device> device;
     std::promise<std::unique_ptr<mir::Device>> promise;
 };
-
-#define MIR_MAKE_EXCEPTION_PTR(x)\
-    std::make_exception_ptr(::boost::enable_error_info(x) <<\
-    ::boost::throw_function(BOOST_CURRENT_FUNCTION) <<\
-    ::boost::throw_file(__FILE__) <<\
-    ::boost::throw_line((int)__LINE__))
 
 void complete_take_device_call(
     GObject* proxy,
@@ -437,20 +450,128 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
 
     auto future = context->promise.get_future();
 
-    g_dbus_proxy_call_with_unix_fd_list(
-        G_DBUS_PROXY(session_proxy.get()),
-        "TakeDevice",
-        g_variant_new(
-            "(uu)",
-            major,
-            minor),
-        G_DBUS_CALL_FLAGS_NO_AUTO_START,
-        G_MAXINT,
-        nullptr,
-        nullptr,
-        &complete_take_device_call,
-        context.release());
+    if (ml->running())
+    {
+        /*
+         * The main loop is running; we can run this call asynchronously and get
+         * notified of completion.
+         *
+         * It uses the thread-default main context, so must be run from the context of
+         * the main loop.
+         */
+        ml->run_with_context_as_thread_default(
+            [
+                major,
+                minor,
+                proxy = G_DBUS_PROXY(session_proxy.get()),
+                userdata = context.release()
+            ]()
+            {
+                g_dbus_proxy_call_with_unix_fd_list(
+                    proxy,
+                    "TakeDevice",
+                    g_variant_new(
+                        "(uu)",
+                        major,
+                        minor),
+                    G_DBUS_CALL_FLAGS_NO_AUTO_START,
+                    G_MAXINT,
+                    nullptr,
+                    nullptr,
+                    &complete_take_device_call,
+                    userdata);
+            });
+    }
+    else
+    {
+        /*
+         * The main loop is not running; we must make a synchronous call, as
+         * the asynchronous call requires the main loop to dispatch the result.
+         */
+        using namespace std::chrono;
+        using namespace std::chrono_literals;
 
+        GUnixFDList* resultant_fds;
+        GErrorPtr error;
+
+        std::unique_ptr<GVariant, decltype(&g_variant_unref)> dbus_result{
+            g_dbus_proxy_call_with_unix_fd_list_sync(
+                G_DBUS_PROXY(session_proxy.get()),
+                "TakeDevice",
+                g_variant_new(
+                    "(uu)",
+                    major,
+                    minor),
+                G_DBUS_CALL_FLAGS_NO_AUTO_START,
+                duration_cast<milliseconds>(10s).count(),
+                nullptr,
+                &resultant_fds,
+                nullptr,
+                &error),
+            &g_variant_unref};
+
+        if (!dbus_result)
+        {
+            std::string error_msg = error ? error->message : "unknown error";
+            context->promise.set_exception(
+                MIR_MAKE_EXCEPTION_PTR((
+                    std::runtime_error{
+                        std::string{"TakeDevice call failed: "} + error_msg})));
+            return future;
+        }
+
+        int num_fds;
+        std::unique_ptr<gint[], std::function<void(gint*)>> fds{
+            g_unix_fd_list_steal_fds(resultant_fds, &num_fds),
+            [&num_fds](gint* fd_list)
+            {
+                // First close any open fds…
+                for (int i = 0; i < num_fds; ++i)
+                {
+                    if (fd_list[i] != -1)
+                    {
+                        ::close(fd_list[i]);
+                    }
+                }
+                // …then free the list itself.
+                g_free(fd_list);
+            }};
+        g_object_unref(resultant_fds);
+
+        gboolean inactive;
+        int fd_index;
+
+        g_variant_get(dbus_result.get(), "(hb)", &fd_index, &inactive);
+
+        mir::Fd fd{fds[fd_index]};
+        // We don't want our FD to be closed by the fds destructor
+        fds[fd_index] = -1;
+
+        if (fd == mir::Fd::invalid)
+        {
+            /*
+             * I don't believe we can get here - the proxy checks that the DBus return value
+             * has type (fd, boolean), and gdbus will error if it can't read the fd out of the
+             * auxiliary channel.
+             *
+             * Better safe than sorry, though
+             */
+            context->promise.set_exception(
+                MIR_MAKE_EXCEPTION_PTR((
+                    std::runtime_error{"TakeDevice call returned invalid FD"})));
+            return future;
+        }
+
+        if (!inactive)
+        {
+            context->device->emit_activated(std::move(fd));
+        }
+        else
+        {
+            context->device->emit_suspended();
+        }
+        context->promise.set_value(std::move(context->device));
+    }
     return future;
 }
 

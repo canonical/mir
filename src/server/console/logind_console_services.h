@@ -28,10 +28,12 @@
 
 namespace mir
 {
+class GLibMainLoop;
+
 class LogindConsoleServices : public ConsoleServices
 {
 public:
-    LogindConsoleServices();
+    LogindConsoleServices(std::shared_ptr<GLibMainLoop> const& ml);
 
     void register_switch_handlers(
         graphics::EventHandlerRegister& handlers,
@@ -70,6 +72,7 @@ private:
         gpointer ctx) noexcept;
 #endif
 
+    std::shared_ptr<GLibMainLoop> const ml;
     std::unique_ptr<GDBusConnection, decltype(&g_object_unref)> const connection;
     std::unique_ptr<LogindSeat, decltype(&g_object_unref)> const seat_proxy;
     std::string const session_path;
