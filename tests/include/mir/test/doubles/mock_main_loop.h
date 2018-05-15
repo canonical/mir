@@ -37,6 +37,7 @@ public:
 
     void run() override {}
     void stop() override {}
+    bool running() const override { return true; }
 
     MOCK_METHOD2(register_signal_handler,
                  void(std::initializer_list<int>,

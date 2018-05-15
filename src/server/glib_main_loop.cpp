@@ -26,6 +26,7 @@
 #include <condition_variable>
 
 #include <boost/throw_exception.hpp>
+#include <future>
 
 namespace
 {
@@ -127,7 +128,7 @@ mir::detail::GMainContextHandle::operator GMainContext*() const
 mir::GLibMainLoop::GLibMainLoop(
     std::shared_ptr<time::Clock> const& clock)
     : clock{clock},
-      running{false},
+      running_{false},
       fd_sources{main_context},
       signal_sources{fd_sources},
       before_iteration_hook{[]{}}
@@ -137,9 +138,9 @@ mir::GLibMainLoop::GLibMainLoop(
 void mir::GLibMainLoop::run()
 {
     main_loop_exception = nullptr;
-    running = true;
+    running_ = true;
 
-    while (running)
+    while (running_)
     {
         before_iteration_hook();
         g_main_context_iteration(main_context, TRUE);
@@ -156,7 +157,7 @@ void mir::GLibMainLoop::stop()
         {
             {
                 std::lock_guard<std::mutex> lock{run_on_halt_mutex};
-                running = false;
+                running_ = false;
             }
             // We know any other thread sees running == false here, so don't need
             // to lock run_on_halt_queue.
@@ -169,6 +170,11 @@ void mir::GLibMainLoop::stop()
 
             g_main_context_wakeup(main_context);
         });
+}
+
+bool mir::GLibMainLoop::running() const
+{
+    return running_;
 }
 
 void mir::GLibMainLoop::register_signal_handler(
@@ -281,10 +287,11 @@ void mir::GLibMainLoop::enqueue_with_guaranteed_execution(mir::ServerAction cons
         };
 
     {
-        std::lock_guard<std::mutex> lock{run_on_halt_mutex};
+        std::unique_lock<std::mutex> lock{run_on_halt_mutex};
 
-        if (!running)
+        if (!running_)
         {
+            lock.unlock();
             action();
             return;
         }
@@ -387,6 +394,55 @@ void mir::GLibMainLoop::reprocess_all_sources()
 
     std::unique_lock<std::mutex> reprocessed_lock{reprocessed_mutex};
     reprocessed_cv.wait(reprocessed_lock, [&] { return reprocessed == true; });
+}
+
+void mir::GLibMainLoop::run_with_context_as_thread_default(std::function<void()> const& code)
+{
+    auto promise = std::make_shared<std::promise<void>>();
+    auto done = promise->get_future();
+
+    enqueue_with_guaranteed_execution(
+        [this, promise, &code]()
+        {
+            /*
+             * There are three possible states here:
+             * 1)   We've been dispatched from the main loop; the thread already owns main_context,
+             *      so we can acquire it.
+             * 2)   The main loop is not running, so we've been immediately dispatched from the calling
+             *      thread. The main loop is not running, so we can successfully acquire main_context
+             *      immediately.
+             * 3)   The main loop *is* running, but is currently processing a stop() request.
+             *      In this case, we've been immediately dispatched from the calling thread, but
+             *      cannot acquire main_context until stop() has completed.
+             *
+             *      There *is* a GLib API that would be helpful here; g_main_context_wait().
+             *      however, that is (silently) deprecated, and spews a GLib-CRITICAL warning
+             *      if you use it.
+             *
+             *      This case is unlikely, and is should be rapidly transient, so just busy-wait :(
+             */
+            {
+                std::lock_guard<std::mutex> lock{run_on_halt_mutex};
+                while (!g_main_context_acquire(main_context))
+                    std::this_thread::yield();
+            }
+
+            // We now own the main_context, so this will work.
+            g_main_context_push_thread_default(main_context);
+            try
+            {
+                code();
+                promise->set_value();
+            }
+            catch(...)
+            {
+                promise->set_exception(std::current_exception());
+            }
+            g_main_context_pop_thread_default(main_context);
+            g_main_context_release(main_context);
+        });
+
+    done.get();
 }
 
 void mir::GLibMainLoop::handle_exception(std::exception_ptr const& e)
