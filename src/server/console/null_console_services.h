@@ -38,9 +38,7 @@ public:
 
     std::future<std::unique_ptr<Device>> acquire_device(
         int, int,
-        Device::OnDeviceActivated const&,
-        Device::OnDeviceSuspended const&,
-        Device::OnDeviceRemoved const&) override
+        std::unique_ptr<Device::Observer>) override
     {
         std::promise<std::unique_ptr<Device>> exceptional;
         exceptional.set_exception(

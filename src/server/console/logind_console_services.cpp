@@ -295,13 +295,9 @@ class mir::LogindConsoleServices::Device : public mir::Device
 {
 public:
     Device(
-        Device::OnDeviceActivated on_activated,
-        Device::OnDeviceSuspended on_suspended,
-        Device::OnDeviceRemoved on_removed,
+        std::unique_ptr<Observer> observer,
         std::function<void(Device const*)> on_destroy)
-        : on_activated{std::move(on_activated)},
-          on_suspended{std::move(on_suspended)},
-          on_removed{std::move(on_removed)},
+        : observer{std::move(observer)},
           on_destroy{std::move(on_destroy)}
     {
     }
@@ -313,22 +309,20 @@ public:
 
     void emit_activated(mir::Fd&& device_fd) const
     {
-        on_activated(std::move(device_fd));
+        observer->activated(std::move(device_fd));
     }
 
     void emit_suspended() const
     {
-        on_suspended();
+        observer->suspended();
     }
 
     void emit_removed() const
     {
-        on_removed();
+        observer->removed();
     }
 private:
-    Device::OnDeviceActivated const on_activated;
-    Device::OnDeviceSuspended const on_suspended;
-    Device::OnDeviceRemoved const on_removed;
+    std::unique_ptr<Observer> const observer;
     std::function<void(Device const*)> const on_destroy;
 };
 
@@ -424,15 +418,11 @@ void complete_take_device_call(
 
 std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_device(
     int major, int minor,
-    Device::OnDeviceActivated const& on_activated,
-    Device::OnDeviceSuspended const& on_suspended,
-    Device::OnDeviceRemoved const& on_removed)
+    std::unique_ptr<Device::Observer> observer)
 {
     auto context = std::make_unique<TakeDeviceContext>();
     context->device = std::make_unique<Device>(
-        on_activated,
-        on_suspended,
-        on_removed,
+        std::move(observer),
         [this, devnum = makedev(major, minor)](Device const* destroying)
         {
             auto const it = acquired_devices.find(devnum);

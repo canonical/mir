@@ -88,9 +88,7 @@ public:
     void restore() override;
     std::future<std::unique_ptr<Device>> acquire_device(
         int major, int minor,
-        Device::OnDeviceActivated const& on_activated,
-        Device::OnDeviceSuspended const& on_suspended,
-        Device::OnDeviceRemoved const& on_removed) override;
+        std::unique_ptr<Device::Observer> observer) override;
 
 private:
     class FDWrapper

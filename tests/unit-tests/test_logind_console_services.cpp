@@ -671,6 +671,40 @@ private:
     mt::AutoUnblockThread const ml_thread;
 };
 
+class Observer : public mir::Device::Observer
+{
+public:
+    Observer(
+        std::function<void(mir::Fd&&)> on_activated,
+        std::function<void()> on_suspended,
+        std::function<void()> on_removed)
+        : on_activated{std::move(on_activated)},
+          on_suspended{std::move(on_suspended)},
+          on_removed{std::move(on_removed)}
+    {
+    }
+
+    void activated(mir::Fd&& device_fd) override
+    {
+        on_activated(std::move(device_fd));
+    }
+
+    void suspended() override
+    {
+        on_suspended();
+    }
+
+    void removed() override
+    {
+        on_removed();
+    }
+
+private:
+    std::function<void(mir::Fd&&)> const on_activated;
+    std::function<void()> const on_suspended;
+    std::function<void()> const on_removed;
+};
+
 using namespace testing;
 using namespace std::literals::chrono_literals;
 
@@ -747,12 +781,13 @@ TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
     mir::Fd resolved_fd;
     auto device = services.acquire_device(
         22, 33,
-        [&resolved_fd](mir::Fd&& fd)
-        {
-            resolved_fd = std::move(fd);
-        },
-        [](){},
-        [](){});
+        std::make_unique<Observer>(
+            [&resolved_fd](mir::Fd&& fd)
+            {
+                resolved_fd = std::move(fd);
+            },
+            [](){},
+            [](){}));
 
     ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
 
@@ -782,12 +817,13 @@ TEST_F(LogindConsoleServices, take_device_calls_suspended_callback_when_initiall
     bool suspend_called{false};
     auto device = services.acquire_device(
         22, 33,
-        [](mir::Fd&&)
-        {
-            FAIL() << "Unexpectedly called Active callback";
-        },
-        [&suspend_called](){ suspend_called = true; },
-        [](){});
+        std::make_unique<Observer>(
+            [](mir::Fd&&)
+            {
+                FAIL() << "Unexpectedly called Active callback";
+            },
+            [&suspend_called](){ suspend_called = true; },
+            [](){}));
 
     ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
     EXPECT_TRUE(suspend_called);
@@ -807,9 +843,10 @@ TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
 
     auto device = services.acquire_device(
         22, 33,
-        [](auto){},
-        [](){},
-        [](){});
+        std::make_unique<Observer>(
+            [](auto){},
+            [](){},
+            [](){}));
 
     ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
 
@@ -836,16 +873,17 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
     mir::Fd received_fd;
     auto device = services.acquire_device(
         22, 33,
-        [active, &received_fd](mir::Fd&& device_fd)
-        {
-            received_fd = std::move(device_fd);
-            active->raise();
-        },
-        [&state]()
-        {
-            state = DeviceState::Suspended;
-        },
-        [](){});
+        std::make_unique<Observer>(
+            [active, &received_fd](mir::Fd&& device_fd)
+            {
+                received_fd = std::move(device_fd);
+                active->raise();
+            },
+            [&state]()
+            {
+                state = DeviceState::Suspended;
+            },
+            [](){}));
 
     ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
     ASSERT_THAT(state, Eq(DeviceState::Suspended));
@@ -885,16 +923,17 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
 
     auto device = services.acquire_device(
         22, 33,
-        [&state](mir::Fd&&)
-        {
-            // We don't actually care about the fd.
-            state = DeviceState::Active;
-        },
-        [suspended]()
-        {
-            suspended->raise();
-        },
-        [](){});
+        std::make_unique<Observer>(
+            [&state](mir::Fd&&)
+            {
+                // We don't actually care about the fd.
+                state = DeviceState::Active;
+            },
+            [suspended]()
+            {
+                suspended->raise();
+            },
+            [](){}));
 
     ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
     ASSERT_THAT(state, Eq(DeviceState::Active));
@@ -921,16 +960,17 @@ TEST_F(LogindConsoleServices, device_removed_callback_called_on_remove)
     auto gone_received = std::make_shared<mt::Signal>();
     auto device = services.acquire_device(
         22, 33,
-        [&state](mir::Fd&&)
-        {
-            // We don't actually care about the fd.
-            state = DeviceState::Active;
-        },
-        []() {},
-        [gone_received]()
-        {
-            gone_received->raise();
-        });
+        std::make_unique<Observer>(
+            [&state](mir::Fd&&)
+            {
+                // We don't actually care about the fd.
+                state = DeviceState::Active;
+            },
+            []() {},
+            [gone_received]()
+            {
+                gone_received->raise();
+            }));
 
     ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
     ASSERT_THAT(state, Eq(DeviceState::Active));
@@ -1184,9 +1224,10 @@ TEST_F(LogindConsoleServices, can_acquire_device_without_running_main_loop)
     bool device_acquired{false};
     services.acquire_device(
         42, 22,
-        [&device_acquired](auto) { device_acquired = true; },
-        [](){},
-        [](){}).get();
+        std::make_unique<Observer>(
+            [&device_acquired](auto) { device_acquired = true; },
+            [](){},
+            [](){})).get();
 
     EXPECT_TRUE(device_acquired);
 }

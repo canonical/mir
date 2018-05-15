@@ -42,12 +42,11 @@ public:
 
     std::future<std::unique_ptr<Device>> acquire_device(
         int, int,
-        Device::OnDeviceActivated const&,
-        Device::OnDeviceSuspended const&,
-        Device::OnDeviceRemoved const&) override
+        std::unique_ptr<Device::Observer> observer) override
     {
         std::promise<std::unique_ptr<Device>> null_promise;
         null_promise.set_value(nullptr);
+        observer->activated(mir::Fd{});
         return null_promise.get_future();
     }
 };

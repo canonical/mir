@@ -39,19 +39,15 @@ public:
                       std::function<bool()> const&,
                       std::function<bool()> const&));
     MOCK_METHOD0(restore, void());
-    MOCK_METHOD5(
+    MOCK_METHOD3(
         acquire_device_immediate,
         std::unique_ptr<Device>(
             int,int,
-            Device::OnDeviceActivated const&,
-            Device::OnDeviceSuspended const&,
-            Device::OnDeviceRemoved const&));
+            Device::Observer*));
 
     std::future<std::unique_ptr<Device>> acquire_device(
         int major, int minor,
-        Device::OnDeviceActivated const& on_activated,
-        Device::OnDeviceSuspended const& on_suspended,
-        Device::OnDeviceRemoved const& on_removed)
+        std::unique_ptr<Device::Observer> observer  )
     {
         std::promise<std::unique_ptr<Device>> promise;
         try
@@ -59,9 +55,7 @@ public:
             promise.set_value(
                 acquire_device_immediate(
                     major, minor,
-                    on_activated,
-                    on_suspended,
-                    on_removed));
+                    observer.get()));
         }
         catch (...)
         {

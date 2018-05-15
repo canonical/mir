@@ -97,16 +97,14 @@ public:
 
     std::future<std::unique_ptr<mir::Device>> acquire_device(
         int major, int minor,
-        mir::Device::OnDeviceActivated const& on_activated,
-        mir::Device::OnDeviceSuspended const&,
-        mir::Device::OnDeviceRemoved const&) override
+        std::unique_ptr<mir::Device::Observer> observer) override
     {
         /* NOTE: This uses the behaviour that MockDRM will intercept any open() call
          * under /dev/dri/
          */
         std::stringstream filename;
         filename << "/dev/dri/" << major << ":" << minor;
-        on_activated(mir::Fd{::open(filename.str().c_str(), O_RDWR | O_CLOEXEC)});
+        observer->activated(mir::Fd{::open(filename.str().c_str(), O_RDWR | O_CLOEXEC)});
         std::promise<std::unique_ptr<mir::Device>> promise;
         // The Device is *just* a handle; there's no reason for anything to dereference it
         promise.set_value(nullptr);

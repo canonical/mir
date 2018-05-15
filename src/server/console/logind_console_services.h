@@ -44,9 +44,7 @@ public:
 
     std::future<std::unique_ptr<mir::Device>> acquire_device(
         int major, int minor,
-        mir::Device::OnDeviceActivated const& on_activated,
-        mir::Device::OnDeviceSuspended const& on_suspended,
-        mir::Device::OnDeviceRemoved const& on_removed) override;
+        std::unique_ptr<Device::Observer> observer) override;
 
     class Device;
 private:

@@ -46,35 +46,43 @@ public:
     Device(Device const&) = delete;
     Device& operator=(Device const&) = delete;
 
-    /**
-     * Callback when a the device is activated - ie: is ready to be used.
-     *
-     * For DRM devices, device_fd will already be DRM master, and all fds will refer to the
-     * same underlying file descriptor; you can safely use only the first fd you receive.
-     *
-     * For other devices each call of OnDeviceActivated will typically
-     *
-     * \param device_fd [in] The file descriptor for the newly-active device.
-     */
-    using OnDeviceActivated = std::function<void(mir::Fd&& device_fd)>;
+    class Observer
+    {
+    public:
+        virtual ~Observer() = default;
 
-    /**
-     * Callback when the device is, or is about to be, suspended.
-     *
-     * For DRM devices the device fd will become functional again at the next OnDeviceActivated
-     * call.
-     *
-     * For other devices, the device fd may remain silenced; users should close their existing
-     * fd and use device_fd from the next OnDeviceActivated call.
-     */
-    using OnDeviceSuspended = std::function<void()>;
-    /**
-     * Callback when the device has been removed; no further callbacks will be generated.
-     *
-     * The only sensible thing to do in the callback is remove any Mir object associated with
-     * the Device, and then destroy the Device.
-     */
-    using OnDeviceRemoved = std::function<void()>;
+        /**
+         * Called when a the device is activated - ie: is ready to be used.
+         *
+         * For DRM devices, device_fd will already be DRM master, and all fds will refer to the
+         * same underlying file descriptor; you can safely use only the first fd you receive.
+         *
+         * For other devices each call of OnDeviceActivated will typically return a new file
+         * descriptor; only the most recently received file descriptor is guaranteed to be usable.
+         *
+         * \param device_fd [in] The file descriptor for the newly-active device.
+         */
+        virtual void activated(mir::Fd&& device_fd) = 0;
+
+        /**
+         * Called when the device is, or is about to be, suspended.
+         *
+         * For DRM devices the device fd will become functional again at the next OnDeviceActivated
+         * call.
+         *
+         * For other devices, the device fd may remain silenced; users should close their existing
+         * fd and use device_fd from the next OnDeviceActivated call.
+         */
+        virtual void suspended() = 0;
+
+        /**
+         * Called when the device has been removed; no further callbacks will be generated.
+         *
+         * The only sensible thing to do in the callback is remove any Mir object associated with
+         * the Device, and then destroy the Device.
+         */
+        virtual void removed() = 0;
+    };
 };
 
 class ConsoleServices
@@ -93,18 +101,18 @@ public:
      *
      * \param major             [in] major number of requested device node
      * \param minor             [in] minor number of requested device node
-     * \param on_activated  [in] Callback triggered when the device becomes available for use
-     * \param on_suspended  [in] Callback triggered when the device becomes temporarily unavailable
-     * \param on_removed    [in] Callback triggered when the device becomes permanently unavailable
+     * \param observer          [in] Observer that will receive notifications for this Device
      *
      * \return  A future that will resolve to a Device handle. Before the future resolves at least
-     *          one of on_activated, on_suspended, or on_removed will have been called.
+     *          one of Observer::activated, Observer::suspended, or Observer::removed will have
+     *          been called.
+     *          The lifetime of the \param observer is guaranteed to be no longer than that of
+     *          the returned std::unique_ptr<Device>, although it may end sooner if the
+     *          implementation determines that no further events can be generated.
      */
     virtual std::future<std::unique_ptr<Device>> acquire_device(
         int major, int minor,
-        Device::OnDeviceActivated const& on_activated,
-        Device::OnDeviceSuspended const& on_suspended,
-        Device::OnDeviceRemoved const& on_removed) = 0;
+        std::unique_ptr<Device::Observer> observer) = 0;
 
 protected:
     ConsoleServices() = default;

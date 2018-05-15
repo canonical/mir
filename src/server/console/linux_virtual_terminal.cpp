@@ -308,9 +308,7 @@ int mir::LinuxVirtualTerminal::open_vt(int vt_number)
 
 std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_device(
     int major, int minor,
-    Device::OnDeviceActivated const& on_activated,
-    Device::OnDeviceSuspended const&,
-    Device::OnDeviceRemoved const&)
+    std::unique_ptr<Device::Observer> observer)
 {
     std::stringstream filename;
     filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
@@ -359,7 +357,7 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
         if ((!needs_master_set) ||
             (drmSetMaster(dev_fd) == 0))
         {
-            on_activated(std::move(dev_fd));
+            observer->activated(std::move(dev_fd));
             // Our “device” needs no cleanup, so nullptr is fine.
             device_promise.set_value(nullptr);
         }
