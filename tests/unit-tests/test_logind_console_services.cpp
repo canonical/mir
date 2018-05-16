@@ -24,8 +24,6 @@
 #include <cstdio>
 #include <fcntl.h>
 #include <boost/throw_exception.hpp>
-#include <mir/test/auto_unblock_thread.h>
-#include <src/include/common/mir/time/steady_clock.h>
 
 #include "mir/time/steady_clock.h"
 #include "mir/glib_main_loop.h"
@@ -37,6 +35,7 @@
 #include "mir/test/signal.h"
 #include "mir/test/doubles/mock_event_handler_register.h"
 #include "mir/test/auto_unblock_thread.h"
+#include "mir/test/doubles/simple_device_observer.h"
 
 #include "src/server/console/logind_console_services.h"
 
@@ -671,40 +670,6 @@ private:
     mt::AutoUnblockThread const ml_thread;
 };
 
-class Observer : public mir::Device::Observer
-{
-public:
-    Observer(
-        std::function<void(mir::Fd&&)> on_activated,
-        std::function<void()> on_suspended,
-        std::function<void()> on_removed)
-        : on_activated{std::move(on_activated)},
-          on_suspended{std::move(on_suspended)},
-          on_removed{std::move(on_removed)}
-    {
-    }
-
-    void activated(mir::Fd&& device_fd) override
-    {
-        on_activated(std::move(device_fd));
-    }
-
-    void suspended() override
-    {
-        on_suspended();
-    }
-
-    void removed() override
-    {
-        on_removed();
-    }
-
-private:
-    std::function<void(mir::Fd&&)> const on_activated;
-    std::function<void()> const on_suspended;
-    std::function<void()> const on_removed;
-};
-
 using namespace testing;
 using namespace std::literals::chrono_literals;
 
@@ -781,7 +746,7 @@ TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
     mir::Fd resolved_fd;
     auto device = services.acquire_device(
         22, 33,
-        std::make_unique<Observer>(
+        std::make_unique<mtd::SimpleDeviceObserver>(
             [&resolved_fd](mir::Fd&& fd)
             {
                 resolved_fd = std::move(fd);
@@ -817,7 +782,7 @@ TEST_F(LogindConsoleServices, take_device_calls_suspended_callback_when_initiall
     bool suspend_called{false};
     auto device = services.acquire_device(
         22, 33,
-        std::make_unique<Observer>(
+        std::make_unique<mtd::SimpleDeviceObserver>(
             [](mir::Fd&&)
             {
                 FAIL() << "Unexpectedly called Active callback";
@@ -843,7 +808,7 @@ TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
 
     auto device = services.acquire_device(
         22, 33,
-        std::make_unique<Observer>(
+        std::make_unique<mtd::SimpleDeviceObserver>(
             [](auto){},
             [](){},
             [](){}));
@@ -873,7 +838,7 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
     mir::Fd received_fd;
     auto device = services.acquire_device(
         22, 33,
-        std::make_unique<Observer>(
+        std::make_unique<mtd::SimpleDeviceObserver>(
             [active, &received_fd](mir::Fd&& device_fd)
             {
                 received_fd = std::move(device_fd);
@@ -923,7 +888,7 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
 
     auto device = services.acquire_device(
         22, 33,
-        std::make_unique<Observer>(
+        std::make_unique<mtd::SimpleDeviceObserver>(
             [&state](mir::Fd&&)
             {
                 // We don't actually care about the fd.
@@ -960,7 +925,7 @@ TEST_F(LogindConsoleServices, device_removed_callback_called_on_remove)
     auto gone_received = std::make_shared<mt::Signal>();
     auto device = services.acquire_device(
         22, 33,
-        std::make_unique<Observer>(
+        std::make_unique<mtd::SimpleDeviceObserver>(
             [&state](mir::Fd&&)
             {
                 // We don't actually care about the fd.
@@ -1224,7 +1189,7 @@ TEST_F(LogindConsoleServices, can_acquire_device_without_running_main_loop)
     bool device_acquired{false};
     services.acquire_device(
         42, 22,
-        std::make_unique<Observer>(
+        std::make_unique<mtd::SimpleDeviceObserver>(
             [&device_acquired](auto) { device_acquired = true; },
             [](){},
             [](){})).get();

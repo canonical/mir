@@ -25,6 +25,8 @@
 #include "mir/test/doubles/mock_display_report.h"
 #include "mir/test/doubles/mock_event_handler_register.h"
 #include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/null_device_observer.h"
+#include "mir/test/doubles/simple_device_observer.h"
 #include "mir/test/gmock_fixes.h"
 
 #include <gtest/gtest.h>
@@ -668,40 +670,6 @@ TEST_F(LinuxVirtualTerminalTest, restores_keyboard_and_graphics)
     set_up_expectations_for_vt_teardown();
 }
 
-class Observer : public mir::Device::Observer
-{
-public:
-    Observer(
-        std::function<void(mir::Fd&&)> on_activated,
-        std::function<void()> on_suspended,
-        std::function<void()> on_removed)
-        : on_activated{std::move(on_activated)},
-          on_suspended{std::move(on_suspended)},
-          on_removed{std::move(on_removed)}
-    {
-    }
-
-    void activated(mir::Fd&& device_fd) override
-    {
-        on_activated(std::move(device_fd));
-    }
-
-    void suspended() override
-    {
-        on_suspended();
-    }
-
-    void removed() override
-    {
-        on_removed();
-    }
-
-private:
-    std::function<void(mir::Fd&&)> const on_activated;
-    std::function<void()> const on_suspended;
-    std::function<void()> const on_removed;
-};
-
 TEST_F(LinuxVirtualTerminalTest, throws_expected_error_when_opening_file_fails)
 {
     using namespace testing;
@@ -720,7 +688,7 @@ TEST_F(LinuxVirtualTerminalTest, throws_expected_error_when_opening_file_fails)
         .WillOnce(Return(-1));
 
     EXPECT_THROW(
-        vt.acquire_device(major, minor, std::make_unique<Observer>([](auto){}, [](){}, [](){})),
+        vt.acquire_device(major, minor, std::make_unique<mtd::NullDeviceObserver>()),
         std::system_error);
 }
 
@@ -747,7 +715,7 @@ TEST_F(LinuxVirtualTerminalTest, throws_error_when_parsing_fails)
         .WillOnce(Return(uevent.fd()));
 
     EXPECT_THROW(
-        vt.acquire_device(55, 61, std::make_unique<Observer>([](auto){}, [](){}, [](){})),
+        vt.acquire_device(55, 61, std::make_unique<mtd::NullDeviceObserver>()),
         std::runtime_error);
 }
 
@@ -775,7 +743,7 @@ TEST_F(LinuxVirtualTerminalTest, opens_correct_device_node)
     EXPECT_CALL(*fops, open(StrEq("/dev/fb0"), O_RDWR | O_CLOEXEC))
         .WillOnce(Return(-1));
 
-    auto device = vt.acquire_device(55, 61, std::make_unique<Observer>([](auto){}, [](){}, [](){}));
+    auto device = vt.acquire_device(55, 61, std::make_unique<mtd::NullDeviceObserver>());
 
     EXPECT_THROW(
         device.get(),
@@ -815,7 +783,7 @@ TEST_F(LinuxVirtualTerminalTest, callback_receives_correct_device_fd)
     mir::Fd device_fd;
     auto device = vt.acquire_device(
         55, 61,
-        std::make_unique<Observer>(
+        std::make_unique<mtd::SimpleDeviceObserver>(
             [&device_fd](mir::Fd&& fd) { device_fd = std::move(fd);},
             [](){},
             [](){})).get();
@@ -862,7 +830,7 @@ TEST_F(LinuxVirtualTerminalTest, calls_set_master_on_drm_node)
     mir::Fd device_fd;
     auto device = vt.acquire_device(
         55, 61,
-        std::make_unique<Observer>(
+        std::make_unique<mtd::SimpleDeviceObserver>(
             [&device_fd](mir::Fd&& fd) { device_fd = std::move(fd);},
             [](){},
             [](){})).get();
@@ -905,7 +873,7 @@ TEST_F(LinuxVirtualTerminalTest, acquire_device_returns_exceptional_future_on_se
 
     auto device = vt.acquire_device(
         55, 61,
-        std::make_unique<Observer>([](auto){}, [](){}, [](){}));
+        std::make_unique<mtd::NullDeviceObserver>());
 
     EXPECT_THROW(
         device.get(),
@@ -947,7 +915,7 @@ TEST_F(LinuxVirtualTerminalTest, does_not_call_set_master_on_non_drm_node)
     mir::Fd device_fd;
     auto device = vt.acquire_device(
         55, 61,
-        std::make_unique<Observer>(
+        std::make_unique<mtd::SimpleDeviceObserver>(
             [&device_fd](mir::Fd&& fd) { device_fd = std::move(fd);},
             [](){},
             [](){})).get();
