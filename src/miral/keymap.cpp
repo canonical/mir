@@ -30,14 +30,50 @@
 #define MIR_LOG_COMPONENT "miral::Keymap"
 #include <mir/log.h>
 
+#include <cstdio>
+#include <memory>
+#include <string>
+
 #include <algorithm>
 #include <mutex>
 #include <vector>
 
 namespace
 {
+std::string keymap_default()
+{
+    static auto const default_keymap = "us";
+    static char const locale_text[] = "Layout:";
+
+    std::unique_ptr<FILE, void(*)(FILE*)> localectl{popen("localectl status", "r"), [](FILE* f){ pclose(f);}};
+
+    if (!localectl)
+        return default_keymap;
+
+    char buf[1024];
+    std::string line;
+
+    while (auto got = fgets(buf, sizeof buf, localectl.get()))
+    {
+        line.append(got);
+
+        if (got && !feof(localectl.get()) && !line.empty() && line.back() != '\n')
+            continue;
+
+        if (!line.empty() && line.back() == '\n')
+            line.pop_back();
+
+        auto const locale_pos = line.find(locale_text);
+        if (locale_pos != std::string::npos)
+            return line.substr(locale_pos + sizeof locale_text);
+
+        line.clear();
+    }
+
+    return default_keymap;
+}
+
 char const* const keymap_option = "keymap";
-char const* const keymap_default = "us";
 }
 
 struct miral::Keymap::Self : mir::input::InputDeviceObserver
@@ -155,7 +191,7 @@ auto miral::Keymap::operator=(Keymap const& rhs) -> Keymap& = default;
 void miral::Keymap::operator()(mir::Server& server) const
 {
     if (self->layout.empty())
-        server.add_configuration_option(keymap_option, "keymap <layout>[+<variant>[+<options>]], e,g, \"gb\" or \"cz+qwerty\" or \"de++compose:caps\"", keymap_default);
+        server.add_configuration_option(keymap_option, "keymap <layout>[+<variant>[+<options>]], e,g, \"gb\" or \"cz+qwerty\" or \"de++compose:caps\"", keymap_default());
 
     server.add_init_callback([this, &server]
         {
