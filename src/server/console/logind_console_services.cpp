@@ -334,34 +334,11 @@ struct TakeDeviceContext
     std::promise<std::unique_ptr<mir::Device>> promise;
 };
 
-void complete_take_device_call(
-    GObject* proxy,
-    GAsyncResult* result,
-    gpointer ctx) noexcept
+void handle_take_device_dbus_result(
+    std::unique_ptr<TakeDeviceContext> context,
+    std::unique_ptr<GVariant, decltype(&g_variant_unref)> result,
+    GUnixFDList* fd_list)
 {
-    std::unique_ptr<TakeDeviceContext> const context{
-        static_cast<TakeDeviceContext*>(ctx)};
-
-    GErrorPtr error;
-    GUnixFDList* fd_list;
-
-    std::unique_ptr<GVariant, decltype(&g_variant_unref)> dbus_result{
-        g_dbus_proxy_call_with_unix_fd_list_finish(
-            G_DBUS_PROXY(proxy),
-            &fd_list,
-            result,
-            &error),
-        &g_variant_unref};
-    if (!dbus_result)
-    {
-        std::string error_msg = error ? error->message : "unknown error";
-        context->promise.set_exception(
-            MIR_MAKE_EXCEPTION_PTR((
-                std::runtime_error{
-                    std::string{"TakeDevice call failed: "} + error_msg})));
-        return;
-    }
-
     int num_fds;
     std::unique_ptr<gint[], std::function<void(gint*)>> fds{
         g_unix_fd_list_steal_fds(fd_list, &num_fds),
@@ -383,7 +360,7 @@ void complete_take_device_call(
     gboolean inactive;
     int fd_index;
 
-    g_variant_get(dbus_result.get(), "(hb)", &fd_index, &inactive);
+    g_variant_get(result.get(), "(hb)", &fd_index, &inactive);
 
     mir::Fd fd{fds[fd_index]};
     // We don't want our FD to be closed by the fds destructor
@@ -413,6 +390,40 @@ void complete_take_device_call(
         context->device->emit_suspended();
     }
     context->promise.set_value(std::move(context->device));
+}
+
+void complete_take_device_call(
+    GObject* proxy,
+    GAsyncResult* result,
+    gpointer ctx) noexcept
+{
+    std::unique_ptr<TakeDeviceContext> context{
+        static_cast<TakeDeviceContext*>(ctx)};
+
+    GErrorPtr error;
+    GUnixFDList* fd_list;
+
+    std::unique_ptr<GVariant, decltype(&g_variant_unref)> dbus_result{
+        g_dbus_proxy_call_with_unix_fd_list_finish(
+            G_DBUS_PROXY(proxy),
+            &fd_list,
+            result,
+            &error),
+        &g_variant_unref};
+    if (!dbus_result)
+    {
+        std::string error_msg = error ? error->message : "unknown error";
+        context->promise.set_exception(
+            MIR_MAKE_EXCEPTION_PTR((
+                std::runtime_error{
+                    std::string{"TakeDevice call failed: "} + error_msg})));
+        return;
+    }
+
+    handle_take_device_dbus_result(
+        std::move(context),
+        std::move(dbus_result),
+        fd_list);
 }
 }
 
@@ -510,57 +521,10 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
             return future;
         }
 
-        int num_fds;
-        std::unique_ptr<gint[], std::function<void(gint*)>> fds{
-            g_unix_fd_list_steal_fds(resultant_fds, &num_fds),
-            [&num_fds](gint* fd_list)
-            {
-                // First close any open fds…
-                for (int i = 0; i < num_fds; ++i)
-                {
-                    if (fd_list[i] != -1)
-                    {
-                        ::close(fd_list[i]);
-                    }
-                }
-                // …then free the list itself.
-                g_free(fd_list);
-            }};
-        g_object_unref(resultant_fds);
-
-        gboolean inactive;
-        int fd_index;
-
-        g_variant_get(dbus_result.get(), "(hb)", &fd_index, &inactive);
-
-        mir::Fd fd{fds[fd_index]};
-        // We don't want our FD to be closed by the fds destructor
-        fds[fd_index] = -1;
-
-        if (fd == mir::Fd::invalid)
-        {
-            /*
-             * I don't believe we can get here - the proxy checks that the DBus return value
-             * has type (fd, boolean), and gdbus will error if it can't read the fd out of the
-             * auxiliary channel.
-             *
-             * Better safe than sorry, though
-             */
-            context->promise.set_exception(
-                MIR_MAKE_EXCEPTION_PTR((
-                    std::runtime_error{"TakeDevice call returned invalid FD"})));
-            return future;
-        }
-
-        if (!inactive)
-        {
-            context->device->emit_activated(std::move(fd));
-        }
-        else
-        {
-            context->device->emit_suspended();
-        }
-        context->promise.set_value(std::move(context->device));
+        handle_take_device_dbus_result(
+            std::move(context),
+            std::move(dbus_result),
+            resultant_fds);
     }
     return future;
 }
