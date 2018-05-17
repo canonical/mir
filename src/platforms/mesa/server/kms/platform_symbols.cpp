@@ -116,8 +116,31 @@ mg::PlatformPriority probe_graphics_platform(
 
         try
         {
-            tmp_fd = console->acquire_device(major(devnum), minor(devnum)).get();
-            break;
+            class Observer : public mir::Device::Observer
+            {
+            public:
+                Observer(mir::Fd& store_in)
+                    : store_in{store_in}
+                {
+                }
+
+                void activated(mir::Fd&& device_fd) override
+                {
+                    store_in = std::move(device_fd);
+                }
+
+                void suspended() override {}
+                void removed() override {}
+            private:
+                mir::Fd& store_in;
+            };
+            // Rely on the console handing us a DRM master...
+            console->acquire_device(
+                major(devnum), minor(devnum),
+                std::make_unique<Observer>(tmp_fd)).get();
+
+            if (tmp_fd != mir::Fd::invalid)
+                return mg::PlatformPriority::best;
         }
         catch (...)
         {

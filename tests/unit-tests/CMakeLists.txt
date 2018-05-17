@@ -35,6 +35,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
   ${PROJECT_SOURCE_DIR}/src/platforms/common/server
   ${GLIB_INCLUDE_DIRS}
+  ${GIO_INCLUDE_DIRS}
 )
 
 add_library(example SHARED library_example.cpp)

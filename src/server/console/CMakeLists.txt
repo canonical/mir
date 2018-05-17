@@ -1,3 +1,5 @@
+include_directories(${DRM_INCLUDE_DIRS})
+
 add_library(
   mirconsole OBJECT
 

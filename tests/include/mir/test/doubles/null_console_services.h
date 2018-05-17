@@ -40,7 +40,15 @@ public:
 
     void restore() override {}
 
-    boost::future<Fd> acquire_device(int, int) override { return boost::future<Fd> (); }
+    std::future<std::unique_ptr<Device>> acquire_device(
+        int, int,
+        std::unique_ptr<Device::Observer> observer) override
+    {
+        std::promise<std::unique_ptr<Device>> null_promise;
+        null_promise.set_value(nullptr);
+        observer->activated(mir::Fd{});
+        return null_promise.get_future();
+    }
 };
 
 }

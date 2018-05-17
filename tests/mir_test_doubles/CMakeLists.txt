@@ -26,6 +26,10 @@ set(
   null_event_sink_factory.cpp
   mock_event_sink_factory.cpp
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_event_sink_factory.h
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/mock_console_services.h
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_device_observer.h
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/simple_device_observer.h
+  simple_device_observer.cpp
 )
 
 set(MIR_TEST_DOUBLES_UDEV_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/mock_udev.cpp)

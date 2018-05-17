@@ -24,6 +24,9 @@
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_display_report.h"
 #include "mir/test/doubles/mock_event_handler_register.h"
+#include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/null_device_observer.h"
+#include "mir/test/doubles/simple_device_observer.h"
 #include "mir/test/gmock_fixes.h"
 
 #include <gtest/gtest.h>
@@ -684,13 +687,9 @@ TEST_F(LinuxVirtualTerminalTest, throws_expected_error_when_opening_file_fails)
     EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
         .WillOnce(Return(-1));
 
-    try
-    {
-        vt.acquire_device(major, minor);
-    }
-    catch (std::system_error const&)
-    {
-    }
+    EXPECT_THROW(
+        vt.acquire_device(major, minor, std::make_unique<mtd::NullDeviceObserver>()),
+        std::system_error);
 }
 
 TEST_F(LinuxVirtualTerminalTest, throws_error_when_parsing_fails)
@@ -715,13 +714,9 @@ TEST_F(LinuxVirtualTerminalTest, throws_error_when_parsing_fails)
     EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
         .WillOnce(Return(uevent.fd()));
 
-    try
-    {
-        vt.acquire_device(55, 61);
-    }
-    catch (std::runtime_error const&)
-    {
-    }
+    EXPECT_THROW(
+        vt.acquire_device(55, 61, std::make_unique<mtd::NullDeviceObserver>()),
+        std::runtime_error);
 }
 
 TEST_F(LinuxVirtualTerminalTest, opens_correct_device_node)
@@ -748,16 +743,11 @@ TEST_F(LinuxVirtualTerminalTest, opens_correct_device_node)
     EXPECT_CALL(*fops, open(StrEq("/dev/fb0"), O_RDWR | O_CLOEXEC))
         .WillOnce(Return(-1));
 
-    auto device = vt.acquire_device(55, 61);
+    auto device = vt.acquire_device(55, 61, std::make_unique<mtd::NullDeviceObserver>());
 
-    try
-    {
-        device.get();
-    }
-    catch(...)
-    {
-        // boost::unique_future appears to lose the type of the exception?
-    }
+    EXPECT_THROW(
+        device.get(),
+        std::system_error);
 }
 
 TEST_F(LinuxVirtualTerminalTest, callback_receives_correct_device_fd)
@@ -790,10 +780,145 @@ TEST_F(LinuxVirtualTerminalTest, callback_receives_correct_device_fd)
     EXPECT_CALL(*fops, open(StrEq("/dev/input/event3"), O_RDWR | O_CLOEXEC))
         .WillOnce(Return(fake_device_node.fd()));
 
-    auto fd = vt.acquire_device(55, 61).get();
+    mir::Fd device_fd;
+    auto device = vt.acquire_device(
+        55, 61,
+        std::make_unique<mtd::SimpleDeviceObserver>(
+            [&device_fd](mir::Fd&& fd) { device_fd = std::move(fd);},
+            [](){},
+            [](){})).get();
     char buffer[sizeof(device_content)];
 
-    auto read_bytes = read(fd, buffer, sizeof(device_content));
+    auto read_bytes = read(device_fd, buffer, sizeof(device_content));
     EXPECT_THAT(read_bytes, Eq(sizeof(device_content)));
     EXPECT_THAT(buffer, StrEq(device_content));
+}
+
+TEST_F(LinuxVirtualTerminalTest, calls_set_master_on_drm_node)
+{
+    using namespace testing;
+
+    mtd::MockDRM drm;
+
+    auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
+
+    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
+    char const uevent_content[] =
+        "MAJOR=55\n"
+        "MINOR=61\n"
+        "DEVNAME=dri/card0\n"
+        "DEVTYPE=drm_minor\n";
+
+    mir::AnonymousShmFile uevent{sizeof(uevent_content)};
+    ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
+
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+        .WillOnce(Return(uevent.fd()));
+
+
+    int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
+
+    EXPECT_CALL(*fops, open(StrEq("/dev/dri/card0"), O_RDWR | O_CLOEXEC))
+        .WillOnce(Return(fake_device_fd));
+    EXPECT_CALL(drm, drmSetMaster(fake_device_fd))
+        .WillOnce(Return(0));
+
+    mir::Fd device_fd;
+    auto device = vt.acquire_device(
+        55, 61,
+        std::make_unique<mtd::SimpleDeviceObserver>(
+            [&device_fd](mir::Fd&& fd) { device_fd = std::move(fd);},
+            [](){},
+            [](){})).get();
+
+    EXPECT_THAT(device_fd, Eq(fake_device_fd));
+}
+
+TEST_F(LinuxVirtualTerminalTest, acquire_device_returns_exceptional_future_on_set_master_failure)
+{
+    using namespace testing;
+
+    mtd::MockDRM drm;
+
+    auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
+
+    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
+    char const uevent_content[] =
+        "MAJOR=55\n"
+        "MINOR=61\n"
+        "DEVNAME=dri/card0\n"
+        "DEVTYPE=drm_minor\n";
+
+    mir::AnonymousShmFile uevent{sizeof(uevent_content)};
+    ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
+
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+        .WillOnce(Return(uevent.fd()));
+
+
+    int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
+
+    EXPECT_CALL(*fops, open(StrEq("/dev/dri/card0"), O_RDWR | O_CLOEXEC))
+        .WillOnce(Return(fake_device_fd));
+    EXPECT_CALL(drm, drmSetMaster(fake_device_fd))
+        .WillOnce(Return(-1));
+
+    auto device = vt.acquire_device(
+        55, 61,
+        std::make_unique<mtd::NullDeviceObserver>());
+
+    EXPECT_THROW(
+        device.get(),
+        std::system_error);
+}
+
+TEST_F(LinuxVirtualTerminalTest, does_not_call_set_master_on_non_drm_node)
+{
+    using namespace testing;
+
+    mtd::MockDRM drm;
+
+    auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
+
+    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
+    char const uevent_content[] =
+        "MAJOR=55\n"
+        "MINOR=61\n"
+        "DEVNAME=input/event3";
+
+    mir::AnonymousShmFile uevent{sizeof(uevent_content)};
+    ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
+
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+        .WillOnce(Return(uevent.fd()));
+
+
+    int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
+
+    EXPECT_CALL(*fops, open(StrEq("/dev/input/event3"), O_RDWR | O_CLOEXEC))
+        .WillOnce(Return(fake_device_fd));
+    EXPECT_CALL(drm, drmSetMaster(fake_device_fd))
+        .Times(0);
+
+    mir::Fd device_fd;
+    auto device = vt.acquire_device(
+        55, 61,
+        std::make_unique<mtd::SimpleDeviceObserver>(
+            [&device_fd](mir::Fd&& fd) { device_fd = std::move(fd);},
+            [](){},
+            [](){})).get();
+
+    EXPECT_THAT(device_fd, Eq(fake_device_fd));
 }
