@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -18,11 +18,13 @@
 
 #include "miral/keymap.h"
 
+#include <mir/fd.h>
 #include <mir/input/input_device_observer.h>
 #include <mir/input/input_device_hub.h>
 #include <mir/input/device.h>
 #include <mir/options/option.h>
 #include <mir/server.h>
+#include <mir/udev/wrapper.h>
 
 #include <mir/input/keymap.h>
 #include <mir/input/mir_keyboard_config.h>
@@ -30,12 +32,9 @@
 #define MIR_LOG_COMPONENT "miral::Keymap"
 #include <mir/log.h>
 
-#include <cstdio>
-#include <memory>
-#include <string>
-
 #include <algorithm>
 #include <mutex>
+#include <string>
 #include <vector>
 
 namespace
@@ -43,31 +42,40 @@ namespace
 std::string keymap_default()
 {
     static auto const default_keymap = "us";
-    static char const locale_text[] = "Layout:";
 
-    std::unique_ptr<FILE, void(*)(FILE*)> localectl{popen("localectl status", "r"), [](FILE* f){ pclose(f);}};
+    namespace mu = mir::udev;
 
-    if (!localectl)
-        return default_keymap;
+    mu::Enumerator input_enumerator{std::make_shared<mu::Context>()};
+    input_enumerator.match_subsystem("input");
+    input_enumerator.scan_devices();
 
-    char buf[1024];
-    std::string line;
-
-    while (auto got = fgets(buf, sizeof buf, localectl.get()))
+    for (auto& device : input_enumerator)
     {
-        line.append(got);
+        if (auto const layout  = device.property("XKBLAYOUT"))
+        {
+            auto const options = device.property("XKBOPTIONS");
+            auto const variant = device.property("XKBVARIANT");
 
-        if (got && !feof(localectl.get()) && !line.empty() && line.back() != '\n')
-            continue;
+            std::string keymap{layout};
 
-        if (!line.empty() && line.back() == '\n')
-            line.pop_back();
+            if (variant || options)
+            {
+                keymap += '+';
 
-        auto const locale_pos = line.find(locale_text);
-        if (locale_pos != std::string::npos)
-            return line.substr(locale_pos + sizeof locale_text);
+                if (variant)
+                {
+                    keymap += variant;
+                }
 
-        line.clear();
+                if (options)
+                {
+                    keymap += '+';
+                    keymap += options;
+                }
+            }
+
+            return keymap;
+        }
     }
 
     return default_keymap;

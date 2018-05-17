@@ -2,6 +2,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/platform
   ${PROJECT_SOURCE_DIR}/include/client
   ${PROJECT_SOURCE_DIR}/include/server
+  ${PROJECT_SOURCE_DIR}/src/include/platform
 )
 
 set(MIRAL_ABI 3)
