@@ -261,9 +261,6 @@ mtd::MockDRM::MockDRM()
                     return fd;
                 }));
 
-    ON_CALL(*this, drmClose(_))
-        .WillByDefault(Invoke([](int fd){ return close(fd); }));
-
     ON_CALL(*this, drmModeGetResources(_))
         .WillByDefault(
             Invoke(
@@ -443,11 +440,6 @@ testing::Matcher<int> mtd::IsFdOfDevice(char const* device)
 int drmOpen(const char *name, const char *busid)
 {
     return global_mock->drmOpen(name, busid);
-}
-
-int drmClose(int fd)
-{
-    return global_mock->drmClose(fd);
 }
 
 int drmIoctl(int fd, unsigned long request, void *arg)

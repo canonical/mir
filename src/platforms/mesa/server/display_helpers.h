@@ -54,7 +54,7 @@ enum class DRMNodeToUse
 class DRMHelper : public DRMAuthentication
 {
 public:
-    DRMHelper(DRMNodeToUse const node_to_use) : fd{-1}, node_to_use{node_to_use} {}
+    DRMHelper(DRMNodeToUse const node_to_use) : node_to_use{node_to_use} {}
     ~DRMHelper();
 
     DRMHelper(const DRMHelper &) = delete;
@@ -70,11 +70,11 @@ public:
     void drop_master() const;
     void set_master() const;
 
-    int fd;
+    mir::Fd fd;
     DRMNodeToUse const node_to_use;
 
 private:
-    DRMHelper(int fd);
+    explicit DRMHelper(mir::Fd&& fd);
 
     // TODO: This herustic is temporary; should be replaced with
     // handling >1 DRM device.
@@ -82,7 +82,7 @@ private:
 
     int count_connections(int fd);
 
-    int open_drm_device(std::shared_ptr<mir::udev::Context> const& udev);
+    mir::Fd open_drm_device(std::shared_ptr<mir::udev::Context> const& udev);
 };
 
 class GBMHelper
