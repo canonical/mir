@@ -107,9 +107,10 @@ bool mf::WlSurface::synchronized() const
 std::experimental::optional<std::pair<geom::Point, mf::WlSurface*>> mf::WlSurface::transform_point(geom::Point point)
 {
     point = point - offset_;
-    for (auto child : children)
+    // loop backwards so the first subsurface we find that accepts the input is the topmost one
+    for (auto child_it = children.rbegin(); child_it != children.rend(); ++child_it)
     {
-        auto result = child->transform_point(point);
+        auto result = (*child_it)->transform_point(point);
         if (result)
             return result;
     }
