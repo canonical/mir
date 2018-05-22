@@ -160,7 +160,6 @@ mir::Fd mgmh::DRMHelper::authenticated_fd()
                 std::runtime_error("Failed to authenticate DRM device magic cookie")) << boost::errinfo_errno(-ret));
     }
 
-    //TODO: remove IntOwnedFd, its how the code works now though
     return mir::Fd{auth_fd};
 }
 
