@@ -16,7 +16,6 @@ add_library(
 
   buffer_allocator.cpp
   display_helpers.cpp
-  drm_close_threadsafe.cpp
   gbm_buffer.cpp
   ipc_operations.cpp
   software_buffer.cpp

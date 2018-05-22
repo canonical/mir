@@ -153,12 +153,6 @@ TEST_F(MesaGraphicsPlatform, connection_ipc_package)
     EXPECT_CALL(mock_drm, drmGetMagic(auth_fd,_));
     EXPECT_CALL(mock_drm, drmAuthMagic(mtd::IsFdOfDevice("/dev/dri/card0"),_));
 
-    EXPECT_CALL(mock_drm, drmClose(mtd::IsFdOfDevice("/dev/dri/card0")));
-    EXPECT_CALL(mock_drm, drmClose(mtd::IsFdOfDevice("/dev/dri/card1")));
-
-    /* Expect authenticated fd to be closed when package is destroyed */
-    EXPECT_CALL(mock_drm, drmClose(auth_fd));
-
     EXPECT_NO_THROW (
         auto platform = create_platform();
         auto ipc_ops = platform->make_ipc_operations();
@@ -192,82 +186,6 @@ TEST_F(MesaGraphicsPlatform, egl_native_display_is_gbm_device)
 {
     auto platform = create_platform();
     EXPECT_EQ(mock_gbm.fake_gbm.device, platform->egl_native_display());
-}
-
-namespace
-{
-
-class ConcurrentCallDetector
-{
-public:
-    ConcurrentCallDetector()
-        : threads_in_call{0}, detected_concurrent_calls_{false}
-    {
-    }
-
-    void call()
-    {
-        if (threads_in_call.fetch_add(1) > 0)
-            detected_concurrent_calls_ = true;
-
-        std::this_thread::sleep_for(std::chrono::milliseconds{1});
-
-        --threads_in_call;
-    }
-
-    bool detected_concurrent_calls()
-    {
-        return detected_concurrent_calls_;
-    }
-
-private:
-    std::atomic<int> threads_in_call;
-    std::atomic<bool> detected_concurrent_calls_;
-};
-
-}
-
-/*
- * This test is not 100% reliable in theory (we are trying to recreate a race
- * condition after all!), but it can only produce false successes, not false
- * failures, so it's safe to use.  In practice it is reliable enough: I get a
- * 100% failure rate for this test (1000 out of 1000 repetitions) when testing
- * without the fix for the race condition we are testing for.
- */
-TEST_F(MesaGraphicsPlatform, drm_close_not_called_concurrently_on_ipc_package_destruction)
-{
-    using namespace testing;
-
-    unsigned int const num_threads{10};
-    unsigned int const num_iterations{10};
-
-    ConcurrentCallDetector detector;
-
-    ON_CALL(mock_drm, drmClose(_))
-        .WillByDefault(DoAll(InvokeWithoutArgs(&detector, &ConcurrentCallDetector::call),
-                             Return(0)));
-
-    auto platform = create_platform();
-    std::shared_ptr<mg::PlatformIpcOperations> ipc_ops = platform->make_ipc_operations();
-
-    std::vector<std::thread> threads;
-
-    for (unsigned int i = 0; i < num_threads; i++)
-    {
-        threads.push_back(std::thread{
-            [ipc_ops]
-            {
-                for (unsigned int i = 0; i < num_iterations; i++)
-                {
-                    ipc_ops->connection_ipc_package();
-                }
-            }});
-    }
-
-    for (auto& t : threads)
-        t.join();
-
-    EXPECT_FALSE(detector.detected_concurrent_calls());
 }
 
 struct StubEmergencyCleanupRegistry : mir::EmergencyCleanupRegistry

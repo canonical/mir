@@ -229,7 +229,7 @@ class StubIpcOps : public mg::PlatformIpcOperations
                     std::runtime_error("Failed to write to pipe in 'echo_fd' operation"));
             }
 
-            reply.fds.push_back(dup(pipe.read_fd()));
+            reply.fds.push_back(pipe.read_fd());
         }
         else
         {

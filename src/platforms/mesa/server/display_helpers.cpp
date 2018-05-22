@@ -17,7 +17,6 @@
  */
 
 #include "display_helpers.h"
-#include "drm_close_threadsafe.h"
 
 #include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/gl_config.h"
@@ -49,7 +48,6 @@ namespace mgmh = mir::graphics::mesa::helpers;
 std::vector<std::shared_ptr<mgmh::DRMHelper>>
 mgmh::DRMHelper::open_all_devices(std::shared_ptr<mir::udev::Context> const& udev)
 {
-    int tmp_fd = -1;
     int error = ENODEV; //Default error is "there are no DRM devices"
 
     mir::udev::Enumerator devices(udev);
@@ -63,7 +61,7 @@ mgmh::DRMHelper::open_all_devices(std::shared_ptr<mir::udev::Context> const& ude
     for(auto& device : devices)
     {
         // If directly opening the DRM device is good enough for X it's good enough for us!
-        tmp_fd = open(device.devnode(), O_RDWR | O_CLOEXEC);
+        auto tmp_fd = mir::Fd{open(device.devnode(), O_RDWR | O_CLOEXEC)};
         if (tmp_fd < 0)
         {
             error = errno;
@@ -84,20 +82,17 @@ mgmh::DRMHelper::open_all_devices(std::shared_ptr<mir::udev::Context> const& ude
 
         if ((error = -drmSetInterfaceVersion(tmp_fd, &sv)))
         {
-            close(tmp_fd);
             mir::log_warning(
                 "Failed to set DRM interface version on device %s: %i (%s)",
                 device.devnode(),
                 error,
                 strerror(error));
-            tmp_fd = -1;
             continue;
         }
 
         // Can't use make_shared with the private constructor.
-        opened_devices.push_back(std::shared_ptr<DRMHelper>{new DRMHelper{tmp_fd}});
+        opened_devices.push_back(std::shared_ptr<DRMHelper>{new DRMHelper{std::move(tmp_fd)}});
         mir::log_info("Using DRM device %s", device.devnode());
-        tmp_fd = -1;
     }
 
     if (opened_devices.size() == 0)
@@ -126,7 +121,7 @@ mir::Fd mgmh::DRMHelper::authenticated_fd()
                 "Tried to get authenticated DRM fd before setting up the DRM master"));
 
     if (node_to_use == DRMNodeToUse::render)
-        return mir::Fd{IntOwnedFd{dup(fd)}};
+        return fd;
 
     char* busid = drmGetBusid(fd);
     if (!busid)
@@ -165,8 +160,7 @@ mir::Fd mgmh::DRMHelper::authenticated_fd()
                 std::runtime_error("Failed to authenticate DRM device magic cookie")) << boost::errinfo_errno(-ret));
     }
 
-    //TODO: remove IntOwnedFd, its how the code works now though
-    return mir::Fd{IntOwnedFd{auth_fd}};
+    return mir::Fd{auth_fd};
 }
 
 void mgmh::DRMHelper::auth_magic(drm_magic_t magic)
@@ -229,8 +223,8 @@ void mgmh::DRMHelper::set_master() const
     }
 }
 
-mgmh::DRMHelper::DRMHelper(int fd)
-    : fd{fd},
+mgmh::DRMHelper::DRMHelper(mir::Fd&& fd)
+    : fd{std::move(fd)},
       node_to_use{DRMNodeToUse::card}
 {
 }
@@ -270,9 +264,9 @@ int mgmh::DRMHelper::count_connections(int fd)
     return n_connected;
 }
 
-int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& udev)
+mir::Fd mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& udev)
 {
-    int tmp_fd = -1;
+    mir::Fd tmp_fd;
     int error = ENODEV; //Default error is "there are no DRM devices"
 
     mir::udev::Enumerator devices(udev);
@@ -290,7 +284,7 @@ int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
             continue;
 
         // If directly opening the DRM device is good enough for X it's good enough for us!
-        tmp_fd = open(device.devnode(), O_RDWR | O_CLOEXEC);
+        tmp_fd = mir::Fd{open(device.devnode(), O_RDWR | O_CLOEXEC)};
         if (tmp_fd < 0)
         {
             error = errno;
@@ -308,8 +302,7 @@ int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
 
             if ((error = -drmSetInterfaceVersion(tmp_fd, &sv)))
             {
-                close(tmp_fd);
-                tmp_fd = -1;
+                tmp_fd = mir::Fd{};
                 continue;
             }
 
@@ -317,8 +310,7 @@ int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
             if (count_connections(tmp_fd) > 0)
                 break;
 
-            close(tmp_fd);
-            tmp_fd = -1;
+            tmp_fd = mir::Fd{};
         }
         else
             break;
@@ -336,8 +328,6 @@ int mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& 
 
 mgmh::DRMHelper::~DRMHelper()
 {
-    if (fd >= 0)
-        mgm::drm_close_threadsafe(fd);
 }
 
 /*************

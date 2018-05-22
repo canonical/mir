@@ -342,9 +342,6 @@ TEST_F(MesaDisplayTest, create_display_drm_failure)
                 InvokeWithoutArgs([]() { errno = ENODEV; }),
                 Return(-1)));
 
-    EXPECT_CALL(mock_drm, drmClose(_))
-        .Times(Exactly(0));
-
     EXPECT_THROW(
     {
         auto display = create_display(create_platform());
@@ -366,10 +363,6 @@ TEST_F(MesaDisplayTest, create_display_kms_failure)
     EXPECT_CALL(mock_drm, drmModeFreeResources(_))
         .Times(Exactly(0));
 
-    // There are 2 DRM device nodes in our mock environment.
-    EXPECT_CALL(mock_drm, drmClose(_))
-        .Times(Exactly(2));
-
     EXPECT_THROW({
         auto display = create_display(platform);
     }, std::runtime_error) << "Expected that c'tor of mgm::Display throws";
@@ -385,9 +378,6 @@ TEST_F(MesaDisplayTest, create_display_gbm_failure)
 
     EXPECT_CALL(mock_gbm, gbm_device_destroy(_))
         .Times(Exactly(0));
-
-    EXPECT_CALL(mock_drm, drmClose(_))
-        .Times(Exactly(2));
 
     EXPECT_THROW({
         auto platform = create_platform();
