@@ -207,7 +207,7 @@ public:
             std::cout << "Messages from DBusMock: " << std::endl;
             while ((bytes_read = ::read(mock_stdout, buffer, sizeof(buffer))) > 0)
             {
-                ::write(STDOUT_FILENO, buffer, bytes_read);
+                (void)::write(STDOUT_FILENO, buffer, bytes_read);
             }
             if (bytes_read < 0)
             {
