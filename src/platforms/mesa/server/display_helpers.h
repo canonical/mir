@@ -35,6 +35,8 @@
 
 namespace mir
 {
+class ConsoleServices;
+
 namespace graphics
 {
 namespace mesa
@@ -61,7 +63,8 @@ public:
     DRMHelper& operator=(const DRMHelper&) = delete;
 
     static std::vector<std::shared_ptr<DRMHelper>> open_all_devices(
-        std::shared_ptr<mir::udev::Context> const& udev);
+        std::shared_ptr<mir::udev::Context> const& udev,
+        mir::ConsoleServices& console);
 
     void setup(std::shared_ptr<mir::udev::Context> const& udev);
     mir::Fd authenticated_fd();

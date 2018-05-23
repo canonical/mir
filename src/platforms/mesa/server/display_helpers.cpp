@@ -17,12 +17,16 @@
  */
 
 #include "display_helpers.h"
+#include "one_shot_device_observer.h"
 
 #include "kms-utils/drm_mode_resources.h"
 #include "mir/graphics/gl_config.h"
 #include "mir/graphics/egl_error.h"
 
 #include "mir/udev/wrapper.h"
+#include "mir/console_services.h"
+
+#include <sys/sysmacros.h>
 
 #define MIR_LOG_COMPONENT "mesa-kms"
 #include "mir/log.h"
@@ -46,7 +50,9 @@ namespace mgmh = mir::graphics::mesa::helpers;
  *************/
 
 std::vector<std::shared_ptr<mgmh::DRMHelper>>
-mgmh::DRMHelper::open_all_devices(std::shared_ptr<mir::udev::Context> const& udev)
+mgmh::DRMHelper::open_all_devices(
+    std::shared_ptr<mir::udev::Context> const& udev,
+    mir::ConsoleServices& console)
 {
     int error = ENODEV; //Default error is "there are no DRM devices"
 
@@ -60,8 +66,11 @@ mgmh::DRMHelper::open_all_devices(std::shared_ptr<mir::udev::Context> const& ude
 
     for(auto& device : devices)
     {
-        // If directly opening the DRM device is good enough for X it's good enough for us!
-        auto tmp_fd = mir::Fd{open(device.devnode(), O_RDWR | O_CLOEXEC)};
+        mir::Fd tmp_fd;
+        console.acquire_device(
+            major(device.devnum()), minor(device.devnum()),
+            std::make_unique<mgm::OneShotDeviceObserver>(tmp_fd)).get();
+
         if (tmp_fd < 0)
         {
             error = errno;

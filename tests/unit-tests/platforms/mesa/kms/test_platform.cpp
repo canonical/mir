@@ -42,6 +42,7 @@
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/fd_matcher.h"
+#include "mir/test/doubles/stub_console_services.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -61,52 +62,6 @@ namespace
 
 const char probe_platform[] = "probe_graphics_platform";
 
-class StubConsoleServices : public mir::ConsoleServices
-{
-public:
-    void
-    register_switch_handlers(
-        mir::graphics::EventHandlerRegister&,
-        std::function<bool()> const&,
-        std::function<bool()> const&) override
-    {
-    }
-
-    void restore() override
-    {
-    }
-
-    std::future<std::unique_ptr<mir::Device>> acquire_device(
-        int major, int minor,
-        std::unique_ptr<mir::Device::Observer> observer) override
-    {
-        /* NOTE: This uses the behaviour that MockDRM will intercept any open() call
-         * under /dev/dri/
-         */
-        std::stringstream filename;
-        filename << "/dev/dri/" << major << ":" << minor;
-        mir::Fd device_fd{::open(filename.str().c_str(), O_RDWR | O_CLOEXEC)};
-        std::promise<std::unique_ptr<mir::Device>> promise;
-        if (drmSetMaster(device_fd) == 0)
-        {
-            observer->activated(std::move(device_fd));
-            // The Device is *just* a handle; there's no reason for anything to dereference it
-            promise.set_value(nullptr);
-        }
-        else
-        {
-            promise.set_exception(
-                std::make_exception_ptr(
-                    std::system_error{
-                        errno,
-                        std::system_category(),
-                        "drmSetMaster failed"}));
-        }
-
-        return promise.get_future();
-    }
-};
-
 class MesaGraphicsPlatform : public ::testing::Test
 {
 public:
@@ -124,7 +79,7 @@ public:
     {
         return std::make_shared<mgm::Platform>(
                 mir::report::null_display_report(),
-                std::make_shared<StubConsoleServices>(),
+                std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgm::BypassOption::allowed);
     }
@@ -202,30 +157,11 @@ struct StubEmergencyCleanupRegistry : mir::EmergencyCleanupRegistry
     mir::ModuleEmergencyCleanupHandler handler;
 };
 
-TEST_F(MesaGraphicsPlatform, restores_vt_on_emergency_cleanup)
-{
-    using namespace testing;
-
-    auto const mock_vt = std::make_shared<mtd::MockConsoleServices>();
-    StubEmergencyCleanupRegistry emergency_cleanup_registry;
-    mgm::Platform platform{
-        mir::report::null_display_report(),
-        mock_vt,
-        emergency_cleanup_registry,
-        mgm::BypassOption::allowed};
-
-    EXPECT_CALL(*mock_vt, restore());
-
-    (*emergency_cleanup_registry.handler)();
-
-    Mock::VerifyAndClearExpectations(mock_vt.get());
-}
-
 TEST_F(MesaGraphicsPlatform, releases_drm_on_emergency_cleanup)
 {
     using namespace testing;
 
-    auto const null_vt = std::make_shared<mtd::NullConsoleServices>();
+    auto const null_vt = std::make_shared<mtd::StubConsoleServices>();
     StubEmergencyCleanupRegistry emergency_cleanup_registry;
     mgm::Platform platform{
         mir::report::null_display_report(),
@@ -244,33 +180,11 @@ TEST_F(MesaGraphicsPlatform, releases_drm_on_emergency_cleanup)
     Mock::VerifyAndClearExpectations(&mock_drm);
 }
 
-TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
-{
-    using namespace testing;
-
-    auto const mock_vt = std::make_shared<mtd::MockConsoleServices>();
-    StubEmergencyCleanupRegistry emergency_cleanup_registry;
-    mgm::Platform platform{
-        mir::report::null_display_report(),
-        mock_vt,
-        emergency_cleanup_registry,
-        mgm::BypassOption::allowed};
-
-    EXPECT_CALL(*mock_vt, restore())
-        .WillOnce(Throw(std::runtime_error("vt restore exception")));
-    EXPECT_CALL(mock_drm, drmDropMaster(_))
-        .WillRepeatedly(Throw(std::runtime_error("drm drop master exception")));
-
-    (*emergency_cleanup_registry.handler)();
-
-    Mock::VerifyAndClearExpectations(&mock_drm);
-}
-
 TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_no_drm_udev_devices)
 {
     mtf::UdevEnvironment udev_environment;
     mir::options::ProgramOption options;
-    auto const stub_vt = std::make_shared<StubConsoleServices>();
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
@@ -282,7 +196,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_best_when_master)
     mtf::UdevEnvironment udev_environment;
     boost::program_options::options_description po;
     mir::options::ProgramOption options;
-    auto const stub_vt = std::make_shared<StubConsoleServices>();
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");
 
@@ -298,7 +212,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_in_between_when_cant_set_master)
     mtf::UdevEnvironment udev_environment;
     boost::program_options::options_description po;
     mir::options::ProgramOption options;
-    auto const stub_vt = std::make_shared<StubConsoleServices>();
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");
 
@@ -321,7 +235,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_egl_client_extension
     mir::options::ProgramOption options;
     const char *argv[] = {"dummy", "--vt"};
     options.parse_arguments(po, 2, argv);
-    auto const stub_vt = std::make_shared<StubConsoleServices>();
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");
 
@@ -342,7 +256,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_gbm_platform_not_sup
     mir::options::ProgramOption options;
     const char *argv[] = {"dummy", "--vt"};
     options.parse_arguments(po, 2, argv);
-    auto const stub_vt = std::make_shared<StubConsoleServices>();
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");
 

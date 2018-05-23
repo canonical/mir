@@ -85,15 +85,3 @@ TEST_F(DRMHelperTest, throws_if_drm_auth_magic_fails)
         drm_helper.auth_magic(magic);
     }, std::runtime_error);
 }
-
-TEST_F(DRMHelperTest, open_all_devices_opens_with_cloexec)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card0"), FlagSet(O_CLOEXEC), _))
-        .Times(1);
-    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card1"), FlagSet(O_CLOEXEC), _))
-        .Times(1);
-
-    mgm::helpers::DRMHelper::open_all_devices(std::make_shared<mir::udev::Context>());
-}

@@ -30,7 +30,8 @@ set(
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/null_device_observer.h
   ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/simple_device_observer.h
   simple_device_observer.cpp
-)
+  stub_console_services.cpp
+  ${PROJECT_SOURCE_DIR}/tests/include/mir/test/doubles/stub_console_services.h)
 
 set(MIR_TEST_DOUBLES_UDEV_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/mock_udev.cpp)
 
