@@ -146,7 +146,7 @@ private:
 
     NullWlSurfaceRole null_role;
     WlSurfaceRole* role;
-    std::vector<WlSubsurface*> children;
+    std::vector<WlSubsurface*> children; // ordering is from bottom to top
 
     WlSurfaceState pending;
     geometry::Displacement offset_;
