@@ -21,6 +21,7 @@
 
 #include "mir_test_framework/udev_environment.h"
 #include "mir/test/doubles/mock_drm.h"
+#include "mir/test/doubles/stub_console_services.h"
 
 #include <fcntl.h>
 
@@ -41,16 +42,9 @@ MATCHER_P(FlagSet, flag, "")
 
 class DRMHelperTest : public ::testing::Test
 {              
-public:        
-    DRMHelperTest()
-    {          
-        fake_devices.add_standard_device("standard-drm-devices");
-    }          
-               
-protected:       
+protected:
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     mtf::UdevEnvironment fake_devices;
-    mgm::helpers::DRMHelper drm_helper{mgm::helpers::DRMNodeToUse::card};
 };
 
 }
@@ -59,15 +53,19 @@ TEST_F(DRMHelperTest, closes_drm_fd_on_exec)
 {   
     using namespace testing;
 
+    fake_devices.add_standard_device("standard-drm-render-nodes");
+
     EXPECT_CALL(mock_drm, open(_, FlagSet(O_CLOEXEC), _));
 
-    drm_helper.setup(std::make_shared<mir::udev::Context>());
+    auto helper = mgm::helpers::DRMHelper::open_any_render_node(
+        std::make_shared<mir::udev::Context>());
 }   
 
 TEST_F(DRMHelperTest, throws_if_drm_auth_magic_fails)
 {
     using namespace testing;
 
+    fake_devices.add_standard_device("standard-drm-devices");
     drm_magic_t const magic{0x10111213};
 
     EXPECT_CALL(
@@ -79,9 +77,15 @@ TEST_F(DRMHelperTest, throws_if_drm_auth_magic_fails)
             magic))
             .WillOnce(Return(-1));
 
-    drm_helper.setup(std::make_shared<mir::udev::Context>());
+    mtd::StubConsoleServices console;
+
+    auto helpers = mgm::helpers::DRMHelper::open_all_devices(
+        std::make_shared<mir::udev::Context>(),
+        console);
+
+    ASSERT_THAT(helpers, Not(IsEmpty()));
 
     EXPECT_THROW({
-        drm_helper.auth_magic(magic);
+        helpers[0]->auth_magic(magic);
     }, std::runtime_error);
 }

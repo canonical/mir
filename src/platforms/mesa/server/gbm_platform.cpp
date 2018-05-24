@@ -26,6 +26,27 @@
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
 
+namespace
+{
+mir::Fd drm_fd_from_authentication(mg::PlatformAuthentication& authenticator)
+{
+    auto master = authenticator.drm_fd();
+    auto auth = authenticator.auth_extension();
+    if (master.is_set())
+    {
+        return master.value();
+    }
+    else if (auth.is_set())
+    {
+        return auth.value()->auth_fd();
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("no authentication fd to make gbm buffers"));
+    }
+}
+}
+
 mgm::GBMPlatform::GBMPlatform(
     BypassOption bypass_option,
     BufferImportMethod import_method,
@@ -33,29 +54,12 @@ mgm::GBMPlatform::GBMPlatform(
     bypass_option(bypass_option),
     import_method(import_method),
     platform_authentication(platform_authentication),
-    gbm{std::make_shared<mgm::helpers::GBMHelper>()},
+    gbm{std::make_shared<mgm::helpers::GBMHelper>(drm_fd_from_authentication(*platform_authentication))},
     auth{std::make_shared<mgm::NestedAuthentication>(platform_authentication)}
 {
-    auto master = platform_authentication->drm_fd();
-    auto auth = platform_authentication->auth_extension();
-    if (master.is_set())
-    {
-        gbm->setup(master.value());
-    }
-    else if (auth.is_set())
-    {
-        gbm->setup(auth.value()->auth_fd());
-    }
-    else
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("no authentication fd to make gbm buffers"));
-    }
-
-    {
-        auto gbm_extension = platform_authentication->set_gbm_extension();
-        if (gbm_extension.is_set())
-            gbm_extension.value()->set_gbm_device(gbm->device);
-    }
+    auto gbm_extension = platform_authentication->set_gbm_extension();
+    if (gbm_extension.is_set())
+        gbm_extension.value()->set_gbm_device(gbm->device);
 }
 
 mgm::GBMPlatform::GBMPlatform(
@@ -67,10 +71,9 @@ mgm::GBMPlatform::GBMPlatform(
     import_method(import_method),
     udev(udev),
     drm(drm),
-    gbm{std::make_shared<mgm::helpers::GBMHelper>()},
+    gbm{std::make_shared<mgm::helpers::GBMHelper>(drm->fd)},
     auth{drm}
 {
-    gbm->setup(*drm);
 }
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GBMPlatform::create_buffer_allocator()

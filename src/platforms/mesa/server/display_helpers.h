@@ -56,7 +56,6 @@ enum class DRMNodeToUse
 class DRMHelper : public DRMAuthentication
 {
 public:
-    DRMHelper(DRMNodeToUse const node_to_use) : node_to_use{node_to_use} {}
     ~DRMHelper();
 
     DRMHelper(const DRMHelper &) = delete;
@@ -66,7 +65,9 @@ public:
         std::shared_ptr<mir::udev::Context> const& udev,
         mir::ConsoleServices& console);
 
-    void setup(std::shared_ptr<mir::udev::Context> const& udev);
+    static std::unique_ptr<DRMHelper> open_any_render_node(
+        std::shared_ptr<mir::udev::Context> const& udev);
+
     mir::Fd authenticated_fd();
     void auth_magic(drm_magic_t magic);
 
@@ -74,34 +75,23 @@ public:
     void set_master() const;
 
     mir::Fd fd;
-    DRMNodeToUse const node_to_use;
-
 private:
-    explicit DRMHelper(mir::Fd&& fd);
-
-    // TODO: This herustic is temporary; should be replaced with
-    // handling >1 DRM device.
-    int is_appropriate_device(std::shared_ptr<mir::udev::Context> const& udev, mir::udev::Device const& dev);
-
-    int count_connections(int fd);
-
-    mir::Fd open_drm_device(std::shared_ptr<mir::udev::Context> const& udev);
+    DRMNodeToUse node_to_use;
+    explicit DRMHelper(mir::Fd&& fd, DRMNodeToUse node_to_use);
 };
 
 class GBMHelper
 {
 public:
-    GBMHelper() : device{0} {}
+    GBMHelper(mir::Fd const& drm_fd);
     ~GBMHelper();
 
     GBMHelper(const GBMHelper&) = delete;
     GBMHelper& operator=(const GBMHelper&) = delete;
 
-    void setup(const DRMHelper& drm);
-    void setup(int drm_fd);
     GBMSurfaceUPtr create_scanout_surface(uint32_t width, uint32_t height, bool sharable);
 
-    gbm_device* device;
+    gbm_device* const device;
 };
 
 }

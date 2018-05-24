@@ -100,7 +100,7 @@ mgmh::DRMHelper::open_all_devices(
         }
 
         // Can't use make_shared with the private constructor.
-        opened_devices.push_back(std::shared_ptr<DRMHelper>{new DRMHelper{std::move(tmp_fd)}});
+        opened_devices.push_back(std::shared_ptr<DRMHelper>{new DRMHelper{std::move(tmp_fd), DRMNodeToUse::card}});
         mir::log_info("Using DRM device %s", device.devnode());
     }
 
@@ -113,12 +113,42 @@ mgmh::DRMHelper::open_all_devices(
     return opened_devices;
 }
 
-void mgmh::DRMHelper::setup(std::shared_ptr<mir::udev::Context> const& udev)
+std::unique_ptr<mgmh::DRMHelper> mgmh::DRMHelper::open_any_render_node(
+    std::shared_ptr<mir::udev::Context> const& udev)
 {
-    fd = open_drm_device(udev);
+    mir::Fd tmp_fd;
+    int error = ENODEV; //Default error is "there are no DRM devices"
 
-    if (fd < 0)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to open DRM device\n"));
+    mir::udev::Enumerator devices(udev);
+    devices.match_subsystem("drm");
+    devices.match_sysname("renderD[0-9]*");
+
+    devices.scan_devices();
+
+    for(auto& device : devices)
+    {
+        // If directly opening the DRM device is good enough for X it's good enough for us!
+        tmp_fd = mir::Fd{open(device.devnode(), O_RDWR | O_CLOEXEC)};
+        if (tmp_fd < 0)
+        {
+            error = errno;
+            continue;
+        }
+
+        break;
+    }
+
+    if (tmp_fd < 0)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                    error,
+                    std::system_category(),
+                    "Error opening DRM device"}));
+    }
+
+    return std::unique_ptr<mgmh::DRMHelper>{
+        new mgmh::DRMHelper{std::move(tmp_fd), DRMNodeToUse::render}};
 }
 
 mir::Fd mgmh::DRMHelper::authenticated_fd()
@@ -232,107 +262,10 @@ void mgmh::DRMHelper::set_master() const
     }
 }
 
-mgmh::DRMHelper::DRMHelper(mir::Fd&& fd)
+mgmh::DRMHelper::DRMHelper(mir::Fd&& fd, DRMNodeToUse node_to_use)
     : fd{std::move(fd)},
-      node_to_use{DRMNodeToUse::card}
+      node_to_use{node_to_use}
 {
-}
-
-int mgmh::DRMHelper::is_appropriate_device(std::shared_ptr<mir::udev::Context> const& udev, mir::udev::Device const& drm_device)
-{
-    mir::udev::Enumerator children(udev);
-    children.match_parent(drm_device);
-
-    char const* devtype = drm_device.devtype();
-    if (!devtype || strcmp(devtype, "drm_minor"))
-        return EINVAL;
-
-    children.scan_devices();
-    for (auto& device : children)
-    {
-        // For some reason udev regards the device as a parent of itself
-        // If there are any other children, they should be outputs.
-        if (device != drm_device)
-            return 0;
-    }
-
-    return ENOMEDIUM;
-}
-
-int mgmh::DRMHelper::count_connections(int fd)
-{
-    kms::DRMModeResources resources{fd};
-
-    int n_connected = 0;
-    resources.for_each_connector([&](kms::DRMModeConnectorUPtr connector)
-    {
-        if (connector->connection == DRM_MODE_CONNECTED)
-            n_connected++;
-    });
-
-    return n_connected;
-}
-
-mir::Fd mgmh::DRMHelper::open_drm_device(std::shared_ptr<mir::udev::Context> const& udev)
-{
-    mir::Fd tmp_fd;
-    int error = ENODEV; //Default error is "there are no DRM devices"
-
-    mir::udev::Enumerator devices(udev);
-    devices.match_subsystem("drm");
-    if (node_to_use == DRMNodeToUse::render)
-        devices.match_sysname("renderD[0-9]*");
-    else
-        devices.match_sysname("card[0-9]*");
-
-    devices.scan_devices();
-
-    for(auto& device : devices)
-    {
-        if ((node_to_use == DRMNodeToUse::card) && (error = is_appropriate_device(udev, device)))
-            continue;
-
-        // If directly opening the DRM device is good enough for X it's good enough for us!
-        tmp_fd = mir::Fd{open(device.devnode(), O_RDWR | O_CLOEXEC)};
-        if (tmp_fd < 0)
-        {
-            error = errno;
-            continue;
-        }
-
-        if (node_to_use == DRMNodeToUse::card)
-        {
-            // Check that the drm device is usable by setting the interface version we use (1.4)
-            drmSetVersion sv;
-            sv.drm_di_major = 1;
-            sv.drm_di_minor = 4;
-            sv.drm_dd_major = -1;     /* Don't care */
-            sv.drm_dd_minor = -1;     /* Don't care */
-
-            if ((error = -drmSetInterfaceVersion(tmp_fd, &sv)))
-            {
-                tmp_fd = mir::Fd{};
-                continue;
-            }
-
-            // Stop if this device has connections to display on
-            if (count_connections(tmp_fd) > 0)
-                break;
-
-            tmp_fd = mir::Fd{};
-        }
-        else
-            break;
-    }
-
-    if (tmp_fd < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            boost::enable_error_info(
-                std::runtime_error("Error opening DRM device")) << boost::errinfo_errno(error));
-    }
-
-    return tmp_fd;
 }
 
 mgmh::DRMHelper::~DRMHelper()
@@ -343,18 +276,10 @@ mgmh::DRMHelper::~DRMHelper()
  * GBMHelper *
  *************/
 
-void mgmh::GBMHelper::setup(const DRMHelper& drm)
+mgmh::GBMHelper::GBMHelper(mir::Fd const& drm_fd)
+    : device{gbm_create_device(drm_fd)}
 {
-    device = gbm_create_device(drm.fd);
     if (!device)
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Failed to create GBM device"));
-}
-
-void mgmh::GBMHelper::setup(int drm_fd)
-{
-    device = gbm_create_device(drm_fd);
-    if(!device)
         BOOST_THROW_EXCEPTION(
             std::runtime_error("Failed to create GBM device"));
 }

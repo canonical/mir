@@ -147,8 +147,8 @@ mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform
 {
     mir::assert_entry_point_signature<mg::CreateRenderingPlatform>(&create_rendering_platform);
     auto udev = std::make_shared<mir::udev::Context>();
-    auto drm = std::make_shared<mgm::helpers::DRMHelper>(mgm::helpers::DRMNodeToUse::render);
-    drm->setup(udev);
     return mir::make_module_ptr<mgm::GBMPlatform>(
-        mgm::BypassOption::prohibited, mgm::BufferImportMethod::dma_buf, udev, drm);
+        mgm::BypassOption::prohibited, mgm::BufferImportMethod::dma_buf,
+        udev,
+        mgm::helpers::DRMHelper::open_any_render_node(udev));
 }

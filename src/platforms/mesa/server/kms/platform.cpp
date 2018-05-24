@@ -57,7 +57,7 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         BypassOption bypass_option)
     : udev{std::make_shared<mir::udev::Context>()},
       drm{helpers::DRMHelper::open_all_devices(udev, *vt)},
-      gbm{std::make_shared<mgmh::GBMHelper>()},
+      gbm{std::make_shared<mgmh::GBMHelper>(drm.front()->fd)},
       listener{listener},
       vt{vt},
       bypass_option_{bypass_option}
@@ -66,7 +66,6 @@ mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
     // shell renderer.
     //
     // TODO: expose multiple rendering GPUs to the shell.
-    gbm->setup(*drm.front());
 
     std::weak_ptr<ConsoleServices> weak_vt = vt;
     std::vector<std::weak_ptr<mgmh::DRMHelper>> weak_drm;
