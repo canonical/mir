@@ -96,11 +96,13 @@ public:
     TouchParameters& from_device(int device_id);
     TouchParameters& at_position(geometry::Point abs_pos);
     TouchParameters& with_action(Action touch_action);
-    
+    TouchParameters& with_event_time(std::chrono::nanoseconds time);
+
     int device_id;
     int abs_x;
     int abs_y;
     Action action;
+    std::experimental::optional<std::chrono::nanoseconds> event_time;
 };
 TouchParameters a_touch_event();
 
