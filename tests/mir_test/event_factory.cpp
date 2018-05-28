@@ -148,6 +148,12 @@ mis::TouchParameters& mis::TouchParameters::with_action(Action touch_action)
     return *this;
 }
 
+mis::TouchParameters& mis::TouchParameters::with_event_time(std::chrono::nanoseconds event_time)
+{
+    this->event_time = event_time;
+    return *this;
+}
+
 mis::TouchParameters mis::a_touch_event()
 {
     return mis::TouchParameters();

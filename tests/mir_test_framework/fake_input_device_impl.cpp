@@ -222,8 +222,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
 
-    auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now().time_since_epoch());
+    auto const event_time = touch.event_time.value_or(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()));
 
     auto touch_action = mir_touch_action_up;
     if (touch.action == synthesis::TouchParameters::Action::Tap)
@@ -316,14 +317,6 @@ void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::TouchscreenSettin
 void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, float& y)
 {
     auto info = get_output_info();
-    auto touch_range = FakeInputDevice::maximum_touch_axis_value - FakeInputDevice::minimum_touch_axis_value + 1;
-    auto const width = info.output_size.width.as_int();
-    auto const height = info.output_size.height.as_int();
-    auto x_scale = width / float(touch_range);
-    auto y_scale = height / float(touch_range);
-    x = (x - float(FakeInputDevice::minimum_touch_axis_value))*x_scale;
-    y = (y - float(FakeInputDevice::minimum_touch_axis_value))*y_scale;
-
     info.transform_to_scene(x, y);
 }
 
