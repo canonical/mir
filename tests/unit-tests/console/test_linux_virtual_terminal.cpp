@@ -932,3 +932,66 @@ TEST_F(LinuxVirtualTerminalTest, does_not_call_set_master_on_non_drm_node)
 
     EXPECT_THAT(device_fd, Eq(fake_device_fd));
 }
+
+TEST_F(LinuxVirtualTerminalTest, calls_drop_master_on_vt_switch_away)
+{
+    using namespace testing;
+
+    int const vt_num{7};
+    int const allow_switch{1};
+
+    {
+        InSequence s;
+
+        set_up_expectations_for_current_vt_search(vt_num);
+        set_up_expectations_for_vt_setup(vt_num, false);
+        set_up_expectations_for_switch_handler(SIGUSR1);
+
+        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, allow_switch));
+
+        set_up_expectations_for_vt_teardown();
+    }
+
+    testing::NiceMock<mtd::MockDRM> drm;
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
+
+    char const* const expected_filename = "/sys/dev/char/226:61/uevent";
+    char const uevent_content[] =
+        "MAJOR=226\n"
+        "MINOR=61\n"
+        "DEVNAME=dri/card0\n"
+        "DEVTYPE=drm_minor\n";
+
+    mir::AnonymousShmFile uevent{sizeof(uevent_content)};
+    ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
+
+    EXPECT_CALL(mock_fops, open(StrEq(expected_filename), _))
+        .WillOnce(Return(uevent.fd()));
+
+
+    int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
+
+    EXPECT_CALL(mock_fops, open(StrEq("/dev/dri/card0"), _))
+        .WillOnce(Return(fake_device_fd));
+    ON_CALL(drm, drmSetMaster(fake_device_fd))
+        .WillByDefault(Return(0));
+    EXPECT_CALL(drm, drmDropMaster(fake_device_fd))
+        .WillOnce(Return(0));
+
+    mir::Fd device_fd;
+    auto device = vt.acquire_device(
+        226, 61,
+        std::make_unique<mtd::NullDeviceObserver>()).get();
+
+    auto succeeding_handler = [] { return true; };
+    vt.register_switch_handlers(mock_event_handler_register, succeeding_handler, succeeding_handler);
+
+    /* Fake a VT switch away request */
+    sig_handler(SIGUSR1);
+
+    Mock::VerifyAndClear(&drm);
+}
