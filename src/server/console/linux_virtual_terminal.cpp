@@ -470,30 +470,25 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
                 << boost::errinfo_file_name(filename.str())));
     }
 
-    std::string devnode;
-    bool is_drm_device{false};
-    {
-        using namespace boost::iostreams;
-        char line_buffer[1024];
-        stream<file_descriptor_source> uevent{fd, file_descriptor_flags::never_close_handle};
+    // The DRM subsystem has major number 226.
+    bool const is_drm_device{major == 226};
 
-        while (uevent.getline(line_buffer, sizeof(line_buffer)))
+    auto const devnode =
+        [](auto const& fd)
         {
-            if (strncmp(line_buffer, "DEVNAME=", strlen("DEVNAME=")) == 0)
+            using namespace boost::iostreams;
+            char line_buffer[1024];
+            stream<file_descriptor_source> uevent{fd, file_descriptor_flags::never_close_handle};
+
+            while (uevent.getline(line_buffer, sizeof(line_buffer)))
             {
-                devnode = std::string{"/dev/"} + std::string{line_buffer + strlen("DEVNAME=")};
+                if (strncmp(line_buffer, "DEVNAME=", strlen("DEVNAME=")) == 0)
+                {
+                    return std::string{"/dev/"} + std::string{line_buffer + strlen("DEVNAME=")};
+                }
             }
-            else if (strncmp(line_buffer, "DEVTYPE=", strlen("DEVTYPE=")) == 0)
-            {
-                is_drm_device = strncmp(
-                    line_buffer + strlen("DEVTYPE="),
-                    "drm_minor",
-                    strlen("drm_minor")) == 0;
-            }
-        }
-        if (devnode.empty())
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to read DEVNAME"}));
-    }
+        }(fd);
 
     std::promise<std::unique_ptr<mir::Device>> device_promise;
     try
