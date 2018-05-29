@@ -676,6 +676,66 @@ MATCHER_P(FlagsSet, flag, "")
 {
     return (arg & flag);
 }
+
+void set_expectations_for_uevent_probe(
+    MockVTFileOperations& fops,
+    int major, int minor,
+    char const* content)
+{
+    using namespace testing;
+
+    std::stringstream expected_filename;
+    expected_filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
+
+    auto uevent = std::make_shared<mir::AnonymousShmFile>(strlen(content));
+    ::memcpy(uevent->base_ptr(), content, strlen(content));
+
+    EXPECT_CALL(fops, open(StrEq(expected_filename.str()), FlagsSet(O_RDONLY | O_CLOEXEC)))
+        .WillRepeatedly(InvokeWithoutArgs(
+            [uevent]() { return uevent->fd(); }));
+}
+
+std::string uevent_content_for_device(
+    int major, int minor,
+    char const* device_name)
+{
+    std::stringstream content;
+
+    if (strncmp(device_name, "/dev/", strlen("/dev/")) != 0)
+    {
+        throw std::logic_error{"device_name is expected to be the fully-qualified /dev/foo path"};
+    }
+
+    content
+        << "MAJOR=" << major << "\n"
+        << "MINOR=" << minor << "\n"
+        << "DEVNAME=" << device_name + strlen ("/dev/") << "\n";
+
+    return content.str();
+}
+
+void set_expectations_for_uevent_probe_of_drm(
+    MockVTFileOperations& fops,
+    int major, int minor,
+    char const* device_name)
+{
+    auto const uevent_content =
+        uevent_content_for_device(major, minor, device_name) +
+        "DEVTYPE=drm_minor\n";
+
+    set_expectations_for_uevent_probe(fops, major, minor, uevent_content.c_str());
+}
+
+void set_expectations_for_uevent_probe_of_device(
+    MockVTFileOperations& fops,
+    int major, int minor,
+    char const* device_name)
+{
+    set_expectations_for_uevent_probe(
+        fops,
+        major, minor,
+        uevent_content_for_device(major, minor, device_name).c_str());
+}
 }
 
 TEST_F(LinuxVirtualTerminalTest, throws_expected_error_when_opening_file_fails)
@@ -737,18 +797,10 @@ TEST_F(LinuxVirtualTerminalTest, opens_correct_device_node)
 
     mir::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
 
-    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
-    char const* const uevent_content =
-        "MAJOR=55\n"
-        "MINOR=61\n"
-        "DEVNAME=fb0";
+    auto const device_node = "/dev/fb0";
+    set_expectations_for_uevent_probe_of_device(*fops, 55, 61, device_node);
 
-    mir::AnonymousShmFile uevent{strlen(uevent_content)};
-    ::memcpy(uevent.base_ptr(), uevent_content, strlen(uevent_content));
-
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), _))
-        .WillOnce(Return(uevent.fd()));
-    EXPECT_CALL(*fops, open(StrEq("/dev/fb0"), FlagsSet(O_RDWR | O_CLOEXEC)))
+    EXPECT_CALL(*fops, open(StrEq(device_node), FlagsSet(O_RDWR | O_CLOEXEC)))
         .WillOnce(Return(-1));
 
     auto device = vt.acquire_device(55, 61, std::make_unique<mtd::NullDeviceObserver>());
@@ -768,24 +820,15 @@ TEST_F(LinuxVirtualTerminalTest, callback_receives_correct_device_fd)
 
     mir::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
 
-    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
-    char const uevent_content[] =
-        "MAJOR=55\n"
-        "MINOR=61\n"
-        "DEVNAME=input/event3";
-
-    mir::AnonymousShmFile uevent{sizeof(uevent_content)};
-    ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
-
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), _))
-        .WillOnce(Return(uevent.fd()));
+    auto const device_node = "/dev/input/event3";
+    set_expectations_for_uevent_probe_of_device(*fops, 55, 61, device_node);
 
     char const device_content[] =
         "I am the very model of a modern major general";
     mir::AnonymousShmFile fake_device_node(sizeof(device_content));
     ::memcpy(fake_device_node.base_ptr(), device_content, sizeof(device_content));
 
-    EXPECT_CALL(*fops, open(StrEq("/dev/input/event3"), _))
+    EXPECT_CALL(*fops, open(StrEq(device_node), _))
         .WillOnce(Return(fake_device_node.fd()));
 
     mir::Fd device_fd;
@@ -814,30 +857,18 @@ TEST_F(LinuxVirtualTerminalTest, calls_set_master_on_drm_node)
 
     mir::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
 
-    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
-    char const uevent_content[] =
-        "MAJOR=55\n"
-        "MINOR=61\n"
-        "DEVNAME=dri/card0\n"
-        "DEVTYPE=drm_minor\n";
-
-    mir::AnonymousShmFile uevent{sizeof(uevent_content)};
-    ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
-
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), _))
-        .WillOnce(Return(uevent.fd()));
-
+    auto const device_node = "/dev/dri/card0";
+    set_expectations_for_uevent_probe_of_drm(*fops, 226, 1, device_node);
 
     int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
-
-    EXPECT_CALL(*fops, open(StrEq("/dev/dri/card0"), _))
+    EXPECT_CALL(*fops, open(StrEq(device_node), _))
         .WillOnce(Return(fake_device_fd));
     ON_CALL(drm, drmSetMaster(fake_device_fd))
         .WillByDefault(Return(0));
 
     mir::Fd device_fd;
     auto device = vt.acquire_device(
-        55, 61,
+        226, 1,
         std::make_unique<mtd::SimpleDeviceObserver>(
             [&device_fd](mir::Fd&& fd) { device_fd = std::move(fd);},
             [](){},
@@ -858,29 +889,18 @@ TEST_F(LinuxVirtualTerminalTest, acquire_device_returns_exceptional_future_on_se
 
     mir::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
 
-    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
-    char const uevent_content[] =
-        "MAJOR=55\n"
-        "MINOR=61\n"
-        "DEVNAME=dri/card0\n"
-        "DEVTYPE=drm_minor\n";
-
-    mir::AnonymousShmFile uevent{sizeof(uevent_content)};
-    ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
-
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), _))
-        .WillOnce(Return(uevent.fd()));
-
+    auto const device_node = "/dev/dri/card0";
+    set_expectations_for_uevent_probe_of_drm(*fops, 226, 4, device_node);
 
     int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
 
-    EXPECT_CALL(*fops, open(StrEq("/dev/dri/card0"), _))
+    EXPECT_CALL(*fops, open(StrEq(device_node), _))
         .WillOnce(Return(fake_device_fd));
     EXPECT_CALL(drm, drmSetMaster(fake_device_fd))
         .WillOnce(Return(-1));
 
     auto device = vt.acquire_device(
-        55, 61,
+        226, 4,
         std::make_unique<mtd::NullDeviceObserver>());
 
     EXPECT_THROW(
@@ -900,24 +920,14 @@ TEST_F(LinuxVirtualTerminalTest, does_not_call_set_master_on_non_drm_node)
 
     mir::LinuxVirtualTerminal vt(fops, std::move(pops), 7, null_report);
 
-    char const* const expected_filename = "/sys/dev/char/55:61/uevent";
-    char const uevent_content[] =
-        "MAJOR=55\n"
-        "MINOR=61\n"
-        "DEVNAME=input/event3";
-
-    mir::AnonymousShmFile uevent{sizeof(uevent_content)};
-    ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
-
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), _))
-        .WillOnce(Return(uevent.fd()));
-
+    auto const device_node = "/dev/input/event3";
+    set_expectations_for_uevent_probe_of_device(*fops, 55, 61, device_node);
 
     int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
 
     EXPECT_CALL(
         *fops,
-        open(StrEq("/dev/input/event3"), FlagsSet(O_RDWR | O_CLOEXEC | O_NONBLOCK)))
+        open(StrEq(device_node), FlagsSet(O_RDWR | O_CLOEXEC | O_NONBLOCK)))
         .WillOnce(Return(fake_device_fd));
     EXPECT_CALL(drm, drmSetMaster(fake_device_fd))
         .Times(0);
@@ -940,6 +950,18 @@ TEST_F(LinuxVirtualTerminalTest, calls_drop_master_on_vt_switch_away)
     int const vt_num{7};
     int const allow_switch{1};
 
+    testing::NiceMock<mtd::MockDRM> drm;
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+
+    auto const device_node = "/dev/drm/card1";
+    set_expectations_for_uevent_probe_of_drm(mock_fops, 226, 61, device_node);
+
+    int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
+    EXPECT_CALL(mock_fops, open(StrEq(device_node), _))
+        .WillOnce(Return(fake_device_fd));
+    ON_CALL(drm, drmSetMaster(fake_device_fd))
+        .WillByDefault(Return(0));
+
     {
         InSequence s;
 
@@ -947,40 +969,17 @@ TEST_F(LinuxVirtualTerminalTest, calls_drop_master_on_vt_switch_away)
         set_up_expectations_for_vt_setup(vt_num, false);
         set_up_expectations_for_switch_handler(SIGUSR1);
 
+        EXPECT_CALL(drm, drmDropMaster(fake_device_fd))
+            .WillOnce(Return(0));
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, allow_switch));
 
         set_up_expectations_for_vt_teardown();
     }
 
-    testing::NiceMock<mtd::MockDRM> drm;
-    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
     auto pops = std::make_unique<StubPosixProcessOperations>();
     auto null_report = mr::null_display_report();
 
     mir::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
-
-    char const* const expected_filename = "/sys/dev/char/226:61/uevent";
-    char const uevent_content[] =
-        "MAJOR=226\n"
-        "MINOR=61\n"
-        "DEVNAME=dri/card0\n"
-        "DEVTYPE=drm_minor\n";
-
-    mir::AnonymousShmFile uevent{sizeof(uevent_content)};
-    ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
-
-    EXPECT_CALL(mock_fops, open(StrEq(expected_filename), _))
-        .WillOnce(Return(uevent.fd()));
-
-
-    int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
-
-    EXPECT_CALL(mock_fops, open(StrEq("/dev/dri/card0"), _))
-        .WillOnce(Return(fake_device_fd));
-    ON_CALL(drm, drmSetMaster(fake_device_fd))
-        .WillByDefault(Return(0));
-    EXPECT_CALL(drm, drmDropMaster(fake_device_fd))
-        .WillOnce(Return(0));
 
     mir::Fd device_fd;
     auto device = vt.acquire_device(
