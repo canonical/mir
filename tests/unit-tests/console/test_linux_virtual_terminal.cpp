@@ -670,6 +670,14 @@ TEST_F(LinuxVirtualTerminalTest, restores_keyboard_and_graphics)
     set_up_expectations_for_vt_teardown();
 }
 
+namespace
+{
+MATCHER_P(FlagsSet, flag, "")
+{
+    return (arg & flag);
+}
+}
+
 TEST_F(LinuxVirtualTerminalTest, throws_expected_error_when_opening_file_fails)
 {
     using namespace testing;
@@ -684,7 +692,7 @@ TEST_F(LinuxVirtualTerminalTest, throws_expected_error_when_opening_file_fails)
     int const minor = 321;
     char const* const expected_filename = "/sys/dev/char/123:321/uevent";
 
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), FlagsSet(O_RDONLY | O_CLOEXEC)))
         .WillOnce(Return(-1));
 
     EXPECT_THROW(
@@ -711,7 +719,7 @@ TEST_F(LinuxVirtualTerminalTest, throws_error_when_parsing_fails)
     mir::AnonymousShmFile uevent{strlen(uevent_content)};
     ::memcpy(uevent.base_ptr(), uevent_content, strlen(uevent_content));
 
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), FlagsSet(O_RDONLY | O_CLOEXEC)))
         .WillOnce(Return(uevent.fd()));
 
     EXPECT_THROW(
@@ -738,9 +746,9 @@ TEST_F(LinuxVirtualTerminalTest, opens_correct_device_node)
     mir::AnonymousShmFile uevent{strlen(uevent_content)};
     ::memcpy(uevent.base_ptr(), uevent_content, strlen(uevent_content));
 
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), _))
         .WillOnce(Return(uevent.fd()));
-    EXPECT_CALL(*fops, open(StrEq("/dev/fb0"), O_RDWR | O_CLOEXEC))
+    EXPECT_CALL(*fops, open(StrEq("/dev/fb0"), FlagsSet(O_RDWR | O_CLOEXEC)))
         .WillOnce(Return(-1));
 
     auto device = vt.acquire_device(55, 61, std::make_unique<mtd::NullDeviceObserver>());
@@ -769,7 +777,7 @@ TEST_F(LinuxVirtualTerminalTest, callback_receives_correct_device_fd)
     mir::AnonymousShmFile uevent{sizeof(uevent_content)};
     ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
 
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), _))
         .WillOnce(Return(uevent.fd()));
 
     char const device_content[] =
@@ -777,7 +785,7 @@ TEST_F(LinuxVirtualTerminalTest, callback_receives_correct_device_fd)
     mir::AnonymousShmFile fake_device_node(sizeof(device_content));
     ::memcpy(fake_device_node.base_ptr(), device_content, sizeof(device_content));
 
-    EXPECT_CALL(*fops, open(StrEq("/dev/input/event3"), O_RDWR | O_CLOEXEC))
+    EXPECT_CALL(*fops, open(StrEq("/dev/input/event3"), _))
         .WillOnce(Return(fake_device_node.fd()));
 
     mir::Fd device_fd;
@@ -798,7 +806,7 @@ TEST_F(LinuxVirtualTerminalTest, calls_set_master_on_drm_node)
 {
     using namespace testing;
 
-    mtd::MockDRM drm;
+    testing::NiceMock<mtd::MockDRM> drm;
 
     auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
     auto pops = std::make_unique<StubPosixProcessOperations>();
@@ -816,16 +824,16 @@ TEST_F(LinuxVirtualTerminalTest, calls_set_master_on_drm_node)
     mir::AnonymousShmFile uevent{sizeof(uevent_content)};
     ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
 
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), _))
         .WillOnce(Return(uevent.fd()));
 
 
     int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
 
-    EXPECT_CALL(*fops, open(StrEq("/dev/dri/card0"), O_RDWR | O_CLOEXEC))
+    EXPECT_CALL(*fops, open(StrEq("/dev/dri/card0"), _))
         .WillOnce(Return(fake_device_fd));
-    EXPECT_CALL(drm, drmSetMaster(fake_device_fd))
-        .WillOnce(Return(0));
+    ON_CALL(drm, drmSetMaster(fake_device_fd))
+        .WillByDefault(Return(0));
 
     mir::Fd device_fd;
     auto device = vt.acquire_device(
@@ -842,7 +850,7 @@ TEST_F(LinuxVirtualTerminalTest, acquire_device_returns_exceptional_future_on_se
 {
     using namespace testing;
 
-    mtd::MockDRM drm;
+    testing::NiceMock<mtd::MockDRM> drm;
 
     auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
     auto pops = std::make_unique<StubPosixProcessOperations>();
@@ -860,13 +868,13 @@ TEST_F(LinuxVirtualTerminalTest, acquire_device_returns_exceptional_future_on_se
     mir::AnonymousShmFile uevent{sizeof(uevent_content)};
     ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
 
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), _))
         .WillOnce(Return(uevent.fd()));
 
 
     int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
 
-    EXPECT_CALL(*fops, open(StrEq("/dev/dri/card0"), O_RDWR | O_CLOEXEC))
+    EXPECT_CALL(*fops, open(StrEq("/dev/dri/card0"), _))
         .WillOnce(Return(fake_device_fd));
     EXPECT_CALL(drm, drmSetMaster(fake_device_fd))
         .WillOnce(Return(-1));
@@ -884,7 +892,7 @@ TEST_F(LinuxVirtualTerminalTest, does_not_call_set_master_on_non_drm_node)
 {
     using namespace testing;
 
-    mtd::MockDRM drm;
+    testing::NiceMock<mtd::MockDRM> drm;
 
     auto fops = std::make_shared<NiceMock<MockVTFileOperations>>();
     auto pops = std::make_unique<StubPosixProcessOperations>();
@@ -901,13 +909,15 @@ TEST_F(LinuxVirtualTerminalTest, does_not_call_set_master_on_non_drm_node)
     mir::AnonymousShmFile uevent{sizeof(uevent_content)};
     ::memcpy(uevent.base_ptr(), uevent_content, sizeof(uevent_content));
 
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), O_RDONLY | O_CLOEXEC))
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), _))
         .WillOnce(Return(uevent.fd()));
 
 
     int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
 
-    EXPECT_CALL(*fops, open(StrEq("/dev/input/event3"), O_RDWR | O_CLOEXEC))
+    EXPECT_CALL(
+        *fops,
+        open(StrEq("/dev/input/event3"), FlagsSet(O_RDWR | O_CLOEXEC | O_NONBLOCK)))
         .WillOnce(Return(fake_device_fd));
     EXPECT_CALL(drm, drmSetMaster(fake_device_fd))
         .Times(0);
