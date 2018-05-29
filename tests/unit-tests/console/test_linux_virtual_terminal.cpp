@@ -994,3 +994,53 @@ TEST_F(LinuxVirtualTerminalTest, calls_drop_master_on_vt_switch_away)
 
     Mock::VerifyAndClear(&drm);
 }
+
+TEST_F(LinuxVirtualTerminalTest, does_not_drop_master_for_non_drm_devices_on_switch_away)
+{
+    using namespace testing;
+
+    int const vt_num{7};
+    int const allow_switch{1};
+
+    testing::NiceMock<mtd::MockDRM> drm;
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+
+    auto const device_node = "/dev/input/event11";
+    set_expectations_for_uevent_probe_of_device(mock_fops, 16, 61, device_node);
+
+    int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
+    EXPECT_CALL(mock_fops, open(StrEq(device_node), _))
+        .WillOnce(Return(fake_device_fd));
+
+    EXPECT_CALL(drm, drmDropMaster(fake_device_fd))
+        .Times(0);
+    {
+        InSequence s;
+
+        set_up_expectations_for_current_vt_search(vt_num);
+        set_up_expectations_for_vt_setup(vt_num, false);
+        set_up_expectations_for_switch_handler(SIGUSR1);
+
+        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, allow_switch));
+
+        set_up_expectations_for_vt_teardown();
+    }
+
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
+
+    mir::Fd device_fd;
+    auto device = vt.acquire_device(
+        16, 61,
+        std::make_unique<mtd::NullDeviceObserver>()).get();
+
+    auto succeeding_handler = [] { return true; };
+    vt.register_switch_handlers(mock_event_handler_register, succeeding_handler, succeeding_handler);
+
+    /* Fake a VT switch away request */
+    sig_handler(SIGUSR1);
+
+    Mock::VerifyAndClear(&drm);
+}
