@@ -45,7 +45,7 @@ find_file(GMOCK_SOURCE
         PATHS /usr/src/googletest/googlemock/src/ /usr/src/gmock/ /usr/src/gmock/src)
 
 if (EXISTS ${GMOCK_SOURCE})
-    find_path(GMOCK_INCLUDE_DIR gmock/gmock.h)
+    find_path(GMOCK_INCLUDE_DIR gmock/gmock.h PATHS /usr/src/googletest/googlemock/include)
 
     add_library(GMock STATIC ${GMOCK_SOURCE})
 
