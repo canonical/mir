@@ -8,6 +8,7 @@ check_cxx_compiler_flag(-Wnull-dereference HAS_W_NULL_DEREFERENCE)
 check_cxx_compiler_flag(-Woverloaded-virtual HAS_W_OVERLOADED_VIRTUAL)
 check_cxx_compiler_flag(-Winconsistent-missing-override HAS_W_INCONSISTENT_MISSING_OVERRIDE)
 check_cxx_compiler_flag(-Wgnu-zero-variadic-macro-arguments HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
+check_cxx_compiler_flag(-Wno-sign-compare HAS_W_GNU_SIGN_COMPARE)
 
 if (HAS_W_NULL_DEREFERENCE)
   # Avoid clang complaints about poor quality gmock/gtest headers
@@ -31,6 +32,10 @@ else()
     # Work around the Google Test headers not being C++11 friendly (LP: #1658604)
     string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
   endif()
+endif()
+if (HAS_W_GNU_SIGN_COMPARE)
+  # TODO fix the code
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-compare")
 endif()
 
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")
