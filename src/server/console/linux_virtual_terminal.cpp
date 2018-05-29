@@ -41,10 +41,27 @@
 class mir::LinuxVirtualTerminal::Device : public mir::Device
 {
 public:
-    Device() = default;
+    Device(std::unique_ptr<mir::Device::Observer> observer)
+        : observer{std::move(observer)}
+    {
+    }
 
+    void on_activated()
+    {
+        observer->activated(activate());
+    }
+
+    void on_suspended()
+    {
+        observer->suspended();
+        suspend();
+    }
+
+protected:
     virtual mir::Fd activate() = 0;
     virtual void suspend() = 0;
+private:
+    std::unique_ptr<mir::Device::Observer> const observer;
 };
 
 namespace
@@ -52,8 +69,12 @@ namespace
 class DRMDevice : public mir::LinuxVirtualTerminal::Device
 {
 public:
-    DRMDevice(mir::VTFileOperations& fops, char const* device_node)
-        : device_fd{fops.open(device_node, O_RDWR | O_CLOEXEC)}
+    DRMDevice(
+        mir::VTFileOperations& fops,
+        char const* device_node,
+        std::unique_ptr<mir::Device::Observer> observer)
+        : Device(std::move(observer)),
+          device_fd{fops.open(device_node, O_RDWR | O_CLOEXEC)}
     {
         if (device_fd == mir::Fd::invalid)
         {
@@ -79,6 +100,7 @@ public:
         is_master = true;
     }
 
+protected:
     mir::Fd activate() override
     {
         // SetMaster is idempotent; no need to track status
@@ -115,12 +137,17 @@ private:
 class EvdevDevice : public mir::LinuxVirtualTerminal::Device
 {
 public:
-    EvdevDevice(std::shared_ptr<mir::VTFileOperations> fops, std::string device_node)
-        : fops{std::move(fops)},
+    EvdevDevice(
+        std::shared_ptr<mir::VTFileOperations> fops,
+        std::string device_node,
+        std::unique_ptr<mir::Device::Observer> observer)
+        : Device(std::move(observer)),
+          fops{std::move(fops)},
           device_node{std::move(device_node)}
     {
     }
 
+protected:
     mir::Fd activate() override
     {
         mir::Fd const device_fd{
@@ -246,6 +273,10 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
                     if (!switch_back())
                         report->report_vt_switch_back_failure();
                     fops->ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
+                    for (auto const& device : active_devices)
+                    {
+                        device->on_activated();
+                    }
                     active = true;
                 }
                 else
@@ -258,7 +289,7 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
                     {
                         for (auto const& device : active_devices)
                         {
-                            device->suspend();
+                            device->on_suspended();
                         }
                         action = allow_switch;
                         active = false;
@@ -470,13 +501,13 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
         std::unique_ptr<mir::LinuxVirtualTerminal::Device> device;
         if (is_drm_device)
         {
-            device = std::make_unique<DRMDevice>(*fops, devnode.c_str());
+            device = std::make_unique<DRMDevice>(*fops, devnode.c_str(), std::move(observer));
         }
         else
         {
-            device = std::make_unique<EvdevDevice>(fops, std::move(devnode));
+            device = std::make_unique<EvdevDevice>(fops, std::move(devnode), std::move(observer));
         }
-        observer->activated(device->activate());
+        device->on_activated();
         active_devices.push_back(device.get());
         device_promise.set_value(std::move(device));
     }

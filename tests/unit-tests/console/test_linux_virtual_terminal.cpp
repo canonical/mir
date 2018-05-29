@@ -1044,3 +1044,140 @@ TEST_F(LinuxVirtualTerminalTest, does_not_drop_master_for_non_drm_devices_on_swi
 
     Mock::VerifyAndClear(&drm);
 }
+
+TEST_F(LinuxVirtualTerminalTest, claims_drm_master_on_vt_switch_to)
+{
+    using namespace testing;
+
+    int const vt_num{7};
+    int const allow_switch{1};
+
+    testing::NiceMock<mtd::MockDRM> drm;
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+
+    auto const device_node_one = "/dev/drm/card1";
+    set_expectations_for_uevent_probe_of_drm(mock_fops, 226, 61, device_node_one);
+    std::atomic<bool> device_one_master{false};
+
+    auto const device_node_two = "/dev/drm/card3";
+    set_expectations_for_uevent_probe_of_drm(mock_fops, 226, 3, device_node_two);
+    std::atomic<bool> device_two_master{false};
+
+    int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
+    EXPECT_CALL(mock_fops, open(StrEq(device_node_one), _))
+        .WillOnce(Return(fake_device_fd));
+    ON_CALL(drm, drmSetMaster(fake_device_fd))
+        .WillByDefault(InvokeWithoutArgs(
+            [&device_one_master]()
+            {
+                device_one_master = true;
+                return 0;
+            }));
+    ON_CALL(drm, drmDropMaster(fake_device_fd))
+        .WillByDefault(InvokeWithoutArgs(
+            [&device_one_master]()
+            {
+                device_one_master = false;
+                return 0;
+            }));
+
+    int const second_fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
+    EXPECT_CALL(mock_fops, open(StrEq(device_node_two), _))
+        .WillOnce(Return(second_fake_device_fd));
+    ON_CALL(drm, drmSetMaster(second_fake_device_fd))
+        .WillByDefault(InvokeWithoutArgs(
+            [&device_two_master]()
+            {
+                device_two_master = true;
+                return 0;
+            }));
+    ON_CALL(drm, drmDropMaster(second_fake_device_fd))
+        .WillByDefault(InvokeWithoutArgs(
+            [&device_two_master]()
+            {
+                device_two_master = false;
+                return 0;
+            }));
+
+    {
+        InSequence s;
+
+        set_up_expectations_for_current_vt_search(vt_num);
+        set_up_expectations_for_vt_setup(vt_num, false);
+        set_up_expectations_for_switch_handler(SIGUSR1);
+
+        // Switching away…
+        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, allow_switch));
+        // …and back
+        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, VT_ACKACQ));
+
+        set_up_expectations_for_vt_teardown();
+    }
+
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
+
+    mir::Fd first_device_fd, second_device_fd;
+    std::atomic<bool> first_device_resumed{false}, second_device_resumed{false};
+    auto device = vt.acquire_device(
+        226, 61,
+        std::make_unique<mtd::SimpleDeviceObserver>(
+            [&first_device_fd, &device_one_master, &first_device_resumed](mir::Fd&& fd)
+            {
+                EXPECT_TRUE(device_one_master);
+                if (first_device_fd != mir::Fd::invalid)
+                {
+                    EXPECT_THAT(first_device_fd, Eq(fd));
+                    first_device_resumed = true;
+                }
+                else
+                {
+                    first_device_fd = std::move(fd);
+                }
+            },
+            [](){},
+            [](){})).get();
+    auto second_device = vt.acquire_device(
+        226, 3,
+        std::make_unique<mtd::SimpleDeviceObserver>(
+            [&second_device_fd, &device_two_master, &second_device_resumed](mir::Fd&& fd)
+            {
+                EXPECT_TRUE(device_two_master);
+                if (second_device_fd != mir::Fd::invalid)
+                {
+                    EXPECT_THAT(second_device_fd, Eq(fd));
+                    second_device_resumed = true;
+                }
+                else
+                {
+                    second_device_fd = std::move(fd);
+                }
+            },
+            [](){},
+            [](){})).get();
+
+    auto succeeding_handler = [] { return true; };
+    vt.register_switch_handlers(mock_event_handler_register, succeeding_handler, succeeding_handler);
+
+    EXPECT_TRUE(device_one_master);
+    EXPECT_TRUE(device_two_master);
+
+    /* Fake a VT switch away request */
+    sig_handler(SIGUSR1);
+
+    EXPECT_FALSE(device_one_master);
+    EXPECT_FALSE(device_two_master);
+
+    /* And now a switch-to request */
+    sig_handler(SIGUSR1);
+
+    EXPECT_TRUE(first_device_resumed);
+    EXPECT_TRUE(device_one_master);
+
+    EXPECT_TRUE(second_device_resumed);
+    EXPECT_TRUE(device_two_master);
+
+    Mock::VerifyAndClear(&drm);
+}
