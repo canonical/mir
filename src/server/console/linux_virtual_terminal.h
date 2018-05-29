@@ -26,6 +26,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <future>
+#include <vector>
 
 namespace mir
 {
@@ -86,11 +87,14 @@ public:
         std::function<bool()> const& switch_away,
         std::function<bool()> const& switch_back) override;
     void restore() override;
-    std::future<std::unique_ptr<Device>> acquire_device(
+    std::future<std::unique_ptr<mir::Device>> acquire_device(
         int major, int minor,
-        std::unique_ptr<Device::Observer> observer) override;
+        std::unique_ptr<mir::Device::Observer> observer) override;
 
+    class Device;
 private:
+    std::vector<Device*> active_devices;
+
     class FDWrapper
     {
     public:

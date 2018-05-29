@@ -38,6 +38,118 @@
 #include <fcntl.h>
 #include <xf86drm.h>
 
+class mir::LinuxVirtualTerminal::Device : public mir::Device
+{
+public:
+    Device() = default;
+
+    virtual mir::Fd activate() = 0;
+    virtual void suspend() = 0;
+};
+
+namespace
+{
+class DRMDevice : public mir::LinuxVirtualTerminal::Device
+{
+public:
+    DRMDevice(mir::VTFileOperations& fops, char const* device_node)
+        : device_fd{fops.open(device_node, O_RDWR | O_CLOEXEC)}
+    {
+        if (device_fd == mir::Fd::invalid)
+        {
+            BOOST_THROW_EXCEPTION((
+                boost::enable_error_info(
+                    std::system_error{
+                        errno,
+                        std::system_category(),
+                        "Failed to open DRM device node"})
+                    << boost::errinfo_file_name(device_node)));
+        }
+        // Claim DRM master here, as we can give a better error message if it fails.
+        if (drmSetMaster(device_fd) != 0)
+        {
+            BOOST_THROW_EXCEPTION((
+                boost::enable_error_info(
+                    std::system_error{
+                        errno,
+                        std::system_category(),
+                        "Failed to claim DRM master"})
+                    << boost::errinfo_file_name(device_node)));
+        }
+        is_master = true;
+    }
+
+    mir::Fd activate() override
+    {
+        // SetMaster is idempotent; no need to track status
+        if (drmSetMaster(device_fd) != 0)
+        {
+            BOOST_THROW_EXCEPTION((
+                std::system_error{
+                    errno,
+                    std::system_category(),
+                    "Failed to reclaim DRM master"}));
+        }
+        is_master = true;
+        return device_fd;
+    }
+
+    void suspend() override
+    {
+        if (is_master && (drmDropMaster(device_fd) != 0))
+        {
+            BOOST_THROW_EXCEPTION((
+                std::system_error{
+                    errno,
+                    std::system_category(),
+                    "Failed to release DRM master"}));
+        }
+        is_master = false;
+    }
+
+private:
+    bool is_master{false};
+    mir::Fd const device_fd;
+};
+
+class EvdevDevice : public mir::LinuxVirtualTerminal::Device
+{
+public:
+    EvdevDevice(std::shared_ptr<mir::VTFileOperations> fops, std::string device_node)
+        : fops{std::move(fops)},
+          device_node{std::move(device_node)}
+    {
+    }
+
+    mir::Fd activate() override
+    {
+        mir::Fd const device_fd{
+            fops->open(device_node.c_str(), O_RDWR | O_CLOEXEC | O_NONBLOCK)};
+        if (device_fd == mir::Fd::invalid)
+        {
+            BOOST_THROW_EXCEPTION((
+                boost::enable_error_info(
+                    std::system_error{
+                        errno,
+                        std::system_category(),
+                        "Failed to open DRM device node"})
+                    << boost::errinfo_file_name(device_node)));
+        }
+        return device_fd;
+    }
+
+    void suspend() override
+    {
+        // TODO: Ideally, call the EVIOCREVOKE ioctl to guarantee no further access.
+    }
+
+private:
+    std::shared_ptr<mir::VTFileOperations> const fops;
+    // TODO: Technically we should store the dev_t here and find it again on activate()
+    std::string const device_node;
+};
+}
+
 mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
     std::shared_ptr<VTFileOperations> const& fops,
     std::unique_ptr<PosixProcessOperations> pops,
@@ -144,6 +256,10 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
 
                     if (switch_away())
                     {
+                        for (auto const& device : active_devices)
+                        {
+                            device->suspend();
+                        }
                         action = allow_switch;
                         active = false;
                     }
@@ -308,7 +424,7 @@ int mir::LinuxVirtualTerminal::open_vt(int vt_number)
 
 std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_device(
     int major, int minor,
-    std::unique_ptr<Device::Observer> observer)
+    std::unique_ptr<mir::Device::Observer> observer)
 {
     std::stringstream filename;
     filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
@@ -324,7 +440,7 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
     }
 
     std::string devnode;
-    bool needs_master_set{false};
+    bool is_drm_device{false};
     {
         using namespace boost::iostreams;
         char line_buffer[1024];
@@ -338,7 +454,7 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
             }
             else if (strncmp(line_buffer, "DEVTYPE=", strlen("DEVTYPE=")) == 0)
             {
-                needs_master_set = strncmp(
+                is_drm_device = strncmp(
                     line_buffer + strlen("DEVTYPE="),
                     "drm_minor",
                     strlen("drm_minor")) == 0;
@@ -348,44 +464,26 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to read DEVNAME"}));
     }
 
-    auto dev_fd = mir::Fd{fops->open(devnode.c_str(), O_RDWR | O_CLOEXEC)};
-    std::promise<std::unique_ptr<Device>> device_promise;
-    if (dev_fd != mir::Fd::invalid)
+    std::promise<std::unique_ptr<mir::Device>> device_promise;
+    try
     {
-        // If our device node is not a DRM node we don't need to do anything;
-        // If our device *is* a DRM node we need drmSetMaster to succeed.
-        if ((!needs_master_set) ||
-            (drmSetMaster(dev_fd) == 0))
+        std::unique_ptr<mir::LinuxVirtualTerminal::Device> device;
+        if (is_drm_device)
         {
-            observer->activated(std::move(dev_fd));
-            // Our “device” needs no cleanup, so nullptr is fine.
-            device_promise.set_value(nullptr);
+            device = std::make_unique<DRMDevice>(*fops, devnode.c_str());
         }
         else
         {
-            // Oops! drmSetMaster() failed!
-            device_promise.set_exception(
-                std::make_exception_ptr(
-                    boost::enable_error_info(
-                        std::system_error{
-                            errno,
-                            std::system_category(),
-                            "drmSetMaster() failed"})
-                        << boost::errinfo_file_name(devnode.c_str())
-                ));
+            device = std::make_unique<EvdevDevice>(fops, std::move(devnode));
         }
+        observer->activated(device->activate());
+        active_devices.push_back(device.get());
+        device_promise.set_value(std::move(device));
     }
-    else
+    catch (std::exception const&)
     {
-        device_promise.set_exception(
-            std::make_exception_ptr(
-                boost::enable_error_info(
-                    std::system_error{
-                        errno,
-                        std::system_category(),
-                        "Failed to open device node"})
-                    << boost::errinfo_file_name(devnode.c_str())
-                ));
+        device_promise.set_exception(std::current_exception());
     }
+
     return device_promise.get_future();
 }
