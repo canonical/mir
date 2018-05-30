@@ -21,6 +21,8 @@
 
 #include "mir/console_services.h"
 
+#include "mir/mutex.h"
+
 #include <memory>
 #include <linux/vt.h>
 #include <termios.h>
@@ -93,7 +95,7 @@ public:
 
     class Device;
 private:
-    std::vector<Device*> active_devices;
+    std::shared_ptr<Mutex<std::vector<Device*>>> const active_devices;
 
     class FDWrapper
     {

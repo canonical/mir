@@ -41,9 +41,27 @@
 class mir::LinuxVirtualTerminal::Device : public mir::Device
 {
 public:
-    Device(std::unique_ptr<mir::Device::Observer> observer)
-        : observer{std::move(observer)}
+    Device(
+        std::unique_ptr<mir::Device::Observer> observer,
+        std::shared_ptr<mir::Mutex<std::vector<Device*>>> const& device_list)
+        : observer{std::move(observer)},
+          device_list{device_list}
     {
+        device_list->lock()->push_back(this);
+    }
+
+    ~Device()
+    {
+        if (auto live_devices = device_list.lock())
+        {
+            auto devices = live_devices->lock();
+            devices->erase(
+                std::remove(
+                    devices->begin(),
+                    devices->end(),
+                    this),
+                devices->end());
+        }
     }
 
     void on_activated()
@@ -62,6 +80,7 @@ protected:
     virtual void suspend() = 0;
 private:
     std::unique_ptr<mir::Device::Observer> const observer;
+    std::weak_ptr<mir::Mutex<std::vector<Device*>>> const device_list;
 };
 
 namespace
@@ -72,8 +91,9 @@ public:
     DRMDevice(
         mir::VTFileOperations& fops,
         char const* device_node,
-        std::unique_ptr<mir::Device::Observer> observer)
-        : Device(std::move(observer)),
+        std::unique_ptr<mir::Device::Observer> observer,
+        std::shared_ptr<mir::Mutex<std::vector<Device*>>> const& device_list)
+        : Device(std::move(observer), device_list),
           device_fd{fops.open(device_node, O_RDWR | O_CLOEXEC)}
     {
         if (device_fd == mir::Fd::invalid)
@@ -140,8 +160,9 @@ public:
     EvdevDevice(
         std::shared_ptr<mir::VTFileOperations> fops,
         std::string device_node,
-        std::unique_ptr<mir::Device::Observer> observer)
-        : Device(std::move(observer)),
+        std::unique_ptr<mir::Device::Observer> observer,
+        std::shared_ptr<mir::Mutex<std::vector<Device*>>> const& device_list)
+        : Device(std::move(observer), device_list),
           fops{std::move(fops)},
           device_node{std::move(device_node)}
     {
@@ -182,7 +203,8 @@ mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
     std::unique_ptr<PosixProcessOperations> pops,
     int vt_number,
     std::shared_ptr<graphics::DisplayReport> const& report)
-    : fops{fops},
+    : active_devices{std::make_shared<mir::Mutex<std::vector<Device*>>>()},
+      fops{fops},
       pops{std::move(pops)},
       report{report},
       vt_fd{fops, open_vt(vt_number)},
@@ -273,7 +295,7 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
                     if (!switch_back())
                         report->report_vt_switch_back_failure();
                     fops->ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
-                    for (auto const& device : active_devices)
+                    for (auto const& device : *active_devices->lock())
                     {
                         device->on_activated();
                     }
@@ -287,7 +309,7 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
 
                     if (switch_away())
                     {
-                        for (auto const& device : active_devices)
+                        for (auto const& device : *active_devices->lock())
                         {
                             device->on_suspended();
                         }
@@ -496,14 +518,13 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
         std::unique_ptr<mir::LinuxVirtualTerminal::Device> device;
         if (is_drm_device)
         {
-            device = std::make_unique<DRMDevice>(*fops, devnode.c_str(), std::move(observer));
+            device = std::make_unique<DRMDevice>(*fops, devnode.c_str(), std::move(observer), active_devices);
         }
         else
         {
-            device = std::make_unique<EvdevDevice>(fops, std::move(devnode), std::move(observer));
+            device = std::make_unique<EvdevDevice>(fops, std::move(devnode), std::move(observer), active_devices);
         }
         device->on_activated();
-        active_devices.push_back(device.get());
         device_promise.set_value(std::move(device));
     }
     catch (std::exception const&)
