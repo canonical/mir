@@ -37,6 +37,7 @@
 
 #include <linux/vt.h>
 #include <linux/kd.h>
+#include <linux/input.h>
 #include <fcntl.h>
 
 namespace mg = mir::graphics;
@@ -95,20 +96,22 @@ MATCHER_P(ModeUsesSignal, sig, "")
 {
     auto vtm = static_cast<vt_mode*>(arg);
 
-    return vtm->mode == VT_PROCESS &&
-           vtm->relsig == sig &&
-           vtm->acqsig == sig;
+    return vtm &&
+        vtm->mode == VT_PROCESS &&
+        vtm->relsig == sig &&
+        vtm->acqsig == sig;
 }
 
 MATCHER_P(VTModeMatches, mode, "")
 {
     auto vtm = static_cast<vt_mode*>(arg);
 
-    return vtm->mode == mode.mode &&
-           vtm->waitv == mode.waitv &&
-           vtm->relsig == mode.relsig &&
-           vtm->acqsig == mode.acqsig &&
-           vtm->frsig == mode.frsig;
+    return vtm &&
+        vtm->mode == mode.mode &&
+        vtm->waitv == mode.waitv &&
+        vtm->relsig == mode.relsig &&
+        vtm->acqsig == mode.acqsig &&
+        vtm->frsig == mode.frsig;
 }
 
 }
@@ -971,6 +974,8 @@ TEST_F(LinuxVirtualTerminalTest, calls_drop_master_on_vt_switch_away)
 
         EXPECT_CALL(drm, drmDropMaster(fake_device_fd))
             .WillOnce(Return(0));
+        EXPECT_CALL(mock_fops, ioctl(fake_device_fd, EVIOCREVOKE, nullptr))
+            .Times(0);
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, allow_switch));
 
         set_up_expectations_for_vt_teardown();
@@ -995,6 +1000,99 @@ TEST_F(LinuxVirtualTerminalTest, calls_drop_master_on_vt_switch_away)
     Mock::VerifyAndClear(&drm);
 }
 
+TEST_F(LinuxVirtualTerminalTest, revokes_evdev_device_on_switch_away)
+{
+    using namespace testing;
+
+    int const vt_num{7};
+    int const allow_switch{1};
+
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+
+    auto const device_node = "/dev/input/event6";
+    set_expectations_for_uevent_probe_of_device(mock_fops, 26, 6, device_node);
+
+    int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
+    EXPECT_CALL(mock_fops, open(StrEq(device_node), _))
+        .WillOnce(Return(fake_device_fd));
+
+    {
+        InSequence s;
+
+        set_up_expectations_for_current_vt_search(vt_num);
+        set_up_expectations_for_vt_setup(vt_num, false);
+        set_up_expectations_for_switch_handler(SIGUSR1);
+
+        EXPECT_CALL(mock_fops, ioctl(fake_device_fd, EVIOCREVOKE, nullptr));
+        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, allow_switch));
+
+        set_up_expectations_for_vt_teardown();
+    }
+
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
+
+    mir::Fd device_fd;
+    auto device = vt.acquire_device(
+        26, 6,
+        std::make_unique<mtd::NullDeviceObserver>()).get();
+
+    auto succeeding_handler = [] { return true; };
+    vt.register_switch_handlers(mock_event_handler_register, succeeding_handler, succeeding_handler);
+
+    /* Fake a VT switch away request */
+    sig_handler(SIGUSR1);
+}
+
+TEST_F(LinuxVirtualTerminalTest, failure_to_revoke_on_switch_away_is_not_fatal)
+{
+    using namespace testing;
+
+    int const vt_num{7};
+    int const allow_switch{1};
+
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+
+    auto const device_node = "/dev/input/event6";
+    set_expectations_for_uevent_probe_of_device(mock_fops, 26, 6, device_node);
+
+    int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
+    EXPECT_CALL(mock_fops, open(StrEq(device_node), _))
+        .WillOnce(Return(fake_device_fd));
+
+    {
+        InSequence s;
+
+        set_up_expectations_for_current_vt_search(vt_num);
+        set_up_expectations_for_vt_setup(vt_num, false);
+        set_up_expectations_for_switch_handler(SIGUSR1);
+
+        EXPECT_CALL(mock_fops, ioctl(fake_device_fd, EVIOCREVOKE, nullptr))
+            .WillOnce(InvokeWithoutArgs([]() { errno = EINVAL; return -1; }));
+        EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, allow_switch));
+
+        set_up_expectations_for_vt_teardown();
+    }
+
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(fops, std::move(pops), 0, null_report);
+
+    mir::Fd device_fd;
+    auto device = vt.acquire_device(
+        26, 6,
+        std::make_unique<mtd::NullDeviceObserver>()).get();
+
+    auto succeeding_handler = [] { return true; };
+    vt.register_switch_handlers(mock_event_handler_register, succeeding_handler, succeeding_handler);
+
+    /* Fake a VT switch away request */
+    sig_handler(SIGUSR1);
+}
+
 TEST_F(LinuxVirtualTerminalTest, does_not_drop_master_for_non_drm_devices_on_switch_away)
 {
     using namespace testing;
@@ -1011,6 +1109,8 @@ TEST_F(LinuxVirtualTerminalTest, does_not_drop_master_for_non_drm_devices_on_swi
     int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
     EXPECT_CALL(mock_fops, open(StrEq(device_node), _))
         .WillOnce(Return(fake_device_fd));
+    EXPECT_CALL(mock_fops, ioctl(fake_device_fd, EVIOCREVOKE, nullptr))
+        .WillRepeatedly(Return(0));
 
     EXPECT_CALL(drm, drmDropMaster(fake_device_fd))
         .Times(0);
@@ -1209,6 +1309,11 @@ TEST_F(LinuxVirtualTerminalTest, input_device_gets_new_fd_on_vt_switch_to)
             {
                 return open("/dev/null", O_RDONLY | O_CLOEXEC);
             }));
+
+    // We don't care about the revoke, but we need to expect it
+    EXPECT_CALL(mock_fops, ioctl(_, EVIOCREVOKE, nullptr))
+        .Times(AnyNumber())
+        .WillRepeatedly(Return(0));
 
     {
         InSequence s;

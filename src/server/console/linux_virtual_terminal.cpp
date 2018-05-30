@@ -21,6 +21,9 @@
 #include "mir/graphics/event_handler_register.h"
 #include "mir/fd.h"
 
+#define MIR_LOG_COMPONTENT "VT-handler"
+#include "mir/log.h"
+
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/exception/errinfo_file_name.hpp>
@@ -35,6 +38,7 @@
 
 #include <linux/vt.h>
 #include <linux/kd.h>
+#include <linux/input.h>
 #include <fcntl.h>
 #include <xf86drm.h>
 
@@ -171,7 +175,7 @@ public:
 protected:
     mir::Fd activate() override
     {
-        mir::Fd const device_fd{
+        device_fd = mir::Fd{
             fops->open(device_node.c_str(), O_RDWR | O_CLOEXEC | O_NONBLOCK)};
         if (device_fd == mir::Fd::invalid)
         {
@@ -188,11 +192,27 @@ protected:
 
     void suspend() override
     {
-        // TODO: Ideally, call the EVIOCREVOKE ioctl to guarantee no further access.
+        if (device_fd != mir::Fd::invalid)
+        {
+            if (fops->ioctl(device_fd, EVIOCREVOKE, nullptr))
+            {
+                /*
+                 * This can be best-effort; we're not going to prevent the new VT owner from
+                 * using the device if this fails.
+                 *
+                 * It might result in this Mir server receiving unexpected input, however, so
+                 * we should log something.
+                 */
+                mir::log_warning("Failed to revoke input access: %s (%i)", strerror(errno), errno);
+            }
+        }
+        // Don't keep the device FD open if nothing else needs it now.
+        device_fd = mir::Fd{};
     }
 
 private:
     std::shared_ptr<mir::VTFileOperations> const fops;
+    mir::Fd device_fd;
     // TODO: Technically we should store the dev_t here and find it again on activate()
     std::string const device_node;
 };
