@@ -217,6 +217,30 @@ private:
     // TODO: Technically we should store the dev_t here and find it again on activate()
     std::string const device_node;
 };
+
+void restore_vt(
+    mir::VTFileOperations& fops,
+    int vt_fd,
+    int prev_kd_mode,
+    struct vt_mode const& prev_vt_mode,
+    int prev_tty_mode,
+    struct termios const& prev_tcattr)
+{
+    fops.tcsetattr(vt_fd, TCSANOW, &prev_tcattr);
+    fops.ioctl(vt_fd, KDSKBMODE, prev_tty_mode);
+    fops.ioctl(vt_fd, KDSETMODE, prev_kd_mode);
+
+    /*
+     * Only restore the previous mode if it was VT_AUTO. VT_PROCESS mode is
+     * always bound to the calling process, so "restoring" VT_PROCESS will
+     * not work; it will just bind the notification signals to our process
+     * again. Not "restoring" VT_PROCESS also ensures we don't mess up the
+     * VT state of the previous controlling process, in case it had set
+     * VT_PROCESS and we fail during setup.
+     */
+    if (prev_vt_mode.mode == VT_AUTO)
+        fops.ioctl(vt_fd, VT_SETMODE, &const_cast<struct vt_mode&>(prev_vt_mode));
+}
 }
 
 mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
@@ -298,13 +322,28 @@ mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
 
     emergency_cleanup.add(
         make_module_ptr<EmergencyCleanupHandler>(
-            [this]
+            [
+                fops = fops,
+                // If we've made it here we know that vt_fd.fd() is a valid fd
+                vt_fd = vt_fd.fd(),
+                devices = active_devices,
+                saved_kd_mode = prev_kd_mode,
+                saved_vt_mode = prev_vt_mode,
+                saved_tty_mode = prev_tty_mode,
+                saved_tcattr = prev_tcattr
+            ]
             {
-                for (auto const& device : *active_devices->lock())
+                for (auto const& device : *devices->lock())
                 {
                     device->on_suspended();
                 }
-                this->restore();
+                restore_vt(
+                    *fops,
+                    vt_fd,
+                    saved_kd_mode,
+                    saved_vt_mode,
+                    saved_tty_mode,
+                    saved_tcattr);
             }));
 }
 
@@ -381,20 +420,13 @@ void mir::LinuxVirtualTerminal::restore()
 {
     if (vt_fd.fd() >= 0)
     {
-        fops->tcsetattr(vt_fd.fd(), TCSANOW, &prev_tcattr);
-        fops->ioctl(vt_fd.fd(), KDSKBMODE, prev_tty_mode);
-        fops->ioctl(vt_fd.fd(), KDSETMODE, prev_kd_mode);
-
-        /*
-         * Only restore the previous mode if it was VT_AUTO. VT_PROCESS mode is
-         * always bound to the calling process, so "restoring" VT_PROCESS will
-         * not work; it will just bind the notification signals to our process
-         * again. Not "restoring" VT_PROCESS also ensures we don't mess up the
-         * VT state of the previous controlling process, in case it had set
-         * VT_PROCESS and we fail during setup.
-         */
-        if (prev_vt_mode.mode == VT_AUTO)
-            fops->ioctl(vt_fd.fd(), VT_SETMODE, &prev_vt_mode);
+        restore_vt(
+            *fops,
+            vt_fd.fd(),
+            prev_kd_mode,
+            prev_vt_mode,
+            prev_tty_mode,
+            prev_tcattr);
     }
 }
 
