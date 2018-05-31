@@ -22,7 +22,6 @@
 #include "mir/graphics/platform_operation_message.h"
 #include "src/platforms/mesa/server/kms/platform.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/emergency_cleanup_registry.h"
 #include "mir/shared_library.h"
 #include "mir/options/program_option.h"
 
@@ -141,43 +140,6 @@ TEST_F(MesaGraphicsPlatform, egl_native_display_is_gbm_device)
 {
     auto platform = create_platform();
     EXPECT_EQ(mock_gbm.fake_gbm.device, platform->egl_native_display());
-}
-
-struct StubEmergencyCleanupRegistry : mir::EmergencyCleanupRegistry
-{
-    void add(mir::EmergencyCleanupHandler const&) override
-    {
-    }
-
-    void add(mir::ModuleEmergencyCleanupHandler handler) override
-    {
-        this->handler = std::move(handler);
-    }
-
-    mir::ModuleEmergencyCleanupHandler handler;
-};
-
-TEST_F(MesaGraphicsPlatform, releases_drm_on_emergency_cleanup)
-{
-    using namespace testing;
-
-    auto const null_vt = std::make_shared<mtd::StubConsoleServices>();
-    StubEmergencyCleanupRegistry emergency_cleanup_registry;
-    mgm::Platform platform{
-        mir::report::null_display_report(),
-        null_vt,
-        emergency_cleanup_registry,
-        mgm::BypassOption::allowed};
-
-    int const success_code = 0;
-    EXPECT_CALL(mock_drm, drmDropMaster(mtd::IsFdOfDevice("/dev/dri/card0")))
-        .WillOnce(Return(success_code));
-    EXPECT_CALL(mock_drm, drmDropMaster(mtd::IsFdOfDevice("/dev/dri/card1")))
-        .WillOnce(Return(success_code));
-
-    (*emergency_cleanup_registry.handler)();
-
-    Mock::VerifyAndClearExpectations(&mock_drm);
 }
 
 TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_no_drm_udev_devices)

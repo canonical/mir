@@ -53,49 +53,19 @@ namespace mgmh = mgm::helpers;
 
 mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
                         std::shared_ptr<ConsoleServices> const& vt,
-                        EmergencyCleanupRegistry& emergency_cleanup_registry,
+                        EmergencyCleanupRegistry&,
                         BypassOption bypass_option)
     : udev{std::make_shared<mir::udev::Context>()},
       drm{helpers::DRMHelper::open_all_devices(udev, *vt)},
+      // We assume the first DRM device is the boot GPU, and arbitrarily pick it as our
+      // shell renderer.
+      //
+      // TODO: expose multiple rendering GPUs to the shell.
       gbm{std::make_shared<mgmh::GBMHelper>(drm.front()->fd)},
       listener{listener},
       vt{vt},
       bypass_option_{bypass_option}
 {
-    // We assume the first DRM device is the boot GPU, and arbitrarily pick it as our
-    // shell renderer.
-    //
-    // TODO: expose multiple rendering GPUs to the shell.
-
-    std::weak_ptr<ConsoleServices> weak_vt = vt;
-    std::vector<std::weak_ptr<mgmh::DRMHelper>> weak_drm;
-
-    for (auto const &helper : drm)
-    {
-        weak_drm.push_back(helper);
-    }
-    emergency_cleanup_registry.add(
-        make_module_ptr<EmergencyCleanupHandler>(
-            [weak_vt,weak_drm]
-            {
-                if (auto const vt = weak_vt.lock())
-                    try { vt->restore(); } catch (...) {}
-
-                for (auto helper : weak_drm)
-                {
-                    if (auto const drm = helper.lock())
-                    {
-                        try
-                        {
-                            drm->drop_master();
-                        }
-                        catch (...)
-                        {
-                        }
-                    }
-                }
-            }));
-
     auth_factory = std::make_unique<DRMNativePlatformAuthFactory>(*drm.front());
 }
 
