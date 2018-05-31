@@ -32,6 +32,8 @@
 
 namespace mir
 {
+class EmergencyCleanupRegistry;
+
 namespace graphics
 {
 class DisplayReport;
@@ -78,10 +80,12 @@ protected:
 class LinuxVirtualTerminal : public ConsoleServices
 {
 public:
-    LinuxVirtualTerminal(std::shared_ptr<VTFileOperations> const& fops,
-                         std::unique_ptr<PosixProcessOperations> pops,
-                         int vt_number,
-                         std::shared_ptr<graphics::DisplayReport> const& report);
+    LinuxVirtualTerminal(
+        std::shared_ptr<VTFileOperations> const& fops,
+        std::unique_ptr<PosixProcessOperations> pops,
+        int vt_number,
+        EmergencyCleanupRegistry& emergency_cleanup,
+        std::shared_ptr<graphics::DisplayReport> const& report);
     ~LinuxVirtualTerminal() noexcept(true);
 
     void register_switch_handlers(

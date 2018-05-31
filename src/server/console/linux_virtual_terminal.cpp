@@ -20,6 +20,7 @@
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/event_handler_register.h"
 #include "mir/fd.h"
+#include "mir/emergency_cleanup_registry.h"
 
 #define MIR_LOG_COMPONTENT "VT-handler"
 #include "mir/log.h"
@@ -222,6 +223,7 @@ mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
     std::shared_ptr<VTFileOperations> const& fops,
     std::unique_ptr<PosixProcessOperations> pops,
     int vt_number,
+    EmergencyCleanupRegistry& emergency_cleanup,
     std::shared_ptr<graphics::DisplayReport> const& report)
     : active_devices{std::make_shared<mir::Mutex<std::vector<Device*>>>()},
       fops{fops},
@@ -293,6 +295,17 @@ mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
                 std::runtime_error("Failed to set VT to graphics mode"))
                 << boost::errinfo_errno(errno));
     }
+
+    emergency_cleanup.add(
+        make_module_ptr<EmergencyCleanupHandler>(
+            [this]
+            {
+                for (auto const& device : *active_devices->lock())
+                {
+                    device->on_suspended();
+                }
+                this->restore();
+            }));
 }
 
 mir::LinuxVirtualTerminal::~LinuxVirtualTerminal() noexcept(true)
