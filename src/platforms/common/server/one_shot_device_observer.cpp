@@ -23,13 +23,17 @@
 namespace mgc = mir::graphics::common;
 
 mgc::OneShotDeviceObserver::OneShotDeviceObserver(mir::Fd& store_to)
-    : store_to{store_to}
+    : store_to{store_to},
+      triggered{false}
 {
 }
 
 void mgc::OneShotDeviceObserver::activated(mir::Fd&& device_fd)
 {
-    store_to = std::move(device_fd);
+    if (!triggered.exchange(true))
+    {
+        store_to = std::move(device_fd);
+    }
 }
 
 void mgc::OneShotDeviceObserver::suspended()

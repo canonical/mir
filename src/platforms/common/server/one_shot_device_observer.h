@@ -21,6 +21,8 @@
 
 #include "mir/console_services.h"
 
+#include <atomic>
+
 namespace mir
 {
 namespace graphics
@@ -40,6 +42,7 @@ public:
 
 private:
     mir::Fd& store_to;
+    std::atomic<bool> triggered;
 };
 }
 }
