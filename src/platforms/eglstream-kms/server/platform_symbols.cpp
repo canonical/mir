@@ -26,6 +26,7 @@
 #include "mir/libname.h"
 #include "mir/log.h"
 #include "mir/graphics/egl_error.h"
+#include "one_shot_device_observer.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/diagnostic_information.hpp>
@@ -33,8 +34,12 @@
 #include <sstream>
 
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
+#include <boost/exception/errinfo_file_name.hpp>
 
 namespace mg = mir::graphics;
+namespace mgc = mir::graphics::common;
 namespace mo = mir::options;
 namespace mge = mir::graphics::eglstream;
 
@@ -73,25 +78,25 @@ EGLDeviceEXT find_device()
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const&,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
-    std::shared_ptr<mir::ConsoleServices> const&,
+    std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mg::DisplayReport> const&, 
     std::shared_ptr<mir::logging::Logger> const&)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     return mir::make_module_ptr<mge::Platform>(
         std::make_shared<mge::RenderingPlatform>(),
-        std::make_shared<mge::DisplayPlatform>(find_device()));
+        std::make_shared<mge::DisplayPlatform>(*console, find_device()));
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const&, 
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
-    std::shared_ptr<mir::ConsoleServices> const&,
+    std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mg::DisplayReport> const&, 
     std::shared_ptr<mir::logging::Logger> const&) 
 {
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
-    return mir::make_module_ptr<mge::DisplayPlatform>(find_device());
+    return mir::make_module_ptr<mge::DisplayPlatform>(*console, find_device());
 }
 
 mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
@@ -109,19 +114,42 @@ void add_graphics_platform_options(boost::program_options::options_description& 
 
 namespace
 {
-char const* drm_node_for_device(EGLDeviceEXT device)
+dev_t devnum_for_device(EGLDeviceEXT device)
 {
     auto const device_path = eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
     if (!device_path)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to determine DRM device node path from EGLDevice"));
     }
-    return device_path;
+
+    struct stat info;
+    if (stat(device_path, &info) == -1)
+    {
+        using namespace std::literals::string_literals;
+
+        BOOST_THROW_EXCEPTION((
+            boost::enable_error_info(
+                std::system_error{
+                    errno,
+                    std::system_category(),
+                    "Failed to stat device node"})
+                    << boost::errinfo_file_name(device_path)));
+    }
+
+    if ((info.st_mode & S_IFMT) != S_IFCHR)
+    {
+        BOOST_THROW_EXCEPTION((
+            boost::enable_error_info(
+                std::runtime_error{"Queried device node is unexpectedly not a char device"})
+                << boost::errinfo_file_name(device_path)));
+    }
+
+    return info.st_rdev;
 }
 }
 
 mg::PlatformPriority probe_graphics_platform(
-    std::shared_ptr<mir::ConsoleServices> const&,
+    std::shared_ptr<mir::ConsoleServices> const& console,
     mo::ProgramOption const& /*options*/)
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
@@ -168,7 +196,7 @@ mg::PlatformPriority probe_graphics_platform(
     }
 
     if (std::none_of(devices.get(), devices.get() + device_count,
-        [](EGLDeviceEXT device)
+        [console](EGLDeviceEXT device)
         {
             auto device_extensions = eglQueryDeviceStringEXT(device, EGL_EXTENSIONS);
             if (device_extensions)
@@ -179,15 +207,20 @@ mg::PlatformPriority probe_graphics_platform(
                 // EGL_EXT_device_drmish_but_not_drm)
                 if (strstr(device_extensions, "EGL_EXT_device_drm") != NULL)
                 {
-                    // Check if we can acquire DRM master
-                    mir::Fd const drm_fd{open(drm_node_for_device(device), O_RDWR | O_CLOEXEC)};
-                    if (drmSetMaster(drm_fd))
+                    // Check we can acquire the device...
+                    mir::Fd drm_fd;
+                    auto const devnum = devnum_for_device(device);
+
+                    console->acquire_device(
+                        major(devnum), minor(devnum),
+                        std::make_unique<mgc::OneShotDeviceObserver>(drm_fd)).get();
+
+                    if (drm_fd == mir::Fd::invalid)
                     {
                         mir::log_debug(
-                            "EGL_EXT_device_drm found, but can't acquire DRM master.");
+                            "EGL_EXT_device_drm found, but can't acquire DRM node.");
                         return false;
                     }
-                    drmDropMaster(drm_fd);
                     return true;
                 }
                 return false;

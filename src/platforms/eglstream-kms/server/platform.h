@@ -32,6 +32,8 @@
 
 namespace mir
 {
+class Device;
+
 namespace graphics
 {
 namespace eglstream
@@ -48,7 +50,7 @@ public:
 class DisplayPlatform : public graphics::DisplayPlatform
 {
 public:
-    DisplayPlatform(EGLDeviceEXT device);
+    DisplayPlatform(ConsoleServices& console, EGLDeviceEXT device);
 
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& /*initial_conf_policy*/,
@@ -58,7 +60,8 @@ public:
 
 private:
     EGLDisplay display;
-    mir::Fd const drm_node;
+    mir::Fd drm_node;
+    std::unique_ptr<mir::Device> drm_device;
 };
 
 class Platform : public graphics::Platform
