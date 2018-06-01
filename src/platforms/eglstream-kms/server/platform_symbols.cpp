@@ -19,6 +19,7 @@
 #include <epoxy/egl.h>
 
 #include "platform.h"
+#include "utils.h"
 #include "mir/graphics/platform.h"
 #include "mir/options/option.h"
 #include "mir/module_deleter.h"
@@ -112,42 +113,6 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     mir::assert_entry_point_signature<mg::AddPlatformOptions>(&add_graphics_platform_options);
 }
 
-namespace
-{
-dev_t devnum_for_device(EGLDeviceEXT device)
-{
-    auto const device_path = eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
-    if (!device_path)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to determine DRM device node path from EGLDevice"));
-    }
-
-    struct stat info;
-    if (stat(device_path, &info) == -1)
-    {
-        using namespace std::literals::string_literals;
-
-        BOOST_THROW_EXCEPTION((
-            boost::enable_error_info(
-                std::system_error{
-                    errno,
-                    std::system_category(),
-                    "Failed to stat device node"})
-                    << boost::errinfo_file_name(device_path)));
-    }
-
-    if ((info.st_mode & S_IFMT) != S_IFCHR)
-    {
-        BOOST_THROW_EXCEPTION((
-            boost::enable_error_info(
-                std::runtime_error{"Queried device node is unexpectedly not a char device"})
-                << boost::errinfo_file_name(device_path)));
-    }
-
-    return info.st_rdev;
-}
-}
-
 mg::PlatformPriority probe_graphics_platform(
     std::shared_ptr<mir::ConsoleServices> const& console,
     mo::ProgramOption const& /*options*/)
@@ -209,7 +174,7 @@ mg::PlatformPriority probe_graphics_platform(
                 {
                     // Check we can acquire the device...
                     mir::Fd drm_fd;
-                    auto const devnum = devnum_for_device(device);
+                    auto const devnum = mge::devnum_for_device(device);
 
                     console->acquire_device(
                         major(devnum), minor(devnum),

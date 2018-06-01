@@ -21,6 +21,7 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
+#include "utils.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
@@ -46,37 +47,6 @@ namespace
 {
 // Our copy of eglext.h doesn't have this?
 int const EGL_DRM_MASTER_FD_EXT{0x333C};
-
-dev_t devnum_for_device(EGLDeviceEXT device)
-{
-    auto const device_path = eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
-    if (!device_path)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to determine DRM device node path from EGLDevice"));
-    }
-
-    struct stat info;
-    if (stat(device_path, &info) == -1)
-    {
-        BOOST_THROW_EXCEPTION((
-            boost::enable_error_info(
-                std::system_error{
-                    errno,
-                    std::system_category(),
-                    "Failed to stat device node"})
-                    << boost::errinfo_file_name(device_path)));
-    }
-
-    if ((info.st_mode & S_IFMT) != S_IFCHR)
-    {
-        BOOST_THROW_EXCEPTION((
-                                  boost::enable_error_info(
-                                      std::runtime_error{"Queried device node is unexpectedly not a char device"})
-                                      << boost::errinfo_file_name(device_path)));
-    }
-
-    return info.st_rdev;
-}
 }
 
 mge::DisplayPlatform::DisplayPlatform(ConsoleServices& console, EGLDeviceEXT device)
