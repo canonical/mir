@@ -43,6 +43,7 @@
 
 namespace mg = mir::graphics;
 namespace mgm = mir::graphics::mesa;
+namespace mgc = mir::graphics::common;
 namespace mgmh = mir::graphics::mesa::helpers;
 
 /*************
@@ -69,7 +70,7 @@ mgmh::DRMHelper::open_all_devices(
         mir::Fd tmp_fd;
         console.acquire_device(
             major(device.devnum()), minor(device.devnum()),
-            std::make_unique<mgm::OneShotDeviceObserver>(tmp_fd)).get();
+            std::make_unique<mgc::OneShotDeviceObserver>(tmp_fd)).get();
 
         if (tmp_fd < 0)
         {

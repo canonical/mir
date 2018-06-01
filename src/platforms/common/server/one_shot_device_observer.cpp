@@ -20,20 +20,22 @@
 
 #include "mir/fd.h"
 
-mir::graphics::mesa::OneShotDeviceObserver::OneShotDeviceObserver(mir::Fd& store_to)
+namespace mgc = mir::graphics::common;
+
+mgc::OneShotDeviceObserver::OneShotDeviceObserver(mir::Fd& store_to)
     : store_to{store_to}
 {
 }
 
-void mir::graphics::mesa::OneShotDeviceObserver::activated(mir::Fd&& device_fd)
+void mgc::OneShotDeviceObserver::activated(mir::Fd&& device_fd)
 {
     store_to = std::move(device_fd);
 }
 
-void mir::graphics::mesa::OneShotDeviceObserver::suspended()
+void mgc::OneShotDeviceObserver::suspended()
 {
 }
 
-void mir::graphics::mesa::OneShotDeviceObserver::removed()
+void mgc::OneShotDeviceObserver::removed()
 {
 }

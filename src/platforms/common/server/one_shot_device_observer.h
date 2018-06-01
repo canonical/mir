@@ -25,7 +25,7 @@ namespace mir
 {
 namespace graphics
 {
-namespace  mesa
+namespace common
 {
 class OneShotDeviceObserver : public mir::Device::Observer
 {

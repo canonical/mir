@@ -22,8 +22,6 @@ add_library(
   gbm_platform.cpp
   nested_authentication.cpp
   drm_native_platform.cpp
-  one_shot_device_observer.cpp
-  one_shot_device_observer.h
 )
 
 target_link_libraries(
