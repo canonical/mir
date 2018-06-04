@@ -185,7 +185,7 @@ protected:
                     std::system_error{
                         errno,
                         std::system_category(),
-                        "Failed to open DRM device node"})
+                        "Failed to open device node"})
                     << boost::errinfo_file_name(device_node)));
         }
         return device_fd;
