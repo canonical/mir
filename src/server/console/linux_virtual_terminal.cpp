@@ -43,29 +43,78 @@
 #include <fcntl.h>
 #include <xf86drm.h>
 
+class mir::LinuxVirtualTerminal::DeviceList
+{
+public:
+    DeviceList() = default;
+
+    class DeviceListIterable
+    {
+    public:
+        friend class DeviceList;
+
+        std::vector<Device*>::iterator begin()
+        {
+            return devices->begin();
+        }
+
+        std::vector<Device*>::iterator end()
+        {
+            return devices->end();
+        }
+
+    private:
+        DeviceListIterable(MutexGuard<std::vector<Device*>>&& devices)
+            : devices{std::move(devices)}
+        {
+        }
+        MutexGuard<std::vector<Device*>> devices;
+    };
+
+    DeviceListIterable as_iterable()
+    {
+        return DeviceListIterable{list.lock()};
+    }
+
+    void insert(Device* device)
+    {
+        list.lock()->push_back(device);
+    }
+
+    void remove(Device* device)
+    {
+        auto devices = list.lock();
+        devices->erase(
+            std::remove(
+                devices->begin(),
+                devices->end(),
+                device),
+            devices->end());
+    }
+private:
+    DeviceList(DeviceList const&) = delete;
+    DeviceList& operator=(DeviceList const&) = delete;
+
+    Mutex<std::vector<Device*>> list;
+};
+
 class mir::LinuxVirtualTerminal::Device : public mir::Device
 {
 public:
     Device(
         std::unique_ptr<mir::Device::Observer> observer,
-        std::shared_ptr<mir::Mutex<std::vector<Device*>>> const& device_list)
+        std::shared_ptr<DeviceList> const& device_list)
         : observer{std::move(observer)},
           device_list{device_list}
     {
-        device_list->lock()->push_back(this);
+        device_list->insert(this);
     }
 
     ~Device()
     {
         if (auto live_devices = device_list.lock())
         {
-            auto devices = live_devices->lock();
-            devices->erase(
-                std::remove(
-                    devices->begin(),
-                    devices->end(),
-                    this),
-                devices->end());
+            live_devices->remove(this);
         }
     }
 
@@ -85,7 +134,7 @@ protected:
     virtual void suspend() = 0;
 private:
     std::unique_ptr<mir::Device::Observer> const observer;
-    std::weak_ptr<mir::Mutex<std::vector<Device*>>> const device_list;
+    std::weak_ptr<DeviceList> const device_list;
 };
 
 namespace
@@ -97,7 +146,7 @@ public:
         mir::VTFileOperations& fops,
         char const* device_node,
         std::unique_ptr<mir::Device::Observer> observer,
-        std::shared_ptr<mir::Mutex<std::vector<Device*>>> const& device_list)
+        std::shared_ptr<mir::LinuxVirtualTerminal::DeviceList> const& device_list)
         : Device(std::move(observer), device_list),
           device_fd{fops.open(device_node, O_RDWR | O_CLOEXEC)}
     {
@@ -166,7 +215,7 @@ public:
         std::shared_ptr<mir::VTFileOperations> fops,
         std::string device_node,
         std::unique_ptr<mir::Device::Observer> observer,
-        std::shared_ptr<mir::Mutex<std::vector<Device*>>> const& device_list)
+        std::shared_ptr<mir::LinuxVirtualTerminal::DeviceList> const& device_list)
         : Device(std::move(observer), device_list),
           fops{std::move(fops)},
           device_node{std::move(device_node)}
@@ -249,7 +298,7 @@ mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
     int vt_number,
     EmergencyCleanupRegistry& emergency_cleanup,
     std::shared_ptr<graphics::DisplayReport> const& report)
-    : active_devices{std::make_shared<mir::Mutex<std::vector<Device*>>>()},
+    : active_devices{std::make_shared<DeviceList>()},
       fops{fops},
       pops{std::move(pops)},
       report{report},
@@ -333,7 +382,7 @@ mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
                 saved_tcattr = prev_tcattr
             ]
             {
-                for (auto const& device : *devices->lock())
+                for (auto const& device : devices->as_iterable())
                 {
                     device->on_suspended();
                 }
@@ -367,7 +416,7 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
                     if (!switch_back())
                         report->report_vt_switch_back_failure();
                     fops->ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
-                    for (auto const& device : *active_devices->lock())
+                    for (auto const& device : active_devices->as_iterable())
                     {
                         device->on_activated();
                     }
@@ -381,7 +430,7 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
 
                     if (switch_away())
                     {
-                        for (auto const& device : *active_devices->lock())
+                        for (auto const& device : active_devices->as_iterable())
                         {
                             device->on_suspended();
                         }

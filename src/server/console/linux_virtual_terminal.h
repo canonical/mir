@@ -98,8 +98,9 @@ public:
         std::unique_ptr<mir::Device::Observer> observer) override;
 
     class Device;
+    class DeviceList;
 private:
-    std::shared_ptr<Mutex<std::vector<Device*>>> const active_devices;
+    std::shared_ptr<DeviceList> const active_devices;
 
     class FDWrapper
     {
