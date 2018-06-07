@@ -21,14 +21,19 @@
 
 #include "mir/console_services.h"
 
+#include "mir/synchronised.h"
+
 #include <memory>
 #include <linux/vt.h>
 #include <termios.h>
 #include <unistd.h>
 #include <future>
+#include <vector>
 
 namespace mir
 {
+class EmergencyCleanupRegistry;
+
 namespace graphics
 {
 class DisplayReport;
@@ -75,10 +80,12 @@ protected:
 class LinuxVirtualTerminal : public ConsoleServices
 {
 public:
-    LinuxVirtualTerminal(std::shared_ptr<VTFileOperations> const& fops,
-                         std::unique_ptr<PosixProcessOperations> pops,
-                         int vt_number,
-                         std::shared_ptr<graphics::DisplayReport> const& report);
+    LinuxVirtualTerminal(
+        std::shared_ptr<VTFileOperations> const& fops,
+        std::unique_ptr<PosixProcessOperations> pops,
+        int vt_number,
+        EmergencyCleanupRegistry& emergency_cleanup,
+        std::shared_ptr<graphics::DisplayReport> const& report);
     ~LinuxVirtualTerminal() noexcept(true);
 
     void register_switch_handlers(
@@ -86,11 +93,15 @@ public:
         std::function<bool()> const& switch_away,
         std::function<bool()> const& switch_back) override;
     void restore() override;
-    std::future<std::unique_ptr<Device>> acquire_device(
+    std::future<std::unique_ptr<mir::Device>> acquire_device(
         int major, int minor,
-        std::unique_ptr<Device::Observer> observer) override;
+        std::unique_ptr<mir::Device::Observer> observer) override;
 
+    class Device;
+    class DeviceList;
 private:
+    std::shared_ptr<DeviceList> const active_devices;
+
     class FDWrapper
     {
     public:
