@@ -42,12 +42,12 @@ struct RealVTFileOperations : public mir::VTFileOperations
         return ::close(fd);
     }
 
-    int ioctl(int d, int request, int val)
+    int ioctl(int d, unsigned long int request, int val)
     {
         return ::ioctl(d, request, val);
     }
 
-    int ioctl(int d, int request, void* p_val)
+    int ioctl(int d, unsigned long int request, void* p_val)
     {
         return ::ioctl(d, request, p_val);
     }

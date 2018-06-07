@@ -47,8 +47,8 @@ public:
 
     virtual int open(char const* pathname, int flags) = 0;
     virtual int close(int fd) = 0;
-    virtual int ioctl(int d, int request, int val) = 0;
-    virtual int ioctl(int d, int request, void* p_val) = 0;
+    virtual int ioctl(int d, unsigned long int request, int val) = 0;
+    virtual int ioctl(int d, unsigned long int request, void* p_val) = 0;
     virtual int tcsetattr(int d, int acts, const struct termios *tcattr) = 0;
     virtual int tcgetattr(int d, struct termios *tcattr) = 0;
 
