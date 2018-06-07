@@ -58,8 +58,8 @@ public:
     ~MockVTFileOperations() noexcept {}
     MOCK_METHOD2(open, int(char const*, int));
     MOCK_METHOD1(close, int(int));
-    MOCK_METHOD3(ioctl, int(int, int, int));
-    MOCK_METHOD3(ioctl, int(int, int, void*));
+    MOCK_METHOD3(ioctl, int(int, unsigned long int, int));
+    MOCK_METHOD3(ioctl, int(int, unsigned long int, void*));
     MOCK_METHOD3(tcsetattr, int(int, int, const struct termios*));
     MOCK_METHOD2(tcgetattr, int(int, struct termios*));
 };
