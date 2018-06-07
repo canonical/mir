@@ -148,6 +148,9 @@ TEST_F(ServerShutdown, server_can_shut_down_when_clients_are_blocked)
 
     // Shutting down the server should not block
     stop_server();
+
+    // Kill the ServerConfiguration to ensure the Clients are unblocked.
+    server_configuration.reset();
 }
 
 TEST_F(ServerShutdown, server_releases_resources_on_shutdown_with_connected_clients)

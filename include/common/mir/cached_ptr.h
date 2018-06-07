@@ -27,7 +27,7 @@ namespace mir
 template<typename Type>
 class CachedPtr
 {
-    std::weak_ptr<Type> cache;
+    std::shared_ptr<Type> cache;
     CachedPtr(CachedPtr const&) = delete;
     CachedPtr& operator=(CachedPtr const&) = delete;
 public:
@@ -35,12 +35,11 @@ public:
 
     std::shared_ptr<Type> operator()(std::function<std::shared_ptr<Type>()> make)
     {
-        auto result = cache.lock();
-        if (!result)
+        if (!cache)
         {
-                cache = result = make();
+                cache = make();
         }
-        return result;
+        return cache;
     }
 };
 } // namespace mir
