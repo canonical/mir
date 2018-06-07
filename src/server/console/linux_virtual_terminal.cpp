@@ -64,11 +64,11 @@ public:
         }
 
     private:
-        DeviceListIterable(MutexGuard<std::vector<Device*>>&& devices)
+        DeviceListIterable(Synchronised<std::vector<Device*>>::Locked&& devices)
             : devices{std::move(devices)}
         {
         }
-        MutexGuard<std::vector<Device*>> devices;
+        Synchronised<std::vector<Device*>>::Locked devices;
     };
 
     DeviceListIterable as_iterable()
@@ -95,7 +95,7 @@ private:
     DeviceList(DeviceList const&) = delete;
     DeviceList& operator=(DeviceList const&) = delete;
 
-    Mutex<std::vector<Device*>> list;
+    Synchronised<std::vector<Device*>> list;
 };
 
 class mir::LinuxVirtualTerminal::Device : public mir::Device
