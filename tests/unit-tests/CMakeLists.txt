@@ -79,7 +79,6 @@ set(
   test_posix_timestamp.cpp
   test_observer_multiplexer.cpp
   test_edid.cpp
-  test_logind_console_services.cpp
 )
 
 CMAKE_DEPENDENT_OPTION(
@@ -93,6 +92,7 @@ add_subdirectory(platforms/)
 add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(compositor/)
+add_subdirectory(console/)
 add_subdirectory(frontend/)
 add_subdirectory(logging/)
 add_subdirectory(shell/)
