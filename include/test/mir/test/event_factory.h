@@ -44,10 +44,12 @@ public:
     KeyParameters& from_device(int device_id);
     KeyParameters& of_scancode(int scancode);
     KeyParameters& with_action(EventAction action);
+    KeyParameters& with_event_time(std::chrono::nanoseconds time);
 
     int device_id;
     int scancode;
     EventAction action;
+    std::experimental::optional<std::chrono::nanoseconds> event_time;
 };
 KeyParameters a_key_down_event();
 KeyParameters a_key_up_event();
@@ -59,10 +61,12 @@ public:
     ButtonParameters& from_device(int device_id);
     ButtonParameters& of_button(int scancode);
     ButtonParameters& with_action(EventAction action);
+    ButtonParameters& with_event_time(std::chrono::nanoseconds time);
 
     int device_id;
     int button;
     EventAction action;
+    std::experimental::optional<std::chrono::nanoseconds> event_time;
 };
 ButtonParameters a_button_down_event();
 ButtonParameters a_button_up_event();
