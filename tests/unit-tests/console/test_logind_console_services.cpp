@@ -194,6 +194,10 @@ public:
 
     void TearDown() override
     {
+        // I'm not sure why explicitly stopping the main loop here works better than
+        // implicitly in the destructor. (Issue #398) OTOH this is a logical place.
+        ml_thread.stop();
+
         // Print the dbusmock output if we've failed.
         auto const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
         if (test_info->result()->Failed() && dbusmock)
@@ -667,7 +671,7 @@ private:
     mir::Fd mock_stdout;
 
     std::shared_ptr<mir::GLibMainLoop> const ml;
-    mt::AutoUnblockThread const ml_thread;
+    mt::AutoUnblockThread ml_thread;
 };
 
 using namespace testing;
