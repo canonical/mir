@@ -46,11 +46,7 @@ void mo::ProgramOption::parse_arguments(
 {
     // Passing argc and argv directly to command_line_parser() should do same thing. Unfortunately, when argc is 0, boost
     // 1.67+ does not correctly construct the vector and throws a std::bad_alloc
-    std::vector<std::string> args;
-    for (int i = 1; i < argc; i++)
-    {
-        args.push_back(*(argv + i));
-    }
+    std::vector<std::string> args{argv + 1, argv + std::max(argc, 1)};
     auto parsed_command_line = po::command_line_parser(args).options(desc).allow_unregistered().run();
     po::store(parsed_command_line, options);
     po::notify(options);
