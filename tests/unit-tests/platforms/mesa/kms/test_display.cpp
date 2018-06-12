@@ -33,10 +33,9 @@
 #include "mir/test/doubles/mock_gl.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/mock_display_report.h"
-#include "mir/test/doubles/null_console_services.h"
+#include "mir/test/doubles/stub_console_services.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/mock_gl_config.h"
-#include "mir/test/doubles/mock_console_services.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "mir/test/doubles/mock_event_handler_register.h"
 
@@ -114,7 +113,7 @@ public:
     {
         return std::make_shared<mgm::Platform>(
                mir::report::null_display_report(),
-               std::make_shared<mtd::NullConsoleServices>(),
+               std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
                mgm::BypassOption::allowed);
     }
@@ -658,50 +657,6 @@ TEST_F(MesaDisplayTest, pause_drops_drm_master)
     display->pause();
 }
 
-TEST_F(MesaDisplayTest, resume_sets_drm_master)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_drm, drmSetMaster(_))
-        .Times(2);
-
-    auto display = create_display(create_platform());
-
-    display->resume();
-}
-
-TEST_F(MesaDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_drm, drmDropMaster(_))
-        .WillOnce(SetErrnoAndReturn(EACCES, -EACCES));
-
-    EXPECT_CALL(mock_drm, drmSetMaster(_))
-        .WillOnce(SetErrnoAndReturn(EPERM, -EPERM));
-
-    EXPECT_CALL(*mock_report, report_drm_master_failure(EACCES));
-    EXPECT_CALL(*mock_report, report_drm_master_failure(EPERM));
-
-    auto platform = std::make_shared<mgm::Platform>(
-        mock_report,
-        std::make_shared<mtd::NullConsoleServices>(),
-        *std::make_shared<mtd::NullEmergencyCleanup>(),
-        mgm::BypassOption::allowed);
-    auto display = platform->create_display(
-        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-        std::make_shared<mtd::StubGLConfig>()
-        );
-
-    EXPECT_THROW({
-        display->pause();
-    }, std::runtime_error);
-
-    EXPECT_THROW({
-        display->resume();
-    }, std::runtime_error);
-}
-
 TEST_F(MesaDisplayTest, configuration_change_registers_video_devices_handler)
 {
     using namespace testing;
@@ -747,7 +702,17 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
     mt::AutoUnblockThread mainLoopThread([&ml]{ml.stop();}, [&ml]{ml.run();});
     ASSERT_TRUE(mainloop_started.wait_for(10s));
 
-    auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
+    auto const syspath =
+        fake_devices.add_device(
+            "drm",
+            "card2",
+            NULL,
+            {},
+            {
+                "DEVTYPE", "drm_minor",
+                "MAJOR", "226",
+                "MINOR", "42"
+            });
 
     for (int i = 0; i != device_change_count; ++i)
     {
