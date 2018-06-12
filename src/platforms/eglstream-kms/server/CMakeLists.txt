@@ -25,6 +25,8 @@ add_library(mirplatformgraphicseglstreamkmsobjects OBJECT
   egl_output.h
   egl_output.cpp
   software_buffer.cpp
+  utils.cpp
+  utils.h
 )
 
 add_library(mirplatformgraphicseglstreamkms MODULE
