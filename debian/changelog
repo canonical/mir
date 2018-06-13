@@ -35,7 +35,7 @@ mir (0.32.0) UNRELEASED; urgency=medium
         WlAbstractMirWindow. (Fixes: #311)
       . [Wayland] Don't hold a lock in mf::WlShmBuffer while potentially
         destroying an object that uses it. (Fixes #355)
-      . [Wayland] Disconnect a sink when its target window is destroye
+      . [Wayland] Disconnect a sink when its target window is destroyed
         (Fixes #357)
       . [Wayland] Send frame notifications even if there is no buffer,
         this fixes the gedit lockup when subsurfaces are dismissed.
