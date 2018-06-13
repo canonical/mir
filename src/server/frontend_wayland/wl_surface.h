@@ -101,10 +101,16 @@ private:
     WlSurface* const surface;
 };
 
-
 class WlSurface : public wayland::Surface
 {
 public:
+    struct Position
+    {
+        mir::geometry::Point position;
+        WlSurface* surface;
+        bool is_in_input_region;
+    };
+
     WlSurface(wl_client* client,
               wl_resource* parent,
               uint32_t id,
@@ -117,7 +123,7 @@ public:
     geometry::Displacement offset() const { return offset_; }
     geometry::Size buffer_size() const { return buffer_size_.value_or(geometry::Size{}); }
     bool synchronized() const;
-    std::experimental::optional<std::pair<geometry::Point, WlSurface*>> transform_point(geometry::Point point);
+    Position transform_point(geometry::Point point);
     wl_resource* raw_resource() const { return resource; }
     mir::frontend::SurfaceId surface_id() const;
 

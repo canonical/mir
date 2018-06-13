@@ -59,18 +59,10 @@ void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* surface
         case mir_touch_action_down:
         {
             auto const transformed = surface->transform_point(point);
-            if (transformed)
-            {
-                handle_down(transformed.value().first,
-                            transformed.value().second,
-                            mir_input_event_get_event_time_ms(input_ev),
-                            touch_id);
-            }
-            else
-            {
-                log_warning("surface->transform_point() returned nullopt for touch down action");
-                return;
-            }
+            handle_down(transformed.position,
+                        transformed.surface,
+                        mir_input_event_get_event_time_ms(input_ev),
+                        touch_id);
             break;
         }
         case mir_touch_action_up:
@@ -79,29 +71,21 @@ void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* surface
         case mir_touch_action_change:
         {
             auto const transformed = surface->transform_point(point);
-            if (transformed)
+            if (focused_surface_for_ids[touch_id] == transformed.surface)
             {
-                if (focused_surface_for_ids[touch_id] == transformed.value().second)
-                {
-                    wl_touch_send_motion(resource,
-                                         mir_input_event_get_event_time_ms(input_ev),
-                                         touch_id,
-                                         wl_fixed_from_double(transformed.value().first.x.as_int()),
-                                         wl_fixed_from_double(transformed.value().first.y.as_int()));
-                }
-                else
-                {
-                    handle_up(mir_input_event_get_event_time_ms(input_ev), touch_id);
-                    handle_down(transformed.value().first,
-                                transformed.value().second,
-                                mir_input_event_get_event_time_ms(input_ev),
-                                touch_id);
-                }
+                wl_touch_send_motion(resource,
+                                     mir_input_event_get_event_time_ms(input_ev),
+                                     touch_id,
+                                     wl_fixed_from_double(transformed.position.x.as_int()),
+                                     wl_fixed_from_double(transformed.position.y.as_int()));
             }
             else
             {
-                log_warning("surface->transform_point() returned nullopt for touch change action");
-                return;
+                handle_up(mir_input_event_get_event_time_ms(input_ev), touch_id);
+                handle_down(transformed.position,
+                            transformed.surface,
+                            mir_input_event_get_event_time_ms(input_ev),
+                            touch_id);
             }
             break;
         }
