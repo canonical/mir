@@ -195,7 +195,7 @@ public:
     void TearDown() override
     {
         // Tests cases *must* stop the mainloop thread before destroying
-        // block scope objects that are referenced by enqued logic.
+        // block scope objects that are referenced by enqueued logic.
         ASSERT_TRUE(ml_thread_stopped);
 
         // Print the dbusmock output if we've failed.
@@ -223,7 +223,7 @@ public:
     }
 
     // Tests cases *must* stop the mainloop thread before destroying
-    // block scope objects that are referenced by enqued logic.
+    // block scope objects that are referenced by enqueued logic.
     void stop_mainloop()
     {
         ml_thread.stop();
