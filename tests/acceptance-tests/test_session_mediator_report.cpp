@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -35,7 +35,8 @@ namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
 
-using testing::_;
+using namespace testing;
+using namespace std::chrono_literals;
 
 namespace
 {
@@ -107,15 +108,15 @@ struct SessionMediatorReportTest : mtf::HeadlessInProcessServer
 
 TEST_F(SessionMediatorReportTest, session_connect_called)
 {
-    EXPECT_CALL(*report, session_connect_called(_));
+    auto report_received = std::make_shared<mt::Signal>();
+    EXPECT_CALL(*report, session_connect_called(_))
+        .WillOnce(InvokeWithoutArgs([report_received]() { report_received->raise(); }));
     connect_client();
+    EXPECT_TRUE(report_received->wait_for(10s));
 }
 
 TEST_F(SessionMediatorReportTest, session_disconnect_called)
 {
-    using namespace testing;
-    using namespace std::chrono_literals;
-
     connect_client();
 
     auto report_received = std::make_shared<mt::Signal>();
@@ -127,9 +128,6 @@ TEST_F(SessionMediatorReportTest, session_disconnect_called)
 
 TEST_F(SessionMediatorReportTest, session_create_and_release_surface_called)
 {
-    using namespace testing;
-    using namespace std::chrono_literals;
-
     connect_client();
 
     auto report_received = std::make_shared<mt::Signal>();
@@ -170,9 +168,6 @@ TEST_F(SessionMediatorReportTest, session_submit_buffer_called)
 
 TEST_F(SessionMediatorReportTest, session_start_and_stop_prompt_session_called)
 {
-    using namespace testing;
-    using namespace std::chrono_literals;
-
     connect_client();
 
     auto report_received = std::make_shared<mt::Signal>();
@@ -193,9 +188,6 @@ TEST_F(SessionMediatorReportTest, session_start_and_stop_prompt_session_called)
 
 TEST_F(SessionMediatorReportTest, session_create_and_release_buffer_stream_called)
 {
-    using namespace testing;
-    using namespace std::chrono_literals;
-
     connect_client();
 
     auto report_received = std::make_shared<mt::Signal>();
