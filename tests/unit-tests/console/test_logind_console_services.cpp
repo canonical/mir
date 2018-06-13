@@ -183,7 +183,7 @@ public:
               &g_object_unref},
           ml{std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>())},
           ml_thread{
-              [this]() { ml->stop(); },
+              [this]() { ml->stop(); ml_thread_stopped = true; },
               [this]() { ml->run(); }}
     {
         if (!bus_connection)
@@ -194,9 +194,9 @@ public:
 
     void TearDown() override
     {
-        // I'm not sure why explicitly stopping the main loop here works better than
-        // implicitly in the destructor. (Issue #398) OTOH this is a logical place.
-        ml_thread.stop();
+        // Tests cases *must* stop the mainloop thread before destroying
+        // block scope objects that are referenced by enqued logic.
+        ASSERT_TRUE(ml_thread_stopped);
 
         // Print the dbusmock output if we've failed.
         auto const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
@@ -220,6 +220,13 @@ public:
                     << "(" << errno << ")" << std::endl;
             }
         }
+    }
+
+    // Tests cases *must* stop the mainloop thread before destroying
+    // block scope objects that are referenced by enqued logic.
+    void stop_mainloop()
+    {
+        ml_thread.stop();
     }
 
     std::string add_any_active_session()
@@ -672,6 +679,7 @@ private:
 
     std::shared_ptr<mir::GLibMainLoop> const ml;
     mt::AutoUnblockThread ml_thread;
+    bool ml_thread_stopped = false;
 };
 
 using namespace testing;
@@ -683,6 +691,7 @@ TEST_F(LogindConsoleServices, happy_path_succeeds)
     add_any_active_session();
 
     mir::LogindConsoleServices test{the_main_loop()};
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, construction_fails_if_cannot_claim_control)
@@ -700,6 +709,7 @@ TEST_F(LogindConsoleServices, construction_fails_if_cannot_claim_control)
     EXPECT_THROW(
         mir::LogindConsoleServices test{the_main_loop()};,
         std::runtime_error);
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, construction_fails_if_no_logind)
@@ -707,6 +717,7 @@ TEST_F(LogindConsoleServices, construction_fails_if_no_logind)
     EXPECT_THROW(
         mir::LogindConsoleServices test{the_main_loop()},
         std::runtime_error);
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, selects_active_session)
@@ -725,6 +736,7 @@ TEST_F(LogindConsoleServices, selects_active_session)
     add_any_active_session();
 
     mir::LogindConsoleServices test{the_main_loop()};
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
@@ -770,6 +782,7 @@ TEST_F(LogindConsoleServices, take_device_happy_path_resolves_to_fd)
     auto read_bytes = read(resolved_fd, buffer, sizeof(buffer));
     EXPECT_THAT(read_bytes, Eq(sizeof(device_content)));
     EXPECT_THAT(buffer, StrEq(device_content));
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, take_device_calls_suspended_callback_when_initially_suspended)
@@ -797,6 +810,7 @@ TEST_F(LogindConsoleServices, take_device_calls_suspended_callback_when_initiall
     ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
     EXPECT_TRUE(suspend_called);
     device.get();
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
@@ -823,6 +837,7 @@ TEST_F(LogindConsoleServices, take_device_resolves_to_exception_on_error)
         device.get(),
         std::runtime_error
     );
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
@@ -874,6 +889,7 @@ TEST_F(LogindConsoleServices, device_activated_callback_called_on_activate)
     auto read_bytes = read(received_fd, buffer, sizeof(buffer));
     EXPECT_THAT(read_bytes, Eq(sizeof(device_content)));
     EXPECT_THAT(buffer, StrEq(device_content));
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
@@ -911,6 +927,7 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
     emit_device_suspended(session_path.c_str(), 22, 33, SuspendType::Paused);
 
     EXPECT_TRUE(suspended->wait_for(30s));
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, device_removed_callback_called_on_remove)
@@ -948,6 +965,7 @@ TEST_F(LogindConsoleServices, device_removed_callback_called_on_remove)
     emit_device_suspended(session_path.c_str(), 22, 33, SuspendType::Gone);
 
     EXPECT_TRUE(gone_received->wait_for(30s));
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, calls_pause_handler_on_pause)
@@ -975,6 +993,7 @@ TEST_F(LogindConsoleServices, calls_pause_handler_on_pause)
     set_logind_session_state(session_path, SessionState::Online);
 
     EXPECT_TRUE(paused->wait_for(30s));
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, calls_resume_handler_on_resume)
@@ -1008,6 +1027,7 @@ TEST_F(LogindConsoleServices, calls_resume_handler_on_resume)
     set_logind_session_state(session_path, SessionState::Active);
 
     EXPECT_TRUE(resumed->wait_for(30s));
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, calls_pause_handler_on_closing_state)
@@ -1035,6 +1055,7 @@ TEST_F(LogindConsoleServices, calls_pause_handler_on_closing_state)
     set_logind_session_state(session_path, SessionState::Closing);
 
     EXPECT_TRUE(paused->wait_for(30s));
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, spurious_online_state_transitions_are_ignored)
@@ -1072,6 +1093,7 @@ TEST_F(LogindConsoleServices, spurious_online_state_transitions_are_ignored)
     * this can only false-pass, not false-fail.
     */
     EXPECT_FALSE(paused->wait_for(5s)) << "Unexpectedly received pause notification";
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, online_to_closing_state_transition_is_ignored)
@@ -1109,6 +1131,7 @@ TEST_F(LogindConsoleServices, online_to_closing_state_transition_is_ignored)
      * this can only false-pass, not false-fail.
      */
     EXPECT_FALSE(paused->wait_for(5s)) << "Unexpectedly received pause notification";
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, construction_does_not_require_running_mainloop)
@@ -1120,6 +1143,7 @@ TEST_F(LogindConsoleServices, construction_does_not_require_running_mainloop)
         std::make_shared<mir::GLibMainLoop>(std::make_shared<mir::time::SteadyClock>());
 
     mir::LogindConsoleServices services{not_running_main_loop};
+    stop_mainloop();
 }
 
 TEST_F(LogindConsoleServices, runs_callbacks_on_provided_main_loop)
@@ -1167,6 +1191,7 @@ TEST_F(LogindConsoleServices, runs_callbacks_on_provided_main_loop)
     EXPECT_TRUE(paused->wait_for(30s));
     set_logind_session_state(session_path, SessionState::Active);
     EXPECT_TRUE(resumed->wait_for(30s));
+    stop_mainloop();
 }
 
 /*
@@ -1199,4 +1224,5 @@ TEST_F(LogindConsoleServices, can_acquire_device_without_running_main_loop)
             [](){})).get();
 
     EXPECT_TRUE(device_acquired);
+    stop_mainloop();
 }
