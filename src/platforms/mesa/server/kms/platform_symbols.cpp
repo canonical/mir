@@ -113,7 +113,7 @@ mg::PlatformPriority probe_graphics_platform(
         return mg::PlatformPriority::unsupported;
     }
 
-    // Check for master
+    // Check for suitability
     mir::Fd tmp_fd;
     for (auto& device : drm_devices)
     {
@@ -201,34 +201,11 @@ mg::PlatformPriority probe_graphics_platform(
     if (nested)
         return mg::PlatformPriority::supported;
 
-    if (tmp_fd >= 0)
-    {
-        if (drmSetMaster(tmp_fd) >= 0)
-        {
-            drmDropMaster(tmp_fd);
-            return mg::PlatformPriority::best;
-        }
-    }
-
-    /* We failed to set mastership. However, still on most systems mesa-kms
-     * is the right driver to choose. Landing here just means the user did
-     * not specify --vt or is running from ssh. Still in most cases mesa-kms
-     * is the correct option so give it a go. Better to fail trying to switch
-     * VTs (and tell the user that) than to refuse to load the correct
-     * driver at all. (LP: #1528082)
-     *
-     * Just make sure we are below PlatformPriority::supported in case
-     * mesa-x11 can be used instead.
-     *
-     * TODO: Revisit the priority terminology. having a range of values between
-     *       "supported" and "unsupported" is potentially confusing.
-     * TODO: Revisit the return code of this function. We document that
-     *       integer values outside the enum are allowed but C++ disallows it
-     *       without a cast. So we should return an int or typedef to int
-     *       instead.
+    /*
+     * We haven't found any suitable devices. We've complained above about
+     * the reason, so we don't have to pretend to be supported.
      */
-    return static_cast<mg::PlatformPriority>(
-        mg::PlatformPriority::supported - 1);
+    return mg::PlatformPriority::unsupported;
 }
 
 namespace
