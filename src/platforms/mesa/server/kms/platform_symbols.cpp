@@ -16,8 +16,12 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "mesa-kms"
+#include "mir/log.h"
+
 #include "platform.h"
 #include "gbm_platform.h"
+#include "display_helpers.h"
 #include "mir/options/program_option.h"
 #include "mir/options/option.h"
 #include "mir/udev/wrapper.h"
@@ -26,8 +30,11 @@
 #include "mir/libname.h"
 #include "mir/console_services.h"
 #include "one_shot_device_observer.h"
+#include "mir/raii.h"
+#include "mir/graphics/egl_error.h"
 
 #include <EGL/egl.h>
+#include MIR_SERVER_GL_H
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
@@ -86,18 +93,23 @@ mg::PlatformPriority probe_graphics_platform(
     drm_devices.scan_devices();
 
     if (drm_devices.begin() == drm_devices.end())
+    {
+        mir::log_info("Unsupported: No DRM devices detected");
         return mg::PlatformPriority::unsupported;
+    }
 
     // We also require GBM EGL platform
     auto const* client_extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
     if (!client_extensions)
     {
         // Doesn't support EGL client extensions; Mesa does, so this is unlikely to be mesa.
+        mir::log_info("Unsupported: EGL platform does not support client extensions.");
         return mg::PlatformPriority::unsupported;
     }
     if (strstr(client_extensions, "EGL_MESA_platform_gbm") == nullptr)
     {
         // No platform_gbm support, so we can't work.
+        mir::log_info("Unsupported: EGL platform does not support EGL_MESA_platform_gbm extension");
         return mg::PlatformPriority::unsupported;
     }
 
@@ -119,12 +131,67 @@ mg::PlatformPriority probe_graphics_platform(
         try
         {
             // Rely on the console handing us a DRM master...
-            console->acquire_device(
+            auto const device_cleanup = console->acquire_device(
                 major(devnum), minor(devnum),
                 std::make_unique<mgc::OneShotDeviceObserver>(tmp_fd)).get();
 
             if (tmp_fd != mir::Fd::invalid)
+            {
+                mgm::helpers::GBMHelper gbm_device{tmp_fd};
+                EGLDisplay dpy;
+                auto dpy_cleanup = mir::raii::paired_calls(
+                    [&dpy, &gbm_device]()
+                    {
+                        dpy = eglGetDisplay(static_cast<EGLNativeDisplayType>(gbm_device.device));
+                    },
+                    [&dpy]()
+                    {
+                        if (dpy != EGL_NO_DISPLAY)
+                        {
+                            eglTerminate(dpy);
+                        }
+                    });
+
+                if (dpy == EGL_NO_DISPLAY)
+                {
+                    mir::log_info(
+                        "Probe failed to create EGL display on device %s: %s",
+                        device.devnode(),
+                        mg::egl_category().message(eglGetError()).c_str());
+                    continue;
+                }
+
+                auto egl_init = mir::raii::paired_calls(
+                    [&dpy]()
+                    {
+                        EGLint major_ver{1}, minor_ver{4};
+                        if (!eglInitialize(dpy, &major_ver, &minor_ver))
+                        {
+                            mir::log_debug("Failed to initialise EGL: %s", mg::egl_category().message(eglGetError()).c_str());
+                            dpy = EGL_NO_DISPLAY;
+                        }
+                    },
+                    [&dpy]()
+                    {
+                        if (dpy != EGL_NO_DISPLAY)
+                        {
+                            eglTerminate(dpy);
+                        }
+                    });
+
+                eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+
+                if (strncmp(
+                    "llvmpipe",
+                    reinterpret_cast<char const*>(glGetString(GL_RENDERER)),
+                    strlen("llvmpipe")) == 0)
+                {
+                     mir::log_info("Detected software renderer: %s", glGetString(GL_RENDERER));
+                     return mg::PlatformPriority::supported;
+                }
+
                 return mg::PlatformPriority::best;
+            }
         }
         catch (...)
         {

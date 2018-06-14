@@ -40,6 +40,7 @@
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_egl.h"
+#include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/fd_matcher.h"
 #include "mir/test/doubles/stub_console_services.h"
 
@@ -71,6 +72,12 @@ public:
         Mock::VerifyAndClearExpectations(&mock_gbm);
         ON_CALL(mock_egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
             .WillByDefault(Return("EGL_AN_extension_string EGL_MESA_platform_gbm"));
+        ON_CALL(mock_egl, eglGetDisplay(_))
+            .WillByDefault(Return(fake_display));
+        ON_CALL(mock_gl, glGetString(GL_RENDERER))
+            .WillByDefault(
+                Return(
+                    reinterpret_cast<GLubyte const*>("GeForce GTX 1070/PCIe/SSE2")));
         fake_devices.add_standard_device("standard-drm-devices");
     }
 
@@ -83,9 +90,11 @@ public:
                 mgm::BypassOption::allowed);
     }
 
+    EGLDisplay fake_display{reinterpret_cast<EGLDisplay>(0xabcd)};
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
     ::testing::NiceMock<mtd::MockGBM> mock_gbm;
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
+    ::testing::NiceMock<mtd::MockGL> mock_gl;
     mtf::UdevEnvironment fake_devices;
 };
 }
@@ -165,6 +174,25 @@ TEST_F(MesaGraphicsPlatform, probe_returns_best_when_master)
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::best, probe(stub_vt, options));
+}
+
+TEST_F(MesaGraphicsPlatform, probe_returns_supported_on_llvmpipe)
+{
+    mtf::UdevEnvironment udev_environment;
+    boost::program_options::options_description po;
+    mir::options::ProgramOption options;
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
+
+    udev_environment.add_standard_device("standard-drm-devices");
+
+    ON_CALL(mock_gl, glGetString(GL_RENDERER))
+        .WillByDefault(
+            testing::Return(
+                reinterpret_cast<GLubyte const*>("llvmpipe (you know, some version)")));
+
+    mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
+    auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
+    EXPECT_EQ(mg::PlatformPriority::supported, probe(stub_vt, options));
 }
 
 TEST_F(MesaGraphicsPlatform, probe_returns_in_between_when_cant_set_master)
