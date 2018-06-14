@@ -239,6 +239,19 @@ private:
     EGLStreamKHR output_stream;
     EGLSurface surface;
 };
+
+mge::KMSDisplayConfiguration create_display_configuration(
+    mir::Fd const& drm_node,
+    EGLDisplay dpy,
+    EGLContext context)
+{
+    if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, context) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION((
+            mg::egl_error("Failed to make EGL context current for display construction")));
+    }
+    return mge::KMSDisplayConfiguration{drm_node, dpy};
+}
 }
 
 mge::Display::Display(
@@ -250,7 +263,7 @@ mge::Display::Display(
       display{display},
       config{choose_config(display, gl_conf)},
       context{create_context(display, config)},
-      display_configuration{this->drm_node, display}
+      display_configuration{create_display_configuration(this->drm_node, display, context)}
 {
     auto ret = drmSetClientCap(drm_node, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
     if (ret != 0)
