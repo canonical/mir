@@ -48,6 +48,14 @@ public:
     explicit StartupInternalClient(std::string name, ClientObject const& client_object) :
         StartupInternalClient(name, client_object, client_object) {}
 
+    explicit StartupInternalClient(
+        std::function<void(int fd)> client_code,
+        std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification);
+
+    template <typename ClientObject>
+    explicit StartupInternalClient(ClientObject const& client_object) :
+        StartupInternalClient(client_object, client_object) {}
+
     ~StartupInternalClient();
 
     void operator()(mir::Server& server);
@@ -76,6 +84,18 @@ public:
         launch(
             name,
             [&](mir::client::Connection connection) { client_object(connection); },
+            [&](std::weak_ptr<mir::scene::Session> const session) { client_object(session); });
+    }
+
+    void launch(
+        std::function<void(int fd)> const& wayland_fd,
+        std::function<void(std::weak_ptr<mir::scene::Session> const session)> const& connect_notification) const;
+
+    template <typename ClientObject>
+    void launch(ClientObject& client_object) const
+    {
+        launch(
+            [&](int fd) { client_object(fd); },
             [&](std::weak_ptr<mir::scene::Session> const session) { client_object(session); });
     }
 
