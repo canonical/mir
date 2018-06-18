@@ -60,6 +60,7 @@ public:
                                std::vector<mir::geometry::Rectangle>& input_shape_accumulator,
                                geometry::Displacement const& parent_offset) const;
 
+    geometry::Displacement total_offset() const override { return parent->total_offset(); }
     bool synchronized() const override;
     SurfaceId surface_id() const override;
 

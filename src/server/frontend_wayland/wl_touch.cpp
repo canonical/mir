@@ -41,7 +41,7 @@ mf::WlTouch::~WlTouch()
     on_destroy(this);
 }
 
-void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* surface)
+void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* main_surface)
 {
     // TODO: support for touches on subsurfaces
     auto const input_ev = mir_touch_event_input_event(touch_ev);
@@ -58,7 +58,7 @@ void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* surface
         {
         case mir_touch_action_down:
         {
-            auto const transformed = surface->transform_point(point);
+            auto const transformed = main_surface->transform_point(point);
             handle_down(transformed.position,
                         transformed.surface,
                         mir_input_event_get_event_time_ms(input_ev),
@@ -70,22 +70,19 @@ void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* surface
             break;
         case mir_touch_action_change:
         {
-            auto const transformed = surface->transform_point(point);
-            if (focused_surface_for_ids[touch_id] == transformed.surface)
+            auto current_surface = focused_surface_for_ids.find(touch_id);
+            if (current_surface == focused_surface_for_ids.end())
             {
-                wl_touch_send_motion(resource,
-                                     mir_input_event_get_event_time_ms(input_ev),
-                                     touch_id,
-                                     wl_fixed_from_double(transformed.position.x.as_int()),
-                                     wl_fixed_from_double(transformed.position.y.as_int()));
+                log_warning("WlTouch::handle_event() called with mir_touch_action_change action but touch id that has not been registered");
             }
             else
             {
-                handle_up(mir_input_event_get_event_time_ms(input_ev), touch_id);
-                handle_down(transformed.position,
-                            transformed.surface,
-                            mir_input_event_get_event_time_ms(input_ev),
-                            touch_id);
+                auto const transformed_point = current_surface->second->total_offset() + point;
+                wl_touch_send_motion(resource,
+                                     mir_input_event_get_event_time_ms(input_ev),
+                                     touch_id,
+                                     wl_fixed_from_double(transformed_point.x.as_int()),
+                                     wl_fixed_from_double(transformed_point.y.as_int()));
             }
             break;
         }

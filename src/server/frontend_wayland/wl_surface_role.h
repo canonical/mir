@@ -54,6 +54,7 @@ class WlSurfaceRole
 {
 public:
     virtual bool synchronized() const { return false; }
+    virtual geometry::Displacement total_offset() const { return {}; }
     virtual SurfaceId surface_id() const = 0;
     virtual void refresh_surface_data_now() = 0;
     virtual void commit(WlSurfaceState const& state) = 0;

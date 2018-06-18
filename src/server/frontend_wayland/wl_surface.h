@@ -121,6 +121,7 @@ public:
 
     std::shared_ptr<bool> destroyed_flag() const { return destroyed; }
     geometry::Displacement offset() const { return offset_; }
+    geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
     geometry::Size buffer_size() const { return buffer_size_.value_or(geometry::Size{}); }
     bool synchronized() const;
     Position transform_point(geometry::Point point);
