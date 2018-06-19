@@ -239,10 +239,16 @@ void lifecycle_event_callback(MirConnection* /*connection*/, MirLifecycleState s
 #endif
 }
 
-struct SpinnerSplash::Self
+struct SpinnerSplash::Self : SplashSession
 {
-    std::mutex mutex;
-    std::weak_ptr<mir::scene::Session> session;
+    std::mutex mutable mutex;
+    std::weak_ptr<mir::scene::Session> session_;
+
+    std::shared_ptr<mir::scene::Session> session() const override
+    {
+        std::lock_guard<decltype(mutex)> lock{mutex};
+        return session_.lock();
+    }
 };
 
 SpinnerSplash::SpinnerSplash() : self{std::make_shared<Self>()} {}
@@ -252,136 +258,145 @@ SpinnerSplash::~SpinnerSplash() = default;
 void SpinnerSplash::operator()(std::weak_ptr<mir::scene::Session> const& session)
 {
     std::lock_guard<decltype(self->mutex)> lock{self->mutex};
-    self->session = session;
+    self->session_ = session;
 }
 
-auto SpinnerSplash::session() const
--> std::shared_ptr<mir::scene::Session>
+void SpinnerSplash::operator()(struct wl_display* /*display*/)
 {
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
-    return self->session.lock();
 }
 
-void SpinnerSplash::operator()(MirConnection* const connection)
-try
+SpinnerSplash::operator std::shared_ptr<SplashSession>() const
 {
-#ifndef MIR_EGL_UNAVAILABLE
-    GLuint prog[2];
-    GLuint texture[2];
-    GLint vpos[2];
-    GLint theta;
-    GLint fadeGlow;
-    GLint fadeLogo;
-    GLint aTexCoords[2];
-    GLint sampler[2];
-
-    mir_connection_set_lifecycle_event_callback(connection, &lifecycle_event_callback, &dying);
-    auto const windows = mir_eglapp_init(connection);
-
-    if (!windows.size()) return;
-
-    double pixelSize = 10 * 11.18;
-    const GLfloat texCoordsSpinner[] =
-    {
-        -0.5f, 0.5f,
-        -0.5f, -0.5f,
-        0.5f, 0.5f,
-        0.5f, -0.5f,
-    };
-
-    prog[0] = createShaderProgram(vShaderSrcSpinner, fShaderSrcGlow);
-    prog[1] = createShaderProgram(vShaderSrcSpinner, fShaderSrcLogo);
-
-    // setup proper GL-blending
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glBlendEquation(GL_FUNC_ADD);
-
-    // get locations of shader-attributes/uniforms
-    vpos[0] = glGetAttribLocation(prog[0], "vPosition");
-    aTexCoords[0] = glGetAttribLocation(prog[0], "aTexCoords");
-    theta = glGetUniformLocation(prog[0], "theta");
-    sampler[0] = glGetUniformLocation(prog[0], "uSampler");
-    fadeGlow = glGetUniformLocation(prog[0], "uFadeGlow");
-    vpos[1] = glGetAttribLocation(prog[1], "vPosition");
-    aTexCoords[1] = glGetAttribLocation(prog[1], "aTexCoords");
-    sampler[1] = glGetUniformLocation(prog[1], "uSampler");
-    fadeLogo = glGetUniformLocation(prog[1], "uFadeLogo");
-
-    // create and upload spinner-artwork
-    // note that the embedded image data has pre-multiplied alpha
-    glGenTextures(2, texture);
-    uploadTexture(texture[0], spinner_glow);
-    uploadTexture(texture[1], spinner_logo);
-
-    // bunch of shader-attributes to enable
-    glVertexAttribPointer(aTexCoords[0], 2, GL_FLOAT, GL_FALSE, 0, texCoordsSpinner);
-    glVertexAttribPointer(aTexCoords[1], 2, GL_FLOAT, GL_FALSE, 0, texCoordsSpinner);
-    glEnableVertexAttribArray(vpos[0]);
-    glEnableVertexAttribArray(vpos[1]);
-    glEnableVertexAttribArray(aTexCoords[0]);
-    glEnableVertexAttribArray(aTexCoords[1]);
-    glActiveTexture(GL_TEXTURE0);
-
-    AnimationValues anim = {0.0, 0.0, 1.0, 0.0, 0.0};
-    GTimer* timer = g_timer_new();
-
-    do
-    {
-        for (auto const& surface : windows)
-            surface->paint([&](unsigned int width, unsigned int height)
-            {
-                GLfloat halfRealWidth = ((2.0 / width) * pixelSize) / 2.0;
-                GLfloat halfRealHeight = ((2.0 / height) * pixelSize) / 2.0;
-
-                const GLfloat vertices[] =
-                    {
-                        halfRealWidth,  halfRealHeight,
-                        halfRealWidth, -halfRealHeight,
-                        -halfRealWidth, halfRealHeight,
-                        -halfRealWidth,-halfRealHeight,
-                    };
-
-                glVertexAttribPointer(vpos[0], 2, GL_FLOAT, GL_FALSE, 0, vertices);
-                glVertexAttribPointer(vpos[1], 2, GL_FLOAT, GL_FALSE, 0, vertices);
-
-                glViewport(0, 0, width, height);
-
-                GLfloat color[] = {LIGHT_AUBERGINE};
-                for (auto& c : color) { c*= anim.fadeBackground; }
-
-                glClearColor(color[0], color[1], color[2], anim.fadeBackground);
-                glClear(GL_COLOR_BUFFER_BIT);
-
-                // draw glow
-                glUseProgram(prog[0]);
-                glBindTexture(GL_TEXTURE_2D, texture[0]);
-                glUniform1i(sampler[0], 0);
-                glUniform1f(theta, anim.angle);
-                glUniform1f(fadeGlow, anim.fadeGlow);
-                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-                // draw logo
-                glUseProgram(prog[1]);
-                glBindTexture(GL_TEXTURE_2D, texture[1]);
-                glUniform1i(sampler[1], 0);
-                glUniform1f(theta, anim.angle);
-                glUniform1f(fadeLogo, anim.fadeLogo);
-                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-            });
-
-        if (dying.load())
-            throw std::runtime_error("Server disconnected");
-    }
-    while (updateAnimation(timer, &anim));
-
-    glDeleteTextures(2, texture);
-    g_timer_destroy (timer);
-#else
-    (void)connection;
-#endif
+    return self;
 }
-catch (std::exception const& x)
-{
-    printf("%s\n", x.what());
-}
+
+//auto SpinnerSplash::session() const
+//-> std::shared_ptr<mir::scene::Session>
+//{
+//    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
+//    return self->session.lock();
+//}
+
+//void SpinnerSplash::operator()(MirConnection* const connection)
+//try
+//{
+//#ifndef MIR_EGL_UNAVAILABLE
+//    GLuint prog[2];
+//    GLuint texture[2];
+//    GLint vpos[2];
+//    GLint theta;
+//    GLint fadeGlow;
+//    GLint fadeLogo;
+//    GLint aTexCoords[2];
+//    GLint sampler[2];
+//
+//    mir_connection_set_lifecycle_event_callback(connection, &lifecycle_event_callback, &dying);
+//    auto const windows = mir_eglapp_init(connection);
+//
+//    if (!windows.size()) return;
+//
+//    double pixelSize = 10 * 11.18;
+//    const GLfloat texCoordsSpinner[] =
+//    {
+//        -0.5f, 0.5f,
+//        -0.5f, -0.5f,
+//        0.5f, 0.5f,
+//        0.5f, -0.5f,
+//    };
+//
+//    prog[0] = createShaderProgram(vShaderSrcSpinner, fShaderSrcGlow);
+//    prog[1] = createShaderProgram(vShaderSrcSpinner, fShaderSrcLogo);
+//
+//    // setup proper GL-blending
+//    glEnable(GL_BLEND);
+//    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+//    glBlendEquation(GL_FUNC_ADD);
+//
+//    // get locations of shader-attributes/uniforms
+//    vpos[0] = glGetAttribLocation(prog[0], "vPosition");
+//    aTexCoords[0] = glGetAttribLocation(prog[0], "aTexCoords");
+//    theta = glGetUniformLocation(prog[0], "theta");
+//    sampler[0] = glGetUniformLocation(prog[0], "uSampler");
+//    fadeGlow = glGetUniformLocation(prog[0], "uFadeGlow");
+//    vpos[1] = glGetAttribLocation(prog[1], "vPosition");
+//    aTexCoords[1] = glGetAttribLocation(prog[1], "aTexCoords");
+//    sampler[1] = glGetUniformLocation(prog[1], "uSampler");
+//    fadeLogo = glGetUniformLocation(prog[1], "uFadeLogo");
+//
+//    // create and upload spinner-artwork
+//    // note that the embedded image data has pre-multiplied alpha
+//    glGenTextures(2, texture);
+//    uploadTexture(texture[0], spinner_glow);
+//    uploadTexture(texture[1], spinner_logo);
+//
+//    // bunch of shader-attributes to enable
+//    glVertexAttribPointer(aTexCoords[0], 2, GL_FLOAT, GL_FALSE, 0, texCoordsSpinner);
+//    glVertexAttribPointer(aTexCoords[1], 2, GL_FLOAT, GL_FALSE, 0, texCoordsSpinner);
+//    glEnableVertexAttribArray(vpos[0]);
+//    glEnableVertexAttribArray(vpos[1]);
+//    glEnableVertexAttribArray(aTexCoords[0]);
+//    glEnableVertexAttribArray(aTexCoords[1]);
+//    glActiveTexture(GL_TEXTURE0);
+//
+//    AnimationValues anim = {0.0, 0.0, 1.0, 0.0, 0.0};
+//    GTimer* timer = g_timer_new();
+//
+//    do
+//    {
+//        for (auto const& surface : windows)
+//            surface->paint([&](unsigned int width, unsigned int height)
+//            {
+//                GLfloat halfRealWidth = ((2.0 / width) * pixelSize) / 2.0;
+//                GLfloat halfRealHeight = ((2.0 / height) * pixelSize) / 2.0;
+//
+//                const GLfloat vertices[] =
+//                    {
+//                        halfRealWidth,  halfRealHeight,
+//                        halfRealWidth, -halfRealHeight,
+//                        -halfRealWidth, halfRealHeight,
+//                        -halfRealWidth,-halfRealHeight,
+//                    };
+//
+//                glVertexAttribPointer(vpos[0], 2, GL_FLOAT, GL_FALSE, 0, vertices);
+//                glVertexAttribPointer(vpos[1], 2, GL_FLOAT, GL_FALSE, 0, vertices);
+//
+//                glViewport(0, 0, width, height);
+//
+//                GLfloat color[] = {LIGHT_AUBERGINE};
+//                for (auto& c : color) { c*= anim.fadeBackground; }
+//
+//                glClearColor(color[0], color[1], color[2], anim.fadeBackground);
+//                glClear(GL_COLOR_BUFFER_BIT);
+//
+//                // draw glow
+//                glUseProgram(prog[0]);
+//                glBindTexture(GL_TEXTURE_2D, texture[0]);
+//                glUniform1i(sampler[0], 0);
+//                glUniform1f(theta, anim.angle);
+//                glUniform1f(fadeGlow, anim.fadeGlow);
+//                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+//
+//                // draw logo
+//                glUseProgram(prog[1]);
+//                glBindTexture(GL_TEXTURE_2D, texture[1]);
+//                glUniform1i(sampler[1], 0);
+//                glUniform1f(theta, anim.angle);
+//                glUniform1f(fadeLogo, anim.fadeLogo);
+//                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+//            });
+//
+//        if (dying.load())
+//            throw std::runtime_error("Server disconnected");
+//    }
+//    while (updateAnimation(timer, &anim));
+//
+//    glDeleteTextures(2, texture);
+//    g_timer_destroy (timer);
+//#else
+//    (void)connection;
+//#endif
+//}
+//catch (std::exception const& x)
+//{
+//    printf("%s\n", x.what());
+//}
