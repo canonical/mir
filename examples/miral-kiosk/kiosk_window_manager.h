@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2017 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -28,7 +28,7 @@ using namespace mir::geometry;
 class KioskWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy
 {
 public:
-    KioskWindowManagerPolicy(miral::WindowManagerTools const& tools, SwSplash const&);
+    KioskWindowManagerPolicy(miral::WindowManagerTools const& tools, SplashSession const&);
 
     auto place_new_window(miral::ApplicationInfo const& app_info, miral::WindowSpecification const& request)
     -> miral::WindowSpecification override;
@@ -56,7 +56,7 @@ private:
         mir_input_event_modifier_ctrl |
         mir_input_event_modifier_meta;
 
-    SwSplash const splash;
+    SplashSession const splash;
 };
 
 #endif /* MIRAL_KIOSK_WINDOW_MANAGER_H */

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2017 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -27,7 +27,7 @@
 namespace ms = mir::scene;
 using namespace miral;
 
-KioskWindowManagerPolicy::KioskWindowManagerPolicy(WindowManagerTools const& tools, SwSplash const& splash) :
+KioskWindowManagerPolicy::KioskWindowManagerPolicy(WindowManagerTools const& tools, SplashSession const& splash) :
     CanonicalWindowManagerPolicy{tools},
     splash{splash}
 {

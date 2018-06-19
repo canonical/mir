@@ -112,7 +112,7 @@ private:
     Point resize_top_left;
     Size resize_size;
 
-    SwSplash const spinner;
+    SplashSession const spinner;
 
     std::unique_ptr<DecorationProvider> const decoration_provider;
 

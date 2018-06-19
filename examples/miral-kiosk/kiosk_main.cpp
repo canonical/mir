@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * under the terms of the GNU General Public License version 2 or 3 as as
@@ -32,7 +32,7 @@ namespace
 {
 struct KioskAuthorizer : miral::ApplicationAuthorizer
 {
-    KioskAuthorizer(SwSplash const& splash) : splash{splash}{}
+    KioskAuthorizer(SplashSession const& splash) : splash{splash}{}
 
     virtual bool connection_is_allowed(miral::ApplicationCredentials const& creds) override
     {
@@ -73,7 +73,7 @@ struct KioskAuthorizer : miral::ApplicationAuthorizer
 
     static std::atomic<bool> startup_only;
 
-    SwSplash splash;
+    SplashSession splash;
 };
 
 std::atomic<bool> KioskAuthorizer::startup_only{false};

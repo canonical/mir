@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2016 Canonical Ltd.
+ * Copyright © 2015-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -72,7 +72,7 @@ void TilingWindowManagerPolicy::MRUTileList::enumerate(Enumerator const& enumera
 
 TilingWindowManagerPolicy::TilingWindowManagerPolicy(
     WindowManagerTools const& tools,
-    SwSplash const& spinner,
+    SplashSession const& spinner,
     miral::InternalClientLauncher const& launcher) :
     tools{tools},
     spinner{spinner},
@@ -282,13 +282,6 @@ bool TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* ev
     auto const action = mir_keyboard_event_action(event);
     auto const scan_code = mir_keyboard_event_scan_code(event);
     auto const modifiers = mir_keyboard_event_modifiers(event) & modifier_mask;
-
-    if (action == mir_keyboard_action_down && scan_code == KEY_F12 &&
-        (modifiers & modifier_mask) == mir_input_event_modifier_alt)
-    {
-        launcher.launch("Spinner", spinner);
-        return true;
-    }
 
     if (action == mir_keyboard_action_down && scan_code == KEY_F11)
     {

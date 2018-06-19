@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -19,11 +19,7 @@
 #ifndef MIRAL_SHELL_SW_SPLASH_H
 #define MIRAL_SHELL_SW_SPLASH_H
 
-#include <mir_toolkit/client_types.h>
-
-#include <memory>
-
-namespace mir { class Server; namespace scene { class Session; }}
+#include "splash_session.h"
 
 // A very simple s/w rendered splash animation
 class SwSplash
@@ -34,7 +30,8 @@ public:
 
     void operator()(MirConnection* connection);
     void operator()(std::weak_ptr<mir::scene::Session> const& session);
-    auto session() const -> std::shared_ptr<mir::scene::Session>;
+
+    operator SplashSession() const;
 
 private:
     struct Self;
