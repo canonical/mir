@@ -220,7 +220,7 @@ void WlInternalClientRunner<Base>::run(mir::Server& server)
         {
             if (auto const display = wl_display_connect_to_fd(fd))
             {
-                auto const deleter = mir::raii::deleter_for(display, [](::wl_display* d) { wl_display_disconnect(d); });
+                auto const deleter = mir::raii::deleter_for(display, &wl_display_disconnect);
                 client_code(display);
             }
         }};
