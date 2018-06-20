@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * under the terms of the GNU General Public License version 2 or 3 as as
@@ -17,27 +17,21 @@
 #ifndef UNITYSYSTEMCOMPOSITOR_MIREGL_H
 #define UNITYSYSTEMCOMPOSITOR_MIREGL_H
 
-#include <mir/client/surface.h>
-#include <mir/client/window.h>
-
 #include <EGL/egl.h>
 
 #include <memory>
+#include <vector>
 
 class MirEglApp;
 class MirEglSurface;
 
-std::shared_ptr<MirEglApp> make_mir_eglapp(
-    MirConnection* const connection,
-    MirPixelFormat const& pixel_format);
+std::shared_ptr<MirEglApp> make_mir_eglapp(struct wl_display* display);
+std::vector<std::shared_ptr<MirEglSurface>> mir_surface_init(std::shared_ptr<MirEglApp> const& app);
 
 class MirEglSurface
 {
 public:
-    MirEglSurface(
-        std::shared_ptr<MirEglApp> const& mir_egl_app,
-        char const* name,
-        MirOutput const* output);
+    MirEglSurface(std::shared_ptr<MirEglApp> const& mir_egl_app, int width, int height);
 
     ~MirEglSurface();
 
@@ -57,11 +51,32 @@ private:
     unsigned int height() const;
 
     std::shared_ptr<MirEglApp> const mir_egl_app;
-    mir::client::Surface surface;
-    mir::client::Window window;
+
+    void* content_area = nullptr;
+    struct wl_display* display = nullptr;
+    struct wl_surface* surface = nullptr;
+    struct wl_callback* new_frame_signal = nullptr;
+    struct wl_shell_surface* window = nullptr;
+    struct Buffers
+    {
+        struct wl_buffer* buffer;
+        bool available;
+    } buffers[4];
+    bool waiting_for_buffer = true;
+
     EGLSurface eglsurface;
     int width_;
     int height_;
+
+    static void shell_surface_ping(void *data, struct wl_shell_surface *wl_shell_surface, uint32_t serial);
+
+    static void shell_surface_configure(void *data,
+        struct wl_shell_surface *wl_shell_surface,
+        uint32_t edges,
+        int32_t width,
+        int32_t height);
+    static void shell_surface_popup_done(void *data, struct wl_shell_surface *wl_shell_surface);
+
 };
 
 #endif //UNITYSYSTEMCOMPOSITOR_MIREGL_H

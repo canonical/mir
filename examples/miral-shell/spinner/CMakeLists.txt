@@ -63,6 +63,8 @@ target_link_libraries(miral-spinner
   example-shell-lib
   mirclientcpp
   EGL
+  wayland-egl
+  ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
   ${GLIB_LDFLAGS}
   ${GLESv2_LIBRARIES}
   ${MIRCLIENT_LDFLAGS}

@@ -89,7 +89,7 @@ int main(int argc, char const* argv[])
             config_keymap,
             debug_extensions,
             AppendEventFilter{quit_on_ctrl_alt_bksp},
-            StartupInternalClient{"Intro", spinner},
+            StartupInternalClient{spinner},
             pre_init(CommandLineOption{[&](std::string const& typeface) { ::titlebar::font_file(typeface); },
                               "shell-titlebar-font", "font file to use for titlebars", ::titlebar::font_file()})
         });
