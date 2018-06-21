@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
 find_package(GLESv2 REQUIRED)
 find_package(PIL REQUIRED)
@@ -59,12 +60,13 @@ add_library(miral-spinner STATIC
   ${CMAKE_CURRENT_BINARY_DIR}/spinner_glow.h
 )
 
+pkg_check_modules(WAYLAND_EGL REQUIRED wayland-egl)
+
 target_link_libraries(miral-spinner
   example-shell-lib
   mirclientcpp
   EGL
-  wayland-egl
-  ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
+  ${WAYLAND_EGL_LDFLAGS} ${WAYLAND_EGL_LIBRARIES}
   ${GLIB_LDFLAGS}
   ${GLESv2_LIBRARIES}
   ${MIRCLIENT_LDFLAGS}
