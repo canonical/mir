@@ -32,6 +32,7 @@
 namespace mir
 {
 class EmergencyCleanupRegistry;
+class ConsoleServices;
 
 namespace dispatch
 {
@@ -99,13 +100,15 @@ typedef mir::UniqueModulePtr<Platform>(*CreatePlatform)(
     options::Option const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
+    std::shared_ptr<ConsoleServices> const& console,
     std::shared_ptr<InputReport> const& report);
 
 typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
 
 typedef PlatformPriority(*ProbePlatform)(
-    options::Option const& options);
+    options::Option const& options,
+    mir::ConsoleServices& console);
 
 typedef ModuleProperties const*(*DescribeModule)();
 
@@ -137,6 +140,7 @@ mir::UniqueModulePtr<mir::input::Platform> create_input_platform(
     mir::options::Option const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::input::InputDeviceRegistry> const& input_device_registry,
+    std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::input::InputReport> const& report);
 
 /**
@@ -160,7 +164,9 @@ void add_input_platform_options(boost::program_options::options_description& con
  *
  * \ingroup platform_enablement
  */
-mir::input::PlatformPriority probe_input_platform(mir::options::Option const& options);
+mir::input::PlatformPriority probe_input_platform(
+    mir::options::Option const& options,
+    mir::ConsoleServices& console);
 
 /**
  * describe_input_module should return a description of the input platform.

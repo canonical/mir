@@ -38,6 +38,7 @@ mtd::MockLibInput::MockLibInput()
                               {
                                   if (events.empty())
                                       return nullptr;
+                                  libinput_simulation_queue.dispatch(mir::dispatch::FdEvent::readable);
                                   auto ret = events.front();
                                   events.erase(events.begin());
                                   return ret;
@@ -78,7 +79,7 @@ void mtd::MockLibInput::push_back(libinput_event* event)
     wake();
 }
 
-void mtd::MockLibInput::setup_device(libinput_device* dev, libinput_device_group* group, udev_device* u_dev, char const* name, char const* sysname, unsigned int vendor, unsigned int product)
+void mtd::MockLibInput::setup_device(libinput_device* dev, libinput_device_group* group, std::shared_ptr<udev_device> u_dev, char const* name, char const* sysname, unsigned int vendor, unsigned int product)
 {
     ON_CALL(*this, libinput_device_get_name(dev))
         .WillByDefault(Return(name));
@@ -95,7 +96,7 @@ void mtd::MockLibInput::setup_device(libinput_device* dev, libinput_device_group
     ON_CALL(*this, libinput_device_unref(dev))
         .WillByDefault(Return(nullptr));
     ON_CALL(*this, libinput_device_get_udev_device(dev))
-        .WillByDefault(Return(u_dev));
+        .WillByDefault(InvokeWithoutArgs([u_dev]() { return udev_device_ref(u_dev.get());}));
 }
 
 mtd::MockLibInput::~MockLibInput() noexcept
