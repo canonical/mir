@@ -176,5 +176,6 @@ MIR_PLATFORM_0.32 {
    mir::udev::Device::sysname*;
    mir::udev::Device::syspath*;
    mir::udev::Monitor::process_event*;
+   mir::udev::Context::device_from_syspath*;
   };
 } MIR_PLATFORM_0.31;

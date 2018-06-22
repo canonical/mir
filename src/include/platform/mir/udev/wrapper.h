@@ -65,6 +65,7 @@ public:
     virtual char const* sysname() const = 0;
     virtual bool initialised() const = 0;
     virtual char const* syspath() const = 0;
+    virtual std::shared_ptr<udev_device> as_raw() const = 0;
 protected:
     Device() = default;
 };

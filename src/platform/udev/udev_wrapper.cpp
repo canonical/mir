@@ -44,6 +44,7 @@ public:
     virtual char const* sysname() const override;
     virtual bool initialised() const override;
     virtual char const* syspath() const override;
+    virtual std::shared_ptr<udev_device> as_raw() const override;
 
     udev_device* const dev;
 };
@@ -106,6 +107,14 @@ bool DeviceImpl::initialised() const
 char const* DeviceImpl::syspath() const
 {
     return udev_device_get_syspath(dev);
+}
+
+std::shared_ptr<udev_device> DeviceImpl::as_raw() const
+{
+    return std::shared_ptr<udev_device>{
+        udev_device_ref(dev),
+        &udev_device_unref
+    };
 }
 }
 
