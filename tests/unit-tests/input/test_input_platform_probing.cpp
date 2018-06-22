@@ -132,8 +132,13 @@ TEST_F(InputPlatformProbe, stub_platform_not_picked_up_by_default)
 {
     disable_x11();
     auto platform =
-        mi::probe_input_platforms(mock_options, mt::fake_shared(stub_emergency), mt::fake_shared(mock_registry),
-                                  mr::null_input_report(), *stub_prober_report);
+        mi::probe_input_platforms(
+            mock_options,
+            mt::fake_shared(stub_emergency),
+            mt::fake_shared(mock_registry),
+            nullptr,
+            mr::null_input_report(),
+            *stub_prober_report);
 
     EXPECT_THAT(platform, OfPtrType<mi::evdev::Platform>());
 }
@@ -143,8 +148,13 @@ char const vt[] = "vt";
 TEST_F(InputPlatformProbe, x11_platform_found_and_used_when_display_connection_works)
 {
     auto platform =
-        mi::probe_input_platforms(mock_options, mt::fake_shared(stub_emergency), mt::fake_shared(mock_registry),
-                                  mr::null_input_report(), *stub_prober_report);
+        mi::probe_input_platforms(
+            mock_options,
+            mt::fake_shared(stub_emergency),
+            mt::fake_shared(mock_registry),
+            nullptr,
+            mr::null_input_report(),
+            *stub_prober_report);
 
     EXPECT_THAT(platform, OfPtrType<mi::X::XInputPlatform>());
 }
@@ -159,8 +169,13 @@ TEST_F(InputPlatformProbe, when_multiple_x11_platforms_are_eligible_only_one_is_
     ASSERT_THAT(link(real_lib.c_str(), fake_lib.c_str()), Eq(0));
 
     auto platform =
-        mi::probe_input_platforms(mock_options, mt::fake_shared(stub_emergency), mt::fake_shared(mock_registry),
-                                  mr::null_input_report(), *stub_prober_report);
+        mi::probe_input_platforms(
+            mock_options,
+            mt::fake_shared(stub_emergency),
+            mt::fake_shared(mock_registry),
+            nullptr,
+            mr::null_input_report(),
+            *stub_prober_report);
 
     EXPECT_THAT(platform, OfPtrType<mi::X::XInputPlatform>());
 
@@ -171,8 +186,13 @@ TEST_F(InputPlatformProbe, x11_input_platform_not_used_when_vt_specified)
 {
     ON_CALL(mock_options, is_set(StrEq(vt))).WillByDefault(Return(true));
     auto platform =
-        mi::probe_input_platforms(mock_options, mt::fake_shared(stub_emergency), mt::fake_shared(mock_registry),
-                                  mr::null_input_report(), *stub_prober_report);
+        mi::probe_input_platforms(
+            mock_options,
+            mt::fake_shared(stub_emergency),
+            mt::fake_shared(mock_registry),
+            nullptr,
+            mr::null_input_report(),
+            *stub_prober_report);
 
     EXPECT_THAT(platform, OfPtrType<mi::evdev::Platform>());
 }
@@ -185,7 +205,12 @@ TEST_F(InputPlatformProbe, allows_forcing_stub_input_platform)
     platform_input_lib_value = mtf::server_input_platform("input-stub.so");
     platform_input_lib_value_as_any = platform_input_lib_value;
     auto platform =
-        mi::probe_input_platforms(mock_options, mt::fake_shared(stub_emergency), mt::fake_shared(mock_registry),
-                                  mr::null_input_report(), *stub_prober_report);
+        mi::probe_input_platforms(
+            mock_options,
+            mt::fake_shared(stub_emergency),
+            mt::fake_shared(mock_registry),
+            nullptr,
+            mr::null_input_report(),
+            *stub_prober_report);
     EXPECT_THAT(platform, OfPtrType<mtf::StubInputPlatform>());
 }

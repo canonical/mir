@@ -27,6 +27,7 @@ set(
   ${PROJECT_SOURCE_DIR}/include/server/mir/input/seat_observer.h
   ${PROJECT_SOURCE_DIR}/include/server/mir/input/input_dispatcher.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/seat.h
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/input_probe.h
 )
 
 add_library(

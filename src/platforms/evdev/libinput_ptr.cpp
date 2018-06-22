@@ -18,6 +18,7 @@
 
 #include "libinput.h"
 #include "libinput_ptr.h"
+#include "fd_store.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -26,25 +27,25 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <linux/input.h>
+#include <iostream>
+#include <cstring>
 
 namespace mie = mir::input::evdev;
 
 namespace
 {
-int use_monotonic_clock(int evdev)
+int fd_open(const char* path, int flags, void* userdata)
 {
-    if (evdev != -1)
-    {
-        int const clockId = CLOCK_MONOTONIC;
-        // Switch each evdev 'client' to MONOTONIC
-        ioctl(evdev, EVIOCSCLOCKID, &clockId);
-    }
-    return evdev;
-}
+    auto fd_store = static_cast<mie::FdStore*>(userdata);
 
-int fd_open(const char* path, int flags, void* /*userdata*/)
-{
-    return use_monotonic_clock(::open(path, flags));
+    auto fd = fd_store->take_fd(path);
+
+    if (fcntl(fd, F_SETFL, flags) == -1)
+    {
+        std::cerr << "Failed to set flags: " << strerror(errno) << " (" << errno << ")" << std::endl;
+    }
+
+    return fd_store->take_fd(path);
 }
 
 void fd_close(int fd, void* /*userdata*/)
@@ -53,14 +54,14 @@ void fd_close(int fd, void* /*userdata*/)
 }
 
 const libinput_interface fd_ops = {fd_open, fd_close};
-char const default_seat[] = "seat0";
 }
 
-mie::LibInputPtr mie::make_libinput(udev* context)
+mie::LibInputPtr mie::make_libinput(FdStore* fd_store)
 {
-    auto ret = mie::LibInputPtr{libinput_udev_create_context(&fd_ops, nullptr, context), libinput_unref};
-    // Temporary technical debt - pick the first seat as default.
-    if (libinput_udev_assign_seat(ret.get(), default_seat) != 0)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failure assigning udev seat"));
+    auto ret = mie::LibInputPtr{
+        libinput_path_create_context(
+            &fd_ops,
+            fd_store),
+        libinput_unref};
     return ret;
 }

@@ -25,7 +25,7 @@ add_library(mirplatforminputevdevobjects OBJECT
     libinput_device_ptr.cpp
     libinput_ptr.cpp
     platform.cpp
-    )
+        fd_store.cpp fd_store.h)
 
 add_library(mirplatforminputevdev MODULE
   platform_factory.cpp

@@ -35,9 +35,11 @@ struct MockUdev
 public:
     MockUdev();
     ~MockUdev() noexcept;
+    MOCK_METHOD1(udev_device_get_devnum, dev_t(udev_device*));
     MOCK_METHOD1(udev_device_get_devnode, char const*(udev_device*));
     MOCK_METHOD2(udev_device_get_property_value, char const*(udev_device* device, char const* property));
     MOCK_METHOD1(udev_device_unref, udev_device*(udev_device* device));
+    MOCK_METHOD1(udev_device_ref,udev_device*(udev_device* device));
 };
 
 }
