@@ -40,6 +40,19 @@
 
 namespace mtf = mir_test_framework;
 
+/*
+ * Conveniently, umockdev doesn't do the setup required to make
+ * udev_device_get_is_initialized return true; this breaks the invariant
+ * "either udev_device_get_is_initialized returns true, or you will receive
+ * an ADD event for it once it is initialized".
+ *
+ * Just always return initialised for now, until we want to verify.
+ */
+int udev_device_get_is_initialized(udev_device*)
+{
+    return 1;
+}
+
 mtf::UdevEnvironment::UdevEnvironment()
     : recordings_path(mtf::test_data_path() + "/udev-recordings")
 {
