@@ -75,11 +75,15 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
     mo::Option const& /*options*/,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& /*emergency_cleanup_registry*/,
     std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
-    std::shared_ptr<mir::ConsoleServices> const& /*console*/,
+    std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mi::InputReport> const& report)
 {
     mir::assert_entry_point_signature<mi::CreatePlatform>(&create_input_platform);
-    return mir::make_module_ptr<mie::Platform>(input_device_registry, report, std::make_unique<mu::Context>());
+    return mir::make_module_ptr<mie::Platform>(
+        input_device_registry,
+        report,
+        std::make_unique<mu::Context>(),
+        console);
 }
 
 void add_input_platform_options(
@@ -90,7 +94,8 @@ void add_input_platform_options(
 }
 
 mi::PlatformPriority probe_input_platform(
-    mo::Option const& options)
+    mo::Option const& options,
+    mir::ConsoleServices&)
 {
     mir::assert_entry_point_signature<mi::ProbePlatform>(&probe_input_platform);
     if (options.is_set(host_socket_opt))

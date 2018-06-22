@@ -74,7 +74,7 @@ mir::UniqueModulePtr<mi::Platform> mi::probe_input_platforms(
                 auto const probe = module->load_function<mi::ProbePlatform>(
                     "probe_input_platform", MIR_SERVER_INPUT_PLATFORM_VERSION);
 
-                if (probe(options) > reject_platform_priority)
+                if (probe(options, *console) > reject_platform_priority)
                 {
                     platform_module = module;
 

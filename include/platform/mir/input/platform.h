@@ -107,7 +107,8 @@ typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
 
 typedef PlatformPriority(*ProbePlatform)(
-    options::Option const& options);
+    options::Option const& options,
+    mir::ConsoleServices& console);
 
 typedef ModuleProperties const*(*DescribeModule)();
 
@@ -163,7 +164,9 @@ void add_input_platform_options(boost::program_options::options_description& con
  *
  * \ingroup platform_enablement
  */
-mir::input::PlatformPriority probe_input_platform(mir::options::Option const& options);
+mir::input::PlatformPriority probe_input_platform(
+    mir::options::Option const& options,
+    mir::ConsoleServices& console);
 
 /**
  * describe_input_module should return a description of the input platform.
