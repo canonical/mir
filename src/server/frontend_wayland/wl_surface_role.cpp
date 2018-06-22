@@ -53,7 +53,7 @@ void mir::frontend::WlAbstractMirWindow::set_fullscreen(std::experimental::optio
     {
         shell::SurfaceSpecification mods;
         mods.state = mir_window_state_fullscreen;
-        mods.output_id = output_manager->output_id_for(output);
+        mods.output_id = output_manager->output_id_for(client, output);
         auto const session = get_session(client);
         shell->modify_surface(session, surface_id_, mods);
     }
@@ -61,7 +61,7 @@ void mir::frontend::WlAbstractMirWindow::set_fullscreen(std::experimental::optio
     {
         params->state = mir_window_state_fullscreen;
         if (output)
-            params->output_id = output_manager->output_id_for(output.value());
+            params->output_id = output_manager->output_id_for(client, output.value());
         create_mir_window();
     }
 }

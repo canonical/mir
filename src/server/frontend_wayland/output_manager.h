@@ -45,6 +45,8 @@ public:
 
     void handle_configuration_changed(graphics::DisplayConfigurationOutput const& /*config*/);
 
+    bool matches_client_resource(wl_client* client, struct wl_resource* resource) const;
+
 private:
     static void send_initial_config(wl_resource* client_resource, graphics::DisplayConfigurationOutput const& config);
 
@@ -65,17 +67,11 @@ class OutputManager
 public:
     OutputManager(wl_display* display, DisplayChanger& display_config);
 
-    auto output_id_for(std::experimental::optional<struct wl_resource*> const& /*output*/) ->
-    mir::optional_value<mir::graphics::DisplayConfigurationOutputId>
-    {
-        return {};
-    }
+    auto output_id_for(wl_client* client, std::experimental::optional<struct wl_resource*> const& /*output*/) const
+        -> optional_value<graphics::DisplayConfigurationOutputId>;
 
-    auto output_id_for(struct wl_resource* /*output*/) -> mir::graphics::DisplayConfigurationOutputId
-    {
-        return {};
-    }
-
+    auto output_id_for(wl_client* client, struct wl_resource* /*output*/) const
+        -> graphics::DisplayConfigurationOutputId;
 
 private:
     void create_output(graphics::DisplayConfigurationOutput const& initial_config);
