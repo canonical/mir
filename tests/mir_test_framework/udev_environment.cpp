@@ -123,6 +123,22 @@ void mtf::UdevEnvironment::emit_device_changed(std::string const& device_path)
 
 void mtf::UdevEnvironment::add_standard_device(std::string const& name)
 {
+    auto const existing_devices =
+        []()
+        {
+            std::unordered_set<std::string> devices;
+            auto ctx = std::make_shared<mir::udev::Context>();
+            mir::udev::Enumerator enumerator{ctx};
+
+            enumerator.scan_devices();
+            for (auto const& device : enumerator)
+            {
+                devices.insert(device.syspath());
+            }
+
+            return devices;
+        }();
+
     auto descriptor_filename = recordings_path + "/" + name + ".umockdev";
     GError* err = nullptr;
     if (!umockdev_testbed_add_from_file(testbed, descriptor_filename.c_str(), &err))
@@ -155,6 +171,19 @@ void mtf::UdevEnvironment::add_standard_device(std::string const& name)
                 BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Failed to load device recording: ") +
                                                          err->message));
             }
+        }
+    }
+
+    // Send an “ADDED” uevent for everything we've added. umockdev does not do this automatically
+    auto ctx = std::make_shared<mir::udev::Context>();
+    mir::udev::Enumerator enumerator{ctx};
+
+    enumerator.scan_devices();
+    for (auto const& device : enumerator)
+    {
+        if (existing_devices.count(device.syspath()) == 0)
+        {
+            umockdev_testbed_uevent(testbed, device.syspath(), "add");
         }
     }
 }
