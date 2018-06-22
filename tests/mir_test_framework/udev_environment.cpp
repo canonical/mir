@@ -20,6 +20,8 @@
 #include "mir_test_framework/udev_environment.h"
 #include "mir_test_framework/executable_path.h"
 
+#include "mir/udev/wrapper.h"
+
 #include <umockdev.h>
 
 #include <sys/types.h>
@@ -33,6 +35,7 @@
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
+#include <unordered_set>
 
 
 namespace mtf = mir_test_framework;
@@ -75,10 +78,42 @@ std::string mtf::UdevEnvironment::add_device(char const* subsystem,
     return retval;
 }
 
+namespace
+{
+void remove_subtree(UMockdevTestbed* testbed, mir::udev::Device const& device)
+{
+    auto ctx = std::make_shared<mir::udev::Context>();
+
+    mir::udev::Enumerator children{ctx};
+    children.match_parent(device);
+    children.scan_devices();
+
+    for (auto const& child : children)
+    {
+        // A udev device is always a child of itself(‽)
+        if (child != device)
+        {
+            remove_subtree(testbed, child);
+        }
+    }
+    umockdev_testbed_uevent(testbed, device.syspath(), "remove");
+    umockdev_testbed_remove_device(testbed, device.syspath());
+}
+}
+
 void mtf::UdevEnvironment::remove_device(std::string const& device_path)
 {
-    umockdev_testbed_uevent(testbed, device_path.c_str(), "remove");
-    umockdev_testbed_remove_device(testbed, device_path.c_str());
+    /* Because removing a device from umockdev will recursively remove
+     * any children, if we want to have a REMOVED event sent (and we do),
+     * we need to walk the tree of children and emit REMOVED events for them.
+     *
+     * Since we're already walking the tree, we might as well remove the
+     * devices as we go.
+     */
+    auto ctx = std::make_shared<mir::udev::Context>();
+    auto device_to_remove = ctx->device_from_syspath(device_path);
+
+    remove_subtree(testbed, *device_to_remove);
 }
 
 void mtf::UdevEnvironment::emit_device_changed(std::string const& device_path)
