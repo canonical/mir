@@ -64,6 +64,14 @@ struct EvdevInputPlatform : public ::testing::TestWithParam<std::string>
     mtf::UdevEnvironment udev;
     testing::NiceMock<mtd::MockLibInput> li_mock;
 
+    libinput* const fake_context{reinterpret_cast<libinput*>(0xaabbcc)};
+
+    EvdevInputPlatform()
+    {
+        ON_CALL(li_mock, libinput_path_create_context(_,_))
+            .WillByDefault(Return(fake_context));
+    }
+
     auto create_input_platform()
     {
         auto ctx = std::make_unique<mu::Context>();
@@ -135,10 +143,6 @@ TEST_P(EvdevInputPlatform, scans_on_start)
 
     EXPECT_CALL(mock_registry, add_device(_));
 
-    auto fake_context = reinterpret_cast<libinput*>(0xaabb);
-
-    ON_CALL(li_mock, libinput_path_create_context(_,_))
-        .WillByDefault(Return(fake_context));
     ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
         .WillByDefault(
             WithArgs<1>(
@@ -168,10 +172,6 @@ TEST_P(EvdevInputPlatform, detects_on_hotplug)
     using namespace ::testing;
     auto platform = create_input_platform();
 
-    auto fake_context = reinterpret_cast<libinput*>(0xaabb);
-
-    ON_CALL(li_mock, libinput_path_create_context(_,_))
-        .WillByDefault(Return(fake_context));
     ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
         .WillByDefault(
             WithArgs<1>(
@@ -204,10 +204,6 @@ TEST_P(EvdevInputPlatform, detects_hot_removal)
     using namespace ::testing;
     auto platform = create_input_platform();
 
-    auto fake_context = reinterpret_cast<libinput*>(0xaabb);
-
-    ON_CALL(li_mock, libinput_path_create_context(_,_))
-        .WillByDefault(Return(fake_context));
     ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
         .WillByDefault(
             WithArgs<1>(
@@ -251,10 +247,6 @@ TEST_P(EvdevInputPlatform, removes_devices_on_stop)
     using namespace ::testing;
     auto platform = create_input_platform();
 
-    auto fake_context = reinterpret_cast<libinput*>(0xaabb);
-
-    ON_CALL(li_mock, libinput_path_create_context(_,_))
-        .WillByDefault(Return(fake_context));
     ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
         .WillByDefault(
             WithArgs<1>(
@@ -296,10 +288,6 @@ TEST_F(EvdevInputPlatform, register_ungrouped_devices)
     auto platform = create_input_platform();
     EXPECT_CALL(mock_registry, add_device(_)).Times(2);
 
-    auto fake_context = reinterpret_cast<libinput*>(0xaabb);
-
-    ON_CALL(li_mock, libinput_path_create_context(_,_))
-        .WillByDefault(Return(fake_context));
     ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
         .WillByDefault(
             WithArgs<1>(
@@ -332,10 +320,6 @@ TEST_F(EvdevInputPlatform, ignore_devices_from_same_group)
 
     EXPECT_CALL(mock_registry, add_device(_)).Times(1);
 
-    auto fake_context = reinterpret_cast<libinput*>(0xaabb);
-
-    ON_CALL(li_mock, libinput_path_create_context(_,_))
-        .WillByDefault(Return(fake_context));
     ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
         .WillByDefault(
             WithArgs<1>(
