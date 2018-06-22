@@ -24,6 +24,7 @@
 #include <wayland-egl.h>
 
 #include <chrono>
+#include <algorithm>
 
 static void new_global(
     void* data,
@@ -51,9 +52,7 @@ static void output_geometry(void */*data*/,
     int32_t /*subpixel*/,
     const char */*make*/,
     const char */*model*/,
-    int32_t /*transform*/)
-{
-}
+    int32_t /*transform*/);
 
 static void output_mode(void *data,
     struct wl_output */*wl_output*/,
@@ -91,15 +90,21 @@ public:
 
     ~MirEglApp();
 
+    struct OutputInfo
+    {
+        struct wl_output* wl_output;
+        int32_t x;
+        int32_t y;
+        int32_t width;
+        int32_t height;
+    };
+
     struct wl_display* const display;
     struct wl_compositor* compositor;
     struct wl_shm* shm;
     struct wl_seat* seat;
-    struct wl_output* output;
+    std::vector<OutputInfo> output_info;
     struct wl_shell* shell;
-
-    int32_t max_outout_width = 100;
-    int32_t max_outout_height= 100;
 
 private:
     friend void new_global(
@@ -116,17 +121,53 @@ private:
     EGLSurface dummy_surface;
 };
 
+static void output_geometry(void *data,
+    struct wl_output *wl_output,
+    int32_t x,
+    int32_t y,
+    int32_t /*physical_width*/,
+    int32_t /*physical_height*/,
+    int32_t /*subpixel*/,
+    const char */*make*/,
+    const char */*model*/,
+    int32_t /*transform*/)
+{
+    struct MirEglApp* app = static_cast<decltype(app)>(data);
+
+    for (auto& oi : app->output_info)
+    {
+        if (wl_output == oi.wl_output)
+        {
+            oi.x = x;
+            oi.y = y;
+            return;
+        }
+    }
+    app->output_info.push_back({wl_output, x, y, 0, 0});
+}
+
 static void output_mode(void *data,
-    struct wl_output */*wl_output*/,
-    uint32_t /*flags*/,
+    struct wl_output *wl_output,
+    uint32_t flags,
     int32_t width,
     int32_t height,
     int32_t /*refresh*/)
 {
+    if (!(WL_OUTPUT_MODE_CURRENT & flags))
+        return;
+
     struct MirEglApp* app = static_cast<decltype(app)>(data);
 
-    app->max_outout_width  = std::max(app->max_outout_width,  width);
-    app->max_outout_height = std::max(app->max_outout_height, height);
+    for (auto& oi : app->output_info)
+    {
+        if (wl_output == oi.wl_output)
+        {
+            oi.width = width;
+            oi.height = height;
+            return;
+        }
+    }
+    app->output_info.push_back({wl_output, 0, 0, width, height});
 }
 
 static void new_global(
@@ -155,7 +196,9 @@ static void new_global(
     }
     else if (strcmp(interface, "wl_output") == 0)
     {
-        app->output = static_cast<decltype(app->output)>(wl_registry_bind(registry, id, &wl_output_interface, 2));
+        wl_output* output = static_cast<decltype(output)>(wl_registry_bind(registry, id, &wl_output_interface, 2));
+
+        app->output_info.push_back({output, 0, 0, 0, 0});
     }
     else if (strcmp(interface, "wl_shell") == 0)
     {
@@ -172,14 +215,17 @@ std::vector<std::shared_ptr<MirEglSurface>> mir_surface_init(std::shared_ptr<Mir
 {
     std::vector<std::shared_ptr<MirEglSurface>> result;
 
-    result.push_back(
-        std::make_shared<MirEglSurface>(mir_egl_app, mir_egl_app->max_outout_width, mir_egl_app->max_outout_height));
+    for (auto const& oi : mir_egl_app->output_info)
+    {
+        result.push_back(std::make_shared<MirEglSurface>(mir_egl_app, oi.wl_output, oi.width, oi.height));
+    }
 
     return result;
 }
 
-MirEglSurface::MirEglSurface(std::shared_ptr<MirEglApp> const& mir_egl_app, int width_, int height_)
-:
+MirEglSurface::MirEglSurface(
+    std::shared_ptr<MirEglApp> const& mir_egl_app,
+    struct wl_output* wl_output, int width_, int height_) :
     mir_egl_app{mir_egl_app},
     width_{width_},
     height_{height_}
@@ -194,8 +240,7 @@ MirEglSurface::MirEglSurface(std::shared_ptr<MirEglApp> const& mir_egl_app, int 
     surface = wl_compositor_create_surface(mir_egl_app->compositor);
     window = wl_shell_get_shell_surface(mir_egl_app->shell, surface);
     wl_shell_surface_add_listener(window, &shell_surface_listener, this);
-    wl_shell_surface_set_maximized(window, nullptr);
-    wl_shell_surface_set_toplevel(window);
+    wl_shell_surface_set_fullscreen(window, WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, wl_output);
     wl_display_dispatch(display);
 
     eglsurface = mir_egl_app->create_eglsurface(surface, width(), height());
@@ -269,7 +314,10 @@ MirEglApp::MirEglApp(struct wl_display* display) :
         &output_done,
         &output_scale,
     };
-    wl_output_add_listener(output, &output_listener, this);
+
+    for (auto const oi : output_info)
+        wl_output_add_listener(oi.wl_output, &output_listener, this);
+
     wl_display_roundtrip(display);
 
     unsigned int bpp = 32; //8*MIR_BYTES_PER_PIXEL(pixel_format);

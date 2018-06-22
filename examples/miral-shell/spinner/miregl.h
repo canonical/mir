@@ -31,7 +31,7 @@ std::vector<std::shared_ptr<MirEglSurface>> mir_surface_init(std::shared_ptr<Mir
 class MirEglSurface
 {
 public:
-    MirEglSurface(std::shared_ptr<MirEglApp> const& mir_egl_app, int width, int height);
+    MirEglSurface(std::shared_ptr<MirEglApp> const& mir_egl_app, struct wl_output* wl_output, int width, int height);
 
     ~MirEglSurface();
 
