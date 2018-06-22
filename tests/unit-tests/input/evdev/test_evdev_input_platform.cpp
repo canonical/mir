@@ -58,6 +58,26 @@ struct MockInputDeviceRegistry : public mi::InputDeviceRegistry
     MOCK_METHOD1(remove_device, void(std::shared_ptr<mi::InputDevice> const&));
 };
 
+std::shared_ptr<udev_device> device_for_path(char const* devnode)
+{
+    auto ctx = std::make_shared<mu::Context>();
+    mu::Enumerator devices{ctx};
+
+    devices.scan_devices();
+
+    for (auto const& device : devices)
+    {
+        if (device.devnode() && strcmp(device.devnode(), devnode) == 0)
+        {
+            return device.as_raw();
+        }
+    }
+
+    BOOST_THROW_EXCEPTION((
+                              std::runtime_error{
+                                  std::string{"Failed to find udev device for "} + devnode}));
+}
+
 struct EvdevInputPlatform : public ::testing::TestWithParam<std::string>
 {
     testing::NiceMock<MockInputDeviceRegistry> mock_registry;
@@ -66,10 +86,50 @@ struct EvdevInputPlatform : public ::testing::TestWithParam<std::string>
 
     libinput* const fake_context{reinterpret_cast<libinput*>(0xaabbcc)};
 
+    int device_count{0};
+    libinput_device* get_unique_device_ptr()
+    {
+        return reinterpret_cast<libinput_device*>(++device_count);
+    }
+
+    int device_group_count{0};
+    libinput_device_group* get_unique_device_group_ptr()
+    {
+        return reinterpret_cast<libinput_device_group*>(++device_group_count);
+    }
+
     EvdevInputPlatform()
     {
         ON_CALL(li_mock, libinput_path_create_context(_,_))
             .WillByDefault(Return(fake_context));
+
+        ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
+            .WillByDefault(
+                WithArgs<1>(
+                    Invoke(
+                        [&](char const* path)
+                        {
+                            auto const device = get_unique_device_ptr();
+                            li_mock.setup_device(
+                                device,
+                                get_unique_device_group_ptr(),
+                                device_for_path(path),
+                                "Hello",
+                                "SYSNAME",
+                                33,
+                                44);
+                            li_mock.setup_device_add_event(device);
+                            return device;
+                        })));
+
+        ON_CALL(li_mock, libinput_path_remove_device(_))
+            .WillByDefault(
+                Invoke(
+                    [this](auto device)
+                    {
+                        li_mock.setup_device_remove_event(device);
+                    }));
+
     }
 
     auto create_input_platform()
@@ -111,27 +171,6 @@ void run_dispatchable(mir::input::Platform& platform)
         platform.dispatchable()->dispatch(mir::dispatch::FdEvent::readable);
     }
 }
-
-std::shared_ptr<udev_device> device_for_path(char const* devnode)
-{
-    auto ctx = std::make_shared<mu::Context>();
-    mu::Enumerator devices{ctx};
-
-    devices.scan_devices();
-
-    for (auto const& device : devices)
-    {
-        if (device.devnode() && strcmp(device.devnode(), devnode) == 0)
-        {
-            return device.as_raw();
-        }
-    }
-
-    BOOST_THROW_EXCEPTION((
-        std::runtime_error{
-            std::string{"Failed to find udev device for "} + devnode}));
-}
-
 }
 
 TEST_P(EvdevInputPlatform, scans_on_start)
@@ -143,26 +182,6 @@ TEST_P(EvdevInputPlatform, scans_on_start)
 
     EXPECT_CALL(mock_registry, add_device(_));
 
-    ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
-        .WillByDefault(
-            WithArgs<1>(
-                Invoke(
-                    [&](char const* path)
-                    {
-                        auto device = reinterpret_cast<libinput_device*>(std::hash<char const*>()(path));
-                        li_mock.setup_device(
-                            device,
-                            nullptr,
-                            device_for_path(path),
-                            "Hello",
-                            "SYSNAME",
-                            33,
-                            44);
-                        li_mock.setup_device_add_event(device);
-                        return device;
-                    })));
-
-
     platform->start();
     run_dispatchable(*platform);
 }
@@ -171,25 +190,6 @@ TEST_P(EvdevInputPlatform, detects_on_hotplug)
 {
     using namespace ::testing;
     auto platform = create_input_platform();
-
-    ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
-        .WillByDefault(
-            WithArgs<1>(
-                Invoke(
-                    [&](char const* path)
-                    {
-                        auto device = reinterpret_cast<libinput_device*>(std::hash<char const*>()(path));
-                        li_mock.setup_device(
-                            device,
-                            nullptr,
-                            device_for_path(path),
-                            "Hello",
-                            "SYSNAME",
-                            33,
-                            44);
-                        li_mock.setup_device_add_event(device);
-                        return device;
-                    })));
 
     EXPECT_CALL(mock_registry, add_device(_));
 
@@ -204,31 +204,6 @@ TEST_P(EvdevInputPlatform, detects_hot_removal)
     using namespace ::testing;
     auto platform = create_input_platform();
 
-    ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
-        .WillByDefault(
-            WithArgs<1>(
-                Invoke(
-                    [&](char const* path)
-                    {
-                        auto device = reinterpret_cast<libinput_device*>(std::hash<char const*>()(path));
-                        li_mock.setup_device(
-                            device,
-                            reinterpret_cast<libinput_device_group*>(device),
-                            device_for_path(path),
-                            "Hello",
-                            "SYSNAME",
-                            33,
-                            44);
-                        li_mock.setup_device_add_event(device);
-                        return device;
-                    })));
-    ON_CALL(li_mock, libinput_path_remove_device(_))
-        .WillByDefault(
-            Invoke(
-                [this](auto device)
-                {
-                    li_mock.setup_device_remove_event(device);
-                }));
 
     EXPECT_CALL(mock_registry, add_device(_));
     EXPECT_CALL(mock_registry, remove_device(_));
@@ -246,25 +221,6 @@ TEST_P(EvdevInputPlatform, removes_devices_on_stop)
 {
     using namespace ::testing;
     auto platform = create_input_platform();
-
-    ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
-        .WillByDefault(
-            WithArgs<1>(
-                Invoke(
-                    [&](char const* path)
-                    {
-                        auto device = reinterpret_cast<libinput_device*>(std::hash<char const*>()(path));
-                        li_mock.setup_device(
-                            device,
-                            nullptr,
-                            device_for_path(path),
-                            "Hello",
-                            "SYSNAME",
-                            33,
-                            44);
-                        li_mock.setup_device_add_event(device);
-                        return device;
-                    })));
 
     udev.add_standard_device(GetParam());
     platform->start();
@@ -288,25 +244,6 @@ TEST_F(EvdevInputPlatform, register_ungrouped_devices)
     auto platform = create_input_platform();
     EXPECT_CALL(mock_registry, add_device(_)).Times(2);
 
-    ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
-        .WillByDefault(
-            WithArgs<1>(
-                Invoke(
-                    [&](char const* path)
-                    {
-                        auto device = reinterpret_cast<libinput_device*>(std::hash<char const*>()(path));
-                        li_mock.setup_device(
-                            device,
-                            nullptr,
-                            device_for_path(path),
-                            "Hello",
-                            "SYSNAME",
-                            33,
-                            44);
-                        li_mock.setup_device_add_event(device);
-                        return device;
-                    })));
-
     platform->start();
 
     udev.add_standard_device("synaptics-touchpad");
@@ -326,7 +263,7 @@ TEST_F(EvdevInputPlatform, ignore_devices_from_same_group)
                 Invoke(
                     [&](char const* path)
                     {
-                        auto device = reinterpret_cast<libinput_device*>(std::hash<char const*>()(path));
+                        auto device = get_unique_device_ptr();
                         li_mock.setup_device(
                             device,
                             reinterpret_cast<libinput_device_group*>(0xaabbbb),
