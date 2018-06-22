@@ -17,11 +17,12 @@
  */
 
 #include "mir_test_framework/libinput_environment.h"
+#include "mir/test/fake_shared.h"
 
 #include <boost/throw_exception.hpp>
-#include <iostream>
 
 namespace mtf = mir_test_framework;
+namespace mt = mir::test;
 using namespace testing;
 
 using DeviceEntry = std::pair<std::string, mtf::LibInputEnvironment::DeviceSetup>;
@@ -106,18 +107,23 @@ libinput_device* mtf::LibInputEnvironment::setup_device(std::string const& devic
 
     auto dev = mock_libinput.get_next_fake_ptr<libinput_device*>();
     auto group = mock_libinput.get_next_fake_ptr<libinput_device_group*>();
-    auto u_dev = mock_libinput.get_next_fake_ptr<udev_device*>();
+    auto u_dev = std::shared_ptr<udev_device>{
+        mock_libinput.get_next_fake_ptr<udev_device*>(),
+        [](auto) {}};
+    auto const devnum = mock_libinput.get_next_devnum();
 
     mock_libinput.setup_device(dev, group, u_dev, device_name.c_str(), entry->second.path.c_str(), 123, 456);
-    ON_CALL(mock_udev, udev_device_get_devnode(u_dev))
+    ON_CALL(mock_udev, udev_device_get_devnode(u_dev.get()))
         .WillByDefault(Return(entry->second.path.c_str()));
-    ON_CALL(mock_udev, udev_device_get_property_value(u_dev, _))
+    ON_CALL(mock_udev, udev_device_get_property_value(u_dev.get(), _))
         .WillByDefault(Invoke(
                 [this, device_name](udev_device*, char const* property)
                 {
                     return standard_devices[device_name].properties[property].c_str();
                 }
                 ));
+    ON_CALL(mock_udev, udev_device_get_devnum(u_dev.get()))
+        .WillByDefault(Return(devnum));
 
     available_devs[device_name] = dev;
 

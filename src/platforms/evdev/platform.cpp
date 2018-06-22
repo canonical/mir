@@ -19,12 +19,16 @@
 #include "platform.h"
 #include "libinput_device.h"
 #include "libinput_ptr.h"
+#include "fd_store.h"
+
 #include "mir/udev/wrapper.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/dispatch/readable_fd.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
+#include "mir/dispatch/action_queue.h"
 #include "mir/module_properties.h"
 #include "mir/assert_module_entry_point.h"
+#include "mir/console_services.h"
 
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_device.h"
@@ -122,12 +126,15 @@ private:
 
 } // namespace
 
-mie::Platform::Platform(std::shared_ptr<InputDeviceRegistry> const& registry,
-                              std::shared_ptr<InputReport> const& report,
-                              std::unique_ptr<udev::Context>&& udev_context) :
+mie::Platform::Platform(
+        std::shared_ptr<InputDeviceRegistry> const& registry,
+        std::shared_ptr<InputReport> const& report,
+        std::unique_ptr<udev::Context>&& udev_context,
+        std::shared_ptr<ConsoleServices> const& console) :
     report(report),
     udev_context(std::move(udev_context)),
     input_device_registry(registry),
+    console{console},
     platform_dispatchable{std::make_shared<md::MultiplexingDispatchable>()}
 {
 }
@@ -137,13 +144,123 @@ std::shared_ptr<mir::dispatch::Dispatchable> mie::Platform::dispatchable()
     return platform_dispatchable;
 }
 
+namespace
+{
+class InputDeviceObserver : public mir::Device::Observer
+{
+public:
+    InputDeviceObserver(
+        std::shared_ptr<md::ActionQueue> action_queue,
+        mie::FdStore& device_fds,
+        std::shared_ptr<::libinput>& lib,
+        mu::Device const& device,
+        std::vector<std::shared_ptr<mie::LibInputDevice>>& devices,
+        std::unordered_map<dev_t, std::unique_ptr<mir::Device>>& device_watchers)
+        : action_queue{std::move(action_queue)},
+          device_fds{device_fds},
+          lib{lib},
+          devnum{device.devnum()},
+          devnode{device.devnode()},
+          syspath{device.syspath()},
+          devices{devices},
+          device_watchers{device_watchers}
+    {
+        /*
+         * We take everything shared with Platform (except action_queue) by reference.
+         *
+         * The only actions this class takes is to queue up functions on the action_queue.
+         * These functions can freely use the referenced members of mie::Platform as
+         * the Platform is guaranteed to be alive when dispatch() is called on it.
+         *
+         * Likewise, there no threadsafety issues as everything is done from the dispatch
+         * thread.
+         */
+    }
+
+    void activated(mir::Fd&& device_fd) override
+    {
+        action_queue->enqueue(
+            [fd_store = &device_fds, fd = std::move(device_fd), lib = lib, devnode = devnode]() mutable
+            {
+                fd_store->store_fd(devnode.c_str(), std::move(fd));
+
+                libinput_path_add_device(lib.get(), devnode.c_str());
+            });
+    }
+
+    void suspended() override
+    {
+        action_queue->enqueue(
+            [
+                devices = &devices,
+                syspath = syspath,
+                device_watchers = &device_watchers,
+                devnum = devnum
+            ]
+            {
+                for (auto const& input_device : *devices)
+                {
+                    auto device_udev = libinput_device_get_udev_device(input_device->device());
+
+                    if (device_udev)
+                    {
+                        if (syspath == udev_device_get_syspath(device_udev))
+                        {
+                            libinput_path_remove_device(input_device->device());
+                        }
+                    }
+                }
+                device_watchers->erase(devnum);
+            });
+    }
+
+    void removed() override
+    {
+        action_queue->enqueue(
+            [
+                devices = &devices,
+                syspath = syspath,
+                device_watchers = &device_watchers,
+                devnum = devnum
+            ]
+            {
+                for (auto const& input_device : *devices)
+                {
+                    auto device_udev = libinput_device_get_udev_device(input_device->device());
+
+                    if (device_udev)
+                    {
+                        if (syspath == udev_device_get_syspath(device_udev))
+                        {
+                            libinput_path_remove_device(input_device->device());
+                        }
+                    }
+                }
+                device_watchers->erase(devnum);
+            });
+    }
+
+private:
+    std::shared_ptr<md::ActionQueue> const action_queue;
+
+    mie::FdStore& device_fds;
+    std::shared_ptr<::libinput>& lib;
+    dev_t const devnum;
+    std::string const devnode;
+    std::string const syspath;
+    std::vector<std::shared_ptr<mie::LibInputDevice>>& devices;
+    std::unordered_map<dev_t, std::unique_ptr<mir::Device>>& device_watchers;
+};
+}
+
 void mie::Platform::start()
 {
-    lib = make_libinput();
+    lib = make_libinput(&device_fds);
     libinput_dispatchable =
         std::make_shared<md::ReadableFd>(
             Fd{IntOwnedFd{libinput_get_fd(lib.get())}}, [this]{process_input_events();}
         );
+    action_queue = std::make_shared<md::ActionQueue>();
     udev_dispatchable =
         std::make_shared<DispatchableUDevMonitor>(
             *udev_context,
@@ -153,18 +270,47 @@ void mie::Platform::start()
                 {
                 case mu::Monitor::ADDED:
                 {
-                    if (auto devnode = device.devnode())
+                    if (device.devnode())
                     {
+                        /*
+                         * What if… madness?
+                         *
+                         * When we get notified from the mu::Monitor (ie: hotplug rather
+                         * than on-start enumeration) under (at least) umockdev the
+                         * udev_device is missing some properties. *Notably*,
+                         * devices.devnum() is always 0.
+                         *
+                         * Work around this (umockdev?) bug by requesting a new
+                         * Device from the syspath of the one we've been notified about.
+                         */
+                        auto ctx = std::make_shared<mu::Context>();
+                        auto workaround_device = ctx->device_from_syspath(device.syspath());
+
+                        std::string devnode{workaround_device->devnode()};
                         // Libinput filters out anything without “event” as its name
-                        if (strncmp(device.sysname(), "event", strlen("event")) != 0)
+                        if (strncmp(workaround_device->sysname(), "event", strlen("event")) != 0)
                         {
                             return;
                         }
-                        auto input_device = libinput_path_add_device(lib.get(), devnode);
-                        if (input_device)
+                        if (pending_devices.count(workaround_device->devnum()) > 0 ||
+                            device_watchers.count(workaround_device->devnum()) > 0)
                         {
-                            this->device_added(input_device);
+                            // We're already handling this, ignore.
+                            return;
                         }
+
+                        pending_devices.emplace(
+                            workaround_device->devnum(),
+                            console->acquire_device(
+                                major(workaround_device->devnum()),
+                                minor(workaround_device->devnum()),
+                                std::make_unique<InputDeviceObserver>(
+                                    action_queue,
+                                    device_fds,
+                                    lib,
+                                    *workaround_device,
+                                    devices,
+                                    device_watchers)));
                     }
                     break;
                 }
@@ -179,6 +325,7 @@ void mie::Platform::start()
                             if (strcmp(device.syspath(), udev_device_get_syspath(device_udev)) == 0)
                             {
                                 libinput_path_remove_device(input_device->device());
+                                device_watchers.erase(device.devnum());
                             }
                         }
                     }
@@ -188,8 +335,10 @@ void mie::Platform::start()
                     break;
                 }
             });
+
     platform_dispatchable->add_watch(udev_dispatchable);
     platform_dispatchable->add_watch(libinput_dispatchable);
+    platform_dispatchable->add_watch(action_queue);
     process_input_events();
 }
 
@@ -243,6 +392,10 @@ void mie::Platform::device_added(libinput_device* dev)
 
     log_info("Added %s", describe(dev).c_str());
 
+    auto const devnum = udev_device_get_devnum(libinput_device_get_udev_device(device_ptr.get()));
+    device_watchers.emplace(devnum, pending_devices.at(devnum).get());
+    pending_devices.erase(devnum);
+
     auto device_it = find_device(libinput_device_get_device_group(device_ptr.get()));
     if (end(devices) != device_it)
     {
@@ -288,14 +441,23 @@ auto mie::Platform::find_device(libinput_device_group const* devgroup) -> declty
         [devgroup](auto const& item)
         {
             return devgroup == item->group();
-        }
-        );
+        });
 }
 
 void mie::Platform::stop()
 {
-    platform_dispatchable->remove_watch(udev_dispatchable);
-    platform_dispatchable->remove_watch(libinput_dispatchable);
+    if (action_queue)
+    {
+        platform_dispatchable->remove_watch(action_queue);
+    }
+    if (udev_dispatchable)
+    {
+        platform_dispatchable->remove_watch(udev_dispatchable);
+    }
+    if (libinput_dispatchable)
+    {
+        platform_dispatchable->remove_watch(libinput_dispatchable);
+    }
     while (!devices.empty())
     {
         input_device_registry->remove_device(devices.back());
@@ -303,5 +465,6 @@ void mie::Platform::stop()
     }
     libinput_dispatchable.reset();
     udev_dispatchable.reset();
+    action_queue.reset();
     lib.reset();
 }

@@ -47,7 +47,7 @@ mir::ModuleProperties const description = {
     mir::libname()
 };
 
-bool can_open_input_devices()
+bool can_open_input_devices(mir::ConsoleServices& console)
 {
     mu::Enumerator input_enumerator{std::make_shared<mu::Context>()};
     input_enumerator.match_subsystem("input");
@@ -59,9 +59,43 @@ bool can_open_input_devices()
     {
         if (device.devnode() != nullptr)
         {
-            device_found = true;
+            class Observer : public mir::Device::Observer
+            {
+            public:
+                Observer(mir::Fd& to_store)
+                    : fd{to_store},
+                      triggered{false}
+                {
+                }
 
-            mir::Fd input_device(::open(device.devnode(), O_RDONLY|O_NONBLOCK));
+                void activated(mir::Fd&& device_fd) override
+                {
+                    if (!triggered.exchange(true))
+                    {
+                        fd = std::move(device_fd);
+                    }
+                }
+
+                void suspended() override
+                {
+                }
+
+                void removed() override
+                {
+                }
+
+            private:
+                mir::Fd& fd;
+                std::atomic<bool> triggered;
+            };
+            device_found = true;
+            mir::Fd input_device;
+
+            console.acquire_device(
+                major(device.devnum()),
+                minor(device.devnum()),
+                std::make_unique<Observer>(input_device)).get();
+
             if (input_device > 0)
                 return true;
         }
@@ -95,7 +129,7 @@ void add_input_platform_options(
 
 mi::PlatformPriority probe_input_platform(
     mo::Option const& options,
-    mir::ConsoleServices&)
+    mir::ConsoleServices& console)
 {
     mir::assert_entry_point_signature<mi::ProbePlatform>(&probe_input_platform);
     if (options.is_set(host_socket_opt))
@@ -103,7 +137,7 @@ mi::PlatformPriority probe_input_platform(
         return mi::PlatformPriority::unsupported;
     }
 
-    if (can_open_input_devices())
+    if (can_open_input_devices(console))
         return mi::PlatformPriority::supported;
 
     return mi::PlatformPriority::unsupported;

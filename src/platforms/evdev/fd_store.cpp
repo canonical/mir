@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -13,33 +13,32 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
+ * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_INPUT_EVDEV_LIBINPUT_PTR_H_
-#define MIR_INPUT_EVDEV_LIBINPUT_PTR_H_
+#include "fd_store.h"
 
-#include "mir_toolkit/event.h"
-#include "mir/fd.h"
+#define MIR_LOG_COMPONENT "evdev-input"
+#include "mir/log.h"
 
-#include <unordered_map>
-#include <memory>
-#include <functional>
+#include <boost/throw_exception.hpp>
 
-struct libinput;
+namespace mie = mir::input::evdev;
 
-namespace mir
+void mie::FdStore::store_fd(char const* path, mir::Fd&& fd)
 {
-namespace input
-{
-namespace evdev
-{
-using LibInputPtr = std::unique_ptr<libinput, libinput*(*)(libinput*)>;
-class FdStore;
-
-LibInputPtr make_libinput(FdStore* fd_store);
-}
-}
+    fds[path] = std::move(fd);
 }
 
-#endif
+mir::Fd mie::FdStore::take_fd(char const* path)
+{
+    try
+    {
+        return fds.at(path);
+    }
+    catch (std::out_of_range const&)
+    {
+        mir::log_warning("Failed to find requested fd for path %s", path);
+    }
+    return mir::Fd{};
+}
