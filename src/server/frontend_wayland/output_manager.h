@@ -24,6 +24,8 @@
 #include <wayland-server-core.h>
 #include <wayland-server-protocol.h>
 
+#include <experimental/optional>
+
 #include <memory>
 #include <vector>
 #include <unordered_map>
@@ -62,6 +64,18 @@ class OutputManager
 {
 public:
     OutputManager(wl_display* display, DisplayChanger& display_config);
+
+    auto output_id_for(std::experimental::optional<struct wl_resource*> const& /*output*/) ->
+    mir::optional_value<mir::graphics::DisplayConfigurationOutputId>
+    {
+        return {};
+    }
+
+    auto output_id_for(struct wl_resource* /*output*/) -> mir::graphics::DisplayConfigurationOutputId
+    {
+        return {};
+    }
+
 
 private:
     void create_output(graphics::DisplayConfigurationOutput const& initial_config);
