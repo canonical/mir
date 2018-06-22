@@ -17,6 +17,8 @@ mir (0.32.0) UNRELEASED; urgency=medium
     - Enhancements:
       . [Wayland] Implement subsurface support
       . [Wayland] Initial support for copy, cut and paste
+      . [Wayland] Make use of the specified output in fullscreen requests.
+        (Fixes #423)
       . [libmiral] Update miral::Keymap to get the default keymap from udev
       . [libmiral] Extend the logic for launching apps to support Wayland apps
         and provide it as an API for servers to use it. (Fixes #300)
