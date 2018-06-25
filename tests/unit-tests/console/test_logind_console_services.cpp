@@ -240,6 +240,31 @@ public:
             "");
     }
 
+    void add_seat(char const* name)
+    {
+        auto result = std::unique_ptr<GVariant, decltype(&g_variant_unref)>{
+            g_dbus_connection_call_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                "/org/freedesktop/login1",
+                "org.freedesktop.DBus.Mock",
+                "AddSeat",
+                g_variant_new(
+                    "(s)",
+                    name),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NO_AUTO_START,
+                1000,
+                nullptr,
+                nullptr),
+            &g_variant_unref};
+
+        if (!result)
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to add Seat"}));
+        }
+    }
+
     std::string add_session(
         char const* id,
         char const* seat,
@@ -716,6 +741,18 @@ TEST_F(LogindConsoleServices, construction_fails_if_no_logind)
 {
     EXPECT_THROW(
         mir::LogindConsoleServices test{the_main_loop()},
+        std::runtime_error);
+    stop_mainloop();
+}
+
+TEST_F(LogindConsoleServices, construction_fails_if_no_active_session)
+{
+    ensure_mock_logind();
+
+    add_seat("seat0");
+
+    EXPECT_THROW(
+        mir::LogindConsoleServices test{the_main_loop()};,
         std::runtime_error);
     stop_mainloop();
 }
