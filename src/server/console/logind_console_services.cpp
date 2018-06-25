@@ -170,7 +170,19 @@ std::string object_path_for_current_session(LogindSeat* seat_proxy)
         &g_variant_unref
     };
 
-    return g_variant_get_string(object_path_variant.get(), nullptr);
+    auto const object_path = g_variant_get_string(object_path_variant.get(), nullptr);
+
+    /* We require the display manager to have already set up an active session for us.
+     *
+     * Because logind couldn't be bothered using the *perfectly functional* DBus optional
+     * type, we detect this by the ActiveSession property having an object-path of "/"
+     */
+    if (!object_path || (strcmp(object_path, "/") == 0))
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Seat has no active session"}));
+    }
+
+    return {object_path};
 }
 
 std::unique_ptr<GDBusConnection, decltype(&g_object_unref)>
