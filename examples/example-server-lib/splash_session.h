@@ -19,8 +19,6 @@
 #ifndef MIR_SPLASH_SESSION_H
 #define MIR_SPLASH_SESSION_H
 
-#include <mir_toolkit/client_types.h>
-
 #include <memory>
 
 namespace mir { class Server; namespace scene { class Session; }}

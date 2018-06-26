@@ -21,6 +21,8 @@
 
 #include "splash_session.h"
 
+#include <mir_toolkit/client_types.h>
+
 // A very simple s/w rendered splash animation
 class SwSplash
 {
