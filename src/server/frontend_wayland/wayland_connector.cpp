@@ -145,9 +145,11 @@ void cleanup_private(wl_listener* listener, void* /*data*/)
 struct ClientSessionConstructor
 {
     ClientSessionConstructor(std::shared_ptr<mf::Shell> const& shell,
-                             std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
+                             std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
+                             std::unordered_map<int, std::function<void(std::shared_ptr<Session> const& session)>>* connect_handlers)
         : shell{shell},
-          session_authorizer{session_authorizer}
+          session_authorizer{session_authorizer},
+          connect_handlers{connect_handlers}
     {
     }
 
@@ -155,6 +157,8 @@ struct ClientSessionConstructor
     wl_listener destruction_listener;
     std::shared_ptr<mf::Shell> const shell;
     std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
+    std::unordered_map<int, std::function<void(std::shared_ptr<Session> const& session)>>* connect_handlers;
+
 };
 
 static_assert(
@@ -169,6 +173,14 @@ void create_client_session(wl_listener* listener, void* data)
     ClientSessionConstructor* construction_context;
     construction_context =
         wl_container_of(listener, construction_context, construction_listener);
+
+    auto const handler_iter = construction_context->connect_handlers->find(wl_client_get_fd(client));
+
+    std::function<void(std::shared_ptr<Session> const& session)> const connection_handler =
+        (handler_iter != std::end(*construction_context->connect_handlers)) ? handler_iter->second : [](auto){};
+
+    if (handler_iter != std::end(*construction_context->connect_handlers))
+        construction_context->connect_handlers->erase(handler_iter);
 
     pid_t client_pid;
     uid_t client_uid;
@@ -191,6 +203,8 @@ void create_client_session(wl_listener* listener, void* data)
     auto client_context = new ClientPrivate{session, construction_context->shell.get()};
     client_context->destroy_listener.notify = &cleanup_private;
     wl_client_add_destroy_listener(client, &client_context->destroy_listener);
+
+    connection_handler(session);
 }
 
 void cleanup_client_handler(wl_listener* listener, void*)
@@ -202,9 +216,10 @@ void cleanup_client_handler(wl_listener* listener, void*)
 }
 
 void setup_new_client_handler(wl_display* display, std::shared_ptr<mf::Shell> const& shell,
-                              std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer)
+                              std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
+                              std::unordered_map<int, std::function<void(std::shared_ptr<Session> const& session)>>* connect_handlers)
 {
-    auto context = new ClientSessionConstructor{shell, session_authorizer};
+    auto context = new ClientSessionConstructor{shell, session_authorizer, connect_handlers};
     context->construction_listener.notify = &create_client_session;
 
     wl_display_add_client_created_listener(display, &context->construction_listener);
@@ -676,7 +691,7 @@ mf::WaylandConnector::WaylandConnector(
 
     auto wayland_loop = wl_display_get_event_loop(display.get());
 
-    setup_new_client_handler(display.get(), shell, session_authorizer);
+    setup_new_client_handler(display.get(), shell, session_authorizer, &connect_handlers);
 
     pause_source = wl_event_loop_add_fd(wayland_loop, pause_signal, WL_EVENT_READABLE, &halt_eventloop, display.get());
 }
@@ -756,9 +771,39 @@ int mf::WaylandConnector::client_socket_fd() const
 }
 
 int mf::WaylandConnector::client_socket_fd(
-    std::function<void(std::shared_ptr<Session> const& session)> const& /*connect_handler*/) const
+    std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
 {
-    return -1;
+    enum { server, client, size };
+    int socket_fd[size];
+
+    char const* error = nullptr;
+
+    if (socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fd))
+    {
+        error = "Could not create socket pair";
+    }
+    else
+    {
+        executor_for_event_loop(wl_display_get_event_loop(display.get()))
+            ->spawn(
+                [socket = socket_fd[server], display = display.get(), this, connect_handler]()
+                    {
+                        connect_handlers[socket] = std::move(connect_handler);
+                        if (!wl_client_create(display, socket))
+                        {
+                            mir::log_error(
+                                "Failed to create Wayland client object: %s (errno %i)",
+                                strerror(errno),
+                                errno);
+                        }
+                    });
+        // TODO: Wait on the result of wl_client_create so we can throw an exception on failure.
+    }
+
+    if (error)
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), error}));
+
+    return socket_fd[client];
 }
 
 void mf::WaylandConnector::run_on_wayland_display(std::function<void(wl_display*)> const& functor)
