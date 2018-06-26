@@ -140,26 +140,21 @@ mg::PlatformPriority probe_graphics_platform(
                 mgm::helpers::GBMHelper gbm_device{tmp_fd};
                 EGLDisplay dpy;
                 auto dpy_cleanup = mir::raii::paired_calls(
-                    [&dpy, &gbm_device]()
+                    [&dpy, &gbm_device, &device]()
                     {
                         dpy = eglGetDisplay(static_cast<EGLNativeDisplayType>(gbm_device.device));
+                        if (dpy == EGL_NO_DISPLAY)
+                        {
+                            throw mg::egl_error(
+                                std::string{"Probe failed to create EGL display on device "} +
+                                device.devnode());
+                        }
                     },
                     [&dpy]()
                     {
-                        if (dpy != EGL_NO_DISPLAY)
-                        {
-                            eglTerminate(dpy);
-                        }
+                        eglTerminate(dpy);
                     });
 
-                if (dpy == EGL_NO_DISPLAY)
-                {
-                    mir::log_info(
-                        "Probe failed to create EGL display on device %s: %s",
-                        device.devnode(),
-                        mg::egl_category().message(eglGetError()).c_str());
-                    continue;
-                }
 
                 auto egl_init = mir::raii::paired_calls(
                     [&dpy]()
@@ -167,34 +162,38 @@ mg::PlatformPriority probe_graphics_platform(
                         EGLint major_ver{1}, minor_ver{4};
                         if (!eglInitialize(dpy, &major_ver, &minor_ver))
                         {
-                            mir::log_debug("Failed to initialise EGL: %s", mg::egl_category().message(eglGetError()).c_str());
-                            dpy = EGL_NO_DISPLAY;
+                            throw mg::egl_error("Probe failed to initialise EGL");
                         }
                     },
                     [&dpy]()
                     {
-                        if (dpy != EGL_NO_DISPLAY)
-                        {
-                            eglTerminate(dpy);
-                        }
+                        eglTerminate(dpy);
                     });
 
                 eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
 
+                auto const renderer_string = reinterpret_cast<char const*>(glGetString(GL_RENDERER));
+                if (!renderer_string)
+                {
+                    throw mg::egl_error(
+                        "Probe failed to query GL renderer");
+                }
+
                 if (strncmp(
                     "llvmpipe",
-                    reinterpret_cast<char const*>(glGetString(GL_RENDERER)),
+                    renderer_string,
                     strlen("llvmpipe")) == 0)
                 {
-                     mir::log_info("Detected software renderer: %s", glGetString(GL_RENDERER));
+                     mir::log_info("Detected software renderer: %s", renderer_string);
                      return mg::PlatformPriority::supported;
                 }
 
                 return mg::PlatformPriority::best;
             }
         }
-        catch (...)
+        catch (std::exception const& e)
         {
+            mir::log_info("%s", e.what());
         }
     }
 
