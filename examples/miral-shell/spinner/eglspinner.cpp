@@ -34,8 +34,6 @@
 #include <atomic>
 #include <mutex>
 
-//#include <mir_toolkit/mir_client_library.h>
-
 #include "spinner_glow.h"
 #include "spinner_logo.h"
 
@@ -219,14 +217,6 @@ const char fShaderSrcLogo[] =
     "    col = col * uFadeLogo;                           \n"
     "    gl_FragColor = col;                              \n"
     "}                                                    \n";
-
-//std::atomic<bool> dying{false};
-//
-//void lifecycle_event_callback(MirConnection* /*connection*/, MirLifecycleState state, void* context)
-//{
-//    if (state == mir_lifecycle_connection_lost)
-//        static_cast<decltype(dying)*>(context)->store(true);
-//}
 }
 
 struct SpinnerSplash::Self : SplashSession
@@ -362,9 +352,6 @@ try
                 glUniform1f(fadeLogo, anim.fadeLogo);
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
             });
-
-//        if (dying.load())
-//            throw std::runtime_error("Server disconnected");
     }
     while (updateAnimation(timer, &anim));
 
