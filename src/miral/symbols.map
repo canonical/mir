@@ -5,7 +5,7 @@ global:
 #   miral::InternalClientLauncher::launch*;
     _ZNK5miral22InternalClientLauncher6launchERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKSt8functionIFvN3mir6client10ConnectionEEERKS9_IFvSt8weak_ptrINSA_5scene7SessionEEEE;
 #   miral::StartupInternalClient::StartupInternalClient*;
-    _ZN5miral21StartupInternalClientC1ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt8functionIFvN3mir6client10ConnectionEEES7_IFvSt8weak_ptrINS8_5scene7SessionEEEE;
+    _ZN5miral21StartupInternalClientC?ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt8functionIFvN3mir6client10ConnectionEEES7_IFvSt8weak_ptrINS8_5scene7SessionEEEE;
   extern "C++" {
     miral::AddInitCallback::?AddInitCallback*;
     miral::AddInitCallback::AddInitCallback*;
