@@ -299,10 +299,7 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::CanonicalWindowManagerPolicy::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::Rectangle const&)@MIRAL_2.1" 2.1.0
  (c++)"miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(miral::WindowInfo&)@MIRAL_2.1" 2.1.0
  MIRAL_2.2@MIRAL_2.2 2.2.0
- (c++)"miral::ExternalClientLauncher::?ExternalClientLauncher()@MIRAL_2.2" 2.2.0
  (c++)"miral::ExternalClientLauncher::ExternalClientLauncher()@MIRAL_2.2" 2.2.0
- (c++)"miral::ExternalClientLauncher::ExternalClientLauncher()@MIRAL_2.2" 2.2.0
- (c++)"miral::ExternalClientLauncher::~ExternalClientLauncher()@MIRAL_2.2" 2.2.0
  (c++)"miral::ExternalClientLauncher::~ExternalClientLauncher()@MIRAL_2.2" 2.2.0
  (c++)"miral::ExternalClientLauncher::operator()(mir::Server&)@MIRAL_2.2" 2.2.0
  (c++)"miral::ExternalClientLauncher::launch(std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&) const@MIRAL_2.2" 2.2.0
