@@ -24,6 +24,8 @@
 #include <wayland-server-core.h>
 #include <wayland-server-protocol.h>
 
+#include <experimental/optional>
+
 #include <memory>
 #include <vector>
 #include <unordered_map>
@@ -42,6 +44,8 @@ public:
     ~Output();
 
     void handle_configuration_changed(graphics::DisplayConfigurationOutput const& /*config*/);
+
+    bool matches_client_resource(wl_client* client, struct wl_resource* resource) const;
 
 private:
     static void send_initial_config(wl_resource* client_resource, graphics::DisplayConfigurationOutput const& config);
@@ -62,6 +66,12 @@ class OutputManager
 {
 public:
     OutputManager(wl_display* display, DisplayChanger& display_config);
+
+    auto output_id_for(wl_client* client, std::experimental::optional<struct wl_resource*> const& /*output*/) const
+        -> optional_value<graphics::DisplayConfigurationOutputId>;
+
+    auto output_id_for(wl_client* client, struct wl_resource* /*output*/) const
+        -> graphics::DisplayConfigurationOutputId;
 
 private:
     void create_output(graphics::DisplayConfigurationOutput const& initial_config);

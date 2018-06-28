@@ -48,7 +48,7 @@ public:
     static XdgSurfaceV6* from(wl_resource* surface);
 
     XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t id, WlSurface* surface,
-                 std::shared_ptr<Shell> const& shell, WlSeat& seat);
+                 std::shared_ptr<Shell> const& shell, WlSeat& seat, OutputManager* output_manager);
     ~XdgSurfaceV6() override;
 
     void destroy() override;
@@ -151,10 +151,15 @@ namespace mf = mir::frontend;  // Keep CLion's parsing happy
 
 // XdgShellV6
 
-mf::XdgShellV6::XdgShellV6(struct wl_display* display, std::shared_ptr<mf::Shell> const shell, WlSeat& seat)
-    : wayland::XdgShellV6(display, 1),
-      shell{shell},
-      seat{seat}
+mf::XdgShellV6::XdgShellV6(
+    struct wl_display* display,
+    std::shared_ptr<mf::Shell> const shell,
+    WlSeat& seat,
+    OutputManager* output_manager) :
+    wayland::XdgShellV6(display, 1),
+    shell{shell},
+    seat{seat},
+    output_manager{output_manager}
 {}
 
 void mf::XdgShellV6::destroy(struct wl_client* client, struct wl_resource* resource)
@@ -171,7 +176,7 @@ void mf::XdgShellV6::create_positioner(struct wl_client* client, struct wl_resou
 void mf::XdgShellV6::get_xdg_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id,
                                      struct wl_resource* surface)
 {
-    new XdgSurfaceV6{client, resource, id, WlSurface::from(surface), shell, seat};
+    new XdgSurfaceV6{client, resource, id, WlSurface::from(surface), shell, seat, output_manager};
 }
 
 void mf::XdgShellV6::pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
@@ -189,9 +194,9 @@ mf::XdgSurfaceV6* mf::XdgSurfaceV6::from(wl_resource* surface)
 }
 
 mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t id, WlSurface* surface,
-                               std::shared_ptr<mf::Shell> const& shell, WlSeat& seat)
+                               std::shared_ptr<mf::Shell> const& shell, WlSeat& seat, OutputManager* output_manager)
     : wayland::XdgSurfaceV6(client, parent, id),
-      WlAbstractMirWindow{&seat, client, surface, shell},
+      WlAbstractMirWindow{&seat, client, surface, shell, output_manager},
       parent{parent},
       shell{shell}
 {

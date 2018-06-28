@@ -283,9 +283,10 @@ public:
         uint32_t id,
         WlSurface* surface,
         std::shared_ptr<mf::Shell> const& shell,
-        WlSeat& seat)
+        WlSeat& seat,
+        OutputManager* output_manager)
         : ShellSurface(client, parent, id),
-          WlAbstractMirWindow{&seat, client, surface, shell}
+          WlAbstractMirWindow{&seat, client, surface, shell, output_manager}
     {
     }
 
@@ -495,10 +496,12 @@ public:
     WlShell(
         wl_display* display,
         std::shared_ptr<mf::Shell> const& shell,
-        WlSeat& seat)
+        WlSeat& seat,
+        OutputManager* const output_manager)
         : Shell(display, 1),
           shell{shell},
-          seat{seat}
+          seat{seat},
+          output_manager{output_manager}
     {
     }
 
@@ -508,11 +511,12 @@ public:
         uint32_t id,
         wl_resource* surface) override
     {
-        new WlShellSurface(client, resource, id, WlSurface::from(surface), shell, seat);
+        new WlShellSurface(client, resource, id, WlSurface::from(surface), shell, seat, output_manager);
     }
 private:
     std::shared_ptr<mf::Shell> const shell;
     WlSeat& seat;
+    OutputManager* const output_manager;
 };
 }
 }
@@ -638,10 +642,10 @@ mf::WaylandConnector::WaylandConnector(
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         display_config);
-    shell_global = std::make_unique<mf::WlShell>(display.get(), shell, *seat_global);
+    shell_global = std::make_unique<mf::WlShell>(display.get(), shell, *seat_global, output_manager.get());
     data_device_manager_global = mf::create_data_device_manager(display.get());
     if (!getenv("MIR_DISABLE_XDG_SHELL_V6_UNSTABLE"))
-        xdg_shell_global = std::make_unique<XdgShellV6>(display.get(), shell, *seat_global);
+        xdg_shell_global = std::make_unique<XdgShellV6>(display.get(), shell, *seat_global, output_manager.get());
 
     wl_display_init_shm(display.get());
 

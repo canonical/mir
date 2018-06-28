@@ -40,6 +40,21 @@ void mf::Output::handle_configuration_changed(mg::DisplayConfigurationOutput con
 {
 }
 
+bool mf::Output::matches_client_resource(wl_client* client, struct wl_resource* resource) const
+{
+    auto const rp = resource_map.find(client);
+
+    if (rp == resource_map.end())
+        return false;
+
+    for (auto const& r : rp->second)
+        if (r == resource)
+            return true;
+
+    return false;
+}
+
+
 void mf::Output::send_initial_config(wl_resource* client_resource, mg::DisplayConfigurationOutput const& config)
 {
     wl_output_send_geometry(
@@ -116,6 +131,31 @@ mf::OutputManager::OutputManager(wl_display* display, mf::DisplayChanger& displa
     // TODO: Also register display configuration listeners
     display_config.base_configuration()
         ->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
+}
+
+auto mf::OutputManager::output_id_for(
+    wl_client* client,
+    std::experimental::optional<struct wl_resource*> const& output) const
+    -> mir::optional_value<graphics::DisplayConfigurationOutputId>
+{
+    if (output)
+    {
+        return output_id_for(client, output.value());
+    }
+    else
+    {
+        return {};
+    }
+}
+
+auto mf::OutputManager::output_id_for(wl_client* client, struct wl_resource* output) const
+    -> mir::graphics::DisplayConfigurationOutputId
+{
+    for (auto const& dd: outputs)
+        if (dd.second->matches_client_resource(client, output))
+            return {dd.first};
+
+    return {};
 }
 
 void mf::OutputManager::create_output(mg::DisplayConfigurationOutput const& initial_config)
