@@ -13,7 +13,7 @@ backends:
             - fedora-27-64
             - fedora-28-64
             - fedora-rawhide-64:
-                image: images:fedora/27/amd64
+                image: images:fedora/28/amd64
     google:
         key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
         plan: n1-highcpu-8
@@ -27,7 +27,7 @@ backends:
             - fedora-27-64
             - fedora-28-64
             - fedora-rawhide-64:
-                image: fedora-27-64
+                image: fedora-28-64
 
 environment:
     ARCH: amd64
