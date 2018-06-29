@@ -191,9 +191,9 @@ void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize, EGLi
     // TODO: Get the required EGL_{RED,GREEN,BLUE}_SIZE values out of gbm_format
     EGLint const config_attr[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-        EGL_RED_SIZE, 5,
-        EGL_GREEN_SIZE, 5,
-        EGL_BLUE_SIZE, 5,
+        EGL_RED_SIZE, 8,
+        EGL_GREEN_SIZE, 8,
+        EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 0,
         EGL_DEPTH_SIZE, depth_buffer_bits,
         EGL_STENCIL_SIZE, stencil_buffer_bits,
