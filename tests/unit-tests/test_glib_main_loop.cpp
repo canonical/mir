@@ -1411,6 +1411,193 @@ TEST_F(GLibMainLoopTest, stress_emits_alarm_notification_with_zero_timeout)
     }
 }
 
+TEST_F(GLibMainLoopTest, running_returns_false_when_not_running)
+{
+    EXPECT_FALSE(ml.running());
+}
+
+TEST_F(GLibMainLoopTest, running_returns_true_from_ml)
+{
+    UnblockMainLoop unblocker{ml};
+
+    auto signal = std::make_shared<mt::Signal>();
+    ml.spawn(
+        [signal, this]()
+        {
+            EXPECT_TRUE(ml.running());
+            signal->raise();
+        });
+
+    EXPECT_TRUE(signal->wait_for(std::chrono::seconds{30}));
+}
+
+TEST_F(GLibMainLoopTest, running_returns_true_from_outside_ml_while_running)
+{
+    UnblockMainLoop unblocker{ml};
+
+    auto signal = std::make_shared<mt::Signal>();
+    ml.spawn(
+        [signal]()
+        {
+            signal->raise();
+        });
+
+    ASSERT_TRUE(signal->wait_for(std::chrono::seconds{30}));
+    EXPECT_TRUE(ml.running());
+}
+
+TEST_F(GLibMainLoopTest, running_returns_false_after_stopping)
+{
+    UnblockMainLoop unblocker{ml};
+
+    auto started = std::make_shared<mt::Signal>();
+    ml.spawn(
+        [started]()
+        {
+            started->raise();
+        });
+
+    ASSERT_TRUE(started->wait_for(std::chrono::seconds{30}));
+
+    auto stopped = std::make_shared<mt::Signal>();
+    ml.stop();
+    /*
+     * We rely on this source being enqueued after the ::stop() source:
+     * Either the ml.stop() has been processed, and this runs immediately, or
+     * it is queued and run during ml.stop() proccessing.
+     */
+    ml.enqueue_with_guaranteed_execution(
+        [stopped]()
+        {
+            stopped->raise();
+        });
+
+    ASSERT_TRUE(stopped->wait_for(std::chrono::seconds{30}));
+    EXPECT_FALSE(ml.running());
+}
+
+TEST_F(GLibMainLoopTest, run_with_context_as_thread_default_works_before_ml_is_started)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    auto thread_context = std::unique_ptr<GMainContext, decltype(&g_main_context_unref)>{
+        g_main_context_new(),
+        &g_main_context_unref};
+
+    // Ensure that *this* thread's default context is known.
+    g_main_context_push_thread_default(thread_context.get());
+
+    auto callback_run = std::make_shared<mt::Signal>();
+    ml.run_with_context_as_thread_default(
+        [callback_run]()
+        {
+            auto idle_callback = g_idle_source_new();
+            g_source_set_callback(
+                idle_callback,
+                [](gpointer ctx) -> gboolean
+                {
+                    static_cast<mt::Signal*>(ctx)->raise();
+                    return false;
+                },
+                callback_run.get(),
+                nullptr);
+            g_source_attach(
+                idle_callback,
+                g_main_context_get_thread_default());
+        });
+
+    // Dispatch anything that has been mistakenly attached to the GMainContext we constructed.
+    while (g_main_context_iteration(thread_context.get(), false))
+        ;
+
+    // Our callback should *not* have been run, as we're not running the mainloop.
+    EXPECT_FALSE(callback_run->raised());
+
+    UnblockMainLoop looper{ml};
+    // The main loop should now process the source we added
+    EXPECT_TRUE(callback_run->wait_for(30s));
+
+    g_main_context_pop_thread_default(thread_context.get());
+}
+
+TEST_F(GLibMainLoopTest, run_with_context_as_thread_default_works_when_ml_is_running)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    UnblockMainLoop unblock{ml};
+
+    auto started = std::make_shared<mt::Signal>();
+    ml.spawn(
+        [started]()
+        {
+            started->raise();
+        });
+
+    ASSERT_TRUE(started->wait_for(30s));
+
+    auto thread_context = std::unique_ptr<GMainContext, decltype(&g_main_context_unref)>{
+        g_main_context_new(),
+        &g_main_context_unref};
+
+    // Ensure that *this* thread's default context is known.
+    g_main_context_push_thread_default(thread_context.get());
+
+    auto callback_run = std::make_shared<mt::Signal>();
+    ml.run_with_context_as_thread_default(
+        [callback_run]()
+        {
+            auto idle_callback = g_idle_source_new();
+            g_source_set_callback(
+                idle_callback,
+                [](gpointer ctx) -> gboolean
+                {
+                    static_cast<mt::Signal*>(ctx)->raise();
+                    return false;
+                },
+                callback_run.get(),
+                nullptr);
+            g_source_attach(
+                idle_callback,
+                g_main_context_get_thread_default());
+        });
+
+    // We shouldn't have anything on the thread_context...
+    EXPECT_FALSE(g_main_context_pending(thread_context.get()));
+
+    // ...and the main loop should get around to running our callback soon.
+    EXPECT_TRUE(callback_run->wait_for(30s));
+
+    g_main_context_pop_thread_default(thread_context.get());
+}
+
+TEST_F(GLibMainLoopTest, run_with_context_as_thread_default_handles_exceptions)
+{
+    using namespace testing;
+    using namespace std::literals::chrono_literals;
+
+    // Without a running loop
+    EXPECT_THROW(
+        ml.run_with_context_as_thread_default([]() { throw std::logic_error{"Hello!"}; }),
+        std::logic_error);
+
+    UnblockMainLoop unblock{ml};
+
+    auto started = std::make_shared<mt::Signal>();
+    ml.spawn(
+        [started]()
+        {
+            started->raise();
+        });
+
+    ASSERT_TRUE(started->wait_for(30s));
+
+    EXPECT_THROW(
+        ml.run_with_context_as_thread_default([]() { throw std::out_of_range{"Hello!"}; }),
+        std::out_of_range);
+}
+
 // This test recreates a scenario we get in our integration and acceptance test
 // runs, and which creates problems for the default glib signal source. The
 // scenario involves creating, running (with signal handling) and destroying

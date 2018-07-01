@@ -182,12 +182,13 @@ try
     // before run() starts allocates resources and starts threads.
     launch_startup_applications(*server);
 
+    server->add_init_callback([server, this]
     {
         // By enqueuing the notification code in the main loop, we are
         // ensuring that the server has really and fully started.
         auto const main_loop = server->the_main_loop();
         main_loop->enqueue(this, start_callback);
-    }
+    });
 
     server->run();
 

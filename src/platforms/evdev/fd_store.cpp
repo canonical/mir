@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2017 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -13,23 +13,32 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_GRAPHICS_MESA_DRM_CLOSE_THREADSAFE_H_
-#define MIR_GRAPHICS_MESA_DRM_CLOSE_THREADSAFE_H_
+#include "fd_store.h"
 
-namespace mir
-{
-namespace graphics
-{
-namespace mesa
-{
+#define MIR_LOG_COMPONENT "evdev-input"
+#include "mir/log.h"
 
-int drm_close_threadsafe(int fd);
+#include <boost/throw_exception.hpp>
 
-}
-}
+namespace mie = mir::input::evdev;
+
+void mie::FdStore::store_fd(char const* path, mir::Fd&& fd)
+{
+    fds[path] = std::move(fd);
 }
 
-#endif /* MIR_GRAPHICS_MESA_DRM_CLOSE_THREADSAFE_H_ */
+mir::Fd mie::FdStore::take_fd(char const* path)
+{
+    try
+    {
+        return fds.at(path);
+    }
+    catch (std::out_of_range const&)
+    {
+        mir::log_warning("Failed to find requested fd for path %s", path);
+    }
+    return mir::Fd{};
+}

@@ -21,6 +21,7 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
+#include "utils.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_ipc_package.h"
 #include "mir/graphics/platform_operation_message.h"
@@ -30,45 +31,39 @@
 #include "mir/graphics/egl_error.h"
 
 #include <boost/throw_exception.hpp>
+#include <boost/exception/info.hpp>
+#include <boost/exception/errinfo_file_name.hpp>
 #include <xf86drm.h>
 #include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/sysmacros.h>
+#include <one_shot_device_observer.h>
 
 namespace mg = mir::graphics;
 namespace mge = mir::graphics::eglstream;
+namespace mgc = mir::graphics::common;
 
 namespace
 {
 // Our copy of eglext.h doesn't have this?
 int const EGL_DRM_MASTER_FD_EXT{0x333C};
-
-char const* drm_node_for_device(EGLDeviceEXT device)
-{
-    auto const device_path = eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
-    if (!device_path)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to determine DRM device node path from EGLDevice"));
-    }
-    return device_path;
-}
 }
 
-mge::DisplayPlatform::DisplayPlatform(EGLDeviceEXT device)
-    : display{EGL_NO_DISPLAY},
-      drm_node{open(drm_node_for_device(device), O_RDWR | O_CLOEXEC)}
+mge::DisplayPlatform::DisplayPlatform(ConsoleServices& console, EGLDeviceEXT device)
+    : display{EGL_NO_DISPLAY}
 {
     using namespace std::literals;
 
+    auto const devnum = devnum_for_device(device);
+    drm_device = console.acquire_device(
+        major(devnum), minor(devnum),
+        std::make_unique<mgc::OneShotDeviceObserver>(drm_node))
+            .get();
+
     if (drm_node == mir::Fd::invalid)
     {
-        BOOST_THROW_EXCEPTION(std::system_error(
-            errno,
-            std::system_category(),
-            "Failed to open DRM device "s + drm_node_for_device(device)));
-    }
-
-    if (drmSetMaster(drm_node))
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to acquire DRM master"}));
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{"Failed to acquire DRM device node for device"}));
     }
 
     int const drm_node_attrib[] = {

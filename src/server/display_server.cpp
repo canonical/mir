@@ -33,7 +33,11 @@
 #include "mir/log.h"
 #include "mir/unwind_helpers.h"
 
+#include <boost/exception/diagnostic_information.hpp>
+
+#include <chrono>
 #include <stdexcept>
+#include <thread>
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -122,7 +126,24 @@ struct mir::DisplayServer::Private
         try
         {
             auto disp = try_but_revert_if_unwinding(
-                [this] { display->resume(); },
+                [this]
+                {
+                    auto const deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds{500};
+
+                    retry:
+                    try
+                    {
+                        display->resume();
+                    }
+                    catch(std::runtime_error const& e)
+                    {
+                        if (std::chrono::steady_clock::now() > deadline)
+                            fatal_error(("Failed to resume display:\n" + boost::diagnostic_information(e)).c_str());
+
+                        std::this_thread::sleep_for(std::chrono::milliseconds{50});
+                        goto retry;
+                    }
+                },
                 [&, this] { display->pause(); });
 
             auto comp = try_but_revert_if_unwinding(

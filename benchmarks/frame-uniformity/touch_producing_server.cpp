@@ -67,17 +67,7 @@ std::shared_ptr<mg::Platform> TouchProducingServer::the_graphics_platform()
 
 void TouchProducingServer::synthesize_event_at(geom::Point const& point)
 {
-    auto const minimum_touch = mtf::FakeInputDevice::minimum_touch_axis_value;
-    auto const maximum_touch = mtf::FakeInputDevice::maximum_touch_axis_value;
-    auto const display_width = screen_dimensions.size.width.as_int();
-    auto const display_height = screen_dimensions.size.height.as_int();
-
-    auto px_frac = point.x.as_int() / static_cast<double>(display_width);
-    auto py_frac = point.y.as_int() / static_cast<double>(display_height);
-    auto const abs_touch_x = minimum_touch + (maximum_touch-minimum_touch) * px_frac;
-    auto const abs_touch_y = minimum_touch + (maximum_touch-minimum_touch) * py_frac;
-
-    touch_screen->emit_event(mis::a_touch_event().at_position({abs_touch_x, abs_touch_y}));
+    touch_screen->emit_event(mis::a_touch_event().at_position(point));
 }
 
 void TouchProducingServer::thread_function()

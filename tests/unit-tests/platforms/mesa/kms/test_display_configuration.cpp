@@ -34,7 +34,7 @@
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
-#include "mir/test/doubles/null_console_services.h"
+#include "mir/test/doubles/stub_console_services.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/stub_gl_program_factory.h"
 
@@ -123,7 +123,7 @@ public:
     {
         return std::make_shared<mgm::Platform>(
                mir::report::null_display_report(),
-               std::make_shared<mtd::NullConsoleServices>(),
+               std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
                mgm::BypassOption::allowed);
     }
@@ -666,7 +666,9 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
         {},
         {
             "DEVTYPE", "drm_minor",
-            "DEVNAME", "/dev/dri/card2"
+            "DEVNAME", "/dev/dri/card2",
+            "MAJOR", "226",
+            "MINOR", "2"
         });
 
     mock_drm.reset(drm_device);
@@ -842,7 +844,9 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
         {},
         {
             "DEVTYPE", "drm_minor",
-            "DEVNAME", "/dev/dri/card2"
+            "DEVNAME", "/dev/dri/card2",
+            "MAJOR", "226",
+            "MINOR", "2"
         });
 
     mock_drm.reset(drm_device);
@@ -948,7 +952,9 @@ TEST_F(MesaDisplayConfigurationTest, does_not_query_drm_unnecesarily)
         {},
         {
             "DEVTYPE", "drm_minor",
-            "DEVNAME", "/dev/dri/card2"
+            "DEVNAME", "/dev/dri/card2",
+            "MAJOR", "226",
+            "MINOR", "2"
         });
 
     auto display = create_display(create_platform());

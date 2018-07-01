@@ -20,12 +20,13 @@
 #define MIR_INPUT_EVDEV_LIBINPUT_PTR_H_
 
 #include "mir_toolkit/event.h"
+#include "mir/fd.h"
 
+#include <unordered_map>
 #include <memory>
-#include <list>
+#include <functional>
 
 struct libinput;
-struct udev;
 
 namespace mir
 {
@@ -34,8 +35,9 @@ namespace input
 namespace evdev
 {
 using LibInputPtr = std::unique_ptr<libinput, libinput*(*)(libinput*)>;
+class FdStore;
 
-LibInputPtr make_libinput(::udev* context);
+LibInputPtr make_libinput(FdStore* fd_store);
 }
 }
 }

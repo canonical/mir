@@ -25,7 +25,6 @@
 #include "mir/libname.h"
 #include "display_helpers.h"
 #include "drm_authentication.h"
-#include "drm_close_threadsafe.h"
 #include "ipc_operations.h"
 #include "mir_toolkit/mesa/platform_operation.h"
 #include "native_buffer.h"
@@ -51,17 +50,15 @@ mir::ModuleProperties const description = {
 
 struct MesaPlatformIPCPackage : public mg::PlatformIPCPackage
 {
-    MesaPlatformIPCPackage(int drm_auth_fd) :
-        mg::PlatformIPCPackage(&description)
+    MesaPlatformIPCPackage(mir::Fd&& drm_auth_fd)
+        : mg::PlatformIPCPackage(&description),
+          authed_fd{std::move(drm_auth_fd)}
     {
-        ipc_fds.push_back(drm_auth_fd);
+        ipc_fds.push_back(authed_fd);
     }
 
-    ~MesaPlatformIPCPackage()
-    {
-        if (ipc_fds.size() > 0 && ipc_fds[0] >= 0)
-            mgm::drm_close_threadsafe(ipc_fds[0]);
-    }
+private:
+    mir::Fd const authed_fd;
 };
 }
 

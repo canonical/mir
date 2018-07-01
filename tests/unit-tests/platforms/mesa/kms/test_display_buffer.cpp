@@ -118,7 +118,7 @@ protected:
     {
         helpers::EGLHelper egl{gl_config};
         return GBMOutputSurface{
-            drm->fd,
+            mir::Fd{} ,
             GBMSurfaceUPtr{nullptr},
             static_cast<uint32_t>(width),
             static_cast<uint32_t>(height),
@@ -146,8 +146,6 @@ protected:
     std::shared_ptr<MockKMSOutput> mock_kms_output;
     StubGLConfig gl_config;
     mir::graphics::RenderableList const bypassable_list;
-    std::shared_ptr<helpers::GBMHelper> gbm{std::make_shared<helpers::GBMHelper>()};
-    std::shared_ptr<helpers::DRMHelper> drm{std::make_shared<helpers::DRMHelper>(helpers::DRMNodeToUse::card)};
 };
 
 TEST_F(MesaDisplayBufferTest, unrotated_view_area_is_untouched)

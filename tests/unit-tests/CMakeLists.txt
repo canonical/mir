@@ -35,6 +35,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
   ${PROJECT_SOURCE_DIR}/src/platforms/common/server
   ${GLIB_INCLUDE_DIRS}
+  ${GIO_INCLUDE_DIRS}
 )
 
 add_library(example SHARED library_example.cpp)
@@ -78,7 +79,6 @@ set(
   test_posix_timestamp.cpp
   test_observer_multiplexer.cpp
   test_edid.cpp
-  test_logind_console_services.cpp
 )
 
 CMAKE_DEPENDENT_OPTION(
@@ -92,6 +92,7 @@ add_subdirectory(platforms/)
 add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(compositor/)
+add_subdirectory(console/)
 add_subdirectory(frontend/)
 add_subdirectory(logging/)
 add_subdirectory(shell/)
@@ -179,6 +180,7 @@ target_link_libraries(
   ${GMOCK_LIBRARIES}
   ${Boost_LIBRARIES}
   ${UMOCKDEV_LIBRARIES}
+  ${LIBINPUT_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 

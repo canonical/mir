@@ -20,6 +20,10 @@
 #include "mir/graphics/display_report.h"
 #include "mir/graphics/event_handler_register.h"
 #include "mir/fd.h"
+#include "mir/emergency_cleanup_registry.h"
+
+#define MIR_LOG_COMPONTENT "VT-handler"
+#include "mir/log.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -35,14 +39,267 @@
 
 #include <linux/vt.h>
 #include <linux/kd.h>
+#include <linux/input.h>
 #include <fcntl.h>
+#include <xf86drm.h>
+
+class mir::LinuxVirtualTerminal::DeviceList
+{
+public:
+    DeviceList() = default;
+
+    class DeviceListIterable
+    {
+    public:
+        friend class DeviceList;
+
+        std::vector<Device*>::iterator begin()
+        {
+            return devices->begin();
+        }
+
+        std::vector<Device*>::iterator end()
+        {
+            return devices->end();
+        }
+
+    private:
+        DeviceListIterable(Synchronised<std::vector<Device*>>::Locked&& devices)
+            : devices{std::move(devices)}
+        {
+        }
+        Synchronised<std::vector<Device*>>::Locked devices;
+    };
+
+    DeviceListIterable as_iterable()
+    {
+        return DeviceListIterable{list.lock()};
+    }
+
+    void insert(Device* device)
+    {
+        list.lock()->push_back(device);
+    }
+
+    void remove(Device* device)
+    {
+        auto devices = list.lock();
+        devices->erase(
+            std::remove(
+                devices->begin(),
+                devices->end(),
+                device),
+            devices->end());
+    }
+private:
+    DeviceList(DeviceList const&) = delete;
+    DeviceList& operator=(DeviceList const&) = delete;
+
+    Synchronised<std::vector<Device*>> list;
+};
+
+class mir::LinuxVirtualTerminal::Device : public mir::Device
+{
+public:
+    Device(
+        std::unique_ptr<mir::Device::Observer> observer,
+        std::shared_ptr<DeviceList> const& device_list)
+        : observer{std::move(observer)},
+          device_list{device_list}
+    {
+        device_list->insert(this);
+    }
+
+    ~Device()
+    {
+        if (auto live_devices = device_list.lock())
+        {
+            live_devices->remove(this);
+        }
+    }
+
+    void on_activated()
+    {
+        observer->activated(activate());
+    }
+
+    void on_suspended()
+    {
+        observer->suspended();
+        suspend();
+    }
+
+protected:
+    virtual mir::Fd activate() = 0;
+    virtual void suspend() = 0;
+private:
+    std::unique_ptr<mir::Device::Observer> const observer;
+    std::weak_ptr<DeviceList> const device_list;
+};
+
+namespace
+{
+class DRMDevice : public mir::LinuxVirtualTerminal::Device
+{
+public:
+    DRMDevice(
+        mir::VTFileOperations& fops,
+        char const* device_node,
+        std::unique_ptr<mir::Device::Observer> observer,
+        std::shared_ptr<mir::LinuxVirtualTerminal::DeviceList> const& device_list)
+        : Device(std::move(observer), device_list),
+          device_fd{fops.open(device_node, O_RDWR | O_CLOEXEC)}
+    {
+        if (device_fd == mir::Fd::invalid)
+        {
+            BOOST_THROW_EXCEPTION((
+                boost::enable_error_info(
+                    std::system_error{
+                        errno,
+                        std::system_category(),
+                        "Failed to open DRM device node"})
+                    << boost::errinfo_file_name(device_node)));
+        }
+        // Claim DRM master here, as we can give a better error message if it fails.
+        if (drmSetMaster(device_fd) != 0)
+        {
+            BOOST_THROW_EXCEPTION((
+                boost::enable_error_info(
+                    std::system_error{
+                        errno,
+                        std::system_category(),
+                        "Failed to claim DRM master"})
+                    << boost::errinfo_file_name(device_node)));
+        }
+        is_master = true;
+    }
+
+protected:
+    mir::Fd activate() override
+    {
+        // SetMaster is idempotent; no need to track status
+        if (drmSetMaster(device_fd) != 0)
+        {
+            BOOST_THROW_EXCEPTION((
+                std::system_error{
+                    errno,
+                    std::system_category(),
+                    "Failed to reclaim DRM master"}));
+        }
+        is_master = true;
+        return device_fd;
+    }
+
+    void suspend() override
+    {
+        if (is_master && (drmDropMaster(device_fd) != 0))
+        {
+            BOOST_THROW_EXCEPTION((
+                std::system_error{
+                    errno,
+                    std::system_category(),
+                    "Failed to release DRM master"}));
+        }
+        is_master = false;
+    }
+
+private:
+    bool is_master{false};
+    mir::Fd const device_fd;
+};
+
+class EvdevDevice : public mir::LinuxVirtualTerminal::Device
+{
+public:
+    EvdevDevice(
+        std::shared_ptr<mir::VTFileOperations> fops,
+        std::string device_node,
+        std::unique_ptr<mir::Device::Observer> observer,
+        std::shared_ptr<mir::LinuxVirtualTerminal::DeviceList> const& device_list)
+        : Device(std::move(observer), device_list),
+          fops{std::move(fops)},
+          device_node{std::move(device_node)}
+    {
+    }
+
+protected:
+    mir::Fd activate() override
+    {
+        device_fd = mir::Fd{
+            fops->open(device_node.c_str(), O_RDWR | O_CLOEXEC | O_NONBLOCK)};
+        if (device_fd == mir::Fd::invalid)
+        {
+            BOOST_THROW_EXCEPTION((
+                boost::enable_error_info(
+                    std::system_error{
+                        errno,
+                        std::system_category(),
+                        "Failed to open device node"})
+                    << boost::errinfo_file_name(device_node)));
+        }
+        return device_fd;
+    }
+
+    void suspend() override
+    {
+        if (device_fd != mir::Fd::invalid)
+        {
+            if (fops->ioctl(device_fd, EVIOCREVOKE, nullptr))
+            {
+                /*
+                 * This can be best-effort; we're not going to prevent the new VT owner from
+                 * using the device if this fails.
+                 *
+                 * It might result in this Mir server receiving unexpected input, however, so
+                 * we should log something.
+                 */
+                mir::log_warning("Failed to revoke input access: %s (%i)", strerror(errno), errno);
+            }
+        }
+        // Don't keep the device FD open if nothing else needs it now.
+        device_fd = mir::Fd{};
+    }
+
+private:
+    std::shared_ptr<mir::VTFileOperations> const fops;
+    mir::Fd device_fd;
+    // TODO: Technically we should store the dev_t here and find it again on activate()
+    std::string const device_node;
+};
+
+void restore_vt(
+    mir::VTFileOperations& fops,
+    int vt_fd,
+    int prev_kd_mode,
+    struct vt_mode const& prev_vt_mode,
+    int prev_tty_mode,
+    struct termios const& prev_tcattr)
+{
+    fops.tcsetattr(vt_fd, TCSANOW, &prev_tcattr);
+    fops.ioctl(vt_fd, KDSKBMODE, prev_tty_mode);
+    fops.ioctl(vt_fd, KDSETMODE, prev_kd_mode);
+
+    /*
+     * Only restore the previous mode if it was VT_AUTO. VT_PROCESS mode is
+     * always bound to the calling process, so "restoring" VT_PROCESS will
+     * not work; it will just bind the notification signals to our process
+     * again. Not "restoring" VT_PROCESS also ensures we don't mess up the
+     * VT state of the previous controlling process, in case it had set
+     * VT_PROCESS and we fail during setup.
+     */
+    if (prev_vt_mode.mode == VT_AUTO)
+        fops.ioctl(vt_fd, VT_SETMODE, &const_cast<struct vt_mode&>(prev_vt_mode));
+}
+}
 
 mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
     std::shared_ptr<VTFileOperations> const& fops,
     std::unique_ptr<PosixProcessOperations> pops,
     int vt_number,
+    EmergencyCleanupRegistry& emergency_cleanup,
     std::shared_ptr<graphics::DisplayReport> const& report)
-    : fops{fops},
+    : active_devices{std::make_shared<DeviceList>()},
+      fops{fops},
       pops{std::move(pops)},
       report{report},
       vt_fd{fops, open_vt(vt_number)},
@@ -111,6 +368,32 @@ mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
                 std::runtime_error("Failed to set VT to graphics mode"))
                 << boost::errinfo_errno(errno));
     }
+
+    emergency_cleanup.add(
+        make_module_ptr<EmergencyCleanupHandler>(
+            [
+                fops = fops,
+                // If we've made it here we know that vt_fd.fd() is a valid fd
+                vt_fd = vt_fd.fd(),
+                devices = active_devices,
+                saved_kd_mode = prev_kd_mode,
+                saved_vt_mode = prev_vt_mode,
+                saved_tty_mode = prev_tty_mode,
+                saved_tcattr = prev_tcattr
+            ]
+            {
+                for (auto const& device : devices->as_iterable())
+                {
+                    device->on_suspended();
+                }
+                restore_vt(
+                    *fops,
+                    vt_fd,
+                    saved_kd_mode,
+                    saved_vt_mode,
+                    saved_tty_mode,
+                    saved_tcattr);
+            }));
 }
 
 mir::LinuxVirtualTerminal::~LinuxVirtualTerminal() noexcept(true)
@@ -133,6 +416,10 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
                     if (!switch_back())
                         report->report_vt_switch_back_failure();
                     fops->ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
+                    for (auto const& device : active_devices->as_iterable())
+                    {
+                        device->on_activated();
+                    }
                     active = true;
                 }
                 else
@@ -143,6 +430,10 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
 
                     if (switch_away())
                     {
+                        for (auto const& device : active_devices->as_iterable())
+                        {
+                            device->on_suspended();
+                        }
                         action = allow_switch;
                         active = false;
                     }
@@ -178,20 +469,13 @@ void mir::LinuxVirtualTerminal::restore()
 {
     if (vt_fd.fd() >= 0)
     {
-        fops->tcsetattr(vt_fd.fd(), TCSANOW, &prev_tcattr);
-        fops->ioctl(vt_fd.fd(), KDSKBMODE, prev_tty_mode);
-        fops->ioctl(vt_fd.fd(), KDSETMODE, prev_kd_mode);
-
-        /*
-         * Only restore the previous mode if it was VT_AUTO. VT_PROCESS mode is
-         * always bound to the calling process, so "restoring" VT_PROCESS will
-         * not work; it will just bind the notification signals to our process
-         * again. Not "restoring" VT_PROCESS also ensures we don't mess up the
-         * VT state of the previous controlling process, in case it had set
-         * VT_PROCESS and we fail during setup.
-         */
-        if (prev_vt_mode.mode == VT_AUTO)
-            fops->ioctl(vt_fd.fd(), VT_SETMODE, &prev_vt_mode);
+        restore_vt(
+            *fops,
+            vt_fd.fd(),
+            prev_kd_mode,
+            prev_vt_mode,
+            prev_tty_mode,
+            prev_tcattr);
     }
 }
 
@@ -305,7 +589,9 @@ int mir::LinuxVirtualTerminal::open_vt(int vt_number)
     return vt_fd;
 }
 
-boost::future<mir::Fd> mir::LinuxVirtualTerminal::acquire_device(int major, int minor)
+std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_device(
+    int major, int minor,
+    std::unique_ptr<mir::Device::Observer> observer)
 {
     std::stringstream filename;
     filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
@@ -319,6 +605,9 @@ boost::future<mir::Fd> mir::LinuxVirtualTerminal::acquire_device(int major, int 
             "Failed to open /sys file to discover devnode"})
                 << boost::errinfo_file_name(filename.str())));
     }
+
+    // The DRM subsystem has major number 226.
+    bool const is_drm_device{major == 226};
 
     auto const devnode =
         [](auto const& fd)
@@ -337,21 +626,25 @@ boost::future<mir::Fd> mir::LinuxVirtualTerminal::acquire_device(int major, int 
             BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to read DEVNAME"}));
         }(fd);
 
-    auto dev_fd = mir::Fd{fops->open(devnode.c_str(), O_RDWR | O_CLOEXEC)};
-    if (dev_fd != mir::Fd::invalid)
+    std::promise<std::unique_ptr<mir::Device>> device_promise;
+    try
     {
-        return boost::make_ready_future<Fd>(std::move(dev_fd));
+        std::unique_ptr<mir::LinuxVirtualTerminal::Device> device;
+        if (is_drm_device)
+        {
+            device = std::make_unique<DRMDevice>(*fops, devnode.c_str(), std::move(observer), active_devices);
+        }
+        else
+        {
+            device = std::make_unique<EvdevDevice>(fops, std::move(devnode), std::move(observer), active_devices);
+        }
+        device->on_activated();
+        device_promise.set_value(std::move(device));
     }
-    else
+    catch (std::exception const&)
     {
-        return boost::make_exceptional_future<Fd>(
-            std::make_exception_ptr(
-                boost::enable_error_info(
-                    std::system_error{
-                        errno,
-                        std::system_category(),
-                        "Failed to open device node"})
-                    << boost::errinfo_file_name(devnode.c_str())
-                ));
+        device_promise.set_exception(std::current_exception());
     }
+
+    return device_promise.get_future();
 }

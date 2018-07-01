@@ -44,9 +44,6 @@ namespace mtf = mir_test_framework;
 
 namespace
 {
-//TODO not yet configured at the input simulating device
-const auto minimum_touch = mtf::FakeInputDevice::minimum_touch_axis_value;
-const auto maximum_touch = mtf::FakeInputDevice::maximum_touch_axis_value;
 
 ACTION_P(UnblockBarrier, barrier)
 {
@@ -143,25 +140,14 @@ struct TestTouchspotVisualizations : mtf::DeferredInProcessServer
     }
 };
 
-geom::Point transform_to_screen_space(geom::Point in_touchpad_space)
-{
-    auto display_width = ServerConfiguration::display_bounds.size.width.as_uint32_t();
-    auto display_height = ServerConfiguration::display_bounds.size.height.as_uint32_t();
-    
-    float scale_x = float(display_width) / (maximum_touch - minimum_touch + 1);
-    float scale_y = float(display_height) / (maximum_touch - minimum_touch + 1);
-    
-    return {scale_x * in_touchpad_space.x.as_uint32_t(), scale_y * in_touchpad_space.y.as_uint32_t()};
-}
-
 }
 
 using namespace ::testing;
 
 TEST_F(TestTouchspotVisualizations, touch_is_given_to_touchspot_visualizer)
 {
-    static geom::Point abs_touch = { minimum_touch, minimum_touch };
-    static std::vector<geom::Point> expected_spots = { transform_to_screen_space(abs_touch) };
+    geom::Point const abs_touch{0, 0};
+    std::vector<geom::Point> const expected_spots{abs_touch};
 
     InSequence seq;
     // First we will see the spots cleared, as this is the start of a new gesture.
@@ -179,12 +165,12 @@ TEST_F(TestTouchspotVisualizations, touch_is_given_to_touchspot_visualizer)
 
 TEST_F(TestTouchspotVisualizations, touchspots_follow_gesture)
 {
-    static geom::Point abs_touch = { minimum_touch, minimum_touch };
-    static geom::Point abs_touch_2 = { maximum_touch, maximum_touch };
-    static std::vector<geom::Point> expected_spots_1 =
-       { transform_to_screen_space(abs_touch) };
-    static std::vector<geom::Point> expected_spots_2 = 
-       { transform_to_screen_space(abs_touch_2) };
+    auto const display_size{ServerConfiguration::display_bounds.size};
+    geom::Point const abs_touch{0, 0};
+    geom::Point const abs_touch_2{display_size.width.as_uint32_t() - 1,
+                                   display_size.height.as_uint32_t() - 1};
+    std::vector<geom::Point> expected_spots_1{abs_touch};
+    std::vector<geom::Point> expected_spots_2{abs_touch_2};
 
     InSequence seq;
 

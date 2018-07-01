@@ -14,7 +14,7 @@ ExternalProject_Add(
   INSTALL_COMMAND true
   BUILD_ALWAYS TRUE)
 
-add_library(libwlcs SHARED IMPORTED)
+add_library(libwlcs STATIC IMPORTED)
 set_target_properties(libwlcs PROPERTIES IMPORTED_LOCATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwlcs.so)
 add_dependencies(libwlcs wlcs)
 

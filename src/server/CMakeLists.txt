@@ -71,6 +71,7 @@ add_library(mirserverobjects OBJECT
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/observer_multiplexer.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/glib_main_loop.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/glib_main_loop_sources.h
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/synchronised.h
 )
 
 set(MIR_SERVER_OBJECTS

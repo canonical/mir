@@ -22,6 +22,7 @@
 #include "mir/test/doubles/mock_x11.h"
 #include "mir/test/doubles/mock_option.h"
 #include "mir_test_framework/executable_path.h"
+#include "mir/test/doubles/stub_console_services.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -47,6 +48,7 @@ struct X11Platform : Test
     NiceMock<mtd::MockOption> options;
     NiceMock<mtd::MockX11> mock_x11;
     std::shared_ptr<mir::SharedLibrary> library{get_x11_platform()};
+    mtd::StubConsoleServices console;
 };
 
 }
@@ -57,7 +59,7 @@ TEST_F(X11Platform, probes_as_unsupported_without_display)
         .WillByDefault(Return(nullptr));
 
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
-    EXPECT_THAT(probe_fun(options), Eq(mir::input::PlatformPriority::unsupported));
+    EXPECT_THAT(probe_fun(options, console), Eq(mir::input::PlatformPriority::unsupported));
 }
 
 TEST_F(X11Platform, probes_as_supported_with_display)
@@ -65,7 +67,7 @@ TEST_F(X11Platform, probes_as_supported_with_display)
     // default setup of MockX11 already provides fake objects
 
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
-    EXPECT_THAT(probe_fun(options), Ge(mir::input::PlatformPriority::supported));
+    EXPECT_THAT(probe_fun(options, console), Ge(mir::input::PlatformPriority::supported));
 }
 
 TEST_F(X11Platform, probes_as_unsupported_on_nested_configs)
@@ -76,6 +78,6 @@ TEST_F(X11Platform, probes_as_unsupported_on_nested_configs)
         .WillByDefault(Return("something"));
 
     auto probe_fun = library->load_function<mir::input::ProbePlatform>(probe_input_platform_symbol);
-    EXPECT_THAT(probe_fun(options), Eq(mir::input::PlatformPriority::unsupported));
+    EXPECT_THAT(probe_fun(options, console), Eq(mir::input::PlatformPriority::unsupported));
 }
 

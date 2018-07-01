@@ -27,6 +27,8 @@
 
 namespace mir { class Server; namespace scene { class Session; }}
 
+struct wl_display;
+
 namespace miral
 {
 /** Wrapper for running an internal Mir client at startup
@@ -47,6 +49,14 @@ public:
     template <typename ClientObject>
     explicit StartupInternalClient(std::string name, ClientObject const& client_object) :
         StartupInternalClient(name, client_object, client_object) {}
+
+    explicit StartupInternalClient(
+        std::function<void(struct ::wl_display* display)> client_code,
+        std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification);
+
+    template <typename ClientObject>
+    explicit StartupInternalClient(ClientObject const& client_object) :
+        StartupInternalClient(client_object, client_object) {}
 
     ~StartupInternalClient();
 
@@ -76,6 +86,18 @@ public:
         launch(
             name,
             [&](mir::client::Connection connection) { client_object(connection); },
+            [&](std::weak_ptr<mir::scene::Session> const session) { client_object(session); });
+    }
+
+    void launch(
+        std::function<void(struct ::wl_display* display)> const& wayland_fd,
+        std::function<void(std::weak_ptr<mir::scene::Session> const session)> const& connect_notification) const;
+
+    template <typename ClientObject>
+    void launch(ClientObject& client_object) const
+    {
+        launch(
+            [&](struct ::wl_display* display) { client_object(display); },
             [&](std::weak_ptr<mir::scene::Session> const session) { client_object(session); });
     }
 

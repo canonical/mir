@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Lesser General Public License version 2 or 3,
@@ -13,21 +13,24 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
+ * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "drm_close_threadsafe.h"
+#ifndef MIR_PLATFORM_EGLSTREAM_KMS_UTILS_H_
+#define MIR_PLATFORM_EGLSTREAM_KMS_UTILS_H_
 
-#include <mutex>
+#include <epoxy/egl.h>
+#include <sys/types.h>
 
-#include <xf86drm.h>
-
-namespace mgm = mir::graphics::mesa;
-
-int mgm::drm_close_threadsafe(int fd)
+namespace mir
 {
-    static std::mutex m;
-    std::lock_guard<std::mutex> lg{m};
-
-    return drmClose(fd);
+namespace graphics
+{
+namespace eglstream
+{
+dev_t devnum_for_device(EGLDeviceEXT device);
 }
+}
+}
+
+#endif //MIR_PLATFORM_EGLSTREAM_KMS_UTILS_H_

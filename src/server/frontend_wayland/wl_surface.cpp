@@ -107,15 +107,17 @@ bool mf::WlSurface::synchronized() const
 std::experimental::optional<std::pair<geom::Point, mf::WlSurface*>> mf::WlSurface::transform_point(geom::Point point)
 {
     point = point - offset_;
-    for (auto child : children)
+    // loop backwards so the first subsurface we find that accepts the input is the topmost one
+    for (auto child_it = children.rbegin(); child_it != children.rend(); ++child_it)
     {
-        auto result = child->transform_point(point);
+        auto result = (*child_it)->transform_point(point);
         if (result)
             return result;
     }
+    geom::Rectangle surface_rect = {geom::Point{}, buffer_size_.value_or(geom::Size{})};
     for (auto& rect : input_shape.value_or(std::vector<geom::Rectangle>{{{}, buffer_size()}}))
     {
-        if (rect.contains(point))
+        if (rect.intersection_with(surface_rect).contains(point))
             return std::make_pair(point, this);
     }
     return std::experimental::nullopt;

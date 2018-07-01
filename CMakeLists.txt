@@ -28,8 +28,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 31)
-set(MIR_VERSION_PATCH 2)
+set(MIR_VERSION_MINOR 32)
+set(MIR_VERSION_PATCH 0)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_definitions(-DMIR_VERSION_MINOR=${MIR_VERSION_MINOR})
@@ -168,7 +168,7 @@ include_directories(include/common)
 include_directories(include/cookie)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem iostreams thread REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem iostreams REQUIRED)
 include_directories (SYSTEM
   ${Boost_INCLUDE_DIRS}
 )

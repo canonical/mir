@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <cinttypes>
+#include "mir/fd.h"
 
 namespace mir
 {
@@ -30,7 +31,7 @@ namespace graphics
 struct PlatformOperationMessage
 {
     std::vector<uint8_t> data;
-    std::vector<int32_t> fds;
+    std::vector<mir::Fd> fds;
 };
 
 }

@@ -25,6 +25,7 @@
 #include "mir/assert_module_entry_point.h"
 #include "mir/libname.h"
 #include "mir/console_services.h"
+#include "one_shot_device_observer.h"
 
 #include <EGL/egl.h>
 #include <fcntl.h>
@@ -32,6 +33,7 @@
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
+namespace mgc = mir::graphics::common;
 namespace mo = mir::options;
 
 namespace
@@ -116,8 +118,13 @@ mg::PlatformPriority probe_graphics_platform(
 
         try
         {
-            tmp_fd = console->acquire_device(major(devnum), minor(devnum)).get();
-            break;
+            // Rely on the console handing us a DRM master...
+            console->acquire_device(
+                major(devnum), minor(devnum),
+                std::make_unique<mgc::OneShotDeviceObserver>(tmp_fd)).get();
+
+            if (tmp_fd != mir::Fd::invalid)
+                return mg::PlatformPriority::best;
         }
         catch (...)
         {

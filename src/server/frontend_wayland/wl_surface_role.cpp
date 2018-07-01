@@ -18,6 +18,7 @@
 
 #include "wl_surface_role.h"
 
+#include "output_manager.h"
 #include "wayland_utils.h"
 #include "wl_surface.h"
 #include "basic_surface_event_sink.h"
@@ -47,9 +48,22 @@ void mir::frontend::WlAbstractMirWindow::unset_maximized()
 
 void mir::frontend::WlAbstractMirWindow::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
 {
-    (void)output; // TODO specify the output when setting fullscreen
     // We must process this request immediately (i.e. don't defer until commit())
-    set_state_now(mir_window_state_fullscreen);
+    if (surface_id_.as_value())
+    {
+        shell::SurfaceSpecification mods;
+        mods.state = mir_window_state_fullscreen;
+        mods.output_id = output_manager->output_id_for(client, output);
+        auto const session = get_session(client);
+        shell->modify_surface(session, surface_id_, mods);
+    }
+    else
+    {
+        params->state = mir_window_state_fullscreen;
+        if (output)
+            params->output_id = output_manager->output_id_for(client, output.value());
+        create_mir_window();
+    }
 }
 
 void mir::frontend::WlAbstractMirWindow::unset_fullscreen()
@@ -94,11 +108,12 @@ std::shared_ptr<scene::Surface> get_surface_for_id(std::shared_ptr<Session> cons
 }
 
 WlAbstractMirWindow::WlAbstractMirWindow(WlSeat* seat, wl_client* client, WlSurface* surface,
-                                         std::shared_ptr<Shell> const& shell)
+                                         std::shared_ptr<Shell> const& shell, OutputManager* output_manager)
         : destroyed{std::make_shared<bool>(false)},
           client{client},
           surface{surface},
           shell{shell},
+          output_manager{output_manager},
           sink{std::make_shared<BasicSurfaceEventSink>(seat, client, surface, this)},
           params{std::make_unique<scene::SurfaceCreationParameters>(
                  scene::SurfaceCreationParameters().of_type(mir_window_type_freestyle))}
@@ -107,6 +122,7 @@ WlAbstractMirWindow::WlAbstractMirWindow(WlSeat* seat, wl_client* client, WlSurf
 
 WlAbstractMirWindow::~WlAbstractMirWindow()
 {
+    sink->disconnect();
     *destroyed = true;
     if (surface_id_.as_value())
     {

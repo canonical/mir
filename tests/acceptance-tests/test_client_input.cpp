@@ -342,9 +342,6 @@ struct TestClientInputWithTwoScreens : TestClientInput
 
     int const width{second_screen.size.width.as_int()};
     int const height{second_screen.size.height.as_int()};
-    float const touch_range = mtf::FakeInputDevice::maximum_touch_axis_value - mtf::FakeInputDevice::minimum_touch_axis_value + 1;
-    float const scale_to_device_width = touch_range / width;
-    float const scale_to_device_height = touch_range / height;
 
     void SetUp() override
     {
@@ -696,26 +693,13 @@ TEST_F(TestClientInput, clients_receive_pointer_within_coordinate_system_of_wind
 // TODO: Consider tests for more input devices with custom mapping (i.e. joysticks...)
 TEST_F(TestClientInput, usb_direct_input_devices_work)
 {
-    float const minimum_touch = mtf::FakeInputDevice::minimum_touch_axis_value;
-    float const maximum_touch = mtf::FakeInputDevice::maximum_touch_axis_value;
     auto const display_width = screen_geometry.size.width.as_int();
     auto const display_height = screen_geometry.size.height.as_int();
 
-    // We place a click 10% in to the touchscreens space in both axis,
-    // and a second at 0,0. Thus we expect to see a click at
-    // .1*screen_width/height and a second at zero zero.
-    float const abs_touch_x_1 = minimum_touch + (maximum_touch - minimum_touch) * 0.1f;
-    float const abs_touch_y_1 = minimum_touch + (maximum_touch - minimum_touch) * 0.1f;
-    float const abs_touch_x_2 = 0;
-    float const abs_touch_y_2 = 0;
-
-    float const expected_scale_x = display_width / (maximum_touch - minimum_touch + 1.0f);
-    float const expected_scale_y = display_height / (maximum_touch - minimum_touch + 1.0f);
-
-    float const expected_motion_x_1 = expected_scale_x * abs_touch_x_1;
-    float const expected_motion_y_1 = expected_scale_y * abs_touch_y_1;
-    float const expected_motion_x_2 = expected_scale_x * abs_touch_x_2;
-    float const expected_motion_y_2 = expected_scale_y * abs_touch_y_2;
+    float const expected_motion_x_1 = display_width * 0.1f;
+    float const expected_motion_y_1 = display_height * 0.1f;
+    float const expected_motion_x_2 = 0;
+    float const expected_motion_y_2 = 0;
 
     positions[first] = screen_geometry;
 
@@ -733,13 +717,13 @@ TEST_F(TestClientInput, usb_direct_input_devices_work)
         .WillOnce(mt::WakeUp(&first_client.all_events_received));
 
     fake_touch_screen->emit_event(mis::a_touch_event()
-                                  .at_position({abs_touch_x_1, abs_touch_y_1}));
+                                  .at_position({expected_motion_x_1, expected_motion_y_1}));
     // Sleep here to trigger more failures (simulate slow machine)
     // TODO why would that cause failures?b
     std::this_thread::sleep_for(10ms);
     fake_touch_screen->emit_event(mis::a_touch_event()
                                   .with_action(mis::TouchParameters::Action::Move)
-                                  .at_position({abs_touch_x_2, abs_touch_y_2}));
+                                  .at_position({expected_motion_x_2, expected_motion_y_2}));
 
     first_client.all_events_received.wait_for(2s);
 }
@@ -1547,7 +1531,7 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_can_be_mapped_to_second_output
     EXPECT_CALL(client, handle_input(mt::TouchEvent(expected_x, expected_y)))
         .WillOnce(mt::WakeUp(&client.all_events_received));
     fake_touch_screen->emit_event(mis::a_touch_event()
-                           .at_position({touch_x*scale_to_device_width, touch_y*scale_to_device_height}));
+                           .at_position({touch_x, touch_y}));
 
     EXPECT_TRUE(client.all_events_received.wait_for(10s));
 }
@@ -1620,7 +1604,7 @@ TEST_F(TestClientInputWithTwoScreens, touchscreen_mapped_to_deactivated_output_i
     ON_CALL(client, handle_input(mt::TouchEvent(expected_x, expected_y)))
         .WillByDefault(mt::WakeUp(&client.all_events_received));
     fake_touch_screen->emit_event(mis::a_touch_event()
-                           .at_position({touch_x*scale_to_device_width, touch_y*scale_to_device_height}));
+                           .at_position({touch_x, touch_y}));
 
     EXPECT_FALSE(client.all_events_received.wait_for(5s));
 }

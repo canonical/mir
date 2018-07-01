@@ -22,7 +22,6 @@
 #include "mir/graphics/platform_operation_message.h"
 #include "src/platforms/mesa/server/kms/platform.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/emergency_cleanup_registry.h"
 #include "mir/shared_library.h"
 #include "mir/options/program_option.h"
 
@@ -42,6 +41,7 @@
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/fd_matcher.h"
+#include "mir/test/doubles/stub_console_services.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -61,32 +61,6 @@ namespace
 
 const char probe_platform[] = "probe_graphics_platform";
 
-class StubConsoleServices : public mir::ConsoleServices
-{
-public:
-    void
-    register_switch_handlers(
-        mir::graphics::EventHandlerRegister&,
-        std::function<bool()> const&,
-        std::function<bool()> const&) override
-    {
-    }
-
-    void restore() override
-    {
-    }
-
-    boost::future<mir::Fd> acquire_device(int major, int minor) override
-    {
-        /* NOTE: This uses the behaviour that MockDRM will intercept any open() call
-         * under /dev/dri/
-         */
-        std::stringstream filename;
-        filename << "/dev/dri/" << major << ":" << minor;
-        return boost::make_ready_future<mir::Fd>(::open(filename.str().c_str(), O_RDWR | O_CLOEXEC));
-    }
-};
-
 class MesaGraphicsPlatform : public ::testing::Test
 {
 public:
@@ -104,7 +78,7 @@ public:
     {
         return std::make_shared<mgm::Platform>(
                 mir::report::null_display_report(),
-                std::make_shared<StubConsoleServices>(),
+                std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgm::BypassOption::allowed);
     }
@@ -132,12 +106,6 @@ TEST_F(MesaGraphicsPlatform, connection_ipc_package)
     /* Expect proper authorization */
     EXPECT_CALL(mock_drm, drmGetMagic(auth_fd,_));
     EXPECT_CALL(mock_drm, drmAuthMagic(mtd::IsFdOfDevice("/dev/dri/card0"),_));
-
-    EXPECT_CALL(mock_drm, drmClose(mtd::IsFdOfDevice("/dev/dri/card0")));
-    EXPECT_CALL(mock_drm, drmClose(mtd::IsFdOfDevice("/dev/dri/card1")));
-
-    /* Expect authenticated fd to be closed when package is destroyed */
-    EXPECT_CALL(mock_drm, drmClose(auth_fd));
 
     EXPECT_NO_THROW (
         auto platform = create_platform();
@@ -174,165 +142,11 @@ TEST_F(MesaGraphicsPlatform, egl_native_display_is_gbm_device)
     EXPECT_EQ(mock_gbm.fake_gbm.device, platform->egl_native_display());
 }
 
-namespace
-{
-
-class ConcurrentCallDetector
-{
-public:
-    ConcurrentCallDetector()
-        : threads_in_call{0}, detected_concurrent_calls_{false}
-    {
-    }
-
-    void call()
-    {
-        if (threads_in_call.fetch_add(1) > 0)
-            detected_concurrent_calls_ = true;
-
-        std::this_thread::sleep_for(std::chrono::milliseconds{1});
-
-        --threads_in_call;
-    }
-
-    bool detected_concurrent_calls()
-    {
-        return detected_concurrent_calls_;
-    }
-
-private:
-    std::atomic<int> threads_in_call;
-    std::atomic<bool> detected_concurrent_calls_;
-};
-
-}
-
-/*
- * This test is not 100% reliable in theory (we are trying to recreate a race
- * condition after all!), but it can only produce false successes, not false
- * failures, so it's safe to use.  In practice it is reliable enough: I get a
- * 100% failure rate for this test (1000 out of 1000 repetitions) when testing
- * without the fix for the race condition we are testing for.
- */
-TEST_F(MesaGraphicsPlatform, drm_close_not_called_concurrently_on_ipc_package_destruction)
-{
-    using namespace testing;
-
-    unsigned int const num_threads{10};
-    unsigned int const num_iterations{10};
-
-    ConcurrentCallDetector detector;
-
-    ON_CALL(mock_drm, drmClose(_))
-        .WillByDefault(DoAll(InvokeWithoutArgs(&detector, &ConcurrentCallDetector::call),
-                             Return(0)));
-
-    auto platform = create_platform();
-    std::shared_ptr<mg::PlatformIpcOperations> ipc_ops = platform->make_ipc_operations();
-
-    std::vector<std::thread> threads;
-
-    for (unsigned int i = 0; i < num_threads; i++)
-    {
-        threads.push_back(std::thread{
-            [ipc_ops]
-            {
-                for (unsigned int i = 0; i < num_iterations; i++)
-                {
-                    ipc_ops->connection_ipc_package();
-                }
-            }});
-    }
-
-    for (auto& t : threads)
-        t.join();
-
-    EXPECT_FALSE(detector.detected_concurrent_calls());
-}
-
-struct StubEmergencyCleanupRegistry : mir::EmergencyCleanupRegistry
-{
-    void add(mir::EmergencyCleanupHandler const&) override
-    {
-    }
-
-    void add(mir::ModuleEmergencyCleanupHandler handler) override
-    {
-        this->handler = std::move(handler);
-    }
-
-    mir::ModuleEmergencyCleanupHandler handler;
-};
-
-TEST_F(MesaGraphicsPlatform, restores_vt_on_emergency_cleanup)
-{
-    using namespace testing;
-
-    auto const mock_vt = std::make_shared<mtd::MockConsoleServices>();
-    StubEmergencyCleanupRegistry emergency_cleanup_registry;
-    mgm::Platform platform{
-        mir::report::null_display_report(),
-        mock_vt,
-        emergency_cleanup_registry,
-        mgm::BypassOption::allowed};
-
-    EXPECT_CALL(*mock_vt, restore());
-
-    (*emergency_cleanup_registry.handler)();
-
-    Mock::VerifyAndClearExpectations(mock_vt.get());
-}
-
-TEST_F(MesaGraphicsPlatform, releases_drm_on_emergency_cleanup)
-{
-    using namespace testing;
-
-    auto const null_vt = std::make_shared<mtd::NullConsoleServices>();
-    StubEmergencyCleanupRegistry emergency_cleanup_registry;
-    mgm::Platform platform{
-        mir::report::null_display_report(),
-        null_vt,
-        emergency_cleanup_registry,
-        mgm::BypassOption::allowed};
-
-    int const success_code = 0;
-    EXPECT_CALL(mock_drm, drmDropMaster(mtd::IsFdOfDevice("/dev/dri/card0")))
-        .WillOnce(Return(success_code));
-    EXPECT_CALL(mock_drm, drmDropMaster(mtd::IsFdOfDevice("/dev/dri/card1")))
-        .WillOnce(Return(success_code));
-
-    (*emergency_cleanup_registry.handler)();
-
-    Mock::VerifyAndClearExpectations(&mock_drm);
-}
-
-TEST_F(MesaGraphicsPlatform, does_not_propagate_emergency_cleanup_exceptions)
-{
-    using namespace testing;
-
-    auto const mock_vt = std::make_shared<mtd::MockConsoleServices>();
-    StubEmergencyCleanupRegistry emergency_cleanup_registry;
-    mgm::Platform platform{
-        mir::report::null_display_report(),
-        mock_vt,
-        emergency_cleanup_registry,
-        mgm::BypassOption::allowed};
-
-    EXPECT_CALL(*mock_vt, restore())
-        .WillOnce(Throw(std::runtime_error("vt restore exception")));
-    EXPECT_CALL(mock_drm, drmDropMaster(_))
-        .WillRepeatedly(Throw(std::runtime_error("drm drop master exception")));
-
-    (*emergency_cleanup_registry.handler)();
-
-    Mock::VerifyAndClearExpectations(&mock_drm);
-}
-
 TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_no_drm_udev_devices)
 {
     mtf::UdevEnvironment udev_environment;
     mir::options::ProgramOption options;
-    auto const stub_vt = std::make_shared<StubConsoleServices>();
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
@@ -344,7 +158,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_best_when_master)
     mtf::UdevEnvironment udev_environment;
     boost::program_options::options_description po;
     mir::options::ProgramOption options;
-    auto const stub_vt = std::make_shared<StubConsoleServices>();
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");
 
@@ -360,12 +174,12 @@ TEST_F(MesaGraphicsPlatform, probe_returns_in_between_when_cant_set_master)
     mtf::UdevEnvironment udev_environment;
     boost::program_options::options_description po;
     mir::options::ProgramOption options;
-    auto const stub_vt = std::make_shared<StubConsoleServices>();
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");
 
     EXPECT_CALL(mock_drm, drmSetMaster(_))
-        .WillOnce(Return(-1));
+        .WillRepeatedly(Return(-1));
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
@@ -383,7 +197,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_egl_client_extension
     mir::options::ProgramOption options;
     const char *argv[] = {"dummy", "--vt"};
     options.parse_arguments(po, 2, argv);
-    auto const stub_vt = std::make_shared<StubConsoleServices>();
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");
 
@@ -404,7 +218,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_gbm_platform_not_sup
     mir::options::ProgramOption options;
     const char *argv[] = {"dummy", "--vt"};
     options.parse_arguments(po, 2, argv);
-    auto const stub_vt = std::make_shared<StubConsoleServices>();
+    auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");
 

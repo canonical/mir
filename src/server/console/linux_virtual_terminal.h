@@ -21,13 +21,19 @@
 
 #include "mir/console_services.h"
 
+#include "mir/synchronised.h"
+
 #include <memory>
 #include <linux/vt.h>
 #include <termios.h>
 #include <unistd.h>
+#include <future>
+#include <vector>
 
 namespace mir
 {
+class EmergencyCleanupRegistry;
+
 namespace graphics
 {
 class DisplayReport;
@@ -41,8 +47,8 @@ public:
 
     virtual int open(char const* pathname, int flags) = 0;
     virtual int close(int fd) = 0;
-    virtual int ioctl(int d, int request, int val) = 0;
-    virtual int ioctl(int d, int request, void* p_val) = 0;
+    virtual int ioctl(int d, unsigned long int request, int val) = 0;
+    virtual int ioctl(int d, unsigned long int request, void* p_val) = 0;
     virtual int tcsetattr(int d, int acts, const struct termios *tcattr) = 0;
     virtual int tcgetattr(int d, struct termios *tcattr) = 0;
 
@@ -74,10 +80,12 @@ protected:
 class LinuxVirtualTerminal : public ConsoleServices
 {
 public:
-    LinuxVirtualTerminal(std::shared_ptr<VTFileOperations> const& fops,
-                         std::unique_ptr<PosixProcessOperations> pops,
-                         int vt_number,
-                         std::shared_ptr<graphics::DisplayReport> const& report);
+    LinuxVirtualTerminal(
+        std::shared_ptr<VTFileOperations> const& fops,
+        std::unique_ptr<PosixProcessOperations> pops,
+        int vt_number,
+        EmergencyCleanupRegistry& emergency_cleanup,
+        std::shared_ptr<graphics::DisplayReport> const& report);
     ~LinuxVirtualTerminal() noexcept(true);
 
     void register_switch_handlers(
@@ -85,9 +93,15 @@ public:
         std::function<bool()> const& switch_away,
         std::function<bool()> const& switch_back) override;
     void restore() override;
-    boost::future<Fd> acquire_device(int major, int minor) override;
+    std::future<std::unique_ptr<mir::Device>> acquire_device(
+        int major, int minor,
+        std::unique_ptr<mir::Device::Observer> observer) override;
 
+    class Device;
+    class DeviceList;
 private:
+    std::shared_ptr<DeviceList> const active_devices;
+
     class FDWrapper
     {
     public:

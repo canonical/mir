@@ -32,15 +32,14 @@ mgx::Platform::Platform(std::shared_ptr<::Display> const& conn,
                         std::shared_ptr<mg::DisplayReport> const& report)
     : x11_connection{conn},
       udev{std::make_shared<mir::udev::Context>()},
-      drm{std::make_shared<mesa::helpers::DRMHelper>(mesa::helpers::DRMNodeToUse::render)},
+      drm{mgm::helpers::DRMHelper::open_any_render_node(udev)},
       report{report},
+      gbm{drm->fd},
       size{size}
 {
     if (!x11_connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
 
-    drm->setup(udev);
-    gbm.setup(*drm);
     auth_factory = std::make_unique<mgm::DRMNativePlatformAuthFactory>(*drm);
 }
 

@@ -92,7 +92,6 @@ public:
 
     MOCK_METHOD3(open, int(char const* path, int flags, mode_t mode));
     MOCK_METHOD2(drmOpen, int(const char *name, const char *busid));
-    MOCK_METHOD1(drmClose, int(int fd));
     MOCK_METHOD3(drmIoctl, int(int fd, unsigned long request, void *arg));
 
     MOCK_METHOD1(drmModeGetResources, drmModeResPtr(int fd));

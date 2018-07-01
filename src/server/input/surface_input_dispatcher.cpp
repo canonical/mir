@@ -418,6 +418,10 @@ void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
         [this](auto id) { return &this->ensure_pointer_state(id).current_target; },
         [this](auto point) { return this->find_target_surface(point); });
 
+    // If we're in a move/resize gesture we don't need to synthesize an event
+    if (ensure_pointer_state(mir_input_event_get_device_id(ctx.iev)).gesture_owner)
+        return;
+
     auto const entered_surface_changed = dispatch_scene_change_enter_exit_events(
         ctx,
         [this](auto surf, auto pev, auto action) { this->send_enter_exit_event(surf, pev, action); });

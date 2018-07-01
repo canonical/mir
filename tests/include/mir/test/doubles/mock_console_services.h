@@ -21,6 +21,7 @@
 
 #include "mir/console_services.h"
 
+#include "mir/test/gmock_fixes.h"
 #include <gmock/gmock.h>
 
 namespace mir
@@ -38,18 +39,29 @@ public:
                       std::function<bool()> const&,
                       std::function<bool()> const&));
     MOCK_METHOD0(restore, void());
-    MOCK_METHOD2(acquire_device_immediate, mir::Fd(int,int));
+    MOCK_METHOD3(
+        acquire_device_immediate,
+        std::unique_ptr<Device>(
+            int,int,
+            Device::Observer*));
 
-    boost::future<mir::Fd> acquire_device(int major, int minor)
+    std::future<std::unique_ptr<Device>> acquire_device(
+        int major, int minor,
+        std::unique_ptr<Device::Observer> observer  )
     {
+        std::promise<std::unique_ptr<Device>> promise;
         try
         {
-            return boost::make_ready_future(acquire_device_immediate(major, minor));
+            promise.set_value(
+                acquire_device_immediate(
+                    major, minor,
+                    observer.get()));
         }
         catch (...)
         {
-            return boost::make_exceptional_future<mir::Fd>(std::current_exception());
+            promise.set_exception(std::current_exception());
         }
+        return promise.get_future();
     }
 };
 
