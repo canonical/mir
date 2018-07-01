@@ -663,7 +663,7 @@ mf::WaylandConnector::WaylandConnector(
     if (!getenv("MIR_DISABLE_XDG_SHELL_V6_UNSTABLE"))
         xdg_shell_global = std::make_unique<XdgShellV6>(display.get(), shell, *seat_global, output_manager.get());
     if (getenv("MIR_ENABLE_EXPERIMENTAL_X11"))
-        xwayland_wm_shell = std::make_shared<mf::XWaylandWMShell>(shell, *seat_global);
+        xwayland_wm_shell = std::make_shared<mf::XWaylandWMShell>(shell, *seat_global, output_manager.get());
 
     wl_display_init_shm(display.get());
 

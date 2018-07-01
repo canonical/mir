@@ -27,12 +27,15 @@ namespace mir
 {
 namespace frontend
 {
+class OutputManager;
 class XWaylandWMSurface;
 class Shell;
 class XWaylandWMShellSurface : public WlAbstractMirWindow
 {
 public:
-    XWaylandWMShellSurface(wl_client* client, WlSurface* surface, std::shared_ptr<Shell> const& shell, WlSeat& seat);
+    XWaylandWMShellSurface(wl_client* client, WlSurface* surface,
+                           std::shared_ptr<Shell> const& shell, WlSeat& seat,
+                           OutputManager* const output_manager);
     ~XWaylandWMShellSurface();
 
     void move();

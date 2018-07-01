@@ -27,13 +27,16 @@
 
 namespace mf = mir::frontend;
 
-mf::XWaylandWMShell::XWaylandWMShell(std::shared_ptr<mf::Shell> const& shell, mf::WlSeat& seat)
-    : shell{shell}, seat{seat}
+mf::XWaylandWMShell::XWaylandWMShell(std::shared_ptr<mf::Shell> const& shell,
+                                     mf::WlSeat& seat,
+                                     OutputManager* const output_manager)
+    : shell{shell}, seat{seat}, output_manager{output_manager}
 {
 }
 
 std::shared_ptr<mf::XWaylandWMShellSurface> mf::XWaylandWMShell::get_shell_surface(wl_client* client,
                                                                                    WlSurface* surface)
 {
-    return std::make_shared<mf::XWaylandWMShellSurface>(client, surface, shell, seat);
+    return std::make_shared<mf::XWaylandWMShellSurface>(client, surface, shell,
+                                                        seat, output_manager);
 }

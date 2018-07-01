@@ -32,8 +32,9 @@ namespace mf = mir::frontend;
 mf::XWaylandWMShellSurface::XWaylandWMShellSurface(wl_client* client,
                                                    WlSurface* surface,
                                                    std::shared_ptr<mf::Shell> const& shell,
-                                                   WlSeat& seat)
-    : WlAbstractMirWindow{&seat, client, surface, shell}
+                                                   WlSeat& seat,
+                                                   OutputManager* const output_manager)
+    : WlAbstractMirWindow{&seat, client, surface, shell, output_manager}
 {
     surface->set_role(this);
     set_state_now(MirWindowState::mir_window_state_maximized);
