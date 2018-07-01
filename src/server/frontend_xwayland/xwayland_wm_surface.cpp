@@ -26,6 +26,7 @@
 
 #include <wayland-client-core.h>
 #include <wayland-client.h>
+#include <string.h>
 
 #include <map>
 
@@ -69,6 +70,10 @@ void mf::XWaylandWMSurface::set_surface(WlSurface *wls)
 
     auto shell = xwm->get_wl_connector()->get_xwayland_wm_shell();
     shell_surface = shell->get_shell_surface(xwm->get_wl_client(), wlsurface);
+    if (!properties.title.empty())
+      shell_surface->set_title(properties.title);
+
+    shell_surface->set_toplevel();
     xcb_flush(xwm->get_xcb_connection());
 }
 
@@ -173,6 +178,15 @@ void mf::XWaylandWMSurface::read_properties()
         {
         case XCB_ATOM_STRING:
         {
+            char *p = strndup(reinterpret_cast<char *>(xcb_get_property_value(reply)),
+                              xcb_get_property_value_length(reply));
+            if (atom == XCB_ATOM_WM_CLASS) {
+                properties.appId = std::string(p);
+            } else if (atom == XCB_ATOM_WM_NAME || xwm->xcb_atom.net_wm_name) {
+                properties.title = std::string(p);
+            } else {
+                free(p);
+            }
             mir::log_verbose("XCB_ATOM_STRING");
             break;
         }
@@ -234,4 +248,28 @@ void mf::XWaylandWMSurface::read_properties()
 
         free(reply);
     }
+}
+
+void mf::XWaylandWMSurface::move_resize(uint32_t detail)
+{
+  switch (detail)
+  {
+  case _NET_WM_MOVERESIZE_MOVE:
+      shell_surface->move();
+      mir::log_verbose("Move!");
+      break;
+  case _NET_WM_MOVERESIZE_SIZE_TOPLEFT:
+  case _NET_WM_MOVERESIZE_SIZE_TOP:
+  case _NET_WM_MOVERESIZE_SIZE_TOPRIGHT:
+  case _NET_WM_MOVERESIZE_SIZE_RIGHT:
+  case _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT:
+  case _NET_WM_MOVERESIZE_SIZE_BOTTOM:
+  case _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT:
+  case _NET_WM_MOVERESIZE_SIZE_LEFT:
+      shell_surface->resize(detail);
+      mir::log_verbose("resize!");
+      break;
+  default:
+      break;
+  }
 }

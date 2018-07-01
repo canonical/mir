@@ -20,6 +20,7 @@
 #include "xwayland_log.h"
 
 #include "xwayland_wm_shellsurface.h"
+#include "xwayland_wm_surface.h"
 
 #include "mir/frontend/shell.h"
 #include "mir/scene/surface_creation_parameters.h"
@@ -36,24 +37,26 @@ mf::XWaylandWMShellSurface::XWaylandWMShellSurface(wl_client* client,
                                                    OutputManager* const output_manager)
     : WlAbstractMirWindow{&seat, client, surface, shell, output_manager}
 {
-    surface->set_role(this);
-    set_state_now(MirWindowState::mir_window_state_maximized);
+    params->type = mir_window_type_normal;
 }
 
 mf::XWaylandWMShellSurface::~XWaylandWMShellSurface()
 {
     surface->clear_role();
+    mir::log_verbose("Im gone");
 }
 
 void mf::XWaylandWMShellSurface::destroy()
 {
-    surface->clear_role();
+
 }
+
 void mf::XWaylandWMShellSurface::set_toplevel()
 {
     surface->set_role(this);
-    mir::log_verbose("set toplevel");
+    set_state_now(MirWindowState::mir_window_state_restored);
 }
+
 void mf::XWaylandWMShellSurface::set_transient(struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
 {
     (void)parent;
@@ -67,6 +70,7 @@ void mf::XWaylandWMShellSurface::handle_resize(const geometry::Size& new_size)
     (void)new_size;
     // TODO
     mir::log_verbose("handle resize");
+    //move();
 }
 
 // This is just a wrapper to avoid needing nullptr to use this method
@@ -96,7 +100,6 @@ void mf::XWaylandWMShellSurface::set_title(std::string const& title)
     {
         params->name = title;
     }
-    mir::log_verbose("set title");
 }
 
 void mf::XWaylandWMShellSurface::move()
@@ -108,10 +111,55 @@ void mf::XWaylandWMShellSurface::move()
             shell->request_operation(session, surface_id(), sink->latest_timestamp_ns(), Shell::UserRequest::move);
         }
     }
-    mir::log_verbose("move");
 }
+
 void mf::XWaylandWMShellSurface::resize(uint32_t edges)
 {
-    (void)edges;
-    // TODO
+    if (surface_id().as_value())
+    {
+        if (auto session = get_session(client))
+        {
+            MirResizeEdge edge = mir_resize_edge_none;
+
+            switch (edges)
+            {
+            case _NET_WM_MOVERESIZE_SIZE_TOP:
+                edge = mir_resize_edge_north;
+                break;
+
+            case _NET_WM_MOVERESIZE_SIZE_BOTTOM:
+                edge = mir_resize_edge_south;
+                break;
+
+            case _NET_WM_MOVERESIZE_SIZE_LEFT:
+                edge = mir_resize_edge_west;
+                break;
+
+            case _NET_WM_MOVERESIZE_SIZE_TOPLEFT:
+                edge = mir_resize_edge_northwest;
+                break;
+
+            case _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT:
+                edge = mir_resize_edge_southwest;
+                break;
+
+            case _NET_WM_MOVERESIZE_SIZE_RIGHT:
+                edge = mir_resize_edge_east;
+                break;
+
+            case _NET_WM_MOVERESIZE_SIZE_TOPRIGHT:
+                edge = mir_resize_edge_northeast;
+                break;
+
+            case _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT:
+                edge = mir_resize_edge_southeast;
+                break;
+
+            default:;
+            }
+
+            shell->request_operation(
+                session, surface_id(), sink->latest_timestamp_ns(), Shell::UserRequest::resize, edge);
+        }
+    }
 }

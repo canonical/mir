@@ -172,10 +172,10 @@ private:
     void handle_create_notify(xcb_create_notify_event_t *event);
     void handle_property_notify(xcb_property_notify_event_t *event);
     void handle_map_request(xcb_map_request_event_t *event);
-    void handle_change_state(XWaylandWMSurface *surface, xcb_client_message_event_t *event);
-    void handle_state(XWaylandWMSurface *surface, xcb_client_message_event_t *event);
-    void handle_surface_id(XWaylandWMSurface *surface, xcb_client_message_event_t *event);
-    void handle_move_resize(XWaylandWMSurface *surface, xcb_client_message_event_t *event);
+    void handle_change_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event);
+    void handle_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event);
+    void handle_surface_id(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event);
+    void handle_move_resize(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event);
     void handle_client_message(xcb_client_message_event_t *event);
     void handle_configure_request(xcb_configure_request_event_t *event);
     void handle_unmap_notify(xcb_unmap_notify_event_t *event);
@@ -192,7 +192,7 @@ private:
     xcb_connection_t *xcb_connection;
     xcb_screen_t *xcb_screen;
     xcb_window_t xcb_window;
-    std::map<xcb_window_t, XWaylandWMSurface *> surfaces;
+    std::map<xcb_window_t, std::shared_ptr<XWaylandWMSurface>> surfaces;
     std::shared_ptr<dispatch::ReadableFd> wm_dispatcher;
     int xcb_cursor;
     xcb_cursor_t *xcb_cursors;

@@ -39,12 +39,6 @@ public:
     ~XWaylandWMShellSurface();
 
     void move();
-
-protected:
-    void destroy() override;
-    void set_toplevel();
-    void set_transient(struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags);
-    void handle_resize(const geometry::Size& new_size) override;
     void set_fullscreen();
     void set_popup(struct wl_resource* /*seat*/,
                    uint32_t /*serial*/,
@@ -54,6 +48,22 @@ protected:
                    uint32_t flags);
     void set_title(std::string const& title);
     void resize(uint32_t edges);
+    void set_toplevel();
+
+    using WlAbstractMirWindow::set_maximized;
+    using WlAbstractMirWindow::unset_maximized;
+    using WlAbstractMirWindow::unset_fullscreen;
+    using WlAbstractMirWindow::set_minimized;
+    using WlAbstractMirWindow::set_state_now;
+
+protected:
+    void destroy() override;
+    void set_transient(struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags);
+    void handle_resize(const geometry::Size& new_size) override;
+
+    using WlAbstractMirWindow::client;
+    using WlAbstractMirWindow::params;
+    using WlAbstractMirWindow::surface_id;
 };
 } /* frontend */
 } /* mir */

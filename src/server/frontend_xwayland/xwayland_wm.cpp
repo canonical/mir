@@ -120,7 +120,7 @@ void mf::XWaylandWM::start(wl_client *wlc, const int fd)
 
     wm_dispatcher =
         std::make_shared<mir::dispatch::ReadableFd>(mir::Fd{mir::IntOwnedFd{wm_fd}}, [this]() { handle_events(); });
-    dispatcher->add_watch(wm_dispatcher, mir::dispatch::DispatchReentrancy::sequential);
+    dispatcher->add_watch(wm_dispatcher);
 
     event_thread = std::make_unique<mir::dispatch::ThreadedDispatcher>(
         "Mir/X11 WM Reader", dispatcher, []() { mir::terminate_with_current_exception(); });
@@ -239,7 +239,7 @@ void mf::XWaylandWM::set_net_active_window(xcb_window_t window)
 
 void mf::XWaylandWM::create_window(xcb_window_t id)
 {
-    surfaces[id] = new XWaylandWMSurface(this, id);
+    surfaces[id] = std::make_shared<XWaylandWMSurface>(this, id);
 }
 
 /* Events */
@@ -334,7 +334,7 @@ void mf::XWaylandWM::handle_property_notify(xcb_property_notify_event_t *event)
 {
     mir::log_verbose("XCB_PROPERTY_NOTIFY (window %d)", event->window);
 
-    auto *surface = surfaces[event->window];
+    auto surface = surfaces[event->window];
     if (!surface)
         return;
 
@@ -364,8 +364,6 @@ void mf::XWaylandWM::handle_destroy_notify(xcb_destroy_notify_event_t *event)
     if (surfaces.find(event->window) == surfaces.end())
         return;
 
-    auto *surface = surfaces[event->window];
-    delete surface;
     surfaces.erase(event->window);
 }
 
@@ -380,9 +378,9 @@ void mf::XWaylandWM::handle_map_request(xcb_map_request_event_t *event)
     if (surfaces.find(event->window) == surfaces.end())
         return;
 
-    auto *surface = surfaces[event->window];
+    auto surface = surfaces[event->window];
 
-    mir::log_verbose("XCB_MAP_REQUEST (window %d, %p)", event->window, surface);
+    mir::log_verbose("XCB_MAP_REQUEST (window %d)", event->window);
 
     surface->read_properties();
     surface->set_wm_state(XWaylandWMSurface::NormalState);
@@ -408,7 +406,7 @@ void mf::XWaylandWM::handle_unmap_notify(xcb_unmap_notify_event_t *event)
     if (surfaces.find(event->window) == surfaces.end())
         return;
 
-    auto *surface = surfaces[event->window];
+    auto surface = surfaces[event->window];
 
     surface->set_surface_id(0);
     surface->set_wm_state(XWaylandWMSurface::WithdrawnState);
@@ -431,7 +429,7 @@ void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
     if (surfaces.find(event->window) == surfaces.end())
         return;
 
-    auto *surface = surfaces[event->window];
+    auto surface = surfaces[event->window];
 
     if (event->type == xcb_atom.net_wm_moveresize)
         handle_move_resize(surface, event);
@@ -441,7 +439,7 @@ void mf::XWaylandWM::handle_client_message(xcb_client_message_event_t *event)
         handle_surface_id(surface, event);
 }
 
-void mf::XWaylandWM::handle_move_resize(XWaylandWMSurface *surface, xcb_client_message_event_t *event)
+void mf::XWaylandWM::handle_move_resize(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
 {
     if (!surface || !event)
         return;
@@ -449,33 +447,10 @@ void mf::XWaylandWM::handle_move_resize(XWaylandWMSurface *surface, xcb_client_m
     mir::log_verbose("handle move resize");
 
     int detail = event->data.data32[2];
-    switch (detail)
-    {
-    case _NET_WM_MOVERESIZE_MOVE:
-        surface->get_shell_surface()->move();
-        break;
-    case _NET_WM_MOVERESIZE_SIZE_TOPLEFT:
-        break;
-    case _NET_WM_MOVERESIZE_SIZE_TOP:
-        break;
-    case _NET_WM_MOVERESIZE_SIZE_TOPRIGHT:
-        break;
-    case _NET_WM_MOVERESIZE_SIZE_RIGHT:
-        break;
-    case _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT:
-        break;
-    case _NET_WM_MOVERESIZE_SIZE_BOTTOM:
-        break;
-    case _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT:
-        break;
-    case _NET_WM_MOVERESIZE_SIZE_LEFT:
-        break;
-    default:
-        break;
-    }
+    surface->move_resize(detail);
 }
 
-void mf::XWaylandWM::handle_change_state(XWaylandWMSurface *surface, xcb_client_message_event_t *event)
+void mf::XWaylandWM::handle_change_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
 {
     if (!surface || !event)
         return;
@@ -485,14 +460,14 @@ void mf::XWaylandWM::handle_change_state(XWaylandWMSurface *surface, xcb_client_
         surface->get_shell_surface()->set_minimized();
 }
 
-void mf::XWaylandWM::handle_state(XWaylandWMSurface *surface, xcb_client_message_event_t *event)
+void mf::XWaylandWM::handle_state(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
 {
     if (!surface || !event)
         return;
     mir::log_verbose("Handle state");
 }
 
-void mf::XWaylandWM::handle_surface_id(XWaylandWMSurface *surface, xcb_client_message_event_t *event)
+void mf::XWaylandWM::handle_surface_id(std::shared_ptr<XWaylandWMSurface> surface, xcb_client_message_event_t *event)
 {
     if (!surface || !event)
         return;
@@ -520,7 +495,7 @@ void mf::XWaylandWM::handle_configure_request(xcb_configure_request_event_t *eve
     mir::log_verbose("XCB_CONFIGURE_REQUEST (window %d) %d,%d @ %dx%d", event->window, event->x, event->y, event->width,
                      event->height);
 
-    auto *shellSurface = surfaces[event->window];
+    auto shellSurface = surfaces[event->window];
 
     uint32_t values[6];
     int i = -1;

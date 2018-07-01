@@ -136,6 +136,7 @@ public:
     void set_workspace(int workspace);
     void set_wm_state(WmState state);
     void set_net_wm_state();
+    void move_resize(uint32_t detail);
     bool has_surface()
     {
         return !!shell_surface;
