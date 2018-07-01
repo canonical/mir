@@ -36,8 +36,10 @@
 #include <poll.h>
 #include <sys/socket.h>
 
+
 #ifndef ARRAY_LENGTH
-#define ARRAY_LENGTH(a) (sizeof(a) / sizeof(a)[0])
+namespace { template<typename T, size_t size> constexpr size_t length_of(T(&)[size]) {return size;} }
+#define ARRAY_LENGTH(a) length_of(a)
 #endif
 
 #define CURSOR_ENTRY(x)        \
@@ -89,10 +91,10 @@ mf::XWaylandWM::~XWaylandWM()
     }
 
     // xcb_cursors == 2 when its empty
-    if (ARRAY_LENGTH(xcb_cursors) != 2) {
+    if (xcb_cursors.size() != 2) {
       mir::log_info("Cleaning cursors");
-      for (unsigned long i = 0; i < ARRAY_LENGTH(xcb_cursors); i++)
-        xcb_free_cursor(xcb_connection, xcb_cursors[i]);
+      for (auto xcb_cursor : xcb_cursors)
+        xcb_free_cursor(xcb_connection, xcb_cursor);
     }
     if (xcb_connection != nullptr)
       xcb_disconnect(xcb_connection);
@@ -190,14 +192,15 @@ void mf::XWaylandWM::create_wm_cursor()
     const char *name;
     int count = ARRAY_LENGTH(cursors);
 
-    xcb_cursors = new xcb_cursor_t[count];
+    xcb_cursors.clear();
+    xcb_cursors.reserve(count);
 
     for (int i = 0; i < count; i++)
     {
         for (size_t j = 0; j < cursors[i].count; j++)
         {
             name = cursors[i].names[j];
-            xcb_cursors[i] = xcb_cursor_library_load_cursor(name);
+            xcb_cursors.push_back(xcb_cursor_library_load_cursor(name));
             if (xcb_cursors[i] != static_cast<xcb_cursor_t>(-1))
                 break;
         }

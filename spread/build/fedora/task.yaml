@@ -48,7 +48,8 @@ execute: |
         dbus \
         python3-dbusmock \
         python3-gobject-base \
-        python3-dbus
+        python3-dbus \
+        libXcursor-devel
 
     BUILD_DIR=$(mktemp --directory)
     cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_USE_LD_GOLD=ON
