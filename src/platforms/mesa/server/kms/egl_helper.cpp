@@ -171,14 +171,14 @@ std::vector<EGLConfig> get_matching_configs(EGLDisplay dpy, EGLint const attr[])
     if ((eglChooseConfig(dpy, attr, nullptr, 0, &num_egl_configs) == EGL_FALSE) ||
         (num_egl_configs == 0))
     {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to choose EGL config"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to enumerate any matching EGL configs"));
     }
 
     std::vector<EGLConfig> matching_configs(static_cast<size_t>(num_egl_configs));
     if ((eglChooseConfig(dpy, attr, matching_configs.data(), static_cast<EGLint>(matching_configs.size()), &num_egl_configs) == EGL_FALSE) ||
         (num_egl_configs == 0))
     {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to choose EGL config"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to acquire matching EGL configs"));
     }
 
     matching_configs.resize(static_cast<size_t>(num_egl_configs));
