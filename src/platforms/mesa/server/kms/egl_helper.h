@@ -59,7 +59,7 @@ public:
 
     void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)>);
 private:
-    void setup_internal(GBMHelper const& gbm, bool initialize);
+    void setup_internal(GBMHelper const& gbm, bool initialize, EGLint gbm_format);
 
     EGLint const depth_buffer_bits;
     EGLint const stencil_buffer_bits;
