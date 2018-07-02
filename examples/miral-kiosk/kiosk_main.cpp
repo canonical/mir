@@ -32,13 +32,13 @@ namespace
 {
 struct KioskAuthorizer : miral::ApplicationAuthorizer
 {
-    KioskAuthorizer(SplashSession const& splash) : splash{splash}{}
+    KioskAuthorizer(std::shared_ptr<SplashSession> const& splash) : splash{splash}{}
 
     virtual bool connection_is_allowed(miral::ApplicationCredentials const& creds) override
     {
         // Allow internal applications and (optionally) only ones that start "immediately"
         // (For the sake of an example "immediately" means while the spash is running)
-        return getpid() == creds.pid() || !startup_only || splash.session();
+        return getpid() == creds.pid() || !startup_only || splash->session();
     }
 
     virtual bool configure_display_is_allowed(miral::ApplicationCredentials const& /*creds*/) override
@@ -73,7 +73,7 @@ struct KioskAuthorizer : miral::ApplicationAuthorizer
 
     static std::atomic<bool> startup_only;
 
-    SplashSession splash;
+    std::shared_ptr<SplashSession> splash;
 };
 
 std::atomic<bool> KioskAuthorizer::startup_only{false};

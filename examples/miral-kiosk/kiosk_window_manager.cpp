@@ -27,7 +27,7 @@
 namespace ms = mir::scene;
 using namespace miral;
 
-KioskWindowManagerPolicy::KioskWindowManagerPolicy(WindowManagerTools const& tools, SplashSession const& splash) :
+KioskWindowManagerPolicy::KioskWindowManagerPolicy(WindowManagerTools const& tools, std::shared_ptr<SplashSession> const& splash) :
     CanonicalWindowManagerPolicy{tools},
     splash{splash}
 {
@@ -119,7 +119,7 @@ void KioskWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
 {
     CanonicalWindowManagerPolicy::advise_focus_gained(info);
 
-    if (auto session = splash.session())
+    if (auto session = splash->session())
     {
         auto const& app_info = tools.info_for(session);
 

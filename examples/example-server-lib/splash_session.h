@@ -26,24 +26,12 @@ namespace mir { class Server; namespace scene { class Session; }}
 class SplashSession
 {
 public:
-    struct Self;
-    SplashSession(std::shared_ptr<Self> const self);
-
-    auto session() const -> std::shared_ptr<mir::scene::Session>;
-
-private:
-    std::shared_ptr<Self> const self;
-};
-
-class SplashSession::Self
-{
-public:
     virtual auto session() const -> std::shared_ptr<mir::scene::Session> = 0;
 
-    Self() = default;
-    virtual ~Self() = default;
-    Self(Self const&) = delete;
-    Self& operator=(Self const&) = delete;
+    SplashSession() = default;
+    virtual ~SplashSession() = default;
+    SplashSession(SplashSession const&) = delete;
+    SplashSession& operator=(SplashSession const&) = delete;
 };
 
 #endif //MIR_SPLASH_SESSION_H

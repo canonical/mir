@@ -28,7 +28,7 @@ using namespace mir::geometry;
 class KioskWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy
 {
 public:
-    KioskWindowManagerPolicy(miral::WindowManagerTools const& tools, SplashSession const&);
+    KioskWindowManagerPolicy(miral::WindowManagerTools const& tools, std::shared_ptr<SplashSession> const&);
 
     auto place_new_window(miral::ApplicationInfo const& app_info, miral::WindowSpecification const& request)
     -> miral::WindowSpecification override;
@@ -56,7 +56,7 @@ private:
         mir_input_event_modifier_ctrl |
         mir_input_event_modifier_meta;
 
-    SplashSession const splash;
+    std::shared_ptr<SplashSession> const splash;
 };
 
 #endif /* MIRAL_KIOSK_WINDOW_MANAGER_H */

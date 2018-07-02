@@ -47,7 +47,7 @@ using namespace mir::geometry;
 class TilingWindowManagerPolicy : public miral::WindowManagementPolicy
 {
 public:
-    explicit TilingWindowManagerPolicy(miral::WindowManagerTools const& tools, SplashSession const& spinner,
+    explicit TilingWindowManagerPolicy(miral::WindowManagerTools const& tools, std::shared_ptr<SplashSession> const& spinner,
         miral::InternalClientLauncher const& launcher);
 
     auto place_new_window(
@@ -108,7 +108,7 @@ private:
     void constrain_size_and_place(miral::WindowSpecification& mods, miral::Window const& window, Rectangle const& tile) const;
 
     miral::WindowManagerTools tools;
-    SplashSession spinner;
+    std::shared_ptr<SplashSession> spinner;
     miral::InternalClientLauncher const launcher;
     Point old_cursor{};
     Rectangles displays;

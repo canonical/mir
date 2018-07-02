@@ -6,7 +6,7 @@ add_library(example-shell-lib STATIC
     floating_window_manager.cpp floating_window_manager.h
     decoration_provider.cpp     decoration_provider.h
     titlebar_config.cpp         titlebar_config.h
-    splash_session.cpp          splash_session.h
+        splash_session.h
     sw_splash.cpp               sw_splash.h
 )
 

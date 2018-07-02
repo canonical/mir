@@ -37,7 +37,7 @@ class FloatingWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy
 public:
     FloatingWindowManagerPolicy(
         miral::WindowManagerTools const& tools,
-        SplashSession const& spinner,
+        std::shared_ptr<SplashSession> const& spinner,
         miral::InternalClientLauncher const& launcher,
         std::function<void()>& shutdown_hook);
     ~FloatingWindowManagerPolicy();
@@ -112,7 +112,7 @@ private:
     Point resize_top_left;
     Size resize_size;
 
-    SplashSession const spinner;
+    std::shared_ptr<SplashSession> const spinner;
 
     std::unique_ptr<DecorationProvider> const decoration_provider;
 

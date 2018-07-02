@@ -104,7 +104,7 @@ void render_pattern(MirGraphicsRegion *region, uint8_t pattern[])
 }
 }
 
-struct SwSplash::Self : SplashSession::Self
+struct SwSplash::Self : SplashSession
 {
     std::mutex mutable mutex;
     std::weak_ptr<mir::scene::Session> session_;
@@ -126,9 +126,9 @@ void SwSplash::operator()(std::weak_ptr<mir::scene::Session> const& session)
     self->session_ = session;
 }
 
-SwSplash::operator SplashSession() const
+SwSplash::operator std::shared_ptr<SplashSession>() const
 {
-    return SplashSession{self};
+    return std::shared_ptr<SplashSession>{self};
 }
 
 void SwSplash::operator()(MirConnection* connection)
