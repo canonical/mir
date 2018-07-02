@@ -777,7 +777,14 @@ TEST_F(MesaDisplayTest, respects_gl_config)
         null_report};
 }
 
-TEST_F(MesaDisplayTest, supports_as_low_as_15bit_colour)
+/*
+ * It *would* be nice to support 15bit colour, but the mesa-kms platform
+ * has, from the first commit, unconditonally allocated 24-bit framebuffers.
+ *
+ * It's not clear to me that Mir has ever been successfully tested on a platform
+ * that doesn't support 24-bit rendering.
+ */
+TEST_F(MesaDisplayTest, DISABLED_supports_as_low_as_15bit_colour)
 {  // Regression test for LP: #1212753
     using namespace testing;
 
