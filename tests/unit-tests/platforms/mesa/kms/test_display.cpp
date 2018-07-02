@@ -90,6 +90,12 @@ public:
                              SetArgPointee<4>(1),
                              Return(EGL_TRUE)));
 
+        ON_CALL(mock_egl, eglGetConfigAttrib(_, mock_egl.fake_configs[0], EGL_NATIVE_VISUAL_ID, _))
+            .WillByDefault(
+                DoAll(
+                    SetArgPointee<3>(GBM_FORMAT_XRGB8888),
+                    Return(EGL_TRUE)));
+
         mock_egl.provide_egl_extensions();
         mock_gl.provide_gles_extensions();
         /*
@@ -745,11 +751,20 @@ TEST_F(MesaDisplayTest, respects_gl_config)
                     _,
                     AllOf(mtd::EGLConfigContainsAttrib(EGL_DEPTH_SIZE, depth_bits),
                           mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
-                    _,_,_))
+                    NotNull(),_,_))
         .Times(AtLeast(1))
         .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
                         SetArgPointee<4>(1),
                         Return(EGL_TRUE)));
+    /* We actually want the default behaviour here, but because we've made an
+     * EXPECT_CALL for eglChooseConfig GMock will ignore the ON_CALL behaviour
+     */
+    EXPECT_CALL(mock_egl, eglChooseConfig(_,_,nullptr,_,_))
+        .Times(AnyNumber())
+        .WillRepeatedly(
+            DoAll(
+                SetArgPointee<4>(1),
+                Return(EGL_TRUE)));
 
     auto platform = create_platform();
     mgm::Display display{

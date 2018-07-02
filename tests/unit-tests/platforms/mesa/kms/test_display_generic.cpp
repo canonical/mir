@@ -54,6 +54,11 @@ public:
             .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
                                  SetArgPointee<4>(1),
                                  Return(EGL_TRUE)));
+        ON_CALL(mock_egl, eglGetConfigAttrib(_, mock_egl.fake_configs[0], EGL_NATIVE_VISUAL_ID, _))
+            .WillByDefault(
+                DoAll(
+                    SetArgPointee<3>(GBM_FORMAT_XRGB8888),
+                    Return(EGL_TRUE)));
 
         mock_egl.provide_egl_extensions();
         mock_gl.provide_gles_extensions();
