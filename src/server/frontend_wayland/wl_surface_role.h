@@ -46,6 +46,7 @@ namespace frontend
 {
 class Shell;
 class BasicSurfaceEventSink;
+class OutputManager;
 class WlSurface;
 class WlSeat;
 struct WlSurfaceState;
@@ -67,7 +68,7 @@ class WlAbstractMirWindow : public WlSurfaceRole
 {
 public:
     WlAbstractMirWindow(WlSeat* seat, wl_client* client, WlSurface* surface,
-                        std::shared_ptr<frontend::Shell> const& shell);
+                        std::shared_ptr<frontend::Shell> const& shell, OutputManager* output_manager);
 
     ~WlAbstractMirWindow() override;
 
@@ -91,6 +92,7 @@ protected:
     wl_client* const client;
     WlSurface* const surface;
     std::shared_ptr<frontend::Shell> const shell;
+    OutputManager* output_manager;
     std::shared_ptr<BasicSurfaceEventSink> const sink;
 
     std::unique_ptr<scene::SurfaceCreationParameters> const params;

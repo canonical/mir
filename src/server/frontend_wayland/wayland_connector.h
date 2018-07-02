@@ -24,6 +24,7 @@
 #include "mir/optional_value.h"
 
 #include <wayland-server-core.h>
+#include <unordered_map>
 #include <thread>
 
 namespace mir
@@ -98,6 +99,9 @@ private:
     std::thread dispatch_thread;
     wl_event_source* pause_source;
     std::string wayland_display;
+
+    // Only accessed on event loop
+    std::unordered_map<int, std::function<void(std::shared_ptr<Session> const& session)>> mutable connect_handlers;
 };
 }
 }

@@ -1,3 +1,60 @@
+mir (0.32.0) UNRELEASED; urgency=medium
+
+  * New upstream release 0.32.0(https://github.com/MirServer/mir/projects/2)
+
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 3
+      . mirserver ABI bumped to 47
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 16
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 15
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+    - Enhancements:
+      . [Wayland] Implement subsurface support
+      . [Wayland] Initial support for copy, cut and paste
+      . [Wayland] Make use of the specified output in fullscreen requests.
+        (Fixes #423)
+      . [libmiral] Update miral::Keymap to get the default keymap from udev
+      . [libmiral] Extend the logic for launching apps to support Wayland apps
+        and provide it as an API for servers to use it. (Fixes #300)
+      . logind support
+      . libinput backend: Support running without root privs
+      . [miral-shell] Options to use toolkit libmirclient support in
+        miral-desktop, miral-app and miral-run
+      . [miral-shell] Fix default font on Ubuntu 18.04 and Arch
+      . [wlcs] Fixes to test framework, more test coverage
+    - Bugs fixed:
+      . [Wayland] Implement subsurface support for touches. (Fixes #347)
+      . [Wayland] Implement Input regions. (Fixes #306)
+      . [Wayland] Implement/correct implementation of window state changes in
+        xdg-shell V6. (Fixes #297)
+      . [Wayland] Implement the common state changing logic in
+        WlAbstractMirWindow. (Fixes: #311)
+      . [Wayland] Don't hold a lock in mf::WlShmBuffer while potentially
+        destroying an object that uses it. (Fixes #355)
+      . [Wayland] Disconnect a sink when its target window is destroyed
+        (Fixes #357)
+      . [Wayland] Send frame notifications even if there is no buffer,
+        this fixes the gedit lockup when subsurfaces are dismissed.
+      . Don't synthesize pointer events during gestures. (Fixes #179)
+      . Notify the compositor of surfaces that have content before they are
+        added to the scene. (Fixes #328)
+      . Retry drmSetMaster() a few times and if it doesn't work die.
+        (Fixes #373)
+      . Defer initializing DefaultServerConfiguration::reports until any
+        subclasses have been fully constructed. (Fixes #361)
+      . Ensure ExternalInputDeviceHub::remove_observer() synchronizes memory
+        across threads. (Fixes #359)
+      . Correct the glm matrix used for software cursor transformation
+        (Fixes #322)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 12 Jun 2018 14:23:00 +0100
+
 mir (0.31.2) UNRELEASED; urgency=medium
 
   * New upstream release 0.31.2

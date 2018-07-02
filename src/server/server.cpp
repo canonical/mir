@@ -512,6 +512,14 @@ auto mir::Server::open_client_socket(ConnectHandler const& connect_handler) -> F
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
+auto mir::Server::open_client_wayland(ConnectHandler const& connect_handler) -> int
+{
+    if (auto const config = self->server_config)
+        return config->the_wayland_connector()->client_socket_fd(connect_handler);
+
+    BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
+}
+
 #define MIR_SERVER_ACCESSOR(name)\
 auto mir::Server::name() const -> decltype(self->server_config->name())\
 {\

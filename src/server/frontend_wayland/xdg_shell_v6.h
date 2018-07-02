@@ -29,11 +29,12 @@ namespace frontend
 
 class Shell;
 class WlSeat;
+class OutputManager;
 
 class XdgShellV6 : public wayland::XdgShellV6
 {
 public:
-    XdgShellV6(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat);
+    XdgShellV6(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat, OutputManager* output_manager);
 
     void destroy(struct wl_client* client, struct wl_resource* resource) override;
     void create_positioner(struct wl_client* client, struct wl_resource* resource, uint32_t id) override;
@@ -44,6 +45,7 @@ public:
 private:
     std::shared_ptr<Shell> const shell;
     WlSeat& seat;
+    OutputManager* output_manager;
 };
 
 }

@@ -88,6 +88,7 @@ target_link_libraries(miral
     PRIVATE
         miral-internal
         mirserver
+        ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
 )
 
 set_target_properties(miral
