@@ -19,9 +19,12 @@ backends:
         plan: n1-highcpu-8
         location: computeengine/us-east1-b
         systems:
-            - ubuntu-16.04-64
-            - ubuntu-17.10-64
-            - ubuntu-18.04-64
+            - ubuntu-16.04-64:
+                image: ubuntu-os-cloud/ubuntu-1604-lts
+            - ubuntu-17.10-64:
+                image: ubuntu-os-cloud/ubuntu-1710
+            - ubuntu-18.04-64:
+                image: ubuntu-os-cloud/ubuntu-1804-lts
             - ubuntu-devel-64:
                 image: ubuntu-os-cloud-devel/ubuntu-1810
             - fedora-27-64
