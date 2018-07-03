@@ -28,6 +28,9 @@ execute: |
         # don't run tests
         DEB_BUILD_OPTIONS="${DEB_BUILD_OPTIONS} nocheck"
 
+        # enable universe
+        apt-add-repository universe
+
         # limit existing apt sources to build architecture
         sed -i "s/^deb \(\[arch=.*\] \)\?/deb [arch=${DEB_BUILD_ARCH}] /" \
           /etc/apt/sources.list
