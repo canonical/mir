@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2016 Canonical Ltd.
+ * Copyright © 2015-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -47,7 +47,7 @@ using namespace mir::geometry;
 class TilingWindowManagerPolicy : public miral::WindowManagementPolicy
 {
 public:
-    explicit TilingWindowManagerPolicy(miral::WindowManagerTools const& tools, SwSplash const& spinner,
+    explicit TilingWindowManagerPolicy(miral::WindowManagerTools const& tools, std::shared_ptr<SplashSession> const& spinner,
         miral::InternalClientLauncher const& launcher);
 
     auto place_new_window(
@@ -108,7 +108,7 @@ private:
     void constrain_size_and_place(miral::WindowSpecification& mods, miral::Window const& window, Rectangle const& tile) const;
 
     miral::WindowManagerTools tools;
-    SwSplash spinner;
+    std::shared_ptr<SplashSession> spinner;
     miral::InternalClientLauncher const launcher;
     Point old_cursor{};
     Rectangles displays;
