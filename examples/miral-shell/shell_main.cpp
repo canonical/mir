@@ -19,7 +19,7 @@
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "titlebar_config.h"
-#include "sw_splash.h"
+#include "spinner/splash.h"
 
 #include <miral/display_configuration_option.h>
 #include <miral/runner.h>
@@ -39,7 +39,7 @@ int main(int argc, char const* argv[])
 
     std::function<void()> shutdown_hook{[]{}};
 
-    SwSplash spinner;
+    SpinnerSplash spinner;
     InternalClientLauncher launcher;
     WindowManagerOptions window_managers
         {
@@ -89,7 +89,7 @@ int main(int argc, char const* argv[])
             config_keymap,
             debug_extensions,
             AppendEventFilter{quit_on_ctrl_alt_bksp},
-            StartupInternalClient{"Intro", spinner},
+            StartupInternalClient{spinner},
             pre_init(CommandLineOption{[&](std::string const& typeface) { ::titlebar::font_file(typeface); },
                               "shell-titlebar-font", "font file to use for titlebars", ::titlebar::font_file()})
         });

@@ -128,7 +128,7 @@ void SwSplash::operator()(std::weak_ptr<mir::scene::Session> const& session)
 
 SwSplash::operator std::shared_ptr<SplashSession>() const
 {
-    return std::shared_ptr<SplashSession>{self};
+    return self;
 }
 
 void SwSplash::operator()(MirConnection* connection)
