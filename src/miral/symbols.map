@@ -342,5 +342,5 @@ global:
     _ZNK5miral22InternalClientLauncher6launchERKSt8functionIFvP10wl_displayEERKS1_IFvSt8weak_ptrIN3mir5scene7SessionEEEE;
 
 #   miral::StartupInternalClient::StartupInternalClient*;
-    _ZN5miral21StartupInternalClientC1ESt8functionIFvP10wl_displayEES1_IFvSt8weak_ptrIN3mir5scene7SessionEEEE;
+    _ZN5miral21StartupInternalClientC?ESt8functionIFvP10wl_displayEES1_IFvSt8weak_ptrIN3mir5scene7SessionEEEE;
 } MIRAL_2.2;
