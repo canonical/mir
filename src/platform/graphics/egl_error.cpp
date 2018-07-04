@@ -83,6 +83,25 @@ struct egl_category : std::error_category
     }
 };
 
+struct gl_category : std::error_category
+{
+    const char* name() const noexcept override { return "egl"; }
+
+    std::string message(int ev) const override
+    {
+#define CASE_FOR_ERROR(error) \
+            case error: return #error " (" + to_hex_string(error) + ")";
+        switch (ev)
+        {
+            CASE_FOR_ERROR(GL_NO_ERROR)
+
+            default:
+                return "Unknown error (" + to_hex_string(ev) + ")";
+        }
+#undef CASE_ERROR
+    }
+};
+
 }
 
 std::error_category const& mir::graphics::egl_category()
@@ -90,4 +109,11 @@ std::error_category const& mir::graphics::egl_category()
     static class egl_category const egl_category_instance{};
 
     return egl_category_instance;
+}
+
+std::error_category const& mir::graphics::gl_category()
+{
+    static class gl_category const gl_category_instance{};
+
+    return gl_category_instance;
 }
