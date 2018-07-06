@@ -116,7 +116,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                     {
                         mir::log_debug(
                             "Not using logind for session management: %s",
-                            boost::diagnostic_information(e).c_str());
+                            e.what());
                     }
                 }
 
@@ -131,7 +131,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                 {
                     mir::log_debug(
                         "Not using logind for session management: %s",
-                        boost::diagnostic_information(e).c_str());
+                        e.what());
                 }
 
                 try
@@ -149,7 +149,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                 {
                     mir::log_debug(
                         "Not using Linux VT subsystem for session management: %s",
-                        boost::diagnostic_information(e).c_str());
+                        e.what());
                 }
 
                 mir::log_debug("No session management supported");
