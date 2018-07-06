@@ -32,9 +32,11 @@
 #include "one_shot_device_observer.h"
 #include "mir/raii.h"
 #include "mir/graphics/egl_error.h"
+#include "mir/graphics/gl_config.h"
 
 #include <EGL/egl.h>
 #include MIR_SERVER_GL_H
+#include "egl_helper.h"
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
@@ -75,6 +77,23 @@ void add_graphics_platform_options(boost::program_options::options_description& 
         (bypass_option_name,
          boost::program_options::value<bool>()->default_value(true),
          "[platform-specific] utilize the bypass optimization for fullscreen surfaces.");
+}
+
+namespace
+{
+class MinimalGLConfig : public mir::graphics::GLConfig
+{
+public:
+    int depth_buffer_bits() const override
+    {
+        return 0;
+    }
+
+    int stencil_buffer_bits() const override
+    {
+        return 0;
+    }
+};
 }
 
 mg::PlatformPriority probe_graphics_platform(
@@ -138,44 +157,16 @@ mg::PlatformPriority probe_graphics_platform(
             if (tmp_fd != mir::Fd::invalid)
             {
                 mgm::helpers::GBMHelper gbm_device{tmp_fd};
-                EGLDisplay dpy;
-                auto dpy_cleanup = mir::raii::paired_calls(
-                    [&dpy, &gbm_device, &device]()
-                    {
-                        dpy = eglGetDisplay(static_cast<EGLNativeDisplayType>(gbm_device.device));
-                        if (dpy == EGL_NO_DISPLAY)
-                        {
-                            throw mg::egl_error(
-                                std::string{"Probe failed to create EGL display on device "} +
-                                device.devnode());
-                        }
-                    },
-                    [&dpy]()
-                    {
-                        eglTerminate(dpy);
-                    });
+                mgm::helpers::EGLHelper egl{MinimalGLConfig()};
 
+                egl.setup(gbm_device);
 
-                auto egl_init = mir::raii::paired_calls(
-                    [&dpy]()
-                    {
-                        EGLint major_ver{1}, minor_ver{4};
-                        if (!eglInitialize(dpy, &major_ver, &minor_ver))
-                        {
-                            throw mg::egl_error("Probe failed to initialise EGL");
-                        }
-                    },
-                    [&dpy]()
-                    {
-                        eglTerminate(dpy);
-                    });
-
-                eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+                egl.make_current();
 
                 auto const renderer_string = reinterpret_cast<char const*>(glGetString(GL_RENDERER));
                 if (!renderer_string)
                 {
-                    throw mg::egl_error(
+                    throw mg::gl_error(
                         "Probe failed to query GL renderer");
                 }
 
@@ -185,6 +176,8 @@ mg::PlatformPriority probe_graphics_platform(
                     strlen("llvmpipe")) == 0)
                 {
                      mir::log_info("Detected software renderer: %s", renderer_string);
+                     // TODO:   Check if any *other* DRM devices support HW acceleration, and
+                     //         use them instead.
                      return mg::PlatformPriority::supported;
                 }
 
