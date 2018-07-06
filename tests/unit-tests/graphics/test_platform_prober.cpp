@@ -91,6 +91,11 @@ std::shared_ptr<void> ensure_mesa_probing_succeeds()
                 SetArgPointee<1>(1),
                 SetArgPointee<2>(4),
                 Return(EGL_TRUE)));
+    ON_CALL(env->egl, eglGetConfigAttrib(_, env->egl.fake_configs[0], EGL_NATIVE_VISUAL_ID, _))
+            .WillByDefault(
+                DoAll(
+                    SetArgPointee<3>(GBM_FORMAT_XRGB8888),
+                    Return(EGL_TRUE)));
     ON_CALL(env->gl, glGetString(GL_RENDERER))
         .WillByDefault(Return(reinterpret_cast<GLubyte const*>("Not A Software Renderer, Honest!")));
 

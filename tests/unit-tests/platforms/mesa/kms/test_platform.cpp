@@ -78,6 +78,11 @@ public:
             .WillByDefault(
                 Return(
                     reinterpret_cast<GLubyte const*>("GeForce GTX 1070/PCIe/SSE2")));
+        ON_CALL(mock_egl, eglGetConfigAttrib(_, _, EGL_NATIVE_VISUAL_ID, _))
+            .WillByDefault(
+                DoAll(
+                    SetArgPointee<3>(GBM_FORMAT_XRGB8888),
+                    Return(EGL_TRUE)));
         fake_devices.add_standard_device("standard-drm-devices");
     }
 
