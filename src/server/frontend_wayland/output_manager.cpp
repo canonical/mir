@@ -78,8 +78,12 @@ void mf::Output::send_initial_config(wl_resource* client_resource, mg::DisplayCo
             mode.size.height.as_int(),
             mode.vrefresh_hz * 1000);
     }
-    wl_output_send_scale(client_resource, 1);
-    wl_output_send_done(client_resource);
+
+    if (wl_resource_get_version(client_resource) >= WL_OUTPUT_SCALE_SINCE_VERSION)
+        wl_output_send_scale(client_resource, 1);
+
+    if (wl_resource_get_version(client_resource) >= WL_OUTPUT_DONE_SINCE_VERSION)
+        wl_output_send_done(client_resource);
 }
 
 wl_global* mf::Output::make_output(wl_display* display)
