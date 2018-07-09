@@ -38,6 +38,7 @@ public:
     ~BasicSurfaceEventSink();
 
     void handle_event(EventUPtr&& event) override;
+    void handle_resize(mir::geometry::Size const& new_size);
 
     void handle_lifecycle_event(MirLifecycleState) override {}
     void handle_display_config_change(graphics::DisplayConfiguration const&) override {}

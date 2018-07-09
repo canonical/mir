@@ -72,7 +72,13 @@ void mf::BasicSurfaceEventSink::handle_event(EventUPtr&& event)
 
 void mf::BasicSurfaceEventSink::handle_resize_event(MirResizeEvent const* event)
 {
-    requested_size = {mir_resize_event_get_width(event), mir_resize_event_get_height(event)};
+    geometry::Size const new_size{mir_resize_event_get_width(event), mir_resize_event_get_height(event)};
+    handle_resize(new_size);
+}
+
+void mf::BasicSurfaceEventSink::handle_resize(mir::geometry::Size const& new_size)
+{
+    requested_size = new_size;
     if (requested_size != window_size)
         window->handle_resize(requested_size);
 }

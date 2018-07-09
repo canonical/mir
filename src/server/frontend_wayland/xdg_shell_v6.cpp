@@ -426,9 +426,14 @@ void mf::XdgSurfaceV6::commit(mf::WlSurfaceState const& state)
 
 void mf::XdgSurfaceV6::handle_resize(geometry::Size const& new_size)
 {
+    auto const action = [notify_resize=notify_resize, new_size, sink=sink]
+        { notify_resize(new_size, sink->state(), sink->is_active()); };
+
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
-    notify_resize(new_size, sink->state(), sink->is_active());
+    action();
     zxdg_surface_v6_send_configure(resource, serial);
+
+    set_next_commit_action(action);
 }
 
 // XdgPopupV6
@@ -463,8 +468,6 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
     self->set_notify_resize(
         [this](geom::Size const& new_size, MirWindowState state, bool active)
         {
-                this->self->clear_next_commit_action();
-
             wl_array states;
             wl_array_init(&states);
 

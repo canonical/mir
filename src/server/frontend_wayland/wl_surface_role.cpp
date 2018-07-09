@@ -211,7 +211,7 @@ void WlAbstractMirWindow::create_mir_window()
     auto const client_size = window->client_size();
 
     if (client_size != params->size)
-        handle_resize(client_size);
+        sink->handle_resize(client_size);
 }
 
 geometry::Size WlAbstractMirWindow::window_size()
