@@ -46,7 +46,7 @@ struct SurfaceSpecification;
 namespace frontend
 {
 class Shell;
-class BasicSurfaceEventSink;
+class WlSurfaceEventSink;
 class OutputManager;
 class WlSurface;
 class WlSeat;
@@ -80,7 +80,7 @@ protected:
     WlSurface* const surface;
     std::shared_ptr<frontend::Shell> const shell;
     OutputManager* output_manager;
-    std::shared_ptr<BasicSurfaceEventSink> const sink;
+    std::shared_ptr<WlSurfaceEventSink> const sink;
 
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
     optional_value<geometry::Size> window_size_;

@@ -31,11 +31,11 @@ class WlSurface;
 class WlSeat;
 class WindowWlSurfaceRole;
 
-class BasicSurfaceEventSink : public EventSink
+class WlSurfaceEventSink : public EventSink
 {
 public:
-    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, WlSurface* surface, WindowWlSurfaceRole* window);
-    ~BasicSurfaceEventSink();
+    WlSurfaceEventSink(WlSeat* seat, wl_client* client, WlSurface* surface, WindowWlSurfaceRole* window);
+    ~WlSurfaceEventSink();
 
     void handle_event(EventUPtr&& event) override;
     void handle_resize(mir::geometry::Size const& new_size);

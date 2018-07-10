@@ -39,7 +39,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
-std::shared_ptr<ms::Surface> get_surface_for_id(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface_id)
+std::shared_ptr<ms::Surface> scene_surface_from(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface_id)
 {
     return std::dynamic_pointer_cast<ms::Surface>(session->get_surface(surface_id));
 }
@@ -52,7 +52,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(WlSeat* seat, wl_client* client, Wl
           surface{surface},
           shell{shell},
           output_manager{output_manager},
-          sink{std::make_shared<BasicSurfaceEventSink>(seat, client, surface, this)},
+          sink{std::make_shared<WlSurfaceEventSink>(seat, client, surface, this)},
           params{std::make_unique<scene::SurfaceCreationParameters>(
                  scene::SurfaceCreationParameters().of_type(mir_window_type_freestyle))}
 {
@@ -168,7 +168,7 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 
     if (surface_id_.as_value())
     {
-        auto const scene_surface = get_surface_for_id(session, surface_id_);
+        auto const scene_surface = scene_surface_from(session, surface_id_);
 
         sink->latest_client_size(window_size());
 
@@ -224,7 +224,7 @@ void mf::WindowWlSurfaceRole::visiblity(bool visible)
 
     auto const session = get_session(client);
 
-    auto mir_surface = get_surface_for_id(session, surface_id_);
+    auto mir_surface = scene_surface_from(session, surface_id_);
 
     if (mir_surface->visible() == visible)
         return;

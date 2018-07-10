@@ -30,7 +30,8 @@
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
-mf::BasicSurfaceEventSink::BasicSurfaceEventSink(WlSeat* seat, wl_client* client, WlSurface* surface, WindowWlSurfaceRole* window)
+mf::WlSurfaceEventSink::WlSurfaceEventSink(WlSeat* seat, wl_client* client, WlSurface* surface,
+                                           WindowWlSurfaceRole* window)
     : seat{seat},
       client{client},
       surface{surface},
@@ -40,12 +41,12 @@ mf::BasicSurfaceEventSink::BasicSurfaceEventSink(WlSeat* seat, wl_client* client
 {
 }
 
-mf::BasicSurfaceEventSink::~BasicSurfaceEventSink()
+mf::WlSurfaceEventSink::~WlSurfaceEventSink()
 {
     *destroyed = true;
 }
 
-void mf::BasicSurfaceEventSink::handle_event(EventUPtr&& event)
+void mf::WlSurfaceEventSink::handle_event(EventUPtr&& event)
 {
     seat->spawn(run_unless(
         destroyed,
@@ -71,20 +72,20 @@ void mf::BasicSurfaceEventSink::handle_event(EventUPtr&& event)
         }));
 }
 
-void mf::BasicSurfaceEventSink::handle_resize_event(MirResizeEvent const* event)
+void mf::WlSurfaceEventSink::handle_resize_event(MirResizeEvent const* event)
 {
     geometry::Size const new_size{mir_resize_event_get_width(event), mir_resize_event_get_height(event)};
     handle_resize(new_size);
 }
 
-void mf::BasicSurfaceEventSink::handle_resize(mir::geometry::Size const& new_size)
+void mf::WlSurfaceEventSink::handle_resize(mir::geometry::Size const& new_size)
 {
     requested_size = new_size;
     if (requested_size != window_size)
         window->handle_resize(requested_size);
 }
 
-void mf::BasicSurfaceEventSink::handle_input_event(MirInputEvent const* event)
+void mf::WlSurfaceEventSink::handle_input_event(MirInputEvent const* event)
 {
     // Remember the timestamp of any events "signed" with a cookie
     if (mir_input_event_has_cookie(event))
@@ -115,7 +116,7 @@ void mf::BasicSurfaceEventSink::handle_input_event(MirInputEvent const* event)
     }
 }
 
-void mf::BasicSurfaceEventSink::handle_keymap_event(MirKeymapEvent const* event)
+void mf::WlSurfaceEventSink::handle_keymap_event(MirKeymapEvent const* event)
 {
     seat->for_each_listener(client, [this, event](WlKeyboard* keyboard)
         {
@@ -123,7 +124,7 @@ void mf::BasicSurfaceEventSink::handle_keymap_event(MirKeymapEvent const* event)
         });
 }
 
-void mf::BasicSurfaceEventSink::handle_window_event(MirWindowEvent const* event)
+void mf::WlSurfaceEventSink::handle_window_event(MirWindowEvent const* event)
 {
     switch (mir_window_event_get_attribute(event))
     {
