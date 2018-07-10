@@ -71,14 +71,6 @@ public:
     void set_min_size(int32_t width, int32_t height);
 
     using WindowWlSurfaceRole::client;
-    using WindowWlSurfaceRole::params;
-    using WindowWlSurfaceRole::surface_id;
-    using WindowWlSurfaceRole::set_maximized;
-    using WindowWlSurfaceRole::unset_maximized;
-    using WindowWlSurfaceRole::set_fullscreen;
-    using WindowWlSurfaceRole::unset_fullscreen;
-    using WindowWlSurfaceRole::set_minimized;
-    using WindowWlSurfaceRole::set_state_now;
 
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
