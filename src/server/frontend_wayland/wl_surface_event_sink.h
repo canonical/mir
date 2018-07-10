@@ -85,7 +85,6 @@ protected:
     std::shared_ptr<bool> const destroyed;
 
 private:
-    void handle_resize_event(MirResizeEvent const* event);
     void handle_input_event(MirInputEvent const* event);
     void handle_keymap_event(MirKeymapEvent const* event);
     void handle_window_event(MirWindowEvent const* event);

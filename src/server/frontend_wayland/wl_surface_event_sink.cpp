@@ -55,8 +55,13 @@ void mf::WlSurfaceEventSink::handle_event(EventUPtr&& event)
             switch (mir_event_get_type(event.get()))
             {
                 case mir_event_type_resize:
-                    handle_resize_event(mir_event_get_resize_event(event.get()));
+                {
+                    auto const resize_event{mir_event_get_resize_event(event.get())};
+                    geometry::Size const new_size{mir_resize_event_get_width(resize_event),
+                                                  mir_resize_event_get_height(resize_event)};
+                    handle_resize(new_size);
                     break;
+                }
                 case mir_event_type_input:
                     handle_input_event(mir_event_get_input_event(event.get()));
                     break;
@@ -70,12 +75,6 @@ void mf::WlSurfaceEventSink::handle_event(EventUPtr&& event)
                     break;
             }
         }));
-}
-
-void mf::WlSurfaceEventSink::handle_resize_event(MirResizeEvent const* event)
-{
-    geometry::Size const new_size{mir_resize_event_get_width(event), mir_resize_event_get_height(event)};
-    handle_resize(new_size);
 }
 
 void mf::WlSurfaceEventSink::handle_resize(mir::geometry::Size const& new_size)
