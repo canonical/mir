@@ -22,7 +22,7 @@
 #include "basic_surface_event_sink.h"
 #include "wl_seat.h"
 #include "wl_surface.h"
-#include "wl_surface_role.h"
+#include "window_wl_surface_role.h"
 
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/frontend/session.h"
@@ -42,7 +42,7 @@ class Shell;
 class XdgSurfaceV6;
 class WlSeat;
 
-class XdgSurfaceV6 : wayland::XdgSurfaceV6, public WlAbstractMirWindow
+class XdgSurfaceV6 : wayland::XdgSurfaceV6, public WindowWlSurfaceRole
 {
 public:
     static XdgSurfaceV6* from(wl_resource* surface);
@@ -70,15 +70,15 @@ public:
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
 
-    using WlAbstractMirWindow::client;
-    using WlAbstractMirWindow::params;
-    using WlAbstractMirWindow::surface_id;
-    using WlAbstractMirWindow::set_maximized;
-    using WlAbstractMirWindow::unset_maximized;
-    using WlAbstractMirWindow::set_fullscreen;
-    using WlAbstractMirWindow::unset_fullscreen;
-    using WlAbstractMirWindow::set_minimized;
-    using WlAbstractMirWindow::set_state_now;
+    using WindowWlSurfaceRole::client;
+    using WindowWlSurfaceRole::params;
+    using WindowWlSurfaceRole::surface_id;
+    using WindowWlSurfaceRole::set_maximized;
+    using WindowWlSurfaceRole::unset_maximized;
+    using WindowWlSurfaceRole::set_fullscreen;
+    using WindowWlSurfaceRole::unset_fullscreen;
+    using WindowWlSurfaceRole::set_minimized;
+    using WindowWlSurfaceRole::set_state_now;
 
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
@@ -196,7 +196,7 @@ mf::XdgSurfaceV6* mf::XdgSurfaceV6::from(wl_resource* surface)
 mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t id, WlSurface* surface,
                                std::shared_ptr<mf::Shell> const& shell, WlSeat& seat, OutputManager* output_manager)
     : wayland::XdgSurfaceV6(client, parent, id),
-      WlAbstractMirWindow{&seat, client, surface, shell, output_manager},
+      WindowWlSurfaceRole{&seat, client, surface, shell, output_manager},
       parent{parent},
       shell{shell}
 {
@@ -419,7 +419,7 @@ void mf::XdgSurfaceV6::set_next_commit_action(std::function<void()> action)
 
 void mf::XdgSurfaceV6::commit(mf::WlSurfaceState const& state)
 {
-    WlAbstractMirWindow::commit(state);
+    WindowWlSurfaceRole::commit(state);
     next_commit_action();
     clear_next_commit_action();
 }

@@ -29,12 +29,12 @@ namespace frontend
 {
 class WlSurface;
 class WlSeat;
-class WlAbstractMirWindow;
+class WindowWlSurfaceRole;
 
 class BasicSurfaceEventSink : public EventSink
 {
 public:
-    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, WlSurface* surface, WlAbstractMirWindow* window);
+    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, WlSurface* surface, WindowWlSurfaceRole* window);
     ~BasicSurfaceEventSink();
 
     void handle_event(EventUPtr&& event) override;
@@ -76,7 +76,7 @@ protected:
     WlSeat* const seat;
     wl_client* const client;
     WlSurface* const surface;
-    WlAbstractMirWindow* window;
+    WindowWlSurfaceRole* window;
     geometry::Size window_size;
     int64_t timestamp_ns{0};
     geometry::Size requested_size;

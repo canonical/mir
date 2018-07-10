@@ -13,7 +13,8 @@ set(
   data_device.cpp               data_device.h
   output_manager.cpp            output_manager.h
   wl_subcompositor.cpp          wl_subcompositor.h
-  wl_surface_role.cpp           wl_surface_role.h
+                                wl_surface_role.h
+  window_wl_surface_role.cpp    window_wl_surface_role.h
   wl_surface.cpp                wl_surface.h
   wl_seat.cpp                   wl_seat.h
   wl_keyboard.cpp               wl_keyboard.h

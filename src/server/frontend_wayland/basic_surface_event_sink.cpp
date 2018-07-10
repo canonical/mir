@@ -23,13 +23,14 @@
 #include "wl_touch.h"
 #include "wl_surface.h"
 #include "wayland_utils.h"
+#include "window_wl_surface_role.h"
 
 #include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
-mf::BasicSurfaceEventSink::BasicSurfaceEventSink(WlSeat* seat, wl_client* client, WlSurface* surface, WlAbstractMirWindow* window)
+mf::BasicSurfaceEventSink::BasicSurfaceEventSink(WlSeat* seat, wl_client* client, WlSurface* surface, WindowWlSurfaceRole* window)
     : seat{seat},
       client{client},
       surface{surface},
