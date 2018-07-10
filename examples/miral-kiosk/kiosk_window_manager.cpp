@@ -137,6 +137,7 @@ auto KioskWindowManagerPolicy::place_new_window(ApplicationInfo const& app_info,
         (!specification.parent().is_set() || !specification.parent().value().lock()))
     {
         specification.state() = mir_window_state_maximized;
+        specification.size() = mir::optional_value<Size>{}; // Ignore requested size (if any) when we maximize
         tools.place_and_size_for_state(specification, WindowInfo{});
 
         if (!request.state().is_set() || request.state().value() != mir_window_state_restored)
@@ -154,6 +155,7 @@ void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, Win
         !window_info.parent())
     {
         specification.state() = mir_window_state_maximized;
+        specification.size() = mir::optional_value<Size>{}; // Ignore requested size (if any) when we maximize
         tools.place_and_size_for_state(specification, window_info);
 
         if (!modifications.state().is_set() || modifications.state().value() != mir_window_state_restored)
