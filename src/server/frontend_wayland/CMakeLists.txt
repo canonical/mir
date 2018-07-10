@@ -9,7 +9,7 @@ set(
   wlshmbuffer.cpp               wlshmbuffer.h
   wayland_executor.cpp          wayland_executor.h
   null_event_sink.cpp           null_event_sink.h
-  basic_surface_event_sink.cpp  basic_surface_event_sink.h
+  wl_surface_event_sink.cpp     wl_surface_event_sink.h
   data_device.cpp               data_device.h
   output_manager.cpp            output_manager.h
   wl_subcompositor.cpp          wl_subcompositor.h

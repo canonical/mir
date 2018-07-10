@@ -28,7 +28,7 @@
 #include "xdg_shell_v6.h"
 #include "wl_region.h"
 
-#include "basic_surface_event_sink.h"
+#include "wl_surface_event_sink.h"
 #include "null_event_sink.h"
 #include "output_manager.h"
 #include "wayland_executor.h"

@@ -21,7 +21,7 @@
 #include "output_manager.h"
 #include "wayland_utils.h"
 #include "wl_surface.h"
-#include "basic_surface_event_sink.h"
+#include "wl_surface_event_sink.h"
 #include "wl_seat.h"
 
 #include "mir/shell/surface_specification.h"

@@ -19,7 +19,7 @@
 #include "xdg_shell_v6.h"
 
 #include "wayland_utils.h"
-#include "basic_surface_event_sink.h"
+#include "wl_surface_event_sink.h"
 #include "wl_seat.h"
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"

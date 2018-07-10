@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "basic_surface_event_sink.h"
+#include "wl_surface_event_sink.h"
 #include "wl_seat.h"
 #include "wl_pointer.h"
 #include "wl_keyboard.h"
