@@ -108,6 +108,8 @@ public:
     optional_value<MirPlacementGravity> aux_rect_placement_gravity;
     optional_value<int> aux_rect_placement_offset_x;
     optional_value<int> aux_rect_placement_offset_y;
+
+    void apply_to(scene::SurfaceCreationParameters& params) const;
 };
 
 }
