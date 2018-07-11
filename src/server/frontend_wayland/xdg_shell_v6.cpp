@@ -116,11 +116,12 @@ private:
     XdgSurfaceV6* const self;
 };
 
-class XdgPositionerV6 : public wayland::XdgPositionerV6
+class XdgPositionerV6 : public wayland::XdgPositionerV6, public WindowPositionerData
 {
 public:
     XdgPositionerV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
 
+private:
     void destroy() override;
     void set_size(int32_t width, int32_t height) override;
     void set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) override;
@@ -128,13 +129,6 @@ public:
     void set_gravity(uint32_t gravity) override;
     void set_constraint_adjustment(uint32_t constraint_adjustment) override;
     void set_offset(int32_t x, int32_t y) override;
-
-    optional_value<geometry::Size> size;
-    optional_value<geometry::Rectangle> aux_rect;
-    optional_value<MirPlacementGravity> surface_placement_gravity;
-    optional_value<MirPlacementGravity> aux_rect_placement_gravity;
-    optional_value<int> aux_rect_placement_offset_x;
-    optional_value<int> aux_rect_placement_offset_y;
 };
 
 }
@@ -208,7 +202,9 @@ void mf::XdgSurfaceV6::get_toplevel(uint32_t id)
 void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner)
 {
     auto* tmp = wl_resource_get_user_data(positioner);
-    auto const* const pos =  static_cast<XdgPositionerV6*>(static_cast<wayland::XdgPositionerV6*>(tmp));
+    auto const* const pos = static_cast<WindowPositionerData*>(
+                                static_cast<XdgPositionerV6*>(
+                                    static_cast<wayland::XdgPositionerV6*>(tmp)));
 
     auto const session = get_session(client);
     auto& parent_surface = *XdgSurfaceV6::from(parent);
