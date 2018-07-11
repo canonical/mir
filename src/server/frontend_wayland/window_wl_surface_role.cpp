@@ -60,6 +60,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(WlSeat* seat, wl_client* client, Wl
 
 mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
 {
+    surface->clear_role();
     sink->disconnect();
     *destroyed = true;
     if (surface_id_.as_value())
