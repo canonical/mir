@@ -120,20 +120,6 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
 
             try
             {
-                auto const vt_services = std::make_shared<mir::LogindConsoleServices>(
-                    std::dynamic_pointer_cast<mir::GLibMainLoop>(the_main_loop()));
-                mir::log_debug("Using logind for session management");
-                return vt_services;
-            }
-            catch (std::exception const& e)
-            {
-                mir::log_debug(
-                    "Not using logind for session management: %s",
-                    boost::diagnostic_information(e).c_str());
-            }
-
-            try
-            {
                 auto const vt_services = std::make_shared<mir::LinuxVirtualTerminal>(
                     std::make_unique<RealVTFileOperations>(),
                     std::make_unique<RealPosixProcessOperations>(),
