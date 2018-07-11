@@ -24,6 +24,7 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/optional_value.h"
 
 #include <mir_toolkit/common.h>
@@ -96,6 +97,17 @@ private:
     void create_mir_window();
 
     void visiblity(bool visible) override;
+};
+
+class WindowPositionerData
+{
+public:
+    optional_value<geometry::Size> size;
+    optional_value<geometry::Rectangle> aux_rect;
+    optional_value<MirPlacementGravity> surface_placement_gravity;
+    optional_value<MirPlacementGravity> aux_rect_placement_gravity;
+    optional_value<int> aux_rect_placement_offset_x;
+    optional_value<int> aux_rect_placement_offset_y;
 };
 
 }
