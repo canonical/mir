@@ -306,10 +306,7 @@ public:
     {
     }
 
-    ~WlShellSurface() override
-    {
-        surface->clear_role();
-    }
+    ~WlShellSurface() = default;
 
 protected:
     void destroy() override

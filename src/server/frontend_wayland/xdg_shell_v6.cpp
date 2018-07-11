@@ -49,7 +49,7 @@ public:
 
     XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t id, WlSurface* surface,
                  std::shared_ptr<Shell> const& shell, WlSeat& seat, OutputManager* output_manager);
-    ~XdgSurfaceV6() override;
+    ~XdgSurfaceV6() = default;
 
     void destroy() override;
     void get_toplevel(uint32_t id) override;
@@ -192,11 +192,6 @@ mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t 
       parent{parent},
       shell{shell}
 {
-}
-
-mf::XdgSurfaceV6::~XdgSurfaceV6()
-{
-    surface->clear_role();
 }
 
 void mf::XdgSurfaceV6::destroy()
