@@ -448,7 +448,7 @@ protected:
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::KeyMapper> key_mapper;
-    std::shared_ptr<ConsoleServices> console_services{nullptr};
+    CachedPtr<ConsoleServices> console_services;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
