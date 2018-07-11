@@ -201,23 +201,17 @@ void mf::XdgSurfaceV6::get_toplevel(uint32_t id)
 
 void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner)
 {
-    auto* tmp = wl_resource_get_user_data(positioner);
     auto const* const pos = static_cast<WindowPositionerData*>(
                                 static_cast<XdgPositionerV6*>(
-                                    static_cast<wayland::XdgPositionerV6*>(tmp)));
+                                    static_cast<wayland::XdgPositionerV6*>(
+                                        wl_resource_get_user_data(positioner))));
 
-    auto const session = get_session(client);
     auto& parent_surface = *XdgSurfaceV6::from(parent);
 
     params->type = mir_window_type_freestyle;
     params->parent_id = parent_surface.surface_id();
-    if (pos->size.is_set()) params->size = pos->size.value();
-    params->aux_rect = pos->aux_rect;
-    params->surface_placement_gravity = pos->surface_placement_gravity;
-    params->aux_rect_placement_gravity = pos->aux_rect_placement_gravity;
-    params->aux_rect_placement_offset_x = pos->aux_rect_placement_offset_x;
-    params->aux_rect_placement_offset_y = pos->aux_rect_placement_offset_y;
-    params->placement_hints = mir_placement_hints_slide_any;
+
+    pos->apply_to(*params);
 
     new XdgPopupV6{client, parent, id, this};
     surface->set_role(this);
