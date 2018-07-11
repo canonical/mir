@@ -219,16 +219,7 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
 
 void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    geom::Displacement const offset{-x, -y};
-
-    surface->set_pending_offset(offset);
-    window_size_ = geom::Size{width, height};
-
-    if (surface_id().as_value())
-    {
-        spec().width = geom::Width{width};
-        spec().height = geom::Height{height};
-    }
+    WindowWlSurfaceRole::set_geometry(x, y, width, height);
 }
 
 void mf::XdgSurfaceV6::ack_configure(uint32_t serial)
@@ -240,80 +231,56 @@ void mf::XdgSurfaceV6::ack_configure(uint32_t serial)
 
 void mf::XdgSurfaceV6::set_title(std::string const& title)
 {
-    if (surface_id().as_value())
-    {
-        spec().name = title;
-    }
-    else
-    {
-        params->name = title;
-    }
+    WindowWlSurfaceRole::set_title(title);
 }
 
 void mf::XdgSurfaceV6::move(struct wl_resource* /*seat*/, uint32_t /*serial*/)
 {
-    if (surface_id().as_value())
-    {
-        if (auto session = get_session(client))
-        {
-            shell->request_operation(session, surface_id(), sink->latest_timestamp_ns(), Shell::UserRequest::move);
-        }
-    }
+    WindowWlSurfaceRole::initiate_interactive_move();
 }
 
 void mf::XdgSurfaceV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges)
 {
-    if (surface_id().as_value())
+    MirResizeEdge edge = mir_resize_edge_none;
+
+    switch (edges)
     {
-        if (auto session = get_session(client))
-        {
-            MirResizeEdge edge = mir_resize_edge_none;
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP:
+        edge = mir_resize_edge_north;
+        break;
 
-            switch (edges)
-            {
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP:
-                edge = mir_resize_edge_north;
-                break;
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM:
+        edge = mir_resize_edge_south;
+        break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM:
-                edge = mir_resize_edge_south;
-                break;
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_LEFT:
+        edge = mir_resize_edge_west;
+        break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_LEFT:
-                edge = mir_resize_edge_west;
-                break;
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_LEFT:
+        edge = mir_resize_edge_northwest;
+        break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_LEFT:
-                edge = mir_resize_edge_northwest;
-                break;
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_LEFT:
+        edge = mir_resize_edge_southwest;
+        break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_LEFT:
-                edge = mir_resize_edge_southwest;
-                break;
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_RIGHT:
+        edge = mir_resize_edge_east;
+        break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_RIGHT:
-                edge = mir_resize_edge_east;
-                break;
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_RIGHT:
+        edge = mir_resize_edge_northeast;
+        break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_RIGHT:
-                edge = mir_resize_edge_northeast;
-                break;
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_RIGHT:
+        edge = mir_resize_edge_southeast;
+        break;
 
-            case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_RIGHT:
-                edge = mir_resize_edge_southeast;
-                break;
-
-            default:;
-            }
-
-            shell->request_operation(
-                session,
-                surface_id(),
-                sink->latest_timestamp_ns(),
-                Shell::UserRequest::resize,
-                edge);
-        }
+    default:;
     }
+
+    WindowWlSurfaceRole::initiate_interactive_resize(edge);
 }
 
 void mf::XdgSurfaceV6::set_notify_resize(std::function<void(geometry::Size const&, MirWindowState, bool)> notify_resize_)
@@ -323,60 +290,17 @@ void mf::XdgSurfaceV6::set_notify_resize(std::function<void(geometry::Size const
 
 void mf::XdgSurfaceV6::set_parent(optional_value<SurfaceId> parent_id)
 {
-    if (surface_id().as_value())
-    {
-        spec().parent_id = parent_id;
-    }
-    else
-    {
-        params->parent_id = parent_id;
-    }
+    WindowWlSurfaceRole::set_parent(parent_id);
 }
 
 void mf::XdgSurfaceV6::set_max_size(int32_t width, int32_t height)
 {
-    if (surface_id().as_value())
-    {
-        if (width == 0) width = std::numeric_limits<int>::max();
-        if (height == 0) height = std::numeric_limits<int>::max();
-
-        auto& mods = spec();
-        mods.max_width = geom::Width{width};
-        mods.max_height = geom::Height{height};
-    }
-    else
-    {
-        if (width == 0)
-        {
-            if (params->max_width.is_set())
-                params->max_width.consume();
-        }
-        else
-            params->max_width = geom::Width{width};
-
-        if (height == 0)
-        {
-            if (params->max_height.is_set())
-                params->max_height.consume();
-        }
-        else
-            params->max_height = geom::Height{height};
-    }
+    WindowWlSurfaceRole::set_max_size(width, height);
 }
 
 void mf::XdgSurfaceV6::set_min_size(int32_t width, int32_t height)
 {
-    if (surface_id().as_value())
-    {
-        auto& mods = spec();
-        mods.min_width = geom::Width{width};
-        mods.min_height = geom::Height{height};
-    }
-    else
-    {
-        params->min_width = geom::Width{width};
-        params->min_height = geom::Height{height};
-    }
+    WindowWlSurfaceRole::set_min_size(width, height);
 }
 
 void mf::XdgSurfaceV6::clear_next_commit_action()

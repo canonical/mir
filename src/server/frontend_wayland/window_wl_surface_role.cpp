@@ -88,6 +88,117 @@ void mf::WindowWlSurfaceRole::refresh_surface_data_now()
     shell->modify_surface(get_session(client), surface_id_, surface_data_spec);
 }
 
+void mf::WindowWlSurfaceRole::set_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
+{
+    geom::Displacement const offset{-x, -y};
+
+    surface->set_pending_offset(offset);
+    window_size_ = geom::Size{width, height};
+
+    if (surface_id().as_value())
+    {
+        spec().width = geom::Width{width};
+        spec().height = geom::Height{height};
+    }
+}
+
+void mf::WindowWlSurfaceRole::set_title(std::string const& title)
+{
+    if (surface_id().as_value())
+    {
+        spec().name = title;
+    }
+    else
+    {
+        params->name = title;
+    }
+}
+
+void mf::WindowWlSurfaceRole::initiate_interactive_move()
+{
+    if (surface_id().as_value())
+    {
+        if (auto session = get_session(client))
+        {
+            shell->request_operation(session, surface_id(), sink->latest_timestamp_ns(), Shell::UserRequest::move);
+        }
+    }
+}
+
+void mf::WindowWlSurfaceRole::initiate_interactive_resize(MirResizeEdge edge)
+{
+    if (surface_id().as_value())
+    {
+        if (auto session = get_session(client))
+        {
+            shell->request_operation(
+                session,
+                surface_id(),
+                sink->latest_timestamp_ns(),
+                Shell::UserRequest::resize,
+                edge);
+        }
+    }
+}
+
+void mf::WindowWlSurfaceRole::set_parent(optional_value<SurfaceId> parent_id)
+{
+    if (surface_id().as_value())
+    {
+        spec().parent_id = parent_id;
+    }
+    else
+    {
+        params->parent_id = parent_id;
+    }
+}
+
+void mf::WindowWlSurfaceRole::set_max_size(int32_t width, int32_t height)
+{
+    if (surface_id().as_value())
+    {
+        if (width == 0) width = std::numeric_limits<int>::max();
+        if (height == 0) height = std::numeric_limits<int>::max();
+
+        auto& mods = spec();
+        mods.max_width = geom::Width{width};
+        mods.max_height = geom::Height{height};
+    }
+    else
+    {
+        if (width == 0)
+        {
+            if (params->max_width.is_set())
+                params->max_width.consume();
+        }
+        else
+            params->max_width = geom::Width{width};
+
+        if (height == 0)
+        {
+            if (params->max_height.is_set())
+                params->max_height.consume();
+        }
+        else
+            params->max_height = geom::Height{height};
+    }
+}
+
+void mf::WindowWlSurfaceRole::set_min_size(int32_t width, int32_t height)
+{
+    if (surface_id().as_value())
+    {
+        auto& mods = spec();
+        mods.min_width = geom::Width{width};
+        mods.min_height = geom::Height{height};
+    }
+    else
+    {
+        params->min_width = geom::Width{width};
+        params->min_height = geom::Height{height};
+    }
+}
+
 void mf::WindowWlSurfaceRole::set_maximized()
 {
     // We must process this request immediately (i.e. don't defer until commit())
