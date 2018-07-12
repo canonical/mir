@@ -469,12 +469,14 @@ void mf::XdgToplevelV6::set_min_size(int32_t width, int32_t height)
 
 void mf::XdgToplevelV6::set_maximized()
 {
-    self->set_maximized();
+    // We must process this request immediately (i.e. don't defer until commit())
+    self->set_state_now(mir_window_state_maximized);
 }
 
 void mf::XdgToplevelV6::unset_maximized()
 {
-    self->unset_maximized();
+    // We must process this request immediately (i.e. don't defer until commit())
+    self->set_state_now(mir_window_state_restored);
 }
 
 void mf::XdgToplevelV6::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
@@ -484,12 +486,15 @@ void mf::XdgToplevelV6::set_fullscreen(std::experimental::optional<struct wl_res
 
 void mf::XdgToplevelV6::unset_fullscreen()
 {
-    self->unset_fullscreen();
+    // We must process this request immediately (i.e. don't defer until commit())
+    // TODO: should we instead restore the previous state?
+    self->set_state_now(mir_window_state_restored);
 }
 
 void mf::XdgToplevelV6::set_minimized()
 {
-    self->set_minimized();
+    // We must process this request immediately (i.e. don't defer until commit())
+    self->set_state_now(mir_window_state_minimized);
 }
 
 mf::XdgToplevelV6* mf::XdgToplevelV6::from(wl_resource* surface)

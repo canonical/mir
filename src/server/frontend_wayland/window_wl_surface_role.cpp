@@ -216,18 +216,6 @@ void mf::WindowWlSurfaceRole::set_min_size(int32_t width, int32_t height)
     }
 }
 
-void mf::WindowWlSurfaceRole::set_maximized()
-{
-    // We must process this request immediately (i.e. don't defer until commit())
-    set_state_now(mir_window_state_maximized);
-}
-
-void mf::WindowWlSurfaceRole::unset_maximized()
-{
-    // We must process this request immediately (i.e. don't defer until commit())
-    set_state_now(mir_window_state_restored);
-}
-
 void mf::WindowWlSurfaceRole::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
 {
     // We must process this request immediately (i.e. don't defer until commit())
@@ -246,18 +234,6 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::experimental::optional<struct 
             params->output_id = output_manager->output_id_for(client, output.value());
         create_mir_window();
     }
-}
-
-void mf::WindowWlSurfaceRole::unset_fullscreen()
-{
-    // We must process this request immediately (i.e. don't defer until commit())
-    set_state_now(mir_window_state_restored);
-}
-
-void mf::WindowWlSurfaceRole::set_minimized()
-{
-    // We must process this request immediately (i.e. don't defer until commit())
-    set_state_now(mir_window_state_minimized);
 }
 
 void mf::WindowWlSurfaceRole::set_state_now(MirWindowState state)
