@@ -88,44 +88,15 @@ void mf::WindowWlSurfaceRole::refresh_surface_data_now()
     shell->modify_surface(get_session(client), surface_id_, surface_data_spec);
 }
 
-void mf::WindowWlSurfaceRole::apply_positioner(Positioner const& positioner)
+void mf::WindowWlSurfaceRole::apply_spec(mir::shell::SurfaceSpecification const& new_spec)
 {
     if (surface_id().as_value())
     {
-        if (positioner.size)
-        {
-            spec().width = positioner.size.value().width;
-            spec().height = positioner.size.value().height;
-        }
-        if (positioner.aux_rect)
-            spec().aux_rect = positioner.aux_rect.value();
-        if (positioner.surface_placement_gravity)
-            spec().surface_placement_gravity = positioner.surface_placement_gravity.value();
-        if (positioner.aux_rect_placement_gravity)
-            spec().aux_rect_placement_gravity = positioner.aux_rect_placement_gravity.value();
-        if (positioner.aux_rect_placement_offset)
-        {
-            spec().aux_rect_placement_offset_x = positioner.aux_rect_placement_offset.value().dx.as_int();
-            spec().aux_rect_placement_offset_y = positioner.aux_rect_placement_offset.value().dy.as_int();
-        }
-        spec().placement_hints = mir_placement_hints_slide_any;
+        spec().update_from(new_spec);
     }
     else
     {
-        if (positioner.size)
-            params->size = positioner.size.value();
-        if (positioner.aux_rect)
-            params->aux_rect = positioner.aux_rect.value();
-        if (positioner.surface_placement_gravity)
-            params->surface_placement_gravity = positioner.surface_placement_gravity.value();
-        if (positioner.aux_rect_placement_gravity)
-            params->aux_rect_placement_gravity = positioner.aux_rect_placement_gravity.value();
-        if (positioner.aux_rect_placement_offset)
-        {
-            params->aux_rect_placement_offset_x = positioner.aux_rect_placement_offset.value().dx.as_int();
-            params->aux_rect_placement_offset_y = positioner.aux_rect_placement_offset.value().dy.as_int();
-        }
-        params->placement_hints = mir_placement_hints_slide_any;
+        params->update_from(new_spec);
     }
 }
 

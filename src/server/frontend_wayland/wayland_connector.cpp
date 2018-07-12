@@ -325,34 +325,22 @@ protected:
         int32_t y,
         uint32_t flags) override
     {
-        auto const session = get_session(client);
         auto& parent_surface = *WlSurface::from(parent);
 
-        if (surface_id().as_value())
-        {
-            auto& mods = spec();
-            mods.parent_id = parent_surface.surface_id();
-            mods.aux_rect = geom::Rectangle{{x, y}, {}};
-            mods.surface_placement_gravity = mir_placement_gravity_northwest;
-            mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
-            mods.placement_hints = mir_placement_hints_slide_x;
-            mods.aux_rect_placement_offset_x = 0;
-            mods.aux_rect_placement_offset_y = 0;
-        }
-        else
-        {
-            if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
-                params->type = mir_window_type_gloss;
-            params->parent_id = parent_surface.surface_id();
-            params->aux_rect = geom::Rectangle{{x, y}, {}};
-            params->surface_placement_gravity = mir_placement_gravity_northwest;
-            params->aux_rect_placement_gravity = mir_placement_gravity_southeast;
-            params->placement_hints = mir_placement_hints_slide_x;
-            params->aux_rect_placement_offset_x = 0;
-            params->aux_rect_placement_offset_y = 0;
+        mir::shell::SurfaceSpecification mods;
 
-            surface->set_role(this);
-        }
+        if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
+            mods.type = mir_window_type_gloss;
+        mods.parent_id = parent_surface.surface_id();
+        mods.aux_rect = geom::Rectangle{{x, y}, {}};
+        mods.surface_placement_gravity = mir_placement_gravity_northwest;
+        mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
+        mods.placement_hints = mir_placement_hints_slide_x;
+        mods.aux_rect_placement_offset_x = 0;
+        mods.aux_rect_placement_offset_y = 0;
+
+        apply_spec(mods);
+        surface->set_role(this);
     }
 
     void handle_resize(const geometry::Size & new_size) override
@@ -380,32 +368,20 @@ protected:
         auto const session = get_session(client);
         auto& parent_surface = *WlSurface::from(parent);
 
-        if (surface_id().as_value())
-        {
-            auto& mods = spec();
-            mods.parent_id = parent_surface.surface_id();
-            mods.aux_rect = geom::Rectangle{{x, y}, {}};
-            mods.surface_placement_gravity = mir_placement_gravity_northwest;
-            mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
-            mods.placement_hints = mir_placement_hints_slide_x;
-            mods.aux_rect_placement_offset_x = 0;
-            mods.aux_rect_placement_offset_y = 0;
-        }
-        else
-        {
-            if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
-                params->type = mir_window_type_gloss;
+        mir::shell::SurfaceSpecification mods;
 
-            params->parent_id = parent_surface.surface_id();
-            params->aux_rect = geom::Rectangle{{x, y}, {}};
-            params->surface_placement_gravity = mir_placement_gravity_northwest;
-            params->aux_rect_placement_gravity = mir_placement_gravity_southeast;
-            params->placement_hints = mir_placement_hints_slide_x;
-            params->aux_rect_placement_offset_x = 0;
-            params->aux_rect_placement_offset_y = 0;
+        if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
+            mods.type = mir_window_type_gloss;
+        mods.parent_id = parent_surface.surface_id();
+        mods.aux_rect = geom::Rectangle{{x, y}, {}};
+        mods.surface_placement_gravity = mir_placement_gravity_northwest;
+        mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
+        mods.placement_hints = mir_placement_hints_slide_x;
+        mods.aux_rect_placement_offset_x = 0;
+        mods.aux_rect_placement_offset_y = 0;
 
-            surface->set_role(this);
-        }
+        apply_spec(mods);
+        surface->set_role(this);
     }
 
     void set_maximized(std::experimental::optional<struct wl_resource*> const& output) override
@@ -416,14 +392,7 @@ protected:
 
     void set_title(std::string const& title) override
     {
-        if (surface_id().as_value())
-        {
-            spec().name = title;
-        }
-        else
-        {
-            params->name = title;
-        }
+        WindowWlSurfaceRole::set_title(title);
     }
 
     void pong(uint32_t /*serial*/) override

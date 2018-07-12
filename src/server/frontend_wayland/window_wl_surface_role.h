@@ -55,15 +55,6 @@ class WlSeat;
 class WindowWlSurfaceRole : public WlSurfaceRole
 {
 public:
-    class Positioner
-    {
-    public:
-        std::experimental::optional<geometry::Size> size;
-        std::experimental::optional<geometry::Rectangle> aux_rect;
-        std::experimental::optional<MirPlacementGravity> surface_placement_gravity;
-        std::experimental::optional<MirPlacementGravity> aux_rect_placement_gravity;
-        std::experimental::optional<geometry::Displacement> aux_rect_placement_offset;
-    };
 
     WindowWlSurfaceRole(WlSeat* seat, wl_client* client, WlSurface* surface,
                         std::shared_ptr<frontend::Shell> const& shell, OutputManager* output_manager);
@@ -75,7 +66,7 @@ public:
     void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
     void refresh_surface_data_now() override;
 
-    void apply_positioner(Positioner const& positioner);
+    void apply_spec(shell::SurfaceSpecification const& new_spec);
     void set_geometry(int32_t x, int32_t y, int32_t width, int32_t height);
     void set_title(std::string const& title);
     void initiate_interactive_move();
