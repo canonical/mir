@@ -88,6 +88,18 @@ void mf::WindowWlSurfaceRole::refresh_surface_data_now()
     shell->modify_surface(get_session(client), surface_id_, surface_data_spec);
 }
 
+void mf::WindowWlSurfaceRole::apply_positioner(Positioner const& positioner)
+{
+    if (positioner.size.is_set())
+        params->size = positioner.size.value();
+    params->aux_rect = positioner.aux_rect;
+    params->surface_placement_gravity = positioner.surface_placement_gravity;
+    params->aux_rect_placement_gravity = positioner.aux_rect_placement_gravity;
+    params->aux_rect_placement_offset_x = positioner.aux_rect_placement_offset_x;
+    params->aux_rect_placement_offset_y = positioner.aux_rect_placement_offset_y;
+    params->placement_hints = mir_placement_hints_slide_any;
+}
+
 void mf::WindowWlSurfaceRole::set_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
     geom::Displacement const offset{-x, -y};
@@ -351,17 +363,5 @@ void mf::WindowWlSurfaceRole::visiblity(bool visible)
         if (mir_surface->state() != mir_window_state_hidden)
             spec().state = mir_window_state_hidden;
     }
-}
-
-void mf::WindowPositionerData::apply_to(ms::SurfaceCreationParameters& params) const
-{
-    if (size.is_set())
-        params.size = size.value();
-    params.aux_rect = aux_rect;
-    params.surface_placement_gravity = surface_placement_gravity;
-    params.aux_rect_placement_gravity = aux_rect_placement_gravity;
-    params.aux_rect_placement_offset_x = aux_rect_placement_offset_x;
-    params.aux_rect_placement_offset_y = aux_rect_placement_offset_y;
-    params.placement_hints = mir_placement_hints_slide_any;
 }
 
