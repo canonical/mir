@@ -116,7 +116,7 @@ private:
     XdgSurfaceV6* const self;
 };
 
-class XdgPositionerV6 : public wayland::XdgPositionerV6, public WindowPositionerData
+class XdgPositionerV6 : public wayland::XdgPositionerV6, public WindowWlSurfaceRole::Positioner
 {
 public:
     XdgPositionerV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -201,7 +201,7 @@ void mf::XdgSurfaceV6::get_toplevel(uint32_t id)
 
 void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner)
 {
-    auto const* const pos = static_cast<WindowPositionerData*>(
+    auto const* const pos = static_cast<Positioner*>(
                                 static_cast<XdgPositionerV6*>(
                                     static_cast<wayland::XdgPositionerV6*>(
                                         wl_resource_get_user_data(positioner))));
@@ -211,7 +211,7 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
     params->type = mir_window_type_freestyle;
     params->parent_id = parent_surface.surface_id();
 
-    pos->apply_to(*params);
+    apply_positioner(*pos);
 
     new XdgPopupV6{client, parent, id, this};
     surface->set_role(this);

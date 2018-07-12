@@ -55,6 +55,17 @@ class WlSeat;
 class WindowWlSurfaceRole : public WlSurfaceRole
 {
 public:
+    class Positioner
+    {
+    public:
+        optional_value<geometry::Size> size;
+        optional_value<geometry::Rectangle> aux_rect;
+        optional_value<MirPlacementGravity> surface_placement_gravity;
+        optional_value<MirPlacementGravity> aux_rect_placement_gravity;
+        optional_value<int> aux_rect_placement_offset_x;
+        optional_value<int> aux_rect_placement_offset_y;
+    };
+
     WindowWlSurfaceRole(WlSeat* seat, wl_client* client, WlSurface* surface,
                         std::shared_ptr<frontend::Shell> const& shell, OutputManager* output_manager);
 
@@ -65,6 +76,7 @@ public:
     void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
     void refresh_surface_data_now() override;
 
+    void apply_positioner(Positioner const& positioner);
     void set_geometry(int32_t x, int32_t y, int32_t width, int32_t height);
     void set_title(std::string const& title);
     void initiate_interactive_move();
@@ -104,19 +116,6 @@ private:
     void create_mir_window();
 
     void visiblity(bool visible) override;
-};
-
-class WindowPositionerData
-{
-public:
-    optional_value<geometry::Size> size;
-    optional_value<geometry::Rectangle> aux_rect;
-    optional_value<MirPlacementGravity> surface_placement_gravity;
-    optional_value<MirPlacementGravity> aux_rect_placement_gravity;
-    optional_value<int> aux_rect_placement_offset_x;
-    optional_value<int> aux_rect_placement_offset_y;
-
-    void apply_to(scene::SurfaceCreationParameters& params) const;
 };
 
 }
