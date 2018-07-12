@@ -386,7 +386,7 @@ protected:
     void set_maximized(std::experimental::optional<struct wl_resource*> const& output) override
     {
         (void)output;
-        WindowWlSurfaceRole::set_maximized();
+        WindowWlSurfaceRole::set_state_now(mir_window_state_maximized);
     }
 
     void set_title(std::string const& title) override
