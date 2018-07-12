@@ -23,6 +23,8 @@ stages:
       AND ( branch = master
             OR branch =~ ^release/[\d\.]+$
             OR tag =~ ^v[\d\.]+$ )
+- name: process snaps
+  if: repo = MirServer/mir
 
 env:
   global:
@@ -61,11 +63,12 @@ jobs:
   - &ppa-upload
     stage: upload to ppa:mir-team
     env: RELEASE=16.04
-    before_install:
+    git:
+      depth: false
+    before_install: &decrypt-bot-data
     - openssl aes-256-cbc -K $encrypted_ba35384b250b_key -iv $encrypted_ba35384b250b_iv
       -in tools/bot-data.tar.xz.enc -out tools/bot-data.tar.xz -d
     - tar --extract --xz --file tools/bot-data.tar.xz --directory ${HOME}
-    - git fetch --unshallow origin master:master
     script:
     - tools/ppa-upload.sh
     addons:
@@ -84,3 +87,12 @@ jobs:
     env: RELEASE=18.04
   - <<: *ppa-upload
     env: RELEASE=devel
+  - stage: process snaps
+    env: ~
+    language: python
+    python: [3.6]
+    before_install: *decrypt-bot-data
+    install:
+    - pip install -r tools/requirements.txt
+    script:
+    - tools/process_snaps.py
