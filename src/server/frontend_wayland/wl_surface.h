@@ -53,6 +53,7 @@ namespace frontend
 {
 class BufferStream;
 class Session;
+class WlSurface;
 class WlSubsurface;
 
 struct WlSurfaceState

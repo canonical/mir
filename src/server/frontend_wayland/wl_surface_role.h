@@ -21,34 +21,15 @@
 
 #include "mir/frontend/surface_id.h"
 #include "mir/geometry/displacement.h"
-#include "mir/geometry/size.h"
-#include "mir/optional_value.h"
 
 #include <mir_toolkit/common.h>
 
-#include <experimental/optional>
 #include <memory>
-
-struct wl_client;
-struct wl_resource;
 
 namespace mir
 {
-namespace scene
-{
-struct SurfaceCreationParameters;
-}
-namespace shell
-{
-struct SurfaceSpecification;
-}
 namespace frontend
 {
-class Shell;
-class BasicSurfaceEventSink;
-class OutputManager;
-class WlSurface;
-class WlSeat;
 struct WlSurfaceState;
 
 class WlSurfaceRole
@@ -63,54 +44,6 @@ public:
     virtual void destroy() = 0;
     virtual ~WlSurfaceRole() = default;
 };
-
-class WlAbstractMirWindow : public WlSurfaceRole
-{
-public:
-    WlAbstractMirWindow(WlSeat* seat, wl_client* client, WlSurface* surface,
-                        std::shared_ptr<frontend::Shell> const& shell, OutputManager* output_manager);
-
-    ~WlAbstractMirWindow() override;
-
-    SurfaceId surface_id() const override { return surface_id_; };
-
-    void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
-    void refresh_surface_data_now() override;
-
-    void set_maximized();
-    void unset_maximized();
-    void set_fullscreen(std::experimental::optional<wl_resource*> const& output);
-    void unset_fullscreen();
-    void set_minimized();
-
-    void set_state_now(MirWindowState state);
-
-    virtual void handle_resize(geometry::Size const& new_size) = 0;
-
-protected:
-    std::shared_ptr<bool> const destroyed;
-    wl_client* const client;
-    WlSurface* const surface;
-    std::shared_ptr<frontend::Shell> const shell;
-    OutputManager* output_manager;
-    std::shared_ptr<BasicSurfaceEventSink> const sink;
-
-    std::unique_ptr<scene::SurfaceCreationParameters> const params;
-    optional_value<geometry::Size> window_size_;
-
-    geometry::Size window_size();
-    shell::SurfaceSpecification& spec();
-    void commit(WlSurfaceState const& state) override;
-
-private:
-    SurfaceId surface_id_;
-    std::unique_ptr<shell::SurfaceSpecification> pending_changes;
-
-    void visiblity(bool visible) override;
-
-    void create_mir_window();
-};
-
 }
 }
 

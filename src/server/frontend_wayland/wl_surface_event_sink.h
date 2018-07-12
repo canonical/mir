@@ -29,13 +29,13 @@ namespace frontend
 {
 class WlSurface;
 class WlSeat;
-class WlAbstractMirWindow;
+class WindowWlSurfaceRole;
 
-class BasicSurfaceEventSink : public EventSink
+class WlSurfaceEventSink : public EventSink
 {
 public:
-    BasicSurfaceEventSink(WlSeat* seat, wl_client* client, WlSurface* surface, WlAbstractMirWindow* window);
-    ~BasicSurfaceEventSink();
+    WlSurfaceEventSink(WlSeat* seat, wl_client* client, WlSurface* surface, WindowWlSurfaceRole* window);
+    ~WlSurfaceEventSink();
 
     void handle_event(EventUPtr&& event) override;
     void handle_resize(mir::geometry::Size const& new_size);
@@ -76,7 +76,7 @@ protected:
     WlSeat* const seat;
     wl_client* const client;
     WlSurface* const surface;
-    WlAbstractMirWindow* window;
+    WindowWlSurfaceRole* window;
     geometry::Size window_size;
     int64_t timestamp_ns{0};
     geometry::Size requested_size;
@@ -85,7 +85,6 @@ protected:
     std::shared_ptr<bool> const destroyed;
 
 private:
-    void handle_resize_event(MirResizeEvent const* event);
     void handle_input_event(MirInputEvent const* event);
     void handle_keymap_event(MirKeymapEvent const* event);
     void handle_window_event(MirWindowEvent const* event);
