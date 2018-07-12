@@ -90,14 +90,43 @@ void mf::WindowWlSurfaceRole::refresh_surface_data_now()
 
 void mf::WindowWlSurfaceRole::apply_positioner(Positioner const& positioner)
 {
-    if (positioner.size.is_set())
-        params->size = positioner.size.value();
-    params->aux_rect = positioner.aux_rect;
-    params->surface_placement_gravity = positioner.surface_placement_gravity;
-    params->aux_rect_placement_gravity = positioner.aux_rect_placement_gravity;
-    params->aux_rect_placement_offset_x = positioner.aux_rect_placement_offset_x;
-    params->aux_rect_placement_offset_y = positioner.aux_rect_placement_offset_y;
-    params->placement_hints = mir_placement_hints_slide_any;
+    if (surface_id().as_value())
+    {
+        if (positioner.size)
+        {
+            spec().width = positioner.size.value().width;
+            spec().height = positioner.size.value().height;
+        }
+        if (positioner.aux_rect)
+            spec().aux_rect = positioner.aux_rect.value();
+        if (positioner.surface_placement_gravity)
+            spec().surface_placement_gravity = positioner.surface_placement_gravity.value();
+        if (positioner.aux_rect_placement_gravity)
+            spec().aux_rect_placement_gravity = positioner.aux_rect_placement_gravity.value();
+        if (positioner.aux_rect_placement_offset)
+        {
+            spec().aux_rect_placement_offset_x = positioner.aux_rect_placement_offset.value().dx.as_int();
+            spec().aux_rect_placement_offset_y = positioner.aux_rect_placement_offset.value().dy.as_int();
+        }
+        spec().placement_hints = mir_placement_hints_slide_any;
+    }
+    else
+    {
+        if (positioner.size)
+            params->size = positioner.size.value();
+        if (positioner.aux_rect)
+            params->aux_rect = positioner.aux_rect.value();
+        if (positioner.surface_placement_gravity)
+            params->surface_placement_gravity = positioner.surface_placement_gravity.value();
+        if (positioner.aux_rect_placement_gravity)
+            params->aux_rect_placement_gravity = positioner.aux_rect_placement_gravity.value();
+        if (positioner.aux_rect_placement_offset)
+        {
+            params->aux_rect_placement_offset_x = positioner.aux_rect_placement_offset.value().dx.as_int();
+            params->aux_rect_placement_offset_y = positioner.aux_rect_placement_offset.value().dy.as_int();
+        }
+        params->placement_hints = mir_placement_hints_slide_any;
+    }
 }
 
 void mf::WindowWlSurfaceRole::set_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
