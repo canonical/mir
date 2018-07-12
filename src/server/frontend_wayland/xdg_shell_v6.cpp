@@ -116,7 +116,7 @@ private:
     XdgSurfaceV6* const self;
 };
 
-class XdgPositionerV6 : public wayland::XdgPositionerV6, public WindowWlSurfaceRole::Positioner
+class XdgPositionerV6 : public wayland::XdgPositionerV6, public shell::SurfaceSpecification
 {
 public:
     XdgPositionerV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -201,17 +201,18 @@ void mf::XdgSurfaceV6::get_toplevel(uint32_t id)
 
 void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner)
 {
-    auto const* const pos = static_cast<Positioner*>(
+    auto specification = static_cast<mir::shell::SurfaceSpecification*>(
                                 static_cast<XdgPositionerV6*>(
                                     static_cast<wayland::XdgPositionerV6*>(
                                         wl_resource_get_user_data(positioner))));
 
     auto& parent_surface = *XdgSurfaceV6::from(parent);
 
-    params->type = mir_window_type_freestyle;
-    params->parent_id = parent_surface.surface_id();
+    specification->type = mir_window_type_freestyle;
+    specification->parent_id = parent_surface.surface_id();
+    specification->placement_hints = mir_placement_hints_slide_any;
 
-    apply_positioner(*pos);
+    apply_spec(*specification);
 
     new XdgPopupV6{client, parent, id, this};
     surface->set_role(this);
@@ -501,7 +502,8 @@ mf::XdgToplevelV6* mf::XdgToplevelV6::from(wl_resource* surface)
 
 mf::XdgPositionerV6::XdgPositionerV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : wayland::XdgPositionerV6(client, parent, id)
-{}
+{
+}
 
 void mf::XdgPositionerV6::destroy()
 {
@@ -510,7 +512,8 @@ void mf::XdgPositionerV6::destroy()
 
 void mf::XdgPositionerV6::set_size(int32_t width, int32_t height)
 {
-    size = geom::Size{width, height};
+    this->width = geom::Width{width};
+    this->height = geom::Height{height};
 }
 
 void mf::XdgPositionerV6::set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -564,6 +567,7 @@ void mf::XdgPositionerV6::set_constraint_adjustment(uint32_t constraint_adjustme
 
 void mf::XdgPositionerV6::set_offset(int32_t x, int32_t y)
 {
-    aux_rect_placement_offset = geometry::Displacement{x, y};
+    aux_rect_placement_offset_x = x;
+    aux_rect_placement_offset_y = y;
 }
 
