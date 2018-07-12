@@ -34,6 +34,7 @@
 
 namespace mir
 {
+namespace shell { class SurfaceSpecification; }
 namespace scene
 {
 class Surface;
@@ -71,6 +72,8 @@ struct SurfaceCreationParameters
     SurfaceCreationParameters& with_edge_attachment(MirEdgeAttachment edge);
 
     SurfaceCreationParameters& with_buffer_stream(frontend::BufferStreamId const& id);
+
+    void update_from(shell::SurfaceSpecification const& that);
 
     std::string name;
     geometry::Size size;
