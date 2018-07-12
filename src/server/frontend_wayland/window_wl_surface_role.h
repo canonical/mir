@@ -66,6 +66,7 @@ public:
     void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
     void refresh_surface_data_now() override;
 
+    void become_surface_role();
     void apply_spec(shell::SurfaceSpecification const& new_spec);
     void set_geometry(int32_t x, int32_t y, int32_t width, int32_t height);
     void set_title(std::string const& title);
@@ -87,25 +88,28 @@ public:
 protected:
     std::shared_ptr<bool> const destroyed;
     wl_client* const client;
+
+    geometry::Size window_size();
+    MirWindowState window_state();
+    bool is_active();
+    uint64_t latest_timestamp_ns();
+
+    void commit(WlSurfaceState const& state) override;
+
+private:
     WlSurface* const surface;
     std::shared_ptr<frontend::Shell> const shell;
     OutputManager* output_manager;
     std::shared_ptr<WlSurfaceEventSink> const sink;
-
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
     optional_value<geometry::Size> window_size_;
-
-    geometry::Size window_size();
-    shell::SurfaceSpecification& spec();
-    void commit(WlSurfaceState const& state) override;
-
-private:
     SurfaceId surface_id_;
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
 
-    void create_mir_window();
-
     void visiblity(bool visible) override;
+
+    shell::SurfaceSpecification& spec();
+    void create_mir_window();
 };
 
 }
