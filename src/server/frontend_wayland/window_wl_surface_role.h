@@ -58,12 +58,11 @@ public:
     class Positioner
     {
     public:
-        optional_value<geometry::Size> size;
-        optional_value<geometry::Rectangle> aux_rect;
-        optional_value<MirPlacementGravity> surface_placement_gravity;
-        optional_value<MirPlacementGravity> aux_rect_placement_gravity;
-        optional_value<int> aux_rect_placement_offset_x;
-        optional_value<int> aux_rect_placement_offset_y;
+        std::experimental::optional<geometry::Size> size;
+        std::experimental::optional<geometry::Rectangle> aux_rect;
+        std::experimental::optional<MirPlacementGravity> surface_placement_gravity;
+        std::experimental::optional<MirPlacementGravity> aux_rect_placement_gravity;
+        std::experimental::optional<geometry::Displacement> aux_rect_placement_offset;
     };
 
     WindowWlSurfaceRole(WlSeat* seat, wl_client* client, WlSurface* surface,

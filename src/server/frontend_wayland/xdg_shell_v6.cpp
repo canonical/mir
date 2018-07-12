@@ -564,7 +564,6 @@ void mf::XdgPositionerV6::set_constraint_adjustment(uint32_t constraint_adjustme
 
 void mf::XdgPositionerV6::set_offset(int32_t x, int32_t y)
 {
-    aux_rect_placement_offset_x = x;
-    aux_rect_placement_offset_y = y;
+    aux_rect_placement_offset = geometry::Displacement{x, y};
 }
 
