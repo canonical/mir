@@ -196,7 +196,7 @@ void mf::XdgSurfaceV6::destroy()
 void mf::XdgSurfaceV6::get_toplevel(uint32_t id)
 {
     new XdgToplevelV6{client, parent, id, shell, this};
-    surface->set_role(this);
+    become_surface_role();
 }
 
 void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner)
@@ -215,7 +215,7 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
     apply_spec(*specification);
 
     new XdgPopupV6{client, parent, id, this};
-    surface->set_role(this);
+    become_surface_role();
 }
 
 void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -328,8 +328,8 @@ void mf::XdgSurfaceV6::commit(mf::WlSurfaceState const& state)
 
 void mf::XdgSurfaceV6::handle_resize(geometry::Size const& new_size)
 {
-    auto const action = [notify_resize=notify_resize, new_size, sink=sink]
-        { notify_resize(new_size, sink->state(), sink->is_active()); };
+    auto const action = [notify_resize=notify_resize, new_size, state=window_state(), is_active=is_active()]
+        { notify_resize(new_size, state, is_active); };
 
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
     action();

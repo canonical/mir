@@ -28,7 +28,6 @@
 #include "xdg_shell_v6.h"
 #include "wl_region.h"
 
-#include "wl_surface_event_sink.h"
 #include "null_event_sink.h"
 #include "output_manager.h"
 #include "wayland_executor.h"
@@ -316,7 +315,7 @@ protected:
 
     void set_toplevel() override
     {
-        surface->set_role(this);
+        become_surface_role();
     }
 
     void set_transient(
@@ -340,7 +339,7 @@ protected:
         mods.aux_rect_placement_offset_y = 0;
 
         apply_spec(mods);
-        surface->set_role(this);
+        become_surface_role();
     }
 
     void handle_resize(const geometry::Size & new_size) override
@@ -381,7 +380,7 @@ protected:
         mods.aux_rect_placement_offset_y = 0;
 
         apply_spec(mods);
-        surface->set_role(this);
+        become_surface_role();
     }
 
     void set_maximized(std::experimental::optional<struct wl_resource*> const& output) override
@@ -401,68 +400,51 @@ protected:
 
     void move(struct wl_resource* /*seat*/, uint32_t /*serial*/) override
     {
-        if (surface_id().as_value())
-        {
-            if (auto session = get_session(client))
-            {
-                shell->request_operation(session, surface_id(), sink->latest_timestamp_ns(), Shell::UserRequest::move);
-            }
-        }
+        WindowWlSurfaceRole::initiate_interactive_move();
     }
 
     void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges) override
     {
-        if (surface_id().as_value())
+        MirResizeEdge edge = mir_resize_edge_none;
+
+        switch (edges)
         {
-            if (auto session = get_session(client))
-            {
-                MirResizeEdge edge = mir_resize_edge_none;
+        case WL_SHELL_SURFACE_RESIZE_TOP:
+            edge = mir_resize_edge_north;
+            break;
 
-                switch (edges)
-                {
-                case WL_SHELL_SURFACE_RESIZE_TOP:
-                    edge = mir_resize_edge_north;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_BOTTOM:
+            edge = mir_resize_edge_south;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_BOTTOM:
-                    edge = mir_resize_edge_south;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_LEFT:
+            edge = mir_resize_edge_west;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_LEFT:
-                    edge = mir_resize_edge_west;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_TOP_LEFT:
+            edge = mir_resize_edge_northwest;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_TOP_LEFT:
-                    edge = mir_resize_edge_northwest;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT:
+            edge = mir_resize_edge_southwest;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT:
-                    edge = mir_resize_edge_southwest;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_RIGHT:
+            edge = mir_resize_edge_east;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_RIGHT:
-                    edge = mir_resize_edge_east;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_TOP_RIGHT:
+            edge = mir_resize_edge_northeast;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_TOP_RIGHT:
-                    edge = mir_resize_edge_northeast;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT:
+            edge = mir_resize_edge_southeast;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT:
-                    edge = mir_resize_edge_southeast;
-                    break;
-
-                default:;
-                }
-
-                shell->request_operation(
-                    session,
-                    surface_id(),
-                    sink->latest_timestamp_ns(),
-                    Shell::UserRequest::resize,
-                    edge);
-            }
+        default:;
         }
+
+        WindowWlSurfaceRole::initiate_interactive_resize(edge);
     }
 
     void set_class(std::string const& /*class_*/) override

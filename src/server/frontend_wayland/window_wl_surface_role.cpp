@@ -88,6 +88,11 @@ void mf::WindowWlSurfaceRole::refresh_surface_data_now()
     shell->modify_surface(get_session(client), surface_id_, surface_data_spec);
 }
 
+void mf::WindowWlSurfaceRole::become_surface_role()
+{
+    surface->set_role(this);
+}
+
 void mf::WindowWlSurfaceRole::apply_spec(mir::shell::SurfaceSpecification const& new_spec)
 {
     if (surface_id().as_value())
@@ -276,12 +281,19 @@ geom::Size mf::WindowWlSurfaceRole::window_size()
      return window_size_.is_set()? window_size_.value() : surface->buffer_size();
 }
 
-mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
+MirWindowState mf::WindowWlSurfaceRole::window_state()
 {
-    if (!pending_changes)
-        pending_changes = std::make_unique<mir::shell::SurfaceSpecification>();
+    return sink->state();
+}
 
-    return *pending_changes;
+bool mf::WindowWlSurfaceRole::is_active()
+{
+    return sink->is_active();
+}
+
+uint64_t mf::WindowWlSurfaceRole::latest_timestamp_ns()
+{
+    return sink->latest_timestamp_ns();
 }
 
 void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
@@ -318,29 +330,6 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     create_mir_window();
 }
 
-void mf::WindowWlSurfaceRole::create_mir_window()
-{
-    auto const session = get_session(client);
-
-    if (params->size == geometry::Size{})
-        params->size = window_size();
-    if (params->size == geometry::Size{})
-        params->size = geometry::Size{640, 480};
-
-    params->streams = std::vector<shell::StreamSpecification>{};
-    params->input_shape = std::vector<geom::Rectangle>{};
-    surface->populate_surface_data(params->streams.value(), params->input_shape.value(), {});
-
-    surface_id_ = shell->create_surface(session, *params, sink);
-
-    // The shell isn't guaranteed to respect the requested size
-    auto const window = session->get_surface(surface_id_);
-    auto const client_size = window->client_size();
-
-    if (client_size != params->size)
-        sink->handle_resize(client_size);
-}
-
 void mf::WindowWlSurfaceRole::visiblity(bool visible)
 {
     if (!surface_id_.as_value())
@@ -363,5 +352,36 @@ void mf::WindowWlSurfaceRole::visiblity(bool visible)
         if (mir_surface->state() != mir_window_state_hidden)
             spec().state = mir_window_state_hidden;
     }
+}
+
+mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
+{
+    if (!pending_changes)
+        pending_changes = std::make_unique<mir::shell::SurfaceSpecification>();
+
+    return *pending_changes;
+}
+
+void mf::WindowWlSurfaceRole::create_mir_window()
+{
+    auto const session = get_session(client);
+
+    if (params->size == geometry::Size{})
+        params->size = window_size();
+    if (params->size == geometry::Size{})
+        params->size = geometry::Size{640, 480};
+
+    params->streams = std::vector<shell::StreamSpecification>{};
+    params->input_shape = std::vector<geom::Rectangle>{};
+    surface->populate_surface_data(params->streams.value(), params->input_shape.value(), {});
+
+    surface_id_ = shell->create_surface(session, *params, sink);
+
+    // The shell isn't guaranteed to respect the requested size
+    auto const window = session->get_surface(surface_id_);
+    auto const client_size = window->client_size();
+
+    if (client_size != params->size)
+        sink->handle_resize(client_size);
 }
 
