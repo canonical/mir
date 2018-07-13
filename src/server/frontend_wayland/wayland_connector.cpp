@@ -363,7 +363,6 @@ protected:
         int32_t y,
         uint32_t flags) override
     {
-        auto const session = get_session(client);
         auto& parent_surface = *WlSurface::from(parent);
 
         mir::shell::SurfaceSpecification mods;
@@ -448,8 +447,6 @@ protected:
     void set_class(std::string const& /*class_*/) override
     {
     }
-
-    using WindowWlSurfaceRole::client;
 };
 
 class WlShell : public wayland::Shell

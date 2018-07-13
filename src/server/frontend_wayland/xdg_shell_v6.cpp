@@ -66,8 +66,6 @@ public:
                                               bool active)> notify_resize);
     void send_configure();
 
-    using WindowWlSurfaceRole::client;
-
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
     std::function<void(std::experimental::optional<geometry::Point> const& new_top_left,
@@ -196,7 +194,7 @@ void mf::XdgSurfaceV6::destroy()
 
 void mf::XdgSurfaceV6::get_toplevel(uint32_t id)
 {
-    new XdgToplevelV6{client, parent, id, shell, this};
+    new XdgToplevelV6{wayland::XdgSurfaceV6::client, parent, id, shell, this};
     become_surface_role();
 }
 
@@ -215,7 +213,7 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
 
     apply_spec(*specification);
 
-    new XdgPopupV6{client, parent, id, this};
+    new XdgPopupV6{wayland::XdgSurfaceV6::client, parent, id, this};
     become_surface_role();
 }
 
@@ -241,7 +239,7 @@ void mf::XdgSurfaceV6::set_notify_resize(
 
 void mf::XdgSurfaceV6::send_configure()
 {
-    auto const serial = wl_display_next_serial(wl_client_get_display(client));
+    auto const serial = wl_display_next_serial(wl_client_get_display(wayland::XdgSurfaceV6::client));
     zxdg_surface_v6_send_configure(resource, serial);
 }
 
