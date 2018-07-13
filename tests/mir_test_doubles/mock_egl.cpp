@@ -103,9 +103,16 @@ mtd::MockEGL::MockEGL()
         [&] (EGLDisplay, const EGLint *, EGLConfig *configs,
              EGLint config_size, EGLint *num_config) -> EGLBoolean
         {
-            EGLint const min_size = std::min(config_size, fake_configs_num);
-            std::copy(fake_configs, fake_configs + min_size, configs);
-            *num_config = min_size;
+            if (configs != nullptr)
+            {
+                EGLint const min_size = std::min(config_size, fake_configs_num);
+                std::copy(fake_configs, fake_configs + min_size, configs);
+                *num_config = min_size;
+            }
+            else
+            {
+                *num_config = fake_configs_num;
+            }
             return EGL_TRUE;
         }));
 

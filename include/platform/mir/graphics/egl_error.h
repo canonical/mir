@@ -21,6 +21,7 @@
 
 #include <system_error>
 #include <EGL/egl.h>
+#include <GLES2/gl2.h>
 
 namespace mir
 {
@@ -32,6 +33,13 @@ std::error_category const& egl_category();
 inline auto egl_error(std::string const& msg) -> std::system_error
 {
     return std::system_error{eglGetError(), egl_category(), msg};
+}
+
+std::error_category const& gl_category();
+
+inline auto gl_error(std::string const& msg) -> std::system_error
+{
+    return std::system_error{static_cast<int>(glGetError()), gl_category(), msg};
 }
 
 }

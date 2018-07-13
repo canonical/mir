@@ -112,15 +112,8 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
             auto point = Point{mir_pointer_event_axis_value(event, mir_pointer_axis_x),
                                         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
             auto transformed = surface->transform_point(point);
-            if (transformed)
-            {
-                handle_enter(transformed.value().first, transformed.value().second);
-                handle_frame();
-            }
-            else
-            {
-                log_warning("surface->transform_point() returned nullopt for enter action");
-            }
+            handle_enter(transformed.position, transformed.surface);
+            handle_frame();
             break;
         }
         case mir_pointer_action_leave:
@@ -141,16 +134,16 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
                                         mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
             auto transformed = surface->transform_point(point);
 
-            if (transformed && focused_surface && transformed.value().second == focused_surface.value())
+            if (focused_surface && transformed.surface == focused_surface.value())
             {
-                if (!last_position || transformed.value().first != last_position.value())
+                if (!last_position || transformed.position != last_position.value())
                 {
                     wl_pointer_send_motion(
                         resource,
                         timestamp,
-                        wl_fixed_from_double(transformed.value().first.x.as_int()),
-                        wl_fixed_from_double(transformed.value().first.y.as_int()));
-                    last_position = transformed.value().first;
+                        wl_fixed_from_double(transformed.position.x.as_int()),
+                        wl_fixed_from_double(transformed.position.y.as_int()));
+                    last_position = transformed.position;
                     needs_frame = true;
                 }
             }
@@ -158,10 +151,7 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
             {
                 if (focused_surface)
                     handle_leave();
-                if (transformed)
-                    handle_enter(transformed.value().first, transformed.value().second);
-                else
-                    log_warning("surface->transform_point() returned nullopt for motion action");
+                handle_enter(transformed.position, transformed.surface);
                 needs_frame = true;
             }
 

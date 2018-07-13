@@ -48,7 +48,7 @@ inline PolicyData& policy_data_for(WindowInfo const& info)
 
 FloatingWindowManagerPolicy::FloatingWindowManagerPolicy(
     WindowManagerTools const& tools,
-    SwSplash const& spinner,
+    std::shared_ptr<SplashSession> const& spinner,
     miral::InternalClientLauncher const& launcher,
     std::function<void()>& shutdown_hook) :
     CanonicalWindowManagerPolicy(tools),
@@ -400,7 +400,7 @@ void FloatingWindowManagerPolicy::advise_new_window(WindowInfo const& window_inf
 
 void FloatingWindowManagerPolicy::handle_window_ready(WindowInfo& window_info)
 {
-    if (window_info.window().application() != spinner.session() && window_info.needs_titlebar(window_info.type()))
+    if (window_info.window().application() != spinner->session() && window_info.needs_titlebar(window_info.type()))
         decoration_provider->create_titlebar_for(window_info.window());
 
     CanonicalWindowManagerPolicy::handle_window_ready(window_info);
@@ -425,7 +425,7 @@ void FloatingWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
 void FloatingWindowManagerPolicy::keep_spinner_on_top()
 {
     // Frig to force the spinner to the top
-    if (auto const spinner_session = spinner.session())
+    if (auto const spinner_session = spinner->session())
     {
         auto const& spinner_info = tools.info_for(spinner_session);
 

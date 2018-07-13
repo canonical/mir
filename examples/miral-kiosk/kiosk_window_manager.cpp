@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2017 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -27,7 +27,7 @@
 namespace ms = mir::scene;
 using namespace miral;
 
-KioskWindowManagerPolicy::KioskWindowManagerPolicy(WindowManagerTools const& tools, SwSplash const& splash) :
+KioskWindowManagerPolicy::KioskWindowManagerPolicy(WindowManagerTools const& tools, std::shared_ptr<SplashSession> const& splash) :
     CanonicalWindowManagerPolicy{tools},
     splash{splash}
 {
@@ -119,7 +119,7 @@ void KioskWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
 {
     CanonicalWindowManagerPolicy::advise_focus_gained(info);
 
-    if (auto session = splash.session())
+    if (auto session = splash->session())
     {
         auto const& app_info = tools.info_for(session);
 
@@ -137,6 +137,7 @@ auto KioskWindowManagerPolicy::place_new_window(ApplicationInfo const& app_info,
         (!specification.parent().is_set() || !specification.parent().value().lock()))
     {
         specification.state() = mir_window_state_maximized;
+        specification.size() = mir::optional_value<Size>{}; // Ignore requested size (if any) when we maximize
         tools.place_and_size_for_state(specification, WindowInfo{});
 
         if (!request.state().is_set() || request.state().value() != mir_window_state_restored)
@@ -154,6 +155,7 @@ void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, Win
         !window_info.parent())
     {
         specification.state() = mir_window_state_maximized;
+        specification.size() = mir::optional_value<Size>{}; // Ignore requested size (if any) when we maximize
         tools.place_and_size_for_state(specification, window_info);
 
         if (!modifications.state().is_set() || modifications.state().value() != mir_window_state_restored)
