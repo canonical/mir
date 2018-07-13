@@ -18,17 +18,10 @@
 
 #include "xdg_shell_v6.h"
 
-#include "wayland_utils.h"
-#include "wl_surface_event_sink.h"
-#include "wl_seat.h"
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"
 
-#include "mir/scene/surface_creation_parameters.h"
-#include "mir/frontend/session.h"
-#include "mir/scene/surface.h"
-#include "mir/frontend/shell.h"
-#include "mir/optional_value.h"
+#include "mir/shell/surface_specification.h"
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
