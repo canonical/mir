@@ -66,7 +66,6 @@ public:
                                               bool active)> notify_resize);
     void send_configure();
 
-    struct wl_resource* const parent;
     std::function<void(std::experimental::optional<geometry::Point> const& new_top_left,
                        geometry::Size const& new_size,
                        MirWindowState state,
@@ -178,8 +177,7 @@ mf::XdgSurfaceV6* mf::XdgSurfaceV6::from(wl_resource* surface)
 mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t id, WlSurface* surface,
                                std::shared_ptr<mf::Shell> const& shell, WlSeat& seat, OutputManager* output_manager)
     : wayland::XdgSurfaceV6(client, parent, id),
-      WindowWlSurfaceRole{&seat, client, surface, shell, output_manager},
-      parent{parent}
+      WindowWlSurfaceRole{&seat, client, surface, shell, output_manager}
 {
 }
 
@@ -190,7 +188,7 @@ void mf::XdgSurfaceV6::destroy()
 
 void mf::XdgSurfaceV6::get_toplevel(uint32_t id)
 {
-    new XdgToplevelV6{wayland::XdgSurfaceV6::client, parent, id, this};
+    new XdgToplevelV6{wayland::XdgSurfaceV6::client, resource, id, this};
     become_surface_role();
 }
 
