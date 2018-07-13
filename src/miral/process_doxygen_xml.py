@@ -425,9 +425,12 @@ global:
 
 #    miral::StartupInternalClient::StartupInternalClient*;
     _ZN5miral21StartupInternalClientC?ESt8functionIFvP10wl_displayEES1_IFvSt8weak_ptrIN3mir5scene7SessionEEEE;
-'''
+} MIRAL_2.2;
 
-END_NEW_STANZA = '''} MIRAL_2.2;'''
+MIRAL_2.4 {
+global:'''
+
+END_NEW_STANZA = '''} MIRAL_2.3;'''
 
 def _print_report():
     print(OLD_STANZAS)

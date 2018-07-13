@@ -53,6 +53,7 @@ extern char const* const fatal_except_opt;
 extern char const* const debug_opt;
 extern char const* const composite_delay_opt;
 extern char const* const enable_key_repeat_opt;
+extern char const* const x11_display_opt;
 
 extern char const* const name_opt;
 extern char const* const offscreen_opt;

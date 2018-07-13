@@ -25,24 +25,55 @@
 #include "mir/options/default_configuration.h"
 
 namespace mf = mir::frontend;
+namespace mo = mir::options;
+
+namespace
+{
+struct NullConnector : mf::Connector
+{
+    void start() override
+    {
+    }
+
+    void stop() override
+    {
+    }
+
+    int client_socket_fd() const override
+    {
+        return 0;
+    }
+
+    int client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const override
+    {
+        return -1;
+    }
+
+    mir::optional_value<std::string> socket_name() const override
+    {
+        return mir::optional_value<std::string>();
+    }
+};
+}
 
 std::shared_ptr<mf::Connector> mir::DefaultServerConfiguration::the_xwayland_connector()
 {
     return xwayland_connector([this]() -> std::shared_ptr<mf::Connector> {
-        // For now just use a env var to set X11 display
-        // If not set use 0
-        int disp = 0;
-        try
+
+        auto options = the_options();
+        if (options->is_set(mo::x11_display_opt))
         {
-            disp = std::stoi(getenv("MIR_X11_DISPLAY"));
-        }
-        catch (...)
-        {
-            mir::log_error("No valid x11 display vaule provided, must be number only!");
-            disp = 0;
+            try
+            {
+                auto wc = std::static_pointer_cast<mf::WaylandConnector>(the_wayland_connector());
+                return std::make_shared<mf::XWaylandConnector>(options->get<int>(mo::x11_display_opt), wc);
+            }
+            catch (...)
+            {
+                mir::fatal_error("Invalid x11 display value provided, must be number only!");
+            }
         }
 
-        auto wc = std::static_pointer_cast<mf::WaylandConnector>(the_wayland_connector());
-        return std::make_shared<mf::XWaylandConnector>(disp, wc);
+        return std::make_shared<NullConnector>();
     });
 }

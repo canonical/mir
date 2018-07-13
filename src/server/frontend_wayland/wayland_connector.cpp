@@ -27,7 +27,6 @@
 #include "wl_seat.h"
 #include "xdg_shell_v6.h"
 #include "wl_region.h"
-#include "xwayland_wm_shell.h"
 
 #include "wl_surface_event_sink.h"
 #include "null_event_sink.h"
@@ -621,7 +620,8 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
-    bool arw_socket)
+    bool arw_socket,
+    std::unique_ptr<X11Support> x11_factory)
     : display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       allocator{allocator_for_display(allocator, display.get())}
@@ -663,8 +663,8 @@ mf::WaylandConnector::WaylandConnector(
     data_device_manager_global = mf::create_data_device_manager(display.get());
     if (!getenv("MIR_DISABLE_XDG_SHELL_V6_UNSTABLE"))
         xdg_shell_global = std::make_unique<XdgShellV6>(display.get(), shell, *seat_global, output_manager.get());
-    if (getenv("MIR_ENABLE_EXPERIMENTAL_X11"))
-        xwayland_wm_shell = std::make_shared<mf::XWaylandWMShell>(shell, *seat_global, output_manager.get());
+
+    xwayland_wm_shell = x11_factory->build_window_manager(shell, *seat_global, output_manager.get());
 
     wl_display_init_shm(display.get());
 

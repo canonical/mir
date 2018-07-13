@@ -33,7 +33,7 @@
 #include <X11/Xatom.h>
 #include <algorithm>
 
-#define MIR_LOG_COMPONENT "x11-display"
+#define MIR_LOG_COMPONENT "display"
 #include "mir/log.h"
 
 namespace mg=mir::graphics;
