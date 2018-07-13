@@ -24,6 +24,7 @@
 #include "mir/frontend/surface_id.h"
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
+#include "mir/geometry/rectangle.h"
 #include "mir/optional_value.h"
 
 #include <mir_toolkit/common.h>
@@ -54,6 +55,7 @@ class WlSeat;
 class WindowWlSurfaceRole : public WlSurfaceRole
 {
 public:
+
     WindowWlSurfaceRole(WlSeat* seat, wl_client* client, WlSurface* surface,
                         std::shared_ptr<frontend::Shell> const& shell, OutputManager* output_manager);
 
@@ -63,12 +65,17 @@ public:
 
     void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
     void refresh_surface_data_now() override;
+    void become_surface_role();
 
-    void set_maximized();
-    void unset_maximized();
+    void apply_spec(shell::SurfaceSpecification const& new_spec);
+    void set_geometry(int32_t x, int32_t y, int32_t width, int32_t height);
+    void set_title(std::string const& title);
+    void initiate_interactive_move();
+    void initiate_interactive_resize(MirResizeEdge edge);
+    void set_parent(optional_value<SurfaceId> parent_id);
+    void set_max_size(int32_t width, int32_t height);
+    void set_min_size(int32_t width, int32_t height);
     void set_fullscreen(std::experimental::optional<wl_resource*> const& output);
-    void unset_fullscreen();
-    void set_minimized();
 
     void set_state_now(MirWindowState state);
 
@@ -77,25 +84,28 @@ public:
 protected:
     std::shared_ptr<bool> const destroyed;
     wl_client* const client;
+
+    geometry::Size window_size();
+    MirWindowState window_state();
+    bool is_active();
+    uint64_t latest_timestamp_ns();
+
+    void commit(WlSurfaceState const& state) override;
+
+private:
     WlSurface* const surface;
     std::shared_ptr<frontend::Shell> const shell;
     OutputManager* output_manager;
     std::shared_ptr<WlSurfaceEventSink> const sink;
-
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
     optional_value<geometry::Size> window_size_;
-
-    geometry::Size window_size();
-    shell::SurfaceSpecification& spec();
-    void commit(WlSurfaceState const& state) override;
-
-private:
     SurfaceId surface_id_;
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
 
-    void create_mir_window();
-
     void visiblity(bool visible) override;
+
+    shell::SurfaceSpecification& spec();
+    void create_mir_window();
 };
 
 }
