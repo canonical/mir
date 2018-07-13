@@ -57,6 +57,7 @@ struct StreamCursor
 struct SurfaceSpecification
 {
     bool is_empty() const;
+    void update_from(SurfaceSpecification const& that);
 
     optional_value<geometry::Width> width;
     optional_value<geometry::Height> height;

@@ -28,7 +28,6 @@
 #include "xdg_shell_v6.h"
 #include "wl_region.h"
 
-#include "wl_surface_event_sink.h"
 #include "null_event_sink.h"
 #include "output_manager.h"
 #include "wayland_executor.h"
@@ -306,10 +305,7 @@ public:
     {
     }
 
-    ~WlShellSurface() override
-    {
-        surface->clear_role();
-    }
+    ~WlShellSurface() = default;
 
 protected:
     void destroy() override
@@ -319,7 +315,7 @@ protected:
 
     void set_toplevel() override
     {
-        surface->set_role(this);
+        become_surface_role();
     }
 
     void set_transient(
@@ -328,34 +324,22 @@ protected:
         int32_t y,
         uint32_t flags) override
     {
-        auto const session = get_session(client);
         auto& parent_surface = *WlSurface::from(parent);
 
-        if (surface_id().as_value())
-        {
-            auto& mods = spec();
-            mods.parent_id = parent_surface.surface_id();
-            mods.aux_rect = geom::Rectangle{{x, y}, {}};
-            mods.surface_placement_gravity = mir_placement_gravity_northwest;
-            mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
-            mods.placement_hints = mir_placement_hints_slide_x;
-            mods.aux_rect_placement_offset_x = 0;
-            mods.aux_rect_placement_offset_y = 0;
-        }
-        else
-        {
-            if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
-                params->type = mir_window_type_gloss;
-            params->parent_id = parent_surface.surface_id();
-            params->aux_rect = geom::Rectangle{{x, y}, {}};
-            params->surface_placement_gravity = mir_placement_gravity_northwest;
-            params->aux_rect_placement_gravity = mir_placement_gravity_southeast;
-            params->placement_hints = mir_placement_hints_slide_x;
-            params->aux_rect_placement_offset_x = 0;
-            params->aux_rect_placement_offset_y = 0;
+        mir::shell::SurfaceSpecification mods;
 
-            surface->set_role(this);
-        }
+        if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
+            mods.type = mir_window_type_gloss;
+        mods.parent_id = parent_surface.surface_id();
+        mods.aux_rect = geom::Rectangle{{x, y}, {}};
+        mods.surface_placement_gravity = mir_placement_gravity_northwest;
+        mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
+        mods.placement_hints = mir_placement_hints_slide_x;
+        mods.aux_rect_placement_offset_x = 0;
+        mods.aux_rect_placement_offset_y = 0;
+
+        apply_spec(mods);
+        become_surface_role();
     }
 
     void handle_resize(const geometry::Size & new_size) override
@@ -383,50 +367,31 @@ protected:
         auto const session = get_session(client);
         auto& parent_surface = *WlSurface::from(parent);
 
-        if (surface_id().as_value())
-        {
-            auto& mods = spec();
-            mods.parent_id = parent_surface.surface_id();
-            mods.aux_rect = geom::Rectangle{{x, y}, {}};
-            mods.surface_placement_gravity = mir_placement_gravity_northwest;
-            mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
-            mods.placement_hints = mir_placement_hints_slide_x;
-            mods.aux_rect_placement_offset_x = 0;
-            mods.aux_rect_placement_offset_y = 0;
-        }
-        else
-        {
-            if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
-                params->type = mir_window_type_gloss;
+        mir::shell::SurfaceSpecification mods;
 
-            params->parent_id = parent_surface.surface_id();
-            params->aux_rect = geom::Rectangle{{x, y}, {}};
-            params->surface_placement_gravity = mir_placement_gravity_northwest;
-            params->aux_rect_placement_gravity = mir_placement_gravity_southeast;
-            params->placement_hints = mir_placement_hints_slide_x;
-            params->aux_rect_placement_offset_x = 0;
-            params->aux_rect_placement_offset_y = 0;
+        if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
+            mods.type = mir_window_type_gloss;
+        mods.parent_id = parent_surface.surface_id();
+        mods.aux_rect = geom::Rectangle{{x, y}, {}};
+        mods.surface_placement_gravity = mir_placement_gravity_northwest;
+        mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
+        mods.placement_hints = mir_placement_hints_slide_x;
+        mods.aux_rect_placement_offset_x = 0;
+        mods.aux_rect_placement_offset_y = 0;
 
-            surface->set_role(this);
-        }
+        apply_spec(mods);
+        become_surface_role();
     }
 
     void set_maximized(std::experimental::optional<struct wl_resource*> const& output) override
     {
         (void)output;
-        WindowWlSurfaceRole::set_maximized();
+        WindowWlSurfaceRole::set_state_now(mir_window_state_maximized);
     }
 
     void set_title(std::string const& title) override
     {
-        if (surface_id().as_value())
-        {
-            spec().name = title;
-        }
-        else
-        {
-            params->name = title;
-        }
+        WindowWlSurfaceRole::set_title(title);
     }
 
     void pong(uint32_t /*serial*/) override
@@ -435,68 +400,51 @@ protected:
 
     void move(struct wl_resource* /*seat*/, uint32_t /*serial*/) override
     {
-        if (surface_id().as_value())
-        {
-            if (auto session = get_session(client))
-            {
-                shell->request_operation(session, surface_id(), sink->latest_timestamp_ns(), Shell::UserRequest::move);
-            }
-        }
+        WindowWlSurfaceRole::initiate_interactive_move();
     }
 
     void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges) override
     {
-        if (surface_id().as_value())
+        MirResizeEdge edge = mir_resize_edge_none;
+
+        switch (edges)
         {
-            if (auto session = get_session(client))
-            {
-                MirResizeEdge edge = mir_resize_edge_none;
+        case WL_SHELL_SURFACE_RESIZE_TOP:
+            edge = mir_resize_edge_north;
+            break;
 
-                switch (edges)
-                {
-                case WL_SHELL_SURFACE_RESIZE_TOP:
-                    edge = mir_resize_edge_north;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_BOTTOM:
+            edge = mir_resize_edge_south;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_BOTTOM:
-                    edge = mir_resize_edge_south;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_LEFT:
+            edge = mir_resize_edge_west;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_LEFT:
-                    edge = mir_resize_edge_west;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_TOP_LEFT:
+            edge = mir_resize_edge_northwest;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_TOP_LEFT:
-                    edge = mir_resize_edge_northwest;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT:
+            edge = mir_resize_edge_southwest;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_BOTTOM_LEFT:
-                    edge = mir_resize_edge_southwest;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_RIGHT:
+            edge = mir_resize_edge_east;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_RIGHT:
-                    edge = mir_resize_edge_east;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_TOP_RIGHT:
+            edge = mir_resize_edge_northeast;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_TOP_RIGHT:
-                    edge = mir_resize_edge_northeast;
-                    break;
+        case WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT:
+            edge = mir_resize_edge_southeast;
+            break;
 
-                case WL_SHELL_SURFACE_RESIZE_BOTTOM_RIGHT:
-                    edge = mir_resize_edge_southeast;
-                    break;
-
-                default:;
-                }
-
-                shell->request_operation(
-                    session,
-                    surface_id(),
-                    sink->latest_timestamp_ns(),
-                    Shell::UserRequest::resize,
-                    edge);
-            }
+        default:;
         }
+
+        WindowWlSurfaceRole::initiate_interactive_resize(edge);
     }
 
     void set_class(std::string const& /*class_*/) override

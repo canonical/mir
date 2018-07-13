@@ -60,6 +60,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(WlSeat* seat, wl_client* client, Wl
 
 mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
 {
+    surface->clear_role();
     sink->disconnect();
     *destroyed = true;
     if (surface_id_.as_value())
@@ -87,16 +88,132 @@ void mf::WindowWlSurfaceRole::refresh_surface_data_now()
     shell->modify_surface(get_session(client), surface_id_, surface_data_spec);
 }
 
-void mf::WindowWlSurfaceRole::set_maximized()
+void mf::WindowWlSurfaceRole::become_surface_role()
 {
-    // We must process this request immediately (i.e. don't defer until commit())
-    set_state_now(mir_window_state_maximized);
+    surface->set_role(this);
 }
 
-void mf::WindowWlSurfaceRole::unset_maximized()
+void mf::WindowWlSurfaceRole::apply_spec(mir::shell::SurfaceSpecification const& new_spec)
 {
-    // We must process this request immediately (i.e. don't defer until commit())
-    set_state_now(mir_window_state_restored);
+    if (surface_id().as_value())
+    {
+        spec().update_from(new_spec);
+    }
+    else
+    {
+        params->update_from(new_spec);
+    }
+}
+
+void mf::WindowWlSurfaceRole::set_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
+{
+    geom::Displacement const offset{-x, -y};
+
+    surface->set_pending_offset(offset);
+    window_size_ = geom::Size{width, height};
+
+    if (surface_id().as_value())
+    {
+        spec().width = geom::Width{width};
+        spec().height = geom::Height{height};
+    }
+}
+
+void mf::WindowWlSurfaceRole::set_title(std::string const& title)
+{
+    if (surface_id().as_value())
+    {
+        spec().name = title;
+    }
+    else
+    {
+        params->name = title;
+    }
+}
+
+void mf::WindowWlSurfaceRole::initiate_interactive_move()
+{
+    if (surface_id().as_value())
+    {
+        if (auto session = get_session(client))
+        {
+            shell->request_operation(session, surface_id(), sink->latest_timestamp_ns(), Shell::UserRequest::move);
+        }
+    }
+}
+
+void mf::WindowWlSurfaceRole::initiate_interactive_resize(MirResizeEdge edge)
+{
+    if (surface_id().as_value())
+    {
+        if (auto session = get_session(client))
+        {
+            shell->request_operation(
+                session,
+                surface_id(),
+                sink->latest_timestamp_ns(),
+                Shell::UserRequest::resize,
+                edge);
+        }
+    }
+}
+
+void mf::WindowWlSurfaceRole::set_parent(optional_value<SurfaceId> parent_id)
+{
+    if (surface_id().as_value())
+    {
+        spec().parent_id = parent_id;
+    }
+    else
+    {
+        params->parent_id = parent_id;
+    }
+}
+
+void mf::WindowWlSurfaceRole::set_max_size(int32_t width, int32_t height)
+{
+    if (surface_id().as_value())
+    {
+        if (width == 0) width = std::numeric_limits<int>::max();
+        if (height == 0) height = std::numeric_limits<int>::max();
+
+        auto& mods = spec();
+        mods.max_width = geom::Width{width};
+        mods.max_height = geom::Height{height};
+    }
+    else
+    {
+        if (width == 0)
+        {
+            if (params->max_width.is_set())
+                params->max_width.consume();
+        }
+        else
+            params->max_width = geom::Width{width};
+
+        if (height == 0)
+        {
+            if (params->max_height.is_set())
+                params->max_height.consume();
+        }
+        else
+            params->max_height = geom::Height{height};
+    }
+}
+
+void mf::WindowWlSurfaceRole::set_min_size(int32_t width, int32_t height)
+{
+    if (surface_id().as_value())
+    {
+        auto& mods = spec();
+        mods.min_width = geom::Width{width};
+        mods.min_height = geom::Height{height};
+    }
+    else
+    {
+        params->min_width = geom::Width{width};
+        params->min_height = geom::Height{height};
+    }
 }
 
 void mf::WindowWlSurfaceRole::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
@@ -117,18 +234,6 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::experimental::optional<struct 
             params->output_id = output_manager->output_id_for(client, output.value());
         create_mir_window();
     }
-}
-
-void mf::WindowWlSurfaceRole::unset_fullscreen()
-{
-    // We must process this request immediately (i.e. don't defer until commit())
-    set_state_now(mir_window_state_restored);
-}
-
-void mf::WindowWlSurfaceRole::set_minimized()
-{
-    // We must process this request immediately (i.e. don't defer until commit())
-    set_state_now(mir_window_state_minimized);
 }
 
 void mf::WindowWlSurfaceRole::set_state_now(MirWindowState state)
@@ -152,12 +257,19 @@ geom::Size mf::WindowWlSurfaceRole::window_size()
      return window_size_.is_set()? window_size_.value() : surface->buffer_size();
 }
 
-mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
+MirWindowState mf::WindowWlSurfaceRole::window_state()
 {
-    if (!pending_changes)
-        pending_changes = std::make_unique<mir::shell::SurfaceSpecification>();
+    return sink->state();
+}
 
-    return *pending_changes;
+bool mf::WindowWlSurfaceRole::is_active()
+{
+    return sink->is_active();
+}
+
+uint64_t mf::WindowWlSurfaceRole::latest_timestamp_ns()
+{
+    return sink->latest_timestamp_ns();
 }
 
 void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
@@ -194,29 +306,6 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     create_mir_window();
 }
 
-void mf::WindowWlSurfaceRole::create_mir_window()
-{
-    auto const session = get_session(client);
-
-    if (params->size == geometry::Size{})
-        params->size = window_size();
-    if (params->size == geometry::Size{})
-        params->size = geometry::Size{640, 480};
-
-    params->streams = std::vector<shell::StreamSpecification>{};
-    params->input_shape = std::vector<geom::Rectangle>{};
-    surface->populate_surface_data(params->streams.value(), params->input_shape.value(), {});
-
-    surface_id_ = shell->create_surface(session, *params, sink);
-
-    // The shell isn't guaranteed to respect the requested size
-    auto const window = session->get_surface(surface_id_);
-    auto const client_size = window->client_size();
-
-    if (client_size != params->size)
-        sink->handle_resize(client_size);
-}
-
 void mf::WindowWlSurfaceRole::visiblity(bool visible)
 {
     if (!surface_id_.as_value())
@@ -239,5 +328,36 @@ void mf::WindowWlSurfaceRole::visiblity(bool visible)
         if (mir_surface->state() != mir_window_state_hidden)
             spec().state = mir_window_state_hidden;
     }
+}
+
+mir::shell::SurfaceSpecification& mf::WindowWlSurfaceRole::spec()
+{
+    if (!pending_changes)
+        pending_changes = std::make_unique<mir::shell::SurfaceSpecification>();
+
+    return *pending_changes;
+}
+
+void mf::WindowWlSurfaceRole::create_mir_window()
+{
+    auto const session = get_session(client);
+
+    if (params->size == geometry::Size{})
+        params->size = window_size();
+    if (params->size == geometry::Size{})
+        params->size = geometry::Size{640, 480};
+
+    params->streams = std::vector<shell::StreamSpecification>{};
+    params->input_shape = std::vector<geom::Rectangle>{};
+    surface->populate_surface_data(params->streams.value(), params->input_shape.value(), {});
+
+    surface_id_ = shell->create_surface(session, *params, sink);
+
+    // The shell isn't guaranteed to respect the requested size
+    auto const window = session->get_surface(surface_id_);
+    auto const client_size = window->client_size();
+
+    if (client_size != params->size)
+        sink->handle_resize(client_size);
 }
 

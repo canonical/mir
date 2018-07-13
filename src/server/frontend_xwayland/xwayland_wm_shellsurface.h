@@ -50,10 +50,6 @@ public:
     void resize(uint32_t edges);
     void set_toplevel();
 
-    using WindowWlSurfaceRole::set_maximized;
-    using WindowWlSurfaceRole::unset_maximized;
-    using WindowWlSurfaceRole::unset_fullscreen;
-    using WindowWlSurfaceRole::set_minimized;
     using WindowWlSurfaceRole::set_state_now;
 
 protected:
@@ -62,7 +58,6 @@ protected:
     void handle_resize(const geometry::Size& new_size) override;
 
     using WindowWlSurfaceRole::client;
-    using WindowWlSurfaceRole::params;
     using WindowWlSurfaceRole::surface_id;
 };
 } /* frontend */
