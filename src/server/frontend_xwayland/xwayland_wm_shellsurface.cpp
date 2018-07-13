@@ -37,12 +37,11 @@ mf::XWaylandWMShellSurface::XWaylandWMShellSurface(wl_client* client,
                                                    OutputManager* const output_manager)
     : WindowWlSurfaceRole{&seat, client, surface, shell, output_manager}
 {
-    params->type = mir_window_type_normal;
+//    params->type = mir_window_type_normal;
 }
 
 mf::XWaylandWMShellSurface::~XWaylandWMShellSurface()
 {
-    surface->clear_role();
     mir::log_verbose("Im gone");
 }
 
@@ -53,7 +52,7 @@ void mf::XWaylandWMShellSurface::destroy()
 
 void mf::XWaylandWMShellSurface::set_toplevel()
 {
-    surface->set_role(this);
+    become_surface_role();
     set_state_now(MirWindowState::mir_window_state_restored);
 }
 
@@ -92,25 +91,12 @@ void mf::XWaylandWMShellSurface::set_popup(
 
 void mf::XWaylandWMShellSurface::set_title(std::string const& title)
 {
-    if (surface_id().as_value())
-    {
-        spec().name = title;
-    }
-    else
-    {
-        params->name = title;
-    }
+    WindowWlSurfaceRole::set_title(title);
 }
 
 void mf::XWaylandWMShellSurface::move()
 {
-    if (surface_id().as_value())
-    {
-        if (auto session = get_session(client))
-        {
-            shell->request_operation(session, surface_id(), sink->latest_timestamp_ns(), Shell::UserRequest::move);
-        }
-    }
+    WindowWlSurfaceRole::initiate_interactive_move();
 }
 
 void mf::XWaylandWMShellSurface::resize(uint32_t edges)
@@ -158,8 +144,7 @@ void mf::XWaylandWMShellSurface::resize(uint32_t edges)
             default:;
             }
 
-            shell->request_operation(
-                session, surface_id(), sink->latest_timestamp_ns(), Shell::UserRequest::resize, edge);
+            WindowWlSurfaceRole::initiate_interactive_resize(edge);
         }
     }
 }
