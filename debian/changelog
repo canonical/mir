@@ -1,3 +1,31 @@
+mir (0.32.1) UNRELEASED; urgency=medium
+
+  * New upstream release 0.32.1(https://github.com/MirServer/mir/projects/5)
+
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 3
+      . mirserver ABI unchanged at 47
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 16
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged at 15
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+    - Enhancements:
+      . [libmiral] Launcher for internal Wayland clients. (#410)
+      . [miral-shell] Reinstate the "spinner" when starting miral-shell
+        (re-implementing it in Wayland)
+    - Bugs fixed:
+      . [mesa-kms] Select EGLConfig matching our GBM format. (#435)
+      . [Wayland] Don't send output events that are not supported in the agreed
+        protocol version. (#389)
+      . [Wayland] Ensure resize configuration events are not superseded. (#449)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 10 Jul 2018 14:39:00 +0100
+
 mir (0.32.0) UNRELEASED; urgency=medium
 
   * New upstream release 0.32.0(https://github.com/MirServer/mir/projects/2)
