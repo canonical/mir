@@ -20,7 +20,7 @@
 
 #include "generated/wayland_wrapper.h"
 #include "wl_surface.h"
-#include "wl_surface_role.h"
+#include "window_wl_surface_role.h"
 #include "xwayland_wm_surface.h"
 
 namespace mir
@@ -30,7 +30,7 @@ namespace frontend
 class OutputManager;
 class XWaylandWMSurface;
 class Shell;
-class XWaylandWMShellSurface : public WlAbstractMirWindow
+class XWaylandWMShellSurface : public WindowWlSurfaceRole
 {
 public:
     XWaylandWMShellSurface(wl_client* client, WlSurface* surface,
@@ -50,20 +50,20 @@ public:
     void resize(uint32_t edges);
     void set_toplevel();
 
-    using WlAbstractMirWindow::set_maximized;
-    using WlAbstractMirWindow::unset_maximized;
-    using WlAbstractMirWindow::unset_fullscreen;
-    using WlAbstractMirWindow::set_minimized;
-    using WlAbstractMirWindow::set_state_now;
+    using WindowWlSurfaceRole::set_maximized;
+    using WindowWlSurfaceRole::unset_maximized;
+    using WindowWlSurfaceRole::unset_fullscreen;
+    using WindowWlSurfaceRole::set_minimized;
+    using WindowWlSurfaceRole::set_state_now;
 
 protected:
     void destroy() override;
     void set_transient(struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags);
     void handle_resize(const geometry::Size& new_size) override;
 
-    using WlAbstractMirWindow::client;
-    using WlAbstractMirWindow::params;
-    using WlAbstractMirWindow::surface_id;
+    using WindowWlSurfaceRole::client;
+    using WindowWlSurfaceRole::params;
+    using WindowWlSurfaceRole::surface_id;
 };
 } /* frontend */
 } /* mir */
