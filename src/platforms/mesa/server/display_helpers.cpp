@@ -68,7 +68,7 @@ mgmh::DRMHelper::open_all_devices(
     for(auto& device : devices)
     {
         mir::Fd tmp_fd;
-        console.acquire_device(
+        auto device_handle = console.acquire_device(
             major(device.devnum()), minor(device.devnum()),
             std::make_unique<mgc::OneShotDeviceObserver>(tmp_fd)).get();
 
@@ -101,7 +101,12 @@ mgmh::DRMHelper::open_all_devices(
         }
 
         // Can't use make_shared with the private constructor.
-        opened_devices.push_back(std::shared_ptr<DRMHelper>{new DRMHelper{std::move(tmp_fd), DRMNodeToUse::card}});
+        opened_devices.push_back(
+            std::shared_ptr<DRMHelper>{
+                new DRMHelper{
+                    std::move(tmp_fd),
+                    std::move(device_handle),
+                    DRMNodeToUse::card}});
         mir::log_info("Using DRM device %s", device.devnode());
     }
 
@@ -149,7 +154,7 @@ std::unique_ptr<mgmh::DRMHelper> mgmh::DRMHelper::open_any_render_node(
     }
 
     return std::unique_ptr<mgmh::DRMHelper>{
-        new mgmh::DRMHelper{std::move(tmp_fd), DRMNodeToUse::render}};
+        new mgmh::DRMHelper{std::move(tmp_fd), nullptr, DRMNodeToUse::render}};
 }
 
 mir::Fd mgmh::DRMHelper::authenticated_fd()
@@ -263,9 +268,10 @@ void mgmh::DRMHelper::set_master() const
     }
 }
 
-mgmh::DRMHelper::DRMHelper(mir::Fd&& fd, DRMNodeToUse node_to_use)
+mgmh::DRMHelper::DRMHelper(mir::Fd&& fd, std::unique_ptr<mir::Device> device, DRMNodeToUse node_to_use)
     : fd{std::move(fd)},
-      node_to_use{node_to_use}
+      node_to_use{node_to_use},
+      device_handle{std::move(device)}
 {
 }
 

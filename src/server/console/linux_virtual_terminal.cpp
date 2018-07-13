@@ -174,6 +174,13 @@ public:
         is_master = true;
     }
 
+    ~DRMDevice()
+    {
+        if (is_master)
+        {
+            drmDropMaster(device_fd);
+        }
+    }
 protected:
     mir::Fd activate() override
     {

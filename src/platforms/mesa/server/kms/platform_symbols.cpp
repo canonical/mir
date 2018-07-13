@@ -16,8 +16,12 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
+#define MIR_LOG_COMPONENT "mesa-kms"
+#include "mir/log.h"
+
 #include "platform.h"
 #include "gbm_platform.h"
+#include "display_helpers.h"
 #include "mir/options/program_option.h"
 #include "mir/options/option.h"
 #include "mir/udev/wrapper.h"
@@ -26,8 +30,13 @@
 #include "mir/libname.h"
 #include "mir/console_services.h"
 #include "one_shot_device_observer.h"
+#include "mir/raii.h"
+#include "mir/graphics/egl_error.h"
+#include "mir/graphics/gl_config.h"
 
 #include <EGL/egl.h>
+#include MIR_SERVER_GL_H
+#include "egl_helper.h"
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
@@ -70,6 +79,23 @@ void add_graphics_platform_options(boost::program_options::options_description& 
          "[platform-specific] utilize the bypass optimization for fullscreen surfaces.");
 }
 
+namespace
+{
+class MinimalGLConfig : public mir::graphics::GLConfig
+{
+public:
+    int depth_buffer_bits() const override
+    {
+        return 0;
+    }
+
+    int stencil_buffer_bits() const override
+    {
+        return 0;
+    }
+};
+}
+
 mg::PlatformPriority probe_graphics_platform(
     std::shared_ptr<mir::ConsoleServices> const& console,
     mo::ProgramOption const& options)
@@ -86,22 +112,27 @@ mg::PlatformPriority probe_graphics_platform(
     drm_devices.scan_devices();
 
     if (drm_devices.begin() == drm_devices.end())
+    {
+        mir::log_info("Unsupported: No DRM devices detected");
         return mg::PlatformPriority::unsupported;
+    }
 
     // We also require GBM EGL platform
     auto const* client_extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
     if (!client_extensions)
     {
         // Doesn't support EGL client extensions; Mesa does, so this is unlikely to be mesa.
+        mir::log_info("Unsupported: EGL platform does not support client extensions.");
         return mg::PlatformPriority::unsupported;
     }
     if (strstr(client_extensions, "EGL_MESA_platform_gbm") == nullptr)
     {
         // No platform_gbm support, so we can't work.
+        mir::log_info("Unsupported: EGL platform does not support EGL_MESA_platform_gbm extension");
         return mg::PlatformPriority::unsupported;
     }
 
-    // Check for master
+    // Check for suitability
     mir::Fd tmp_fd;
     for (auto& device : drm_devices)
     {
@@ -119,49 +150,54 @@ mg::PlatformPriority probe_graphics_platform(
         try
         {
             // Rely on the console handing us a DRM master...
-            console->acquire_device(
+            auto const device_cleanup = console->acquire_device(
                 major(devnum), minor(devnum),
                 std::make_unique<mgc::OneShotDeviceObserver>(tmp_fd)).get();
 
             if (tmp_fd != mir::Fd::invalid)
+            {
+                mgm::helpers::GBMHelper gbm_device{tmp_fd};
+                mgm::helpers::EGLHelper egl{MinimalGLConfig()};
+
+                egl.setup(gbm_device);
+
+                egl.make_current();
+
+                auto const renderer_string = reinterpret_cast<char const*>(glGetString(GL_RENDERER));
+                if (!renderer_string)
+                {
+                    throw mg::gl_error(
+                        "Probe failed to query GL renderer");
+                }
+
+                if (strncmp(
+                    "llvmpipe",
+                    renderer_string,
+                    strlen("llvmpipe")) == 0)
+                {
+                     mir::log_info("Detected software renderer: %s", renderer_string);
+                     // TODO:   Check if any *other* DRM devices support HW acceleration, and
+                     //         use them instead.
+                     return mg::PlatformPriority::supported;
+                }
+
                 return mg::PlatformPriority::best;
+            }
         }
-        catch (...)
+        catch (std::exception const& e)
         {
+            mir::log_info("%s", e.what());
         }
     }
 
     if (nested)
         return mg::PlatformPriority::supported;
 
-    if (tmp_fd >= 0)
-    {
-        if (drmSetMaster(tmp_fd) >= 0)
-        {
-            drmDropMaster(tmp_fd);
-            return mg::PlatformPriority::best;
-        }
-    }
-
-    /* We failed to set mastership. However, still on most systems mesa-kms
-     * is the right driver to choose. Landing here just means the user did
-     * not specify --vt or is running from ssh. Still in most cases mesa-kms
-     * is the correct option so give it a go. Better to fail trying to switch
-     * VTs (and tell the user that) than to refuse to load the correct
-     * driver at all. (LP: #1528082)
-     *
-     * Just make sure we are below PlatformPriority::supported in case
-     * mesa-x11 can be used instead.
-     *
-     * TODO: Revisit the priority terminology. having a range of values between
-     *       "supported" and "unsupported" is potentially confusing.
-     * TODO: Revisit the return code of this function. We document that
-     *       integer values outside the enum are allowed but C++ disallows it
-     *       without a cast. So we should return an int or typedef to int
-     *       instead.
+    /*
+     * We haven't found any suitable devices. We've complained above about
+     * the reason, so we don't have to pretend to be supported.
      */
-    return static_cast<mg::PlatformPriority>(
-        mg::PlatformPriority::supported - 1);
+    return mg::PlatformPriority::unsupported;
 }
 
 namespace

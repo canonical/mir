@@ -21,14 +21,14 @@
 #include "data_device.h"
 #include "wayland_utils.h"
 #include "wl_surface_role.h"
+#include "window_wl_surface_role.h"
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
 #include "xdg_shell_v6.h"
 #include "wl_region.h"
-#include "xwayland_wm_shell.h"
 
-#include "basic_surface_event_sink.h"
+#include "wl_surface_event_sink.h"
 #include "null_event_sink.h"
 #include "output_manager.h"
 #include "wayland_executor.h"
@@ -290,7 +290,7 @@ void WlCompositor::create_region(wl_client* client, wl_resource* resource, uint3
     new WlRegion{client, resource, id};
 }
 
-class WlShellSurface  : public wayland::ShellSurface, public WlAbstractMirWindow
+class WlShellSurface  : public wayland::ShellSurface, public WindowWlSurfaceRole
 {
 public:
     WlShellSurface(
@@ -302,7 +302,7 @@ public:
         WlSeat& seat,
         OutputManager* output_manager)
         : ShellSurface(client, parent, id),
-          WlAbstractMirWindow{&seat, client, surface, shell, output_manager}
+          WindowWlSurfaceRole{&seat, client, surface, shell, output_manager}
     {
     }
 
@@ -369,7 +369,7 @@ protected:
         uint32_t /*framerate*/,
         std::experimental::optional<struct wl_resource*> const& output) override
     {
-        WlAbstractMirWindow::set_fullscreen(output);
+        WindowWlSurfaceRole::set_fullscreen(output);
     }
 
     void set_popup(
@@ -414,7 +414,7 @@ protected:
     void set_maximized(std::experimental::optional<struct wl_resource*> const& output) override
     {
         (void)output;
-        WlAbstractMirWindow::set_maximized();
+        WindowWlSurfaceRole::set_maximized();
     }
 
     void set_title(std::string const& title) override
@@ -503,7 +503,7 @@ protected:
     {
     }
 
-    using WlAbstractMirWindow::client;
+    using WindowWlSurfaceRole::client;
 };
 
 class WlShell : public wayland::Shell
@@ -620,7 +620,8 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
-    bool arw_socket)
+    bool arw_socket,
+    std::unique_ptr<X11Support> x11_factory)
     : display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       allocator{allocator_for_display(allocator, display.get())}
@@ -662,8 +663,8 @@ mf::WaylandConnector::WaylandConnector(
     data_device_manager_global = mf::create_data_device_manager(display.get());
     if (!getenv("MIR_DISABLE_XDG_SHELL_V6_UNSTABLE"))
         xdg_shell_global = std::make_unique<XdgShellV6>(display.get(), shell, *seat_global, output_manager.get());
-    if (getenv("MIR_ENABLE_EXPERIMENTAL_X11"))
-        xwayland_wm_shell = std::make_shared<mf::XWaylandWMShell>(shell, *seat_global, output_manager.get());
+
+    xwayland_wm_shell = x11_factory->build_window_manager(shell, *seat_global, output_manager.get());
 
     wl_display_init_shm(display.get());
 

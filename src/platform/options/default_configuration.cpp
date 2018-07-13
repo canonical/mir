@@ -55,6 +55,7 @@ char const* const mo::fatal_except_opt            = "on-fatal-error-except";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::composite_delay_opt         = "composite-delay";
 char const* const mo::enable_key_repeat_opt       = "enable-key-repeat";
+char const* const mo::x11_display_opt             = "display";
 
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";

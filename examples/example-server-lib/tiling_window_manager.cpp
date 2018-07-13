@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2016 Canonical Ltd.
+ * Copyright © 2015-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -72,7 +72,7 @@ void TilingWindowManagerPolicy::MRUTileList::enumerate(Enumerator const& enumera
 
 TilingWindowManagerPolicy::TilingWindowManagerPolicy(
     WindowManagerTools const& tools,
-    SwSplash const& spinner,
+    std::shared_ptr<SplashSession> const& spinner,
     miral::InternalClientLauncher const& launcher) :
     tools{tools},
     spinner{spinner},
@@ -109,7 +109,7 @@ auto TilingWindowManagerPolicy::place_new_window(
 
     parameters.userdata() = app_info.userdata();
 
-    if (app_info.application() != spinner.session())
+    if (app_info.application() != spinner->session())
     {
         Rectangle const& tile = tile_for(app_info);
 
@@ -160,7 +160,7 @@ void TilingWindowManagerPolicy::handle_window_ready(WindowInfo& window_info)
     if (window_info.can_be_active())
         tools.select_active_window(window_info.window());
 
-    if (spinner.session() != window_info.window().application())
+    if (spinner->session() != window_info.window().application())
     {
         tiles.push(window_info.userdata());
         dirty_tiles = true;
@@ -282,13 +282,6 @@ bool TilingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* ev
     auto const action = mir_keyboard_event_action(event);
     auto const scan_code = mir_keyboard_event_scan_code(event);
     auto const modifiers = mir_keyboard_event_modifiers(event) & modifier_mask;
-
-    if (action == mir_keyboard_action_down && scan_code == KEY_F12 &&
-        (modifiers & modifier_mask) == mir_input_event_modifier_alt)
-    {
-        launcher.launch("Spinner", spinner);
-        return true;
-    }
 
     if (action == mir_keyboard_action_down && scan_code == KEY_F11)
     {
@@ -465,7 +458,7 @@ auto TilingWindowManagerPolicy::application_under(Point position)
 -> Application
 {
     return tools.find_application([&, this](ApplicationInfo const& info)
-        { return spinner.session() != info.application() && tile_for(info).contains(position);});
+        { return spinner->session() != info.application() && tile_for(info).contains(position);});
 }
 
 void TilingWindowManagerPolicy::update_tiles(Rectangles const& outputs)
@@ -521,7 +514,7 @@ void TilingWindowManagerPolicy::update_tiles(Rectangles const& outputs)
 
     tools.for_each_application([&](ApplicationInfo& info)
         {
-            if (spinner.session() == info.application())
+            if (spinner->session() == info.application())
                 return;
 
             auto const tile_data = std::static_pointer_cast<TilingWindowManagerPolicyData>(info.userdata());
@@ -605,7 +598,7 @@ void TilingWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
 {
     tools.raise_tree(info.window());
 
-    if (auto const spinner_session = spinner.session())
+    if (auto const spinner_session = spinner->session())
     {
         auto const& spinner_info = tools.info_for(spinner_session);
 
@@ -621,7 +614,7 @@ void TilingWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
 
 void TilingWindowManagerPolicy::advise_new_app(miral::ApplicationInfo& application)
 {
-    if (spinner.session() == application.application())
+    if (spinner->session() == application.application())
         return;
 
     application.userdata(std::make_shared<TilingWindowManagerPolicyData>());
@@ -635,7 +628,7 @@ void TilingWindowManagerPolicy::advise_new_app(miral::ApplicationInfo& applicati
 
 void TilingWindowManagerPolicy::advise_delete_app(miral::ApplicationInfo const& application)
 {
-    if (spinner.session() == application.application())
+    if (spinner->session() == application.application())
         return;
 
     tiles.erase(application.userdata());

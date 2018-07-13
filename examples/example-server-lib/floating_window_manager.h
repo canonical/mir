@@ -21,7 +21,7 @@
 
 #include <miral/canonical_window_manager.h>
 
-#include "sw_splash.h"
+#include "splash_session.h"
 
 #include <chrono>
 #include <map>
@@ -37,7 +37,7 @@ class FloatingWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy
 public:
     FloatingWindowManagerPolicy(
         miral::WindowManagerTools const& tools,
-        SwSplash const& spinner,
+        std::shared_ptr<SplashSession> const& spinner,
         miral::InternalClientLauncher const& launcher,
         std::function<void()>& shutdown_hook);
     ~FloatingWindowManagerPolicy();
@@ -112,7 +112,7 @@ private:
     Point resize_top_left;
     Size resize_size;
 
-    SwSplash const spinner;
+    std::shared_ptr<SplashSession> const spinner;
 
     std::unique_ptr<DecorationProvider> const decoration_provider;
 

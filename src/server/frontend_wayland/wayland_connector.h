@@ -59,6 +59,18 @@ class DisplayChanger;
 class SessionAuthorizer;
 class DataDeviceManager;
 
+class X11Support
+{
+public:
+    virtual auto build_window_manager(std::shared_ptr<Shell> const& shell, WlSeat& seat, OutputManager* const output_manager)
+    -> std::shared_ptr<XWaylandWMShell> = 0;
+
+    X11Support() = default;
+    virtual ~X11Support() = default;
+    X11Support(X11Support const&) = delete;
+    X11Support& operator= (X11Support const&) = delete;
+};
+
 class WaylandConnector : public Connector
 {
 public:
@@ -70,7 +82,8 @@ public:
         std::shared_ptr<input::Seat> const& seat,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-        bool arw_socket);
+        bool arw_socket,
+        std::unique_ptr<X11Support> x11_factory);
 
     ~WaylandConnector() override;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2018 Canonical Ltd.
+ * Copyright © 2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -16,28 +16,29 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIRAL_SHELL_SW_SPLASH_H
-#define MIRAL_SHELL_SW_SPLASH_H
 
-#include "splash_session.h"
+#include "miral/x11_support.h"
 
-#include <mir_toolkit/client_types.h>
+#include <mir/server.h>
+#include <mir/options/configuration.h>
 
-// A very simple s/w rendered splash animation
-class SwSplash
+namespace mo = mir::options;
+
+struct miral::X11Support::Self
 {
-public:
-    SwSplash();
-    ~SwSplash();
-
-    void operator()(MirConnection* connection);
-    void operator()(std::weak_ptr<mir::scene::Session> const& session);
-
-    operator std::shared_ptr<SplashSession>() const;
-
-private:
-    struct Self;
-    std::shared_ptr<Self> const self;
 };
 
-#endif //MIRAL_SHELL_SW_SPLASH_H
+miral::X11Support::X11Support() : self{std::make_shared<Self>()}
+{
+}
+
+void miral::X11Support::operator()(mir::Server& server) const
+{
+    server.add_configuration_option(mo::x11_display_opt, "Socket to use for X11 DISPLAY (default: none).", mir::OptionType::integer);
+}
+
+miral::X11Support::~X11Support() = default;
+miral::X11Support::X11Support(X11Support const&) = default;
+auto miral::X11Support::operator=(X11Support const&) -> X11Support& = default;
+
+

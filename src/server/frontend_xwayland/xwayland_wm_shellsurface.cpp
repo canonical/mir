@@ -25,7 +25,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/scene/surface_creation_parameters.h"
 
-#include "basic_surface_event_sink.h"
+#include "wl_surface_event_sink.h"
 #include "wayland_utils.h"
 
 namespace mf = mir::frontend;
@@ -35,7 +35,7 @@ mf::XWaylandWMShellSurface::XWaylandWMShellSurface(wl_client* client,
                                                    std::shared_ptr<mf::Shell> const& shell,
                                                    WlSeat& seat,
                                                    OutputManager* const output_manager)
-    : WlAbstractMirWindow{&seat, client, surface, shell, output_manager}
+    : WindowWlSurfaceRole{&seat, client, surface, shell, output_manager}
 {
     params->type = mir_window_type_normal;
 }
@@ -76,7 +76,7 @@ void mf::XWaylandWMShellSurface::handle_resize(const geometry::Size& new_size)
 // This is just a wrapper to avoid needing nullptr to use this method
 void mf::XWaylandWMShellSurface::set_fullscreen()
 {
-    WlAbstractMirWindow::set_fullscreen(nullptr);
+    WindowWlSurfaceRole::set_fullscreen(nullptr);
     mir::log_verbose("set fullscreen");
 }
 

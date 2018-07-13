@@ -18,12 +18,34 @@
 
 #include "mir/default_server_configuration.h"
 #include "wayland_connector.h"
+#include "xwayland_wm_shell.h"
 
 #include "mir/frontend/display_changer.h"
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
 
 namespace mf = mir::frontend;
+namespace mo = mir::options;
+
+namespace
+{
+struct X11Support : mf:: X11Support
+{
+    X11Support(bool enabled) : enabled{enabled} {}
+    std::shared_ptr<mir::frontend::XWaylandWMShell> build_window_manager(
+        std::shared_ptr<mir::frontend::Shell> const& shell, mir::frontend::WlSeat& seat,
+        mir::frontend::OutputManager* const output_manager) override
+    {
+        if (enabled)
+            return std::make_shared<mf::XWaylandWMShell>(shell, seat, output_manager);
+
+        return {};
+    }
+
+    const bool enabled;
+};
+}
+
 
 std::shared_ptr<mf::Connector>
     mir::DefaultServerConfiguration::the_wayland_connector()
@@ -31,12 +53,13 @@ std::shared_ptr<mf::Connector>
     return wayland_connector(
         [this]() -> std::shared_ptr<mf::Connector>
         {
-            bool const arw_socket = the_options()->is_set(options::arw_server_socket_opt);
+            auto options = the_options();
+            bool const arw_socket = options->is_set(options::arw_server_socket_opt);
 
             optional_value<std::string> display_name;
 
-            if (the_options()->is_set(options::wayland_socket_name_opt))
-                display_name = the_options()->get<std::string>(options::wayland_socket_name_opt);
+            if (options->is_set(options::wayland_socket_name_opt))
+                display_name = options->get<std::string>(options::wayland_socket_name_opt);
 
             return std::make_shared<mf::WaylandConnector>(
                 display_name,
@@ -46,6 +69,7 @@ std::shared_ptr<mf::Connector>
                 the_seat(),
                 the_buffer_allocator(),
                 the_session_authorizer(),
-                arw_socket);
+                arw_socket,
+                std::make_unique<X11Support>(options->is_set(mo::x11_display_opt)));
         });
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2018 Canonical Ltd.
+ * Copyright © 2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -16,28 +16,32 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIRAL_SHELL_SW_SPLASH_H
-#define MIRAL_SHELL_SW_SPLASH_H
+#ifndef MIRAL_X11_SUPPORT_H
+#define MIRAL_X11_SUPPORT_H
 
-#include "splash_session.h"
+#include <memory>
 
-#include <mir_toolkit/client_types.h>
+namespace mir { class Server; }
 
-// A very simple s/w rendered splash animation
-class SwSplash
+namespace miral
+{
+/// Add a user configuration option for X11 support.
+class X11Support
 {
 public:
-    SwSplash();
-    ~SwSplash();
 
-    void operator()(MirConnection* connection);
-    void operator()(std::weak_ptr<mir::scene::Session> const& session);
+    void operator()(mir::Server& server) const;
 
-    operator std::shared_ptr<SplashSession>() const;
+    X11Support();
+    ~X11Support();
+    X11Support(X11Support const&);
+    auto operator=(X11Support const&) -> X11Support&;
 
 private:
     struct Self;
-    std::shared_ptr<Self> const self;
+    std::shared_ptr<Self> self;
 };
 
-#endif //MIRAL_SHELL_SW_SPLASH_H
+}
+
+#endif //MIRAL_X11_SUPPORT_H

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -104,10 +104,16 @@ void render_pattern(MirGraphicsRegion *region, uint8_t pattern[])
 }
 }
 
-struct SwSplash::Self
+struct SwSplash::Self : SplashSession
 {
-    std::mutex mutex;
-    std::weak_ptr<mir::scene::Session> session;
+    std::mutex mutable mutex;
+    std::weak_ptr<mir::scene::Session> session_;
+
+    std::shared_ptr<mir::scene::Session> session() const override
+    {
+        std::lock_guard<decltype(mutex)> lock{mutex};
+        return session_.lock();
+    }
 };
 
 SwSplash::SwSplash() : self{std::make_shared<Self>()} {}
@@ -117,13 +123,12 @@ SwSplash::~SwSplash() = default;
 void SwSplash::operator()(std::weak_ptr<mir::scene::Session> const& session)
 {
     std::lock_guard<decltype(self->mutex)> lock{self->mutex};
-    self->session = session;
+    self->session_ = session;
 }
 
-auto SwSplash::session() const -> std::shared_ptr<mir::scene::Session>
+SwSplash::operator std::shared_ptr<SplashSession>() const
 {
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
-    return self->session.lock();
+    return self;
 }
 
 void SwSplash::operator()(MirConnection* connection)

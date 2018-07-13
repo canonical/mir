@@ -179,3 +179,18 @@ MIR_PLATFORM_0.32 {
    mir::udev::Context::device_from_syspath*;
   };
 } MIR_PLATFORM_0.31;
+
+MIR_PLATFORM_0.33 {
+ global:
+  extern "C++" {
+   mir::graphics::gl_category*;
+   mir::graphics::gl_error*;
+  };
+} MIR_PLATFORM_0.32;
+
+MIR_PLATFORM_0.32.1 {
+ global:
+  extern "C++" {
+    mir::options::x11_display_opt*;
+  };
+} MIR_PLATFORM_0.33;

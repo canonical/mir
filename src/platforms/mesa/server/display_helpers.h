@@ -36,6 +36,7 @@
 namespace mir
 {
 class ConsoleServices;
+class Device;
 
 namespace graphics
 {
@@ -77,7 +78,9 @@ public:
     mir::Fd fd;
 private:
     DRMNodeToUse node_to_use;
-    explicit DRMHelper(mir::Fd&& fd, DRMNodeToUse node_to_use);
+    std::unique_ptr<Device> const device_handle;
+
+    explicit DRMHelper(mir::Fd&& fd, std::unique_ptr<mir::Device> device, DRMNodeToUse node_to_use);
 };
 
 class GBMHelper
