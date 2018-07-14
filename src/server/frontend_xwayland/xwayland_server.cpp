@@ -55,15 +55,20 @@ mf::XWaylandServer::XWaylandServer(const int xdisplay, std::shared_ptr<mf::Wayla
 
 mf::XWaylandServer::~XWaylandServer()
 {
-    if (lazy)
-      return;
-
     mir::log_info("deiniting xwayland server");
-    char path[256];
+
+    // Terminate any running xservers
+    kill(pid, SIGTERM);
+
+    if (lazy) {
+      lazy_thread->join();
+      return;
+    }
 
     dispatcher->remove_watch(afd_dispatcher);
     dispatcher->remove_watch(fd_dispatcher);
 
+    char path[256];
     snprintf(path, sizeof path, "/tmp/.X%d-lock", xdisplay);
     unlink(path);
     snprintf(path, sizeof path, "/tmp/.X11-unix/X%d", xdisplay);
