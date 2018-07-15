@@ -116,7 +116,7 @@ public:
     ~XWaylandWM();
 
     void start(wl_client *wlclient, const int fd);
-    void stop();
+    void destroy();
 
     xcb_connection_t *get_xcb_connection();
     atom_t *get_xcb_atom();

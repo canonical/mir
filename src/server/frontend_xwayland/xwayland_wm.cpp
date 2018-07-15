@@ -79,26 +79,31 @@ static const struct cursor_alternatives cursors[] = {
 namespace mf = mir::frontend;
 
 mf::XWaylandWM::XWaylandWM(std::shared_ptr<mf::WaylandConnector> wc)
-    : wlc(wc), dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()}, xcb_connection(nullptr)
+    : wlc(wc),
+      dispatcher{std::make_shared<mir::dispatch::MultiplexingDispatchable>()},
+      xcb_connection(nullptr)
 {
 }
 
 mf::XWaylandWM::~XWaylandWM()
 {
-    if (event_thread) {
-      dispatcher->remove_watch(wm_dispatcher);
-      event_thread.reset();
-    }
+}
 
-    // xcb_cursors == 2 when its empty
-    if (xcb_cursors.size() != 2) {
-      mir::log_info("Cleaning cursors");
-      for (auto xcb_cursor : xcb_cursors)
-        xcb_free_cursor(xcb_connection, xcb_cursor);
-    }
-    if (xcb_connection != nullptr)
-      xcb_disconnect(xcb_connection);
-    close(wm_fd);
+void mf::XWaylandWM::destroy() {
+  if (event_thread) {
+    dispatcher->remove_watch(wm_dispatcher);
+    event_thread.reset();
+  }
+
+  // xcb_cursors == 2 when its empty
+  if (xcb_cursors.size() != 2) {
+    mir::log_info("Cleaning cursors");
+    for (auto xcb_cursor : xcb_cursors)
+      xcb_free_cursor(xcb_connection, xcb_cursor);
+  }
+  if (xcb_connection != nullptr)
+    xcb_disconnect(xcb_connection);
+  close(wm_fd);
 }
 
 void mf::XWaylandWM::start(wl_client *wlc, const int fd)
