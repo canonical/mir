@@ -137,6 +137,7 @@ public:
     void set_wm_state(WmState state);
     void set_net_wm_state();
     void move_resize(uint32_t detail);
+    void send_resize(const geometry::Size& new_size);
     bool has_surface()
     {
         return !!shell_surface;

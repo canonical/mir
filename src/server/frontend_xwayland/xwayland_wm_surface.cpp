@@ -70,6 +70,8 @@ void mf::XWaylandWMSurface::set_surface(WlSurface *wls)
 
     auto shell = xwm->get_wl_connector()->get_xwayland_wm_shell();
     shell_surface = shell->get_shell_surface(xwm->get_wl_client(), wlsurface);
+    shell_surface->set_surface(this);
+
     if (!properties.title.empty())
       shell_surface->set_title(properties.title);
 
@@ -272,4 +274,16 @@ void mf::XWaylandWMSurface::move_resize(uint32_t detail)
   default:
       break;
   }
+}
+
+void mf::XWaylandWMSurface::send_resize(const geometry::Size& new_size)
+{
+    uint32_t mask = XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
+    uint32_t values[2];
+
+    values[0] = new_size.width.as_uint32_t();
+    values[1] = new_size.height.as_uint32_t();
+
+    xcb_configure_window(xwm->get_xcb_connection(), window, mask, values);
+    xcb_flush(xwm->get_xcb_connection());
 }

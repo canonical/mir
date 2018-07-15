@@ -49,6 +49,7 @@ public:
     void set_title(std::string const& title);
     void resize(uint32_t edges);
     void set_toplevel();
+    void set_surface(XWaylandWMSurface* sur);
 
     using WindowWlSurfaceRole::set_state_now;
 
@@ -59,6 +60,9 @@ protected:
 
     using WindowWlSurfaceRole::client;
     using WindowWlSurfaceRole::surface_id;
+
+private:
+    XWaylandWMSurface *surface;
 };
 } /* frontend */
 } /* mir */

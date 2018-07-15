@@ -56,6 +56,10 @@ void mf::XWaylandWMShellSurface::set_toplevel()
     set_state_now(MirWindowState::mir_window_state_restored);
 }
 
+void mf::XWaylandWMShellSurface::set_surface(XWaylandWMSurface *sur) {
+    surface = sur;
+}
+
 void mf::XWaylandWMShellSurface::set_transient(struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
 {
     (void)parent;
@@ -66,10 +70,9 @@ void mf::XWaylandWMShellSurface::set_transient(struct wl_resource* parent, int32
 }
 void mf::XWaylandWMShellSurface::handle_resize(const geometry::Size& new_size)
 {
-    (void)new_size;
-    // TODO
     mir::log_verbose("handle resize");
-    //move();
+    if (surface != NULL)
+      surface->send_resize(new_size);
 }
 
 // This is just a wrapper to avoid needing nullptr to use this method
