@@ -104,50 +104,44 @@ void mf::XWaylandWMShellSurface::move()
 
 void mf::XWaylandWMShellSurface::resize(uint32_t edges)
 {
-    if (surface_id().as_value())
+    MirResizeEdge edge = mir_resize_edge_none;
+
+    switch (edges)
     {
-        if (auto session = get_session(client))
-        {
-            MirResizeEdge edge = mir_resize_edge_none;
+    case _NET_WM_MOVERESIZE_SIZE_TOP:
+        edge = mir_resize_edge_north;
+        break;
 
-            switch (edges)
-            {
-            case _NET_WM_MOVERESIZE_SIZE_TOP:
-                edge = mir_resize_edge_north;
-                break;
+    case _NET_WM_MOVERESIZE_SIZE_BOTTOM:
+        edge = mir_resize_edge_south;
+        break;
 
-            case _NET_WM_MOVERESIZE_SIZE_BOTTOM:
-                edge = mir_resize_edge_south;
-                break;
+    case _NET_WM_MOVERESIZE_SIZE_LEFT:
+        edge = mir_resize_edge_west;
+        break;
 
-            case _NET_WM_MOVERESIZE_SIZE_LEFT:
-                edge = mir_resize_edge_west;
-                break;
+    case _NET_WM_MOVERESIZE_SIZE_TOPLEFT:
+        edge = mir_resize_edge_northwest;
+        break;
 
-            case _NET_WM_MOVERESIZE_SIZE_TOPLEFT:
-                edge = mir_resize_edge_northwest;
-                break;
+    case _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT:
+        edge = mir_resize_edge_southwest;
+        break;
 
-            case _NET_WM_MOVERESIZE_SIZE_BOTTOMLEFT:
-                edge = mir_resize_edge_southwest;
-                break;
+    case _NET_WM_MOVERESIZE_SIZE_RIGHT:
+        edge = mir_resize_edge_east;
+        break;
 
-            case _NET_WM_MOVERESIZE_SIZE_RIGHT:
-                edge = mir_resize_edge_east;
-                break;
+    case _NET_WM_MOVERESIZE_SIZE_TOPRIGHT:
+        edge = mir_resize_edge_northeast;
+        break;
 
-            case _NET_WM_MOVERESIZE_SIZE_TOPRIGHT:
-                edge = mir_resize_edge_northeast;
-                break;
+    case _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT:
+        edge = mir_resize_edge_southeast;
+        break;
 
-            case _NET_WM_MOVERESIZE_SIZE_BOTTOMRIGHT:
-                edge = mir_resize_edge_southeast;
-                break;
-
-            default:;
-            }
-
-            WindowWlSurfaceRole::initiate_interactive_resize(edge);
-        }
+    default:;
     }
+
+    WindowWlSurfaceRole::initiate_interactive_resize(edge);
 }
