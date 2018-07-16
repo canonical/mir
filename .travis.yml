@@ -11,6 +11,11 @@ branches:
   - /^v[\d\.]+$/
 
 stages:
+- name: process snaps
+  if: (type = pull_request
+        AND head_repo = MirServer/mir)
+      OR (type != pull_request
+        AND repo = MirServer/mir)
 - name: test
   # don't test on pushes to master or release pull requests or tag events
   # TODO: enable release pull request testing when we have more CI power
