@@ -95,5 +95,5 @@ jobs:
     install:
     - pip install -r tools/requirements.txt
     script:
-    - tools/process_snaps.py
     - exit 1
+    - tools/process_snaps.py
