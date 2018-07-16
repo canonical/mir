@@ -11,6 +11,8 @@ branches:
   - /^v[\d\.]+$/
 
 stages:
+- name: process snaps
+  if: repo = MirServer/mir
 - name: test
   # don't test on pushes to master or release pull requests or tag events
   # TODO: enable release pull request testing when we have more CI power
@@ -23,8 +25,6 @@ stages:
       AND ( branch = master
             OR branch =~ ^release/[\d\.]+$
             OR tag =~ ^v[\d\.]+$ )
-- name: process snaps
-  if: repo = MirServer/mir
 
 env:
   global:
