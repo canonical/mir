@@ -16,15 +16,6 @@ yourself. (See \ref getting_involved_in_mir).
 
 ## Getting Mir on Ubuntu
 
-On Ubuntu the latest Mir release is available from the Mir team's "release PPA".
-We recommend always using the latest release, but if you don't wish to use the
-PPA, there will be also a release of Mir in the Ubuntu archive, but some things
-may not work as described here.
-
-To add the PPA to your system:
-
-    sudo add-apt-repository --update ppa:mir-team/release
-
 You can install the Mir examples along with the Mir graphics drivers as follows:
 
     sudo apt install mir-demos mir-graphics-drivers-desktop
@@ -32,6 +23,17 @@ You can install the Mir examples along with the Mir graphics drivers as follows:
 It is also useful to install Wayland support for Qt and qterminal:
 
     sudo apt install qterminal qtwayland5
+
+### Getting the latest Mir release on Ubuntu
+
+As a matter of policy Ubuntu does not routinely update packages after a series
+is released. This means the Mir team cannot reasonably guarantee that all series
+will have the latest Mir release available at all times.
+
+The latest Mir release is available for all supported Ubuntu series from the
+Mir team's "release PPA". To add the PPA to your system:
+
+    sudo add-apt-repository --update ppa:mir-team/release
 
 To remove the PPA from your system:
 
@@ -49,7 +51,7 @@ It is also useful to install qterminal:
 
 ## Getting Mir on Arch
 
-If you're on Arch Linux, you can install 'mir' from the AUR.
+On Arch Linux, you can install the [mir](https://aur.archlinux.org/packages/mir/) package from the AUR.
 
 Using Mir demos
 ---------------
@@ -87,7 +89,7 @@ From outside the Mir-on-X11 session applications can be run using the
 
 #### Script Options
 
-The `miral-app` script provide options for using an alternative shell
+The `miral-app` script provides options for using an alternative shell
 (`miral-kiosk` as used by the mir-kiosk snap) and an alternative launcher.
 
     -kiosk               use miral-kiosk instead of miral-shell
