@@ -5,7 +5,7 @@
 # program (like mir_*_tests) somehow provides sufficient preloaded C++ symbols
 # that the bug does not occur.
 #
-mir_add_wrapped_executable(mir_test_reload_protobuf test_reload.c)
+mir_add_wrapped_executable(mir_test_reload_protobuf NOINSTALL test_reload.c)
 
 #
 # XXX I would like to detect the full file name from the mirprotobuf target
