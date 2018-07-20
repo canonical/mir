@@ -102,7 +102,7 @@ add_subdirectory(renderers/gl)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
-mir_add_wrapped_executable(mir_unit_tests
+mir_add_wrapped_executable(mir_unit_tests NOINSTALL
   ${UNIT_TEST_SOURCES}
   $<TARGET_OBJECTS:mir-libinput-test-framework>
   $<TARGET_OBJECTS:mir-test-doubles-udev>
@@ -147,7 +147,7 @@ if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11 OR MIR_BUILD_PLAT
   )
 endif (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11 OR MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
 
-mir_add_wrapped_executable(mir_umock_unit_tests
+mir_add_wrapped_executable(mir_umock_unit_tests NOINSTALL
   ${UMOCK_UNIT_TEST_SOURCES}
   $<TARGET_OBJECTS:mir-umock-test-framework>
   $<TARGET_OBJECTS:mir-test-input-framework>
