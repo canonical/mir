@@ -18,6 +18,7 @@
 
 #include "mir/default_server_configuration.h"
 #include "wayland_connector.h"
+#include "xdg_shell_v6.h"
 
 #include "mir/frontend/display_changer.h"
 #include "mir/graphics/platform.h"
@@ -28,6 +29,20 @@ namespace mf = mir::frontend;
 std::shared_ptr<mf::Connector>
     mir::DefaultServerConfiguration::the_wayland_connector()
 {
+    struct WaylandExtensions : mf::WaylandExtensions
+    {
+    protected:
+        virtual void custom_extensions(
+            wl_display* display,
+            std::shared_ptr<mf::Shell> const& shell,
+            mf::WlSeat* seat,
+            mf::OutputManager* const output_manager)
+        {
+            if (!getenv("MIR_DISABLE_XDG_SHELL_V6_UNSTABLE"))
+                add_extension("zxdg_shell_v6", std::make_shared<mf::XdgShellV6>(display, shell, *seat, output_manager));
+        }
+    };
+
     return wayland_connector(
         [this]() -> std::shared_ptr<mf::Connector>
         {
@@ -46,6 +61,7 @@ std::shared_ptr<mf::Connector>
                 the_seat(),
                 the_buffer_allocator(),
                 the_session_authorizer(),
-                arw_socket);
+                arw_socket,
+                std::make_unique<WaylandExtensions>());
         });
 }

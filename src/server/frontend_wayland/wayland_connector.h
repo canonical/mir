@@ -48,8 +48,6 @@ namespace frontend
 class WlCompositor;
 class WlSubcompositor;
 class WlApplication;
-class WlShell;
-class XdgShellV6;
 class WlSeat;
 class OutputManager;
 
@@ -57,6 +55,25 @@ class Shell;
 class DisplayChanger;
 class SessionAuthorizer;
 class DataDeviceManager;
+
+class WaylandExtensions
+{
+public:
+    WaylandExtensions() = default;
+    virtual ~WaylandExtensions() = default;
+    WaylandExtensions(WaylandExtensions const&) = delete;
+    WaylandExtensions& operator=(WaylandExtensions const&) = delete;
+
+    void init(wl_display* display, std::shared_ptr<Shell> const& shell, WlSeat* seat, OutputManager* const output_manager);
+
+protected:
+
+    virtual void add_extension(std::string const name, std::shared_ptr<void> implementation);
+    virtual void custom_extensions(wl_display* display, std::shared_ptr<Shell> const& shell, WlSeat* seat, OutputManager* const output_manager);
+
+private:
+    std::unordered_map<std::string, std::shared_ptr<void>> extension_protocols;
+};
 
 class WaylandConnector : public Connector
 {
@@ -69,7 +86,8 @@ public:
         std::shared_ptr<input::Seat> const& seat,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-        bool arw_socket);
+        bool arw_socket,
+        std::unique_ptr<WaylandExtensions> extensions);
 
     ~WaylandConnector() override;
 
@@ -93,9 +111,8 @@ private:
     std::unique_ptr<WlSeat> seat_global;
     std::unique_ptr<OutputManager> output_manager;
     std::shared_ptr<graphics::WaylandAllocator> const allocator;
-    std::unique_ptr<WlShell> shell_global;
     std::unique_ptr<DataDeviceManager> data_device_manager_global;
-    std::unique_ptr<XdgShellV6> xdg_shell_global;
+    std::unique_ptr<WaylandExtensions> const extensions;
     std::thread dispatch_thread;
     wl_event_source* pause_source;
     std::string wayland_display;
