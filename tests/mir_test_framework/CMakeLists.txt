@@ -210,4 +210,3 @@ install(TARGETS mirplatformgraphicsthrow LIBRARY DESTINATION ${MIR_SERVER_PLATFO
 install(TARGETS mirclientplatformstub LIBRARY DESTINATION ${MIR_CLIENT_PLATFORM_PATH})
 
 add_subdirectory(udev-recordings/)
-add_subdirectory(testing-cursor-theme/)
