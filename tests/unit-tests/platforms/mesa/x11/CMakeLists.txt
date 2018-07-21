@@ -1,5 +1,4 @@
-mir_add_wrapped_executable(
-  mir_unit_tests_mesa-x11
+mir_add_wrapped_executable(mir_unit_tests_mesa-x11 NOINSTALL
   ${CMAKE_CURRENT_SOURCE_DIR}/test_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_graphics_platform.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
