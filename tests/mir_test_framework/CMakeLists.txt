@@ -141,8 +141,6 @@ set_target_properties(
   LINK_FLAGS "-Wl,--version-script,${MIR_INPUT_PLATFORM_VERSION_SCRIPT}"
 )
 
-install(TARGETS mirplatforminputstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
-
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols-server.map.in
     ${CMAKE_CURRENT_BINARY_DIR}/symbols-server.map)
 set(server_symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols-server.map)
