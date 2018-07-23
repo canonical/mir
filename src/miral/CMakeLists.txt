@@ -25,6 +25,11 @@ add_library(miral-internal STATIC
                                         window_info_defaults.h
 )
 
+# For no obvious reason this has to be explicit on Cosmic and not implied
+# by the linker's symbol version script
+set_target_properties(miral-internal
+    PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS}  -fvisibility=hidden")
+
 set_source_files_properties(xcursor.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 
 add_library(miral SHARED
