@@ -20,8 +20,7 @@ add_dependencies(libwlcs wlcs)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/wlcs/include)
 
-mir_add_wrapped_executable(
-  mir_wlcs_tests
+mir_add_wrapped_executable(mir_wlcs_tests NOINSTALL
 
   wlcs/example/mir_integration.cpp
 )

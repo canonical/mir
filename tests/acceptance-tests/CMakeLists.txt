@@ -87,8 +87,7 @@ endif()
           "${CMAKE_CXXFLAGS} -I ${CMAKE_SOURCE_DIR}")
 # END "throwbacks"
 
-mir_add_wrapped_executable(
-  mir_acceptance_tests
+mir_add_wrapped_executable(mir_acceptance_tests NOINSTALL
 
   ${SOURCES}
 )
