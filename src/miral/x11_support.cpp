@@ -16,20 +16,29 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIRAL_LAUNCH_APP_H
-#define MIRAL_LAUNCH_APP_H
 
-#include <mir/optional_value.h>
+#include "miral/x11_support.h"
 
-#include <string>
-#include <vector>
+#include <mir/server.h>
+#include <mir/options/configuration.h>
 
-namespace miral
+namespace mo = mir::options;
+
+struct miral::X11Support::Self
 {
-void launch_app(std::vector<std::string> const& app,
-                mir::optional_value<std::string> const& wayland_display,
-                mir::optional_value<std::string> const& mir_socket,
-                mir::optional_value<std::string> const& x11_display);
+};
+
+miral::X11Support::X11Support() : self{std::make_shared<Self>()}
+{
 }
 
-#endif //MIRAL_LAUNCH_APP_H
+void miral::X11Support::operator()(mir::Server& server) const
+{
+    server.add_configuration_option(mo::x11_display_opt, "Socket to use for X11 DISPLAY (default: none).", mir::OptionType::integer);
+}
+
+miral::X11Support::~X11Support() = default;
+miral::X11Support::X11Support(X11Support const&) = default;
+auto miral::X11Support::operator=(X11Support const&) -> X11Support& = default;
+
+

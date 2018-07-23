@@ -19,18 +19,21 @@
 #include "mir/default_server_configuration.h"
 #include "wayland_connector.h"
 #include "xdg_shell_v6.h"
+#include "xwayland_wm_shell.h"
 
 #include "mir/frontend/display_changer.h"
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
 
 namespace mf = mir::frontend;
+namespace mo = mir::options;
 
 std::shared_ptr<mf::Connector>
     mir::DefaultServerConfiguration::the_wayland_connector()
 {
     struct WaylandExtensions : mf::WaylandExtensions
     {
+        WaylandExtensions(bool x11_enabled) : x11_enabled{x11_enabled} {}
     protected:
         virtual void custom_extensions(
             wl_display* display,
@@ -40,18 +43,23 @@ std::shared_ptr<mf::Connector>
         {
             if (!getenv("MIR_DISABLE_XDG_SHELL_V6_UNSTABLE"))
                 add_extension("zxdg_shell_v6", std::make_shared<mf::XdgShellV6>(display, shell, *seat, output_manager));
+
+            if (x11_enabled)
+                add_extension("x11-support", std::make_shared<mf::XWaylandWMShell>(shell, *seat, output_manager));
         }
+        const bool x11_enabled;
     };
 
     return wayland_connector(
         [this]() -> std::shared_ptr<mf::Connector>
         {
-            bool const arw_socket = the_options()->is_set(options::arw_server_socket_opt);
+            auto options = the_options();
+            bool const arw_socket = options->is_set(options::arw_server_socket_opt);
 
             optional_value<std::string> display_name;
 
-            if (the_options()->is_set(options::wayland_socket_name_opt))
-                display_name = the_options()->get<std::string>(options::wayland_socket_name_opt);
+            if (options->is_set(options::wayland_socket_name_opt))
+                display_name = options->get<std::string>(options::wayland_socket_name_opt);
 
             return std::make_shared<mf::WaylandConnector>(
                 display_name,
@@ -62,6 +70,6 @@ std::shared_ptr<mf::Connector>
                 the_buffer_allocator(),
                 the_session_authorizer(),
                 arw_socket,
-                std::make_unique<WaylandExtensions>());
+                std::make_unique<WaylandExtensions>(options->is_set(mo::x11_display_opt)));
         });
 }

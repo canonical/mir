@@ -55,6 +55,7 @@ struct mir::DisplayServer::Private
           compositor{config.the_compositor()},
           connector{config.the_connector()},
           wayland_connector{config.the_wayland_connector()},
+          xwayland_connector{config.the_xwayland_connector()},
           prompt_connector{config.the_prompt_connector()},
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()},
@@ -83,6 +84,10 @@ struct mir::DisplayServer::Private
             auto wayland = try_but_revert_if_unwinding(
                 [this] { wayland_connector->stop(); },
                 [this] { wayland_connector->start(); });
+
+            auto xwayland = try_but_revert_if_unwinding(
+                [this] { xwayland_connector->stop(); },
+                [this] { xwayland_connector->start(); });
 
             auto prompt = try_but_revert_if_unwinding(
                 [this] { prompt_connector->stop(); },
@@ -165,6 +170,10 @@ struct mir::DisplayServer::Private
                 [this] { wayland_connector->start(); },
                 [&, this] { wayland_connector->stop(); });
 
+            auto xwayland = try_but_revert_if_unwinding(
+                [this] { xwayland_connector->start(); },
+                [&, this] { xwayland_connector->stop(); });
+
             connector->start();
         }
         catch(std::runtime_error const&)
@@ -192,6 +201,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mc::Compositor> const compositor;
     std::shared_ptr<mf::Connector> const connector;
     std::shared_ptr<mf::Connector> const wayland_connector;
+    std::shared_ptr<mf::Connector> const xwayland_connector;
     std::shared_ptr<mf::Connector> const prompt_connector;
     std::shared_ptr<mi::InputManager> const input_manager;
     std::shared_ptr<mir::MainLoop> const main_loop;
@@ -228,11 +238,13 @@ void mir::DisplayServer::run()
     server.prompt_connector->start();
     server.connector->start();
     server.wayland_connector->start();
+    server.xwayland_connector->start();
 
     server.server_status_listener->started();
 
     server.main_loop->run();
 
+    server.xwayland_connector->stop();
     server.wayland_connector->stop();
     server.connector->stop();
     server.prompt_connector->stop();

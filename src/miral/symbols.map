@@ -342,5 +342,15 @@ global:
 
 #    miral::StartupInternalClient::StartupInternalClient*;
     _ZN5miral21StartupInternalClientC?ESt8functionIFvP10wl_displayEES1_IFvSt8weak_ptrIN3mir5scene7SessionEEEE;
-
 } MIRAL_2.2;
+
+MIRAL_2.4 {
+global:
+  extern "C++" {
+    miral::X11Support::?X11Support*;
+    miral::X11Support::X11Support*;
+    miral::X11Support::operator*;
+    typeinfo?for?miral::X11Support;
+    vtable?for?miral::X11Support;
+  };
+} MIRAL_2.3;

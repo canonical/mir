@@ -1,6 +1,8 @@
 add_subdirectory(protocol/)
 add_subdirectory(generated/)
 
+include_directories(../frontend_xwayland)
+
 set(
   WAYLAND_SOURCES
 
@@ -29,4 +31,3 @@ add_library(
 
   ${WAYLAND_SOURCES}
 )
-

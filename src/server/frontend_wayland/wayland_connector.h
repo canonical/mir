@@ -66,6 +66,8 @@ public:
 
     void init(wl_display* display, std::shared_ptr<Shell> const& shell, WlSeat* seat, OutputManager* const output_manager);
 
+    auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
+
 protected:
 
     virtual void add_extension(std::string const name, std::shared_ptr<void> implementation);
@@ -102,6 +104,9 @@ public:
     void run_on_wayland_display(std::function<void(wl_display*)> const& functor);
 
     auto socket_name() const -> optional_value<std::string> override;
+
+    auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
+    auto get_wl_display() const -> wl_display*;
 
 private:
     std::unique_ptr<wl_display, void(*)(wl_display*)> const display;

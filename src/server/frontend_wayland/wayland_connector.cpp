@@ -576,6 +576,15 @@ void mf::WaylandExtensions::custom_extensions(wl_display*, std::shared_ptr<Shell
 {
 }
 
+auto mir::frontend::WaylandExtensions::get_extension(std::string const& name) const -> std::shared_ptr<void>
+{
+    auto const result = extension_protocols.find(name);
+    if (result != end(extension_protocols))
+        return result->second;
+
+    return {};
+}
+
 mf::WaylandConnector::WaylandConnector(
     optional_value<std::string> const& display_name,
     std::shared_ptr<mf::Shell> const& shell,
@@ -783,4 +792,14 @@ void mf::WaylandConnector::run_on_wayland_display(std::function<void(wl_display*
 auto mf::WaylandConnector::socket_name() const -> optional_value<std::string>
 {
     return wayland_display;
+}
+
+auto mf::WaylandConnector::get_extension(std::string const& name) const -> std::shared_ptr<void>
+{
+    return extensions->get_extension(name);
+}
+
+auto mf::WaylandConnector::get_wl_display() const -> wl_display*
+{
+    return display.get();
 }

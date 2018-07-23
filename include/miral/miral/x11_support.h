@@ -16,20 +16,32 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIRAL_LAUNCH_APP_H
-#define MIRAL_LAUNCH_APP_H
+#ifndef MIRAL_X11_SUPPORT_H
+#define MIRAL_X11_SUPPORT_H
 
-#include <mir/optional_value.h>
+#include <memory>
 
-#include <string>
-#include <vector>
+namespace mir { class Server; }
 
 namespace miral
 {
-void launch_app(std::vector<std::string> const& app,
-                mir::optional_value<std::string> const& wayland_display,
-                mir::optional_value<std::string> const& mir_socket,
-                mir::optional_value<std::string> const& x11_display);
+/// Add a user configuration option for X11 support.
+class X11Support
+{
+public:
+
+    void operator()(mir::Server& server) const;
+
+    X11Support();
+    ~X11Support();
+    X11Support(X11Support const&);
+    auto operator=(X11Support const&) -> X11Support&;
+
+private:
+    struct Self;
+    std::shared_ptr<Self> self;
+};
+
 }
 
-#endif //MIRAL_LAUNCH_APP_H
+#endif //MIRAL_X11_SUPPORT_H

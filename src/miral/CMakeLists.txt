@@ -58,6 +58,7 @@ add_library(miral SHARED
     window_management_policy.cpp        ${miral_include}/miral/window_management_policy.h
     window_manager_tools.cpp            ${miral_include}/miral/window_manager_tools.h
                                         ${miral_include}/miral/lambda_as_function.h
+    x11_support.cpp                     ${miral_include}/miral/x11_support.h
 )
 
 check_cxx_compiler_flag(-Wno-attribute-alias HAS_W_NO_ATTRIBUTE_ALIAS)

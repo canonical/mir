@@ -177,6 +177,7 @@ public:
      *  @{ */
     std::shared_ptr<frontend::Connector>    the_connector() override;
     std::shared_ptr<frontend::Connector>    the_wayland_connector() override;
+    std::shared_ptr<frontend::Connector>    the_xwayland_connector() override;
     std::shared_ptr<frontend::Connector>    the_prompt_connector() override;
     std::shared_ptr<graphics::Display>      the_display() override;
     std::shared_ptr<compositor::Compositor> the_compositor() override;
@@ -381,6 +382,7 @@ protected:
 
     CachedPtr<frontend::Connector>   connector;
     CachedPtr<frontend::Connector>   wayland_connector;
+    CachedPtr<frontend::Connector>   xwayland_connector;
     CachedPtr<frontend::Connector>   prompt_connector;
 
     CachedPtr<input::InputReport> input_report;

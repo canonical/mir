@@ -28,6 +28,8 @@ stages:
       AND ( branch = master
             OR branch =~ ^release/[\d\.]+$
             OR tag =~ ^v[\d\.]+$ )
+- name: process snaps
+  if: repo = MirServer/mir
 
 env:
   global:
