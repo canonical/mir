@@ -24,9 +24,11 @@
 #include <cstring>
 
 
-void miral::launch_app(std::vector<std::string> const& app,
-                       mir::optional_value<std::string> const& wayland_display,
-                       mir::optional_value<std::string> const& mir_socket)
+void miral::launch_app(
+    std::vector<std::string> const& app,
+    mir::optional_value<std::string> const& wayland_display,
+    mir::optional_value<std::string> const& mir_socket,
+    mir::optional_value<std::string> const& x11_display)
 {
     pid_t pid = fork();
 
@@ -53,6 +55,15 @@ void miral::launch_app(std::vector<std::string> const& app,
         else
         {
             unsetenv("WAYLAND_DISPLAY");
+        }
+
+        if (x11_display)
+        {
+            setenv("DISPLAY", x11_display.value().c_str(),  true);   // configure X11 socket
+        }
+        else
+        {
+            unsetenv("DISPLAY");
         }
 
         setenv("GDK_BACKEND", "wayland,mir", true);         // configure GTK to use Wayland (or Mir)

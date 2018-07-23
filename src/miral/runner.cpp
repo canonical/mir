@@ -24,10 +24,14 @@
 #include <mir/main_loop.h>
 #include <mir/report_exception.h>
 #include <mir/options/option.h>
+#include <mir/options/configuration.h>
 
 #include <chrono>
 #include <mutex>
 #include <thread>
+
+
+namespace mo = mir::options;
 
 namespace
 {
@@ -137,7 +141,13 @@ void miral::MirRunner::Self::launch_startup_applications(::mir::Server& server)
                     if (app[0] == "gnome-terminal")
                         app.push_back("--app-id"),app.push_back("com.canonical.miral.Terminal");
 
-                    launch_app(app, wayland_display, mir_socket);
+                    mir::optional_value<std::string> x11_display;
+
+                    auto const options = server.get_options();
+                    if (options->is_set(mo::x11_display_opt))
+                        x11_display = std::string(":") + std::to_string(options->get<int>(mo::x11_display_opt));
+
+                    launch_app(app, wayland_display, mir_socket, x11_display);
 
                     if ((i = j) != end(value)) ++i;
                 }
