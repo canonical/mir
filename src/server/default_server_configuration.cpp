@@ -43,6 +43,7 @@
 #include "default_emergency_cleanup.h"
 #include "mir/graphics/platform.h"
 #include "mir/scene/coordinate_translator.h"
+#include "mir/console_services.h"
 
 #include <type_traits>
 
@@ -68,8 +69,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::Configuration> const& configuration_options) :
     configuration_options(configuration_options),
-    default_filter(std::make_shared<mi::VTFilter>()),
-    reports{initialise_reports()}
+    default_filter(std::make_shared<mi::VTFilter>())
 {
 }
 

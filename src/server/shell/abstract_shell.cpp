@@ -46,12 +46,12 @@ struct UpdateConfinementOnSurfaceChanges : ms::NullSurfaceObserver
     {
     }
 
-    void resized_to(geom::Size const& /*size*/) override
+    void resized_to(ms::Surface const*, geom::Size const& /*size*/) override
     {
         update_confinement_region();
     }
 
-    void moved_to(geom::Point const& /*top_left*/) override
+    void moved_to(ms::Surface const*, geom::Point const& /*top_left*/) override
     {
         update_confinement_region();
     }
@@ -272,6 +272,15 @@ void msh::AbstractShell::request_move(
     uint64_t timestamp)
 {
     window_manager->handle_request_move(session, surface, timestamp);
+}
+
+void msh::AbstractShell::request_resize(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<scene::Surface> const& surface,
+    uint64_t timestamp,
+    MirResizeEdge edge)
+{
+    window_manager->handle_request_resize(session, surface, timestamp, edge);
 }
 
 void msh::AbstractShell::focus_next_session()

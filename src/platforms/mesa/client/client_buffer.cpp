@@ -99,12 +99,12 @@ mclm::ClientBuffer::ClientBuffer(
     buffer_pf{pf},
     egl_image_attrs{
         EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-        EGL_WIDTH, static_cast<const EGLint>(creation_package->width),
-        EGL_HEIGHT, static_cast<const EGLint>(creation_package->height),
-        EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(mir::graphics::mesa::mir_format_to_gbm_format(buffer_pf)),
+        EGL_WIDTH, static_cast<EGLint>(creation_package->width),
+        EGL_HEIGHT, static_cast<EGLint>(creation_package->height),
+        EGL_LINUX_DRM_FOURCC_EXT, static_cast<EGLint>(mir::graphics::mesa::mir_format_to_gbm_format(buffer_pf)),
         EGL_DMA_BUF_PLANE0_FD_EXT, creation_package->fd[0],
         EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
-        EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(creation_package->stride),
+        EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<EGLint>(creation_package->stride),
         EGL_NONE}
 {
     if (pf == mir_pixel_format_invalid)
@@ -128,12 +128,12 @@ mclm::ClientBuffer::ClientBuffer(
     buffer_pf{mir::graphics::mesa::gbm_format_to_mir_format(native_pf)},
     egl_image_attrs{
         EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-        EGL_WIDTH, static_cast<const EGLint>(creation_package->width),
-        EGL_HEIGHT, static_cast<const EGLint>(creation_package->height),
-        EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(native_pf),
+        EGL_WIDTH, static_cast<EGLint>(creation_package->width),
+        EGL_HEIGHT, static_cast<EGLint>(creation_package->height),
+        EGL_LINUX_DRM_FOURCC_EXT, static_cast<EGLint>(native_pf),
         EGL_DMA_BUF_PLANE0_FD_EXT, creation_package->fd[0],
         EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
-        EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(creation_package->stride),
+        EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<EGLint>(creation_package->stride),
         EGL_NONE}
 {
 }

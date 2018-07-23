@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * under the terms of the GNU General Public License version 2 or 3 as as
@@ -15,22 +15,66 @@
  */
 
 #include "miregl.h"
-#include <miral/window_specification.h>
-#include <mir/client/window_spec.h>
-#include <mir_toolkit/mir_client_library.h>
+#include <wayland-client.h>
 
 #include <cstring>
 
 #include <GLES2/gl2.h>
 
-using namespace mir::client;
+#include <wayland-egl.h>
+
+#include <chrono>
+#include <algorithm>
+
+static void new_global(
+    void* data,
+    struct wl_registry* registry,
+    uint32_t id,
+    char const* interface,
+    uint32_t version);
+
+static void global_remove(
+    void* data,
+    struct wl_registry* registry,
+    uint32_t name)
+{
+    (void)data;
+    (void)registry;
+    (void)name;
+}
+
+static void output_geometry(void */*data*/,
+    struct wl_output */*wl_output*/,
+    int32_t /*x*/,
+    int32_t /*y*/,
+    int32_t /*physical_width*/,
+    int32_t /*physical_height*/,
+    int32_t /*subpixel*/,
+    const char */*make*/,
+    const char */*model*/,
+    int32_t /*transform*/);
+
+static void output_mode(void *data,
+    struct wl_output */*wl_output*/,
+    uint32_t /*flags*/,
+    int32_t width,
+    int32_t height,
+    int32_t /*refresh*/);
+
+static void output_done(void* /*data*/, struct wl_output* /*wl_output*/)
+{
+}
+
+static void output_scale(void* /*data*/, struct wl_output* /*wl_output*/, int32_t /*factor*/)
+{
+}
 
 class MirEglApp
 {
 public:
-    MirEglApp(MirConnection* const connection, MirPixelFormat pixel_format);
+    MirEglApp(struct wl_display* display);
 
-    EGLSurface create_surface(MirRenderSurface* surface);
+    EGLSurface create_eglsurface(wl_surface* surface, int width, int height);
 
     void make_current(EGLSurface eglsurface) const;
 
@@ -46,8 +90,30 @@ public:
 
     ~MirEglApp();
 
-    MirConnection* const connection;
+    struct OutputInfo
+    {
+        struct wl_output* wl_output;
+        int32_t x;
+        int32_t y;
+        int32_t width;
+        int32_t height;
+    };
+
+    struct wl_display* const display;
+    struct wl_compositor* compositor;
+    struct wl_shm* shm;
+    struct wl_seat* seat;
+    std::vector<OutputInfo> output_info;
+    struct wl_shell* shell;
+
 private:
+    friend void new_global(
+        void* data,
+        struct wl_registry* registry,
+        uint32_t id,
+        char const* interface,
+        uint32_t version);
+
     EGLDisplay egldisplay;
     EGLContext eglctx;
     EGLConfig eglconfig;
@@ -55,36 +121,129 @@ private:
     EGLSurface dummy_surface;
 };
 
-std::shared_ptr<MirEglApp> make_mir_eglapp(
-    MirConnection* const connection, MirPixelFormat const& pixel_format)
+static void output_geometry(void *data,
+    struct wl_output *wl_output,
+    int32_t x,
+    int32_t y,
+    int32_t /*physical_width*/,
+    int32_t /*physical_height*/,
+    int32_t /*subpixel*/,
+    const char */*make*/,
+    const char */*model*/,
+    int32_t /*transform*/)
 {
-    return std::make_shared<MirEglApp>(connection, pixel_format);
+    struct MirEglApp* app = static_cast<decltype(app)>(data);
+
+    for (auto& oi : app->output_info)
+    {
+        if (wl_output == oi.wl_output)
+        {
+            oi.x = x;
+            oi.y = y;
+            return;
+        }
+    }
+    app->output_info.push_back({wl_output, x, y, 0, 0});
+}
+
+static void output_mode(void *data,
+    struct wl_output *wl_output,
+    uint32_t flags,
+    int32_t width,
+    int32_t height,
+    int32_t /*refresh*/)
+{
+    if (!(WL_OUTPUT_MODE_CURRENT & flags))
+        return;
+
+    struct MirEglApp* app = static_cast<decltype(app)>(data);
+
+    for (auto& oi : app->output_info)
+    {
+        if (wl_output == oi.wl_output)
+        {
+            oi.width = width;
+            oi.height = height;
+            return;
+        }
+    }
+    app->output_info.push_back({wl_output, 0, 0, width, height});
+}
+
+static void new_global(
+    void* data,
+    struct wl_registry* registry,
+    uint32_t id,
+    char const* interface,
+    uint32_t version)
+{
+    (void)version;
+    struct MirEglApp* app = static_cast<decltype(app)>(data);
+
+    if (strcmp(interface, "wl_compositor") == 0)
+    {
+        app->compositor = static_cast<decltype(app->compositor)>(wl_registry_bind(registry, id, &wl_compositor_interface, 3));
+    }
+    else if (strcmp(interface, "wl_shm") == 0)
+    {
+        app->shm = static_cast<decltype(app->shm)>(wl_registry_bind(registry, id, &wl_shm_interface, 1));
+        // Normally we'd add a listener to pick up the supported formats here
+        // As luck would have it, I know that argb8888 is the only format we support :)
+    }
+    else if (strcmp(interface, "wl_seat") == 0)
+    {
+        app->seat = static_cast<decltype(app->seat)>(wl_registry_bind(registry, id, &wl_seat_interface, 4));
+    }
+    else if (strcmp(interface, "wl_output") == 0)
+    {
+        wl_output* output = static_cast<decltype(output)>(wl_registry_bind(registry, id, &wl_output_interface, 2));
+
+        app->output_info.push_back({output, 0, 0, 0, 0});
+    }
+    else if (strcmp(interface, "wl_shell") == 0)
+    {
+        app->shell = static_cast<decltype(app->shell)>(wl_registry_bind(registry, id, &wl_shell_interface, 1));
+    }
+}
+
+std::shared_ptr<MirEglApp> make_mir_eglapp(struct wl_display* display)
+{
+    return std::make_shared<MirEglApp>(display);
+}
+
+std::vector<std::shared_ptr<MirEglSurface>> mir_surface_init(std::shared_ptr<MirEglApp> const& mir_egl_app)
+{
+    std::vector<std::shared_ptr<MirEglSurface>> result;
+
+    for (auto const& oi : mir_egl_app->output_info)
+    {
+        result.push_back(std::make_shared<MirEglSurface>(mir_egl_app, oi.wl_output, oi.width, oi.height));
+    }
+
+    return result;
 }
 
 MirEglSurface::MirEglSurface(
     std::shared_ptr<MirEglApp> const& mir_egl_app,
-    char const* name,
-    MirOutput const* output)
-:
-    mir_egl_app{mir_egl_app}
+    struct wl_output* wl_output, int width_, int height_) :
+    mir_egl_app{mir_egl_app},
+    width_{width_},
+    height_{height_}
 {
-    auto const mode = mir_output_get_current_mode(output);
-    auto const output_id = mir_output_get_id(output);
-    auto const width = mir_output_mode_get_width(mode);
-    auto const height = mir_output_mode_get_height(mode);
+    static struct wl_shell_surface_listener const shell_surface_listener = {
+        shell_surface_ping,
+        shell_surface_configure,
+        shell_surface_popup_done
+    };
 
-    surface = Surface{mir_connection_create_render_surface_sync(mir_egl_app->connection, width, height)};
+    display = mir_egl_app->display;
+    surface = wl_compositor_create_surface(mir_egl_app->compositor);
+    window = wl_shell_get_shell_surface(mir_egl_app->shell, surface);
+    wl_shell_surface_add_listener(window, &shell_surface_listener, this);
+    wl_shell_surface_set_fullscreen(window, WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, wl_output);
+    wl_display_dispatch(display);
 
-    eglsurface = mir_egl_app->create_surface(surface);
-
-    window = WindowSpec::for_normal_window(mir_egl_app->connection, width, height)
-        .add_surface(surface, width, height, 0, 0)
-        .set_name(name)
-        .set_fullscreen_on_output(output_id)
-        .create_window();
-
-    if (!mir_window_is_valid(window))
-        throw std::runtime_error(std::string("Can't create a window ") + mir_window_get_error_message(window));
+    eglsurface = mir_egl_app->create_eglsurface(surface, width(), height());
 
     mir_egl_app->set_swap_interval(eglsurface, -1);
 }
@@ -92,6 +251,8 @@ MirEglSurface::MirEglSurface(
 MirEglSurface::~MirEglSurface()
 {
     mir_egl_app->destroy_surface(eglsurface);
+    wl_surface_destroy(surface);
+    wl_shell_surface_destroy(window);
 }
 
 void MirEglSurface::egl_make_current()
@@ -115,11 +276,51 @@ unsigned int MirEglSurface::height() const
     return height_;
 }
 
-MirEglApp::MirEglApp(MirConnection* const connection, MirPixelFormat pixel_format) :
-    connection{connection},
+void MirEglSurface::shell_surface_ping(void */*data*/, struct wl_shell_surface *wl_shell_surface, uint32_t serial)
+{
+    wl_shell_surface_pong(wl_shell_surface, serial);
+}
+
+void MirEglSurface::shell_surface_configure(void *data,
+    struct wl_shell_surface */*wl_shell_surface*/,
+    uint32_t /*edges*/,
+    int32_t width,
+    int32_t height)
+{
+    auto self = static_cast<MirEglSurface*>(data);
+    if (width) self->width_ = width;
+    if (height) self->height_ = height;
+}
+
+void MirEglSurface::shell_surface_popup_done(void */*data*/, struct wl_shell_surface */*wl_shell_surface*/)
+{
+}
+
+MirEglApp::MirEglApp(struct wl_display* display) :
+    display{display},
     dummy_surface{EGL_NO_SURFACE}
 {
-    unsigned int bpp = 8*MIR_BYTES_PER_PIXEL(pixel_format);
+    static struct wl_registry_listener const registry_listener = {
+        new_global,
+        global_remove
+    };
+
+    wl_registry_add_listener(wl_display_get_registry(display), &registry_listener, this);
+    wl_display_roundtrip(display);
+
+    static struct wl_output_listener const output_listener = {
+        &output_geometry,
+        &output_mode,
+        &output_done,
+        &output_scale,
+    };
+
+    for (auto const oi : output_info)
+        wl_output_add_listener(oi.wl_output, &output_listener, this);
+
+    wl_display_roundtrip(display);
+
+    unsigned int bpp = 32; //8*MIR_BYTES_PER_PIXEL(pixel_format);
 
     EGLint attribs[] =
         {
@@ -130,7 +331,7 @@ MirEglApp::MirEglApp(MirConnection* const connection, MirPixelFormat pixel_forma
             EGL_NONE
         };
 
-    egldisplay = eglGetDisplay((EGLNativeDisplayType)(connection));
+    egldisplay = eglGetDisplay((EGLNativeDisplayType)(display));
     if (egldisplay == EGL_NO_DISPLAY)
         throw std::runtime_error("Can't eglGetDisplay");
 
@@ -175,12 +376,13 @@ MirEglApp::MirEglApp(MirConnection* const connection, MirPixelFormat pixel_forma
     make_current(dummy_surface);
 }
 
-EGLSurface MirEglApp::create_surface(MirRenderSurface* surface)
+EGLSurface MirEglApp::create_eglsurface(wl_surface* surface, int width, int height)
 {
+
     auto const eglsurface = eglCreateWindowSurface(
         egldisplay,
         eglconfig,
-        (EGLNativeWindowType)surface, NULL);
+        (EGLNativeWindowType)wl_egl_window_create(surface, width, height), NULL);
 
     if (eglsurface == EGL_NO_SURFACE)
         throw std::runtime_error("eglCreateWindowSurface failed");

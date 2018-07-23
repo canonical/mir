@@ -210,11 +210,11 @@ TEST_F(SurfaceStackCompositor, swapping_a_surface_that_has_been_added_triggers_a
 //test associated with lp:1290306, 1293896, 1294048, 1294051, 1294053
 TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_consumed)
 {
-    std::shared_ptr<ms::SurfaceObserver> observer = nullptr;
+    std::function<void(mir::geometry::Size const&)> frame_callback;
     ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor(_))
         .WillByDefault(Return(5));
-    EXPECT_CALL(*mock_buffer_stream, add_observer(_))
-        .WillOnce(SaveArg<0>(&observer));
+    EXPECT_CALL(*mock_buffer_stream, set_frame_posted_callback(_))
+        .WillOnce(SaveArg<0>(&frame_callback));
     stub_surface->set_streams(std::list<ms::StreamInfo>{ { mock_buffer_stream, {0,0}, geom::Size{100, 100} } });
 
     mc::MultiThreadedCompositor mt_compositor(
@@ -226,8 +226,8 @@ TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_co
     mt_compositor.start();
 
     stack.add_surface(stub_surface, default_params.input_mode);
-    ASSERT_THAT(observer, Ne(nullptr));
-    observer->frame_posted(1, { 100, 100 });
+    ASSERT_THAT(frame_callback, Ne(nullptr));
+    frame_callback({ 100, 100 });
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(5, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(5, timeout));
@@ -235,13 +235,13 @@ TEST_F(SurfaceStackCompositor, compositor_runs_until_all_surfaces_buffers_are_co
 
 TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffers_are_consumed)
 {
-    std::shared_ptr<ms::SurfaceObserver> observer = nullptr;
+    std::function<void(mir::geometry::Size const&)> frame_callback;
     ON_CALL(*mock_buffer_stream, buffers_ready_for_compositor(_))
         .WillByDefault(Return(5));
     ON_CALL(*mock_buffer_stream, lock_compositor_buffer(_))
         .WillByDefault(Return(mt::fake_shared(*stub_buffer)));
-    EXPECT_CALL(*mock_buffer_stream, add_observer(_))
-        .WillOnce(SaveArg<0>(&observer));
+    EXPECT_CALL(*mock_buffer_stream, set_frame_posted_callback(_))
+        .WillOnce(SaveArg<0>(&frame_callback));
     stub_surface->set_streams(std::list<ms::StreamInfo>{ { mock_buffer_stream, {0,0}, geom::Size{100, 100} } });
 
     stub_surface->resize(geom::Size{10,10});
@@ -255,8 +255,8 @@ TEST_F(SurfaceStackCompositor, bypassed_compositor_runs_until_all_surfaces_buffe
     mt_compositor.start();
 
     stack.add_surface(stub_surface, default_params.input_mode);
-    ASSERT_THAT(observer, Ne(nullptr));
-    observer->frame_posted(1, { 100, 100 });
+    ASSERT_THAT(frame_callback, Ne(nullptr));
+    frame_callback({ 100, 100 });
 
     EXPECT_TRUE(stub_primary_db.has_posted_at_least(5, timeout));
     EXPECT_TRUE(stub_secondary_db.has_posted_at_least(5, timeout));

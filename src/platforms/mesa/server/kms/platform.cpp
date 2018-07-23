@@ -19,7 +19,7 @@
 #include "platform.h"
 #include "buffer_allocator.h"
 #include "display.h"
-#include "linux_virtual_terminal.h"
+#include "mir/console_services.h"
 #include "ipc_operations.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/graphics/platform_operation_message.h"
@@ -52,51 +52,20 @@ namespace mgm = mg::mesa;
 namespace mgmh = mgm::helpers;
 
 mgm::Platform::Platform(std::shared_ptr<DisplayReport> const& listener,
-                        std::shared_ptr<VirtualTerminal> const& vt,
-                        EmergencyCleanupRegistry& emergency_cleanup_registry,
+                        std::shared_ptr<ConsoleServices> const& vt,
+                        EmergencyCleanupRegistry&,
                         BypassOption bypass_option)
     : udev{std::make_shared<mir::udev::Context>()},
-      drm{helpers::DRMHelper::open_all_devices(udev)},
-      gbm{std::make_shared<mgmh::GBMHelper>()},
+      drm{helpers::DRMHelper::open_all_devices(udev, *vt)},
+      // We assume the first DRM device is the boot GPU, and arbitrarily pick it as our
+      // shell renderer.
+      //
+      // TODO: expose multiple rendering GPUs to the shell.
+      gbm{std::make_shared<mgmh::GBMHelper>(drm.front()->fd)},
       listener{listener},
       vt{vt},
       bypass_option_{bypass_option}
 {
-    // We assume the first DRM device is the boot GPU, and arbitrarily pick it as our
-    // shell renderer.
-    //
-    // TODO: expose multiple rendering GPUs to the shell.
-    gbm->setup(*drm.front());
-
-    std::weak_ptr<VirtualTerminal> weak_vt = vt;
-    std::vector<std::weak_ptr<mgmh::DRMHelper>> weak_drm;
-
-    for (auto const &helper : drm)
-    {
-        weak_drm.push_back(helper);
-    }
-    emergency_cleanup_registry.add(
-        make_module_ptr<EmergencyCleanupHandler>(
-            [weak_vt,weak_drm]
-            {
-                if (auto const vt = weak_vt.lock())
-                    try { vt->restore(); } catch (...) {}
-
-                for (auto helper : weak_drm)
-                {
-                    if (auto const drm = helper.lock())
-                    {
-                        try
-                        {
-                            drm->drop_master();
-                        }
-                        catch (...)
-                        {
-                        }
-                    }
-                }
-            }));
-
     auth_factory = std::make_unique<DRMNativePlatformAuthFactory>(*drm.front());
 }
 

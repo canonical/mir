@@ -30,6 +30,7 @@
 #include <miral/command_line_option.h>
 #include <miral/cursor_theme.h>
 #include <miral/keymap.h>
+#include <miral/x11_support.h>
 
 #include <linux/input.h>
 
@@ -41,11 +42,10 @@ int main(int argc, char const* argv[])
 
     SpinnerSplash spinner;
     InternalClientLauncher launcher;
-    ActiveOutputsMonitor outputs_monitor;
     WindowManagerOptions window_managers
         {
             add_window_manager_policy<FloatingWindowManagerPolicy>("floating", spinner, launcher, shutdown_hook),
-            add_window_manager_policy<TilingWindowManagerPolicy>("tiling", spinner, launcher, outputs_monitor),
+            add_window_manager_policy<TilingWindowManagerPolicy>("tiling", spinner, launcher),
         };
 
     MirRunner runner{argc, argv};
@@ -84,14 +84,14 @@ int main(int argc, char const* argv[])
             CommandLineOption{[&](std::string const& ) { },
                               "desktop_file_hint", "Ignored for Unity8 compatibility", "miral-shell.desktop"},
             CursorTheme{"default:DMZ-White"},
+            X11Support{},
             window_managers,
             display_configuration_options,
             launcher,
-            outputs_monitor,
             config_keymap,
             debug_extensions,
             AppendEventFilter{quit_on_ctrl_alt_bksp},
-            StartupInternalClient{"Intro", spinner},
+            StartupInternalClient{spinner},
             pre_init(CommandLineOption{[&](std::string const& typeface) { ::titlebar::font_file(typeface); },
                               "shell-titlebar-font", "font file to use for titlebars", ::titlebar::font_file()})
         });

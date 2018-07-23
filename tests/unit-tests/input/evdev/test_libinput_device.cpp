@@ -135,7 +135,7 @@ struct LibInputDevice : public ::testing::Test
     {
         ON_CALL(mock_sink, bounding_rectangle())
             .WillByDefault(Return(geom::Rectangle({0,0}, {100,100})));
-        lib = mie::make_libinput(fake_udev);
+        lib = mie::make_libinput(nullptr);
     }
 
     libinput_device* setup_laptop_keyboard()
@@ -328,7 +328,9 @@ TEST_F(LibInputDevice, unique_id_contains_device_name)
 {
     auto fake_device = env.mock_libinput.get_next_fake_ptr<libinput_device*>();
     auto fake_dev_group = env.mock_libinput.get_next_fake_ptr<libinput_device_group*>();
-    auto udev_dev = env.mock_libinput.get_next_fake_ptr<udev_device*>();
+    auto udev_dev = std::shared_ptr<udev_device>{
+        env.mock_libinput.get_next_fake_ptr<udev_device*>(),
+        [](auto){}};
     env.mock_libinput.setup_device(fake_device, fake_dev_group, udev_dev, "Keyboard", "event4", 1, 2);
 
     mie::LibInputDevice dev(mir::report::null_input_report(),

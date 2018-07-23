@@ -33,7 +33,7 @@ class NullDisplayBuffer : public graphics::DisplayBuffer, public graphics::Nativ
 public:
     geometry::Rectangle view_area() const override { return geometry::Rectangle(); }
     bool overlay(graphics::RenderableList const&) override { return false; }
-    glm::mat2 transformation() const override { return {}; }
+    glm::mat2 transformation() const override { return glm::mat2(1); }
     NativeDisplayBuffer* native_display_buffer() override { return this; }
 };
 

@@ -190,6 +190,13 @@ void md::add_server_action_gsource(
         void const* const owner;
         std::function<void(void)> const action;
         std::function<bool(void const*)> const should_dispatch;
+
+        // If we come to finalize() before dispatch() we have already
+        // torn down most of Mir and even unloaded some shared libraries.
+        // That means the action could refer to  stuff that is no longer
+        // in the address space.
+        // We will just leak any resources instead of crashing.
+        bool mutable dispatched{false};
     };
 
     struct ServerActionGSource
@@ -215,13 +222,14 @@ void md::add_server_action_gsource(
         {
             auto const& ctx = reinterpret_cast<ServerActionGSource*>(source)->ctx;
             ctx.action();
+            ctx.dispatched = true;
             return FALSE;
         }
 
         static void finalize(GSource* source)
         {
             auto const sa_gsource = reinterpret_cast<ServerActionGSource*>(source);
-            if (sa_gsource->ctx_constructed)
+            if (sa_gsource->ctx_constructed && sa_gsource->ctx.dispatched)
                 sa_gsource->ctx.~ServerActionContext();
         }
     };
@@ -431,9 +439,9 @@ void md::FdSources::add(
 
     g_source_set_callback(
         gsource,
-        reinterpret_cast<GSourceFunc>(&FdContext::static_call),
+        reinterpret_cast<GSourceFunc>(reinterpret_cast<void*>(&FdContext::static_call)),
         fd_context,
-        reinterpret_cast<GDestroyNotify>(&FdContext::static_destroy));
+        reinterpret_cast<GDestroyNotify>(reinterpret_cast<void*>(&FdContext::static_destroy)));
 
     std::lock_guard<std::mutex> lock{sources_mutex};
 

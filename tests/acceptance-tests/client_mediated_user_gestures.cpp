@@ -19,8 +19,6 @@
 #include <mir_toolkit/mir_window.h>
 #include <mir_toolkit/mir_blob.h>
 
-#include <miral/window_management_policy_addendum2.h>
-
 #include <mir/geometry/displacement.h>
 #include <mir/input/input_device_info.h>
 #include <mir/input/device_capability.h>
@@ -71,8 +69,7 @@ private:
 
 void mir_cookie_release(Cookie const&) = delete;
 
-struct MockWindowManagementPolicy : mir_test_framework::CanonicalWindowManagerPolicy,
-    miral::WindowManagementPolicyAddendum2
+struct MockWindowManagementPolicy : mir_test_framework::CanonicalWindowManagerPolicy
 {
     MockWindowManagementPolicy(
         miral::WindowManagerTools const& tools,
@@ -84,6 +81,7 @@ struct MockWindowManagementPolicy : mir_test_framework::CanonicalWindowManagerPo
 
     MOCK_METHOD2(handle_request_move, void(miral::WindowInfo&, MirInputEvent const*));
     MOCK_METHOD1(handle_request_drag_and_drop, void(miral::WindowInfo&));
+    MOCK_METHOD3(handle_request_resize, void(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge));
 };
 
 struct MouseMoverAndFaker
@@ -268,6 +266,14 @@ auto ClientMediatedUserGestures::user_initiates_gesture() -> Cookie
     reset_window_event_handler();
     return cookie;
 }
+}
+
+// TODO extend this test when server side implemented
+TEST_F(ClientMediatedUserGestures, when_client_initiates_resize_nothing_bad_happens)
+{
+    auto const cookie = user_initiates_gesture();
+
+    mir_window_request_user_resize(window, mir_resize_edge_east, cookie);
 }
 
 TEST_F(ClientMediatedUserGestures, when_user_initiates_gesture_client_receives_cookie)

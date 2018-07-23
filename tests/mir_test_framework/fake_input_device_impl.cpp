@@ -146,8 +146,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
 {
     xkb_keysym_t key_code = 0;
 
-    auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now().time_since_epoch());
+    auto event_time = key_params.event_time.value_or(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()));
 
     auto input_action =
         (key_params.action == synthesis::EventAction::Down) ? mir_keyboard_action_down : mir_keyboard_action_up;
@@ -161,8 +162,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::KeyPara
 
 void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::ButtonParameters const& button)
 {
-    auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now().time_since_epoch());
+    auto event_time = button.event_time.value_or(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()));
     auto action = update_buttons(button.action, mie::to_pointer_button(button.button, settings.handedness));
     auto button_event = builder->pointer_event(event_time,
                                                action,
@@ -222,8 +224,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::synthesize_events(synthesis::TouchPa
     if (!sink)
         BOOST_THROW_EXCEPTION(std::runtime_error("Device is not started."));
 
-    auto const event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::steady_clock::now().time_since_epoch());
+    auto const event_time = touch.event_time.value_or(
+        std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()));
 
     auto touch_action = mir_touch_action_up;
     if (touch.action == synthesis::TouchParameters::Action::Tap)
@@ -316,14 +319,6 @@ void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::TouchscreenSettin
 void mtf::FakeInputDeviceImpl::InputDevice::map_touch_coordinates(float& x, float& y)
 {
     auto info = get_output_info();
-    auto touch_range = FakeInputDevice::maximum_touch_axis_value - FakeInputDevice::minimum_touch_axis_value + 1;
-    auto const width = info.output_size.width.as_int();
-    auto const height = info.output_size.height.as_int();
-    auto x_scale = width / float(touch_range);
-    auto y_scale = height / float(touch_range);
-    x = (x - float(FakeInputDevice::minimum_touch_axis_value))*x_scale;
-    y = (y - float(FakeInputDevice::minimum_touch_axis_value))*y_scale;
-
     info.transform_to_scene(x, y);
 }
 

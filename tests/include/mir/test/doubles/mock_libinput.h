@@ -38,7 +38,7 @@ public:
     MockLibInput();
     ~MockLibInput() noexcept;
     void wake();
-    void setup_device(libinput_device* device, libinput_device_group* group, udev_device* u_dev, char const* name,
+    void setup_device(libinput_device* device, libinput_device_group* group, std::shared_ptr<udev_device> u_dev, char const* name,
                       char const* sysname, unsigned int vendor, unsigned int product);
 
     libinput_event* setup_touch_event(libinput_device* dev, libinput_event_type type, uint64_t event_time, int slot,
@@ -176,10 +176,19 @@ public:
         return reinterpret_cast<PtrT>(++last_fake_ptr);
     }
 
+    dev_t get_next_devnum()
+    {
+        auto const next_devnum =
+            makedev(major(last_devnum) + 1, minor(last_devnum) + 1);
+        last_devnum = next_devnum;
+        return next_devnum;
+    }
+
     std::vector<libinput_event*> events;
 private:
     dispatch::ActionQueue libinput_simulation_queue;
     unsigned int last_fake_ptr{0};
+    dev_t last_devnum{makedev(1,0)};
     void push_back(libinput_event* event);
 };
 

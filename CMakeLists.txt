@@ -28,8 +28,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
 set(MIR_VERSION_MAJOR 0)
-set(MIR_VERSION_MINOR 29)
-set(MIR_VERSION_PATCH 0)
+set(MIR_VERSION_MINOR 32)
+set(MIR_VERSION_PATCH 1)
 
 add_definitions(-DMIR_VERSION_MAJOR=${MIR_VERSION_MAJOR})
 add_definitions(-DMIR_VERSION_MINOR=${MIR_VERSION_MINOR})
@@ -84,11 +84,17 @@ if(HAS_W_PSABI)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
 endif()
 
-option(MIR_USE_LD_GOLD "Enables the \"gold\" linker." OFF)
-if(MIR_USE_LD_GOLD)
+set(MIR_USE_LD ld CACHE STRING "Linker to use")
+set_property(CACHE MIR_USE_LD PROPERTY STRINGS "ld;gold;lld")
+if(MIR_USE_LD MATCHES "gold")
   set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold")
   set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=gold")
   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
+endif()
+if(MIR_USE_LD MATCHES "lld")
+  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=lld")
+  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=lld")
+  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
 endif()
 
 # Link time optimization allows leaner, cleaner libraries
@@ -162,7 +168,7 @@ include_directories(include/common)
 include_directories(include/cookie)
 
 # Check for boost
-find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem REQUIRED)
+find_package(Boost 1.48.0 COMPONENTS date_time system program_options filesystem iostreams REQUIRED)
 include_directories (SYSTEM
   ${Boost_INCLUDE_DIRS}
 )
@@ -216,8 +222,14 @@ find_package(LTTngUST REQUIRED)
 
 pkg_check_modules(UDEV REQUIRED libudev)
 pkg_check_modules(GLIB REQUIRED glib-2.0)
+pkg_check_modules(GIO REQUIRED gio-2.0 gio-unix-2.0)
 pkg_check_modules(WAYLAND_SERVER REQUIRED wayland-server)
 pkg_check_modules(WAYLAND_CLIENT REQUIRED wayland-client)
+pkg_check_modules(XCB REQUIRED xcb)
+pkg_check_modules(XCB_COMPOSITE REQUIRED xcb-composite)
+pkg_check_modules(XCB_XFIXES REQUIRED xcb-xfixes)
+pkg_check_modules(XCB_RENDER REQUIRED xcb-render)
+pkg_check_modules(X11_XCURSOR REQUIRED xcursor)
 
 include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
 include_directories (SYSTEM ${EGL_INCLUDE_DIRS})

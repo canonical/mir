@@ -16,7 +16,6 @@
  * Authored by: Andreas Pokorny <andreas.pokorny@canonical.com>
  */
 
-#include <boost/asio/detail/shared_ptr.hpp>
 #include "null_input_dispatcher.h"
 
 namespace mi = mir::input;

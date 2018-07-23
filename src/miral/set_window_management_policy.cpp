@@ -19,11 +19,9 @@
 #include "miral/set_window_management_policy.h"
 #include "basic_window_manager.h"
 #include "window_management_trace.h"
-#include "both_versions.h"
 
 #include <mir/server.h>
 #include <mir/options/option.h>
-#include <mir/version.h>
 
 namespace msh = mir::shell;
 
@@ -73,19 +71,3 @@ void miral::SetWindowManagementPolicy::operator()(mir::Server& server) const
                 builder);
         });
 }
-
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZN5miral24SetWindowManagmentPolicyC1ERKSt8functionIFSt10unique_ptrINS_22WindowManagementPolicyESt14default_deleteIS3_EERKNS_18WindowManagerToolsEEE,
-    _ZN5miral25SetWindowManagementPolicyC1ERKSt8functionIFSt10unique_ptrINS_22WindowManagementPolicyESt14default_deleteIS3_EERKNS_18WindowManagerToolsEEE)
-
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZNK5miral24SetWindowManagmentPolicyclERN3mir6ServerE,
-    _ZNK5miral25SetWindowManagementPolicyclERN3mir6ServerE)
-
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZN5miral24SetWindowManagmentPolicyD1Ev,
-    _ZN5miral25SetWindowManagementPolicyD1Ev)
-
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZN5miral24SetWindowManagmentPolicyD2Ev,
-    _ZN5miral25SetWindowManagementPolicyD2Ev)

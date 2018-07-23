@@ -1,5 +1,4 @@
-mir_add_wrapped_executable(
-  mir_unit_tests_mesa-kms
+mir_add_wrapped_executable(mir_unit_tests_mesa-kms NOINSTALL
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gbm_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_software_buffer.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_allocator.cpp
@@ -12,7 +11,6 @@ mir_add_wrapped_executable(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_configuration.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_real_kms_output.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_kms_page_flipper.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_linux_virtual_terminal.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_cursor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_bypass.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_nested_authentication.cpp
@@ -33,7 +31,8 @@ target_link_libraries(
   mir-test-doubles-static
   mir-test-doubles-platform-static
   mirsharedmesaservercommon-static
-  mircommon
+
+  server_platform_common
 
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
 )

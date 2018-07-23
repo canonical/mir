@@ -56,6 +56,7 @@ public:
     void stop() override;
     int client_socket_fd() const override;
     int client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const override;
+    auto socket_name() const -> optional_value<std::string> override;
 
 protected:
     void create_session_for(
@@ -81,6 +82,8 @@ public:
         EmergencyCleanupRegistry& emergency_cleanup_registry,
         std::shared_ptr<ConnectorReport> const& report);
     ~PublishedSocketConnector() noexcept;
+
+    auto socket_name() const -> optional_value<std::string> override;
 
 private:
     void start_accept();

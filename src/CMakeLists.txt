@@ -1,8 +1,8 @@
 # We need MIRPLATFORM_ABI in both libmirplatform and the platform implementations.
 set(MIRPLATFORM_ABI 16)
 
-set(MIRAL_VERSION_MAJOR 1)
-set(MIRAL_VERSION_MINOR 5)
+set(MIRAL_VERSION_MAJOR 2)
+set(MIRAL_VERSION_MINOR 4)
 set(MIRAL_VERSION_PATCH 0)
 set(MIRAL_VERSION ${MIRAL_VERSION_MAJOR}.${MIRAL_VERSION_MINOR}.${MIRAL_VERSION_PATCH})
 
@@ -25,7 +25,6 @@ set(MIR_GENERATED_INCLUDE_DIRECTORIES)
 add_subdirectory(capnproto/)
 add_subdirectory(common/)
 add_subdirectory(protobuf/)
-add_subdirectory(protocol/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(platform/)

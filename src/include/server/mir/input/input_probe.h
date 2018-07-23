@@ -30,6 +30,7 @@ class Option;
 }
 class EmergencyCleanupRegistry;
 class SharedLibraryProberReport;
+class ConsoleServices;
 
 namespace input
 {
@@ -38,15 +39,21 @@ class Platform;
 class InputDeviceRegistry;
 
 mir::UniqueModulePtr<Platform> probe_input_platforms(
-    options::Option const& options, std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
-    std::shared_ptr<InputDeviceRegistry> const& device_registry, std::shared_ptr<InputReport> const& input_report,
+    options::Option const& options,
+    std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
+    std::shared_ptr<InputDeviceRegistry> const& device_registry,
+    std::shared_ptr<ConsoleServices> const& console,
+    std::shared_ptr<InputReport> const& input_report,
     SharedLibraryProberReport & prober_report);
 
 /// Tries to create an input platform from the graphics module, otherwise returns a null pointer
 auto input_platform_from_graphics_module(
     graphics::Platform const& graphics_platform,
-    options::Option const& options, std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
-    std::shared_ptr<InputDeviceRegistry> const& device_registry, std::shared_ptr<InputReport> const& input_report)
+    options::Option const& options,
+    std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup,
+    std::shared_ptr<InputDeviceRegistry> const& device_registry,
+    std::shared_ptr<ConsoleServices> const& console,
+    std::shared_ptr<InputReport> const& input_report)
 -> mir::UniqueModulePtr<Platform>;
 }
 }

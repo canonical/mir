@@ -91,7 +91,8 @@ struct FrontendShell : mf::Shell
         std::shared_ptr<mf::Session> const& session,
         mf::SurfaceId surface_id,
         uint64_t timestamp,
-        UserRequest request) override;
+        UserRequest request,
+        optional_value <uint32_t> hint) override;
 };
 }
 }

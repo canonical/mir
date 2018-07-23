@@ -25,7 +25,7 @@
 
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/stub_console_services.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/graphics/display_configuration_policy.h"
@@ -119,6 +119,11 @@ public:
             .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
                                  SetArgPointee<4>(1),
                                  Return(EGL_TRUE)));
+        ON_CALL(mock_egl, eglGetConfigAttrib(_, mock_egl.fake_configs[0], EGL_NATIVE_VISUAL_ID, _))
+            .WillByDefault(
+                DoAll(
+                    SetArgPointee<3>(GBM_FORMAT_XRGB8888),
+                    Return(EGL_TRUE)));
 
         mock_egl.provide_egl_extensions();
         mock_gl.provide_gles_extensions();
@@ -145,7 +150,7 @@ public:
     {
         return std::make_shared<mgm::Platform>(
                mir::report::null_display_report(),
-               std::make_shared<mtd::NullVirtualTerminal>(),
+               std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
                mgm::BypassOption::allowed);
     }

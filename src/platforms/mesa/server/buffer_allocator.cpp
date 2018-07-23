@@ -162,12 +162,12 @@ private:
             const EGLint image_attrs_X[] =
             {
                 EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-                EGL_WIDTH, static_cast<const EGLint>(gbm_bo_get_width(bo_raw)),
-                EGL_HEIGHT, static_cast<const EGLint>(gbm_bo_get_height(bo_raw)),
-                EGL_LINUX_DRM_FOURCC_EXT, static_cast<const EGLint>(gbm_bo_get_format(bo_raw)),
+                EGL_WIDTH, static_cast<EGLint>(gbm_bo_get_width(bo_raw)),
+                EGL_HEIGHT, static_cast<EGLint>(gbm_bo_get_height(bo_raw)),
+                EGL_LINUX_DRM_FOURCC_EXT, static_cast<EGLint>(gbm_bo_get_format(bo_raw)),
                 EGL_DMA_BUF_PLANE0_FD_EXT, prime_fd,
                 EGL_DMA_BUF_PLANE0_OFFSET_EXT, 0,
-                EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<const EGLint>(gbm_bo_get_stride(bo_raw)),
+                EGL_DMA_BUF_PLANE0_PITCH_EXT, static_cast<EGLint>(gbm_bo_get_stride(bo_raw)),
                 EGL_NONE
             };
 
@@ -555,13 +555,12 @@ void mgm::BufferAllocator::bind_display(wl_display* display)
 
     if (!egl_extensions->wayland)
     {
-        mir::log_warning("No EGL_WL_bind_wayland_display support");
-        return;
+        BOOST_THROW_EXCEPTION((std::runtime_error{"No EGL_WL_bind_wayland_display support"}));
     }
 
     if (egl_extensions->wayland->eglBindWaylandDisplayWL(dpy, display) == EGL_FALSE)
     {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to bind Wayland display"));
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to bind Wayland EGL display"));
     }
     else
     {
@@ -574,12 +573,10 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource(
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release)
 {
-    if (egl_extensions->wayland)
-        return WaylandBuffer::mir_buffer_from_wl_buffer(
-            dpy,
-            buffer,
-            egl_extensions,
-            std::move(on_consumed),
-            std::move(on_release));
-    return nullptr;
+    return WaylandBuffer::mir_buffer_from_wl_buffer(
+        dpy,
+        buffer,
+        egl_extensions,
+        std::move(on_consumed),
+        std::move(on_release));
 }

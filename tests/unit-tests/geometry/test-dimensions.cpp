@@ -55,7 +55,6 @@ TEST(geometry, delta_arithmetic)
 {
     using namespace geom;
     DeltaX dx1{1};
-    DeltaY dy1{1};
 
     DeltaX x2 = DeltaX(1) + dx1;
     EXPECT_EQ(DeltaX(2), x2);

@@ -139,15 +139,6 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
 
     surface_stack->add_surface(surface, params.input_mode);
 
-    if (params.state.is_set())
-        surface->configure(mir_window_attrib_state, params.state.value());
-    if (params.type.is_set())
-        surface->configure(mir_window_attrib_type, params.type.value());
-    if (params.preferred_orientation.is_set())
-        surface->configure(mir_window_attrib_preferred_orientation, params.preferred_orientation.value());
-    if (params.input_shape.is_set())
-        surface->set_input_region(params.input_shape.value());
-
     auto const observer = std::make_shared<scene::SurfaceEventSource>(
         id,
         *surface,
@@ -161,9 +152,19 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
         default_content_map[id] = stream_id;
     }
 
-    observer->moved_to(surface->top_left());
+    observer->moved_to(surface.get(), surface->top_left());
 
     session_listener->surface_created(*this, surface);
+
+    if (params.state.is_set())
+        surface->configure(mir_window_attrib_state, params.state.value());
+    if (params.type.is_set())
+        surface->configure(mir_window_attrib_type, params.type.value());
+    if (params.preferred_orientation.is_set())
+        surface->configure(mir_window_attrib_preferred_orientation, params.preferred_orientation.value());
+    if (params.input_shape.is_set())
+        surface->set_input_region(params.input_shape.value());
+
     return id;
 }
 
@@ -318,7 +319,7 @@ void ms::ApplicationSession::send_display_config(mg::DisplayConfiguration const&
         if (output_properties)
         {
             event_sink->handle_event(
-                *mev::make_event(
+                mev::make_event(
                     surface.first,
                     output_properties->dpi,
                     output_properties->scale,
@@ -343,17 +344,17 @@ void ms::ApplicationSession::set_lifecycle_state(MirLifecycleState state)
 void ms::ApplicationSession::start_prompt_session()
 {
     // All sessions which are part of the prompt session get this event.
-    event_sink->handle_event(*mev::make_event(mir_prompt_session_state_started));
+    event_sink->handle_event(mev::make_event(mir_prompt_session_state_started));
 }
 
 void ms::ApplicationSession::stop_prompt_session()
 {
-    event_sink->handle_event(*mev::make_event(mir_prompt_session_state_stopped));
+    event_sink->handle_event(mev::make_event(mir_prompt_session_state_stopped));
 }
 
 void ms::ApplicationSession::suspend_prompt_session()
 {
-    event_sink->handle_event(*mev::make_event(mir_prompt_session_state_suspended));
+    event_sink->handle_event(mev::make_event(mir_prompt_session_state_suspended));
 }
 
 void ms::ApplicationSession::resume_prompt_session()

@@ -388,20 +388,17 @@ void msh::CanonicalWindowManagerPolicy::handle_modify_surface(
             false,
             display_area);
 
-        apply_resize(surface, top_left, new_size);
+        surface->resize(new_size);
     }
 
     if (modifications.input_shape.is_set())
     {
-        auto rectangles = modifications.input_shape.value();
-        auto displacement = surface->top_left() - Point{0, 0}; 
-        for(auto& rect : rectangles)
-        {
-            rect.top_left = rect.top_left + displacement;
-            rect = rect.intersection_with({surface->top_left(), surface->size()});
-            rect.top_left = rect.top_left - displacement;
-        }
-        surface->set_input_region(rectangles);
+        surface->set_input_region(modifications.input_shape.value());
+    }
+
+    if (modifications.width.is_set() || modifications.height.is_set())
+    {
+        move_tree(surface, {});
     }
 
     if (modifications.state.is_set())

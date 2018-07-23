@@ -81,23 +81,14 @@ def _report(publish, symbol):
     else:
         print('NOPUBLISH: {}'.format(symbol))
 
-OLD_STANZAS = '''MIRAL_1.0 {
+OLD_STANZAS = '''
+MIRAL_2.0 {
 global:
+#    miral::InternalClientLauncher::launch*;
+    _ZNK5miral22InternalClientLauncher6launchERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKSt8functionIFvN3mir6client10ConnectionEEERKS9_IFvSt8weak_ptrINSA_5scene7SessionEEEE;
+#    miral::StartupInternalClient::StartupInternalClient*;
+    _ZN5miral21StartupInternalClientC?ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt8functionIFvN3mir6client10ConnectionEEES7_IFvSt8weak_ptrINS8_5scene7SessionEEEE;
   extern "C++" {
-    miral::ActiveOutputsListener::?ActiveOutputsListener*;
-    miral::ActiveOutputsListener::ActiveOutputsListener*;
-    miral::ActiveOutputsListener::advise_output_begin*;
-    miral::ActiveOutputsListener::advise_output_create*;
-    miral::ActiveOutputsListener::advise_output_delete*;
-    miral::ActiveOutputsListener::advise_output_end*;
-    miral::ActiveOutputsListener::advise_output_update*;
-    miral::ActiveOutputsListener::operator*;
-    miral::ActiveOutputsMonitor::?ActiveOutputsMonitor*;
-    miral::ActiveOutputsMonitor::ActiveOutputsMonitor*;
-    miral::ActiveOutputsMonitor::add_listener*;
-    miral::ActiveOutputsMonitor::delete_listener*;
-    miral::ActiveOutputsMonitor::operator*;
-    miral::ActiveOutputsMonitor::process_outputs*;
     miral::AddInitCallback::?AddInitCallback*;
     miral::AddInitCallback::AddInitCallback*;
     miral::AddInitCallback::operator*;
@@ -129,7 +120,7 @@ global:
     miral::CanonicalWindowManagerPolicy::handle_modify_window*;
     miral::CanonicalWindowManagerPolicy::handle_raise_window*;
     miral::CanonicalWindowManagerPolicy::handle_window_ready*;
-    miral::CanonicalWindowManagerPolicy::place_new_surface*;
+    miral::CanonicalWindowManagerPolicy::place_new_window*;
     miral::CommandLineOption::?CommandLineOption*;
     miral::CommandLineOption::CommandLineOption*;
     miral::CommandLineOption::operator*;
@@ -142,6 +133,7 @@ global:
     miral::DebugExtension::operator*;
     miral::InternalClientLauncher::?InternalClientLauncher*;
     miral::InternalClientLauncher::InternalClientLauncher*;
+#   miral::InternalClientLauncher::launch*;
     miral::InternalClientLauncher::operator*;
     miral::Keymap::?Keymap*;
     miral::Keymap::Keymap*;
@@ -176,10 +168,11 @@ global:
     miral::SetTerminator::?SetTerminator*;
     miral::SetTerminator::SetTerminator*;
     miral::SetTerminator::operator*;
-    miral::SetWindowManagmentPolicy::?SetWindowManagmentPolicy*;
-    miral::SetWindowManagmentPolicy::SetWindowManagmentPolicy*;
-    miral::SetWindowManagmentPolicy::operator*;
+    miral::SetWindowManagementPolicy::?SetWindowManagementPolicy*;
+    miral::SetWindowManagementPolicy::SetWindowManagementPolicy*;
+    miral::SetWindowManagementPolicy::operator*;
     miral::StartupInternalClient::?StartupInternalClient*;
+#   miral::StartupInternalClient::StartupInternalClient*;
     miral::StartupInternalClient::operator*;
     miral::Window::?Window*;
     miral::Window::Window*;
@@ -193,6 +186,7 @@ global:
     miral::WindowInfo::WindowInfo*;
     miral::WindowInfo::add_child*;
     miral::WindowInfo::can_be_active*;
+    miral::WindowInfo::can_morph_to*;
     miral::WindowInfo::children*;
     miral::WindowInfo::confine_pointer*;
     miral::WindowInfo::constrain_resize*;
@@ -208,17 +202,22 @@ global:
     miral::WindowInfo::must_have_parent*;
     miral::WindowInfo::must_not_have_parent*;
     miral::WindowInfo::name*;
+    miral::WindowInfo::needs_titlebar*;
     miral::WindowInfo::operator*;
     miral::WindowInfo::output_id*;
     miral::WindowInfo::parent*;
     miral::WindowInfo::preferred_orientation*;
     miral::WindowInfo::remove_child*;
     miral::WindowInfo::restore_rect*;
+    miral::WindowInfo::shell_chrome*;
+    miral::WindowInfo::state*;
+    miral::WindowInfo::type*;
     miral::WindowInfo::userdata*;
     miral::WindowInfo::width_inc*;
     miral::WindowInfo::window*;
     miral::WindowManagementPolicy::?WindowManagementPolicy*;
     miral::WindowManagementPolicy::WindowManagementPolicy*;
+    miral::WindowManagementPolicy::advise_adding_to_workspace*;
     miral::WindowManagementPolicy::advise_begin*;
     miral::WindowManagementPolicy::advise_delete_app*;
     miral::WindowManagementPolicy::advise_delete_window*;
@@ -228,32 +227,47 @@ global:
     miral::WindowManagementPolicy::advise_move_to*;
     miral::WindowManagementPolicy::advise_new_app*;
     miral::WindowManagementPolicy::advise_new_window*;
+    miral::WindowManagementPolicy::advise_output_create*;
+    miral::WindowManagementPolicy::advise_output_delete*;
+    miral::WindowManagementPolicy::advise_output_update*;
     miral::WindowManagementPolicy::advise_raise*;
+    miral::WindowManagementPolicy::advise_removing_from_workspace*;
     miral::WindowManagementPolicy::advise_resize*;
+    miral::WindowManagementPolicy::advise_state_change*;
     miral::WindowManagementPolicy::operator*;
     miral::WindowManagerOptions::WindowManagerOptions*;
     miral::WindowManagerOptions::operator*;
     miral::WindowManagerTools::?WindowManagerTools*;
     miral::WindowManagerTools::WindowManagerTools*;
-    miral::WindowManagerTools::active_display*;
+    miral::WindowManagerTools::active_output*;
     miral::WindowManagerTools::active_window*;
+    miral::WindowManagerTools::add_tree_to_workspace*;
     miral::WindowManagerTools::ask_client_to_close*;
     miral::WindowManagerTools::count_applications*;
+    miral::WindowManagerTools::create_workspace*;
     miral::WindowManagerTools::drag_active_window*;
+    miral::WindowManagerTools::drag_window*;
+    miral::WindowManagerTools::end_drag_and_drop*;
     miral::WindowManagerTools::find_application*;
     miral::WindowManagerTools::focus_next_application*;
     miral::WindowManagerTools::focus_next_within_application*;
+    miral::WindowManagerTools::focus_prev_within_application*;
     miral::WindowManagerTools::for_each_application*;
+    miral::WindowManagerTools::for_each_window_in_workspace*;
+    miral::WindowManagerTools::for_each_workspace_containing*;
     miral::WindowManagerTools::force_close*;
     miral::WindowManagerTools::id_for_window*;
     miral::WindowManagerTools::info_for*;
     miral::WindowManagerTools::info_for_window_id*;
     miral::WindowManagerTools::invoke_under_lock*;
     miral::WindowManagerTools::modify_window*;
+    miral::WindowManagerTools::move_workspace_content_to_workspace*;
     miral::WindowManagerTools::operator*;
     miral::WindowManagerTools::place_and_size_for_state*;
     miral::WindowManagerTools::raise_tree*;
+    miral::WindowManagerTools::remove_tree_from_workspace*;
     miral::WindowManagerTools::select_active_window*;
+    miral::WindowManagerTools::start_drag_and_drop*;
     miral::WindowManagerTools::window_at*;
     miral::WindowSpecification::?WindowSpecification*;
     miral::WindowSpecification::WindowSpecification*;
@@ -285,6 +299,9 @@ global:
     miral::WindowSpecification::userdata*;
     miral::WindowSpecification::width_inc*;
     miral::WindowSpecification::window_placement_gravity*;
+    miral::WorkspacePolicy::?WorkspacePolicy*;
+    miral::WorkspacePolicy::WorkspacePolicy*;
+    miral::WorkspacePolicy::operator*;
     miral::apply_lifecycle_state_to*;
     miral::display_configuration_options*;
     miral::equivalent_display_area*;
@@ -292,22 +309,16 @@ global:
     miral::name_of*;
     miral::operator*;
     miral::pid_of*;
-    miral::toolkit::Connection::Connection*;
-    miral::toolkit::Surface::Surface*;
-    non-virtual?thunk?to?miral::ActiveOutputsListener::?ActiveOutputsListener*;
-    non-virtual?thunk?to?miral::ActiveOutputsListener::advise_output_begin*;
-    non-virtual?thunk?to?miral::ActiveOutputsListener::advise_output_create*;
-    non-virtual?thunk?to?miral::ActiveOutputsListener::advise_output_delete*;
-    non-virtual?thunk?to?miral::ActiveOutputsListener::advise_output_end*;
-    non-virtual?thunk?to?miral::ActiveOutputsListener::advise_output_update*;
+    miral::pre_init*;
     non-virtual?thunk?to?miral::ApplicationAuthorizer::?ApplicationAuthorizer*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::advise_focus_gained*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::confirm_inherited_move*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_modify_window*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_raise_window*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_window_ready*;
-    non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::place_new_surface*;
+    non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::place_new_window*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::?WindowManagementPolicy*;
+    non-virtual?thunk?to?miral::WindowManagementPolicy::advise_adding_to_workspace*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_begin*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_delete_app*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_delete_window*;
@@ -317,11 +328,14 @@ global:
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_move_to*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_new_app*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_new_window*;
+    non-virtual?thunk?to?miral::WindowManagementPolicy::advise_output_create*;
+    non-virtual?thunk?to?miral::WindowManagementPolicy::advise_output_delete*;
+    non-virtual?thunk?to?miral::WindowManagementPolicy::advise_output_update*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_raise*;
+    non-virtual?thunk?to?miral::WindowManagementPolicy::advise_removing_from_workspace*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_resize*;
     non-virtual?thunk?to?miral::WindowManagementPolicy::advise_state_change*;
-    typeinfo?for?miral::ActiveOutputsListener;
-    typeinfo?for?miral::ActiveOutputsMonitor;
+    non-virtual?thunk?to?miral::WorkspacePolicy::?WorkspacePolicy*;
     typeinfo?for?miral::AddInitCallback;
     typeinfo?for?miral::AppendEventFilter;
     typeinfo?for?miral::ApplicationAuthorizer;
@@ -339,7 +353,7 @@ global:
     typeinfo?for?miral::Output::PhysicalSizeMM;
     typeinfo?for?miral::SetCommandLineHandler;
     typeinfo?for?miral::SetTerminator;
-    typeinfo?for?miral::SetWindowManagmentPolicy;
+    typeinfo?for?miral::SetWindowManagementPolicy;
     typeinfo?for?miral::StartupInternalClient;
     typeinfo?for?miral::Window;
     typeinfo?for?miral::WindowInfo;
@@ -349,12 +363,7 @@ global:
     typeinfo?for?miral::WindowManagerTools;
     typeinfo?for?miral::WindowSpecification;
     typeinfo?for?miral::WindowSpecification::AspectRatio;
-    typeinfo?for?miral::toolkit::Connection;
-    typeinfo?for?miral::toolkit::PersistentId;
-    typeinfo?for?miral::toolkit::Surface;
-    typeinfo?for?miral::toolkit::SurfaceSpec;
-    vtable?for?miral::ActiveOutputsListener;
-    vtable?for?miral::ActiveOutputsMonitor;
+    typeinfo?for?miral::WorkspacePolicy;
     vtable?for?miral::AddInitCallback;
     vtable?for?miral::AppendEventFilter;
     vtable?for?miral::ApplicationAuthorizer;
@@ -372,7 +381,7 @@ global:
     vtable?for?miral::Output::PhysicalSizeMM;
     vtable?for?miral::SetCommandLineHandler;
     vtable?for?miral::SetTerminator;
-    vtable?for?miral::SetWindowManagmentPolicy;
+    vtable?for?miral::SetWindowManagementPolicy;
     vtable?for?miral::StartupInternalClient;
     vtable?for?miral::Window;
     vtable?for?miral::WindowInfo;
@@ -382,143 +391,59 @@ global:
     vtable?for?miral::WindowManagerTools;
     vtable?for?miral::WindowSpecification;
     vtable?for?miral::WindowSpecification::AspectRatio;
-    vtable?for?miral::toolkit::Connection;
-    vtable?for?miral::toolkit::PersistentId;
-    vtable?for?miral::toolkit::Surface;
-    vtable?for?miral::toolkit::SurfaceSpec;
-  };
-#    miral::WindowInfo::can_morph_to*;
-    _ZNK5miral10WindowInfo12can_morph_toE14MirSurfaceType;
-
-#    miral::WindowInfo::needs_titlebar*;
-    _ZN5miral10WindowInfo14needs_titlebarE14MirSurfaceType;
-
-#    miral::WindowInfo::state*;
-    _ZNK5miral10WindowInfo5stateEv;
-    _ZN5miral10WindowInfo5stateE15MirSurfaceState;
-
-#    miral::WindowInfo::type*;
-    _ZN5miral10WindowInfo4typeE14MirSurfaceType;
-    _ZNK5miral10WindowInfo4typeEv;
-
-#    miral::WindowManagementPolicy::advise_state_change*;
-    _ZN5miral22WindowManagementPolicy19advise_state_changeERKNS_10WindowInfoE15MirSurfaceState;
-
-#    miral::StartupInternalClient::StartupInternalClient*;
-    _ZN5miral21StartupInternalClientC1ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt8functionIFvNS_7toolkit10ConnectionEEES7_IFvSt8weak_ptrIN3mir5scene7SessionEEEE;
-#    miral::InternalClientLauncher::launch*;
-    _ZNK5miral22InternalClientLauncher6launchERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKSt8functionIFvNS_7toolkit10ConnectionEEERKS9_IFvSt8weak_ptrIN3mir5scene7SessionEEEE;
-local: *;
-};
-
-MIRAL_1.1 {
-global:
-    # miral::WindowInfo::can_morph_to*
-    _ZNK5miral10WindowInfo12can_morph_toE13MirWindowType;
-
-    #miral::WindowInfo::needs_titlebar*;
-    _ZN5miral10WindowInfo14needs_titlebarE13MirWindowType;
-
-    # miral::WindowInfo::state*;
-    _ZNK5miral10WindowInfo5stateEv;
-    _ZN5miral10WindowInfo5stateE14MirWindowState;
-
-    miral::WindowInfo::type*;
-    _ZN5miral10WindowInfo4typeE13MirWindowType;
-    _ZNK5miral10WindowInfo4typeEv;
-
-    # miral::WindowManagementPolicy::advise_state_change*;
-    _ZN5miral22WindowManagementPolicy19advise_state_changeERKNS_10WindowInfoE14MirWindowState;
-
-  extern "C++" {
-    miral::CanonicalWindowManagerPolicy::place_new_window*;
-    non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::place_new_window*;
-  };
-} MIRAL_1.0;
-
-MIRAL_1.2 {
-global:
-#    miral::InternalClientLauncher::launch*;
-  _ZNK5miral22InternalClientLauncher6launchERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKSt8functionIFvN3mir6client10ConnectionEEERKS9_IFvSt8weak_ptrINSA_5scene7SessionEEEE;
-
-#    miral::StartupInternalClient::StartupInternalClient*;
-  _ZN5miral21StartupInternalClientC?ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt8functionIFvN3mir6client10ConnectionEEES7_IFvSt8weak_ptrINS8_5scene7SessionEEEE;
-  extern "C++" {
-    miral::WindowInfo::shell_chrome*;
-    miral::WindowManagerTools::drag_window*;
-    typeinfo?for?miral::ApplicationAuthorizer1;
-    vtable?for?miral::ApplicationAuthorizer1;
-  };
-} MIRAL_1.1;
-
-MIRAL_1.3 {
-global:
-  extern "C++" {
-    miral::WindowManagerTools::add_tree_to_workspace*;
-    miral::WindowManagerTools::create_workspace*;
-    miral::WindowManagerTools::focus_prev_within_application*;
-    miral::WindowManagerTools::for_each_window_in_workspace*;
-    miral::WindowManagerTools::for_each_workspace_containing*;
-    miral::WindowManagerTools::remove_tree_from_workspace*;
-    miral::WindowManagerTools::move_workspace_content_to_workspace*;
-    miral::WorkspacePolicy::?WorkspacePolicy*;
-    miral::WorkspacePolicy::WorkspacePolicy*;
-    miral::WorkspacePolicy::advise_adding_to_workspace*;
-    miral::WorkspacePolicy::advise_removing_from_workspace*;
-    miral::WorkspacePolicy::operator*;
-    non-virtual?thunk?to?miral::WorkspacePolicy::?WorkspacePolicy*;
-    non-virtual?thunk?to?miral::WorkspacePolicy::advise_adding_to_workspace*;
-    non-virtual?thunk?to?miral::WorkspacePolicy::advise_removing_from_workspace*;
-    typeinfo?for?miral::WorkspacePolicy;
     vtable?for?miral::WorkspacePolicy;
   };
-} MIRAL_1.2;
+  local: *;
+};
 
-MIRAL_1.3.1 {
+MIRAL_2.1 {
 global:
   extern "C++" {
-    miral::SetWindowManagementPolicy::?SetWindowManagementPolicy*;
-    miral::SetWindowManagementPolicy::SetWindowManagementPolicy*;
-    miral::SetWindowManagementPolicy::operator*;
-    typeinfo?for?miral::SetWindowManagementPolicy;
-    vtable?for?miral::SetWindowManagementPolicy;
+    miral::CanonicalWindowManagerPolicy::confirm_placement_on_display*;
+    miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
+    non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::confirm_placement_on_display*;
+    non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop*;
   };
-} MIRAL_1.3;
+} MIRAL_2.0;
 
-MIRAL_1.4.0 {
+MIRAL_2.2 {
 global:
   extern "C++" {
-    miral::WindowManagementPolicyAddendum2::?WindowManagementPolicyAddendum2*;
-    miral::WindowManagementPolicyAddendum2::WindowManagementPolicyAddendum2*;
-    miral::WindowManagementPolicyAddendum2::operator*;
-    miral::WindowManagerTools::end_drag_and_drop*;
-    miral::WindowManagerTools::start_drag_and_drop*;
-    miral::toolkit::Window::Window*;
-    non-virtual?thunk?to?miral::WindowManagementPolicyAddendum2::?WindowManagementPolicyAddendum2*;
-    typeinfo?for?miral::WindowManagementPolicyAddendum2;
-    typeinfo?for?miral::toolkit::Window;
-    typeinfo?for?miral::toolkit::WindowId;
-    typeinfo?for?miral::toolkit::WindowSpec;
-    vtable?for?miral::WindowManagementPolicyAddendum2;
-    vtable?for?miral::toolkit::Window;
-    vtable?for?miral::toolkit::WindowId;
-    vtable?for?miral::toolkit::WindowSpec;
+    miral::ExternalClientLauncher::?ExternalClientLauncher*;
+    miral::ExternalClientLauncher::ExternalClientLauncher*;
+    miral::ExternalClientLauncher::launch*;
+    miral::ExternalClientLauncher::operator*;
+    typeinfo?for?miral::ExternalClientLauncher;
+    vtable?for?miral::ExternalClientLauncher;
   };
-} MIRAL_1.3.1;
+} MIRAL_2.1;
 
-MIRAL_1.5.0 {
+MIRAL_2.3 {
 global:
-  extern "C++" {'''
+#    miral::InternalClientLauncher::launch*;
+    _ZNK5miral22InternalClientLauncher6launchERKSt8functionIFvP10wl_displayEERKS1_IFvSt8weak_ptrIN3mir5scene7SessionEEEE;
 
-END_NEW_STANZA = '''  };
-} MIRAL_1.4.0;'''
+#    miral::StartupInternalClient::StartupInternalClient*;
+    _ZN5miral21StartupInternalClientC?ESt8functionIFvP10wl_displayEES1_IFvSt8weak_ptrIN3mir5scene7SessionEEEE;
+} MIRAL_2.2;
+
+MIRAL_2.4 {
+global:'''
+
+END_NEW_STANZA = '''} MIRAL_2.3;'''
 
 def _print_report():
     print(OLD_STANZAS)
+    new_symbols = False;
     for symbol in sorted(SYMBOLS['public']):
         formatted_symbol = '    {};'.format(symbol)
         if formatted_symbol not in OLD_STANZAS and 'miral::' in formatted_symbol:
+            if not new_symbols:
+                new_symbols = True;
+                print('  extern "C++" {')
             print(formatted_symbol)
+
+    if new_symbols: print("  };")
     print(END_NEW_STANZA)
 
 def _print_debug_info(node, attributes):

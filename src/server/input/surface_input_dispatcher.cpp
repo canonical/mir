@@ -22,6 +22,7 @@
 #include "mir/input/surface.h"
 #include "mir/scene/observer.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/surface_observer.h"
 #include "mir/events/event_builders.h"
 #include "mir_toolkit/mir_cookie.h"
 
@@ -38,36 +39,128 @@ namespace geom = mir::geometry;
 
 namespace
 {
-struct InputDispatcherSceneObserver : public ms::Observer
+struct InputDispatcherSceneObserver :
+    public ms::Observer,
+    public ms::SurfaceObserver,
+    public std::enable_shared_from_this<InputDispatcherSceneObserver>
 {
-    InputDispatcherSceneObserver(std::function<void(ms::Surface*)> const& on_removed)
-        : on_removed(on_removed)
+    InputDispatcherSceneObserver(
+        std::function<void(ms::Surface*)> const& on_removed,
+        std::function<void(ms::Surface const*)> const& on_surface_moved,
+        std::function<void()> const& on_surface_resized)
+        : on_removed(on_removed),
+          on_surface_moved{on_surface_moved},
+          on_surface_resized{on_surface_resized}
     {
     }
-    void surface_added(ms::Surface* surface)
+    void surface_added(ms::Surface* surface) override
     {
-        (void) surface;
+        surface->add_observer(shared_from_this());
     }
-    void surface_removed(ms::Surface* surface)
+    void surface_removed(ms::Surface* surface) override
     {
         on_removed(surface);
     }
-    void surfaces_reordered()
+    void surfaces_reordered() override
     {
     }
-    void scene_changed()
+    void scene_changed() override
     {
     }
 
-    void surface_exists(ms::Surface* surface)
+    void surface_exists(ms::Surface* surface) override
     {
-        (void) surface;
+        surface->add_observer(shared_from_this());
     }
-    void end_observation()
+    void end_observation() override
+    {
+    }
+
+    void attrib_changed(ms::Surface const*, MirWindowAttrib /*attrib*/, int /*value*/) override
+    {
+        // TODO: Do we need to listen to visibility events?
+    }
+
+    void resized_to(ms::Surface const*, mir::geometry::Size const& /*size*/) override
+    {
+        on_surface_resized();
+    }
+
+    void moved_to(ms::Surface const* surf, mir::geometry::Point const& /*top_left*/) override
+    {
+        on_surface_moved(surf);
+    }
+
+    void hidden_set_to(ms::Surface const*, bool /*hide*/) override
+    {
+        // TODO: Do we need to listen to this?
+    }
+
+    void frame_posted(ms::Surface const*, int, mir::geometry::Size const&) override
+    {
+
+    }
+
+    void alpha_set_to(ms::Surface const*, float) override
+    {
+
+    }
+
+    void orientation_set_to(ms::Surface const*, MirOrientation) override
+    {
+
+    }
+
+    void transformation_set_to(ms::Surface const*, glm::mat4 const&) override
+    {
+
+    }
+
+    void reception_mode_set_to(ms::Surface const*, mir::input::InputReceptionMode) override
+    {
+    }
+
+    void cursor_image_set_to(ms::Surface const*, mir::graphics::CursorImage const&) override
+    {
+    }
+
+    void client_surface_close_requested(ms::Surface const*) override
+    {
+    }
+
+    void keymap_changed(
+        ms::Surface const*,
+        MirInputDeviceId,
+        std::string const&,
+        std::string const&,
+        std::string const&,
+        std::string const&) override
+    {
+    }
+
+    void renamed(ms::Surface const*, char const*) override
+    {
+    }
+
+    void cursor_image_removed(ms::Surface const*) override
+    {
+    }
+
+    void placed_relative(ms::Surface const*, mir::geometry::Rectangle const&) override
+    {
+    }
+
+    void input_consumed(ms::Surface const*, MirEvent const*) override
+    {
+    }
+
+    void start_drag_and_drop(ms::Surface const*, std::vector<uint8_t> const&) override
     {
     }
 
     std::function<void(ms::Surface*)> const on_removed;
+    std::function<void(ms::Surface const*)> const on_surface_moved;
+    std::function<void()> const on_surface_resized;
 };
 
 void deliver_without_relative_motion(
@@ -127,13 +220,32 @@ mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> co
     : scene(scene),
       started(false)
 {
-    scene_observer = std::make_shared<InputDispatcherSceneObserver>([this](ms::Surface* s){surface_removed(s);});
+    scene_observer = std::make_shared<InputDispatcherSceneObserver>(
+        [this](ms::Surface* s){surface_removed(s);},
+        std::bind(
+            std::mem_fn(&SurfaceInputDispatcher::surface_moved),
+            this,
+            std::placeholders::_1),
+        std::bind(
+            std::mem_fn(&SurfaceInputDispatcher::surface_resized),
+            this));
     scene->add_observer(scene_observer);
 }
 
 mi::SurfaceInputDispatcher::~SurfaceInputDispatcher()
 {
     scene->remove_observer(scene_observer);
+    scene->for_each(
+        [this](auto surface)
+        {
+            // Everything *should* be a scene::Surface, but let's not crash if it isn't.
+            if (auto scene_surf = std::dynamic_pointer_cast<ms::Surface>(surface))
+            {
+                // We *know* scene_observer is an InputDispatcherSceneObserver
+                scene_surf->remove_observer(
+                    std::static_pointer_cast<InputDispatcherSceneObserver>(scene_observer));
+            }
+        });
 }
 
 namespace
@@ -168,6 +280,182 @@ void mi::SurfaceInputDispatcher::surface_removed(ms::Surface *surface)
         auto& state = kv.second;
         if (compare_surfaces(state.gesture_owner, surface))
             state.gesture_owner.reset();
+    }
+}
+
+namespace
+{
+struct SceneChangeContext
+{
+    MirInputEvent const* const iev;
+    MirPointerEvent const* const pev;
+    std::shared_ptr<mi::Surface>& current_target;
+    std::shared_ptr<mi::Surface> const target_surface;
+};
+
+SceneChangeContext context_for_event(
+    MirEvent const* last_pointer_event,
+    std::function<std::shared_ptr<mi::Surface>*(MirInputDeviceId)> const& get_current_target,
+    std::function<std::shared_ptr<mi::Surface>(geom::Point const&)> const& surface_under_point)
+{
+    auto const iev = mir_event_get_input_event(last_pointer_event);
+    auto const pev = mir_input_event_get_pointer_event(iev);
+    geom::Point const event_x_y = {
+        mir_pointer_event_axis_value(pev,mir_pointer_axis_x),
+        mir_pointer_event_axis_value(pev,mir_pointer_axis_y)
+    };
+
+    return SceneChangeContext{
+        iev,
+        pev,
+        *get_current_target(mir_input_event_get_device_id(iev)),
+        surface_under_point(event_x_y)
+    };
+}
+
+using SendEnterExitFn = std::function<void(std::shared_ptr<mi::Surface> const&, MirPointerEvent const*, MirPointerAction action)>;
+
+bool dispatch_scene_change_enter_exit_events(
+    SceneChangeContext const& ctx,
+    SendEnterExitFn const& send_enter_exit_event)
+{
+    /*
+     * Check if the top-most surface that's under the pointer is the same as the last
+     * time we sent and input event…
+     */
+    auto const target_changed = ctx.current_target != ctx.target_surface;
+    if (target_changed)
+    {
+        if (ctx.current_target)
+        {
+            /*
+             * We have been sending pointer events to a surface, but it's no longer
+             * top-most under the cursor; we need to send a leave event.
+             */
+            auto const event = mev::make_event(
+                mir_input_event_get_device_id(ctx.iev),
+                std::chrono::nanoseconds{std::chrono::steady_clock::now().time_since_epoch()},
+                std::vector<uint8_t>{},
+                0, // TODO: We need the current keyboard state
+                mir_pointer_action_leave,
+                mir_pointer_event_buttons(ctx.pev),
+                mir_pointer_event_axis_value(ctx.pev, mir_pointer_axis_x),
+                mir_pointer_event_axis_value(ctx.pev, mir_pointer_axis_y),
+                0, 0, // No scrolling
+                0, 0  // No relative motion
+            );
+
+            auto const synth_iev = mir_event_get_input_event(event.get());
+            auto const synth_pev = mir_input_event_get_pointer_event(synth_iev);
+            send_enter_exit_event(ctx.current_target, synth_pev, mir_pointer_action_leave);
+        }
+        if (ctx.target_surface)
+        {
+            /*
+             * A new surface is top-most underneath the cursor; send a pointer enter event
+             */
+            auto const event = mev::make_event(
+                mir_input_event_get_device_id(ctx.iev),
+                std::chrono::nanoseconds{std::chrono::steady_clock::now().time_since_epoch()},
+                std::vector<uint8_t>{},
+                0, // TODO: We need the current keyboard state
+                mir_pointer_action_enter,
+                mir_pointer_event_buttons(ctx.pev),
+                mir_pointer_event_axis_value(ctx.pev, mir_pointer_axis_x),
+                mir_pointer_event_axis_value(ctx.pev, mir_pointer_axis_y),
+                0, 0, // No scrolling
+                0, 0  // No relative motion
+            );
+
+            auto const synth_iev = mir_event_get_input_event(event.get());
+            auto const synth_pev = mir_input_event_get_pointer_event(synth_iev);
+            send_enter_exit_event(ctx.target_surface, synth_pev, mir_pointer_action_enter);
+        }
+    }
+    return target_changed;
+}
+
+void send_motion_event_to_moved_surface(
+    SceneChangeContext const& ctx,
+    ms::Surface const* moved_surface,
+    std::function<void(std::shared_ptr<mi::Surface> const&, MirEvent const*)> const& send_motion)
+{
+    if ((ctx.target_surface.get() == moved_surface) &&
+        ctx.current_target == ctx.target_surface)
+    {
+        /*
+         * The surface that has moved was the top-most surface before;
+         * it has already received a pointer_enter event, so we need to send
+         * a motion event for the movement
+         */
+        auto const event = mev::make_event(
+            mir_input_event_get_device_id(ctx.iev),
+            std::chrono::nanoseconds{std::chrono::steady_clock::now().time_since_epoch()},
+            std::vector<uint8_t>{},
+            0, // TODO: We need the current keyboard state
+            mir_pointer_action_motion,
+            0,
+            mir_pointer_event_axis_value(ctx.pev, mir_pointer_axis_x),
+            mir_pointer_event_axis_value(ctx.pev, mir_pointer_axis_y),
+            0, 0, // No scrolling
+            0, 0  // No relative motion
+        );
+
+        send_motion(ctx.target_surface, event.get());
+    }
+}
+}
+
+void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
+{
+    std::lock_guard<std::mutex> lock{dispatcher_mutex};
+
+    if (!last_pointer_event)
+        return;
+
+    auto ctx = context_for_event(
+        last_pointer_event.get(),
+        [this](auto id) { return &this->ensure_pointer_state(id).current_target; },
+        [this](auto point) { return this->find_target_surface(point); });
+
+    // If we're in a move/resize gesture we don't need to synthesize an event
+    if (ensure_pointer_state(mir_input_event_get_device_id(ctx.iev)).gesture_owner)
+        return;
+
+    auto const entered_surface_changed = dispatch_scene_change_enter_exit_events(
+        ctx,
+        [this](auto surf, auto pev, auto action) { this->send_enter_exit_event(surf, pev, action); });
+    if (entered_surface_changed)
+    {
+        ctx.current_target = ctx.target_surface;
+    } else
+    {
+        send_motion_event_to_moved_surface(
+            ctx,
+            moved_surface,
+            [this](auto surf, auto ev) { deliver_without_relative_motion(surf, ev, drag_and_drop_handle); });
+    }
+}
+
+void mi::SurfaceInputDispatcher::surface_resized()
+{
+    std::lock_guard<std::mutex> lock{dispatcher_mutex};
+
+    if (!last_pointer_event)
+        return;
+
+    auto ctx = context_for_event(
+        last_pointer_event.get(),
+        [this](auto id) { return &this->ensure_pointer_state(id).current_target; },
+        [this](auto point) { return this->find_target_surface(point); });
+
+    auto const entered_surface_changed = dispatch_scene_change_enter_exit_events(
+        ctx,
+        [this](auto surf, auto pev, auto action) { this->send_enter_exit_event(surf, pev, action); });
+
+    if (entered_surface_changed)
+    {
+        ctx.current_target = ctx.target_surface;
     }
 }
 
@@ -272,9 +560,11 @@ mi::SurfaceInputDispatcher::TouchInputState& mi::SurfaceInputDispatcher::ensure_
     return touch_state_by_id[id];
 }
 
-bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, MirEvent const* ev)
+bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId id, std::shared_ptr<MirEvent const> const& event)
 {
+    auto const ev = event.get();
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
+    last_pointer_event = event;
     auto const* input_ev = mir_event_get_input_event(ev);
     auto const* pev = mir_input_event_get_pointer_event(input_ev);
     auto action = mir_pointer_event_action(pev);
@@ -430,7 +720,7 @@ bool mi::SurfaceInputDispatcher::dispatch(std::shared_ptr<MirEvent const> const&
     case mir_input_event_type_touch:
         return dispatch_touch(id, event.get());
     case mir_input_event_type_pointer:
-        return dispatch_pointer(id, event.get());
+        return dispatch_pointer(id, event);
     default:
         BOOST_THROW_EXCEPTION(std::logic_error("InputDispatcher got an input event of unknown type"));
     }
@@ -451,6 +741,7 @@ void mi::SurfaceInputDispatcher::stop()
 
     pointer_state_by_id.clear();
     touch_state_by_id.clear();
+    last_pointer_event.reset();
     
     started = false;
 }

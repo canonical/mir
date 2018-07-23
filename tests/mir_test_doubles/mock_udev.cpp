@@ -30,11 +30,19 @@ mtd::MockUdev::MockUdev()
     using namespace testing;
     assert(global_udev == nullptr && "Only one udev mock object per process is allowed");
     global_udev = this;
+
+    ON_CALL(*this, udev_device_ref(_))
+        .WillByDefault(ReturnArg<0>());
 }
 
 mtd::MockUdev::~MockUdev() noexcept
 {
     global_udev = nullptr;
+}
+
+dev_t udev_device_get_devnum(udev_device* dev)
+{
+    return global_udev->udev_device_get_devnum(dev);
 }
 
 char const* udev_device_get_devnode(udev_device* dev)
@@ -50,4 +58,9 @@ char const* udev_device_get_property_value(udev_device* dev, char const* propert
 udev_device* udev_device_unref(udev_device* device)
 {
     return global_udev->udev_device_unref(device);
+}
+
+udev_device* udev_device_ref(udev_device* device)
+{
+    return global_udev->udev_device_ref(device);
 }

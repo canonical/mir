@@ -22,6 +22,7 @@
 #include "mir/input/cursor_images.h"
 #include "mir/input/input_device_info.h"
 #include "mir/scene/surface_observer.h"
+#include "mir/scene/surface.h"
 
 #include "mir_test_framework/in_process_server.h"
 #include "mir_test_framework/executable_path.h"
@@ -63,28 +64,29 @@ namespace
 class MockSurfaceObserver : public msc::SurfaceObserver
 {
 public:
-    MOCK_METHOD2(attrib_changed, void(MirWindowAttrib attrib, int value));
-    MOCK_METHOD1(resized_to, void(geom::Size const& size));
-    MOCK_METHOD1(moved_to, void(geom::Point const& top_left));
-    MOCK_METHOD1(hidden_set_to, void(bool hide));
-    MOCK_METHOD2(frame_posted, void(int frames_available, geom::Size const& size));
-    MOCK_METHOD1(alpha_set_to, void(float alpha));
-    MOCK_METHOD1(orientation_set_to, void(MirOrientation orientation));
-    MOCK_METHOD1(transformation_set_to, void(glm::mat4 const& t));
-    MOCK_METHOD1(reception_mode_set_to, void(mi::InputReceptionMode mode));
-    MOCK_METHOD1(cursor_image_set_to, void(mg::CursorImage const& image));
-    MOCK_METHOD0(client_surface_close_requested, void());
-    MOCK_METHOD5(keymap_changed, void(
+    MOCK_METHOD3(attrib_changed, void(msc::Surface const*, MirWindowAttrib attrib, int value));
+    MOCK_METHOD2(resized_to, void(msc::Surface const*, geom::Size const& size));
+    MOCK_METHOD2(moved_to, void(msc::Surface const*, geom::Point const& top_left));
+    MOCK_METHOD2(hidden_set_to, void(msc::Surface const*, bool hide));
+    MOCK_METHOD3(frame_posted, void(msc::Surface const*, int frames_available, geom::Size const& size));
+    MOCK_METHOD2(alpha_set_to, void(msc::Surface const*, float alpha));
+    MOCK_METHOD2(orientation_set_to, void(msc::Surface const*, MirOrientation orientation));
+    MOCK_METHOD2(transformation_set_to, void(msc::Surface const*, glm::mat4 const& t));
+    MOCK_METHOD2(reception_mode_set_to, void(msc::Surface const*, mi::InputReceptionMode mode));
+    MOCK_METHOD2(cursor_image_set_to, void(msc::Surface const*, mg::CursorImage const& image));
+    MOCK_METHOD1(client_surface_close_requested, void(msc::Surface const*));
+    MOCK_METHOD6(keymap_changed, void(
+        msc::Surface const*,
         MirInputDeviceId id,
         std::string const& model,
         std::string const& layout,
         std::string const& variant,
         std::string const& options));
-    MOCK_METHOD1(renamed, void(char const* name));
-    MOCK_METHOD0(cursor_image_removed, void());
-    MOCK_METHOD1(placed_relative, void(geom::Rectangle const& placement));
-    MOCK_METHOD1(input_consumed, void(MirEvent const*));
-    MOCK_METHOD1(start_drag_and_drop, void(std::vector<uint8_t> const& handle));
+    MOCK_METHOD2(renamed, void(msc::Surface const*, char const* name));
+    MOCK_METHOD1(cursor_image_removed, void(msc::Surface const*));
+    MOCK_METHOD2(placed_relative, void(msc::Surface const*, geom::Rectangle const& placement));
+    MOCK_METHOD2(input_consumed, void(msc::Surface const*, MirEvent const*));
+    MOCK_METHOD2(start_drag_and_drop, void(msc::Surface const*, std::vector<uint8_t> const& handle));
 };
 
 
@@ -500,7 +502,7 @@ TEST_F(ClientCursor, can_be_disabled)
 
     mt::Signal wait;
 
-    EXPECT_CALL(*mock_surface_observer, cursor_image_removed())
+    EXPECT_CALL(*mock_surface_observer, cursor_image_removed(_))
         .Times(1)
         .WillOnce(mt::WakeUp(&wait));
 
@@ -526,7 +528,7 @@ TEST_F(ClientCursor, is_restored_when_leaving_surface)
 
     mt::Signal wait;
 
-    EXPECT_CALL(*mock_surface_observer, cursor_image_removed())
+    EXPECT_CALL(*mock_surface_observer, cursor_image_removed(_))
         .Times(1)
         .WillOnce(mt::WakeUp(&wait));
 
@@ -557,7 +559,7 @@ TEST_F(ClientCursor, is_changed_when_crossing_surface_boundaries)
 
     mt::Signal wait;
 
-    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_, _))
         .Times(1)
         .WillOnce(mt::WakeUp(&wait));
 
@@ -567,7 +569,7 @@ TEST_F(ClientCursor, is_changed_when_crossing_surface_boundaries)
     EXPECT_TRUE(wait.wait_for(timeout));
     wait.reset();
 
-    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_, _))
         .Times(1)
         .WillOnce(mt::WakeUp(&wait));
 
@@ -598,7 +600,7 @@ TEST_F(ClientCursor, of_topmost_window_is_applied)
 
     mt::Signal wait;
 
-    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_, _))
         .Times(1)
         .WillOnce(mt::WakeUp(&wait));
 
@@ -608,7 +610,7 @@ TEST_F(ClientCursor, of_topmost_window_is_applied)
     EXPECT_TRUE(wait.wait_for(timeout));
     wait.reset();
 
-    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_, _))
         .Times(1)
         .WillOnce(mt::WakeUp(&wait));
 
@@ -636,7 +638,7 @@ TEST_F(ClientCursor, is_applied_without_cursor_motion)
 
     mt::Signal wait;
 
-    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+    EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_, _))
         .Times(1)
         .WillOnce(mt::WakeUp(&wait));
 
@@ -672,8 +674,8 @@ TEST_F(ClientCursor, from_buffer_stream_is_applied)
 
     {
         InSequence seq;
-        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_)).Times(2);
-        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_, _)).Times(2);
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_, _))
             .WillOnce(mt::WakeUp(&cursor_image_set));
     }
 
@@ -704,8 +706,8 @@ TEST_F(ClientCursor, from_a_surface_config_is_applied)
 
     {
         InSequence seq;
-        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_)).Times(2);
-        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_, _)).Times(2);
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_, _))
             .WillOnce(mt::WakeUp(&cursor_image_set));
     }
 
@@ -736,8 +738,8 @@ TEST_F(ClientCursor, from_a_surface_is_applied)
 
     {
         InSequence seq;
-        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_)).Times(2);
-        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_))
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_, _)).Times(2);
+        EXPECT_CALL(*mock_surface_observer, cursor_image_set_to(_, _))
             .WillOnce(mt::WakeUp(&cursor_image_set));
     }
 
@@ -786,7 +788,7 @@ TEST_F(ClientCursor, passes_through_nested_server)
 
         mt::Signal wait;
 
-        EXPECT_CALL(*mock_surface_observer, cursor_image_removed())
+        EXPECT_CALL(*mock_surface_observer, cursor_image_removed(_))
             .Times(1)
             .WillOnce(mt::WakeUp(&wait));
 

@@ -40,6 +40,11 @@ public:
     virtual char const* devpath() const override;
     virtual char const* devnode() const override;
     virtual char const* property(char const*) const override;
+    virtual dev_t devnum() const override;
+    virtual char const* sysname() const override;
+    virtual bool initialised() const override;
+    virtual char const* syspath() const override;
+    virtual std::shared_ptr<udev_device> as_raw() const override;
 
     udev_device* const dev;
 };
@@ -79,9 +84,37 @@ char const* DeviceImpl::devnode() const
     return udev_device_get_devnode(dev);
 }
 
+char const* DeviceImpl::sysname() const
+{
+    return udev_device_get_sysname(dev);
+}
+
 char const* DeviceImpl::property(char const* name) const
 {
     return udev_device_get_property_value(dev, name);
+}
+
+dev_t DeviceImpl::devnum() const
+{
+    return udev_device_get_devnum(dev);
+}
+
+bool DeviceImpl::initialised() const
+{
+    return static_cast<bool>(udev_device_get_is_initialized(dev));
+}
+
+char const* DeviceImpl::syspath() const
+{
+    return udev_device_get_syspath(dev);
+}
+
+std::shared_ptr<udev_device> DeviceImpl::as_raw() const
+{
+    return std::shared_ptr<udev_device>{
+        udev_device_ref(dev),
+        &udev_device_unref
+    };
 }
 }
 
@@ -123,7 +156,7 @@ void mu::Enumerator::iterator::increment()
         {
             current = ctx->device_from_syspath(udev_list_entry_get_name(entry));
         }
-        catch (std::runtime_error)
+        catch (std::runtime_error const&)
         {
             // The Device throws a runtime_error if the device does not exist
             // This can happen if it has been removed since the iterator was created.

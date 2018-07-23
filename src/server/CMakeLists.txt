@@ -18,6 +18,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/include/cookie
   ${PROJECT_SOURCE_DIR}/src/include/cookie
   ${GLIB_INCLUDE_DIRS}
+  ${GIO_INCLUDE_DIRS}
 )
 add_definitions(-DMIR_SERVER_INPUT_PLATFORM_VERSION="${MIR_SERVER_INPUT_PLATFORM_VERSION}")
 
@@ -30,8 +31,11 @@ add_subdirectory(input/)
 add_subdirectory(report/)
 add_subdirectory(scene/)
 add_subdirectory(frontend/)
+add_subdirectory(frontend_wayland/)
+add_subdirectory(frontend_xwayland/)
 add_subdirectory(shell/)
 add_subdirectory(thread/)
+add_subdirectory(console/)
 
 set(PREFIX "${CMAKE_INSTALL_PREFIX}")
 set(EXEC_PREFIX "${CMAKE_INSTALL_PREFIX}")
@@ -67,6 +71,7 @@ add_library(mirserverobjects OBJECT
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/observer_multiplexer.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/glib_main_loop.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/glib_main_loop_sources.h
+  ${PROJECT_SOURCE_DIR}/src/include/server/mir/synchronised.h
 )
 
 set(MIR_SERVER_OBJECTS
@@ -77,6 +82,8 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirgraphics>
   $<TARGET_OBJECTS:mirfrontend>
   $<TARGET_OBJECTS:mirfrontend-wayland>
+  $<TARGET_OBJECTS:mirfrontend-waylandgenerated>
+  $<TARGET_OBJECTS:mirfrontend-xwayland>
   $<TARGET_OBJECTS:mirshell>
   $<TARGET_OBJECTS:mirlttng>
   $<TARGET_OBJECTS:mirreport>
@@ -85,6 +92,7 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirnestedgraphics>
   $<TARGET_OBJECTS:miroffscreengraphics>
   $<TARGET_OBJECTS:mirthread>
+  $<TARGET_OBJECTS:mirconsole>
 
   $<TARGET_OBJECTS:mirrenderergl>
   $<TARGET_OBJECTS:mirgl>
@@ -95,6 +103,7 @@ set(MIR_SERVER_REFERENCES
   ${GL_LDFLAGS} ${GL_LIBRARIES}
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
   ${GLIB_LDFLAGS} ${GLIB_LIBRARIES}
+  ${GIO_LDFLAGS} ${GIO_LIBRARIES}
   ${UUID_LDFLAGS} ${UUID_LIBRARIES}
 )
 
@@ -120,8 +129,14 @@ target_link_libraries(mirserver LINK_PUBLIC
   ${GL_LDFLAGS} ${GL_LIBRARIES}
   ${UDEV_LDFLAGS} ${UDEV_LIBRARIES}
   ${GLIB_LDFLAGS} ${GLIB_LIBRARIES}
+  ${GIO_LDFLAGS} ${GIO_LIBRARIES}
   ${UUID_LDFLAGS} ${UUID_LIBRARIES}
   ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
+  ${XCB_LDFLAGS} ${XCB_LIBRARIES}
+  ${XCB_COMPOSITE_LDFLAGS} ${XCB_COMPOSITE_LIBRARIES}
+  ${XCB_XFIXES_LDFLAGS} ${XCB_XFIXES_LIBRARIES}
+  ${XCB_RENDER_LDFLAGS} ${XCB_RENDER_LIBRARIES}
+  ${X11_XCURSOR_LDFLAGS} ${X11_XCURSOR_LIBRARIES}
   atomic
 )
 
@@ -142,7 +157,7 @@ install(DIRECTORY
   ${CMAKE_SOURCE_DIR}/include/server/mir DESTINATION "include/mirserver"
 )
 
-set(MIRSERVER_ABI 46) # Be sure to increment MIR_VERSION_MINOR at the same time
+set(MIRSERVER_ABI 47) # Be sure to increment MIR_VERSION_MINOR at the same time
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 set_target_properties(

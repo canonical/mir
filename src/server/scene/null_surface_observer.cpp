@@ -21,24 +21,26 @@
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
 
-void ms::NullSurfaceObserver::attrib_changed(MirWindowAttrib /*attrib*/, int /*value*/) {}
-void ms::NullSurfaceObserver::resized_to(geometry::Size const& /*size*/) {}
-void ms::NullSurfaceObserver::moved_to(geometry::Point const& /*top_left*/) {}
-void ms::NullSurfaceObserver::hidden_set_to(bool /*hide*/) {}
-void ms::NullSurfaceObserver::frame_posted(int /*frames_available*/, geometry::Size const& /* size */) {}
-void ms::NullSurfaceObserver::alpha_set_to(float /*alpha*/) {}
-void ms::NullSurfaceObserver::orientation_set_to(MirOrientation /*orientation*/) {}
-void ms::NullSurfaceObserver::transformation_set_to(glm::mat4 const& /*t*/) {}
-void ms::NullSurfaceObserver::reception_mode_set_to(input::InputReceptionMode /*mode*/) {}
-void ms::NullSurfaceObserver::cursor_image_set_to(mg::CursorImage const& /*image*/) {}
-void ms::NullSurfaceObserver::client_surface_close_requested() {}
-void ms::NullSurfaceObserver::keymap_changed(MirInputDeviceId /* id */, std::string const& /*model*/,
-                                             std::string const& /*layout*/, std::string const& /*variant*/,
-                                             std::string const& /**/)
-{
-}
-void ms::NullSurfaceObserver::renamed(char const*) {}
-void ms::NullSurfaceObserver::cursor_image_removed() {}
-void ms::NullSurfaceObserver::placed_relative(geometry::Rectangle const& /*placement*/)  {}
-void ms::NullSurfaceObserver::input_consumed(MirEvent const* /*event*/)  {}
-void ms::NullSurfaceObserver::start_drag_and_drop(std::vector<uint8_t> const& /*handle*/)  {}
+void ms::NullSurfaceObserver::attrib_changed(Surface const*, MirWindowAttrib, int) {}
+void ms::NullSurfaceObserver::resized_to(Surface const*, geometry::Size const&) {}
+void ms::NullSurfaceObserver::moved_to(Surface const*, geometry::Point const&) {}
+void ms::NullSurfaceObserver::hidden_set_to(Surface const*, bool) {}
+void ms::NullSurfaceObserver::frame_posted(Surface const*, int, geometry::Size const&) {}
+void ms::NullSurfaceObserver::alpha_set_to(Surface const*, float) {}
+void ms::NullSurfaceObserver::orientation_set_to(Surface const*, MirOrientation) {}
+void ms::NullSurfaceObserver::transformation_set_to(Surface const*, glm::mat4 const&) {}
+void ms::NullSurfaceObserver::reception_mode_set_to(Surface const*, input::InputReceptionMode) {}
+void ms::NullSurfaceObserver::cursor_image_set_to(Surface const*, graphics::CursorImage const&) {}
+void ms::NullSurfaceObserver::client_surface_close_requested(Surface const*) {}
+void ms::NullSurfaceObserver::keymap_changed(
+    Surface const*,
+    MirInputDeviceId,
+    std::string const&,
+    std::string const&,
+    std::string const&,
+    std::string const&) {}
+void ms::NullSurfaceObserver::renamed(Surface const*, char const*) {}
+void ms::NullSurfaceObserver::cursor_image_removed(Surface const*) {}
+void ms::NullSurfaceObserver::placed_relative(Surface const*, geometry::Rectangle const&) {}
+void ms::NullSurfaceObserver::input_consumed(Surface const*, MirEvent const*) {}
+void ms::NullSurfaceObserver::start_drag_and_drop(Surface const*, std::vector<uint8_t> const&) {}

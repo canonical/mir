@@ -1174,8 +1174,10 @@ void mf::SessionMediator::platform_operation(
     unsigned int const opcode = request->opcode();
     platform_request.data.assign(request->data().begin(),
                                  request->data().end());
-    platform_request.fds.assign(request->fd().begin(),
-                                request->fd().end());
+    for (auto const request_fd : request->fd())
+    {
+        platform_request.fds.emplace_back(request_fd);
+    }
 
     auto const& platform_response = ipc_operations->platform_operation(opcode, platform_request);
 
@@ -1322,6 +1324,13 @@ void mir::frontend::SessionMediator::request_operation(
             session, mf::SurfaceId{surface_id.value()},
             cookie_ptr->timestamp(),
             Shell::UserRequest::move);
+        break;
+
+    case mir::protobuf::RequestOperation::USER_RESIZE:
+        shell->request_operation(
+            session, mf::SurfaceId{surface_id.value()},
+            cookie_ptr->timestamp(),
+            Shell::UserRequest::resize);
         break;
 
     default:

@@ -74,7 +74,7 @@ TEST_F(OffscreenDisplayTest, orientation_normal)
     display.for_each_display_sync_group([&](mg::DisplaySyncGroup& group) {
         group.for_each_display_buffer([&](mg::DisplayBuffer& db) {
             ++count;
-            EXPECT_EQ(glm::mat2{}, db.transformation());
+            EXPECT_EQ(glm::mat2(1), db.transformation());
         });
     });
 

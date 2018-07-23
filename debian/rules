@@ -6,7 +6,7 @@ include debian/opts.mk
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
 %:
-	dh $@ --parallel --fail-missing --with python3
+	dh $@ -Bbuild-$(DEB_HOST_ARCH) --parallel --fail-missing --with python3
 
 # Enable verbose debugging output from the testsuite
 export MIR_SERVER_LOGGING = on
@@ -31,6 +31,8 @@ ifeq ($(DEB_HOST_ARCH),s390x)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
 endif
 
+$(info COMMON_CONFIGURE_OPTIONS: ${COMMON_CONFIGURE_OPTIONS})
+
 override_dh_auto_configure:
 ifneq ($(filter armhf,$(DEB_HOST_ARCH)),)
 	dh_auto_configure -- \
@@ -52,6 +54,8 @@ else
 	  $(OVERRIDE_CONFIGURE_OPTIONS)
 endif
 endif
+	# Run cmake again to pick up wlcs tests, because reasons?
+	cmake build-$(DEB_HOST_ARCH)
 
 # Only build the docs when we need them
 override_dh_auto_build-indep:
@@ -66,19 +70,22 @@ MIRAL_VERSION=$(MIRAL_RELEASE).$(DEB_VERSION)
 
 # TODO: we'll use a symbol file once mir is abi stable
 override_dh_makeshlibs:
-	dh_makeshlibs -Nlibmiral2 -V -Nmir-test-tools
-	# libmiral2 *has* a symbols file, so we don't need to -V it!
-	dh_makeshlibs -plibmiral2 -- -v$(MIRAL_RELEASE)
+	dh_makeshlibs -Nlibmiral3 -V -Nmir-test-tools
+	# libmiral3 *has* a symbols file, so we don't need to -V it!
+	dh_makeshlibs -plibmiral3 -- -v$(MIRAL_RELEASE)
 
 override_dh_install:
 # Nothing outside Mir should link to libmirprotobuf directly.
 # Delete the symlink so that --fail-missing doesn't think we've missed it
 # accidentally.
 	-rm debian/tmp/usr/lib/*/libmirprotobuf.so
+	-dh_install -pmir-utils usr/bin/mirvanity
+
 ifeq ($(filter xenial yakkety zesty,$(DEB_DISTRIBUTION)),)
 	dh_install
 else
 	# xenial, yakkety & zesty predate dh_missing
+	rm debian/tmp/usr/bin/mirvanity
 	dh_install --fail-missing
 endif
 
@@ -91,5 +98,5 @@ override_dh_shlibdeps:
 	dh_shlibdeps -Xmir-test-data
 
 override_dh_gencontrol:
-	dh_gencontrol -Nlibmiral2 -Nlibmiral-dev
-	dh_gencontrol -plibmiral2 -plibmiral-dev -- -v$(MIRAL_VERSION) -V'libmiral2:Version=$(MIRAL_VERSION)'
+	dh_gencontrol -Nlibmiral3 -Nlibmiral-dev
+	dh_gencontrol -plibmiral3 -plibmiral-dev -- -v$(MIRAL_VERSION) -V'libmiral3:Version=$(MIRAL_VERSION)'

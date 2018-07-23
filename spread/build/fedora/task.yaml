@@ -1,0 +1,62 @@
+summary: Build (on Fedora)
+systems: [fedora-*]
+
+execute: |
+    if [ "${SPREAD_SYSTEM}" = "fedora-rawhide-64" -a "${SPREAD_REBOOT}" -eq 0 ]; then
+      # upgrade to rawhide
+      dnf upgrade --assumeyes --refresh
+      dnf install --assumeyes fedora-gpg-keys
+      # rawhide being rolling breaks from time to time, fall through an incomplete upgrade
+      dnf distro-sync --assumeyes --releasever=rawhide || /bin/true
+      REBOOT
+    fi
+
+    dnf install --assumeyes \
+        cmake \
+        make \
+        gcc-c++ \
+        boost-devel \
+        mesa-libEGL-devel \
+        mesa-libGLES-devel \
+        glm-devel \
+        protobuf-lite-devel \
+        protobuf-compiler \
+        capnproto-devel \
+        capnproto \
+        glog-devel \
+        gflags-devel \
+        systemd-devel \
+        glib2-devel \
+        wayland-devel \
+        mesa-libgbm-devel \
+        libepoxy-devel \
+        nettle-devel \
+        libinput-devel \
+        libxml++-devel \
+        libuuid-devel \
+        libxkbcommon-devel \
+        freetype-devel \
+        lttng-ust-devel \
+        libatomic \
+        qterminal \
+        qt5-qtwayland \
+        python3-pillow \
+        libevdev-devel \
+        umockdev-devel \
+        gtest-devel \
+        gmock-devel \
+        dbus \
+        python3-dbusmock \
+        python3-gobject-base \
+        python3-dbus \
+        mesa-libwayland-egl-devel\
+        libXcursor-devel
+
+    BUILD_DIR=$(mktemp --directory)
+    cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_USE_LD_GOLD=ON
+    # Run cmake again to pick up wlcs?!?!?!?!
+    cmake $BUILD_DIR
+    export VERBOSE=1
+    cmake --build $BUILD_DIR -- -j`nproc`
+    cmake --build $BUILD_DIR -- ptest
+

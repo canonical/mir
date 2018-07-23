@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2017 Canonical Ltd.
+ * Copyright © 2013-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * under the terms of the GNU General Public License version 2 or 3 as as
@@ -19,14 +19,6 @@
  *          Kevin DuBois <kevin.dubois@canonical.com>
  */
 
-// Ugly way to detect the Mir EGL patch to mesa
-// NB this has to be before any other includes
-#define MIR_EGL_PLATFORM
-#include <EGL/eglplatform.h>
-#ifndef MIR_CLIENT_API_VERSION
-#define MIR_EGL_UNAVAILABLE
-#endif
-
 #include "splash.h"
 
 #include <chrono>
@@ -41,8 +33,6 @@
 #include <signal.h>
 #include <atomic>
 #include <mutex>
-
-#include <mir_toolkit/mir_client_library.h>
 
 #include "spinner_glow.h"
 #include "spinner_logo.h"
@@ -227,22 +217,18 @@ const char fShaderSrcLogo[] =
     "    col = col * uFadeLogo;                           \n"
     "    gl_FragColor = col;                              \n"
     "}                                                    \n";
-
-std::atomic<bool> dying{false};
-
-#ifndef MIR_EGL_UNAVAILABLE
-void lifecycle_event_callback(MirConnection* /*connection*/, MirLifecycleState state, void* context)
-{
-    if (state == mir_lifecycle_connection_lost)
-        static_cast<decltype(dying)*>(context)->store(true);
-}
-#endif
 }
 
-struct SpinnerSplash::Self
+struct SpinnerSplash::Self : SplashSession
 {
-    std::mutex mutex;
-    std::weak_ptr<mir::scene::Session> session;
+    std::mutex mutable mutex;
+    std::weak_ptr<mir::scene::Session> session_;
+
+    std::shared_ptr<mir::scene::Session> session() const override
+    {
+        std::lock_guard<decltype(mutex)> lock{mutex};
+        return session_.lock();
+    }
 };
 
 SpinnerSplash::SpinnerSplash() : self{std::make_shared<Self>()} {}
@@ -252,20 +238,17 @@ SpinnerSplash::~SpinnerSplash() = default;
 void SpinnerSplash::operator()(std::weak_ptr<mir::scene::Session> const& session)
 {
     std::lock_guard<decltype(self->mutex)> lock{self->mutex};
-    self->session = session;
+    self->session_ = session;
 }
 
-auto SpinnerSplash::session() const
--> std::shared_ptr<mir::scene::Session>
+SpinnerSplash::operator std::shared_ptr<SplashSession>() const
 {
-    std::lock_guard<decltype(self->mutex)> lock{self->mutex};
-    return self->session.lock();
+    return self;
 }
 
-void SpinnerSplash::operator()(MirConnection* const connection)
+void SpinnerSplash::operator()(struct wl_display* display)
 try
 {
-#ifndef MIR_EGL_UNAVAILABLE
     GLuint prog[2];
     GLuint texture[2];
     GLint vpos[2];
@@ -275,8 +258,8 @@ try
     GLint aTexCoords[2];
     GLint sampler[2];
 
-    mir_connection_set_lifecycle_event_callback(connection, &lifecycle_event_callback, &dying);
-    auto const windows = mir_eglapp_init(connection);
+//    mir_connection_set_lifecycle_event_callback(connection, &lifecycle_event_callback, &dying);
+    auto const windows = mir_eglapp_init(display);
 
     if (!windows.size()) return;
 
@@ -369,17 +352,11 @@ try
                 glUniform1f(fadeLogo, anim.fadeLogo);
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
             });
-
-        if (dying.load())
-            throw std::runtime_error("Server disconnected");
     }
     while (updateAnimation(timer, &anim));
 
     glDeleteTextures(2, texture);
     g_timer_destroy (timer);
-#else
-    (void)connection;
-#endif
 }
 catch (std::exception const& x)
 {

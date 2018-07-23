@@ -32,10 +32,6 @@ namespace graphics
 class Buffer;
 struct BufferProperties;
 }
-namespace scene
-{
-class SurfaceObserver;
-}
 
 namespace frontend
 {
@@ -48,9 +44,9 @@ public:
     virtual void submit_buffer(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
     virtual void resize(geometry::Size const& size) = 0;
 
-    virtual void add_observer(std::shared_ptr<scene::SurfaceObserver> const& observer) = 0;
-    virtual void remove_observer(std::weak_ptr<scene::SurfaceObserver> const& observer) = 0;
-    
+    virtual void set_frame_posted_callback(
+        std::function<void(geometry::Size const&)> const& callback) = 0;
+
     virtual void with_most_recent_buffer_do(
         std::function<void(graphics::Buffer&)> const& exec) = 0;
 

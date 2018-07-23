@@ -215,3 +215,11 @@ void msh::SystemCompositorWindowManager::handle_request_move(
     uint64_t /*timestamp*/)
 {
 }
+
+void msh::SystemCompositorWindowManager::handle_request_resize(
+    std::shared_ptr<scene::Session> const& /*session*/,
+    std::shared_ptr<scene::Surface> const& /*surface*/,
+    uint64_t /*timestamp*/,
+    MirResizeEdge /*edge*/)
+{
+}

@@ -86,6 +86,12 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         uint64_t timestamp) = 0;
 
+    virtual void handle_request_resize(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t timestamp,
+        MirResizeEdge edge) = 0;
+
     virtual ~WindowManager() = default;
     WindowManager() = default;
     WindowManager(WindowManager const&) = delete;

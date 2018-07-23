@@ -23,7 +23,7 @@
 
 #include "miral/window_management_policy.h"
 #include "miral/window_info.h"
-#include "miral/active_outputs.h"
+#include "active_outputs.h"
 #include "miral/application.h"
 #include "miral/application_info.h"
 #include "mru_window_list.h"
@@ -32,7 +32,6 @@
 #include <mir/observer_registrar.h>
 #include <mir/shell/abstract_shell.h>
 #include <mir/shell/window_manager.h>
-#include <mir/version.h>
 
 #include <boost/bimap.hpp>
 #include <boost/bimap/multiset_of.hpp>
@@ -51,6 +50,7 @@ namespace miral
 class WorkspacePolicy;
 class WindowManagementPolicyAddendum2;
 class WindowManagementPolicyAddendum3;
+class WindowManagementPolicyAddendum4;
 class DisplayConfigurationListeners;
 
 using mir::shell::SurfaceSet;
@@ -109,7 +109,6 @@ public:
         std::shared_ptr<mir::scene::Surface> const& surface,
         uint64_t timestamp) override;
 
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     void handle_request_drag_and_drop(
         std::shared_ptr<mir::scene::Session> const& session,
         std::shared_ptr<mir::scene::Surface> const& surface,
@@ -119,7 +118,12 @@ public:
         std::shared_ptr<mir::scene::Session> const& session,
         std::shared_ptr<mir::scene::Surface> const& surface,
         uint64_t timestamp) override;
-#endif
+
+    void handle_request_resize(
+        std::shared_ptr<mir::scene::Session> const& session,
+        std::shared_ptr<mir::scene::Surface> const& surface,
+        uint64_t timestamp,
+        MirResizeEdge edge) override;
 
     int set_surface_attribute(
         std::shared_ptr<mir::scene::Session> const& /*application*/,
@@ -209,9 +213,6 @@ private:
     std::shared_ptr<DeadWorkspaces> const dead_workspaces{std::make_shared<DeadWorkspaces>()};
 
     std::unique_ptr<WindowManagementPolicy> const policy;
-    WorkspacePolicy* const workspace_policy;
-    WindowManagementPolicyAddendum2* const policy2;
-    WindowManagementPolicyAddendum3* const policy3;
 
     std::mutex mutex;
     SessionInfoMap app_info;
@@ -219,9 +220,7 @@ private:
     mir::geometry::Rectangles outputs;
     mir::geometry::Point cursor;
     uint64_t last_input_event_timestamp{0};
-#if MIR_SERVER_VERSION >= MIR_VERSION_NUMBER(0, 27, 0)
     MirEvent const* last_input_event{nullptr};
-#endif
     miral::MRUWindowList mru_active_windows;
     std::set<Window> fullscreen_surfaces;
     std::set<Window> maximized_surfaces;

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2016 Canonical Ltd.
+ * Copyright © 2014-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -20,6 +20,7 @@
 #define MIR_SERVER_H_
 
 #include "mir/shell/window_manager_builder.h"
+#include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
 
 #include <functional>
@@ -453,6 +454,10 @@ public:
     /// \param connect_handler callback to be invoked when the client connects
     auto open_client_socket(ConnectHandler const& connect_handler) -> Fd;
 
+    /// Get a file descriptor that can be used to connect a Wayland client
+    /// \param connect_handler callback to be invoked when the client connects
+    auto open_client_wayland(ConnectHandler const& connect_handler) -> int;
+
     /// Get a file descriptor that can be used to connect a prompt provider
     /// It can be passed to another process, or used directly with mir_connect()
     /// using the format "fd://%d".
@@ -463,6 +468,12 @@ public:
     auto open_wayland_client_socket() -> Fd;
 
     void run_on_wayland_display(std::function<void(wl_display*)> const& functor);
+
+    /// Get the name of the Mir endpoint (if any) usable as a $MIR_SERVER value
+    auto mir_socket_name() const -> optional_value<std::string>;
+
+    /// Get the name of the Wayland endpoint (if any) usable as a $WAYLAND_DISPLAY value
+    auto wayland_display() const -> optional_value<std::string>;
 /** @} */
 
 private:

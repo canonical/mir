@@ -7,8 +7,7 @@ set(
   ui_get_sysname_ioctl_override.cpp
 )
 
-mir_add_wrapped_executable(
-  mir_privileged_tests
+mir_add_wrapped_executable(mir_privileged_tests NOINSTALL
 
   ${PRIVILEGED_TESTS_SOURCES}
 )

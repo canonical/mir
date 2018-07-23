@@ -38,6 +38,8 @@ class ObserverRegistrar;
 template<class Observer>
 class ObserverMultiplexer;
 
+class ConsoleServices;
+
 namespace cookie
 {
 class Authority;
@@ -157,7 +159,6 @@ class Configuration;
 namespace report
 {
 class ReportFactory;
-class Reports;
 }
 
 namespace renderer
@@ -176,6 +177,7 @@ public:
      *  @{ */
     std::shared_ptr<frontend::Connector>    the_connector() override;
     std::shared_ptr<frontend::Connector>    the_wayland_connector() override;
+    std::shared_ptr<frontend::Connector>    the_xwayland_connector() override;
     std::shared_ptr<frontend::Connector>    the_prompt_connector() override;
     std::shared_ptr<graphics::Display>      the_display() override;
     std::shared_ptr<compositor::Compositor> the_compositor() override;
@@ -343,6 +345,9 @@ public:
     virtual std::shared_ptr<ServerActionQueue> the_server_action_queue();
     virtual std::shared_ptr<SharedLibraryProberReport>  the_shared_library_prober_report();
 
+    virtual std::shared_ptr<ConsoleServices> the_console_services();
+    auto default_reports() -> std::shared_ptr<void>;
+
 private:
     // We need to ensure the platform library is destroyed last as the
     // DisplayConfiguration can hold weak_ptrs to objects created from the library
@@ -377,6 +382,7 @@ protected:
 
     CachedPtr<frontend::Connector>   connector;
     CachedPtr<frontend::Connector>   wayland_connector;
+    CachedPtr<frontend::Connector>   xwayland_connector;
     CachedPtr<frontend::Connector>   prompt_connector;
 
     CachedPtr<input::InputReport> input_report;
@@ -444,6 +450,7 @@ protected:
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::KeyMapper> key_mapper;
+    CachedPtr<ConsoleServices> console_services;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
@@ -454,7 +461,6 @@ private:
         seat_observer_multiplexer;
     CachedPtr<ObserverMultiplexer<frontend::SessionMediatorObserver>>
         session_mediator_observer_multiplexer;
-    std::shared_ptr<report::Reports> const reports;
 
     virtual std::string the_socket_file() const;
 
@@ -465,7 +471,6 @@ private:
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
-    auto initialise_reports() -> std::shared_ptr<report::Reports>;
 
     CachedPtr<shell::detail::FrontendShell> frontend_shell;
     std::vector<mir::ExtensionDescription> the_extensions();

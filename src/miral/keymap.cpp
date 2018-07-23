@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -18,12 +18,13 @@
 
 #include "miral/keymap.h"
 
+#include <mir/fd.h>
 #include <mir/input/input_device_observer.h>
 #include <mir/input/input_device_hub.h>
 #include <mir/input/device.h>
 #include <mir/options/option.h>
 #include <mir/server.h>
-#include <mir/version.h>
+#include <mir/udev/wrapper.h>
 
 #include <mir/input/keymap.h>
 #include <mir/input/mir_keyboard_config.h>
@@ -33,12 +34,54 @@
 
 #include <algorithm>
 #include <mutex>
+#include <string>
 #include <vector>
 
 namespace
 {
+std::string keymap_default()
+{
+    static auto const default_keymap = "us";
+
+    namespace mu = mir::udev;
+
+    mu::Enumerator input_enumerator{std::make_shared<mu::Context>()};
+    input_enumerator.match_subsystem("input");
+    input_enumerator.scan_devices();
+
+    for (auto& device : input_enumerator)
+    {
+        if (auto const layout  = device.property("XKBLAYOUT"))
+        {
+            auto const options = device.property("XKBOPTIONS");
+            auto const variant = device.property("XKBVARIANT");
+
+            std::string keymap{layout};
+
+            if (variant || options)
+            {
+                keymap += '+';
+
+                if (variant)
+                {
+                    keymap += variant;
+                }
+
+                if (options)
+                {
+                    keymap += '+';
+                    keymap += options;
+                }
+            }
+
+            return keymap;
+        }
+    }
+
+    return default_keymap;
+}
+
 char const* const keymap_option = "keymap";
-char const* const keymap_default = "us";
 }
 
 struct miral::Keymap::Self : mir::input::InputDeviceObserver
@@ -156,7 +199,7 @@ auto miral::Keymap::operator=(Keymap const& rhs) -> Keymap& = default;
 void miral::Keymap::operator()(mir::Server& server) const
 {
     if (self->layout.empty())
-        server.add_configuration_option(keymap_option, "keymap <layout>[+<variant>[+<options>]], e,g, \"gb\" or \"cz+qwerty\" or \"de++compose:caps\"", keymap_default);
+        server.add_configuration_option(keymap_option, "keymap <layout>[+<variant>[+<options>]], e,g, \"gb\" or \"cz+qwerty\" or \"de++compose:caps\"", keymap_default());
 
     server.add_init_callback([this, &server]
         {

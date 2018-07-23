@@ -34,9 +34,8 @@ set(
   session_mediator_observer_multiplexer.cpp
   session_mediator_observer_multiplexer.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/shell.h
+  ${PROJECT_SOURCE_DIR}/include/server/mir/frontend/buffer_stream.h
 )
-
-add_subdirectory(wayland)
 
 add_library(
   mirfrontend OBJECT

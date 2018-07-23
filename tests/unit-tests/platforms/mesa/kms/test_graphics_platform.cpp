@@ -25,7 +25,7 @@
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
-#include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/stub_console_services.h"
 #include "mir/options/program_option.h"
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
@@ -69,7 +69,7 @@ public:
     {
       return std::make_shared<mgm::Platform>(
               mir::report::null_display_report(),
-              std::make_shared<mtd::NullVirtualTerminal>(),
+              std::make_shared<mtd::StubConsoleServices>(),
               *std::make_shared<mtd::NullEmergencyCleanup>(),
               mgm::BypassOption::allowed);
     }

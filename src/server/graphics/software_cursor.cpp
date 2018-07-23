@@ -93,7 +93,7 @@ public:
 
     glm::mat4 transformation() const override
     {
-        return glm::mat4();
+        return glm::mat4(1);
     }
 
     bool shaped() const override
@@ -177,14 +177,17 @@ void mg::SoftwareCursor::show(CursorImage const& cursor_image)
 std::shared_ptr<mg::detail::CursorRenderable>
 mg::SoftwareCursor::create_renderable_for(CursorImage const& cursor_image, geom::Point position)
 {
-    auto new_renderable = std::make_shared<detail::CursorRenderable>(
-        allocator->alloc_buffer({cursor_image.size(), format, mg::BufferUsage::software}),
-        position + hotspot - cursor_image.hotspot());
-
     size_t const pixels_size =
         cursor_image.size().width.as_uint32_t() *
         cursor_image.size().height.as_uint32_t() *
         MIR_BYTES_PER_PIXEL(format);
+
+    if (pixels_size == 0)
+        BOOST_THROW_EXCEPTION(std::logic_error("zero sized software cursor image is invalid"));
+
+    auto new_renderable = std::make_shared<detail::CursorRenderable>(
+        allocator->alloc_buffer({cursor_image.size(), format, mg::BufferUsage::software}),
+        position + hotspot - cursor_image.hotspot());
 
     // TODO: The buffer pixel format may not be argb_8888, leading to
     // incorrect cursor colors. We need to transform the data to match

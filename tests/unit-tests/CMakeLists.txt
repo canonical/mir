@@ -35,6 +35,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/platforms/common/client
   ${PROJECT_SOURCE_DIR}/src/platforms/common/server
   ${GLIB_INCLUDE_DIRS}
+  ${GIO_INCLUDE_DIRS}
 )
 
 add_library(example SHARED library_example.cpp)
@@ -45,10 +46,6 @@ set_target_properties(
   OUTPUT_NAME example
   PREFIX ""
 )
-install(TARGETS example
-  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mir-test-data/shared-libraries
-)
-
 
 # Umockdev uses glib, which uses the deprecated "register" allocation specifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
@@ -91,6 +88,7 @@ add_subdirectory(platforms/)
 add_subdirectory(options/)
 add_subdirectory(client/)
 add_subdirectory(compositor/)
+add_subdirectory(console/)
 add_subdirectory(frontend/)
 add_subdirectory(logging/)
 add_subdirectory(shell/)
@@ -104,7 +102,7 @@ add_subdirectory(renderers/gl)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
-mir_add_wrapped_executable(mir_unit_tests
+mir_add_wrapped_executable(mir_unit_tests NOINSTALL
   ${UNIT_TEST_SOURCES}
   $<TARGET_OBJECTS:mir-libinput-test-framework>
   $<TARGET_OBJECTS:mir-test-doubles-udev>
@@ -149,7 +147,7 @@ if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11 OR MIR_BUILD_PLAT
   )
 endif (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11 OR MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
 
-mir_add_wrapped_executable(mir_umock_unit_tests
+mir_add_wrapped_executable(mir_umock_unit_tests NOINSTALL
   ${UMOCK_UNIT_TEST_SOURCES}
   $<TARGET_OBJECTS:mir-umock-test-framework>
   $<TARGET_OBJECTS:mir-test-input-framework>
@@ -178,6 +176,7 @@ target_link_libraries(
   ${GMOCK_LIBRARIES}
   ${Boost_LIBRARIES}
   ${UMOCKDEV_LIBRARIES}
+  ${LIBINPUT_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
@@ -203,9 +202,6 @@ add_custom_command(TARGET mir_unit_tests POST_BUILD
   ${CMAKE_CURRENT_SOURCE_DIR}/shared-libraries ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/shared-libraries
   COMMENT "Copying test data to build dir..."
 )
-file(GLOB SO_FILES ${CMAKE_CURRENT_SOURCE_DIR}/shared-libraries/*.so*)
-install(FILES ${SO_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mir-test-data/shared-libraries)
-
 add_library(loadable_test_dso SHARED ${CMAKE_CURRENT_SOURCE_DIR}/shared-libraries/empty_input.c)
 
 set_target_properties(loadable_test_dso PROPERTIES
@@ -213,12 +209,15 @@ set_target_properties(loadable_test_dso PROPERTIES
   COMPILE_FLAGS "-Wno-pedantic"
   OUTPUT_NAME this-arch
 )
-install(TARGETS loadable_test_dso
-  LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/share/mir-test-data/shared-libraries
-)
 
 add_dependencies(mir_unit_tests loadable_test_dso)
 
 mir_add_test(NAME unit-tests-do-not-link-with-GL-or-EGL
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin
       COMMAND /bin/sh -c "!(objdump -p *unit_tests* | grep NEEDED | grep GL)")
+
+add_custom_command(TARGET mir_unit_tests POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory
+  ${CMAKE_CURRENT_SOURCE_DIR}/dbus ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/dbus
+  COMMENT "Copying dbus-daemon configuration to build dir..."
+)

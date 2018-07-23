@@ -30,13 +30,6 @@ miral::CanonicalWindowManagerPolicy::CanonicalWindowManagerPolicy(WindowManagerT
 {
 }
 
-#ifndef __clang__
-extern "C" __attribute__((alias("_ZN5miral28CanonicalWindowManagerPolicy16place_new_windowERKNS_15ApplicationInfoERKNS_19WindowSpecificationE"))) void _ZN5miral28CanonicalWindowManagerPolicy17place_new_surfaceERKNS_15ApplicationInfoERKNS_19WindowSpecificationE();
-__asm__(".symver _ZN5miral28CanonicalWindowManagerPolicy17place_new_surfaceERKNS_15ApplicationInfoERKNS_19WindowSpecificationE,_ZN5miral28CanonicalWindowManagerPolicy17place_new_surfaceERKNS_15ApplicationInfoERKNS_19WindowSpecificationE@MIRAL_1.0");
-#else
-__asm__(".symver _ZN5miral28CanonicalWindowManagerPolicy16place_new_windowERKNS_15ApplicationInfoERKNS_19WindowSpecificationE,_ZN5miral28CanonicalWindowManagerPolicy17place_new_surfaceERKNS_15ApplicationInfoERKNS_19WindowSpecificationE@MIRAL_1.0");
-__asm__(".symver _ZN5miral28CanonicalWindowManagerPolicy16place_new_windowERKNS_15ApplicationInfoERKNS_19WindowSpecificationE,_ZN5miral28CanonicalWindowManagerPolicy16place_new_windowERKNS_15ApplicationInfoERKNS_19WindowSpecificationE@@@MIRAL_1.1");
-#endif
 auto miral::CanonicalWindowManagerPolicy::place_new_window(
     miral::ApplicationInfo const& /*app_info*/,
     miral::WindowSpecification const& request_parameters)
@@ -74,4 +67,17 @@ auto miral::CanonicalWindowManagerPolicy::confirm_inherited_move(WindowInfo cons
 -> Rectangle
 {
     return {window_info.window().top_left()+movement, window_info.window().size()};
+}
+
+auto miral::CanonicalWindowManagerPolicy::confirm_placement_on_display(
+    WindowInfo const& /*window_info*/,
+    MirWindowState /*new_state*/,
+    Rectangle const& new_placement)
+-> mir::geometry::Rectangle
+{
+    return new_placement;
+}
+
+void miral::CanonicalWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*window_info*/)
+{
 }

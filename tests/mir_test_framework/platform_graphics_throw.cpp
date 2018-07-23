@@ -55,7 +55,7 @@ public:
         mir::SharedLibrary stub_platform_library{std::string(platform_path) + "/graphics-dummy.so"};
         auto create_stub_platform = stub_platform_library.load_function<mg::CreateHostPlatform>("create_host_platform");
 
-        stub_platform = create_stub_platform(nullptr, nullptr, nullptr, nullptr);
+        stub_platform = create_stub_platform(nullptr, nullptr, nullptr, nullptr, nullptr);
     }
 
     mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
@@ -100,7 +100,7 @@ public:
         return stub_platform->native_display_platform();
     }
 
-    std::vector<mir::ExtensionDescription> extensions() const
+    std::vector<mir::ExtensionDescription> extensions() const override
     {
         return {};
     }
@@ -141,7 +141,9 @@ private:
 
 }
 
-mg::PlatformPriority probe_graphics_platform(mo::ProgramOption const& /*options*/)
+mg::PlatformPriority probe_graphics_platform(
+    std::shared_ptr<mir::ConsoleServices> const&,
+    mo::ProgramOption const& /*options*/)
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_graphics_platform);
     return mg::PlatformPriority::unsupported;
@@ -169,6 +171,7 @@ void add_graphics_platform_options(boost::program_options::options_description&)
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const&,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
+    std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mir::logging::Logger> const&)
 {

@@ -44,17 +44,17 @@ ms::SurfaceEventSource::SurfaceEventSource(
 {
 }
 
-void ms::SurfaceEventSource::resized_to(geom::Size const& size)
+void ms::SurfaceEventSource::resized_to(Surface const*, geometry::Size const& size)
 {
-    event_sink->handle_event(*mev::make_event(id, size));
+    event_sink->handle_event(mev::make_event(id, size));
 }
 
-void ms::SurfaceEventSource::moved_to(geom::Point const& top_left)
+void ms::SurfaceEventSource::moved_to(Surface const*, geometry::Point const& top_left)
 {
     auto new_output_properties = outputs.properties_for(geom::Rectangle{top_left, surface.size()});
     if (new_output_properties && (new_output_properties != last_output.lock()))
     {
-        event_sink->handle_event(*mev::make_event(
+        event_sink->handle_event(mev::make_event(
             id,
             new_output_properties->dpi,
             new_output_properties->scale,
@@ -66,43 +66,45 @@ void ms::SurfaceEventSource::moved_to(geom::Point const& top_left)
     }
 }
 
-void ms::SurfaceEventSource::attrib_changed(MirWindowAttrib attrib, int value)
+void ms::SurfaceEventSource::attrib_changed(Surface const*, MirWindowAttrib attrib, int value)
 {
-    event_sink->handle_event(*mev::make_event(id, attrib, value));
+    event_sink->handle_event(mev::make_event(id, attrib, value));
 }
 
-void ms::SurfaceEventSource::orientation_set_to(MirOrientation orientation)
+void ms::SurfaceEventSource::orientation_set_to(Surface const*, MirOrientation orientation)
 {
-    event_sink->handle_event(*mev::make_event(id, orientation));
+    event_sink->handle_event(mev::make_event(id, orientation));
 }
 
-void ms::SurfaceEventSource::client_surface_close_requested()
+void ms::SurfaceEventSource::client_surface_close_requested(Surface const*)
 {
-    event_sink->handle_event(*mev::make_event(id));
+    event_sink->handle_event(mev::make_event(id));
 }
 
-void ms::SurfaceEventSource::keymap_changed(MirInputDeviceId device_id,
-                                            std::string const& model,
-                                            std::string const& layout,
-                                            std::string const& variant,
-                                            std::string const& options)
+void ms::SurfaceEventSource::keymap_changed(
+    Surface const*,
+    MirInputDeviceId device_id,
+    std::string const& model,
+    std::string const& layout,
+    std::string const& variant,
+    std::string const& options)
 {
-    event_sink->handle_event(*mev::make_event(id, device_id, model, layout, variant, options));
+    event_sink->handle_event(mev::make_event(id, device_id, model, layout, variant, options));
 }
 
-void ms::SurfaceEventSource::placed_relative(geometry::Rectangle const& placement)
+void ms::SurfaceEventSource::placed_relative(Surface const*, geometry::Rectangle const& placement)
 {
-    event_sink->handle_event(*mev::make_event(id, placement));
+    event_sink->handle_event(mev::make_event(id, placement));
 }
 
-void ms::SurfaceEventSource::input_consumed(MirEvent const* event)
+void ms::SurfaceEventSource::input_consumed(Surface const*, MirEvent const* event)
 {
     auto ev = mev::clone_event(*event);
     mev::set_window_id(*ev, id.as_value());
-    event_sink->handle_event(*ev);
+    event_sink->handle_event(move(ev));
 }
 
-void ms::SurfaceEventSource::start_drag_and_drop(std::vector<uint8_t> const& handle)
+void ms::SurfaceEventSource::start_drag_and_drop(Surface const*, std::vector<uint8_t> const& handle)
 {
-    event_sink->handle_event(*mev::make_start_drag_and_drop_event(id, handle));
+    event_sink->handle_event(mev::make_start_drag_and_drop_event(id, handle));
 }

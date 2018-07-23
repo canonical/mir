@@ -18,7 +18,7 @@
 #include <boost/throw_exception.hpp>
 #include "src/platforms/mesa/server/kms/platform.h"
 #include "src/platforms/mesa/server/kms/display.h"
-#include "src/platforms/mesa/server/kms/virtual_terminal.h"
+#include "mir/console_services.h"
 #include "src/server/report/logging/display_report.h"
 #include "mir/logging/logger.h"
 #include "mir/graphics/display_buffer.h"
@@ -33,10 +33,9 @@
 #include "mir/test/doubles/mock_gl.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/mock_display_report.h"
-#include "mir/test/doubles/null_virtual_terminal.h"
+#include "mir/test/doubles/stub_console_services.h"
 #include "mir/test/doubles/stub_gl_config.h"
 #include "mir/test/doubles/mock_gl_config.h"
-#include "mir/test/doubles/mock_virtual_terminal.h"
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "mir/test/doubles/mock_event_handler_register.h"
 
@@ -91,6 +90,12 @@ public:
                              SetArgPointee<4>(1),
                              Return(EGL_TRUE)));
 
+        ON_CALL(mock_egl, eglGetConfigAttrib(_, mock_egl.fake_configs[0], EGL_NATIVE_VISUAL_ID, _))
+            .WillByDefault(
+                DoAll(
+                    SetArgPointee<3>(GBM_FORMAT_XRGB8888),
+                    Return(EGL_TRUE)));
+
         mock_egl.provide_egl_extensions();
         mock_gl.provide_gles_extensions();
         /*
@@ -114,7 +119,7 @@ public:
     {
         return std::make_shared<mgm::Platform>(
                mir::report::null_display_report(),
-               std::make_shared<mtd::NullVirtualTerminal>(),
+               std::make_shared<mtd::StubConsoleServices>(),
                *std::make_shared<mtd::NullEmergencyCleanup>(),
                mgm::BypassOption::allowed);
     }
@@ -342,9 +347,6 @@ TEST_F(MesaDisplayTest, create_display_drm_failure)
                 InvokeWithoutArgs([]() { errno = ENODEV; }),
                 Return(-1)));
 
-    EXPECT_CALL(mock_drm, drmClose(_))
-        .Times(Exactly(0));
-
     EXPECT_THROW(
     {
         auto display = create_display(create_platform());
@@ -366,10 +368,6 @@ TEST_F(MesaDisplayTest, create_display_kms_failure)
     EXPECT_CALL(mock_drm, drmModeFreeResources(_))
         .Times(Exactly(0));
 
-    // There are 2 DRM device nodes in our mock environment.
-    EXPECT_CALL(mock_drm, drmClose(_))
-        .Times(Exactly(2));
-
     EXPECT_THROW({
         auto display = create_display(platform);
     }, std::runtime_error) << "Expected that c'tor of mgm::Display throws";
@@ -385,9 +383,6 @@ TEST_F(MesaDisplayTest, create_display_gbm_failure)
 
     EXPECT_CALL(mock_gbm, gbm_device_destroy(_))
         .Times(Exactly(0));
-
-    EXPECT_CALL(mock_drm, drmClose(_))
-        .Times(Exactly(2));
 
     EXPECT_THROW({
         auto platform = create_platform();
@@ -656,24 +651,6 @@ TEST_F(MesaDisplayTest, for_each_display_buffer_calls_callback)
     EXPECT_NE(0, callback_count);
 }
 
-TEST_F(MesaDisplayTest, constructor_sets_vt_graphics_mode)
-{
-    using namespace testing;
-
-    auto mock_vt = std::make_shared<mtd::MockVirtualTerminal>();
-
-    EXPECT_CALL(*mock_vt, set_graphics_mode())
-        .Times(1);
-
-    auto platform = std::make_shared<mgm::Platform>(
-        null_report,
-        mock_vt,
-        *std::make_shared<mtd::NullEmergencyCleanup>(),
-        mgm::BypassOption::allowed);
-
-    auto display = create_display(platform);
-}
-
 TEST_F(MesaDisplayTest, pause_drops_drm_master)
 {
     using namespace testing;
@@ -684,50 +661,6 @@ TEST_F(MesaDisplayTest, pause_drops_drm_master)
     auto display = create_display(create_platform());
 
     display->pause();
-}
-
-TEST_F(MesaDisplayTest, resume_sets_drm_master)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_drm, drmSetMaster(_))
-        .Times(2);
-
-    auto display = create_display(create_platform());
-
-    display->resume();
-}
-
-TEST_F(MesaDisplayTest, set_or_drop_drm_master_failure_throws_and_reports_error)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_drm, drmDropMaster(_))
-        .WillOnce(SetErrnoAndReturn(EACCES, -EACCES));
-
-    EXPECT_CALL(mock_drm, drmSetMaster(_))
-        .WillOnce(SetErrnoAndReturn(EPERM, -EPERM));
-
-    EXPECT_CALL(*mock_report, report_drm_master_failure(EACCES));
-    EXPECT_CALL(*mock_report, report_drm_master_failure(EPERM));
-
-    auto platform = std::make_shared<mgm::Platform>(
-        mock_report,
-        std::make_shared<mtd::NullVirtualTerminal>(),
-        *std::make_shared<mtd::NullEmergencyCleanup>(),
-        mgm::BypassOption::allowed);
-    auto display = platform->create_display(
-        std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
-        std::make_shared<mtd::StubGLConfig>()
-        );
-
-    EXPECT_THROW({
-        display->pause();
-    }, std::runtime_error);
-
-    EXPECT_THROW({
-        display->resume();
-    }, std::runtime_error);
 }
 
 TEST_F(MesaDisplayTest, configuration_change_registers_video_devices_handler)
@@ -775,7 +708,17 @@ TEST_F(MesaDisplayTest, drm_device_change_event_triggers_handler)
     mt::AutoUnblockThread mainLoopThread([&ml]{ml.stop();}, [&ml]{ml.run();});
     ASSERT_TRUE(mainloop_started.wait_for(10s));
 
-    auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
+    auto const syspath =
+        fake_devices.add_device(
+            "drm",
+            "card2",
+            NULL,
+            {},
+            {
+                "DEVTYPE", "drm_minor",
+                "MAJOR", "226",
+                "MINOR", "42"
+            });
 
     for (int i = 0; i != device_change_count; ++i)
     {
@@ -808,11 +751,20 @@ TEST_F(MesaDisplayTest, respects_gl_config)
                     _,
                     AllOf(mtd::EGLConfigContainsAttrib(EGL_DEPTH_SIZE, depth_bits),
                           mtd::EGLConfigContainsAttrib(EGL_STENCIL_SIZE, stencil_bits)),
-                    _,_,_))
+                    NotNull(),_,_))
         .Times(AtLeast(1))
         .WillRepeatedly(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
                         SetArgPointee<4>(1),
                         Return(EGL_TRUE)));
+    /* We actually want the default behaviour here, but because we've made an
+     * EXPECT_CALL for eglChooseConfig GMock will ignore the ON_CALL behaviour
+     */
+    EXPECT_CALL(mock_egl, eglChooseConfig(_,_,nullptr,_,_))
+        .Times(AnyNumber())
+        .WillRepeatedly(
+            DoAll(
+                SetArgPointee<4>(1),
+                Return(EGL_TRUE)));
 
     auto platform = create_platform();
     mgm::Display display{
@@ -825,7 +777,14 @@ TEST_F(MesaDisplayTest, respects_gl_config)
         null_report};
 }
 
-TEST_F(MesaDisplayTest, supports_as_low_as_15bit_colour)
+/*
+ * It *would* be nice to support 15bit colour, but the mesa-kms platform
+ * has, from the first commit, unconditonally allocated 24-bit framebuffers.
+ *
+ * It's not clear to me that Mir has ever been successfully tested on a platform
+ * that doesn't support 24-bit rendering.
+ */
+TEST_F(MesaDisplayTest, DISABLED_supports_as_low_as_15bit_colour)
 {  // Regression test for LP: #1212753
     using namespace testing;
 

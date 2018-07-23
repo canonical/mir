@@ -1,9 +1,12 @@
 .idea
 .project
+benchmarks/mir_perf_framework_setup.py
 include/server/mir/version.h
 include/client/mir_toolkit/version.h
-include/miral/version.h
+include/miral/miral/version.h
 build-*
 cmake-*
+build
+benchmarks/build
 
 tools/bot-data.tar.xz

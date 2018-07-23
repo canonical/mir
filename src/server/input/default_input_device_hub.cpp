@@ -88,8 +88,9 @@ void mi::ExternalInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserv
     auto observer = obs.lock();
     if (observer)
     {
+        std::mutex mutex;
         std::condition_variable cv;
-        std::atomic<bool> removed{false};
+        bool removed{false};
 
         data->observer_queue->enqueue_with_guaranteed_execution(
             [&,this]
@@ -97,17 +98,15 @@ void mi::ExternalInputDeviceHub::remove_observer(std::weak_ptr<InputDeviceObserv
                 // Unless remove() is on the same thread as add() external synchronization would be needed
                 data->observers.remove(observer);
 
-                // We do *not* take a lock and instead rely on removed being atomic,
-                // as enqueue_with_guaranteed_execution may run on our stack.
+                std::lock_guard<decltype(mutex)> lock{mutex};
                 removed = true;
                 cv.notify_one();
             });
 
-        std::mutex mutex;
         std::unique_lock<decltype(mutex)> lock{mutex};
 
         // Before returning wait for the remove - otherwise notifications can still happen
-        cv.wait(lock, [&] { return removed.load(); });
+        cv.wait(lock, [&] { return removed; });
     }
 }
 

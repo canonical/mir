@@ -43,8 +43,7 @@ add_subdirectory(process/)
 add_subdirectory(input/)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-mir_add_wrapped_executable(
-  mir_integration_tests
+mir_add_wrapped_executable(mir_integration_tests NOINSTALL
   ${INTEGRATION_TESTS_SRCS}
   ${MIR_SERVER_OBJECTS}
   ${MIR_PLATFORM_OBJECTS}
@@ -57,13 +56,14 @@ add_dependencies(mir_integration_tests GMock)
 target_link_libraries(
   mir_integration_tests
 
+  mirclient-static
+  mirclientlttng-static
+
   mir-test-static
   mir-test-framework-static
   mir-test-doubles-static
   mirclient-debug-extension
-  mirclient-static
   mirdraw
-  mirclientlttng-static
 
   mircommon
 

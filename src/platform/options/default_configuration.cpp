@@ -55,6 +55,7 @@ char const* const mo::fatal_except_opt            = "on-fatal-error-except";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::composite_delay_opt         = "composite-delay";
 char const* const mo::enable_key_repeat_opt       = "enable-key-repeat";
+char const* const mo::x11_display_opt             = "display";
 
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
@@ -63,6 +64,8 @@ char const* const mo::lttng_opt_value = "lttng";
 char const* const mo::platform_graphics_lib = "platform-graphics-lib";
 char const* const mo::platform_input_lib = "platform-input-lib";
 char const* const mo::platform_path = "platform-path";
+char const* const mo::vt_option_name = "vt";
+
 
 namespace
 {
@@ -195,13 +198,16 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Display visualization of touchspots (e.g. for screencasting).")
         (cursor_opt,
             po::value<std::string>()->default_value("auto"),
-            "Cursor (mouse pointer) to use [{auto,software}]")
+            "Cursor (mouse pointer) to use [{auto,null,software}]")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
              "Enable server generated key repeat")
         (fatal_except_opt, "On \"fatal error\" conditions [e.g. drivers behaving "
             "in unexpected ways] throw an exception (instead of a core dump)")
         (debug_opt, "Enable extra development debugging. "
-            "This is only interesting for people doing Mir server or client development.");
+            "This is only interesting for people doing Mir server or client development.")
+        (vt_option_name,
+            boost::program_options::value<int>()->default_value(0),
+            "When running on a VT, VT to run on or 0 to use current.");
 
         add_platform_options();
 }
@@ -220,29 +226,60 @@ void mo::DefaultConfiguration::add_platform_options()
     mo::ProgramOption options;
     options.parse_arguments(program_options, argc, argv);
 
-    // TODO: We should just load all the platform plugins we can and present their options.
-    auto env_libname = ::getenv("MIR_SERVER_PLATFORM_GRAPHICS_LIB");
-    auto env_libpath = ::getenv("MIR_SERVER_PLATFORM_PATH");
     try
     {
-        if (options.is_set(platform_graphics_lib))
+        auto env_libname = ::getenv("MIR_SERVER_PLATFORM_GRAPHICS_LIB");
+        auto env_libpath = ::getenv("MIR_SERVER_PLATFORM_PATH");
+
+        platform_libraries =
+            [env_libname, env_libpath, &options]()
+            {
+                if (options.is_set(platform_graphics_lib))
+                {
+                    return std::vector<std::shared_ptr<mir::SharedLibrary>>{
+                        std::make_shared<mir::SharedLibrary>(
+                            options.get<std::string>(platform_graphics_lib))};
+                }
+                else if (env_libname)
+                {
+                    return std::vector<std::shared_ptr<mir::SharedLibrary>>{
+                        std::make_shared<mir::SharedLibrary>(std::string{env_libname})
+                    };
+                }
+                else
+                {
+                    mir::logging::NullSharedLibraryProberReport null_report;
+                    auto const plugin_path = env_libpath ? env_libpath : options.get<std::string>(platform_path);
+                    return mir::libraries_for_path(plugin_path, null_report);
+                }
+            }();
+
+        for (auto& platform : platform_libraries)
         {
-            platform_graphics_library = std::make_shared<mir::SharedLibrary>(options.get<std::string>(platform_graphics_lib));
-        }
-        else if (env_libname)
-        {
-            platform_graphics_library = std::make_shared<mir::SharedLibrary>(std::string{env_libname});
-        }
-        else
-        {
-            mir::logging::NullSharedLibraryProberReport null_report;
-            auto const plugin_path = env_libpath ? env_libpath : options.get<std::string>(platform_path);
-            auto plugins = mir::libraries_for_path(plugin_path, null_report);
-            platform_graphics_library = mir::graphics::module_for_device(plugins, options);
+            /* Ideally we'd namespace these options with the platform,
+             * and display them in a group as $FOO-platform-specific.
+             */
+            try
+            {
+                auto add_platform_options = platform->load_function<mir::graphics::AddPlatformOptions>("add_graphics_platform_options", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+                add_platform_options(*this->program_options);
+            }
+            catch (std::runtime_error&)
+            {
+                /* We've failed to add the options - probably because it's not a graphics platform,
+                 * or because it's got the wrong version - unload it; it's unnecessary.
+                 */
+                platform.reset();
+            }
         }
 
-        auto add_platform_options = platform_graphics_library->load_function<mir::graphics::AddPlatformOptions>("add_graphics_platform_options", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-        add_platform_options(*this->program_options);
+        // Remove the shared_ptrs to the libraries we've unloaded from the vector.
+        platform_libraries.erase(
+            std::remove(
+                platform_libraries.begin(),
+                platform_libraries.end(),
+                std::shared_ptr<mir::SharedLibrary>{}),
+            platform_libraries.end());
     }
     catch(...)
     {

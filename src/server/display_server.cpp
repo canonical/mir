@@ -33,7 +33,11 @@
 #include "mir/log.h"
 #include "mir/unwind_helpers.h"
 
+#include <boost/exception/diagnostic_information.hpp>
+
+#include <chrono>
 #include <stdexcept>
+#include <thread>
 
 namespace mc = mir::compositor;
 namespace mf = mir::frontend;
@@ -51,6 +55,7 @@ struct mir::DisplayServer::Private
           compositor{config.the_compositor()},
           connector{config.the_connector()},
           wayland_connector{config.the_wayland_connector()},
+          xwayland_connector{config.the_xwayland_connector()},
           prompt_connector{config.the_prompt_connector()},
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()},
@@ -79,6 +84,10 @@ struct mir::DisplayServer::Private
             auto wayland = try_but_revert_if_unwinding(
                 [this] { wayland_connector->stop(); },
                 [this] { wayland_connector->start(); });
+
+            auto xwayland = try_but_revert_if_unwinding(
+                [this] { xwayland_connector->stop(); },
+                [this] { xwayland_connector->start(); });
 
             auto prompt = try_but_revert_if_unwinding(
                 [this] { prompt_connector->stop(); },
@@ -117,7 +126,24 @@ struct mir::DisplayServer::Private
         try
         {
             auto disp = try_but_revert_if_unwinding(
-                [this] { display->resume(); },
+                [this]
+                {
+                    auto const deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds{500};
+
+                    retry:
+                    try
+                    {
+                        display->resume();
+                    }
+                    catch(std::runtime_error const& e)
+                    {
+                        if (std::chrono::steady_clock::now() > deadline)
+                            fatal_error(("Failed to resume display:\n" + boost::diagnostic_information(e)).c_str());
+
+                        std::this_thread::sleep_for(std::chrono::milliseconds{50});
+                        goto retry;
+                    }
+                },
                 [&, this] { display->pause(); });
 
             auto comp = try_but_revert_if_unwinding(
@@ -143,6 +169,10 @@ struct mir::DisplayServer::Private
             auto wayland = try_but_revert_if_unwinding(
                 [this] { wayland_connector->start(); },
                 [&, this] { wayland_connector->stop(); });
+
+            auto xwayland = try_but_revert_if_unwinding(
+                [this] { xwayland_connector->start(); },
+                [&, this] { xwayland_connector->stop(); });
 
             connector->start();
         }
@@ -171,6 +201,7 @@ struct mir::DisplayServer::Private
     std::shared_ptr<mc::Compositor> const compositor;
     std::shared_ptr<mf::Connector> const connector;
     std::shared_ptr<mf::Connector> const wayland_connector;
+    std::shared_ptr<mf::Connector> const xwayland_connector;
     std::shared_ptr<mf::Connector> const prompt_connector;
     std::shared_ptr<mi::InputManager> const input_manager;
     std::shared_ptr<mir::MainLoop> const main_loop;
@@ -207,11 +238,13 @@ void mir::DisplayServer::run()
     server.prompt_connector->start();
     server.connector->start();
     server.wayland_connector->start();
+    server.xwayland_connector->start();
 
     server.server_status_listener->started();
 
     server.main_loop->run();
 
+    server.xwayland_connector->stop();
     server.wayland_connector->stop();
     server.connector->stop();
     server.prompt_connector->stop();

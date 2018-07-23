@@ -11,8 +11,10 @@ Build-Depends: cmake,
                graphviz,
                libboost-dev,
                libboost-date-time-dev,
+               libboost-iostreams-dev,
                libboost-program-options-dev,
                libboost-system-dev,
+               libboost-thread-dev,
                libboost-filesystem-dev,
                protobuf-compiler,
                libdrm-dev,
@@ -46,6 +48,13 @@ Build-Depends: cmake,
                libepoxy-dev,
                python3-pil:native,
                linux-libc-dev,
+               dbus,
+               python3-dbusmock,
+               libxcb-composite0-dev,
+               libxcb-xfixes0-dev,
+               libxcb-render0-dev,
+               libxcb-composite0-dev,
+               libxcursor-dev
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
@@ -68,7 +77,7 @@ Description: Display server for Ubuntu - RPC definitions
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver46
+Package: libmirserver47
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -147,7 +156,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver46 (= ${binary:Version}),
+Depends: libmirserver47 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -332,7 +341,7 @@ Description: Display server for Ubuntu - shared library
  Contains the shared libraries required for the Mir server and client.
 
 # Longer-term these drivers should move out-of-tree
-Package: mir-platform-graphics-mesa-x13
+Package: mir-platform-graphics-mesa-x15
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -346,7 +355,7 @@ Description: Display server for Ubuntu - platform library for X11 Mesa
  Contains the shared libraries required for the Mir server to interact with
  the X11 platform using the Mesa drivers.
 
-Package: mir-platform-graphics-mesa-kms13
+Package: mir-platform-graphics-mesa-kms15
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -408,8 +417,8 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-mesa-kms13,
-         mir-platform-graphics-mesa-x13,
+         mir-platform-graphics-mesa-kms15,
+         mir-platform-graphics-mesa-x15,
          mir-client-platform-mesa5,
          mir-platform-input-evdev7,
 Description: Display server for Ubuntu - desktop driver metapackage
@@ -491,7 +500,7 @@ Description: Display server for Ubuntu - GL Renderer development files
  Contains header files that define the interfaces through which platforms and
  renderers access the functionality needed to render with GL.
 
-Package: libmiral2
+Package: libmiral3
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -509,7 +518,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiral2 (= ${libmiral2:Version}),
+Depends: libmiral3 (= ${libmiral3:Version}),
 # ${source:Version} is technically incorrect, but Launchpad doesn't do BinNMUs
 # so it's harmless.
          libmirclient-dev (= ${source:Version}),

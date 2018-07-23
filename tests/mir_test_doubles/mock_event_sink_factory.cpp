@@ -34,7 +34,7 @@ public:
     GloballyUniqueMockEventSink(std::shared_ptr<mf::EventSink> const& underlying_sink);
     ~GloballyUniqueMockEventSink() override;
 
-    void handle_event(MirEvent const& ev) override;
+    void handle_event(mir::EventUPtr&& event) override;
     void handle_lifecycle_event(MirLifecycleState state) override;
     void handle_display_config_change(mg::DisplayConfiguration const& conf) override;
     void handle_error(mir::ClientVisibleError const& error) override;
@@ -59,9 +59,9 @@ GloballyUniqueMockEventSink::~GloballyUniqueMockEventSink()
 {
 }
 
-void GloballyUniqueMockEventSink::handle_event(MirEvent const& ev)
+void GloballyUniqueMockEventSink::handle_event(mir::EventUPtr&& event)
 {
-    underlying_sink->handle_event(ev);
+    underlying_sink->handle_event(move(event));
 }
 
 void GloballyUniqueMockEventSink::handle_lifecycle_event(MirLifecycleState state)

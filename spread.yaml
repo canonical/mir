@@ -5,17 +5,32 @@ kill-timeout: 50m
 backends:
     lxd:
         systems:
-            - ubuntu-16.04
-            - ubuntu-17.10
-            - ubuntu-18.04:
-                image: ubuntu-daily:18.04
-    linode:
-        key: "$(HOST: echo $SPREAD_LINODE_KEY)"
+            - ubuntu-16.04-64
+            - ubuntu-17.10-64
+            - ubuntu-18.04-64
+            - ubuntu-devel-64:
+               image: ubuntu-daily:devel/amd64
+            - fedora-27-64
+            - fedora-28-64
+            - fedora-rawhide-64:
+                image: images:fedora/28/amd64
+    google:
+        key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
+        plan: n1-highcpu-8
+        location: computeengine/us-east1-b
         systems:
-            - ubuntu-16.04
-            - ubuntu-17.10
-            - ubuntu-devel:
-                image: ubuntu-17.10
+            - ubuntu-16.04-64:
+                image: ubuntu-os-cloud/ubuntu-1604-lts
+            - ubuntu-17.10-64:
+                image: ubuntu-os-cloud/ubuntu-1710
+            - ubuntu-18.04-64:
+                image: ubuntu-os-cloud/ubuntu-1804-lts
+            - ubuntu-devel-64:
+                image: ubuntu-os-cloud-devel/ubuntu-1810
+            - fedora-27-64
+            - fedora-28-64
+            - fedora-rawhide-64:
+                image: fedora-28-64
 
 environment:
     ARCH: amd64
@@ -27,6 +42,20 @@ environment:
     CLANG/clang: 1
     VALGRIND: 0
     VALGRIND/valgrind: 1
+
+prepare: |
+    # NOTE: This part of the code needs to be in spread.yaml as it runs before
+    # the rest of the source code (including the tests/lib directory) is
+    # around. The purpose of this code is to fix some connectivity issues and
+    # then apply the delta of the git repository.
+    # apt update is hanging on security.ubuntu.com with IPv6, prefer IPv4 over IPv6
+    cat <<EOF > /etc/gai.conf
+    precedence  ::1/128       50
+    precedence  ::/0          40
+    precedence  2002::/16     30
+    precedence ::/96          20
+    precedence ::ffff:0:0/96 100
+    EOF
 
 suites:
     spread/build/:

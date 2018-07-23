@@ -14,14 +14,13 @@ ExternalProject_Add(
   INSTALL_COMMAND true
   BUILD_ALWAYS TRUE)
 
-add_library(libwlcs SHARED IMPORTED)
+add_library(libwlcs STATIC IMPORTED)
 set_target_properties(libwlcs PROPERTIES IMPORTED_LOCATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libwlcs.so)
 add_dependencies(libwlcs wlcs)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/wlcs/include)
 
-mir_add_wrapped_executable(
-  mir_wlcs_tests
+mir_add_wrapped_executable(mir_wlcs_tests NOINSTALL
 
   wlcs/example/mir_integration.cpp
 )
@@ -33,6 +32,7 @@ target_link_libraries(
   mirserver
   mir-test-assist
   mir-test-doubles-platform-static
+  ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
 )
 
 if (MIR_RUN_ACCEPTANCE_TESTS)

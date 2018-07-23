@@ -2,15 +2,11 @@ environment:
     DEB_BUILD_OPTIONS: "parallel=$( nproc ) noopt"
     NO_PKG_MANGLE: 1
 
+systems: [ubuntu-*]
+
 summary: Build Ubuntu packages
 
 execute: |
-    if [ "${SPREAD_SYSTEM}" = "ubuntu-devel" -a "${SPREAD_REBOOT}" -eq 0 ]; then
-      # upgrade to devel
-      do-release-upgrade -d -f DistUpgradeViewNonInteractive
-      REBOOT
-    fi
-
     apt-get update
 
     # to get dpkg-architecture and mk-build-deps

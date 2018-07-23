@@ -38,6 +38,7 @@ class DRMNativePlatformAuthFactory : public graphics::NativeDisplayPlatform,
 {
 public:
     DRMNativePlatformAuthFactory(helpers::DRMHelper&);
+    DRMNativePlatformAuthFactory(mir::Fd drm_fd);
     UniqueModulePtr<PlatformAuthentication> create_platform_authentication() override;
 private:
     helpers::DRMHelper& drm;

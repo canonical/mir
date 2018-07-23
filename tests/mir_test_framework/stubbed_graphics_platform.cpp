@@ -229,7 +229,7 @@ class StubIpcOps : public mg::PlatformIpcOperations
                     std::runtime_error("Failed to write to pipe in 'echo_fd' operation"));
             }
 
-            reply.fds.push_back(dup(pipe.read_fd()));
+            reply.fds.push_back(pipe.read_fd());
         }
         else
         {
@@ -356,6 +356,7 @@ extern "C" std::shared_ptr<mg::Platform> create_stub_platform(std::vector<geom::
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const&,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
+    std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mir::logging::Logger> const&)
 {
@@ -378,6 +379,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const&,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
+    std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mg::DisplayReport> const&,
     std::shared_ptr<mir::logging::Logger> const&)
 {

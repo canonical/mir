@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2017 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -28,7 +28,7 @@ using namespace mir::geometry;
 class KioskWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy
 {
 public:
-    KioskWindowManagerPolicy(miral::WindowManagerTools const& tools, SwSplash const&);
+    KioskWindowManagerPolicy(miral::WindowManagerTools const& tools, std::shared_ptr<SplashSession> const&);
 
     auto place_new_window(miral::ApplicationInfo const& app_info, miral::WindowSpecification const& request)
     -> miral::WindowSpecification override;
@@ -40,6 +40,14 @@ public:
     bool handle_pointer_event(MirPointerEvent const* event) override;
     void handle_modify_window(miral::WindowInfo& window_info, miral::WindowSpecification const& modifications) override;
 
+    void handle_request_drag_and_drop(miral::WindowInfo& window_info) override;
+    void handle_request_move(miral::WindowInfo& window_info, MirInputEvent const* input_event) override;
+    void handle_request_resize(miral::WindowInfo& window_info, MirInputEvent const* input_event,
+        MirResizeEdge edge) override;
+
+    Rectangle confirm_placement_on_display(const miral::WindowInfo& window_info, MirWindowState new_state,
+        Rectangle const& new_placement) override;
+
 private:
     static const int modifier_mask =
         mir_input_event_modifier_alt |
@@ -48,7 +56,7 @@ private:
         mir_input_event_modifier_ctrl |
         mir_input_event_modifier_meta;
 
-    SwSplash const splash;
+    std::shared_ptr<SplashSession> const splash;
 };
 
 #endif /* MIRAL_KIOSK_WINDOW_MANAGER_H */

@@ -125,7 +125,7 @@ public:
     {
     }
 
-    void frame_posted(int count, geom::Size const&) override
+    void frame_posted(mir::scene::Surface const*, int count, geom::Size const&) override
     {
         cb(count);
     }

@@ -83,5 +83,5 @@ done
 
 MIR_SOCKET=${mir_socket} WAYLAND_DISPLAY=${wayland_display} ${x11_server} ${x11_server_args} :${port} & pid=$!
 while [ ! -e "/tmp/.X11-unix/X${port}" ]; do echo "waiting for DISPLAY=:${port}"; sleep 1 ;done
-DISPLAY=:${port} "$@"
+DISPLAY=:${port} NO_AT_BRIDGE=1 "$@"
 kill ${pid}

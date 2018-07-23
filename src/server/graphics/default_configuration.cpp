@@ -26,6 +26,7 @@
 #include "nested/cursor.h"
 #include "nested/display.h"
 #include "nested/platform.h"
+#include "null_cursor.h"
 #include "offscreen/display.h"
 #include "software_cursor.h"
 
@@ -109,14 +110,45 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                         auto msg = "Failed to find any platform plugins in: " + path;
                         throw std::runtime_error(msg.c_str());
                     }
-                    platform_library = mir::graphics::module_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()));
+                    platform_library = mir::graphics::module_for_device(platforms, dynamic_cast<mir::options::ProgramOption&>(*the_options()), the_console_services());
                 }
-                auto create_host_platform = platform_library->load_function<mg::CreateHostPlatform>(
-                    "create_host_platform",
-                    MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-                auto describe_module = platform_library->load_function<mg::DescribeModule>(
-                    "describe_graphics_module",
-                    MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+                auto create_host_platform =
+                    [platform_library]() -> std::function<std::remove_pointer<mg::CreateHostPlatform>::type>
+                    {
+                        try
+                        {
+                            return platform_library->load_function<mg::CreateHostPlatform>(
+                                "create_host_platform",
+                                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+                        }
+                        catch (std::runtime_error const&)
+                        {
+                            auto create_host_platform =
+                                platform_library->load_function<mg::obsolete_0_27::CreateHostPlatform>(
+                                    "create_host_platform",
+                                    mg::obsolete_0_27::symbol_version);
+                            return [create_host_platform](auto options, auto cleanup, auto, auto report, auto logger)
+                                {
+                                    return create_host_platform(options, cleanup, report, logger);
+                                };
+                        }
+                    }();
+                auto describe_module =
+                    [platform_library]()
+                    {
+                        try
+                        {
+                            return platform_library->load_function<mg::DescribeModule>(
+                                "describe_graphics_module",
+                                MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
+                        }
+                        catch (std::runtime_error const&)
+                        {
+                            return platform_library->load_function<mg::DescribeModule>(
+                                "describe_graphics_module",
+                                mg::obsolete_0_27::symbol_version);
+                        }
+                    }();
                 auto description = describe_module();
                 mir::log_info("Selected driver: %s (version %d.%d.%d)",
                               description->name,
@@ -124,7 +156,12 @@ std::shared_ptr<mg::Platform> mir::DefaultServerConfiguration::the_graphics_plat
                               description->minor_version,
                               description->micro_version);
 
-                return create_host_platform(the_options(), the_emergency_cleanup(), the_display_report(), the_logger());
+                return create_host_platform(
+                    the_options(),
+                    the_emergency_cleanup(),
+                    the_console_services(),
+                    the_display_report(),
+                    the_logger());
             }
             catch(...)
             {
@@ -186,7 +223,12 @@ mir::DefaultServerConfiguration::the_cursor()
 
             auto cursor_choice = the_options()->get<std::string>(options::cursor_opt);
 
-            if (the_options()->is_set(options::host_socket_opt))
+            if (cursor_choice == "null")
+            {
+                mir::log_info("Cursor disabled");
+                primary_cursor = std::make_shared<mg::NullCursor>();
+            }
+            else if (the_options()->is_set(options::host_socket_opt))
             {
                 mir::log_info("Using nested cursor");
                 primary_cursor = std::make_shared<mgn::Cursor>(

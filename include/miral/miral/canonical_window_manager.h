@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2016 Canonical Ltd.
+ * Copyright © 2015-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -45,11 +45,20 @@ public:
     /// Tries to focus on the newly ready window
     void handle_raise_window(WindowInfo& window_info) override;
 
+    /// request from client to initiate drag and drop
+    /// \note this is a legacy of Unity8's content-hub and should probably be ignored going forward
+    void handle_request_drag_and_drop(WindowInfo& window_info) override;
+
     /// Raises the window (and any children)
     void advise_focus_gained(WindowInfo const& info) override;
 
     /// Move the child window with the parent
     auto confirm_inherited_move(WindowInfo const& window_info, Displacement movement) -> Rectangle override;
+
+    auto confirm_placement_on_display(
+        WindowInfo const& window_info,
+        MirWindowState new_state,
+        Rectangle const& new_placement) -> Rectangle override;
 
 protected:
     WindowManagerTools tools;

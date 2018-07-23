@@ -1,0 +1,5 @@
+from distutils.core import setup
+
+setup(name='mir_perf_framework',
+      version='@MIR_VERSION@',
+      packages=['mir_perf_framework'])

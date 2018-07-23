@@ -19,8 +19,6 @@
 #ifndef MIRAL_APPLICATION_AUTHORIZER_H
 #define MIRAL_APPLICATION_AUTHORIZER_H
 
-#include <miral/version.h>
-
 #include <sys/types.h>
 #include <functional>
 #include <memory>
@@ -58,19 +56,8 @@ public:
     virtual bool set_base_display_configuration_is_allowed(ApplicationCredentials const& creds) = 0;
     virtual bool screencast_is_allowed(ApplicationCredentials const& creds) = 0;
     virtual bool prompt_session_is_allowed(ApplicationCredentials const& creds) = 0;
-};
-
-// Mir has introduced new functions. We can't introduce new functions to ApplicationAuthorizer
-// without breaking ABI, but we can offer an extension interface:
-class ApplicationAuthorizer1 : public ApplicationAuthorizer
-{
-public:
     virtual bool configure_input_is_allowed(ApplicationCredentials const& creds) = 0;
     virtual bool set_base_input_configuration_is_allowed(ApplicationCredentials const& creds) = 0;
-
-#if MIRAL_VERSION >= MIR_VERSION_NUMBER(2, 0, 0)
-#error "We've presumably broken ABI - please roll this interface into ApplicationAuthorizer"
-#endif
 };
 
 class BasicSetApplicationAuthorizer

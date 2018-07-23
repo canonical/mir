@@ -45,6 +45,12 @@ mis::KeyParameters& mis::KeyParameters::with_action(mis::EventAction new_action)
     return *this;
 }
 
+mis::KeyParameters& mis::KeyParameters::with_event_time(std::chrono::nanoseconds event_time)
+{
+    this->event_time = event_time;
+    return *this;
+}
+
 mis::KeyParameters mis::a_key_down_event()
 {
     return mis::KeyParameters().with_action(mis::EventAction::Down);
@@ -77,6 +83,12 @@ mis::ButtonParameters& mis::ButtonParameters::of_button(int new_button)
 mis::ButtonParameters& mis::ButtonParameters::with_action(mis::EventAction new_action)
 {
     action = new_action;
+    return *this;
+}
+
+mis::ButtonParameters& mis::ButtonParameters::with_event_time(std::chrono::nanoseconds event_time)
+{
+    this->event_time = event_time;
     return *this;
 }
 
@@ -145,6 +157,12 @@ mis::TouchParameters& mis::TouchParameters::at_position(geom::Point abs_pos)
 mis::TouchParameters& mis::TouchParameters::with_action(Action touch_action)
 {
     action = touch_action;
+    return *this;
+}
+
+mis::TouchParameters& mis::TouchParameters::with_event_time(std::chrono::nanoseconds event_time)
+{
+    this->event_time = event_time;
     return *this;
 }
 

@@ -182,6 +182,12 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         uint64_t timestamp) override;
 
+    void handle_request_resize(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        uint64_t timestamp,
+        MirResizeEdge edge) override;
+
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& /*session*/,
         std::shared_ptr<scene::Surface> const& surface,

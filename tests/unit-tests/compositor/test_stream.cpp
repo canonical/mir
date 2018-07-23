@@ -35,11 +35,6 @@ namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace
 {
-struct MockSurfaceObserver : mir::scene::NullSurfaceObserver
-{
-    MOCK_METHOD2(frame_posted, void(int, geom::Size const&));
-};
-
 struct Stream : Test
 {
     Stream() :
@@ -140,25 +135,24 @@ TEST_F(Stream, tracks_has_buffer)
     EXPECT_TRUE(stream.has_submitted_buffer());
 }
 
-TEST_F(Stream, calls_observers_after_scheduling_on_submissions)
+TEST_F(Stream, calls_frame_callback_after_scheduling_on_submissions)
 {
-    auto observer = std::make_shared<MockSurfaceObserver>();
-    EXPECT_CALL(*observer, frame_posted(1, initial_size));
-    stream.add_observer(observer);
+    int frame_count{0};
+    stream.set_frame_posted_callback([&frame_count](auto) { ++frame_count;});
     stream.submit_buffer(buffers[0]);
-    stream.remove_observer(observer);
+    stream.set_frame_posted_callback([](auto) {});
     stream.submit_buffer(buffers[0]);
+    EXPECT_THAT(frame_count, Eq(1));
 }
 
-TEST_F(Stream, calls_observers_call_doesnt_hold_lock)
+TEST_F(Stream, frame_callback_is_called_without_scheduling_lock)
 {
-    auto observer = std::make_shared<MockSurfaceObserver>();
-    EXPECT_CALL(*observer, frame_posted(1,_))
-        .WillOnce(InvokeWithoutArgs([&]{
+    stream.set_frame_posted_callback(
+        [this](auto)
+        {
             EXPECT_THAT(stream.buffers_ready_for_compositor(this), Eq(1));
             EXPECT_TRUE(stream.has_submitted_buffer());
-        }));
-    stream.add_observer(observer);
+        });
     stream.submit_buffer(buffers[0]);
 }
 
@@ -191,9 +185,7 @@ TEST_F(Stream, forces_a_new_buffer_when_told_to_drop_buffers)
 
 TEST_F(Stream, throws_on_nullptr_submissions)
 {
-    auto observer = std::make_shared<MockSurfaceObserver>();
-    EXPECT_CALL(*observer, frame_posted(_,_)).Times(0);
-    stream.add_observer(observer);
+    stream.set_frame_posted_callback([](auto) { FAIL() << "frame-posted should not be called on null buffer"; });
     EXPECT_THROW({
         stream.submit_buffer(nullptr);
     }, std::invalid_argument);

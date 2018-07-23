@@ -50,13 +50,13 @@ mfd::EventSender::EventSender(
 {
 }
 
-void mfd::EventSender::handle_event(MirEvent const& e)
+void mfd::EventSender::handle_event(EventUPtr&& event)
 {
     // In future we might send multiple events, or insert them into messages
     // containing other responses, but for now we send them individually.
     mp::EventSequence seq;
     mp::Event *ev = seq.add_event();
-    ev->set_raw(MirEvent::serialize(&e));
+    ev->set_raw(MirEvent::serialize(event.get()));
 
     send_event_sequence(seq, {});
 }

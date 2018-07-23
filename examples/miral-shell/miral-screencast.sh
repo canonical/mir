@@ -17,13 +17,11 @@ do
     echo "    --height  set the capture height  [${height}]"
     echo "    --output  set the output filename [${output}]"
     echo "    --socket  set the mir socket      [${socket}]"
-    echo "    --tmpfile specify the temporary work file"
     exit 0
   elif [ "$1" == "--socket" ]; then shift; socket=$1
   elif [ "$1" == "--output" ]; then shift; output=$1
   elif [ "$1" == "--width"  ]; then shift; width=$1
   elif [ "$1" == "--height" ]; then shift; height=$1
-  elif [ "$1" == "--tmpfile" ]; then shift; tempfile=$1
   fi
   shift
 done
@@ -40,12 +38,5 @@ if [ -e ${output} ]; then echo "Output exists, moving to ${output}~"; mv ${outpu
 while [ ! -e "${socket}" ]; do echo "waiting for ${socket}"; sleep 1 ;done
 
 if [ ! -v tempfile ]; then tempfile=$(mktemp); fi
-${bindir}/mirscreencast --size ${width} ${height} -m ${socket} -f ${tempfile}& mirscreencast_pid=$!
-trap 'kill ${mirscreencast_pid}; rm -f -- "${tempfile}"; exit 0' INT TERM HUP EXIT
-
-sleep 1; # don't lose the next message in the spew from mirscreencast
-read -rsp $'\n\nPress enter when recording complete...'
-
-kill ${mirscreencast_pid}
-trap 'rm -f -- "${tempfile}"; exit 0' INT TERM HUP EXIT
-mencoder -demuxer rawvideo -rawvideo fps=60:w=${width}:h=${height}:format=bgra -ovc x264 -o ${output} ${tempfile}
+${bindir}/mirscreencast -m ${socket}   --size ${width}   ${height} --stdout | \
+mencoder -demuxer rawvideo -rawvideo fps=60:w=${width}:h=${height}:format=bgra -ovc x264 -o ${output} -

@@ -593,12 +593,22 @@ void MirSurface::request_user_move(MirCookie const* cookie)
     request_operation(cookie, mp::RequestOperation::USER_MOVE);
 }
 
+void MirSurface::request_user_resize(MirResizeEdge edge, MirCookie const* cookie)
+{
+    request_operation(cookie, mp::RequestOperation::USER_RESIZE, edge);
+}
+
 void MirSurface::request_drag_and_drop(MirCookie const* cookie)
 {
     request_operation(cookie, mp::RequestOperation::START_DRAG_AND_DROP);
 }
 
 void MirSurface::request_operation(MirCookie const* cookie, mir::protobuf::RequestOperation operation) const
+{
+    request_operation(cookie, operation, mir::optional_value<uint32_t>{});
+}
+
+void MirSurface::request_operation(MirCookie const* cookie, mir::protobuf::RequestOperation operation, mir::optional_value<uint32_t> hint) const
 {
     mir::protobuf::RequestWithAuthority request;
     request.set_operation(operation);
@@ -609,6 +619,9 @@ void MirSurface::request_operation(MirCookie const* cookie, mir::protobuf::Reque
     auto const event_authority = request.mutable_authority();
 
     event_authority->set_cookie(cookie->cookie().data(), cookie->size());
+
+    if (hint.is_set())
+        request.set_hint(hint.value());
 
     server->request_operation(
         &request,

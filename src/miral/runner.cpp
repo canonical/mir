@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2017 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -18,17 +18,20 @@
 
 #include "miral/runner.h"
 #include "join_client_threads.h"
+#include "launch_app.h"
 
 #include <mir/server.h>
 #include <mir/main_loop.h>
 #include <mir/report_exception.h>
 #include <mir/options/option.h>
-#include <mir/version.h>
+#include <mir/options/configuration.h>
 
 #include <chrono>
-#include <cstdlib>
 #include <mutex>
 #include <thread>
+
+
+namespace mo = mir::options;
 
 namespace
 {
@@ -44,6 +47,7 @@ struct miral::MirRunner::Self
         argc(argc), argv(argv), config_file{config_file} {}
 
     auto run_with(std::initializer_list<std::function<void(::mir::Server&)>> options) -> int;
+    void launch_startup_applications(::mir::Server& server);
 
     int const argc;
     char const** const argv;
@@ -75,70 +79,6 @@ auto const startup_apps = "startup-apps";
 void enable_startup_applications(::mir::Server& server)
 {
     server.add_configuration_option(startup_apps, "Colon separated list of startup apps", mir::OptionType::string);
-}
-
-void launch_startup_app(std::string socket_file, std::string app)
-{
-    pid_t pid = fork();
-
-    if (pid < 0)
-    {
-        throw std::runtime_error("Failed to fork process");
-    }
-
-    if (pid == 0)
-    {
-        auto const time_limit = std::chrono::steady_clock::now() + std::chrono::seconds(2);
-
-        do
-        {
-            if (access(socket_file.c_str(), R_OK|W_OK) != -1)
-                break;
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(10));
-        }
-        while (std::chrono::steady_clock::now() < time_limit);
-
-        setenv("MIR_SOCKET", socket_file.c_str(),  true);   // configure Mir socket
-        setenv("GDK_BACKEND", "mir", true);                 // configure GTK to use Mir
-        setenv("QT_QPA_PLATFORM", "ubuntumirclient", true); // configure Qt to use Mir
-        unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
-        setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland
-
-        // gnome-terminal is the (only known) special case
-        char const* exec_args[] = { "gnome-terminal", "--app-id", "com.canonical.miral.Terminal", nullptr };
-
-        if (app != exec_args[0])
-        {
-            exec_args[0] = app.c_str();
-            exec_args[1] = nullptr;
-        }
-
-        execvp(exec_args[0], const_cast<char*const*>(exec_args));
-
-        throw std::logic_error(std::string("Failed to execute client (") + exec_args[0] + ") error: " + strerror(errno));
-    }
-}
-
-void launch_startup_applications(::mir::Server& server)
-{
-    if (auto const options = server.get_options())
-    {
-        if (options->is_set(startup_apps))
-        {
-            auto const socket_file = options->get<std::string>("file");
-            auto const value = options->get<std::string>(startup_apps);
-
-            for (auto i = begin(value); i != end(value); )
-            {
-                auto const j = find(i, end(value), ':');
-
-                launch_startup_app(socket_file, std::string{i, j});
-
-                if ((i = j) != end(value)) ++i;
-            }
-        }
-    }
 }
 
 auto const env_hacks = "env-hacks";
@@ -176,6 +116,50 @@ void apply_env_hacks(::mir::Server& server)
 }
 }
 
+void miral::MirRunner::Self::launch_startup_applications(::mir::Server& server)
+{
+    if (auto const options = server.get_options())
+    {
+        if (options->is_set(startup_apps))
+        {
+            auto const value = options->get<std::string>(startup_apps);
+
+            std::lock_guard<decltype(mutex)> lock{mutex};
+            auto const updated = [&server, value, start_callback=this->start_callback]
+            {
+                auto const wayland_display = server.wayland_display();
+                auto const mir_socket = server.mir_socket_name();
+
+                for (auto i = begin(value); i != end(value); )
+                {
+                    auto const j = find(i, end(value), ':');
+
+                    std::vector<std::string> app{std::string{i, j}};
+
+                    // gnome-terminal is the (only known) special case
+                    // TODO this hack doesn't work on Fedora
+                    if (app[0] == "gnome-terminal")
+                        app.push_back("--app-id"),app.push_back("com.canonical.miral.Terminal");
+
+                    mir::optional_value<std::string> x11_display;
+
+                    auto const options = server.get_options();
+                    if (options->is_set(mo::x11_display_opt))
+                        x11_display = std::string(":") + std::to_string(options->get<int>(mo::x11_display_opt));
+
+                    launch_app(app, wayland_display, mir_socket, x11_display);
+
+                    if ((i = j) != end(value)) ++i;
+                }
+
+                start_callback();
+            };
+
+            start_callback = updated;
+        }
+    }
+}
+
 auto miral::MirRunner::Self::run_with(std::initializer_list<std::function<void(::mir::Server&)>> options)
 -> int
 try
@@ -208,12 +192,13 @@ try
     // before run() starts allocates resources and starts threads.
     launch_startup_applications(*server);
 
+    server->add_init_callback([server, this]
     {
         // By enqueuing the notification code in the main loop, we are
         // ensuring that the server has really and fully started.
         auto const main_loop = server->the_main_loop();
         main_loop->enqueue(this, start_callback);
-    }
+    });
 
     server->run();
 

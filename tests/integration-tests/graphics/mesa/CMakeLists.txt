@@ -2,12 +2,8 @@ if (MIR_BUILD_PLATFORM_MESA_KMS)
     ##########################################################################
     # mir_integration_tests_mesa-kms
     ##########################################################################
-    mir_add_wrapped_executable(
-      mir_integration_tests_mesa-kms
+    mir_add_wrapped_executable(mir_integration_tests_mesa-kms NOINSTALL
       ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_integration.cpp
-      ${MIR_SERVER_OBJECTS}
-      ${MIR_PLATFORM_OBJECTS}
-      $<TARGET_OBJECTS:mirplatformgraphicsmesakmsobjects>
     )
 
     add_dependencies(mir_integration_tests_mesa-kms GMock)
@@ -38,12 +34,8 @@ if (MIR_BUILD_PLATFORM_MESA_X11)
     ##########################################################################
     # mir_integration_tests_mesa-x11
     ##########################################################################
-    mir_add_wrapped_executable(
-      mir_integration_tests_mesa-x11
+    mir_add_wrapped_executable(mir_integration_tests_mesa-x11 NOINSTALL
       ${CMAKE_CURRENT_SOURCE_DIR}/test_buffer_integration.cpp
-      ${MIR_SERVER_OBJECTS}
-      ${MIR_PLATFORM_OBJECTS}
-      $<TARGET_OBJECTS:mirplatformgraphicsmesax11objects>
       $<TARGET_OBJECTS:mirplatformservermesax11sharedresources>
     )
 

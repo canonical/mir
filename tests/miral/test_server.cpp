@@ -30,7 +30,6 @@
 #include <mir/fd.h>
 #include <mir/main_loop.h>
 #include <mir/server.h>
-#include <mir/version.h>
 
 #include <boost/throw_exception.hpp>
 

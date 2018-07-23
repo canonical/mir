@@ -75,14 +75,14 @@ struct StubClientBuffer : client::ClientBuffer
     {
         return buffer;
     }
-    MirBufferPackage* package() const
+    MirBufferPackage* package() const override
     {
         return package_.get();
     }
     void update_from(MirBufferPackage const&) override {}
     void fill_update_msg(MirBufferPackage&)  override{}
 
-    void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint** attrs)
+    void egl_image_creation_parameters(EGLenum*, EGLClientBuffer*, EGLint** attrs) override
     {
         static EGLint image_attrs[] = { EGL_NONE };
         if (attrs)

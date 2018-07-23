@@ -1,7 +1,3 @@
-# Needed so we can install snaps
-sudo: required
-dist: trusty
-
 language: cpp
 
 branches:
@@ -15,6 +11,11 @@ branches:
   - /^v[\d\.]+$/
 
 stages:
+- name: process snaps
+  if: (type = pull_request
+        AND head_repo = MirServer/mir)
+      OR (type != pull_request
+        AND repo = MirServer/mir)
 - name: test
   # don't test on pushes to master or release pull requests or tag events
   # TODO: enable release pull request testing when we have more CI power
@@ -27,36 +28,51 @@ stages:
       AND ( branch = master
             OR branch =~ ^release/[\d\.]+$
             OR tag =~ ^v[\d\.]+$ )
+- name: process snaps
+  if: repo = MirServer/mir
 
 env:
   global:
-    # SPREAD_LINODE_KEY
-  - secure: QmijX+AeqyYUJuiRkdCCXMZTAzokc7Y9a5Lwv1Y48SALuBLyMULrJxNVrHi/8whRX97PL5+31JazS8ZdfxucIaEy/JapwbmoKlJIjsvcm4azFgzATlXLKdqkfTOZ0qtYdSI910UjRT7EfBp2tyTz4zDnXysicr3K/CWx2P4MnIvNoH+hNz6ux/WpET9a+GFMmDJmyqyxDNLiHCpk7AUHARMsl6LC0SeGfabJjd59cRkG0Kdktr7nDooegB9aZPrMkIH9HIFRkib45/nTFHHa7jqX0CvJPMTBY/QljPOuNfhkaNtUTxCdfqFH7u8hM7d7ieX6PavjSgt4aTZC4LVJf6Y7xC/LA32yZELHKUexH1EaDkur0fypErDpRmjoPC9yBvpijL+bLlnDAHNc7xnelIhn6HHd8qM6OpEQUN6yl3J5KHRSuXPsBxwMQWoo3cXWRtLo0ESrZOm5KJ2+UA+JArofBwcyeygbBtYnvzTJB+nNPCmY5TrqA6wPeSaaZPMsESCGmgzCRTxg3B2YNbgX7VqZjwBcwRhNwGzLSlL40WSOa7bgDyQTm76l7Y/6Nav4vMrSFDycQz1n4keaD4b0Dy7rUTD5HTIu+IP7KiO/anu8IPCnG4kBfPw2r52GHMXlNE9cN8aC9exwuvfZOn3DbtREPeZUTaxqpWUvAIQ7nRs=
+    # SPREAD_GOOGLE_KEY
+  - secure: C+R+J6LFdpge/aRDiCSVmU+Ps4sA0BhibQZgHi2iy20QkuD3NFiKcU7mISiEfWzsrRyLxtxYadWrfXXovyaSKDkIzuArVi/l5PyYRlLh7DYM/chk0CEbcoBpRKllgH57wU8ki7mCvksIbMdjZZo8iFIL79JUMaMvCK/QOwjqvj7d0I0qsJRT228G3n1KXKgRRL/9cafnjnzjHorrPpVJAkg8T7/QLO7uh7D5L5+KcHcf2Ws2/V05lhFXApCxL2QPLTCjn7cONKCaRfg35MkeFxWwTNm+JhGEW70A8Uk3qFWObWMPDEGrLkS5RF1Gw4zXrlqOyZRtK6VCaqsnJPVhqhLXliq9jNd/dbr/6L7hSa/t8ewbkXFuOqJzq240bEn4OCUFJOl9mwhklj14/Y+/xV3wRxIF6qdCDB99nirJKtwPjeYsKdCHLwKN/kj6yHhAU9JBDm+D5Odo9ny33eFPfQ+6SyGHL6BZKg7sVi8wbZwiTjmoN3wFZwSVto/4w1JiUHhJkMkEeIOlsQyfzJZl1DOTQDl4UiEAa8lhjvfqz8TqdXdu/3UPC9tokjnm45Joa5WkcnnvVsBoro+mSar6DipC6nb/+5yuguIEzcGha8iNyNMpMY0Ei0V+PwCl+M5k/vFtdA+HbSGs6VI4JvRd9awQ7geohn5ram5l4as67Sg=
   - DEBFULLNAME="Mir CI Bot"
   - DEBEMAIL="mir-ci-bot@canonical.com"
+  - SPREAD_PATH=/tmp/spread
   matrix:
-  - SYSTEM=ubuntu-16.04 VARIANT=amd64
-  - SYSTEM=ubuntu-16.04 VARIANT=arm64
-  - SYSTEM=ubuntu-17.10 VARIANT=amd64
-  - SYSTEM=ubuntu-devel VARIANT=clang
+  - SYSTEM=google:ubuntu-devel-64 VARIANT=amd64
+  - SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
+  - SYSTEM=google:ubuntu-16.04-64 VARIANT=amd64
+  - SYSTEM=google:ubuntu-16.04-64 VARIANT=arm64
+  - SYSTEM=google:ubuntu-18.04-64 VARIANT=clang
+  - SYSTEM=google:fedora-27-64 VARIANT=amd64
+  - SYSTEM=google:fedora-28-64 VARIANT=amd64
+
+matrix:
+  allow_failures:
+  - env: SYSTEM=google:ubuntu-devel-64 VARIANT=amd64
+  fast_finish: true
 
 before_install:
-- sudo apt-get --yes install snapd
-- sudo snap install spread
+- mkdir -p ${SPREAD_PATH}
+- pushd "${SPREAD_PATH}"
+- curl -s -O https://niemeyer.s3.amazonaws.com/spread-amd64.tar.gz
+- tar xzvf spread-amd64.tar.gz
+- popd
 
 script:
-- /snap/bin/spread linode:$SYSTEM:...:$VARIANT
+- ${SPREAD_PATH}/spread -v $SYSTEM:...:$VARIANT
 
 jobs:
   include:
   - &ppa-upload
     stage: upload to ppa:mir-team
     env: RELEASE=16.04
-    before_install:
+    git:
+      depth: false
+    before_install: &decrypt-bot-data
     - openssl aes-256-cbc -K $encrypted_ba35384b250b_key -iv $encrypted_ba35384b250b_iv
       -in tools/bot-data.tar.xz.enc -out tools/bot-data.tar.xz -d
     - tar --extract --xz --file tools/bot-data.tar.xz --directory ${HOME}
-    - git fetch --unshallow origin master:master
     script:
     - tools/ppa-upload.sh
     addons:
@@ -66,10 +82,19 @@ jobs:
         - devscripts
         - dput
         - fakeroot
+        - python-bzrlib
         - python-launchpadlib
+        - python-paramiko
   - <<: *ppa-upload
-    env: RELEASE=17.04
-  - <<: *ppa-upload
-    env: RELEASE=17.10
+    env: RELEASE=18.04
   - <<: *ppa-upload
     env: RELEASE=devel
+  - stage: process snaps
+    env: ~
+    language: python
+    python: [3.6]
+    before_install: *decrypt-bot-data
+    install:
+    - pip install -r tools/requirements.txt
+    script:
+    - tools/process_snaps.py

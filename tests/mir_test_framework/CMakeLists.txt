@@ -141,8 +141,6 @@ set_target_properties(
   LINK_FLAGS "-Wl,--version-script,${MIR_INPUT_PLATFORM_VERSION_SCRIPT}"
 )
 
-install(TARGETS mirplatforminputstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
-
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols-server.map.in
     ${CMAKE_CURRENT_BINARY_DIR}/symbols-server.map)
 set(server_symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols-server.map)
@@ -204,10 +202,4 @@ add_custom_command(TARGET mir-test-framework-static POST_BUILD
 
 string (REPLACE " -Wl,--no-undefined" " " CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
 
-install(TARGETS mirplatformgraphicsstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
-install(TARGETS mirplatformgraphicsthrow LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
-
-install(TARGETS mirclientplatformstub LIBRARY DESTINATION ${MIR_CLIENT_PLATFORM_PATH})
-
 add_subdirectory(udev-recordings/)
-add_subdirectory(testing-cursor-theme/)

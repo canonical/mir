@@ -19,8 +19,6 @@
 #ifndef __EGLAPP_H__
 #define __EGLAPP_H__
 
-#include <mir_toolkit/client_types.h>
-
 #include <memory>
 #include <vector>
 
@@ -28,6 +26,6 @@ class MirEglSurface;
 
 extern float mir_eglapp_background_opacity;
 
-std::vector<std::shared_ptr<MirEglSurface>> mir_eglapp_init(MirConnection* const connection);
+std::vector<std::shared_ptr<MirEglSurface>> mir_eglapp_init(struct wl_display* display);
 
 #endif

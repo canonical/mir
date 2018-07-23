@@ -17,19 +17,19 @@ the \#mirserver IRC channel on freenode.
 
 You’ll need a few development tools installed:
 
-    $ sudo apt install devscripts equivs git
+    sudo apt install devscripts equivs git
 
 With these installed you can checkout Mir and get the remaining dependencies:
 
-    $ git clone --recursive https://github.com/MirServer/mir.git
-    $ cd mir
-    $ mk-build-deps -i -s sudo
+    git clone --recursive https://github.com/MirServer/mir.git
+    cd mir
+    mk-build-deps -i -s sudo
 
 ### On Fedora
 
 You’ll need some development tools and packages installed:
 
-    $ sudo dnf install git cmake gcc-c++ boost-devel mesa-libEGL-devel \
+    sudo dnf install git cmake gcc-c++ boost-devel mesa-libEGL-devel \
     mesa-libGLES-devel glm-devel protobuf-lite-devel protobuf-compiler \
     capnproto-devel capnproto glog-devel gflags-devel systemd-devel \
     glib2-devel wayland-devel mesa-libgbm-devel libepoxy-devel nettle-devel \
@@ -39,21 +39,21 @@ You’ll need some development tools and packages installed:
 
 With these installed you can checkout Mir:
 
-    $ git clone --recursive https://github.com/MirServer/mir.git
-    $ cd mir
+    git clone --recursive https://github.com/MirServer/mir.git
+    cd mir
 
 Building Mir
 ------------
 
-    $ mkdir build
-    $ cd  build
-    $ cmake ..
-    $ make
+    mkdir build
+    cd  build
+    cmake ..
+    make
 
 This creates an example shell (miral-shell) in the bin directory. This can be
 run directly:
 
-    $ bin/miral-shell
+    bin/miral-shell
 
 With the default options this runs in a window on X (which is convenient for
 development).
@@ -61,13 +61,13 @@ development).
 The miral-shell example is simple, don’t expect to see a sophisticated launcher
 by default. You can start mir apps from the command-line. For example:
 
-    $ bin/miral-run qterminal
+    bin/miral-run qterminal
 
 To exit from miral-shell press Ctrl-Alt-BkSp.
 
 You can install the Mir examples, headers and libraries you've built with:
   
-    $ sudo make install
+    sudo make install
 
 ### Contributing to Mir
 
@@ -83,21 +83,5 @@ The Mir coding guidelines are [here](cppguide/index.html).
  - \ref md_HACKING "Mir hacking guide"
  - \ref component_reports
  - \ref dso_versioning_guide
- - \ref abi_compatibility_tools
  - \ref performance_framework
  - \ref latency "Measuring visual latency"
-
-## Building Mesa
-
-_The Mesa packages shipped with Ubuntu are already built with the relevant Mir patches
-and should work out of the box with Mir._
-
-For GL accelerated clients to use Mir they need to use a patched version of Mesa
-that supports Mir.
-
-The patch is hosted on GitHub:
-
-    $ git clone https://github.com/RAOF/mesa.git
-
-Compile as per normal instructions and pass --with-egl-platforms="mir,drm" to
-the configure options. You will need libmirclient installed as shown above.

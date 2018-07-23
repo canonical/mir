@@ -79,7 +79,8 @@ public:
         std::shared_ptr<Session> const& session,
         SurfaceId surface_id,
         uint64_t timestamp,
-        UserRequest request) override;
+        UserRequest request,
+        optional_value <uint32_t> hint) override;
 
 protected:
     std::shared_ptr<Shell> const wrapped;

@@ -23,6 +23,7 @@ set(CMAKE_CXX_FLAGS ${NO_NO_LTO_FLAGS})
 mir_add_wrapped_executable(miral-test NOINSTALL
     mru_window_list.cpp
     active_outputs.cpp
+    command_line_option.cpp
     window_id.cpp
     runner.cpp
     select_active_window.cpp
@@ -32,6 +33,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     window_properties.cpp
     drag_active_window.cpp
     modify_window_state.cpp
+    modify_window_specification.cpp
     test_server.cpp         test_server.h
     test_window_manager_tools.h
     display_reconfiguration.cpp

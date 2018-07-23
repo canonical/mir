@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -29,7 +29,8 @@
 
 namespace miral
 {
-class WindowManagementTrace : public WindowManagementPolicy, WindowManagerToolsImplementation
+class WindowManagementTrace : public WindowManagementPolicy,
+    WindowManagerToolsImplementation
 {
 public:
     WindowManagementTrace(WindowManagerTools const& wrapped, WindowManagementPolicyBuilder const& builder);
@@ -110,6 +111,23 @@ private:
     void for_each_window_in_workspace(
         std::shared_ptr<Workspace> const& workspace, std::function<void(Window const&)> const& callback) override;
 
+    void handle_request_drag_and_drop(WindowInfo& window_info) override;
+
+    void handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event) override;
+
+    void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) override;
+
+    void advise_adding_to_workspace(
+        std::shared_ptr<Workspace> const& workspace, std::vector<Window> const& windows) override;
+
+    void advise_removing_from_workspace(
+        std::shared_ptr<Workspace> const& workspace, std::vector<Window> const& windows) override;
+
+    auto confirm_placement_on_display(
+        WindowInfo const& window_info,
+        MirWindowState new_state,
+        Rectangle const& new_placement) -> Rectangle override;
+
 public:
     virtual void advise_begin() override;
 
@@ -134,6 +152,12 @@ public:
     virtual void advise_delete_window(WindowInfo const& window_info) override;
 
     virtual void advise_raise(std::vector<Window> const& windows) override;
+
+    void advise_output_create(Output const& output) override;
+
+    void advise_output_update(Output const& updated, Output const& original) override;
+
+    void advise_output_delete(Output const& output) override;
 
 private:
     WindowManagerTools wrapped;

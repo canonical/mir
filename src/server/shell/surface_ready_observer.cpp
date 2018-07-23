@@ -35,7 +35,7 @@ msh::SurfaceReadyObserver::SurfaceReadyObserver(
 msh::SurfaceReadyObserver::~SurfaceReadyObserver()
     = default;
 
-void msh::SurfaceReadyObserver::frame_posted(int, mir::geometry::Size const&)
+void msh::SurfaceReadyObserver::frame_posted(ms::Surface const*, int, geometry::Size const&)
 {
     if (auto const s = surface.lock())
     {

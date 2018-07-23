@@ -18,15 +18,17 @@
 
 #include "miral/internal_client.h"
 #include "join_client_threads.h"
-#include "both_versions.h"
 
 #include <mir/fd.h>
+#include <mir/main_loop.h>
 #include <mir/server.h>
 #include <mir/scene/session.h>
-#include <mir/main_loop.h>
+#include <mir/raii.h>
 
 #define MIR_LOG_COMPONENT "miral::Internal Client"
 #include <mir/log.h>
+
+#include <wayland-client.h>
 
 #include <atomic>
 #include <condition_variable>
@@ -39,27 +41,24 @@ namespace
 class InternalClientRunner
 {
 public:
-    InternalClientRunner(std::string name,
-         std::function<void(mir::client::Connection connection)> client_code,
-         std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification);
+    virtual void run(mir::Server& server) = 0;
 
-    void run(mir::Server& server);
-    void join_client_thread();
+    virtual void join_client_thread() = 0;
 
-    ~InternalClientRunner();
+    virtual ~InternalClientRunner() = default;
 
-private:
-    std::string const name;
-    std::thread thread;
-    std::mutex mutable mutex;
-    std::condition_variable mutable cv;
-    mir::Fd fd;
-    std::weak_ptr<mir::scene::Session> session;
-    mir::client::Connection connection;
-    std::function<void(mir::client::Connection connection)> const client_code;
-    std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification;
+    InternalClientRunner() = default;
+    InternalClientRunner(InternalClientRunner const&) = delete;
+    InternalClientRunner& operator=(InternalClientRunner const&) = delete;
+};
+}
+
+class miral::StartupInternalClient::Self : public virtual InternalClientRunner
+{
 };
 
+namespace
+{
 std::mutex client_runners_mutex;
 std::multimap<mir::Server*, std::weak_ptr<InternalClientRunner>> client_runners;
 
@@ -84,12 +83,34 @@ void join_runners_for(mir::Server* server)
 }
 }
 
-class miral::StartupInternalClient::Self : public InternalClientRunner
+// "Base" is a bit of compile time indirection because StartupInternalClient::Self is inaccessible
+template<typename Base>
+class MirInternalClientRunner : public Base, public virtual InternalClientRunner
 {
-    using InternalClientRunner::InternalClientRunner;
+public:
+    MirInternalClientRunner(std::string name,
+        std::function<void(mir::client::Connection connection)> client_code,
+        std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification);
+
+    void run(mir::Server& server) override;
+    void join_client_thread() override;
+
+    ~MirInternalClientRunner() override;
+
+private:
+    std::string const name;
+    std::thread thread;
+    std::mutex mutable mutex;
+    std::condition_variable mutable cv;
+    mir::Fd fd;
+    std::weak_ptr<mir::scene::Session> session;
+    mir::client::Connection connection;
+    std::function<void(mir::client::Connection connection)> const client_code;
+    std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification;
 };
 
-InternalClientRunner::InternalClientRunner(
+template<typename Base>
+MirInternalClientRunner<Base>::MirInternalClientRunner(
     std::string const name,
     std::function<void(mir::client::Connection connection)> client_code,
     std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification) :
@@ -99,7 +120,8 @@ InternalClientRunner::InternalClientRunner(
 {
 }
 
-void InternalClientRunner::run(mir::Server& server)
+template<typename Base>
+void MirInternalClientRunner<Base>::run(mir::Server& server)
 {
     fd = server.open_client_socket([this](std::shared_ptr<mir::frontend::Session> const& mf_session)
         {
@@ -134,13 +156,15 @@ void InternalClientRunner::run(mir::Server& server)
         }};
 }
 
-InternalClientRunner::~InternalClientRunner()
+template<typename Base>
+MirInternalClientRunner<Base>::~MirInternalClientRunner()
 {
     join_client_thread();
 }
 
 
-void InternalClientRunner::join_client_thread()
+template<typename Base>
+void MirInternalClientRunner<Base>::join_client_thread()
 {
     if (thread.joinable())
     {
@@ -148,21 +172,88 @@ void InternalClientRunner::join_client_thread()
     }
 }
 
-#ifndef __clang__
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZN5miral21StartupInternalClientC1ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt8functionIFvNS_7toolkit10ConnectionEEES7_IFvSt8weak_ptrIN3mir5scene7SessionEEEE,
-    _ZN5miral21StartupInternalClientC1ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt8functionIFvN3mir6client10ConnectionEEES7_IFvSt8weak_ptrINS8_5scene7SessionEEEE)
-#else
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZN5miral21StartupInternalClientC1ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt8functionIFvNS_7toolkit10ConnectionEEES7_IFvSt8weak_ptrIN3mir5scene7SessionEEEE,
-    _ZN5miral21StartupInternalClientC2ENSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt8functionIFvN3mir6client10ConnectionEEES7_IFvSt8weak_ptrINS8_5scene7SessionEEEE)
-// clang emits a different symbol ---^
-#endif
+// "Base" is a bit of compile time indirection because StartupInternalClient::Self is inaccessible
+template<typename Base>
+class WlInternalClientRunner : public Base, public virtual InternalClientRunner
+{
+public:
+    WlInternalClientRunner(
+        std::function<void(struct ::wl_display* display)> client_code,
+        std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification);
+
+    void run(mir::Server& server) override;
+    void join_client_thread() override;
+
+    ~WlInternalClientRunner() override;
+
+private:
+    std::thread thread;
+    std::mutex mutable mutex;
+    std::condition_variable mutable cv;
+    int fd;
+    std::weak_ptr<mir::scene::Session> session;
+    std::function<void(struct ::wl_display* display)> const client_code;
+    std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification;
+};
+
+template<typename Base>
+WlInternalClientRunner<Base>::WlInternalClientRunner(
+    std::function<void(struct ::wl_display* display)> client_code,
+    std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification) :
+    client_code(std::move(client_code)),
+    connect_notification(std::move(connect_notification))
+{
+}
+
+template<typename Base>
+void WlInternalClientRunner<Base>::run(mir::Server& server)
+{
+    fd = server.open_client_wayland([this](std::shared_ptr<mir::frontend::Session> const& mf_session)
+        {
+            std::lock_guard<decltype(mutex)> lock_guard{mutex};
+            session = std::dynamic_pointer_cast<mir::scene::Session>(mf_session);
+            connect_notification(session);
+            cv.notify_one();
+        });
+
+    thread = std::thread{[this]
+        {
+            if (auto const display = wl_display_connect_to_fd(fd))
+            {
+                auto const deleter = mir::raii::deleter_for(display, &wl_display_disconnect);
+                client_code(display);
+            }
+        }};
+}
+
+template<typename Base>
+WlInternalClientRunner<Base>::~WlInternalClientRunner()
+{
+    join_client_thread();
+}
+
+
+template<typename Base>
+void WlInternalClientRunner<Base>::join_client_thread()
+{
+    if (thread.joinable())
+    {
+        thread.join();
+    }
+}
+
 miral::StartupInternalClient::StartupInternalClient(
     std::string name,
     std::function<void(mir::client::Connection connection)> client_code,
     std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification) :
-    internal_client(std::make_shared<Self>(std::move(name), std::move(client_code), std::move(connect_notification)))
+    internal_client(std::make_shared<MirInternalClientRunner<Self>>(std::move(name), std::move(client_code), std::move(connect_notification)))
+{
+}
+
+miral::StartupInternalClient::StartupInternalClient(
+    std::function<void(struct ::wl_display* display)> client_code,
+    std::function<void(std::weak_ptr<mir::scene::Session> const session)> connect_notification) :
+    internal_client(std::make_shared<WlInternalClientRunner<Self>>(std::move(client_code), std::move(connect_notification)))
 {
 }
 
@@ -192,16 +283,21 @@ void miral::InternalClientLauncher::operator()(mir::Server& server)
     self->server = &server;
 }
 
-
-MIRAL_FAKE_OLD_SYMBOL(
-    _ZNK5miral22InternalClientLauncher6launchERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKSt8functionIFvNS_7toolkit10ConnectionEEERKS9_IFvSt8weak_ptrIN3mir5scene7SessionEEEE,
-    _ZNK5miral22InternalClientLauncher6launchERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKSt8functionIFvN3mir6client10ConnectionEEERKS9_IFvSt8weak_ptrINSA_5scene7SessionEEEE)
 void miral::InternalClientLauncher::launch(
     std::string const& name,
     std::function<void(mir::client::Connection connection)> const& client_code,
     std::function<void(std::weak_ptr<mir::scene::Session> const session)> const& connect_notification) const
 {
-    self->runner = std::make_shared<InternalClientRunner>(name, client_code, connect_notification);
+    self->runner = std::make_shared<MirInternalClientRunner<Self>>(name, client_code, connect_notification);
+    self->server->the_main_loop()->enqueue(this, [this] { self->runner->run(*self->server); });
+    register_runner(self->server, self->runner);
+}
+
+void miral::InternalClientLauncher::launch(
+    std::function<void(struct ::wl_display* display)> const& client_code,
+    std::function<void(std::weak_ptr<mir::scene::Session> const session)> const& connect_notification) const
+{
+    self->runner = std::make_shared<WlInternalClientRunner<Self>>(client_code, connect_notification);
     self->server->the_main_loop()->enqueue(this, [this] { self->runner->run(*self->server); });
     register_runner(self->server, self->runner);
 }

@@ -29,6 +29,7 @@
 namespace mir
 {
 class EmergencyCleanupRegistry;
+class ConsoleServices;
 
 namespace logging { class Logger; }
 
@@ -172,25 +173,49 @@ enum PlatformPriority : uint32_t
 typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
     std::shared_ptr<mir::logging::Logger> const& logger);
 
 typedef void(*AddPlatformOptions)(
     boost::program_options::options_description& config);
 
-typedef mir::graphics::PlatformPriority(*PlatformProbe)(mir::options::ProgramOption const& options);
+typedef mir::graphics::PlatformPriority(*PlatformProbe)(
+    std::shared_ptr<mir::ConsoleServices> const&,
+        mir::options::ProgramOption const& options);
 
 typedef mir::ModuleProperties const*(*DescribeModule)();
 
 typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
     std::shared_ptr<mir::logging::Logger> const& logger);
 
 typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderingPlatform)(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::graphics::PlatformAuthentication> const& platform_authentication);
+
+/** Signatures from the obsolete 0.27 ABI */
+namespace obsolete_0_27
+{
+constexpr char const* symbol_version = "MIR_GRAPHICS_PLATFORM_0.27";
+
+typedef mir::UniqueModulePtr<mir::graphics::Platform>(*CreateHostPlatform)(
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mir::graphics::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& logger);
+
+typedef mir::graphics::PlatformPriority(*PlatformProbe)(mir::options::ProgramOption const& options);
+
+typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatform)(
+    std::shared_ptr<mir::options::Option> const& options,
+    std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mir::graphics::DisplayReport> const& report,
+    std::shared_ptr<mir::logging::Logger> const& logger);
+}
 }
 }
 
@@ -209,6 +234,7 @@ extern "C"
  *
  * \param [in] options options to use for this platform
  * \param [in] emergency_cleanup_registry object to register emergency shutdown handlers with
+ * \param [in] console console-services provider
  * \param [in] report the object to use to report interesting events from the display subsystem
  * \param [in] logger the object to use to log interesting events from the display subsystem
  *
@@ -219,6 +245,7 @@ extern "C"
 mir::UniqueModulePtr<mir::graphics::Platform> create_host_platform(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
     std::shared_ptr<mir::logging::Logger> const& logger);
 
@@ -237,13 +264,16 @@ void add_graphics_platform_options(
 // TODO: We actually need to be more granular here; on a device with more
 //       than one graphics system we may need a different platform per GPU,
 //       so we should be associating platforms with graphics devices in some way
-mir::graphics::PlatformPriority probe_graphics_platform(mir::options::ProgramOption const& options);
+mir::graphics::PlatformPriority probe_graphics_platform(
+    std::shared_ptr<mir::ConsoleServices> const& console,
+    mir::options::ProgramOption const& options);
 
 mir::ModuleProperties const* describe_graphics_module();
 
 mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
+    std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::graphics::DisplayReport> const& report,
     std::shared_ptr<mir::logging::Logger> const& logger);
 
