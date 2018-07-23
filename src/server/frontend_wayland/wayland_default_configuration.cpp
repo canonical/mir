@@ -18,6 +18,7 @@
 
 #include "mir/default_server_configuration.h"
 #include "wayland_connector.h"
+#include "xdg_shell_v6.h"
 #include "xwayland_wm_shell.h"
 
 #include "mir/frontend/display_changer.h"
@@ -27,29 +28,28 @@
 namespace mf = mir::frontend;
 namespace mo = mir::options;
 
-namespace
-{
-struct X11Support : mf:: X11Support
-{
-    X11Support(bool enabled) : enabled{enabled} {}
-    std::shared_ptr<mir::frontend::XWaylandWMShell> build_window_manager(
-        std::shared_ptr<mir::frontend::Shell> const& shell, mir::frontend::WlSeat& seat,
-        mir::frontend::OutputManager* const output_manager) override
-    {
-        if (enabled)
-            return std::make_shared<mf::XWaylandWMShell>(shell, seat, output_manager);
-
-        return {};
-    }
-
-    const bool enabled;
-};
-}
-
-
 std::shared_ptr<mf::Connector>
     mir::DefaultServerConfiguration::the_wayland_connector()
 {
+    struct WaylandExtensions : mf::WaylandExtensions
+    {
+        WaylandExtensions(bool x11_enabled) : x11_enabled{x11_enabled} {}
+    protected:
+        virtual void custom_extensions(
+            wl_display* display,
+            std::shared_ptr<mf::Shell> const& shell,
+            mf::WlSeat* seat,
+            mf::OutputManager* const output_manager)
+        {
+            if (!getenv("MIR_DISABLE_XDG_SHELL_V6_UNSTABLE"))
+                add_extension("zxdg_shell_v6", std::make_shared<mf::XdgShellV6>(display, shell, *seat, output_manager));
+
+            if (x11_enabled)
+                add_extension("x11-support", std::make_shared<mf::XWaylandWMShell>(shell, *seat, output_manager));
+        }
+        const bool x11_enabled;
+    };
+
     return wayland_connector(
         [this]() -> std::shared_ptr<mf::Connector>
         {
@@ -70,6 +70,6 @@ std::shared_ptr<mf::Connector>
                 the_buffer_allocator(),
                 the_session_authorizer(),
                 arw_socket,
-                std::make_unique<X11Support>(options->is_set(mo::x11_display_opt)));
+                std::make_unique<WaylandExtensions>(options->is_set(mo::x11_display_opt)));
         });
 }

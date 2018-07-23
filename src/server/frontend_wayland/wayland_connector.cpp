@@ -25,7 +25,6 @@
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
-#include "xdg_shell_v6.h"
 #include "wl_region.h"
 
 #include "null_event_sink.h"
@@ -560,6 +559,32 @@ std::shared_ptr<mg::WaylandAllocator> allocator_for_display(
 }
 }
 
+void mf::WaylandExtensions::init(wl_display* display, std::shared_ptr<Shell> const& shell, WlSeat* seat, OutputManager* const output_manager)
+{
+
+    add_extension("wl_shell", std::make_shared<mf::WlShell>(display, shell, *seat, output_manager));
+
+    custom_extensions(display, shell, seat, output_manager);
+}
+
+void mf::WaylandExtensions::add_extension(std::string const name, std::shared_ptr<void> implementation)
+{
+    extension_protocols[std::move(name)] = std::move(implementation);
+}
+
+void mf::WaylandExtensions::custom_extensions(wl_display*, std::shared_ptr<Shell> const&, WlSeat*, OutputManager* const)
+{
+}
+
+auto mir::frontend::WaylandExtensions::get_extension(std::string const& name) const -> std::shared_ptr<void>
+{
+    auto const result = extension_protocols.find(name);
+    if (result != end(extension_protocols))
+        return result->second;
+
+    return {};
+}
+
 mf::WaylandConnector::WaylandConnector(
     optional_value<std::string> const& display_name,
     std::shared_ptr<mf::Shell> const& shell,
@@ -569,10 +594,11 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     bool arw_socket,
-    std::unique_ptr<X11Support> x11_factory)
+    std::unique_ptr<WaylandExtensions> extensions_)
     : display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
-      allocator{allocator_for_display(allocator, display.get())}
+      allocator{allocator_for_display(allocator, display.get())},
+      extensions{std::move(extensions_)}
 {
     if (pause_signal == mir::Fd::invalid)
     {
@@ -607,12 +633,10 @@ mf::WaylandConnector::WaylandConnector(
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
         display_config);
-    shell_global = std::make_unique<mf::WlShell>(display.get(), shell, *seat_global, output_manager.get());
-    data_device_manager_global = mf::create_data_device_manager(display.get());
-    if (!getenv("MIR_DISABLE_XDG_SHELL_V6_UNSTABLE"))
-        xdg_shell_global = std::make_unique<XdgShellV6>(display.get(), shell, *seat_global, output_manager.get());
 
-    xwayland_wm_shell = x11_factory->build_window_manager(shell, *seat_global, output_manager.get());
+    data_device_manager_global = mf::create_data_device_manager(display.get());
+
+    extensions->init(display.get(), shell, seat_global.get(), output_manager.get());
 
     wl_display_init_shm(display.get());
 
@@ -770,12 +794,12 @@ auto mf::WaylandConnector::socket_name() const -> optional_value<std::string>
     return wayland_display;
 }
 
-wl_display *mf::WaylandConnector::get_wl_display()
+auto mf::WaylandConnector::get_extension(std::string const& name) const -> std::shared_ptr<void>
 {
-    return display.get();
+    return extensions->get_extension(name);
 }
 
-std::shared_ptr<mf::XWaylandWMShell> mf::WaylandConnector::get_xwayland_wm_shell()
+auto mf::WaylandConnector::get_wl_display() const -> wl_display*
 {
-    return xwayland_wm_shell;
+    return display.get();
 }

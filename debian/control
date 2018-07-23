@@ -53,6 +53,7 @@ Build-Depends: cmake,
                libxcb-composite0-dev,
                libxcb-xfixes0-dev,
                libxcb-render0-dev,
+               libxcb-composite0-dev,
                libxcursor-dev
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir

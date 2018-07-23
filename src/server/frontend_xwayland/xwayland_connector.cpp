@@ -28,7 +28,7 @@
 namespace mf = mir::frontend;
 
 mf::XWaylandConnector::XWaylandConnector(const int xdisplay, std::shared_ptr<mf::WaylandConnector> wc)
-    : enabled(!!wc->get_xwayland_wm_shell())
+    : enabled(!!wc->get_extension("x11-support"))
 {
     if (enabled)
         xwayland_server = std::make_shared<mf::XWaylandServer>(xdisplay, wc);

@@ -68,7 +68,7 @@ void mf::XWaylandWMSurface::set_surface(WlSurface *wls)
 {
     wlsurface = wls;
 
-    auto shell = xwm->get_wl_connector()->get_xwayland_wm_shell();
+    auto shell = std::static_pointer_cast<XWaylandWMShell>(xwm->get_wl_connector()->get_extension("x11-support"));
     shell_surface = shell->get_shell_surface(xwm->get_wl_client(), wlsurface);
     shell_surface->set_surface(this);
 
