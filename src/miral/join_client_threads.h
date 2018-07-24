@@ -19,9 +19,6 @@
 #ifndef MIRAL_JOIN_CLIENT_THREADS_H
 #define MIRAL_JOIN_CLIENT_THREADS_H
 
-// For no obvious reason this has to be explicit on Cosmic and not implied
-// by the linker's symbol version script
-__attribute__ ((visibility("hidden")))
 void join_client_threads(mir::Server* server);
 
 #endif //MIRAL_JOIN_CLIENT_THREADS_H
