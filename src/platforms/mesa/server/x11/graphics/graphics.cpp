@@ -39,7 +39,7 @@ mx::X11Resources x11_resources;
 
 namespace
 {
-char const* x11_displays_option_name{"x11-displays"};
+char const* x11_displays_option_name{"x11-output"};
 }
 
 mir::UniqueModulePtr<mg::Platform> create_host_platform(
@@ -51,12 +51,12 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     if (!x11_resources.get_conn())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 output"));
 
     auto display_dims_str = options->get<std::string>(x11_displays_option_name);
     auto pos = display_dims_str.find('x');
     if (pos == std::string::npos)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Malformed display size option"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Malformed output size option"));
 
     return mir::make_module_ptr<mgx::Platform>(
         x11_resources.get_conn(),
@@ -73,7 +73,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     config.add_options()
         (x11_displays_option_name,
          boost::program_options::value<std::string>()->default_value("1280x1024"),
-         "[mir-on-X specific] WIDTHxHEIGHT of \"display\" window.");
+         "[mir-on-X specific] WIDTHxHEIGHT of \"output\" window.");
 }
 
 mg::PlatformPriority probe_graphics_platform(
@@ -126,12 +126,12 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
 
     if (!x11_resources.get_conn())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 output"));
 
     auto display_dims_str = options->get<std::string>(x11_displays_option_name);
     auto pos = display_dims_str.find('x');
     if (pos == std::string::npos)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Malformed display size option"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Malformed output size option"));
 
     return mir::make_module_ptr<mgx::Platform>(
                x11_resources.get_conn(),
