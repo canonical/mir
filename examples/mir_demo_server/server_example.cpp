@@ -33,6 +33,7 @@
 #include <miral/display_configuration_option.h>
 #include <miral/runner.h>
 #include <miral/window_management_options.h>
+#include <miral/x11_support.h>
 
 #include "mir/abnormal_exit.h"
 #include "mir/server.h"
@@ -146,6 +147,7 @@ try
         me::add_log_host_lifecycle_option_to,
         me::add_glog_options_to,
         miral::StartupInternalClient{"Intro", spinner},
+        miral::X11Support{},
         launcher,
         window_managers,
         me::add_custom_compositor_option_to,
