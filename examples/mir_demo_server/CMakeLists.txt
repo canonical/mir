@@ -34,7 +34,11 @@ target_link_libraries(mir_demo_server_loadable
   ${Boost_LIBRARIES}
 )
 
-mir_add_wrapped_executable(mir_demo_server NOINSTALL
+install(TARGETS mir_demo_server_loadable
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+mir_add_wrapped_executable(mir_demo_server
   mir_demo_server_loader.cpp
 )
 

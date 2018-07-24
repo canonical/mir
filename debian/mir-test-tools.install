@@ -3,3 +3,5 @@ usr/bin/mir_performance_tests
 usr/bin/mir-smoke-test-runner
 usr/lib/*/mir/tools/libmirclientlttng.so
 usr/lib/*/mir/tools/libmirserverlttng.so
+usr/bin/mir_demo_server
+usr/lib/*/libmir_demo_server_loadable.so
