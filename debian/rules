@@ -31,6 +31,11 @@ ifeq ($(DEB_HOST_ARCH),s390x)
 	COMMON_CONFIGURE_OPTIONS += -DMIR_LINK_TIME_OPTIMIZATION=OFF
 endif
 
+# Don't use "gold" linker 16.04 , due to failing to build on ppc64le
+ifneq ($(filter xenial,$(DEB_DISTRIBUTION)),)
+	COMMON_CONFIGURE_OPTIONS += -DMIR_USE_LD=ld
+endif
+
 $(info COMMON_CONFIGURE_OPTIONS: ${COMMON_CONFIGURE_OPTIONS})
 
 override_dh_auto_configure:
