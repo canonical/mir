@@ -74,7 +74,6 @@ Terminal.
 If you use the terminal launched by `miral-app` Wayland applications can be
 started as usual:
 
-    mir_demo_client_chain_jumping_buffers
     kate
     neverputt
     gedit
