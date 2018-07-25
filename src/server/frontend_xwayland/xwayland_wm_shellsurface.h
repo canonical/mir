@@ -56,7 +56,7 @@ public:
 protected:
     void destroy() override;
     void set_transient(struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags);
-    void handle_resize(const geometry::Size& new_size) override;
+    void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left, geometry::Size const& new_size) override;
 
     using WindowWlSurfaceRole::client;
     using WindowWlSurfaceRole::surface_id;

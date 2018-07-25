@@ -68,7 +68,8 @@ void mf::XWaylandWMShellSurface::set_transient(struct wl_resource* parent, int32
     (void)flags;
     mir::log_verbose("set transidient");
 }
-void mf::XWaylandWMShellSurface::handle_resize(const geometry::Size& new_size)
+void mf::XWaylandWMShellSurface::handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
+                                               geometry::Size const& new_size)
 {
     mir::log_verbose("handle resize");
     if (surface != NULL)
