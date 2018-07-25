@@ -58,13 +58,17 @@ public:
     void ack_configure(uint32_t serial) override;
     void commit(WlSurfaceState const& state) override;
 
-    void handle_resize(const geometry::Size & new_size) override;
+    void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
+                       geometry::Size const& new_size) override;
 
     void set_parent(optional_value<SurfaceId> parent_id);
     void set_title(std::string const& title);
     void move(struct wl_resource* seat, uint32_t serial);
     void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges);
-    void set_notify_resize(std::function<void(geometry::Size const& new_size, MirWindowState state, bool active)> notify_resize);
+    void set_notify_resize(std::function<void(std::experimental::optional<geometry::Point> const& new_top_left,
+                                              geometry::Size const& new_size,
+                                              MirWindowState state,
+                                              bool active)> notify_resize);
     void set_next_commit_action(std::function<void()> action);
     void clear_next_commit_action();
     void set_max_size(int32_t width, int32_t height);
@@ -75,8 +79,10 @@ public:
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
     std::function<void()> next_commit_action{[]{}};
-    std::function<void(geometry::Size const& new_size, MirWindowState state, bool active)> notify_resize =
-        [](auto, auto, auto){};
+    std::function<void(std::experimental::optional<geometry::Point> const& new_top_left,
+                       geometry::Size const& new_size,
+                       MirWindowState state,
+                       bool active)> notify_resize = [](auto, auto, auto, auto){};
 };
 
 class XdgPopupV6 : wayland::XdgPopupV6
@@ -284,7 +290,11 @@ void mf::XdgSurfaceV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/,
     WindowWlSurfaceRole::initiate_interactive_resize(edge);
 }
 
-void mf::XdgSurfaceV6::set_notify_resize(std::function<void(geometry::Size const&, MirWindowState, bool)> notify_resize_)
+void mf::XdgSurfaceV6::set_notify_resize(
+    std::function<void(std::experimental::optional<geometry::Point> const&,
+                       geometry::Size const&,
+                       MirWindowState,
+                       bool)> notify_resize_)
 {
     notify_resize = notify_resize_;
 }
@@ -326,10 +336,17 @@ void mf::XdgSurfaceV6::commit(mf::WlSurfaceState const& state)
     clear_next_commit_action();
 }
 
-void mf::XdgSurfaceV6::handle_resize(geometry::Size const& new_size)
+void mf::XdgSurfaceV6::handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
+                                     geometry::Size const& new_size)
 {
-    auto const action = [notify_resize=notify_resize, new_size, state=window_state(), is_active=is_active()]
-        { notify_resize(new_size, state, is_active); };
+    auto const action = [notify_resize=notify_resize,
+                         new_top_left,
+                         new_size,
+                         state=window_state(),
+                         is_active=is_active()]()
+        {
+            notify_resize(new_top_left, new_size, state, is_active);
+        };
 
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
     action();
@@ -368,7 +385,10 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
       self{self}
 {
     self->set_notify_resize(
-        [this](geom::Size const& new_size, MirWindowState state, bool active)
+        [this](std::experimental::optional<geom::Point> const& /*new_top_left*/,
+               geom::Size const& new_size,
+               MirWindowState state,
+               bool active)
         {
             wl_array states;
             wl_array_init(&states);

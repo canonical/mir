@@ -79,7 +79,8 @@ public:
 
     void set_state_now(MirWindowState state);
 
-    virtual void handle_resize(geometry::Size const& new_size) = 0;
+    virtual void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
+                               geometry::Size const& new_size) = 0;
 
 protected:
     std::shared_ptr<bool> const destroyed;
