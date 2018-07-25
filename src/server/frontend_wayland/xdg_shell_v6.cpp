@@ -73,6 +73,7 @@ public:
     void clear_next_commit_action();
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
+    void send_configure();
 
     using WindowWlSurfaceRole::client;
 
@@ -92,6 +93,9 @@ public:
 
     void grab(struct wl_resource* seat, uint32_t serial) override;
     void destroy() override;
+
+private:
+    std::experimental::optional<geom::Point> last_top_left;
 };
 
 class XdgToplevelV6 : public wayland::XdgToplevelV6
@@ -314,6 +318,12 @@ void mf::XdgSurfaceV6::set_min_size(int32_t width, int32_t height)
     WindowWlSurfaceRole::set_min_size(width, height);
 }
 
+void mf::XdgSurfaceV6::send_configure()
+{
+    auto const serial = wl_display_next_serial(wl_client_get_display(client));
+    zxdg_surface_v6_send_configure(resource, serial);
+}
+
 void mf::XdgSurfaceV6::clear_next_commit_action()
 {
     next_commit_action = []{};
@@ -324,8 +334,7 @@ void mf::XdgSurfaceV6::set_next_commit_action(std::function<void()> action)
     next_commit_action = [this, action]
     {
         action();
-        auto const serial = wl_display_next_serial(wl_client_get_display(client));
-        zxdg_surface_v6_send_configure(resource, serial);
+        send_configure();
     };
 }
 
@@ -363,6 +372,26 @@ mf::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent,
     // TODO Make this readable!!! This "works" by exploiting the non-obvious side-effect
     // of causing a zxdg_surface_v6_send_configure() event to become pending.
     self->set_next_commit_action([]{});
+
+    self->set_notify_resize(
+        [this, self](std::experimental::optional<geom::Point> const& new_top_left,
+               geom::Size const& new_size,
+               MirWindowState /*state*/,
+               bool /*active*/)
+        {
+            if (new_top_left)
+                last_top_left = new_top_left;
+
+            if (!last_top_left)
+                return;
+
+            zxdg_popup_v6_send_configure(resource,
+                                         last_top_left.value().x.as_int(),
+                                         last_top_left.value().y.as_int(),
+                                         new_size.width.as_int(),
+                                         new_size.height.as_int());
+            self->send_configure();
+        });
 }
 
 void mf::XdgPopupV6::grab(struct wl_resource* seat, uint32_t serial)
