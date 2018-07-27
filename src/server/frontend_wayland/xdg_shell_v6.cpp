@@ -95,7 +95,8 @@ public:
     void destroy() override;
 
 private:
-    std::experimental::optional<geom::Point> last_top_left;
+    std::experimental::optional<geom::Point> cached_top_left;
+    std::experimental::optional<geom::Size> cached_size;
 };
 
 class XdgToplevelV6 : public wayland::XdgToplevelV6
@@ -379,18 +380,22 @@ mf::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent,
                MirWindowState /*state*/,
                bool /*active*/)
         {
+            bool const needs_configure = (new_top_left != cached_top_left) || (new_size != cached_size);
+
             if (new_top_left)
-                last_top_left = new_top_left;
+                cached_top_left = new_top_left;
 
-            if (!last_top_left)
-                return;
+            cached_size = new_size;
 
-            zxdg_popup_v6_send_configure(resource,
-                                         last_top_left.value().x.as_int(),
-                                         last_top_left.value().y.as_int(),
-                                         new_size.width.as_int(),
-                                         new_size.height.as_int());
-            self->send_configure();
+            if (needs_configure && cached_top_left && cached_size)
+            {
+                zxdg_popup_v6_send_configure(resource,
+                                            cached_top_left.value().x.as_int(),
+                                            cached_top_left.value().y.as_int(),
+                                            cached_size.value().width.as_int(),
+                                            cached_size.value().height.as_int());
+                self->send_configure();
+            }
         });
 }
 
