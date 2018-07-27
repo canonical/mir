@@ -85,6 +85,36 @@ public:
     };
 };
 
+class VTSwitcher
+{
+public:
+    virtual ~VTSwitcher() = default;
+
+    /**
+     * Initiate a switch to the specified VT
+     *
+     * \note    On all current platforms this call is *not* synchronous; it will
+     *          initiate the request for a VT switch, but not wait until the switch
+     *          has completed. The switch from Mir's VT can be detected with the
+     *          from the switch_away callback of
+     *          ConsoleServices::register_switch_handlers()
+     * \note    It is *not* an error to call this with the number of the active VT.
+     *          This will be a no-op.
+     * \param vt_number     [in] Number of the VT to switch to
+     * \param error_handler [in] Functor to call should an asynchronous error occur.
+     */
+    virtual void switch_to(
+        int vt_number,
+        std::function<void(std::exception const& error)> const& error_handler) = 0;
+
+protected:
+    VTSwitcher() = default;
+
+private:
+    VTSwitcher(VTSwitcher const&) = delete;
+    VTSwitcher& operator=(VTSwitcher const&) = delete;
+};
+
 class ConsoleServices
 {
 public:
@@ -95,6 +125,16 @@ public:
         std::function<bool()> const& switch_away,
         std::function<bool()> const& switch_back) = 0;
     virtual void restore() = 0;
+
+    /**
+     * Construct a VTSwitcher
+     *
+     * \return  A VTSwitcher instance if the current environment and ConsoleServices
+     *          implementation support it.
+     * \throws  A std::runtime_error if either the ConsoleServices implementation
+     *          or the current environment do not support VT switching.
+     */
+    virtual std::unique_ptr<VTSwitcher> create_vt_switcher() = 0;
 
     /**
      * Asynchronously acquire access to a device node.

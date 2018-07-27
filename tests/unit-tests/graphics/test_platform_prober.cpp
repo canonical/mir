@@ -18,6 +18,7 @@
 
 #include <gtest/gtest.h>
 #include <fcntl.h>
+#include <boost/throw_exception.hpp>
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_probe.h"
@@ -115,6 +116,12 @@ public:
 
     void restore() override
     {
+    }
+
+    std::unique_ptr<mir::VTSwitcher> create_vt_switcher() override
+    {
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{"StubConsoleServices does not support VT switching"}));
     }
 
     std::future<std::unique_ptr<mir::Device>> acquire_device(

@@ -721,6 +721,37 @@ public:
         }
     }
 
+    void add_switch_to_to_seat(
+        char const* seat_path,
+        char const* mock_code)
+    {
+        auto result = std::unique_ptr<GVariant, decltype(&g_variant_unref)>{
+            g_dbus_connection_call_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                seat_path,
+                "org.freedesktop.DBus.Mock",
+                "AddMethod",
+                g_variant_new(
+                    "(sssss)",
+                    "org.freedesktop.login1.Seat",
+                    "SwitchTo",
+                    "u",
+                    "",
+                    mock_code),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NO_AUTO_START,
+                1000,
+                nullptr,
+                nullptr),
+            &g_variant_unref};
+
+        if (!result)
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to add SwitchTo"}));
+        }
+    }
+
     struct CallInfo
     {
         using GVariantPtr = std::unique_ptr<GVariant, decltype(&g_variant_unref)>;
@@ -1435,6 +1466,101 @@ TEST_F(LogindConsoleServices, can_acquire_device_without_running_main_loop)
             [](){})).get();
 
     EXPECT_TRUE(device_acquired);
+    stop_mainloop();
+}
+
+TEST_F(LogindConsoleServices, creates_vt_switcher_when_vt_switching_possible)
+{
+    ensure_mock_logind();
+    add_any_active_session();
+
+    mir::LogindConsoleServices console{the_main_loop()};
+
+    EXPECT_THAT(console.create_vt_switcher(), NotNull());
+
+    stop_mainloop();
+}
+
+//TODO: Add test for create_vt_switcher() failing when Logind *can't* switch VTs
+
+TEST_F(LogindConsoleServices, vt_switcher_calls_error_handler_on_error)
+{
+    ensure_mock_logind();
+    add_seat("seat0");
+    add_session(
+        "s1",
+        "seat0",
+        1000,
+        "ubuntu",
+        true,
+        "");
+
+    add_switch_to_to_seat(
+        "/org/freedesktop/login1/seat/seat0",
+        "raise dbus.exceptions.DBusException('No such file or directory (2)', name='System.Error.ENOENT')");
+
+    mir::LogindConsoleServices console{the_main_loop()};
+    auto switcher = console.create_vt_switcher();
+
+    auto error_received = std::make_shared<mt::Signal>();
+
+    switcher->switch_to(
+        7,
+        [error_received](std::exception const& err)
+        {
+            EXPECT_THAT(dynamic_cast<std::runtime_error const*>(&err), NotNull());
+            EXPECT_THAT(err.what(), ContainsRegex(".*No such file or directory.*"));
+            error_received->raise();
+        });
+    EXPECT_TRUE(error_received->wait_for(30s));
+
+    stop_mainloop();
+}
+
+TEST_F(LogindConsoleServices, vt_switcher_calls_switch_to_with_correct_argument)
+{
+    ensure_mock_logind();
+    add_seat("seat0");
+    add_session(
+        "s1",
+        "seat0",
+        1000,
+        "ubuntu",
+        true,
+        "");
+
+    add_switch_to_to_seat(
+        "/org/freedesktop/login1/seat/seat0",
+        "");
+
+    mir::LogindConsoleServices console{the_main_loop()};
+    auto switcher = console.create_vt_switcher();
+
+    switcher->switch_to(
+        3,
+        [](auto){});
+
+    auto calls_made = get_calls_for_object("/org/freedesktop/login1/seat/seat0");
+
+    auto switch_to_call = std::find_if(
+        calls_made.begin(),
+        calls_made.end(),
+        [](CallInfo const& call)
+        {
+            return call.method_name == "SwitchTo";
+        });
+
+    ASSERT_THAT(switch_to_call, Not(Eq(calls_made.end())));
+    ASSERT_THAT(switch_to_call->arguments.size(), Eq(1));
+
+    unsigned vt_arg;
+    g_variant_get(
+        switch_to_call->arguments[0].get(),
+        "u",
+        &vt_arg);
+
+    EXPECT_THAT(vt_arg, Eq(3));
+
     stop_mainloop();
 }
 

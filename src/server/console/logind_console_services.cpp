@@ -726,4 +726,76 @@ GDBusMessage* mir::LogindConsoleServices::resume_device_dbus_filter(
     g_object_unref(message);
     return nullptr;
 }
+
+namespace
+{
+class LogindVTSwitcher : public mir::VTSwitcher
+{
+public:
+    LogindVTSwitcher(
+        std::unique_ptr<LogindSeat, decltype(&g_object_unref)> seat_proxy,
+        std::shared_ptr<mir::GLibMainLoop> ml)
+        : seat_proxy{std::move(seat_proxy)},
+          ml{std::move(ml)}
+    {
+    }
+
+    void switch_to(
+        int vt_number,
+        std::function<void(std::exception const&)> const& error_handler) override
+    {
+        ml->run_with_context_as_thread_default(
+            [this, vt_number, &error_handler]()
+            {
+                logind_seat_call_switch_to(
+                    seat_proxy.get(),
+                    vt_number,
+                    nullptr,
+                    &LogindVTSwitcher::complete_switch_to,
+                    new std::function<void(std::exception const&)>{error_handler});
+            });
+    }
+
+private:
+    static void complete_switch_to(
+        GObject* seat_proxy,
+        GAsyncResult* result,
+        gpointer userdata)
+    {
+        auto const error_handler = std::unique_ptr<std::function<void(std::exception const&)>>{
+            static_cast<std::function<void(std::exception const&)>*>(userdata)};
+        GErrorPtr error;
+
+        if (!logind_seat_call_switch_to_finish(
+           LOGIND_SEAT(seat_proxy),
+           result,
+           &error))
+        {
+            auto const err = boost::enable_error_info(
+                std::runtime_error{
+                    std::string{"Logind request to switch vt failed: "} +
+                    error->message})
+                        << boost::throw_file(__FILE__)
+                        << boost::throw_function(__PRETTY_FUNCTION__)
+                        << boost::throw_line(__LINE__);
+
+            (*error_handler)(err);
+        }
+    }
+
+    std::unique_ptr<LogindSeat, decltype(&g_object_unref)> const seat_proxy;
+    std::shared_ptr<mir::GLibMainLoop> const ml;
+};
+}
+
+std::unique_ptr<mir::VTSwitcher> mir::LogindConsoleServices::create_vt_switcher()
+{
+    // TODO: Query logind whether VTs exist at all, and throw if they don't.
+    return std::make_unique<LogindVTSwitcher>(
+        std::unique_ptr<LogindSeat, decltype(&g_object_unref)>{
+            LOGIND_SEAT(g_object_ref(seat_proxy.get())),
+            &g_object_unref},
+        ml);
+}
+
 #endif

@@ -19,6 +19,7 @@
 #ifndef MIR_NULL_CONSOLE_SERVICES_H_
 #define MIR_NULL_CONSOLE_SERVICES_H_
 
+#include <boost/throw_exception.hpp>
 #include <future>
 #include "mir/console_services.h"
 #include "mir/fd.h"
@@ -35,6 +36,12 @@ public:
     }
 
     void restore() override {}
+
+    std::unique_ptr<VTSwitcher> create_vt_switcher() override
+    {
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{"NullConsoleServices does not support VT switching"}));
+    }
 
     std::future<std::unique_ptr<Device>> acquire_device(
         int, int,
