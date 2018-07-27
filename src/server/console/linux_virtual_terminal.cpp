@@ -21,6 +21,7 @@
 #include "mir/graphics/event_handler_register.h"
 #include "mir/fd.h"
 #include "mir/emergency_cleanup_registry.h"
+#include "ioctl_vt_switcher.h"
 
 #define MIR_LOG_COMPONTENT "VT-handler"
 #include "mir/log.h"
@@ -654,4 +655,19 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
     }
 
     return device_promise.get_future();
+}
+
+std::unique_ptr<mir::VTSwitcher> mir::LinuxVirtualTerminal::create_vt_switcher()
+{
+    mir::Fd control_fd{fcntl(vt_fd.fd(), F_DUPFD_CLOEXEC, 0)};
+    if (control_fd == mir::Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to duplicate file descriptor for VT control fd"}));
+    }
+
+    return std::make_unique<console::IoctlVTSwitcher>(control_fd);
 }

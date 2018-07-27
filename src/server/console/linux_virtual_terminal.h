@@ -93,6 +93,7 @@ public:
         std::function<bool()> const& switch_away,
         std::function<bool()> const& switch_back) override;
     void restore() override;
+    std::unique_ptr<VTSwitcher> create_vt_switcher() override;
     std::future<std::unique_ptr<mir::Device>> acquire_device(
         int major, int minor,
         std::unique_ptr<mir::Device::Observer> observer) override;
