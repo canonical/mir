@@ -439,7 +439,7 @@ void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms
             }
         }
     }
-    catch (std::out_of_range e)
+    catch (std::out_of_range const& e)
     {
         // tools->info_for(surface) throws std::out_of_range if the surface isn't in a map
         // so far I only know of this happening in shutdown after WLCS XDG shell popup tests
