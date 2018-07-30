@@ -25,6 +25,8 @@
 #include "wayland_utils.h"
 #include "window_wl_surface_role.h"
 
+#include <mir_toolkit/events/window_placement.h>
+
 #include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;
@@ -71,6 +73,12 @@ void mf::WlSurfaceEventSink::handle_event(EventUPtr&& event)
                 case mir_event_type_window:
                     handle_window_event(mir_event_get_window_event(event.get()));
                     break;
+                case mir_event_type_window_placement:
+                {
+                    auto const placement_event{mir_event_get_window_placement_event(event.get())};
+                    auto const rect = mir_window_placement_get_relative_position(placement_event);
+                    window->handle_resize(geom::Point{rect.left, rect.top}, geom::Size{rect.width, rect.height});
+                }
                 default:
                     break;
             }
@@ -81,7 +89,7 @@ void mf::WlSurfaceEventSink::handle_resize(mir::geometry::Size const& new_size)
 {
     requested_size = new_size;
     if (requested_size != window_size)
-        window->handle_resize(requested_size);
+        window->handle_resize(std::experimental::nullopt, requested_size);
 }
 
 void mf::WlSurfaceEventSink::handle_input_event(MirInputEvent const* event)
@@ -131,12 +139,12 @@ void mf::WlSurfaceEventSink::handle_window_event(MirWindowEvent const* event)
         has_focus = mir_window_event_get_attribute_value(event);
         if (has_focus)
             seat->notify_focus(client);
-        window->handle_resize(requested_size);
+        window->handle_resize(std::experimental::nullopt, requested_size);
         break;
 
     case mir_window_attrib_state:
         current_state = MirWindowState(mir_window_event_get_attribute_value(event));
-        window->handle_resize(requested_size);
+        window->handle_resize(std::experimental::nullopt, requested_size);
         break;
 
     default:;

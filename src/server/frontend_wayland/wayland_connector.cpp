@@ -341,7 +341,8 @@ protected:
         become_surface_role();
     }
 
-    void handle_resize(const geometry::Size & new_size) override
+    void handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
+                       geometry::Size const& new_size) override
     {
         wl_shell_surface_send_configure(resource, WL_SHELL_SURFACE_RESIZE_NONE, new_size.width.as_int(),
                                         new_size.height.as_int());
