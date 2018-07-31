@@ -67,6 +67,13 @@ extern char const* const lttng_opt_value;
 extern char const* const platform_graphics_lib;
 extern char const* const platform_input_lib;
 extern char const* const platform_path;
+
+extern char const* const console_provider;
+extern char const* const logind_console;
+extern char const* const vt_console;
+extern char const* const null_console;
+extern char const* const auto_console;
+
 extern char const* const vt_option_name;
 
 class Configuration
