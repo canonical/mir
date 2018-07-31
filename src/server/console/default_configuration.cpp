@@ -96,7 +96,7 @@ struct RealPosixProcessOperations : public mir::PosixProcessOperations
 
 std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_console_services()
 {
-    return console_services(
+    auto const make_console_services =
         [this]() -> std::shared_ptr<ConsoleServices>
         {
             auto const provider = the_options()->get<std::string>(options::console_provider);
@@ -200,5 +200,13 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
             BOOST_THROW_EXCEPTION((
                 std::runtime_error{
                     std::string{"Unknown console provider: "} + provider}));
-        });
+        };
+
+    // TODO: this is clearly not threadsafe, but then neither is CachedPtr
+    if (!console_services)
+    {
+        console_services = make_console_services();
+    }
+
+    return console_services;
 }
