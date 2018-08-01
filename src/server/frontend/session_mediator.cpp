@@ -1330,7 +1330,8 @@ void mir::frontend::SessionMediator::request_operation(
         shell->request_operation(
             session, mf::SurfaceId{surface_id.value()},
             cookie_ptr->timestamp(),
-            Shell::UserRequest::resize);
+            Shell::UserRequest::resize,
+            request->hint());
         break;
 
     default:
