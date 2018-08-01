@@ -10,7 +10,6 @@ endif()
 
 include_directories(
     ${PROJECT_SOURCE_DIR}/src/miral
-    ${MIRTEST_INCLUDE_DIRS}
     ${GMOCK_INCLUDE_DIR}
     ${GTEST_INCLUDE_DIR}
 )
@@ -20,32 +19,40 @@ set(CMAKE_C_FLAGS ${NO_NO_LTO_FLAGS})
 string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_CXX_FLAGS})
 set(CMAKE_CXX_FLAGS ${NO_NO_LTO_FLAGS})
 
-mir_add_wrapped_executable(miral-test NOINSTALL
+add_library(miral-test-framework SHARED
+    test_server.cpp     ../include/miral/test_server.h
+)
+
+target_include_directories(miral-test-framework PUBLIC ../include/miral)
+
+target_link_libraries(miral-test-framework
+PUBLIC
+    ${GTEST_BOTH_LIBRARIES}
+    ${GMOCK_LIBRARIES}
+    miral
+    mir-test-assist
+PRIVATE
+    miral-internal
+)
+
+mir_add_wrapped_executable(miral-test-internal NOINSTALL
     mru_window_list.cpp
     active_outputs.cpp
     command_line_option.cpp
-    window_id.cpp
-    runner.cpp
     select_active_window.cpp
     window_placement.cpp
     window_placement_anchors_to_parent.cpp
-    window_placement_client_api.cpp
-    window_properties.cpp
     drag_active_window.cpp
     modify_window_state.cpp
     modify_window_specification.cpp
-    test_server.cpp         test_server.h
-    test_window_manager_tools.h
     display_reconfiguration.cpp
-    active_window.cpp
     raise_tree.cpp
-    workspaces.cpp
-    drag_and_drop.cpp
     client_mediated_gestures.cpp
     window_info.cpp
+    test_window_manager_tools.h
 )
 
-target_link_libraries(miral-test
+target_link_libraries(miral-test-internal
     ${GTEST_BOTH_LIBRARIES}
     ${GMOCK_LIBRARIES}
     miral
@@ -53,4 +60,20 @@ target_link_libraries(miral-test
     mir-test-assist
 )
 
+mir_add_wrapped_executable(miral-test NOINSTALL
+    window_id.cpp
+    runner.cpp
+    window_placement_client_api.cpp
+    window_properties.cpp
+    active_window.cpp
+    workspaces.cpp
+    drag_and_drop.cpp
+)
+
+target_link_libraries(miral-test
+    miral-test-framework
+    ${UUID_LDFLAGS} ${UUID_LIBRARIES}
+)
+
 mir_discover_tests_with_fd_leak_detection(miral-test)
+mir_discover_tests_with_fd_leak_detection(miral-test-internal)
