@@ -166,6 +166,12 @@ struct Workspaces : public miral::TestServer
     {
         client_windows.clear();
         client_connection.reset();
+
+        // There's a race between closing the client and closing the server.
+        // AutoSendBuffer is trying to send *after* SessionMediator is destroyed.
+        // This sleep() is not a good fix, but a good fix would be deep in legacy code.
+        std::this_thread::sleep_for(10ms);
+
         miral::TestServer::TearDown();
     }
 
