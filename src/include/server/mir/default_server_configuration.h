@@ -454,7 +454,6 @@ protected:
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
-    std::shared_ptr<input::EventFilter> const default_filter;
     CachedPtr<ObserverMultiplexer<graphics::DisplayConfigurationObserver>>
         display_configuration_observer_multiplexer;
     CachedPtr<ObserverMultiplexer<input::SeatObserver>>

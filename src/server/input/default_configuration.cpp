@@ -20,6 +20,7 @@
 
 #include "key_repeat_dispatcher.h"
 #include "event_filter_chain_dispatcher.h"
+#include "mir/input/vt_filter.h"
 #include "config_changer.h"
 #include "cursor_controller.h"
 #include "touchspot_controller.h"
@@ -49,6 +50,7 @@
 #include "mir/log.h"
 #include "mir/shared_library.h"
 #include "mir/dispatch/action_queue.h"
+#include "mir/console_services.h"
 
 #include "mir_toolkit/cursors.h"
 
@@ -76,8 +78,28 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
     return event_filter_chain_dispatcher(
         [this]() -> std::shared_ptr<mi::EventFilterChainDispatcher>
         {
-            std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
-            return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_surface_input_dispatcher());
+            auto default_filter_list =
+                [this]() -> std::initializer_list<std::shared_ptr<mi::EventFilter> const>
+                {
+                    try
+                    {
+                        return {
+                            std::make_shared<mi::VTFilter>(
+                                the_console_services()->create_vt_switcher())};
+                    }
+                    catch (std::exception const& err)
+                    {
+                        mir::log(
+                            mir::logging::Severity::informational,
+                            "VT switch key handling",
+                            "No VT switch handling available: %s",
+                            err.what());
+                        return {};
+                    }};
+
+            return std::make_shared<mi::EventFilterChainDispatcher>(
+                default_filter_list(),
+                the_surface_input_dispatcher());
         });
 }
 

@@ -34,7 +34,6 @@
 #include "mir/scene/null_session_listener.h"
 #include "mir/graphics/display.h"
 #include "mir/input/cursor_listener.h"
-#include "mir/input/vt_filter.h"
 #include "mir/input/input_manager.h"
 #include "mir/time/steady_clock.h"
 #include "mir/geometry/rectangles.h"
@@ -68,8 +67,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 }
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::Configuration> const& configuration_options) :
-    configuration_options(configuration_options),
-    default_filter(std::make_shared<mi::VTFilter>(the_console_services()->create_vt_switcher()))
+    configuration_options(configuration_options)
 {
 }
 
