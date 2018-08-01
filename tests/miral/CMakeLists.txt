@@ -53,4 +53,4 @@ target_link_libraries(miral-test
     mir-test-assist
 )
 
-add_test(miral-test ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/miral-test)
+mir_discover_tests_with_fd_leak_detection(miral-test)
