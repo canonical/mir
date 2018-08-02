@@ -50,7 +50,7 @@ vt_login_session=$(who -u | grep tty${vt} | grep ${USER} | wc -l)
 if [ "${vt_login_session}" == "0" ]; then echo "Error: please log into tty${vt} first"; exit 1 ;fi
 
 oldvt=$(sudo fgconsole)
-sudo --preserve-env sh -c "${bindir}${miral_server} --wayland-socket-name ${wayland_display} --vt ${vt} --arw-file --file ${socket} $*&\
+sudo --preserve-env sh -c "${bindir}${miral_server} --wayland-socket-name ${wayland_display} --console-provider=vt --vt ${vt} --arw-file --file ${socket} $*&\
     while [ ! -e \"${socket}\" ]; do echo \"waiting for ${socket}\"; sleep 1 ;done;\
     su -c \"MIR_SOCKET=${socket} XDG_SESSION_TYPE=mir GDK_BACKEND=${gdk_backend} QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=${sdl_videodriver} WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 dbus-run-session -- ${launcher}\" $USER;\
     (sudo killall -w ${bindir}${miral_server} || sudo killall -w ${bindir}${miral_server}.bin); chvt ${oldvt}"
