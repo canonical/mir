@@ -62,6 +62,9 @@ struct TestDisplayServer : private TestRuntimeEnvironment
 
     MirRunner runner;
 
+    // Passed to runner.run_with() by start_server()
+    std::function<void(mir::Server&)> init_server = [](auto&){};
+
     void invoke_tools(std::function<void(WindowManagerTools& tools)> const& f);
     void invoke_window_manager(std::function<void(mir::shell::WindowManager& wm)> const& f);
 
