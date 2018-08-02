@@ -22,7 +22,7 @@ add_library(miral-internal STATIC
     xcursor_loader.cpp                  xcursor_loader.h
     xcursor.c                           xcursor.h
                                         join_client_threads.h
-                                        window_info_defaults.h
+    window_info_defaults.cpp            window_info_defaults.h
 )
 
 # Already implied by the linker's symbol version script, but can avoid accidents

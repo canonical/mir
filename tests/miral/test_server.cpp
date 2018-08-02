@@ -18,6 +18,7 @@
 
 #include "test_server.h"
 #include "basic_window_manager.h"
+#include "window_management_trace.h"
 
 #include <miral/command_line_option.h>
 #include <miral/set_window_management_policy.h>
@@ -30,9 +31,9 @@
 #include <mir/fd.h>
 #include <mir/main_loop.h>
 #include <mir/server.h>
+#include <mir/options/option.h>
 
 #include <boost/throw_exception.hpp>
-
 
 using namespace miral;
 using namespace testing;
@@ -43,6 +44,7 @@ namespace
 {
 std::chrono::seconds const timeout{20};
 char const* dummy_args[2] = { "TestServer", nullptr };
+char const* const trace_option = "window-management-trace";
 }
 
 miral::TestDisplayServer::TestWindowManagerPolicy::TestWindowManagerPolicy(
@@ -74,6 +76,8 @@ void miral::TestDisplayServer::start_server()
          {
             auto init = [this](mir::Server& server)
                 {
+                    server.add_configuration_option(trace_option, "log trace message", mir::OptionType::null);
+
                     server.add_init_callback([&]
                         {
                             auto const main_loop = server.the_main_loop();
@@ -100,10 +104,19 @@ void miral::TestDisplayServer::start_server()
 
                             auto const persistent_surface_store = server.the_persistent_surface_store();
 
-                            auto builder = [this](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
+                            std::function<std::unique_ptr<miral::WindowManagementPolicy>(WindowManagerTools const&)>
+                                builder = [this](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
                                 {
                                     return build_window_manager_policy(tools);
                                 };
+
+                            if (server.get_options()->is_set(trace_option))
+                            {
+                                builder = [builder](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
+                                    {
+                                        return std::make_unique<WindowManagementTrace>(tools, builder);
+                                    };
+                            }
 
                             auto wm = std::make_shared<miral::BasicWindowManager>(
                                 focus_controller,
