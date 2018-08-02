@@ -19,7 +19,7 @@ set(CMAKE_C_FLAGS ${NO_NO_LTO_FLAGS})
 string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_CXX_FLAGS})
 set(CMAKE_CXX_FLAGS ${NO_NO_LTO_FLAGS})
 
-add_library(miral-test-framework SHARED
+add_library(miral-test-framework STATIC
     test_server.cpp     ../include/miral/test_server.h
 )
 
