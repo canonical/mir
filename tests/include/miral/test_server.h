@@ -48,12 +48,13 @@ private:
     std::list<mir_test_framework::TemporaryEnvironmentValue> env;
 };
 
-struct TestServer : testing::Test, private TestRuntimeEnvironment
+struct TestDisplayServer : private TestRuntimeEnvironment
 {
-    TestServer();
+    TestDisplayServer();
+    virtual ~TestDisplayServer();
 
-    void SetUp() override;
-    void TearDown() override;
+    void start_server();
+    void stop_server();
 
     auto connect_client(std::string name) -> mir::client::Connection;
 
@@ -76,9 +77,15 @@ private:
     mir::Server* server_running{nullptr};
 };
 
-struct TestServer::TestWindowManagerPolicy : CanonicalWindowManagerPolicy
+struct TestServer : TestDisplayServer, testing::Test
 {
-    TestWindowManagerPolicy(WindowManagerTools const& tools, TestServer& test_fixture);
+    void SetUp() override;
+    void TearDown() override;
+};
+
+struct TestDisplayServer::TestWindowManagerPolicy : CanonicalWindowManagerPolicy
+{
+    TestWindowManagerPolicy(WindowManagerTools const& tools, TestDisplayServer& test_fixture);
 
     bool handle_keyboard_event(MirKeyboardEvent const*) override { return false; }
     bool handle_pointer_event(MirPointerEvent const*) override { return false; }

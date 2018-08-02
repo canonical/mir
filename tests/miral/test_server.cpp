@@ -45,14 +45,14 @@ std::chrono::seconds const timeout{20};
 char const* dummy_args[2] = { "TestServer", nullptr };
 }
 
-miral::TestServer::TestWindowManagerPolicy::TestWindowManagerPolicy(
-    WindowManagerTools const& tools, TestServer& test_fixture) :
+miral::TestDisplayServer::TestWindowManagerPolicy::TestWindowManagerPolicy(
+    WindowManagerTools const& tools, TestDisplayServer& test_fixture) :
     CanonicalWindowManagerPolicy{tools}
 {
     test_fixture.tools = tools;
 }
 
-miral::TestServer::TestServer() :
+miral::TestDisplayServer::TestDisplayServer() :
     runner{1, dummy_args}
 {
     add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
@@ -60,13 +60,15 @@ miral::TestServer::TestServer() :
     add_to_environment("MIR_SERVER_NO_FILE", "on");
 }
 
-auto miral::TestServer::build_window_manager_policy(WindowManagerTools const& tools)
+miral::TestDisplayServer::~TestDisplayServer() = default;
+
+auto miral::TestDisplayServer::build_window_manager_policy(WindowManagerTools const& tools)
 -> std::unique_ptr<TestWindowManagerPolicy>
 {
     return std::make_unique<TestWindowManagerPolicy>(tools, *this);
 }
 
-void miral::TestServer::SetUp()
+void miral::TestDisplayServer::start_server()
 {
     mir::test::AutoJoinThread t([this]
          {
@@ -140,7 +142,7 @@ void miral::TestServer::SetUp()
     server_thread = std::move(t);
 }
 
-void miral::TestServer::TearDown()
+void miral::TestDisplayServer::stop_server()
 {
     std::unique_lock<std::mutex> lock(mutex);
 
@@ -154,7 +156,7 @@ void miral::TestServer::TearDown()
     server_thread.stop();
 }
 
-auto miral::TestServer::connect_client(std::string name) -> mir::client::Connection
+auto miral::TestDisplayServer::connect_client(std::string name) -> mir::client::Connection
 {
     std::lock_guard<std::mutex> lock(mutex);
 
@@ -167,12 +169,12 @@ auto miral::TestServer::connect_client(std::string name) -> mir::client::Connect
     return mir::client::Connection{mir_connect_sync(connect_string, name.c_str())};
 }
 
-void miral::TestServer::invoke_tools(std::function<void(WindowManagerTools& tools)> const& f)
+void miral::TestDisplayServer::invoke_tools(std::function<void(WindowManagerTools& tools)> const& f)
 {
     tools.invoke_under_lock([&]{f(tools); });
 }
 
-void miral::TestServer::invoke_window_manager(std::function<void(mir::shell::WindowManager& wm)> const& f)
+void miral::TestDisplayServer::invoke_window_manager(std::function<void(mir::shell::WindowManager& wm)> const& f)
 {
     if (auto const wm = window_manager.lock())
         f(*wm);
@@ -184,6 +186,18 @@ void miral::TestServer::invoke_window_manager(std::function<void(mir::shell::Win
 void miral::TestRuntimeEnvironment::add_to_environment(char const* key, char const* value)
 {
     env.emplace_back(key, value);
+}
+
+void miral::TestServer::SetUp()
+{
+    TestDisplayServer::start_server();
+    testing::Test::SetUp();
+}
+
+void miral::TestServer::TearDown()
+{
+    TestDisplayServer::stop_server();
+    testing::Test::TearDown();
 }
 
 using miral::TestServer;
