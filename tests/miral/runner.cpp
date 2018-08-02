@@ -18,11 +18,17 @@
 
 #include "test_server.h"
 
+#include <mir/test/signal.h>
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+using namespace testing;
+
 namespace
 {
+auto const a_long_time = std::chrono::seconds(1);
+
 struct Runner : miral::TestServer
 {
     void SetUp() override
@@ -42,8 +48,14 @@ TEST_F(Runner, stop_callback_is_called)
 
 TEST_F(Runner, start_callback_is_called)
 {
+    mir::test::Signal signal;
+
     runner.add_start_callback([this] { callback(); });
-    EXPECT_CALL(*this, callback());
+    EXPECT_CALL(*this, callback())
+        .WillOnce(InvokeWithoutArgs([&] { signal.raise(); }));
+
     miral::TestServer::SetUp();
+
+    signal.wait_for(a_long_time);
     testing::Mock::VerifyAndClearExpectations(this);
 }

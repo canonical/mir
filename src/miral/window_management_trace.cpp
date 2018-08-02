@@ -135,6 +135,7 @@ auto dump_of(miral::WindowInfo const& info) -> std::string
         APPEND(name);
         APPEND(type);
         APPEND(state);
+        bout.append("top_left", info.window().top_left());
         bout.append("size", info.window().size());
         if (info.state() != mir_window_state_restored) APPEND(restore_rect);
         if (std::shared_ptr<mir::scene::Surface> parent = info.parent())
