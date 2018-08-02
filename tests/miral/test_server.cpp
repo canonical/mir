@@ -37,6 +37,7 @@
 
 using namespace miral;
 using namespace testing;
+using namespace std::chrono_literals;
 namespace mtf = mir_test_framework;
 namespace msh = mir::shell;
 
@@ -225,6 +226,11 @@ void miral::TestServer::SetUp()
 
 void miral::TestServer::TearDown()
 {
+    // There's a race between closing a client and closing the server.
+    // AutoSendBuffer is trying to send *after* SessionMediator is destroyed.
+    // This sleep() is not a good fix, but a good fix would be deep in legacy code.
+    std::this_thread::sleep_for(10ms);
+
     TestDisplayServer::stop_server();
     testing::Test::TearDown();
 }
