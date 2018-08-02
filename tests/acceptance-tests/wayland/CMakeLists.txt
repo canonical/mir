@@ -38,3 +38,21 @@ target_link_libraries(
 if (MIR_RUN_ACCEPTANCE_TESTS)
   mir_discover_tests_with_fd_leak_detection(mir_wlcs_tests)
 endif (MIR_RUN_ACCEPTANCE_TESTS)
+
+mir_add_wrapped_executable(miral_wlcs_tests NOINSTALL
+
+  miral_integration.cpp
+)
+
+target_link_libraries(
+  miral_wlcs_tests
+
+  miral-test-framework
+  mir-test-doubles-platform-static
+  libwlcs
+  ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
+)
+
+if (MIR_RUN_ACCEPTANCE_TESTS)
+  mir_discover_tests_with_fd_leak_detection(miral_wlcs_tests)
+endif (MIR_RUN_ACCEPTANCE_TESTS)
