@@ -574,10 +574,7 @@ void wlcs_server_stop(WlcsDisplayServer* server)
 WlcsDisplayServer* wlcs_create_server(int argc, char const** argv)
 {
     auto runner = new MirWlcsDisplayServer;
-    runner->add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
-    runner->add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
     runner->add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
-    runner->add_to_environment("MIR_SERVER_NO_FILE", "");
     runner->add_to_environment("MIR_SERVER_WAYLAND_SOCKET_NAME", "wlcs-tests");
     runner->add_to_environment("WAYLAND_DISPLAY", "wlcs-tests");
 
