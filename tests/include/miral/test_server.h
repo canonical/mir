@@ -91,7 +91,7 @@ struct TestDisplayServer::TestWindowManagerPolicy : CanonicalWindowManagerPolicy
     TestWindowManagerPolicy(WindowManagerTools const& tools, TestDisplayServer& test_fixture);
 
     bool handle_keyboard_event(MirKeyboardEvent const*) override { return false; }
-    bool handle_pointer_event(MirPointerEvent const*) override { return false; }
+    bool handle_pointer_event(MirPointerEvent const*) override;
     bool handle_touch_event(MirTouchEvent const*) override { return false; }
     void handle_request_drag_and_drop(miral::WindowInfo&) override {}
     void handle_request_move(miral::WindowInfo&, MirInputEvent const*) override {}
