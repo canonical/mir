@@ -21,6 +21,7 @@
 #include "mir/log.h"
 #include "mir/emergency_cleanup.h"
 #include "mir/glib_main_loop.h"
+#include "mir/abnormal_exit.h"
 
 #include "null_console_services.h"
 #include "linux_virtual_terminal.h"
@@ -155,8 +156,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
             {
                 if (vt)
                 {
-                    BOOST_THROW_EXCEPTION((
-                        std::runtime_error{"--vt option requires --console-provider=vt"}));
+                    throw mir::AbnormalExit{"--vt option requires --console-provider=vt"};
                 }
                 try
                 {
@@ -178,8 +178,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
             {
                 if (vt)
                 {
-                    BOOST_THROW_EXCEPTION((
-                        std::runtime_error{"--vt option requires --console-provider=vt"}));
+                    throw mir::AbnormalExit{"--vt option requires --console-provider=vt"};
                 }
                 return logind_constructor();
             }
@@ -191,8 +190,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
             {
                 if (vt)
                 {
-                    BOOST_THROW_EXCEPTION((
-                        std::runtime_error{"--vt option requires --console-provider=vt"}));
+                    throw mir::AbnormalExit{"--vt option requires --console-provider=vt"};
                 }
                 return null_constructor();
             }
