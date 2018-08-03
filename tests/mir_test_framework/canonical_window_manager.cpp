@@ -24,6 +24,9 @@
 #include "mir/shell/surface_ready_observer.h"
 #include "mir/shell/display_layout.h"
 
+#define MIR_LOG_COMPONENT  "Canonical Window Manager"
+#include "mir/log.h"
+
 #include <uuid.h>
 #include <linux/input.h>
 #include <csignal>
@@ -418,20 +421,29 @@ void msh::CanonicalWindowManagerPolicy::handle_delete_surface(std::shared_ptr<ms
     fullscreen_surfaces.erase(surface);
     bool const is_active_surface{surface.lock() == active_surface()};
 
-    auto& info = tools->info_for(surface);
-
-    if (auto const parent = info.parent.lock())
+    try
     {
-        auto& siblings = tools->info_for(parent).children;
+        auto& info = tools->info_for(surface);
 
-        for (auto i = begin(siblings); i != end(siblings); ++i)
+        if (auto const parent = info.parent.lock())
         {
-            if (surface.lock() == i->lock())
+            auto& siblings = tools->info_for(parent).children;
+
+            for (auto i = begin(siblings); i != end(siblings); ++i)
             {
-                siblings.erase(i);
-                break;
+                if (surface.lock() == i->lock())
+                {
+                    siblings.erase(i);
+                    break;
+                }
             }
         }
+    }
+    catch (std::out_of_range const& e)
+    {
+        // tools->info_for(surface) throws std::out_of_range if the surface isn't in a map
+        // so far I only know of this happening in shutdown after WLCS XDG shell popup tests
+        log_warning("std::out_of_range caught in msh::CanonicalWindowManagerPolicy::handle_delete_surface()");
     }
 
     session->destroy_surface(surface);
