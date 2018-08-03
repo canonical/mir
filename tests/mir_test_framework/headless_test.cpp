@@ -34,6 +34,7 @@ mtf::HeadlessTest::HeadlessTest()
     add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
     add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
     add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
+    add_to_environment("MIR_SERVER_CONSOLE_PROVIDER", "none");
     server.override_the_display_buffer_compositor_factory([]
     {
         return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>();

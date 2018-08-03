@@ -207,8 +207,6 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_egl_client_extension
     mtf::UdevEnvironment udev_environment;
     boost::program_options::options_description po;
     mir::options::ProgramOption options;
-    const char *argv[] = {"dummy", "--vt"};
-    options.parse_arguments(po, 2, argv);
     auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");
@@ -228,8 +226,6 @@ TEST_F(MesaGraphicsPlatform, probe_returns_unsupported_when_gbm_platform_not_sup
     mtf::UdevEnvironment udev_environment;
     boost::program_options::options_description po;
     mir::options::ProgramOption options;
-    const char *argv[] = {"dummy", "--vt"};
-    options.parse_arguments(po, 2, argv);
     auto const stub_vt = std::make_shared<mtd::StubConsoleServices>();
 
     udev_environment.add_standard_device("standard-drm-devices");

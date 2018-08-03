@@ -192,5 +192,10 @@ MIR_PLATFORM_0.32.1 {
  global:
   extern "C++" {
     mir::options::x11_display_opt*;
+    mir::options::console_provider*;
+    mir::options::auto_console*;
+    mir::options::logind_console*;
+    mir::options::vt_console*;
+    mir::options::null_console*
   };
 } MIR_PLATFORM_0.33;
