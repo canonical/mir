@@ -1598,6 +1598,42 @@ TEST_F(GLibMainLoopTest, run_with_context_as_thread_default_handles_exceptions)
         std::out_of_range);
 }
 
+TEST_F(GLibMainLoopTest, run_with_context_as_thread_default_may_be_called_from_the_mainloop)
+{
+    using namespace std::literals::chrono_literals;
+    using namespace testing;
+
+    UnblockMainLoop unblock{ml};
+
+    auto started = std::make_shared<mt::Signal>();
+    ml.spawn(
+        [started]()
+        {
+            started->raise();
+        });
+
+    ASSERT_TRUE(started->wait_for(30s));
+
+    auto done = std::make_shared<mt::Signal>();
+
+    ml.spawn(
+        [this, done]()
+        {
+            auto ml_thread = std::this_thread::get_id();
+            auto invoke_done = std::make_shared<mt::Signal>();
+            ml.run_with_context_as_thread_default(
+                [&ml_thread, invoke_done]()
+                {
+                    EXPECT_THAT(std::this_thread::get_id(), Eq(ml_thread));
+                    invoke_done->raise();
+                });
+            EXPECT_TRUE(invoke_done->wait_for(30s));
+            done->raise();
+        });
+
+    EXPECT_TRUE(done->wait_for(30s));
+}
+
 // This test recreates a scenario we get in our integration and acceptance test
 // runs, and which creates problems for the default glib signal source. The
 // scenario involves creating, running (with signal handling) and destroying
