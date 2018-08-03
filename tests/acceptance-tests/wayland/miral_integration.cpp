@@ -199,7 +199,7 @@ public:
     void associate_client_socket(int client_socket)
     {
         auto state_accessor = state.wait_for(
-            [](State& state) { return static_cast<bool>(state.latest_client)    ; },
+            [](State& state) { return static_cast<bool>(state.latest_client); },
             std::chrono::seconds{30});
         state_accessor->client_session_map[client_socket] = state_accessor->latest_client.value();
         state_accessor->latest_client = {};
