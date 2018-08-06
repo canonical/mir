@@ -66,7 +66,6 @@ public:
                                               MirWindowState state,
                                               bool active)> notify_resize);
     void set_next_commit_action(std::function<void()> action);
-    void clear_next_commit_action();
     void send_configure();
 
     using WindowWlSurfaceRole::client;
@@ -249,11 +248,6 @@ void mf::XdgSurfaceV6::send_configure()
     zxdg_surface_v6_send_configure(resource, serial);
 }
 
-void mf::XdgSurfaceV6::clear_next_commit_action()
-{
-    next_commit_action = []{};
-}
-
 void mf::XdgSurfaceV6::set_next_commit_action(std::function<void()> action)
 {
     next_commit_action = action;
@@ -263,24 +257,21 @@ void mf::XdgSurfaceV6::commit(mf::WlSurfaceState const& state)
 {
     WindowWlSurfaceRole::commit(state);
     next_commit_action();
-    clear_next_commit_action();
+    next_commit_action = []{};
 }
 
 void mf::XdgSurfaceV6::handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
                                      geometry::Size const& new_size)
 {
-    auto const action = [this,
-                         new_top_left,
-                         new_size,
-                         state=window_state(),
-                         is_active=is_active()]()
-        {
-            notify_resize(new_top_left, new_size, state, is_active);
-            send_configure();
-        };
+    MirWindowState const window_state = WindowWlSurfaceRole::window_state();
+    bool const is_active = WindowWlSurfaceRole::is_active();
 
-    action();
-    set_next_commit_action(action);
+    notify_resize(new_top_left, new_size, window_state, is_active);
+
+    set_next_commit_action([this, new_top_left, new_size, window_state, is_active]
+        {
+            notify_resize(new_top_left, new_size, window_state, is_active);
+        });
 }
 
 // XdgPopupV6
@@ -288,8 +279,6 @@ void mf::XdgSurfaceV6::handle_resize(std::experimental::optional<geometry::Point
 mf::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id, XdgSurfaceV6* self)
     : wayland::XdgPopupV6(client, parent, id)
 {
-    // TODO Make this readable!!! This "works" by exploiting the non-obvious side-effect
-    // of causing a zxdg_surface_v6_send_configure() event to become pending.
     self->set_next_commit_action([self]
         {
             self->send_configure();
@@ -373,8 +362,9 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
             }
 
             zxdg_toplevel_v6_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
-
             wl_array_release(&states);
+
+            this->self->send_configure();
         });
 
     self->set_next_commit_action(
