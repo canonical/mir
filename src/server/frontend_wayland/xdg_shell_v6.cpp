@@ -267,11 +267,6 @@ void mf::XdgSurfaceV6::handle_resize(std::experimental::optional<geometry::Point
     bool const is_active = WindowWlSurfaceRole::is_active();
 
     notify_resize(new_top_left, new_size, window_state, is_active);
-
-    set_next_commit_action([this, new_top_left, new_size, window_state, is_active]
-        {
-            notify_resize(new_top_left, new_size, window_state, is_active);
-        });
 }
 
 // XdgPopupV6
@@ -279,11 +274,6 @@ void mf::XdgSurfaceV6::handle_resize(std::experimental::optional<geometry::Point
 mf::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id, XdgSurfaceV6* self)
     : wayland::XdgPopupV6(client, parent, id)
 {
-    self->set_next_commit_action([self]
-        {
-            self->send_configure();
-        });
-
     self->set_notify_resize(
         [this, self](std::experimental::optional<geom::Point> const& new_top_left,
                geom::Size const& new_size,
