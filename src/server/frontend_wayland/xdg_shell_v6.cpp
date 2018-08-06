@@ -256,11 +256,7 @@ void mf::XdgSurfaceV6::clear_next_commit_action()
 
 void mf::XdgSurfaceV6::set_next_commit_action(std::function<void()> action)
 {
-    next_commit_action = [this, action]
-    {
-        action();
-        send_configure();
-    };
+    next_commit_action = action;
 }
 
 void mf::XdgSurfaceV6::commit(mf::WlSurfaceState const& state)
@@ -273,19 +269,17 @@ void mf::XdgSurfaceV6::commit(mf::WlSurfaceState const& state)
 void mf::XdgSurfaceV6::handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
                                      geometry::Size const& new_size)
 {
-    auto const action = [notify_resize=notify_resize,
+    auto const action = [this,
                          new_top_left,
                          new_size,
                          state=window_state(),
                          is_active=is_active()]()
         {
             notify_resize(new_top_left, new_size, state, is_active);
+            send_configure();
         };
 
-    auto const serial = wl_display_next_serial(wl_client_get_display(client));
     action();
-    zxdg_surface_v6_send_configure(resource, serial);
-
     set_next_commit_action(action);
 }
 
@@ -296,7 +290,10 @@ mf::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent,
 {
     // TODO Make this readable!!! This "works" by exploiting the non-obvious side-effect
     // of causing a zxdg_surface_v6_send_configure() event to become pending.
-    self->set_next_commit_action([]{});
+    self->set_next_commit_action([self]
+        {
+            self->send_configure();
+        });
 
     self->set_notify_resize(
         [this, self](std::experimental::optional<geom::Point> const& new_top_left,
@@ -381,12 +378,13 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
         });
 
     self->set_next_commit_action(
-        [resource = this->resource]
+        [self, resource = this->resource]
             {
                 wl_array states;
                 wl_array_init(&states);
                 zxdg_toplevel_v6_send_configure(resource, 0, 0, &states);
                 wl_array_release(&states);
+                self->send_configure();
             });
 }
 
