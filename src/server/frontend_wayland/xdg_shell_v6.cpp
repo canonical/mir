@@ -562,6 +562,9 @@ mf::XdgToplevelV6* mf::XdgToplevelV6::from(wl_resource* surface)
 mf::XdgPositionerV6::XdgPositionerV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : wayland::XdgPositionerV6(client, parent, id)
 {
+    // specifying gravity is not required by the xdg shell protocol, but is by Mir window managers
+    surface_placement_gravity = mir_placement_gravity_center;
+    aux_rect_placement_gravity = mir_placement_gravity_center;
 }
 
 void mf::XdgPositionerV6::destroy()
