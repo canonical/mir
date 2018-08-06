@@ -56,7 +56,6 @@ public:
     void get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner) override;
     void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void ack_configure(uint32_t serial) override;
-    void commit(WlSurfaceState const& state) override;
 
     void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
                        geometry::Size const& new_size) override;
@@ -65,14 +64,12 @@ public:
                                               geometry::Size const& new_size,
                                               MirWindowState state,
                                               bool active)> notify_resize);
-    void set_next_commit_action(std::function<void()> action);
     void send_configure();
 
     using WindowWlSurfaceRole::client;
 
     struct wl_resource* const parent;
     std::shared_ptr<Shell> const shell;
-    std::function<void()> next_commit_action{[]{}};
     std::function<void(std::experimental::optional<geometry::Point> const& new_top_left,
                        geometry::Size const& new_size,
                        MirWindowState state,
@@ -248,18 +245,6 @@ void mf::XdgSurfaceV6::send_configure()
     zxdg_surface_v6_send_configure(resource, serial);
 }
 
-void mf::XdgSurfaceV6::set_next_commit_action(std::function<void()> action)
-{
-    next_commit_action = action;
-}
-
-void mf::XdgSurfaceV6::commit(mf::WlSurfaceState const& state)
-{
-    WindowWlSurfaceRole::commit(state);
-    next_commit_action();
-    next_commit_action = []{};
-}
-
 void mf::XdgSurfaceV6::handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
                                      geometry::Size const& new_size)
 {
@@ -357,15 +342,11 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* p
             this->self->send_configure();
         });
 
-    self->set_next_commit_action(
-        [self, resource = this->resource]
-            {
-                wl_array states;
-                wl_array_init(&states);
-                zxdg_toplevel_v6_send_configure(resource, 0, 0, &states);
-                wl_array_release(&states);
-                self->send_configure();
-            });
+    wl_array states;
+    wl_array_init(&states);
+    zxdg_toplevel_v6_send_configure(resource, 0, 0, &states);
+    wl_array_release(&states);
+    self->send_configure();
 }
 
 void mf::XdgToplevelV6::destroy()
