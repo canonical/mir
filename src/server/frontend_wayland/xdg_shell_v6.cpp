@@ -61,18 +61,12 @@ public:
     void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
                        geometry::Size const& new_size) override;
 
-    void set_parent(optional_value<SurfaceId> parent_id);
-    void set_title(std::string const& title);
-    void move(struct wl_resource* seat, uint32_t serial);
-    void resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges);
     void set_notify_resize(std::function<void(std::experimental::optional<geometry::Point> const& new_top_left,
                                               geometry::Size const& new_size,
                                               MirWindowState state,
                                               bool active)> notify_resize);
     void set_next_commit_action(std::function<void()> action);
     void clear_next_commit_action();
-    void set_max_size(int32_t width, int32_t height);
-    void set_min_size(int32_t width, int32_t height);
     void send_configure();
 
     using WindowWlSurfaceRole::client;
@@ -240,61 +234,6 @@ void mf::XdgSurfaceV6::ack_configure(uint32_t serial)
     // TODO
 }
 
-
-void mf::XdgSurfaceV6::set_title(std::string const& title)
-{
-    WindowWlSurfaceRole::set_title(title);
-}
-
-void mf::XdgSurfaceV6::move(struct wl_resource* /*seat*/, uint32_t /*serial*/)
-{
-    WindowWlSurfaceRole::initiate_interactive_move();
-}
-
-void mf::XdgSurfaceV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges)
-{
-    MirResizeEdge edge = mir_resize_edge_none;
-
-    switch (edges)
-    {
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP:
-        edge = mir_resize_edge_north;
-        break;
-
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM:
-        edge = mir_resize_edge_south;
-        break;
-
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_LEFT:
-        edge = mir_resize_edge_west;
-        break;
-
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_LEFT:
-        edge = mir_resize_edge_northwest;
-        break;
-
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_LEFT:
-        edge = mir_resize_edge_southwest;
-        break;
-
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_RIGHT:
-        edge = mir_resize_edge_east;
-        break;
-
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_RIGHT:
-        edge = mir_resize_edge_northeast;
-        break;
-
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_RIGHT:
-        edge = mir_resize_edge_southeast;
-        break;
-
-    default:;
-    }
-
-    WindowWlSurfaceRole::initiate_interactive_resize(edge);
-}
-
 void mf::XdgSurfaceV6::set_notify_resize(
     std::function<void(std::experimental::optional<geometry::Point> const&,
                        geometry::Size const&,
@@ -302,21 +241,6 @@ void mf::XdgSurfaceV6::set_notify_resize(
                        bool)> notify_resize_)
 {
     notify_resize = notify_resize_;
-}
-
-void mf::XdgSurfaceV6::set_parent(optional_value<SurfaceId> parent_id)
-{
-    WindowWlSurfaceRole::set_parent(parent_id);
-}
-
-void mf::XdgSurfaceV6::set_max_size(int32_t width, int32_t height)
-{
-    WindowWlSurfaceRole::set_max_size(width, height);
-}
-
-void mf::XdgSurfaceV6::set_min_size(int32_t width, int32_t height)
-{
-    WindowWlSurfaceRole::set_min_size(width, height);
 }
 
 void mf::XdgSurfaceV6::send_configure()
@@ -475,18 +399,17 @@ void mf::XdgToplevelV6::set_parent(std::experimental::optional<struct wl_resourc
 {
     if (parent && parent.value())
     {
-        self->set_parent(XdgToplevelV6::from(parent.value())->self->surface_id());
+        self->WindowWlSurfaceRole::set_parent(XdgToplevelV6::from(parent.value())->self->surface_id());
     }
     else
     {
-        self->set_parent({});
+        self->WindowWlSurfaceRole::set_parent({});
     }
-
 }
 
 void mf::XdgToplevelV6::set_title(std::string const& title)
 {
-    self->set_title(title);
+    self->WindowWlSurfaceRole::set_title(title);
 }
 
 void mf::XdgToplevelV6::set_app_id(std::string const& /*app_id*/)
@@ -501,54 +424,93 @@ void mf::XdgToplevelV6::show_window_menu(struct wl_resource* seat, uint32_t seri
     // TODO
 }
 
-void mf::XdgToplevelV6::move(struct wl_resource* seat, uint32_t serial)
+void mf::XdgToplevelV6::move(struct wl_resource* /*seat*/, uint32_t /*serial*/)
 {
-    self->move(seat, serial);
+    self->WindowWlSurfaceRole::initiate_interactive_move();
 }
 
-void mf::XdgToplevelV6::resize(struct wl_resource* seat, uint32_t serial, uint32_t edges)
+void mf::XdgToplevelV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges)
 {
-    self->resize(seat, serial, edges);
+    MirResizeEdge edge = mir_resize_edge_none;
+
+    switch (edges)
+    {
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP:
+        edge = mir_resize_edge_north;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM:
+        edge = mir_resize_edge_south;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_LEFT:
+        edge = mir_resize_edge_west;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_LEFT:
+        edge = mir_resize_edge_northwest;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_LEFT:
+        edge = mir_resize_edge_southwest;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_RIGHT:
+        edge = mir_resize_edge_east;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_RIGHT:
+        edge = mir_resize_edge_northeast;
+        break;
+
+    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_RIGHT:
+        edge = mir_resize_edge_southeast;
+        break;
+
+    default:;
+    }
+
+    self->WindowWlSurfaceRole::initiate_interactive_resize(edge);
 }
 
 void mf::XdgToplevelV6::set_max_size(int32_t width, int32_t height)
 {
-    self->set_max_size(width, height);
+    self->WindowWlSurfaceRole::set_max_size(width, height);
 }
 
 void mf::XdgToplevelV6::set_min_size(int32_t width, int32_t height)
 {
-    self->set_min_size(width, height);
+    self->WindowWlSurfaceRole::set_min_size(width, height);
 }
 
 void mf::XdgToplevelV6::set_maximized()
 {
     // We must process this request immediately (i.e. don't defer until commit())
-    self->set_state_now(mir_window_state_maximized);
+    self->WindowWlSurfaceRole::set_state_now(mir_window_state_maximized);
 }
 
 void mf::XdgToplevelV6::unset_maximized()
 {
     // We must process this request immediately (i.e. don't defer until commit())
-    self->set_state_now(mir_window_state_restored);
+    self->WindowWlSurfaceRole::set_state_now(mir_window_state_restored);
 }
 
 void mf::XdgToplevelV6::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
 {
-    self->set_fullscreen(output);
+    self->WindowWlSurfaceRole::set_fullscreen(output);
 }
 
 void mf::XdgToplevelV6::unset_fullscreen()
 {
     // We must process this request immediately (i.e. don't defer until commit())
     // TODO: should we instead restore the previous state?
-    self->set_state_now(mir_window_state_restored);
+    self->WindowWlSurfaceRole::set_state_now(mir_window_state_restored);
 }
 
 void mf::XdgToplevelV6::set_minimized()
 {
     // We must process this request immediately (i.e. don't defer until commit())
-    self->set_state_now(mir_window_state_minimized);
+    self->WindowWlSurfaceRole::set_state_now(mir_window_state_minimized);
 }
 
 mf::XdgToplevelV6* mf::XdgToplevelV6::from(wl_resource* surface)
