@@ -302,6 +302,7 @@ public:
         : ShellSurface(client, parent, id),
           WindowWlSurfaceRole{&seat, client, surface, shell, output_manager}
     {
+        become_surface_role();
     }
 
     ~WlShellSurface() = default;
@@ -314,7 +315,6 @@ protected:
 
     void set_toplevel() override
     {
-        become_surface_role();
     }
 
     void set_transient(
@@ -338,7 +338,6 @@ protected:
         mods.aux_rect_placement_offset_y = 0;
 
         apply_spec(mods);
-        become_surface_role();
     }
 
     void handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
@@ -380,7 +379,6 @@ protected:
         mods.aux_rect_placement_offset_y = 0;
 
         apply_spec(mods);
-        become_surface_role();
     }
 
     void set_maximized(std::experimental::optional<struct wl_resource*> const& output) override
