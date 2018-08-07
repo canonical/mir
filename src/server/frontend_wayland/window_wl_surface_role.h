@@ -65,7 +65,6 @@ public:
 
     void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
     void refresh_surface_data_now() override;
-    void become_surface_role();
 
     void apply_spec(shell::SurfaceSpecification const& new_spec);
     void set_geometry(int32_t x, int32_t y, int32_t width, int32_t height);
