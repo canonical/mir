@@ -453,6 +453,40 @@ public:
         }
     }
 
+    void add_release_device_to_session(
+        char const* session_path,
+        char const* mock_code = "")
+    {
+        std::unique_ptr<GVariant, decltype(&g_variant_unref)> result{nullptr, &g_variant_unref};
+
+        GError* error{nullptr};
+        result.reset(
+            g_dbus_connection_call_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                session_path,
+                "org.freedesktop.DBus.Mock",
+                "AddMethod",
+                g_variant_new(
+                    "(sssss)",
+                    "org.freedesktop.login1.Session",
+                    "ReleaseDevice",
+                    "uu",
+                    "",
+                    mock_code),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NONE,
+                1000,
+                nullptr,
+                &error));
+
+        if (!result)
+        {
+            auto error_msg = error ? error->message : "Unknown error";
+            BOOST_THROW_EXCEPTION((std::runtime_error{error_msg}));
+        }
+    }
+
     void ensure_mock_logind()
     {
         if (dbusmock)
@@ -685,6 +719,73 @@ public:
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{error->message}));
         }
+    }
+
+    struct CallInfo
+    {
+        using GVariantPtr = std::unique_ptr<GVariant, decltype(&g_variant_unref)>;
+
+        CallInfo(
+            uint64_t timestamp,
+            std::string method_name,
+            GVariantIter* argument_array)
+            : timestamp{timestamp},
+              method_name{std::move(method_name)}
+        {
+            arguments.reserve(g_variant_iter_n_children(argument_array));
+
+            GVariant* argument;
+            while (g_variant_iter_next(argument_array, "v", &argument))
+            {
+                // We own a reference to argument, so we don't need to increase the refcount.
+                arguments.emplace_back(GVariantPtr{argument, &g_variant_unref});
+            }
+        }
+
+        uint64_t timestamp;
+        std::string method_name;
+        std::vector<GVariantPtr> arguments;
+    };
+
+    std::vector<CallInfo> get_calls_for_object(char const* object_path)
+    {
+        auto result = std::unique_ptr<GVariant, decltype(&g_variant_unref)>{
+            g_dbus_connection_call_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                object_path,
+                "org.freedesktop.DBus.Mock",
+                "GetCalls",
+                g_variant_new("()"),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NO_AUTO_START,
+                1000,
+                nullptr,
+                nullptr),
+            &g_variant_unref};
+
+        if (!result)
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to query list of mock calls made"}));
+        }
+
+        auto variant_iter = g_variant_iter_new(g_variant_get_child_value(result.get(), 0));
+        std::vector<CallInfo> calls;
+        calls.reserve(g_variant_iter_n_children(variant_iter));
+
+        uint64_t timestamp;
+        char const* method_name;
+        GVariantIter* arguments;
+        while (g_variant_iter_next(variant_iter, "(tsav)", &timestamp, &method_name, &arguments))
+        {
+            calls.emplace_back(
+                timestamp,
+                method_name,
+                arguments);
+            g_variant_iter_free(arguments);
+        }
+
+        return calls;
     }
 
     std::shared_ptr<mir::GLibMainLoop> the_main_loop()
@@ -1261,5 +1362,65 @@ TEST_F(LogindConsoleServices, can_acquire_device_without_running_main_loop)
             [](){})).get();
 
     EXPECT_TRUE(device_acquired);
+    stop_mainloop();
+}
+
+TEST_F(LogindConsoleServices, destroying_device_handle_releases_logind_device)
+{
+    ensure_mock_logind();
+    auto const session_path = add_any_active_session();
+
+    add_take_device_to_session(
+        session_path.c_str(),
+        "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
+    add_release_device_to_session(
+        session_path.c_str());
+
+    mir::LogindConsoleServices services{the_main_loop()};
+
+    int const device_major{42};
+    int const device_minor{88};
+
+    bool device_acquired{false};
+    auto device = services.acquire_device(
+        device_major, device_minor,
+        std::make_unique<mtd::SimpleDeviceObserver>(
+            [&device_acquired](auto) { device_acquired = true; },
+            [](){},
+            [](){})).get();
+
+    ASSERT_TRUE(device_acquired);
+
+    device.reset();
+    auto const calls_made = get_calls_for_object(session_path.c_str());
+
+    ASSERT_THAT(calls_made, Not(IsEmpty()));
+
+    auto const release_call =
+        std::find_if(
+            calls_made.begin(),
+            calls_made.end(),
+            [](CallInfo const& call)
+            {
+                return call.method_name == "ReleaseDevice";
+            });
+
+    ASSERT_THAT(release_call, Not(Eq(calls_made.end())));
+    ASSERT_THAT(release_call->arguments.size(), Eq(2));
+
+    int released_major, released_minor;
+
+    g_variant_get(
+        release_call->arguments[0].get(),
+        "u",
+        &released_major);
+    g_variant_get(
+        release_call->arguments[1].get(),
+        "u",
+        &released_minor);
+
+    EXPECT_THAT(released_major, Eq(device_major));
+    EXPECT_THAT(released_minor, Eq(device_minor));
+
     stop_mainloop();
 }

@@ -437,6 +437,26 @@ void complete_take_device_call(
         std::move(dbus_result),
         fd_list);
 }
+
+void complete_release_device_call(
+    GObject* proxy,
+    GAsyncResult* result,
+    gpointer) noexcept
+{
+    GErrorPtr error;
+
+    if (!logind_session_call_release_device_finish(
+        LOGIND_SESSION(proxy),
+        result,
+        &error))
+    {
+        auto const error_message = error ? error->message : "unknown error";
+
+        mir::log_warning(
+            "ReleaseDevice call failed: %s",
+            error_message);
+    }
+}
 }
 
 std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_device(
@@ -456,6 +476,21 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
                 if (it->second == destroying)
                 {
                     acquired_devices.erase(it);
+                    ml->run_with_context_as_thread_default(
+                        [
+                            session = std::shared_ptr<GObject>{
+                                G_OBJECT(g_object_ref(session_proxy.get())),
+                                &g_object_unref},
+                            devnum
+                        ]()
+                        {
+                            logind_session_call_release_device(
+                                LOGIND_SESSION(session.get()),
+                                major(devnum), minor(devnum),
+                                nullptr,
+                                &complete_release_device_call,
+                                nullptr);
+                        });
                 }
             }
         });
