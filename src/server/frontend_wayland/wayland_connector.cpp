@@ -302,7 +302,6 @@ public:
         : ShellSurface(client, parent, id),
           WindowWlSurfaceRole{&seat, client, surface, shell, output_manager}
     {
-        become_surface_role();
     }
 
     ~WlShellSurface() = default;
