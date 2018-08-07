@@ -358,17 +358,17 @@ void mf::XdgToplevelV6::set_parent(std::experimental::optional<struct wl_resourc
 {
     if (parent && parent.value())
     {
-        self->WindowWlSurfaceRole::set_parent(XdgToplevelV6::from(parent.value())->self->surface_id());
+        self->set_parent(XdgToplevelV6::from(parent.value())->self->surface_id());
     }
     else
     {
-        self->WindowWlSurfaceRole::set_parent({});
+        self->set_parent({});
     }
 }
 
 void mf::XdgToplevelV6::set_title(std::string const& title)
 {
-    self->WindowWlSurfaceRole::set_title(title);
+    self->set_title(title);
 }
 
 void mf::XdgToplevelV6::set_app_id(std::string const& /*app_id*/)
@@ -385,7 +385,7 @@ void mf::XdgToplevelV6::show_window_menu(struct wl_resource* seat, uint32_t seri
 
 void mf::XdgToplevelV6::move(struct wl_resource* /*seat*/, uint32_t /*serial*/)
 {
-    self->WindowWlSurfaceRole::initiate_interactive_move();
+    self->initiate_interactive_move();
 }
 
 void mf::XdgToplevelV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/, uint32_t edges)
@@ -429,47 +429,47 @@ void mf::XdgToplevelV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/
     default:;
     }
 
-    self->WindowWlSurfaceRole::initiate_interactive_resize(edge);
+    self->initiate_interactive_resize(edge);
 }
 
 void mf::XdgToplevelV6::set_max_size(int32_t width, int32_t height)
 {
-    self->WindowWlSurfaceRole::set_max_size(width, height);
+    self->set_max_size(width, height);
 }
 
 void mf::XdgToplevelV6::set_min_size(int32_t width, int32_t height)
 {
-    self->WindowWlSurfaceRole::set_min_size(width, height);
+    self->set_min_size(width, height);
 }
 
 void mf::XdgToplevelV6::set_maximized()
 {
     // We must process this request immediately (i.e. don't defer until commit())
-    self->WindowWlSurfaceRole::set_state_now(mir_window_state_maximized);
+    self->set_state_now(mir_window_state_maximized);
 }
 
 void mf::XdgToplevelV6::unset_maximized()
 {
     // We must process this request immediately (i.e. don't defer until commit())
-    self->WindowWlSurfaceRole::set_state_now(mir_window_state_restored);
+    self->set_state_now(mir_window_state_restored);
 }
 
 void mf::XdgToplevelV6::set_fullscreen(std::experimental::optional<struct wl_resource*> const& output)
 {
-    self->WindowWlSurfaceRole::set_fullscreen(output);
+    self->set_fullscreen(output);
 }
 
 void mf::XdgToplevelV6::unset_fullscreen()
 {
     // We must process this request immediately (i.e. don't defer until commit())
     // TODO: should we instead restore the previous state?
-    self->WindowWlSurfaceRole::set_state_now(mir_window_state_restored);
+    self->set_state_now(mir_window_state_restored);
 }
 
 void mf::XdgToplevelV6::set_minimized()
 {
     // We must process this request immediately (i.e. don't defer until commit())
-    self->WindowWlSurfaceRole::set_state_now(mir_window_state_minimized);
+    self->set_state_now(mir_window_state_minimized);
 }
 
 mf::XdgToplevelV6* mf::XdgToplevelV6::from(wl_resource* surface)
