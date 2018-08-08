@@ -23,7 +23,6 @@
 
 namespace mir
 {
-
 namespace frontend
 {
 
