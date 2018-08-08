@@ -39,9 +39,15 @@ environment:
     ARCH/armhf: armhf
     ARCH/i386: i386
     CLANG: 0
-    CLANG/clang: 1
+    CLANG/clang,asan_clang,tsan_clang,ubsan_clang: 1
     VALGRIND: 0
     VALGRIND/valgrind: 1
+    BUILD_TYPE: RelWithDebInfo
+    BUILD_TYPE/asan,asan_clang: AddressSanitizer
+    BUILD_TYPE/tsan,tsan_clang: ThreadSanitizer
+    BUILD_TYPE/ubsan,ubsan_clang: UBSanitizer
+    NOCHECK: ""
+    NOCHECK/asan,tsan,ubsan,asan_clang,tsan_clang,ubsan_clang: nocheck
 
 prepare: |
     # NOTE: This part of the code needs to be in spread.yaml as it runs before
