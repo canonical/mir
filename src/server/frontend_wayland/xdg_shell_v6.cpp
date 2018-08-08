@@ -18,17 +18,10 @@
 
 #include "xdg_shell_v6.h"
 
-#include "wayland_utils.h"
-#include "wl_surface_event_sink.h"
-#include "wl_seat.h"
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"
 
-#include "mir/scene/surface_creation_parameters.h"
-#include "mir/frontend/session.h"
-#include "mir/scene/surface.h"
-#include "mir/frontend/shell.h"
-#include "mir/optional_value.h"
+#include "mir/shell/surface_specification.h"
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -66,10 +59,6 @@ public:
                                               bool active)> notify_resize);
     void send_configure();
 
-    using WindowWlSurfaceRole::client;
-
-    struct wl_resource* const parent;
-    std::shared_ptr<Shell> const shell;
     std::function<void(std::experimental::optional<geometry::Point> const& new_top_left,
                        geometry::Size const& new_size,
                        MirWindowState state,
@@ -92,8 +81,7 @@ private:
 class XdgToplevelV6 : public wayland::XdgToplevelV6
 {
 public:
-    XdgToplevelV6(struct wl_client* client, struct wl_resource* parent, uint32_t id,
-                  std::shared_ptr<frontend::Shell> const& shell, XdgSurfaceV6* self);
+    XdgToplevelV6(struct wl_client* client, struct wl_resource* parent, uint32_t id, XdgSurfaceV6* self);
 
     void destroy() override;
     void set_parent(std::experimental::optional<struct wl_resource*> const& parent) override;
@@ -113,7 +101,6 @@ public:
 private:
     static XdgToplevelV6* from(wl_resource* surface);
 
-    std::shared_ptr<frontend::Shell> const shell;
     XdgSurfaceV6* const self;
 };
 
@@ -183,9 +170,7 @@ mf::XdgSurfaceV6* mf::XdgSurfaceV6::from(wl_resource* surface)
 mf::XdgSurfaceV6::XdgSurfaceV6(wl_client* client, wl_resource* parent, uint32_t id, WlSurface* surface,
                                std::shared_ptr<mf::Shell> const& shell, WlSeat& seat, OutputManager* output_manager)
     : wayland::XdgSurfaceV6(client, parent, id),
-      WindowWlSurfaceRole{&seat, client, surface, shell, output_manager},
-      parent{parent},
-      shell{shell}
+      WindowWlSurfaceRole{&seat, client, surface, shell, output_manager}
 {
 }
 
@@ -196,7 +181,7 @@ void mf::XdgSurfaceV6::destroy()
 
 void mf::XdgSurfaceV6::get_toplevel(uint32_t id)
 {
-    new XdgToplevelV6{client, parent, id, shell, this};
+    new XdgToplevelV6{wayland::XdgSurfaceV6::client, resource, id, this};
     become_surface_role();
 }
 
@@ -215,7 +200,7 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent, struct
 
     apply_spec(*specification);
 
-    new XdgPopupV6{client, parent, id, this};
+    new XdgPopupV6{wayland::XdgSurfaceV6::client, parent, id, this};
     become_surface_role();
 }
 
@@ -241,7 +226,7 @@ void mf::XdgSurfaceV6::set_notify_resize(
 
 void mf::XdgSurfaceV6::send_configure()
 {
-    auto const serial = wl_display_next_serial(wl_client_get_display(client));
+    auto const serial = wl_display_next_serial(wl_client_get_display(wayland::XdgSurfaceV6::client));
     zxdg_surface_v6_send_configure(resource, serial);
 }
 
@@ -297,10 +282,8 @@ void mf::XdgPopupV6::destroy()
 
 // XdgToplevelV6
 
-mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* parent, uint32_t id,
-                                 std::shared_ptr<mf::Shell> const& shell, XdgSurfaceV6* self)
+mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* parent, uint32_t id, XdgSurfaceV6* self)
     : wayland::XdgToplevelV6(client, parent, id),
-      shell{shell},
       self{self}
 {
     self->set_notify_resize(
