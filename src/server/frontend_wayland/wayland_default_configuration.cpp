@@ -19,6 +19,7 @@
 #include "mir/default_server_configuration.h"
 #include "wayland_connector.h"
 #include "xdg_shell_v6.h"
+#include "xdg_shell_stable.h"
 #include "xwayland_wm_shell.h"
 
 #include "mir/frontend/display_changer.h"
@@ -33,7 +34,10 @@ std::shared_ptr<mf::Connector>
 {
     struct WaylandExtensions : mf::WaylandExtensions
     {
-        WaylandExtensions(bool x11_enabled) : x11_enabled{x11_enabled} {}
+        WaylandExtensions(bool x11_enabled, bool xdg_stable_enabled)
+            : x11_enabled{x11_enabled},
+              xdg_stable_enabled{xdg_stable_enabled}
+        {}
     protected:
         virtual void custom_extensions(
             wl_display* display,
@@ -46,8 +50,12 @@ std::shared_ptr<mf::Connector>
 
             if (x11_enabled)
                 add_extension("x11-support", std::make_shared<mf::XWaylandWMShell>(shell, *seat, output_manager));
+
+            if (xdg_stable_enabled)
+                add_extension("xdg_shell_stable", std::make_shared<mf::XdgShellStable>(display, shell, *seat, output_manager));
         }
         const bool x11_enabled;
+        const bool xdg_stable_enabled;
     };
 
     return wayland_connector(
@@ -70,6 +78,8 @@ std::shared_ptr<mf::Connector>
                 the_buffer_allocator(),
                 the_session_authorizer(),
                 arw_socket,
-                std::make_unique<WaylandExtensions>(options->is_set(mo::x11_display_opt)));
+                std::make_unique<WaylandExtensions>(
+                    options->is_set(mo::x11_display_opt),
+                    true));
         });
 }
