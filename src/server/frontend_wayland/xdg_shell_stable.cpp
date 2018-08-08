@@ -31,7 +31,7 @@ namespace mir
 namespace frontend
 {
 
-class XdgSurfaceStable : wayland::XdgSurfaceV6
+class XdgSurfaceStable : wayland::XdgSurface
 {
 public:
     static XdgSurfaceStable* from(wl_resource* surface);
@@ -42,7 +42,8 @@ public:
 
     void destroy() override;
     void get_toplevel(uint32_t id) override;
-    void get_popup(uint32_t id, struct wl_resource* parent_surface, struct wl_resource* positioner) override;
+    void get_popup(uint32_t id, std::experimental::optional<struct wl_resource*> const& parent_surface,
+                   struct wl_resource* positioner) override;
     void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void ack_configure(uint32_t serial) override;
 
@@ -61,7 +62,7 @@ public:
     XdgShellStable const& xdg_shell;
 };
 
-class XdgPopupStable : wayland::XdgPopupV6, public WindowWlSurfaceRole
+class XdgPopupStable : wayland::XdgPopup, public WindowWlSurfaceRole
 {
 public:
     XdgPopupStable(struct wl_client* client, struct wl_resource* resource_parent, uint32_t id, XdgSurfaceStable* xdg_surface,
@@ -80,7 +81,7 @@ private:
     XdgSurfaceStable* const xdg_surface;
 };
 
-class XdgToplevelStable : wayland::XdgToplevelV6, public WindowWlSurfaceRole
+class XdgToplevelStable : wayland::XdgToplevel, public WindowWlSurfaceRole
 {
 public:
     XdgToplevelStable(struct wl_client* client, struct wl_resource* resource_parent, uint32_t id, XdgSurfaceStable* xdg_surface,
@@ -110,7 +111,7 @@ private:
     XdgSurfaceStable* const xdg_surface;
 };
 
-class XdgPositionerStable : public wayland::XdgPositionerV6, public shell::SurfaceSpecification
+class XdgPositionerStable : public wayland::XdgPositioner, public shell::SurfaceSpecification
 {
 public:
     XdgPositionerStable(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -136,7 +137,7 @@ mf::XdgShellStable::XdgShellStable(
     std::shared_ptr<mf::Shell> const shell,
     WlSeat& seat,
     OutputManager* output_manager) :
-    wayland::XdgShellV6(display, 1),
+    wayland::XdgWmBase(display, 1),
     shell{shell},
     seat{seat},
     output_manager{output_manager}
@@ -170,12 +171,12 @@ void mf::XdgShellStable::pong(struct wl_client* client, struct wl_resource* reso
 mf::XdgSurfaceStable* mf::XdgSurfaceStable::from(wl_resource* surface)
 {
     auto* tmp = wl_resource_get_user_data(surface);
-    return static_cast<XdgSurfaceStable*>(static_cast<wayland::XdgSurfaceV6*>(tmp));
+    return static_cast<XdgSurfaceStable*>(static_cast<wayland::XdgSurface*>(tmp));
 }
 
 mf::XdgSurfaceStable::XdgSurfaceStable(wl_client* client, wl_resource* resource_parent, uint32_t id, WlSurface* surface,
                                XdgShellStable const& xdg_shell)
-    : wayland::XdgSurfaceV6(client, resource_parent, id),
+    : wayland::XdgSurface(client, resource_parent, id),
       surface{surface},
       xdg_shell{xdg_shell}
 {
@@ -188,13 +189,16 @@ void mf::XdgSurfaceStable::destroy()
 
 void mf::XdgSurfaceStable::get_toplevel(uint32_t id)
 {
-    auto toplevel = new XdgToplevelStable{wayland::XdgSurfaceV6::client, resource, id, this, surface};
+    auto toplevel = new XdgToplevelStable{wayland::XdgSurface::client, resource, id, this, surface};
     set_window_role(toplevel);
 }
 
-void mf::XdgSurfaceStable::get_popup(uint32_t id, struct wl_resource* parent_surface, struct wl_resource* positioner)
+void mf::XdgSurfaceStable::get_popup(uint32_t id,
+                                     std::experimental::optional<struct wl_resource*> const& parent_surface,
+                                     struct wl_resource* positioner)
 {
-    auto popup = new XdgPopupStable{wayland::XdgSurfaceV6::client, resource, id, this, XdgSurfaceStable::from(parent_surface),
+    // TODO: don't force unwrap
+    auto popup = new XdgPopupStable{wayland::XdgSurface::client, resource, id, this, XdgSurfaceStable::from(parent_surface.value()),
                                 positioner, surface};
     set_window_role(popup);
 }
@@ -213,8 +217,8 @@ void mf::XdgSurfaceStable::ack_configure(uint32_t serial)
 
 void mf::XdgSurfaceStable::send_configure()
 {
-    auto const serial = wl_display_next_serial(wl_client_get_display(wayland::XdgSurfaceV6::client));
-    zxdg_surface_v6_send_configure(resource, serial);
+    auto const serial = wl_display_next_serial(wl_client_get_display(wayland::XdgSurface::client));
+    xdg_surface_send_configure(resource, serial);
 }
 
 std::experimental::optional<mf::WindowWlSurfaceRole*> const& mf::XdgSurfaceStable::window_role()
@@ -242,14 +246,14 @@ void mf::XdgSurfaceStable::set_window_role(WindowWlSurfaceRole* role)
 mf::XdgPopupStable::XdgPopupStable(struct wl_client* client, struct wl_resource* resource_parent, uint32_t id,
                            XdgSurfaceStable* xdg_surface, XdgSurfaceStable* parent_surface, struct wl_resource* positioner,
                            WlSurface* surface)
-    : wayland::XdgPopupV6(client, resource_parent, id),
+    : wayland::XdgPopup(client, resource_parent, id),
       WindowWlSurfaceRole(&xdg_surface->xdg_shell.seat, client, surface, xdg_surface->xdg_shell.shell,
                           xdg_surface->xdg_shell.output_manager),
       xdg_surface{xdg_surface}
 {
     auto specification = static_cast<mir::shell::SurfaceSpecification*>(
                                 static_cast<XdgPositionerStable*>(
-                                    static_cast<wayland::XdgPositionerV6*>(
+                                    static_cast<wayland::XdgPositioner*>(
                                         wl_resource_get_user_data(positioner))));
 
     auto parent_role = parent_surface->window_role();
@@ -287,7 +291,7 @@ void mf::XdgPopupStable::handle_resize(const std::experimental::optional<geometr
 
     if (needs_configure && cached_top_left && cached_size)
     {
-        zxdg_popup_v6_send_configure(resource,
+        xdg_popup_send_configure(resource,
                                     cached_top_left.value().x.as_int(),
                                     cached_top_left.value().y.as_int(),
                                     cached_size.value().width.as_int(),
@@ -300,14 +304,14 @@ void mf::XdgPopupStable::handle_resize(const std::experimental::optional<geometr
 
 mf::XdgToplevelStable::XdgToplevelStable(struct wl_client* client, struct wl_resource* resource_parent, uint32_t id,
                                  XdgSurfaceStable* xdg_surface, WlSurface* surface)
-    : wayland::XdgToplevelV6(client, resource_parent, id),
+    : wayland::XdgToplevel(client, resource_parent, id),
       WindowWlSurfaceRole(&xdg_surface->xdg_shell.seat, client, surface, xdg_surface->xdg_shell.shell,
                           xdg_surface->xdg_shell.output_manager),
       xdg_surface{xdg_surface}
 {
     wl_array states;
     wl_array_init(&states);
-    zxdg_toplevel_v6_send_configure(resource, 0, 0, &states);
+    xdg_toplevel_send_configure(resource, 0, 0, &states);
     wl_array_release(&states);
     xdg_surface->send_configure();
 }
@@ -357,35 +361,35 @@ void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t /*seri
 
     switch (edges)
     {
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP:
+    case XDG_TOPLEVEL_RESIZE_EDGE_TOP:
         edge = mir_resize_edge_north;
         break;
 
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM:
+    case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM:
         edge = mir_resize_edge_south;
         break;
 
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_LEFT:
+    case XDG_TOPLEVEL_RESIZE_EDGE_LEFT:
         edge = mir_resize_edge_west;
         break;
 
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_LEFT:
+    case XDG_TOPLEVEL_RESIZE_EDGE_TOP_LEFT:
         edge = mir_resize_edge_northwest;
         break;
 
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_LEFT:
+    case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_LEFT:
         edge = mir_resize_edge_southwest;
         break;
 
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_RIGHT:
+    case XDG_TOPLEVEL_RESIZE_EDGE_RIGHT:
         edge = mir_resize_edge_east;
         break;
 
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_RIGHT:
+    case XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT:
         edge = mir_resize_edge_northeast;
         break;
 
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_RIGHT:
+    case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT:
         edge = mir_resize_edge_southeast;
         break;
 
@@ -444,7 +448,7 @@ void mf::XdgToplevelStable::handle_resize(std::experimental::optional<geometry::
     if (is_active())
     {
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = ZXDG_TOPLEVEL_V6_STATE_ACTIVATED;
+            *state = XDG_TOPLEVEL_STATE_ACTIVATED;
     }
 
     switch (window_state())
@@ -453,19 +457,19 @@ void mf::XdgToplevelStable::handle_resize(std::experimental::optional<geometry::
     case mir_window_state_horizmaximized:
     case mir_window_state_vertmaximized:
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = ZXDG_TOPLEVEL_V6_STATE_MAXIMIZED;
+            *state = XDG_TOPLEVEL_STATE_MAXIMIZED;
         break;
 
     case mir_window_state_fullscreen:
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = ZXDG_TOPLEVEL_V6_STATE_FULLSCREEN;
+            *state = XDG_TOPLEVEL_STATE_FULLSCREEN;
         break;
 
     default:
         break;
     }
 
-    zxdg_toplevel_v6_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
+    xdg_toplevel_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
     wl_array_release(&states);
 
     xdg_surface->send_configure();
@@ -474,13 +478,13 @@ void mf::XdgToplevelStable::handle_resize(std::experimental::optional<geometry::
 mf::XdgToplevelStable* mf::XdgToplevelStable::from(wl_resource* surface)
 {
     auto* tmp = wl_resource_get_user_data(surface);
-    return static_cast<XdgToplevelStable*>(static_cast<wayland::XdgToplevelV6*>(tmp));
+    return static_cast<XdgToplevelStable*>(static_cast<wayland::XdgToplevel*>(tmp));
 }
 
 // XdgPositionerStable
 
 mf::XdgPositionerStable::XdgPositionerStable(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : wayland::XdgPositionerV6(client, parent, id)
+    : wayland::XdgPositioner(client, parent, id)
 {
     // specifying gravity is not required by the xdg shell protocol, but is by Mir window managers
     surface_placement_gravity = mir_placement_gravity_center;
@@ -507,16 +511,16 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
 {
     MirPlacementGravity placement = mir_placement_gravity_center;
 
-    if (anchor & ZXDG_POSITIONER_V6_ANCHOR_TOP)
+    if (anchor & XDG_POSITIONER_ANCHOR_TOP)
         placement = MirPlacementGravity(placement | mir_placement_gravity_north);
 
-    if (anchor & ZXDG_POSITIONER_V6_ANCHOR_BOTTOM)
+    if (anchor & XDG_POSITIONER_ANCHOR_BOTTOM)
         placement = MirPlacementGravity(placement | mir_placement_gravity_south);
 
-    if (anchor & ZXDG_POSITIONER_V6_ANCHOR_LEFT)
+    if (anchor & XDG_POSITIONER_ANCHOR_LEFT)
         placement = MirPlacementGravity(placement | mir_placement_gravity_west);
 
-    if (anchor & ZXDG_POSITIONER_V6_ANCHOR_RIGHT)
+    if (anchor & XDG_POSITIONER_ANCHOR_RIGHT)
         placement = MirPlacementGravity(placement | mir_placement_gravity_east);
 
     aux_rect_placement_gravity = placement;
@@ -526,16 +530,16 @@ void mf::XdgPositionerStable::set_gravity(uint32_t gravity)
 {
     MirPlacementGravity placement = mir_placement_gravity_center;
 
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_TOP)
+    if (gravity & XDG_POSITIONER_GRAVITY_TOP)
         placement = MirPlacementGravity(placement | mir_placement_gravity_south);
 
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_BOTTOM)
+    if (gravity & XDG_POSITIONER_GRAVITY_BOTTOM)
         placement = MirPlacementGravity(placement | mir_placement_gravity_north);
 
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_LEFT)
+    if (gravity & XDG_POSITIONER_GRAVITY_LEFT)
         placement = MirPlacementGravity(placement | mir_placement_gravity_east);
 
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_RIGHT)
+    if (gravity & XDG_POSITIONER_GRAVITY_RIGHT)
         placement = MirPlacementGravity(placement | mir_placement_gravity_west);
 
     surface_placement_gravity = placement;

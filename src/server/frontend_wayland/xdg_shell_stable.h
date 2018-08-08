@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_XDG_SHELL_STABLE_H
 #define MIR_FRONTEND_XDG_SHELL_STABLE_H
 
-#include "generated/xdg-shell-unstable-v6_wrapper.h"
+#include "generated/xdg-shell_wrapper.h"
 
 namespace mir
 {
@@ -30,7 +30,7 @@ class Shell;
 class WlSeat;
 class OutputManager;
 
-class XdgShellStable : public wayland::XdgShellV6
+class XdgShellStable : public wayland::XdgWmBase
 {
 public:
     XdgShellStable(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat, OutputManager* output_manager);
