@@ -1,5 +1,5 @@
 environment:
-    DEB_BUILD_OPTIONS: "parallel=$( nproc ) noopt"
+    DEB_BUILD_OPTIONS: "parallel=$( nproc ) noopt ${NOCHECK}"
     NO_PKG_MANGLE: 1
 
 systems: [ubuntu-*]
@@ -73,6 +73,9 @@ execute: |
     if [ "${VALGRIND}" -eq 1 ]; then
       echo "OVERRIDE_CONFIGURE_OPTIONS += -DENABLE_MEMCHECK_OPTION=ON" >> debian/opts.mk
     fi
+
+    # change the build type
+    echo "OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_BUILD_TYPE=${BUILD_TYPE}" >> debian/opts.mk
 
     # build and run tests
     debian/rules build

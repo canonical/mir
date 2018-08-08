@@ -22,6 +22,10 @@ stages:
   if: NOT (( branch = master AND type = push )
              OR ( head_branch =~ ^release/[\d\.]+$ ))
       AND tag IS blank
+- name: sanitize
+  if: type = cron
+      AND repo = MirServer/mir
+      AND branch = master
 - name: upload to ppa:mir-team
   if: type = push
       AND repo = MirServer/mir
@@ -84,6 +88,19 @@ jobs:
     env: RELEASE=18.04
   - <<: *ppa-upload
     env: RELEASE=devel
+  - &sanitize
+    stage: sanitize
+    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=asan
+  - <<: *sanitize
+    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=tsan
+  - <<: *sanitize
+    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=ubsan
+  - <<: *sanitize
+    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=asan_clang
+  - <<: *sanitize
+    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=tsan_clang
+  - <<: *sanitize
+    env: SYSTEM=google:ubuntu-18.04-64 VARIANT=ubsan_clang
   - stage: process snaps
     env: ~
     language: python
