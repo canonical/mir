@@ -52,7 +52,6 @@ void mf::XWaylandWMShellSurface::destroy()
 
 void mf::XWaylandWMShellSurface::set_toplevel()
 {
-    become_surface_role();
     set_state_now(MirWindowState::mir_window_state_restored);
 }
 

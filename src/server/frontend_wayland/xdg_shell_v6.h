@@ -42,10 +42,9 @@ public:
                          struct wl_resource* surface) override;
     void pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial) override;
 
-private:
     std::shared_ptr<Shell> const shell;
     WlSeat& seat;
-    OutputManager* output_manager;
+    OutputManager* const output_manager;
 };
 
 }
