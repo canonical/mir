@@ -131,6 +131,13 @@ if(cmake_build_type_lower MATCHES "addresssanitizer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=address")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=address")
+  if (CMAKE_COMPILER_IS_GNUCXX)
+    # Work around GCC bug. It should automatically link to asan when
+    # -fsanitize=address is used, but doesn't.
+    #
+    # Linking everything with asan is harmless and simple, so do that.
+    link_libraries(asan) # Workaround for LP:1413474
+  endif()
 elseif(cmake_build_type_lower MATCHES "threadsanitizer")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=thread -fno-omit-frame-pointer")
@@ -150,6 +157,13 @@ elseif(cmake_build_type_lower MATCHES "ubsanitizer")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fsanitize=undefined")
   # "Symbol already defined" errors occur with pre-compiled headers
   SET(MIR_USE_PRECOMPILED_HEADERS OFF CACHE BOOL "Use precompiled headers" FORCE)
+  if (CMAKE_COMPILER_IS_GNUCXX)
+    # Work around GCC bug. It should automatically link to asan when
+    # -fsanitize=undefined is used, but doesn't.
+    #
+    # Linking everything with ubsan is harmless and simple, so do that.
+    link_libraries(ubsan) # Workaround for LP:1413474
+  endif()
 else()
   # AddressSanitizer builds fail if we disallow undefined symbols
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
