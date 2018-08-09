@@ -521,17 +521,43 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
 {
     MirPlacementGravity placement = mir_placement_gravity_center;
 
-    if (anchor & XDG_POSITIONER_ANCHOR_TOP)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_north);
+    switch (anchor)
+    {
+        case XDG_POSITIONER_ANCHOR_TOP:
+            placement = mir_placement_gravity_north;
+            break;
 
-    if (anchor & XDG_POSITIONER_ANCHOR_BOTTOM)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_south);
+        case XDG_POSITIONER_ANCHOR_BOTTOM:
+            placement = mir_placement_gravity_south;
+            break;
 
-    if (anchor & XDG_POSITIONER_ANCHOR_LEFT)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_west);
+        case XDG_POSITIONER_ANCHOR_LEFT:
+            placement = mir_placement_gravity_west;
+            break;
 
-    if (anchor & XDG_POSITIONER_ANCHOR_RIGHT)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_east);
+        case XDG_POSITIONER_ANCHOR_RIGHT:
+            placement = mir_placement_gravity_east;
+            break;
+
+        case XDG_POSITIONER_ANCHOR_TOP_LEFT:
+            placement = mir_placement_gravity_northwest;
+            break;
+
+        case XDG_POSITIONER_ANCHOR_BOTTOM_LEFT:
+            placement = mir_placement_gravity_southwest;
+            break;
+
+        case XDG_POSITIONER_ANCHOR_TOP_RIGHT:
+            placement = mir_placement_gravity_northeast;
+            break;
+
+        case XDG_POSITIONER_ANCHOR_BOTTOM_RIGHT:
+            placement = mir_placement_gravity_southeast;
+            break;
+
+        default:
+            placement = mir_placement_gravity_center;
+    }
 
     aux_rect_placement_gravity = placement;
 }
@@ -540,17 +566,43 @@ void mf::XdgPositionerStable::set_gravity(uint32_t gravity)
 {
     MirPlacementGravity placement = mir_placement_gravity_center;
 
-    if (gravity & XDG_POSITIONER_GRAVITY_TOP)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_south);
+    switch (gravity)
+    {
+        case XDG_POSITIONER_GRAVITY_TOP:
+            placement = mir_placement_gravity_south;
+            break;
 
-    if (gravity & XDG_POSITIONER_GRAVITY_BOTTOM)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_north);
+        case XDG_POSITIONER_GRAVITY_BOTTOM:
+            placement = mir_placement_gravity_north;
+            break;
 
-    if (gravity & XDG_POSITIONER_GRAVITY_LEFT)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_east);
+        case XDG_POSITIONER_GRAVITY_LEFT:
+            placement = mir_placement_gravity_east;
+            break;
 
-    if (gravity & XDG_POSITIONER_GRAVITY_RIGHT)
-        placement = MirPlacementGravity(placement | mir_placement_gravity_west);
+        case XDG_POSITIONER_GRAVITY_RIGHT:
+            placement = mir_placement_gravity_west;
+            break;
+
+        case XDG_POSITIONER_GRAVITY_TOP_LEFT:
+            placement = mir_placement_gravity_southeast;
+            break;
+
+        case XDG_POSITIONER_GRAVITY_BOTTOM_LEFT:
+            placement = mir_placement_gravity_northeast;
+            break;
+
+        case XDG_POSITIONER_GRAVITY_TOP_RIGHT:
+            placement = mir_placement_gravity_southwest;
+            break;
+
+        case XDG_POSITIONER_GRAVITY_BOTTOM_RIGHT:
+            placement = mir_placement_gravity_northwest;
+            break;
+
+        default:
+            placement = mir_placement_gravity_center;
+    }
 
     surface_placement_gravity = placement;
 }
