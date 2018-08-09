@@ -410,7 +410,7 @@ void mir::Server::run()
         run_mir(
             *self->server_config,
             [&](DisplayServer&)
-                { self->init_callback(); },
+                { self->init_callback(); self->init_callback = []{}; },
             self->terminator);
 
         self->exit_status = true;
