@@ -11,10 +11,14 @@ export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 # Enable verbose debugging output from the testsuite
 export MIR_SERVER_LOGGING = on
 override_dh_auto_test:
-ifeq ($(DEB_HOST_ARCH_ENDIAN),little)
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+  ifeq ($(DEB_HOST_ARCH_ENDIAN),little)
 	GTEST_OUTPUT=xml:./ dh_auto_build -- ARGS="-V" ptest
-else
+  else
 	echo "Testsuite disabled on $(DEB_HOST_ARCH) due to lack of big-endian support."
+  endif
+else
+	echo "Testsuite disabled due to DEB_BUILD_OPTIONS=\"$(DEB_BUILD_OPTIONS)\""
 endif
 
 COMMON_CONFIGURE_OPTIONS = \
