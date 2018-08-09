@@ -190,7 +190,14 @@ void miral::BasicWindowManager::remove_surface(
     std::weak_ptr<scene::Surface> const& surface)
 {
     Locker lock{this};
-    remove_window(session, info_for(surface));
+    try
+    {
+        remove_window(session, info_for(surface));
+    }
+    catch (std::out_of_range const& ex)
+    {
+        fatal_error("Could not find surface to remove in miral::BasicWindowManager::remove_surface()");
+    }
 }
 
 void miral::BasicWindowManager::remove_window(Application const& application, miral::WindowInfo const& info)
