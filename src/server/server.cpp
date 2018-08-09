@@ -446,6 +446,7 @@ void mir::Server::stop()
         if (auto const main_loop = the_main_loop())
         {
             self->stop_callback();
+            self->stop_callback = []{};
             main_loop->stop();
         }
 }
