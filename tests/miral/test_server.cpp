@@ -40,6 +40,8 @@ using namespace testing;
 using namespace std::chrono_literals;
 namespace mtf = mir_test_framework;
 namespace msh = mir::shell;
+namespace ml = mir::logging;
+namespace mtd = mir::test::doubles;
 
 namespace
 {
@@ -94,6 +96,7 @@ void miral::TestDisplayServer::start_server()
             auto init = [this](mir::Server& server)
                 {
                     server.add_configuration_option(trace_option, "log trace message", mir::OptionType::null);
+                    server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);
 
                     server.add_init_callback([&]
                         {
@@ -144,14 +147,21 @@ void miral::TestDisplayServer::start_server()
                             window_manager = wm;
                             return wm;
                         });
+
+                    server.override_the_logger([&]()
+                        {
+                            std::shared_ptr<ml::Logger> result{};
+
+                            if (!server.get_options()->get<bool>(mtd::logging_opt))
+                                result = std::make_shared<mtd::NullLogger>();
+
+                            return result;
+                        });
                 };
 
             try
             {
-                namespace mtd = mir::test::doubles;
-                // Ignore the --logging flag passed to mir tests
-                CommandLineOption logging{[](bool) {}, mtd::logging_opt, mtd::logging_descr, false};
-                runner.run_with({init, logging, init_server});
+                runner.run_with({init, init_server});
             }
             catch (std::exception const& e)
             {
