@@ -161,9 +161,7 @@ void miral::TestDisplayServer::start_server()
 
             try
             {
-                // Ignore the --logging flag passed to mir tests
-                CommandLineOption logging{[](bool) {}, mtd::logging_opt, mtd::logging_descr, false};
-                runner.run_with({init, logging, init_server});
+                runner.run_with({init, init_server});
             }
             catch (std::exception const& e)
             {
