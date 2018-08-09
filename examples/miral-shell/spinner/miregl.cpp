@@ -114,6 +114,7 @@ private:
         char const* interface,
         uint32_t version);
 
+    struct wl_egl_window* window;
     EGLDisplay egldisplay;
     EGLContext eglctx;
     EGLConfig eglconfig;
@@ -379,10 +380,11 @@ MirEglApp::MirEglApp(struct wl_display* display) :
 EGLSurface MirEglApp::create_eglsurface(wl_surface* surface, int width, int height)
 {
 
+    window = wl_egl_window_create(surface, width, height);
     auto const eglsurface = eglCreateWindowSurface(
         egldisplay,
         eglconfig,
-        (EGLNativeWindowType)wl_egl_window_create(surface, width, height), NULL);
+        (EGLNativeWindowType)window, NULL);
 
     if (eglsurface == EGL_NO_SURFACE)
         throw std::runtime_error("eglCreateWindowSurface failed");
@@ -404,6 +406,7 @@ void MirEglApp::swap_buffers(EGLSurface eglsurface) const
 void MirEglApp::destroy_surface(EGLSurface eglsurface) const
 {
     eglDestroySurface(egldisplay, eglsurface);
+    wl_egl_window_destroy(window);
 }
 
 void MirEglApp::get_surface_size(EGLSurface eglsurface, int* width, int* height) const
