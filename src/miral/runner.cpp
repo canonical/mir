@@ -178,7 +178,7 @@ try
         for (auto& option : options)
             option(*server);
 
-        server->add_stop_callback(stop_callback);
+        server->add_stop_callback(std::move(stop_callback));
 
         // Provide the command line and run the server
         server->set_command_line(argc, argv);
@@ -197,7 +197,7 @@ try
         // By enqueuing the notification code in the main loop, we are
         // ensuring that the server has really and fully started.
         auto const main_loop = server->the_main_loop();
-        main_loop->enqueue(this, start_callback);
+        main_loop->enqueue(this, std::move(start_callback));
     });
 
     server->run();
