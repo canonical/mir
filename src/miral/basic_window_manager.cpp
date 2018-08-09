@@ -196,7 +196,7 @@ void miral::BasicWindowManager::remove_surface(
     }
     catch (std::out_of_range const& ex)
     {
-        throw std::runtime_error("Could not find surface to remove in miral::BasicWindowManager::remove_surface()");
+        fatal_error("Could not find surface to remove in miral::BasicWindowManager::remove_surface()");
     }
 }
 
