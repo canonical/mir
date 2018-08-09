@@ -71,7 +71,6 @@ mf::WlKeyboard::~WlKeyboard()
 void mf::WlKeyboard::handle_keyboard_event(MirKeyboardEvent const* key_event, WlSurface* /*surface*/)
 {
     auto const input_ev = mir_keyboard_event_input_event(key_event);
-    auto const ev = mir::client::Event{mir_event_ref(mir_input_event_get_event(input_ev))};
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
     auto const scancode = mir_keyboard_event_scan_code(key_event);
     /*
