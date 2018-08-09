@@ -186,9 +186,7 @@ void create_client_session(wl_listener* listener, void* data)
     gid_t client_gid;
     wl_client_get_credentials(client, &client_pid, &client_uid, &client_gid);
 
-    auto session_cred = new mf::SessionCredentials{client_pid,
-                                                   client_uid, client_gid};
-    if (!construction_context->session_authorizer->connection_is_allowed(*session_cred))
+    if (!construction_context->session_authorizer->connection_is_allowed({client_pid, client_uid, client_gid}))
     {
         wl_client_destroy(client);
         return;
