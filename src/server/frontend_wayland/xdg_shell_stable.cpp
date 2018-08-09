@@ -66,8 +66,8 @@ class XdgPopupStable : wayland::XdgPopup, public WindowWlSurfaceRole
 {
 public:
     XdgPopupStable(struct wl_client* client, struct wl_resource* resource_parent, uint32_t id,
-                   XdgSurfaceStable* xdg_surface, std::experimental::optional<WlSurfaceRole*> parent_role,
-                   struct wl_resource* positioner, WlSurface* surface);
+                   XdgSurfaceStable* xdg_surface, WlSurfaceRole* parent_role, struct wl_resource* positioner,
+                   WlSurface* surface);
 
     void grab(struct wl_resource* seat, uint32_t serial) override;
     void destroy() override;
@@ -203,7 +203,16 @@ void mf::XdgSurfaceStable::get_popup(uint32_t id,
                                   parent_xdg_surface.value()->window_role()
                                   : std::experimental::nullopt;
 
-    auto popup = new XdgPopupStable{wayland::XdgSurface::client, resource, id, this, parent_window_role, positioner,
+
+    if  (!parent_window_role)
+    {
+        // When we implement layer shell, it will be more clear why this function might be called with a null parent,
+        // and we can revisit handling it then.
+        log_warning("tried to create XDG shell stable popup without a parent");
+        return;
+    }
+
+    auto popup = new XdgPopupStable{wayland::XdgSurface::client, resource, id, this, parent_window_role.value(), positioner,
                                     surface};
     set_window_role(popup);
 }
@@ -250,7 +259,7 @@ void mf::XdgSurfaceStable::set_window_role(WindowWlSurfaceRole* role)
 
 mf::XdgPopupStable::XdgPopupStable(struct wl_client* client, struct wl_resource* resource_parent, uint32_t id,
                                    XdgSurfaceStable* xdg_surface,
-                                   std::experimental::optional<WlSurfaceRole*> parent_role,
+                                   WlSurfaceRole* parent_role,
                                    struct wl_resource* positioner, WlSurface* surface)
     : wayland::XdgPopup(client, resource_parent, id),
       WindowWlSurfaceRole(&xdg_surface->xdg_shell.seat, client, surface, xdg_surface->xdg_shell.shell,
@@ -264,8 +273,7 @@ mf::XdgPopupStable::XdgPopupStable(struct wl_client* client, struct wl_resource*
 
     specification->type = mir_window_type_freestyle;
     specification->placement_hints = mir_placement_hints_slide_any;
-    if (parent_role)
-        specification->parent_id = parent_role.value()->surface_id();
+    specification->parent_id = parent_role->surface_id();
 
     apply_spec(*specification);
 }
