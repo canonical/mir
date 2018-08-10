@@ -54,12 +54,6 @@ namespace geom = mir::geometry;
 namespace
 {
 
-int errno_from_exception(std::exception const& e)
-{
-    auto errno_ptr = boost::get_error_info<boost::errinfo_errno>(e);
-    return (errno_ptr != nullptr) ? *errno_ptr : -1;
-}
-
 class GBMGLContext : public mir::renderer::gl::Context
 {
 public:
@@ -292,32 +286,11 @@ void mgm::Display::register_pause_resume_handlers(
 
 void mgm::Display::pause()
 {
-    try
-    {
-        if (auto c = cursor.lock()) c->suspend();
-        for (auto& helper : drm)
-            helper->drop_master();
-    }
-    catch(std::runtime_error const& e)
-    {
-        listener->report_drm_master_failure(errno_from_exception(e));
-        throw;
-    }
+    if (auto c = cursor.lock()) c->suspend();
 }
 
 void mgm::Display::resume()
 {
-    try
-    {
-        for (auto& helper : drm)
-            helper->set_master();
-    }
-    catch(std::runtime_error const& e)
-    {
-        listener->report_drm_master_failure(errno_from_exception(e));
-        throw;
-    }
-
     {
         std::lock_guard<std::mutex> lg{configuration_mutex};
 
