@@ -90,6 +90,9 @@ jobs:
     env: RELEASE=devel
   - &sanitize
     stage: sanitize
+    notifications:
+      email:
+      - mir-ci-bot@canonical.com
     env: SYSTEM=google:ubuntu-18.04-64 VARIANT=asan
   - <<: *sanitize
     env: SYSTEM=google:ubuntu-18.04-64 VARIANT=tsan
