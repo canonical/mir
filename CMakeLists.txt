@@ -164,6 +164,9 @@ elseif(cmake_build_type_lower MATCHES "ubsanitizer")
     # Linking everything with ubsan is harmless and simple, so do that.
     link_libraries(ubsan) # Workaround for LP:1413474
   endif()
+  # We have inline classes as interfaces used by .so's and implemented elsewhere.
+  # This results in multiple trivial implementations. So let's not warn about that.
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-sanitize=vptr")
 else()
   # AddressSanitizer builds fail if we disallow undefined symbols
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
