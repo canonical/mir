@@ -34,7 +34,7 @@ class EventFilterChainDispatcher : public CompositeEventFilter, public mir::inpu
 {
 public:
     EventFilterChainDispatcher(
-        std::initializer_list<std::shared_ptr<EventFilter> const> const& values,
+        std::vector<std::weak_ptr<EventFilter>> initial_filters,
         std::shared_ptr<InputDispatcher> const& next_dispatcher);
 
     // CompositeEventFilter

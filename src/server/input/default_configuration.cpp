@@ -76,8 +76,10 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
     return event_filter_chain_dispatcher(
         [this]() -> std::shared_ptr<mi::EventFilterChainDispatcher>
         {
-            std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
-            return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_surface_input_dispatcher());
+            std::vector<std::weak_ptr<mi::EventFilter>> filter_list {default_filter};
+            return std::make_shared<mi::EventFilterChainDispatcher>(
+                std::move(filter_list),
+                the_surface_input_dispatcher());
         });
 }
 

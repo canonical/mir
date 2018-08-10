@@ -21,9 +21,9 @@
 namespace mi = mir::input;
 
 mi::EventFilterChainDispatcher::EventFilterChainDispatcher(
-    std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& values,
+    std::vector<std::weak_ptr<mi::EventFilter>> initial_filters,
     std::shared_ptr<mi::InputDispatcher> const& next_dispatcher)
-    : filters(values.begin(), values.end()),
+    : filters(std::move(initial_filters)),
       next_dispatcher(next_dispatcher)
 {
 }
