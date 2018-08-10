@@ -1425,7 +1425,7 @@ auto MirConnection::create_render_surface_with_content(
     mir::protobuf::BufferStreamParameters params;
     params.set_width(logical_size.width.as_int());
     params.set_height(logical_size.height.as_int());
-    params.set_pixel_format(-1);
+    params.set_pixel_format(mir_pixel_format_invalid);
     params.set_buffer_usage(-1);
 
     auto nw = platform->create_egl_native_window(nullptr);
