@@ -127,10 +127,14 @@ void mf::WlKeyboard::handle_window_event(MirWindowEvent const* event, WlSurface*
                 wl_resource_post_no_memory(resource);
                 BOOST_THROW_EXCEPTION(std::bad_alloc());
             }
-            std::memcpy(
-                array_storage,
-                keyboard_state.data(),
-                keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
+
+            if (!keyboard_state.empty())
+            {
+                std::memcpy(
+                    array_storage,
+                    keyboard_state.data(),
+                    keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
+            }
 
             // Rebuild xkb state
             state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
