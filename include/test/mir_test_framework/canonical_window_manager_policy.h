@@ -36,7 +36,7 @@ struct CanonicalWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
     mir::geometry::Rectangle confirm_placement_on_display(
         miral::WindowInfo const&,
         MirWindowState,
-        mir::geometry::Rectangle const& new_placement)
+        mir::geometry::Rectangle const& new_placement) override
     {
         return new_placement;
     }
