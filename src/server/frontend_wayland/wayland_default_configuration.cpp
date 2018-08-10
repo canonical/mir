@@ -19,6 +19,7 @@
 #include "mir/default_server_configuration.h"
 #include "wayland_connector.h"
 #include "xdg_shell_v6.h"
+#include "xdg_shell_stable.h"
 #include "xwayland_wm_shell.h"
 
 #include "mir/frontend/display_changer.h"
@@ -43,6 +44,10 @@ std::shared_ptr<mf::Connector>
         {
             if (!getenv("MIR_DISABLE_XDG_SHELL_V6_UNSTABLE"))
                 add_extension("zxdg_shell_v6", std::make_shared<mf::XdgShellV6>(display, shell, *seat, output_manager));
+
+            if (!getenv("MIR_DISABLE_XDG_SHELL_STABLE"))
+                add_extension("xdg_shell_stable",
+                              std::make_shared<mf::XdgShellStable>(display, shell, *seat,output_manager));
 
             if (x11_enabled)
                 add_extension("x11-support", std::make_shared<mf::XWaylandWMShell>(shell, *seat, output_manager));
