@@ -28,11 +28,30 @@ namespace mir
 namespace input
 {
 
+/**
+ * Apply a chain of filters to events
+ *
+ * This composite filter offers the event to each filter in turn until one consumes it.
+ */
 class CompositeEventFilter : public EventFilter
 {
 public:
-    virtual void append(std::shared_ptr<EventFilter> const& filter) = 0;
-    virtual void prepend(std::shared_ptr<EventFilter> const& filter) = 0;
+    /**
+     * Add a filter to the end of the chain; it will be offered each event after any existing filters.
+     *
+     * The filter will be removed when the lifetime of the underlying object ends.
+     *
+     * \param [in] filter   Filter to append to chain.
+     */
+    virtual void append(std::weak_ptr<EventFilter> const& filter) = 0;
+    /**
+     * Add a filter to the beginning of the chain; it will be offered each event before any existing filters.
+     *
+     * The filter will be removed when the lifetime of the underlying object ends.
+     *
+     * \param [in] filter   Filter to prepend to chain.
+     */
+    virtual void prepend(std::weak_ptr<EventFilter> const& filter) = 0;
 };
 
 }

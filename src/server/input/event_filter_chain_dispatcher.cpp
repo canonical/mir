@@ -48,14 +48,14 @@ bool mi::EventFilterChainDispatcher::handle(MirEvent const& event)
     return false;
 }
 
-void mi::EventFilterChainDispatcher::append(std::shared_ptr<EventFilter> const& filter)
+void mi::EventFilterChainDispatcher::append(std::weak_ptr<EventFilter> const& filter)
 {
     std::lock_guard<std::mutex> lg(filter_guard);
 
     filters.push_back(filter);
 }
 
-void mi::EventFilterChainDispatcher::prepend(std::shared_ptr<EventFilter> const& filter)
+void mi::EventFilterChainDispatcher::prepend(std::weak_ptr<EventFilter> const& filter)
 {
     std::lock_guard<std::mutex> lg(filter_guard);
         
