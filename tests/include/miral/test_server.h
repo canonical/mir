@@ -99,7 +99,7 @@ struct TestDisplayServer::TestWindowManagerPolicy : CanonicalWindowManagerPolicy
     mir::geometry::Rectangle confirm_placement_on_display(
         const miral::WindowInfo&,
         MirWindowState,
-        mir::geometry::Rectangle const& new_placement)
+        mir::geometry::Rectangle const& new_placement) override
     {
         return new_placement;
     }
