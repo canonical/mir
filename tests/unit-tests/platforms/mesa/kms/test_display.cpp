@@ -651,18 +651,6 @@ TEST_F(MesaDisplayTest, for_each_display_buffer_calls_callback)
     EXPECT_NE(0, callback_count);
 }
 
-TEST_F(MesaDisplayTest, pause_drops_drm_master)
-{
-    using namespace testing;
-
-    EXPECT_CALL(mock_drm, drmDropMaster(_))
-        .Times(2);
-
-    auto display = create_display(create_platform());
-
-    display->pause();
-}
-
 TEST_F(MesaDisplayTest, configuration_change_registers_video_devices_handler)
 {
     using namespace testing;
