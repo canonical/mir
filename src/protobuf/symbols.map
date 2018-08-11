@@ -1183,3 +1183,11 @@ MIR_PROTOBUF_FEDORA {
     mir::protobuf::*::InternalSwap*;
   };
 } MIR_PROTOBUF_0.27;
+
+# When using protobuf v3.6.0 (specifically, tested on Arch Linux) these are needed
+MIR_PROTOBUF_PROTOBUF_3.6.0 {
+ global:
+  extern "C++" {
+    *google::protobuf::Arena::CreateMaybeMessage*;
+  };
+} MIR_PROTOBUF_FEDORA;
