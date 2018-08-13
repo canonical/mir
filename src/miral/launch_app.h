@@ -21,15 +21,17 @@
 
 #include <mir/optional_value.h>
 
+#include <sys/types.h>
+
 #include <string>
 #include <vector>
 
 namespace miral
 {
-void launch_app(std::vector<std::string> const& app,
+auto launch_app(std::vector<std::string> const& app,
                 mir::optional_value<std::string> const& wayland_display,
                 mir::optional_value<std::string> const& mir_socket,
-                mir::optional_value<std::string> const& x11_display);
+                mir::optional_value<std::string> const& x11_display) -> pid_t;
 }
 
 #endif //MIRAL_LAUNCH_APP_H

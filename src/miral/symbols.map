@@ -347,6 +347,7 @@ global:
 MIRAL_2.4 {
 global:
   extern "C++" {
+    miral::ExternalClientLauncher::pid*;
     miral::X11Support::?X11Support*;
     miral::X11Support::X11Support*;
     miral::X11Support::operator*;

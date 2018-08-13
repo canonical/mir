@@ -28,6 +28,7 @@ namespace mo = mir::options;
 struct miral::ExternalClientLauncher::Self
 {
     mir::Server* server = nullptr;
+    pid_t pid = -1;
 };
 
 void miral::ExternalClientLauncher::operator()(mir::Server& server)
@@ -49,8 +50,14 @@ void miral::ExternalClientLauncher::launch(std::vector<std::string> const& comma
     if (options->is_set(mo::x11_display_opt))
         x11_display = std::string(":") + std::to_string(options->get<int>(mo::x11_display_opt));
 
-    launch_app(command_line, wayland_display, mir_socket, x11_display);
+    self->pid = launch_app(command_line, wayland_display, mir_socket, x11_display);
 }
 
 miral::ExternalClientLauncher::ExternalClientLauncher() : self{std::make_shared<Self>()} {}
+
+auto miral::ExternalClientLauncher::pid() const -> pid_t
+{
+    return self->pid;
+}
+
 miral::ExternalClientLauncher::~ExternalClientLauncher() = default;
