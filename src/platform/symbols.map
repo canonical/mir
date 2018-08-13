@@ -188,14 +188,16 @@ MIR_PLATFORM_0.33 {
   };
 } MIR_PLATFORM_0.32;
 
-MIR_PLATFORM_0.32.1 {
+MIR_PLATFORM_0.32.3 {
  global:
   extern "C++" {
-    mir::options::x11_display_opt*;
-    mir::options::console_provider*;
-    mir::options::auto_console*;
-    mir::options::logind_console*;
-    mir::options::vt_console*;
-    mir::options::null_console*
+    mir::options::auto_console;
+    mir::options::console_provider;
+    mir::options::logind_console;
+    mir::options::null_console;
+    mir::options::vt_console;
+    mir::options::wayland_extensions_opt;
+    mir::options::wayland_extensions_value;
+    mir::options::x11_display_opt;
   };
 } MIR_PLATFORM_0.33;

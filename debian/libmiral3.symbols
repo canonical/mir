@@ -313,3 +313,12 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::X11Support::~X11Support()@MIRAL_2.4" 2.4.0
  (c++)"miral::X11Support::X11Support()@MIRAL_2.4" 2.4.0
  (c++)"miral::X11Support::X11Support(miral::X11Support const&)@MIRAL_2.4" 2.4.0
+ (c++)"miral::WaylandExtensions::WaylandExtensions(miral::WaylandExtensions const&)@MIRAL_2.4" 2.4.0
+ (c++)"miral::WaylandExtensions::WaylandExtensions()@MIRAL_2.4" 2.4.0
+ (c++)"miral::WaylandExtensions::WaylandExtensions(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_2.4" 2.4.0
+ (c++)"miral::WaylandExtensions::WaylandExtensions(miral::WaylandExtensions const&)@MIRAL_2.4" 2.4.0
+ (c++)"miral::WaylandExtensions::WaylandExtensions()@MIRAL_2.4" 2.4.0
+ (c++)"miral::WaylandExtensions::~WaylandExtensions()@MIRAL_2.4" 2.4.0
+ (c++)"miral::WaylandExtensions::operator=(miral::WaylandExtensions const&)@MIRAL_2.4" 2.4.0
+ (c++)"miral::WaylandExtensions::supported_extensions[abi:cxx11]() const@MIRAL_2.4" 2.4.0
+ (c++)"miral::WaylandExtensions::operator()(mir::Server&) const@MIRAL_2.4" 2.4.0
