@@ -307,6 +307,7 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::InternalClientLauncher::launch(std::function<void (wl_display*)> const&, std::function<void (std::weak_ptr<mir::scene::Session>)> const&) const@MIRAL_2.3" 2.3.0
  (c++)"miral::StartupInternalClient::StartupInternalClient(std::function<void (wl_display*)>, std::function<void (std::weak_ptr<mir::scene::Session>)>)@MIRAL_2.3" 2.3.0
  MIRAL_2.4@MIRAL_2.4 2.4.0
+ (c++)"miral::ExternalClientLauncher::pid() const@MIRAL_2.4" 2.4.0
  (c++)"miral::X11Support::operator=(miral::X11Support const&)@MIRAL_2.4" 2.4.0
  (c++)"miral::X11Support::operator()(mir::Server&) const@MIRAL_2.4" 2.4.0
  (c++)"miral::X11Support::~X11Support()@MIRAL_2.4" 2.4.0
