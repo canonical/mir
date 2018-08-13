@@ -351,6 +351,7 @@ global:
     miral::WaylandExtensions::WaylandExtensions*;
     miral::WaylandExtensions::operator*;
     miral::WaylandExtensions::supported_extensions*;
+    miral::ExternalClientLauncher::pid*;
     miral::X11Support::?X11Support*;
     miral::X11Support::X11Support*;
     miral::X11Support::operator*;
