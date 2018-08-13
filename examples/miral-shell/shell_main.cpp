@@ -30,6 +30,7 @@
 #include <miral/command_line_option.h>
 #include <miral/cursor_theme.h>
 #include <miral/keymap.h>
+#include <miral/wayland_extensions.h>
 
 #include <linux/input.h>
 
@@ -83,6 +84,7 @@ int main(int argc, char const* argv[])
             CommandLineOption{[&](std::string const& ) { },
                               "desktop_file_hint", "Ignored for Unity8 compatibility", "miral-shell.desktop"},
             CursorTheme{"default:DMZ-White"},
+            WaylandExtensions{},
             window_managers,
             display_configuration_options,
             launcher,
