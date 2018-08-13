@@ -31,6 +31,7 @@ namespace mo = mir::options;
 
 namespace
 {
+auto const wl_shell     = "wl_shell";
 auto const xdg_shell    = "xdg_shell";
 auto const xdg_shell_v6 = "zxdg_shell_v6";
 
@@ -48,6 +49,9 @@ auto configure_wayland_extensions(std::string extensions, bool x11_enabled) -> s
             mf::WlSeat* seat,
             mf::OutputManager* const output_manager)
         {
+            if (extension.find(wl_shell) != extension.end())
+                add_extension(wl_shell, mf::create_wl_shell(display, shell, seat, output_manager));
+
             if (extension.find(xdg_shell_v6) != extension.end())
                 add_extension(xdg_shell_v6, std::make_shared<mf::XdgShellV6>(display, shell, *seat, output_manager));
 

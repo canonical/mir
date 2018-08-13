@@ -552,11 +552,14 @@ std::shared_ptr<mg::WaylandAllocator> allocator_for_display(
 }
 }
 
+auto mf::create_wl_shell(wl_display* display, std::shared_ptr<Shell> const& shell, WlSeat* seat, OutputManager* const output_manager)
+-> std::shared_ptr<void>
+{
+    return std::make_shared<mf::WlShell>(display, shell, *seat, output_manager);
+}
+
 void mf::WaylandExtensions::init(wl_display* display, std::shared_ptr<Shell> const& shell, WlSeat* seat, OutputManager* const output_manager)
 {
-
-    add_extension("wl_shell", std::make_shared<mf::WlShell>(display, shell, *seat, output_manager));
-
     custom_extensions(display, shell, seat, output_manager);
 }
 
