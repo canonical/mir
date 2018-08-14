@@ -443,7 +443,7 @@ void mir::Server::stop()
 {
     mir::log_info("Stopping");
     if (self->server_config)
-        if (auto const main_loop = the_main_loop())
+        if (auto const main_loop = the_main_loop().get())
         {
             self->stop_callback();
             main_loop->stop();
