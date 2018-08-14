@@ -614,6 +614,23 @@ void mir::LogindConsoleServices::on_state_change(
     }
 }
 
+namespace {
+void complete_pause_device_complete(
+    GObject* session_proxy,
+    GAsyncResult* result,
+    gpointer)
+{
+    GErrorPtr err;
+    if (!logind_session_call_pause_device_complete_finish(
+        LOGIND_SESSION(session_proxy),
+        result,
+        &err))
+    {
+        mir::log_warning("PauseDeviceComplete failed: %s", err->message);
+    }
+}
+}
+
 void mir::LogindConsoleServices::on_pause_device(
     LogindSession*,
     unsigned major, unsigned minor,
@@ -629,6 +646,18 @@ void mir::LogindConsoleServices::on_pause_device(
         using namespace std::literals::string_literals;
         if ("pause"s == suspend_type)
         {
+            mir::log_debug("Received logind pause event for device %i:%i", major, minor);
+            it->second->emit_suspended();
+            logind_session_call_pause_device_complete(
+                me->session_proxy.get(),
+                major, minor,
+                nullptr,
+                &complete_pause_device_complete,
+                nullptr);
+        }
+        else if ("force"s == suspend_type)
+        {
+            mir::log_debug("Received logind force-pause event for device %i:%i", major, minor);
             it->second->emit_suspended();
         }
         else if ("gone"s == suspend_type)

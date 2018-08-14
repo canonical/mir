@@ -36,6 +36,7 @@
 #include "mir/test/doubles/mock_event_handler_register.h"
 #include "mir/test/auto_unblock_thread.h"
 #include "mir/test/doubles/simple_device_observer.h"
+#include "mir/test/doubles/null_device_observer.h"
 
 #include "src/server/console/logind_console_services.h"
 
@@ -752,6 +753,37 @@ public:
         }
     }
 
+    void add_pause_device_complete_to_session(
+        char const* session_path,
+        char const* mock_code = "")
+    {
+        auto result = std::unique_ptr<GVariant, decltype(&g_variant_unref)>{
+            g_dbus_connection_call_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                session_path,
+                "org.freedesktop.DBus.Mock",
+                "AddMethod",
+                g_variant_new(
+                    "(sssss)",
+                    "org.freedesktop.login1.Session",
+                    "PauseDeviceComplete",
+                    "uu",
+                    "",
+                    mock_code),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NO_AUTO_START,
+                1000,
+                nullptr,
+                nullptr),
+            &g_variant_unref};
+
+        if (!result)
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to add PauseDeviceComplete"}));
+        }
+    }
+
     struct CallInfo
     {
         using GVariantPtr = std::unique_ptr<GVariant, decltype(&g_variant_unref)>;
@@ -891,8 +923,7 @@ public:
         return future_call;
     }
 
-
-std::shared_ptr<mir::GLibMainLoop> the_main_loop()
+    std::shared_ptr<mir::GLibMainLoop> the_main_loop()
     {
         return ml;
     }
@@ -1169,6 +1200,42 @@ TEST_F(LogindConsoleServices, device_suspended_callback_called_on_suspend)
     emit_device_suspended(session_path.c_str(), 22, 33, SuspendType::Paused);
 
     EXPECT_TRUE(suspended->wait_for(30s));
+    stop_mainloop();
+}
+
+TEST_F(LogindConsoleServices, acks_device_suspend_signal)
+{
+    ensure_mock_logind();
+
+    auto session_path = add_any_active_session();
+    add_take_device_to_session(
+        session_path.c_str(),
+        "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
+    add_pause_device_complete_to_session(session_path.c_str());
+
+    mir::LogindConsoleServices services{the_main_loop()};
+
+    auto device = services.acquire_device(
+        22, 33,
+        std::make_unique<mtd::NullDeviceObserver>());
+
+    ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
+
+    auto pause_ack_call = expect_call(
+        session_path,
+        "PauseDeviceComplete");
+
+    emit_device_suspended(session_path.c_str(), 22, 33, SuspendType::Paused);
+
+    ASSERT_THAT(pause_ack_call.wait_for(30s), Eq(std::future_status::ready));
+
+    auto call_details = pause_ack_call.get();
+
+    ASSERT_THAT(call_details.arguments, SizeIs(2));
+
+    EXPECT_THAT(g_variant_get_uint32(call_details.arguments[0].get()), Eq(22));
+    EXPECT_THAT(g_variant_get_uint32(call_details.arguments[1].get()), Eq(33));
+
     stop_mainloop();
 }
 
