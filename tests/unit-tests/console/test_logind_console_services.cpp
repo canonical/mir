@@ -923,6 +923,60 @@ public:
         return future_call;
     }
 
+    template<typename T, typename R>
+    void wait_for_dbus_sync_point(std::chrono::duration<T, R> wait_for)
+    {
+        // Add a method we can call…
+        auto result = std::unique_ptr<GVariant, decltype(&g_variant_unref)>{
+            g_dbus_connection_call_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                "/org/freedesktop/login1",
+                "org.freedesktop.DBus.Mock",
+                "AddMethod",
+                g_variant_new(
+                    "(sssss)",
+                    "org.freedesktop.DBus.Mock",
+                    "Syncpoint",
+                    "",
+                    "",
+                    ""),
+                nullptr,
+                G_DBUS_CALL_FLAGS_NO_AUTO_START,
+                1000,
+                nullptr,
+                nullptr),
+            &g_variant_unref};
+
+        // …subscribe to a notification for when it's called…
+        auto syncpoint_called = expect_call("/org/freedesktop/login1", "Syncpoint");
+
+        // …call it…
+        result.reset(
+            g_dbus_connection_call_sync(
+                bus_connection.get(),
+                "org.freedesktop.login1",
+                "/org/freedesktop/login1",
+                "org.freedesktop.DBus.Mock",
+                "Syncpoint",
+                nullptr,
+                nullptr,
+                G_DBUS_CALL_FLAGS_NO_AUTO_START,
+                1000,
+                nullptr,
+                nullptr));
+
+        /*
+         * …now, because signals are handled in-order, we know that any
+         * previous DBus call or signal will have been processed by the time
+         * the Syncpoint-called signal is received
+         */
+        if (syncpoint_called.wait_for(wait_for) != std::future_status::ready)
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Timeout waiting for syncpoint"}));
+        }
+    }
+
     std::shared_ptr<mir::GLibMainLoop> the_main_loop()
     {
         return ml;
@@ -1235,6 +1289,41 @@ TEST_F(LogindConsoleServices, acks_device_suspend_signal)
 
     EXPECT_THAT(g_variant_get_uint32(call_details.arguments[0].get()), Eq(22));
     EXPECT_THAT(g_variant_get_uint32(call_details.arguments[1].get()), Eq(33));
+
+    stop_mainloop();
+}
+
+TEST_F(LogindConsoleServices, handles_ack_device_suspend_failure)
+{
+    ensure_mock_logind();
+
+    auto session_path = add_any_active_session();
+    add_take_device_to_session(
+        session_path.c_str(),
+        "ret = (os.open('/dev/zero', os.O_RDONLY), False)");
+    add_pause_device_complete_to_session(
+        session_path.c_str(),
+        "raise dbus.exceptions.DBusException('Device or resource busy (36)', name='System.Error.EBUSY')");
+
+    mir::LogindConsoleServices services{the_main_loop()};
+
+    auto device = services.acquire_device(
+        22, 33,
+        std::make_unique<mtd::NullDeviceObserver>());
+
+    ASSERT_THAT(device.wait_for(30s), Eq(std::future_status::ready));
+
+    auto pause_ack_call = expect_call(
+        session_path,
+        "PauseDeviceComplete");
+
+    emit_device_suspended(session_path.c_str(), 22, 33, SuspendType::Paused);
+
+    ASSERT_THAT(pause_ack_call.wait_for(30s), Eq(std::future_status::ready));
+
+    // We only want to assert that this doesn't blow up; insert a sync-point
+    // to ensure the ack call has been processed.
+    wait_for_dbus_sync_point(30s);
 
     stop_mainloop();
 }
