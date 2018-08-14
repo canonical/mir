@@ -202,8 +202,25 @@ void mgm::RealKMSOutput::clear_crtc()
                                  0, 0, 0, nullptr, 0, nullptr);
     if (result)
     {
-        fatal_error("Couldn't clear output %s (drmModeSetCrtc = %d)",
-                   mgk::connector_name(connector).c_str(), result);
+        if (result == -EACCES || result == -EPERM)
+        {
+            /* We don't have modesetting rights.
+             *
+             * This can happen during session switching if (eg) logind has already
+             * revoked device access before notifying us.
+             *
+             * Whatever we're switching to can handle the CRTCs; this should not be fatal.
+             */
+            mir::log_info("Couldn't clear output %s (drmModeSetCrtc: %s (%i))",
+                mgk::connector_name(connector).c_str(),
+                strerror(-result),
+                -result);
+        }
+        else
+        {
+            fatal_error("Couldn't clear output %s (drmModeSetCrtc = %d)",
+                        mgk::connector_name(connector).c_str(), result);
+        }
     }
 
     current_crtc = nullptr;
