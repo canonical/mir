@@ -618,3 +618,11 @@ MIR_CLIENT_0.27 {  # New functions in Mir 0.27
     mir_touchscreen_config_set_mapping_mode;
     mir_touchscreen_config_set_output_id;
 } MIR_CLIENT_0.26.1;
+
+# When building with CMAKE_BUILD_TYPE=UBSanitize these are needed
+MIR_CLIENT_UBSAN {
+ global:
+  extern "C++" {
+      typeinfo?for?mir::input::receiver::XKBMapper;
+  };
+} MIR_CLIENT_0.26.1;

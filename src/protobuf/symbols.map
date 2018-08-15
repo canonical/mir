@@ -1184,6 +1184,17 @@ MIR_PROTOBUF_FEDORA {
   };
 } MIR_PROTOBUF_0.27;
 
+# When building with CMAKE_BUILD_TYPE=UBSanitize these are needed
+MIR_PROTOBUF_UBSAN {
+ global:
+  extern "C++" {
+      typeinfo?for?mir::protobuf::StructuredError;
+      typeinfo?for?mir::protobuf::InputConfigurationRequest;
+      typeinfo?for?mir::protobuf::PointerConfiguration;
+      typeinfo?for?mir::protobuf::TouchpadConfiguration;
+  };
+} MIR_PROTOBUF_0.26;
+
 # When using protobuf v3.6.0 (specifically, tested on Arch Linux) these are needed
 MIR_PROTOBUF_PROTOBUF_3.6.0 {
  global:
