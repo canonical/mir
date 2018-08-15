@@ -260,7 +260,10 @@ private:
                 "wl_shell_surface") == 0 ||
             strcmp(
                 wl_resource_get_class(resource),
-                "zxdg_surface_v6") == 0;
+                "zxdg_surface_v6") == 0 ||
+            strcmp(
+                wl_resource_get_class(resource),
+                "xdg_surface") == 0;
 
         if (is_surface)
         {

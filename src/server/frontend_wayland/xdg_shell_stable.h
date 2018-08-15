@@ -16,10 +16,10 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_XDG_SHELL_V6_H
-#define MIR_FRONTEND_XDG_SHELL_V6_H
+#ifndef MIR_FRONTEND_XDG_SHELL_STABLE_H
+#define MIR_FRONTEND_XDG_SHELL_STABLE_H
 
-#include "generated/xdg-shell-unstable-v6_wrapper.h"
+#include "generated/xdg-shell_wrapper.h"
 
 namespace mir
 {
@@ -30,10 +30,10 @@ class Shell;
 class WlSeat;
 class OutputManager;
 
-class XdgShellV6 : public wayland::XdgShellV6
+class XdgShellStable : public wayland::XdgWmBase
 {
 public:
-    XdgShellV6(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat, OutputManager* output_manager);
+    XdgShellStable(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat, OutputManager* output_manager);
 
     void destroy(struct wl_client* client, struct wl_resource* resource) override;
     void create_positioner(struct wl_client* client, struct wl_resource* resource, uint32_t id) override;
@@ -49,4 +49,4 @@ public:
 }
 }
 
-#endif // MIR_FRONTEND_XDG_SHELL_V6_H
+#endif // MIR_FRONTEND_XDG_SHELL_STABLE_H

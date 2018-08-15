@@ -296,10 +296,11 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
             shell->modify_surface(session, surface_id_, *pending_changes);
 
         pending_changes.reset();
-        return;
     }
-
-    create_mir_window();
+    else
+    {
+        create_mir_window();
+    }
 }
 
 void mf::WindowWlSurfaceRole::visiblity(bool visible)

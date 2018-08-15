@@ -347,10 +347,17 @@ global:
 MIRAL_2.4 {
 global:
   extern "C++" {
+    miral::WaylandExtensions::?WaylandExtensions*;
+    miral::WaylandExtensions::WaylandExtensions*;
+    miral::WaylandExtensions::operator*;
+    miral::WaylandExtensions::supported_extensions*;
+    miral::ExternalClientLauncher::pid*;
     miral::X11Support::?X11Support*;
     miral::X11Support::X11Support*;
     miral::X11Support::operator*;
+    typeinfo?for?miral::WaylandExtensions;
     typeinfo?for?miral::X11Support;
+    vtable?for?miral::WaylandExtensions;
     vtable?for?miral::X11Support;
   };
 } MIRAL_2.3;

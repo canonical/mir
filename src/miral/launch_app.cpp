@@ -24,11 +24,11 @@
 #include <cstring>
 
 
-void miral::launch_app(
+auto miral::launch_app(
     std::vector<std::string> const& app,
     mir::optional_value<std::string> const& wayland_display,
     mir::optional_value<std::string> const& mir_socket,
-    mir::optional_value<std::string> const& x11_display)
+    mir::optional_value<std::string> const& x11_display) -> pid_t
 {
     pid_t pid = fork();
 
@@ -82,6 +82,8 @@ void miral::launch_app(
 
         throw std::logic_error(std::string("Failed to execute client (") + exec_args[0] + ") error: " + strerror(errno));
     }
+
+    return pid;
 }
 
 

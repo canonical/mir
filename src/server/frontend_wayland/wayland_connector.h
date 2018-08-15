@@ -125,6 +125,9 @@ private:
     // Only accessed on event loop
     std::unordered_map<int, std::function<void(std::shared_ptr<Session> const& session)>> mutable connect_handlers;
 };
+
+auto create_wl_shell(wl_display* display, std::shared_ptr<Shell> const& shell, WlSeat* seat, OutputManager* const output_manager)
+    -> std::shared_ptr<void>;
 }
 }
 

@@ -1194,3 +1194,11 @@ MIR_PROTOBUF_UBSAN {
       typeinfo?for?mir::protobuf::TouchpadConfiguration;
   };
 } MIR_PROTOBUF_0.26;
+
+# When using protobuf v3.6.0 (specifically, tested on Arch Linux) these are needed
+MIR_PROTOBUF_PROTOBUF_3.6.0 {
+ global:
+  extern "C++" {
+    *google::protobuf::Arena::CreateMaybeMessage*;
+  };
+} MIR_PROTOBUF_FEDORA;

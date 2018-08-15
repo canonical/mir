@@ -19,6 +19,8 @@
 #ifndef MIRAL_EXTERNAL_CLIENT_H
 #define MIRAL_EXTERNAL_CLIENT_H
 
+#include <sys/types.h>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -36,6 +38,12 @@ public:
     void operator()(mir::Server& server);
 
     void launch(std::vector<std::string> const& command_line) const;
+
+    /// The pid of the latest process that was launched or -1.
+    /// \note there's no guarantee that the process still exists, or that
+    /// another process has not subsequently been assigned the same id.
+    /// \remark Since MirAL 2.4
+    auto pid() const -> pid_t;
 
 private:
     struct Self;
