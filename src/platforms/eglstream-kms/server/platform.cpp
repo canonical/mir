@@ -43,12 +43,6 @@ namespace mg = mir::graphics;
 namespace mge = mir::graphics::eglstream;
 namespace mgc = mir::graphics::common;
 
-namespace
-{
-// Our copy of eglext.h doesn't have this?
-int const EGL_DRM_MASTER_FD_EXT{0x333C};
-}
-
 mge::DisplayPlatform::DisplayPlatform(ConsoleServices& console, EGLDeviceEXT device)
     : display{EGL_NO_DISPLAY}
 {

@@ -30,6 +30,11 @@
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
+/* XXX khronos eglext.h does not yet have EGL_DRM_MASTER_FD_EXT */
+#if !defined(EGL_DRM_MASTER_FD_EXT)
+#define EGL_DRM_MASTER_FD_EXT                   (0x333C)
+#endif
+
 namespace mir
 {
 class Device;
