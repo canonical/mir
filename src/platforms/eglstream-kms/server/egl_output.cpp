@@ -82,6 +82,8 @@ public:
         {
             BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to mmap() buffer"}));
         }
+
+        ::memset(map, 0, pitch_ * height);
     }
     ~DumbFb() noexcept(false)
     {
