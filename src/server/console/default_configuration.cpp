@@ -160,7 +160,14 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                 }
                 try
                 {
-                    return logind_constructor();
+                    if (getenv("DISPLAY"))
+                    {
+                        mir::log_debug("Not trying logind: \"DISPLAY\" is set and X need not have claimed the VT");
+                    }
+                    else
+                    {
+                        return logind_constructor();
+                    }
                 }
                 catch (std::exception const&)
                 {
