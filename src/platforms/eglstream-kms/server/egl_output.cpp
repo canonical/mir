@@ -269,16 +269,21 @@ void mgek::EGLOutput::configure(size_t kms_mode_index)
     }
 
     EGLAttrib const crtc_filter[] = {
-        EGL_DRM_PLANE_EXT, static_cast<EGLAttrib>(plane_id),
+        EGL_DRM_CRTC_EXT, static_cast<EGLAttrib>(crtc_id),
         EGL_NONE};
     int found_layers{0};
     if (eglGetOutputLayersEXT(display, crtc_filter, &layer, 1, &found_layers) != EGL_TRUE)
     {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to find EGLOutputEXT corresponding to DRM CRTC")));
+        BOOST_THROW_EXCEPTION((
+            mg::egl_error(
+                std::string{"Failed to find EGLOutputEXT corresponding to DRM CRTC "} +
+                std::to_string(crtc_id))));
     }
     if (found_layers != 1)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find EGLOutputEXT corresponding to DRM CRTC"});
+        BOOST_THROW_EXCEPTION(std::runtime_error{
+            std::string{"Failed to find EGLOutputEXT corresponding to DRM CRTC "} +
+            std::to_string(crtc_id)});
     }
 
     using_saved_crtc = false;
