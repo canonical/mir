@@ -32,6 +32,8 @@
 #include <map>
 #include <mir/abnormal_exit.h>
 #include <mir/geometry/displacement.h>
+#include <fstream>
+#include <sstream>
 
 namespace mg = mir::graphics;
 using namespace mir::geometry;
@@ -130,13 +132,111 @@ size_t select_mode_index(size_t mode_index, std::vector<mg::DisplayConfiguration
 
 StaticDisplayConfigurationPolicy::StaticDisplayConfigurationPolicy(std::string const& filename)
 {
-    puts(filename.c_str());
+    static auto const output_id = "output_id=";
 
-    // Just set up some dummy data
-    config[Id{0, 1}].position = Point{0, 0};
-    config[Id{0, 1}].size = Size{1024, 768};
-    config[Id{0, 2}].position = Point{1024, 0};
-    config[Id{0, 2}].size = Size{1024, 768};
+    std::ifstream config_file{filename};
+
+    if (!config_file)
+        throw mir::AbnormalExit{"ERROR: Cannot read static display configuration file: '" + filename + "'"};
+
+    int line_count = 0;
+    std::string line;
+    while (std::getline(config_file, line))
+    {
+        ++line_count;
+
+        puts(line.c_str());
+
+        // Strip trailing comment
+        line.erase(find(begin(line), end(line), '#'), end(line));
+
+        puts(line.c_str());
+
+        // Ignore blank lines
+        if (line.empty())
+            continue;
+
+        if (line.compare(0, strlen(output_id), output_id) != 0)
+            goto error;
+
+        line.erase(0, strlen(output_id));
+
+        std::istringstream in{line};
+        in.setf(std::ios::skipws);
+
+        int card_no = -1;
+        int port_no = -1;
+        char delimiter = '\0';
+
+        if (!(in >> card_no))
+            goto error;
+
+        if (!(in >> delimiter) || delimiter != '/')
+            goto error;
+
+        if (!(in >> port_no))
+            goto error;
+
+        Id const output_id{card_no, port_no};
+        Config   output_config;
+
+        if (in >> delimiter && delimiter != ':')
+            goto error;
+
+        in >> std::ws;
+        std::string property;
+        while (std::getline(in, property, '='))
+        {
+            puts(property.c_str());
+
+            if (property == "position")
+            {
+                int x;
+                int y;
+
+                if (!(in >> x))
+                    goto error;
+
+                if (!(in >> delimiter) || delimiter != ',')
+                    goto error;
+
+                if (!(in >> y))
+                    goto error;
+
+                output_config.position = Point{x, y};
+            }
+            else if (property == "size")
+            {
+                int width;
+                int height;
+
+                if (!(in >> width))
+                    goto error;
+
+                if (!(in >> delimiter) || delimiter != 'x')
+                    goto error;
+
+                if (!(in >> height))
+                    goto error;
+
+                output_config.size = Size{width, height};
+            }
+            else goto error;
+
+            if (in >> delimiter && delimiter != ';')
+                goto error;
+
+            in >> std::ws;
+        }
+
+        config[output_id] = output_config;
+    }
+
+    return;
+
+error:
+    throw mir::AbnormalExit{"ERROR: Syntax error in display configuration file: '" + filename +
+                            "' line: " + std::to_string(line_count)};
 }
 
 void StaticDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration& conf)
@@ -169,7 +269,11 @@ void StaticDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration& conf)
                     {
                         if (mode->size == conf.size.value())
                         {
-                            conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
+                            if (conf_output.modes[conf_output.current_mode_index].size != conf.size.value()
+                             || conf_output.modes[conf_output.current_mode_index].vrefresh_hz < mode->vrefresh_hz)
+                            {
+                                conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
+                            }
                         }
                     }
                 }
