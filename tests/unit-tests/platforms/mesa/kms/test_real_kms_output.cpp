@@ -439,7 +439,33 @@ TEST_F(RealKMSOutputTest, has_no_cursor_if_no_hardware_support)
     EXPECT_FALSE(output.has_cursor());
 }
 
-TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails)
+TEST_F(RealKMSOutputTest, clear_crtc_is_non_fatal_on_permission_error)
+{
+    mir::FatalErrorStrategy on_error{mir::fatal_error_except};
+
+    using namespace testing;
+
+    setup_outputs_connected_crtc();
+
+    mgm::RealKMSOutput output{
+        drm_fd,
+        mg::kms::get_connector(drm_fd, connector_ids[0]),
+        mt::fake_shared(mock_page_flipper)};
+
+    EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
+        .Times(2)
+        .WillOnce(Return(-EACCES))
+        .WillOnce(Return(-EPERM));
+
+    EXPECT_NO_THROW({
+        output.clear_crtc();
+    });
+    EXPECT_NO_THROW({
+        output.clear_crtc();
+    });
+}
+
+TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails_for_non_permission_reason)
 {
     mir::FatalErrorStrategy on_error{mir::fatal_error_except};
 
@@ -454,7 +480,7 @@ TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails)
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
         .Times(1)
-        .WillOnce(Return(-1));
+        .WillOnce(Return(-EINVAL));
 
     EXPECT_THROW({
         output.clear_crtc();
