@@ -318,7 +318,7 @@ auto mgk::DRMModeResources::encoders() const -> detail::ObjectCollection<DRMMode
 
 auto mgk::DRMModeResources::crtcs() const -> detail::ObjectCollection<DRMModeCrtcUPtr, &get_crtc>
 {
-    return detail::ObjectCollection<DRMModeCrtcUPtr, &get_crtc>{drm_fd, resources->crtcs, resources->encoders + resources->count_crtcs};
+    return detail::ObjectCollection<DRMModeCrtcUPtr, &get_crtc>{drm_fd, resources->crtcs, resources->crtcs + resources->count_crtcs};
 }
 
 template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
