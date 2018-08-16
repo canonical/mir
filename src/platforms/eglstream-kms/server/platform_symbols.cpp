@@ -47,8 +47,6 @@ namespace mge = mir::graphics::eglstream;
 
 namespace
 {
-int const EGL_DRM_MASTER_FD_EXT{0x333C};
-
 EGLDeviceEXT find_device()
 {
     int device_count{0};
