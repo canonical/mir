@@ -11,6 +11,8 @@ set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
 add_library(mirclientcpp INTERFACE)
 
+add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miral")
+
 add_library(miral-internal STATIC
     active_outputs.cpp                  active_outputs.h
     basic_window_manager.cpp            basic_window_manager.h window_manager_tools_implementation.h

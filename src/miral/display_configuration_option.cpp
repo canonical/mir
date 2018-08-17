@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014, 2016 Canonical Ltd.
+ * Copyright © 2014-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -18,18 +18,14 @@
 
 #include "miral/display_configuration_option.h"
 
+#include <mir/abnormal_exit.h>
 #include <mir/graphics/default_display_configuration_policy.h>
 #include <mir/graphics/display_configuration.h>
+#include <mir/log.h>
 #include <mir/options/option.h>
 #include <mir/server.h>
 #include <mir_toolkit/mir_client_library.h>
-#include <mir/abnormal_exit.h>
-#include <mir/geometry/displacement.h>
 
-#define MIR_LOG_COMPONENT "miral"
-#include <mir/log.h>
-
-#include <iostream>
 #include <map>
 #include <fstream>
 #include <sstream>
@@ -104,10 +100,10 @@ void PixelFormatSelector::apply_to(mg::DisplayConfiguration& conf)
 
 namespace
 {
-class StaticDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
+class StaticDisplayConfig : public mg::DisplayConfigurationPolicy
 {
 public:
-    StaticDisplayConfigurationPolicy(std::string const& filename);
+    StaticDisplayConfig(std::string const& filename);
     virtual void apply_to(mg::DisplayConfiguration& conf);
 private:
 
@@ -115,6 +111,8 @@ private:
     struct Config { mir::optional_value<Point> position; mir::optional_value<Size> size; };
 
     static constexpr char const* const output_id = "output_id";
+    static constexpr char const* const position = "position";
+    static constexpr char const* const size = "size";
 
     std::map<Id, Config> config;
 };
@@ -131,7 +129,7 @@ size_t select_mode_index(size_t mode_index, std::vector<mg::DisplayConfiguration
 }
 }
 
-StaticDisplayConfigurationPolicy::StaticDisplayConfigurationPolicy(std::string const& filename)
+StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
 {
     std::ifstream config_file{filename};
 
@@ -188,7 +186,7 @@ StaticDisplayConfigurationPolicy::StaticDisplayConfigurationPolicy(std::string c
 
         while (in >> std::ws, std::getline(in, property, '='))
         {
-            if (property == "position")
+            if (property == position)
             {
                 int x;
                 int y;
@@ -204,7 +202,7 @@ StaticDisplayConfigurationPolicy::StaticDisplayConfigurationPolicy(std::string c
 
                 output_config.position = Point{x, y};
             }
-            else if (property == "size")
+            else if (property == size)
             {
                 int width;
                 int height;
@@ -239,7 +237,7 @@ error:
                             " before: " + error + "'"};
 }
 
-void StaticDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration& conf)
+void StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 {
     std::ostringstream out;
     out << "Display config:\n8>< ---------------------------------------------------";
@@ -293,10 +291,10 @@ void StaticDisplayConfigurationPolicy::apply_to(mg::DisplayConfiguration& conf)
 
              if (conf_output.connected && conf_output.modes.size() > 0)
              {
-                 auto const& top_left = conf_output.top_left;
-                 auto const& size = conf_output.modes[conf_output.current_mode_index].size;
-                 out << ": " << "position=" << top_left.x << ',' << top_left.y
-                           << "; " << "size="<< size.width << 'x' << size.height;
+                 auto const& tl = conf_output.top_left;
+                 auto const& sz = conf_output.modes[conf_output.current_mode_index].size;
+                 out << ": " << position << '=' << tl.x << ',' << tl.y
+                     << "; " << size << '=' << sz.width << 'x' << sz.height;
              }
 
              out << " # " << type;
@@ -340,7 +338,7 @@ void miral::display_configuration_options(mir::Server& server)
             else if (display_layout == single_opt_val)
                 layout_selector = std::make_shared<mg::SingleDisplayConfigurationPolicy>();
             else if (display_layout.compare(0, strlen(static_opt_val), static_opt_val) == 0)
-                layout_selector = std::make_shared<StaticDisplayConfigurationPolicy>(display_layout.substr(strlen(static_opt_val)));
+                layout_selector = std::make_shared<StaticDisplayConfig>(display_layout.substr(strlen(static_opt_val)));
 
             // Whatever the layout select a pixel format with requested alpha
             return std::make_shared<PixelFormatSelector>(layout_selector, with_alpha);
