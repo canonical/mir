@@ -21,6 +21,7 @@
 #define MIR_LOG_COMPONENT "evdev-input"
 #include "mir/log.h"
 
+#include <algorithm>
 #include <boost/throw_exception.hpp>
 
 namespace mie = mir::input::evdev;
@@ -41,4 +42,24 @@ mir::Fd mie::FdStore::take_fd(char const* path)
         mir::log_warning("Failed to find requested fd for path %s", path);
     }
     return mir::Fd{};
+}
+
+void mie::FdStore::remove_fd(int fd)
+{
+    auto element = std::find_if(
+        fds.begin(),
+        fds.end(),
+        [fd](auto const& pair)
+        {
+            return pair.second == fd;
+        });
+
+    if (element == fds.end())
+    {
+        mir::log_warning("Attempted to remove unmanaged fd %i", fd);
+    }
+    else
+    {
+        fds.erase(element);
+    }
 }
