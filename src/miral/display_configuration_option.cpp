@@ -178,7 +178,7 @@ StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
         if (!(in >> port_no))
             goto error;
 
-        Id const output_id{card_no, port_no};
+        Id const output_id{mg::DisplayConfigurationCardId{card_no}, mg::DisplayConfigurationOutputId{port_no}};
         Config   output_config;
 
         if (in >> delimiter && delimiter != ':')
