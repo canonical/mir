@@ -446,6 +446,9 @@ auto mie::Platform::find_device(libinput_device_group const* devgroup) -> declty
 
 void mie::Platform::stop()
 {
+    // This must only be called from the dispatch thread, so this doesn't race
+    device_watchers.clear();
+
     if (action_queue)
     {
         platform_dispatchable->remove_watch(action_queue);
