@@ -110,14 +110,16 @@ private:
     using Id = std::tuple<mg::DisplayConfigurationCardId, mg::DisplayConfigurationOutputId>;
     struct Config
     {
-        mir::optional_value<Point> position;
-        mir::optional_value<Size> size;
+        mir::optional_value<Point>  position;
+        mir::optional_value<Size>   size;
         mir::optional_value<double> refresh;
+        mir::optional_value<float>  scale;
     };
 
     static constexpr char const* const output_id = "output_id";
     static constexpr char const* const position = "position";
     static constexpr char const* const mode = "mode";
+    static constexpr char const* const scale = "scale";
 
     std::map<Id, Config> config;
 };
@@ -235,6 +237,15 @@ StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
                     output_config.refresh = refresh;
                 }
             }
+            else if (property == scale)
+            {
+                double scale;
+
+                if (!(in >> scale))
+                    goto error;
+
+                output_config.scale = scale;
+            }
             else goto error;
 
             if (in >> std::ws, in >> delimiter && delimiter != ';')
@@ -302,6 +313,11 @@ void StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                         }
                     }
                 }
+
+                if (conf.scale.is_set())
+                {
+                    conf_output.scale = conf.scale.value();
+                }
             }
             else
             {
@@ -315,9 +331,9 @@ void StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 
              if (conf_output.connected && conf_output.modes.size() > 0)
              {
-                 auto const& tl = conf_output.top_left;
-                 out << ": " << position << '=' << tl.x << ',' << tl.y
-                     << "; " << mode << '=' << conf_output.modes[conf_output.current_mode_index];
+                 out << ": " << position << '=' << conf_output.top_left.x << ',' << conf_output.top_left.y
+                     << "; " << mode << '=' << conf_output.modes[conf_output.current_mode_index]
+                     << "; " << scale << '=' << conf_output.scale;
              }
 
              out << " # " << type;
