@@ -112,7 +112,7 @@ private:
 
     static constexpr char const* const output_id = "output_id";
     static constexpr char const* const position = "position";
-    static constexpr char const* const size = "size";
+    static constexpr char const* const mode = "mode";
 
     std::map<Id, Config> config;
 };
@@ -202,7 +202,7 @@ StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
 
                 output_config.position = Point{x, y};
             }
-            else if (property == size)
+            else if (property == mode)
             {
                 int width;
                 int height;
@@ -294,7 +294,7 @@ void StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                  auto const& tl = conf_output.top_left;
                  auto const& sz = conf_output.modes[conf_output.current_mode_index].size;
                  out << ": " << position << '=' << tl.x << ',' << tl.y
-                     << "; " << size << '=' << sz.width << 'x' << sz.height;
+                     << "; " << mode << '=' << sz.width << 'x' << sz.height;
              }
 
              out << " # " << type;
