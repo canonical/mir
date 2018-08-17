@@ -108,7 +108,12 @@ public:
 private:
 
     using Id = std::tuple<mg::DisplayConfigurationCardId, mg::DisplayConfigurationOutputId>;
-    struct Config { mir::optional_value<Point> position; mir::optional_value<Size> size; };
+    struct Config
+    {
+        mir::optional_value<Point> position;
+        mir::optional_value<Size> size;
+        mir::optional_value<double> refresh;
+    };
 
     static constexpr char const* const output_id = "output_id";
     static constexpr char const* const position = "position";
@@ -217,6 +222,18 @@ StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
                     goto error;
 
                 output_config.size = Size{width, height};
+
+                if (in.peek() == '@')
+                {
+                    double refresh;
+                    if (!(in >> delimiter) || delimiter != '@')
+                        goto error;
+
+                    if (!(in >> refresh))
+                        goto error;
+
+                    output_config.refresh = refresh;
+                }
             }
             else goto error;
 
@@ -234,7 +251,7 @@ error:
     getline(in, error);
     throw mir::AbnormalExit{"ERROR: Syntax error in display configuration file: '" + filename +
                             "' line: " + std::to_string(line_count) +
-                            " before: " + error + "'"};
+                            " before: '" + error + "'"};
 }
 
 void StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
@@ -270,7 +287,14 @@ void StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                     {
                         if (mode->size == conf.size.value())
                         {
-                            if (conf_output.modes[conf_output.current_mode_index].size != conf.size.value()
+                            if (conf.refresh.is_set())
+                            {
+                                if (abs(conf.refresh.value() - mode->vrefresh_hz) < 1.0)
+                                {
+                                    conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
+                                }
+                            }
+                            else if (conf_output.modes[conf_output.current_mode_index].size != conf.size.value()
                              || conf_output.modes[conf_output.current_mode_index].vrefresh_hz < mode->vrefresh_hz)
                             {
                                 conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
@@ -292,9 +316,8 @@ void StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
              if (conf_output.connected && conf_output.modes.size() > 0)
              {
                  auto const& tl = conf_output.top_left;
-                 auto const& sz = conf_output.modes[conf_output.current_mode_index].size;
                  out << ": " << position << '=' << tl.x << ',' << tl.y
-                     << "; " << mode << '=' << sz.width << 'x' << sz.height;
+                     << "; " << mode << '=' << conf_output.modes[conf_output.current_mode_index];
              }
 
              out << " # " << type;
