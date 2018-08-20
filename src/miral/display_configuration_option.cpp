@@ -117,15 +117,42 @@ private:
         mir::optional_value<Size>   size;
         mir::optional_value<double> refresh;
         mir::optional_value<float>  scale;
+        mir::optional_value<MirOrientation>  orientation;
     };
 
     static constexpr char const* const output_id = "output_id";
     static constexpr char const* const position = "position";
     static constexpr char const* const mode = "mode";
     static constexpr char const* const scale = "scale";
+    static constexpr char const* const orientation = "orientation";
+
 
     std::map<Id, Config> config;
+
+    static constexpr char const* const orientation_value[] =
+        { "normal", "left", "inverted", "right" };
+
+    static auto as_string(MirOrientation orientation) -> char const*
+    {
+        return orientation_value[orientation/90];
+    }
+
+    static auto as_orientation(std::string const& orientation) -> MirOrientation
+    {
+        if (orientation == orientation_value[3])
+            return mir_orientation_right;
+
+        if (orientation == orientation_value[2])
+            return mir_orientation_inverted;
+
+        if (orientation == orientation_value[1])
+            return mir_orientation_left;
+
+        return mir_orientation_normal;
+    }
 };
+
+constexpr char const* const StaticDisplayConfig::orientation_value[];
 
 size_t select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMode> const & modes)
 {
@@ -251,6 +278,16 @@ StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
                 output_config.scale = scale;
             }
 #endif
+            else if (property == orientation)
+            {
+                std::string orientation;
+
+                if (!(in >> std::ws, std::getline(in, orientation, ';')))
+                    goto error;
+
+                puts(orientation.c_str());
+                output_config.orientation = as_orientation(orientation);
+            }
             else goto error;
 
             if (in >> std::ws, in >> delimiter && delimiter != ';')
@@ -311,7 +348,7 @@ void StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                                 }
                             }
                             else if (conf_output.modes[conf_output.current_mode_index].size != conf.size.value()
-                             || conf_output.modes[conf_output.current_mode_index].vrefresh_hz < mode->vrefresh_hz)
+                                  || conf_output.modes[conf_output.current_mode_index].vrefresh_hz < mode->vrefresh_hz)
                             {
                                 conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
                             }
@@ -323,6 +360,11 @@ void StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                 {
                     conf_output.scale = conf.scale.value();
                 }
+
+                if (conf.orientation.is_set())
+                {
+                    conf_output.orientation = conf.orientation.value();
+                }
             }
             else
             {
@@ -330,34 +372,34 @@ void StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                 conf_output.power_mode = mir_power_mode_off;
             }
 
-             auto const type = mir_output_type_name(static_cast<MirOutputType>(conf_output.type));
+            auto const type = mir_output_type_name(static_cast<MirOutputType>(conf_output.type));
 
-             out << '\n' << output_id << '=' << conf_output.card_id << '/' << conf_output.id;
+            out << '\n' << output_id << '=' << conf_output.card_id << '/' << conf_output.id;
 
-             if (conf_output.connected && conf_output.modes.size() > 0)
-             {
-                 out << ": " << position << '=' << conf_output.top_left.x << ',' << conf_output.top_left.y
-                     << "; " << mode << '=' << conf_output.modes[conf_output.current_mode_index]
+            if (conf_output.connected && conf_output.modes.size() > 0)
+            {
+                out << ": " << position << '=' << conf_output.top_left.x << ',' << conf_output.top_left.y
+                    << "; " << mode << '=' << conf_output.modes[conf_output.current_mode_index]
 #ifndef MIR_SCALE_NOT_SUPPORTED
-                     << "; " << scale << '=' << conf_output.scale
+                    << "; " << scale << '=' << conf_output.scale
 #endif
-                     ;
-             }
+                    << "; " << orientation << '=' << as_string(conf_output.orientation);
+            }
 
-             out << " # " << type;
+            out << " # " << type;
 
-             if (!conf_output.connected || conf_output.modes.size() <= 0)
-                 out << " (disconnected)";
+            if (!conf_output.connected || conf_output.modes.size() <= 0)
+                out << " (disconnected)";
 
-             if (conf_output.modes.size() > 0)
-             {
-                 out << " modes: ";
-                 for (size_t i = 0; i < conf_output.modes.size(); ++i)
-                 {
-                     if (i) out << ", ";
-                     out << conf_output.modes[i];
-                 }
-             }
+            if (conf_output.modes.size() > 0)
+            {
+                out << " modes: ";
+                for (size_t i = 0; i < conf_output.modes.size(); ++i)
+                {
+                    if (i) out << ", ";
+                    out << conf_output.modes[i];
+                }
+            }
         });
 
     out << "\n8>< ---------------------------------------------------";
