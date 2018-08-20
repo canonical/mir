@@ -123,7 +123,9 @@ private:
     static constexpr char const* const output_id = "output_id";
     static constexpr char const* const position = "position";
     static constexpr char const* const mode = "mode";
+#ifndef MIR_SCALE_NOT_SUPPORTED
     static constexpr char const* const scale = "scale";
+#endif
     static constexpr char const* const orientation = "orientation";
 
 
