@@ -30,6 +30,9 @@
 #include <fstream>
 #include <sstream>
 
+// Scale is not supported when compositing. https://github.com/MirServer/mir/issues/552
+#define MIR_SCALE_NOT_SUPPORTED
+
 namespace mg = mir::graphics;
 using namespace mir::geometry;
 
@@ -237,6 +240,7 @@ StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
                     output_config.refresh = refresh;
                 }
             }
+#ifndef MIR_SCALE_NOT_SUPPORTED
             else if (property == scale)
             {
                 double scale;
@@ -246,6 +250,7 @@ StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
 
                 output_config.scale = scale;
             }
+#endif
             else goto error;
 
             if (in >> std::ws, in >> delimiter && delimiter != ';')
@@ -333,7 +338,10 @@ void StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
              {
                  out << ": " << position << '=' << conf_output.top_left.x << ',' << conf_output.top_left.y
                      << "; " << mode << '=' << conf_output.modes[conf_output.current_mode_index]
-                     << "; " << scale << '=' << conf_output.scale;
+#ifndef MIR_SCALE_NOT_SUPPORTED
+                     << "; " << scale << '=' << conf_output.scale
+#endif
+                     ;
              }
 
              out << " # " << type;
