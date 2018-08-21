@@ -26,6 +26,7 @@
 #include <vector>
 #include <mutex>
 #include <exception>
+#include <future>
 
 #include <glib.h>
 #include <deque>
@@ -94,10 +95,70 @@ public:
     void reprocess_all_sources();
 
     /**
-     * Make the GLibMainLoop's GMainContext the thread-default context
+     * Run a functor with the GLibMainLoop's GMainContext as the thread-default context
+     *
+     * For a Callable with return type T this returns a std::future<T> with a destructor that
+     * will not block on the shared state (ie: this is guaranteed not to be a std::async future)
+     *
+     * \param [in]  code    Functor to run; this may be any type invokable with no arguments.
      */
-    void run_with_context_as_thread_default(std::function<void()> const& code);
+    template<
+        typename Callable,
+        typename =
+        std::enable_if_t<!std::is_same<std::result_of_t<Callable()>, void>::value>
+    >
+    std::future<std::result_of_t<Callable()>> run_with_context_as_thread_default(Callable code)
+    {
+        using Result = std::result_of_t<Callable()>;
+
+        auto promise = std::make_shared<std::promise<Result>>();
+        auto future = promise->get_future();
+
+        execute_with_context_as_thread_default(
+            [code = std::move(code), promise = std::move(promise)]()
+            {
+                try
+                {
+                    promise->set_value(code());
+                }
+                catch(...)
+                {
+                    promise->set_exception(std::current_exception());
+                }
+            });
+
+        return future;
+    }
+
+    template<
+        typename Callable,
+        typename =
+            std::enable_if_t<std::is_same<std::result_of_t<Callable()>, void>::value>
+        >
+    std::future<void> run_with_context_as_thread_default(Callable code)
+    {
+        auto promise = std::make_shared<std::promise<void>>();
+        auto future = promise->get_future();
+
+        execute_with_context_as_thread_default(
+            [code = std::move(code), promise = std::move(promise)]()
+            {
+                try
+                {
+                    code();
+                    promise->set_value();
+                }
+                catch(...)
+                {
+                    promise->set_exception(std::current_exception());
+                }
+            });
+
+        return future;
+    }
 private:
+    void execute_with_context_as_thread_default(std::function<void()> code);
+
     bool should_process_actions_for(void const* owner);
     void handle_exception(std::exception_ptr const& e);
 
