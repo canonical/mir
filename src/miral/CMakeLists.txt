@@ -9,6 +9,8 @@ set(MIRAL_ABI 3)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
+pkg_check_modules(YAML REQUIRED yaml-cpp)
+
 add_library(mirclientcpp INTERFACE)
 
 add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miral")
@@ -98,6 +100,7 @@ target_link_libraries(miral
         miral-internal
         mirserver
         ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
+        ${YAML_LIBRARIES}
 )
 
 set_target_properties(miral

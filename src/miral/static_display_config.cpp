@@ -22,9 +22,13 @@
 
 #include <mir/log.h>
 
+
+#include "yaml-cpp/yaml.h"
+
 #include <algorithm>
 #include <fstream>
 #include <sstream>
+#include <iostream>
 
 // Scale is not supported when compositing. https://github.com/MirServer/mir/issues/552
 #define MIR_SCALE_NOT_SUPPORTED
@@ -78,144 +82,141 @@ size_t select_mode_index(size_t mode_index, std::vector<mg::DisplayConfiguration
 }
 
 miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
+try
 {
-    std::ifstream config_file{filename};
+    using namespace YAML;
+    using std::begin;
+    using std::end;
 
-    if (!config_file)
+    auto const config = LoadFile(filename);
+    if (!config.IsDefined())
+        puts("!config.IsDefined()");
+
+    Node layouts = config["layouts"];
+    if (!layouts.IsDefined())
+        puts("!layouts.IsDefined()");
+
+    switch (layouts.Type())
     {
-        mir::log_warning("Cannot read static display configuration file: '" + filename + "'");
-        return;
+    case NodeType::Null: puts("layouts:Null"); break;
+    case NodeType::Scalar: puts("layouts:Scalar"); break;
+    case NodeType::Sequence: puts("layouts:Sequence"); break;
+    case NodeType::Map: puts("layouts:Map"); break;
+    case NodeType::Undefined: puts("layouts:Undefined"); break;
     }
 
-    int line_count = 0;
-    std::string line;
-    std::istringstream in;
+    auto const layout = begin(config["layouts"]);
 
-    while (std::getline(config_file, line))
+    puts("*********************************************************");
+    if (layout != end(config["layouts"]))
     {
-        ++line_count;
+        Node name_node;
+        Node config_node;
 
-        // Strip trailing comment
-        line.erase(find(begin(line), end(line), '#'), end(line));
+        std::tie(name_node, config_node) = *layout;
 
-        // Ignore blank lines
-        if (line.empty())
-            continue;
+        auto const layout_name = name_node.Scalar();
 
-        in = std::istringstream{line};
-        in.setf(std::ios::skipws);
+        std::cout << "layout_name: " << layout_name << '\n';
 
-        std::string property;
+        Node displays = config_node["displays"];
 
-        in >> std::ws;
-        std::getline(in, property, '=');
-
-        if (property != output_id)
-            goto error;
-
-        int card_no = -1;
-        int port_no = -1;
-        char delimiter = '\0';
-
-        if (!(in >> card_no))
-            goto error;
-
-        if (!(in >> delimiter) || delimiter != '/')
-            goto error;
-
-        if (!(in >> port_no))
-            goto error;
-
-        Id const output_id{mg::DisplayConfigurationCardId{card_no}, mg::DisplayConfigurationOutputId{port_no}};
-        Config   output_config;
-
-        if (in >> delimiter && delimiter != ':')
-            goto error;
-
-        while (in >> std::ws, std::getline(in, property, '='))
+        for (Node const card : displays)
         {
-            if (property == position)
+            int card_no = 0;
+
+            if (auto const id = card["card-id"])
             {
-                int x;
-                int y;
-
-                if (!(in >> x))
-                    goto error;
-
-                if (!(in >> delimiter) || delimiter != ',')
-                    goto error;
-
-                if (!(in >> y))
-                    goto error;
-
-                output_config.position = Point{x, y};
+                card_no = id.as<int>();
             }
-            else if (property == mode)
+
+            std::cout << "Card #" << card_no << '\n';
+
+            for (std::pair<Node, Node> port : card)
             {
-                int width;
-                int height;
+                auto const port_name = port.first.Scalar();
 
-                if (!(in >> width))
-                    goto error;
+                if (port_name == "card-id")
+                    continue;
 
-                if (!(in >> delimiter) || delimiter != 'x')
-                    goto error;
+                std::cout << "Port: " << port_name << '\n';
 
-                if (!(in >> height))
-                    goto error;
+                auto const& port_config = port.second;
 
-                output_config.size = Size{width, height};
-
-                if (in.peek() == '@')
+                if (port_config.IsDefined())
                 {
-                    double refresh;
-                    if (!(in >> delimiter) || delimiter != '@')
-                        goto error;
+                    // TODO remove requirement for port field
+                    if (auto const p = port_config["port"])
+                    {
+                        puts("port");
+                        int const port_no = p.as<int>();
+                        std::cout << "Port #" << port_no << '\n';
 
-                    if (!(in >> refresh))
-                        goto error;
+                        Id const output_id{mg::DisplayConfigurationCardId{card_no}, mg::DisplayConfigurationOutputId{port_no}};
+                        Config   output_config;
 
-                    output_config.refresh = refresh;
+                        if (auto const pos = port_config[position])
+                        {
+                            puts(position);
+                            output_config.size = Size{pos[0].as<int>(), pos[1].as<int>()};
+                        }
+
+                        if (auto const m = port_config[mode])
+                        {
+                            puts(mode);
+                            puts(m.as<std::string>().c_str());
+                            std::istringstream in{m.as<std::string>()};
+
+                            char delimiter = '\0';
+                            int width;
+                            int height;
+
+                            if (!(in >> width))
+                                goto mode_error;
+
+                            if (!(in >> delimiter) || delimiter != 'x')
+                                goto mode_error;
+
+                            if (!(in >> height))
+                                goto mode_error;
+
+                            output_config.size = Size{width, height};
+
+                            if (in.peek() == '@')
+                            {
+                                double refresh;
+                                if (!(in >> delimiter) || delimiter != '@')
+                                    goto mode_error;
+
+                                if (!(in >> refresh))
+                                    goto mode_error;
+
+                                output_config.refresh = refresh;
+                            }
+                        }
+                        mode_error: // TODO better error handling
+
+                        if (auto const o = port_config[orientation])
+                        {
+                            puts(orientation);
+                            std::string const orientation = o.as<std::string>();
+                            puts(orientation.c_str());
+                            output_config.orientation = as_orientation(orientation);
+                        }
+
+                        this->config[output_id] = output_config;
+                    }
                 }
             }
-#ifndef MIR_SCALE_NOT_SUPPORTED
-            else if (property == scale)
-            {
-                double scale;
-
-                if (!(in >> scale))
-                    goto error;
-
-                output_config.scale = scale;
-            }
-#endif
-            else if (property == orientation)
-            {
-                std::string orientation;
-
-                if (!(in >> std::ws, std::getline(in, orientation, ';')))
-                    goto error;
-
-                puts(orientation.c_str());
-                output_config.orientation = as_orientation(orientation);
-            }
-            else goto error;
-
-            if (in >> std::ws, in >> delimiter && delimiter != ';')
-                goto error;
         }
-
-        config[output_id] = output_config;
     }
+    puts("*********************************************************");
 
     return;
-
-error:
-    std::string error;
-    getline(in, error);
-    throw mir::AbnormalExit{"ERROR: Syntax error in display configuration file: '" + filename +
-                            "' line: " + std::to_string(line_count) +
-                            " before: '" + error + "'"};
+}
+catch (YAML::Exception const& x)
+{
+    throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename + "' : " + x.what()};
 }
 
 void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
