@@ -106,9 +106,9 @@ void mix::XInputPlatform::process_input_event()
 #ifdef GRAB_KBD
             case FocusIn:
                 {
-                    if (!kbd_grabbed)
+                    auto const& xfiev = xev.xfocus;
+                    if (!kbd_grabbed && (xfiev.mode == NotifyNormal || xfiev.mode == NotifyWhileGrabbed))
                     {
-                        auto const& xfiev = xev.xfocus;
                         XGrabKeyboard(xfiev.display, xfiev.window, True, GrabModeAsync, GrabModeAsync, CurrentTime);
                         kbd_grabbed = true;
                     }
@@ -117,9 +117,9 @@ void mix::XInputPlatform::process_input_event()
 
             case FocusOut:
                 {
-                    if (kbd_grabbed)
+                    auto const& xfoev = xev.xfocus;
+                    if (kbd_grabbed && (xfoev.mode == NotifyNormal || xfoev.mode == NotifyWhileGrabbed))
                     {
-                        auto const& xfoev = xev.xfocus;
                         XUngrabKeyboard(xfoev.display, CurrentTime);
                         kbd_grabbed = false;
                     }
