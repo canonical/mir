@@ -788,7 +788,80 @@ public:
         return calls;
     }
 
-    std::shared_ptr<mir::GLibMainLoop> the_main_loop()
+    std::future<CallInfo> expect_call(
+        std::string object_path,
+        std::string method_name)
+    {
+        auto promised_call = std::make_shared<std::promise<CallInfo>>();
+        auto future_call = promised_call->get_future();
+
+        ml->run_with_context_as_thread_default(
+            [
+                this,
+                path = std::move(object_path),
+                name = std::move(method_name),
+                promised_call
+            ]()
+            {
+                struct HandlerCtx
+                {
+                    std::remove_const<decltype(promised_call)>::type promise;
+                    guint subscription_id;
+                };
+
+                auto context = new HandlerCtx;
+                context->promise = promised_call;
+
+                context->subscription_id = g_dbus_connection_signal_subscribe(
+                    bus_connection.get(),
+                    nullptr,
+                    "org.freedesktop.DBus.Mock",
+                    "MethodCalled",
+                    path.c_str(),
+                    name.c_str(),
+                    G_DBUS_SIGNAL_FLAGS_NONE,
+                    [](GDBusConnection* connection,
+                       gchar const* /*sender_name*/,
+                       gchar const* /*object_path*/,
+                       gchar const* /*interface_name*/,
+                       gchar const* /*signal_name*/,
+                       GVariant* parameters,
+                       gpointer ctx) noexcept
+                    {
+                        auto context = static_cast<HandlerCtx*>(ctx);
+
+                        GVariant* argument_array;
+                        char const* method_name;
+
+                        g_variant_get(parameters, "(&s@av)", &method_name, &argument_array);
+                        auto iter = g_variant_iter_new(argument_array);
+                        g_variant_unref(argument_array);
+
+                        context->promise->set_value(
+                            CallInfo{
+                                static_cast<uint64_t>(
+                                    std::chrono::steady_clock::now().time_since_epoch().count()),
+                                method_name,
+                                iter
+                            });
+
+                        g_variant_iter_free(iter);
+
+                        g_dbus_connection_signal_unsubscribe(
+                            connection,
+                            context->subscription_id);
+                    },
+                    context,
+                    [](gpointer ctx)
+                    {
+                        delete static_cast<HandlerCtx*>(ctx);
+                    });
+            }).get(); // Make sure our signal handler is actually registered before continuing.
+        return future_call;
+    }
+
+
+std::shared_ptr<mir::GLibMainLoop> the_main_loop()
     {
         return ml;
     }
@@ -1391,31 +1464,23 @@ TEST_F(LogindConsoleServices, destroying_device_handle_releases_logind_device)
 
     ASSERT_TRUE(device_acquired);
 
+    auto future_call = expect_call(session_path.c_str(), "ReleaseDevice");
+
     device.reset();
-    auto const calls_made = get_calls_for_object(session_path.c_str());
 
-    ASSERT_THAT(calls_made, Not(IsEmpty()));
+    ASSERT_THAT(future_call.wait_for(30s), Eq(std::future_status::ready));
 
-    auto const release_call =
-        std::find_if(
-            calls_made.begin(),
-            calls_made.end(),
-            [](CallInfo const& call)
-            {
-                return call.method_name == "ReleaseDevice";
-            });
-
-    ASSERT_THAT(release_call, Not(Eq(calls_made.end())));
-    ASSERT_THAT(release_call->arguments.size(), Eq(2));
+    auto call_info = future_call.get();
+    ASSERT_THAT(call_info.arguments.size(), Eq(2));
 
     int released_major, released_minor;
 
     g_variant_get(
-        release_call->arguments[0].get(),
+        call_info.arguments[0].get(),
         "u",
         &released_major);
     g_variant_get(
-        release_call->arguments[1].get(),
+        call_info.arguments[1].get(),
         "u",
         &released_minor);
 

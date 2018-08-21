@@ -1579,7 +1579,7 @@ TEST_F(GLibMainLoopTest, run_with_context_as_thread_default_handles_exceptions)
 
     // Without a running loop
     EXPECT_THROW(
-        ml.run_with_context_as_thread_default([]() { throw std::logic_error{"Hello!"}; }),
+        ml.run_with_context_as_thread_default([]() { throw std::logic_error{"Hello!"}; }).get(),
         std::logic_error);
 
     UnblockMainLoop unblock{ml};
@@ -1594,7 +1594,7 @@ TEST_F(GLibMainLoopTest, run_with_context_as_thread_default_handles_exceptions)
     ASSERT_TRUE(started->wait_for(30s));
 
     EXPECT_THROW(
-        ml.run_with_context_as_thread_default([]() { throw std::out_of_range{"Hello!"}; }),
+        ml.run_with_context_as_thread_default([]() { throw std::out_of_range{"Hello!"}; }).get(),
         std::out_of_range);
 }
 
@@ -1632,6 +1632,32 @@ TEST_F(GLibMainLoopTest, run_with_context_as_thread_default_may_be_called_from_t
         });
 
     EXPECT_TRUE(done->wait_for(30s));
+}
+
+TEST_F(GLibMainLoopTest, run_with_main_context_as_default_functor_can_return_values)
+{
+    using namespace std::literals::chrono_literals;
+    using namespace testing;
+
+    UnblockMainLoop unblock{ml};
+    auto constexpr expected_value{42};
+
+    auto future_int = ml.run_with_context_as_thread_default(
+        []()
+        {
+            return expected_value;
+        });
+
+    ASSERT_THAT(future_int.wait_for(30s), Eq(std::future_status::ready));
+    EXPECT_THAT(future_int.get(), Eq(expected_value));
+
+    auto future_void = ml.run_with_context_as_thread_default(
+        []()
+        {
+            return;
+        });
+
+    EXPECT_THAT(future_void.wait_for(30s), Eq(std::future_status::ready));
 }
 
 // This test recreates a scenario we get in our integration and acceptance test

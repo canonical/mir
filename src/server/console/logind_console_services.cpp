@@ -84,38 +84,40 @@ std::unique_ptr<LogindSession, decltype(&g_object_unref)> simple_proxy_on_system
     GDBusConnection* connection,
     char const* object_path)
 {
-    using namespace std::literals::string_literals;
-
-    GErrorPtr error;
-
     // GDBus proxies will use the thread-default main context at creation time.
-    LogindSession* proxy;
-    ml.run_with_context_as_thread_default(
-        [&proxy, connection, object_path, &error]()
+    return ml.run_with_context_as_thread_default(
+        [connection, object_path]()
         {
-            proxy = logind_session_proxy_new_sync(
-                connection,
-                G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
-                "org.freedesktop.login1",
-                object_path,
-                nullptr,
-                &error);
-        });
-    if (!proxy)
-    {
-        auto error_msg = error ? error->message : "unknown error";
-        BOOST_THROW_EXCEPTION((
-            std::runtime_error{
-                "Failed to connect to DBus interface at "s +
-                object_path + ": " + error_msg}));
-    }
+            GErrorPtr error;
 
-    if (error)
-    {
-        mir::log_error("Proxy is non-null, but has error set?! Error: %s", error->message);
-    }
+            auto proxy = std::unique_ptr<LogindSession, decltype(&g_object_unref)>{
+                logind_session_proxy_new_sync(
+                    connection,
+                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+                    "org.freedesktop.login1",
+                    object_path,
+                    nullptr,
+                    &error),
+                &g_object_unref};
 
-    return {proxy, &g_object_unref};
+            if (!proxy)
+            {
+                using namespace std::literals::string_literals;
+
+                auto error_msg = error ? error->message : "unknown error";
+                BOOST_THROW_EXCEPTION((
+                    std::runtime_error{
+                        "Failed to connect to DBus interface at "s +
+                        object_path + ": " + error_msg}));
+            }
+
+            if (error)
+            {
+                mir::log_error("Proxy is non-null, but has error set?! Error: %s", error->message);
+            }
+            return proxy;
+
+        }).get();
 }
 
 std::unique_ptr<LogindSeat, decltype(&g_object_unref)> simple_seat_proxy_on_system_bus(
@@ -125,35 +127,38 @@ std::unique_ptr<LogindSeat, decltype(&g_object_unref)> simple_seat_proxy_on_syst
 {
     using namespace std::literals::string_literals;
 
-    GErrorPtr error;
-
-    LogindSeat* proxy;
-    ml.run_with_context_as_thread_default(
-        [&proxy, connection, object_path, &error]()
+    return ml.run_with_context_as_thread_default(
+        [connection, object_path]()
         {
-            proxy = logind_seat_proxy_new_sync(
-                connection,
-                G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
-                "org.freedesktop.login1",
-                object_path,
-                nullptr,
-                &error);
-        });
-    if (!proxy)
-    {
-        auto error_msg = error ? error->message : "unknown error";
-        BOOST_THROW_EXCEPTION((
-            std::runtime_error{
-                "Failed to connect to DBus interface at "s +
-                object_path + ": " + error_msg}));
-    }
+            GErrorPtr error;
 
-    if (error)
-    {
-        mir::log_error("Proxy is non-null, but has error set?! Error: %s", error->message);
-    }
+            auto proxy = std::unique_ptr<LogindSeat, decltype(&g_object_unref)>{
+                logind_seat_proxy_new_sync(
+                    connection,
+                    G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START,
+                    "org.freedesktop.login1",
+                    object_path,
+                    nullptr,
+                    &error),
+                &g_object_unref};
 
-    return {proxy, &g_object_unref};
+            if (!proxy)
+            {
+                using namespace std::literals::string_literals;
+                auto error_msg = error ? error->message : "unknown error";
+                BOOST_THROW_EXCEPTION((
+                    std::runtime_error{
+                        "Failed to connect to DBus interface at "s +
+                        object_path + ": " + error_msg}));
+            }
+
+            if (error)
+            {
+                mir::log_error("Proxy is non-null, but has error set?! Error: %s", error->message);
+            }
+
+            return proxy;
+        }).get();
 }
 
 std::string object_path_for_current_session(LogindSeat* seat_proxy)
@@ -206,28 +211,32 @@ connect_to_system_bus(mir::GLibMainLoop& ml)
                 "Failed to find address of DBus system bus: "s + error_msg}));
     }
 
-    GDBusConnection* bus;
-    ml.run_with_context_as_thread_default(
-        [&bus, &system_bus_address, &error]()
+    return ml.run_with_context_as_thread_default(
+        [&system_bus_address]()
         {
-            bus = g_dbus_connection_new_for_address_sync(
-                system_bus_address.get(),
-                static_cast<GDBusConnectionFlags>(
-                    G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT |
-                    G_DBUS_CONNECTION_FLAGS_MESSAGE_BUS_CONNECTION),
-                nullptr,
-                nullptr,
-                &error);
-        });
-    if (!bus)
-    {
-        auto error_msg = error ? error->message : "unknown error";
-        BOOST_THROW_EXCEPTION((
-          std::runtime_error{
-              "Failed to connect to DBus system bus: "s + error_msg}));
-    }
+            GErrorPtr error;
 
-    return {bus, &g_object_unref};
+            auto bus = std::unique_ptr<GDBusConnection, decltype(&g_object_unref)>{
+                g_dbus_connection_new_for_address_sync(
+                    system_bus_address.get(),
+                    static_cast<GDBusConnectionFlags>(
+                        G_DBUS_CONNECTION_FLAGS_AUTHENTICATION_CLIENT |
+                        G_DBUS_CONNECTION_FLAGS_MESSAGE_BUS_CONNECTION),
+                    nullptr,
+                    nullptr,
+                    &error),
+                &g_object_unref};
+
+            if (!bus)
+            {
+                auto error_msg = error ? error->message : "unknown error";
+                BOOST_THROW_EXCEPTION((
+                    std::runtime_error{
+                        "Failed to connect to DBus system bus: "s + error_msg}));
+            }
+
+            return bus;
+        }).get();
 }
 }
 
@@ -528,7 +537,7 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
                     nullptr,
                     &complete_take_device_call,
                     userdata);
-            });
+            }); // We don't need to wait for completion here, so throw away the std::future.
     }
     else
     {

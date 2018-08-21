@@ -396,33 +396,21 @@ void mir::GLibMainLoop::reprocess_all_sources()
     reprocessed_cv.wait(reprocessed_lock, [&] { return reprocessed == true; });
 }
 
-void mir::GLibMainLoop::run_with_context_as_thread_default(std::function<void()> const& code)
+void mir::GLibMainLoop::execute_with_context_as_thread_default(std::function<void()> code)
 {
     if (g_main_context_acquire(main_context))
     {
         /* We have the main context, so just do the thing. */
         g_main_context_push_thread_default(main_context);
 
-        try
-        {
-            code();
-        }
-        catch (...)
-        {
-            g_main_context_pop_thread_default(main_context);
-            g_main_context_release(main_context);
-            throw;
-        }
+        code();
         g_main_context_pop_thread_default(main_context);
         g_main_context_release(main_context);
     }
     else
     {
-        auto promise = std::make_shared<std::promise<void>>();
-        auto done = promise->get_future();
-
         enqueue_with_guaranteed_execution(
-            [this, promise, &code]()
+            [this, code = std::move(code)]()
             {
                 /*
                  * There are three possible states here:
@@ -449,20 +437,11 @@ void mir::GLibMainLoop::run_with_context_as_thread_default(std::function<void()>
 
                 // We now own the main_context, so this will work.
                 g_main_context_push_thread_default(main_context);
-                try
-                {
-                    code();
-                    promise->set_value();
-                }
-                catch(...)
-                {
-                    promise->set_exception(std::current_exception());
-                }
+
+                code();
                 g_main_context_pop_thread_default(main_context);
                 g_main_context_release(main_context);
             });
-
-        done.get();
     }
 }
 
