@@ -20,6 +20,7 @@ add_library(miral-internal STATIC
     display_configuration_listeners.cpp display_configuration_listeners.h
     launch_app.cpp                      launch_app.h
     mru_window_list.cpp                 mru_window_list.h
+    static_display_config.cpp           static_display_config.h
     window_management_trace.cpp         window_management_trace.h
     xcursor_loader.cpp                  xcursor_loader.h
     xcursor.c                           xcursor.h
