@@ -25,7 +25,6 @@
 #include <mir/server.h>
 
 namespace mg = mir::graphics;
-using namespace mir::geometry;
 
 namespace
 {
@@ -70,7 +69,6 @@ PixelFormatSelector::PixelFormatSelector(
 void PixelFormatSelector::apply_to(mg::DisplayConfiguration& conf)
 {
     base_policy->apply_to(conf);
-
     conf.for_each_output(
         [&](mg::UserDisplayConfigurationOutput& conf_output)
         {

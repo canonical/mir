@@ -25,9 +25,6 @@
 
 #include <map>
 
-// Scale is not supported when compositing. https://github.com/MirServer/mir/issues/552
-#define MIR_SCALE_NOT_SUPPORTED
-
 namespace miral
 {
 class StaticDisplayConfig : public mir::graphics::DisplayConfigurationPolicy
@@ -47,38 +44,7 @@ private:
         mir::optional_value<MirOrientation>  orientation;
     };
 
-    static constexpr char const* const output_id = "output_id";
-    static constexpr char const* const position = "position";
-    static constexpr char const* const mode = "mode";
-#ifndef MIR_SCALE_NOT_SUPPORTED
-    static constexpr char const* const scale = "scale";
-#endif
-    static constexpr char const* const orientation = "orientation";
-
-
     std::map<Id, Config> config;
-
-    static constexpr char const* const orientation_value[] =
-        { "normal", "left", "inverted", "right" };
-
-    static auto as_string(MirOrientation orientation) -> char const*
-    {
-        return orientation_value[orientation/90];
-    }
-
-    static auto as_orientation(std::string const& orientation) -> MirOrientation
-    {
-        if (orientation == orientation_value[3])
-            return mir_orientation_right;
-
-        if (orientation == orientation_value[2])
-            return mir_orientation_inverted;
-
-        if (orientation == orientation_value[1])
-            return mir_orientation_left;
-
-        return mir_orientation_normal;
-    }
 };
 }
 
