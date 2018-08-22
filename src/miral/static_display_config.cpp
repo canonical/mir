@@ -35,12 +35,10 @@ using namespace mir::geometry;
 
 namespace
 {
-constexpr char const* const position = "position";
-constexpr char const* const mode = "mode";
-constexpr char const* const orientation = "orientation";
-
-constexpr char const* const orientation_value[] =
-    { "normal", "left", "inverted", "right" };
+char const* const position = "position";
+char const* const mode = "mode";
+char const* const orientation = "orientation";
+char const* const orientation_value[] = { "normal", "left", "inverted", "right" };
 
 auto as_string(MirOrientation orientation) -> char const*
 {
@@ -63,34 +61,10 @@ auto as_orientation(std::string const& orientation) -> MirOrientation
 
 auto output_type_from(std::string const& output) -> MirOutputType
 {
-    static const char * const names[] =
-        {
-            "unknown",
-            "VGA",
-            "DVI-I",
-            "DVI-D",
-            "DVI-A",
-            "Composite",
-            "S-video",
-            "LVDS",
-            "Component",
-            "9-pin",
-            "DisplayPort",
-            "HDMI-A",
-            "HDMI-B",
-            "TV",
-            "eDP",
-            "Virtual",
-            "DSI",
-            "DPI",
-        };
-
-    int index = 0;
-    for (auto const name : names)
+    for (int i = 0; auto const name = mir_output_type_name(static_cast<MirOutputType>(i)); ++i)
     {
         if (output.find(name) == 0)
-            return static_cast<MirOutputType>(index);
-        ++index;
+            return static_cast<MirOutputType>(i);
     }
     return mir_output_type_unknown;
 }
@@ -104,7 +78,7 @@ auto output_index_from(std::string const& output) -> int
 }
 }
 
-size_t select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMode> const & modes)
+auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMode> const & modes) -> size_t
 {
     if (modes.empty())
         return std::numeric_limits<size_t>::max();
