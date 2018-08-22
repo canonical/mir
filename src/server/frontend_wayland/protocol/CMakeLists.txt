@@ -33,16 +33,19 @@ macro(GENERATE_PROTOCOL NAME_PREFIX PROTOCOL_NAME)
     VERBATIM
     COMMAND "wayland-scanner" "--include-core-only" "code" "${PROTOCOL_PATH}" "${OUTPUT_PATH_C}"
     DEPENDS "${PROTOCOL_PATH}"
+    DEPENDS wrapper-generator
   )
   add_custom_command(OUTPUT "${OUTPUT_PATH_H}"
     VERBATIM
     COMMAND "wayland-scanner" "--include-core-only" "server-header" "${PROTOCOL_PATH}" "${OUTPUT_PATH_H}"
     DEPENDS "${PROTOCOL_PATH}"
+    DEPENDS wrapper-generator
   )
   add_custom_command(OUTPUT "${OUTPUT_PATH_WRAPPER}"
     VERBATIM
     COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator ${NAME_PREFIX} ${PROTOCOL_NAME}.h ${PROTOCOL_PATH} > ${OUTPUT_PATH_WRAPPER}"
     DEPENDS "${PROTOCOL_PATH}"
+    DEPENDS wrapper-generator
   )
   set(GENERATED_FILES ${GENERATED_FILES} "${OUTPUT_PATH_H}" "${OUTPUT_PATH_C}" "${OUTPUT_PATH_WRAPPER}")
 endmacro()

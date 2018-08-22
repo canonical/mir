@@ -32,3 +32,8 @@ add_library(
 
   ${WAYLAND_SOURCES}
 )
+
+add_dependencies(
+  mirfrontend-wayland
+  mirfrontend-waylandgenerated
+)
