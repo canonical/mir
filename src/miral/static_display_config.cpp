@@ -35,7 +35,6 @@ using namespace mir::geometry;
 
 namespace
 {
-constexpr char const* const output_id = "output_id";
 constexpr char const* const position = "position";
 constexpr char const* const mode = "mode";
 constexpr char const* const orientation = "orientation";
