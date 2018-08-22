@@ -211,11 +211,17 @@ catch (YAML::Exception const& x)
 
 void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 {
-    std::map<mg::DisplayConfigurationCardId, std::ostringstream> cardout;
+    struct card_data
+    {
+        std::ostringstream out;
+        std::map<MirOutputType, int> output_counts;
+    };
+    std::map<mg::DisplayConfigurationCardId, card_data> card_map;
 
     conf.for_each_output([&](mg::UserDisplayConfigurationOutput& conf_output)
         {
-            auto& out = cardout[conf_output.card_id];
+            auto& card_data = card_map[conf_output.card_id];
+            auto& out = card_data.out;
 
             if (conf_output.connected && conf_output.modes.size() > 0)
             {
@@ -275,13 +281,12 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                 conf_output.power_mode = mir_power_mode_off;
             }
 
-            auto const type = mir_output_type_name(static_cast<MirOutputType>(conf_output.type));
-            
+            auto const type = static_cast<MirOutputType>(conf_output.type);
 
-            out << "\n      " << type;
+            out << "\n      " << mir_output_type_name(type);
             if (conf_output.card_id.as_value() > 0)
                 out << '-' << conf_output.card_id.as_value();
-            out << '-' << conf_output.id.as_value() << ':';         // TODO calculate correctly
+            out << '-' << ++card_data.output_counts[type] << ':';
 
             out << "\n        port: " << conf_output.id.as_value(); // TODO obsolete
 
@@ -325,11 +330,11 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     out << "\n    displays:";
     out << "\n    # a list of displays matched by card-id and output label";
 
-    for (auto& co : cardout)
+    for (auto& co : card_map)
     {
         out << "\n";
         out << "\n    - card-id: " << co.first.as_value();
-        out << co.second.str();
+        out << co.second.out.str();
     }
 
     out << "8>< ---------------------------------------------------";
