@@ -503,7 +503,11 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
                 }
             }
         });
-    acquired_devices.insert(std::make_pair(makedev(major, minor), context->device.get()));
+
+    if (!acquired_devices.insert(std::make_pair(makedev(major, minor), context->device.get())).second)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Attempted to acquire a device multiple times"}));
+    }
 
     auto future = context->promise.get_future();
 
