@@ -285,27 +285,37 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
             out << "\n      " << type;
             if (conf_output.card_id.as_value() > 0)
                 out << '-' << conf_output.card_id.as_value();
-            out << '-' << conf_output.id.as_value(); // TODO calculate correctly
+            out << '-' << conf_output.id.as_value() << ':';         // TODO calculate correctly
 
             out << "\n        port: " << conf_output.id.as_value(); // TODO obsolete
 
             if (conf_output.connected && conf_output.modes.size() > 0)
             {
+                out << "\n        # This output supports the following modes:";
                 for (size_t i = 0; i < conf_output.modes.size(); ++i)
                 {
                     if (i) out << ',';
-                    if (i % 5) out << ' ';
+                    if ((i % 5) != 2) out << ' ';
                     else out << "\n        # ";
                     out << conf_output.modes[i];
                 }
-                out << "\n        #mode: " << conf_output.modes[conf_output.current_mode_index];
-                out << "\n        #position: [" << conf_output.top_left.x << ',' << conf_output.top_left.y << ']';
-                out << "\n        #orientation: " << as_string(conf_output.orientation);
+                out << "\n        #";
+                out << "\n        # Uncomment the following to enforce the selected configuration."
+                       "\n        # Or amend as desired.";
+                out << "\n        #";
+                out << "\n        #mode: " << conf_output.modes[conf_output.current_mode_index]
+                    << "\t# Defaults to preferred mode";
+                out << "\n        #position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
+                    << "\t# Defaults to [0, 0]";
+                out << "\n        #orientation: " << as_string(conf_output.orientation)
+                    << "\t# {normal, left, right, inverted}, Defaults to normal";
             }
             else
             {
                 out << "\n        # (disconnected)";
             }
+
+            out << "\n";
         });
 
     std::ostringstream out;
@@ -326,7 +336,7 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
         out << co.second.str();
     }
 
-    out << "\n8>< ---------------------------------------------------";
+    out << "8>< ---------------------------------------------------";
     mir::log_info(out.str());
 }
 
