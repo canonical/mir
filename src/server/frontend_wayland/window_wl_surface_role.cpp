@@ -47,14 +47,14 @@ std::shared_ptr<ms::Surface> scene_surface_from(std::shared_ptr<mf::Session> con
 
 mf::WindowWlSurfaceRole::WindowWlSurfaceRole(WlSeat* seat, wl_client* client, WlSurface* surface,
                                              std::shared_ptr<Shell> const& shell, OutputManager* output_manager)
-        : destroyed{std::make_shared<bool>(false)},
-          client{client},
-          surface{surface},
-          shell{shell},
-          output_manager{output_manager},
-          sink{std::make_shared<WlSurfaceEventSink>(seat, client, surface, this)},
-          params{std::make_unique<scene::SurfaceCreationParameters>(
-                 scene::SurfaceCreationParameters().of_type(mir_window_type_freestyle))}
+    : destroyed{std::make_shared<bool>(false)},
+      client{client},
+      surface{surface},
+      shell{shell},
+      output_manager{output_manager},
+      sink{std::make_shared<WlSurfaceEventSink>(seat, client, surface, this)},
+      params{std::make_unique<scene::SurfaceCreationParameters>(
+             scene::SurfaceCreationParameters().of_type(mir_window_type_freestyle))}
 {
     surface->set_role(this);
 }
@@ -144,12 +144,11 @@ void mf::WindowWlSurfaceRole::initiate_interactive_resize(MirResizeEdge edge)
     {
         if (auto session = get_session(client))
         {
-            shell->request_operation(
-                session,
-                surface_id(),
-                sink->latest_timestamp_ns(),
-                Shell::UserRequest::resize,
-                edge);
+            shell->request_operation(session,
+                                     surface_id(),
+                                     sink->latest_timestamp_ns(),
+                                     Shell::UserRequest::resize,
+                                     edge);
         }
     }
 }
@@ -185,7 +184,9 @@ void mf::WindowWlSurfaceRole::set_max_size(int32_t width, int32_t height)
                 params->max_width.consume();
         }
         else
+        {
             params->max_width = geom::Width{width};
+        }
 
         if (height == 0)
         {
@@ -193,7 +194,9 @@ void mf::WindowWlSurfaceRole::set_max_size(int32_t width, int32_t height)
                 params->max_height.consume();
         }
         else
+        {
             params->max_height = geom::Height{height};
+        }
     }
 }
 
