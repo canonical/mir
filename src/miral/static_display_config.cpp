@@ -30,32 +30,26 @@
 #include <sstream>
 #include <iostream>
 
-// Scale is not supported when compositing. https://github.com/MirServer/mir/issues/552
-#define MIR_SCALE_NOT_SUPPORTED
-
 namespace mg = mir::graphics;
 using namespace mir::geometry;
 
 namespace
 {
-static constexpr char const* const output_id = "output_id";
-static constexpr char const* const position = "position";
-static constexpr char const* const mode = "mode";
-#ifndef MIR_SCALE_NOT_SUPPORTED
-static constexpr char const* const scale = "scale";
-#endif
-static constexpr char const* const orientation = "orientation";
+constexpr char const* const output_id = "output_id";
+constexpr char const* const position = "position";
+constexpr char const* const mode = "mode";
+constexpr char const* const orientation = "orientation";
 
 
-static constexpr char const* const orientation_value[] =
+constexpr char const* const orientation_value[] =
     { "normal", "left", "inverted", "right" };
 
-static auto as_string(MirOrientation orientation) -> char const*
+auto as_string(MirOrientation orientation) -> char const*
 {
     return orientation_value[orientation/90];
 }
 
-static auto as_orientation(std::string const& orientation) -> MirOrientation
+auto as_orientation(std::string const& orientation) -> MirOrientation
 {
     if (orientation == orientation_value[3])
         return mir_orientation_right;
@@ -221,11 +215,12 @@ catch (YAML::Exception const& x)
 
 void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 {
-    std::ostringstream out;
-    out << "Display config:\n8>< ---------------------------------------------------";
+    std::map<mg::DisplayConfigurationCardId, std::ostringstream> cardout;
 
     conf.for_each_output([&](mg::UserDisplayConfigurationOutput& conf_output)
         {
+            auto& out = cardout[conf_output.card_id];
+
             if (conf_output.connected && conf_output.modes.size() > 0)
             {
                 conf_output.used = true;
@@ -285,34 +280,51 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
             }
 
             auto const type = mir_output_type_name(static_cast<MirOutputType>(conf_output.type));
+            
 
-            out << '\n' << output_id << '=' << conf_output.card_id << '/' << conf_output.id;
+            out << "\n      " << type;
+            if (conf_output.card_id.as_value() > 0)
+                out << '-' << conf_output.card_id.as_value();
+            out << '-' << conf_output.id.as_value(); // TODO calculate correctly
+
+            out << "\n        port: " << conf_output.id.as_value(); // TODO obsolete
 
             if (conf_output.connected && conf_output.modes.size() > 0)
             {
-                out << ": " << position << '=' << conf_output.top_left.x << ',' << conf_output.top_left.y
-                    << "; " << mode << '=' << conf_output.modes[conf_output.current_mode_index]
-#ifndef MIR_SCALE_NOT_SUPPORTED
-                    << "; " << scale << '=' << conf_output.scale
-#endif
-                    << "; " << orientation << '=' << as_string(conf_output.orientation);
-            }
-
-            out << " # " << type;
-
-            if (!conf_output.connected || conf_output.modes.size() <= 0)
-                out << " (disconnected)";
-
-            if (conf_output.modes.size() > 0)
-            {
-                out << " modes: ";
                 for (size_t i = 0; i < conf_output.modes.size(); ++i)
                 {
-                    if (i) out << ", ";
+                    if (i) out << ',';
+                    if (i % 5) out << ' ';
+                    else out << "\n        # ";
                     out << conf_output.modes[i];
                 }
+                out << "\n        #mode: " << conf_output.modes[conf_output.current_mode_index];
+                out << "\n        #position: [" << conf_output.top_left.x << ',' << conf_output.top_left.y << ']';
+                out << "\n        #orientation: " << as_string(conf_output.orientation);
+            }
+            else
+            {
+                out << "\n        # (disconnected)";
             }
         });
+
+    std::ostringstream out;
+    out << "Display config:\n8>< ---------------------------------------------------";
+    out << "\nlayouts:";
+    out << "\n# keys here are layout labels (used for atomically switching between them)";
+    out << "\n# when enabling displays, surfaces should be matched in reverse recency order";
+    out << "\n";
+    out << "\n  my-layout:                       # the first layout is the default";
+    out << "\n";
+    out << "\n    displays:";
+    out << "\n    # a list of displays matched by card-id and output label";
+
+    for (auto& co : cardout)
+    {
+        out << "\n";
+        out << "\n    - card-id: " << co.first.as_value();
+        out << co.second.str();
+    }
 
     out << "\n8>< ---------------------------------------------------";
     mir::log_info(out.str());
