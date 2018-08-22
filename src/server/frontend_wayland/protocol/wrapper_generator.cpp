@@ -27,6 +27,8 @@
 #include <locale>
 #include <stdio.h>
 
+const std::vector<std::string> cpp_reserved_keywords = {"namespace"}; // add to this on an as-needed basis
+
 // remove the path from a file path, leaving only the base name
 std::string remove_file_path(std::string const& path)
 {
@@ -35,6 +37,20 @@ std::string remove_file_path(std::string const& path)
         return path;
     else
         return path.substr(i + 1);
+}
+
+// make sure the name is not a C++ reserved word, could be expanded to get rid of invalid characters if that was needed
+std::string sanitize_name(std::string const& name)
+{
+    std::string ret = name;
+    for (auto const& i: cpp_reserved_keywords)
+    {
+        if (i == name)
+        {
+            ret = name + "_";
+        }
+    }
+    return ret;
 }
 
 void emit_comment_header(std::ostream& out, std::string const& input_file_path)
@@ -179,7 +195,7 @@ class Argument
 {
 public:
     Argument(xmlpp::Element const& node)
-        : name{node.get_attribute_value("name")},
+        : name{sanitize_name(node.get_attribute_value("name"))},
           descriptor{parse_optional(node) ? optional_type_map.at(node.get_attribute_value("type"))
                                           : type_map.at(node.get_attribute_value("type"))}
     {
