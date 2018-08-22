@@ -469,6 +469,7 @@ void mie::Platform::stop()
 {
     // This must only be called from the dispatch thread, so this doesn't race
     device_watchers.clear();
+    pending_devices.clear();
 
     if (action_queue)
     {
