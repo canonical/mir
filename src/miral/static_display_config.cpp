@@ -158,7 +158,7 @@ try
                         if (auto const pos = port_config[position])
                         {
                             puts(position);
-                            output_config.size = Size{pos[0].as<int>(), pos[1].as<int>()};
+                            output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
                         }
 
                         if (auto const m = port_config[mode])
