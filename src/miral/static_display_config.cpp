@@ -40,7 +40,6 @@ constexpr char const* const position = "position";
 constexpr char const* const mode = "mode";
 constexpr char const* const orientation = "orientation";
 
-
 constexpr char const* const orientation_value[] =
     { "normal", "left", "inverted", "right" };
 
@@ -61,6 +60,48 @@ auto as_orientation(std::string const& orientation) -> MirOrientation
         return mir_orientation_left;
 
     return mir_orientation_normal;
+}
+
+auto output_type_from(std::string const& output) -> MirOutputType
+{
+    static const char * const names[] =
+        {
+            "unknown",
+            "VGA",
+            "DVI-I",
+            "DVI-D",
+            "DVI-A",
+            "Composite",
+            "S-video",
+            "LVDS",
+            "Component",
+            "9-pin",
+            "DisplayPort",
+            "HDMI-A",
+            "HDMI-B",
+            "TV",
+            "eDP",
+            "Virtual",
+            "DSI",
+            "DPI",
+        };
+
+    int index = 0;
+    for (auto const name : names)
+    {
+        if (output.find(name) == 0)
+            return static_cast<MirOutputType>(index);
+        ++index;
+    }
+    return mir_output_type_unknown;
+}
+
+auto output_index_from(std::string const& output) -> int
+{
+    std::istringstream in{output.substr(output.rfind('-')+1)};
+    int result = 0;
+    in >> result;
+    return result;
 }
 }
 
@@ -119,16 +160,16 @@ try
 
         for (Node const card : cards)
         {
-            int card_no = 0;
+            mg::DisplayConfigurationCardId card_no;
 
             if (auto const id = card["card-id"])
             {
-                card_no = id.as<int>();
+                card_no = mg::DisplayConfigurationCardId{id.as<int>()};
             }
 
             if (!card.IsDefined() || !(card.IsMap() || card.IsNull()))
                 throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
-                                        "' : invalid card: " + std::to_string(card_no)};
+                                        "' : invalid card: " + std::to_string(card_no.as_value())};
 
             for (std::pair<Node, Node> port : card)
             {
@@ -139,66 +180,60 @@ try
 
                 auto const& port_config = port.second;
 
-                if (port_config.IsDefined())
+                if (port_config.IsDefined() && !port_config.IsNull())
                 {
-                    if (!port_config.IsDefined() || !port_config.IsMap())
+                    if (!port_config.IsMap())
                         throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
-                                                "' : invalid card: " + std::to_string(card_no)};
+                                                "' : invalid port: " + port_name};
 
-                    // TODO remove requirement for port field
-                    if (auto const p = port_config["port"])
+                    Id const output_id{card_no, output_type_from(port_name), output_index_from(port_name)};
+                    Config   output_config;
+
+                    if (auto const pos = port_config[position])
                     {
-                        int const port_no = p.as<int>();
-
-                        Id const output_id{mg::DisplayConfigurationCardId{card_no}, mg::DisplayConfigurationOutputId{port_no}};
-                        Config   output_config;
-
-                        if (auto const pos = port_config[position])
-                        {
-                            output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
-                        }
-
-                        if (auto const m = port_config[mode])
-                        {
-                            std::istringstream in{m.as<std::string>()};
-
-                            char delimiter = '\0';
-                            int width;
-                            int height;
-
-                            if (!(in >> width))
-                                goto mode_error;
-
-                            if (!(in >> delimiter) || delimiter != 'x')
-                                goto mode_error;
-
-                            if (!(in >> height))
-                                goto mode_error;
-
-                            output_config.size = Size{width, height};
-
-                            if (in.peek() == '@')
-                            {
-                                double refresh;
-                                if (!(in >> delimiter) || delimiter != '@')
-                                    goto mode_error;
-
-                                if (!(in >> refresh))
-                                    goto mode_error;
-
-                                output_config.refresh = refresh;
-                            }
-                        }
-                        mode_error: // TODO better error handling
-
-                        if (auto const o = port_config[orientation])
-                        {
-                            std::string const orientation = o.as<std::string>();
-                            output_config.orientation = as_orientation(orientation);
-                        }
-
-                        this->config[output_id] = output_config;
+                        output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
                     }
+
+                    if (auto const m = port_config[mode])
+                    {
+                        std::istringstream in{m.as<std::string>()};
+
+                        char delimiter = '\0';
+                        int width;
+                        int height;
+
+                        if (!(in >> width))
+                            goto mode_error;
+
+                        if (!(in >> delimiter) || delimiter != 'x')
+                            goto mode_error;
+
+                        if (!(in >> height))
+                            goto mode_error;
+
+                        output_config.size = Size{width, height};
+
+                        if (in.peek() == '@')
+                        {
+                            double refresh;
+                            if (!(in >> delimiter) || delimiter != '@')
+                                goto mode_error;
+
+                            if (!(in >> refresh))
+                                goto mode_error;
+
+                            output_config.refresh = refresh;
+                        }
+                    }
+                    mode_error: // TODO better error handling
+
+                    if (auto const o = port_config[orientation])
+                    {
+                        std::string const orientation = o.as<std::string>();
+                        output_config.orientation = as_orientation(orientation);
+                    }
+
+                    this->config[output_id] = output_config;
                 }
             }
         }
@@ -222,6 +257,8 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
         {
             auto& card_data = card_map[conf_output.card_id];
             auto& out = card_data.out;
+            auto const type = static_cast<MirOutputType>(conf_output.type);
+            auto const index_by_type = ++card_data.output_counts[type];
 
             if (conf_output.connected && conf_output.modes.size() > 0)
             {
@@ -229,7 +266,7 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                 conf_output.power_mode = mir_power_mode_on;
                 conf_output.orientation = mir_orientation_normal;
 
-                auto& conf = config[Id{conf_output.card_id, conf_output.id}];
+                auto& conf = config[Id{conf_output.card_id, type, index_by_type}];
 
                 if (conf.position.is_set())
                 {
@@ -281,14 +318,10 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                 conf_output.power_mode = mir_power_mode_off;
             }
 
-            auto const type = static_cast<MirOutputType>(conf_output.type);
-
             out << "\n      " << mir_output_type_name(type);
             if (conf_output.card_id.as_value() > 0)
                 out << '-' << conf_output.card_id.as_value();
-            out << '-' << ++card_data.output_counts[type] << ':';
-
-            out << "\n        port: " << conf_output.id.as_value(); // TODO obsolete
+            out << '-' << index_by_type << ':';
 
             if (conf_output.connected && conf_output.modes.size() > 0)
             {

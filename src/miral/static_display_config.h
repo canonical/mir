@@ -34,7 +34,7 @@ public:
     virtual void apply_to(mir::graphics::DisplayConfiguration& conf);
 private:
 
-    using Id = std::tuple<mir::graphics::DisplayConfigurationCardId, mir::graphics::DisplayConfigurationOutputId>;
+    using Id = std::tuple<mir::graphics::DisplayConfigurationCardId, MirOutputType, int>;
     struct Config
     {
         mir::optional_value<mir::geometry::Point>  position;
