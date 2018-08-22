@@ -196,7 +196,7 @@ public:
     {
         // Tests cases *must* stop the mainloop thread before destroying
         // block scope objects that are referenced by enqueued logic.
-        ASSERT_TRUE(ml_thread_stopped);
+        EXPECT_TRUE(ml_thread_stopped);
 
         // Print the dbusmock output if we've failed.
         auto const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
