@@ -669,6 +669,13 @@ void mir::LogindConsoleServices::on_pause_device(
             it->second->emit_removed();
             // The device is gone; logind promises not to send further events for it
             me->acquired_devices.erase(it);
+            // …unfortunately, logind is a FILTHY LIAR.
+            logind_session_call_release_device(
+                me->session_proxy.get(),
+                major, minor,
+                nullptr,
+                &complete_release_device_call,
+                nullptr);
         }
         else
         {
