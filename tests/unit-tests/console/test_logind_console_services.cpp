@@ -1692,26 +1692,22 @@ TEST_F(LogindConsoleServices, vt_switcher_calls_switch_to_with_correct_argument)
     mir::LogindConsoleServices console{the_main_loop()};
     auto switcher = console.create_vt_switcher();
 
+    auto switch_to_future = expect_call(
+        "/org/freedesktop/login1/seat/seat0",
+        "SwitchTo");
+
     switcher->switch_to(
         3,
         [](auto){});
 
-    auto calls_made = get_calls_for_object("/org/freedesktop/login1/seat/seat0");
+    ASSERT_THAT(switch_to_future.wait_for(30s), Eq(std::future_status::ready));
+    auto switch_to_call = switch_to_future.get();
 
-    auto switch_to_call = std::find_if(
-        calls_made.begin(),
-        calls_made.end(),
-        [](CallInfo const& call)
-        {
-            return call.method_name == "SwitchTo";
-        });
-
-    ASSERT_THAT(switch_to_call, Not(Eq(calls_made.end())));
-    ASSERT_THAT(switch_to_call->arguments.size(), Eq(1));
+    ASSERT_THAT(switch_to_call.arguments.size(), Eq(1));
 
     unsigned vt_arg;
     g_variant_get(
-        switch_to_call->arguments[0].get(),
+        switch_to_call.arguments[0].get(),
         "u",
         &vt_arg);
 
