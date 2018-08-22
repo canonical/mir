@@ -152,11 +152,11 @@ try
             throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
                                     "' : invalid layout: " + name_node.Scalar()};
 
-        Node cards = config_node["displays"];
+        Node cards = config_node["cards"];
 
         if (!cards.IsDefined() || !cards.IsSequence())
             throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
-                                    "' : invalid 'displays' in " + name_node.Scalar()};
+                                    "' : invalid 'cards' in " + name_node.Scalar()};
 
         for (Node const card : cards)
         {
@@ -360,8 +360,8 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     out << "\n";
     out << "\n  my-layout:                       # the first layout is the default";
     out << "\n";
-    out << "\n    displays:";
-    out << "\n    # a list of displays matched by card-id and output label";
+    out << "\n    cards:";
+    out << "\n    # a list of cards (currently matched by card-id)";
 
     for (auto& co : card_map)
     {
