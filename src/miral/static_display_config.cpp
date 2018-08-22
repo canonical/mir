@@ -82,26 +82,24 @@ try
     using std::begin;
     using std::end;
 
-    auto const config = LoadFile(filename);
-    if (!config.IsDefined())
-        puts("!config.IsDefined()");
+    std::ifstream config_file{filename};
+
+    if (!config_file)
+    {
+        mir::log_warning("Cannot read static display configuration file: '" + filename + "'");
+        return;
+    }
+
+    auto const config = Load(config_file);
+    if (!config.IsDefined() || !config.IsMap())
+        throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename + "' : unrecognized content"};
 
     Node layouts = config["layouts"];
-    if (!layouts.IsDefined())
-        puts("!layouts.IsDefined()");
-
-    switch (layouts.Type())
-    {
-    case NodeType::Null: puts("layouts:Null"); break;
-    case NodeType::Scalar: puts("layouts:Scalar"); break;
-    case NodeType::Sequence: puts("layouts:Sequence"); break;
-    case NodeType::Map: puts("layouts:Map"); break;
-    case NodeType::Undefined: puts("layouts:Undefined"); break;
-    }
+    if (!layouts.IsDefined() || !layouts.IsMap())
+        throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename + "' : no layouts"};
 
     auto const layout = begin(config["layouts"]);
 
-    puts("*********************************************************");
     if (layout != end(config["layouts"]))
     {
         Node name_node;
@@ -109,13 +107,17 @@ try
 
         std::tie(name_node, config_node) = *layout;
 
-        auto const layout_name = name_node.Scalar();
+        if (!config_node.IsDefined() || !config_node.IsMap())
+            throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
+                                    "' : invalid layout: " + name_node.Scalar()};
 
-        std::cout << "layout_name: " << layout_name << '\n';
+        Node cards = config_node["displays"];
 
-        Node displays = config_node["displays"];
+        if (!cards.IsDefined() || !cards.IsSequence())
+            throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
+                                    "' : invalid 'displays' in " + name_node.Scalar()};
 
-        for (Node const card : displays)
+        for (Node const card : cards)
         {
             int card_no = 0;
 
@@ -124,7 +126,9 @@ try
                 card_no = id.as<int>();
             }
 
-            std::cout << "Card #" << card_no << '\n';
+            if (!card.IsDefined() || !(card.IsMap() || card.IsNull()))
+                throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
+                                        "' : invalid card: " + std::to_string(card_no)};
 
             for (std::pair<Node, Node> port : card)
             {
@@ -133,32 +137,29 @@ try
                 if (port_name == "card-id")
                     continue;
 
-                std::cout << "Port: " << port_name << '\n';
-
                 auto const& port_config = port.second;
 
                 if (port_config.IsDefined())
                 {
+                    if (!port_config.IsDefined() || !port_config.IsMap())
+                        throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
+                                                "' : invalid card: " + std::to_string(card_no)};
+
                     // TODO remove requirement for port field
                     if (auto const p = port_config["port"])
                     {
-                        puts("port");
                         int const port_no = p.as<int>();
-                        std::cout << "Port #" << port_no << '\n';
 
                         Id const output_id{mg::DisplayConfigurationCardId{card_no}, mg::DisplayConfigurationOutputId{port_no}};
                         Config   output_config;
 
                         if (auto const pos = port_config[position])
                         {
-                            puts(position);
                             output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
                         }
 
                         if (auto const m = port_config[mode])
                         {
-                            puts(mode);
-                            puts(m.as<std::string>().c_str());
                             std::istringstream in{m.as<std::string>()};
 
                             char delimiter = '\0';
@@ -192,9 +193,7 @@ try
 
                         if (auto const o = port_config[orientation])
                         {
-                            puts(orientation);
                             std::string const orientation = o.as<std::string>();
-                            puts(orientation.c_str());
                             output_config.orientation = as_orientation(orientation);
                         }
 
@@ -204,9 +203,6 @@ try
             }
         }
     }
-    puts("*********************************************************");
-
-    return;
 }
 catch (YAML::Exception const& x)
 {
