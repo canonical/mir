@@ -755,6 +755,7 @@ GDBusMessage* mir::LogindConsoleServices::resume_device_dbus_filter(
     g_object_unref(message);
     return nullptr;
 }
+#endif
 
 namespace
 {
@@ -826,5 +827,3 @@ std::unique_ptr<mir::VTSwitcher> mir::LogindConsoleServices::create_vt_switcher(
             &g_object_unref},
         ml);
 }
-
-#endif
