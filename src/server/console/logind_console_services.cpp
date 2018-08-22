@@ -772,10 +772,10 @@ public:
 
     void switch_to(
         int vt_number,
-        std::function<void(std::exception const&)> const& error_handler) override
+        std::function<void(std::exception const&)> error_handler) override
     {
         ml->run_with_context_as_thread_default(
-            [this, vt_number, &error_handler]()
+            [this, vt_number, error_handler = std::move(error_handler)]()
             {
                 logind_seat_call_switch_to(
                     seat_proxy.get(),
@@ -783,7 +783,7 @@ public:
                     nullptr,
                     &LogindVTSwitcher::complete_switch_to,
                     new std::function<void(std::exception const&)>{error_handler});
-            });
+            }); // No need to wait for this to run; drop the std::future on the floor
     }
 
 private:

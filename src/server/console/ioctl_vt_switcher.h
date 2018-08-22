@@ -33,7 +33,7 @@ public:
 
     void switch_to(
         int vt_number,
-        std::function<void(std::exception const&)> const& error_handler) override;
+        std::function<void(std::exception const&)> error_handler) override;
 
 private:
     mir::Fd const vt_fd;

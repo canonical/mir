@@ -105,7 +105,7 @@ public:
      */
     virtual void switch_to(
         int vt_number,
-        std::function<void(std::exception const& error)> const& error_handler) = 0;
+        std::function<void(std::exception const&)> error_handler) = 0;
 
 protected:
     VTSwitcher() = default;

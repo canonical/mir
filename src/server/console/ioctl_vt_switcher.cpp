@@ -31,7 +31,7 @@ mir::console::IoctlVTSwitcher::IoctlVTSwitcher(mir::Fd vt_fd)
 
 void mir::console::IoctlVTSwitcher::switch_to(
     int vt_number,
-    std::function<void(std::exception const&)> const& error_handler)
+    std::function<void(std::exception const&)> error_handler)
 {
     if (ioctl(vt_fd, VT_ACTIVATE, vt_number) == -1)
     {
