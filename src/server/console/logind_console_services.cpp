@@ -268,7 +268,7 @@ mir::LogindConsoleServices::LogindConsoleServices(std::shared_ptr<mir::GLibMainL
 
     g_signal_connect(
         G_OBJECT(session_proxy.get()),
-        "notify::state",
+        "notify::active",
         G_CALLBACK(&LogindConsoleServices::on_state_change),
         this);
     g_signal_connect(
@@ -593,8 +593,8 @@ void mir::LogindConsoleServices::on_state_change(
     // No threadsafety concerns, as this is only ever called from the glib mainloop.
     auto me = static_cast<LogindConsoleServices*>(ctx);
 
-    auto const state = logind_session_get_state(LOGIND_SESSION(session_proxy));
-    if (strncmp(state, "active", strlen("active")) == 0)
+    auto const active = logind_session_get_active(LOGIND_SESSION(session_proxy));
+    if (active)
     {
         // “active” means running and foregrounded.
         if (!me->active)
