@@ -21,6 +21,7 @@
 #include "mir/graphics/event_handler_register.h"
 #include "mir/fd.h"
 #include "mir/emergency_cleanup_registry.h"
+#include "mir/raii.h"
 
 #define MIR_LOG_COMPONTENT "VT-handler"
 #include "mir/log.h"
@@ -420,20 +421,55 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
             {
                 if (!active)
                 {
-                    if (!switch_back())
-                        report->report_vt_switch_back_failure();
-                    fops->ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
+                    /*
+                     * We *must* do one of two things:
+                     * 1) ACK the VT switch call
+                     * 2) Die (and hence give up VT process control)
+                     *
+                     * Otherwise we leave the VT subsystem in a glorious state of
+                     * waiting forever for us to ACK the switch.
+                     */
+                    auto ack_when_done = mir::raii::paired_calls(
+                        [](){},
+                        [this]()
+                        {
+                            fops->ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
+                        });
+
                     for (auto const& device : active_devices->as_iterable())
                     {
                         device->on_activated();
                     }
+
+                    if (!switch_back())
+                        report->report_vt_switch_back_failure();
                     active = true;
                 }
                 else
                 {
                     static int const disallow_switch{0};
                     static int const allow_switch{1};
-                    int action;
+
+                    /*
+                     * We default to allowing the switch; if any part of this process
+                     * throws an exception, the safe option is to let the user get away.
+                     */
+                    int action{allow_switch};
+
+                    /*
+                     * We *must* do one of two things:
+                     * 1) ACK the VT switch call
+                     * 2) Die (and hence give up VT process control)
+                     *
+                     * Otherwise we leave the VT subsystem in a glorious state of
+                     * waiting forever for us to ACK the switch.
+                     */
+                    auto ack_when_done = mir::raii::paired_calls(
+                        [](){},
+                        [this, &action]()
+                        {
+                            fops->ioctl(vt_fd.fd(), VT_RELDISP, action);
+                        });
 
                     if (switch_away())
                     {
@@ -449,8 +485,6 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
                         action = disallow_switch;
                         report->report_vt_switch_away_failure();
                     }
-
-                    fops->ioctl(vt_fd.fd(), VT_RELDISP, action);
                 }
             }));
 

@@ -48,9 +48,11 @@ int fd_open(const char* path, int flags, void* userdata)
     return fd_store->take_fd(path);
 }
 
-void fd_close(int fd, void* /*userdata*/)
+void fd_close(int fd, void* userdata)
 {
-    ::close(fd);
+    auto fd_store = static_cast<mie::FdStore*>(userdata);
+
+    fd_store->remove_fd(fd);
 }
 
 const libinput_interface fd_ops = {fd_open, fd_close};
