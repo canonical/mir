@@ -155,6 +155,7 @@ public:
         std::shared_ptr<::libinput>& lib,
         mu::Device const& device,
         std::vector<std::shared_ptr<mie::LibInputDevice>>& devices,
+        std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>>& pending_devices,
         std::unordered_map<dev_t, std::unique_ptr<mir::Device>>& device_watchers)
         : action_queue{std::move(action_queue)},
           device_fds{device_fds},
@@ -163,6 +164,7 @@ public:
           devnode{device.devnode()},
           syspath{device.syspath()},
           devices{devices},
+          pending_devices{pending_devices},
           device_watchers{device_watchers}
     {
         /*
@@ -180,11 +182,32 @@ public:
     void activated(mir::Fd&& device_fd) override
     {
         action_queue->enqueue(
-            [fd_store = &device_fds, fd = std::move(device_fd), lib = lib, devnode = devnode]() mutable
+            [
+                &device_fds = device_fds,
+                fd = std::move(device_fd),
+                &lib = lib,
+                devnode = devnode,
+                devnum = devnum,
+                &pending_devices = pending_devices,
+                &device_watchers = device_watchers
+            ]() mutable
             {
-                fd_store->store_fd(devnode.c_str(), std::move(fd));
+                auto raw_fd = static_cast<int>(fd);
+                device_fds.store_fd(devnode.c_str(), std::move(fd));
 
-                libinput_path_add_device(lib.get(), devnode.c_str());
+                auto pending_iter = pending_devices.find(devnum);
+                if (pending_iter != pending_devices.end())
+                {
+                    device_watchers.emplace(devnum, pending_iter->second.get());
+                    pending_devices.erase(pending_iter);
+                }
+
+                if (!libinput_path_add_device(lib.get(), devnode.c_str()))
+                {
+                    // Oops, libinput didn't want this after all.
+                    device_fds.remove_fd(raw_fd);
+                    device_watchers.erase(devnum);
+                }
             });
     }
 
@@ -192,13 +215,13 @@ public:
     {
         action_queue->enqueue(
             [
-                devices = &devices,
+                &devices = devices,
                 syspath = syspath,
-                device_watchers = &device_watchers,
+                &device_watchers = device_watchers,
                 devnum = devnum
-            ]
+            ]()
             {
-                for (auto const& input_device : *devices)
+                for (auto const& input_device : devices)
                 {
                     auto device_udev = libinput_device_get_udev_device(input_device->device());
 
@@ -210,7 +233,7 @@ public:
                         }
                     }
                 }
-                device_watchers->erase(devnum);
+                device_watchers.erase(devnum);
             });
     }
 
@@ -218,13 +241,13 @@ public:
     {
         action_queue->enqueue(
             [
-                devices = &devices,
+                &devices = devices,
                 syspath = syspath,
-                device_watchers = &device_watchers,
+                &device_watchers = device_watchers,
                 devnum = devnum
-            ]
+            ]()
             {
-                for (auto const& input_device : *devices)
+                for (auto const& input_device : devices)
                 {
                     auto device_udev = libinput_device_get_udev_device(input_device->device());
 
@@ -236,7 +259,7 @@ public:
                         }
                     }
                 }
-                device_watchers->erase(devnum);
+                device_watchers.erase(devnum);
             });
     }
 
@@ -249,6 +272,7 @@ private:
     std::string const devnode;
     std::string const syspath;
     std::vector<std::shared_ptr<mie::LibInputDevice>>& devices;
+    std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>>& pending_devices;
     std::unordered_map<dev_t, std::unique_ptr<mir::Device>>& device_watchers;
 };
 }
@@ -310,6 +334,7 @@ void mie::Platform::start()
                                     lib,
                                     *workaround_device,
                                     devices,
+                                    pending_devices,
                                     device_watchers)));
                     }
                     break;
@@ -391,10 +416,6 @@ void mie::Platform::device_added(libinput_device* dev)
     auto device_ptr = make_libinput_device(lib, dev);
 
     log_info("Added %s", describe(dev).c_str());
-
-    auto const devnum = udev_device_get_devnum(libinput_device_get_udev_device(device_ptr.get()));
-    device_watchers.emplace(devnum, pending_devices.at(devnum).get());
-    pending_devices.erase(devnum);
 
     auto device_it = find_device(libinput_device_get_device_group(device_ptr.get()));
     if (end(devices) != device_it)
