@@ -3,7 +3,7 @@ pkg_check_modules(XMLPP libxml++-2.6 REQUIRED)
 include_directories(SYSTEM ${XMLPP_INCLUDE_DIRS})
 
 add_executable(wrapper-generator
-  wrapper_generator.cpp
+  wrapper_generator.cpp     wrapper_generator.h
 )
 
 target_link_libraries(wrapper-generator

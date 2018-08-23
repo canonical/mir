@@ -16,14 +16,11 @@
  * Authored By: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include <libxml++/libxml++.h>
+#include "wrapper_generator.h"
+
 #include <iostream>
 #include <unordered_map>
 #include <unordered_set>
-#include <functional>
-
-#include <experimental/optional>
-#include <vector>
 #include <locale>
 #include <stdio.h>
 
