@@ -28,7 +28,6 @@
 #include <algorithm>
 #include <fstream>
 #include <sstream>
-#include <iostream>
 
 namespace mg = mir::graphics;
 using namespace mir::geometry;
@@ -79,6 +78,18 @@ auto output_index_from(std::string const& output) -> int
     in >> result;
     return result;
 }
+
+auto open_file(std::string const& filename) -> std::ifstream
+{
+    std::ifstream config_file{filename};
+
+    if (!config_file)
+    {
+        mir::log_warning("Cannot read static display configuration file: '" + filename + "'");
+    }
+
+    return config_file;
+}
 }
 
 auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMode> const & modes) -> size_t
@@ -92,28 +103,25 @@ auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMo
     return mode_index;
 }
 
-miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
+miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename) :
+    StaticDisplayConfig{open_file(filename), "ERROR: in display configuration file: '" + filename + "' : "}
+{
+}
+
+miral::StaticDisplayConfig::StaticDisplayConfig(std::istream&& config_file, std::string const& error_prefix)
 try
 {
     using namespace YAML;
     using std::begin;
     using std::end;
 
-    std::ifstream config_file{filename};
-
-    if (!config_file)
-    {
-        mir::log_warning("Cannot read static display configuration file: '" + filename + "'");
-        return;
-    }
-
     auto const config = Load(config_file);
     if (!config.IsDefined() || !config.IsMap())
-        throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename + "' : unrecognized content"};
+        throw mir::AbnormalExit{error_prefix + "unrecognized content"};
 
     Node layouts = config["layouts"];
     if (!layouts.IsDefined() || !layouts.IsMap())
-        throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename + "' : no layouts"};
+        throw mir::AbnormalExit{error_prefix + "no layouts"};
 
     auto const layout = begin(config["layouts"]);
 
@@ -125,14 +133,12 @@ try
         std::tie(name_node, config_node) = *layout;
 
         if (!config_node.IsDefined() || !config_node.IsMap())
-            throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
-                                    "' : invalid layout: " + name_node.Scalar()};
+            throw mir::AbnormalExit{error_prefix + "invalid layout: " + name_node.Scalar()};
 
         Node cards = config_node["cards"];
 
         if (!cards.IsDefined() || !cards.IsSequence())
-            throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
-                                    "' : invalid 'cards' in " + name_node.Scalar()};
+            throw mir::AbnormalExit{error_prefix + "invalid 'cards' in " + name_node.Scalar()};
 
         for (Node const card : cards)
         {
@@ -144,8 +150,7 @@ try
             }
 
             if (!card.IsDefined() || !(card.IsMap() || card.IsNull()))
-                throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
-                                        "' : invalid card: " + std::to_string(card_no.as_value())};
+                throw mir::AbnormalExit{error_prefix + "invalid card: " + std::to_string(card_no.as_value())};
 
             for (std::pair<Node, Node> port : card)
             {
@@ -159,8 +164,7 @@ try
                 if (port_config.IsDefined() && !port_config.IsNull())
                 {
                     if (!port_config.IsMap())
-                        throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
-                                                "' : invalid port: " + port_name};
+                        throw mir::AbnormalExit{error_prefix + "invalid port: " + port_name};
 
                     Id const output_id{card_no, output_type_from(port_name), output_index_from(port_name)};
                     Config   output_config;
@@ -169,8 +173,7 @@ try
                     {
                         auto const state = s.as<std::string>();
                         if (state != state_enabled && state != state_disabled)
-                            throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
-                                                    "' : invalid 'state' (" + state + ") for port: " + port_name};
+                            throw mir::AbnormalExit{error_prefix + "invalid 'state' (" + state + ") for port: " + port_name};
                         output_config.disabled = (state == state_disabled);
                     }
 
@@ -226,7 +229,7 @@ try
 }
 catch (YAML::Exception const& x)
 {
-    throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename + "' : " + x.what()};
+    throw mir::AbnormalExit{error_prefix + x.what()};
 }
 
 void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)

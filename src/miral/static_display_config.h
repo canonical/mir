@@ -24,6 +24,7 @@
 #include <mir/graphics/display_configuration.h>
 
 #include <map>
+#include <iosfwd>
 
 namespace miral
 {
@@ -31,6 +32,7 @@ class StaticDisplayConfig : public mir::graphics::DisplayConfigurationPolicy
 {
 public:
     StaticDisplayConfig(std::string const& filename);
+    StaticDisplayConfig(std::istream&& config_file, std::string const& error_prefix);
     virtual void apply_to(mir::graphics::DisplayConfiguration& conf);
 private:
 
