@@ -28,7 +28,7 @@ class Emitter;
 
 // Simply a newline
 // implicitly convertible to an Emitter
-struct Newline
+struct EmptyLine
 {
 };
 
@@ -69,32 +69,32 @@ public:
     struct State
     {
         std::ostream& out;
+        std::shared_ptr<bool> const on_fresh_line;
         std::string indent;
-
-        // return a new state with one greater level of indentation
-        State indented();
     };
+
+    Emitter() = delete;
 
     // constructors for simple emitters
     Emitter(std::string const& text);
     Emitter(const char* text);
     Emitter(std::initializer_list<Emitter> const& emitters);
-    Emitter(std::vector<Emitter> const& emitters);
 
     // constructors for complex emitters
-    Emitter(Newline);
+    Emitter(EmptyLine);
     Emitter(Lines && lines);
     Emitter(Block && block);
     Emitter(List && list);
 
     void emit(State state) const;
+    bool is_valid() const { return impl != nullptr; }
 
     class Impl;
 
 private:
     Emitter(std::shared_ptr<Impl const> impl);
 
-    std::shared_ptr<Impl const> const impl;
+    std::shared_ptr<Impl const> impl;
 
     static std::string const single_indent;
 };
