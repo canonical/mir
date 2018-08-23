@@ -16,15 +16,12 @@
  * Authored By: William Wold <william.wold@canonical.com>
  */
 
+#ifndef MIR_WAYLAND_GENERATOR_WRAPPER_GENERATOR_H
+#define MIR_WAYLAND_GENERATOR_WRAPPER_GENERATOR_H
+
 #include <libxml++/libxml++.h>
 #include <functional>
 #include <vector>
 #include <experimental/optional>
 
-class Emitter
-{
-public:
-
-private:
-
-};
+#endif // MIR_WAYLAND_GENERATOR_WRAPPER_GENERATOR_H
