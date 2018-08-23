@@ -21,25 +21,38 @@
 
 #include <ostream>
 #include <initializer_list>
+#include <vector>
+#include <memory>
 
 class Emitter
 {
 public:
-    Emitter(std::ostream& out);
+    struct State
+    {
+        std::ostream& out;
+        std::string indent;
 
-    void emit(std::string fragment);
-    void emit(std::initializer_list<std::string> fragments);
-    void emit_newline();
-    void emit_indent();
-    void emit_lines(std::initializer_list<std::initializer_list<std::string>> lines);
-    void inline increase_indent() { indent++; }
-    void inline decrease_indent() { indent--; }
+        State indented();
+    };
+
+    Emitter(std::string const& text);
+    Emitter(const char* text);
+    Emitter(std::initializer_list<Emitter> const& emitters);
+
+    static Emitter block(std::initializer_list<Emitter> const& emitters);
+
+    void emit(State state) const;
+
+    class Impl;
 
 private:
-    std::ostream& out;
-    int indent{0};
-    bool fresh_line{true};
+    Emitter(std::shared_ptr<Impl const> impl);
+
+    std::shared_ptr<Impl const> const impl;
+
     static std::string const single_indent;
 };
+
+
 
 #endif // MIR_WAYLAND_GENERATOR_EMITTER_H
