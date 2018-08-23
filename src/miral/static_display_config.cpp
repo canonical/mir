@@ -35,6 +35,9 @@ using namespace mir::geometry;
 
 namespace
 {
+char const* const state = "state";
+char const* const state_enabled  = "enabled";
+char const* const state_disabled = "disabled";
 char const* const position = "position";
 char const* const mode = "mode";
 char const* const orientation = "orientation";
@@ -162,6 +165,15 @@ try
                     Id const output_id{card_no, output_type_from(port_name), output_index_from(port_name)};
                     Config   output_config;
 
+                    if (auto const s = port_config[state])
+                    {
+                        auto const state = s.as<std::string>();
+                        if (state != state_enabled && state != state_disabled)
+                            throw mir::AbnormalExit{"ERROR: in display configuration file: '" + filename +
+                                                    "' : invalid 'state' (" + state + ") for port: " + port_name};
+                        output_config.disabled = (state == state_disabled);
+                    }
+
                     if (auto const pos = port_config[position])
                     {
                         output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
@@ -232,14 +244,13 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
             auto& out = card_data.out;
             auto const type = static_cast<MirOutputType>(conf_output.type);
             auto const index_by_type = ++card_data.output_counts[type];
+            auto& conf = config[Id{conf_output.card_id, type, index_by_type}];
 
-            if (conf_output.connected && conf_output.modes.size() > 0)
+            if (conf_output.connected && conf_output.modes.size() > 0 && !conf.disabled)
             {
                 conf_output.used = true;
                 conf_output.power_mode = mir_power_mode_on;
                 conf_output.orientation = mir_orientation_normal;
-
-                auto& conf = config[Id{conf_output.card_id, type, index_by_type}];
 
                 if (conf.position.is_set())
                 {
@@ -310,12 +321,18 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                 out << "\n        # Uncomment the following to enforce the selected configuration."
                        "\n        # Or amend as desired.";
                 out << "\n        #";
-                out << "\n        #mode: " << conf_output.modes[conf_output.current_mode_index]
-                    << "\t# Defaults to preferred mode";
-                out << "\n        #position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
-                    << "\t# Defaults to [0, 0]";
-                out << "\n        #orientation: " << as_string(conf_output.orientation)
-                    << "\t# {normal, left, right, inverted}, Defaults to normal";
+                out << "\n        # state: " << (conf_output.used ? state_enabled : state_disabled)
+                    << "\t# {enabled, disabled}, defaults to enabled";
+
+                if (conf_output.used) // The following are only set when used
+                {
+                    out << "\n        # mode: " << conf_output.modes[conf_output.current_mode_index]
+                        << "\t# Defaults to preferred mode";
+                    out << "\n        # position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
+                        << "\t# Defaults to [0, 0]";
+                    out << "\n        # orientation: " << as_string(conf_output.orientation)
+                        << "\t# {normal, left, right, inverted}, defaults to normal";
+                }
             }
             else
             {

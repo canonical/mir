@@ -37,6 +37,7 @@ private:
     using Id = std::tuple<mir::graphics::DisplayConfigurationCardId, MirOutputType, int>;
     struct Config
     {
+        bool  disabled = false;
         mir::optional_value<mir::geometry::Point>  position;
         mir::optional_value<mir::geometry::Size>   size;
         mir::optional_value<double> refresh;
