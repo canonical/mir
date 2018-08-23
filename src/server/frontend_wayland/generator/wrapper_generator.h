@@ -19,9 +19,8 @@
 #ifndef MIR_WAYLAND_GENERATOR_WRAPPER_GENERATOR_H
 #define MIR_WAYLAND_GENERATOR_WRAPPER_GENERATOR_H
 
-#include <libxml++/libxml++.h>
-#include <functional>
-#include <vector>
-#include <experimental/optional>
+#include <string>
+
+std::string sanitize_name(std::string const& name);
 
 #endif // MIR_WAYLAND_GENERATOR_WRAPPER_GENERATOR_H
