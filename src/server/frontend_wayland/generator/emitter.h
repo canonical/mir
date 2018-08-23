@@ -32,6 +32,16 @@ struct EmptyLine
 {
 };
 
+// a line that is at the same indentation level as surrounding block
+// implicitly convertible to an Emitter
+struct Line
+{
+    Line(std::initializer_list<Emitter> const& emitters) : emitters{emitters} {}
+    Line(std::vector<Emitter> const& emitters) : emitters{emitters} {}
+
+    std::vector<Emitter> emitters;
+};
+
 // a series of lines that is at the same indentation level as surrounding block
 // implicitly convertible to an Emitter
 struct Lines
@@ -79,9 +89,11 @@ public:
     Emitter(std::string const& text);
     Emitter(const char* text);
     Emitter(std::initializer_list<Emitter> const& emitters);
+    Emitter(std::vector<Emitter> const& emitters);
 
     // constructors for complex emitters
     Emitter(EmptyLine);
+    Emitter(Line && line);
     Emitter(Lines && lines);
     Emitter(Block && block);
     Emitter(List && list);

@@ -80,7 +80,7 @@ private:
 class SeqEmitter : public Emitter::Impl
 {
 public:
-    SeqEmitter(std::vector<Emitter> && children, Emitter const && delimiter = nullptr, bool at_start = false, bool at_end = false)
+    SeqEmitter(std::vector<Emitter> const && children, Emitter const && delimiter = nullptr, bool at_start = false, bool at_end = false)
         : children(move(children)),
           delimiter{delimiter},
           at_start{at_start},
@@ -168,9 +168,25 @@ Emitter::Emitter(std::initializer_list<Emitter> const& emitters)
 {
 }
 
+Emitter::Emitter(std::vector<Emitter> const& emitters)
+    : impl{Impl::contains_valid(emitters) ?
+               std::make_shared<SeqEmitter>(move(emitters)) :
+               nullptr}
+{
+}
+
 Emitter::Emitter(EmptyLine)
     : impl{std::make_shared<EmptyLineEmitter>()}
 {
+}
+
+Emitter::Emitter(Line && line)
+{
+    Emitter e{line.emitters};
+    if (e.is_valid())
+    {
+        impl = std::make_shared<LayoutEmitter>(std::move(e));
+    }
 }
 
 Emitter::Emitter(Lines && lines)

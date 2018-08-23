@@ -176,7 +176,7 @@ public:
         }
         for (auto& i : arguments)
         {
-            args.push_back(i.emit_cpp_prototype());
+            args.push_back(i.cpp_prototype());
         }
 
         return {"virtual void ", name, "(", List{args, ", "}, ") = 0;"};
@@ -189,11 +189,14 @@ public:
             {"struct wl_client*", (is_global ? " client" : "")},
             "struct wl_resource* resource"};
         for (auto const& arg : arguments)
-            c_args.push_back(arg.emit_c_prototype());
+            c_args.push_back(arg.c_prototype());
 
         std::vector<Emitter> thunk_converters;
         for (auto const& arg : arguments)
-            thunk_converters.push_back(arg.emit_thunk_converter());
+        {
+            if (auto converter = arg.thunk_converter())
+                thunk_converters.push_back(converter.value());
+        }
 
         std::vector<Emitter> call_args;
         if (is_global)
@@ -202,7 +205,7 @@ public:
             call_args.push_back("resource");
         }
         for (auto& arg : arguments)
-            call_args.push_back(arg.emit_thunk_call_fragment());
+            call_args.push_back(arg.thunk_call_fragment());
 
         return {"static void ", name, "_thunk(", List{c_args, ", "}, ")",
             Block{
