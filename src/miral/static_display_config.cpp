@@ -328,20 +328,20 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                     else out << "\n        # ";
                     out << conf_output.modes[i];
                 }
-                out << "\n        #";
-                out << "\n        # Uncomment the following to enforce the selected configuration."
-                       "\n        # Or amend as desired.";
-                out << "\n        #";
-                out << "\n        # state: " << (conf_output.used ? state_enabled : state_disabled)
+                out << "\n        #"
+                       "\n        # Uncomment the following to enforce the selected configuration."
+                       "\n        # Or amend as desired."
+                       "\n        #"
+                       "\n        # state: " << (conf_output.used ? state_enabled : state_disabled)
                     << "\t# {enabled, disabled}, defaults to enabled";
 
                 if (conf_output.used) // The following are only set when used
                 {
                     out << "\n        # mode: " << conf_output.modes[conf_output.current_mode_index]
-                        << "\t# Defaults to preferred mode";
-                    out << "\n        # position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
-                        << "\t# Defaults to [0, 0]";
-                    out << "\n        # orientation: " << as_string(conf_output.orientation)
+                        << "\t# Defaults to preferred mode"
+                           "\n        # position: [" << conf_output.top_left.x << ", " << conf_output.top_left.y << ']'
+                        << "\t# Defaults to [0, 0]"
+                           "\n        # orientation: " << as_string(conf_output.orientation)
                         << "\t# {normal, left, right, inverted}, defaults to normal";
                 }
             }
@@ -354,21 +354,21 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
         });
 
     std::ostringstream out;
-    out << "Display config:\n8>< ---------------------------------------------------";
-    out << "\nlayouts:";
-    out << "\n# keys here are layout labels (used for atomically switching between them)";
-    out << "\n# when enabling displays, surfaces should be matched in reverse recency order";
-    out << "\n";
-    out << "\n  default:                         # the default layout";
-    out << "\n";
-    out << "\n    cards:";
-    out << "\n    # a list of cards (currently matched by card-id)";
+    out << "Display config:\n8>< ---------------------------------------------------"
+           "\nlayouts:"
+           "\n# keys here are layout labels (used for atomically switching between them)"
+           "\n# when enabling displays, surfaces should be matched in reverse recency order"
+           "\n"
+           "\n  default:                         # the default layout"
+           "\n"
+           "\n    cards:"
+           "\n    # a list of cards (currently matched by card-id)";
 
-    for (auto& co : card_map)
+    for (auto const& co : card_map)
     {
-        out << "\n";
-        out << "\n    - card-id: " << co.first.as_value();
-        out << co.second.out.str();
+        out << "\n"
+               "\n    - card-id: " << co.first.as_value()
+            << co.second.out.str();
     }
 
     out << "8>< ---------------------------------------------------";
