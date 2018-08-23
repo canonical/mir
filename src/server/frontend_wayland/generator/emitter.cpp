@@ -19,13 +19,7 @@
 #include "emitter.h"
 
 std::string const Emitter::single_indent = "    ";
-
-Emitter::State Emitter::State::indented()
-{
-    auto copy = *this;
-    copy.indent += single_indent;
-    return copy;
-}
+const bool debug = true;
 
 class Emitter::Impl
 {
@@ -35,34 +29,29 @@ public:
 
     virtual void emit(State state) const = 0;
 
-    static std::vector<Emitter> insert_between(std::vector<Emitter> const && emitters,
-                                               Emitter const && delimiter,
-                                               bool at_start = true,
-                                               bool at_end = false)
+    static bool contains_valid(std::vector<Emitter> const& emitters)
     {
-        std::vector<Emitter> ret;
         for (auto const& i: emitters)
         {
-            if (at_start || !ret.empty())
-                ret.push_back(delimiter);
-            ret.push_back(i);
+            if (i.is_valid())
+                return true;
         }
-        if (at_end)
-            ret.push_back(delimiter);
-        return ret;
+        return false;
     }
 };
 
-class NewlineEmitter : public Emitter::Impl
+class EmptyLineEmitter : public Emitter::Impl
 {
 public:
-    NewlineEmitter() = default;
-    virtual ~NewlineEmitter() = default;
+    EmptyLineEmitter() = default;
+    virtual ~EmptyLineEmitter() = default;
 
     void emit(Emitter::State state) const override
     {
+        if (!*state.on_fresh_line)
+            state.out << "\n";
         state.out << "\n";
-        state.out << state.indent;
+        *state.on_fresh_line = true;
     }
 };
 
@@ -78,156 +67,157 @@ public:
 
     void emit(Emitter::State state) const override
     {
+        if (*state.on_fresh_line)
+            state.out << state.indent;
         state.out << text;
+        *state.on_fresh_line = false;
     }
 
 private:
-    std::string text;
+    std::string const text;
 };
 
-class FragEmitter : public Emitter::Impl
+class SeqEmitter : public Emitter::Impl
 {
 public:
-    FragEmitter(std::vector<Emitter> && children)
-    : children(move(children))
+    SeqEmitter(std::vector<Emitter> && children, Emitter const && delimiter = nullptr, bool at_start = false, bool at_end = false)
+        : children(move(children)),
+          delimiter{delimiter},
+          at_start{at_start},
+          at_end{at_end}
     {
     }
 
-    virtual ~FragEmitter() = default;
+    virtual ~SeqEmitter() = default;
 
     void emit(Emitter::State state) const override
     {
+        if (at_start)
+            delimiter.emit(state);
+        bool is_start = true;
         for (auto& i: children)
         {
+            if (!is_start && delimiter.is_valid())
+                delimiter.emit(state);
+            is_start = false;
             i.emit(state);
         }
-    }
-
-private:
-    std::vector<Emitter> children;
-};
-
-class BlockEmitter : public Emitter::Impl
-{
-public:
-    BlockEmitter(std::vector<Emitter> && children)
-        : children{move(children)}
-    {
-    }
-
-    virtual ~BlockEmitter() = default;
-
-    void emit(Emitter::State state) const override
-    {
-        StringEmitter{"{"}.emit(state);
-        auto child_state = state.indented();
-        for (auto& i: children)
-        {
-            i.emit(state);
-        }
-        NewlineEmitter{}.emit(state);
-        StringEmitter{"}"}.emit(state);
+        if (at_end)
+            delimiter.emit(state);
     }
 
 private:
     std::vector<Emitter> const children;
+    Emitter const delimiter;
+    bool const at_start;
+    bool const at_end;
+};
+
+class LayoutEmitter : public Emitter::Impl
+{
+public:
+    LayoutEmitter(Emitter && child, bool clear_line_before = true, bool clear_line_after = true, std::string indent="")
+        : child{std::move(child)},
+          clear_line_before{clear_line_before},
+          clear_line_after{clear_line_after},
+          indent{indent}
+    {
+    }
+
+    virtual ~LayoutEmitter() = default;
+
+    void emit(Emitter::State state) const override
+    {
+        state.indent += indent;
+        if (clear_line_before && !*state.on_fresh_line)
+        {
+            state.out << "\n";
+            *state.on_fresh_line = true;
+        }
+        child.emit(state);
+        if (clear_line_after && !*state.on_fresh_line)
+        {
+            state.out << "\n";
+            *state.on_fresh_line = true;
+        }
+    }
+
+private:
+    Emitter const child;
+    bool const clear_line_before;
+    bool const clear_line_after;
+    std::string const indent;
 };
 
 Emitter::Emitter(std::string const& text)
-    : impl{std::make_shared<StringEmitter>(text)}
+    : impl{text.empty() ? nullptr : std::make_shared<StringEmitter>(text)}
 {
 }
 
 Emitter::Emitter(const char* text)
-    : impl{std::make_shared<StringEmitter>(text)}
+    : impl{text != nullptr && *text!='\0' ?
+               std::make_shared<StringEmitter>(std::string{text}) :
+               nullptr}
 {
 }
 
 Emitter::Emitter(std::initializer_list<Emitter> const& emitters)
-    : impl{std::make_shared<FragEmitter>(move(emitters))}
+    : impl{Impl::contains_valid(emitters) ?
+               std::make_shared<SeqEmitter>(emitters) :
+               nullptr}
 {
 }
 
-Emitter::Emitter(std::vector<Emitter> const& emitters)
-    : impl{std::make_shared<FragEmitter>(Impl::insert_between(move(emitters), Newline{}))}
-{
-}
-
-Emitter::Emitter(Newline)
-    : impl{std::make_shared<NewlineEmitter>()}
+Emitter::Emitter(EmptyLine)
+    : impl{std::make_shared<EmptyLineEmitter>()}
 {
 }
 
 Emitter::Emitter(Lines && lines)
-    : impl{std::make_shared<FragEmitter>(Impl::insert_between(move(lines.emitters), Newline{}))}
 {
+    std::vector<Emitter> l;
+    for (auto& i : lines.emitters)
+    {
+        if (i.is_valid())
+            l.push_back(Emitter{std::make_shared<LayoutEmitter>(std::move(i))});
+    }
+    if (!l.empty())
+    {
+        impl = std::make_shared<SeqEmitter>(move(l));
+    }
 }
 
 Emitter::Emitter(Block && block)
-    : impl{std::make_shared<BlockEmitter>(Impl::insert_between(move(block.emitters), Newline{}))}
 {
+    impl = std::make_shared<LayoutEmitter>(Emitter{"{",
+                                                   Emitter{std::make_shared<LayoutEmitter>(
+                                                       Lines{block.emitters}, true, true, single_indent)},
+                                                   "}"});
 }
 
 Emitter::Emitter(List && list)
-    : impl{std::make_shared<FragEmitter>(Impl::insert_between(move(list.items), std::move(list.delimiter), false, false))}
 {
+    std::vector<Emitter> l;
+    for (auto& i : list.items)
+    {
+        if (i.is_valid())
+            l.push_back(std::move(i));
+    }
+    if (!l.empty())
+    {
+        impl = std::make_shared<SeqEmitter>(move(l), std::move(list.delimiter));
+    }
 }
 
 void Emitter::emit(State state) const
 {
-    impl->emit(state);
+    if (impl)
+    {
+        impl->emit(state);
+    }
 }
 
 Emitter::Emitter(std::shared_ptr<Impl const> impl)
     : impl{move(impl)}
 {
 }
-
-/*
-Emitter::Emitter(std::ostream& out)
-    : out{out}
-{
-}
-
-void Emitter::emit(std::string fragment)
-{
-    out << fragment;
-    fresh_line = false;
-}
-
-void Emitter::emit(std::initializer_list<std::string> fragments)
-{
-    for (auto const& fragment : fragments)
-    {
-        emit(fragment);
-    }
-}
-
-void Emitter::emit_newline()
-{
-    out << "\n";
-    fresh_line = true;
-}
-
-void Emitter::emit_indent()
-{
-    if (!fresh_line)
-        emit_newline();
-
-    for (int i = 0; i < indent; i++)
-    {
-        out << single_indent;
-        fresh_line = false;
-    }
-}
-
-void Emitter::emit_lines(std::initializer_list<std::initializer_list<std::string>> lines)
-{
-    for (auto const& line : lines)
-    {
-        emit_indent();
-        emit(line);
-        emit_newline();
-    }
-}
-*/

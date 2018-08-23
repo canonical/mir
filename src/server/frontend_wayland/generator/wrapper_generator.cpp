@@ -234,7 +234,8 @@ public:
                 substituted_line = substituted_line.replace(substitution_pos, 5, name);
                 substitution_pos = substituted_line.find("$NAME");
             }
-            substituted_lines.push_back(substituted_line);
+            if (!substituted_line.empty())
+                substituted_lines.push_back(substituted_line);
         }
         return Lines{substituted_lines};
     }
@@ -299,7 +300,7 @@ public:
         return {"static void ", name, "_thunk(", List{c_args, ", "}, ")",
             Block{
                 {"auto me = static_cast<", interface_type, "*>(wl_resource_get_user_data(resource));"},
-                thunk_converters,
+                Lines{thunk_converters},
                 "try",
                 Block{
                     {"me->", name, "(", List{call_args, ", "}, ");"}
@@ -309,10 +310,10 @@ public:
                     {"::mir::log(",
                         List{{
                                 "::mir::logging::Severity::critical",
-                                "\"frontend:Wayland\"",
-                                "std::current_exception()",
-                                {"\"Exception processing ", interface_type, "::", name, "() request\""}
-                            }, {",", Newline{}}},
+                                "    \"frontend:Wayland\"",
+                                "    std::current_exception()",
+                                {"    \"Exception processing ", interface_type, "::", name, "() request\""}
+                            }, ","},
                         ");"}
                 }
             }
@@ -411,7 +412,7 @@ public:
         for (auto const& method : methods)
         {
             auto emitter = method.emit_vtable_initialiser();
-            emitter.emit({std::cout, "\t\t"});
+            emitter.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
             std::cout << ",\n";
         }
         emit_indented_lines(out, indent, {
@@ -455,7 +456,7 @@ public:
         for (auto const& method : methods)
         {
             auto emitter = method.emit_virtual_prototype(is_global);
-            emitter.emit({std::cout, "\t\t"});
+            emitter.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
             std::cout << "\n";
         }
         out << std::endl;
@@ -484,7 +485,7 @@ public:
         for (auto const& method : methods)
         {
             auto emitter = method.emit_thunk(generated_name, is_global);
-            emitter.emit({std::cout, "\t\t"});
+            emitter.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
             std::cout << "\n";
         }
 
@@ -603,21 +604,21 @@ int main(int argc, char** argv)
     }
 
     auto emitter = emit_comment_header(input_file_path);
-    emitter.emit({std::cout, "\t\t"});
+    emitter.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
     std::cout << "\n";
 
     std::cout << std::endl;
 
     std::string const include_guard_macro = macro_string("MIR_FRONTEND_WAYLAND_" + file_name_from_path(input_file_path) + "_WRAPPER");
     auto emitter0 = emit_include_guard_top(include_guard_macro);
-    emitter0.emit({std::cout, "\t\t"});
+    emitter0.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
     std::cout << "\n";
 
     std::cout << std::endl;
 
     std::string const custom_header{argv[2]};
     auto emitter1 = emit_required_headers(custom_header);
-    emitter1.emit({std::cout, "\t\t"});
+    emitter1.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
     std::cout << "\n";
 
     std::cout << std::endl;
@@ -650,7 +651,7 @@ int main(int argc, char** argv)
     std::cout << std::endl;
 
     auto emitter2 = emit_include_guard_bottom(include_guard_macro);
-    emitter2.emit({std::cout, "\t\t"});
+    emitter2.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
     std::cout << "\n";
 
     return 0;
