@@ -124,106 +124,113 @@ try
     if (!layouts.IsDefined() || !layouts.IsMap())
         throw mir::AbnormalExit{error_prefix + "no layouts"};
 
-    auto const layout = begin(config["layouts"]);
+    auto layout = layouts["default"];
 
-    if (layout != end(config["layouts"]))
+    if (!layout.IsDefined() || !layout.IsMap())
     {
-        Node name_node;
-        Node config_node;
-
-        std::tie(name_node, config_node) = *layout;
-
-        if (!config_node.IsDefined() || !config_node.IsMap())
-            throw mir::AbnormalExit{error_prefix + "invalid layout: " + name_node.Scalar()};
-
-        Node cards = config_node["cards"];
-
-        if (!cards.IsDefined() || !cards.IsSequence())
-            throw mir::AbnormalExit{error_prefix + "invalid 'cards' in " + name_node.Scalar()};
-
-        for (Node const card : cards)
+        // No 'default' but there is only one - use it
+        if (layouts.size() == 1)
         {
-            mg::DisplayConfigurationCardId card_no;
+            layout = layouts.begin()->second;
 
-            if (auto const id = card[card_id])
+            if (!layout.IsDefined() || !layout.IsMap())
+                throw mir::AbnormalExit{error_prefix + "invalid '"+ layouts.begin()->first.Scalar() + "' layout"};
+
+            mir::log_debug("Loading display layout '%s'", layouts.begin()->first.Scalar().c_str());
+        }
+        else
+        {
+            throw mir::AbnormalExit{error_prefix + "invalid 'default' layout"};
+        }
+    }
+
+    Node cards = layout["cards"];
+
+    if (!cards.IsDefined() || !cards.IsSequence())
+        throw mir::AbnormalExit{error_prefix + "invalid 'cards' in 'default' layout"};
+
+    for (Node const card : cards)
+    {
+        mg::DisplayConfigurationCardId card_no;
+
+        if (auto const id = card[card_id])
+        {
+            card_no = mg::DisplayConfigurationCardId{id.as<int>()};
+        }
+
+        if (!card.IsDefined() || !(card.IsMap() || card.IsNull()))
+            throw mir::AbnormalExit{error_prefix + "invalid card: " + std::to_string(card_no.as_value())};
+
+        for (std::pair<Node, Node> port : card)
+        {
+            auto const port_name = port.first.Scalar();
+
+            if (port_name == card_id)
+                continue;
+
+            auto const& port_config = port.second;
+
+            if (port_config.IsDefined() && !port_config.IsNull())
             {
-                card_no = mg::DisplayConfigurationCardId{id.as<int>()};
-            }
+                if (!port_config.IsMap())
+                    throw mir::AbnormalExit{error_prefix + "invalid port: " + port_name};
 
-            if (!card.IsDefined() || !(card.IsMap() || card.IsNull()))
-                throw mir::AbnormalExit{error_prefix + "invalid card: " + std::to_string(card_no.as_value())};
+                Id const output_id{card_no, output_type_from(port_name), output_index_from(port_name)};
+                Config   output_config;
 
-            for (std::pair<Node, Node> port : card)
-            {
-                auto const port_name = port.first.Scalar();
-
-                if (port_name == card_id)
-                    continue;
-
-                auto const& port_config = port.second;
-
-                if (port_config.IsDefined() && !port_config.IsNull())
+                if (auto const s = port_config[state])
                 {
-                    if (!port_config.IsMap())
-                        throw mir::AbnormalExit{error_prefix + "invalid port: " + port_name};
-
-                    Id const output_id{card_no, output_type_from(port_name), output_index_from(port_name)};
-                    Config   output_config;
-
-                    if (auto const s = port_config[state])
-                    {
-                        auto const state = s.as<std::string>();
-                        if (state != state_enabled && state != state_disabled)
-                            throw mir::AbnormalExit{error_prefix + "invalid 'state' (" + state + ") for port: " + port_name};
-                        output_config.disabled = (state == state_disabled);
-                    }
-
-                    if (auto const pos = port_config[position])
-                    {
-                        output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
-                    }
-
-                    if (auto const m = port_config[mode])
-                    {
-                        std::istringstream in{m.as<std::string>()};
-
-                        char delimiter = '\0';
-                        int width;
-                        int height;
-
-                        if (!(in >> width))
-                            goto mode_error;
-
-                        if (!(in >> delimiter) || delimiter != 'x')
-                            goto mode_error;
-
-                        if (!(in >> height))
-                            goto mode_error;
-
-                        output_config.size = Size{width, height};
-
-                        if (in.peek() == '@')
-                        {
-                            double refresh;
-                            if (!(in >> delimiter) || delimiter != '@')
-                                goto mode_error;
-
-                            if (!(in >> refresh))
-                                goto mode_error;
-
-                            output_config.refresh = refresh;
-                        }
-                    }
-                    mode_error: // TODO better error handling
-
-                    if (auto const o = port_config[orientation])
-                    {
-                        std::string const orientation = o.as<std::string>();
-                        output_config.orientation = as_orientation(orientation);
-                    }
-
-                    this->config[output_id] = output_config;
+                    auto const state = s.as<std::string>();
+                    if (state != state_enabled && state != state_disabled)
+                        throw mir::AbnormalExit{error_prefix + "invalid 'state' (" + state + ") for port: " + port_name};
+                    output_config.disabled = (state == state_disabled);
                 }
+
+                if (auto const pos = port_config[position])
+                {
+                    output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
+                }
+
+                if (auto const m = port_config[mode])
+                {
+                    std::istringstream in{m.as<std::string>()};
+
+                    char delimiter = '\0';
+                    int width;
+                    int height;
+
+                    if (!(in >> width))
+                        goto mode_error;
+
+                    if (!(in >> delimiter) || delimiter != 'x')
+                        goto mode_error;
+
+                    if (!(in >> height))
+                        goto mode_error;
+
+                    output_config.size = Size{width, height};
+
+                    if (in.peek() == '@')
+                    {
+                        double refresh;
+                        if (!(in >> delimiter) || delimiter != '@')
+                            goto mode_error;
+
+                        if (!(in >> refresh))
+                            goto mode_error;
+
+                        output_config.refresh = refresh;
+                    }
+                }
+                mode_error: // TODO better error handling
+
+                if (auto const o = port_config[orientation])
+                {
+                    std::string const orientation = o.as<std::string>();
+                    output_config.orientation = as_orientation(orientation);
+                }
+
+                this->config[output_id] = output_config;
             }
         }
     }
@@ -352,7 +359,7 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
     out << "\n# keys here are layout labels (used for atomically switching between them)";
     out << "\n# when enabling displays, surfaces should be matched in reverse recency order";
     out << "\n";
-    out << "\n  my-layout:                       # the first layout is the default";
+    out << "\n  default:                         # the default layout";
     out << "\n";
     out << "\n    cards:";
     out << "\n    # a list of cards (currently matched by card-id)";
