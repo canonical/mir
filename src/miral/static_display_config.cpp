@@ -34,6 +34,7 @@ using namespace mir::geometry;
 
 namespace
 {
+char const* const card_id = "card-id";
 char const* const state = "state";
 char const* const state_enabled  = "enabled";
 char const* const state_disabled = "disabled";
@@ -144,7 +145,7 @@ try
         {
             mg::DisplayConfigurationCardId card_no;
 
-            if (auto const id = card["card-id"])
+            if (auto const id = card[card_id])
             {
                 card_no = mg::DisplayConfigurationCardId{id.as<int>()};
             }
@@ -156,7 +157,7 @@ try
             {
                 auto const port_name = port.first.Scalar();
 
-                if (port_name == "card-id")
+                if (port_name == card_id)
                     continue;
 
                 auto const& port_config = port.second;
