@@ -79,6 +79,7 @@ miral::TestDisplayServer::TestDisplayServer() :
     add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
     add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
     add_to_environment("MIR_SERVER_NO_FILE", "on");
+    add_to_environment("MIR_SERVER_CONSOLE_PROVIDER", "none");
 }
 
 miral::TestDisplayServer::~TestDisplayServer() = default;
