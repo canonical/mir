@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 Canonical Ltd.
+ * Copyright © 2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -98,8 +98,5 @@ private:
 
     static std::string const single_indent;
 };
-
-#define MAP(array, expr) \
-    [&]() -> std::vector<Emitter> { std::vector<Emitter> ret; for (auto& _ : array) { ret.push_back(expr); } return ret; }()
 
 #endif // MIR_WAYLAND_GENERATOR_EMITTER_H
