@@ -91,7 +91,6 @@ auto open_file(std::string const& filename) -> std::ifstream
 
     return config_file;
 }
-}
 
 auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMode> const & modes) -> size_t
 {
@@ -102,6 +101,7 @@ auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMo
         return 0;
 
     return mode_index;
+}
 }
 
 miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename) :
