@@ -23,7 +23,7 @@
 #include <libxml++/libxml++.h>
 #include <iostream>
 
-Emitter emit_comment_header(std::string const& input_file_path)
+Emitter comment_header(std::string const& input_file_path)
 {
     return Lines{
         "/*",
@@ -35,7 +35,7 @@ Emitter emit_comment_header(std::string const& input_file_path)
     };
 }
 
-Emitter emit_include_guard_top(std::string const& macro)
+Emitter include_guard_top(std::string const& macro)
 {
     return Lines{
         {"#ifndef ", macro},
@@ -43,14 +43,7 @@ Emitter emit_include_guard_top(std::string const& macro)
     };
 }
 
-Emitter emit_include_guard_bottom(std::string const& macro)
-{
-    return Lines{
-        {"#endif // ", macro}
-    };
-}
-
-Emitter emit_required_headers(std::string const& custom_header)
+Emitter required_headers(std::string const& custom_header)
 {
     return Lines{
         "#include <experimental/optional>",
@@ -64,33 +57,63 @@ Emitter emit_required_headers(std::string const& custom_header)
     };
 }
 
-void emit_indented_lines(std::ostream& out, std::string const& indent,
-                         std::initializer_list<std::initializer_list<std::string>> lines)
+Emitter include_guard_bottom(std::string const& macro)
 {
-    for (auto const& line : lines)
-    {
-        out << indent;
-        for (auto const& fragment : line)
-        {
-            out << fragment;
-        }
-        out << "\n";
-    }
+    return Lines{
+        {"#endif // ", macro}
+    };
 }
 
-// arguments are:
-//  0: binary
-//  1: name prefix (such as wl_)
-//  2: header to include (such as wayland-server.h)
-//  3: input file path
+Emitter header_file(std::string custom_header, std::string input_file_path, std::vector<Interface>& interfaces)
+{
+    std::string const include_guard_macro = to_upper_case("MIR_FRONTEND_WAYLAND_" + file_name_from_path(input_file_path) + "_WRAPPER");
+
+    std::vector<Emitter> interface_emitters;
+    for (auto& interface : interfaces)
+    {
+        interface_emitters.push_back(interface.full_class());
+    }
+
+    return Lines{
+        comment_header(input_file_path),
+        include_guard_top(include_guard_macro),
+        required_headers(custom_header),
+        "namespace mir",
+        "{",
+        "namespace frontend",
+        "{",
+        "namespace wayland",
+        "{",
+        Lines{interface_emitters},
+        "}",
+        "}",
+        "}",
+        include_guard_bottom(include_guard_macro)
+    };
+}
+
 int main(int argc, char** argv)
 {
     if (argc != 4)
     {
+        Emitter msg = Lines{
+            "/*",
+            "Incorrect number of arguments",
+            {"Usage:", file_name_from_path(argv[0]), " prefix", " header", " input"},
+            Block{
+                "prefix: the name prefix which will be removed, such as wl_",
+                "        to not use a prefix, use _ or anything that won't match the start of a name",
+                "header: the C header to include, such as wayland-server.h",
+                "input: the input xml file path",
+            },
+            "*/",
+        };
         exit(1);
     }
 
     std::string const prefix{argv[1]};
+    std::string const custom_header{argv[2]};
+    std::string const input_file_path{argv[3]};
 
     auto name_transform = [prefix](std::string protocol_name)
     {
@@ -103,7 +126,6 @@ int main(int argc, char** argv)
         return to_camel_case(transformed_name);
     };
 
-    std::string const input_file_path{argv[3]};
     xmlpp::DomParser parser(input_file_path);
 
     auto document = parser.get_document();
@@ -118,33 +140,7 @@ int main(int argc, char** argv)
         constructible_interfaces.insert(arg->get_attribute_value("interface"));
     }
 
-    auto emitter = emit_comment_header(input_file_path);
-    emitter.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
-    std::cout << "\n";
-
-    std::cout << std::endl;
-
-    std::string const include_guard_macro = to_upper_case("MIR_FRONTEND_WAYLAND_" + file_name_from_path(input_file_path) + "_WRAPPER");
-    auto emitter0 = emit_include_guard_top(include_guard_macro);
-    emitter0.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
-    std::cout << "\n";
-
-    std::cout << std::endl;
-
-    std::string const custom_header{argv[2]};
-    auto emitter1 = emit_required_headers(custom_header);
-    emitter1.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
-    std::cout << "\n";
-
-    std::cout << std::endl;
-
-    std::cout << "namespace mir" << std::endl;
-    std::cout << "{" << std::endl;
-    std::cout << "namespace frontend" << std::endl;
-    std::cout << "{" << std::endl;
-    std::cout << "namespace wayland" << std::endl;
-    std::cout << "{" << std::endl;
-
+    std::vector<Interface> interfaces;
     for (auto top_level : root_node->get_children("interface"))
     {
         auto interface = dynamic_cast<xmlpp::Element*>(top_level);
@@ -155,19 +151,9 @@ int main(int argc, char** argv)
             // These are special, and don't need binding.
             continue;
         }
-        auto emitter_class = Interface(*interface, name_transform, constructible_interfaces).full_class();
-        emitter_class.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
-        std::cout << "\n";
-
-        std::cout << std::endl << std::endl;
+        interfaces.emplace_back(*interface, name_transform, constructible_interfaces);
     }
-    std::cout << "}" << std::endl;
-    std::cout << "}" << std::endl;
-    std::cout << "}" << std::endl;
 
-    std::cout << std::endl;
-
-    auto emitter2 = emit_include_guard_bottom(include_guard_macro);
-    emitter2.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
-    std::cout << "\n";
+    auto header = header_file(custom_header, input_file_path, interfaces);
+    header.emit({std::cout, std::make_shared<bool>(true), ""});
 }
