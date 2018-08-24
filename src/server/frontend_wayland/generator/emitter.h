@@ -26,11 +26,7 @@
 
 class Emitter;
 
-// Simply a newline
-// implicitly convertible to an Emitter
-struct EmptyLine
-{
-};
+Emitter const extern empty_line;
 
 // a line that is at the same indentation level as surrounding block
 // implicitly convertible to an Emitter
@@ -113,7 +109,6 @@ public:
     explicit Emitter(std::vector<Emitter> const& emitters);
 
     // constructors for complex emitters
-    Emitter(EmptyLine);
     Emitter(Line && line);
     Emitter(Lines && lines);
     Emitter(Block && block);
@@ -123,11 +118,11 @@ public:
     bool is_valid() const { return impl != nullptr; }
 
     class Impl;
+    Emitter(std::shared_ptr<Impl const> impl);
 
     static std::string const single_indent;
 
 private:
-    Emitter(std::shared_ptr<Impl const> impl);
 
     std::shared_ptr<Impl const> impl;
 };
