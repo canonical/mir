@@ -37,9 +37,18 @@ struct EmptyLine
 struct Line
 {
     Line(std::initializer_list<Emitter> const& emitters) : emitters{emitters} {}
-    Line(std::vector<Emitter> const& emitters) : emitters{emitters} {}
+    Line(std::initializer_list<Emitter> const& emitters, bool break_before, bool break_after, std::string indent = "")
+        : emitters{emitters},
+          break_before{break_before},
+          break_after{break_after},
+          indent{indent}
+    {
+    }
 
     std::vector<Emitter> emitters;
+    bool const break_before{true};
+    bool const break_after{true};
+    std::string const indent;
 };
 
 // a series of lines that is at the same indentation level as surrounding block
@@ -66,11 +75,23 @@ struct Block
 // implicitly convertible to an Emitter
 struct List
 {
-    List(std::initializer_list<Emitter> const& items, Emitter const& delimiter) : items{items}, delimiter{delimiter} {}
-    List(std::vector<Emitter> const& items, Emitter const& delimiter) : items{items}, delimiter{delimiter} {}
+    List(std::initializer_list<Emitter> const& items, Emitter const& delimiter, std::string indent = "")
+        : items{items},
+          delimiter{delimiter},
+          indent{indent}
+    {
+    }
+
+    List(std::vector<Emitter> const& items, Emitter const& delimiter, std::string indent = "")
+        : items{items},
+          delimiter{delimiter},
+          indent{indent}
+    {
+    }
 
     std::vector<Emitter> items;
     Emitter const& delimiter;
+    std::string const indent;
 };
 
 class Emitter
@@ -89,7 +110,7 @@ public:
     Emitter(std::string const& text);
     Emitter(const char* text);
     Emitter(std::initializer_list<Emitter> const& emitters);
-    Emitter(std::vector<Emitter> const& emitters);
+    explicit Emitter(std::vector<Emitter> const& emitters);
 
     // constructors for complex emitters
     Emitter(EmptyLine);
@@ -103,12 +124,12 @@ public:
 
     class Impl;
 
+    static std::string const single_indent;
+
 private:
     Emitter(std::shared_ptr<Impl const> impl);
 
     std::shared_ptr<Impl const> impl;
-
-    static std::string const single_indent;
 };
 
 #endif // MIR_WAYLAND_GENERATOR_EMITTER_H

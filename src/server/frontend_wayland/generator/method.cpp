@@ -51,16 +51,15 @@ Emitter Method::thunk_body(std::string const& interface_type) const
                 {"me->", name, "(", mir_call_args(), ");"}
             },
             "catch (...)",
-            Block{
-                {"::mir::log(",
-                    List{{
-                        "::mir::logging::Severity::critical",
-                        "    \"frontend:Wayland\"",
-                        "    std::current_exception()",
-                        {"    \"Exception processing ", interface_type, "::", name, "() request\""}
-                    }, ","},
-                    ");"}
-            }
+            Block{{
+                "::mir::log(",
+                    List{{"::mir::logging::Severity::critical",
+                          "\"frontend:Wayland\"",
+                          "std::current_exception()",
+                          {"\"Exception processing ", interface_type, "::", name, "() request\""}},
+                        Line{{","}, false, true}, "           "},
+                ");"
+            }}
         }
     };
 }
