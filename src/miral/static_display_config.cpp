@@ -130,20 +130,7 @@ try
 
     if (!layout.IsDefined() || !layout.IsMap())
     {
-        // No 'default' but there is only one - use it
-        if (layouts.size() == 1)
-        {
-            layout = layouts.begin()->second;
-
-            if (!layout.IsDefined() || !layout.IsMap())
-                throw mir::AbnormalExit{error_prefix + "invalid '"+ layouts.begin()->first.Scalar() + "' layout"};
-
-            mir::log_debug("Loading display layout '%s'", layouts.begin()->first.Scalar().c_str());
-        }
-        else
-        {
-            throw mir::AbnormalExit{error_prefix + "invalid 'default' layout"};
-        }
+        throw mir::AbnormalExit{error_prefix + "invalid 'default' layout"};
     }
 
     Node cards = layout["cards"];
