@@ -99,12 +99,14 @@ miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
 {
     std::ifstream config_file{filename};
 
-    if (!config_file)
+    if (config_file)
+    {
+        load_config(config_file, "ERROR: in display configuration file: '" + filename + "' : ");
+    }
+    else
     {
         mir::log_warning("Cannot read static display configuration file: '" + filename + "'");
     }
-
-    load_config(config_file, "ERROR: in display configuration file: '" + filename + "' : ");
 }
 
 void miral::StaticDisplayConfig::load_config(std::istream& config_file, std::string const& error_prefix)
