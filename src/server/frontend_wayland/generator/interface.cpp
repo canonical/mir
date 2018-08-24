@@ -34,7 +34,7 @@ Interface::Interface(
 {
 }
 
-Emitter Interface::full_class()
+Emitter Interface::full_class() const
 {
     return Lines{
         {"class ", generated_name},
@@ -54,7 +54,7 @@ Emitter Interface::full_class()
     };
 }
 
-Emitter Interface::constructor()
+Emitter Interface::constructor() const
 {
     if (is_global)
         return constructor_for_global();
@@ -62,7 +62,7 @@ Emitter Interface::constructor()
         return constructor_for_regular();
 }
 
-Emitter Interface::constructor_for_global()
+Emitter Interface::constructor_for_global() const
 {
     return Lines{
         {generated_name, "(struct wl_display* display, uint32_t max_version)"},
@@ -79,7 +79,7 @@ Emitter Interface::constructor_for_global()
     };
 }
 
-Emitter Interface::constructor_for_regular()
+Emitter Interface::constructor_for_regular() const
 {
     return Lines{
         {generated_name, "(struct wl_client* client, struct wl_resource* parent, uint32_t id)"},
@@ -99,7 +99,7 @@ Emitter Interface::constructor_for_regular()
     };
 }
 
-Emitter Interface::destructor()
+Emitter Interface::destructor() const
 {
     if (is_global)
     {
@@ -118,12 +118,12 @@ Emitter Interface::destructor()
     }
 }
 
-Emitter Interface::bind_prototype()
+Emitter Interface::bind_prototype() const
 {
     return "virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }";
 }
 
-Emitter Interface::virtual_method_prototypes()
+Emitter Interface::virtual_method_prototypes() const
 {
     std::vector<Emitter> prototypes;
     for (auto const& method : methods)
@@ -133,7 +133,7 @@ Emitter Interface::virtual_method_prototypes()
     return Lines{prototypes};
 }
 
-Emitter Interface::member_vars()
+Emitter Interface::member_vars() const
 {
     if (is_global)
     {
@@ -151,7 +151,7 @@ Emitter Interface::member_vars()
     }
 }
 
-Emitter Interface::thunk_bodies()
+Emitter Interface::thunk_bodies() const
 {
     std::vector<Emitter> bodies;
     for (auto const& method : methods)
@@ -161,7 +161,7 @@ Emitter Interface::thunk_bodies()
     return Lines{bodies};
 }
 
-Emitter Interface::bind_thunk()
+Emitter Interface::bind_thunk() const
 {
     return Lines{
         "static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)",
@@ -195,7 +195,7 @@ Emitter Interface::bind_thunk()
     };
 }
 
-Emitter Interface::resource_destroyed_thunk()
+Emitter Interface::resource_destroyed_thunk() const
 {
     return Lines{
         "static void resource_destroyed_thunk(wl_resource* resource)",
@@ -205,7 +205,7 @@ Emitter Interface::resource_destroyed_thunk()
     };
 }
 
-Emitter Interface::vtable_getter()
+Emitter Interface::vtable_getter() const
 {
     return Lines{
         {"static inline struct ", wl_name, "_interface const* get_vtable()"},
@@ -218,7 +218,7 @@ Emitter Interface::vtable_getter()
     };
 }
 
-Emitter Interface::vtable_contents()
+Emitter Interface::vtable_contents() const
 {
     std::vector<Emitter> elems;
     for (auto const& method : methods)
