@@ -47,6 +47,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     modify_window_specification.cpp
     display_reconfiguration.cpp
     raise_tree.cpp
+    static_display_config.cpp
     client_mediated_gestures.cpp
     window_info.cpp
     test_window_manager_tools.h
@@ -55,7 +56,6 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
 target_link_libraries(miral-test-internal
     ${GTEST_BOTH_LIBRARIES}
     ${GMOCK_LIBRARIES}
-    miral
     miral-internal
     mir-test-assist
 )

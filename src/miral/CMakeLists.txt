@@ -87,6 +87,13 @@ target_include_directories(miral-internal
     PRIVATE ${MIRSERVER_INCLUDE_DIRS}
 )
 
+target_link_libraries(miral-internal
+    PRIVATE
+        mirserver
+        ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
+        ${YAML_LIBRARIES}
+)
+
 target_include_directories(miral
     PUBLIC  "${miral_include}" ${MIRCLIENT_INCLUDE_DIRS}
     PRIVATE ${MIRSERVER_INCLUDE_DIRS}
@@ -99,8 +106,6 @@ target_link_libraries(miral
     PRIVATE
         miral-internal
         mirserver
-        ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
-        ${YAML_LIBRARIES}
 )
 
 set_target_properties(miral

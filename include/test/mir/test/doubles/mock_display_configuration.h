@@ -21,6 +21,8 @@
 
 #include "mir/graphics/display_configuration.h"
 
+#include <gmock/gmock.h>
+
 namespace mir
 {
 namespace test

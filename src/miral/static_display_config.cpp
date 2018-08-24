@@ -80,18 +80,6 @@ auto output_index_from(std::string const& output) -> int
     return result;
 }
 
-auto open_file(std::string const& filename) -> std::ifstream
-{
-    std::ifstream config_file{filename};
-
-    if (!config_file)
-    {
-        mir::log_warning("Cannot read static display configuration file: '" + filename + "'");
-    }
-
-    return config_file;
-}
-
 auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMode> const & modes) -> size_t
 {
     if (modes.empty())
@@ -104,23 +92,35 @@ auto select_mode_index(size_t mode_index, std::vector<mg::DisplayConfigurationMo
 }
 }
 
-miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename) :
-    StaticDisplayConfig{open_file(filename), "ERROR: in display configuration file: '" + filename + "' : "}
+
+miral::StaticDisplayConfig::StaticDisplayConfig() = default;
+
+miral::StaticDisplayConfig::StaticDisplayConfig(std::string const& filename)
 {
+    std::ifstream config_file{filename};
+
+    if (!config_file)
+    {
+        mir::log_warning("Cannot read static display configuration file: '" + filename + "'");
+    }
+
+    load_config(config_file, "ERROR: in display configuration file: '" + filename + "' : ");
 }
 
-miral::StaticDisplayConfig::StaticDisplayConfig(std::istream&& config_file, std::string const& error_prefix)
+void miral::StaticDisplayConfig::load_config(std::istream& config_file, std::string const& error_prefix)
 try
 {
+    decltype(config) new_config;
+
     using namespace YAML;
     using std::begin;
     using std::end;
 
-    auto const config = Load(config_file);
-    if (!config.IsDefined() || !config.IsMap())
+    auto const parsed_config = Load(config_file);
+    if (!parsed_config.IsDefined() || !parsed_config.IsMap())
         throw mir::AbnormalExit{error_prefix + "unrecognized content"};
 
-    Node layouts = config["layouts"];
+    Node layouts = parsed_config["layouts"];
     if (!layouts.IsDefined() || !layouts.IsMap())
         throw mir::AbnormalExit{error_prefix + "no layouts"};
 
@@ -230,10 +230,12 @@ try
                     output_config.orientation = as_orientation(orientation);
                 }
 
-                this->config[output_id] = output_config;
+                new_config[output_id] = output_config;
             }
         }
     }
+
+    config = new_config;
 }
 catch (YAML::Exception const& x)
 {

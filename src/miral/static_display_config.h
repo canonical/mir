@@ -31,9 +31,13 @@ namespace miral
 class StaticDisplayConfig : public mir::graphics::DisplayConfigurationPolicy
 {
 public:
+    StaticDisplayConfig();
     StaticDisplayConfig(std::string const& filename);
-    StaticDisplayConfig(std::istream&& config_file, std::string const& error_prefix);
+
     virtual void apply_to(mir::graphics::DisplayConfiguration& conf);
+
+    void load_config(std::istream& config_file, std::string const& error_prefix);
+
 private:
 
     using Id = std::tuple<mir::graphics::DisplayConfigurationCardId, MirOutputType, int>;
