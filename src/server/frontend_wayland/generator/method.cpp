@@ -48,7 +48,7 @@ Emitter Method::thunk_body(std::string const& interface_type) const
             Block{
                 {"me->", name, "(", mir_call_args(), ");"}
             },
-            "catch (...)",
+            "catch(...)",
             Block{{
                 "::mir::log(",
                     List{{"::mir::logging::Severity::critical",

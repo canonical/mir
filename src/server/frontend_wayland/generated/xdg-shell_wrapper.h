@@ -23,13 +23,14 @@ namespace frontend
 {
 namespace wayland
 {
+
 class XdgWmBase
 {
 protected:
     XdgWmBase(struct wl_display* display, uint32_t max_version)
         : global{wl_global_create(display, &xdg_wm_base_interface, max_version,
                                   this, &XdgWmBase::bind_thunk)},
-            max_version{max_version}
+          max_version{max_version}
     {
         if (global == nullptr)
         {
@@ -37,12 +38,14 @@ protected:
                 "Failed to export xdg_wm_base interface"}));
         }
     }
+
     virtual ~XdgWmBase()
     {
         wl_global_destroy(global);
     }
 
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+
     virtual void destroy(struct wl_client* client, struct wl_resource* resource) = 0;
     virtual void create_positioner(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
     virtual void get_xdg_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface) = 0;
@@ -61,14 +64,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgWmBase::destroy() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgWmBase::destroy() request");
         }
     }
-
     static void create_positioner_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<XdgWmBase*>(wl_resource_get_user_data(resource));
@@ -78,14 +79,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgWmBase::create_positioner() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgWmBase::create_positioner() request");
         }
     }
-
     static void get_xdg_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
         auto me = static_cast<XdgWmBase*>(wl_resource_get_user_data(resource));
@@ -95,14 +94,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgWmBase::get_xdg_surface() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgWmBase::get_xdg_surface() request");
         }
     }
-
     static void pong_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
     {
         auto me = static_cast<XdgWmBase*>(wl_resource_get_user_data(resource));
@@ -112,11 +109,10 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgWmBase::pong() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgWmBase::pong() request");
         }
     }
 
@@ -133,15 +129,14 @@ private:
         wl_resource_set_implementation(resource, get_vtable(), me, nullptr);
         try
         {
-          me->bind(client, resource);
+            me->bind(client, resource);
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgWmBase::bind() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgWmBase::bind() request");
         }
     }
 
@@ -151,19 +146,19 @@ private:
             destroy_thunk,
             create_positioner_thunk,
             get_xdg_surface_thunk,
-            pong_thunk,
+            pong_thunk
         };
         return &vtable;
     }
 };
-
 
 class XdgPositioner
 {
 protected:
     XdgPositioner(struct wl_client* client, struct wl_resource* parent, uint32_t id)
         : client{client},
-          resource{wl_resource_create(client, &xdg_positioner_interface, wl_resource_get_version(parent), id)}
+          resource{wl_resource_create(client, &xdg_positioner_interface,
+                                      wl_resource_get_version(parent), id)}
     {
         if (resource == nullptr)
         {
@@ -172,6 +167,7 @@ protected:
         }
         wl_resource_set_implementation(resource, get_vtable(), this, &resource_destroyed_thunk);
     }
+
     virtual ~XdgPositioner() = default;
 
     virtual void destroy() = 0;
@@ -195,14 +191,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgPositioner::destroy() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgPositioner::destroy() request");
         }
     }
-
     static void set_size_thunk(struct wl_client*, struct wl_resource* resource, int32_t width, int32_t height)
     {
         auto me = static_cast<XdgPositioner*>(wl_resource_get_user_data(resource));
@@ -212,14 +206,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgPositioner::set_size() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgPositioner::set_size() request");
         }
     }
-
     static void set_anchor_rect_thunk(struct wl_client*, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
     {
         auto me = static_cast<XdgPositioner*>(wl_resource_get_user_data(resource));
@@ -229,14 +221,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgPositioner::set_anchor_rect() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgPositioner::set_anchor_rect() request");
         }
     }
-
     static void set_anchor_thunk(struct wl_client*, struct wl_resource* resource, uint32_t anchor)
     {
         auto me = static_cast<XdgPositioner*>(wl_resource_get_user_data(resource));
@@ -246,14 +236,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgPositioner::set_anchor() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgPositioner::set_anchor() request");
         }
     }
-
     static void set_gravity_thunk(struct wl_client*, struct wl_resource* resource, uint32_t gravity)
     {
         auto me = static_cast<XdgPositioner*>(wl_resource_get_user_data(resource));
@@ -263,14 +251,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgPositioner::set_gravity() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgPositioner::set_gravity() request");
         }
     }
-
     static void set_constraint_adjustment_thunk(struct wl_client*, struct wl_resource* resource, uint32_t constraint_adjustment)
     {
         auto me = static_cast<XdgPositioner*>(wl_resource_get_user_data(resource));
@@ -280,14 +266,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgPositioner::set_constraint_adjustment() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgPositioner::set_constraint_adjustment() request");
         }
     }
-
     static void set_offset_thunk(struct wl_client*, struct wl_resource* resource, int32_t x, int32_t y)
     {
         auto me = static_cast<XdgPositioner*>(wl_resource_get_user_data(resource));
@@ -297,11 +281,10 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgPositioner::set_offset() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgPositioner::set_offset() request");
         }
     }
 
@@ -319,19 +302,19 @@ private:
             set_anchor_thunk,
             set_gravity_thunk,
             set_constraint_adjustment_thunk,
-            set_offset_thunk,
+            set_offset_thunk
         };
         return &vtable;
     }
 };
-
 
 class XdgSurface
 {
 protected:
     XdgSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
         : client{client},
-          resource{wl_resource_create(client, &xdg_surface_interface, wl_resource_get_version(parent), id)}
+          resource{wl_resource_create(client, &xdg_surface_interface,
+                                      wl_resource_get_version(parent), id)}
     {
         if (resource == nullptr)
         {
@@ -340,6 +323,7 @@ protected:
         }
         wl_resource_set_implementation(resource, get_vtable(), this, &resource_destroyed_thunk);
     }
+
     virtual ~XdgSurface() = default;
 
     virtual void destroy() = 0;
@@ -361,14 +345,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgSurface::destroy() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgSurface::destroy() request");
         }
     }
-
     static void get_toplevel_thunk(struct wl_client*, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<XdgSurface*>(wl_resource_get_user_data(resource));
@@ -378,14 +360,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgSurface::get_toplevel() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgSurface::get_toplevel() request");
         }
     }
-
     static void get_popup_thunk(struct wl_client*, struct wl_resource* resource, uint32_t id, struct wl_resource* parent, struct wl_resource* positioner)
     {
         auto me = static_cast<XdgSurface*>(wl_resource_get_user_data(resource));
@@ -400,14 +380,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgSurface::get_popup() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgSurface::get_popup() request");
         }
     }
-
     static void set_window_geometry_thunk(struct wl_client*, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
     {
         auto me = static_cast<XdgSurface*>(wl_resource_get_user_data(resource));
@@ -417,14 +395,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgSurface::set_window_geometry() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgSurface::set_window_geometry() request");
         }
     }
-
     static void ack_configure_thunk(struct wl_client*, struct wl_resource* resource, uint32_t serial)
     {
         auto me = static_cast<XdgSurface*>(wl_resource_get_user_data(resource));
@@ -434,11 +410,10 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgSurface::ack_configure() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgSurface::ack_configure() request");
         }
     }
 
@@ -454,19 +429,19 @@ private:
             get_toplevel_thunk,
             get_popup_thunk,
             set_window_geometry_thunk,
-            ack_configure_thunk,
+            ack_configure_thunk
         };
         return &vtable;
     }
 };
-
 
 class XdgToplevel
 {
 protected:
     XdgToplevel(struct wl_client* client, struct wl_resource* parent, uint32_t id)
         : client{client},
-          resource{wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(parent), id)}
+          resource{wl_resource_create(client, &xdg_toplevel_interface,
+                                      wl_resource_get_version(parent), id)}
     {
         if (resource == nullptr)
         {
@@ -475,6 +450,7 @@ protected:
         }
         wl_resource_set_implementation(resource, get_vtable(), this, &resource_destroyed_thunk);
     }
+
     virtual ~XdgToplevel() = default;
 
     virtual void destroy() = 0;
@@ -505,14 +481,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::destroy() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::destroy() request");
         }
     }
-
     static void set_parent_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* parent)
     {
         auto me = static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
@@ -527,14 +501,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::set_parent() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::set_parent() request");
         }
     }
-
     static void set_title_thunk(struct wl_client*, struct wl_resource* resource, char const* title)
     {
         auto me = static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
@@ -544,14 +516,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::set_title() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::set_title() request");
         }
     }
-
     static void set_app_id_thunk(struct wl_client*, struct wl_resource* resource, char const* app_id)
     {
         auto me = static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
@@ -561,14 +531,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::set_app_id() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::set_app_id() request");
         }
     }
-
     static void show_window_menu_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y)
     {
         auto me = static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
@@ -578,14 +546,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::show_window_menu() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::show_window_menu() request");
         }
     }
-
     static void move_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
     {
         auto me = static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
@@ -595,14 +561,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::move() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::move() request");
         }
     }
-
     static void resize_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
     {
         auto me = static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
@@ -612,14 +576,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::resize() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::resize() request");
         }
     }
-
     static void set_max_size_thunk(struct wl_client*, struct wl_resource* resource, int32_t width, int32_t height)
     {
         auto me = static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
@@ -629,14 +591,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::set_max_size() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::set_max_size() request");
         }
     }
-
     static void set_min_size_thunk(struct wl_client*, struct wl_resource* resource, int32_t width, int32_t height)
     {
         auto me = static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
@@ -646,14 +606,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::set_min_size() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::set_min_size() request");
         }
     }
-
     static void set_maximized_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
@@ -663,14 +621,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::set_maximized() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::set_maximized() request");
         }
     }
-
     static void unset_maximized_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
@@ -680,14 +636,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::unset_maximized() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::unset_maximized() request");
         }
     }
-
     static void set_fullscreen_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* output)
     {
         auto me = static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
@@ -702,14 +656,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::set_fullscreen() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::set_fullscreen() request");
         }
     }
-
     static void unset_fullscreen_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
@@ -719,14 +671,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::unset_fullscreen() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::unset_fullscreen() request");
         }
     }
-
     static void set_minimized_thunk(struct wl_client*, struct wl_resource* resource)
     {
         auto me = static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
@@ -736,11 +686,10 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgToplevel::set_minimized() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgToplevel::set_minimized() request");
         }
     }
 
@@ -765,19 +714,19 @@ private:
             unset_maximized_thunk,
             set_fullscreen_thunk,
             unset_fullscreen_thunk,
-            set_minimized_thunk,
+            set_minimized_thunk
         };
         return &vtable;
     }
 };
-
 
 class XdgPopup
 {
 protected:
     XdgPopup(struct wl_client* client, struct wl_resource* parent, uint32_t id)
         : client{client},
-          resource{wl_resource_create(client, &xdg_popup_interface, wl_resource_get_version(parent), id)}
+          resource{wl_resource_create(client, &xdg_popup_interface,
+                                      wl_resource_get_version(parent), id)}
     {
         if (resource == nullptr)
         {
@@ -786,6 +735,7 @@ protected:
         }
         wl_resource_set_implementation(resource, get_vtable(), this, &resource_destroyed_thunk);
     }
+
     virtual ~XdgPopup() = default;
 
     virtual void destroy() = 0;
@@ -804,14 +754,12 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgPopup::destroy() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgPopup::destroy() request");
         }
     }
-
     static void grab_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
     {
         auto me = static_cast<XdgPopup*>(wl_resource_get_user_data(resource));
@@ -821,11 +769,10 @@ private:
         }
         catch(...)
         {
-            ::mir::log(
-                ::mir::logging::Severity::critical,
-                "frontend:Wayland",
-                std::current_exception(),
-                "Exception processing XdgPopup::grab() request");
+            ::mir::log(::mir::logging::Severity::critical,
+                       "frontend:Wayland",
+                       std::current_exception(),
+                       "Exception processing XdgPopup::grab() request");
         }
     }
 
@@ -838,12 +785,11 @@ private:
     {
         static struct xdg_popup_interface const vtable = {
             destroy_thunk,
-            grab_thunk,
+            grab_thunk
         };
         return &vtable;
     }
 };
-
 
 }
 }
