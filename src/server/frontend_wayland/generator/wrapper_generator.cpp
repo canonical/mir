@@ -160,226 +160,223 @@ public:
         std::unordered_set<std::string> const& constructable_interfaces)
         : wl_name{node.get_attribute_value("name")},
           generated_name{name_transform(wl_name)},
-          is_global{constructable_interfaces.count(wl_name) == 0}
+          is_global{constructable_interfaces.count(wl_name) == 0},
+          methods{get_methods(node, is_global)},
+          has_vtable{!methods.empty()}
     {
+    }
+
+    Emitter full_class()
+    {
+        return Lines{
+            {"class ", generated_name},
+            "{",
+            "protected:",
+            constructor(),
+            destructor(),
+            (is_global ? bind_prototype() : nullptr),
+            virtual_method_prototypes(),
+            member_vars(),
+            "private:",
+            thunk_bodies(),
+            (is_global ? bind_thunk() : nullptr),
+            (has_vtable && !is_global ? resource_destroyed_thunk() : nullptr),
+            (has_vtable ? vtable_getter() : nullptr),
+            "};"
+        };
+    }
+
+private:
+    Emitter constructor()
+    {
+        if (is_global)
+            return constructor_for_global();
+        else
+            return constructor_for_regular();
+    }
+
+    Emitter constructor_for_global()
+    {
+        return Lines{
+            {generated_name, "(struct wl_display* display, uint32_t max_version)"},
+            {"    : global{wl_global_create(display, &", wl_name, "_interface, max_version,"},
+            {"                              this, &", generated_name, "::bind_thunk)},"},
+            {"      max_version{max_version}"},
+            Block{
+                "if (global == nullptr)",
+                Block{
+                    "BOOST_THROW_EXCEPTION((std::runtime_error{",
+                    {"    \"Failed to export ", wl_name, " interface\"}));"}
+                }
+            }
+        };
+    }
+
+    Emitter constructor_for_regular()
+    {
+        return Lines{
+            {generated_name, "(struct wl_client* client, struct wl_resource* parent, uint32_t id)"},
+            {"    : client{client},"},
+            {"      resource{wl_resource_create(client, &", wl_name, "_interface,"},
+            {"                                  wl_resource_get_version(parent), id)}"},
+            Block{
+                "if (resource == nullptr)",
+                Block{
+                    "wl_resource_post_no_memory(parent);",
+                    "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
+                },
+                (has_vtable ?
+                    "wl_resource_set_implementation(resource, get_vtable(), this, &resource_destroyed_thunk);" :
+                    Emitter{nullptr})
+            }
+        };
+    }
+
+    Emitter destructor()
+    {
+        if (is_global)
+        {
+            return Lines{
+                {"virtual ~", generated_name, "()"},
+                Block{
+                    "wl_global_destroy(global);"
+                }
+            };
+        }
+        else
+        {
+            return Lines{
+                {"virtual ~", generated_name, "() = default;"}
+            };
+        }
+    }
+
+    Emitter bind_prototype()
+    {
+        return "virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }";
+    }
+
+    Emitter virtual_method_prototypes()
+    {
+        std::vector<Emitter> prototypes;
+        for (auto const& method : methods)
+        {
+            prototypes.push_back(method.virtual_mir_prototype());
+        }
+        return Lines{prototypes};
+    }
+
+    Emitter member_vars()
+    {
+        if (is_global)
+        {
+            return Lines{
+                {"struct wl_global* const global;"},
+                {"uint32_t const max_version;"},
+            };
+        }
+        else
+        {
+            return Lines{
+                {"struct wl_client* const client;"},
+                {"struct wl_resource* const resource;"}
+            };
+        }
+    }
+
+    Emitter thunk_bodies()
+    {
+        std::vector<Emitter> bodies;
+        for (auto const& method : methods)
+        {
+            bodies.push_back(method.thunk_body(generated_name));
+        }
+        return Lines{bodies};
+    }
+
+    Emitter bind_thunk()
+    {
+        return Lines{
+            "static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)",
+            Block{
+                {"auto me = static_cast<", generated_name, "*>(data);"},
+                {"auto resource = wl_resource_create(client, &", wl_name, "_interface,"},
+                {"                                   std::min(version, me->max_version), id);"},
+                "if (resource == nullptr)",
+                Block{
+                    "wl_client_post_no_memory(client);",
+                    "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
+                },
+                (has_vtable ?
+                "wl_resource_set_implementation(resource, get_vtable(), me, nullptr);" :
+                Emitter{nullptr}),
+                "try",
+                Block{
+                    "me->bind(client, resource);"
+                },
+                "catch(...)",
+                Block{{
+                    "::mir::log(",
+                    List{{"::mir::logging::Severity::critical",
+                        "\"frontend:Wayland\"",
+                        "std::current_exception()",
+                        {"\"Exception processing ", generated_name, "::bind() request\""}},
+                        Line{{","}, false, true}, "           "},
+                        ");"
+                }}
+            }
+        };
+    }
+
+    Emitter resource_destroyed_thunk()
+    {
+        return Lines{
+            "static void resource_destroyed_thunk(wl_resource* resource)",
+            Block{
+                {"delete static_cast<", generated_name, "*>(wl_resource_get_user_data(resource));"}
+            }
+        };
+    }
+
+    Emitter vtable_getter()
+    {
+        return Lines{
+            {"static inline struct ", wl_name, "_interface const* get_vtable()"},
+            Block{
+                {"static struct ", wl_name, "_interface const vtable = {"},
+                vtable_contents(),
+                "};",
+                "return &vtable;"
+            }
+        };
+    }
+
+    Emitter vtable_contents()
+    {
+        std::vector<Emitter> elems;
+        for (auto const& method : methods)
+        {
+            elems.push_back(method.vtable_initialiser());
+        }
+        return List{elems, Line{{","}, false, true}, Emitter::single_indent};
+    }
+
+    static std::vector<Method> get_methods(xmlpp::Element const& node, bool is_global)
+    {
+        std::vector<Method> methods;
         for (auto method_node : node.get_children("request"))
         {
             auto method = dynamic_cast<xmlpp::Element*>(method_node);
             methods.emplace_back(Method{std::ref(*method), is_global});
         }
-    }
-
-    void emit_constructor(std::ostream& out, std::string const& indent, bool has_vtable)
-    {
-        if (is_global)
-        {
-            emit_constructor_for_global(out, indent);
-        }
-        else
-        {
-            emit_constructor_for_regular(out, indent, has_vtable);
-        }
-    }
-
-    void emit_bind(std::ostream& out, std::string const& indent, bool has_vtable)
-    {
-        emit_indented_lines(out, indent, {
-            {"static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)"},
-            {"{"},
-        });
-        emit_indented_lines(out, indent + "    ", {
-            {"auto me = static_cast<", generated_name, "*>(data);"},
-            {"auto resource = wl_resource_create(client, &", wl_name, "_interface,"},
-            {"                                   std::min(version, me->max_version), id);"},
-            {"if (resource == nullptr)"},
-            {"{"},
-            {"    wl_client_post_no_memory(client);"},
-            {"    BOOST_THROW_EXCEPTION((std::bad_alloc{}));"},
-            {"}"},
-        });
-        if (has_vtable)
-        {
-            emit_indented_lines(out, indent + "    ",
-                {{"wl_resource_set_implementation(resource, get_vtable(), me, nullptr);"}});
-        }
-        emit_indented_lines(out, indent + "    ", {
-            {"try"},
-            {"{"},
-            {"  me->bind(client, resource);"},
-            {"}"},
-            {"catch(...)"},
-            {"{"},
-            {"    ::mir::log("},
-            {"        ::mir::logging::Severity::critical,"},
-            {"        \"frontend:Wayland\","},
-            {"        std::current_exception(),"},
-            {"        \"Exception processing ", generated_name, "::bind() request\");"},
-            {"}"},
-        });
-        emit_indented_lines(out, indent, {
-            {"}"}
-        });
-    }
-
-    void emit_get_vtable(std::ostream& out, std::string const& indent)
-    {
-        emit_indented_lines(out, indent, {
-            {"static inline struct " + wl_name + "_interface const* get_vtable()"},
-            {"{"},
-            {"    static struct " + wl_name + "_interface const vtable = {"},
-        });
-        for (auto const& method : methods)
-        {
-            auto emitter = method.vtable_initialiser();
-            emitter.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
-            std::cout << ",\n";
-        }
-        emit_indented_lines(out, indent, {
-            {"    };"},
-            {"    return &vtable;"},
-            {"}"},
-        });
-    }
-
-    void emit_class()
-    {
-        auto& out = std::cout;
-        out << "class " << generated_name << std::endl;
-        out << "{" << std::endl;
-        out << "protected:" << std::endl;
-
-        emit_constructor(out, "    ", !methods.empty());
-        if (is_global)
-        {
-            emit_indented_lines(out, "    ", {
-                {"virtual ~", generated_name, "()"},
-                {"{"},
-                {"    wl_global_destroy(global);"},
-                {"}"},
-            });
-        }
-        else
-        {
-            emit_indented_lines(out, "    ", {
-                {"virtual ~", generated_name, "() = default;"},
-            });
-        }
-        out << '\n';
-
-        if (is_global)
-        {
-            emit_indented_lines(out, "    ", {
-                {"virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }"}
-            });
-        }
-        for (auto const& method : methods)
-        {
-            auto emitter = method.virtual_mir_prototype();
-            emitter.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
-            std::cout << "\n";
-        }
-        out << std::endl;
-
-        if (is_global)
-        {
-            emit_indented_lines(out, "    ", {
-                {"struct wl_global* const global;"},
-                {"uint32_t const max_version;"},
-            });
-        }
-        else
-        {
-            emit_indented_lines(out, "    ", {
-                {"struct wl_client* const client;"},
-                {"struct wl_resource* const resource;"}
-            });
-        }
-        out << '\n';
-
-        if (!methods.empty())
-        {
-            out << "private:" << std::endl;
-        }
-
-        for (auto const& method : methods)
-        {
-            auto emitter = method.thunk_body(generated_name);
-            emitter.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
-            std::cout << "\n";
-        }
-
-        if (is_global)
-        {
-            emit_bind(out, "    ", !methods.empty());
-            if (!methods.empty())
-                out << '\n';
-        }
-
-        if (!methods.empty())
-        {
-            if (!is_global)
-            {
-                emit_indented_lines(out, "    ", {
-                    {"static void resource_destroyed_thunk(wl_resource* resource)"},
-                    {"{"},
-                    {"    delete static_cast<", generated_name, "*>(wl_resource_get_user_data(resource));"},
-                    {"}"}
-                });
-                out << '\n';
-            }
-
-            emit_get_vtable(out, "    ");
-        }
-        out << "};" << '\n';
-    }
-
-private:
-    void emit_constructor_for_global(std::ostream& out, std::string const& indent)
-    {
-        emit_indented_lines(out, indent, {
-            {generated_name, "(struct wl_display* display, uint32_t max_version)"},
-            {"    : global{wl_global_create(display, &", wl_name, "_interface, max_version,"},
-            {"                              this, &", generated_name, "::bind_thunk)},"},
-            {"        max_version{max_version}"},
-            {"{" },
-            {"    if (global == nullptr)"},
-            {"    {" },
-            {"        BOOST_THROW_EXCEPTION((std::runtime_error{"},
-            {"            \"Failed to export ", wl_name, " interface\"}));"},
-            {"    }" },
-            {"}"},
-        });
-    }
-
-    void emit_constructor_for_regular(std::ostream& out, std::string const& indent, bool has_vtable)
-    {
-        emit_indented_lines(out, indent, {
-            { generated_name, "(struct wl_client* client, struct wl_resource* parent, uint32_t id)" },
-            { "    : client{client}," },
-            { "      resource{wl_resource_create(client, &", wl_name, "_interface, wl_resource_get_version(parent), id)}" },
-            { "{" }
-        });
-        emit_indented_lines(out, indent + "    ", {
-            { "if (resource == nullptr)" },
-            { "{" },
-            { "    wl_resource_post_no_memory(parent);" },
-            { "    BOOST_THROW_EXCEPTION((std::bad_alloc{}));" },
-            { "}" },
-        });
-        if (has_vtable)
-        {
-            emit_indented_lines(out, indent + "    ",
-                {{ "wl_resource_set_implementation(resource, get_vtable(), this, &resource_destroyed_thunk);" }});
-        }
-        emit_indented_lines(out, indent, {
-            { "}" }
-        });
+        return methods;
     }
 
     std::string const wl_name;
     std::string const generated_name;
     bool const is_global;
-    std::vector<Method> methods;
+    std::vector<Method> const methods;
+    bool const has_vtable;
 };
 
 // arguments are:
@@ -459,7 +456,9 @@ int main(int argc, char** argv)
             // These are special, and don't need binding.
             continue;
         }
-        Interface(*interface, name_transform, constructible_interfaces).emit_class();
+        auto emitter_class = Interface(*interface, name_transform, constructible_interfaces).full_class();
+        emitter_class.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
+        std::cout << "\n";
 
         std::cout << std::endl << std::endl;
     }
