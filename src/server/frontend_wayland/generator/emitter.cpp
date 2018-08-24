@@ -185,7 +185,7 @@ Emitter::Emitter(Line && line)
     Emitter e{line.emitters};
     if (e.is_valid())
     {
-        impl = std::make_shared<LayoutEmitter>(std::move(e));
+        impl = std::make_shared<LayoutEmitter>(std::move(e), line.break_before, line.break_after, line.indent);
     }
 }
 
@@ -208,7 +208,7 @@ Emitter::Emitter(Block && block)
     impl = std::make_shared<LayoutEmitter>(Emitter{"{",
                                                    Emitter{std::make_shared<LayoutEmitter>(
                                                        Lines{block.emitters}, true, true, single_indent)},
-                                                   "}"});
+                                                   "}"}, true, true);
 }
 
 Emitter::Emitter(List && list)
@@ -222,6 +222,8 @@ Emitter::Emitter(List && list)
     if (!l.empty())
     {
         impl = std::make_shared<SeqEmitter>(move(l), std::move(list.delimiter));
+        if (!list.indent.empty())
+            impl = std::make_shared<LayoutEmitter>(Emitter{impl}, false, false, list.indent);
     }
 }
 
