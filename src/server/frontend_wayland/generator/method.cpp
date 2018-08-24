@@ -22,8 +22,9 @@
 
 #include <libxml++/libxml++.h>
 
-Method::Method(xmlpp::Element const& node)
-    : name{node.get_attribute_value("name")}
+Method::Method(xmlpp::Element const& node, bool is_global)
+    : name{node.get_attribute_value("name")},
+      is_global{is_global}
 {
     for (auto const& child : node.get_children("arg"))
     {
@@ -33,54 +34,21 @@ Method::Method(xmlpp::Element const& node)
 }
 
 // TODO: Decide whether to resolve wl_resource* to wrapped types (ie: Region, Surface, etc).
-Emitter Method::emit_virtual_prototype(bool is_global) const
+Emitter Method::virtual_mir_prototype() const
 {
-    std::vector<Emitter> args;
-    if (is_global)
-    {
-        args.push_back("struct wl_client* client");
-        args.push_back("struct wl_resource* resource");
-    }
-    for (auto& i : arguments)
-    {
-        args.push_back(i.cpp_prototype());
-    }
-
-    return {"virtual void ", name, "(", List{args, ", "}, ") = 0;"};
+    return {"virtual void ", name, "(", mir_args(), ") = 0;"};
 }
 
 // TODO: Decide whether to resolve wl_resource* to wrapped types (ie: Region, Surface, etc).
-Emitter Method::emit_thunk(std::string const& interface_type, bool is_global) const
+Emitter Method::thunk_body(std::string const& interface_type) const
 {
-    std::vector<Emitter> c_args{
-        {"struct wl_client*", (is_global ? " client" : "")},
-        "struct wl_resource* resource"};
-        for (auto const& arg : arguments)
-            c_args.push_back(arg.c_prototype());
-
-        std::vector<Emitter> thunk_converters;
-        for (auto const& arg : arguments)
-        {
-            if (auto converter = arg.thunk_converter())
-                thunk_converters.push_back(converter.value());
-        }
-
-        std::vector<Emitter> call_args;
-        if (is_global)
-        {
-            call_args.push_back("client");
-            call_args.push_back("resource");
-        }
-        for (auto& arg : arguments)
-            call_args.push_back(arg.thunk_call_fragment());
-
-        return {"static void ", name, "_thunk(", List{c_args, ", "}, ")",
+    return {"static void ", name, "_thunk(", wl_args(), ")",
         Block{
             {"auto me = static_cast<", interface_type, "*>(wl_resource_get_user_data(resource));"},
-            Lines{thunk_converters},
+            converters(),
             "try",
             Block{
-                {"me->", name, "(", List{call_args, ", "}, ");"}
+                {"me->", name, "(", mir_call_args(), ");"}
             },
             "catch (...)",
             Block{
@@ -94,10 +62,60 @@ Emitter Method::emit_thunk(std::string const& interface_type, bool is_global) co
                     ");"}
             }
         }
-        };
+    };
 }
 
-Emitter Method::emit_vtable_initialiser() const
+Emitter Method::vtable_initialiser() const
 {
     return {name, "_thunk"};
+}
+
+Emitter Method::wl_args() const
+{
+    Emitter client_arg = "struct wl_client*";
+    if (is_global) // only bind it to a variable if we need it
+        client_arg = {client_arg, " client"};
+    std::vector<Emitter> wl_args{client_arg, "struct wl_resource* resource"};
+    for (auto const& arg : arguments)
+        wl_args.push_back(arg.wl_prototype());
+    return List{wl_args, ", "};
+}
+
+Emitter Method::mir_args() const
+{
+    std::vector<Emitter> mir_args;
+    if (is_global)
+    {
+        mir_args.push_back("struct wl_client* client");
+        mir_args.push_back("struct wl_resource* resource");
+    }
+    for (auto& i : arguments)
+    {
+        mir_args.push_back(i.mir_prototype());
+    }
+    return List{mir_args, ", "};
+}
+
+Emitter Method::converters() const
+{
+    std::vector<Emitter> thunk_converters;
+    for (auto const& arg : arguments)
+    {
+        if (auto converter = arg.converter())
+            thunk_converters.push_back(converter.value());
+    }
+    return Lines{thunk_converters};
+}
+
+Emitter Method::mir_call_args() const
+{
+    std::vector<Emitter> call_args;
+    if (is_global)
+    {
+        call_args.push_back("client");
+        call_args.push_back("resource");
+    }
+    for (auto& arg : arguments)
+        call_args.push_back(arg.mir_call_fragment());
+    return List{call_args, ", "};
 }

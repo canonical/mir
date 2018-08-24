@@ -27,15 +27,15 @@
 std::unordered_map<std::string, Argument::TypeDescriptor const> const Argument::type_map = {
     { "uint", { "uint32_t", "uint32_t", {} }},
     { "int", { "int32_t", "int32_t", {} }},
-    { "fd", { "mir::Fd", "int", { Argument::resolve_fd }}},
+    { "fd", { "mir::Fd", "int", { Argument::fd_converter }}},
     { "object", { "struct wl_resource*", "struct wl_resource*", {} }},
     { "string", { "std::string const&", "char const*", {} }},
     { "new_id", { "uint32_t", "uint32_t", {} }}
 };
 
 std::unordered_map<std::string, Argument::TypeDescriptor const> const Argument::optional_type_map = {
-    { "object", { "std::experimental::optional<struct wl_resource*> const&", "struct wl_resource*", { Argument::resolve_optional_object }}},
-    { "string", { "std::experimental::optional<std::string> const&", "char const*", { Argument::resolve_optional_string }}},
+    { "object", { "std::experimental::optional<struct wl_resource*> const&", "struct wl_resource*", { Argument::optional_object_converter }}},
+    { "string", { "std::experimental::optional<std::string> const&", "char const*", { Argument::optional_string_converter }}},
 };
 
 Argument::Argument(xmlpp::Element const& node)
@@ -46,22 +46,22 @@ Argument::Argument(xmlpp::Element const& node)
 {
 }
 
-Emitter Argument::c_prototype() const
+Emitter Argument::wl_prototype() const
 {
-    return {descriptor.c_type, " ", name};
+    return {descriptor.wl_type, " ", name};
 }
 
-Emitter Argument::cpp_prototype() const
+Emitter Argument::mir_prototype() const
 {
-    return {descriptor.cpp_type, " ", name};
+    return {descriptor.mir_type, " ", name};
 }
 
-Emitter Argument::thunk_call_fragment() const
+Emitter Argument::mir_call_fragment() const
 {
     return descriptor.converter ? (name + "_resolved") : name;
 }
 
-std::experimental::optional<Emitter> Argument::thunk_converter() const
+std::experimental::optional<Emitter> Argument::converter() const
 {
     if (descriptor.converter)
         return descriptor.converter.value()(name);
@@ -78,12 +78,12 @@ bool Argument::argument_is_optional(xmlpp::Element const& arg)
     return false;
 }
 
-Emitter Argument::resolve_fd(std::string name)
+Emitter Argument::fd_converter(std::string name)
 {
     return Line{"mir::Fd ", name, "_resolved{", name, "};"};
 }
 
-Emitter Argument::resolve_optional_object(std::string name)
+Emitter Argument::optional_object_converter(std::string name)
 {
     return Lines{
         {"std::experimental::optional<struct wl_resource*> ", name, "_resolved;"},
@@ -94,7 +94,7 @@ Emitter Argument::resolve_optional_object(std::string name)
     };
 }
 
-Emitter Argument::resolve_optional_string(std::string name)
+Emitter Argument::optional_string_converter(std::string name)
 {
     return Lines{
         {"std::experimental::optional<std::string> ", name, "_resolved;"},

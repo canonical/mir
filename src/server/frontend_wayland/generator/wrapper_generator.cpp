@@ -165,7 +165,7 @@ public:
         for (auto method_node : node.get_children("request"))
         {
             auto method = dynamic_cast<xmlpp::Element*>(method_node);
-            methods.emplace_back(std::ref(*method));
+            methods.emplace_back(Method{std::ref(*method), is_global});
         }
     }
 
@@ -230,7 +230,7 @@ public:
         });
         for (auto const& method : methods)
         {
-            auto emitter = method.emit_vtable_initialiser();
+            auto emitter = method.vtable_initialiser();
             emitter.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
             std::cout << ",\n";
         }
@@ -274,7 +274,7 @@ public:
         }
         for (auto const& method : methods)
         {
-            auto emitter = method.emit_virtual_prototype(is_global);
+            auto emitter = method.virtual_mir_prototype();
             emitter.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
             std::cout << "\n";
         }
@@ -303,7 +303,7 @@ public:
 
         for (auto const& method : methods)
         {
-            auto emitter = method.emit_thunk(generated_name, is_global);
+            auto emitter = method.thunk_body(generated_name);
             emitter.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
             std::cout << "\n";
         }
