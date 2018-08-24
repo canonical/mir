@@ -49,9 +49,9 @@ Emitter required_headers(std::string const& custom_header)
         "#include <experimental/optional>",
         "#include <boost/throw_exception.hpp>",
         "#include <boost/exception/diagnostic_information.hpp>",
-        "",
+        empty_line,
         {"#include \"", custom_header, "\""},
-        "",
+        empty_line,
         "#include \"mir/fd.h\"",
         "#include \"mir/log.h\"",
     };
