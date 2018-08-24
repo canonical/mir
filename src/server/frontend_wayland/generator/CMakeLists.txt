@@ -6,6 +6,7 @@ add_executable(wrapper-generator
   wrapper_generator.cpp     wrapper_generator.h
   argument.cpp              argument.h
   method.cpp                method.h
+  interface.cpp             interface.h
   emitter.cpp               emitter.h
 )
 
