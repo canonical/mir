@@ -20,7 +20,7 @@
 #define MIR_WAYLAND_GENERATOR_INTERFACE_H
 
 #include "emitter.h"
-#include "argument.h"
+#include "method.h"
 
 #include <experimental/optional>
 #include <functional>

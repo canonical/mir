@@ -18,8 +18,6 @@
 
 #include "method.h"
 
-#include "wrapper_generator.h"
-
 #include <libxml++/libxml++.h>
 
 Method::Method(xmlpp::Element const& node, bool is_global)

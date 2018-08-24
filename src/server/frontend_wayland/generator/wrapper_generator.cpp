@@ -16,47 +16,12 @@
  * Authored By: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "wrapper_generator.h"
 #include "emitter.h"
-#include "argument.h"
-#include "method.h"
 #include "interface.h"
+#include "utils.h"
 
 #include <libxml++/libxml++.h>
-#include <functional>
-#include <vector>
-#include <experimental/optional>
 #include <iostream>
-#include <unordered_map>
-#include <unordered_set>
-#include <locale>
-#include <stdio.h>
-
-const std::vector<std::string> cpp_reserved_keywords = {"namespace"}; // add to this on an as-needed basis
-
-// remove the path from a file path, leaving only the base name
-std::string file_name_from_path(std::string const& path)
-{
-    size_t i = path.find_last_of("/");
-    if (i == std::string::npos)
-        return path;
-    else
-        return path.substr(i + 1);
-}
-
-// make sure the name is not a C++ reserved word, could be expanded to get rid of invalid characters if that was needed
-std::string sanitize_name(std::string const& name)
-{
-    std::string ret = name;
-    for (auto const& i: cpp_reserved_keywords)
-    {
-        if (i == name)
-        {
-            ret = name + "_";
-        }
-    }
-    return ret;
-}
 
 Emitter emit_comment_header(std::string const& input_file_path)
 {
@@ -68,27 +33,6 @@ Emitter emit_comment_header(std::string const& input_file_path)
         " * To regenerate, run the “refresh-wayland-wrapper” target.",
         " */",
     };
-}
-
-// converts any string into a valid, all upper case macro name (replacing special chars with underscores)
-std::string macro_string(std::string const& name)
-{
-    std::string macro_name = "";
-    for (unsigned i = 0; i < name.size(); i++)
-    {
-        char c = name[i];
-        if ((c >= 'a' && c <= 'z') ||
-            (c >= 'A' && c <= 'Z') ||
-            (c >= '0' && c <= '9' && i > 0))
-        {
-            macro_name += std::toupper(c, std::locale("C"));
-        }
-        else
-        {
-            macro_name += '_';
-        }
-    }
-    return macro_name;
 }
 
 Emitter emit_include_guard_top(std::string const& macro)
@@ -118,24 +62,6 @@ Emitter emit_required_headers(std::string const& custom_header)
         "#include \"mir/fd.h\"",
         "#include \"mir/log.h\"",
     };
-}
-
-std::string camel_case_string(std::string const& name)
-{
-    std::string camel_cased_name;
-    camel_cased_name = std::string{std::toupper(name[0], std::locale("C"))} + name.substr(1);
-    auto next_underscore_offset = name.find('_');
-    while (next_underscore_offset != std::string::npos)
-    {
-        if (next_underscore_offset < camel_cased_name.length())
-        {
-            camel_cased_name = camel_cased_name.substr(0, next_underscore_offset) +
-                               std::toupper(camel_cased_name[next_underscore_offset + 1], std::locale("C")) +
-                               camel_cased_name.substr(next_underscore_offset + 2);
-        }
-        next_underscore_offset = camel_cased_name.find('_', next_underscore_offset);
-    }
-    return camel_cased_name;
 }
 
 void emit_indented_lines(std::ostream& out, std::string const& indent,
@@ -174,7 +100,7 @@ int main(int argc, char** argv)
             // cut off the prefix
             transformed_name = protocol_name.substr(prefix.length());
         }
-        return camel_case_string(transformed_name);
+        return to_camel_case(transformed_name);
     };
 
     std::string const input_file_path{argv[3]};
@@ -198,7 +124,7 @@ int main(int argc, char** argv)
 
     std::cout << std::endl;
 
-    std::string const include_guard_macro = macro_string("MIR_FRONTEND_WAYLAND_" + file_name_from_path(input_file_path) + "_WRAPPER");
+    std::string const include_guard_macro = to_upper_case("MIR_FRONTEND_WAYLAND_" + file_name_from_path(input_file_path) + "_WRAPPER");
     auto emitter0 = emit_include_guard_top(include_guard_macro);
     emitter0.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
     std::cout << "\n";
@@ -244,6 +170,4 @@ int main(int argc, char** argv)
     auto emitter2 = emit_include_guard_bottom(include_guard_macro);
     emitter2.emit({std::cout, std::make_shared<bool>(false), "\t\t"});
     std::cout << "\n";
-
-    return 0;
 }

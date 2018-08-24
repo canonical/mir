@@ -1,5 +1,5 @@
 /*
- * Copyright © 2017 Canonical Ltd.
+ * Copyright © 2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -21,6 +21,16 @@
 
 #include <string>
 
+// remove the path from a file path, leaving only the base name
+std::string file_name_from_path(std::string const& path);
+
+// make sure the name is not a C++ reserved word, could be expanded to get rid of invalid characters if that was needed
 std::string sanitize_name(std::string const& name);
+
+// converts any string into a valid, all upper case macro name (replacing special chars with underscores)
+std::string to_upper_case(std::string const& name);
+
+// converts a snake_case string into a CamelCase string, for type names
+std::string to_camel_case(std::string const& name);
 
 #endif // MIR_WAYLAND_GENERATOR_WRAPPER_GENERATOR_H
