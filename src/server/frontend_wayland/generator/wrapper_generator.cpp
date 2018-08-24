@@ -64,12 +64,12 @@ Emitter include_guard_bottom(std::string const& macro)
     };
 }
 
-Emitter header_file(std::string custom_header, std::string input_file_path, std::vector<Interface>& interfaces)
+Emitter header_file(std::string custom_header, std::string input_file_path, std::vector<Interface> const& interfaces)
 {
     std::string const include_guard_macro = to_upper_case("MIR_FRONTEND_WAYLAND_" + file_name_from_path(input_file_path) + "_WRAPPER");
 
     std::vector<Emitter> interface_emitters;
-    for (auto& interface : interfaces)
+    for (auto const& interface : interfaces)
     {
         interface_emitters.push_back(interface.full_class());
     }

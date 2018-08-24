@@ -41,21 +41,21 @@ public:
         std::function<std::string(std::string)> const& name_transform,
         std::unordered_set<std::string> const& constructable_interfaces);
 
-    Emitter full_class();
+    Emitter full_class() const;
 
 private:
-    Emitter constructor();
-    Emitter constructor_for_global();
-    Emitter constructor_for_regular();
-    Emitter destructor();
-    Emitter bind_prototype();
-    Emitter virtual_method_prototypes();
-    Emitter member_vars();
-    Emitter thunk_bodies();
-    Emitter bind_thunk();
-    Emitter resource_destroyed_thunk();
-    Emitter vtable_getter();
-    Emitter vtable_contents();
+    Emitter constructor() const;
+    Emitter constructor_for_global() const;
+    Emitter constructor_for_regular() const;
+    Emitter destructor() const;
+    Emitter bind_prototype() const;
+    Emitter virtual_method_prototypes() const;
+    Emitter member_vars() const;
+    Emitter thunk_bodies() const;
+    Emitter bind_thunk() const;
+    Emitter resource_destroyed_thunk() const;
+    Emitter vtable_getter() const;
+    Emitter vtable_contents() const;
 
     static std::vector<Method> get_methods(xmlpp::Element const& node, bool is_global);
 
