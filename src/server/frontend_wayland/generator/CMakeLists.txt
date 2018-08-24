@@ -33,7 +33,8 @@ macro(GENERATE_PROTOCOL NAME_PREFIX PROTOCOL_NAME)
   set(PROTOCOL_PATH "${PROTOCOL_DIR}/${PROTOCOL_NAME}.xml")
   set(OUTPUT_PATH_C "${GENERATED_DIR}/${PROTOCOL_NAME}.c")
   set(OUTPUT_PATH_H "${GENERATED_DIR}/${PROTOCOL_NAME}.h")
-  set(OUTPUT_PATH_WRAPPER "${GENERATED_DIR}/${PROTOCOL_NAME}_wrapper.h")
+  set(OUTPUT_PATH_HEADER "${GENERATED_DIR}/${PROTOCOL_NAME}_wrapper.h")
+  set(OUTPUT_PATH_SRC "${GENERATED_DIR}/${PROTOCOL_NAME}_wrapper.cpp")
   add_custom_command(OUTPUT "${OUTPUT_PATH_C}"
     VERBATIM
     COMMAND "wayland-scanner" "--include-core-only" "code" "${PROTOCOL_PATH}" "${OUTPUT_PATH_C}"
@@ -44,12 +45,18 @@ macro(GENERATE_PROTOCOL NAME_PREFIX PROTOCOL_NAME)
     COMMAND "wayland-scanner" "--include-core-only" "server-header" "${PROTOCOL_PATH}" "${OUTPUT_PATH_H}"
     DEPENDS "${PROTOCOL_PATH}"
   )
-  add_custom_command(OUTPUT "${OUTPUT_PATH_WRAPPER}"
+  add_custom_command(OUTPUT "${OUTPUT_PATH_HEADER}"
     VERBATIM
-    COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator ${NAME_PREFIX} ${PROTOCOL_NAME}.h ${PROTOCOL_PATH} > ${OUTPUT_PATH_WRAPPER}"
+    COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator ${NAME_PREFIX} ${PROTOCOL_NAME}.h ${PROTOCOL_PATH} header > ${OUTPUT_PATH_HEADER}"
     DEPENDS "${PROTOCOL_PATH}"
   )
-  set(GENERATED_FILES ${GENERATED_FILES} "${OUTPUT_PATH_H}" "${OUTPUT_PATH_C}" "${OUTPUT_PATH_WRAPPER}")
+  add_custom_command(OUTPUT "${OUTPUT_PATH_SRC}"
+    VERBATIM
+    COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator ${NAME_PREFIX} ${PROTOCOL_NAME}.h ${PROTOCOL_PATH} source > ${OUTPUT_PATH_SRC}"
+    DEPENDS "${PROTOCOL_PATH}"
+    DEPENDS wrapper-generator
+  )
+  set(GENERATED_FILES ${GENERATED_FILES} "${OUTPUT_PATH_H}" "${OUTPUT_PATH_C}" "${OUTPUT_PATH_HEADER}" "${OUTPUT_PATH_SRC}")
 endmacro()
 
 # when adding a protocol, don't forget to add the generated .c file to CMake
