@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014, 2016 Canonical Ltd.
+ * Copyright © 2014-2018 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -17,6 +17,7 @@
  */
 
 #include "miral/display_configuration_option.h"
+#include "static_display_config.h"
 
 #include <mir/graphics/default_display_configuration_policy.h>
 #include <mir/graphics/display_configuration.h>
@@ -28,11 +29,12 @@ namespace mg = mir::graphics;
 namespace
 {
 char const* const display_config_opt = "display-config";
-char const* const display_config_descr = "Display configuration [{clone,sidebyside,single}]";
+char const* const display_config_descr = "Display configuration [{clone,sidebyside,single,static=<filename>}]";
 
 //char const* const clone_opt_val = "clone";
 char const* const sidebyside_opt_val = "sidebyside";
 char const* const single_opt_val = "single";
+char const* const static_opt_val = "static=";
 
 char const* const display_alpha_opt = "translucent";
 char const* const display_alpha_descr = "Select a display mode with alpha[{on,off}]";
@@ -108,6 +110,8 @@ void miral::display_configuration_options(mir::Server& server)
                 layout_selector = std::make_shared<mg::SideBySideDisplayConfigurationPolicy>();
             else if (display_layout == single_opt_val)
                 layout_selector = std::make_shared<mg::SingleDisplayConfigurationPolicy>();
+            else if (display_layout.compare(0, strlen(static_opt_val), static_opt_val) == 0)
+                layout_selector = std::make_shared<StaticDisplayConfig>(display_layout.substr(strlen(static_opt_val)));
 
             // Whatever the layout select a pixel format with requested alpha
             return std::make_shared<PixelFormatSelector>(layout_selector, with_alpha);

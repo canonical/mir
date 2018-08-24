@@ -9,7 +9,11 @@ set(MIRAL_ABI 3)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
+pkg_check_modules(YAML REQUIRED yaml-cpp)
+
 add_library(mirclientcpp INTERFACE)
+
+add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miral")
 
 add_library(miral-internal STATIC
     active_outputs.cpp                  active_outputs.h
@@ -18,6 +22,7 @@ add_library(miral-internal STATIC
     display_configuration_listeners.cpp display_configuration_listeners.h
     launch_app.cpp                      launch_app.h
     mru_window_list.cpp                 mru_window_list.h
+    static_display_config.cpp           static_display_config.h
     window_management_trace.cpp         window_management_trace.h
     xcursor_loader.cpp                  xcursor_loader.h
     xcursor.c                           xcursor.h
@@ -82,6 +87,13 @@ target_include_directories(miral-internal
     PRIVATE ${MIRSERVER_INCLUDE_DIRS}
 )
 
+target_link_libraries(miral-internal
+    PRIVATE
+        mirserver
+        ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
+        ${YAML_LIBRARIES}
+)
+
 target_include_directories(miral
     PUBLIC  "${miral_include}" ${MIRCLIENT_INCLUDE_DIRS}
     PRIVATE ${MIRSERVER_INCLUDE_DIRS}
@@ -94,7 +106,6 @@ target_link_libraries(miral
     PRIVATE
         miral-internal
         mirserver
-        ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
 )
 
 set_target_properties(miral
