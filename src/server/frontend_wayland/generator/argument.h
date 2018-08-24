@@ -35,23 +35,24 @@ class Argument
 public:
     struct TypeDescriptor
     {
-        std::string cpp_type;
-        std::string c_type;
+        std::string mir_type;
+        std::string wl_type;
+        // wl to mir converter
         std::experimental::optional<std::function<Emitter(std::string)>> converter;
     };
 
     Argument(xmlpp::Element const& node);
 
-    Emitter c_prototype() const;
-    Emitter cpp_prototype() const;
-    Emitter thunk_call_fragment() const;
-    std::experimental::optional<Emitter> thunk_converter() const;
+    Emitter wl_prototype() const;
+    Emitter mir_prototype() const;
+    Emitter mir_call_fragment() const;
+    std::experimental::optional<Emitter> converter() const;
 
 private:
     static bool argument_is_optional(xmlpp::Element const& arg);
-    static Emitter resolve_fd(std::string name);
-    static Emitter resolve_optional_object(std::string name);
-    static Emitter resolve_optional_string(std::string name);
+    static Emitter fd_converter(std::string name);
+    static Emitter optional_object_converter(std::string name);
+    static Emitter optional_string_converter(std::string name);
 
     static std::unordered_map<std::string, Argument::TypeDescriptor const> const type_map;
     static std::unordered_map<std::string, Argument::TypeDescriptor const> const optional_type_map;
