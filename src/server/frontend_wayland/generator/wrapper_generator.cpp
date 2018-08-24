@@ -19,6 +19,7 @@
 #include "wrapper_generator.h"
 #include "emitter.h"
 #include "argument.h"
+#include "method.h"
 
 #include <libxml++/libxml++.h>
 #include <functional>
@@ -149,98 +150,6 @@ void emit_indented_lines(std::ostream& out, std::string const& indent,
         out << "\n";
     }
 }
-
-class Interface;
-
-class Method
-{
-public:
-    Method(xmlpp::Element const& node)
-        : name{node.get_attribute_value("name")}
-    {
-        for (auto const& child : node.get_children("arg"))
-        {
-            auto arg_node = dynamic_cast<xmlpp::Element const*>(child);
-            arguments.emplace_back(std::ref(*arg_node));
-        }
-    }
-
-    // TODO: Decide whether to resolve wl_resource* to wrapped types (ie: Region, Surface, etc).
-    Emitter emit_virtual_prototype(bool is_global) const
-    {
-        std::vector<Emitter> args;
-        if (is_global)
-        {
-            args.push_back("struct wl_client* client");
-            args.push_back("struct wl_resource* resource");
-        }
-        for (auto& i : arguments)
-        {
-            args.push_back(i.cpp_prototype());
-        }
-
-        return {"virtual void ", name, "(", List{args, ", "}, ") = 0;"};
-    }
-
-    // TODO: Decide whether to resolve wl_resource* to wrapped types (ie: Region, Surface, etc).
-    Emitter emit_thunk(std::string const& interface_type, bool is_global) const
-    {
-        std::vector<Emitter> c_args{
-            {"struct wl_client*", (is_global ? " client" : "")},
-            "struct wl_resource* resource"};
-        for (auto const& arg : arguments)
-            c_args.push_back(arg.c_prototype());
-
-        std::vector<Emitter> thunk_converters;
-        for (auto const& arg : arguments)
-        {
-            if (auto converter = arg.thunk_converter())
-                thunk_converters.push_back(converter.value());
-        }
-
-        std::vector<Emitter> call_args;
-        if (is_global)
-        {
-            call_args.push_back("client");
-            call_args.push_back("resource");
-        }
-        for (auto& arg : arguments)
-            call_args.push_back(arg.thunk_call_fragment());
-
-        return {"static void ", name, "_thunk(", List{c_args, ", "}, ")",
-            Block{
-                {"auto me = static_cast<", interface_type, "*>(wl_resource_get_user_data(resource));"},
-                Lines{thunk_converters},
-                "try",
-                Block{
-                    {"me->", name, "(", List{call_args, ", "}, ");"}
-                },
-                "catch (...)",
-                Block{
-                    {"::mir::log(",
-                        List{{
-                                "::mir::logging::Severity::critical",
-                                "    \"frontend:Wayland\"",
-                                "    std::current_exception()",
-                                {"    \"Exception processing ", interface_type, "::", name, "() request\""}
-                            }, ","},
-                        ");"}
-                }
-            }
-        };
-    }
-
-    Emitter emit_vtable_initialiser() const
-    {
-        return {name, "_thunk"};
-    }
-
-private:
-    std::string const name;
-    std::vector<Argument> arguments;
-
-public:
-};
 
 class Interface
 {
