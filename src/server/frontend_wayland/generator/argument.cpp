@@ -17,8 +17,7 @@
  */
 
 #include "argument.h"
-
-#include "wrapper_generator.h"
+#include "utils.h"
 
 #include <libxml++/libxml++.h>
 
