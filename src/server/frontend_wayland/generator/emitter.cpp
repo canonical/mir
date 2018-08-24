@@ -175,11 +175,6 @@ Emitter::Emitter(std::vector<Emitter> const& emitters)
 {
 }
 
-Emitter::Emitter(EmptyLine)
-    : impl{std::make_shared<EmptyLineEmitter>()}
-{
-}
-
 Emitter::Emitter(Line && line)
 {
     Emitter e{line.emitters};
@@ -239,3 +234,5 @@ Emitter::Emitter(std::shared_ptr<Impl const> impl)
     : impl{move(impl)}
 {
 }
+
+Emitter const extern empty_line = Emitter{std::make_shared<EmptyLineEmitter>()};

@@ -40,16 +40,21 @@ Emitter Interface::full_class() const
         {"class ", generated_name},
         "{",
         "protected:",
-        constructor(),
-        destructor(),
-        (is_global ? bind_prototype() : nullptr),
-        virtual_method_prototypes(),
-        member_vars(),
+        List {{
+            constructor(),
+            destructor(),
+            (is_global ? bind_prototype() : nullptr),
+            virtual_method_prototypes(),
+            member_vars(),
+        }, empty_line, Emitter::single_indent},
+        empty_line,
         "private:",
-        thunk_bodies(),
-        (is_global ? bind_thunk() : nullptr),
-        (has_vtable && !is_global ? resource_destroyed_thunk() : nullptr),
-        (has_vtable ? vtable_getter() : nullptr),
+        List {{
+            thunk_bodies(),
+            (is_global ? bind_thunk() : nullptr),
+            (has_vtable && !is_global ? resource_destroyed_thunk() : nullptr),
+            (has_vtable ? vtable_getter() : nullptr),
+        }, empty_line, Emitter::single_indent},
         "};"
     };
 }

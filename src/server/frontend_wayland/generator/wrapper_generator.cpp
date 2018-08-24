@@ -76,18 +76,24 @@ Emitter header_file(std::string custom_header, std::string input_file_path, std:
 
     return Lines{
         comment_header(input_file_path),
+        empty_line,
         include_guard_top(include_guard_macro),
+        empty_line,
         required_headers(custom_header),
+        empty_line,
         "namespace mir",
         "{",
         "namespace frontend",
         "{",
         "namespace wayland",
         "{",
-        Lines{interface_emitters},
+        empty_line,
+        List{interface_emitters, empty_line},
+        empty_line,
         "}",
         "}",
         "}",
+        empty_line,
         include_guard_bottom(include_guard_macro)
     };
 }
