@@ -237,3 +237,38 @@ TEST_F(StaticDisplayConfig, positioning_hdmi1_and_inverting_vga1_works)
     EXPECT_THAT(hdmi1.top_left, Eq(Point{1280, 0}));
     EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_normal));
 }
+
+TEST_F(StaticDisplayConfig, selecting_layout_by_alias_works)
+{
+    std::istringstream stream{
+        "layouts:\n"
+        "  another:\n"
+        "    cards:\n"
+        "    - VGA-1:\n"
+        "        state: disabled\n"
+        "    - HDMI-A-1:\n"
+        "        state: disabled\n"
+        "  expected: &my_default\n"
+        "    cards:\n"
+        "    - VGA-1:\n"
+        "        orientation: inverted\n"
+        "    - HDMI-A-1:\n"
+        "        position: [1280, 0]\n"
+        "  default: *my_default\n"};
+
+    sdc.load_config(stream, "");
+
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(vga1.used, Eq(true));
+    EXPECT_THAT(vga1.power_mode, Eq(mir_power_mode_on));
+    EXPECT_THAT(vga1.modes[vga1.current_mode_index], Eq(default_mode));
+    EXPECT_THAT(vga1.top_left, Eq(Point{0, 0}));
+    EXPECT_THAT(vga1.orientation, Eq(mir_orientation_inverted));
+
+    EXPECT_THAT(hdmi1.used, Eq(true));
+    EXPECT_THAT(hdmi1.power_mode, Eq(mir_power_mode_on));
+    EXPECT_THAT(hdmi1.modes[hdmi1.current_mode_index], Eq(default_mode));
+    EXPECT_THAT(hdmi1.top_left, Eq(Point{1280, 0}));
+    EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_normal));
+}
