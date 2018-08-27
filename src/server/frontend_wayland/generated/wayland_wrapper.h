@@ -34,7 +34,6 @@ protected:
     struct wl_resource* const resource;
 
 private:
-    struct Thunks;
 };
 
 class Compositor
@@ -43,16 +42,17 @@ protected:
     Compositor(struct wl_display* display, uint32_t max_version);
     virtual ~Compositor();
 
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
-
-    virtual void create_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
-    virtual void create_region(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
-
     struct wl_global* const global;
     uint32_t const max_version;
 
 private:
     struct Thunks;
+
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+
+    virtual void create_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
+    virtual void create_region(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
+
     static struct wl_compositor_interface const vtable;
 };
 
@@ -62,15 +62,16 @@ protected:
     ShmPool(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~ShmPool() = default;
 
-    virtual void create_buffer(uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) = 0;
-    virtual void destroy() = 0;
-    virtual void resize(int32_t size) = 0;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
 private:
     struct Thunks;
+
+    virtual void create_buffer(uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) = 0;
+    virtual void destroy() = 0;
+    virtual void resize(int32_t size) = 0;
+
     static struct wl_shm_pool_interface const vtable;
 };
 
@@ -80,15 +81,16 @@ protected:
     Shm(struct wl_display* display, uint32_t max_version);
     virtual ~Shm();
 
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
-
-    virtual void create_pool(struct wl_client* client, struct wl_resource* resource, uint32_t id, mir::Fd fd, int32_t size) = 0;
-
     struct wl_global* const global;
     uint32_t const max_version;
 
 private:
     struct Thunks;
+
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+
+    virtual void create_pool(struct wl_client* client, struct wl_resource* resource, uint32_t id, mir::Fd fd, int32_t size) = 0;
+
     static struct wl_shm_interface const vtable;
 };
 
@@ -98,13 +100,14 @@ protected:
     Buffer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Buffer() = default;
 
-    virtual void destroy() = 0;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
 private:
     struct Thunks;
+
+    virtual void destroy() = 0;
+
     static struct wl_buffer_interface const vtable;
 };
 
@@ -114,17 +117,18 @@ protected:
     DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~DataOffer() = default;
 
+    struct wl_client* const client;
+    struct wl_resource* const resource;
+
+private:
+    struct Thunks;
+
     virtual void accept(uint32_t serial, std::experimental::optional<std::string> const& mime_type) = 0;
     virtual void receive(std::string const& mime_type, mir::Fd fd) = 0;
     virtual void destroy() = 0;
     virtual void finish() = 0;
     virtual void set_actions(uint32_t dnd_actions, uint32_t preferred_action) = 0;
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
-private:
-    struct Thunks;
     static struct wl_data_offer_interface const vtable;
 };
 
@@ -134,15 +138,16 @@ protected:
     DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~DataSource() = default;
 
-    virtual void offer(std::string const& mime_type) = 0;
-    virtual void destroy() = 0;
-    virtual void set_actions(uint32_t dnd_actions) = 0;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
 private:
     struct Thunks;
+
+    virtual void offer(std::string const& mime_type) = 0;
+    virtual void destroy() = 0;
+    virtual void set_actions(uint32_t dnd_actions) = 0;
+
     static struct wl_data_source_interface const vtable;
 };
 
@@ -152,15 +157,16 @@ protected:
     DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~DataDevice() = default;
 
-    virtual void start_drag(std::experimental::optional<struct wl_resource*> const& source, struct wl_resource* origin, std::experimental::optional<struct wl_resource*> const& icon, uint32_t serial) = 0;
-    virtual void set_selection(std::experimental::optional<struct wl_resource*> const& source, uint32_t serial) = 0;
-    virtual void release() = 0;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
 private:
     struct Thunks;
+
+    virtual void start_drag(std::experimental::optional<struct wl_resource*> const& source, struct wl_resource* origin, std::experimental::optional<struct wl_resource*> const& icon, uint32_t serial) = 0;
+    virtual void set_selection(std::experimental::optional<struct wl_resource*> const& source, uint32_t serial) = 0;
+    virtual void release() = 0;
+
     static struct wl_data_device_interface const vtable;
 };
 
@@ -170,16 +176,17 @@ protected:
     DataDeviceManager(struct wl_display* display, uint32_t max_version);
     virtual ~DataDeviceManager();
 
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
-
-    virtual void create_data_source(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
-    virtual void get_data_device(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat) = 0;
-
     struct wl_global* const global;
     uint32_t const max_version;
 
 private:
     struct Thunks;
+
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+
+    virtual void create_data_source(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
+    virtual void get_data_device(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat) = 0;
+
     static struct wl_data_device_manager_interface const vtable;
 };
 
@@ -189,15 +196,16 @@ protected:
     Shell(struct wl_display* display, uint32_t max_version);
     virtual ~Shell();
 
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
-
-    virtual void get_shell_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface) = 0;
-
     struct wl_global* const global;
     uint32_t const max_version;
 
 private:
     struct Thunks;
+
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+
+    virtual void get_shell_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface) = 0;
+
     static struct wl_shell_interface const vtable;
 };
 
@@ -206,6 +214,12 @@ class ShellSurface
 protected:
     ShellSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~ShellSurface() = default;
+
+    struct wl_client* const client;
+    struct wl_resource* const resource;
+
+private:
+    struct Thunks;
 
     virtual void pong(uint32_t serial) = 0;
     virtual void move(struct wl_resource* seat, uint32_t serial) = 0;
@@ -218,11 +232,6 @@ protected:
     virtual void set_title(std::string const& title) = 0;
     virtual void set_class(std::string const& class_) = 0;
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
-private:
-    struct Thunks;
     static struct wl_shell_surface_interface const vtable;
 };
 
@@ -231,6 +240,12 @@ class Surface
 protected:
     Surface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Surface() = default;
+
+    struct wl_client* const client;
+    struct wl_resource* const resource;
+
+private:
+    struct Thunks;
 
     virtual void destroy() = 0;
     virtual void attach(std::experimental::optional<struct wl_resource*> const& buffer, int32_t x, int32_t y) = 0;
@@ -243,11 +258,6 @@ protected:
     virtual void set_buffer_scale(int32_t scale) = 0;
     virtual void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
-private:
-    struct Thunks;
     static struct wl_surface_interface const vtable;
 };
 
@@ -257,6 +267,12 @@ protected:
     Seat(struct wl_display* display, uint32_t max_version);
     virtual ~Seat();
 
+    struct wl_global* const global;
+    uint32_t const max_version;
+
+private:
+    struct Thunks;
+
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
     virtual void get_pointer(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
@@ -264,11 +280,6 @@ protected:
     virtual void get_touch(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
     virtual void release(struct wl_client* client, struct wl_resource* resource) = 0;
 
-    struct wl_global* const global;
-    uint32_t const max_version;
-
-private:
-    struct Thunks;
     static struct wl_seat_interface const vtable;
 };
 
@@ -278,14 +289,15 @@ protected:
     Pointer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Pointer() = default;
 
-    virtual void set_cursor(uint32_t serial, std::experimental::optional<struct wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) = 0;
-    virtual void release() = 0;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
 private:
     struct Thunks;
+
+    virtual void set_cursor(uint32_t serial, std::experimental::optional<struct wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) = 0;
+    virtual void release() = 0;
+
     static struct wl_pointer_interface const vtable;
 };
 
@@ -295,13 +307,14 @@ protected:
     Keyboard(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Keyboard() = default;
 
-    virtual void release() = 0;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
 private:
     struct Thunks;
+
+    virtual void release() = 0;
+
     static struct wl_keyboard_interface const vtable;
 };
 
@@ -311,13 +324,14 @@ protected:
     Touch(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Touch() = default;
 
-    virtual void release() = 0;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
 private:
     struct Thunks;
+
+    virtual void release() = 0;
+
     static struct wl_touch_interface const vtable;
 };
 
@@ -327,15 +341,16 @@ protected:
     Output(struct wl_display* display, uint32_t max_version);
     virtual ~Output();
 
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
-
-    virtual void release(struct wl_client* client, struct wl_resource* resource) = 0;
-
     struct wl_global* const global;
     uint32_t const max_version;
 
 private:
     struct Thunks;
+
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+
+    virtual void release(struct wl_client* client, struct wl_resource* resource) = 0;
+
     static struct wl_output_interface const vtable;
 };
 
@@ -345,15 +360,16 @@ protected:
     Region(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Region() = default;
 
-    virtual void destroy() = 0;
-    virtual void add(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
-    virtual void subtract(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
-
     struct wl_client* const client;
     struct wl_resource* const resource;
 
 private:
     struct Thunks;
+
+    virtual void destroy() = 0;
+    virtual void add(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
+    virtual void subtract(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
+
     static struct wl_region_interface const vtable;
 };
 
@@ -363,16 +379,17 @@ protected:
     Subcompositor(struct wl_display* display, uint32_t max_version);
     virtual ~Subcompositor();
 
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
-
-    virtual void destroy(struct wl_client* client, struct wl_resource* resource) = 0;
-    virtual void get_subsurface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* parent) = 0;
-
     struct wl_global* const global;
     uint32_t const max_version;
 
 private:
     struct Thunks;
+
+    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+
+    virtual void destroy(struct wl_client* client, struct wl_resource* resource) = 0;
+    virtual void get_subsurface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* parent) = 0;
+
     static struct wl_subcompositor_interface const vtable;
 };
 
@@ -382,6 +399,12 @@ protected:
     Subsurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Subsurface() = default;
 
+    struct wl_client* const client;
+    struct wl_resource* const resource;
+
+private:
+    struct Thunks;
+
     virtual void destroy() = 0;
     virtual void set_position(int32_t x, int32_t y) = 0;
     virtual void place_above(struct wl_resource* sibling) = 0;
@@ -389,11 +412,6 @@ protected:
     virtual void set_sync() = 0;
     virtual void set_desync() = 0;
 
-    struct wl_client* const client;
-    struct wl_resource* const resource;
-
-private:
-    struct Thunks;
     static struct wl_subsurface_interface const vtable;
 };
 

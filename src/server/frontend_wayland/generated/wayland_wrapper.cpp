@@ -18,10 +18,6 @@ namespace mfw = mir::frontend::wayland;
 
 // Callback
 
-struct mfw::Callback::Thunks
-{
-};
-
 mfw::Callback::Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_callback_interface, wl_resource_get_version(parent), id)}
