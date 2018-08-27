@@ -5,4 +5,150 @@
  * To regenerate, run the “refresh-wayland-wrapper” target.
  */
 
-// generator not implemented
+#include <experimental/optional>
+#include <boost/throw_exception.hpp>
+#include <boost/exception/diagnostic_information.hpp>
+
+#include "wayland_wrapper.h"
+
+#include "mir/fd.h"
+#include "mir/log.h"
+
+namespace mfw = mir::frontend::wayland;
+
+// Compositor
+
+struct wl_compositor_interface const mfw::Compositor::vtable = {
+    create_surface_thunk,
+    create_region_thunk};
+
+// ShmPool
+
+struct wl_shm_pool_interface const mfw::ShmPool::vtable = {
+    create_buffer_thunk,
+    destroy_thunk,
+    resize_thunk};
+
+// Shm
+
+struct wl_shm_interface const mfw::Shm::vtable = {
+    create_pool_thunk};
+
+// Buffer
+
+struct wl_buffer_interface const mfw::Buffer::vtable = {
+    destroy_thunk};
+
+// DataOffer
+
+struct wl_data_offer_interface const mfw::DataOffer::vtable = {
+    accept_thunk,
+    receive_thunk,
+    destroy_thunk,
+    finish_thunk,
+    set_actions_thunk};
+
+// DataSource
+
+struct wl_data_source_interface const mfw::DataSource::vtable = {
+    offer_thunk,
+    destroy_thunk,
+    set_actions_thunk};
+
+// DataDevice
+
+struct wl_data_device_interface const mfw::DataDevice::vtable = {
+    start_drag_thunk,
+    set_selection_thunk,
+    release_thunk};
+
+// DataDeviceManager
+
+struct wl_data_device_manager_interface const mfw::DataDeviceManager::vtable = {
+    create_data_source_thunk,
+    get_data_device_thunk};
+
+// Shell
+
+struct wl_shell_interface const mfw::Shell::vtable = {
+    get_shell_surface_thunk};
+
+// ShellSurface
+
+struct wl_shell_surface_interface const mfw::ShellSurface::vtable = {
+    pong_thunk,
+    move_thunk,
+    resize_thunk,
+    set_toplevel_thunk,
+    set_transient_thunk,
+    set_fullscreen_thunk,
+    set_popup_thunk,
+    set_maximized_thunk,
+    set_title_thunk,
+    set_class_thunk};
+
+// Surface
+
+struct wl_surface_interface const mfw::Surface::vtable = {
+    destroy_thunk,
+    attach_thunk,
+    damage_thunk,
+    frame_thunk,
+    set_opaque_region_thunk,
+    set_input_region_thunk,
+    commit_thunk,
+    set_buffer_transform_thunk,
+    set_buffer_scale_thunk,
+    damage_buffer_thunk};
+
+// Seat
+
+struct wl_seat_interface const mfw::Seat::vtable = {
+    get_pointer_thunk,
+    get_keyboard_thunk,
+    get_touch_thunk,
+    release_thunk};
+
+// Pointer
+
+struct wl_pointer_interface const mfw::Pointer::vtable = {
+    set_cursor_thunk,
+    release_thunk};
+
+// Keyboard
+
+struct wl_keyboard_interface const mfw::Keyboard::vtable = {
+    release_thunk};
+
+// Touch
+
+struct wl_touch_interface const mfw::Touch::vtable = {
+    release_thunk};
+
+// Output
+
+struct wl_output_interface const mfw::Output::vtable = {
+    release_thunk};
+
+// Region
+
+struct wl_region_interface const mfw::Region::vtable = {
+    destroy_thunk,
+    add_thunk,
+    subtract_thunk};
+
+// Subcompositor
+
+struct wl_subcompositor_interface const mfw::Subcompositor::vtable = {
+    destroy_thunk,
+    get_subsurface_thunk};
+
+// Subsurface
+
+struct wl_subsurface_interface const mfw::Subsurface::vtable = {
+    destroy_thunk,
+    set_position_thunk,
+    place_above_thunk,
+    place_below_thunk,
+    set_sync_thunk,
+    set_desync_thunk};

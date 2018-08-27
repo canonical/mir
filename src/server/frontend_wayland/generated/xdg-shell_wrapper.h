@@ -126,7 +126,7 @@ private:
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, get_vtable(), me, nullptr);
+        wl_resource_set_implementation(resource, &vtable, me, nullptr);
         try
         {
             me->bind(client, resource);
@@ -140,16 +140,7 @@ private:
         }
     }
 
-    static inline struct xdg_wm_base_interface const* get_vtable()
-    {
-        static struct xdg_wm_base_interface const vtable = {
-            destroy_thunk,
-            create_positioner_thunk,
-            get_xdg_surface_thunk,
-            pong_thunk
-        };
-        return &vtable;
-    }
+    static struct xdg_wm_base_interface const vtable;
 };
 
 class XdgPositioner
@@ -165,7 +156,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, get_vtable(), this, &resource_destroyed_thunk);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
 
     virtual ~XdgPositioner() = default;
@@ -293,19 +284,7 @@ private:
         delete static_cast<XdgPositioner*>(wl_resource_get_user_data(resource));
     }
 
-    static inline struct xdg_positioner_interface const* get_vtable()
-    {
-        static struct xdg_positioner_interface const vtable = {
-            destroy_thunk,
-            set_size_thunk,
-            set_anchor_rect_thunk,
-            set_anchor_thunk,
-            set_gravity_thunk,
-            set_constraint_adjustment_thunk,
-            set_offset_thunk
-        };
-        return &vtable;
-    }
+    static struct xdg_positioner_interface const vtable;
 };
 
 class XdgSurface
@@ -321,7 +300,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, get_vtable(), this, &resource_destroyed_thunk);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
 
     virtual ~XdgSurface() = default;
@@ -422,17 +401,7 @@ private:
         delete static_cast<XdgSurface*>(wl_resource_get_user_data(resource));
     }
 
-    static inline struct xdg_surface_interface const* get_vtable()
-    {
-        static struct xdg_surface_interface const vtable = {
-            destroy_thunk,
-            get_toplevel_thunk,
-            get_popup_thunk,
-            set_window_geometry_thunk,
-            ack_configure_thunk
-        };
-        return &vtable;
-    }
+    static struct xdg_surface_interface const vtable;
 };
 
 class XdgToplevel
@@ -448,7 +417,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, get_vtable(), this, &resource_destroyed_thunk);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
 
     virtual ~XdgToplevel() = default;
@@ -698,26 +667,7 @@ private:
         delete static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
     }
 
-    static inline struct xdg_toplevel_interface const* get_vtable()
-    {
-        static struct xdg_toplevel_interface const vtable = {
-            destroy_thunk,
-            set_parent_thunk,
-            set_title_thunk,
-            set_app_id_thunk,
-            show_window_menu_thunk,
-            move_thunk,
-            resize_thunk,
-            set_max_size_thunk,
-            set_min_size_thunk,
-            set_maximized_thunk,
-            unset_maximized_thunk,
-            set_fullscreen_thunk,
-            unset_fullscreen_thunk,
-            set_minimized_thunk
-        };
-        return &vtable;
-    }
+    static struct xdg_toplevel_interface const vtable;
 };
 
 class XdgPopup
@@ -733,7 +683,7 @@ protected:
             wl_resource_post_no_memory(parent);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, get_vtable(), this, &resource_destroyed_thunk);
+        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
     }
 
     virtual ~XdgPopup() = default;
@@ -781,14 +731,7 @@ private:
         delete static_cast<XdgPopup*>(wl_resource_get_user_data(resource));
     }
 
-    static inline struct xdg_popup_interface const* get_vtable()
-    {
-        static struct xdg_popup_interface const vtable = {
-            destroy_thunk,
-            grab_thunk
-        };
-        return &vtable;
-    }
+    static struct xdg_popup_interface const vtable;
 };
 
 }
