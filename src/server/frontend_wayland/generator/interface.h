@@ -53,6 +53,7 @@ private:
     Emitter virtual_method_prototypes() const;
     Emitter member_vars() const;
     Emitter thunks_impl() const;
+    Emitter thunks_impl_contents() const;
     Emitter bind_thunk() const;
     Emitter resource_destroyed_thunk() const;
     Emitter vtable_declare() const;

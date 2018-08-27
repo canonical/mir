@@ -45,16 +45,16 @@ Emitter Interface::declaration() const
                 constructor_prototype(),
                 destructor_prototype(),
             },
-            (is_global ? bind_prototype() : nullptr),
-            virtual_method_prototypes(),
             member_vars(),
         }, empty_line, Emitter::single_indent},
         empty_line,
         "private:",
         List {{
-            "struct Thunks;",
+            (thunks_impl_contents().is_valid() ? "struct Thunks;" : nullptr),
+            (is_global ? bind_prototype() : nullptr),
+            virtual_method_prototypes(),
             (has_vtable ? vtable_declare() : nullptr),
-        }, nullptr, Emitter::single_indent},
+        }, empty_line, Emitter::single_indent},
         "};"
     };
 }
@@ -185,6 +185,25 @@ Emitter Interface::member_vars() const
 
 Emitter Interface::thunks_impl() const
 {
+    Emitter contents = thunks_impl_contents();
+
+    if (contents.is_valid())
+    {
+        return Lines{
+            {"struct ", nmspace, "Thunks"},
+            {Block{
+                contents
+            }, ";"},
+        };
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
+Emitter Interface::thunks_impl_contents() const
+{
     std::vector<Emitter> impls;
     for (auto const& method : methods)
         impls.push_back(method.thunk_impl());
@@ -195,12 +214,7 @@ Emitter Interface::thunks_impl() const
     if (has_vtable && !is_global)
         impls.push_back(resource_destroyed_thunk());
 
-    return Lines{
-        {"struct ", nmspace, "Thunks"},
-        {Block{
-            List{impls, empty_line}
-        }, ";"},
-    };
+    return List{impls, empty_line};
 }
 
 Emitter Interface::bind_thunk() const
