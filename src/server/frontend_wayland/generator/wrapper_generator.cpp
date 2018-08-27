@@ -71,7 +71,7 @@ Emitter header_file(std::string custom_header, std::string input_file_path, std:
     std::vector<Emitter> interface_emitters;
     for (auto const& interface : interfaces)
     {
-        interface_emitters.push_back(interface.full_class());
+        interface_emitters.push_back(interface.declaration());
     }
 
     return Lines{
@@ -98,12 +98,22 @@ Emitter header_file(std::string custom_header, std::string input_file_path, std:
     };
 }
 
-Emitter source_file(std::string input_file_path, std::vector<Interface> const& /*interfaces*/)
+Emitter source_file(std::string custom_header, std::string input_file_path, std::vector<Interface> const& interfaces)
 {
+    std::vector<Emitter> interface_emitters;
+    for (auto const& interface : interfaces)
+    {
+        interface_emitters.push_back(interface.implementation());
+    }
+
     return Lines{
         comment_header(input_file_path),
         empty_line,
-        "// generator not implemented",
+        required_headers(custom_header),
+        empty_line,
+        "namespace mfw = mir::frontend::wayland;",
+        empty_line,
+        List{interface_emitters, empty_line},
     };
 }
 
@@ -194,7 +204,7 @@ int main(int argc, char** argv)
     if (header_mode)
         emitter = header_file(custom_header, input_file_path, interfaces);
     else
-        emitter = source_file(input_file_path, interfaces);
+        emitter = source_file(custom_header, input_file_path, interfaces);
 
     emitter.emit({std::cout});
 }

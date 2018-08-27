@@ -22,19 +22,18 @@
 
 #include "method.h"
 
-Interface::Interface(
-    xmlpp::Element const& node,
-    std::function<std::string(std::string)> const& name_transform,
-    std::unordered_set<std::string> const& constructable_interfaces)
+Interface::Interface(xmlpp::Element const& node,
+                     std::function<std::string(std::string)> const& name_transform,
+                     std::unordered_set<std::string> const& constructable_interfaces)
     : wl_name{node.get_attribute_value("name")},
       generated_name{name_transform(wl_name)},
       is_global{constructable_interfaces.count(wl_name) == 0},
       methods{get_methods(node, is_global)},
-     has_vtable{!methods.empty()}
+      has_vtable{!methods.empty()}
 {
 }
 
-Emitter Interface::full_class() const
+Emitter Interface::declaration() const
 {
     return Lines{
         {"class ", generated_name},
@@ -53,10 +52,30 @@ Emitter Interface::full_class() const
             thunk_bodies(),
             (is_global ? bind_thunk() : nullptr),
             (has_vtable && !is_global ? resource_destroyed_thunk() : nullptr),
-            (has_vtable ? vtable_getter() : nullptr),
+            (has_vtable ? vtable_declare() : nullptr),
         }, empty_line, Emitter::single_indent},
         "};"
     };
+}
+
+Emitter Interface::implementation() const
+{
+    Emitter impl = Lines{
+        (has_vtable ? vtable_init() : nullptr),
+    };
+
+    if (impl.is_valid())
+    {
+        return Lines{
+            {"// ", generated_name},
+            empty_line,
+            impl,
+        };
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 Emitter Interface::constructor() const
@@ -98,7 +117,7 @@ Emitter Interface::constructor_for_regular() const
                 "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
             },
             (has_vtable ?
-            "wl_resource_set_implementation(resource, get_vtable(), this, &resource_destroyed_thunk);" :
+            "wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);" :
             Emitter{nullptr})
         }
     };
@@ -180,7 +199,7 @@ Emitter Interface::bind_thunk() const
                 "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
             },
             (has_vtable ?
-            "wl_resource_set_implementation(resource, get_vtable(), me, nullptr);" :
+            "wl_resource_set_implementation(resource, &vtable, me, nullptr);" :
             Emitter{nullptr}),
             "try",
             Block{
@@ -210,16 +229,17 @@ Emitter Interface::resource_destroyed_thunk() const
     };
 }
 
-Emitter Interface::vtable_getter() const
+Emitter Interface::vtable_declare() const
+{
+    return Line{"static struct ", wl_name, "_interface const vtable;"};
+}
+
+
+Emitter Interface::vtable_init() const
 {
     return Lines{
-        {"static inline struct ", wl_name, "_interface const* get_vtable()"},
-        Block{
-            {"static struct ", wl_name, "_interface const vtable = {"},
-            vtable_contents(),
-            "};",
-            "return &vtable;"
-        }
+        {"struct ", wl_name, "_interface const mfw::", generated_name, "::vtable = {"},
+            {vtable_contents(), "};"}
     };
 }
 

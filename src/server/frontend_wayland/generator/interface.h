@@ -36,12 +36,12 @@ class Element;
 class Interface
 {
 public:
-    Interface(
-        xmlpp::Element const& node,
-        std::function<std::string(std::string)> const& name_transform,
-        std::unordered_set<std::string> const& constructable_interfaces);
+    Interface(xmlpp::Element const& node,
+              std::function<std::string(std::string)> const& name_transform,
+              std::unordered_set<std::string> const& constructable_interfaces);
 
-    Emitter full_class() const;
+    Emitter declaration() const;
+    Emitter implementation() const;
 
 private:
     Emitter constructor() const;
@@ -54,7 +54,8 @@ private:
     Emitter thunk_bodies() const;
     Emitter bind_thunk() const;
     Emitter resource_destroyed_thunk() const;
-    Emitter vtable_getter() const;
+    Emitter vtable_declare() const;
+    Emitter vtable_init() const;
     Emitter vtable_contents() const;
 
     static std::vector<Method> get_methods(xmlpp::Element const& node, bool is_global);
