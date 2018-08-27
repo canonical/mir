@@ -20,8 +20,9 @@
 
 #include <libxml++/libxml++.h>
 
-Method::Method(xmlpp::Element const& node, bool is_global)
+Method::Method(xmlpp::Element const& node, std::string const& class_name, bool is_global)
     : name{node.get_attribute_value("name")},
+      class_name{class_name},
       is_global{is_global}
 {
     for (auto const& child : node.get_children("arg"))
@@ -38,11 +39,11 @@ Emitter Method::virtual_mir_prototype() const
 }
 
 // TODO: Decide whether to resolve wl_resource* to wrapped types (ie: Region, Surface, etc).
-Emitter Method::thunk_body(std::string const& interface_type) const
+Emitter Method::thunk_impl() const
 {
     return {"static void ", name, "_thunk(", wl_args(), ")",
         Block{
-            {"auto me = static_cast<", interface_type, "*>(wl_resource_get_user_data(resource));"},
+            {"auto me = static_cast<", class_name, "*>(wl_resource_get_user_data(resource));"},
             converters(),
             "try",
             Block{
@@ -54,7 +55,7 @@ Emitter Method::thunk_body(std::string const& interface_type) const
                     List{{"::mir::logging::Severity::critical",
                           "\"frontend:Wayland\"",
                           "std::current_exception()",
-                          {"\"Exception processing ", interface_type, "::", name, "() request\""}},
+                          {"\"Exception processing ", class_name, "::", name, "() request\""}},
                         Line{{","}, false, true}, "           "},
                 ");"
             }}

@@ -52,14 +52,14 @@ private:
     Emitter bind_prototype() const;
     Emitter virtual_method_prototypes() const;
     Emitter member_vars() const;
-    Emitter thunk_bodies() const;
+    Emitter thunks_impl() const;
     Emitter bind_thunk() const;
     Emitter resource_destroyed_thunk() const;
     Emitter vtable_declare() const;
     Emitter vtable_init() const;
     Emitter vtable_contents() const;
 
-    static std::vector<Method> get_methods(xmlpp::Element const& node, bool is_global);
+    std::vector<Method> get_methods(xmlpp::Element const& node, bool is_global);
 
     std::string const wl_name;
     std::string const generated_name;

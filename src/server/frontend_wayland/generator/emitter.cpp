@@ -202,7 +202,7 @@ Emitter::Emitter(Block && block)
     impl = std::make_shared<LayoutEmitter>(Emitter{"{",
                                                    Emitter{std::make_shared<LayoutEmitter>(
                                                        Lines{block.emitters}, true, true, single_indent)},
-                                                   "}"}, true, true);
+                                                   "}"}, true, false);
 }
 
 Emitter::Emitter(List && list)
