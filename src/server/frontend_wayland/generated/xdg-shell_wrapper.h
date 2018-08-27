@@ -372,7 +372,7 @@ private:
         std::experimental::optional<struct wl_resource*> parent_resolved;
         if (parent != nullptr)
         {
-            parent_resolved = parent;
+            parent_resolved = {parent};
         }
         try
         {
@@ -493,7 +493,7 @@ private:
         std::experimental::optional<struct wl_resource*> parent_resolved;
         if (parent != nullptr)
         {
-            parent_resolved = parent;
+            parent_resolved = {parent};
         }
         try
         {
@@ -648,7 +648,7 @@ private:
         std::experimental::optional<struct wl_resource*> output_resolved;
         if (output != nullptr)
         {
-            output_resolved = output;
+            output_resolved = {output};
         }
         try
         {

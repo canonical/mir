@@ -88,7 +88,7 @@ Emitter Argument::optional_object_converter(std::string name)
         {"std::experimental::optional<struct wl_resource*> ", name, "_resolved;"},
         {"if (", name, " != nullptr)"},
         Block{
-            {name, "_resolved = ", name, ";"}
+            {name, "_resolved = {", name, "};"}
         }
     };
 }
@@ -99,7 +99,7 @@ Emitter Argument::optional_string_converter(std::string name)
         {"std::experimental::optional<std::string> ", name, "_resolved;"},
         {"if (", name, " != nullptr)"},
         Block{
-            {name, "_resolved = ", name, ";"}
+            {name, "_resolved = {", name, "};"}
         }
     };
 

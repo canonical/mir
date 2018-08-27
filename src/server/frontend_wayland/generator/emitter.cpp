@@ -19,7 +19,6 @@
 #include "emitter.h"
 
 std::string const Emitter::single_indent = "    ";
-const bool debug = true;
 
 class Emitter::Impl
 {

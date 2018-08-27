@@ -395,7 +395,7 @@ private:
         std::experimental::optional<std::string> mime_type_resolved;
         if (mime_type != nullptr)
         {
-            mime_type_resolved = mime_type;
+            mime_type_resolved = {mime_type};
         }
         try
         {
@@ -609,12 +609,12 @@ private:
         std::experimental::optional<struct wl_resource*> source_resolved;
         if (source != nullptr)
         {
-            source_resolved = source;
+            source_resolved = {source};
         }
         std::experimental::optional<struct wl_resource*> icon_resolved;
         if (icon != nullptr)
         {
-            icon_resolved = icon;
+            icon_resolved = {icon};
         }
         try
         {
@@ -634,7 +634,7 @@ private:
         std::experimental::optional<struct wl_resource*> source_resolved;
         if (source != nullptr)
         {
-            source_resolved = source;
+            source_resolved = {source};
         }
         try
         {
@@ -965,7 +965,7 @@ private:
         std::experimental::optional<struct wl_resource*> output_resolved;
         if (output != nullptr)
         {
-            output_resolved = output;
+            output_resolved = {output};
         }
         try
         {
@@ -1000,7 +1000,7 @@ private:
         std::experimental::optional<struct wl_resource*> output_resolved;
         if (output != nullptr)
         {
-            output_resolved = output;
+            output_resolved = {output};
         }
         try
         {
@@ -1122,7 +1122,7 @@ private:
         std::experimental::optional<struct wl_resource*> buffer_resolved;
         if (buffer != nullptr)
         {
-            buffer_resolved = buffer;
+            buffer_resolved = {buffer};
         }
         try
         {
@@ -1172,7 +1172,7 @@ private:
         std::experimental::optional<struct wl_resource*> region_resolved;
         if (region != nullptr)
         {
-            region_resolved = region;
+            region_resolved = {region};
         }
         try
         {
@@ -1192,7 +1192,7 @@ private:
         std::experimental::optional<struct wl_resource*> region_resolved;
         if (region != nullptr)
         {
-            region_resolved = region;
+            region_resolved = {region};
         }
         try
         {
@@ -1449,7 +1449,7 @@ private:
         std::experimental::optional<struct wl_resource*> surface_resolved;
         if (surface != nullptr)
         {
-            surface_resolved = surface;
+            surface_resolved = {surface};
         }
         try
         {
