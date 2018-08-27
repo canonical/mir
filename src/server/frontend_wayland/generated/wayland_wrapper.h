@@ -34,6 +34,7 @@ protected:
     struct wl_resource* const resource;
 
 private:
+    struct Thunks;
 };
 
 class Compositor
@@ -51,61 +52,7 @@ protected:
     uint32_t const max_version;
 
 private:
-    static void create_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
-    {
-        auto me = static_cast<Compositor*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->create_surface(client, resource, id);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Compositor::create_surface() request");
-        }
-    }
-    static void create_region_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
-    {
-        auto me = static_cast<Compositor*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->create_region(client, resource, id);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Compositor::create_region() request");
-        }
-    }
-
-    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
-    {
-        auto me = static_cast<Compositor*>(data);
-        auto resource = wl_resource_create(client, &wl_compositor_interface,
-                                           std::min(version, me->max_version), id);
-        if (resource == nullptr)
-        {
-            wl_client_post_no_memory(client);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
-        try
-        {
-            me->bind(client, resource);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Compositor::bind() request");
-        }
-    }
-
+    struct Thunks;
     static struct wl_compositor_interface const vtable;
 };
 
@@ -123,57 +70,7 @@ protected:
     struct wl_resource* const resource;
 
 private:
-    static void create_buffer_thunk(struct wl_client*, struct wl_resource* resource, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format)
-    {
-        auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->create_buffer(id, offset, width, height, stride, format);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ShmPool::create_buffer() request");
-        }
-    }
-    static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->destroy();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ShmPool::destroy() request");
-        }
-    }
-    static void resize_thunk(struct wl_client*, struct wl_resource* resource, int32_t size)
-    {
-        auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->resize(size);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ShmPool::resize() request");
-        }
-    }
-
-    static void resource_destroyed_thunk(wl_resource* resource)
-    {
-        delete static_cast<ShmPool*>(wl_resource_get_user_data(resource));
-    }
-
+    struct Thunks;
     static struct wl_shm_pool_interface const vtable;
 };
 
@@ -191,47 +88,7 @@ protected:
     uint32_t const max_version;
 
 private:
-    static void create_pool_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int fd, int32_t size)
-    {
-        auto me = static_cast<Shm*>(wl_resource_get_user_data(resource));
-        mir::Fd fd_resolved{fd};
-        try
-        {
-            me->create_pool(client, resource, id, fd_resolved, size);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Shm::create_pool() request");
-        }
-    }
-
-    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
-    {
-        auto me = static_cast<Shm*>(data);
-        auto resource = wl_resource_create(client, &wl_shm_interface,
-                                           std::min(version, me->max_version), id);
-        if (resource == nullptr)
-        {
-            wl_client_post_no_memory(client);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
-        try
-        {
-            me->bind(client, resource);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Shm::bind() request");
-        }
-    }
-
+    struct Thunks;
     static struct wl_shm_interface const vtable;
 };
 
@@ -247,27 +104,7 @@ protected:
     struct wl_resource* const resource;
 
 private:
-    static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<Buffer*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->destroy();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Buffer::destroy() request");
-        }
-    }
-
-    static void resource_destroyed_thunk(wl_resource* resource)
-    {
-        delete static_cast<Buffer*>(wl_resource_get_user_data(resource));
-    }
-
+    struct Thunks;
     static struct wl_buffer_interface const vtable;
 };
 
@@ -287,93 +124,7 @@ protected:
     struct wl_resource* const resource;
 
 private:
-    static void accept_thunk(struct wl_client*, struct wl_resource* resource, uint32_t serial, char const* mime_type)
-    {
-        auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
-        std::experimental::optional<std::string> mime_type_resolved;
-        if (mime_type != nullptr)
-        {
-            mime_type_resolved = {mime_type};
-        }
-        try
-        {
-            me->accept(serial, mime_type_resolved);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataOffer::accept() request");
-        }
-    }
-    static void receive_thunk(struct wl_client*, struct wl_resource* resource, char const* mime_type, int fd)
-    {
-        auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
-        mir::Fd fd_resolved{fd};
-        try
-        {
-            me->receive(mime_type, fd_resolved);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataOffer::receive() request");
-        }
-    }
-    static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->destroy();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataOffer::destroy() request");
-        }
-    }
-    static void finish_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->finish();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataOffer::finish() request");
-        }
-    }
-    static void set_actions_thunk(struct wl_client*, struct wl_resource* resource, uint32_t dnd_actions, uint32_t preferred_action)
-    {
-        auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->set_actions(dnd_actions, preferred_action);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataOffer::set_actions() request");
-        }
-    }
-
-    static void resource_destroyed_thunk(wl_resource* resource)
-    {
-        delete static_cast<DataOffer*>(wl_resource_get_user_data(resource));
-    }
-
+    struct Thunks;
     static struct wl_data_offer_interface const vtable;
 };
 
@@ -391,57 +142,7 @@ protected:
     struct wl_resource* const resource;
 
 private:
-    static void offer_thunk(struct wl_client*, struct wl_resource* resource, char const* mime_type)
-    {
-        auto me = static_cast<DataSource*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->offer(mime_type);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataSource::offer() request");
-        }
-    }
-    static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<DataSource*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->destroy();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataSource::destroy() request");
-        }
-    }
-    static void set_actions_thunk(struct wl_client*, struct wl_resource* resource, uint32_t dnd_actions)
-    {
-        auto me = static_cast<DataSource*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->set_actions(dnd_actions);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataSource::set_actions() request");
-        }
-    }
-
-    static void resource_destroyed_thunk(wl_resource* resource)
-    {
-        delete static_cast<DataSource*>(wl_resource_get_user_data(resource));
-    }
-
+    struct Thunks;
     static struct wl_data_source_interface const vtable;
 };
 
@@ -459,72 +160,7 @@ protected:
     struct wl_resource* const resource;
 
 private:
-    static void start_drag_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* source, struct wl_resource* origin, struct wl_resource* icon, uint32_t serial)
-    {
-        auto me = static_cast<DataDevice*>(wl_resource_get_user_data(resource));
-        std::experimental::optional<struct wl_resource*> source_resolved;
-        if (source != nullptr)
-        {
-            source_resolved = {source};
-        }
-        std::experimental::optional<struct wl_resource*> icon_resolved;
-        if (icon != nullptr)
-        {
-            icon_resolved = {icon};
-        }
-        try
-        {
-            me->start_drag(source_resolved, origin, icon_resolved, serial);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataDevice::start_drag() request");
-        }
-    }
-    static void set_selection_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* source, uint32_t serial)
-    {
-        auto me = static_cast<DataDevice*>(wl_resource_get_user_data(resource));
-        std::experimental::optional<struct wl_resource*> source_resolved;
-        if (source != nullptr)
-        {
-            source_resolved = {source};
-        }
-        try
-        {
-            me->set_selection(source_resolved, serial);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataDevice::set_selection() request");
-        }
-    }
-    static void release_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<DataDevice*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->release();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataDevice::release() request");
-        }
-    }
-
-    static void resource_destroyed_thunk(wl_resource* resource)
-    {
-        delete static_cast<DataDevice*>(wl_resource_get_user_data(resource));
-    }
-
+    struct Thunks;
     static struct wl_data_device_interface const vtable;
 };
 
@@ -543,61 +179,7 @@ protected:
     uint32_t const max_version;
 
 private:
-    static void create_data_source_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
-    {
-        auto me = static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->create_data_source(client, resource, id);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataDeviceManager::create_data_source() request");
-        }
-    }
-    static void get_data_device_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat)
-    {
-        auto me = static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->get_data_device(client, resource, id, seat);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataDeviceManager::get_data_device() request");
-        }
-    }
-
-    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
-    {
-        auto me = static_cast<DataDeviceManager*>(data);
-        auto resource = wl_resource_create(client, &wl_data_device_manager_interface,
-                                           std::min(version, me->max_version), id);
-        if (resource == nullptr)
-        {
-            wl_client_post_no_memory(client);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
-        try
-        {
-            me->bind(client, resource);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing DataDeviceManager::bind() request");
-        }
-    }
-
+    struct Thunks;
     static struct wl_data_device_manager_interface const vtable;
 };
 
@@ -615,46 +197,7 @@ protected:
     uint32_t const max_version;
 
 private:
-    static void get_shell_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
-    {
-        auto me = static_cast<Shell*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->get_shell_surface(client, resource, id, surface);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Shell::get_shell_surface() request");
-        }
-    }
-
-    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
-    {
-        auto me = static_cast<Shell*>(data);
-        auto resource = wl_resource_create(client, &wl_shell_interface,
-                                           std::min(version, me->max_version), id);
-        if (resource == nullptr)
-        {
-            wl_client_post_no_memory(client);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
-        try
-        {
-            me->bind(client, resource);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Shell::bind() request");
-        }
-    }
-
+    struct Thunks;
     static struct wl_shell_interface const vtable;
 };
 
@@ -679,172 +222,7 @@ protected:
     struct wl_resource* const resource;
 
 private:
-    static void pong_thunk(struct wl_client*, struct wl_resource* resource, uint32_t serial)
-    {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->pong(serial);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ShellSurface::pong() request");
-        }
-    }
-    static void move_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial)
-    {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->move(seat, serial);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ShellSurface::move() request");
-        }
-    }
-    static void resize_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, uint32_t edges)
-    {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->resize(seat, serial, edges);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ShellSurface::resize() request");
-        }
-    }
-    static void set_toplevel_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->set_toplevel();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ShellSurface::set_toplevel() request");
-        }
-    }
-    static void set_transient_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
-    {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->set_transient(parent, x, y, flags);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ShellSurface::set_transient() request");
-        }
-    }
-    static void set_fullscreen_thunk(struct wl_client*, struct wl_resource* resource, uint32_t method, uint32_t framerate, struct wl_resource* output)
-    {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        std::experimental::optional<struct wl_resource*> output_resolved;
-        if (output != nullptr)
-        {
-            output_resolved = {output};
-        }
-        try
-        {
-            me->set_fullscreen(method, framerate, output_resolved);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ShellSurface::set_fullscreen() request");
-        }
-    }
-    static void set_popup_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* seat, uint32_t serial, struct wl_resource* parent, int32_t x, int32_t y, uint32_t flags)
-    {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->set_popup(seat, serial, parent, x, y, flags);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ShellSurface::set_popup() request");
-        }
-    }
-    static void set_maximized_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* output)
-    {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        std::experimental::optional<struct wl_resource*> output_resolved;
-        if (output != nullptr)
-        {
-            output_resolved = {output};
-        }
-        try
-        {
-            me->set_maximized(output_resolved);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ShellSurface::set_maximized() request");
-        }
-    }
-    static void set_title_thunk(struct wl_client*, struct wl_resource* resource, char const* title)
-    {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->set_title(title);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ShellSurface::set_title() request");
-        }
-    }
-    static void set_class_thunk(struct wl_client*, struct wl_resource* resource, char const* class_)
-    {
-        auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->set_class(class_);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ShellSurface::set_class() request");
-        }
-    }
-
-    static void resource_destroyed_thunk(wl_resource* resource)
-    {
-        delete static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
-    }
-
+    struct Thunks;
     static struct wl_shell_surface_interface const vtable;
 };
 
@@ -869,177 +247,7 @@ protected:
     struct wl_resource* const resource;
 
 private:
-    static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->destroy();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Surface::destroy() request");
-        }
-    }
-    static void attach_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* buffer, int32_t x, int32_t y)
-    {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        std::experimental::optional<struct wl_resource*> buffer_resolved;
-        if (buffer != nullptr)
-        {
-            buffer_resolved = {buffer};
-        }
-        try
-        {
-            me->attach(buffer_resolved, x, y);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Surface::attach() request");
-        }
-    }
-    static void damage_thunk(struct wl_client*, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
-    {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->damage(x, y, width, height);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Surface::damage() request");
-        }
-    }
-    static void frame_thunk(struct wl_client*, struct wl_resource* resource, uint32_t callback)
-    {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->frame(callback);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Surface::frame() request");
-        }
-    }
-    static void set_opaque_region_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* region)
-    {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        std::experimental::optional<struct wl_resource*> region_resolved;
-        if (region != nullptr)
-        {
-            region_resolved = {region};
-        }
-        try
-        {
-            me->set_opaque_region(region_resolved);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Surface::set_opaque_region() request");
-        }
-    }
-    static void set_input_region_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* region)
-    {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        std::experimental::optional<struct wl_resource*> region_resolved;
-        if (region != nullptr)
-        {
-            region_resolved = {region};
-        }
-        try
-        {
-            me->set_input_region(region_resolved);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Surface::set_input_region() request");
-        }
-    }
-    static void commit_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->commit();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Surface::commit() request");
-        }
-    }
-    static void set_buffer_transform_thunk(struct wl_client*, struct wl_resource* resource, int32_t transform)
-    {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->set_buffer_transform(transform);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Surface::set_buffer_transform() request");
-        }
-    }
-    static void set_buffer_scale_thunk(struct wl_client*, struct wl_resource* resource, int32_t scale)
-    {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->set_buffer_scale(scale);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Surface::set_buffer_scale() request");
-        }
-    }
-    static void damage_buffer_thunk(struct wl_client*, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
-    {
-        auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->damage_buffer(x, y, width, height);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Surface::damage_buffer() request");
-        }
-    }
-
-    static void resource_destroyed_thunk(wl_resource* resource)
-    {
-        delete static_cast<Surface*>(wl_resource_get_user_data(resource));
-    }
-
+    struct Thunks;
     static struct wl_surface_interface const vtable;
 };
 
@@ -1060,91 +268,7 @@ protected:
     uint32_t const max_version;
 
 private:
-    static void get_pointer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
-    {
-        auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->get_pointer(client, resource, id);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Seat::get_pointer() request");
-        }
-    }
-    static void get_keyboard_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
-    {
-        auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->get_keyboard(client, resource, id);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Seat::get_keyboard() request");
-        }
-    }
-    static void get_touch_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
-    {
-        auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->get_touch(client, resource, id);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Seat::get_touch() request");
-        }
-    }
-    static void release_thunk(struct wl_client* client, struct wl_resource* resource)
-    {
-        auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->release(client, resource);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Seat::release() request");
-        }
-    }
-
-    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
-    {
-        auto me = static_cast<Seat*>(data);
-        auto resource = wl_resource_create(client, &wl_seat_interface,
-                                           std::min(version, me->max_version), id);
-        if (resource == nullptr)
-        {
-            wl_client_post_no_memory(client);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
-        try
-        {
-            me->bind(client, resource);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Seat::bind() request");
-        }
-    }
-
+    struct Thunks;
     static struct wl_seat_interface const vtable;
 };
 
@@ -1161,47 +285,7 @@ protected:
     struct wl_resource* const resource;
 
 private:
-    static void set_cursor_thunk(struct wl_client*, struct wl_resource* resource, uint32_t serial, struct wl_resource* surface, int32_t hotspot_x, int32_t hotspot_y)
-    {
-        auto me = static_cast<Pointer*>(wl_resource_get_user_data(resource));
-        std::experimental::optional<struct wl_resource*> surface_resolved;
-        if (surface != nullptr)
-        {
-            surface_resolved = {surface};
-        }
-        try
-        {
-            me->set_cursor(serial, surface_resolved, hotspot_x, hotspot_y);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Pointer::set_cursor() request");
-        }
-    }
-    static void release_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<Pointer*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->release();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Pointer::release() request");
-        }
-    }
-
-    static void resource_destroyed_thunk(wl_resource* resource)
-    {
-        delete static_cast<Pointer*>(wl_resource_get_user_data(resource));
-    }
-
+    struct Thunks;
     static struct wl_pointer_interface const vtable;
 };
 
@@ -1217,27 +301,7 @@ protected:
     struct wl_resource* const resource;
 
 private:
-    static void release_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<Keyboard*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->release();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Keyboard::release() request");
-        }
-    }
-
-    static void resource_destroyed_thunk(wl_resource* resource)
-    {
-        delete static_cast<Keyboard*>(wl_resource_get_user_data(resource));
-    }
-
+    struct Thunks;
     static struct wl_keyboard_interface const vtable;
 };
 
@@ -1253,27 +317,7 @@ protected:
     struct wl_resource* const resource;
 
 private:
-    static void release_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<Touch*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->release();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Touch::release() request");
-        }
-    }
-
-    static void resource_destroyed_thunk(wl_resource* resource)
-    {
-        delete static_cast<Touch*>(wl_resource_get_user_data(resource));
-    }
-
+    struct Thunks;
     static struct wl_touch_interface const vtable;
 };
 
@@ -1291,46 +335,7 @@ protected:
     uint32_t const max_version;
 
 private:
-    static void release_thunk(struct wl_client* client, struct wl_resource* resource)
-    {
-        auto me = static_cast<Output*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->release(client, resource);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Output::release() request");
-        }
-    }
-
-    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
-    {
-        auto me = static_cast<Output*>(data);
-        auto resource = wl_resource_create(client, &wl_output_interface,
-                                           std::min(version, me->max_version), id);
-        if (resource == nullptr)
-        {
-            wl_client_post_no_memory(client);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
-        try
-        {
-            me->bind(client, resource);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Output::bind() request");
-        }
-    }
-
+    struct Thunks;
     static struct wl_output_interface const vtable;
 };
 
@@ -1348,57 +353,7 @@ protected:
     struct wl_resource* const resource;
 
 private:
-    static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<Region*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->destroy();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Region::destroy() request");
-        }
-    }
-    static void add_thunk(struct wl_client*, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
-    {
-        auto me = static_cast<Region*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->add(x, y, width, height);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Region::add() request");
-        }
-    }
-    static void subtract_thunk(struct wl_client*, struct wl_resource* resource, int32_t x, int32_t y, int32_t width, int32_t height)
-    {
-        auto me = static_cast<Region*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->subtract(x, y, width, height);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Region::subtract() request");
-        }
-    }
-
-    static void resource_destroyed_thunk(wl_resource* resource)
-    {
-        delete static_cast<Region*>(wl_resource_get_user_data(resource));
-    }
-
+    struct Thunks;
     static struct wl_region_interface const vtable;
 };
 
@@ -1417,61 +372,7 @@ protected:
     uint32_t const max_version;
 
 private:
-    static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
-    {
-        auto me = static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->destroy(client, resource);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Subcompositor::destroy() request");
-        }
-    }
-    static void get_subsurface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* parent)
-    {
-        auto me = static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->get_subsurface(client, resource, id, surface, parent);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Subcompositor::get_subsurface() request");
-        }
-    }
-
-    static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
-    {
-        auto me = static_cast<Subcompositor*>(data);
-        auto resource = wl_resource_create(client, &wl_subcompositor_interface,
-                                           std::min(version, me->max_version), id);
-        if (resource == nullptr)
-        {
-            wl_client_post_no_memory(client);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
-        try
-        {
-            me->bind(client, resource);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Subcompositor::bind() request");
-        }
-    }
-
+    struct Thunks;
     static struct wl_subcompositor_interface const vtable;
 };
 
@@ -1492,102 +393,7 @@ protected:
     struct wl_resource* const resource;
 
 private:
-    static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->destroy();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Subsurface::destroy() request");
-        }
-    }
-    static void set_position_thunk(struct wl_client*, struct wl_resource* resource, int32_t x, int32_t y)
-    {
-        auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->set_position(x, y);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Subsurface::set_position() request");
-        }
-    }
-    static void place_above_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* sibling)
-    {
-        auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->place_above(sibling);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Subsurface::place_above() request");
-        }
-    }
-    static void place_below_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* sibling)
-    {
-        auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->place_below(sibling);
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Subsurface::place_below() request");
-        }
-    }
-    static void set_sync_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->set_sync();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Subsurface::set_sync() request");
-        }
-    }
-    static void set_desync_thunk(struct wl_client*, struct wl_resource* resource)
-    {
-        auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
-        try
-        {
-            me->set_desync();
-        }
-        catch(...)
-        {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing Subsurface::set_desync() request");
-        }
-    }
-
-    static void resource_destroyed_thunk(wl_resource* resource)
-    {
-        delete static_cast<Subsurface*>(wl_resource_get_user_data(resource));
-    }
-
+    struct Thunks;
     static struct wl_subsurface_interface const vtable;
 };
 
