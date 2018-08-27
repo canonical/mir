@@ -18,6 +18,22 @@ namespace mfw = mir::frontend::wayland;
 
 // XdgShellV6
 
+mfw::XdgShellV6::XdgShellV6(struct wl_display* display, uint32_t max_version)
+    : global{wl_global_create(display, &zxdg_shell_v6_interface, max_version, this, &XdgShellV6::bind_thunk)},
+      max_version{max_version}
+{
+    if (global == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{
+            "Failed to export zxdg_shell_v6 interface"}));
+    }
+}
+
+mfw::XdgShellV6::~XdgShellV6()
+{
+    wl_global_destroy(global);
+}
+
 struct zxdg_shell_v6_interface const mfw::XdgShellV6::vtable = {
     destroy_thunk,
     create_positioner_thunk,
@@ -25,6 +41,18 @@ struct zxdg_shell_v6_interface const mfw::XdgShellV6::vtable = {
     pong_thunk};
 
 // XdgPositionerV6
+
+mfw::XdgPositionerV6::XdgPositionerV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &zxdg_positioner_v6_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
 
 struct zxdg_positioner_v6_interface const mfw::XdgPositionerV6::vtable = {
     destroy_thunk,
@@ -37,6 +65,18 @@ struct zxdg_positioner_v6_interface const mfw::XdgPositionerV6::vtable = {
 
 // XdgSurfaceV6
 
+mfw::XdgSurfaceV6::XdgSurfaceV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &zxdg_surface_v6_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
+
 struct zxdg_surface_v6_interface const mfw::XdgSurfaceV6::vtable = {
     destroy_thunk,
     get_toplevel_thunk,
@@ -45,6 +85,18 @@ struct zxdg_surface_v6_interface const mfw::XdgSurfaceV6::vtable = {
     ack_configure_thunk};
 
 // XdgToplevelV6
+
+mfw::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &zxdg_toplevel_v6_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
 
 struct zxdg_toplevel_v6_interface const mfw::XdgToplevelV6::vtable = {
     destroy_thunk,
@@ -63,6 +115,18 @@ struct zxdg_toplevel_v6_interface const mfw::XdgToplevelV6::vtable = {
     set_minimized_thunk};
 
 // XdgPopupV6
+
+mfw::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &zxdg_popup_v6_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
 
 struct zxdg_popup_v6_interface const mfw::XdgPopupV6::vtable = {
     destroy_thunk,

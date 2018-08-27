@@ -27,22 +27,8 @@ namespace wayland
 class XdgShellV6
 {
 protected:
-    XdgShellV6(struct wl_display* display, uint32_t max_version)
-        : global{wl_global_create(display, &zxdg_shell_v6_interface, max_version,
-                                  this, &XdgShellV6::bind_thunk)},
-          max_version{max_version}
-    {
-        if (global == nullptr)
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{
-                "Failed to export zxdg_shell_v6 interface"}));
-        }
-    }
-
-    virtual ~XdgShellV6()
-    {
-        wl_global_destroy(global);
-    }
+    XdgShellV6(struct wl_display* display, uint32_t max_version);
+    virtual ~XdgShellV6();
 
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
@@ -146,19 +132,7 @@ private:
 class XdgPositionerV6
 {
 protected:
-    XdgPositionerV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &zxdg_positioner_v6_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    XdgPositionerV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgPositionerV6() = default;
 
     virtual void destroy() = 0;
@@ -290,19 +264,7 @@ private:
 class XdgSurfaceV6
 {
 protected:
-    XdgSurfaceV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &zxdg_surface_v6_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    XdgSurfaceV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgSurfaceV6() = default;
 
     virtual void destroy() = 0;
@@ -402,19 +364,7 @@ private:
 class XdgToplevelV6
 {
 protected:
-    XdgToplevelV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &zxdg_toplevel_v6_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    XdgToplevelV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgToplevelV6() = default;
 
     virtual void destroy() = 0;
@@ -668,19 +618,7 @@ private:
 class XdgPopupV6
 {
 protected:
-    XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &zxdg_popup_v6_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgPopupV6() = default;
 
     virtual void destroy() = 0;

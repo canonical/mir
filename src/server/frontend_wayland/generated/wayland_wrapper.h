@@ -27,18 +27,7 @@ namespace wayland
 class Callback
 {
 protected:
-    Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &wl_callback_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-    }
-
+    Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Callback() = default;
 
     struct wl_client* const client;
@@ -50,22 +39,8 @@ private:
 class Compositor
 {
 protected:
-    Compositor(struct wl_display* display, uint32_t max_version)
-        : global{wl_global_create(display, &wl_compositor_interface, max_version,
-                                  this, &Compositor::bind_thunk)},
-          max_version{max_version}
-    {
-        if (global == nullptr)
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{
-                "Failed to export wl_compositor interface"}));
-        }
-    }
-
-    virtual ~Compositor()
-    {
-        wl_global_destroy(global);
-    }
+    Compositor(struct wl_display* display, uint32_t max_version);
+    virtual ~Compositor();
 
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
@@ -137,19 +112,7 @@ private:
 class ShmPool
 {
 protected:
-    ShmPool(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &wl_shm_pool_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    ShmPool(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~ShmPool() = default;
 
     virtual void create_buffer(uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) = 0;
@@ -217,22 +180,8 @@ private:
 class Shm
 {
 protected:
-    Shm(struct wl_display* display, uint32_t max_version)
-        : global{wl_global_create(display, &wl_shm_interface, max_version,
-                                  this, &Shm::bind_thunk)},
-          max_version{max_version}
-    {
-        if (global == nullptr)
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{
-                "Failed to export wl_shm interface"}));
-        }
-    }
-
-    virtual ~Shm()
-    {
-        wl_global_destroy(global);
-    }
+    Shm(struct wl_display* display, uint32_t max_version);
+    virtual ~Shm();
 
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
@@ -289,19 +238,7 @@ private:
 class Buffer
 {
 protected:
-    Buffer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &wl_buffer_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    Buffer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Buffer() = default;
 
     virtual void destroy() = 0;
@@ -337,19 +274,7 @@ private:
 class DataOffer
 {
 protected:
-    DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &wl_data_offer_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~DataOffer() = default;
 
     virtual void accept(uint32_t serial, std::experimental::optional<std::string> const& mime_type) = 0;
@@ -455,19 +380,7 @@ private:
 class DataSource
 {
 protected:
-    DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &wl_data_source_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~DataSource() = default;
 
     virtual void offer(std::string const& mime_type) = 0;
@@ -535,19 +448,7 @@ private:
 class DataDevice
 {
 protected:
-    DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &wl_data_device_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~DataDevice() = default;
 
     virtual void start_drag(std::experimental::optional<struct wl_resource*> const& source, struct wl_resource* origin, std::experimental::optional<struct wl_resource*> const& icon, uint32_t serial) = 0;
@@ -630,22 +531,8 @@ private:
 class DataDeviceManager
 {
 protected:
-    DataDeviceManager(struct wl_display* display, uint32_t max_version)
-        : global{wl_global_create(display, &wl_data_device_manager_interface, max_version,
-                                  this, &DataDeviceManager::bind_thunk)},
-          max_version{max_version}
-    {
-        if (global == nullptr)
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{
-                "Failed to export wl_data_device_manager interface"}));
-        }
-    }
-
-    virtual ~DataDeviceManager()
-    {
-        wl_global_destroy(global);
-    }
+    DataDeviceManager(struct wl_display* display, uint32_t max_version);
+    virtual ~DataDeviceManager();
 
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
@@ -717,22 +604,8 @@ private:
 class Shell
 {
 protected:
-    Shell(struct wl_display* display, uint32_t max_version)
-        : global{wl_global_create(display, &wl_shell_interface, max_version,
-                                  this, &Shell::bind_thunk)},
-          max_version{max_version}
-    {
-        if (global == nullptr)
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{
-                "Failed to export wl_shell interface"}));
-        }
-    }
-
-    virtual ~Shell()
-    {
-        wl_global_destroy(global);
-    }
+    Shell(struct wl_display* display, uint32_t max_version);
+    virtual ~Shell();
 
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
@@ -788,19 +661,7 @@ private:
 class ShellSurface
 {
 protected:
-    ShellSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &wl_shell_surface_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    ShellSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~ShellSurface() = default;
 
     virtual void pong(uint32_t serial) = 0;
@@ -990,19 +851,7 @@ private:
 class Surface
 {
 protected:
-    Surface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &wl_surface_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    Surface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Surface() = default;
 
     virtual void destroy() = 0;
@@ -1197,22 +1046,8 @@ private:
 class Seat
 {
 protected:
-    Seat(struct wl_display* display, uint32_t max_version)
-        : global{wl_global_create(display, &wl_seat_interface, max_version,
-                                  this, &Seat::bind_thunk)},
-          max_version{max_version}
-    {
-        if (global == nullptr)
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{
-                "Failed to export wl_seat interface"}));
-        }
-    }
-
-    virtual ~Seat()
-    {
-        wl_global_destroy(global);
-    }
+    Seat(struct wl_display* display, uint32_t max_version);
+    virtual ~Seat();
 
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
@@ -1316,19 +1151,7 @@ private:
 class Pointer
 {
 protected:
-    Pointer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &wl_pointer_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    Pointer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Pointer() = default;
 
     virtual void set_cursor(uint32_t serial, std::experimental::optional<struct wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) = 0;
@@ -1385,19 +1208,7 @@ private:
 class Keyboard
 {
 protected:
-    Keyboard(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &wl_keyboard_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    Keyboard(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Keyboard() = default;
 
     virtual void release() = 0;
@@ -1433,19 +1244,7 @@ private:
 class Touch
 {
 protected:
-    Touch(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &wl_touch_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    Touch(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Touch() = default;
 
     virtual void release() = 0;
@@ -1481,22 +1280,8 @@ private:
 class Output
 {
 protected:
-    Output(struct wl_display* display, uint32_t max_version)
-        : global{wl_global_create(display, &wl_output_interface, max_version,
-                                  this, &Output::bind_thunk)},
-          max_version{max_version}
-    {
-        if (global == nullptr)
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{
-                "Failed to export wl_output interface"}));
-        }
-    }
-
-    virtual ~Output()
-    {
-        wl_global_destroy(global);
-    }
+    Output(struct wl_display* display, uint32_t max_version);
+    virtual ~Output();
 
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
@@ -1552,19 +1337,7 @@ private:
 class Region
 {
 protected:
-    Region(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &wl_region_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    Region(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Region() = default;
 
     virtual void destroy() = 0;
@@ -1632,22 +1405,8 @@ private:
 class Subcompositor
 {
 protected:
-    Subcompositor(struct wl_display* display, uint32_t max_version)
-        : global{wl_global_create(display, &wl_subcompositor_interface, max_version,
-                                  this, &Subcompositor::bind_thunk)},
-          max_version{max_version}
-    {
-        if (global == nullptr)
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{
-                "Failed to export wl_subcompositor interface"}));
-        }
-    }
-
-    virtual ~Subcompositor()
-    {
-        wl_global_destroy(global);
-    }
+    Subcompositor(struct wl_display* display, uint32_t max_version);
+    virtual ~Subcompositor();
 
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
@@ -1719,19 +1478,7 @@ private:
 class Subsurface
 {
 protected:
-    Subsurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &wl_subsurface_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    Subsurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Subsurface() = default;
 
     virtual void destroy() = 0;

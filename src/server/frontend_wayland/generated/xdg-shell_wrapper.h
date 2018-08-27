@@ -27,22 +27,8 @@ namespace wayland
 class XdgWmBase
 {
 protected:
-    XdgWmBase(struct wl_display* display, uint32_t max_version)
-        : global{wl_global_create(display, &xdg_wm_base_interface, max_version,
-                                  this, &XdgWmBase::bind_thunk)},
-          max_version{max_version}
-    {
-        if (global == nullptr)
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{
-                "Failed to export xdg_wm_base interface"}));
-        }
-    }
-
-    virtual ~XdgWmBase()
-    {
-        wl_global_destroy(global);
-    }
+    XdgWmBase(struct wl_display* display, uint32_t max_version);
+    virtual ~XdgWmBase();
 
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
@@ -146,19 +132,7 @@ private:
 class XdgPositioner
 {
 protected:
-    XdgPositioner(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &xdg_positioner_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    XdgPositioner(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgPositioner() = default;
 
     virtual void destroy() = 0;
@@ -290,19 +264,7 @@ private:
 class XdgSurface
 {
 protected:
-    XdgSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &xdg_surface_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    XdgSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgSurface() = default;
 
     virtual void destroy() = 0;
@@ -407,19 +369,7 @@ private:
 class XdgToplevel
 {
 protected:
-    XdgToplevel(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &xdg_toplevel_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    XdgToplevel(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgToplevel() = default;
 
     virtual void destroy() = 0;
@@ -673,19 +623,7 @@ private:
 class XdgPopup
 {
 protected:
-    XdgPopup(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-        : client{client},
-          resource{wl_resource_create(client, &xdg_popup_interface,
-                                      wl_resource_get_version(parent), id)}
-    {
-        if (resource == nullptr)
-        {
-            wl_resource_post_no_memory(parent);
-            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
-        }
-        wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
-    }
-
+    XdgPopup(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgPopup() = default;
 
     virtual void destroy() = 0;

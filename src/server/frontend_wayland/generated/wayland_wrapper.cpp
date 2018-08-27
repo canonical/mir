@@ -16,13 +16,54 @@
 
 namespace mfw = mir::frontend::wayland;
 
+// Callback
+
+mfw::Callback::Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &wl_callback_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+}
+
 // Compositor
+
+mfw::Compositor::Compositor(struct wl_display* display, uint32_t max_version)
+    : global{wl_global_create(display, &wl_compositor_interface, max_version, this, &Compositor::bind_thunk)},
+      max_version{max_version}
+{
+    if (global == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{
+            "Failed to export wl_compositor interface"}));
+    }
+}
+
+mfw::Compositor::~Compositor()
+{
+    wl_global_destroy(global);
+}
 
 struct wl_compositor_interface const mfw::Compositor::vtable = {
     create_surface_thunk,
     create_region_thunk};
 
 // ShmPool
+
+mfw::ShmPool::ShmPool(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &wl_shm_pool_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
 
 struct wl_shm_pool_interface const mfw::ShmPool::vtable = {
     create_buffer_thunk,
@@ -31,15 +72,55 @@ struct wl_shm_pool_interface const mfw::ShmPool::vtable = {
 
 // Shm
 
+mfw::Shm::Shm(struct wl_display* display, uint32_t max_version)
+    : global{wl_global_create(display, &wl_shm_interface, max_version, this, &Shm::bind_thunk)},
+      max_version{max_version}
+{
+    if (global == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{
+            "Failed to export wl_shm interface"}));
+    }
+}
+
+mfw::Shm::~Shm()
+{
+    wl_global_destroy(global);
+}
+
 struct wl_shm_interface const mfw::Shm::vtable = {
     create_pool_thunk};
 
 // Buffer
 
+mfw::Buffer::Buffer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &wl_buffer_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
+
 struct wl_buffer_interface const mfw::Buffer::vtable = {
     destroy_thunk};
 
 // DataOffer
+
+mfw::DataOffer::DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &wl_data_offer_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
 
 struct wl_data_offer_interface const mfw::DataOffer::vtable = {
     accept_thunk,
@@ -50,12 +131,36 @@ struct wl_data_offer_interface const mfw::DataOffer::vtable = {
 
 // DataSource
 
+mfw::DataSource::DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &wl_data_source_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
+
 struct wl_data_source_interface const mfw::DataSource::vtable = {
     offer_thunk,
     destroy_thunk,
     set_actions_thunk};
 
 // DataDevice
+
+mfw::DataDevice::DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &wl_data_device_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
 
 struct wl_data_device_interface const mfw::DataDevice::vtable = {
     start_drag_thunk,
@@ -64,16 +169,60 @@ struct wl_data_device_interface const mfw::DataDevice::vtable = {
 
 // DataDeviceManager
 
+mfw::DataDeviceManager::DataDeviceManager(struct wl_display* display, uint32_t max_version)
+    : global{wl_global_create(display, &wl_data_device_manager_interface, max_version, this, &DataDeviceManager::bind_thunk)},
+      max_version{max_version}
+{
+    if (global == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{
+            "Failed to export wl_data_device_manager interface"}));
+    }
+}
+
+mfw::DataDeviceManager::~DataDeviceManager()
+{
+    wl_global_destroy(global);
+}
+
 struct wl_data_device_manager_interface const mfw::DataDeviceManager::vtable = {
     create_data_source_thunk,
     get_data_device_thunk};
 
 // Shell
 
+mfw::Shell::Shell(struct wl_display* display, uint32_t max_version)
+    : global{wl_global_create(display, &wl_shell_interface, max_version, this, &Shell::bind_thunk)},
+      max_version{max_version}
+{
+    if (global == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{
+            "Failed to export wl_shell interface"}));
+    }
+}
+
+mfw::Shell::~Shell()
+{
+    wl_global_destroy(global);
+}
+
 struct wl_shell_interface const mfw::Shell::vtable = {
     get_shell_surface_thunk};
 
 // ShellSurface
+
+mfw::ShellSurface::ShellSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &wl_shell_surface_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
 
 struct wl_shell_surface_interface const mfw::ShellSurface::vtable = {
     pong_thunk,
@@ -89,6 +238,18 @@ struct wl_shell_surface_interface const mfw::ShellSurface::vtable = {
 
 // Surface
 
+mfw::Surface::Surface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &wl_surface_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
+
 struct wl_surface_interface const mfw::Surface::vtable = {
     destroy_thunk,
     attach_thunk,
@@ -103,6 +264,22 @@ struct wl_surface_interface const mfw::Surface::vtable = {
 
 // Seat
 
+mfw::Seat::Seat(struct wl_display* display, uint32_t max_version)
+    : global{wl_global_create(display, &wl_seat_interface, max_version, this, &Seat::bind_thunk)},
+      max_version{max_version}
+{
+    if (global == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{
+            "Failed to export wl_seat interface"}));
+    }
+}
+
+mfw::Seat::~Seat()
+{
+    wl_global_destroy(global);
+}
+
 struct wl_seat_interface const mfw::Seat::vtable = {
     get_pointer_thunk,
     get_keyboard_thunk,
@@ -111,26 +288,90 @@ struct wl_seat_interface const mfw::Seat::vtable = {
 
 // Pointer
 
+mfw::Pointer::Pointer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &wl_pointer_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
+
 struct wl_pointer_interface const mfw::Pointer::vtable = {
     set_cursor_thunk,
     release_thunk};
 
 // Keyboard
 
+mfw::Keyboard::Keyboard(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &wl_keyboard_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
+
 struct wl_keyboard_interface const mfw::Keyboard::vtable = {
     release_thunk};
 
 // Touch
+
+mfw::Touch::Touch(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &wl_touch_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
 
 struct wl_touch_interface const mfw::Touch::vtable = {
     release_thunk};
 
 // Output
 
+mfw::Output::Output(struct wl_display* display, uint32_t max_version)
+    : global{wl_global_create(display, &wl_output_interface, max_version, this, &Output::bind_thunk)},
+      max_version{max_version}
+{
+    if (global == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{
+            "Failed to export wl_output interface"}));
+    }
+}
+
+mfw::Output::~Output()
+{
+    wl_global_destroy(global);
+}
+
 struct wl_output_interface const mfw::Output::vtable = {
     release_thunk};
 
 // Region
+
+mfw::Region::Region(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &wl_region_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
 
 struct wl_region_interface const mfw::Region::vtable = {
     destroy_thunk,
@@ -139,11 +380,39 @@ struct wl_region_interface const mfw::Region::vtable = {
 
 // Subcompositor
 
+mfw::Subcompositor::Subcompositor(struct wl_display* display, uint32_t max_version)
+    : global{wl_global_create(display, &wl_subcompositor_interface, max_version, this, &Subcompositor::bind_thunk)},
+      max_version{max_version}
+{
+    if (global == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{
+            "Failed to export wl_subcompositor interface"}));
+    }
+}
+
+mfw::Subcompositor::~Subcompositor()
+{
+    wl_global_destroy(global);
+}
+
 struct wl_subcompositor_interface const mfw::Subcompositor::vtable = {
     destroy_thunk,
     get_subsurface_thunk};
 
 // Subsurface
+
+mfw::Subsurface::Subsurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : client{client},
+      resource{wl_resource_create(client, &wl_subsurface_interface, wl_resource_get_version(parent), id)}
+{
+    if (resource == nullptr)
+    {
+        wl_resource_post_no_memory(parent);
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);
+}
 
 struct wl_subsurface_interface const mfw::Subsurface::vtable = {
     destroy_thunk,
