@@ -27,6 +27,7 @@ Interface::Interface(xmlpp::Element const& node,
                      std::unordered_set<std::string> const& constructable_interfaces)
     : wl_name{node.get_attribute_value("name")},
       generated_name{name_transform(wl_name)},
+      nmspace{"mfw::" + generated_name + "::"},
       is_global{constructable_interfaces.count(wl_name) == 0},
       methods{get_methods(node, is_global)},
       has_vtable{!methods.empty()}
@@ -40,8 +41,10 @@ Emitter Interface::declaration() const
         "{",
         "protected:",
         List {{
-            constructor(),
-            destructor(),
+            Lines {
+                constructor_prototype(),
+                destructor_prototype(),
+            },
             (is_global ? bind_prototype() : nullptr),
             virtual_method_prototypes(),
             member_vars(),
@@ -60,75 +63,84 @@ Emitter Interface::declaration() const
 
 Emitter Interface::implementation() const
 {
-    Emitter impl = Lines{
-        (has_vtable ? vtable_init() : nullptr),
+    return Lines{
+        {"// ", generated_name},
+        empty_line,
+        List{{
+            constructor_impl(),
+            destructor_impl(),
+            (has_vtable ? vtable_init() : nullptr),
+        }, empty_line},
     };
+}
 
-    if (impl.is_valid())
+Emitter Interface::constructor_prototype() const
+{
+    return Line{generated_name, "(", constructor_args(), ");"};
+}
+
+Emitter Interface::constructor_impl() const
+{
+    if (is_global)
     {
         return Lines{
-            {"// ", generated_name},
-            empty_line,
-            impl,
+            {nmspace, generated_name, "(", constructor_args(), ")"},
+            {"    : global{wl_global_create(display, &", wl_name, "_interface, max_version, this, &", generated_name, "::bind_thunk)},"},
+            {"      max_version{max_version}"},
+            Block{
+                "if (global == nullptr)",
+                Block{
+                    "BOOST_THROW_EXCEPTION((std::runtime_error{",
+                    {"    \"Failed to export ", wl_name, " interface\"}));"}
+                }
+            }
         };
     }
     else
     {
-        return nullptr;
+        return Lines{
+            {nmspace, generated_name, "(", constructor_args(), ")"},
+            {"    : client{client},"},
+            {"      resource{wl_resource_create(client, &", wl_name, "_interface, wl_resource_get_version(parent), id)}"},
+            Block{
+                "if (resource == nullptr)",
+                Block{
+                    "wl_resource_post_no_memory(parent);",
+                    "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
+                },
+                (has_vtable ?
+                "wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);" :
+                Emitter{nullptr})
+            }
+        };
     }
 }
 
-Emitter Interface::constructor() const
+Emitter Interface::constructor_args() const
 {
     if (is_global)
-        return constructor_for_global();
+    {
+        return List{{"struct wl_display* display", "uint32_t max_version"},
+                    ", "};
+    }
     else
-        return constructor_for_regular();
+    {
+        return List{{"struct wl_client* client", "struct wl_resource* parent", "uint32_t id"},
+                    ", "};
+    }
 }
 
-Emitter Interface::constructor_for_global() const
+Emitter Interface::destructor_prototype() const
 {
-    return Lines{
-        {generated_name, "(struct wl_display* display, uint32_t max_version)"},
-        {"    : global{wl_global_create(display, &", wl_name, "_interface, max_version,"},
-        {"                              this, &", generated_name, "::bind_thunk)},"},
-        {"      max_version{max_version}"},
-        Block{
-            "if (global == nullptr)",
-            Block{
-                "BOOST_THROW_EXCEPTION((std::runtime_error{",
-                {"    \"Failed to export ", wl_name, " interface\"}));"}
-            }
-        }
-    };
+    return Line{"virtual ~", generated_name, "()", (is_global ? nullptr : " = default"), ";"};
 }
 
-Emitter Interface::constructor_for_regular() const
-{
-    return Lines{
-        {generated_name, "(struct wl_client* client, struct wl_resource* parent, uint32_t id)"},
-        {"    : client{client},"},
-        {"      resource{wl_resource_create(client, &", wl_name, "_interface,"},
-        {"                                  wl_resource_get_version(parent), id)}"},
-        Block{
-            "if (resource == nullptr)",
-            Block{
-                "wl_resource_post_no_memory(parent);",
-                "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
-            },
-            (has_vtable ?
-            "wl_resource_set_implementation(resource, &vtable, this, &resource_destroyed_thunk);" :
-            Emitter{nullptr})
-        }
-    };
-}
-
-Emitter Interface::destructor() const
+Emitter Interface::destructor_impl() const
 {
     if (is_global)
     {
         return Lines{
-            {"virtual ~", generated_name, "()"},
+            {nmspace, "~", generated_name, "()"},
             Block{
                 "wl_global_destroy(global);"
             }
@@ -136,9 +148,7 @@ Emitter Interface::destructor() const
     }
     else
     {
-        return Lines{
-            {"virtual ~", generated_name, "() = default;"}
-        };
+        return nullptr;
     }
 }
 
@@ -238,7 +248,7 @@ Emitter Interface::vtable_declare() const
 Emitter Interface::vtable_init() const
 {
     return Lines{
-        {"struct ", wl_name, "_interface const mfw::", generated_name, "::vtable = {"},
+        {"struct ", wl_name, "_interface const ", nmspace, "vtable = {"},
             {vtable_contents(), "};"}
     };
 }
