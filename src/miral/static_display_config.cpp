@@ -126,102 +126,108 @@ try
     if (!layouts.IsDefined() || !layouts.IsMap())
         throw mir::AbnormalExit{error_prefix + "no layouts"};
 
-    auto layout = layouts["default"];
-
-    if (!layout.IsDefined() || !layout.IsMap())
+    for (auto const& ll : layouts)
     {
-        throw mir::AbnormalExit{error_prefix + "invalid 'default' layout"};
-    }
+        auto const& layout = ll.second;
 
-    Node cards = layout["cards"];
-
-    if (!cards.IsDefined() || !cards.IsSequence())
-        throw mir::AbnormalExit{error_prefix + "invalid 'cards' in 'default' layout"};
-
-    for (Node const card : cards)
-    {
-        mg::DisplayConfigurationCardId card_no;
-
-        if (auto const id = card[card_id])
+        if (!layout.IsDefined() || !layout.IsMap())
         {
-            card_no = mg::DisplayConfigurationCardId{id.as<int>()};
+            throw mir::AbnormalExit{error_prefix + "invalid '" + ll.first.as<std::string>() + "' layout"};
         }
 
-        if (!card.IsDefined() || !(card.IsMap() || card.IsNull()))
-            throw mir::AbnormalExit{error_prefix + "invalid card: " + std::to_string(card_no.as_value())};
+        Id2Config layout_config;
 
-        for (std::pair<Node, Node> port : card)
+        Node cards = layout["cards"];
+
+        if (!cards.IsDefined() || !cards.IsSequence())
+            throw mir::AbnormalExit{error_prefix + "invalid 'cards' in '" + ll.first.as<std::string>() + "' layout"};
+
+        for (Node const card : cards)
         {
-            auto const port_name = port.first.Scalar();
+            mg::DisplayConfigurationCardId card_no;
 
-            if (port_name == card_id)
-                continue;
-
-            auto const& port_config = port.second;
-
-            if (port_config.IsDefined() && !port_config.IsNull())
+            if (auto const id = card[card_id])
             {
-                if (!port_config.IsMap())
-                    throw mir::AbnormalExit{error_prefix + "invalid port: " + port_name};
+                card_no = mg::DisplayConfigurationCardId{id.as<int>()};
+            }
 
-                Id const output_id{card_no, output_type_from(port_name), output_index_from(port_name)};
-                Config   output_config;
+            if (!card.IsDefined() || !(card.IsMap() || card.IsNull()))
+                throw mir::AbnormalExit{error_prefix + "invalid card: " + std::to_string(card_no.as_value())};
 
-                if (auto const s = port_config[state])
+            for (std::pair<Node, Node> port : card)
+            {
+                auto const port_name = port.first.Scalar();
+
+                if (port_name == card_id)
+                    continue;
+
+                auto const& port_config = port.second;
+
+                if (port_config.IsDefined() && !port_config.IsNull())
                 {
-                    auto const state = s.as<std::string>();
-                    if (state != state_enabled && state != state_disabled)
-                        throw mir::AbnormalExit{error_prefix + "invalid 'state' (" + state + ") for port: " + port_name};
-                    output_config.disabled = (state == state_disabled);
-                }
+                    if (!port_config.IsMap())
+                        throw mir::AbnormalExit{error_prefix + "invalid port: " + port_name};
 
-                if (auto const pos = port_config[position])
-                {
-                    output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
-                }
+                    Id const output_id{card_no, output_type_from(port_name), output_index_from(port_name)};
+                    Config   output_config;
 
-                if (auto const m = port_config[mode])
-                {
-                    std::istringstream in{m.as<std::string>()};
-
-                    char delimiter = '\0';
-                    int width;
-                    int height;
-
-                    if (!(in >> width))
-                        goto mode_error;
-
-                    if (!(in >> delimiter) || delimiter != 'x')
-                        goto mode_error;
-
-                    if (!(in >> height))
-                        goto mode_error;
-
-                    output_config.size = Size{width, height};
-
-                    if (in.peek() == '@')
+                    if (auto const s = port_config[state])
                     {
-                        double refresh;
-                        if (!(in >> delimiter) || delimiter != '@')
-                            goto mode_error;
-
-                        if (!(in >> refresh))
-                            goto mode_error;
-
-                        output_config.refresh = refresh;
+                        auto const state = s.as<std::string>();
+                        if (state != state_enabled && state != state_disabled)
+                            throw mir::AbnormalExit{error_prefix + "invalid 'state' (" + state + ") for port: " + port_name};
+                        output_config.disabled = (state == state_disabled);
                     }
-                }
-                mode_error: // TODO better error handling
 
-                if (auto const o = port_config[orientation])
-                {
-                    std::string const orientation = o.as<std::string>();
-                    output_config.orientation = as_orientation(orientation);
-                }
+                    if (auto const pos = port_config[position])
+                    {
+                        output_config.position = Point{pos[0].as<int>(), pos[1].as<int>()};
+                    }
 
-                new_config[output_id] = output_config;
+                    if (auto const m = port_config[mode])
+                    {
+                        std::istringstream in{m.as<std::string>()};
+
+                        char delimiter = '\0';
+                        int width;
+                        int height;
+
+                        if (!(in >> width))
+                            goto mode_error;
+
+                        if (!(in >> delimiter) || delimiter != 'x')
+                            goto mode_error;
+
+                        if (!(in >> height))
+                            goto mode_error;
+
+                        output_config.size = Size{width, height};
+
+                        if (in.peek() == '@')
+                        {
+                            double refresh;
+                            if (!(in >> delimiter) || delimiter != '@')
+                                goto mode_error;
+
+                            if (!(in >> refresh))
+                                goto mode_error;
+
+                            output_config.refresh = refresh;
+                        }
+                    }
+                    mode_error: // TODO better error handling
+
+                    if (auto const o = port_config[orientation])
+                    {
+                        std::string const orientation = o.as<std::string>();
+                        output_config.orientation = as_orientation(orientation);
+                    }
+
+                    layout_config[output_id] = output_config;
+                }
             }
         }
+        new_config[ll.first.Scalar()] = layout_config;
     }
 
     config = new_config;
@@ -246,7 +252,7 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
             auto& out = card_data.out;
             auto const type = static_cast<MirOutputType>(conf_output.type);
             auto const index_by_type = ++card_data.output_counts[type];
-            auto& conf = config[Id{conf_output.card_id, type, index_by_type}];
+            auto& conf = config[layout][Id{conf_output.card_id, type, index_by_type}];
 
             if (conf_output.connected && conf_output.modes.size() > 0 && !conf.disabled)
             {
@@ -364,5 +370,22 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 
     out << "8>< ---------------------------------------------------";
     mir::log_info(out.str());
+}
+
+void miral::StaticDisplayConfig::select_layout(std::string const& layout)
+{
+    this->layout = layout;
+}
+
+auto miral::StaticDisplayConfig::list_layouts() const -> std::vector<std::string>
+{
+    std::vector<std::string> result;
+
+    for (auto const c: config)
+    {
+        result.push_back(c.first);
+    }
+
+    return result;
 }
 
