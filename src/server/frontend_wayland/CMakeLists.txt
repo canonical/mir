@@ -1,4 +1,17 @@
-add_subdirectory(generator/)
+# When cross compiling, the generator needs to be compiled for the host system, not the target one
+
+set(mir_wayland_scanner_cmd "${CMAKE_BINARY_DIR}/bin/wayland-scanner${CMAKE_EXECUTABLE_SUFFIX}")
+
+add_custom_target(
+  mir-wayland-scanner
+  COMMAND ${CMAKE_COMMAND}
+            -DCMAKE_BUILD_TYPE:STRING="Release"
+            -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE:PATH="${CMAKE_BINARY_DIR}/bin"
+            -B"bin"
+            -H"${CMAKE_CURRENT_SOURCE_DIR}/generator/"
+  COMMAND ${CMAKE_COMMAND} --build bin --config Release
+)
+
 add_subdirectory(generated/)
 add_subdirectory(protocol/)
 
