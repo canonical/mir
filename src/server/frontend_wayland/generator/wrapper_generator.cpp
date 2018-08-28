@@ -22,6 +22,7 @@
 
 #include <libxml++/libxml++.h>
 #include <iostream>
+#include <fstream>
 
 Emitter comment_header(std::string const& input_file_path)
 {
@@ -102,7 +103,7 @@ int main(int argc, char** argv)
 {
     std::cerr << "wrapper generator started" << std::endl;
 
-    if (argc != 4)
+    if (argc != 5)
     {
         std::cerr << "wrong number of args" << std::endl;
         Emitter msg = Lines{
@@ -125,6 +126,7 @@ int main(int argc, char** argv)
     std::string const prefix{argv[1]};
     std::string const custom_header{argv[2]};
     std::string const input_file_path{argv[3]};
+    std::string const output_file_path{argv[4]};
 
     auto name_transform = [prefix](std::string protocol_name)
     {
@@ -173,7 +175,9 @@ int main(int argc, char** argv)
 
     std::cerr << "emitters generated" << std::endl;
 
-    header.emit({std::cout, std::make_shared<bool>(true), ""});
+    std::ofstream out_file{output_file_path};
+
+    header.emit({out_file, std::make_shared<bool>(true), ""});
 
     std::cerr << "file written" << std::endl;
 }

@@ -48,7 +48,7 @@ macro(GENERATE_PROTOCOL NAME_PREFIX PROTOCOL_NAME)
   )
   add_custom_command(OUTPUT "${OUTPUT_PATH_WRAPPER}"
     VERBATIM
-    COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator '${NAME_PREFIX}' '${PROTOCOL_NAME}.h' '${PROTOCOL_PATH}' > '${OUTPUT_PATH_WRAPPER}'"
+    COMMAND "${CMAKE_BINARY_DIR}/bin/wrapper-generator" "${NAME_PREFIX}" "${PROTOCOL_NAME}.h" "${PROTOCOL_PATH}" "${OUTPUT_PATH_WRAPPER}"
     DEPENDS "${PROTOCOL_PATH}"
     DEPENDS wrapper-generator
   )
