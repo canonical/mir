@@ -1,4 +1,4 @@
-add_subdirectory(protocol/)
+add_subdirectory(generator/)
 add_subdirectory(generated/)
 
 include_directories(../frontend_xwayland)
@@ -31,4 +31,9 @@ add_library(
   mirfrontend-wayland OBJECT
 
   ${WAYLAND_SOURCES}
+)
+
+add_dependencies(
+  mirfrontend-wayland
+  mirfrontend-waylandgenerated
 )
