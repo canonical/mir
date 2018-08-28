@@ -1,5 +1,6 @@
 add_subdirectory(generator/)
 add_subdirectory(generated/)
+add_subdirectory(protocol/)
 
 include_directories(../frontend_xwayland)
 
