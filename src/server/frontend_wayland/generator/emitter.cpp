@@ -167,7 +167,7 @@ Emitter::Emitter(std::initializer_list<Emitter> const& emitters)
 {
 }
 
-Emitter::Emitter(std::vector<Emitter> const& emitters)
+Emitter::Emitter(std::vector<Emitter> emitters)
     : impl{Impl::contains_valid(emitters) ?
                std::make_shared<SeqEmitter>(move(emitters)) :
                nullptr}
@@ -234,4 +234,4 @@ Emitter::Emitter(std::shared_ptr<Impl const> impl)
 {
 }
 
-Emitter const extern empty_line = Emitter{std::make_shared<EmptyLineEmitter>()};
+Emitter const empty_line = Emitter{std::make_shared<EmptyLineEmitter>()};

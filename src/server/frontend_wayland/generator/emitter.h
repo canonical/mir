@@ -106,7 +106,7 @@ public:
     Emitter(std::string const& text);
     Emitter(const char* text);
     Emitter(std::initializer_list<Emitter> const& emitters);
-    explicit Emitter(std::vector<Emitter> const& emitters);
+    explicit Emitter(std::vector<Emitter> emitters);
 
     // constructors for complex emitters
     Emitter(Line && line);
