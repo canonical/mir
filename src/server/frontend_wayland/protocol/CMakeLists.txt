@@ -20,17 +20,17 @@ macro(GENERATE_PROTOCOL NAME_PREFIX PROTOCOL_NAME)
   add_custom_command(OUTPUT "${OUTPUT_PATH_C}"
     VERBATIM
     COMMAND "wayland-scanner" "--include-core-only" "code" "${PROTOCOL_PATH}" "${OUTPUT_PATH_C}"
-    DEPENDS "${PROTOCOL_PATH}"
+    DEPENDS "${PROTOCOL_PATH}" wayland-wrapper-generator
   )
   add_custom_command(OUTPUT "${OUTPUT_PATH_H}"
     VERBATIM
     COMMAND "wayland-scanner" "--include-core-only" "server-header" "${PROTOCOL_PATH}" "${OUTPUT_PATH_H}"
-    DEPENDS "${PROTOCOL_PATH}"
+    DEPENDS "${PROTOCOL_PATH}" wayland-wrapper-generator
   )
   add_custom_command(OUTPUT "${OUTPUT_PATH_WRAPPER}"
     VERBATIM
     COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wayland-wrapper-generator ${NAME_PREFIX} ${PROTOCOL_NAME}.h ${PROTOCOL_PATH} > ${OUTPUT_PATH_WRAPPER}"
-    DEPENDS "${PROTOCOL_PATH}"
+    DEPENDS "${PROTOCOL_PATH}" wayland-wrapper-generator
   )
   set(GENERATED_FILES ${GENERATED_FILES} "${OUTPUT_PATH_H}" "${OUTPUT_PATH_C}" "${OUTPUT_PATH_WRAPPER}")
 endmacro()
@@ -41,7 +41,7 @@ GENERATE_PROTOCOL("z" "xdg-shell-unstable-v6")
 GENERATE_PROTOCOL("_" "xdg-shell") # empty prefix is not allowed, but '_' won't match anything, so it is ignored
 
 add_custom_target(refresh-wayland-wrapper
-  DEPENDS ${GENERATED_FILES}
   DEPENDS wayland-wrapper-generator
+  DEPENDS ${GENERATED_FILES}
   SOURCES ${GENERATED_FILES}
 )
