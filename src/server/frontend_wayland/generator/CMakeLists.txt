@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -g -std=c++14 -Werror -Wall -fno-strict-aliasing -pedantic -Wnon-virtual-dtor -Wextra -fPIC")
+
 FIND_PACKAGE(PkgConfig REQUIRED)
 
 pkg_check_modules(XMLPP libxml++-2.6 REQUIRED)
