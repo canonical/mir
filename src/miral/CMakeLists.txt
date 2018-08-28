@@ -22,6 +22,7 @@ add_library(miral-internal STATIC
     display_configuration_listeners.cpp display_configuration_listeners.h
     launch_app.cpp                      launch_app.h
     mru_window_list.cpp                 mru_window_list.h
+    shared_data.cpp                     shared_data.h
     static_display_config.cpp           static_display_config.h
     window_management_trace.cpp         window_management_trace.h
     xcursor_loader.cpp                  xcursor_loader.h
@@ -45,6 +46,7 @@ add_library(miral SHARED
     command_line_option.cpp             ${miral_include}/miral/command_line_option.h
     cursor_theme.cpp                    ${miral_include}/miral/cursor_theme.h
     debug_extension.cpp                 ${miral_include}/miral/debug_extension.h
+    display_configuration.cpp           ${miral_include}/miral/display_configuration.h
     external_client.cpp                 ${miral_include}/miral/external_client.h
     keymap.cpp                          ${miral_include}/miral/keymap.h
     runner.cpp                          ${miral_include}/miral/runner.h

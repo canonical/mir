@@ -19,6 +19,7 @@
 #include "miral/runner.h"
 #include "join_client_threads.h"
 #include "launch_app.h"
+#include "shared_data.h"
 
 #include <mir/server.h>
 #include <mir/main_loop.h>
@@ -63,11 +64,13 @@ struct miral::MirRunner::Self
 miral::MirRunner::MirRunner(int argc, char const* argv[]) :
     self{std::make_unique<Self>(argc, argv, filename(argv[0]) + ".config")}
 {
+    rootname = filename(argv[0]);
 }
 
 miral::MirRunner::MirRunner(int argc, char const* argv[], char const* config_file) :
     self{std::make_unique<Self>(argc, argv, config_file)}
 {
+    rootname = filename(argv[0]);
 }
 
 miral::MirRunner::~MirRunner() = default;

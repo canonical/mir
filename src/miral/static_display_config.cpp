@@ -239,6 +239,17 @@ catch (YAML::Exception const& x)
 
 void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 {
+    auto const current_config = config.find(layout);
+
+    if (current_config != end(config))
+    {
+        mir::log_debug("Display config using layout: '%s'", layout.c_str());
+    }
+    else
+    {
+        mir::log_warning("Display config does not contain layout '%s'", layout.c_str());
+    }
+
     struct card_data
     {
         std::ostringstream out;
@@ -252,7 +263,10 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
             auto& out = card_data.out;
             auto const type = static_cast<MirOutputType>(conf_output.type);
             auto const index_by_type = ++card_data.output_counts[type];
-            auto& conf = config[layout][Id{conf_output.card_id, type, index_by_type}];
+
+            auto const& conf = (current_config != end(config)) ?
+                         current_config->second[Id{conf_output.card_id, type, index_by_type}] :
+                          Config{};
 
             if (conf_output.connected && conf_output.modes.size() > 0 && !conf.disabled)
             {
