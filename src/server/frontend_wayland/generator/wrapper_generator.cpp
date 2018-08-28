@@ -100,8 +100,11 @@ Emitter header_file(std::string custom_header, std::string input_file_path, std:
 
 int main(int argc, char** argv)
 {
+    std::cerr << "wrapper generator started" << std::endl;
+
     if (argc != 4)
     {
+        std::cerr << "wrong number of args" << std::endl;
         Emitter msg = Lines{
             "/*",
             "Incorrect number of arguments",
@@ -116,6 +119,8 @@ int main(int argc, char** argv)
         };
         exit(1);
     }
+
+    std::cerr << "right number of args" << std::endl;
 
     std::string const prefix{argv[1]};
     std::string const custom_header{argv[2]};
@@ -133,6 +138,8 @@ int main(int argc, char** argv)
     };
 
     xmlpp::DomParser parser(input_file_path);
+
+    std::cerr << "parser loaded" << std::endl;
 
     auto document = parser.get_document();
 
@@ -160,6 +167,13 @@ int main(int argc, char** argv)
         interfaces.emplace_back(*interface, name_transform, constructible_interfaces);
     }
 
+    std::cerr << "xml parsed" << std::endl;
+
     auto header = header_file(custom_header, input_file_path, interfaces);
+
+    std::cerr << "emitters generated" << std::endl;
+
     header.emit({std::cout, std::make_shared<bool>(true), ""});
+
+    std::cerr << "file written" << std::endl;
 }
