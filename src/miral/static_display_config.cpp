@@ -48,7 +48,7 @@ auto as_string(MirOrientation orientation) -> char const*
     return orientation_value[orientation/90];
 }
 
-auto as_orientation(std::string const& orientation) -> MirOrientation
+auto as_orientation(std::string const& orientation) -> mir::optional_value<MirOrientation>
 {
     if (orientation == orientation_value[3])
         return mir_orientation_right;
@@ -59,7 +59,10 @@ auto as_orientation(std::string const& orientation) -> MirOrientation
     if (orientation == orientation_value[1])
         return mir_orientation_left;
 
-    return mir_orientation_normal;
+    if (orientation == orientation_value[0])
+        return mir_orientation_normal;
+
+    return {};
 }
 
 auto output_type_from(std::string const& output) -> MirOutputType
@@ -221,6 +224,10 @@ try
                     {
                         std::string const orientation = o.as<std::string>();
                         output_config.orientation = as_orientation(orientation);
+
+                        if (!output_config.orientation)
+                            throw mir::AbnormalExit{error_prefix + "invalid 'orientation' (" +
+                                                    orientation + ") for port: " + port_name};
                     }
 
                     layout_config[output_id] = output_config;
@@ -288,6 +295,8 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 
                 if (conf.size.is_set())
                 {
+                    bool matched_mode = false;
+
                     for (auto mode = begin(conf_output.modes); mode != end(conf_output.modes); ++mode)
                     {
                         if (mode->size == conf.size.value())
@@ -297,13 +306,29 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                                 if (abs(conf.refresh.value() - mode->vrefresh_hz) < 1.0)
                                 {
                                     conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
+                                    matched_mode = true;
                                 }
                             }
                             else if (conf_output.modes[conf_output.current_mode_index].size != conf.size.value()
                                   || conf_output.modes[conf_output.current_mode_index].vrefresh_hz < mode->vrefresh_hz)
                             {
                                 conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
+                                matched_mode = true;
                             }
+                        }
+                    }
+
+                    if (!matched_mode)
+                    {
+                        if (conf.refresh.is_set())
+                        {
+                            mir::log_warning("Display config contains unmatched mode: '%dx%d@%2.1f'",
+                                conf.size.value().width.as_int(), conf.size.value().height.as_int(), conf.refresh.value());
+                        }
+                        else
+                        {
+                            mir::log_warning("Display config contains unmatched mode: '%dx%d'",
+                                             conf.size.value().width.as_int(), conf.size.value().height.as_int());
                         }
                     }
                 }

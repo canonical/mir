@@ -18,9 +18,9 @@
 
 #include "static_display_config.h"
 #include "mir/logging/dumb_console_logger.h"
+#include "mir/logging/logger.h"
 
 #include <mir/test/doubles/mock_display_configuration.h>
-#include <mir/test/doubles/null_logger.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -28,6 +28,7 @@
 using namespace testing;
 using namespace mir::geometry;
 namespace mg  = mir::graphics;
+namespace ml  = mir::logging;
 namespace mtd = mir::test::doubles;
 
 namespace
@@ -35,6 +36,11 @@ namespace
 static constexpr Point default_top_left{0, 0};
 static constexpr mg::DisplayConfigurationMode default_mode{{648, 480}, 60.0};
 static constexpr mg::DisplayConfigurationMode another_mode{{1280, 1024}, 75.0};
+
+struct MockLogger : ml::Logger
+{
+    MOCK_METHOD3(log, void (ml::Severity severity, const std::string& message, const std::string& component));
+};
 
 struct StaticDisplayConfig : Test
 {
@@ -44,11 +50,11 @@ struct StaticDisplayConfig : Test
 
     miral::StaticDisplayConfig sdc;
 
-
+    std::shared_ptr<MockLogger> const mock_logger{std::make_shared<NiceMock<MockLogger>>()};
 
     void SetUp() override
     {
-        mir::logging::set_logger(std::make_shared<mtd::NullLogger>());
+        ml::set_logger(mock_logger);
         vga1.id = mg::DisplayConfigurationOutputId{0};
         vga1.card_id = mg::DisplayConfigurationCardId{0};
         vga1.connected = true;
@@ -86,7 +92,7 @@ protected:
     void TearDown() override
     {
         Test::TearDown();
-        mir::logging::set_logger(std::make_shared<mir::logging::DumbConsoleLogger>());
+        ml::set_logger(std::make_shared<ml::DumbConsoleLogger>());
     }
 
 public:
@@ -305,4 +311,86 @@ TEST_F(StaticDisplayConfig, selecting_layout_works)
     EXPECT_THAT(hdmi1.modes[hdmi1.current_mode_index], Eq(default_mode));
     EXPECT_THAT(hdmi1.top_left, Eq(Point{1280, 0}));
     EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_normal));
+}
+
+TEST_F(StaticDisplayConfig, missing_default_layout_is_reported_and_ignored)
+{
+    EXPECT_CALL(*mock_logger, log(Ne(ml::Severity::warning), _, _)).Times(AnyNumber());
+
+    std::istringstream stream{
+        "layouts:\n"
+        "  unknown:\n"
+        "    cards:\n"
+        "    - HDMI-A-1:\n"};
+
+    EXPECT_CALL(*mock_logger, log(ml::Severity::warning, HasSubstr("default"), _));
+
+    sdc.load_config(stream, "");
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_normal));
+}
+
+TEST_F(StaticDisplayConfig, missing_selected_layout_is_reported_and_ignored)
+{
+    EXPECT_CALL(*mock_logger, log(Ne(ml::Severity::warning), _, _)).Times(AnyNumber());
+
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - HDMI-A-1:\n"};
+
+    EXPECT_CALL(*mock_logger, log(ml::Severity::warning, HasSubstr("unknown"), _));
+
+    sdc.select_layout("unknown");
+    sdc.load_config(stream, "");
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.modes[hdmi1.current_mode_index], Eq(default_mode));
+    EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_normal));
+}
+
+TEST_F(StaticDisplayConfig, ill_formed_orientation_causes_AbnormalExit)
+{
+    std::istringstream ill_formed{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - HDMI-A-1:\n"
+        "        orientation: leaft\n"};
+
+    EXPECT_THROW((sdc.load_config(ill_formed, "")), mir::AbnormalExit);
+}
+
+TEST_F(StaticDisplayConfig, unknown_mode_is_reported_and_ignored)
+{
+    EXPECT_CALL(*mock_logger, log(Ne(ml::Severity::warning), _, _)).Times(AnyNumber());
+
+    std::istringstream stream{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - HDMI-A-1:\n"
+        "        mode: 11640x480@59.9\n"};
+
+    EXPECT_CALL(*mock_logger, log(ml::Severity::warning, HasSubstr("11640x480@59.9"), _));
+
+    sdc.load_config(stream, "");
+    sdc.apply_to(dc);
+
+    EXPECT_THAT(hdmi1.modes[hdmi1.current_mode_index], Eq(default_mode));
+    EXPECT_THAT(hdmi1.orientation, Eq(mir_orientation_normal));
+}
+
+TEST_F(StaticDisplayConfig, ill_formed_status_causes_AbnormalExit)
+{
+    std::istringstream ill_formed{
+        "layouts:\n"
+        "  default:\n"
+        "    cards:\n"
+        "    - HDMI-A-1:\n"
+        "        state: bliss\n"};
+
+    EXPECT_THROW((sdc.load_config(ill_formed, "")), mir::AbnormalExit);
 }
