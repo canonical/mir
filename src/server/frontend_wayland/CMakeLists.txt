@@ -2,14 +2,20 @@
 
 set(mir_wayland_scanner_cmd "${CMAKE_BINARY_DIR}/bin/wayland-scanner${CMAKE_EXECUTABLE_SUFFIX}")
 
-add_custom_target(
-  mir-wayland-scanner
+add_custom_command(
+  OUTPUT ${mir_wayland_scanner_cmd}
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/generator/
   COMMAND ${CMAKE_COMMAND}
             -DCMAKE_BUILD_TYPE:STRING="Release"
             -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE:PATH="${CMAKE_BINARY_DIR}/bin"
             -B"bin"
             -H"${CMAKE_CURRENT_SOURCE_DIR}/generator/"
   COMMAND ${CMAKE_COMMAND} --build bin --config Release
+)
+
+add_custom_target(
+  mir-wayland-scanner
+  DEPENDS ${mir_wayland_scanner_cmd}
 )
 
 add_subdirectory(generated/)
