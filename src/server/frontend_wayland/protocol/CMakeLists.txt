@@ -40,6 +40,7 @@ endmacro()
 add_custom_command(OUTPUT "/tmp/binary_info"
   VERBATIM
   COMMAND "sh" "-c" "file ${mir_wayland_scanner_cmd} >&2"
+  COMMAND "sh" "-c" "echo cmake C++ compiler [should be target]: ${CMAKE_CXX_COMPILER} : ${CMAKE_CXX_FLAGS} >&2"
   DEPENDS ${mir_wayland_scanner_cmd}
   DEPENDS mir-wayland-scanner
 )

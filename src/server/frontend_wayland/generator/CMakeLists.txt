@@ -16,6 +16,21 @@ add_executable(wayland-scanner
   emitter.cpp               emitter.h
 )
 
+add_custom_command(OUTPUT "/tmp/cmake_info"
+  VERBATIM
+  COMMAND "sh" "-c" "echo cmake C++ compiler [should be host]: ${CMAKE_CXX_COMPILER} : ${CMAKE_CXX_FLAGS} >&2"
+)
+
+add_custom_target(
+  wayland-scanner-info
+  DEPENDS /tmp/cmake_info
+)
+
+add_dependencies(
+  wayland-scanner
+  wayland-scanner-info
+)
+
 target_link_libraries(wayland-scanner
   ${XMLPP_LDFLAGS} ${XMLPP_LIBRARIES}
 )
