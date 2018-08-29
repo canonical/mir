@@ -37,12 +37,20 @@ macro(GENERATE_PROTOCOL NAME_PREFIX PROTOCOL_NAME)
   set(GENERATED_FILES ${GENERATED_FILES} "${OUTPUT_PATH_H}" "${OUTPUT_PATH_C}" "${OUTPUT_PATH_WRAPPER}")
 endmacro()
 
+add_custom_command(OUTPUT "/tmp/binary_info"
+  VERBATIM
+  COMMAND "sh" "-c" "file ${mir_wayland_scanner_cmd} >&2"
+  DEPENDS ${mir_wayland_scanner_cmd}
+  DEPENDS mir-wayland-scanner
+)
+
 # when adding a protocol, don't forget to add the generated .c file to CMake
 GENERATE_PROTOCOL("wl_" "wayland")
 GENERATE_PROTOCOL("z" "xdg-shell-unstable-v6")
 GENERATE_PROTOCOL("_" "xdg-shell") # empty prefix is not allowed, but '_' won't match anything, so it is ignored
 
 add_custom_target(refresh-wayland-wrapper
+  DEPENDS /tmp/binary_info
   DEPENDS mir-wayland-scanner
   DEPENDS ${GENERATED_FILES}
   SOURCES ${GENERATED_FILES}
