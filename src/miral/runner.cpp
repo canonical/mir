@@ -37,6 +37,11 @@ namespace
 {
 inline auto filename(std::string path) -> std::string
 {
+    // Remove the annoying ".bin" extension on Mir development binaries
+    auto const bin = path.rfind(".bin");
+    if (bin+4 == path.size())
+        path.erase(bin);
+
     return path.substr(path.rfind('/')+1);
 }
 }
