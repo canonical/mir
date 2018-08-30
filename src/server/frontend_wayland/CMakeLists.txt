@@ -48,7 +48,11 @@ add_library(
   ${WAYLAND_SOURCES}
 )
 
+if (NOT CMAKE_CROSSCOMPILING)
+
 add_dependencies(
   mirfrontend-wayland
   mirfrontend-waylandgenerated
 )
+
+endif()
