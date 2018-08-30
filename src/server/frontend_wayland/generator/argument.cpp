@@ -24,17 +24,19 @@
 #include <unordered_map>
 
 std::unordered_map<std::string, Argument::TypeDescriptor const> const Argument::type_map = {
-    { "uint", { "uint32_t", "uint32_t", {} }},
-    { "int", { "int32_t", "int32_t", {} }},
-    { "fd", { "mir::Fd", "int", { Argument::fd_converter }}},
-    { "object", { "struct wl_resource*", "struct wl_resource*", {} }},
-    { "string", { "std::string const&", "char const*", {} }},
-    { "new_id", { "uint32_t", "uint32_t", {} }}
+    { "uint", { "uint32_t", "uint32_t", {}, {} }},
+    { "int", { "int32_t", "int32_t", {}, {} }},
+    { "fd", { "mir::Fd", "int", { Argument::fd_wl2mir }, {} }},
+    { "object", { "struct wl_resource*", "struct wl_resource*", {}, {} }},
+    { "string", { "std::string const&", "char const*", {}, {} }},
+    { "new_id", { "uint32_t", "uint32_t", {}, {} }},
+    { "fixed", { "wl_fixed_t", "wl_fixed_t", {}, {} }},
+    { "array", { "struct wl_array*", "struct wl_array*", {}, {} }}
 };
 
 std::unordered_map<std::string, Argument::TypeDescriptor const> const Argument::optional_type_map = {
-    { "object", { "std::experimental::optional<struct wl_resource*> const&", "struct wl_resource*", { Argument::optional_object_converter }}},
-    { "string", { "std::experimental::optional<std::string> const&", "char const*", { Argument::optional_string_converter }}},
+    { "object", { "std::experimental::optional<struct wl_resource*> const&", "struct wl_resource*", { Argument::optional_object_wl2mir }, {} }},
+    { "string", { "std::experimental::optional<std::string> const&", "char const*", { Argument::optional_string_wl2mir }, {} }},
 };
 
 Argument::Argument(xmlpp::Element const& node)
@@ -57,25 +59,28 @@ Emitter Argument::mir_prototype() const
 
 Emitter Argument::wl_call_fragment() const
 {
-    return name;
+    return descriptor.mir2wl ? (name + "_resolved") : name;
 }
 
 Emitter Argument::mir_call_fragment() const
 {
-    return descriptor.converter ? (name + "_resolved") : name;
+    return descriptor.wl2mir ? (name + "_resolved") : name;
 }
 
-std::experimental::optional<Emitter> Argument::wl_to_mir_converter() const
+std::experimental::optional<Emitter> Argument::wl2mir_converter() const
 {
-    if (descriptor.converter)
-        return descriptor.converter.value()(name);
+    if (descriptor.wl2mir)
+        return descriptor.wl2mir.value()(name);
     else
         return std::experimental::nullopt;
 }
 
-std::experimental::optional<Emitter> Argument::mir_to_wl_converter() const
+std::experimental::optional<Emitter> Argument::mir2wl_converter() const
 {
-    return std::experimental::nullopt;
+    if (descriptor.mir2wl)
+        return descriptor.mir2wl.value()(name);
+    else
+        return std::experimental::nullopt;
 }
 
 bool Argument::argument_is_optional(xmlpp::Element const& arg)
@@ -87,12 +92,12 @@ bool Argument::argument_is_optional(xmlpp::Element const& arg)
     return false;
 }
 
-Emitter Argument::fd_converter(std::string name)
+Emitter Argument::fd_wl2mir(std::string name)
 {
     return Line{"mir::Fd ", name, "_resolved{", name, "};"};
 }
 
-Emitter Argument::optional_object_converter(std::string name)
+Emitter Argument::optional_object_wl2mir(std::string name)
 {
     return Lines{
         {"std::experimental::optional<struct wl_resource*> ", name, "_resolved;"},
@@ -103,7 +108,7 @@ Emitter Argument::optional_object_converter(std::string name)
     };
 }
 
-Emitter Argument::optional_string_converter(std::string name)
+Emitter Argument::optional_string_wl2mir(std::string name)
 {
     return Lines{
         {"std::experimental::optional<std::string> ", name, "_resolved;"},

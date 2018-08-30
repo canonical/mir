@@ -35,18 +35,18 @@ Emitter Event::impl() const
 {
     return {"static void send_", name, "(", mir_args(), ")",
         Block{
-            mir_to_wl_converters(),
+            mir2wl_converters(),
             {"wl_resource_post_event(", wl_call_args(), ");"},
         }
     };
 }
 
-Emitter Event::mir_to_wl_converters() const
+Emitter Event::mir2wl_converters() const
 {
     std::vector<Emitter> thunk_converters;
     for (auto const& arg : arguments)
     {
-        if (auto converter = arg.mir_to_wl_converter())
+        if (auto converter = arg.mir2wl_converter())
             thunk_converters.push_back(converter.value());
     }
     return Lines{thunk_converters};

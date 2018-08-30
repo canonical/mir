@@ -31,7 +31,7 @@ public:
 
 protected:
     // converts wl input types to mir types
-    Emitter mir_to_wl_converters() const;
+    Emitter mir2wl_converters() const;
 
     // arguments to call the virtual mir function call (just names, no types)
     Emitter wl_call_args() const;

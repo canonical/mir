@@ -35,7 +35,7 @@ Emitter Request::thunk_impl() const
     return {"static void ", name, "_thunk(", wl_args(), ")",
         Block{
             {"auto me = static_cast<", class_name, "*>(wl_resource_get_user_data(resource));"},
-            wl_to_mir_converters(),
+            wl2mir_converters(),
             "try",
             Block{
                 {"me->", name, "(", mir_call_args(), ");"}
@@ -70,12 +70,12 @@ Emitter Request::wl_args() const
     return List{wl_args, ", "};
 }
 
-Emitter Request::wl_to_mir_converters() const
+Emitter Request::wl2mir_converters() const
 {
     std::vector<Emitter> thunk_converters;
     for (auto const& arg : arguments)
     {
-        if (auto converter = arg.wl_to_mir_converter())
+        if (auto converter = arg.wl2mir_converter())
             thunk_converters.push_back(converter.value());
     }
     return Lines{thunk_converters};

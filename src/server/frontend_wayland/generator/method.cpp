@@ -29,14 +29,14 @@ Method::Method(xmlpp::Element const& node, std::string const& class_name, bool i
 {
     for (auto const& child : node.get_children("arg"))
     {
+        auto arg_node = dynamic_cast<xmlpp::Element const*>(child);
         try
         {
-            auto arg_node = dynamic_cast<xmlpp::Element const*>(child);
             arguments.emplace_back(std::ref(*arg_node));
         }
         catch (std::out_of_range const& e)
         {
-            std::cerr << "failed to parse type" << std::endl;
+            std::cerr << "failed to parse type " << arg_node->get_attribute_value("type") << std::endl;
         }
     }
 }
