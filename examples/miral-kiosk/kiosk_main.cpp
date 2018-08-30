@@ -92,15 +92,18 @@ int main(int argc, char const* argv[])
         "Only allow applications to connect during startup",
         KioskAuthorizer::startup_only};
 
-    DisplayConfiguration display_config;
+    MirRunner runner{argc, argv};
+
+    DisplayConfiguration display_config{runner};
 
     CommandLineOption display_layout{
         [&display_config](std::string const& layout) { display_config.select_layout(layout); },
         "display-layout",
-        "Display configuration layout",
+        "Display configuration layout from `" + runner.display_config_file() + "'\n"
+        "(Found in $XDG_CONFIG_HOME or $HOME/.config, followed by $XDG_CONFIG_DIRS)",
         "default"};
 
-    return MirRunner{argc, argv}.run_with(
+    return runner.run_with(
         {
             pre_init(display_layout),   // "pre_init" ensures layout selected before display is configured
             display_config,

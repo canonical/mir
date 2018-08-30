@@ -17,29 +17,23 @@
  */
 
 #include "miral/display_configuration.h"
+#include "miral/runner.h"
 #include "static_display_config.h"
-#include "shared_data.h"
 
 #include <mir/server.h>
 
 #include <fstream>
 #include <sstream>
 
-struct miral::DisplayConfiguration::Self : StaticDisplayConfig {};
-
-miral::DisplayConfiguration::DisplayConfiguration() :
-    self{std::make_shared<Self>()}
+struct miral::DisplayConfiguration::Self : StaticDisplayConfig
 {
-}
+    Self(std::string const& name) : name{name} {}
+    std::string const name;
+};
 
-void miral::DisplayConfiguration::select_layout(std::string const& layout)
+miral::DisplayConfiguration::DisplayConfiguration(MirRunner const& mir_runner) :
+    self{std::make_shared<Self>(mir_runner.display_config_file())}
 {
-    self->select_layout(layout);
-}
-
-void miral::DisplayConfiguration::operator()(mir::Server& server) const
-{
-    std::string const name = rootname + ".display";
     std::string config_roots;
 
     if (auto config_home = getenv("XDG_CONFIG_HOME"))
@@ -57,7 +51,7 @@ void miral::DisplayConfiguration::operator()(mir::Server& server) const
     /* Read options from config files */
     for (std::string config_root; getline(config_stream, config_root, ':');)
     {
-        auto const& filename = config_root + "/" + name;
+        auto const& filename = config_root + "/" + self->name;
 
         if (std::ifstream config_file{filename})
         {
@@ -65,7 +59,15 @@ void miral::DisplayConfiguration::operator()(mir::Server& server) const
             break;
         }
     }
+}
 
+void miral::DisplayConfiguration::select_layout(std::string const& layout)
+{
+    self->select_layout(layout);
+}
+
+void miral::DisplayConfiguration::operator()(mir::Server& server) const
+{
     namespace mg = mir::graphics;
 
     server.wrap_display_configuration_policy([this](std::shared_ptr<mg::DisplayConfigurationPolicy> const&)

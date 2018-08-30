@@ -27,6 +27,8 @@ namespace mir { class Server; }
 
 namespace miral
 {
+class MirRunner;
+
 /// Enable display configuration.
 /// The config file (<server-name>.display) is located via the XDG Base
 /// Directory Specification. Vis:
@@ -35,7 +37,7 @@ namespace miral
 class DisplayConfiguration
 {
 public:
-    DisplayConfiguration();
+    explicit DisplayConfiguration(MirRunner const& mir_runner);
 
     /// Select a layout from the configuration
     void select_layout(std::string const& layout);
