@@ -31,34 +31,14 @@ namespace xmlpp
 class Element;
 }
 
-// represents an request handler on a Wayland object
 class Method
 {
 public:
     Method(xmlpp::Element const& node, std::string const& class_name, bool is_global);
 
-    // prototype of virtual function that is overridden in Mir
-    Emitter virtual_mir_prototype() const;
-
-    // the thunk is the static function that libwayland calls
-    // It does some type conversion and calls the virtual method, which should be overridden somewhere in Mir
-    Emitter thunk_impl() const;
-
-    // the bit of this objects vtable that holds this method
-    Emitter vtable_initialiser() const;
-
-private:
-    // arguments from libwayland to the thunk
-    Emitter wl_args() const;
-
-    // arguments of the mir virtual function to the thunk (names with types)
+protected:
+    // arguments with the mir types
     Emitter mir_args() const;
-
-    // converts wl input types to mir types
-    Emitter converters() const;
-
-    // arguments to call the virtual mir function call (just names, no types)
-    Emitter mir_call_args() const;
 
     std::string const name;
     std::string const class_name;

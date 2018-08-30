@@ -29,8 +29,8 @@ Interface::Interface(xmlpp::Element const& node,
       generated_name{name_transform(wl_name)},
       nmspace{"mfw::" + generated_name + "::"},
       is_global{constructable_interfaces.count(wl_name) == 0},
-      methods{get_methods(node, is_global)},
-      has_vtable{!methods.empty()}
+      requests{get_requests(node, is_global)},
+      has_vtable{!requests.empty()}
 {
 }
 
@@ -52,7 +52,7 @@ Emitter Interface::declaration() const
         List {{
             (thunks_impl_contents().is_valid() ? "struct Thunks;" : nullptr),
             (is_global ? bind_prototype() : nullptr),
-            virtual_method_prototypes(),
+            virtual_request_prototypes(),
             (has_vtable ? vtable_declare() : nullptr),
         }, empty_line, Emitter::single_indent},
         "};"
@@ -155,12 +155,12 @@ Emitter Interface::bind_prototype() const
     return "virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }";
 }
 
-Emitter Interface::virtual_method_prototypes() const
+Emitter Interface::virtual_request_prototypes() const
 {
     std::vector<Emitter> prototypes;
-    for (auto const& method : methods)
+    for (auto const& request : requests)
     {
-        prototypes.push_back(method.virtual_mir_prototype());
+        prototypes.push_back(request.virtual_mir_prototype());
     }
     return Lines{prototypes};
 }
@@ -205,8 +205,8 @@ Emitter Interface::thunks_impl() const
 Emitter Interface::thunks_impl_contents() const
 {
     std::vector<Emitter> impls;
-    for (auto const& method : methods)
-        impls.push_back(method.thunk_impl());
+    for (auto const& request : requests)
+        impls.push_back(request.thunk_impl());
 
     if (is_global)
         impls.push_back(bind_thunk());
@@ -278,20 +278,20 @@ Emitter Interface::vtable_init() const
 Emitter Interface::vtable_contents() const
 {
     std::vector<Emitter> elems;
-    for (auto const& method : methods)
+    for (auto const& request : requests)
     {
-        elems.push_back({"Thunks::", method.vtable_initialiser()});
+        elems.push_back({"Thunks::", request.vtable_initialiser()});
     }
     return List{elems, Line{{","}, false, true}, Emitter::single_indent};
 }
 
-std::vector<Method> Interface::get_methods(xmlpp::Element const& node, bool is_global)
+std::vector<Request> Interface::get_requests(xmlpp::Element const& node, bool is_global)
 {
-    std::vector<Method> methods;
+    std::vector<Request> requests;
     for (auto method_node : node.get_children("request"))
     {
-        auto method = dynamic_cast<xmlpp::Element*>(method_node);
-        methods.emplace_back(Method{std::ref(*method), generated_name, is_global});
+        auto elem = dynamic_cast<xmlpp::Element*>(method_node);
+        requests.emplace_back(Request{std::ref(*elem), generated_name, is_global});
     }
-    return methods;
+    return requests;
 }

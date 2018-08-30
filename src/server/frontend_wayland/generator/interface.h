@@ -20,7 +20,7 @@
 #define MIR_WAYLAND_GENERATOR_INTERFACE_H
 
 #include "emitter.h"
-#include "method.h"
+#include "request.h"
 
 #include <experimental/optional>
 #include <functional>
@@ -50,7 +50,7 @@ private:
     Emitter destructor_prototype() const;
     Emitter destructor_impl() const;
     Emitter bind_prototype() const;
-    Emitter virtual_method_prototypes() const;
+    Emitter virtual_request_prototypes() const;
     Emitter member_vars() const;
     Emitter thunks_impl() const;
     Emitter thunks_impl_contents() const;
@@ -60,13 +60,13 @@ private:
     Emitter vtable_init() const;
     Emitter vtable_contents() const;
 
-    std::vector<Method> get_methods(xmlpp::Element const& node, bool is_global);
+    std::vector<Request> get_requests(xmlpp::Element const& node, bool is_global);
 
     std::string const wl_name;
     std::string const generated_name;
     std::string const nmspace;
     bool const is_global;
-    std::vector<Method> const methods;
+    std::vector<Request> const requests;
     bool const has_vtable;
 };
 
