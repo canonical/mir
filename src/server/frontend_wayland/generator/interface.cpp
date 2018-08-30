@@ -30,6 +30,7 @@ Interface::Interface(xmlpp::Element const& node,
       nmspace{"mfw::" + generated_name + "::"},
       is_global{constructable_interfaces.count(wl_name) == 0},
       requests{get_requests(node, is_global)},
+      events{get_events(node, is_global)},
       has_vtable{!requests.empty()}
 {
 }
@@ -53,6 +54,7 @@ Emitter Interface::declaration() const
             (thunks_impl_contents().is_valid() ? "struct Thunks;" : nullptr),
             (is_global ? bind_prototype() : nullptr),
             virtual_request_prototypes(),
+            event_prototypes(),
             (has_vtable ? vtable_declare() : nullptr),
         }, empty_line, Emitter::single_indent},
         "};"
@@ -161,6 +163,16 @@ Emitter Interface::virtual_request_prototypes() const
     for (auto const& request : requests)
     {
         prototypes.push_back(request.virtual_mir_prototype());
+    }
+    return Lines{prototypes};
+}
+
+Emitter Interface::event_prototypes() const
+{
+    std::vector<Emitter> prototypes;
+    for (auto const& event : events)
+    {
+        prototypes.push_back(event.prototype());
     }
     return Lines{prototypes};
 }
@@ -294,4 +306,17 @@ std::vector<Request> Interface::get_requests(xmlpp::Element const& node, bool is
         requests.emplace_back(Request{std::ref(*elem), generated_name, is_global});
     }
     return requests;
+}
+
+std::vector<Event> Interface::get_events(xmlpp::Element const& node, bool is_global)
+{
+    std::vector<Event> events;
+    int opcode = 0;
+    for (auto method_node : node.get_children("event"))
+    {
+        auto elem = dynamic_cast<xmlpp::Element*>(method_node);
+        events.emplace_back(Event{std::ref(*elem), generated_name, is_global, opcode});
+        opcode++;
+    }
+    return events;
 }

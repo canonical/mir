@@ -21,6 +21,7 @@
 
 #include "emitter.h"
 #include "request.h"
+#include "event.h"
 
 #include <experimental/optional>
 #include <functional>
@@ -51,6 +52,7 @@ private:
     Emitter destructor_impl() const;
     Emitter bind_prototype() const;
     Emitter virtual_request_prototypes() const;
+    Emitter event_prototypes() const;
     Emitter member_vars() const;
     Emitter thunks_impl() const;
     Emitter thunks_impl_contents() const;
@@ -61,12 +63,14 @@ private:
     Emitter vtable_contents() const;
 
     std::vector<Request> get_requests(xmlpp::Element const& node, bool is_global);
+    std::vector<Event> get_events(xmlpp::Element const& node, bool is_global);
 
     std::string const wl_name;
     std::string const generated_name;
     std::string const nmspace;
     bool const is_global;
     std::vector<Request> const requests;
+    std::vector<Event> const events;
     bool const has_vtable;
 };
 
