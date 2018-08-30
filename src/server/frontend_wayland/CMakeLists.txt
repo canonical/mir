@@ -5,8 +5,8 @@ set(mir_wayland_scanner_cmd "${CMAKE_BINARY_DIR}/bin/wayland-scanner${CMAKE_EXEC
 add_custom_command(
   OUTPUT ${mir_wayland_scanner_cmd}
   DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/generator/
-  COMMAND "sh" "-c" "DEB_HOST_ARCH=$(uname -m) ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE:STRING=\"Release\" -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE:PATH=\"${CMAKE_BINARY_DIR}/bin\"  -B\"bin\" -H\"${CMAKE_CURRENT_SOURCE_DIR}/generator/\""
-  COMMAND "sh" "-c" "DEB_HOST_ARCH=$(uname -m) ${CMAKE_COMMAND} --build bin --config Release"
+  COMMAND "sh" "-c" "CXX=/usr/bin/c++ ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE:STRING=\"Release\" -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE:PATH=\"${CMAKE_BINARY_DIR}/bin\"  -B\"bin\" -H\"${CMAKE_CURRENT_SOURCE_DIR}/generator/\""
+  COMMAND "sh" "-c" "CXX=/usr/bin/c++ ${CMAKE_COMMAND} --build bin --config Release"
 )
 
 add_custom_target(
