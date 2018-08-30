@@ -1,5 +1,21 @@
-add_subdirectory(generator/)
+# When cross compiling, the generator needs to be compiled for the host system, not the target one
+
+set(mir_wayland_scanner_cmd "${CMAKE_BINARY_DIR}/bin/wayland-scanner${CMAKE_EXECUTABLE_SUFFIX}")
+
+add_custom_command(
+  OUTPUT ${mir_wayland_scanner_cmd}
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/generator/
+  COMMAND "sh" "-c" "CXX=/usr/bin/c++ ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE:STRING=\"Release\" -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE:PATH=\"${CMAKE_BINARY_DIR}/bin\"  -B\"bin\" -H\"${CMAKE_CURRENT_SOURCE_DIR}/generator/\""
+  COMMAND "sh" "-c" "CXX=/usr/bin/c++ ${CMAKE_COMMAND} --build bin --config Release"
+)
+
+add_custom_target(
+  mir-wayland-scanner
+  DEPENDS ${mir_wayland_scanner_cmd}
+)
+
 add_subdirectory(generated/)
+add_subdirectory(protocol/)
 
 include_directories(../frontend_xwayland)
 
@@ -29,6 +45,14 @@ set(
 
 add_library(
   mirfrontend-wayland OBJECT
-
   ${WAYLAND_SOURCES}
 )
+
+if (NOT CMAKE_CROSSCOMPILING)
+
+add_dependencies(
+  mirfrontend-wayland
+  mirfrontend-waylandgenerated
+)
+
+endif()
