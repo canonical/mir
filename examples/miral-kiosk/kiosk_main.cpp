@@ -96,17 +96,10 @@ int main(int argc, char const* argv[])
 
     DisplayConfiguration display_config{runner};
 
-    CommandLineOption display_layout{
-        [&display_config](std::string const& layout) { display_config.select_layout(layout); },
-        "display-layout",
-        "Display configuration layout from `" + runner.display_config_file() + "'\n"
-        "(Found in $XDG_CONFIG_HOME or $HOME/.config, followed by $XDG_CONFIG_DIRS)",
-        "default"};
-
     return runner.run_with(
         {
-            pre_init(display_layout),   // "pre_init" ensures layout selected before display is configured
             display_config,
+            display_config.layout_option(),
             CommandLineOption{[&](std::string const& ) { },
                               "desktop_file_hint", "Ignored for Unity8 compatability", "miral-shell.desktop"},
             set_window_management_policy<KioskWindowManagerPolicy>(splash),

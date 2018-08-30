@@ -349,6 +349,7 @@ global:
   extern "C++" {
     miral::DisplayConfiguration::?DisplayConfiguration*;
     miral::DisplayConfiguration::DisplayConfiguration*;
+    miral::DisplayConfiguration::layout_option*;
     miral::DisplayConfiguration::operator*;
     miral::DisplayConfiguration::select_layout*;
     miral::ExternalClientLauncher::pid*;
