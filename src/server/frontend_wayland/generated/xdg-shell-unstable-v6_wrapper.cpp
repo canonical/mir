@@ -124,6 +124,11 @@ mfw::XdgShellV6::~XdgShellV6()
     wl_global_destroy(global);
 }
 
+void mfw::XdgShellV6::send_ping_event(struct wl_resource* resource, uint32_t serial)
+{
+    wl_resource_post_event(resource, 0, serial);
+}
+
 struct zxdg_shell_v6_interface const mfw::XdgShellV6::vtable = {
     Thunks::destroy_thunk,
     Thunks::create_positioner_thunk,
@@ -373,6 +378,11 @@ mfw::XdgSurfaceV6::XdgSurfaceV6(struct wl_client* client, struct wl_resource* pa
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+void mfw::XdgSurfaceV6::send_configure_event(uint32_t serial)
+{
+    wl_resource_post_event(resource, 0, serial);
 }
 
 struct zxdg_surface_v6_interface const mfw::XdgSurfaceV6::vtable = {
@@ -638,6 +648,16 @@ mfw::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* 
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+void mfw::XdgToplevelV6::send_configure_event(int32_t width, int32_t height, struct wl_array* states)
+{
+    wl_resource_post_event(resource, 0, width, height, states);
+}
+
+void mfw::XdgToplevelV6::send_close_event()
+{
+    wl_resource_post_event(resource, 1);
+}
+
 struct zxdg_toplevel_v6_interface const mfw::XdgToplevelV6::vtable = {
     Thunks::destroy_thunk,
     Thunks::set_parent_thunk,
@@ -706,6 +726,16 @@ mfw::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+void mfw::XdgPopupV6::send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height)
+{
+    wl_resource_post_event(resource, 0, x, y, width, height);
+}
+
+void mfw::XdgPopupV6::send_popup_done_event()
+{
+    wl_resource_post_event(resource, 1);
 }
 
 struct zxdg_popup_v6_interface const mfw::XdgPopupV6::vtable = {

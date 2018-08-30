@@ -29,6 +29,11 @@ mfw::Callback::Callback(struct wl_client* client, struct wl_resource* parent, ui
     }
 }
 
+void mfw::Callback::send_done_event(uint32_t callback_data)
+{
+    wl_resource_post_event(resource, 0, callback_data);
+}
+
 // Compositor
 
 struct mfw::Compositor::Thunks
@@ -245,6 +250,11 @@ mfw::Shm::~Shm()
     wl_global_destroy(global);
 }
 
+void mfw::Shm::send_format_event(struct wl_resource* resource, uint32_t format)
+{
+    wl_resource_post_event(resource, 0, format);
+}
+
 struct wl_shm_interface const mfw::Shm::vtable = {
     Thunks::create_pool_thunk};
 
@@ -284,6 +294,11 @@ mfw::Buffer::Buffer(struct wl_client* client, struct wl_resource* parent, uint32
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+void mfw::Buffer::send_release_event()
+{
+    wl_resource_post_event(resource, 0);
 }
 
 struct wl_buffer_interface const mfw::Buffer::vtable = {
@@ -397,6 +412,21 @@ mfw::DataOffer::DataOffer(struct wl_client* client, struct wl_resource* parent, 
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+void mfw::DataOffer::send_offer_event(std::string const& mime_type)
+{
+    wl_resource_post_event(resource, 0, mime_type);
+}
+
+void mfw::DataOffer::send_source_actions_event(uint32_t source_actions)
+{
+    wl_resource_post_event(resource, 1, source_actions);
+}
+
+void mfw::DataOffer::send_action_event(uint32_t dnd_action)
+{
+    wl_resource_post_event(resource, 2, dnd_action);
+}
+
 struct wl_data_offer_interface const mfw::DataOffer::vtable = {
     Thunks::accept_thunk,
     Thunks::receive_thunk,
@@ -472,6 +502,36 @@ mfw::DataSource::DataSource(struct wl_client* client, struct wl_resource* parent
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+void mfw::DataSource::send_target_event(std::experimental::optional<std::string> const& mime_type)
+{
+    wl_resource_post_event(resource, 0, mime_type);
+}
+
+void mfw::DataSource::send_send_event(std::string const& mime_type, mir::Fd fd)
+{
+    wl_resource_post_event(resource, 1, mime_type, fd);
+}
+
+void mfw::DataSource::send_cancelled_event()
+{
+    wl_resource_post_event(resource, 2);
+}
+
+void mfw::DataSource::send_dnd_drop_performed_event()
+{
+    wl_resource_post_event(resource, 3);
+}
+
+void mfw::DataSource::send_dnd_finished_event()
+{
+    wl_resource_post_event(resource, 4);
+}
+
+void mfw::DataSource::send_action_event(uint32_t dnd_action)
+{
+    wl_resource_post_event(resource, 5, dnd_action);
 }
 
 struct wl_data_source_interface const mfw::DataSource::vtable = {
@@ -562,6 +622,36 @@ mfw::DataDevice::DataDevice(struct wl_client* client, struct wl_resource* parent
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+void mfw::DataDevice::send_data_offer_event(uint32_t id)
+{
+    wl_resource_post_event(resource, 0, id);
+}
+
+void mfw::DataDevice::send_enter_event(uint32_t serial, struct wl_resource* surface, wl_fixed_t x, wl_fixed_t y, std::experimental::optional<struct wl_resource*> const& id)
+{
+    wl_resource_post_event(resource, 1, serial, surface, x, y, id);
+}
+
+void mfw::DataDevice::send_leave_event()
+{
+    wl_resource_post_event(resource, 2);
+}
+
+void mfw::DataDevice::send_motion_event(uint32_t time, wl_fixed_t x, wl_fixed_t y)
+{
+    wl_resource_post_event(resource, 3, time, x, y);
+}
+
+void mfw::DataDevice::send_drop_event()
+{
+    wl_resource_post_event(resource, 4);
+}
+
+void mfw::DataDevice::send_selection_event(std::experimental::optional<struct wl_resource*> const& id)
+{
+    wl_resource_post_event(resource, 5, id);
 }
 
 struct wl_data_device_interface const mfw::DataDevice::vtable = {
@@ -904,6 +994,21 @@ mfw::ShellSurface::ShellSurface(struct wl_client* client, struct wl_resource* pa
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+void mfw::ShellSurface::send_ping_event(uint32_t serial)
+{
+    wl_resource_post_event(resource, 0, serial);
+}
+
+void mfw::ShellSurface::send_configure_event(uint32_t edges, int32_t width, int32_t height)
+{
+    wl_resource_post_event(resource, 1, edges, width, height);
+}
+
+void mfw::ShellSurface::send_popup_done_event()
+{
+    wl_resource_post_event(resource, 2);
+}
+
 struct wl_shell_surface_interface const mfw::ShellSurface::vtable = {
     Thunks::pong_thunk,
     Thunks::move_thunk,
@@ -1113,6 +1218,16 @@ mfw::Surface::Surface(struct wl_client* client, struct wl_resource* parent, uint
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+void mfw::Surface::send_enter_event(struct wl_resource* output)
+{
+    wl_resource_post_event(resource, 0, output);
+}
+
+void mfw::Surface::send_leave_event(struct wl_resource* output)
+{
+    wl_resource_post_event(resource, 1, output);
+}
+
 struct wl_surface_interface const mfw::Surface::vtable = {
     Thunks::destroy_thunk,
     Thunks::attach_thunk,
@@ -1233,6 +1348,16 @@ mfw::Seat::~Seat()
     wl_global_destroy(global);
 }
 
+void mfw::Seat::send_capabilities_event(struct wl_resource* resource, uint32_t capabilities)
+{
+    wl_resource_post_event(resource, 0, capabilities);
+}
+
+void mfw::Seat::send_name_event(struct wl_resource* resource, std::string const& name)
+{
+    wl_resource_post_event(resource, 1, name);
+}
+
 struct wl_seat_interface const mfw::Seat::vtable = {
     Thunks::get_pointer_thunk,
     Thunks::get_keyboard_thunk,
@@ -1298,6 +1423,51 @@ mfw::Pointer::Pointer(struct wl_client* client, struct wl_resource* parent, uint
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+void mfw::Pointer::send_enter_event(uint32_t serial, struct wl_resource* surface, wl_fixed_t surface_x, wl_fixed_t surface_y)
+{
+    wl_resource_post_event(resource, 0, serial, surface, surface_x, surface_y);
+}
+
+void mfw::Pointer::send_leave_event(uint32_t serial, struct wl_resource* surface)
+{
+    wl_resource_post_event(resource, 1, serial, surface);
+}
+
+void mfw::Pointer::send_motion_event(uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y)
+{
+    wl_resource_post_event(resource, 2, time, surface_x, surface_y);
+}
+
+void mfw::Pointer::send_button_event(uint32_t serial, uint32_t time, uint32_t button, uint32_t state)
+{
+    wl_resource_post_event(resource, 3, serial, time, button, state);
+}
+
+void mfw::Pointer::send_axis_event(uint32_t time, uint32_t axis, wl_fixed_t value)
+{
+    wl_resource_post_event(resource, 4, time, axis, value);
+}
+
+void mfw::Pointer::send_frame_event()
+{
+    wl_resource_post_event(resource, 5);
+}
+
+void mfw::Pointer::send_axis_source_event(uint32_t axis_source)
+{
+    wl_resource_post_event(resource, 6, axis_source);
+}
+
+void mfw::Pointer::send_axis_stop_event(uint32_t time, uint32_t axis)
+{
+    wl_resource_post_event(resource, 7, time, axis);
+}
+
+void mfw::Pointer::send_axis_discrete_event(uint32_t axis, int32_t discrete)
+{
+    wl_resource_post_event(resource, 8, axis, discrete);
+}
+
 struct wl_pointer_interface const mfw::Pointer::vtable = {
     Thunks::set_cursor_thunk,
     Thunks::release_thunk};
@@ -1340,6 +1510,36 @@ mfw::Keyboard::Keyboard(struct wl_client* client, struct wl_resource* parent, ui
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+void mfw::Keyboard::send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size)
+{
+    wl_resource_post_event(resource, 0, format, fd, size);
+}
+
+void mfw::Keyboard::send_enter_event(uint32_t serial, struct wl_resource* surface, struct wl_array* keys)
+{
+    wl_resource_post_event(resource, 1, serial, surface, keys);
+}
+
+void mfw::Keyboard::send_leave_event(uint32_t serial, struct wl_resource* surface)
+{
+    wl_resource_post_event(resource, 2, serial, surface);
+}
+
+void mfw::Keyboard::send_key_event(uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
+{
+    wl_resource_post_event(resource, 3, serial, time, key, state);
+}
+
+void mfw::Keyboard::send_modifiers_event(uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group)
+{
+    wl_resource_post_event(resource, 4, serial, mods_depressed, mods_latched, mods_locked, group);
+}
+
+void mfw::Keyboard::send_repeat_info_event(int32_t rate, int32_t delay)
+{
+    wl_resource_post_event(resource, 5, rate, delay);
+}
+
 struct wl_keyboard_interface const mfw::Keyboard::vtable = {
     Thunks::release_thunk};
 
@@ -1379,6 +1579,41 @@ mfw::Touch::Touch(struct wl_client* client, struct wl_resource* parent, uint32_t
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+void mfw::Touch::send_down_event(uint32_t serial, uint32_t time, struct wl_resource* surface, int32_t id, wl_fixed_t x, wl_fixed_t y)
+{
+    wl_resource_post_event(resource, 0, serial, time, surface, id, x, y);
+}
+
+void mfw::Touch::send_up_event(uint32_t serial, uint32_t time, int32_t id)
+{
+    wl_resource_post_event(resource, 1, serial, time, id);
+}
+
+void mfw::Touch::send_motion_event(uint32_t time, int32_t id, wl_fixed_t x, wl_fixed_t y)
+{
+    wl_resource_post_event(resource, 2, time, id, x, y);
+}
+
+void mfw::Touch::send_frame_event()
+{
+    wl_resource_post_event(resource, 3);
+}
+
+void mfw::Touch::send_cancel_event()
+{
+    wl_resource_post_event(resource, 4);
+}
+
+void mfw::Touch::send_shape_event(int32_t id, wl_fixed_t major, wl_fixed_t minor)
+{
+    wl_resource_post_event(resource, 5, id, major, minor);
+}
+
+void mfw::Touch::send_orientation_event(int32_t id, wl_fixed_t orientation)
+{
+    wl_resource_post_event(resource, 6, id, orientation);
 }
 
 struct wl_touch_interface const mfw::Touch::vtable = {
@@ -1442,6 +1677,26 @@ mfw::Output::Output(struct wl_display* display, uint32_t max_version)
 mfw::Output::~Output()
 {
     wl_global_destroy(global);
+}
+
+void mfw::Output::send_geometry_event(struct wl_resource* resource, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform)
+{
+    wl_resource_post_event(resource, 0, x, y, physical_width, physical_height, subpixel, make, model, transform);
+}
+
+void mfw::Output::send_mode_event(struct wl_resource* resource, uint32_t flags, int32_t width, int32_t height, int32_t refresh)
+{
+    wl_resource_post_event(resource, 1, flags, width, height, refresh);
+}
+
+void mfw::Output::send_done_event(struct wl_resource* resource)
+{
+    wl_resource_post_event(resource, 2);
+}
+
+void mfw::Output::send_scale_event(struct wl_resource* resource, int32_t factor)
+{
+    wl_resource_post_event(resource, 3, factor);
 }
 
 struct wl_output_interface const mfw::Output::vtable = {

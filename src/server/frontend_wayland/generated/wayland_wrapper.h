@@ -30,6 +30,8 @@ protected:
     Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Callback() = default;
 
+    void send_done_event(uint32_t callback_data);
+
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -81,6 +83,8 @@ protected:
     Shm(struct wl_display* display, uint32_t max_version);
     virtual ~Shm();
 
+    void send_format_event(struct wl_resource* resource, uint32_t format);
+
     struct wl_global* const global;
     uint32_t const max_version;
 
@@ -100,6 +104,8 @@ protected:
     Buffer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Buffer() = default;
 
+    void send_release_event();
+
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -116,6 +122,10 @@ class DataOffer
 protected:
     DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~DataOffer() = default;
+
+    void send_offer_event(std::string const& mime_type);
+    void send_source_actions_event(uint32_t source_actions);
+    void send_action_event(uint32_t dnd_action);
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -138,6 +148,13 @@ protected:
     DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~DataSource() = default;
 
+    void send_target_event(std::experimental::optional<std::string> const& mime_type);
+    void send_send_event(std::string const& mime_type, mir::Fd fd);
+    void send_cancelled_event();
+    void send_dnd_drop_performed_event();
+    void send_dnd_finished_event();
+    void send_action_event(uint32_t dnd_action);
+
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -156,6 +173,13 @@ class DataDevice
 protected:
     DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~DataDevice() = default;
+
+    void send_data_offer_event(uint32_t id);
+    void send_enter_event(uint32_t serial, struct wl_resource* surface, wl_fixed_t x, wl_fixed_t y, std::experimental::optional<struct wl_resource*> const& id);
+    void send_leave_event();
+    void send_motion_event(uint32_t time, wl_fixed_t x, wl_fixed_t y);
+    void send_drop_event();
+    void send_selection_event(std::experimental::optional<struct wl_resource*> const& id);
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -215,6 +239,10 @@ protected:
     ShellSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~ShellSurface() = default;
 
+    void send_ping_event(uint32_t serial);
+    void send_configure_event(uint32_t edges, int32_t width, int32_t height);
+    void send_popup_done_event();
+
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -240,6 +268,9 @@ class Surface
 protected:
     Surface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Surface() = default;
+
+    void send_enter_event(struct wl_resource* output);
+    void send_leave_event(struct wl_resource* output);
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -267,6 +298,9 @@ protected:
     Seat(struct wl_display* display, uint32_t max_version);
     virtual ~Seat();
 
+    void send_capabilities_event(struct wl_resource* resource, uint32_t capabilities);
+    void send_name_event(struct wl_resource* resource, std::string const& name);
+
     struct wl_global* const global;
     uint32_t const max_version;
 
@@ -289,6 +323,16 @@ protected:
     Pointer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Pointer() = default;
 
+    void send_enter_event(uint32_t serial, struct wl_resource* surface, wl_fixed_t surface_x, wl_fixed_t surface_y);
+    void send_leave_event(uint32_t serial, struct wl_resource* surface);
+    void send_motion_event(uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y);
+    void send_button_event(uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
+    void send_axis_event(uint32_t time, uint32_t axis, wl_fixed_t value);
+    void send_frame_event();
+    void send_axis_source_event(uint32_t axis_source);
+    void send_axis_stop_event(uint32_t time, uint32_t axis);
+    void send_axis_discrete_event(uint32_t axis, int32_t discrete);
+
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -307,6 +351,13 @@ protected:
     Keyboard(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Keyboard() = default;
 
+    void send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size);
+    void send_enter_event(uint32_t serial, struct wl_resource* surface, struct wl_array* keys);
+    void send_leave_event(uint32_t serial, struct wl_resource* surface);
+    void send_key_event(uint32_t serial, uint32_t time, uint32_t key, uint32_t state);
+    void send_modifiers_event(uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group);
+    void send_repeat_info_event(int32_t rate, int32_t delay);
+
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -324,6 +375,14 @@ protected:
     Touch(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Touch() = default;
 
+    void send_down_event(uint32_t serial, uint32_t time, struct wl_resource* surface, int32_t id, wl_fixed_t x, wl_fixed_t y);
+    void send_up_event(uint32_t serial, uint32_t time, int32_t id);
+    void send_motion_event(uint32_t time, int32_t id, wl_fixed_t x, wl_fixed_t y);
+    void send_frame_event();
+    void send_cancel_event();
+    void send_shape_event(int32_t id, wl_fixed_t major, wl_fixed_t minor);
+    void send_orientation_event(int32_t id, wl_fixed_t orientation);
+
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -340,6 +399,11 @@ class Output
 protected:
     Output(struct wl_display* display, uint32_t max_version);
     virtual ~Output();
+
+    void send_geometry_event(struct wl_resource* resource, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform);
+    void send_mode_event(struct wl_resource* resource, uint32_t flags, int32_t width, int32_t height, int32_t refresh);
+    void send_done_event(struct wl_resource* resource);
+    void send_scale_event(struct wl_resource* resource, int32_t factor);
 
     struct wl_global* const global;
     uint32_t const max_version;

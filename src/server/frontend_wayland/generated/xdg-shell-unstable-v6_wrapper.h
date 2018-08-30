@@ -30,6 +30,8 @@ protected:
     XdgShellV6(struct wl_display* display, uint32_t max_version);
     virtual ~XdgShellV6();
 
+    void send_ping_event(struct wl_resource* resource, uint32_t serial);
+
     struct wl_global* const global;
     uint32_t const max_version;
 
@@ -75,6 +77,8 @@ protected:
     XdgSurfaceV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgSurfaceV6() = default;
 
+    void send_configure_event(uint32_t serial);
+
     struct wl_client* const client;
     struct wl_resource* const resource;
 
@@ -95,6 +99,9 @@ class XdgToplevelV6
 protected:
     XdgToplevelV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgToplevelV6() = default;
+
+    void send_configure_event(int32_t width, int32_t height, struct wl_array* states);
+    void send_close_event();
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -125,6 +132,9 @@ class XdgPopupV6
 protected:
     XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgPopupV6() = default;
+
+    void send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height);
+    void send_popup_done_event();
 
     struct wl_client* const client;
     struct wl_resource* const resource;
