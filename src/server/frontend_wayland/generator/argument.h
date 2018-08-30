@@ -45,8 +45,10 @@ public:
 
     Emitter wl_prototype() const;
     Emitter mir_prototype() const;
+    Emitter wl_call_fragment() const;
     Emitter mir_call_fragment() const;
-    std::experimental::optional<Emitter> converter() const;
+    std::experimental::optional<Emitter> wl_to_mir_converter() const;
+    std::experimental::optional<Emitter> mir_to_wl_converter() const;
 
 private:
     static bool argument_is_optional(xmlpp::Element const& arg);

@@ -55,17 +55,27 @@ Emitter Argument::mir_prototype() const
     return {descriptor.mir_type, " ", name};
 }
 
+Emitter Argument::wl_call_fragment() const
+{
+    return name;
+}
+
 Emitter Argument::mir_call_fragment() const
 {
     return descriptor.converter ? (name + "_resolved") : name;
 }
 
-std::experimental::optional<Emitter> Argument::converter() const
+std::experimental::optional<Emitter> Argument::wl_to_mir_converter() const
 {
     if (descriptor.converter)
         return descriptor.converter.value()(name);
     else
-        return {};
+        return std::experimental::nullopt;
+}
+
+std::experimental::optional<Emitter> Argument::mir_to_wl_converter() const
+{
+    return std::experimental::nullopt;
 }
 
 bool Argument::argument_is_optional(xmlpp::Element const& arg)

@@ -75,7 +75,7 @@ Emitter Request::wl_to_mir_converters() const
     std::vector<Emitter> thunk_converters;
     for (auto const& arg : arguments)
     {
-        if (auto converter = arg.converter())
+        if (auto converter = arg.wl_to_mir_converter())
             thunk_converters.push_back(converter.value());
     }
     return Lines{thunk_converters};
