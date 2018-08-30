@@ -40,6 +40,9 @@ protected:
     // arguments from libwayland to the thunk
     Emitter wl_args() const;
 
+    // arguments for mir code
+    Emitter mir_args() const;
+
     // converts wl input types to mir types
     Emitter wl2mir_converters() const;
 

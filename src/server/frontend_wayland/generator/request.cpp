@@ -70,6 +70,21 @@ Emitter Request::wl_args() const
     return List{wl_args, ", "};
 }
 
+Emitter Request::mir_args() const
+{
+    std::vector<Emitter> mir_args;
+    if (is_global)
+    {
+        mir_args.push_back("struct wl_client* client");
+        mir_args.push_back("struct wl_resource* resource");
+    }
+    for (auto& i : arguments)
+    {
+        mir_args.push_back(i.mir_prototype());
+    }
+    return List{mir_args, ", "};
+}
+
 Emitter Request::wl2mir_converters() const
 {
     std::vector<Emitter> thunk_converters;

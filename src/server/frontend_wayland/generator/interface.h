@@ -53,6 +53,7 @@ private:
     Emitter bind_prototype() const;
     Emitter virtual_request_prototypes() const;
     Emitter event_prototypes() const;
+    Emitter event_impls() const;
     Emitter member_vars() const;
     Emitter thunks_impl() const;
     Emitter thunks_impl_contents() const;

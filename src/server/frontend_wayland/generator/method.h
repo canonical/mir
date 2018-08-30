@@ -37,9 +37,6 @@ public:
     Method(xmlpp::Element const& node, std::string const& class_name, bool is_global);
 
 protected:
-    // arguments with the mir types
-    Emitter mir_args() const;
-
     std::string const name;
     std::string const class_name;
     bool const is_global;

@@ -40,18 +40,3 @@ Method::Method(xmlpp::Element const& node, std::string const& class_name, bool i
         }
     }
 }
-
-Emitter Method::mir_args() const
-{
-    std::vector<Emitter> mir_args;
-    if (is_global)
-    {
-        mir_args.push_back("struct wl_client* client");
-        mir_args.push_back("struct wl_resource* resource");
-    }
-    for (auto& i : arguments)
-    {
-        mir_args.push_back(i.mir_prototype());
-    }
-    return List{mir_args, ", "};
-}

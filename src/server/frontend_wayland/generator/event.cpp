@@ -27,13 +27,13 @@ Event::Event(xmlpp::Element const& node, std::string const& class_name, bool is_
 // TODO: Decide whether to resolve wl_resource* to wrapped types (ie: Region, Surface, etc).
 Emitter Event::prototype() const
 {
-    return {"void send_", name, "(", mir_args(), ");"};
+    return {"void send_", name, "_event(", mir_args(), ");"};
 }
 
 // TODO: Decide whether to resolve wl_resource* to wrapped types (ie: Region, Surface, etc).
 Emitter Event::impl() const
 {
-    return {"static void send_", name, "(", mir_args(), ")",
+    return {"void mfw::", class_name, "::send_", name, "_event(", mir_args(), ")",
         Block{
             mir2wl_converters(),
             {"wl_resource_post_event(", wl_call_args(), ");"},
@@ -50,6 +50,20 @@ Emitter Event::mir2wl_converters() const
             thunk_converters.push_back(converter.value());
     }
     return Lines{thunk_converters};
+}
+
+Emitter Event::mir_args() const
+{
+    std::vector<Emitter> mir_args;
+    if (is_global)
+    {
+        mir_args.push_back("struct wl_resource* resource");
+    }
+    for (auto& i : arguments)
+    {
+        mir_args.push_back(i.mir_prototype());
+    }
+    return List{mir_args, ", "};
 }
 
 Emitter Event::wl_call_args() const

@@ -46,6 +46,7 @@ Emitter Interface::declaration() const
                 constructor_prototype(),
                 destructor_prototype(),
             },
+            event_prototypes(),
             member_vars(),
         }, empty_line, Emitter::single_indent},
         empty_line,
@@ -54,7 +55,6 @@ Emitter Interface::declaration() const
             (thunks_impl_contents().is_valid() ? "struct Thunks;" : nullptr),
             (is_global ? bind_prototype() : nullptr),
             virtual_request_prototypes(),
-            event_prototypes(),
             (has_vtable ? vtable_declare() : nullptr),
         }, empty_line, Emitter::single_indent},
         "};"
@@ -70,6 +70,7 @@ Emitter Interface::implementation() const
             thunks_impl(),
             constructor_impl(),
             destructor_impl(),
+            event_impls(),
             (has_vtable ? vtable_init() : nullptr),
         }, empty_line},
     };
@@ -175,6 +176,16 @@ Emitter Interface::event_prototypes() const
         prototypes.push_back(event.prototype());
     }
     return Lines{prototypes};
+}
+
+Emitter Interface::event_impls() const
+{
+    std::vector<Emitter> impls;
+    for (auto const& event : events)
+    {
+        impls.push_back(event.impl());
+    }
+    return List{impls, empty_line};
 }
 
 Emitter Interface::member_vars() const
