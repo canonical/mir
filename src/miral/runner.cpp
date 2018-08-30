@@ -44,7 +44,7 @@ inline auto filename(std::string path) -> std::string
 struct miral::MirRunner::Self
 {
     Self(int argc, char const* argv[], std::string const& config_file) :
-        argc(argc), argv(argv), config_file{config_file} {}
+        argc(argc), argv(argv), config_file{config_file}, display_config_file{filename(argv[0])+ ".display"} {}
 
     auto run_with(std::initializer_list<std::function<void(::mir::Server&)>> options) -> int;
     void launch_startup_applications(::mir::Server& server);
@@ -52,6 +52,7 @@ struct miral::MirRunner::Self
     int const argc;
     char const** const argv;
     std::string const config_file;
+    std::string const display_config_file;
 
     std::mutex mutex;
     std::function<void()> start_callback{[]{}};
@@ -258,5 +259,15 @@ void miral::MirRunner::stop()
     {
         server->stop();
     }
+}
+
+auto miral::MirRunner::config_file() const -> std::string
+{
+    return self->config_file;
+}
+
+auto miral::MirRunner::display_config_file() const -> std::string
+{
+    return self->display_config_file;
 }
 

@@ -322,3 +322,11 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::WaylandExtensions::operator=(miral::WaylandExtensions const&)@MIRAL_2.4" 2.4.0
  (c++)"miral::WaylandExtensions::supported_extensions[abi:cxx11]() const@MIRAL_2.4" 2.4.0
  (c++)"miral::WaylandExtensions::operator()(mir::Server&) const@MIRAL_2.4" 2.4.0
+ (c++)"miral::DisplayConfiguration::~DisplayConfiguration()@MIRAL_2.4" 2.4.0
+ (c++)"miral::DisplayConfiguration::DisplayConfiguration(miral::MirRunner const&)@MIRAL_2.4" 2.4.0
+ (c++)"miral::DisplayConfiguration::DisplayConfiguration(miral::DisplayConfiguration const&)@MIRAL_2.4" 2.4.0
+ (c++)"miral::DisplayConfiguration::operator=(miral::DisplayConfiguration const&)@MIRAL_2.4" 2.4.0
+ (c++)"miral::DisplayConfiguration::operator()(mir::Server&) const@MIRAL_2.4" 2.4.0
+ (c++)"miral::DisplayConfiguration::select_layout(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_2.4" 2.4.0
+ (c++)"miral::MirRunner::config_file[abi:cxx11]() const@MIRAL_2.4" 2.4.0
+ (c++)"miral::MirRunner::display_config_file[abi:cxx11]() const@MIRAL_2.4" 2.4.0

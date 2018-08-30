@@ -38,7 +38,13 @@ public:
 
     void load_config(std::istream& config_file, std::string const& error_prefix);
 
+    void select_layout(std::string const& layout);
+
+    auto list_layouts() const -> std::vector<std::string>;
+
 private:
+
+    std::string layout = "default";
 
     using Id = std::tuple<mir::graphics::DisplayConfigurationCardId, MirOutputType, int>;
     struct Config
@@ -51,7 +57,10 @@ private:
         mir::optional_value<MirOrientation>  orientation;
     };
 
-    std::map<Id, Config> config;
+    using Id2Config = std::map<Id, Config>;
+    using Layout2Id2Config = std::map<std::string, Id2Config>;
+
+    Layout2Id2Config config;
 };
 }
 

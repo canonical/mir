@@ -45,6 +45,7 @@ add_library(miral SHARED
     command_line_option.cpp             ${miral_include}/miral/command_line_option.h
     cursor_theme.cpp                    ${miral_include}/miral/cursor_theme.h
     debug_extension.cpp                 ${miral_include}/miral/debug_extension.h
+    display_configuration.cpp           ${miral_include}/miral/display_configuration.h
     external_client.cpp                 ${miral_include}/miral/external_client.h
     keymap.cpp                          ${miral_include}/miral/keymap.h
     runner.cpp                          ${miral_include}/miral/runner.h

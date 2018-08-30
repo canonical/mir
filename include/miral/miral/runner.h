@@ -63,6 +63,20 @@ public:
     /// Tell the Mir server to exit
     void stop();
 
+    /// Name of the .config file.
+    /// The .config file is located via the XDG Base Directory Specification:
+    ///   $XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS
+    /// Config file entries are long form (e.g. "x11-output=1200x720")
+    /// \remark Since MirAL 2.4
+    auto config_file() const -> std::string;
+
+    /// Name of the .display configuration file.
+    /// The .display file is located via the XDG Base Directory Specification:
+    ///   $XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS
+    /// Config file entries are long form (e.g. "x11-output=1200x720")
+    /// \remark Since MirAL 2.4
+    auto display_config_file() const -> std::string;
+
 private:
     MirRunner(MirRunner const&) = delete;
     MirRunner& operator=(MirRunner const&) = delete;
