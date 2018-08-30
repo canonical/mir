@@ -4,6 +4,11 @@ include_directories(SYSTEM ${XMLPP_INCLUDE_DIRS})
 
 add_executable(wrapper-generator
   wrapper_generator.cpp
+  utils.cpp                 utils.h
+  argument.cpp              argument.h
+  method.cpp                method.h
+  interface.cpp             interface.h
+  emitter.cpp               emitter.h
 )
 
 target_link_libraries(wrapper-generator
