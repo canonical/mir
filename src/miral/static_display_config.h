@@ -24,6 +24,7 @@
 #include <mir/graphics/display_configuration.h>
 
 #include <map>
+#include <functional>
 #include <iosfwd>
 
 namespace miral
@@ -41,6 +42,8 @@ public:
     void select_layout(std::string const& layout);
 
     auto list_layouts() const -> std::vector<std::string>;
+
+    virtual void dump_config(std::function<void(std::ostream&)> const& print_template_config);
 
 private:
 

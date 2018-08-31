@@ -391,7 +391,7 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 
     auto print_template_config = [&card_map](std::ostream& out)
         {
-            out << "\nlayouts:"
+            out << "layouts:"
                    "\n# keys here are layout labels (used for atomically switching between them)"
                    "\n# when enabling displays, surfaces should be matched in reverse recency order"
                    "\n"
@@ -408,9 +408,13 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
             }
         };
 
+    dump_config(print_template_config);
+}
 
+void miral::StaticDisplayConfig::dump_config(std::function<void(std::ostream&)> const& print_template_config)
+{
     std::ostringstream out;
-    out << "Display config:\n8>< ---------------------------------------------------";
+    out << "Display config:\n8>< ---------------------------------------------------\n";
     print_template_config(out);
     out << "8>< ---------------------------------------------------";
     mir::log_info(out.str());

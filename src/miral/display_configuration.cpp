@@ -22,6 +22,9 @@
 #include "static_display_config.h"
 
 #include <mir/server.h>
+#include <mir/log.h>
+
+#include <unistd.h>
 
 #include <fstream>
 #include <sstream>
@@ -30,6 +33,36 @@ struct miral::DisplayConfiguration::Self : StaticDisplayConfig
 {
     Self(std::string const& name) : name{name} {}
     std::string const name;
+
+    void dump_config(std::function<void(std::ostream&)> const& print_template_config) override
+    {
+        std::string config_dir;
+
+        if (auto config_home = getenv("XDG_CONFIG_HOME"))
+            config_dir = config_home;
+        else if (auto home = getenv("HOME"))
+            (config_dir = home) += "/.config";
+
+        if (config_dir.empty())
+        {
+            mir::log_debug("Neither XDG_CONFIG_HOME or HOME is set");
+        }
+        else
+        {
+            auto const filename = config_dir + "/" + name;
+
+            if (access(filename.c_str(), F_OK))
+            {
+                std::ofstream out{filename};
+                print_template_config(out);
+
+                if (!out)
+                    mir::log_debug("Failed writing display configuration template: %s", filename.c_str());
+            }
+        }
+
+        StaticDisplayConfig::dump_config(print_template_config);
+    }
 };
 
 miral::DisplayConfiguration::DisplayConfiguration(MirRunner const& mir_runner) :
