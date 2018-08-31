@@ -35,14 +35,14 @@ class Element;
 class Method
 {
 public:
-    Method(xmlpp::Element const& node, bool is_global);
+    Method(xmlpp::Element const& node, std::string const& class_name, bool is_global);
 
     // prototype of virtual function that is overridden in Mir
     Emitter virtual_mir_prototype() const;
 
     // the thunk is the static function that libwayland calls
     // It does some type conversion and calls the virtual method, which should be overridden somewhere in Mir
-    Emitter thunk_body(std::string const& interface_type) const;
+    Emitter thunk_impl() const;
 
     // the bit of this objects vtable that holds this method
     Emitter vtable_initialiser() const;
@@ -61,6 +61,7 @@ private:
     Emitter mir_call_args() const;
 
     std::string const name;
+    std::string const class_name;
     bool const is_global;
     std::vector<Argument> arguments;
 };

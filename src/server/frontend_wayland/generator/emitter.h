@@ -95,6 +95,13 @@ class Emitter
 public:
     struct State
     {
+        State(std::ostream& out)
+            : out{out},
+              on_fresh_line{std::make_shared<bool>(true)},
+              indent{""}
+        {
+        }
+
         std::ostream& out;
         std::shared_ptr<bool> const on_fresh_line;
         std::string indent;

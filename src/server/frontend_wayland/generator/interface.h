@@ -36,31 +36,35 @@ class Element;
 class Interface
 {
 public:
-    Interface(
-        xmlpp::Element const& node,
-        std::function<std::string(std::string)> const& name_transform,
-        std::unordered_set<std::string> const& constructable_interfaces);
+    Interface(xmlpp::Element const& node,
+              std::function<std::string(std::string)> const& name_transform,
+              std::unordered_set<std::string> const& constructable_interfaces);
 
-    Emitter full_class() const;
+    Emitter declaration() const;
+    Emitter implementation() const;
 
 private:
-    Emitter constructor() const;
-    Emitter constructor_for_global() const;
-    Emitter constructor_for_regular() const;
-    Emitter destructor() const;
+    Emitter constructor_prototype() const;
+    Emitter constructor_impl() const;
+    Emitter constructor_args() const;
+    Emitter destructor_prototype() const;
+    Emitter destructor_impl() const;
     Emitter bind_prototype() const;
     Emitter virtual_method_prototypes() const;
     Emitter member_vars() const;
-    Emitter thunk_bodies() const;
+    Emitter thunks_impl() const;
+    Emitter thunks_impl_contents() const;
     Emitter bind_thunk() const;
     Emitter resource_destroyed_thunk() const;
-    Emitter vtable_getter() const;
+    Emitter vtable_declare() const;
+    Emitter vtable_init() const;
     Emitter vtable_contents() const;
 
-    static std::vector<Method> get_methods(xmlpp::Element const& node, bool is_global);
+    std::vector<Method> get_methods(xmlpp::Element const& node, bool is_global);
 
     std::string const wl_name;
     std::string const generated_name;
+    std::string const nmspace;
     bool const is_global;
     std::vector<Method> const methods;
     bool const has_vtable;

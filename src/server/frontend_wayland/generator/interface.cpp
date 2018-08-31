@@ -22,94 +22,123 @@
 
 #include "method.h"
 
-Interface::Interface(
-    xmlpp::Element const& node,
-    std::function<std::string(std::string)> const& name_transform,
-    std::unordered_set<std::string> const& constructable_interfaces)
+Interface::Interface(xmlpp::Element const& node,
+                     std::function<std::string(std::string)> const& name_transform,
+                     std::unordered_set<std::string> const& constructable_interfaces)
     : wl_name{node.get_attribute_value("name")},
       generated_name{name_transform(wl_name)},
+      nmspace{"mfw::" + generated_name + "::"},
       is_global{constructable_interfaces.count(wl_name) == 0},
       methods{get_methods(node, is_global)},
-     has_vtable{!methods.empty()}
+      has_vtable{!methods.empty()}
 {
 }
 
-Emitter Interface::full_class() const
+Emitter Interface::declaration() const
 {
     return Lines{
         {"class ", generated_name},
         "{",
         "protected:",
         List {{
-            constructor(),
-            destructor(),
-            (is_global ? bind_prototype() : nullptr),
-            virtual_method_prototypes(),
+            Lines {
+                constructor_prototype(),
+                destructor_prototype(),
+            },
             member_vars(),
         }, empty_line, Emitter::single_indent},
         empty_line,
         "private:",
         List {{
-            thunk_bodies(),
-            (is_global ? bind_thunk() : nullptr),
-            (has_vtable && !is_global ? resource_destroyed_thunk() : nullptr),
-            (has_vtable ? vtable_getter() : nullptr),
+            (thunks_impl_contents().is_valid() ? "struct Thunks;" : nullptr),
+            (is_global ? bind_prototype() : nullptr),
+            virtual_method_prototypes(),
+            (has_vtable ? vtable_declare() : nullptr),
         }, empty_line, Emitter::single_indent},
         "};"
     };
 }
 
-Emitter Interface::constructor() const
-{
-    if (is_global)
-        return constructor_for_global();
-    else
-        return constructor_for_regular();
-}
-
-Emitter Interface::constructor_for_global() const
+Emitter Interface::implementation() const
 {
     return Lines{
-        {generated_name, "(struct wl_display* display, uint32_t max_version)"},
-        {"    : global{wl_global_create(display, &", wl_name, "_interface, max_version,"},
-        {"                              this, &", generated_name, "::bind_thunk)},"},
-        {"      max_version{max_version}"},
-        Block{
-            "if (global == nullptr)",
-            Block{
-                "BOOST_THROW_EXCEPTION((std::runtime_error{",
-                {"    \"Failed to export ", wl_name, " interface\"}));"}
-            }
-        }
+        {"// ", generated_name},
+        empty_line,
+        List{{
+            thunks_impl(),
+            constructor_impl(),
+            destructor_impl(),
+            (has_vtable ? vtable_init() : nullptr),
+        }, empty_line},
     };
 }
 
-Emitter Interface::constructor_for_regular() const
+Emitter Interface::constructor_prototype() const
 {
-    return Lines{
-        {generated_name, "(struct wl_client* client, struct wl_resource* parent, uint32_t id)"},
-        {"    : client{client},"},
-        {"      resource{wl_resource_create(client, &", wl_name, "_interface,"},
-        {"                                  wl_resource_get_version(parent), id)}"},
-        Block{
-            "if (resource == nullptr)",
-            Block{
-                "wl_resource_post_no_memory(parent);",
-                "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
-            },
-            (has_vtable ?
-            "wl_resource_set_implementation(resource, get_vtable(), this, &resource_destroyed_thunk);" :
-            Emitter{nullptr})
-        }
-    };
+    return Line{generated_name, "(", constructor_args(), ");"};
 }
 
-Emitter Interface::destructor() const
+Emitter Interface::constructor_impl() const
 {
     if (is_global)
     {
         return Lines{
-            {"virtual ~", generated_name, "()"},
+            {nmspace, generated_name, "(", constructor_args(), ")"},
+            {"    : global{wl_global_create(display, &", wl_name, "_interface, max_version, this, &", "Thunks::bind_thunk)},"},
+            {"      max_version{max_version}"},
+            Block{
+                "if (global == nullptr)",
+                Block{
+                    {"BOOST_THROW_EXCEPTION((std::runtime_error{\"Failed to export ", wl_name, " interface\"}));"}
+                }
+            }
+        };
+    }
+    else
+    {
+        return Lines{
+            {nmspace, generated_name, "(", constructor_args(), ")"},
+            {"    : client{client},"},
+            {"      resource{wl_resource_create(client, &", wl_name, "_interface, wl_resource_get_version(parent), id)}"},
+            Block{
+                "if (resource == nullptr)",
+                Block{
+                    "wl_resource_post_no_memory(parent);",
+                    "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
+                },
+                (has_vtable ?
+                "wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);" :
+                Emitter{nullptr})
+            }
+        };
+    }
+}
+
+Emitter Interface::constructor_args() const
+{
+    if (is_global)
+    {
+        return List{{"struct wl_display* display", "uint32_t max_version"},
+                    ", "};
+    }
+    else
+    {
+        return List{{"struct wl_client* client", "struct wl_resource* parent", "uint32_t id"},
+                    ", "};
+    }
+}
+
+Emitter Interface::destructor_prototype() const
+{
+    return Line{"virtual ~", generated_name, "()", (is_global ? nullptr : " = default"), ";"};
+}
+
+Emitter Interface::destructor_impl() const
+{
+    if (is_global)
+    {
+        return Lines{
+            {nmspace, "~", generated_name, "()"},
             Block{
                 "wl_global_destroy(global);"
             }
@@ -117,9 +146,7 @@ Emitter Interface::destructor() const
     }
     else
     {
-        return Lines{
-            {"virtual ~", generated_name, "() = default;"}
-        };
+        return nullptr;
     }
 }
 
@@ -156,14 +183,38 @@ Emitter Interface::member_vars() const
     }
 }
 
-Emitter Interface::thunk_bodies() const
+Emitter Interface::thunks_impl() const
 {
-    std::vector<Emitter> bodies;
-    for (auto const& method : methods)
+    Emitter contents = thunks_impl_contents();
+
+    if (contents.is_valid())
     {
-        bodies.push_back(method.thunk_body(generated_name));
+        return Lines{
+            {"struct ", nmspace, "Thunks"},
+            {Block{
+                contents
+            }, ";"},
+        };
     }
-    return Lines{bodies};
+    else
+    {
+        return nullptr;
+    }
+}
+
+Emitter Interface::thunks_impl_contents() const
+{
+    std::vector<Emitter> impls;
+    for (auto const& method : methods)
+        impls.push_back(method.thunk_impl());
+
+    if (is_global)
+        impls.push_back(bind_thunk());
+
+    if (has_vtable && !is_global)
+        impls.push_back(resource_destroyed_thunk());
+
+    return List{impls, empty_line};
 }
 
 Emitter Interface::bind_thunk() const
@@ -180,7 +231,7 @@ Emitter Interface::bind_thunk() const
                 "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
             },
             (has_vtable ?
-            "wl_resource_set_implementation(resource, get_vtable(), me, nullptr);" :
+            "wl_resource_set_implementation(resource, &vtable, me, nullptr);" :
             Emitter{nullptr}),
             "try",
             Block{
@@ -210,16 +261,17 @@ Emitter Interface::resource_destroyed_thunk() const
     };
 }
 
-Emitter Interface::vtable_getter() const
+Emitter Interface::vtable_declare() const
+{
+    return Line{"static struct ", wl_name, "_interface const vtable;"};
+}
+
+
+Emitter Interface::vtable_init() const
 {
     return Lines{
-        {"static inline struct ", wl_name, "_interface const* get_vtable()"},
-        Block{
-            {"static struct ", wl_name, "_interface const vtable = {"},
-            vtable_contents(),
-            "};",
-            "return &vtable;"
-        }
+        {"struct ", wl_name, "_interface const ", nmspace, "vtable = {"},
+            {vtable_contents(), "};"}
     };
 }
 
@@ -228,7 +280,7 @@ Emitter Interface::vtable_contents() const
     std::vector<Emitter> elems;
     for (auto const& method : methods)
     {
-        elems.push_back(method.vtable_initialiser());
+        elems.push_back({"Thunks::", method.vtable_initialiser()});
     }
     return List{elems, Line{{","}, false, true}, Emitter::single_indent};
 }
@@ -239,7 +291,7 @@ std::vector<Method> Interface::get_methods(xmlpp::Element const& node, bool is_g
     for (auto method_node : node.get_children("request"))
     {
         auto method = dynamic_cast<xmlpp::Element*>(method_node);
-        methods.emplace_back(Method{std::ref(*method), is_global});
+        methods.emplace_back(Method{std::ref(*method), generated_name, is_global});
     }
     return methods;
 }
