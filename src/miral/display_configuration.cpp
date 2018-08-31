@@ -45,7 +45,7 @@ struct miral::DisplayConfiguration::Self : StaticDisplayConfig
 
         if (config_dir.empty())
         {
-            mir::log_debug("Neither XDG_CONFIG_HOME or HOME is set");
+            mir::log_debug("Nowhere to write display configuration template: Neither XDG_CONFIG_HOME or HOME is set");
         }
         else
         {
