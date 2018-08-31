@@ -23,27 +23,111 @@
 
 #include <unordered_map>
 
-std::unordered_map<std::string, Argument::TypeDescriptor const> const Argument::type_map = {
-    { "uint", { "uint32_t", "uint32_t", {}, {} }},
-    { "int", { "int32_t", "int32_t", {}, {} }},
-    { "fd", { "mir::Fd", "int", { Argument::fd_wl2mir }, {} }},
-    { "object", { "struct wl_resource*", "struct wl_resource*", {}, {} }},
-    { "string", { "std::string const&", "char const*", {}, {} }},
-    { "new_id", { "uint32_t", "uint32_t", {}, {} }},
-    { "fixed", { "wl_fixed_t", "wl_fixed_t", {}, {} }},
-    { "array", { "struct wl_array*", "struct wl_array*", {}, {} }}
+namespace
+{
+
+Emitter fd_wl2mir(std::string name)
+{
+    return Line{"mir::Fd ", name, "_resolved{", name, "};"};
+}
+
+Emitter fixed_wl2mir(std::string name)
+{
+    return Line{"double ", name, "_resolved{wl_fixed_to_double(", name, ")};"};
+}
+
+Emitter fixed_mir2wl(std::string name)
+{
+    return Line{"wl_fixed_t ", name, "_resolved{wl_fixed_from_double(", name, ")};"};
+}
+
+Emitter string_mir2wl(std::string name)
+{
+    return Lines{
+        {"const char* ", name, "_resolved = ", name, ".c_str();"}
+    };
+}
+
+Emitter optional_object_wl2mir(std::string name)
+{
+    return Lines{
+        {"std::experimental::optional<struct wl_resource*> ", name, "_resolved;"},
+        {"if (", name, " != nullptr)"},
+        Block{
+            {name, "_resolved = {", name, "};"}
+        }
+    };
+}
+
+Emitter optional_object_mir2wl(std::string name)
+{
+    return Lines{
+        {"struct wl_resource* ", name, "_resolved = nullptr;"},
+        {"if (", name, ")"},
+        Block{
+            {name, "_resolved = ", name, ".value();"}
+        }
+    };
+}
+
+Emitter optional_string_wl2mir(std::string name)
+{
+    return Lines{
+        {"std::experimental::optional<std::string> ", name, "_resolved;"},
+        {"if (", name, " != nullptr)"},
+        Block{
+            {name, "_resolved = {", name, "};"}
+        }
+    };
+}
+
+Emitter optional_string_mir2wl(std::string name)
+{
+    return Lines{
+        {"const char* ", name, "_resolved = nullptr;"},
+        {"if (", name, ")"},
+        Block{
+            {name, "_resolved = ", name, ".value().c_str();"}
+        }
+    };
+}
+
+std::unordered_map<std::string, Argument::TypeDescriptor const> const request_type_map = {
+    { "uint", { "uint32_t", "uint32_t", {} }},
+    { "int", { "int32_t", "int32_t", {} }},
+    { "fd", { "mir::Fd", "int", { fd_wl2mir } }},
+    { "object", { "struct wl_resource*", "struct wl_resource*", {} }},
+    { "string", { "std::string const&", "char const*", {} }},
+    { "new_id", { "uint32_t", "uint32_t", {} }},
+    { "fixed", { "double", "wl_fixed_t", { fixed_wl2mir } }},
+    { "array", { "struct wl_array*", "struct wl_array*", {} }}
 };
 
-std::unordered_map<std::string, Argument::TypeDescriptor const> const Argument::optional_type_map = {
-    { "object", { "std::experimental::optional<struct wl_resource*> const&", "struct wl_resource*", { Argument::optional_object_wl2mir }, {} }},
-    { "string", { "std::experimental::optional<std::string> const&", "char const*", { Argument::optional_string_wl2mir }, {} }},
+std::unordered_map<std::string, Argument::TypeDescriptor const> const request_optional_type_map = {
+    { "object", { "std::experimental::optional<struct wl_resource*> const&", "struct wl_resource*", { optional_object_wl2mir } }},
+    { "string", { "std::experimental::optional<std::string> const&", "char const*", { optional_string_wl2mir } }},
 };
 
-Argument::Argument(xmlpp::Element const& node)
+std::unordered_map<std::string, Argument::TypeDescriptor const> const event_type_map = {
+    { "uint", { "uint32_t", "uint32_t", {} }},
+    { "int", { "int32_t", "int32_t", {} }},
+    { "fd", { "mir::Fd", "int", { /* converted implicitly */ } }},
+    { "object", { "struct wl_resource*", "struct wl_resource*", {} }},
+    { "string", { "std::string const&", "char const*", { string_mir2wl } }},
+    { "new_id", { "struct wl_resource*", "struct wl_resource*", {} }},
+    { "fixed", { "double", "wl_fixed_t", { fixed_mir2wl } }},
+    { "array", { "struct wl_array*", "struct wl_array*", {} }}
+};
+
+std::unordered_map<std::string, Argument::TypeDescriptor const> const event_optional_type_map = {
+    { "object", { "std::experimental::optional<struct wl_resource*> const&", "struct wl_resource*", {optional_object_mir2wl} }},
+    { "string", { "std::experimental::optional<std::string> const&", "char const*", { optional_string_mir2wl } }},
+};
+}
+
+Argument::Argument(xmlpp::Element const& node, bool is_event)
     : name{sanitize_name(node.get_attribute_value("name"))},
-      descriptor{argument_is_optional(node) ?
-          optional_type_map.at(node.get_attribute_value("type")) :
-          type_map.at(node.get_attribute_value("type"))}
+      descriptor{get_type(node, is_event)}
 {
 }
 
@@ -57,65 +141,61 @@ Emitter Argument::mir_prototype() const
     return {descriptor.mir_type, " ", name};
 }
 
-Emitter Argument::wl_call_fragment() const
+Emitter Argument::call_fragment() const
 {
-    return descriptor.mir2wl ? (name + "_resolved") : name;
+    return descriptor.converter ? (name + "_resolved") : name;
 }
 
-Emitter Argument::mir_call_fragment() const
+std::experimental::optional<Emitter> Argument::converter() const
 {
-    return descriptor.wl2mir ? (name + "_resolved") : name;
-}
-
-std::experimental::optional<Emitter> Argument::wl2mir_converter() const
-{
-    if (descriptor.wl2mir)
-        return descriptor.wl2mir.value()(name);
+    if (descriptor.converter)
+        return descriptor.converter.value()(name);
     else
         return std::experimental::nullopt;
 }
 
-std::experimental::optional<Emitter> Argument::mir2wl_converter() const
+Argument::TypeDescriptor Argument::get_type(xmlpp::Element const& node, bool is_event)
 {
-    if (descriptor.mir2wl)
-        return descriptor.mir2wl.value()(name);
-    else
-        return std::experimental::nullopt;
-}
+    bool is_optional = false;
+    if (auto allow_null = node.get_attribute("allow-null"))
+        is_optional = (allow_null->get_value() == "true");
+    std::string type = node.get_attribute_value("type");
 
-bool Argument::argument_is_optional(xmlpp::Element const& arg)
-{
-    if (auto allow_null = arg.get_attribute("allow-null"))
+    try
     {
-        return allow_null->get_value() == "true";
+        if (is_optional)
+        {
+            if (is_event)
+            {
+                return event_optional_type_map.at(type);
+            }
+            else
+            {
+                return request_optional_type_map.at(type);
+            }
+        }
+        else
+        {
+            if (is_event)
+            {
+                return event_type_map.at(type);
+            }
+            else
+            {
+                return request_type_map.at(type);
+            }
+        }
     }
-    return false;
-}
-
-Emitter Argument::fd_wl2mir(std::string name)
-{
-    return Line{"mir::Fd ", name, "_resolved{", name, "};"};
-}
-
-Emitter Argument::optional_object_wl2mir(std::string name)
-{
-    return Lines{
-        {"std::experimental::optional<struct wl_resource*> ", name, "_resolved;"},
-        {"if (", name, " != nullptr)"},
-        Block{
-            {name, "_resolved = {", name, "};"}
-        }
-    };
-}
-
-Emitter Argument::optional_string_wl2mir(std::string name)
-{
-    return Lines{
-        {"std::experimental::optional<std::string> ", name, "_resolved;"},
-        {"if (", name, " != nullptr)"},
-        Block{
-            {name, "_resolved = {", name, "};"}
-        }
-    };
-
+    catch (std::out_of_range const&)
+    {
+        // its an error message, so who cares about the memory leak?
+        return TypeDescriptor{"unknown_type_" + type, "unknown_type_" + type,
+            {[=](std::string name) -> Emitter
+            {
+                return Lines{
+                    {"#error '", name, "' is of type '" + type + "' (which is unknown for a", is_event ? "n event" : " request", is_optional ? " optional" : "", ")"},
+                    {"#error type resolving code can be found in argument.cpp in the wayland scanner"}
+                };
+            }}};
+    }
 }

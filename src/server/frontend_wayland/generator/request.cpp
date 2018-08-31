@@ -90,7 +90,7 @@ Emitter Request::wl2mir_converters() const
     std::vector<Emitter> thunk_converters;
     for (auto const& arg : arguments)
     {
-        if (auto converter = arg.wl2mir_converter())
+        if (auto converter = arg.converter())
             thunk_converters.push_back(converter.value());
     }
     return Lines{thunk_converters};
@@ -105,6 +105,6 @@ Emitter Request::mir_call_args() const
         call_args.push_back("resource");
     }
     for (auto& arg : arguments)
-        call_args.push_back(arg.mir_call_fragment());
+        call_args.push_back(arg.call_fragment());
     return List{call_args, ", "};
 }

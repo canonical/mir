@@ -46,7 +46,7 @@ Emitter Event::mir2wl_converters() const
     std::vector<Emitter> thunk_converters;
     for (auto const& arg : arguments)
     {
-        if (auto converter = arg.mir2wl_converter())
+        if (auto converter = arg.converter())
             thunk_converters.push_back(converter.value());
     }
     return Lines{thunk_converters};

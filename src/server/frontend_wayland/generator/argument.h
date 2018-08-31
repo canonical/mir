@@ -37,30 +37,21 @@ public:
     {
         std::string mir_type;
         std::string wl_type;
-        std::experimental::optional<std::function<Emitter(std::string)>> wl2mir;
-        std::experimental::optional<std::function<Emitter(std::string)>> mir2wl;
+        std::experimental::optional<std::function<Emitter(std::string)>> converter;
     };
 
-    Argument(xmlpp::Element const& node);
+    Argument(xmlpp::Element const& node, bool is_event);
 
     Emitter wl_prototype() const;
     Emitter mir_prototype() const;
-    Emitter wl_call_fragment() const;
-    Emitter mir_call_fragment() const;
-    std::experimental::optional<Emitter> wl2mir_converter() const;
-    std::experimental::optional<Emitter> mir2wl_converter() const;
+    Emitter call_fragment() const;
+    std::experimental::optional<Emitter> converter() const;
 
 private:
-    static bool argument_is_optional(xmlpp::Element const& arg);
-    static Emitter fd_wl2mir(std::string name);
-    static Emitter optional_object_wl2mir(std::string name);
-    static Emitter optional_string_wl2mir(std::string name);
-
-    static std::unordered_map<std::string, Argument::TypeDescriptor const> const type_map;
-    static std::unordered_map<std::string, Argument::TypeDescriptor const> const optional_type_map;
+    static TypeDescriptor get_type(xmlpp::Element const& node, bool is_event);
 
     std::string const name;
-    TypeDescriptor const& descriptor;
+    TypeDescriptor descriptor;
 };
 
 #endif // MIR_WAYLAND_GENERATOR_ARGUMENT_H
