@@ -88,6 +88,11 @@ auto miral::DisplayConfiguration::layout_option() -> miral::CommandLineOption
         "default"});
 }
 
+auto miral::DisplayConfiguration::list_layouts() -> std::vector<std::string>
+{
+    return self->list_layouts();
+}
+
 miral::DisplayConfiguration::~DisplayConfiguration() = default;
 
 miral::DisplayConfiguration::DisplayConfiguration(miral::DisplayConfiguration const&) = default;

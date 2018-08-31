@@ -350,6 +350,7 @@ global:
     miral::DisplayConfiguration::?DisplayConfiguration*;
     miral::DisplayConfiguration::DisplayConfiguration*;
     miral::DisplayConfiguration::layout_option*;
+    miral::DisplayConfiguration::list_layouts*;
     miral::DisplayConfiguration::operator*;
     miral::DisplayConfiguration::select_layout*;
     miral::ExternalClientLauncher::pid*;
