@@ -31,8 +31,8 @@ class MirRunner;
 class CommandLineOption;
 
 /// Enable display configuration.
-/// The config file (<server-name>.display) is located via the XDG Base
-/// Directory Specification. Vis:
+/// The config file (miral::MirRunner::display_config_file()) is located via
+/// the XDG Base Directory Specification. Vis:
 ///($XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS)
 /// \remark Since MirAL 2.4
 class DisplayConfiguration
@@ -45,6 +45,9 @@ public:
 
     /// Select a layout from the configuration
     void select_layout(std::string const& layout);
+
+    /// List all layouts found in the config file
+    auto list_layouts() -> std::vector<std::string>;
 
     void operator()(mir::Server& server) const;
 

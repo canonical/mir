@@ -326,6 +326,7 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::DisplayConfiguration::DisplayConfiguration(miral::MirRunner const&)@MIRAL_2.4" 2.4.0
  (c++)"miral::DisplayConfiguration::DisplayConfiguration(miral::DisplayConfiguration const&)@MIRAL_2.4" 2.4.0
  (c++)"miral::DisplayConfiguration::layout_option()@MIRAL_2.4" 2.4.0
+ (c++)"miral::DisplayConfiguration::list_layouts[abi:cxx11]()@MIRAL_2.4" 2.4.0
  (c++)"miral::DisplayConfiguration::operator=(miral::DisplayConfiguration const&)@MIRAL_2.4" 2.4.0
  (c++)"miral::DisplayConfiguration::operator()(mir::Server&) const@MIRAL_2.4" 2.4.0
  (c++)"miral::DisplayConfiguration::select_layout(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_2.4" 2.4.0

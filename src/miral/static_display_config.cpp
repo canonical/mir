@@ -389,24 +389,33 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
             out << "\n";
         });
 
+    auto print_template_config = [&card_map](std::ostream& out)
+        {
+            out << "layouts:"
+                   "\n# keys here are layout labels (used for atomically switching between them)"
+                   "\n# when enabling displays, surfaces should be matched in reverse recency order"
+                   "\n"
+                   "\n  default:                         # the default layout"
+                   "\n"
+                   "\n    cards:"
+                   "\n    # a list of cards (currently matched by card-id)";
+
+            for (auto const& co : card_map)
+            {
+                out << "\n"
+                       "\n    - card-id: " << co.first.as_value()
+                    << co.second.out.str();
+            }
+        };
+
+    dump_config(print_template_config);
+}
+
+void miral::StaticDisplayConfig::dump_config(std::function<void(std::ostream&)> const& print_template_config)
+{
     std::ostringstream out;
-    out << "Display config:\n8>< ---------------------------------------------------"
-           "\nlayouts:"
-           "\n# keys here are layout labels (used for atomically switching between them)"
-           "\n# when enabling displays, surfaces should be matched in reverse recency order"
-           "\n"
-           "\n  default:                         # the default layout"
-           "\n"
-           "\n    cards:"
-           "\n    # a list of cards (currently matched by card-id)";
-
-    for (auto const& co : card_map)
-    {
-        out << "\n"
-               "\n    - card-id: " << co.first.as_value()
-            << co.second.out.str();
-    }
-
+    out << "Display config:\n8>< ---------------------------------------------------\n";
+    print_template_config(out);
     out << "8>< ---------------------------------------------------";
     mir::log_info(out.str());
 }
