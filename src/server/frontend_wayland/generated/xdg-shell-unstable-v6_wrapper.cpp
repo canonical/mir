@@ -5,18 +5,24 @@
  * To regenerate, run the “refresh-wayland-wrapper” target.
  */
 
-#include <experimental/optional>
+#include "xdg-shell-unstable-v6_wrapper.h"
+#include "xdg-shell-unstable-v6.h"
+
 #include <boost/throw_exception.hpp>
 #include <boost/exception/diagnostic_information.hpp>
 
-#include "xdg-shell-unstable-v6_wrapper.h"
+#include <wayland-server-core.h>
 
-#include "mir/fd.h"
 #include "mir/log.h"
 
 namespace mfw = mir::frontend::wayland;
 
 // XdgShellV6
+
+mfw::XdgShellV6* mfw::XdgShellV6::from(struct wl_resource* resource)
+{
+    return static_cast<XdgShellV6*>(wl_resource_get_user_data(resource));
+}
 
 struct mfw::XdgShellV6::Thunks
 {
@@ -124,9 +130,14 @@ mfw::XdgShellV6::~XdgShellV6()
     wl_global_destroy(global);
 }
 
-void mfw::XdgShellV6::send_ping_event(struct wl_resource* resource, uint32_t serial)
+void mfw::XdgShellV6::send_ping_event(struct wl_resource* resource, uint32_t serial) const
 {
-    wl_resource_post_event(resource, 0, serial);
+    wl_resource_post_event(resource, Opcode::PING, serial);
+}
+
+void mfw::XdgShellV6::destroy_wayland_object(struct wl_resource* resource) const
+{
+    wl_resource_destroy(resource);
 }
 
 struct zxdg_shell_v6_interface const mfw::XdgShellV6::vtable = {
@@ -136,6 +147,11 @@ struct zxdg_shell_v6_interface const mfw::XdgShellV6::vtable = {
     Thunks::pong_thunk};
 
 // XdgPositionerV6
+
+mfw::XdgPositionerV6* mfw::XdgPositionerV6::from(struct wl_resource* resource)
+{
+    return static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
+}
 
 struct mfw::XdgPositionerV6::Thunks
 {
@@ -269,6 +285,11 @@ mfw::XdgPositionerV6::XdgPositionerV6(struct wl_client* client, struct wl_resour
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+void mfw::XdgPositionerV6::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
+}
+
 struct zxdg_positioner_v6_interface const mfw::XdgPositionerV6::vtable = {
     Thunks::destroy_thunk,
     Thunks::set_size_thunk,
@@ -279,6 +300,11 @@ struct zxdg_positioner_v6_interface const mfw::XdgPositionerV6::vtable = {
     Thunks::set_offset_thunk};
 
 // XdgSurfaceV6
+
+mfw::XdgSurfaceV6* mfw::XdgSurfaceV6::from(struct wl_resource* resource)
+{
+    return static_cast<XdgSurfaceV6*>(wl_resource_get_user_data(resource));
+}
 
 struct mfw::XdgSurfaceV6::Thunks
 {
@@ -380,9 +406,14 @@ mfw::XdgSurfaceV6::XdgSurfaceV6(struct wl_client* client, struct wl_resource* pa
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::XdgSurfaceV6::send_configure_event(uint32_t serial)
+void mfw::XdgSurfaceV6::send_configure_event(uint32_t serial) const
 {
-    wl_resource_post_event(resource, 0, serial);
+    wl_resource_post_event(resource, Opcode::CONFIGURE, serial);
+}
+
+void mfw::XdgSurfaceV6::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
 }
 
 struct zxdg_surface_v6_interface const mfw::XdgSurfaceV6::vtable = {
@@ -393,6 +424,11 @@ struct zxdg_surface_v6_interface const mfw::XdgSurfaceV6::vtable = {
     Thunks::ack_configure_thunk};
 
 // XdgToplevelV6
+
+mfw::XdgToplevelV6* mfw::XdgToplevelV6::from(struct wl_resource* resource)
+{
+    return static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
+}
 
 struct mfw::XdgToplevelV6::Thunks
 {
@@ -648,14 +684,19 @@ mfw::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* 
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::XdgToplevelV6::send_configure_event(int32_t width, int32_t height, struct wl_array* states)
+void mfw::XdgToplevelV6::send_configure_event(int32_t width, int32_t height, struct wl_array* states) const
 {
-    wl_resource_post_event(resource, 0, width, height, states);
+    wl_resource_post_event(resource, Opcode::CONFIGURE, width, height, states);
 }
 
-void mfw::XdgToplevelV6::send_close_event()
+void mfw::XdgToplevelV6::send_close_event() const
 {
-    wl_resource_post_event(resource, 1);
+    wl_resource_post_event(resource, Opcode::CLOSE);
+}
+
+void mfw::XdgToplevelV6::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
 }
 
 struct zxdg_toplevel_v6_interface const mfw::XdgToplevelV6::vtable = {
@@ -675,6 +716,11 @@ struct zxdg_toplevel_v6_interface const mfw::XdgToplevelV6::vtable = {
     Thunks::set_minimized_thunk};
 
 // XdgPopupV6
+
+mfw::XdgPopupV6* mfw::XdgPopupV6::from(struct wl_resource* resource)
+{
+    return static_cast<XdgPopupV6*>(wl_resource_get_user_data(resource));
+}
 
 struct mfw::XdgPopupV6::Thunks
 {
@@ -728,14 +774,19 @@ mfw::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent
     wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::XdgPopupV6::send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height)
+void mfw::XdgPopupV6::send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height) const
 {
-    wl_resource_post_event(resource, 0, x, y, width, height);
+    wl_resource_post_event(resource, Opcode::CONFIGURE, x, y, width, height);
 }
 
-void mfw::XdgPopupV6::send_popup_done_event()
+void mfw::XdgPopupV6::send_popup_done_event() const
 {
-    wl_resource_post_event(resource, 1);
+    wl_resource_post_event(resource, Opcode::POPUP_DONE);
+}
+
+void mfw::XdgPopupV6::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
 }
 
 struct zxdg_popup_v6_interface const mfw::XdgPopupV6::vtable = {

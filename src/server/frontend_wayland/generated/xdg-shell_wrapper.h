@@ -9,13 +9,15 @@
 #define MIR_FRONTEND_WAYLAND_XDG_SHELL_XML_WRAPPER
 
 #include <experimental/optional>
-#include <boost/throw_exception.hpp>
-#include <boost/exception/diagnostic_information.hpp>
-
-#include "xdg-shell.h"
 
 #include "mir/fd.h"
-#include "mir/log.h"
+#include "../wayland_utils.h"
+
+struct xdg_wm_base_interface;
+struct xdg_positioner_interface;
+struct xdg_surface_interface;
+struct xdg_toplevel_interface;
+struct xdg_popup_interface;
 
 namespace mir
 {
@@ -26,14 +28,33 @@ namespace wayland
 
 class XdgWmBase
 {
-protected:
+public:
+    static XdgWmBase* from(struct wl_resource*);
+
     XdgWmBase(struct wl_display* display, uint32_t max_version);
     virtual ~XdgWmBase();
 
-    void send_ping_event(struct wl_resource* resource, uint32_t serial);
+    void send_ping_event(struct wl_resource* resource, uint32_t serial) const;
+
+    void destroy_wayland_object(struct wl_resource* resource) const;
 
     struct wl_global* const global;
     uint32_t const max_version;
+
+    struct Error
+    {
+        static uint32_t const ROLE = 0;
+        static uint32_t const DEFUNCT_SURFACES = 1;
+        static uint32_t const NOT_THE_TOPMOST_POPUP = 2;
+        static uint32_t const INVALID_POPUP_PARENT = 3;
+        static uint32_t const INVALID_SURFACE_STATE = 4;
+        static uint32_t const INVALID_POSITIONER = 5;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const PING = 0;
+    };
 
 private:
     struct Thunks;
@@ -50,12 +71,58 @@ private:
 
 class XdgPositioner
 {
-protected:
+public:
+    static XdgPositioner* from(struct wl_resource*);
+
     XdgPositioner(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgPositioner() = default;
 
+    void destroy_wayland_object() const;
+
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct Error
+    {
+        static uint32_t const INVALID_INPUT = 0;
+    };
+
+    struct Anchor
+    {
+        static uint32_t const NONE = 0;
+        static uint32_t const TOP = 1;
+        static uint32_t const BOTTOM = 2;
+        static uint32_t const LEFT = 3;
+        static uint32_t const RIGHT = 4;
+        static uint32_t const TOP_LEFT = 5;
+        static uint32_t const BOTTOM_LEFT = 6;
+        static uint32_t const TOP_RIGHT = 7;
+        static uint32_t const BOTTOM_RIGHT = 8;
+    };
+
+    struct Gravity
+    {
+        static uint32_t const NONE = 0;
+        static uint32_t const TOP = 1;
+        static uint32_t const BOTTOM = 2;
+        static uint32_t const LEFT = 3;
+        static uint32_t const RIGHT = 4;
+        static uint32_t const TOP_LEFT = 5;
+        static uint32_t const BOTTOM_LEFT = 6;
+        static uint32_t const TOP_RIGHT = 7;
+        static uint32_t const BOTTOM_RIGHT = 8;
+    };
+
+    struct ConstraintAdjustment
+    {
+        static uint32_t const NONE = 0;
+        static uint32_t const SLIDE_X = 1;
+        static uint32_t const SLIDE_Y = 2;
+        static uint32_t const FLIP_X = 4;
+        static uint32_t const FLIP_Y = 8;
+        static uint32_t const RESIZE_X = 16;
+        static uint32_t const RESIZE_Y = 32;
+    };
 
 private:
     struct Thunks;
@@ -73,14 +140,30 @@ private:
 
 class XdgSurface
 {
-protected:
+public:
+    static XdgSurface* from(struct wl_resource*);
+
     XdgSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgSurface() = default;
 
-    void send_configure_event(uint32_t serial);
+    void send_configure_event(uint32_t serial) const;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct Error
+    {
+        static uint32_t const NOT_CONSTRUCTED = 1;
+        static uint32_t const ALREADY_CONSTRUCTED = 2;
+        static uint32_t const UNCONFIGURED_BUFFER = 3;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const CONFIGURE = 0;
+    };
 
 private:
     struct Thunks;
@@ -96,15 +179,46 @@ private:
 
 class XdgToplevel
 {
-protected:
+public:
+    static XdgToplevel* from(struct wl_resource*);
+
     XdgToplevel(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgToplevel() = default;
 
-    void send_configure_event(int32_t width, int32_t height, struct wl_array* states);
-    void send_close_event();
+    void send_configure_event(int32_t width, int32_t height, struct wl_array* states) const;
+    void send_close_event() const;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct ResizeEdge
+    {
+        static uint32_t const NONE = 0;
+        static uint32_t const TOP = 1;
+        static uint32_t const BOTTOM = 2;
+        static uint32_t const LEFT = 4;
+        static uint32_t const TOP_LEFT = 5;
+        static uint32_t const BOTTOM_LEFT = 6;
+        static uint32_t const RIGHT = 8;
+        static uint32_t const TOP_RIGHT = 9;
+        static uint32_t const BOTTOM_RIGHT = 10;
+    };
+
+    struct State
+    {
+        static uint32_t const MAXIMIZED = 1;
+        static uint32_t const FULLSCREEN = 2;
+        static uint32_t const RESIZING = 3;
+        static uint32_t const ACTIVATED = 4;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const CONFIGURE = 0;
+        static uint32_t const CLOSE = 1;
+    };
 
 private:
     struct Thunks;
@@ -129,15 +243,30 @@ private:
 
 class XdgPopup
 {
-protected:
+public:
+    static XdgPopup* from(struct wl_resource*);
+
     XdgPopup(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~XdgPopup() = default;
 
-    void send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height);
-    void send_popup_done_event();
+    void send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height) const;
+    void send_popup_done_event() const;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct Error
+    {
+        static uint32_t const INVALID_GRAB = 0;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const CONFIGURE = 0;
+        static uint32_t const POPUP_DONE = 1;
+    };
 
 private:
     struct Thunks;

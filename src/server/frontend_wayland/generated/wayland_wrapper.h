@@ -9,13 +9,29 @@
 #define MIR_FRONTEND_WAYLAND_WAYLAND_XML_WRAPPER
 
 #include <experimental/optional>
-#include <boost/throw_exception.hpp>
-#include <boost/exception/diagnostic_information.hpp>
-
-#include "wayland.h"
 
 #include "mir/fd.h"
-#include "mir/log.h"
+#include "../wayland_utils.h"
+
+struct wl_compositor_interface;
+struct wl_shm_pool_interface;
+struct wl_shm_interface;
+struct wl_buffer_interface;
+struct wl_data_offer_interface;
+struct wl_data_source_interface;
+struct wl_data_device_interface;
+struct wl_data_device_manager_interface;
+struct wl_shell_interface;
+struct wl_shell_surface_interface;
+struct wl_surface_interface;
+struct wl_seat_interface;
+struct wl_pointer_interface;
+struct wl_keyboard_interface;
+struct wl_touch_interface;
+struct wl_output_interface;
+struct wl_region_interface;
+struct wl_subcompositor_interface;
+struct wl_subsurface_interface;
 
 namespace mir
 {
@@ -26,23 +42,36 @@ namespace wayland
 
 class Callback
 {
-protected:
+public:
+    static Callback* from(struct wl_resource*);
+
     Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Callback() = default;
 
-    void send_done_event(uint32_t callback_data);
+    void send_done_event(uint32_t callback_data) const;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct Opcode
+    {
+        static uint32_t const DONE = 0;
+    };
 
 private:
 };
 
 class Compositor
 {
-protected:
+public:
+    static Compositor* from(struct wl_resource*);
+
     Compositor(struct wl_display* display, uint32_t max_version);
     virtual ~Compositor();
+
+    void destroy_wayland_object(struct wl_resource* resource) const;
 
     struct wl_global* const global;
     uint32_t const max_version;
@@ -60,9 +89,13 @@ private:
 
 class ShmPool
 {
-protected:
+public:
+    static ShmPool* from(struct wl_resource*);
+
     ShmPool(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~ShmPool() = default;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -79,14 +112,92 @@ private:
 
 class Shm
 {
-protected:
+public:
+    static Shm* from(struct wl_resource*);
+
     Shm(struct wl_display* display, uint32_t max_version);
     virtual ~Shm();
 
-    void send_format_event(struct wl_resource* resource, uint32_t format);
+    void send_format_event(struct wl_resource* resource, uint32_t format) const;
+
+    void destroy_wayland_object(struct wl_resource* resource) const;
 
     struct wl_global* const global;
     uint32_t const max_version;
+
+    struct Error
+    {
+        static uint32_t const INVALID_FORMAT = 0;
+        static uint32_t const INVALID_STRIDE = 1;
+        static uint32_t const INVALID_FD = 2;
+    };
+
+    struct Format
+    {
+        static uint32_t const ARGB8888 = 0;
+        static uint32_t const XRGB8888 = 1;
+        static uint32_t const C8 = 0x20203843;
+        static uint32_t const RGB332 = 0x38424752;
+        static uint32_t const BGR233 = 0x38524742;
+        static uint32_t const XRGB4444 = 0x32315258;
+        static uint32_t const XBGR4444 = 0x32314258;
+        static uint32_t const RGBX4444 = 0x32315852;
+        static uint32_t const BGRX4444 = 0x32315842;
+        static uint32_t const ARGB4444 = 0x32315241;
+        static uint32_t const ABGR4444 = 0x32314241;
+        static uint32_t const RGBA4444 = 0x32314152;
+        static uint32_t const BGRA4444 = 0x32314142;
+        static uint32_t const XRGB1555 = 0x35315258;
+        static uint32_t const XBGR1555 = 0x35314258;
+        static uint32_t const RGBX5551 = 0x35315852;
+        static uint32_t const BGRX5551 = 0x35315842;
+        static uint32_t const ARGB1555 = 0x35315241;
+        static uint32_t const ABGR1555 = 0x35314241;
+        static uint32_t const RGBA5551 = 0x35314152;
+        static uint32_t const BGRA5551 = 0x35314142;
+        static uint32_t const RGB565 = 0x36314752;
+        static uint32_t const BGR565 = 0x36314742;
+        static uint32_t const RGB888 = 0x34324752;
+        static uint32_t const BGR888 = 0x34324742;
+        static uint32_t const XBGR8888 = 0x34324258;
+        static uint32_t const RGBX8888 = 0x34325852;
+        static uint32_t const BGRX8888 = 0x34325842;
+        static uint32_t const ABGR8888 = 0x34324241;
+        static uint32_t const RGBA8888 = 0x34324152;
+        static uint32_t const BGRA8888 = 0x34324142;
+        static uint32_t const XRGB2101010 = 0x30335258;
+        static uint32_t const XBGR2101010 = 0x30334258;
+        static uint32_t const RGBX1010102 = 0x30335852;
+        static uint32_t const BGRX1010102 = 0x30335842;
+        static uint32_t const ARGB2101010 = 0x30335241;
+        static uint32_t const ABGR2101010 = 0x30334241;
+        static uint32_t const RGBA1010102 = 0x30334152;
+        static uint32_t const BGRA1010102 = 0x30334142;
+        static uint32_t const YUYV = 0x56595559;
+        static uint32_t const YVYU = 0x55595659;
+        static uint32_t const UYVY = 0x59565955;
+        static uint32_t const VYUY = 0x59555956;
+        static uint32_t const AYUV = 0x56555941;
+        static uint32_t const NV12 = 0x3231564e;
+        static uint32_t const NV21 = 0x3132564e;
+        static uint32_t const NV16 = 0x3631564e;
+        static uint32_t const NV61 = 0x3136564e;
+        static uint32_t const YUV410 = 0x39565559;
+        static uint32_t const YVU410 = 0x39555659;
+        static uint32_t const YUV411 = 0x31315559;
+        static uint32_t const YVU411 = 0x31315659;
+        static uint32_t const YUV420 = 0x32315559;
+        static uint32_t const YVU420 = 0x32315659;
+        static uint32_t const YUV422 = 0x36315559;
+        static uint32_t const YVU422 = 0x36315659;
+        static uint32_t const YUV444 = 0x34325559;
+        static uint32_t const YVU444 = 0x34325659;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const FORMAT = 0;
+    };
 
 private:
     struct Thunks;
@@ -100,14 +211,23 @@ private:
 
 class Buffer
 {
-protected:
+public:
+    static Buffer* from(struct wl_resource*);
+
     Buffer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Buffer() = default;
 
-    void send_release_event();
+    void send_release_event() const;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct Opcode
+    {
+        static uint32_t const RELEASE = 0;
+    };
 
 private:
     struct Thunks;
@@ -119,16 +239,37 @@ private:
 
 class DataOffer
 {
-protected:
+public:
+    static DataOffer* from(struct wl_resource*);
+
     DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~DataOffer() = default;
 
-    void send_offer_event(std::string const& mime_type);
-    void send_source_actions_event(uint32_t source_actions);
-    void send_action_event(uint32_t dnd_action);
+    void send_offer_event(std::string const& mime_type) const;
+    bool version_supports_source_actions();
+    void send_source_actions_event(uint32_t source_actions) const;
+    bool version_supports_action();
+    void send_action_event(uint32_t dnd_action) const;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct Error
+    {
+        static uint32_t const INVALID_FINISH = 0;
+        static uint32_t const INVALID_ACTION_MASK = 1;
+        static uint32_t const INVALID_ACTION = 2;
+        static uint32_t const INVALID_OFFER = 3;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const OFFER = 0;
+        static uint32_t const SOURCE_ACTIONS = 1;
+        static uint32_t const ACTION = 2;
+    };
 
 private:
     struct Thunks;
@@ -144,19 +285,42 @@ private:
 
 class DataSource
 {
-protected:
+public:
+    static DataSource* from(struct wl_resource*);
+
     DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~DataSource() = default;
 
-    void send_target_event(std::experimental::optional<std::string> const& mime_type);
-    void send_send_event(std::string const& mime_type, mir::Fd fd);
-    void send_cancelled_event();
-    void send_dnd_drop_performed_event();
-    void send_dnd_finished_event();
-    void send_action_event(uint32_t dnd_action);
+    void send_target_event(std::experimental::optional<std::string> const& mime_type) const;
+    void send_send_event(std::string const& mime_type, mir::Fd fd) const;
+    void send_cancelled_event() const;
+    bool version_supports_dnd_drop_performed();
+    void send_dnd_drop_performed_event() const;
+    bool version_supports_dnd_finished();
+    void send_dnd_finished_event() const;
+    bool version_supports_action();
+    void send_action_event(uint32_t dnd_action) const;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct Error
+    {
+        static uint32_t const INVALID_ACTION_MASK = 0;
+        static uint32_t const INVALID_SOURCE = 1;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const TARGET = 0;
+        static uint32_t const SEND = 1;
+        static uint32_t const CANCELLED = 2;
+        static uint32_t const DND_DROP_PERFORMED = 3;
+        static uint32_t const DND_FINISHED = 4;
+        static uint32_t const ACTION = 5;
+    };
 
 private:
     struct Thunks;
@@ -170,19 +334,38 @@ private:
 
 class DataDevice
 {
-protected:
+public:
+    static DataDevice* from(struct wl_resource*);
+
     DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~DataDevice() = default;
 
-    void send_data_offer_event(uint32_t id);
-    void send_enter_event(uint32_t serial, struct wl_resource* surface, wl_fixed_t x, wl_fixed_t y, std::experimental::optional<struct wl_resource*> const& id);
-    void send_leave_event();
-    void send_motion_event(uint32_t time, wl_fixed_t x, wl_fixed_t y);
-    void send_drop_event();
-    void send_selection_event(std::experimental::optional<struct wl_resource*> const& id);
+    void send_data_offer_event(struct wl_resource* id) const;
+    void send_enter_event(uint32_t serial, struct wl_resource* surface, double x, double y, std::experimental::optional<struct wl_resource*> const& id) const;
+    void send_leave_event() const;
+    void send_motion_event(uint32_t time, double x, double y) const;
+    void send_drop_event() const;
+    void send_selection_event(std::experimental::optional<struct wl_resource*> const& id) const;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct Error
+    {
+        static uint32_t const ROLE = 0;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const DATA_OFFER = 0;
+        static uint32_t const ENTER = 1;
+        static uint32_t const LEAVE = 2;
+        static uint32_t const MOTION = 3;
+        static uint32_t const DROP = 4;
+        static uint32_t const SELECTION = 5;
+    };
 
 private:
     struct Thunks;
@@ -196,12 +379,24 @@ private:
 
 class DataDeviceManager
 {
-protected:
+public:
+    static DataDeviceManager* from(struct wl_resource*);
+
     DataDeviceManager(struct wl_display* display, uint32_t max_version);
     virtual ~DataDeviceManager();
 
+    void destroy_wayland_object(struct wl_resource* resource) const;
+
     struct wl_global* const global;
     uint32_t const max_version;
+
+    struct DndAction
+    {
+        static uint32_t const NONE = 0;
+        static uint32_t const COPY = 1;
+        static uint32_t const MOVE = 2;
+        static uint32_t const ASK = 4;
+    };
 
 private:
     struct Thunks;
@@ -216,12 +411,21 @@ private:
 
 class Shell
 {
-protected:
+public:
+    static Shell* from(struct wl_resource*);
+
     Shell(struct wl_display* display, uint32_t max_version);
     virtual ~Shell();
 
+    void destroy_wayland_object(struct wl_resource* resource) const;
+
     struct wl_global* const global;
     uint32_t const max_version;
+
+    struct Error
+    {
+        static uint32_t const ROLE = 0;
+    };
 
 private:
     struct Thunks;
@@ -235,16 +439,53 @@ private:
 
 class ShellSurface
 {
-protected:
+public:
+    static ShellSurface* from(struct wl_resource*);
+
     ShellSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~ShellSurface() = default;
 
-    void send_ping_event(uint32_t serial);
-    void send_configure_event(uint32_t edges, int32_t width, int32_t height);
-    void send_popup_done_event();
+    void send_ping_event(uint32_t serial) const;
+    void send_configure_event(uint32_t edges, int32_t width, int32_t height) const;
+    void send_popup_done_event() const;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct Resize
+    {
+        static uint32_t const NONE = 0;
+        static uint32_t const TOP = 1;
+        static uint32_t const BOTTOM = 2;
+        static uint32_t const LEFT = 4;
+        static uint32_t const TOP_LEFT = 5;
+        static uint32_t const BOTTOM_LEFT = 6;
+        static uint32_t const RIGHT = 8;
+        static uint32_t const TOP_RIGHT = 9;
+        static uint32_t const BOTTOM_RIGHT = 10;
+    };
+
+    struct Transient
+    {
+        static uint32_t const INACTIVE = 0x1;
+    };
+
+    struct FullscreenMethod
+    {
+        static uint32_t const DEFAULT = 0;
+        static uint32_t const SCALE = 1;
+        static uint32_t const DRIVER = 2;
+        static uint32_t const FILL = 3;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const PING = 0;
+        static uint32_t const CONFIGURE = 1;
+        static uint32_t const POPUP_DONE = 2;
+    };
 
 private:
     struct Thunks;
@@ -265,15 +506,31 @@ private:
 
 class Surface
 {
-protected:
+public:
+    static Surface* from(struct wl_resource*);
+
     Surface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Surface() = default;
 
-    void send_enter_event(struct wl_resource* output);
-    void send_leave_event(struct wl_resource* output);
+    void send_enter_event(struct wl_resource* output) const;
+    void send_leave_event(struct wl_resource* output) const;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct Error
+    {
+        static uint32_t const INVALID_SCALE = 0;
+        static uint32_t const INVALID_TRANSFORM = 1;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const ENTER = 0;
+        static uint32_t const LEAVE = 1;
+    };
 
 private:
     struct Thunks;
@@ -294,15 +551,33 @@ private:
 
 class Seat
 {
-protected:
+public:
+    static Seat* from(struct wl_resource*);
+
     Seat(struct wl_display* display, uint32_t max_version);
     virtual ~Seat();
 
-    void send_capabilities_event(struct wl_resource* resource, uint32_t capabilities);
-    void send_name_event(struct wl_resource* resource, std::string const& name);
+    void send_capabilities_event(struct wl_resource* resource, uint32_t capabilities) const;
+    bool version_supports_name(struct wl_resource* resource);
+    void send_name_event(struct wl_resource* resource, std::string const& name) const;
+
+    void destroy_wayland_object(struct wl_resource* resource) const;
 
     struct wl_global* const global;
     uint32_t const max_version;
+
+    struct Capability
+    {
+        static uint32_t const POINTER = 1;
+        static uint32_t const KEYBOARD = 2;
+        static uint32_t const TOUCH = 4;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const CAPABILITIES = 0;
+        static uint32_t const NAME = 1;
+    };
 
 private:
     struct Thunks;
@@ -319,22 +594,68 @@ private:
 
 class Pointer
 {
-protected:
+public:
+    static Pointer* from(struct wl_resource*);
+
     Pointer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Pointer() = default;
 
-    void send_enter_event(uint32_t serial, struct wl_resource* surface, wl_fixed_t surface_x, wl_fixed_t surface_y);
-    void send_leave_event(uint32_t serial, struct wl_resource* surface);
-    void send_motion_event(uint32_t time, wl_fixed_t surface_x, wl_fixed_t surface_y);
-    void send_button_event(uint32_t serial, uint32_t time, uint32_t button, uint32_t state);
-    void send_axis_event(uint32_t time, uint32_t axis, wl_fixed_t value);
-    void send_frame_event();
-    void send_axis_source_event(uint32_t axis_source);
-    void send_axis_stop_event(uint32_t time, uint32_t axis);
-    void send_axis_discrete_event(uint32_t axis, int32_t discrete);
+    void send_enter_event(uint32_t serial, struct wl_resource* surface, double surface_x, double surface_y) const;
+    void send_leave_event(uint32_t serial, struct wl_resource* surface) const;
+    void send_motion_event(uint32_t time, double surface_x, double surface_y) const;
+    void send_button_event(uint32_t serial, uint32_t time, uint32_t button, uint32_t state) const;
+    void send_axis_event(uint32_t time, uint32_t axis, double value) const;
+    bool version_supports_frame();
+    void send_frame_event() const;
+    bool version_supports_axis_source();
+    void send_axis_source_event(uint32_t axis_source) const;
+    bool version_supports_axis_stop();
+    void send_axis_stop_event(uint32_t time, uint32_t axis) const;
+    bool version_supports_axis_discrete();
+    void send_axis_discrete_event(uint32_t axis, int32_t discrete) const;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct Error
+    {
+        static uint32_t const ROLE = 0;
+    };
+
+    struct ButtonState
+    {
+        static uint32_t const RELEASED = 0;
+        static uint32_t const PRESSED = 1;
+    };
+
+    struct Axis
+    {
+        static uint32_t const VERTICAL_SCROLL = 0;
+        static uint32_t const HORIZONTAL_SCROLL = 1;
+    };
+
+    struct AxisSource
+    {
+        static uint32_t const WHEEL = 0;
+        static uint32_t const FINGER = 1;
+        static uint32_t const CONTINUOUS = 2;
+        static uint32_t const WHEEL_TILT = 3;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const ENTER = 0;
+        static uint32_t const LEAVE = 1;
+        static uint32_t const MOTION = 2;
+        static uint32_t const BUTTON = 3;
+        static uint32_t const AXIS = 4;
+        static uint32_t const FRAME = 5;
+        static uint32_t const AXIS_SOURCE = 6;
+        static uint32_t const AXIS_STOP = 7;
+        static uint32_t const AXIS_DISCRETE = 8;
+    };
 
 private:
     struct Thunks;
@@ -347,19 +668,46 @@ private:
 
 class Keyboard
 {
-protected:
+public:
+    static Keyboard* from(struct wl_resource*);
+
     Keyboard(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Keyboard() = default;
 
-    void send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size);
-    void send_enter_event(uint32_t serial, struct wl_resource* surface, struct wl_array* keys);
-    void send_leave_event(uint32_t serial, struct wl_resource* surface);
-    void send_key_event(uint32_t serial, uint32_t time, uint32_t key, uint32_t state);
-    void send_modifiers_event(uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group);
-    void send_repeat_info_event(int32_t rate, int32_t delay);
+    void send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const;
+    void send_enter_event(uint32_t serial, struct wl_resource* surface, struct wl_array* keys) const;
+    void send_leave_event(uint32_t serial, struct wl_resource* surface) const;
+    void send_key_event(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const;
+    void send_modifiers_event(uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) const;
+    bool version_supports_repeat_info();
+    void send_repeat_info_event(int32_t rate, int32_t delay) const;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct KeymapFormat
+    {
+        static uint32_t const NO_KEYMAP = 0;
+        static uint32_t const XKB_V1 = 1;
+    };
+
+    struct KeyState
+    {
+        static uint32_t const RELEASED = 0;
+        static uint32_t const PRESSED = 1;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const KEYMAP = 0;
+        static uint32_t const ENTER = 1;
+        static uint32_t const LEAVE = 2;
+        static uint32_t const KEY = 3;
+        static uint32_t const MODIFIERS = 4;
+        static uint32_t const REPEAT_INFO = 5;
+    };
 
 private:
     struct Thunks;
@@ -371,20 +719,37 @@ private:
 
 class Touch
 {
-protected:
+public:
+    static Touch* from(struct wl_resource*);
+
     Touch(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Touch() = default;
 
-    void send_down_event(uint32_t serial, uint32_t time, struct wl_resource* surface, int32_t id, wl_fixed_t x, wl_fixed_t y);
-    void send_up_event(uint32_t serial, uint32_t time, int32_t id);
-    void send_motion_event(uint32_t time, int32_t id, wl_fixed_t x, wl_fixed_t y);
-    void send_frame_event();
-    void send_cancel_event();
-    void send_shape_event(int32_t id, wl_fixed_t major, wl_fixed_t minor);
-    void send_orientation_event(int32_t id, wl_fixed_t orientation);
+    void send_down_event(uint32_t serial, uint32_t time, struct wl_resource* surface, int32_t id, double x, double y) const;
+    void send_up_event(uint32_t serial, uint32_t time, int32_t id) const;
+    void send_motion_event(uint32_t time, int32_t id, double x, double y) const;
+    void send_frame_event() const;
+    void send_cancel_event() const;
+    bool version_supports_shape();
+    void send_shape_event(int32_t id, double major, double minor) const;
+    bool version_supports_orientation();
+    void send_orientation_event(int32_t id, double orientation) const;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct Opcode
+    {
+        static uint32_t const DOWN = 0;
+        static uint32_t const UP = 1;
+        static uint32_t const MOTION = 2;
+        static uint32_t const FRAME = 3;
+        static uint32_t const CANCEL = 4;
+        static uint32_t const SHAPE = 5;
+        static uint32_t const ORIENTATION = 6;
+    };
 
 private:
     struct Thunks;
@@ -396,17 +761,59 @@ private:
 
 class Output
 {
-protected:
+public:
+    static Output* from(struct wl_resource*);
+
     Output(struct wl_display* display, uint32_t max_version);
     virtual ~Output();
 
-    void send_geometry_event(struct wl_resource* resource, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform);
-    void send_mode_event(struct wl_resource* resource, uint32_t flags, int32_t width, int32_t height, int32_t refresh);
-    void send_done_event(struct wl_resource* resource);
-    void send_scale_event(struct wl_resource* resource, int32_t factor);
+    void send_geometry_event(struct wl_resource* resource, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const;
+    void send_mode_event(struct wl_resource* resource, uint32_t flags, int32_t width, int32_t height, int32_t refresh) const;
+    bool version_supports_done(struct wl_resource* resource);
+    void send_done_event(struct wl_resource* resource) const;
+    bool version_supports_scale(struct wl_resource* resource);
+    void send_scale_event(struct wl_resource* resource, int32_t factor) const;
+
+    void destroy_wayland_object(struct wl_resource* resource) const;
 
     struct wl_global* const global;
     uint32_t const max_version;
+
+    struct Subpixel
+    {
+        static uint32_t const UNKNOWN = 0;
+        static uint32_t const NONE = 1;
+        static uint32_t const HORIZONTAL_RGB = 2;
+        static uint32_t const HORIZONTAL_BGR = 3;
+        static uint32_t const VERTICAL_RGB = 4;
+        static uint32_t const VERTICAL_BGR = 5;
+    };
+
+    struct Transform
+    {
+        static uint32_t const NORMAL = 0;
+        static uint32_t const _0 = 1;
+        static uint32_t const _80 = 2;
+        static uint32_t const _70 = 3;
+        static uint32_t const FLIPPED = 4;
+        static uint32_t const FLIPPED_90 = 5;
+        static uint32_t const FLIPPED_180 = 6;
+        static uint32_t const FLIPPED_270 = 7;
+    };
+
+    struct Mode
+    {
+        static uint32_t const CURRENT = 0x1;
+        static uint32_t const PREFERRED = 0x2;
+    };
+
+    struct Opcode
+    {
+        static uint32_t const GEOMETRY = 0;
+        static uint32_t const MODE = 1;
+        static uint32_t const DONE = 2;
+        static uint32_t const SCALE = 3;
+    };
 
 private:
     struct Thunks;
@@ -420,9 +827,13 @@ private:
 
 class Region
 {
-protected:
+public:
+    static Region* from(struct wl_resource*);
+
     Region(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Region() = default;
+
+    void destroy_wayland_object() const;
 
     struct wl_client* const client;
     struct wl_resource* const resource;
@@ -439,12 +850,21 @@ private:
 
 class Subcompositor
 {
-protected:
+public:
+    static Subcompositor* from(struct wl_resource*);
+
     Subcompositor(struct wl_display* display, uint32_t max_version);
     virtual ~Subcompositor();
 
+    void destroy_wayland_object(struct wl_resource* resource) const;
+
     struct wl_global* const global;
     uint32_t const max_version;
+
+    struct Error
+    {
+        static uint32_t const BAD_SURFACE = 0;
+    };
 
 private:
     struct Thunks;
@@ -459,12 +879,21 @@ private:
 
 class Subsurface
 {
-protected:
+public:
+    static Subsurface* from(struct wl_resource*);
+
     Subsurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
     virtual ~Subsurface() = default;
 
+    void destroy_wayland_object() const;
+
     struct wl_client* const client;
     struct wl_resource* const resource;
+
+    struct Error
+    {
+        static uint32_t const BAD_SURFACE = 0;
+    };
 
 private:
     struct Thunks;
