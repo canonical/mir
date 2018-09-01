@@ -19,12 +19,27 @@
 #ifndef MIR_FRONTEND_WAYLAND_UTILS_H
 #define MIR_FRONTEND_WAYLAND_UTILS_H
 
-#include "wayland_utils.h"
-
 #include <memory>
 
-struct wl_client;
 struct MirInputEvent;
+
+extern "C"
+{
+struct wl_client;
+struct wl_resource;
+struct wl_display;
+struct wl_global;
+struct wl_array;
+
+struct wl_display * wl_client_get_display(struct wl_client *client);
+uint32_t wl_display_next_serial(struct wl_display *display);
+uint32_t wl_display_get_serial(struct wl_display *display);
+
+void wl_array_init(struct wl_array *array);
+void wl_array_release(struct wl_array *array);
+
+#include <wayland-server-core.h>
+}
 
 namespace mir
 {
