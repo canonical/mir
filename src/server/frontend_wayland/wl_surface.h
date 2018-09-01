@@ -31,6 +31,7 @@
 #include "mir/geometry/point.h"
 
 #include <vector>
+#include <map>
 
 namespace mir
 {

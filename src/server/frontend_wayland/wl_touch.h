@@ -24,6 +24,7 @@
 #include "mir/geometry/point.h"
 
 #include <map>
+#include <functional>
 
 // from "mir_toolkit/events/event.h"
 struct MirTouchEvent;

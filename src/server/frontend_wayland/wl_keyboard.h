@@ -22,6 +22,7 @@
 #include "generated/wayland_wrapper.h"
 
 #include <vector>
+#include <functional>
 
 // from <xkbcommon/xkbcommon.h>
 struct xkb_keymap;

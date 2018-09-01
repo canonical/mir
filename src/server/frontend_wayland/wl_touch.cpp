@@ -23,6 +23,7 @@
 
 #include "mir/executor.h"
 #include "mir/client/event.h"
+#include "mir/log.h"
 
 namespace mf = mir::frontend;
 

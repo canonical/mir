@@ -22,6 +22,7 @@
 #include "window_wl_surface_role.h"
 
 #include "mir/shell/surface_specification.h"
+#include "mir/log.h"
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;

@@ -23,6 +23,8 @@
 
 #include "generated/wayland_wrapper.h"
 
+#include <functional>
+
 struct MirInputEvent;
 typedef unsigned int MirPointerButtons;
 

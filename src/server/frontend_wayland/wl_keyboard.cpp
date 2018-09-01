@@ -27,6 +27,7 @@
 #include "mir/input/keymap.h"
 
 #include <xkbcommon/xkbcommon.h>
+#include <boost/throw_exception.hpp>
 
 #include <cstring> // memcpy
 

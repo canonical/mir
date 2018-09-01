@@ -20,6 +20,7 @@
 #include "wl_seat.h"
 
 #include <vector>
+#include <algorithm>
 
 namespace mf = mir::frontend;
 

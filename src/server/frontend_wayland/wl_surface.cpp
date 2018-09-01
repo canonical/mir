@@ -33,6 +33,9 @@
 #include "mir/executor.h"
 #include "mir/graphics/wayland_allocator.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/log.h"
+
+#include <algorithm>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
