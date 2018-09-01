@@ -59,9 +59,10 @@ class WlSubsurface;
 
 struct WlSurfaceState
 {
-    struct Callback
+    class Callback : public wayland::Callback
     {
-        wl_resource* resource;
+    public:
+        Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id);
         std::shared_ptr<bool> destroyed;
     };
 
@@ -79,7 +80,7 @@ struct WlSurfaceState
 
     std::experimental::optional<geometry::Displacement> offset;
     std::experimental::optional<std::experimental::optional<std::vector<geometry::Rectangle>>> input_shape;
-    std::vector<Callback> frame_callbacks;
+    std::vector<std::shared_ptr<Callback>> frame_callbacks;
 
 private:
     // only set to true if invalidate_surface_data() is called
@@ -160,7 +161,7 @@ private:
     WlSurfaceState pending;
     geometry::Displacement offset_;
     std::experimental::optional<geometry::Size> buffer_size_;
-    std::vector<WlSurfaceState::Callback> frame_callbacks;
+    std::vector<std::shared_ptr<WlSurfaceState::Callback>> frame_callbacks;
     std::experimental::optional<std::vector<mir::geometry::Rectangle>> input_shape;
     std::map<void const*, std::function<void()>> destroy_listeners;
     std::shared_ptr<bool> const destroyed;
