@@ -31,6 +31,11 @@ Emitter fd_wl2mir(std::string name)
     return Line{"mir::Fd ", name, "_resolved{", name, "};"};
 }
 
+Emitter fd_mir2wl(std::string name)
+{
+    return Line{"int32_t ", name, "_resolved{", name, "};"};
+}
+
 Emitter fixed_wl2mir(std::string name)
 {
     return Line{"double ", name, "_resolved{wl_fixed_to_double(", name, ")};"};
@@ -95,7 +100,7 @@ Emitter optional_string_mir2wl(std::string name)
 std::unordered_map<std::string, Argument::TypeDescriptor const> const request_type_map = {
     { "uint", { "uint32_t", "uint32_t", {} }},
     { "int", { "int32_t", "int32_t", {} }},
-    { "fd", { "mir::Fd", "int", { fd_wl2mir } }},
+    { "fd", { "mir::Fd", "int32_t", { fd_wl2mir } }},
     { "object", { "struct wl_resource*", "struct wl_resource*", {} }},
     { "string", { "std::string const&", "char const*", {} }},
     { "new_id", { "uint32_t", "uint32_t", {} }},
@@ -111,7 +116,7 @@ std::unordered_map<std::string, Argument::TypeDescriptor const> const request_op
 std::unordered_map<std::string, Argument::TypeDescriptor const> const event_type_map = {
     { "uint", { "uint32_t", "uint32_t", {} }},
     { "int", { "int32_t", "int32_t", {} }},
-    { "fd", { "mir::Fd", "int", { /* converted implicitly */ } }},
+    { "fd", { "mir::Fd", "int32_t", { fd_mir2wl } }},
     { "object", { "struct wl_resource*", "struct wl_resource*", {} }},
     { "string", { "std::string const&", "char const*", { string_mir2wl } }},
     { "new_id", { "struct wl_resource*", "struct wl_resource*", {} }},

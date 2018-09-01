@@ -229,7 +229,7 @@ mfw::Shm* mfw::Shm::from(struct wl_resource* resource)
 
 struct mfw::Shm::Thunks
 {
-    static void create_pool_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int fd, int32_t size)
+    static void create_pool_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int32_t fd, int32_t size)
     {
         auto me = static_cast<Shm*>(wl_resource_get_user_data(resource));
         mir::Fd fd_resolved{fd};
@@ -385,7 +385,7 @@ struct mfw::DataOffer::Thunks
         }
     }
 
-    static void receive_thunk(struct wl_client*, struct wl_resource* resource, char const* mime_type, int fd)
+    static void receive_thunk(struct wl_client*, struct wl_resource* resource, char const* mime_type, int32_t fd)
     {
         auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
         mir::Fd fd_resolved{fd};
@@ -594,7 +594,8 @@ void mfw::DataSource::send_target_event(std::experimental::optional<std::string>
 void mfw::DataSource::send_send_event(std::string const& mime_type, mir::Fd fd) const
 {
     const char* mime_type_resolved = mime_type.c_str();
-    wl_resource_post_event(resource, Opcode::SEND, mime_type_resolved, fd);
+    int32_t fd_resolved{fd};
+    wl_resource_post_event(resource, Opcode::SEND, mime_type_resolved, fd_resolved);
 }
 
 void mfw::DataSource::send_cancelled_event() const
@@ -1735,7 +1736,8 @@ mfw::Keyboard::Keyboard(struct wl_client* client, struct wl_resource* parent, ui
 
 void mfw::Keyboard::send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const
 {
-    wl_resource_post_event(resource, Opcode::KEYMAP, format, fd, size);
+    int32_t fd_resolved{fd};
+    wl_resource_post_event(resource, Opcode::KEYMAP, format, fd_resolved, size);
 }
 
 void mfw::Keyboard::send_enter_event(uint32_t serial, struct wl_resource* surface, struct wl_array* keys) const
