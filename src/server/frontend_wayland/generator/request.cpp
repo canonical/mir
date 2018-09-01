@@ -19,7 +19,7 @@
 #include "request.h"
 
 Request::Request(xmlpp::Element const& node, std::string const& class_name, bool is_global)
-    : Method{node, class_name, is_global}
+    : Method{node, class_name, is_global, false}
 {
 }
 

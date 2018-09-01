@@ -29,10 +29,19 @@ Interface::Interface(xmlpp::Element const& node,
       generated_name{name_transform(wl_name)},
       nmspace{"mfw::" + generated_name + "::"},
       is_global{constructable_interfaces.count(wl_name) == 0},
-      requests{get_requests(node, is_global)},
-      events{get_events(node, is_global)},
+      requests{get_requests(node, generated_name, is_global)},
+      events{get_events(node, generated_name, is_global)},
+      enums{get_enums(node)},
       has_vtable{!requests.empty()}
 {
+}
+
+Emitter Interface::global_namespace_forward_declarations() const
+{
+    if (has_vtable)
+        return Line{"struct ", wl_name, "_interface;"};
+    else
+        return nullptr;
 }
 
 Emitter Interface::declaration() const
@@ -40,14 +49,18 @@ Emitter Interface::declaration() const
     return Lines{
         {"class ", generated_name},
         "{",
-        "protected:",
+        "public:",
         List {{
+            {"static ", generated_name, "* from(struct wl_resource*);"},
             Lines {
                 constructor_prototype(),
                 destructor_prototype(),
             },
             event_prototypes(),
+            {"void destroy_wayland_object(", is_global ? "struct wl_resource* resource" : nullptr, ") const;"},
             member_vars(),
+            enum_declarations(),
+            event_opcodes(),
         }, empty_line, Emitter::single_indent},
         empty_line,
         "private:",
@@ -55,7 +68,9 @@ Emitter Interface::declaration() const
             (thunks_impl_contents().is_valid() ? "struct Thunks;" : nullptr),
             (is_global ? bind_prototype() : nullptr),
             virtual_request_prototypes(),
-            (has_vtable ? vtable_declare() : nullptr),
+            (has_vtable ? Emitter
+                {"static struct ", wl_name, "_interface const vtable;"}
+                : nullptr),
         }, empty_line, Emitter::single_indent},
         "};"
     };
@@ -206,6 +221,39 @@ Emitter Interface::member_vars() const
     }
 }
 
+Emitter Interface::enum_declarations() const
+{
+    std::vector<Emitter> ret;
+    for (auto const& i : enums)
+    {
+        ret.push_back(i.declaration());
+    }
+    return List{ret, empty_line};
+}
+
+Emitter Interface::event_opcodes() const
+{
+    std::vector<Emitter> ret;
+    for (auto const& i : events)
+    {
+        ret.push_back(i.opcode_declare());
+    }
+    Emitter body = List{ret, nullptr};
+    if (body.is_valid())
+    {
+        return Lines{
+            {"struct Opcode"},
+            {Block{
+                body
+            }, ";"}
+        };
+    }
+    else
+    {
+        return nullptr;
+    }
+}
+
 Emitter Interface::thunks_impl() const
 {
     Emitter contents = thunks_impl_contents();
@@ -284,12 +332,6 @@ Emitter Interface::resource_destroyed_thunk() const
     };
 }
 
-Emitter Interface::vtable_declare() const
-{
-    return Line{"static struct ", wl_name, "_interface const vtable;"};
-}
-
-
 Emitter Interface::vtable_init() const
 {
     return Lines{
@@ -308,7 +350,7 @@ Emitter Interface::vtable_contents() const
     return List{elems, Line{{","}, false, true}, Emitter::single_indent};
 }
 
-std::vector<Request> Interface::get_requests(xmlpp::Element const& node, bool is_global)
+std::vector<Request> Interface::get_requests(xmlpp::Element const& node, std::string generated_name, bool is_global)
 {
     std::vector<Request> requests;
     for (auto method_node : node.get_children("request"))
@@ -319,7 +361,7 @@ std::vector<Request> Interface::get_requests(xmlpp::Element const& node, bool is
     return requests;
 }
 
-std::vector<Event> Interface::get_events(xmlpp::Element const& node, bool is_global)
+std::vector<Event> Interface::get_events(xmlpp::Element const& node, std::string generated_name, bool is_global)
 {
     std::vector<Event> events;
     int opcode = 0;
@@ -330,4 +372,15 @@ std::vector<Event> Interface::get_events(xmlpp::Element const& node, bool is_glo
         opcode++;
     }
     return events;
+}
+
+std::vector<Enum> Interface::get_enums(xmlpp::Element const& node)
+{
+    std::vector<Enum> enums;
+    for (auto method_node : node.get_children("enum"))
+    {
+        auto elem = dynamic_cast<xmlpp::Element*>(method_node);
+        enums.emplace_back(Enum{std::ref(*elem)});
+    }
+    return enums;
 }

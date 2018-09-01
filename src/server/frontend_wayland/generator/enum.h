@@ -16,18 +16,32 @@
  * Authored By: William Wold <william.wold@canonical.com>
  */
 
-#include "method.h"
+#ifndef MIR_WAYLAND_GENERATOR_ENUM_H
+#define MIR_WAYLAND_GENERATOR_ENUM_H
 
-#include <libxml++/libxml++.h>
+#include "emitter.h"
 
-Method::Method(xmlpp::Element const& node, std::string const& class_name, bool is_global, bool is_event)
-    : name{node.get_attribute_value("name")},
-      class_name{class_name},
-      is_global{is_global}
+namespace xmlpp
 {
-    for (auto const& child : node.get_children("arg"))
-    {
-        auto arg_node = dynamic_cast<xmlpp::Element const*>(child);
-        arguments.emplace_back(std::ref(*arg_node), is_event);
-    }
+class Element;
 }
+
+class Enum
+{
+public:
+    struct Entry
+    {
+        std::string name;
+        std::string value;
+    };
+
+    Enum(xmlpp::Element const& node);
+
+    Emitter declaration() const;
+
+private:
+    std::string const name;
+    std::vector<Entry> entries;
+};
+
+#endif // MIR_WAYLAND_GENERATOR_ARGUMENT_H

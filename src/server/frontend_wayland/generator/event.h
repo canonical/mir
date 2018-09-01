@@ -26,6 +26,7 @@ class Event : public Method
 public:
     Event(xmlpp::Element const& node, std::string const& class_name, bool is_global, int opcode);
 
+    Emitter opcode_declare() const;
     Emitter prototype() const;
     Emitter impl() const;
 
@@ -38,7 +39,10 @@ protected:
     // arguments to call the virtual mir function call (just names, no types)
     Emitter wl_call_args() const;
 
+    static int get_since_version(xmlpp::Element const& node);
+
     int const opcode;
+    int const min_version;
 };
 
 #endif // MIR_WAYLAND_GENERATOR_EVENT_H

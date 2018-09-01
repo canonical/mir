@@ -22,6 +22,7 @@
 #include "emitter.h"
 #include "request.h"
 #include "event.h"
+#include "enum.h"
 
 #include <experimental/optional>
 #include <functional>
@@ -55,16 +56,18 @@ private:
     Emitter event_prototypes() const;
     Emitter event_impls() const;
     Emitter member_vars() const;
+    Emitter enum_declarations() const;
+    Emitter event_opcodes() const;
     Emitter thunks_impl() const;
     Emitter thunks_impl_contents() const;
     Emitter bind_thunk() const;
     Emitter resource_destroyed_thunk() const;
-    Emitter vtable_declare() const;
     Emitter vtable_init() const;
     Emitter vtable_contents() const;
 
-    std::vector<Request> get_requests(xmlpp::Element const& node, bool is_global);
-    std::vector<Event> get_events(xmlpp::Element const& node, bool is_global);
+    static std::vector<Request> get_requests(xmlpp::Element const& node, std::string generated_name, bool is_global);
+    static std::vector<Event> get_events(xmlpp::Element const& node, std::string generated_name, bool is_global);
+    static std::vector<Enum> get_enums(xmlpp::Element const& node);
 
     std::string const wl_name;
     std::string const generated_name;
@@ -72,6 +75,7 @@ private:
     bool const is_global;
     std::vector<Request> const requests;
     std::vector<Event> const events;
+    std::vector<Enum> const enums;
     bool const has_vtable;
 };
 

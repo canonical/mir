@@ -34,7 +34,7 @@ class Element;
 class Method
 {
 public:
-    Method(xmlpp::Element const& node, std::string const& class_name, bool is_global);
+    Method(xmlpp::Element const& node, std::string const& class_name, bool is_global, bool is_event);
 
 protected:
     std::string const name;

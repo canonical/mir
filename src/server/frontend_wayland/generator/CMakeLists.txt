@@ -5,6 +5,7 @@ include_directories(SYSTEM ${XMLPP_INCLUDE_DIRS})
 add_executable(wrapper-generator
   wrapper_generator.cpp
   utils.cpp                 utils.h
+  enum.cpp                  enum.h
   argument.cpp              argument.h
   method.cpp                method.h
   request.cpp               request.h
