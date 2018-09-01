@@ -212,8 +212,8 @@ void mf::WlSurface::send_frame_callbacks()
         if (!*frame.destroyed)
         {
             // TODO: argument should be a timestamp
-            wl_callback_send_done(frame.resource, 0);
-            wl_resource_destroy(frame.resource);
+            frame->send_done_event(0);
+            frame->destroy_wayland_object();
         }
     }
     frame_callbacks.clear();
@@ -222,7 +222,7 @@ void mf::WlSurface::send_frame_callbacks()
 void mf::WlSurface::destroy()
 {
     *destroyed = true;
-    wl_resource_destroy(resource);
+    destroy_wayland_object();
 }
 
 void mf::WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y)
@@ -334,7 +334,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     {
                         executor->spawn(run_unless(
                             destroyed,
-                            [buffer](){ wl_resource_queue_event(buffer, WL_BUFFER_RELEASE); }));
+                            [buffer](){ wl_resource_queue_event(buffer, wayland::Buffer::Opcode::RELEASE); }));
                     };
 
                 mir_buffer = allocator->buffer_from_resource(

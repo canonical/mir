@@ -232,7 +232,7 @@ void mf::XdgSurfaceStable::ack_configure(uint32_t serial)
 void mf::XdgSurfaceStable::send_configure()
 {
     auto const serial = wl_display_next_serial(wl_client_get_display(wayland::XdgSurface::client));
-    xdg_surface_send_configure(resource, serial);
+    send_configure_event(serial);
 }
 
 std::experimental::optional<mf::WindowWlSurfaceRole*> const& mf::XdgSurfaceStable::window_role()
@@ -301,11 +301,10 @@ void mf::XdgPopupStable::handle_resize(const std::experimental::optional<geometr
 
     if (needs_configure && cached_top_left && cached_size)
     {
-        xdg_popup_send_configure(resource,
-                                 cached_top_left.value().x.as_int(),
-                                 cached_top_left.value().y.as_int(),
-                                 cached_size.value().width.as_int(),
-                                 cached_size.value().height.as_int());
+        send_configure_event(cached_top_left.value().x.as_int(),
+                             cached_top_left.value().y.as_int(),
+                             cached_size.value().width.as_int(),
+                             cached_size.value().height.as_int());
         xdg_surface->send_configure();
     }
 }
@@ -321,7 +320,7 @@ mf::XdgToplevelStable::XdgToplevelStable(struct wl_client* client, struct wl_res
 {
     wl_array states;
     wl_array_init(&states);
-    xdg_toplevel_send_configure(resource, 0, 0, &states);
+    send_configure_event(0, 0, &states);
     wl_array_release(&states);
     xdg_surface->send_configure();
 }
@@ -371,35 +370,35 @@ void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t /*seri
 
     switch (edges)
     {
-    case XDG_TOPLEVEL_RESIZE_EDGE_TOP:
+    case ResizeEdge::TOP:
         edge = mir_resize_edge_north;
         break;
 
-    case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM:
+    case ResizeEdge::BOTTOM:
         edge = mir_resize_edge_south;
         break;
 
-    case XDG_TOPLEVEL_RESIZE_EDGE_LEFT:
+    case ResizeEdge::LEFT:
         edge = mir_resize_edge_west;
         break;
 
-    case XDG_TOPLEVEL_RESIZE_EDGE_TOP_LEFT:
-        edge = mir_resize_edge_northwest;
-        break;
-
-    case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_LEFT:
-        edge = mir_resize_edge_southwest;
-        break;
-
-    case XDG_TOPLEVEL_RESIZE_EDGE_RIGHT:
+    case ResizeEdge::RIGHT:
         edge = mir_resize_edge_east;
         break;
 
-    case XDG_TOPLEVEL_RESIZE_EDGE_TOP_RIGHT:
+    case ResizeEdge::TOP_LEFT:
+        edge = mir_resize_edge_northwest;
+        break;
+
+    case ResizeEdge::BOTTOM_LEFT:
+        edge = mir_resize_edge_southwest;
+        break;
+
+    case ResizeEdge::TOP_RIGHT:
         edge = mir_resize_edge_northeast;
         break;
 
-    case XDG_TOPLEVEL_RESIZE_EDGE_BOTTOM_RIGHT:
+    case ResizeEdge::BOTTOM_RIGHT:
         edge = mir_resize_edge_southeast;
         break;
 
@@ -458,7 +457,7 @@ void mf::XdgToplevelStable::handle_resize(std::experimental::optional<geometry::
     if (is_active())
     {
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = XDG_TOPLEVEL_STATE_ACTIVATED;
+            *state = State::ACTIVATED;
     }
 
     switch (window_state())
@@ -467,19 +466,19 @@ void mf::XdgToplevelStable::handle_resize(std::experimental::optional<geometry::
     case mir_window_state_horizmaximized:
     case mir_window_state_vertmaximized:
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = XDG_TOPLEVEL_STATE_MAXIMIZED;
+            *state = State::MAXIMIZED;
         break;
 
     case mir_window_state_fullscreen:
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = XDG_TOPLEVEL_STATE_FULLSCREEN;
+            *state = State::FULLSCREEN;
         break;
 
     default:
         break;
     }
 
-    xdg_toplevel_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
+    send_configure_event(new_size.width.as_int(), new_size.height.as_int(), &states);
     wl_array_release(&states);
 
     xdg_surface->send_configure();
@@ -523,35 +522,35 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
 
     switch (anchor)
     {
-        case XDG_POSITIONER_ANCHOR_TOP:
+        case Anchor::TOP:
             placement = mir_placement_gravity_north;
             break;
 
-        case XDG_POSITIONER_ANCHOR_BOTTOM:
+        case Anchor::BOTTOM:
             placement = mir_placement_gravity_south;
             break;
 
-        case XDG_POSITIONER_ANCHOR_LEFT:
+        case Anchor::LEFT:
             placement = mir_placement_gravity_west;
             break;
 
-        case XDG_POSITIONER_ANCHOR_RIGHT:
+        case Anchor::RIGHT:
             placement = mir_placement_gravity_east;
             break;
 
-        case XDG_POSITIONER_ANCHOR_TOP_LEFT:
+        case Anchor::TOP_LEFT:
             placement = mir_placement_gravity_northwest;
             break;
 
-        case XDG_POSITIONER_ANCHOR_BOTTOM_LEFT:
+        case Anchor::BOTTOM_LEFT:
             placement = mir_placement_gravity_southwest;
             break;
 
-        case XDG_POSITIONER_ANCHOR_TOP_RIGHT:
+        case Anchor::TOP_RIGHT:
             placement = mir_placement_gravity_northeast;
             break;
 
-        case XDG_POSITIONER_ANCHOR_BOTTOM_RIGHT:
+        case Anchor::BOTTOM_RIGHT:
             placement = mir_placement_gravity_southeast;
             break;
 
@@ -568,35 +567,35 @@ void mf::XdgPositionerStable::set_gravity(uint32_t gravity)
 
     switch (gravity)
     {
-        case XDG_POSITIONER_GRAVITY_TOP:
+        case Gravity::TOP:
             placement = mir_placement_gravity_south;
             break;
 
-        case XDG_POSITIONER_GRAVITY_BOTTOM:
+        case Gravity::BOTTOM:
             placement = mir_placement_gravity_north;
             break;
 
-        case XDG_POSITIONER_GRAVITY_LEFT:
+        case Gravity::LEFT:
             placement = mir_placement_gravity_east;
             break;
 
-        case XDG_POSITIONER_GRAVITY_RIGHT:
+        case Gravity::RIGHT:
             placement = mir_placement_gravity_west;
             break;
 
-        case XDG_POSITIONER_GRAVITY_TOP_LEFT:
+        case Gravity::TOP_LEFT:
             placement = mir_placement_gravity_southeast;
             break;
 
-        case XDG_POSITIONER_GRAVITY_BOTTOM_LEFT:
+        case Gravity::BOTTOM_LEFT:
             placement = mir_placement_gravity_northeast;
             break;
 
-        case XDG_POSITIONER_GRAVITY_TOP_RIGHT:
+        case Gravity::TOP_RIGHT:
             placement = mir_placement_gravity_southwest;
             break;
 
-        case XDG_POSITIONER_GRAVITY_BOTTOM_RIGHT:
+        case Gravity::BOTTOM_RIGHT:
             placement = mir_placement_gravity_northwest;
             break;
 

@@ -30,7 +30,7 @@ mf::WlSubcompositor::WlSubcompositor(struct wl_display* display)
 
 void mf::WlSubcompositor::destroy(struct wl_client* /*client*/, struct wl_resource* resource)
 {
-    wl_resource_destroy(resource);
+    destroy_wayland_object(resource);
 }
 
 void mf::WlSubcompositor::get_subsurface(struct wl_client* client, struct wl_resource* resource, uint32_t id,
@@ -119,7 +119,7 @@ void mf::WlSubsurface::set_desync()
 
 void mf::WlSubsurface::destroy()
 {
-    wl_resource_destroy(resource);
+    destroy_wayland_object();
 }
 
 void mf::WlSubsurface::refresh_surface_data_now()
