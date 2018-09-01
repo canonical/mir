@@ -82,10 +82,22 @@ Emitter Interface::implementation() const
         {"// ", generated_name},
         empty_line,
         List{{
+            Lines{
+                {"mfw::", generated_name, "* ", nmspace, "from(struct wl_resource* resource)"},
+                Block{
+                    {"return static_cast<", generated_name, "*>(wl_resource_get_user_data(resource));"}
+                }
+            },
             thunks_impl(),
             constructor_impl(),
             destructor_impl(),
             event_impls(),
+            Lines{
+                {"void ", nmspace, "destroy_wayland_object(", is_global ? "struct wl_resource* resource" : nullptr, ") const"},
+                Block{
+                    {"wl_resource_destroy(resource);"}
+                }
+            },
             (has_vtable ? vtable_init() : nullptr),
         }, empty_line},
     };

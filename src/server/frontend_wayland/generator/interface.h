@@ -42,6 +42,7 @@ public:
               std::function<std::string(std::string)> const& name_transform,
               std::unordered_set<std::string> const& constructable_interfaces);
 
+    Emitter global_namespace_forward_declarations() const;
     Emitter declaration() const;
     Emitter implementation() const;
 
