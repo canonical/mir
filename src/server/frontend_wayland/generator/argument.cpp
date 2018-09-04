@@ -98,41 +98,42 @@ Emitter optional_string_mir2wl(std::string name)
 }
 
 std::unordered_map<std::string, Argument::TypeDescriptor const> const request_type_map = {
-    { "uint", { "uint32_t", "uint32_t", {} }},
-    { "int", { "int32_t", "int32_t", {} }},
-    { "fd", { "mir::Fd", "int32_t", { fd_wl2mir } }},
-    { "object", { "struct wl_resource*", "struct wl_resource*", {} }},
-    { "string", { "std::string const&", "char const*", {} }},
-    { "new_id", { "uint32_t", "uint32_t", {} }},
-    { "fixed", { "double", "wl_fixed_t", { fixed_wl2mir } }},
-    { "array", { "struct wl_array*", "struct wl_array*", {} }}
+    { "uint", { "uint32_t", "uint32_t", "u", {} }},
+    { "int", { "int32_t", "int32_t", "i", {} }},
+    { "fd", { "mir::Fd", "int32_t", "h", { fd_wl2mir } }},
+    { "object", { "struct wl_resource*", "struct wl_resource*", "o", {} }},
+    { "string", { "std::string const&", "char const*", "s", {} }},
+    { "new_id", { "uint32_t", "uint32_t", "n", {} }},
+    { "fixed", { "double", "wl_fixed_t", "f", { fixed_wl2mir } }},
+    { "array", { "struct wl_array*", "struct wl_array*", "a", {} }}
 };
 
 std::unordered_map<std::string, Argument::TypeDescriptor const> const request_optional_type_map = {
-    { "object", { "std::experimental::optional<struct wl_resource*> const&", "struct wl_resource*", { optional_object_wl2mir } }},
-    { "string", { "std::experimental::optional<std::string> const&", "char const*", { optional_string_wl2mir } }},
+    { "object", { "std::experimental::optional<struct wl_resource*> const&", "struct wl_resource*", "?o", { optional_object_wl2mir } }},
+    { "string", { "std::experimental::optional<std::string> const&", "char const*",  "?s",{ optional_string_wl2mir } }},
 };
 
 std::unordered_map<std::string, Argument::TypeDescriptor const> const event_type_map = {
-    { "uint", { "uint32_t", "uint32_t", {} }},
-    { "int", { "int32_t", "int32_t", {} }},
-    { "fd", { "mir::Fd", "int32_t", { fd_mir2wl } }},
-    { "object", { "struct wl_resource*", "struct wl_resource*", {} }},
-    { "string", { "std::string const&", "char const*", { string_mir2wl } }},
-    { "new_id", { "struct wl_resource*", "struct wl_resource*", {} }},
-    { "fixed", { "double", "wl_fixed_t", { fixed_mir2wl } }},
-    { "array", { "struct wl_array*", "struct wl_array*", {} }}
+    { "uint", { "uint32_t", "uint32_t", "u", {} }},
+    { "int", { "int32_t", "int32_t", "i", {} }},
+    { "fd", { "mir::Fd", "int32_t", "h", { fd_mir2wl } }},
+    { "object", { "struct wl_resource*", "struct wl_resource*", "o", {} }},
+    { "string", { "std::string const&", "char const*", "s", { string_mir2wl } }},
+    { "new_id", { "struct wl_resource*", "struct wl_resource*", "n", {} }},
+    { "fixed", { "double", "wl_fixed_t", "f", { fixed_mir2wl } }},
+    { "array", { "struct wl_array*", "struct wl_array*", "a", {} }}
 };
 
 std::unordered_map<std::string, Argument::TypeDescriptor const> const event_optional_type_map = {
-    { "object", { "std::experimental::optional<struct wl_resource*> const&", "struct wl_resource*", {optional_object_mir2wl} }},
-    { "string", { "std::experimental::optional<std::string> const&", "char const*", { optional_string_mir2wl } }},
+    { "object", { "std::experimental::optional<struct wl_resource*> const&", "struct wl_resource*", "?o", {optional_object_mir2wl} }},
+    { "string", { "std::experimental::optional<std::string> const&", "char const*", "?s", { optional_string_mir2wl } }},
 };
 }
 
 Argument::Argument(xmlpp::Element const& node, bool is_event)
     : name{sanitize_name(node.get_attribute_value("name"))},
-      descriptor{get_type(node, is_event)}
+      descriptor{get_type(node, is_event)},
+      interface{get_interface(node)}
 {
 }
 
@@ -149,6 +150,27 @@ Emitter Argument::mir_prototype() const
 Emitter Argument::call_fragment() const
 {
     return descriptor.converter ? (name + "_resolved") : name;
+}
+
+Emitter Argument::object_type_interface_declare() const
+{
+    if (interface)
+        return {"extern struct wl_interface const ", interface.value(), "_interface_data;"};
+    else
+        return nullptr;
+}
+
+Emitter Argument::object_type_fragment() const
+{
+    if (interface)
+        return {"&", interface.value(), "_interface_data"};
+    else
+        return nullptr;
+}
+
+Emitter Argument::type_str_fragment() const
+{
+    return descriptor.wl_type_abbr;
 }
 
 std::experimental::optional<Emitter> Argument::converter() const
@@ -194,7 +216,7 @@ Argument::TypeDescriptor Argument::get_type(xmlpp::Element const& node, bool is_
     catch (std::out_of_range const&)
     {
         // its an error message, so who cares about the memory leak?
-        return TypeDescriptor{"unknown_type_" + type, "unknown_type_" + type,
+        return TypeDescriptor{"unknown_type_" + type, "unknown_type_" + type, "!",
             {[=](std::string name) -> Emitter
             {
                 return Lines{
@@ -203,4 +225,14 @@ Argument::TypeDescriptor Argument::get_type(xmlpp::Element const& node, bool is_
                 };
             }}};
     }
+}
+
+#include <iostream>
+std::experimental::optional<std::string> Argument::get_interface(xmlpp::Element const& node)
+{
+    std::string ret = node.get_attribute_value("interface");
+    if (ret.empty())
+        return std::experimental::nullopt;
+    else
+        return {ret};
 }
