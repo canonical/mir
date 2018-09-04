@@ -6,7 +6,6 @@
  */
 
 #include "wayland_wrapper.h"
-#include "wayland.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/diagnostic_information.hpp>
@@ -15,7 +14,48 @@
 
 #include "mir/log.h"
 
+namespace mir
+{
+namespace frontend
+{
+namespace wayland
+{
+extern struct wl_interface const wl_buffer_interface_data;
+extern struct wl_interface const wl_callback_interface_data;
+extern struct wl_interface const wl_compositor_interface_data;
+extern struct wl_interface const wl_data_device_interface_data;
+extern struct wl_interface const wl_data_device_manager_interface_data;
+extern struct wl_interface const wl_data_offer_interface_data;
+extern struct wl_interface const wl_data_source_interface_data;
+extern struct wl_interface const wl_keyboard_interface_data;
+extern struct wl_interface const wl_output_interface_data;
+extern struct wl_interface const wl_pointer_interface_data;
+extern struct wl_interface const wl_region_interface_data;
+extern struct wl_interface const wl_seat_interface_data;
+extern struct wl_interface const wl_shell_interface_data;
+extern struct wl_interface const wl_shell_surface_interface_data;
+extern struct wl_interface const wl_shm_interface_data;
+extern struct wl_interface const wl_shm_pool_interface_data;
+extern struct wl_interface const wl_subcompositor_interface_data;
+extern struct wl_interface const wl_subsurface_interface_data;
+extern struct wl_interface const wl_surface_interface_data;
+extern struct wl_interface const wl_touch_interface_data;
+}
+}
+}
+
 namespace mfw = mir::frontend::wayland;
+
+namespace
+{
+struct wl_interface const* all_null_types [] {
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr};
+}
 
 // Callback
 
@@ -24,9 +64,14 @@ mfw::Callback* mfw::Callback::from(struct wl_resource* resource)
     return static_cast<Callback*>(wl_resource_get_user_data(resource));
 }
 
+struct mfw::Callback::Thunks
+{
+    static struct wl_message const event_messages[];
+};
+
 mfw::Callback::Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &wl_callback_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &wl_callback_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
@@ -44,6 +89,9 @@ void mfw::Callback::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
+
+struct wl_message const mfw::Callback::Thunks::event_messages[] {
+    {"done", "u", all_null_types}};
 
 // Compositor
 
@@ -89,14 +137,14 @@ struct mfw::Compositor::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Compositor*>(data);
-        auto resource = wl_resource_create(client, &wl_compositor_interface,
+        auto resource = wl_resource_create(client, &wl_compositor_interface_data,
                                            std::min(version, me->max_version), id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
             me->bind(client, resource);
@@ -109,10 +157,15 @@ struct mfw::Compositor::Thunks
                        "Exception processing Compositor::bind() request");
         }
     }
+
+    static struct wl_interface const* create_surface_types[];
+    static struct wl_interface const* create_region_types[];
+    static struct wl_message const request_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::Compositor::Compositor(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_compositor_interface, max_version, this, &Thunks::bind_thunk)},
+    : global{wl_global_create(display, &wl_compositor_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -131,9 +184,19 @@ void mfw::Compositor::destroy_wayland_object(struct wl_resource* resource) const
     wl_resource_destroy(resource);
 }
 
-struct wl_compositor_interface const mfw::Compositor::vtable = {
-    Thunks::create_surface_thunk,
-    Thunks::create_region_thunk};
+struct wl_interface const* mfw::Compositor::Thunks::create_surface_types[] {
+    &wl_surface_interface_data};
+
+struct wl_interface const* mfw::Compositor::Thunks::create_region_types[] {
+    &wl_region_interface_data};
+
+struct wl_message const mfw::Compositor::Thunks::request_messages[] {
+    {"create_surface", "n", create_surface_types},
+    {"create_region", "n", create_region_types}};
+
+void const* mfw::Compositor::Thunks::request_vtable[] {
+    (void*)Thunks::create_surface_thunk,
+    (void*)Thunks::create_region_thunk};
 
 // ShmPool
 
@@ -196,18 +259,22 @@ struct mfw::ShmPool::Thunks
     {
         delete static_cast<ShmPool*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_interface const* create_buffer_types[];
+    static struct wl_message const request_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::ShmPool::ShmPool(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &wl_shm_pool_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &wl_shm_pool_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::ShmPool::destroy_wayland_object() const
@@ -215,10 +282,23 @@ void mfw::ShmPool::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct wl_shm_pool_interface const mfw::ShmPool::vtable = {
-    Thunks::create_buffer_thunk,
-    Thunks::destroy_thunk,
-    Thunks::resize_thunk};
+struct wl_interface const* mfw::ShmPool::Thunks::create_buffer_types[] {
+    &wl_buffer_interface_data,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr};
+
+struct wl_message const mfw::ShmPool::Thunks::request_messages[] {
+    {"create_buffer", "niiiiu", create_buffer_types},
+    {"destroy", "", all_null_types},
+    {"resize", "i", all_null_types}};
+
+void const* mfw::ShmPool::Thunks::request_vtable[] {
+    (void*)Thunks::create_buffer_thunk,
+    (void*)Thunks::destroy_thunk,
+    (void*)Thunks::resize_thunk};
 
 // Shm
 
@@ -249,14 +329,14 @@ struct mfw::Shm::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Shm*>(data);
-        auto resource = wl_resource_create(client, &wl_shm_interface,
+        auto resource = wl_resource_create(client, &wl_shm_interface_data,
                                            std::min(version, me->max_version), id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
             me->bind(client, resource);
@@ -269,10 +349,15 @@ struct mfw::Shm::Thunks
                        "Exception processing Shm::bind() request");
         }
     }
+
+    static struct wl_interface const* create_pool_types[];
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::Shm::Shm(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_shm_interface, max_version, this, &Thunks::bind_thunk)},
+    : global{wl_global_create(display, &wl_shm_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -296,8 +381,19 @@ void mfw::Shm::destroy_wayland_object(struct wl_resource* resource) const
     wl_resource_destroy(resource);
 }
 
-struct wl_shm_interface const mfw::Shm::vtable = {
-    Thunks::create_pool_thunk};
+struct wl_interface const* mfw::Shm::Thunks::create_pool_types[] {
+    &wl_shm_pool_interface_data,
+    nullptr,
+    nullptr};
+
+struct wl_message const mfw::Shm::Thunks::request_messages[] {
+    {"create_pool", "nhi", create_pool_types}};
+
+struct wl_message const mfw::Shm::Thunks::event_messages[] {
+    {"format", "u", all_null_types}};
+
+void const* mfw::Shm::Thunks::request_vtable[] {
+    (void*)Thunks::create_pool_thunk};
 
 // Buffer
 
@@ -328,18 +424,22 @@ struct mfw::Buffer::Thunks
     {
         delete static_cast<Buffer*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::Buffer::Buffer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &wl_buffer_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &wl_buffer_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::Buffer::send_release_event() const
@@ -352,8 +452,14 @@ void mfw::Buffer::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct wl_buffer_interface const mfw::Buffer::vtable = {
-    Thunks::destroy_thunk};
+struct wl_message const mfw::Buffer::Thunks::request_messages[] {
+    {"destroy", "", all_null_types}};
+
+struct wl_message const mfw::Buffer::Thunks::event_messages[] {
+    {"release", "", all_null_types}};
+
+void const* mfw::Buffer::Thunks::request_vtable[] {
+    (void*)Thunks::destroy_thunk};
 
 // DataOffer
 
@@ -454,18 +560,22 @@ struct mfw::DataOffer::Thunks
     {
         delete static_cast<DataOffer*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::DataOffer::DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &wl_data_offer_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &wl_data_offer_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::DataOffer::send_offer_event(std::string const& mime_type) const
@@ -499,12 +609,24 @@ void mfw::DataOffer::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct wl_data_offer_interface const mfw::DataOffer::vtable = {
-    Thunks::accept_thunk,
-    Thunks::receive_thunk,
-    Thunks::destroy_thunk,
-    Thunks::finish_thunk,
-    Thunks::set_actions_thunk};
+struct wl_message const mfw::DataOffer::Thunks::request_messages[] {
+    {"accept", "u?s", all_null_types},
+    {"receive", "sh", all_null_types},
+    {"destroy", "", all_null_types},
+    {"finish", "3", all_null_types},
+    {"set_actions", "3uu", all_null_types}};
+
+struct wl_message const mfw::DataOffer::Thunks::event_messages[] {
+    {"offer", "s", all_null_types},
+    {"source_actions", "3u", all_null_types},
+    {"action", "3u", all_null_types}};
+
+void const* mfw::DataOffer::Thunks::request_vtable[] {
+    (void*)Thunks::accept_thunk,
+    (void*)Thunks::receive_thunk,
+    (void*)Thunks::destroy_thunk,
+    (void*)Thunks::finish_thunk,
+    (void*)Thunks::set_actions_thunk};
 
 // DataSource
 
@@ -567,18 +689,22 @@ struct mfw::DataSource::Thunks
     {
         delete static_cast<DataSource*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::DataSource::DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &wl_data_source_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &wl_data_source_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::DataSource::send_target_event(std::experimental::optional<std::string> const& mime_type) const
@@ -638,10 +764,23 @@ void mfw::DataSource::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct wl_data_source_interface const mfw::DataSource::vtable = {
-    Thunks::offer_thunk,
-    Thunks::destroy_thunk,
-    Thunks::set_actions_thunk};
+struct wl_message const mfw::DataSource::Thunks::request_messages[] {
+    {"offer", "s", all_null_types},
+    {"destroy", "", all_null_types},
+    {"set_actions", "3u", all_null_types}};
+
+struct wl_message const mfw::DataSource::Thunks::event_messages[] {
+    {"target", "?s", all_null_types},
+    {"send", "sh", all_null_types},
+    {"cancelled", "", all_null_types},
+    {"dnd_drop_performed", "3", all_null_types},
+    {"dnd_finished", "3", all_null_types},
+    {"action", "3u", all_null_types}};
+
+void const* mfw::DataSource::Thunks::request_vtable[] {
+    (void*)Thunks::offer_thunk,
+    (void*)Thunks::destroy_thunk,
+    (void*)Thunks::set_actions_thunk};
 
 // DataDevice
 
@@ -719,18 +858,27 @@ struct mfw::DataDevice::Thunks
     {
         delete static_cast<DataDevice*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_interface const* start_drag_types[];
+    static struct wl_interface const* set_selection_types[];
+    static struct wl_interface const* data_offer_types[];
+    static struct wl_interface const* enter_types[];
+    static struct wl_interface const* selection_types[];
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::DataDevice::DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &wl_data_device_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &wl_data_device_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::DataDevice::send_data_offer_event(struct wl_resource* id) const
@@ -782,10 +930,46 @@ void mfw::DataDevice::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct wl_data_device_interface const mfw::DataDevice::vtable = {
-    Thunks::start_drag_thunk,
-    Thunks::set_selection_thunk,
-    Thunks::release_thunk};
+struct wl_interface const* mfw::DataDevice::Thunks::start_drag_types[] {
+    &wl_data_source_interface_data,
+    &wl_surface_interface_data,
+    &wl_surface_interface_data,
+    nullptr};
+
+struct wl_interface const* mfw::DataDevice::Thunks::set_selection_types[] {
+    &wl_data_source_interface_data,
+    nullptr};
+
+struct wl_interface const* mfw::DataDevice::Thunks::data_offer_types[] {
+    &wl_data_offer_interface_data};
+
+struct wl_interface const* mfw::DataDevice::Thunks::enter_types[] {
+    nullptr,
+    &wl_surface_interface_data,
+    nullptr,
+    nullptr,
+    &wl_data_offer_interface_data};
+
+struct wl_interface const* mfw::DataDevice::Thunks::selection_types[] {
+    &wl_data_offer_interface_data};
+
+struct wl_message const mfw::DataDevice::Thunks::request_messages[] {
+    {"start_drag", "?oo?ou", start_drag_types},
+    {"set_selection", "?ou", set_selection_types},
+    {"release", "2", all_null_types}};
+
+struct wl_message const mfw::DataDevice::Thunks::event_messages[] {
+    {"data_offer", "n", data_offer_types},
+    {"enter", "uoff?o", enter_types},
+    {"leave", "", all_null_types},
+    {"motion", "uff", all_null_types},
+    {"drop", "", all_null_types},
+    {"selection", "?o", selection_types}};
+
+void const* mfw::DataDevice::Thunks::request_vtable[] {
+    (void*)Thunks::start_drag_thunk,
+    (void*)Thunks::set_selection_thunk,
+    (void*)Thunks::release_thunk};
 
 // DataDeviceManager
 
@@ -831,14 +1015,14 @@ struct mfw::DataDeviceManager::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<DataDeviceManager*>(data);
-        auto resource = wl_resource_create(client, &wl_data_device_manager_interface,
+        auto resource = wl_resource_create(client, &wl_data_device_manager_interface_data,
                                            std::min(version, me->max_version), id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
             me->bind(client, resource);
@@ -851,10 +1035,15 @@ struct mfw::DataDeviceManager::Thunks
                        "Exception processing DataDeviceManager::bind() request");
         }
     }
+
+    static struct wl_interface const* create_data_source_types[];
+    static struct wl_interface const* get_data_device_types[];
+    static struct wl_message const request_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::DataDeviceManager::DataDeviceManager(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_data_device_manager_interface, max_version, this, &Thunks::bind_thunk)},
+    : global{wl_global_create(display, &wl_data_device_manager_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -873,9 +1062,20 @@ void mfw::DataDeviceManager::destroy_wayland_object(struct wl_resource* resource
     wl_resource_destroy(resource);
 }
 
-struct wl_data_device_manager_interface const mfw::DataDeviceManager::vtable = {
-    Thunks::create_data_source_thunk,
-    Thunks::get_data_device_thunk};
+struct wl_interface const* mfw::DataDeviceManager::Thunks::create_data_source_types[] {
+    &wl_data_source_interface_data};
+
+struct wl_interface const* mfw::DataDeviceManager::Thunks::get_data_device_types[] {
+    &wl_data_device_interface_data,
+    &wl_seat_interface_data};
+
+struct wl_message const mfw::DataDeviceManager::Thunks::request_messages[] {
+    {"create_data_source", "n", create_data_source_types},
+    {"get_data_device", "no", get_data_device_types}};
+
+void const* mfw::DataDeviceManager::Thunks::request_vtable[] {
+    (void*)Thunks::create_data_source_thunk,
+    (void*)Thunks::get_data_device_thunk};
 
 // Shell
 
@@ -905,14 +1105,14 @@ struct mfw::Shell::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Shell*>(data);
-        auto resource = wl_resource_create(client, &wl_shell_interface,
+        auto resource = wl_resource_create(client, &wl_shell_interface_data,
                                            std::min(version, me->max_version), id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
             me->bind(client, resource);
@@ -925,10 +1125,14 @@ struct mfw::Shell::Thunks
                        "Exception processing Shell::bind() request");
         }
     }
+
+    static struct wl_interface const* get_shell_surface_types[];
+    static struct wl_message const request_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::Shell::Shell(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_shell_interface, max_version, this, &Thunks::bind_thunk)},
+    : global{wl_global_create(display, &wl_shell_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -947,8 +1151,15 @@ void mfw::Shell::destroy_wayland_object(struct wl_resource* resource) const
     wl_resource_destroy(resource);
 }
 
-struct wl_shell_interface const mfw::Shell::vtable = {
-    Thunks::get_shell_surface_thunk};
+struct wl_interface const* mfw::Shell::Thunks::get_shell_surface_types[] {
+    &wl_shell_surface_interface_data,
+    &wl_surface_interface_data};
+
+struct wl_message const mfw::Shell::Thunks::request_messages[] {
+    {"get_shell_surface", "no", get_shell_surface_types}};
+
+void const* mfw::Shell::Thunks::request_vtable[] {
+    (void*)Thunks::get_shell_surface_thunk};
 
 // ShellSurface
 
@@ -1133,18 +1344,28 @@ struct mfw::ShellSurface::Thunks
     {
         delete static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_interface const* move_types[];
+    static struct wl_interface const* resize_types[];
+    static struct wl_interface const* set_transient_types[];
+    static struct wl_interface const* set_fullscreen_types[];
+    static struct wl_interface const* set_popup_types[];
+    static struct wl_interface const* set_maximized_types[];
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::ShellSurface::ShellSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &wl_shell_surface_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &wl_shell_surface_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::ShellSurface::send_ping_event(uint32_t serial) const
@@ -1167,17 +1388,65 @@ void mfw::ShellSurface::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct wl_shell_surface_interface const mfw::ShellSurface::vtable = {
-    Thunks::pong_thunk,
-    Thunks::move_thunk,
-    Thunks::resize_thunk,
-    Thunks::set_toplevel_thunk,
-    Thunks::set_transient_thunk,
-    Thunks::set_fullscreen_thunk,
-    Thunks::set_popup_thunk,
-    Thunks::set_maximized_thunk,
-    Thunks::set_title_thunk,
-    Thunks::set_class_thunk};
+struct wl_interface const* mfw::ShellSurface::Thunks::move_types[] {
+    &wl_seat_interface_data,
+    nullptr};
+
+struct wl_interface const* mfw::ShellSurface::Thunks::resize_types[] {
+    &wl_seat_interface_data,
+    nullptr,
+    nullptr};
+
+struct wl_interface const* mfw::ShellSurface::Thunks::set_transient_types[] {
+    &wl_surface_interface_data,
+    nullptr,
+    nullptr,
+    nullptr};
+
+struct wl_interface const* mfw::ShellSurface::Thunks::set_fullscreen_types[] {
+    nullptr,
+    nullptr,
+    &wl_output_interface_data};
+
+struct wl_interface const* mfw::ShellSurface::Thunks::set_popup_types[] {
+    &wl_seat_interface_data,
+    nullptr,
+    &wl_surface_interface_data,
+    nullptr,
+    nullptr,
+    nullptr};
+
+struct wl_interface const* mfw::ShellSurface::Thunks::set_maximized_types[] {
+    &wl_output_interface_data};
+
+struct wl_message const mfw::ShellSurface::Thunks::request_messages[] {
+    {"pong", "u", all_null_types},
+    {"move", "ou", move_types},
+    {"resize", "ouu", resize_types},
+    {"set_toplevel", "", all_null_types},
+    {"set_transient", "oiiu", set_transient_types},
+    {"set_fullscreen", "uu?o", set_fullscreen_types},
+    {"set_popup", "ouoiiu", set_popup_types},
+    {"set_maximized", "?o", set_maximized_types},
+    {"set_title", "s", all_null_types},
+    {"set_class", "s", all_null_types}};
+
+struct wl_message const mfw::ShellSurface::Thunks::event_messages[] {
+    {"ping", "u", all_null_types},
+    {"configure", "uii", all_null_types},
+    {"popup_done", "", all_null_types}};
+
+void const* mfw::ShellSurface::Thunks::request_vtable[] {
+    (void*)Thunks::pong_thunk,
+    (void*)Thunks::move_thunk,
+    (void*)Thunks::resize_thunk,
+    (void*)Thunks::set_toplevel_thunk,
+    (void*)Thunks::set_transient_thunk,
+    (void*)Thunks::set_fullscreen_thunk,
+    (void*)Thunks::set_popup_thunk,
+    (void*)Thunks::set_maximized_thunk,
+    (void*)Thunks::set_title_thunk,
+    (void*)Thunks::set_class_thunk};
 
 // Surface
 
@@ -1367,18 +1636,28 @@ struct mfw::Surface::Thunks
     {
         delete static_cast<Surface*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_interface const* attach_types[];
+    static struct wl_interface const* frame_types[];
+    static struct wl_interface const* set_opaque_region_types[];
+    static struct wl_interface const* set_input_region_types[];
+    static struct wl_interface const* enter_types[];
+    static struct wl_interface const* leave_types[];
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::Surface::Surface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &wl_surface_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &wl_surface_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::Surface::send_enter_event(struct wl_resource* output) const
@@ -1396,17 +1675,53 @@ void mfw::Surface::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct wl_surface_interface const mfw::Surface::vtable = {
-    Thunks::destroy_thunk,
-    Thunks::attach_thunk,
-    Thunks::damage_thunk,
-    Thunks::frame_thunk,
-    Thunks::set_opaque_region_thunk,
-    Thunks::set_input_region_thunk,
-    Thunks::commit_thunk,
-    Thunks::set_buffer_transform_thunk,
-    Thunks::set_buffer_scale_thunk,
-    Thunks::damage_buffer_thunk};
+struct wl_interface const* mfw::Surface::Thunks::attach_types[] {
+    &wl_buffer_interface_data,
+    nullptr,
+    nullptr};
+
+struct wl_interface const* mfw::Surface::Thunks::frame_types[] {
+    &wl_callback_interface_data};
+
+struct wl_interface const* mfw::Surface::Thunks::set_opaque_region_types[] {
+    &wl_region_interface_data};
+
+struct wl_interface const* mfw::Surface::Thunks::set_input_region_types[] {
+    &wl_region_interface_data};
+
+struct wl_interface const* mfw::Surface::Thunks::enter_types[] {
+    &wl_output_interface_data};
+
+struct wl_interface const* mfw::Surface::Thunks::leave_types[] {
+    &wl_output_interface_data};
+
+struct wl_message const mfw::Surface::Thunks::request_messages[] {
+    {"destroy", "", all_null_types},
+    {"attach", "?oii", attach_types},
+    {"damage", "iiii", all_null_types},
+    {"frame", "n", frame_types},
+    {"set_opaque_region", "?o", set_opaque_region_types},
+    {"set_input_region", "?o", set_input_region_types},
+    {"commit", "", all_null_types},
+    {"set_buffer_transform", "2i", all_null_types},
+    {"set_buffer_scale", "3i", all_null_types},
+    {"damage_buffer", "4iiii", all_null_types}};
+
+struct wl_message const mfw::Surface::Thunks::event_messages[] {
+    {"enter", "o", enter_types},
+    {"leave", "o", leave_types}};
+
+void const* mfw::Surface::Thunks::request_vtable[] {
+    (void*)Thunks::destroy_thunk,
+    (void*)Thunks::attach_thunk,
+    (void*)Thunks::damage_thunk,
+    (void*)Thunks::frame_thunk,
+    (void*)Thunks::set_opaque_region_thunk,
+    (void*)Thunks::set_input_region_thunk,
+    (void*)Thunks::commit_thunk,
+    (void*)Thunks::set_buffer_transform_thunk,
+    (void*)Thunks::set_buffer_scale_thunk,
+    (void*)Thunks::damage_buffer_thunk};
 
 // Seat
 
@@ -1484,14 +1799,14 @@ struct mfw::Seat::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Seat*>(data);
-        auto resource = wl_resource_create(client, &wl_seat_interface,
+        auto resource = wl_resource_create(client, &wl_seat_interface_data,
                                            std::min(version, me->max_version), id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
             me->bind(client, resource);
@@ -1504,10 +1819,17 @@ struct mfw::Seat::Thunks
                        "Exception processing Seat::bind() request");
         }
     }
+
+    static struct wl_interface const* get_pointer_types[];
+    static struct wl_interface const* get_keyboard_types[];
+    static struct wl_interface const* get_touch_types[];
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::Seat::Seat(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_seat_interface, max_version, this, &Thunks::bind_thunk)},
+    : global{wl_global_create(display, &wl_seat_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -1542,11 +1864,30 @@ void mfw::Seat::destroy_wayland_object(struct wl_resource* resource) const
     wl_resource_destroy(resource);
 }
 
-struct wl_seat_interface const mfw::Seat::vtable = {
-    Thunks::get_pointer_thunk,
-    Thunks::get_keyboard_thunk,
-    Thunks::get_touch_thunk,
-    Thunks::release_thunk};
+struct wl_interface const* mfw::Seat::Thunks::get_pointer_types[] {
+    &wl_pointer_interface_data};
+
+struct wl_interface const* mfw::Seat::Thunks::get_keyboard_types[] {
+    &wl_keyboard_interface_data};
+
+struct wl_interface const* mfw::Seat::Thunks::get_touch_types[] {
+    &wl_touch_interface_data};
+
+struct wl_message const mfw::Seat::Thunks::request_messages[] {
+    {"get_pointer", "n", get_pointer_types},
+    {"get_keyboard", "n", get_keyboard_types},
+    {"get_touch", "n", get_touch_types},
+    {"release", "5", all_null_types}};
+
+struct wl_message const mfw::Seat::Thunks::event_messages[] {
+    {"capabilities", "u", all_null_types},
+    {"name", "2s", all_null_types}};
+
+void const* mfw::Seat::Thunks::request_vtable[] {
+    (void*)Thunks::get_pointer_thunk,
+    (void*)Thunks::get_keyboard_thunk,
+    (void*)Thunks::get_touch_thunk,
+    (void*)Thunks::release_thunk};
 
 // Pointer
 
@@ -1598,18 +1939,25 @@ struct mfw::Pointer::Thunks
     {
         delete static_cast<Pointer*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_interface const* set_cursor_types[];
+    static struct wl_interface const* enter_types[];
+    static struct wl_interface const* leave_types[];
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::Pointer::Pointer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &wl_pointer_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &wl_pointer_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::Pointer::send_enter_event(uint32_t serial, struct wl_resource* surface, double surface_x, double surface_y) const
@@ -1687,9 +2035,40 @@ void mfw::Pointer::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct wl_pointer_interface const mfw::Pointer::vtable = {
-    Thunks::set_cursor_thunk,
-    Thunks::release_thunk};
+struct wl_interface const* mfw::Pointer::Thunks::set_cursor_types[] {
+    nullptr,
+    &wl_surface_interface_data,
+    nullptr,
+    nullptr};
+
+struct wl_interface const* mfw::Pointer::Thunks::enter_types[] {
+    nullptr,
+    &wl_surface_interface_data,
+    nullptr,
+    nullptr};
+
+struct wl_interface const* mfw::Pointer::Thunks::leave_types[] {
+    nullptr,
+    &wl_surface_interface_data};
+
+struct wl_message const mfw::Pointer::Thunks::request_messages[] {
+    {"set_cursor", "u?oii", set_cursor_types},
+    {"release", "3", all_null_types}};
+
+struct wl_message const mfw::Pointer::Thunks::event_messages[] {
+    {"enter", "uoff", enter_types},
+    {"leave", "uo", leave_types},
+    {"motion", "uff", all_null_types},
+    {"button", "uuuu", all_null_types},
+    {"axis", "uuf", all_null_types},
+    {"frame", "5", all_null_types},
+    {"axis_source", "5u", all_null_types},
+    {"axis_stop", "5uu", all_null_types},
+    {"axis_discrete", "5ui", all_null_types}};
+
+void const* mfw::Pointer::Thunks::request_vtable[] {
+    (void*)Thunks::set_cursor_thunk,
+    (void*)Thunks::release_thunk};
 
 // Keyboard
 
@@ -1720,18 +2099,24 @@ struct mfw::Keyboard::Thunks
     {
         delete static_cast<Keyboard*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_interface const* enter_types[];
+    static struct wl_interface const* leave_types[];
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::Keyboard::Keyboard(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &wl_keyboard_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &wl_keyboard_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::Keyboard::send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const
@@ -1775,8 +2160,28 @@ void mfw::Keyboard::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct wl_keyboard_interface const mfw::Keyboard::vtable = {
-    Thunks::release_thunk};
+struct wl_interface const* mfw::Keyboard::Thunks::enter_types[] {
+    nullptr,
+    &wl_surface_interface_data,
+    nullptr};
+
+struct wl_interface const* mfw::Keyboard::Thunks::leave_types[] {
+    nullptr,
+    &wl_surface_interface_data};
+
+struct wl_message const mfw::Keyboard::Thunks::request_messages[] {
+    {"release", "3", all_null_types}};
+
+struct wl_message const mfw::Keyboard::Thunks::event_messages[] {
+    {"keymap", "uhu", all_null_types},
+    {"enter", "uoa", enter_types},
+    {"leave", "uo", leave_types},
+    {"key", "uuuu", all_null_types},
+    {"modifiers", "uuuuu", all_null_types},
+    {"repeat_info", "4ii", all_null_types}};
+
+void const* mfw::Keyboard::Thunks::request_vtable[] {
+    (void*)Thunks::release_thunk};
 
 // Touch
 
@@ -1807,18 +2212,23 @@ struct mfw::Touch::Thunks
     {
         delete static_cast<Touch*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_interface const* down_types[];
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::Touch::Touch(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &wl_touch_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &wl_touch_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::Touch::send_down_event(uint32_t serial, uint32_t time, struct wl_resource* surface, int32_t id, double x, double y) const
@@ -1878,8 +2288,28 @@ void mfw::Touch::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct wl_touch_interface const mfw::Touch::vtable = {
-    Thunks::release_thunk};
+struct wl_interface const* mfw::Touch::Thunks::down_types[] {
+    nullptr,
+    nullptr,
+    &wl_surface_interface_data,
+    nullptr,
+    nullptr,
+    nullptr};
+
+struct wl_message const mfw::Touch::Thunks::request_messages[] {
+    {"release", "3", all_null_types}};
+
+struct wl_message const mfw::Touch::Thunks::event_messages[] {
+    {"down", "uuoiff", down_types},
+    {"up", "uui", all_null_types},
+    {"motion", "uiff", all_null_types},
+    {"frame", "", all_null_types},
+    {"cancel", "", all_null_types},
+    {"shape", "6iff", all_null_types},
+    {"orientation", "6if", all_null_types}};
+
+void const* mfw::Touch::Thunks::request_vtable[] {
+    (void*)Thunks::release_thunk};
 
 // Output
 
@@ -1909,14 +2339,14 @@ struct mfw::Output::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Output*>(data);
-        auto resource = wl_resource_create(client, &wl_output_interface,
+        auto resource = wl_resource_create(client, &wl_output_interface_data,
                                            std::min(version, me->max_version), id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
             me->bind(client, resource);
@@ -1929,10 +2359,15 @@ struct mfw::Output::Thunks
                        "Exception processing Output::bind() request");
         }
     }
+
+    static struct wl_interface const* geometry_types[];
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::Output::Output(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_output_interface, max_version, this, &Thunks::bind_thunk)},
+    : global{wl_global_create(display, &wl_output_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -1983,8 +2418,27 @@ void mfw::Output::destroy_wayland_object(struct wl_resource* resource) const
     wl_resource_destroy(resource);
 }
 
-struct wl_output_interface const mfw::Output::vtable = {
-    Thunks::release_thunk};
+struct wl_interface const* mfw::Output::Thunks::geometry_types[] {
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr};
+
+struct wl_message const mfw::Output::Thunks::request_messages[] {
+    {"release", "3", all_null_types}};
+
+struct wl_message const mfw::Output::Thunks::event_messages[] {
+    {"geometry", "iiiiissi", geometry_types},
+    {"mode", "uiii", all_null_types},
+    {"done", "2", all_null_types},
+    {"scale", "2i", all_null_types}};
+
+void const* mfw::Output::Thunks::request_vtable[] {
+    (void*)Thunks::release_thunk};
 
 // Region
 
@@ -2047,18 +2501,21 @@ struct mfw::Region::Thunks
     {
         delete static_cast<Region*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_message const request_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::Region::Region(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &wl_region_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &wl_region_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::Region::destroy_wayland_object() const
@@ -2066,10 +2523,15 @@ void mfw::Region::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct wl_region_interface const mfw::Region::vtable = {
-    Thunks::destroy_thunk,
-    Thunks::add_thunk,
-    Thunks::subtract_thunk};
+struct wl_message const mfw::Region::Thunks::request_messages[] {
+    {"destroy", "", all_null_types},
+    {"add", "iiii", all_null_types},
+    {"subtract", "iiii", all_null_types}};
+
+void const* mfw::Region::Thunks::request_vtable[] {
+    (void*)Thunks::destroy_thunk,
+    (void*)Thunks::add_thunk,
+    (void*)Thunks::subtract_thunk};
 
 // Subcompositor
 
@@ -2115,14 +2577,14 @@ struct mfw::Subcompositor::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Subcompositor*>(data);
-        auto resource = wl_resource_create(client, &wl_subcompositor_interface,
+        auto resource = wl_resource_create(client, &wl_subcompositor_interface_data,
                                            std::min(version, me->max_version), id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
             me->bind(client, resource);
@@ -2135,10 +2597,14 @@ struct mfw::Subcompositor::Thunks
                        "Exception processing Subcompositor::bind() request");
         }
     }
+
+    static struct wl_interface const* get_subsurface_types[];
+    static struct wl_message const request_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::Subcompositor::Subcompositor(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_subcompositor_interface, max_version, this, &Thunks::bind_thunk)},
+    : global{wl_global_create(display, &wl_subcompositor_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -2157,9 +2623,18 @@ void mfw::Subcompositor::destroy_wayland_object(struct wl_resource* resource) co
     wl_resource_destroy(resource);
 }
 
-struct wl_subcompositor_interface const mfw::Subcompositor::vtable = {
-    Thunks::destroy_thunk,
-    Thunks::get_subsurface_thunk};
+struct wl_interface const* mfw::Subcompositor::Thunks::get_subsurface_types[] {
+    &wl_subsurface_interface_data,
+    &wl_surface_interface_data,
+    &wl_surface_interface_data};
+
+struct wl_message const mfw::Subcompositor::Thunks::request_messages[] {
+    {"destroy", "", all_null_types},
+    {"get_subsurface", "noo", get_subsurface_types}};
+
+void const* mfw::Subcompositor::Thunks::request_vtable[] {
+    (void*)Thunks::destroy_thunk,
+    (void*)Thunks::get_subsurface_thunk};
 
 // Subsurface
 
@@ -2270,18 +2745,23 @@ struct mfw::Subsurface::Thunks
     {
         delete static_cast<Subsurface*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_interface const* place_above_types[];
+    static struct wl_interface const* place_below_types[];
+    static struct wl_message const request_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::Subsurface::Subsurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &wl_subsurface_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &wl_subsurface_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::Subsurface::destroy_wayland_object() const
@@ -2289,10 +2769,135 @@ void mfw::Subsurface::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct wl_subsurface_interface const mfw::Subsurface::vtable = {
-    Thunks::destroy_thunk,
-    Thunks::set_position_thunk,
-    Thunks::place_above_thunk,
-    Thunks::place_below_thunk,
-    Thunks::set_sync_thunk,
-    Thunks::set_desync_thunk};
+struct wl_interface const* mfw::Subsurface::Thunks::place_above_types[] {
+    &wl_surface_interface_data};
+
+struct wl_interface const* mfw::Subsurface::Thunks::place_below_types[] {
+    &wl_surface_interface_data};
+
+struct wl_message const mfw::Subsurface::Thunks::request_messages[] {
+    {"destroy", "", all_null_types},
+    {"set_position", "ii", all_null_types},
+    {"place_above", "o", place_above_types},
+    {"place_below", "o", place_below_types},
+    {"set_sync", "", all_null_types},
+    {"set_desync", "", all_null_types}};
+
+void const* mfw::Subsurface::Thunks::request_vtable[] {
+    (void*)Thunks::destroy_thunk,
+    (void*)Thunks::set_position_thunk,
+    (void*)Thunks::place_above_thunk,
+    (void*)Thunks::place_below_thunk,
+    (void*)Thunks::set_sync_thunk,
+    (void*)Thunks::set_desync_thunk};
+
+namespace mir
+{
+namespace frontend
+{
+namespace wayland
+{
+
+struct wl_interface const wl_callback_interface_data {
+    "wl_callback", 1,
+    0, nullptr,
+    1, mfw::Callback::Thunks::event_messages};
+
+struct wl_interface const wl_compositor_interface_data {
+    "wl_compositor", 4,
+    2, mfw::Compositor::Thunks::request_messages,
+    0, nullptr};
+
+struct wl_interface const wl_shm_pool_interface_data {
+    "wl_shm_pool", 1,
+    3, mfw::ShmPool::Thunks::request_messages,
+    0, nullptr};
+
+struct wl_interface const wl_shm_interface_data {
+    "wl_shm", 1,
+    1, mfw::Shm::Thunks::request_messages,
+    1, mfw::Shm::Thunks::event_messages};
+
+struct wl_interface const wl_buffer_interface_data {
+    "wl_buffer", 1,
+    1, mfw::Buffer::Thunks::request_messages,
+    1, mfw::Buffer::Thunks::event_messages};
+
+struct wl_interface const wl_data_offer_interface_data {
+    "wl_data_offer", 3,
+    5, mfw::DataOffer::Thunks::request_messages,
+    3, mfw::DataOffer::Thunks::event_messages};
+
+struct wl_interface const wl_data_source_interface_data {
+    "wl_data_source", 3,
+    3, mfw::DataSource::Thunks::request_messages,
+    6, mfw::DataSource::Thunks::event_messages};
+
+struct wl_interface const wl_data_device_interface_data {
+    "wl_data_device", 3,
+    3, mfw::DataDevice::Thunks::request_messages,
+    6, mfw::DataDevice::Thunks::event_messages};
+
+struct wl_interface const wl_data_device_manager_interface_data {
+    "wl_data_device_manager", 3,
+    2, mfw::DataDeviceManager::Thunks::request_messages,
+    0, nullptr};
+
+struct wl_interface const wl_shell_interface_data {
+    "wl_shell", 1,
+    1, mfw::Shell::Thunks::request_messages,
+    0, nullptr};
+
+struct wl_interface const wl_shell_surface_interface_data {
+    "wl_shell_surface", 1,
+    10, mfw::ShellSurface::Thunks::request_messages,
+    3, mfw::ShellSurface::Thunks::event_messages};
+
+struct wl_interface const wl_surface_interface_data {
+    "wl_surface", 4,
+    10, mfw::Surface::Thunks::request_messages,
+    2, mfw::Surface::Thunks::event_messages};
+
+struct wl_interface const wl_seat_interface_data {
+    "wl_seat", 6,
+    4, mfw::Seat::Thunks::request_messages,
+    2, mfw::Seat::Thunks::event_messages};
+
+struct wl_interface const wl_pointer_interface_data {
+    "wl_pointer", 6,
+    2, mfw::Pointer::Thunks::request_messages,
+    9, mfw::Pointer::Thunks::event_messages};
+
+struct wl_interface const wl_keyboard_interface_data {
+    "wl_keyboard", 6,
+    1, mfw::Keyboard::Thunks::request_messages,
+    6, mfw::Keyboard::Thunks::event_messages};
+
+struct wl_interface const wl_touch_interface_data {
+    "wl_touch", 6,
+    1, mfw::Touch::Thunks::request_messages,
+    7, mfw::Touch::Thunks::event_messages};
+
+struct wl_interface const wl_output_interface_data {
+    "wl_output", 3,
+    1, mfw::Output::Thunks::request_messages,
+    4, mfw::Output::Thunks::event_messages};
+
+struct wl_interface const wl_region_interface_data {
+    "wl_region", 1,
+    3, mfw::Region::Thunks::request_messages,
+    0, nullptr};
+
+struct wl_interface const wl_subcompositor_interface_data {
+    "wl_subcompositor", 1,
+    2, mfw::Subcompositor::Thunks::request_messages,
+    0, nullptr};
+
+struct wl_interface const wl_subsurface_interface_data {
+    "wl_subsurface", 1,
+    6, mfw::Subsurface::Thunks::request_messages,
+    0, nullptr};
+
+}
+}
+}

@@ -6,7 +6,6 @@
  */
 
 #include "xdg-shell_wrapper.h"
-#include "xdg-shell.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/diagnostic_information.hpp>
@@ -15,7 +14,36 @@
 
 #include "mir/log.h"
 
+namespace mir
+{
+namespace frontend
+{
+namespace wayland
+{
+extern struct wl_interface const wl_output_interface_data;
+extern struct wl_interface const wl_seat_interface_data;
+extern struct wl_interface const wl_surface_interface_data;
+extern struct wl_interface const xdg_popup_interface_data;
+extern struct wl_interface const xdg_positioner_interface_data;
+extern struct wl_interface const xdg_surface_interface_data;
+extern struct wl_interface const xdg_toplevel_interface_data;
+extern struct wl_interface const xdg_wm_base_interface_data;
+}
+}
+}
+
 namespace mfw = mir::frontend::wayland;
+
+namespace
+{
+struct wl_interface const* all_null_types [] {
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr};
+}
 
 // XdgWmBase
 
@@ -93,14 +121,14 @@ struct mfw::XdgWmBase::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<XdgWmBase*>(data);
-        auto resource = wl_resource_create(client, &xdg_wm_base_interface,
+        auto resource = wl_resource_create(client, &xdg_wm_base_interface_data,
                                            std::min(version, me->max_version), id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, &vtable, me, nullptr);
+        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
             me->bind(client, resource);
@@ -113,10 +141,16 @@ struct mfw::XdgWmBase::Thunks
                        "Exception processing XdgWmBase::bind() request");
         }
     }
+
+    static struct wl_interface const* create_positioner_types[];
+    static struct wl_interface const* get_xdg_surface_types[];
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::XdgWmBase::XdgWmBase(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &xdg_wm_base_interface, max_version, this, &Thunks::bind_thunk)},
+    : global{wl_global_create(display, &xdg_wm_base_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -140,11 +174,27 @@ void mfw::XdgWmBase::destroy_wayland_object(struct wl_resource* resource) const
     wl_resource_destroy(resource);
 }
 
-struct xdg_wm_base_interface const mfw::XdgWmBase::vtable = {
-    Thunks::destroy_thunk,
-    Thunks::create_positioner_thunk,
-    Thunks::get_xdg_surface_thunk,
-    Thunks::pong_thunk};
+struct wl_interface const* mfw::XdgWmBase::Thunks::create_positioner_types[] {
+    &xdg_positioner_interface_data};
+
+struct wl_interface const* mfw::XdgWmBase::Thunks::get_xdg_surface_types[] {
+    &xdg_surface_interface_data,
+    &wl_surface_interface_data};
+
+struct wl_message const mfw::XdgWmBase::Thunks::request_messages[] {
+    {"destroy", "", all_null_types},
+    {"create_positioner", "n", create_positioner_types},
+    {"get_xdg_surface", "no", get_xdg_surface_types},
+    {"pong", "u", all_null_types}};
+
+struct wl_message const mfw::XdgWmBase::Thunks::event_messages[] {
+    {"ping", "u", all_null_types}};
+
+void const* mfw::XdgWmBase::Thunks::request_vtable[] {
+    (void*)Thunks::destroy_thunk,
+    (void*)Thunks::create_positioner_thunk,
+    (void*)Thunks::get_xdg_surface_thunk,
+    (void*)Thunks::pong_thunk};
 
 // XdgPositioner
 
@@ -271,18 +321,21 @@ struct mfw::XdgPositioner::Thunks
     {
         delete static_cast<XdgPositioner*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_message const request_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::XdgPositioner::XdgPositioner(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &xdg_positioner_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &xdg_positioner_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::XdgPositioner::destroy_wayland_object() const
@@ -290,14 +343,23 @@ void mfw::XdgPositioner::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct xdg_positioner_interface const mfw::XdgPositioner::vtable = {
-    Thunks::destroy_thunk,
-    Thunks::set_size_thunk,
-    Thunks::set_anchor_rect_thunk,
-    Thunks::set_anchor_thunk,
-    Thunks::set_gravity_thunk,
-    Thunks::set_constraint_adjustment_thunk,
-    Thunks::set_offset_thunk};
+struct wl_message const mfw::XdgPositioner::Thunks::request_messages[] {
+    {"destroy", "", all_null_types},
+    {"set_size", "ii", all_null_types},
+    {"set_anchor_rect", "iiii", all_null_types},
+    {"set_anchor", "u", all_null_types},
+    {"set_gravity", "u", all_null_types},
+    {"set_constraint_adjustment", "u", all_null_types},
+    {"set_offset", "ii", all_null_types}};
+
+void const* mfw::XdgPositioner::Thunks::request_vtable[] {
+    (void*)Thunks::destroy_thunk,
+    (void*)Thunks::set_size_thunk,
+    (void*)Thunks::set_anchor_rect_thunk,
+    (void*)Thunks::set_anchor_thunk,
+    (void*)Thunks::set_gravity_thunk,
+    (void*)Thunks::set_constraint_adjustment_thunk,
+    (void*)Thunks::set_offset_thunk};
 
 // XdgSurface
 
@@ -397,18 +459,24 @@ struct mfw::XdgSurface::Thunks
     {
         delete static_cast<XdgSurface*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_interface const* get_toplevel_types[];
+    static struct wl_interface const* get_popup_types[];
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::XdgSurface::XdgSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &xdg_surface_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &xdg_surface_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::XdgSurface::send_configure_event(uint32_t serial) const
@@ -421,12 +489,30 @@ void mfw::XdgSurface::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct xdg_surface_interface const mfw::XdgSurface::vtable = {
-    Thunks::destroy_thunk,
-    Thunks::get_toplevel_thunk,
-    Thunks::get_popup_thunk,
-    Thunks::set_window_geometry_thunk,
-    Thunks::ack_configure_thunk};
+struct wl_interface const* mfw::XdgSurface::Thunks::get_toplevel_types[] {
+    &xdg_toplevel_interface_data};
+
+struct wl_interface const* mfw::XdgSurface::Thunks::get_popup_types[] {
+    &xdg_popup_interface_data,
+    &xdg_surface_interface_data,
+    &xdg_positioner_interface_data};
+
+struct wl_message const mfw::XdgSurface::Thunks::request_messages[] {
+    {"destroy", "", all_null_types},
+    {"get_toplevel", "n", get_toplevel_types},
+    {"get_popup", "n?oo", get_popup_types},
+    {"set_window_geometry", "iiii", all_null_types},
+    {"ack_configure", "u", all_null_types}};
+
+struct wl_message const mfw::XdgSurface::Thunks::event_messages[] {
+    {"configure", "u", all_null_types}};
+
+void const* mfw::XdgSurface::Thunks::request_vtable[] {
+    (void*)Thunks::destroy_thunk,
+    (void*)Thunks::get_toplevel_thunk,
+    (void*)Thunks::get_popup_thunk,
+    (void*)Thunks::set_window_geometry_thunk,
+    (void*)Thunks::ack_configure_thunk};
 
 // XdgToplevel
 
@@ -675,18 +761,27 @@ struct mfw::XdgToplevel::Thunks
     {
         delete static_cast<XdgToplevel*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_interface const* set_parent_types[];
+    static struct wl_interface const* show_window_menu_types[];
+    static struct wl_interface const* move_types[];
+    static struct wl_interface const* resize_types[];
+    static struct wl_interface const* set_fullscreen_types[];
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::XdgToplevel::XdgToplevel(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &xdg_toplevel_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &xdg_toplevel_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::XdgToplevel::send_configure_event(int32_t width, int32_t height, struct wl_array* states) const
@@ -704,21 +799,62 @@ void mfw::XdgToplevel::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct xdg_toplevel_interface const mfw::XdgToplevel::vtable = {
-    Thunks::destroy_thunk,
-    Thunks::set_parent_thunk,
-    Thunks::set_title_thunk,
-    Thunks::set_app_id_thunk,
-    Thunks::show_window_menu_thunk,
-    Thunks::move_thunk,
-    Thunks::resize_thunk,
-    Thunks::set_max_size_thunk,
-    Thunks::set_min_size_thunk,
-    Thunks::set_maximized_thunk,
-    Thunks::unset_maximized_thunk,
-    Thunks::set_fullscreen_thunk,
-    Thunks::unset_fullscreen_thunk,
-    Thunks::set_minimized_thunk};
+struct wl_interface const* mfw::XdgToplevel::Thunks::set_parent_types[] {
+    &xdg_toplevel_interface_data};
+
+struct wl_interface const* mfw::XdgToplevel::Thunks::show_window_menu_types[] {
+    &wl_seat_interface_data,
+    nullptr,
+    nullptr,
+    nullptr};
+
+struct wl_interface const* mfw::XdgToplevel::Thunks::move_types[] {
+    &wl_seat_interface_data,
+    nullptr};
+
+struct wl_interface const* mfw::XdgToplevel::Thunks::resize_types[] {
+    &wl_seat_interface_data,
+    nullptr,
+    nullptr};
+
+struct wl_interface const* mfw::XdgToplevel::Thunks::set_fullscreen_types[] {
+    &wl_output_interface_data};
+
+struct wl_message const mfw::XdgToplevel::Thunks::request_messages[] {
+    {"destroy", "", all_null_types},
+    {"set_parent", "?o", set_parent_types},
+    {"set_title", "s", all_null_types},
+    {"set_app_id", "s", all_null_types},
+    {"show_window_menu", "ouii", show_window_menu_types},
+    {"move", "ou", move_types},
+    {"resize", "ouu", resize_types},
+    {"set_max_size", "ii", all_null_types},
+    {"set_min_size", "ii", all_null_types},
+    {"set_maximized", "", all_null_types},
+    {"unset_maximized", "", all_null_types},
+    {"set_fullscreen", "?o", set_fullscreen_types},
+    {"unset_fullscreen", "", all_null_types},
+    {"set_minimized", "", all_null_types}};
+
+struct wl_message const mfw::XdgToplevel::Thunks::event_messages[] {
+    {"configure", "iia", all_null_types},
+    {"close", "", all_null_types}};
+
+void const* mfw::XdgToplevel::Thunks::request_vtable[] {
+    (void*)Thunks::destroy_thunk,
+    (void*)Thunks::set_parent_thunk,
+    (void*)Thunks::set_title_thunk,
+    (void*)Thunks::set_app_id_thunk,
+    (void*)Thunks::show_window_menu_thunk,
+    (void*)Thunks::move_thunk,
+    (void*)Thunks::resize_thunk,
+    (void*)Thunks::set_max_size_thunk,
+    (void*)Thunks::set_min_size_thunk,
+    (void*)Thunks::set_maximized_thunk,
+    (void*)Thunks::unset_maximized_thunk,
+    (void*)Thunks::set_fullscreen_thunk,
+    (void*)Thunks::unset_fullscreen_thunk,
+    (void*)Thunks::set_minimized_thunk};
 
 // XdgPopup
 
@@ -765,18 +901,23 @@ struct mfw::XdgPopup::Thunks
     {
         delete static_cast<XdgPopup*>(wl_resource_get_user_data(resource));
     }
+
+    static struct wl_interface const* grab_types[];
+    static struct wl_message const request_messages[];
+    static struct wl_message const event_messages[];
+    static void const* request_vtable[];
 };
 
 mfw::XdgPopup::XdgPopup(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
-      resource{wl_resource_create(client, &xdg_popup_interface, wl_resource_get_version(parent), id)}
+      resource{wl_resource_create(client, &xdg_popup_interface_data, wl_resource_get_version(parent), id)}
 {
     if (resource == nullptr)
     {
         wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
-    wl_resource_set_implementation(resource, &vtable, this, &Thunks::resource_destroyed_thunk);
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
 void mfw::XdgPopup::send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height) const
@@ -794,6 +935,54 @@ void mfw::XdgPopup::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-struct xdg_popup_interface const mfw::XdgPopup::vtable = {
-    Thunks::destroy_thunk,
-    Thunks::grab_thunk};
+struct wl_interface const* mfw::XdgPopup::Thunks::grab_types[] {
+    &wl_seat_interface_data,
+    nullptr};
+
+struct wl_message const mfw::XdgPopup::Thunks::request_messages[] {
+    {"destroy", "", all_null_types},
+    {"grab", "ou", grab_types}};
+
+struct wl_message const mfw::XdgPopup::Thunks::event_messages[] {
+    {"configure", "iiii", all_null_types},
+    {"popup_done", "", all_null_types}};
+
+void const* mfw::XdgPopup::Thunks::request_vtable[] {
+    (void*)Thunks::destroy_thunk,
+    (void*)Thunks::grab_thunk};
+
+namespace mir
+{
+namespace frontend
+{
+namespace wayland
+{
+
+struct wl_interface const xdg_wm_base_interface_data {
+    "xdg_wm_base", 1,
+    4, mfw::XdgWmBase::Thunks::request_messages,
+    1, mfw::XdgWmBase::Thunks::event_messages};
+
+struct wl_interface const xdg_positioner_interface_data {
+    "xdg_positioner", 1,
+    7, mfw::XdgPositioner::Thunks::request_messages,
+    0, nullptr};
+
+struct wl_interface const xdg_surface_interface_data {
+    "xdg_surface", 1,
+    5, mfw::XdgSurface::Thunks::request_messages,
+    1, mfw::XdgSurface::Thunks::event_messages};
+
+struct wl_interface const xdg_toplevel_interface_data {
+    "xdg_toplevel", 1,
+    14, mfw::XdgToplevel::Thunks::request_messages,
+    2, mfw::XdgToplevel::Thunks::event_messages};
+
+struct wl_interface const xdg_popup_interface_data {
+    "xdg_popup", 1,
+    2, mfw::XdgPopup::Thunks::request_messages,
+    2, mfw::XdgPopup::Thunks::event_messages};
+
+}
+}
+}
