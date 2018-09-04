@@ -26,6 +26,7 @@ Interface::Interface(xmlpp::Element const& node,
                      std::function<std::string(std::string)> const& name_transform,
                      std::unordered_set<std::string> const& constructable_interfaces)
     : wl_name{node.get_attribute_value("name")},
+      version{std::stoi(node.get_attribute_value("version"))},
       generated_name{name_transform(wl_name)},
       nmspace{"mfw::" + generated_name + "::"},
       is_global{constructable_interfaces.count(wl_name) == 0},
@@ -296,6 +297,17 @@ Emitter Interface::thunks_impl_contents() const
 
     if (has_vtable && !is_global)
         impls.push_back(resource_destroyed_thunk());
+
+    if (has_vtable)
+        impls.push_back(Lines{
+            "static struct wl_interface const interface {",
+            Line{{Lines{
+                {"\"", wl_name, "\", ", std::to_string(version), ","},
+                {std::to_string(requests.size()), ", ",  (requests.empty() ? "nullptr" : "request_messages"), ","},
+                {std::to_string(events.size()), ", ",  (events.empty() ? "nullptr" : "event_messages"), ","},
+            }}, true, true, Emitter::single_indent},
+            "};"
+        });
 
     return List{impls, empty_line};
 }

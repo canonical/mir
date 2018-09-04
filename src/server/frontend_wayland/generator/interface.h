@@ -71,6 +71,7 @@ private:
     static std::vector<Enum> get_enums(xmlpp::Element const& node);
 
     std::string const wl_name;
+    int const version;
     std::string const generated_name;
     std::string const nmspace;
     bool const is_global;
