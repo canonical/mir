@@ -261,6 +261,9 @@ void mf::WlPointer::set_cursor(uint32_t serial, std::experimental::optional<wl_r
         cursor = std::make_unique<WlHiddenCursor>(get_session(client));
     }
 
+    if (focused_surface)
+        cursor->apply_to(focused_surface.value());
+
     (void)serial;
 }
 
