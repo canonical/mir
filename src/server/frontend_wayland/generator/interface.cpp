@@ -62,11 +62,11 @@ Emitter Interface::declaration() const
             member_vars(),
             enum_declarations(),
             event_opcodes(),
+            (thunks_impl_contents().is_valid() ? "struct Thunks;" : nullptr),
         }, empty_line, Emitter::single_indent},
         empty_line,
         "private:",
         List {{
-            (thunks_impl_contents().is_valid() ? "struct Thunks;" : nullptr),
             (is_global ? bind_prototype() : nullptr),
             virtual_request_prototypes(),
             (has_vtable ? Emitter
@@ -99,6 +99,7 @@ Emitter Interface::implementation() const
                     {"wl_resource_destroy(resource);"}
                 }
             },
+            types_init(),
             (has_vtable ? vtable_init() : nullptr),
         }, empty_line},
     };
@@ -298,16 +299,16 @@ Emitter Interface::thunks_impl_contents() const
     if (has_vtable && !is_global)
         impls.push_back(resource_destroyed_thunk());
 
-    if (has_vtable)
-        impls.push_back(Lines{
-            "static struct wl_interface const interface {",
-            Line{{Lines{
-                {"\"", wl_name, "\", ", std::to_string(version), ","},
-                {std::to_string(requests.size()), ", ",  (requests.empty() ? "nullptr" : "request_messages"), ","},
-                {std::to_string(events.size()), ", ",  (events.empty() ? "nullptr" : "event_messages"), ","},
-            }}, true, true, Emitter::single_indent},
-            "};"
-        });
+    std::vector<Emitter> declares;
+    for (auto const& request : requests)
+        declares.push_back(request.types_declare());
+    for (auto const& event : events)
+        declares.push_back(event.types_declare());
+    if (!requests.empty())
+        declares.push_back("static struct wl_message const request_messages[];");
+    if (!events.empty())
+        declares.push_back("static struct wl_message const event_messages[];");
+    impls.push_back(Emitter{declares});
 
     return List{impls, empty_line};
 }
@@ -356,10 +357,57 @@ Emitter Interface::resource_destroyed_thunk() const
     };
 }
 
+Emitter Interface::types_init() const
+{
+    std::vector<Emitter> types;
+    for (auto const& request : requests)
+        types.push_back(request.types_init());
+    for (auto const& event : events)
+        types.push_back(event.types_init());
+
+    if (!requests.empty())
+    {
+        std::vector<Emitter> request_messages;
+        for (auto const& request : requests)
+            request_messages.push_back(request.wl_message_init());
+
+        types.push_back(Lines{
+            {"struct wl_message const ", nmspace, "Thunks::request_messages[] {"},
+            {List{request_messages, Line{{","}, false, true}, Emitter::single_indent}, "};"}
+        });
+    }
+
+    if (!events.empty())
+    {
+        std::vector<Emitter> event_messages;
+        for (auto const& event : events)
+            event_messages.push_back(event.wl_message_init());
+
+        types.push_back(Lines{
+            {"struct wl_message const ", nmspace, "Thunks::event_messages[] {"},
+            {List{event_messages, Line{{","}, false, true}, Emitter::single_indent}, "};"}
+        });
+    }
+
+    if (!requests.empty() || !events.empty())
+    {
+        types.push_back(Lines{
+            {"struct wl_interface const ", wl_name, "_interface_data {"},
+            {List{{
+                    {"\"", wl_name, "\", ", std::to_string(version)},
+                    {std::to_string(requests.size()), ", ",  (requests.empty() ? "nullptr" : nmspace + "Thunks::request_messages")},
+                    {std::to_string(events.size()), ", ",  (events.empty() ? "nullptr" : nmspace + "Thunks::event_messages")},
+                }, Line{{","}, false, true}, Emitter::single_indent}, "};"}
+        });
+    }
+
+    return List{types, empty_line};
+}
+
 Emitter Interface::vtable_init() const
 {
     return Lines{
-        {"struct ", wl_name, "_interface const ", nmspace, "vtable = {"},
+        {"struct ", wl_name, "_interface const ", nmspace, "vtable {"},
             {vtable_contents(), "};"}
     };
 }

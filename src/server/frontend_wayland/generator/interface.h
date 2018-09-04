@@ -63,6 +63,7 @@ private:
     Emitter thunks_impl_contents() const;
     Emitter bind_thunk() const;
     Emitter resource_destroyed_thunk() const;
+    Emitter types_init() const;
     Emitter vtable_init() const;
     Emitter vtable_contents() const;
 

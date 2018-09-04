@@ -136,6 +136,12 @@ Emitter source_file(std::string input_file_path, std::vector<Interface> const& i
         empty_line,
         "namespace mfw = mir::frontend::wayland;",
         empty_line,
+        "namespace",
+        "{",
+        {"struct wl_interface const* all_null_types [] {"},
+            {List{std::vector<Emitter>(all_null_types_size, "nullptr"), Line{{","}, false, true}, Emitter::single_indent}, "};"},
+        "}",
+        empty_line,
         List{interface_emitters, empty_line},
     };
 }

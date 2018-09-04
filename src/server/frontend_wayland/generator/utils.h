@@ -21,6 +21,8 @@
 
 #include <string>
 
+int const all_null_types_size = 6;
+
 // remove the path from a file path, leaving only the base name
 std::string file_name_from_path(std::string const& path);
 
