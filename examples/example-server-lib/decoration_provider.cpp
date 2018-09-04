@@ -45,7 +45,7 @@ void null_window_callback(MirWindow*, void*) {}
 
 struct preferred_codecvt : std::codecvt_byname<wchar_t, char, std::mbstate_t>
 {
-    preferred_codecvt() : std::codecvt_byname<wchar_t, char, std::mbstate_t>("") {}
+    preferred_codecvt() : std::codecvt_byname<wchar_t, char, std::mbstate_t>("C") {}
     ~preferred_codecvt() = default;
 };
 
