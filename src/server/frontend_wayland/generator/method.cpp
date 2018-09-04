@@ -23,11 +23,29 @@
 Method::Method(xmlpp::Element const& node, std::string const& class_name, bool is_global, bool is_event)
     : name{node.get_attribute_value("name")},
       class_name{class_name},
-      is_global{is_global}
+      is_global{is_global},
+      min_version{get_since_version(node)}
 {
     for (auto const& child : node.get_children("arg"))
     {
         auto arg_node = dynamic_cast<xmlpp::Element const*>(child);
         arguments.emplace_back(std::ref(*arg_node), is_event);
+    }
+}
+
+Emitter Method::wl_message_init() const
+{
+    return {"{\"", name, "\"}"};
+}
+
+int Method::get_since_version(xmlpp::Element const& node)
+{
+    try
+    {
+        return std::stoi(node.get_attribute_value("since"));
+    }
+    catch (std::invalid_argument const&)
+    {
+        return 0;
     }
 }

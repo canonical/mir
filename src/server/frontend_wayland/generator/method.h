@@ -36,10 +36,16 @@ class Method
 public:
     Method(xmlpp::Element const& node, std::string const& class_name, bool is_global, bool is_event);
 
+    Emitter wl_message_init() const;
+
 protected:
+
+    static int get_since_version(xmlpp::Element const& node);
+
     std::string const name;
     std::string const class_name;
     bool const is_global;
+    int const min_version;
     std::vector<Argument> arguments;
 };
 

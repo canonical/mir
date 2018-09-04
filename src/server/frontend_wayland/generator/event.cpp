@@ -23,8 +23,7 @@
 
 Event::Event(xmlpp::Element const& node, std::string const& class_name, bool is_global, int opcode)
     : Method{node, class_name, is_global, true},
-      opcode{opcode},
-      min_version{get_since_version(node)}
+      opcode{opcode}
 {
 }
 
@@ -98,16 +97,4 @@ Emitter Event::wl_call_args() const
     for (auto& arg : arguments)
         call_args.push_back(arg.call_fragment());
     return List{call_args, ", "};
-}
-
-int Event::get_since_version(xmlpp::Element const& node)
-{
-    try
-    {
-        return std::stoi(node.get_attribute_value("since"));
-    }
-    catch (std::invalid_argument const&)
-    {
-        return 0;
-    }
 }

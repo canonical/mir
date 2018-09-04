@@ -39,10 +39,7 @@ protected:
     // arguments to call the virtual mir function call (just names, no types)
     Emitter wl_call_args() const;
 
-    static int get_since_version(xmlpp::Element const& node);
-
     int const opcode;
-    int const min_version;
 };
 
 #endif // MIR_WAYLAND_GENERATOR_EVENT_H
