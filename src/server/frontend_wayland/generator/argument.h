@@ -24,6 +24,7 @@
 #include <experimental/optional>
 #include <functional>
 #include <unordered_map>
+#include <set>
 
 namespace xmlpp
 {
@@ -46,10 +47,11 @@ public:
     Emitter wl_prototype() const;
     Emitter mir_prototype() const;
     Emitter call_fragment() const;
-    Emitter object_type_interface_declare() const;
     Emitter object_type_fragment() const;
     Emitter type_str_fragment() const;
     std::experimental::optional<Emitter> converter() const;
+
+    void populate_required_interfaces(std::set<std::string>& interfaces) const; // fills the set with interfaces used
 
 private:
     static TypeDescriptor get_type(xmlpp::Element const& node, bool is_event);

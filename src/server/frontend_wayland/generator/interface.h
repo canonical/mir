@@ -42,9 +42,10 @@ public:
               std::function<std::string(std::string)> const& name_transform,
               std::unordered_set<std::string> const& constructable_interfaces);
 
-    Emitter global_namespace_forward_declarations() const;
     Emitter declaration() const;
     Emitter implementation() const;
+    Emitter wl_interface_init() const;
+    void populate_required_interfaces(std::set<std::string>& interfaces) const; // fills the set with interfaces used
 
 private:
     Emitter constructor_prototype() const;
@@ -64,8 +65,6 @@ private:
     Emitter bind_thunk() const;
     Emitter resource_destroyed_thunk() const;
     Emitter types_init() const;
-    Emitter vtable_init() const;
-    Emitter vtable_contents() const;
 
     static std::vector<Request> get_requests(xmlpp::Element const& node, std::string generated_name, bool is_global);
     static std::vector<Event> get_events(xmlpp::Element const& node, std::string generated_name, bool is_global);

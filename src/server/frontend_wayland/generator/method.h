@@ -41,6 +41,8 @@ public:
     Emitter types_init() const;
     Emitter wl_message_init() const;
 
+    void populate_required_interfaces(std::set<std::string>& interfaces) const; // fills the set with interfaces used
+
 protected:
 
     bool use_null_types() const;

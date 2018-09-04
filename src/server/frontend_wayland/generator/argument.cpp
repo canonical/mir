@@ -152,14 +152,6 @@ Emitter Argument::call_fragment() const
     return descriptor.converter ? (name + "_resolved") : name;
 }
 
-Emitter Argument::object_type_interface_declare() const
-{
-    if (interface)
-        return {"extern struct wl_interface const ", interface.value(), "_interface_data;"};
-    else
-        return nullptr;
-}
-
 Emitter Argument::object_type_fragment() const
 {
     if (interface)
@@ -179,6 +171,12 @@ std::experimental::optional<Emitter> Argument::converter() const
         return descriptor.converter.value()(name);
     else
         return std::experimental::nullopt;
+}
+
+void Argument::populate_required_interfaces(std::set<std::string>& interfaces) const
+{
+    if (interface)
+        interfaces.insert(interface.value());
 }
 
 Argument::TypeDescriptor Argument::get_type(xmlpp::Element const& node, bool is_event)
