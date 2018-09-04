@@ -130,7 +130,7 @@ private:
         GBMBOWrapper(GBMBOWrapper const&) = delete;
         GBMBOWrapper& operator=(GBMBOWrapper const&) = delete;
     };
-    Mutex<std::vector<std::pair<int, GBMBOWrapper>>> buffers;
+    Mutex<std::vector<std::tuple<uint32_t, int, GBMBOWrapper>>> buffers;
 
     uint32_t min_buffer_width;
     uint32_t min_buffer_height;

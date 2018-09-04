@@ -298,9 +298,9 @@ void mgm::Cursor::show(CursorImage const& cursor_image)
     hotspot = cursor_image.hotspot();
     {
         auto locked_buffers = buffers.lock();
-        for (auto& pair : *locked_buffers)
+        for (auto& tuple : *locked_buffers)
         {
-            pad_and_write_image_data_locked(lg, pair.second);
+            pad_and_write_image_data_locked(lg, std::get<2>(tuple));
         }
     }
 
@@ -428,17 +428,18 @@ mgm::Cursor::GBMBOWrapper& mgm::Cursor::buffer_for_output(KMSOutput const& outpu
         locked_buffers->end(),
         [&output](auto const& candidate)
             {
-                return candidate.first == output.drm_fd();
+                // We use both id and drm_fd as identifier as we're not sure of the uniqueness of either
+                return std::get<0>(candidate) == output.id() && std::get<1>(candidate) == output.drm_fd();
             });
 
     if (buffer_it != locked_buffers->end())
     {
-        return buffer_it->second;
+        return std::get<2>(*buffer_it);
     }
 
-    locked_buffers->push_back(std::make_pair(output.drm_fd(), GBMBOWrapper(output.drm_fd(), mir_orientation_normal)));
+    locked_buffers->push_back({output.id(), output.drm_fd(), GBMBOWrapper(output.drm_fd(), mir_orientation_normal)});
 
-    GBMBOWrapper& bo = locked_buffers->back().second;
+    GBMBOWrapper& bo = std::get<2>(locked_buffers->back());
     if (gbm_bo_get_width(bo) < min_buffer_width)
     {
         min_buffer_width = gbm_bo_get_width(bo);
