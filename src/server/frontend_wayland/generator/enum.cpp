@@ -27,7 +27,7 @@ Enum::Enum(xmlpp::Element const& node)
     for (auto const& child : node.get_children("entry"))
     {
         auto entry_node = dynamic_cast<xmlpp::Element const*>(child);
-        std::string entry_name = to_upper_case(entry_node->get_attribute_value("name"));
+        std::string entry_name = sanitize_name(entry_node->get_attribute_value("name"));
         std::string entry_value_str = entry_node->get_attribute_value("value");
         entries.emplace_back(Entry{entry_name, entry_value_str});
     }
