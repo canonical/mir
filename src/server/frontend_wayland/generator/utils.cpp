@@ -22,7 +22,7 @@
 #include <string>
 #include <locale>
 
-const std::vector<std::string> cpp_reserved_keywords = {"namespace", "class"}; // add to this on an as-needed basis
+const std::vector<std::string> cpp_reserved_keywords = {"namespace", "class", "default"}; // add to this on an as-needed basis
 
 std::string file_name_from_path(std::string const& path)
 {
