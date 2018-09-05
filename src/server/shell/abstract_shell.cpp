@@ -334,14 +334,35 @@ void msh::AbstractShell::set_focus_to_locked(
 {
     auto const current_focus = focus_surface.lock();
 
+    std::set<std::shared_ptr<ms::Surface>> new_focus_tree;
+
+    for (auto item = surface; item; item = item->parent())
+    {
+        new_focus_tree.insert(item);
+    }
+
+    std::set<std::shared_ptr<ms::Surface>> current_focus_tree;
+
+    for (auto item = current_focus; item; item = item->parent())
+    {
+        current_focus_tree.insert(item);
+    }
+
     if (surface != current_focus)
     {
         focus_surface = surface;
         seat->reset_confinement_regions();
 
+        for (auto const& item : current_focus_tree)
+        {
+            if (new_focus_tree.find(item) == end(new_focus_tree))
+            {
+                item->configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
+            }
+        }
+
         if (current_focus)
         {
-            current_focus->configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
             current_focus->remove_observer(focus_surface_observer);
         }
 
@@ -355,8 +376,15 @@ void msh::AbstractShell::set_focus_to_locked(
             // Ensure the surface has really taken the focus before notifying it that it is focused
             input_targeter->set_focus(surface);
             surface->consume(seat->create_device_state().get());
-            surface->configure(mir_window_attrib_focus, mir_window_focus_state_focused);
             surface->add_observer(focus_surface_observer);
+
+            for (auto const& item : new_focus_tree)
+            {
+                if (current_focus_tree.find(item) == end(current_focus_tree))
+                {
+                    item->configure(mir_window_attrib_focus, mir_window_focus_state_focused);
+                }
+            }
         }
         else
         {

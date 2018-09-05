@@ -385,9 +385,9 @@ TEST_F(ActiveWindow, hiding_active_dialog_makes_parent_active)
     auto const parent = create_window(connection, parent_name, sync1);
     auto const dialog = create_dialog(connection, dialog_name, parent, sync2);
 
-    sync1.exec([&]{ mir_window_set_state(dialog, mir_window_state_hidden); });
+    sync2.exec([&]{ mir_window_set_state(dialog, mir_window_state_hidden); });
 
-    EXPECT_TRUE(sync1.signal_raised());
+    EXPECT_TRUE(sync2.signal_raised());
 
     assert_active_window_is(parent_name);
 }
@@ -404,9 +404,9 @@ TEST_F(ActiveWindow, when_another_window_is_about_hiding_active_dialog_makes_par
     auto const another_window = create_window(connection, another_window_name, sync2);
     auto const dialog = create_dialog(connection, dialog_name, parent, sync3);
 
-    sync1.exec([&]{ mir_window_set_state(dialog, mir_window_state_hidden); });
+    sync3.exec([&]{ mir_window_set_state(dialog, mir_window_state_hidden); });
 
-    EXPECT_TRUE(sync1.signal_raised());
+    EXPECT_TRUE(sync3.signal_raised());
 
     assert_active_window_is(parent_name);
 }
