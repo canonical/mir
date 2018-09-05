@@ -792,9 +792,9 @@ public:
     struct Transform
     {
         static uint32_t const NORMAL = 0;
-        static uint32_t const _0 = 1;
-        static uint32_t const _80 = 2;
-        static uint32_t const _70 = 3;
+        static uint32_t const _90 = 1;
+        static uint32_t const _180 = 2;
+        static uint32_t const _270 = 3;
         static uint32_t const FLIPPED = 4;
         static uint32_t const FLIPPED_90 = 5;
         static uint32_t const FLIPPED_180 = 6;
