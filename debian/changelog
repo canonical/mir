@@ -17,8 +17,10 @@ mir (0.32.2) UNRELEASED; urgency=medium
     - Enhancements:
       . [Wayland] A configuration mechanism to select the Wayland extensions
       . [Wayland] Support XDG shell stable
+      . [Wayland] Improve protocol scanner
       . [libmiral] Display configuration file support
       . [libmiral] Make the pid of external clients available
+      . [libmiral] Add DisplayConfiguration
       . [console] Ensure the_console_services() is constructed only once
       . [console] An option to select the ConsoleServices provider
       . [mir-demos] Move legacy binaries out of mir-demos package
@@ -30,6 +32,7 @@ mir (0.32.2) UNRELEASED; urgency=medium
       . [Wayland] Default for positioner gravity
       . [Wayland] Use miral test framework for wlcs tests
       . [Wayland] Send popup configure events
+      . [Wayland] When setting the pointer cursor apply it. (Fixes #555)
       . [miral-kiosk] Don't allow apps to specify size of "maximized" windows.
         (Fixes #454)
       . [Mir-on-X] Fixed keyboard grab issue on Arch. (Fixes #549)
@@ -39,6 +42,7 @@ mir (0.32.2) UNRELEASED; urgency=medium
         logind. (Fixes #535, #539)
       . Fix "sanitize" builds
       . Racy shutdown in miral-tests and miral_wlcs_tests. (Fixes #543)
+      . Fix a locale initialization crash on musl
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 29 Aug 2018 12:19:00 +0100
 
