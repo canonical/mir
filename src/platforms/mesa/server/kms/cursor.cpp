@@ -421,23 +421,18 @@ void mgm::Cursor::place_cursor_at_locked(
 
 mgm::Cursor::GBMBOWrapper& mgm::Cursor::buffer_for_output(KMSOutput const& output)
 {
+    auto const drm_fd = output.drm_fd();
+    auto const id = output.id();
     auto locked_buffers = buffers.lock();
 
-    auto buffer_it = std::find_if(
-        locked_buffers->begin(),
-        locked_buffers->end(),
-        [&output](auto const& candidate)
-            {
-                // We use both id and drm_fd as identifier as we're not sure of the uniqueness of either
-                return std::get<0>(candidate) == output.id() && std::get<1>(candidate) == output.drm_fd();
-            });
-
-    if (buffer_it != locked_buffers->end())
+    for (auto& bo : *locked_buffers)
     {
-        return std::get<2>(*buffer_it);
+        // We use both id and drm_fd as identifier as we're not sure of the uniqueness of either
+        if (std::get<0>(bo) == id && std::get<1>(bo) == drm_fd)
+            return std::get<2>(bo);
     }
 
-    locked_buffers->push_back({output.id(), output.drm_fd(), GBMBOWrapper(output.drm_fd(), mir_orientation_normal)});
+    locked_buffers->push_back(image_buffer{id, drm_fd, GBMBOWrapper{drm_fd, mir_orientation_normal}});
 
     GBMBOWrapper& bo = std::get<2>(locked_buffers->back());
     if (gbm_bo_get_width(bo) < min_buffer_width)
