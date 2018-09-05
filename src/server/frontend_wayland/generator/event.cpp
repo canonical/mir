@@ -30,7 +30,7 @@ Event::Event(xmlpp::Element const& node, std::string const& class_name, bool is_
 
 Emitter Event::opcode_declare() const
 {
-    return Line{"static uint32_t const ", to_upper_case(name), " = ", std::to_string(opcode), ";"};
+    return Line{"static uint32_t const ", sanitize_name(name), " = ", std::to_string(opcode), ";"};
 }
 
 // TODO: Decide whether to resolve wl_resource* to wrapped types (ie: Region, Surface, etc).
@@ -94,7 +94,7 @@ Emitter Event::mir_args() const
 
 Emitter Event::wl_call_args() const
 {
-    std::vector<Emitter> call_args{"resource", "Opcode::" + to_upper_case(name)};
+    std::vector<Emitter> call_args{"resource", "Opcode::" + sanitize_name(name)};
     for (auto& arg : arguments)
         call_args.push_back(arg.call_fragment());
     return List{call_args, ", "};
