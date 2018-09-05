@@ -132,7 +132,7 @@ mfw::XdgShellV6::~XdgShellV6()
 
 void mfw::XdgShellV6::send_ping_event(struct wl_resource* resource, uint32_t serial) const
 {
-    wl_resource_post_event(resource, Opcode::PING, serial);
+    wl_resource_post_event(resource, Opcode::ping, serial);
 }
 
 void mfw::XdgShellV6::destroy_wayland_object(struct wl_resource* resource) const
@@ -408,7 +408,7 @@ mfw::XdgSurfaceV6::XdgSurfaceV6(struct wl_client* client, struct wl_resource* pa
 
 void mfw::XdgSurfaceV6::send_configure_event(uint32_t serial) const
 {
-    wl_resource_post_event(resource, Opcode::CONFIGURE, serial);
+    wl_resource_post_event(resource, Opcode::configure, serial);
 }
 
 void mfw::XdgSurfaceV6::destroy_wayland_object() const
@@ -686,12 +686,12 @@ mfw::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* 
 
 void mfw::XdgToplevelV6::send_configure_event(int32_t width, int32_t height, struct wl_array* states) const
 {
-    wl_resource_post_event(resource, Opcode::CONFIGURE, width, height, states);
+    wl_resource_post_event(resource, Opcode::configure, width, height, states);
 }
 
 void mfw::XdgToplevelV6::send_close_event() const
 {
-    wl_resource_post_event(resource, Opcode::CLOSE);
+    wl_resource_post_event(resource, Opcode::close);
 }
 
 void mfw::XdgToplevelV6::destroy_wayland_object() const
@@ -776,12 +776,12 @@ mfw::XdgPopupV6::XdgPopupV6(struct wl_client* client, struct wl_resource* parent
 
 void mfw::XdgPopupV6::send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height) const
 {
-    wl_resource_post_event(resource, Opcode::CONFIGURE, x, y, width, height);
+    wl_resource_post_event(resource, Opcode::configure, x, y, width, height);
 }
 
 void mfw::XdgPopupV6::send_popup_done_event() const
 {
-    wl_resource_post_event(resource, Opcode::POPUP_DONE);
+    wl_resource_post_event(resource, Opcode::popup_done);
 }
 
 void mfw::XdgPopupV6::destroy_wayland_object() const

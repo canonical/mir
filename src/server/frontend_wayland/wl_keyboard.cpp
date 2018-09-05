@@ -86,14 +86,14 @@ void mf::WlKeyboard::handle_keyboard_event(MirKeyboardEvent const* key_event, Wl
             send_key_event(serial,
                            mir_input_event_get_event_time_ms(input_ev),
                            mir_keyboard_event_scan_code(key_event),
-                           KeyState::RELEASED);
+                           KeyState::released);
             break;
         case mir_keyboard_action_down:
             xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
             send_key_event(serial,
                            mir_input_event_get_event_time_ms(input_ev),
                            mir_keyboard_event_scan_code(key_event),
-                           KeyState::PRESSED);
+                           KeyState::pressed);
             break;
         default:
             break;
@@ -163,7 +163,7 @@ void mf::WlKeyboard::handle_keymap_event(MirKeymapEvent const* event, WlSurface*
     mir::AnonymousShmFile shm_buffer{length};
     memcpy(shm_buffer.base_ptr(), buffer, length);
 
-    send_keymap_event(KeymapFormat::XKB_V1,
+    send_keymap_event(KeymapFormat::xkb_v1,
                       Fd{IntOwnedFd{shm_buffer.fd()}},
                       length);
 
@@ -203,7 +203,7 @@ void mf::WlKeyboard::set_keymap(mir::input::Keymap const& new_keymap)
     mir::AnonymousShmFile shm_buffer{length};
     memcpy(shm_buffer.base_ptr(), buffer.get(), length);
 
-    send_keymap_event(KeymapFormat::XKB_V1,
+    send_keymap_event(KeymapFormat::xkb_v1,
                       Fd{IntOwnedFd{shm_buffer.fd()}},
                       length);
 }

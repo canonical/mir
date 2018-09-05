@@ -203,7 +203,7 @@ void mf::WlSeat::bind(wl_client* /*client*/, wl_resource* resource)
 {
     // TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
     send_capabilities_event(resource,
-                            Capability::POINTER | Capability::KEYBOARD | Capability::TOUCH);
+                            Capability::pointer | Capability::keyboard | Capability::touch);
     if (version_supports_name(resource))
         send_name_event(resource, "seat0");
 }

@@ -371,35 +371,35 @@ void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t /*seri
 
     switch (edges)
     {
-    case ResizeEdge::TOP:
+    case ResizeEdge::top:
         edge = mir_resize_edge_north;
         break;
 
-    case ResizeEdge::BOTTOM:
+    case ResizeEdge::bottom:
         edge = mir_resize_edge_south;
         break;
 
-    case ResizeEdge::LEFT:
+    case ResizeEdge::left:
         edge = mir_resize_edge_west;
         break;
 
-    case ResizeEdge::RIGHT:
+    case ResizeEdge::right:
         edge = mir_resize_edge_east;
         break;
 
-    case ResizeEdge::TOP_LEFT:
+    case ResizeEdge::top_left:
         edge = mir_resize_edge_northwest;
         break;
 
-    case ResizeEdge::BOTTOM_LEFT:
+    case ResizeEdge::bottom_left:
         edge = mir_resize_edge_southwest;
         break;
 
-    case ResizeEdge::TOP_RIGHT:
+    case ResizeEdge::top_right:
         edge = mir_resize_edge_northeast;
         break;
 
-    case ResizeEdge::BOTTOM_RIGHT:
+    case ResizeEdge::bottom_right:
         edge = mir_resize_edge_southeast;
         break;
 
@@ -458,7 +458,7 @@ void mf::XdgToplevelStable::handle_resize(std::experimental::optional<geometry::
     if (is_active())
     {
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = State::ACTIVATED;
+            *state = State::activated;
     }
 
     switch (window_state())
@@ -467,12 +467,12 @@ void mf::XdgToplevelStable::handle_resize(std::experimental::optional<geometry::
     case mir_window_state_horizmaximized:
     case mir_window_state_vertmaximized:
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = State::MAXIMIZED;
+            *state = State::maximized;
         break;
 
     case mir_window_state_fullscreen:
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = State::FULLSCREEN;
+            *state = State::fullscreen;
         break;
 
     default:
@@ -523,35 +523,35 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
 
     switch (anchor)
     {
-        case Anchor::TOP:
+        case Anchor::top:
             placement = mir_placement_gravity_north;
             break;
 
-        case Anchor::BOTTOM:
+        case Anchor::bottom:
             placement = mir_placement_gravity_south;
             break;
 
-        case Anchor::LEFT:
+        case Anchor::left:
             placement = mir_placement_gravity_west;
             break;
 
-        case Anchor::RIGHT:
+        case Anchor::right:
             placement = mir_placement_gravity_east;
             break;
 
-        case Anchor::TOP_LEFT:
+        case Anchor::top_left:
             placement = mir_placement_gravity_northwest;
             break;
 
-        case Anchor::BOTTOM_LEFT:
+        case Anchor::bottom_left:
             placement = mir_placement_gravity_southwest;
             break;
 
-        case Anchor::TOP_RIGHT:
+        case Anchor::top_right:
             placement = mir_placement_gravity_northeast;
             break;
 
-        case Anchor::BOTTOM_RIGHT:
+        case Anchor::bottom_right:
             placement = mir_placement_gravity_southeast;
             break;
 
@@ -568,35 +568,35 @@ void mf::XdgPositionerStable::set_gravity(uint32_t gravity)
 
     switch (gravity)
     {
-        case Gravity::TOP:
+        case Gravity::top:
             placement = mir_placement_gravity_south;
             break;
 
-        case Gravity::BOTTOM:
+        case Gravity::bottom:
             placement = mir_placement_gravity_north;
             break;
 
-        case Gravity::LEFT:
+        case Gravity::left:
             placement = mir_placement_gravity_east;
             break;
 
-        case Gravity::RIGHT:
+        case Gravity::right:
             placement = mir_placement_gravity_west;
             break;
 
-        case Gravity::TOP_LEFT:
+        case Gravity::top_left:
             placement = mir_placement_gravity_southeast;
             break;
 
-        case Gravity::BOTTOM_LEFT:
+        case Gravity::bottom_left:
             placement = mir_placement_gravity_northeast;
             break;
 
-        case Gravity::TOP_RIGHT:
+        case Gravity::top_right:
             placement = mir_placement_gravity_southwest;
             break;
 
-        case Gravity::BOTTOM_RIGHT:
+        case Gravity::bottom_right:
             placement = mir_placement_gravity_northwest;
             break;
 

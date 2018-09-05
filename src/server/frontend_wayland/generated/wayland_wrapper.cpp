@@ -37,7 +37,7 @@ mfw::Callback::Callback(struct wl_client* client, struct wl_resource* parent, ui
 
 void mfw::Callback::send_done_event(uint32_t callback_data) const
 {
-    wl_resource_post_event(resource, Opcode::DONE, callback_data);
+    wl_resource_post_event(resource, Opcode::done, callback_data);
 }
 
 void mfw::Callback::destroy_wayland_object() const
@@ -288,7 +288,7 @@ mfw::Shm::~Shm()
 
 void mfw::Shm::send_format_event(struct wl_resource* resource, uint32_t format) const
 {
-    wl_resource_post_event(resource, Opcode::FORMAT, format);
+    wl_resource_post_event(resource, Opcode::format, format);
 }
 
 void mfw::Shm::destroy_wayland_object(struct wl_resource* resource) const
@@ -344,7 +344,7 @@ mfw::Buffer::Buffer(struct wl_client* client, struct wl_resource* parent, uint32
 
 void mfw::Buffer::send_release_event() const
 {
-    wl_resource_post_event(resource, Opcode::RELEASE);
+    wl_resource_post_event(resource, Opcode::release);
 }
 
 void mfw::Buffer::destroy_wayland_object() const
@@ -471,7 +471,7 @@ mfw::DataOffer::DataOffer(struct wl_client* client, struct wl_resource* parent, 
 void mfw::DataOffer::send_offer_event(std::string const& mime_type) const
 {
     const char* mime_type_resolved = mime_type.c_str();
-    wl_resource_post_event(resource, Opcode::OFFER, mime_type_resolved);
+    wl_resource_post_event(resource, Opcode::offer, mime_type_resolved);
 }
 
 bool mfw::DataOffer::version_supports_source_actions()
@@ -481,7 +481,7 @@ bool mfw::DataOffer::version_supports_source_actions()
 
 void mfw::DataOffer::send_source_actions_event(uint32_t source_actions) const
 {
-    wl_resource_post_event(resource, Opcode::SOURCE_ACTIONS, source_actions);
+    wl_resource_post_event(resource, Opcode::source_actions, source_actions);
 }
 
 bool mfw::DataOffer::version_supports_action()
@@ -491,7 +491,7 @@ bool mfw::DataOffer::version_supports_action()
 
 void mfw::DataOffer::send_action_event(uint32_t dnd_action) const
 {
-    wl_resource_post_event(resource, Opcode::ACTION, dnd_action);
+    wl_resource_post_event(resource, Opcode::action, dnd_action);
 }
 
 void mfw::DataOffer::destroy_wayland_object() const
@@ -588,19 +588,19 @@ void mfw::DataSource::send_target_event(std::experimental::optional<std::string>
     {
         mime_type_resolved = mime_type.value().c_str();
     }
-    wl_resource_post_event(resource, Opcode::TARGET, mime_type_resolved);
+    wl_resource_post_event(resource, Opcode::target, mime_type_resolved);
 }
 
 void mfw::DataSource::send_send_event(std::string const& mime_type, mir::Fd fd) const
 {
     const char* mime_type_resolved = mime_type.c_str();
     int32_t fd_resolved{fd};
-    wl_resource_post_event(resource, Opcode::SEND, mime_type_resolved, fd_resolved);
+    wl_resource_post_event(resource, Opcode::send, mime_type_resolved, fd_resolved);
 }
 
 void mfw::DataSource::send_cancelled_event() const
 {
-    wl_resource_post_event(resource, Opcode::CANCELLED);
+    wl_resource_post_event(resource, Opcode::cancelled);
 }
 
 bool mfw::DataSource::version_supports_dnd_drop_performed()
@@ -610,7 +610,7 @@ bool mfw::DataSource::version_supports_dnd_drop_performed()
 
 void mfw::DataSource::send_dnd_drop_performed_event() const
 {
-    wl_resource_post_event(resource, Opcode::DND_DROP_PERFORMED);
+    wl_resource_post_event(resource, Opcode::dnd_drop_performed);
 }
 
 bool mfw::DataSource::version_supports_dnd_finished()
@@ -620,7 +620,7 @@ bool mfw::DataSource::version_supports_dnd_finished()
 
 void mfw::DataSource::send_dnd_finished_event() const
 {
-    wl_resource_post_event(resource, Opcode::DND_FINISHED);
+    wl_resource_post_event(resource, Opcode::dnd_finished);
 }
 
 bool mfw::DataSource::version_supports_action()
@@ -630,7 +630,7 @@ bool mfw::DataSource::version_supports_action()
 
 void mfw::DataSource::send_action_event(uint32_t dnd_action) const
 {
-    wl_resource_post_event(resource, Opcode::ACTION, dnd_action);
+    wl_resource_post_event(resource, Opcode::action, dnd_action);
 }
 
 void mfw::DataSource::destroy_wayland_object() const
@@ -735,7 +735,7 @@ mfw::DataDevice::DataDevice(struct wl_client* client, struct wl_resource* parent
 
 void mfw::DataDevice::send_data_offer_event(struct wl_resource* id) const
 {
-    wl_resource_post_event(resource, Opcode::DATA_OFFER, id);
+    wl_resource_post_event(resource, Opcode::data_offer, id);
 }
 
 void mfw::DataDevice::send_enter_event(uint32_t serial, struct wl_resource* surface, double x, double y, std::experimental::optional<struct wl_resource*> const& id) const
@@ -747,24 +747,24 @@ void mfw::DataDevice::send_enter_event(uint32_t serial, struct wl_resource* surf
     {
         id_resolved = id.value();
     }
-    wl_resource_post_event(resource, Opcode::ENTER, serial, surface, x_resolved, y_resolved, id_resolved);
+    wl_resource_post_event(resource, Opcode::enter, serial, surface, x_resolved, y_resolved, id_resolved);
 }
 
 void mfw::DataDevice::send_leave_event() const
 {
-    wl_resource_post_event(resource, Opcode::LEAVE);
+    wl_resource_post_event(resource, Opcode::leave);
 }
 
 void mfw::DataDevice::send_motion_event(uint32_t time, double x, double y) const
 {
     wl_fixed_t x_resolved{wl_fixed_from_double(x)};
     wl_fixed_t y_resolved{wl_fixed_from_double(y)};
-    wl_resource_post_event(resource, Opcode::MOTION, time, x_resolved, y_resolved);
+    wl_resource_post_event(resource, Opcode::motion, time, x_resolved, y_resolved);
 }
 
 void mfw::DataDevice::send_drop_event() const
 {
-    wl_resource_post_event(resource, Opcode::DROP);
+    wl_resource_post_event(resource, Opcode::drop);
 }
 
 void mfw::DataDevice::send_selection_event(std::experimental::optional<struct wl_resource*> const& id) const
@@ -774,7 +774,7 @@ void mfw::DataDevice::send_selection_event(std::experimental::optional<struct wl
     {
         id_resolved = id.value();
     }
-    wl_resource_post_event(resource, Opcode::SELECTION, id_resolved);
+    wl_resource_post_event(resource, Opcode::selection, id_resolved);
 }
 
 void mfw::DataDevice::destroy_wayland_object() const
@@ -1149,17 +1149,17 @@ mfw::ShellSurface::ShellSurface(struct wl_client* client, struct wl_resource* pa
 
 void mfw::ShellSurface::send_ping_event(uint32_t serial) const
 {
-    wl_resource_post_event(resource, Opcode::PING, serial);
+    wl_resource_post_event(resource, Opcode::ping, serial);
 }
 
 void mfw::ShellSurface::send_configure_event(uint32_t edges, int32_t width, int32_t height) const
 {
-    wl_resource_post_event(resource, Opcode::CONFIGURE, edges, width, height);
+    wl_resource_post_event(resource, Opcode::configure, edges, width, height);
 }
 
 void mfw::ShellSurface::send_popup_done_event() const
 {
-    wl_resource_post_event(resource, Opcode::POPUP_DONE);
+    wl_resource_post_event(resource, Opcode::popup_done);
 }
 
 void mfw::ShellSurface::destroy_wayland_object() const
@@ -1383,12 +1383,12 @@ mfw::Surface::Surface(struct wl_client* client, struct wl_resource* parent, uint
 
 void mfw::Surface::send_enter_event(struct wl_resource* output) const
 {
-    wl_resource_post_event(resource, Opcode::ENTER, output);
+    wl_resource_post_event(resource, Opcode::enter, output);
 }
 
 void mfw::Surface::send_leave_event(struct wl_resource* output) const
 {
-    wl_resource_post_event(resource, Opcode::LEAVE, output);
+    wl_resource_post_event(resource, Opcode::leave, output);
 }
 
 void mfw::Surface::destroy_wayland_object() const
@@ -1523,7 +1523,7 @@ mfw::Seat::~Seat()
 
 void mfw::Seat::send_capabilities_event(struct wl_resource* resource, uint32_t capabilities) const
 {
-    wl_resource_post_event(resource, Opcode::CAPABILITIES, capabilities);
+    wl_resource_post_event(resource, Opcode::capabilities, capabilities);
 }
 
 bool mfw::Seat::version_supports_name(struct wl_resource* resource)
@@ -1534,7 +1534,7 @@ bool mfw::Seat::version_supports_name(struct wl_resource* resource)
 void mfw::Seat::send_name_event(struct wl_resource* resource, std::string const& name) const
 {
     const char* name_resolved = name.c_str();
-    wl_resource_post_event(resource, Opcode::NAME, name_resolved);
+    wl_resource_post_event(resource, Opcode::name, name_resolved);
 }
 
 void mfw::Seat::destroy_wayland_object(struct wl_resource* resource) const
@@ -1616,30 +1616,30 @@ void mfw::Pointer::send_enter_event(uint32_t serial, struct wl_resource* surface
 {
     wl_fixed_t surface_x_resolved{wl_fixed_from_double(surface_x)};
     wl_fixed_t surface_y_resolved{wl_fixed_from_double(surface_y)};
-    wl_resource_post_event(resource, Opcode::ENTER, serial, surface, surface_x_resolved, surface_y_resolved);
+    wl_resource_post_event(resource, Opcode::enter, serial, surface, surface_x_resolved, surface_y_resolved);
 }
 
 void mfw::Pointer::send_leave_event(uint32_t serial, struct wl_resource* surface) const
 {
-    wl_resource_post_event(resource, Opcode::LEAVE, serial, surface);
+    wl_resource_post_event(resource, Opcode::leave, serial, surface);
 }
 
 void mfw::Pointer::send_motion_event(uint32_t time, double surface_x, double surface_y) const
 {
     wl_fixed_t surface_x_resolved{wl_fixed_from_double(surface_x)};
     wl_fixed_t surface_y_resolved{wl_fixed_from_double(surface_y)};
-    wl_resource_post_event(resource, Opcode::MOTION, time, surface_x_resolved, surface_y_resolved);
+    wl_resource_post_event(resource, Opcode::motion, time, surface_x_resolved, surface_y_resolved);
 }
 
 void mfw::Pointer::send_button_event(uint32_t serial, uint32_t time, uint32_t button, uint32_t state) const
 {
-    wl_resource_post_event(resource, Opcode::BUTTON, serial, time, button, state);
+    wl_resource_post_event(resource, Opcode::button, serial, time, button, state);
 }
 
 void mfw::Pointer::send_axis_event(uint32_t time, uint32_t axis, double value) const
 {
     wl_fixed_t value_resolved{wl_fixed_from_double(value)};
-    wl_resource_post_event(resource, Opcode::AXIS, time, axis, value_resolved);
+    wl_resource_post_event(resource, Opcode::axis, time, axis, value_resolved);
 }
 
 bool mfw::Pointer::version_supports_frame()
@@ -1649,7 +1649,7 @@ bool mfw::Pointer::version_supports_frame()
 
 void mfw::Pointer::send_frame_event() const
 {
-    wl_resource_post_event(resource, Opcode::FRAME);
+    wl_resource_post_event(resource, Opcode::frame);
 }
 
 bool mfw::Pointer::version_supports_axis_source()
@@ -1659,7 +1659,7 @@ bool mfw::Pointer::version_supports_axis_source()
 
 void mfw::Pointer::send_axis_source_event(uint32_t axis_source) const
 {
-    wl_resource_post_event(resource, Opcode::AXIS_SOURCE, axis_source);
+    wl_resource_post_event(resource, Opcode::axis_source, axis_source);
 }
 
 bool mfw::Pointer::version_supports_axis_stop()
@@ -1669,7 +1669,7 @@ bool mfw::Pointer::version_supports_axis_stop()
 
 void mfw::Pointer::send_axis_stop_event(uint32_t time, uint32_t axis) const
 {
-    wl_resource_post_event(resource, Opcode::AXIS_STOP, time, axis);
+    wl_resource_post_event(resource, Opcode::axis_stop, time, axis);
 }
 
 bool mfw::Pointer::version_supports_axis_discrete()
@@ -1679,7 +1679,7 @@ bool mfw::Pointer::version_supports_axis_discrete()
 
 void mfw::Pointer::send_axis_discrete_event(uint32_t axis, int32_t discrete) const
 {
-    wl_resource_post_event(resource, Opcode::AXIS_DISCRETE, axis, discrete);
+    wl_resource_post_event(resource, Opcode::axis_discrete, axis, discrete);
 }
 
 void mfw::Pointer::destroy_wayland_object() const
@@ -1737,27 +1737,27 @@ mfw::Keyboard::Keyboard(struct wl_client* client, struct wl_resource* parent, ui
 void mfw::Keyboard::send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const
 {
     int32_t fd_resolved{fd};
-    wl_resource_post_event(resource, Opcode::KEYMAP, format, fd_resolved, size);
+    wl_resource_post_event(resource, Opcode::keymap, format, fd_resolved, size);
 }
 
 void mfw::Keyboard::send_enter_event(uint32_t serial, struct wl_resource* surface, struct wl_array* keys) const
 {
-    wl_resource_post_event(resource, Opcode::ENTER, serial, surface, keys);
+    wl_resource_post_event(resource, Opcode::enter, serial, surface, keys);
 }
 
 void mfw::Keyboard::send_leave_event(uint32_t serial, struct wl_resource* surface) const
 {
-    wl_resource_post_event(resource, Opcode::LEAVE, serial, surface);
+    wl_resource_post_event(resource, Opcode::leave, serial, surface);
 }
 
 void mfw::Keyboard::send_key_event(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const
 {
-    wl_resource_post_event(resource, Opcode::KEY, serial, time, key, state);
+    wl_resource_post_event(resource, Opcode::key, serial, time, key, state);
 }
 
 void mfw::Keyboard::send_modifiers_event(uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) const
 {
-    wl_resource_post_event(resource, Opcode::MODIFIERS, serial, mods_depressed, mods_latched, mods_locked, group);
+    wl_resource_post_event(resource, Opcode::modifiers, serial, mods_depressed, mods_latched, mods_locked, group);
 }
 
 bool mfw::Keyboard::version_supports_repeat_info()
@@ -1767,7 +1767,7 @@ bool mfw::Keyboard::version_supports_repeat_info()
 
 void mfw::Keyboard::send_repeat_info_event(int32_t rate, int32_t delay) const
 {
-    wl_resource_post_event(resource, Opcode::REPEAT_INFO, rate, delay);
+    wl_resource_post_event(resource, Opcode::repeat_info, rate, delay);
 }
 
 void mfw::Keyboard::destroy_wayland_object() const
@@ -1825,29 +1825,29 @@ void mfw::Touch::send_down_event(uint32_t serial, uint32_t time, struct wl_resou
 {
     wl_fixed_t x_resolved{wl_fixed_from_double(x)};
     wl_fixed_t y_resolved{wl_fixed_from_double(y)};
-    wl_resource_post_event(resource, Opcode::DOWN, serial, time, surface, id, x_resolved, y_resolved);
+    wl_resource_post_event(resource, Opcode::down, serial, time, surface, id, x_resolved, y_resolved);
 }
 
 void mfw::Touch::send_up_event(uint32_t serial, uint32_t time, int32_t id) const
 {
-    wl_resource_post_event(resource, Opcode::UP, serial, time, id);
+    wl_resource_post_event(resource, Opcode::up, serial, time, id);
 }
 
 void mfw::Touch::send_motion_event(uint32_t time, int32_t id, double x, double y) const
 {
     wl_fixed_t x_resolved{wl_fixed_from_double(x)};
     wl_fixed_t y_resolved{wl_fixed_from_double(y)};
-    wl_resource_post_event(resource, Opcode::MOTION, time, id, x_resolved, y_resolved);
+    wl_resource_post_event(resource, Opcode::motion, time, id, x_resolved, y_resolved);
 }
 
 void mfw::Touch::send_frame_event() const
 {
-    wl_resource_post_event(resource, Opcode::FRAME);
+    wl_resource_post_event(resource, Opcode::frame);
 }
 
 void mfw::Touch::send_cancel_event() const
 {
-    wl_resource_post_event(resource, Opcode::CANCEL);
+    wl_resource_post_event(resource, Opcode::cancel);
 }
 
 bool mfw::Touch::version_supports_shape()
@@ -1859,7 +1859,7 @@ void mfw::Touch::send_shape_event(int32_t id, double major, double minor) const
 {
     wl_fixed_t major_resolved{wl_fixed_from_double(major)};
     wl_fixed_t minor_resolved{wl_fixed_from_double(minor)};
-    wl_resource_post_event(resource, Opcode::SHAPE, id, major_resolved, minor_resolved);
+    wl_resource_post_event(resource, Opcode::shape, id, major_resolved, minor_resolved);
 }
 
 bool mfw::Touch::version_supports_orientation()
@@ -1870,7 +1870,7 @@ bool mfw::Touch::version_supports_orientation()
 void mfw::Touch::send_orientation_event(int32_t id, double orientation) const
 {
     wl_fixed_t orientation_resolved{wl_fixed_from_double(orientation)};
-    wl_resource_post_event(resource, Opcode::ORIENTATION, id, orientation_resolved);
+    wl_resource_post_event(resource, Opcode::orientation, id, orientation_resolved);
 }
 
 void mfw::Touch::destroy_wayland_object() const
@@ -1950,12 +1950,12 @@ void mfw::Output::send_geometry_event(struct wl_resource* resource, int32_t x, i
 {
     const char* make_resolved = make.c_str();
     const char* model_resolved = model.c_str();
-    wl_resource_post_event(resource, Opcode::GEOMETRY, x, y, physical_width, physical_height, subpixel, make_resolved, model_resolved, transform);
+    wl_resource_post_event(resource, Opcode::geometry, x, y, physical_width, physical_height, subpixel, make_resolved, model_resolved, transform);
 }
 
 void mfw::Output::send_mode_event(struct wl_resource* resource, uint32_t flags, int32_t width, int32_t height, int32_t refresh) const
 {
-    wl_resource_post_event(resource, Opcode::MODE, flags, width, height, refresh);
+    wl_resource_post_event(resource, Opcode::mode, flags, width, height, refresh);
 }
 
 bool mfw::Output::version_supports_done(struct wl_resource* resource)
@@ -1965,7 +1965,7 @@ bool mfw::Output::version_supports_done(struct wl_resource* resource)
 
 void mfw::Output::send_done_event(struct wl_resource* resource) const
 {
-    wl_resource_post_event(resource, Opcode::DONE);
+    wl_resource_post_event(resource, Opcode::done);
 }
 
 bool mfw::Output::version_supports_scale(struct wl_resource* resource)
@@ -1975,7 +1975,7 @@ bool mfw::Output::version_supports_scale(struct wl_resource* resource)
 
 void mfw::Output::send_scale_event(struct wl_resource* resource, int32_t factor) const
 {
-    wl_resource_post_event(resource, Opcode::SCALE, factor);
+    wl_resource_post_event(resource, Opcode::scale, factor);
 }
 
 void mfw::Output::destroy_wayland_object(struct wl_resource* resource) const

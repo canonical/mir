@@ -57,7 +57,7 @@ public:
 
     struct Opcode
     {
-        static uint32_t const DONE = 0;
+        static uint32_t const done = 0;
     };
 
 private:
@@ -127,76 +127,76 @@ public:
 
     struct Error
     {
-        static uint32_t const INVALID_FORMAT = 0;
-        static uint32_t const INVALID_STRIDE = 1;
-        static uint32_t const INVALID_FD = 2;
+        static uint32_t const invalid_format = 0;
+        static uint32_t const invalid_stride = 1;
+        static uint32_t const invalid_fd = 2;
     };
 
     struct Format
     {
-        static uint32_t const ARGB8888 = 0;
-        static uint32_t const XRGB8888 = 1;
-        static uint32_t const C8 = 0x20203843;
-        static uint32_t const RGB332 = 0x38424752;
-        static uint32_t const BGR233 = 0x38524742;
-        static uint32_t const XRGB4444 = 0x32315258;
-        static uint32_t const XBGR4444 = 0x32314258;
-        static uint32_t const RGBX4444 = 0x32315852;
-        static uint32_t const BGRX4444 = 0x32315842;
-        static uint32_t const ARGB4444 = 0x32315241;
-        static uint32_t const ABGR4444 = 0x32314241;
-        static uint32_t const RGBA4444 = 0x32314152;
-        static uint32_t const BGRA4444 = 0x32314142;
-        static uint32_t const XRGB1555 = 0x35315258;
-        static uint32_t const XBGR1555 = 0x35314258;
-        static uint32_t const RGBX5551 = 0x35315852;
-        static uint32_t const BGRX5551 = 0x35315842;
-        static uint32_t const ARGB1555 = 0x35315241;
-        static uint32_t const ABGR1555 = 0x35314241;
-        static uint32_t const RGBA5551 = 0x35314152;
-        static uint32_t const BGRA5551 = 0x35314142;
-        static uint32_t const RGB565 = 0x36314752;
-        static uint32_t const BGR565 = 0x36314742;
-        static uint32_t const RGB888 = 0x34324752;
-        static uint32_t const BGR888 = 0x34324742;
-        static uint32_t const XBGR8888 = 0x34324258;
-        static uint32_t const RGBX8888 = 0x34325852;
-        static uint32_t const BGRX8888 = 0x34325842;
-        static uint32_t const ABGR8888 = 0x34324241;
-        static uint32_t const RGBA8888 = 0x34324152;
-        static uint32_t const BGRA8888 = 0x34324142;
-        static uint32_t const XRGB2101010 = 0x30335258;
-        static uint32_t const XBGR2101010 = 0x30334258;
-        static uint32_t const RGBX1010102 = 0x30335852;
-        static uint32_t const BGRX1010102 = 0x30335842;
-        static uint32_t const ARGB2101010 = 0x30335241;
-        static uint32_t const ABGR2101010 = 0x30334241;
-        static uint32_t const RGBA1010102 = 0x30334152;
-        static uint32_t const BGRA1010102 = 0x30334142;
-        static uint32_t const YUYV = 0x56595559;
-        static uint32_t const YVYU = 0x55595659;
-        static uint32_t const UYVY = 0x59565955;
-        static uint32_t const VYUY = 0x59555956;
-        static uint32_t const AYUV = 0x56555941;
-        static uint32_t const NV12 = 0x3231564e;
-        static uint32_t const NV21 = 0x3132564e;
-        static uint32_t const NV16 = 0x3631564e;
-        static uint32_t const NV61 = 0x3136564e;
-        static uint32_t const YUV410 = 0x39565559;
-        static uint32_t const YVU410 = 0x39555659;
-        static uint32_t const YUV411 = 0x31315559;
-        static uint32_t const YVU411 = 0x31315659;
-        static uint32_t const YUV420 = 0x32315559;
-        static uint32_t const YVU420 = 0x32315659;
-        static uint32_t const YUV422 = 0x36315559;
-        static uint32_t const YVU422 = 0x36315659;
-        static uint32_t const YUV444 = 0x34325559;
-        static uint32_t const YVU444 = 0x34325659;
+        static uint32_t const argb8888 = 0;
+        static uint32_t const xrgb8888 = 1;
+        static uint32_t const c8 = 0x20203843;
+        static uint32_t const rgb332 = 0x38424752;
+        static uint32_t const bgr233 = 0x38524742;
+        static uint32_t const xrgb4444 = 0x32315258;
+        static uint32_t const xbgr4444 = 0x32314258;
+        static uint32_t const rgbx4444 = 0x32315852;
+        static uint32_t const bgrx4444 = 0x32315842;
+        static uint32_t const argb4444 = 0x32315241;
+        static uint32_t const abgr4444 = 0x32314241;
+        static uint32_t const rgba4444 = 0x32314152;
+        static uint32_t const bgra4444 = 0x32314142;
+        static uint32_t const xrgb1555 = 0x35315258;
+        static uint32_t const xbgr1555 = 0x35314258;
+        static uint32_t const rgbx5551 = 0x35315852;
+        static uint32_t const bgrx5551 = 0x35315842;
+        static uint32_t const argb1555 = 0x35315241;
+        static uint32_t const abgr1555 = 0x35314241;
+        static uint32_t const rgba5551 = 0x35314152;
+        static uint32_t const bgra5551 = 0x35314142;
+        static uint32_t const rgb565 = 0x36314752;
+        static uint32_t const bgr565 = 0x36314742;
+        static uint32_t const rgb888 = 0x34324752;
+        static uint32_t const bgr888 = 0x34324742;
+        static uint32_t const xbgr8888 = 0x34324258;
+        static uint32_t const rgbx8888 = 0x34325852;
+        static uint32_t const bgrx8888 = 0x34325842;
+        static uint32_t const abgr8888 = 0x34324241;
+        static uint32_t const rgba8888 = 0x34324152;
+        static uint32_t const bgra8888 = 0x34324142;
+        static uint32_t const xrgb2101010 = 0x30335258;
+        static uint32_t const xbgr2101010 = 0x30334258;
+        static uint32_t const rgbx1010102 = 0x30335852;
+        static uint32_t const bgrx1010102 = 0x30335842;
+        static uint32_t const argb2101010 = 0x30335241;
+        static uint32_t const abgr2101010 = 0x30334241;
+        static uint32_t const rgba1010102 = 0x30334152;
+        static uint32_t const bgra1010102 = 0x30334142;
+        static uint32_t const yuyv = 0x56595559;
+        static uint32_t const yvyu = 0x55595659;
+        static uint32_t const uyvy = 0x59565955;
+        static uint32_t const vyuy = 0x59555956;
+        static uint32_t const ayuv = 0x56555941;
+        static uint32_t const nv12 = 0x3231564e;
+        static uint32_t const nv21 = 0x3132564e;
+        static uint32_t const nv16 = 0x3631564e;
+        static uint32_t const nv61 = 0x3136564e;
+        static uint32_t const yuv410 = 0x39565559;
+        static uint32_t const yvu410 = 0x39555659;
+        static uint32_t const yuv411 = 0x31315559;
+        static uint32_t const yvu411 = 0x31315659;
+        static uint32_t const yuv420 = 0x32315559;
+        static uint32_t const yvu420 = 0x32315659;
+        static uint32_t const yuv422 = 0x36315559;
+        static uint32_t const yvu422 = 0x36315659;
+        static uint32_t const yuv444 = 0x34325559;
+        static uint32_t const yvu444 = 0x34325659;
     };
 
     struct Opcode
     {
-        static uint32_t const FORMAT = 0;
+        static uint32_t const format = 0;
     };
 
 private:
@@ -226,7 +226,7 @@ public:
 
     struct Opcode
     {
-        static uint32_t const RELEASE = 0;
+        static uint32_t const release = 0;
     };
 
 private:
@@ -258,17 +258,17 @@ public:
 
     struct Error
     {
-        static uint32_t const INVALID_FINISH = 0;
-        static uint32_t const INVALID_ACTION_MASK = 1;
-        static uint32_t const INVALID_ACTION = 2;
-        static uint32_t const INVALID_OFFER = 3;
+        static uint32_t const invalid_finish = 0;
+        static uint32_t const invalid_action_mask = 1;
+        static uint32_t const invalid_action = 2;
+        static uint32_t const invalid_offer = 3;
     };
 
     struct Opcode
     {
-        static uint32_t const OFFER = 0;
-        static uint32_t const SOURCE_ACTIONS = 1;
-        static uint32_t const ACTION = 2;
+        static uint32_t const offer = 0;
+        static uint32_t const source_actions = 1;
+        static uint32_t const action = 2;
     };
 
 private:
@@ -308,18 +308,18 @@ public:
 
     struct Error
     {
-        static uint32_t const INVALID_ACTION_MASK = 0;
-        static uint32_t const INVALID_SOURCE = 1;
+        static uint32_t const invalid_action_mask = 0;
+        static uint32_t const invalid_source = 1;
     };
 
     struct Opcode
     {
-        static uint32_t const TARGET = 0;
-        static uint32_t const SEND = 1;
-        static uint32_t const CANCELLED = 2;
-        static uint32_t const DND_DROP_PERFORMED = 3;
-        static uint32_t const DND_FINISHED = 4;
-        static uint32_t const ACTION = 5;
+        static uint32_t const target = 0;
+        static uint32_t const send = 1;
+        static uint32_t const cancelled = 2;
+        static uint32_t const dnd_drop_performed = 3;
+        static uint32_t const dnd_finished = 4;
+        static uint32_t const action = 5;
     };
 
 private:
@@ -354,17 +354,17 @@ public:
 
     struct Error
     {
-        static uint32_t const ROLE = 0;
+        static uint32_t const role = 0;
     };
 
     struct Opcode
     {
-        static uint32_t const DATA_OFFER = 0;
-        static uint32_t const ENTER = 1;
-        static uint32_t const LEAVE = 2;
-        static uint32_t const MOTION = 3;
-        static uint32_t const DROP = 4;
-        static uint32_t const SELECTION = 5;
+        static uint32_t const data_offer = 0;
+        static uint32_t const enter = 1;
+        static uint32_t const leave = 2;
+        static uint32_t const motion = 3;
+        static uint32_t const drop = 4;
+        static uint32_t const selection = 5;
     };
 
 private:
@@ -392,10 +392,10 @@ public:
 
     struct DndAction
     {
-        static uint32_t const NONE = 0;
-        static uint32_t const COPY = 1;
-        static uint32_t const MOVE = 2;
-        static uint32_t const ASK = 4;
+        static uint32_t const none = 0;
+        static uint32_t const copy = 1;
+        static uint32_t const move = 2;
+        static uint32_t const ask = 4;
     };
 
 private:
@@ -424,7 +424,7 @@ public:
 
     struct Error
     {
-        static uint32_t const ROLE = 0;
+        static uint32_t const role = 0;
     };
 
 private:
@@ -456,35 +456,35 @@ public:
 
     struct Resize
     {
-        static uint32_t const NONE = 0;
-        static uint32_t const TOP = 1;
-        static uint32_t const BOTTOM = 2;
-        static uint32_t const LEFT = 4;
-        static uint32_t const TOP_LEFT = 5;
-        static uint32_t const BOTTOM_LEFT = 6;
-        static uint32_t const RIGHT = 8;
-        static uint32_t const TOP_RIGHT = 9;
-        static uint32_t const BOTTOM_RIGHT = 10;
+        static uint32_t const none = 0;
+        static uint32_t const top = 1;
+        static uint32_t const bottom = 2;
+        static uint32_t const left = 4;
+        static uint32_t const top_left = 5;
+        static uint32_t const bottom_left = 6;
+        static uint32_t const right = 8;
+        static uint32_t const top_right = 9;
+        static uint32_t const bottom_right = 10;
     };
 
     struct Transient
     {
-        static uint32_t const INACTIVE = 0x1;
+        static uint32_t const inactive = 0x1;
     };
 
     struct FullscreenMethod
     {
-        static uint32_t const DEFAULT = 0;
-        static uint32_t const SCALE = 1;
-        static uint32_t const DRIVER = 2;
-        static uint32_t const FILL = 3;
+        static uint32_t const default_ = 0;
+        static uint32_t const scale = 1;
+        static uint32_t const driver = 2;
+        static uint32_t const fill = 3;
     };
 
     struct Opcode
     {
-        static uint32_t const PING = 0;
-        static uint32_t const CONFIGURE = 1;
-        static uint32_t const POPUP_DONE = 2;
+        static uint32_t const ping = 0;
+        static uint32_t const configure = 1;
+        static uint32_t const popup_done = 2;
     };
 
 private:
@@ -522,14 +522,14 @@ public:
 
     struct Error
     {
-        static uint32_t const INVALID_SCALE = 0;
-        static uint32_t const INVALID_TRANSFORM = 1;
+        static uint32_t const invalid_scale = 0;
+        static uint32_t const invalid_transform = 1;
     };
 
     struct Opcode
     {
-        static uint32_t const ENTER = 0;
-        static uint32_t const LEAVE = 1;
+        static uint32_t const enter = 0;
+        static uint32_t const leave = 1;
     };
 
 private:
@@ -568,15 +568,15 @@ public:
 
     struct Capability
     {
-        static uint32_t const POINTER = 1;
-        static uint32_t const KEYBOARD = 2;
-        static uint32_t const TOUCH = 4;
+        static uint32_t const pointer = 1;
+        static uint32_t const keyboard = 2;
+        static uint32_t const touch = 4;
     };
 
     struct Opcode
     {
-        static uint32_t const CAPABILITIES = 0;
-        static uint32_t const NAME = 1;
+        static uint32_t const capabilities = 0;
+        static uint32_t const name = 1;
     };
 
 private:
@@ -621,40 +621,40 @@ public:
 
     struct Error
     {
-        static uint32_t const ROLE = 0;
+        static uint32_t const role = 0;
     };
 
     struct ButtonState
     {
-        static uint32_t const RELEASED = 0;
-        static uint32_t const PRESSED = 1;
+        static uint32_t const released = 0;
+        static uint32_t const pressed = 1;
     };
 
     struct Axis
     {
-        static uint32_t const VERTICAL_SCROLL = 0;
-        static uint32_t const HORIZONTAL_SCROLL = 1;
+        static uint32_t const vertical_scroll = 0;
+        static uint32_t const horizontal_scroll = 1;
     };
 
     struct AxisSource
     {
-        static uint32_t const WHEEL = 0;
-        static uint32_t const FINGER = 1;
-        static uint32_t const CONTINUOUS = 2;
-        static uint32_t const WHEEL_TILT = 3;
+        static uint32_t const wheel = 0;
+        static uint32_t const finger = 1;
+        static uint32_t const continuous = 2;
+        static uint32_t const wheel_tilt = 3;
     };
 
     struct Opcode
     {
-        static uint32_t const ENTER = 0;
-        static uint32_t const LEAVE = 1;
-        static uint32_t const MOTION = 2;
-        static uint32_t const BUTTON = 3;
-        static uint32_t const AXIS = 4;
-        static uint32_t const FRAME = 5;
-        static uint32_t const AXIS_SOURCE = 6;
-        static uint32_t const AXIS_STOP = 7;
-        static uint32_t const AXIS_DISCRETE = 8;
+        static uint32_t const enter = 0;
+        static uint32_t const leave = 1;
+        static uint32_t const motion = 2;
+        static uint32_t const button = 3;
+        static uint32_t const axis = 4;
+        static uint32_t const frame = 5;
+        static uint32_t const axis_source = 6;
+        static uint32_t const axis_stop = 7;
+        static uint32_t const axis_discrete = 8;
     };
 
 private:
@@ -689,24 +689,24 @@ public:
 
     struct KeymapFormat
     {
-        static uint32_t const NO_KEYMAP = 0;
-        static uint32_t const XKB_V1 = 1;
+        static uint32_t const no_keymap = 0;
+        static uint32_t const xkb_v1 = 1;
     };
 
     struct KeyState
     {
-        static uint32_t const RELEASED = 0;
-        static uint32_t const PRESSED = 1;
+        static uint32_t const released = 0;
+        static uint32_t const pressed = 1;
     };
 
     struct Opcode
     {
-        static uint32_t const KEYMAP = 0;
-        static uint32_t const ENTER = 1;
-        static uint32_t const LEAVE = 2;
-        static uint32_t const KEY = 3;
-        static uint32_t const MODIFIERS = 4;
-        static uint32_t const REPEAT_INFO = 5;
+        static uint32_t const keymap = 0;
+        static uint32_t const enter = 1;
+        static uint32_t const leave = 2;
+        static uint32_t const key = 3;
+        static uint32_t const modifiers = 4;
+        static uint32_t const repeat_info = 5;
     };
 
 private:
@@ -742,13 +742,13 @@ public:
 
     struct Opcode
     {
-        static uint32_t const DOWN = 0;
-        static uint32_t const UP = 1;
-        static uint32_t const MOTION = 2;
-        static uint32_t const FRAME = 3;
-        static uint32_t const CANCEL = 4;
-        static uint32_t const SHAPE = 5;
-        static uint32_t const ORIENTATION = 6;
+        static uint32_t const down = 0;
+        static uint32_t const up = 1;
+        static uint32_t const motion = 2;
+        static uint32_t const frame = 3;
+        static uint32_t const cancel = 4;
+        static uint32_t const shape = 5;
+        static uint32_t const orientation = 6;
     };
 
 private:
@@ -781,38 +781,38 @@ public:
 
     struct Subpixel
     {
-        static uint32_t const UNKNOWN = 0;
-        static uint32_t const NONE = 1;
-        static uint32_t const HORIZONTAL_RGB = 2;
-        static uint32_t const HORIZONTAL_BGR = 3;
-        static uint32_t const VERTICAL_RGB = 4;
-        static uint32_t const VERTICAL_BGR = 5;
+        static uint32_t const unknown = 0;
+        static uint32_t const none = 1;
+        static uint32_t const horizontal_rgb = 2;
+        static uint32_t const horizontal_bgr = 3;
+        static uint32_t const vertical_rgb = 4;
+        static uint32_t const vertical_bgr = 5;
     };
 
     struct Transform
     {
-        static uint32_t const NORMAL = 0;
+        static uint32_t const normal = 0;
         static uint32_t const _90 = 1;
         static uint32_t const _180 = 2;
         static uint32_t const _270 = 3;
-        static uint32_t const FLIPPED = 4;
-        static uint32_t const FLIPPED_90 = 5;
-        static uint32_t const FLIPPED_180 = 6;
-        static uint32_t const FLIPPED_270 = 7;
+        static uint32_t const flipped = 4;
+        static uint32_t const flipped_90 = 5;
+        static uint32_t const flipped_180 = 6;
+        static uint32_t const flipped_270 = 7;
     };
 
     struct Mode
     {
-        static uint32_t const CURRENT = 0x1;
-        static uint32_t const PREFERRED = 0x2;
+        static uint32_t const current = 0x1;
+        static uint32_t const preferred = 0x2;
     };
 
     struct Opcode
     {
-        static uint32_t const GEOMETRY = 0;
-        static uint32_t const MODE = 1;
-        static uint32_t const DONE = 2;
-        static uint32_t const SCALE = 3;
+        static uint32_t const geometry = 0;
+        static uint32_t const mode = 1;
+        static uint32_t const done = 2;
+        static uint32_t const scale = 3;
     };
 
 private:
@@ -863,7 +863,7 @@ public:
 
     struct Error
     {
-        static uint32_t const BAD_SURFACE = 0;
+        static uint32_t const bad_surface = 0;
     };
 
 private:
@@ -892,7 +892,7 @@ public:
 
     struct Error
     {
-        static uint32_t const BAD_SURFACE = 0;
+        static uint32_t const bad_surface = 0;
     };
 
 private:

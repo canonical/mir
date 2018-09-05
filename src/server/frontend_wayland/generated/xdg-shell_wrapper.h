@@ -43,17 +43,17 @@ public:
 
     struct Error
     {
-        static uint32_t const ROLE = 0;
-        static uint32_t const DEFUNCT_SURFACES = 1;
-        static uint32_t const NOT_THE_TOPMOST_POPUP = 2;
-        static uint32_t const INVALID_POPUP_PARENT = 3;
-        static uint32_t const INVALID_SURFACE_STATE = 4;
-        static uint32_t const INVALID_POSITIONER = 5;
+        static uint32_t const role = 0;
+        static uint32_t const defunct_surfaces = 1;
+        static uint32_t const not_the_topmost_popup = 2;
+        static uint32_t const invalid_popup_parent = 3;
+        static uint32_t const invalid_surface_state = 4;
+        static uint32_t const invalid_positioner = 5;
     };
 
     struct Opcode
     {
-        static uint32_t const PING = 0;
+        static uint32_t const ping = 0;
     };
 
 private:
@@ -84,44 +84,44 @@ public:
 
     struct Error
     {
-        static uint32_t const INVALID_INPUT = 0;
+        static uint32_t const invalid_input = 0;
     };
 
     struct Anchor
     {
-        static uint32_t const NONE = 0;
-        static uint32_t const TOP = 1;
-        static uint32_t const BOTTOM = 2;
-        static uint32_t const LEFT = 3;
-        static uint32_t const RIGHT = 4;
-        static uint32_t const TOP_LEFT = 5;
-        static uint32_t const BOTTOM_LEFT = 6;
-        static uint32_t const TOP_RIGHT = 7;
-        static uint32_t const BOTTOM_RIGHT = 8;
+        static uint32_t const none = 0;
+        static uint32_t const top = 1;
+        static uint32_t const bottom = 2;
+        static uint32_t const left = 3;
+        static uint32_t const right = 4;
+        static uint32_t const top_left = 5;
+        static uint32_t const bottom_left = 6;
+        static uint32_t const top_right = 7;
+        static uint32_t const bottom_right = 8;
     };
 
     struct Gravity
     {
-        static uint32_t const NONE = 0;
-        static uint32_t const TOP = 1;
-        static uint32_t const BOTTOM = 2;
-        static uint32_t const LEFT = 3;
-        static uint32_t const RIGHT = 4;
-        static uint32_t const TOP_LEFT = 5;
-        static uint32_t const BOTTOM_LEFT = 6;
-        static uint32_t const TOP_RIGHT = 7;
-        static uint32_t const BOTTOM_RIGHT = 8;
+        static uint32_t const none = 0;
+        static uint32_t const top = 1;
+        static uint32_t const bottom = 2;
+        static uint32_t const left = 3;
+        static uint32_t const right = 4;
+        static uint32_t const top_left = 5;
+        static uint32_t const bottom_left = 6;
+        static uint32_t const top_right = 7;
+        static uint32_t const bottom_right = 8;
     };
 
     struct ConstraintAdjustment
     {
-        static uint32_t const NONE = 0;
-        static uint32_t const SLIDE_X = 1;
-        static uint32_t const SLIDE_Y = 2;
-        static uint32_t const FLIP_X = 4;
-        static uint32_t const FLIP_Y = 8;
-        static uint32_t const RESIZE_X = 16;
-        static uint32_t const RESIZE_Y = 32;
+        static uint32_t const none = 0;
+        static uint32_t const slide_x = 1;
+        static uint32_t const slide_y = 2;
+        static uint32_t const flip_x = 4;
+        static uint32_t const flip_y = 8;
+        static uint32_t const resize_x = 16;
+        static uint32_t const resize_y = 32;
     };
 
 private:
@@ -155,14 +155,14 @@ public:
 
     struct Error
     {
-        static uint32_t const NOT_CONSTRUCTED = 1;
-        static uint32_t const ALREADY_CONSTRUCTED = 2;
-        static uint32_t const UNCONFIGURED_BUFFER = 3;
+        static uint32_t const not_constructed = 1;
+        static uint32_t const already_constructed = 2;
+        static uint32_t const unconfigured_buffer = 3;
     };
 
     struct Opcode
     {
-        static uint32_t const CONFIGURE = 0;
+        static uint32_t const configure = 0;
     };
 
 private:
@@ -195,29 +195,29 @@ public:
 
     struct ResizeEdge
     {
-        static uint32_t const NONE = 0;
-        static uint32_t const TOP = 1;
-        static uint32_t const BOTTOM = 2;
-        static uint32_t const LEFT = 4;
-        static uint32_t const TOP_LEFT = 5;
-        static uint32_t const BOTTOM_LEFT = 6;
-        static uint32_t const RIGHT = 8;
-        static uint32_t const TOP_RIGHT = 9;
-        static uint32_t const BOTTOM_RIGHT = 10;
+        static uint32_t const none = 0;
+        static uint32_t const top = 1;
+        static uint32_t const bottom = 2;
+        static uint32_t const left = 4;
+        static uint32_t const top_left = 5;
+        static uint32_t const bottom_left = 6;
+        static uint32_t const right = 8;
+        static uint32_t const top_right = 9;
+        static uint32_t const bottom_right = 10;
     };
 
     struct State
     {
-        static uint32_t const MAXIMIZED = 1;
-        static uint32_t const FULLSCREEN = 2;
-        static uint32_t const RESIZING = 3;
-        static uint32_t const ACTIVATED = 4;
+        static uint32_t const maximized = 1;
+        static uint32_t const fullscreen = 2;
+        static uint32_t const resizing = 3;
+        static uint32_t const activated = 4;
     };
 
     struct Opcode
     {
-        static uint32_t const CONFIGURE = 0;
-        static uint32_t const CLOSE = 1;
+        static uint32_t const configure = 0;
+        static uint32_t const close = 1;
     };
 
 private:
@@ -259,13 +259,13 @@ public:
 
     struct Error
     {
-        static uint32_t const INVALID_GRAB = 0;
+        static uint32_t const invalid_grab = 0;
     };
 
     struct Opcode
     {
-        static uint32_t const CONFIGURE = 0;
-        static uint32_t const POPUP_DONE = 1;
+        static uint32_t const configure = 0;
+        static uint32_t const popup_done = 1;
     };
 
 private:

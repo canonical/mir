@@ -95,8 +95,8 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
                 if (mapping.first & (current_pointer_buttons ^ last_buttons))
                 {
                     auto const state = (mapping.first & current_pointer_buttons) ?
-                        ButtonState::PRESSED :
-                        ButtonState::RELEASED;
+                        ButtonState::pressed :
+                        ButtonState::released;
 
                     auto const serial = wl_display_next_serial(display);
                     send_button_event(serial, timestamp, mapping.second, state);
@@ -157,7 +157,7 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
             if (hscroll != 0)
             {
                 send_axis_event(timestamp,
-                                Axis::HORIZONTAL_SCROLL,
+                                Axis::horizontal_scroll,
                                 hscroll);
                 needs_frame = true;
             }
@@ -166,7 +166,7 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
             if (vscroll != 0)
             {
                 send_axis_event(timestamp,
-                                Axis::VERTICAL_SCROLL,
+                                Axis::vertical_scroll,
                                 vscroll);
                 needs_frame = true;
             }

@@ -357,35 +357,35 @@ void mf::XdgToplevelV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/
 
     switch (edges)
     {
-    case ResizeEdge::TOP:
+    case ResizeEdge::top:
         edge = mir_resize_edge_north;
         break;
 
-    case ResizeEdge::BOTTOM:
+    case ResizeEdge::bottom:
         edge = mir_resize_edge_south;
         break;
 
-    case ResizeEdge::LEFT:
+    case ResizeEdge::left:
         edge = mir_resize_edge_west;
         break;
 
-    case ResizeEdge::RIGHT:
+    case ResizeEdge::right:
         edge = mir_resize_edge_east;
         break;
 
-    case ResizeEdge::TOP_LEFT:
+    case ResizeEdge::top_left:
         edge = mir_resize_edge_northwest;
         break;
 
-    case ResizeEdge::BOTTOM_LEFT:
+    case ResizeEdge::bottom_left:
         edge = mir_resize_edge_southwest;
         break;
 
-    case ResizeEdge::TOP_RIGHT:
+    case ResizeEdge::top_right:
         edge = mir_resize_edge_northeast;
         break;
 
-    case ResizeEdge::BOTTOM_RIGHT:
+    case ResizeEdge::bottom_right:
         edge = mir_resize_edge_southeast;
         break;
 
@@ -444,7 +444,7 @@ void mf::XdgToplevelV6::handle_resize(std::experimental::optional<geometry::Poin
     if (is_active())
     {
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = State::ACTIVATED;
+            *state = State::activated;
     }
 
     switch (window_state())
@@ -453,12 +453,12 @@ void mf::XdgToplevelV6::handle_resize(std::experimental::optional<geometry::Poin
     case mir_window_state_horizmaximized:
     case mir_window_state_vertmaximized:
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = State::MAXIMIZED;
+            *state = State::maximized;
         break;
 
     case mir_window_state_fullscreen:
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = State::FULLSCREEN;
+            *state = State::fullscreen;
         break;
 
     default:
@@ -507,16 +507,16 @@ void mf::XdgPositionerV6::set_anchor(uint32_t anchor)
 {
     MirPlacementGravity placement = mir_placement_gravity_center;
 
-    if (anchor & Anchor::TOP)
+    if (anchor & Anchor::top)
         placement = MirPlacementGravity(placement | mir_placement_gravity_north);
 
-    if (anchor & Anchor::BOTTOM)
+    if (anchor & Anchor::bottom)
         placement = MirPlacementGravity(placement | mir_placement_gravity_south);
 
-    if (anchor & Anchor::LEFT)
+    if (anchor & Anchor::left)
         placement = MirPlacementGravity(placement | mir_placement_gravity_west);
 
-    if (anchor & Anchor::RIGHT)
+    if (anchor & Anchor::right)
         placement = MirPlacementGravity(placement | mir_placement_gravity_east);
 
     aux_rect_placement_gravity = placement;
@@ -526,16 +526,16 @@ void mf::XdgPositionerV6::set_gravity(uint32_t gravity)
 {
     MirPlacementGravity placement = mir_placement_gravity_center;
 
-    if (gravity & Gravity::TOP)
+    if (gravity & Gravity::top)
         placement = MirPlacementGravity(placement | mir_placement_gravity_south);
 
-    if (gravity & Gravity::BOTTOM)
+    if (gravity & Gravity::bottom)
         placement = MirPlacementGravity(placement | mir_placement_gravity_north);
 
-    if (gravity & Gravity::LEFT)
+    if (gravity & Gravity::left)
         placement = MirPlacementGravity(placement | mir_placement_gravity_east);
 
-    if (gravity & Gravity::RIGHT)
+    if (gravity & Gravity::right)
         placement = MirPlacementGravity(placement | mir_placement_gravity_west);
 
     surface_placement_gravity = placement;
