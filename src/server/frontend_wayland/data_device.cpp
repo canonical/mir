@@ -56,7 +56,7 @@ struct DataOffer : mf::wayland::DataOffer
     DataSource* const source;
 };
 
-class DataSource : mf::wayland::DataSource
+struct DataSource : mf::wayland::DataSource
 {
 public:
     DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id, DataDeviceManager* manager)
