@@ -149,40 +149,59 @@ private:
     std::vector<Emitter> const emitters;
 };
 
-// a list of items with delimiters (such as commas) between them
-// implicitly convertible to an Emitter
-struct List
+struct EmptyLineList
 {
-    explicit List(std::initializer_list<Emitter> items, Emitter const& delimiter, std::string indent = "")
-        : items{std::vector<Emitter>(items)},
-          delimiter{delimiter},
-          indent{indent}
+    explicit EmptyLineList(std::initializer_list<Emitter> items)
+        : items{std::vector<Emitter>(items)}
     {
     }
 
-    explicit List(std::vector<Emitter> const& items, Emitter const& delimiter, std::string indent = "")
-        : items{items},
-          delimiter{delimiter},
-          indent{indent}
+    explicit EmptyLineList(std::vector<Emitter> items)
+        : items{items}
     {
     }
 
     inline operator Emitter() const {
-        return Emitter::layout(
-            Emitter::seq(
-                items,
-                delimiter,
-                false,
-                false),
-            false,
-            false,
-            indent);
+        return Emitter::seq(items, empty_line);
     }
 
 private:
     std::vector<Emitter> const items;
-    Emitter const& delimiter;
-    std::string const indent;
+};
+
+struct BraceList
+{
+    explicit BraceList(std::initializer_list<Emitter> items)
+        : items{std::vector<Emitter>(items)}
+    {
+    }
+
+    explicit BraceList(std::vector<Emitter> items)
+        : items{items}
+    {
+    }
+
+    inline operator Emitter() const {
+        return Emitter::layout({
+                "{",
+                Emitter::layout(
+                    Emitter::seq(
+                        items,
+                        Emitter::layout(
+                            ",",
+                            false,
+                            true)),
+                    true,
+                    false,
+                    Emitter::single_indent),
+                "};"
+            },
+            false,
+            true);
+    }
+
+private:
+    std::vector<Emitter> const items;
 };
 
 #endif // MIR_WAYLAND_GENERATOR_EMITTER_H

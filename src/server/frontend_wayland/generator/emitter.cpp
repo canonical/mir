@@ -158,9 +158,9 @@ std::shared_ptr<Emitter::Impl const> Emitter::string(std::string text)
 }
 
 std::shared_ptr<Emitter::Impl const> Emitter::seq(std::vector<Emitter> const& children,
-                                            Emitter const& delimiter,
-                                            bool at_start,
-                                            bool at_end)
+                                                  Emitter const& delimiter,
+                                                  bool at_start,
+                                                  bool at_end)
 {
     std::vector<Emitter> valid;
     for (auto const& i : children)
@@ -175,9 +175,9 @@ std::shared_ptr<Emitter::Impl const> Emitter::seq(std::vector<Emitter> const& ch
 }
 
 std::shared_ptr<Emitter::Impl const> Emitter::layout(Emitter const& child,
-                                               bool clear_line_before,
-                                               bool clear_line_after,
-                                               std::string indent)
+                                                     bool clear_line_before,
+                                                     bool clear_line_after,
+                                                     std::string indent)
 {
     if (clear_line_before == false && clear_line_after == false && indent == "")
         return child.impl;

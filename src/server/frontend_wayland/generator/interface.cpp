@@ -43,7 +43,7 @@ Emitter Interface::declaration() const
         {"class ", generated_name},
         "{",
         "public:",
-        List {{
+        Emitter::layout(EmptyLineList{
             {"static ", generated_name, "* from(struct wl_resource*);"},
             Lines {
                 constructor_prototype(),
@@ -55,13 +55,13 @@ Emitter Interface::declaration() const
             enum_declarations(),
             event_opcodes(),
             (thunks_impl_contents().is_valid() ? "struct Thunks;" : nullptr),
-        }, empty_line, Emitter::single_indent},
+        }, true, true, Emitter::single_indent),
         empty_line,
         "private:",
-        List {{
+        Emitter::layout(EmptyLineList{
             (is_global ? bind_prototype() : nullptr),
             virtual_request_prototypes(),
-        }, empty_line, Emitter::single_indent},
+        }, true, true, Emitter::single_indent),
         "};"
     };
 }
@@ -71,7 +71,7 @@ Emitter Interface::implementation() const
     return Lines{
         {"// ", generated_name},
         empty_line,
-        List{{
+        EmptyLineList{
             Lines{
                 {"mfw::", generated_name, "* ", nmspace, "from(struct wl_resource* resource)"},
                 Block{
@@ -89,19 +89,19 @@ Emitter Interface::implementation() const
                 }
             },
             types_init()
-        }, empty_line},
+        },
     };
 }
 
 Emitter Interface::wl_interface_init() const
 {
     return Lines{
-        {"struct wl_interface const ", wl_name, "_interface_data {"},
-        {List{{
+        {"struct wl_interface const ", wl_name, "_interface_data ",
+            BraceList{
                 {"\"", wl_name, "\", ", std::to_string(version)},
                 {std::to_string(requests.size()), ", ",  (requests.empty() ? "nullptr" : nmspace + "Thunks::request_messages")},
-                {std::to_string(events.size()), ", ",  (events.empty() ? "nullptr" : nmspace + "Thunks::event_messages")},
-            }, Line{{","}, false, true}, Emitter::single_indent}, "};"}
+                {std::to_string(events.size()), ", ",  (events.empty() ? "nullptr" : nmspace + "Thunks::event_messages")}
+            }}
     };
 }
 
@@ -165,13 +165,11 @@ Emitter Interface::constructor_args() const
 {
     if (is_global)
     {
-        return List{{"struct wl_display* display", "uint32_t max_version"},
-                    ", "};
+        return {"struct wl_display* display, uint32_t max_version"};
     }
     else
     {
-        return List{{"struct wl_client* client", "struct wl_resource* parent", "uint32_t id"},
-                    ", "};
+        return {"struct wl_client* client, struct wl_resource* parent, uint32_t id"};
     }
 }
 
@@ -229,7 +227,7 @@ Emitter Interface::event_impls() const
     {
         impls.push_back(event.impl());
     }
-    return List{impls, empty_line};
+    return EmptyLineList{impls};
 }
 
 Emitter Interface::member_vars() const
@@ -252,22 +250,22 @@ Emitter Interface::member_vars() const
 
 Emitter Interface::enum_declarations() const
 {
-    std::vector<Emitter> ret;
+    std::vector<Emitter> declarations;
     for (auto const& i : enums)
     {
-        ret.push_back(i.declaration());
+        declarations.push_back(i.declaration());
     }
-    return List{ret, empty_line};
+    return EmptyLineList{declarations};
 }
 
 Emitter Interface::event_opcodes() const
 {
-    std::vector<Emitter> ret;
+    std::vector<Emitter> opcodes;
     for (auto const& i : events)
     {
-        ret.push_back(i.opcode_declare());
+        opcodes.push_back(i.opcode_declare());
     }
-    Emitter body = List{ret, nullptr};
+    Emitter body{opcodes};
     if (body.is_valid())
     {
         return Lines{
@@ -327,7 +325,7 @@ Emitter Interface::thunks_impl_contents() const
         declares.push_back({"static void const* request_vtable[];"});
     impls.push_back(Lines{declares});
 
-    return List{impls, empty_line};
+    return EmptyLineList{impls};
 }
 
 Emitter Interface::bind_thunk() const
@@ -353,11 +351,16 @@ Emitter Interface::bind_thunk() const
             "catch(...)",
             Block{{
                 "::mir::log(",
-                List{{"::mir::logging::Severity::critical",
-                        "\"frontend:Wayland\"",
-                        "std::current_exception()",
-                        {"\"Exception processing ", generated_name, "::bind() request\""}},
-                    Line{{","}, false, true}, "           "},
+                Emitter::layout(
+                    Emitter::seq({
+                            "::mir::logging::Severity::critical",
+                            "\"frontend:Wayland\"",
+                            "std::current_exception()",
+                            {"\"Exception processing ", generated_name, "::bind() request\""}},
+                        Emitter::layout(",", false, true)),
+                    false,
+                    false,
+                    "           "),
                 ");"
             }}
         }
@@ -389,8 +392,8 @@ Emitter Interface::types_init() const
             request_messages.push_back(request.wl_message_init());
 
         types.push_back(Lines{
-            {"struct wl_message const ", nmspace, "Thunks::request_messages[] {"},
-            {List{request_messages, Line{{","}, false, true}, Emitter::single_indent}, "};"}
+            {"struct wl_message const ", nmspace, "Thunks::request_messages[] ",
+                BraceList{request_messages}}
         });
     }
 
@@ -401,8 +404,8 @@ Emitter Interface::types_init() const
             event_messages.push_back(event.wl_message_init());
 
         types.push_back(Lines{
-            {"struct wl_message const ", nmspace, "Thunks::event_messages[] {"},
-            {List{event_messages, Line{{","}, false, true}, Emitter::single_indent}, "};"}
+            {"struct wl_message const ", nmspace, "Thunks::event_messages[] ",
+                BraceList{event_messages}}
         });
     }
 
@@ -415,12 +418,12 @@ Emitter Interface::types_init() const
         }
 
         types.push_back(Lines{
-            {"void const* ", nmspace, "Thunks::request_vtable[] {"},
-                {List{elems, Line{{","}, false, true}, Emitter::single_indent}, "};"}
+            {"void const* ", nmspace, "Thunks::request_vtable[] ",
+                BraceList{elems}},
         });
     }
 
-    return List{types, empty_line};
+    return EmptyLineList{types};
 }
 
 std::vector<Request> Interface::get_requests(xmlpp::Element const& node, std::string generated_name, bool is_global)

@@ -88,7 +88,7 @@ Emitter Event::mir_args() const
     {
         mir_args.push_back(i.mir_prototype());
     }
-    return List{mir_args, ", "};
+    return Emitter::seq(mir_args, ", ");
 }
 
 Emitter Event::wl_call_args() const
@@ -96,5 +96,5 @@ Emitter Event::wl_call_args() const
     std::vector<Emitter> call_args{"resource", "Opcode::" + sanitize_name(name)};
     for (auto& arg : arguments)
         call_args.push_back(arg.call_fragment());
-    return List{call_args, ", "};
+    return Emitter::seq(call_args, ", ");
 }

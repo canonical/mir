@@ -95,8 +95,8 @@ Emitter Method::types_init() const
 
     return Lines{
         declares,
-        {"struct wl_interface const* mfw::", class_name, "::Thunks::", name, "_types[] {"},
-            {List{types_vec, Line{{","}, false, true}, Emitter::single_indent}, "};"}
+        {"struct wl_interface const* mfw::", class_name, "::Thunks::", name, "_types[] ",
+            BraceList{types_vec}}
     };
 }
 
