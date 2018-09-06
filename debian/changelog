@@ -40,9 +40,13 @@ mir (0.32.2) UNRELEASED; urgency=medium
       . [console] Fix VT switching with LinuxVirtualTerminal. (Fixes #499)
       . [console] Avoid breaking X11 desktops that have not claimed the VT from
         logind. (Fixes #535, #539)
+      . [console] LogindConsoleServices: Support VT switching. (Fixes #459)
+      . [libmiral] Parents of the active window also have focus. (Fixes #522)
       . Fix "sanitize" builds
       . Racy shutdown in miral-tests and miral_wlcs_tests. (Fixes #543)
       . Fix a locale initialization crash on musl
+      . [mesa] Use both id and drm_fd as output identifier for cursor buffer
+        as we're not sure of the uniqueness of either. (Fixes #556)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 29 Aug 2018 12:19:00 +0100
 
