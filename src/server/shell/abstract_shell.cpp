@@ -30,6 +30,9 @@
 #include "mir/scene/surface.h"
 #include "mir/input/seat.h"
 
+#include <algorithm>
+#include <vector>
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mi = mir::input;
@@ -334,18 +337,18 @@ void msh::AbstractShell::set_focus_to_locked(
 {
     auto const current_focus = focus_surface.lock();
 
-    std::set<std::shared_ptr<ms::Surface>> new_focus_tree;
+    std::vector<std::shared_ptr<ms::Surface>> new_focus_tree;
 
     for (auto item = surface; item; item = item->parent())
     {
-        new_focus_tree.insert(item);
+        new_focus_tree.insert(begin(new_focus_tree), item);
     }
 
-    std::set<std::shared_ptr<ms::Surface>> current_focus_tree;
+    std::vector<std::shared_ptr<ms::Surface>> current_focus_tree;
 
     for (auto item = current_focus; item; item = item->parent())
     {
-        current_focus_tree.insert(item);
+        current_focus_tree.push_back(item);
     }
 
     if (surface != current_focus)
@@ -355,7 +358,7 @@ void msh::AbstractShell::set_focus_to_locked(
 
         for (auto const& item : current_focus_tree)
         {
-            if (new_focus_tree.find(item) == end(new_focus_tree))
+            if (find(begin(new_focus_tree), end(new_focus_tree), item) == end(new_focus_tree))
             {
                 item->configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
             }
@@ -380,7 +383,7 @@ void msh::AbstractShell::set_focus_to_locked(
 
             for (auto const& item : new_focus_tree)
             {
-                if (current_focus_tree.find(item) == end(current_focus_tree))
+                if (find(begin(current_focus_tree), end(current_focus_tree), item) == end(current_focus_tree))
                 {
                     item->configure(mir_window_attrib_focus, mir_window_focus_state_focused);
                 }
