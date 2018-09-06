@@ -20,6 +20,7 @@
 
 #include "mir/fd.h"
 
+#include <boost/throw_exception.hpp>
 #include <sys/sysmacros.h>
 #include <fcntl.h>
 #include <xf86drm.h>
@@ -94,4 +95,10 @@ char const* mtd::StubConsoleServices::devnode_for_devnum(int major, int minor)
         devnode = devnodes[devnum];
     }
     return devnode.c_str();
+}
+
+std::unique_ptr<mir::VTSwitcher> mir::test::doubles::StubConsoleServices::create_vt_switcher()
+{
+    BOOST_THROW_EXCEPTION((
+        std::runtime_error{"StubConsoleServices does not support VT switching"}));
 }

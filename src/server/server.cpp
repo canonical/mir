@@ -52,11 +52,11 @@ namespace
 struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
 {
     bool handle(MirEvent const&) override { return false; }
-    void append(std::shared_ptr<mi::EventFilter> const& filter) override
+    void append(std::weak_ptr<mi::EventFilter> const& filter) override
     {
         append_event_filters.push_back(filter);
     }
-    void prepend(std::shared_ptr<mi::EventFilter> const& filter) override
+    void prepend(std::weak_ptr<mi::EventFilter> const& filter) override
     {
         prepend_event_filters.push_back(filter);
     }
@@ -72,8 +72,8 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
         append_event_filters.clear();
         prepend_event_filters.clear();
     }
-    std::vector<std::shared_ptr<mi::EventFilter>> prepend_event_filters;
-    std::vector<std::shared_ptr<mi::EventFilter>> append_event_filters;
+    std::vector<std::weak_ptr<mi::EventFilter>> prepend_event_filters;
+    std::vector<std::weak_ptr<mi::EventFilter>> append_event_filters;
 };
 }
 

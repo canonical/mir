@@ -42,6 +42,8 @@ public:
 
     void restore() override;
 
+    std::unique_ptr<VTSwitcher> create_vt_switcher() override;
+
     std::future<std::unique_ptr<mir::Device>> acquire_device(
         int major, int minor,
         std::unique_ptr<Device::Observer> observer) override;

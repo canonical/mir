@@ -18,6 +18,8 @@
 
 #include "mir/input/vt_filter.h"
 #include "mir_toolkit/event.h"
+#include "mir/console_services.h"
+#include "mir/log.h"
 
 #include <linux/input.h>
 #include <linux/vt.h>
@@ -25,14 +27,9 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-namespace
+mir::input::VTFilter::VTFilter(std::unique_ptr<mir::VTSwitcher> switcher)
+    : switcher{std::move(switcher)}
 {
-void set_active_vt(int vt)
-{
-    auto console_fd = open("/dev/tty0", O_RDONLY | O_NDELAY);
-    ioctl(console_fd, VT_ACTIVATE, vt);
-    close(console_fd);
-}
 }
 
 bool mir::input::VTFilter::handle(MirEvent const& event)
@@ -47,6 +44,21 @@ bool mir::input::VTFilter::handle(MirEvent const& event)
 
     auto const keyboard_event = mir_input_event_get_keyboard_event(input_event);
     auto const modifier_state  = mir_keyboard_event_modifiers(keyboard_event);
+
+    auto const set_active_vt =
+        [this](int vtno)
+        {
+            switcher->switch_to(
+                vtno,
+                [](std::exception const& err)
+                {
+                    mir::log(
+                        mir::logging::Severity::error,
+                        "VT switch key handler",
+                        std::make_exception_ptr(err),
+                        "Failed to switch to requested VT");
+                });
+        };
 
     if (mir_keyboard_event_action(keyboard_event) == mir_keyboard_action_down &&
         (modifier_state & mir_input_event_modifier_alt) &&

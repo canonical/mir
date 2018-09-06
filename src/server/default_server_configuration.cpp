@@ -68,8 +68,7 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 }
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::Configuration> const& configuration_options) :
-    configuration_options(configuration_options),
-    default_filter(std::make_shared<mi::VTFilter>())
+    configuration_options(configuration_options)
 {
 }
 

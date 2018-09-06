@@ -21,15 +21,24 @@
 
 #include "mir/input/event_filter.h"
 
+#include <memory>
+
 namespace mir
 {
+class VTSwitcher;
+
 namespace input
 {
 
 class VTFilter : public EventFilter
 {
 public:
+    VTFilter(std::unique_ptr<VTSwitcher> switcher);
+
     bool handle(MirEvent const& event) override;
+
+private:
+    std::unique_ptr<VTSwitcher> const switcher;
 };
 
 }

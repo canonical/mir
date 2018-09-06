@@ -22,6 +22,8 @@
 #include "mir/fd.h"
 #include "mir/console_services.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace mir
 {
 namespace test
@@ -39,6 +41,12 @@ public:
     }
 
     void restore() override {}
+
+    std::unique_ptr<VTSwitcher> create_vt_switcher() override
+    {
+        BOOST_THROW_EXCEPTION((
+            std::runtime_error{"NullConsoleServices does not implement VT switching"}));
+    }
 
     std::future<std::unique_ptr<Device>> acquire_device(
         int, int,

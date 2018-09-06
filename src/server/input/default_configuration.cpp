@@ -38,6 +38,7 @@
 #include "mir/input/input_probe.h"
 #include "mir/input/platform.h"
 #include "mir/input/xkb_mapper.h"
+#include "mir/input/vt_filter.h"
 #include "mir/options/configuration.h"
 #include "mir/options/option.h"
 #include "mir/dispatch/multiplexing_dispatchable.h"
@@ -49,6 +50,8 @@
 #include "mir/log.h"
 #include "mir/shared_library.h"
 #include "mir/dispatch/action_queue.h"
+#include "mir/console_services.h"
+#include "mir/log.h"
 
 #include "mir_toolkit/cursors.h"
 
@@ -76,8 +79,28 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
     return event_filter_chain_dispatcher(
         [this]() -> std::shared_ptr<mi::EventFilterChainDispatcher>
         {
-            std::initializer_list<std::shared_ptr<mi::EventFilter> const> filter_list {default_filter};
-            return std::make_shared<mi::EventFilterChainDispatcher>(filter_list, the_surface_input_dispatcher());
+            auto const make_default_filter_list =
+                [this]() -> std::vector<std::weak_ptr<mi::EventFilter>>
+                {
+                    try
+                    {
+                        default_filter = std::make_shared<mi::VTFilter>(
+                            the_console_services()->create_vt_switcher());
+                    }
+                    catch (std::exception const& err)
+                    {
+                        mir::log(
+                            mir::logging::Severity::informational,
+                            "VT switch key handler",
+                            "No VT switching support available: %s",
+                            err.what());
+                        return {};
+                    }
+                    return {default_filter};
+                };
+            return std::make_shared<mi::EventFilterChainDispatcher>(
+                make_default_filter_list(),
+                the_surface_input_dispatcher());
         });
 }
 

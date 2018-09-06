@@ -21,9 +21,9 @@
 namespace mi = mir::input;
 
 mi::EventFilterChainDispatcher::EventFilterChainDispatcher(
-    std::initializer_list<std::shared_ptr<mi::EventFilter> const> const& values,
+    std::vector<std::weak_ptr<mi::EventFilter>> initial_filters,
     std::shared_ptr<mi::InputDispatcher> const& next_dispatcher)
-    : filters(values.begin(), values.end()),
+    : filters(std::move(initial_filters)),
       next_dispatcher(next_dispatcher)
 {
 }
@@ -48,14 +48,14 @@ bool mi::EventFilterChainDispatcher::handle(MirEvent const& event)
     return false;
 }
 
-void mi::EventFilterChainDispatcher::append(std::shared_ptr<EventFilter> const& filter)
+void mi::EventFilterChainDispatcher::append(std::weak_ptr<EventFilter> const& filter)
 {
     std::lock_guard<std::mutex> lg(filter_guard);
 
     filters.push_back(filter);
 }
 
-void mi::EventFilterChainDispatcher::prepend(std::shared_ptr<EventFilter> const& filter)
+void mi::EventFilterChainDispatcher::prepend(std::weak_ptr<EventFilter> const& filter)
 {
     std::lock_guard<std::mutex> lg(filter_guard);
         

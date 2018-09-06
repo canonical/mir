@@ -9,7 +9,7 @@ add_library(
   logind-seat.c                             logind-seat.h
   logind-session.c                          logind-session.h
   default_configuration.cpp
-)
+  ioctl_vt_switcher.cpp                     ioctl_vt_switcher.h)
 
 set_source_files_properties(
   logind-seat.c

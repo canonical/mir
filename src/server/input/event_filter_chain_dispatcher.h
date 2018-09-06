@@ -34,13 +34,13 @@ class EventFilterChainDispatcher : public CompositeEventFilter, public mir::inpu
 {
 public:
     EventFilterChainDispatcher(
-        std::initializer_list<std::shared_ptr<EventFilter> const> const& values,
+        std::vector<std::weak_ptr<EventFilter>> initial_filters,
         std::shared_ptr<InputDispatcher> const& next_dispatcher);
 
     // CompositeEventFilter
     bool handle(MirEvent const& event) override;
-    void append(std::shared_ptr<EventFilter> const& filter) override;
-    void prepend(std::shared_ptr<EventFilter> const& filter) override;
+    void append(std::weak_ptr<EventFilter> const& filter) override;
+    void prepend(std::weak_ptr<EventFilter> const& filter) override;
 
     // InputDispatcher
     bool dispatch(std::shared_ptr<MirEvent const> const& event) override;
