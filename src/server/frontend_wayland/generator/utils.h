@@ -25,7 +25,7 @@
 std::string file_name_from_path(std::string const& path);
 
 // make sure the name is not a C++ reserved word, could be expanded to get rid of invalid characters if that was needed
-std::string sanitize_name(std::string const& name);
+std::string sanitize_name(std::string const& name, bool escape_invalid = true);
 
 // converts any string into a valid, all upper case macro name (replacing special chars with underscores)
 std::string to_upper_case(std::string const& name);

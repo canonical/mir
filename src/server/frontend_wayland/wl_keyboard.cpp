@@ -27,6 +27,7 @@
 #include "mir/input/keymap.h"
 
 #include <xkbcommon/xkbcommon.h>
+#include <boost/throw_exception.hpp>
 
 #include <cstring> // memcpy
 
@@ -59,8 +60,8 @@ mf::WlKeyboard::WlKeyboard(
     set_keymap(initial_keymap);
 
     // I don't know where to get "real" rate and delay args. These are better than nothing.
-    if (wl_resource_get_version(resource) >= WL_KEYBOARD_REPEAT_INFO_SINCE_VERSION)
-        wl_keyboard_send_repeat_info(resource, 30, 200);
+    if (version_supports_repeat_info())
+        send_repeat_info_event(30, 200);
 }
 
 mf::WlKeyboard::~WlKeyboard()
@@ -82,19 +83,17 @@ void mf::WlKeyboard::handle_keyboard_event(MirKeyboardEvent const* key_event, Wl
     {
         case mir_keyboard_action_up:
             xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_UP);
-            wl_keyboard_send_key(resource,
-                serial,
-                mir_input_event_get_event_time_ms(input_ev),
-                mir_keyboard_event_scan_code(key_event),
-                WL_KEYBOARD_KEY_STATE_RELEASED);
+            send_key_event(serial,
+                           mir_input_event_get_event_time_ms(input_ev),
+                           mir_keyboard_event_scan_code(key_event),
+                           KeyState::released);
             break;
         case mir_keyboard_action_down:
             xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
-            wl_keyboard_send_key(resource,
-                serial,
-                mir_input_event_get_event_time_ms(input_ev),
-                mir_keyboard_event_scan_code(key_event),
-                WL_KEYBOARD_KEY_STATE_PRESSED);
+            send_key_event(serial,
+                           mir_input_event_get_event_time_ms(input_ev),
+                           mir_keyboard_event_scan_code(key_event),
+                           KeyState::pressed);
             break;
         default:
             break;
@@ -144,12 +143,12 @@ void mf::WlKeyboard::handle_window_event(MirWindowEvent const* event, WlSurface*
             }
             update_modifier_state();
 
-            wl_keyboard_send_enter(resource, serial, surface->raw_resource(), &key_state);
+            send_enter_event(serial, surface->raw_resource(), &key_state);
             wl_array_release(&key_state);
         }
         else
         {
-            wl_keyboard_send_leave(resource, serial, surface->raw_resource());
+            send_leave_event(serial, surface->raw_resource());
         }
     }
 }
@@ -164,11 +163,9 @@ void mf::WlKeyboard::handle_keymap_event(MirKeymapEvent const* event, WlSurface*
     mir::AnonymousShmFile shm_buffer{length};
     memcpy(shm_buffer.base_ptr(), buffer, length);
 
-    wl_keyboard_send_keymap(
-        resource,
-        WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,
-        shm_buffer.fd(),
-        length);
+    send_keymap_event(KeymapFormat::xkb_v1,
+                      Fd{IntOwnedFd{shm_buffer.fd()}},
+                      length);
 
     keymap = decltype(keymap)(xkb_keymap_new_from_buffer(
         context.get(),
@@ -206,11 +203,9 @@ void mf::WlKeyboard::set_keymap(mir::input::Keymap const& new_keymap)
     mir::AnonymousShmFile shm_buffer{length};
     memcpy(shm_buffer.base_ptr(), buffer.get(), length);
 
-    wl_keyboard_send_keymap(
-        resource,
-        WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1,
-        shm_buffer.fd(),
-        length);
+    send_keymap_event(KeymapFormat::xkb_v1,
+                      Fd{IntOwnedFd{shm_buffer.fd()}},
+                      length);
 }
 
 void mf::WlKeyboard::update_modifier_state()
@@ -241,13 +236,11 @@ void mf::WlKeyboard::update_modifier_state()
         mods_locked = new_locked_mods;
         group = new_group;
 
-        wl_keyboard_send_modifiers(
-            resource,
-            wl_display_get_serial(wl_client_get_display(client)),
-            mods_depressed,
-            mods_latched,
-            mods_locked,
-            group);
+        send_modifiers_event(wl_display_get_serial(wl_client_get_display(client)),
+                             mods_depressed,
+                             mods_latched,
+                             mods_locked,
+                             group);
     }
 }
 

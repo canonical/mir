@@ -43,16 +43,27 @@ Emitter include_guard_top(std::string const& macro)
     };
 }
 
-Emitter required_headers(std::string const& custom_header)
+Emitter header_includes()
 {
     return Lines{
         "#include <experimental/optional>",
+        empty_line,
+        "#include \"mir/fd.h\"",
+        "#include \"../wayland_utils.h\"",
+    };
+}
+
+Emitter impl_includes(std::string const& protocol_name)
+{
+    return Lines{
+        {"#include \"", protocol_name, "_wrapper.h\""},
+        {"#include \"", protocol_name, ".h\""},
+        empty_line,
         "#include <boost/throw_exception.hpp>",
         "#include <boost/exception/diagnostic_information.hpp>",
         empty_line,
-        {"#include \"", custom_header, "\""},
+        "#include <wayland-server-core.h>",
         empty_line,
-        "#include \"mir/fd.h\"",
         "#include \"mir/log.h\"",
     };
 }
@@ -64,7 +75,7 @@ Emitter include_guard_bottom(std::string const& macro)
     };
 }
 
-Emitter header_file(std::string custom_header, std::string input_file_path, std::vector<Interface> const& interfaces)
+Emitter header_file(std::string input_file_path, std::vector<Interface> const& interfaces)
 {
     std::string const include_guard_macro = to_upper_case("MIR_FRONTEND_WAYLAND_" + file_name_from_path(input_file_path) + "_WRAPPER");
 
@@ -74,12 +85,20 @@ Emitter header_file(std::string custom_header, std::string input_file_path, std:
         interface_emitters.push_back(interface.declaration());
     }
 
+    std::vector<Emitter> fwd_declare_emitters;
+    for (auto const& interface : interfaces)
+    {
+        fwd_declare_emitters.push_back(interface.global_namespace_forward_declarations());
+    }
+
     return Lines{
         comment_header(input_file_path),
         empty_line,
         include_guard_top(include_guard_macro),
         empty_line,
-        required_headers(custom_header),
+        header_includes(),
+        empty_line,
+        List{fwd_declare_emitters, nullptr},
         empty_line,
         "namespace mir",
         "{",
@@ -98,7 +117,7 @@ Emitter header_file(std::string custom_header, std::string input_file_path, std:
     };
 }
 
-Emitter source_file(std::string custom_header, std::string input_file_path, std::vector<Interface> const& interfaces)
+Emitter source_file(std::string input_file_path, std::vector<Interface> const& interfaces)
 {
     std::vector<Emitter> interface_emitters;
     for (auto const& interface : interfaces)
@@ -106,10 +125,14 @@ Emitter source_file(std::string custom_header, std::string input_file_path, std:
         interface_emitters.push_back(interface.implementation());
     }
 
+    std::string protocol_name = file_name_from_path(input_file_path);
+    if (protocol_name.substr(protocol_name.size() - 4) == ".xml")
+        protocol_name = protocol_name.substr(0, protocol_name.size() - 4);
+
     return Lines{
         comment_header(input_file_path),
         empty_line,
-        required_headers(custom_header),
+        impl_includes(protocol_name),
         empty_line,
         "namespace mfw = mir::frontend::wayland;",
         empty_line,
@@ -126,7 +149,6 @@ int main(int argc, char** argv)
         Block{
             "prefix: the name prefix which will be removed, such as wl_",
             "        to not use a prefix, use _ or anything that won't match the start of a name",
-            "header: the C header to include, such as wayland-server.h",
             "input: the input xml file path",
             "mode: 'header' or 'source'",
         },
@@ -134,7 +156,7 @@ int main(int argc, char** argv)
         empty_line,
     };
 
-    if (argc != 5)
+    if (argc != 4)
     {
         usage_emitter.emit({std::cerr});
         usage_emitter.emit({std::cout});
@@ -142,10 +164,9 @@ int main(int argc, char** argv)
     }
 
     std::string const prefix{argv[1]};
-    std::string const custom_header{argv[2]};
-    std::string const input_file_path{argv[3]};
+    std::string const input_file_path{argv[2]};
     bool header_mode{true};
-    std::string mode_str = argv[4];
+    std::string mode_str = argv[3];
     if (mode_str == "header")
     {
         header_mode = true;
@@ -202,9 +223,9 @@ int main(int argc, char** argv)
 
     Emitter emitter{nullptr};
     if (header_mode)
-        emitter = header_file(custom_header, input_file_path, interfaces);
+        emitter = header_file(input_file_path, interfaces);
     else
-        emitter = source_file(custom_header, input_file_path, interfaces);
+        emitter = source_file(input_file_path, interfaces);
 
     emitter.emit({std::cout});
 }

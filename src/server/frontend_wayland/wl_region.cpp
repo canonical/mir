@@ -19,6 +19,8 @@
 
 #include "wl_region.h"
 
+#include <mir/log.h>
+
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 

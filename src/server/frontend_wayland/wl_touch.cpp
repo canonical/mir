@@ -23,6 +23,7 @@
 
 #include "mir/executor.h"
 #include "mir/client/event.h"
+#include "mir/log.h"
 
 namespace mf = mir::frontend;
 
@@ -78,11 +79,10 @@ void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* main_su
             else
             {
                 auto const transformed_point = current_surface->second->total_offset() + point;
-                wl_touch_send_motion(resource,
-                                     mir_input_event_get_event_time_ms(input_ev),
-                                     touch_id,
-                                     wl_fixed_from_double(transformed_point.x.as_int()),
-                                     wl_fixed_from_double(transformed_point.y.as_int()));
+                send_motion_event(mir_input_event_get_event_time_ms(input_ev),
+                                  touch_id,
+                                  transformed_point.x.as_int(),
+                                  transformed_point.y.as_int());
             }
             break;
         }
@@ -108,33 +108,33 @@ void mf::WlTouch::handle_event(MirTouchEvent const* touch_ev, WlSurface* main_su
          * Regardless, the Wayland protocol requires that there be at least
          * one event sent before we send the ending frame, so make that explicit.
          */
-        wl_touch_send_frame(resource);
+        send_frame_event();
     }
 }
 
 void mf::WlTouch::release()
 {
-    wl_resource_destroy(resource);
+    destroy_wayland_object();
 }
 
 void mf::WlTouch::handle_down(mir::geometry::Point position, WlSurface* surface, uint32_t time, int32_t id)
 {
     focused_surface_for_ids[id] = surface;
-    wl_touch_send_down(resource,
-                       wl_display_get_serial(wl_client_get_display(client)),
-                       time,
-                       surface->raw_resource(),
-                       id,
-                       wl_fixed_from_double(position.x.as_int()),
-                       wl_fixed_from_double(position.y.as_int()));
+    // TODO: Why is this not wl_display_next_serial()?
+    send_down_event(wl_display_get_serial(wl_client_get_display(client)),
+                    time,
+                    surface->raw_resource(),
+                    id,
+                    position.x.as_int(),
+                    position.y.as_int());
 }
 
 void mf::WlTouch::handle_up(uint32_t time, int32_t id)
 {
     focused_surface_for_ids.erase(id);
-    wl_touch_send_up(resource,
-                     wl_display_get_serial(wl_client_get_display(client)),
-                     time,
-                     id);
+    // TODO: Why is this not wl_display_next_serial()?
+    send_up_event(wl_display_get_serial(wl_client_get_display(client)),
+                  time,
+                  id);
 }
 

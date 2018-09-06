@@ -16,31 +16,33 @@
  * Authored By: William Wold <william.wold@canonical.com>
  */
 
-#ifndef MIR_WAYLAND_GENERATOR_METHOD_H
-#define MIR_WAYLAND_GENERATOR_METHOD_H
+#ifndef MIR_WAYLAND_GENERATOR_EVENT_H
+#define MIR_WAYLAND_GENERATOR_EVENT_H
 
-#include "emitter.h"
-#include "argument.h"
+#include "method.h"
 
-#include <experimental/optional>
-#include <functional>
-#include <unordered_map>
-
-namespace xmlpp
-{
-class Element;
-}
-
-class Method
+class Event : public Method
 {
 public:
-    Method(xmlpp::Element const& node, std::string const& class_name, bool is_global, bool is_event);
+    Event(xmlpp::Element const& node, std::string const& class_name, bool is_global, int opcode);
+
+    Emitter opcode_declare() const;
+    Emitter prototype() const;
+    Emitter impl() const;
 
 protected:
-    std::string const name;
-    std::string const class_name;
-    bool const is_global;
-    std::vector<Argument> arguments;
+    // converts wl input types to mir types
+    Emitter mir2wl_converters() const;
+
+    Emitter mir_args() const;
+
+    // arguments to call the virtual mir function call (just names, no types)
+    Emitter wl_call_args() const;
+
+    static int get_since_version(xmlpp::Element const& node);
+
+    int const opcode;
+    int const min_version;
 };
 
-#endif // MIR_WAYLAND_GENERATOR_METHOD_H
+#endif // MIR_WAYLAND_GENERATOR_EVENT_H

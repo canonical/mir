@@ -33,9 +33,18 @@
 #include "mir/executor.h"
 #include "mir/graphics/wayland_allocator.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/log.h"
+
+#include <algorithm>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
+
+mf::WlSurfaceState::Callback::Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+    : wayland::Callback{client, parent, id},
+      destroyed{deleted_flag_for_resource(resource)}
+{
+}
 
 void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
 {
@@ -209,11 +218,11 @@ void mf::WlSurface::send_frame_callbacks()
 {
     for (auto const& frame : frame_callbacks)
     {
-        if (!*frame.destroyed)
+        if (!*frame->destroyed)
         {
             // TODO: argument should be a timestamp
-            wl_callback_send_done(frame.resource, 0);
-            wl_resource_destroy(frame.resource);
+            frame->send_done_event(0);
+            frame->destroy_wayland_object();
         }
     }
     frame_callbacks.clear();
@@ -222,7 +231,7 @@ void mf::WlSurface::send_frame_callbacks()
 void mf::WlSurface::destroy()
 {
     *destroyed = true;
-    wl_resource_destroy(resource);
+    destroy_wayland_object();
 }
 
 void mf::WlSurface::attach(std::experimental::optional<wl_resource*> const& buffer, int32_t x, int32_t y)
@@ -257,9 +266,7 @@ void mf::WlSurface::damage_buffer(int32_t x, int32_t y, int32_t width, int32_t h
 
 void mf::WlSurface::frame(uint32_t callback)
 {
-    auto callback_resource = wl_resource_create(client, &wl_callback_interface, 1, callback);
-    auto callback_destroyed = deleted_flag_for_resource(callback_resource);
-    pending.frame_callbacks.emplace_back(WlSurfaceState::Callback{callback_resource, callback_destroyed});
+    pending.frame_callbacks.push_back(std::make_shared<WlSurfaceState::Callback>(client, resource, callback));
 }
 
 void mf::WlSurface::set_opaque_region(std::experimental::optional<wl_resource*> const& region)
@@ -334,7 +341,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     {
                         executor->spawn(run_unless(
                             destroyed,
-                            [buffer](){ wl_resource_queue_event(buffer, WL_BUFFER_RELEASE); }));
+                            [buffer](){ wl_resource_queue_event(buffer, wayland::Buffer::Opcode::release); }));
                     };
 
                 mir_buffer = allocator->buffer_from_resource(

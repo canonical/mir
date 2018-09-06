@@ -20,6 +20,7 @@
 #include "wl_seat.h"
 
 #include <vector>
+#include <algorithm>
 
 namespace mf = mir::frontend;
 
@@ -57,9 +58,10 @@ struct DataOffer : mf::wayland::DataOffer
 
 struct DataSource : mf::wayland::DataSource
 {
-    DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id, DataDeviceManager* manager) :
-        mf::wayland::DataSource{client, parent, id},
-        manager{manager}
+public:
+    DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id, DataDeviceManager* manager)
+        : mf::wayland::DataSource{client, parent, id},
+          manager{manager}
     {
     }
 
@@ -77,7 +79,7 @@ struct DataSource : mf::wayland::DataSource
     void send_cancelled() const
     {
         if (!destroyed)
-            wl_data_source_send_cancelled(resource);
+            send_cancelled_event();
     }
 
     void add_listener(DataOffer* listener);
@@ -159,7 +161,7 @@ void DataSource::destroy()
 {
     destroyed = true;
     manager->notify_destroyed(this);
-    wl_resource_destroy(resource);
+    destroy_wayland_object();
 }
 
 void DataSource::add_listener(DataOffer* listener)
@@ -174,7 +176,7 @@ void DataSource::remove_listener(DataOffer* listener)
 
 void DataSource::send_send(std::string const& mime_type, mir::Fd fd)
 {
-    wl_data_source_send_send(resource, mime_type.c_str(), fd);
+    send_send_event(mime_type.c_str(), fd);
 }
 
 DataSource::~DataSource()
@@ -269,7 +271,7 @@ void DataDevice::notify_destroyed(DataSource* source)
     {
         current_source = nullptr;
         current_offer = nullptr;
-        wl_data_device_send_selection(resource, 0);
+        send_selection_event(std::experimental::nullopt);
     }
 }
 
@@ -277,7 +279,7 @@ void DataDevice::release()
 {
     manager->remove_listener(this);
     seat->remove_focus_listener(this);
-    wl_resource_destroy(resource);
+    destroy_wayland_object();
 }
 
 void DataDevice::focus_on(wl_client* focus)
@@ -295,17 +297,18 @@ DataOffer::DataOffer(struct wl_client* client, struct wl_resource* parent, uint3
     source{source}
 {
     source->add_listener(this);
-    wl_data_device_send_data_offer(parent, resource);
+    auto device = mf::wayland::DataDevice::from(parent);
+    device->send_data_offer_event(resource);
     for (auto const& type : source->mime_types)
     {
-        wl_data_offer_send_offer(resource, type.c_str());
+        send_offer_event(type);
     }
-    wl_data_device_send_selection(parent, resource);
+    device->send_selection_event(resource);
 }
 
 void DataOffer::offer(std::string const& mime_type)
 {
-    wl_data_offer_send_offer(resource, mime_type.c_str());
+    send_offer_event(mime_type);
 }
 
 void DataOffer::receive(std::string const& mime_type, mir::Fd fd)
@@ -316,7 +319,7 @@ void DataOffer::receive(std::string const& mime_type, mir::Fd fd)
 void DataOffer::destroy()
 {
     source->remove_listener(this);
-    wl_resource_destroy(resource);
+    destroy_wayland_object();
 }
 
 auto mf::create_data_device_manager(struct wl_display* display)

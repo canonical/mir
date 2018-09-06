@@ -20,7 +20,9 @@
 #define MIR_WAYLAND_GENERATOR_INTERFACE_H
 
 #include "emitter.h"
-#include "method.h"
+#include "request.h"
+#include "event.h"
+#include "enum.h"
 
 #include <experimental/optional>
 #include <functional>
@@ -40,6 +42,7 @@ public:
               std::function<std::string(std::string)> const& name_transform,
               std::unordered_set<std::string> const& constructable_interfaces);
 
+    Emitter global_namespace_forward_declarations() const;
     Emitter declaration() const;
     Emitter implementation() const;
 
@@ -50,23 +53,30 @@ private:
     Emitter destructor_prototype() const;
     Emitter destructor_impl() const;
     Emitter bind_prototype() const;
-    Emitter virtual_method_prototypes() const;
+    Emitter virtual_request_prototypes() const;
+    Emitter event_prototypes() const;
+    Emitter event_impls() const;
     Emitter member_vars() const;
+    Emitter enum_declarations() const;
+    Emitter event_opcodes() const;
     Emitter thunks_impl() const;
     Emitter thunks_impl_contents() const;
     Emitter bind_thunk() const;
     Emitter resource_destroyed_thunk() const;
-    Emitter vtable_declare() const;
     Emitter vtable_init() const;
     Emitter vtable_contents() const;
 
-    std::vector<Method> get_methods(xmlpp::Element const& node, bool is_global);
+    static std::vector<Request> get_requests(xmlpp::Element const& node, std::string generated_name, bool is_global);
+    static std::vector<Event> get_events(xmlpp::Element const& node, std::string generated_name, bool is_global);
+    static std::vector<Enum> get_enums(xmlpp::Element const& node);
 
     std::string const wl_name;
     std::string const generated_name;
     std::string const nmspace;
     bool const is_global;
-    std::vector<Method> const methods;
+    std::vector<Request> const requests;
+    std::vector<Event> const events;
+    std::vector<Enum> const enums;
     bool const has_vtable;
 };
 

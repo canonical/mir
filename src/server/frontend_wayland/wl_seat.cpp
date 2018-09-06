@@ -38,6 +38,7 @@
 
 #include <mutex>
 #include <unordered_set>
+#include <algorithm>
 
 namespace mf = mir::frontend;
 namespace mi = mir::input;
@@ -169,7 +170,7 @@ mf::WlSeat::~WlSeat()
 
 auto mf::WlSeat::from(struct wl_resource* seat) -> WlSeat*
 {
-    return static_cast<mf::WlSeat*>(static_cast<mf::wayland::Seat*>(wl_resource_get_user_data(seat)));
+    return static_cast<mf::WlSeat*>(wayland::Seat::from(seat));
 }
 
 void mf::WlSeat::for_each_listener(wl_client* client, std::function<void(WlPointer*)> func)
@@ -201,19 +202,10 @@ void mf::WlSeat::spawn(std::function<void()>&& work)
 void mf::WlSeat::bind(wl_client* /*client*/, wl_resource* resource)
 {
     // TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
-    int version = wl_resource_get_version(resource);
-    if (version >= WL_SEAT_CAPABILITIES_SINCE_VERSION)
-    {
-        wl_seat_send_capabilities(
-            resource,
-            WL_SEAT_CAPABILITY_POINTER |
-            WL_SEAT_CAPABILITY_KEYBOARD |
-            WL_SEAT_CAPABILITY_TOUCH);
-    }
-    if (version >= WL_SEAT_NAME_SINCE_VERSION)
-    {
-        wl_seat_send_name(resource, "seat0");
-    }
+    send_capabilities_event(resource,
+                            Capability::pointer | Capability::keyboard | Capability::touch);
+    if (version_supports_name(resource))
+        send_name_event(resource, "seat0");
 }
 
 void mf::WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t id)

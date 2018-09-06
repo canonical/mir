@@ -16,42 +16,32 @@
  * Authored By: William Wold <william.wold@canonical.com>
  */
 
-#ifndef MIR_WAYLAND_GENERATOR_ARGUMENT_H
-#define MIR_WAYLAND_GENERATOR_ARGUMENT_H
+#ifndef MIR_WAYLAND_GENERATOR_ENUM_H
+#define MIR_WAYLAND_GENERATOR_ENUM_H
 
 #include "emitter.h"
-
-#include <experimental/optional>
-#include <functional>
-#include <unordered_map>
 
 namespace xmlpp
 {
 class Element;
 }
 
-class Argument
+class Enum
 {
 public:
-    struct TypeDescriptor
+    struct Entry
     {
-        std::string mir_type;
-        std::string wl_type;
-        std::experimental::optional<std::function<Emitter(std::string)>> converter;
+        std::string name;
+        std::string value;
     };
 
-    Argument(xmlpp::Element const& node, bool is_event);
+    Enum(xmlpp::Element const& node);
 
-    Emitter wl_prototype() const;
-    Emitter mir_prototype() const;
-    Emitter call_fragment() const;
-    std::experimental::optional<Emitter> converter() const;
+    Emitter declaration() const;
 
 private:
-    static TypeDescriptor get_type(xmlpp::Element const& node, bool is_event);
-
     std::string const name;
-    TypeDescriptor descriptor;
+    std::vector<Entry> entries;
 };
 
 #endif // MIR_WAYLAND_GENERATOR_ARGUMENT_H

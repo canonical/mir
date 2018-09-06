@@ -95,11 +95,11 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
                 if (mapping.first & (current_pointer_buttons ^ last_buttons))
                 {
                     auto const state = (mapping.first & current_pointer_buttons) ?
-                        WL_POINTER_BUTTON_STATE_PRESSED :
-                        WL_POINTER_BUTTON_STATE_RELEASED;
+                        ButtonState::pressed :
+                        ButtonState::released;
 
                     auto const serial = wl_display_next_serial(display);
-                    wl_pointer_send_button(resource, serial, timestamp, mapping.second, state);
+                    send_button_event(serial, timestamp, mapping.second, state);
                     handle_frame();
                 }
             }
@@ -138,11 +138,9 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
             {
                 if (!last_position || transformed.position != last_position.value())
                 {
-                    wl_pointer_send_motion(
-                        resource,
-                        timestamp,
-                        wl_fixed_from_double(transformed.position.x.as_int()),
-                        wl_fixed_from_double(transformed.position.y.as_int()));
+                    send_motion_event(timestamp,
+                                      transformed.position.x.as_int(),
+                                      transformed.position.y.as_int());
                     last_position = transformed.position;
                     needs_frame = true;
                 }
@@ -158,22 +156,18 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
             auto hscroll = mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll) * 10;
             if (hscroll != 0)
             {
-                wl_pointer_send_axis(
-                    resource,
-                    timestamp,
-                    WL_POINTER_AXIS_HORIZONTAL_SCROLL,
-                    wl_fixed_from_double(hscroll));
+                send_axis_event(timestamp,
+                                Axis::horizontal_scroll,
+                                hscroll);
                 needs_frame = true;
             }
 
             auto vscroll = mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll) * 10;
             if (vscroll != 0)
             {
-                wl_pointer_send_axis(
-                    resource,
-                    timestamp,
-                    WL_POINTER_AXIS_VERTICAL_SCROLL,
-                    wl_fixed_from_double(vscroll));
+                send_axis_event(timestamp,
+                                Axis::vertical_scroll,
+                                vscroll);
                 needs_frame = true;
             }
 
@@ -192,12 +186,10 @@ void mf::WlPointer::handle_enter(Point position, WlSurface* surface)
 {
     cursor->apply_to(surface);
     auto const serial = wl_display_next_serial(display);
-    wl_pointer_send_enter(
-        resource,
-        serial,
-        surface->raw_resource(),
-        wl_fixed_from_double(position.x.as_int()),
-        wl_fixed_from_double(position.y.as_int()));
+    send_enter_event(serial,
+                     surface->raw_resource(),
+                     position.x.as_int(),
+                     position.y.as_int());
     surface->add_destroy_listener(this, [this]()
         {
             handle_leave();
@@ -211,18 +203,16 @@ void mf::WlPointer::handle_leave()
         return;
     focused_surface.value()->remove_destroy_listener(this);
     auto const serial = wl_display_next_serial(display);
-    wl_pointer_send_leave(
-        resource,
-        serial,
-        focused_surface.value()->raw_resource());
+    send_leave_event(serial,
+                     focused_surface.value()->raw_resource());
     focused_surface = std::experimental::nullopt;
     last_position = std::experimental::nullopt;
 }
 
 void mf::WlPointer::handle_frame()
 {
-    if (wl_resource_get_version(resource) >= WL_POINTER_FRAME_SINCE_VERSION)
-        wl_pointer_send_frame(resource);
+    if (version_supports_frame())
+        send_frame_event();
 }
 
 namespace
@@ -269,7 +259,7 @@ void mf::WlPointer::set_cursor(uint32_t serial, std::experimental::optional<wl_r
 
 void mf::WlPointer::release()
 {
-    wl_resource_destroy(resource);
+    destroy_wayland_object();
 }
 
 WlStreamCursor::WlStreamCursor(

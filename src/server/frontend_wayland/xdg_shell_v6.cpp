@@ -22,6 +22,7 @@
 #include "window_wl_surface_role.h"
 
 #include "mir/shell/surface_specification.h"
+#include "mir/log.h"
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -214,7 +215,7 @@ void mf::XdgSurfaceV6::ack_configure(uint32_t serial)
 void mf::XdgSurfaceV6::send_configure()
 {
     auto const serial = wl_display_next_serial(wl_client_get_display(wayland::XdgSurfaceV6::client));
-    zxdg_surface_v6_send_configure(resource, serial);
+    send_configure_event(serial);
 }
 
 std::experimental::optional<mf::WindowWlSurfaceRole*> const& mf::XdgSurfaceV6::window_role()
@@ -287,11 +288,10 @@ void mf::XdgPopupV6::handle_resize(const std::experimental::optional<geometry::P
 
     if (needs_configure && cached_top_left && cached_size)
     {
-        zxdg_popup_v6_send_configure(resource,
-                                    cached_top_left.value().x.as_int(),
-                                    cached_top_left.value().y.as_int(),
-                                    cached_size.value().width.as_int(),
-                                    cached_size.value().height.as_int());
+        send_configure_event(cached_top_left.value().x.as_int(),
+                             cached_top_left.value().y.as_int(),
+                             cached_size.value().width.as_int(),
+                             cached_size.value().height.as_int());
         xdg_surface->send_configure();
     }
 }
@@ -307,7 +307,7 @@ mf::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, struct wl_resource* r
 {
     wl_array states;
     wl_array_init(&states);
-    zxdg_toplevel_v6_send_configure(resource, 0, 0, &states);
+    send_configure_event(0, 0, &states);
     wl_array_release(&states);
     xdg_surface->send_configure();
 }
@@ -357,35 +357,35 @@ void mf::XdgToplevelV6::resize(struct wl_resource* /*seat*/, uint32_t /*serial*/
 
     switch (edges)
     {
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP:
+    case ResizeEdge::top:
         edge = mir_resize_edge_north;
         break;
 
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM:
+    case ResizeEdge::bottom:
         edge = mir_resize_edge_south;
         break;
 
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_LEFT:
+    case ResizeEdge::left:
         edge = mir_resize_edge_west;
         break;
 
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_LEFT:
-        edge = mir_resize_edge_northwest;
-        break;
-
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_LEFT:
-        edge = mir_resize_edge_southwest;
-        break;
-
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_RIGHT:
+    case ResizeEdge::right:
         edge = mir_resize_edge_east;
         break;
 
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_TOP_RIGHT:
+    case ResizeEdge::top_left:
+        edge = mir_resize_edge_northwest;
+        break;
+
+    case ResizeEdge::bottom_left:
+        edge = mir_resize_edge_southwest;
+        break;
+
+    case ResizeEdge::top_right:
         edge = mir_resize_edge_northeast;
         break;
 
-    case ZXDG_TOPLEVEL_V6_RESIZE_EDGE_BOTTOM_RIGHT:
+    case ResizeEdge::bottom_right:
         edge = mir_resize_edge_southeast;
         break;
 
@@ -444,7 +444,7 @@ void mf::XdgToplevelV6::handle_resize(std::experimental::optional<geometry::Poin
     if (is_active())
     {
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = ZXDG_TOPLEVEL_V6_STATE_ACTIVATED;
+            *state = State::activated;
     }
 
     switch (window_state())
@@ -453,19 +453,19 @@ void mf::XdgToplevelV6::handle_resize(std::experimental::optional<geometry::Poin
     case mir_window_state_horizmaximized:
     case mir_window_state_vertmaximized:
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = ZXDG_TOPLEVEL_V6_STATE_MAXIMIZED;
+            *state = State::maximized;
         break;
 
     case mir_window_state_fullscreen:
         if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = ZXDG_TOPLEVEL_V6_STATE_FULLSCREEN;
+            *state = State::fullscreen;
         break;
 
     default:
         break;
     }
 
-    zxdg_toplevel_v6_send_configure(resource, new_size.width.as_int(), new_size.height.as_int(), &states);
+    send_configure_event(new_size.width.as_int(), new_size.height.as_int(), &states);
     wl_array_release(&states);
 
     xdg_surface->send_configure();
@@ -507,16 +507,16 @@ void mf::XdgPositionerV6::set_anchor(uint32_t anchor)
 {
     MirPlacementGravity placement = mir_placement_gravity_center;
 
-    if (anchor & ZXDG_POSITIONER_V6_ANCHOR_TOP)
+    if (anchor & Anchor::top)
         placement = MirPlacementGravity(placement | mir_placement_gravity_north);
 
-    if (anchor & ZXDG_POSITIONER_V6_ANCHOR_BOTTOM)
+    if (anchor & Anchor::bottom)
         placement = MirPlacementGravity(placement | mir_placement_gravity_south);
 
-    if (anchor & ZXDG_POSITIONER_V6_ANCHOR_LEFT)
+    if (anchor & Anchor::left)
         placement = MirPlacementGravity(placement | mir_placement_gravity_west);
 
-    if (anchor & ZXDG_POSITIONER_V6_ANCHOR_RIGHT)
+    if (anchor & Anchor::right)
         placement = MirPlacementGravity(placement | mir_placement_gravity_east);
 
     aux_rect_placement_gravity = placement;
@@ -526,16 +526,16 @@ void mf::XdgPositionerV6::set_gravity(uint32_t gravity)
 {
     MirPlacementGravity placement = mir_placement_gravity_center;
 
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_TOP)
+    if (gravity & Gravity::top)
         placement = MirPlacementGravity(placement | mir_placement_gravity_south);
 
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_BOTTOM)
+    if (gravity & Gravity::bottom)
         placement = MirPlacementGravity(placement | mir_placement_gravity_north);
 
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_LEFT)
+    if (gravity & Gravity::left)
         placement = MirPlacementGravity(placement | mir_placement_gravity_east);
 
-    if (gravity & ZXDG_POSITIONER_V6_GRAVITY_RIGHT)
+    if (gravity & Gravity::right)
         placement = MirPlacementGravity(placement | mir_placement_gravity_west);
 
     surface_placement_gravity = placement;

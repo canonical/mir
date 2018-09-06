@@ -23,6 +23,7 @@
 
 #include <unordered_map>
 #include <vector>
+#include <functional>
 
 // from "mir_toolkit/events/event.h"
 struct MirInputEvent;
