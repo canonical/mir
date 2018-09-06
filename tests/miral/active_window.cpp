@@ -410,3 +410,26 @@ TEST_F(ActiveWindow, when_another_window_is_about_hiding_active_dialog_makes_par
 
     assert_active_window_is(parent_name);
 }
+
+TEST_F(ActiveWindow, when_a_window_is_active_its_parent_has_focus)
+{
+    FocusChangeSync sync3;
+    FocusChangeSync sync4;
+    char const* const parent_name = __PRETTY_FUNCTION__;
+    auto const dialog_name = "dialog";
+    auto const another_window_name = "another window";
+    auto const another_dialog_name = "another dialog";
+    auto const connection = connect_client(parent_name);
+
+    auto const parent = create_window(connection, parent_name, sync1);
+    auto const another_parent = create_window(connection, another_window_name, sync2);
+    auto const dialog = create_dialog(connection, dialog_name, parent, sync3);
+
+    EXPECT_THAT(mir_window_get_focus_state(parent), Eq(mir_window_focus_state_focused));
+    EXPECT_THAT(mir_window_get_focus_state(another_parent), Eq(mir_window_focus_state_unfocused));
+
+    auto const another_dialog = create_dialog(connection, another_dialog_name, another_parent, sync4);
+
+    EXPECT_THAT(mir_window_get_focus_state(parent), Eq(mir_window_focus_state_unfocused));
+    EXPECT_THAT(mir_window_get_focus_state(another_parent), Eq(mir_window_focus_state_focused));
+}
