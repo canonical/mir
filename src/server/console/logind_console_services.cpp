@@ -485,21 +485,44 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
                 if (it->second == destroying)
                 {
                     acquired_devices.erase(it);
-                    ml->run_with_context_as_thread_default(
-                        [
-                            session = std::shared_ptr<GObject>{
-                                G_OBJECT(g_object_ref(session_proxy.get())),
-                                &g_object_unref},
-                            devnum
-                        ]()
+                    /* Like TakeDevice, we might be trying to release a device before the
+                     * main loop is running.
+                     *
+                     * Opportunistically release the device asynchronously
+                     */
+                    if (ml->running())
+                    {
+                        ml->run_with_context_as_thread_default(
+                            [
+                                session = std::shared_ptr<GObject>{
+                                    G_OBJECT(g_object_ref(session_proxy.get())),
+                                    &g_object_unref},
+                                devnum
+                            ]()
+                            {
+                                logind_session_call_release_device(
+                                    LOGIND_SESSION(session.get()),
+                                    major(devnum), minor(devnum),
+                                    nullptr,
+                                    &complete_release_device_call,
+                                    nullptr);
+                            });
+                    }
+                    else
+                    {
+                        GErrorPtr error;
+                        if (!logind_session_call_release_device_sync(
+                            session_proxy.get(),
+                            major(devnum), minor(devnum),
+                            nullptr,
+                            &error))
                         {
-                            logind_session_call_release_device(
-                                LOGIND_SESSION(session.get()),
-                                major(devnum), minor(devnum),
-                                nullptr,
-                                &complete_release_device_call,
-                                nullptr);
-                        });
+                            mir::log_info("Failed to release device %i:%i: %s",
+                                major(devnum),
+                                minor(devnum),
+                                error->message);
+                        }
+                    }
                 }
             }
         });
