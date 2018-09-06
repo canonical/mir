@@ -53,13 +53,21 @@ public:
         if (mir_event_get_type(event) == mir_event_type_window &&
             mir_window_event_get_attribute(mir_event_get_window_event(event)) == mir_window_attrib_focus)
         {
+            ((FocusChangeSync*)context)->assertion();
+            ((FocusChangeSync*)context)->assertion = []{};
             ((FocusChangeSync*)context)->signal.raise();
         }
     }
 
     auto signal_raised() -> bool { return signal.raised(); }
 
+    void on_focus_change_assert(std::function<void()> assertion)
+    {
+        this ->assertion = assertion;
+    }
+
 private:
+    std::function<void()> assertion = []{};
     mir::test::Signal signal;
 };
 
@@ -385,9 +393,9 @@ TEST_F(ActiveWindow, hiding_active_dialog_makes_parent_active)
     auto const parent = create_window(connection, parent_name, sync1);
     auto const dialog = create_dialog(connection, dialog_name, parent, sync2);
 
-    sync1.exec([&]{ mir_window_set_state(dialog, mir_window_state_hidden); });
+    sync2.exec([&]{ mir_window_set_state(dialog, mir_window_state_hidden); });
 
-    EXPECT_TRUE(sync1.signal_raised());
+    EXPECT_TRUE(sync2.signal_raised());
 
     assert_active_window_is(parent_name);
 }
@@ -404,9 +412,79 @@ TEST_F(ActiveWindow, when_another_window_is_about_hiding_active_dialog_makes_par
     auto const another_window = create_window(connection, another_window_name, sync2);
     auto const dialog = create_dialog(connection, dialog_name, parent, sync3);
 
-    sync1.exec([&]{ mir_window_set_state(dialog, mir_window_state_hidden); });
+    sync3.exec([&]{ mir_window_set_state(dialog, mir_window_state_hidden); });
 
-    EXPECT_TRUE(sync1.signal_raised());
+    EXPECT_TRUE(sync3.signal_raised());
 
     assert_active_window_is(parent_name);
+}
+
+TEST_F(ActiveWindow, when_a_window_is_active_its_parent_has_focus)
+{
+    FocusChangeSync sync3;
+    FocusChangeSync sync4;
+    char const* const parent_name = __PRETTY_FUNCTION__;
+    auto const dialog_name = "dialog";
+    auto const another_window_name = "another window";
+    auto const another_dialog_name = "another dialog";
+    auto const connection = connect_client(parent_name);
+
+    auto const parent = create_window(connection, parent_name, sync1);
+    auto const another_parent = create_window(connection, another_window_name, sync2);
+    auto const dialog = create_dialog(connection, dialog_name, parent, sync3);
+
+    EXPECT_THAT(mir_window_get_focus_state(parent), Eq(mir_window_focus_state_focused));
+    EXPECT_THAT(mir_window_get_focus_state(another_parent), Eq(mir_window_focus_state_unfocused));
+
+    auto const another_dialog = create_dialog(connection, another_dialog_name, another_parent, sync4);
+
+    EXPECT_THAT(mir_window_get_focus_state(parent), Eq(mir_window_focus_state_unfocused));
+    EXPECT_THAT(mir_window_get_focus_state(another_parent), Eq(mir_window_focus_state_focused));
+}
+
+TEST_F(ActiveWindow, when_focus_changes_parents_lose_focus_last)
+{
+    FocusChangeSync sync3;
+    FocusChangeSync sync4;
+    char const* const parent_name = __PRETTY_FUNCTION__;
+    auto const dialog_name = "dialog";
+    auto const another_window_name = "another window";
+    auto const another_dialog_name = "another dialog";
+    auto const connection = connect_client(parent_name);
+
+    auto const parent = create_window(connection, parent_name, sync1);
+    auto const another_parent = create_window(connection, another_window_name, sync2);
+    auto const dialog = create_dialog(connection, dialog_name, parent, sync3);
+
+    sync3.on_focus_change_assert(
+        [&parent]{ EXPECT_THAT(mir_window_get_focus_state(parent), Eq(mir_window_focus_state_focused)); });
+
+    auto const another_dialog = create_dialog(connection, another_dialog_name, another_parent, sync4);
+}
+
+TEST_F(ActiveWindow, when_focus_changes_parents_gain_focus_first)
+{
+    FocusChangeSync sync3;
+    FocusChangeSync sync4;
+    char const* const parent_name = __PRETTY_FUNCTION__;
+    auto const dialog_name = "dialog";
+    auto const another_window_name = "another window";
+    auto const another_dialog_name = "another dialog";
+    auto const connection = connect_client(parent_name);
+
+    auto const parent = create_window(connection, parent_name, sync1);
+    auto const another_parent = create_window(connection, another_window_name, sync2);
+    auto const dialog = create_dialog(connection, dialog_name, parent, sync3);
+
+    miral::Window dialog_window;
+    invoke_tools([&](WindowManagerTools& tools){ dialog_window = tools.active_window(); });
+
+    auto const another_dialog = create_dialog(connection, another_dialog_name, another_parent, sync4);
+
+    sync3.on_focus_change_assert(
+        [&parent]{ EXPECT_THAT(mir_window_get_focus_state(parent), Eq(mir_window_focus_state_focused)); });
+
+    sync3.exec([&]{ invoke_tools([&](WindowManagerTools& tools){ tools.select_active_window(dialog_window); }); });
+
+    EXPECT_TRUE(sync3.signal_raised());
 }

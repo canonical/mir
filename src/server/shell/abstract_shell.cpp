@@ -30,6 +30,9 @@
 #include "mir/scene/surface.h"
 #include "mir/input/seat.h"
 
+#include <algorithm>
+#include <vector>
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mi = mir::input;
@@ -334,14 +337,35 @@ void msh::AbstractShell::set_focus_to_locked(
 {
     auto const current_focus = focus_surface.lock();
 
+    std::vector<std::shared_ptr<ms::Surface>> new_focus_tree;
+
+    for (auto item = surface; item; item = item->parent())
+    {
+        new_focus_tree.insert(begin(new_focus_tree), item);
+    }
+
+    std::vector<std::shared_ptr<ms::Surface>> current_focus_tree;
+
+    for (auto item = current_focus; item; item = item->parent())
+    {
+        current_focus_tree.push_back(item);
+    }
+
     if (surface != current_focus)
     {
         focus_surface = surface;
         seat->reset_confinement_regions();
 
+        for (auto const& item : current_focus_tree)
+        {
+            if (find(begin(new_focus_tree), end(new_focus_tree), item) == end(new_focus_tree))
+            {
+                item->configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
+            }
+        }
+
         if (current_focus)
         {
-            current_focus->configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
             current_focus->remove_observer(focus_surface_observer);
         }
 
@@ -355,8 +379,15 @@ void msh::AbstractShell::set_focus_to_locked(
             // Ensure the surface has really taken the focus before notifying it that it is focused
             input_targeter->set_focus(surface);
             surface->consume(seat->create_device_state().get());
-            surface->configure(mir_window_attrib_focus, mir_window_focus_state_focused);
             surface->add_observer(focus_surface_observer);
+
+            for (auto const& item : new_focus_tree)
+            {
+                if (find(begin(current_focus_tree), end(current_focus_tree), item) == end(current_focus_tree))
+                {
+                    item->configure(mir_window_attrib_focus, mir_window_focus_state_focused);
+                }
+            }
         }
         else
         {
