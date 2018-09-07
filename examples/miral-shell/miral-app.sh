@@ -14,7 +14,7 @@ then
   then
     echo "Error: Host endpoint '${MIR_SOCKET}' does not exist"; exit 1
   fi
-  hostsocket='--host-socket ${MIR_SOCKET}'
+  hostsocket='MIR_SERVER_HOST_SOCKET ${MIR_SOCKET}'
 fi
 
 socket=${XDG_RUNTIME_DIR}/miral_socket
@@ -55,7 +55,7 @@ if [ -e "${socket}" ]; then echo "Error: session endpoint '${socket}' already ex
 if [ -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; then echo "Error: wayland endpoint '${wayland_display}' already exists"; exit 1 ;fi
 
 
-sh -c "${bindir}${miral_server} $* ${hostsocket} --file ${socket} --wayland-socket-name ${wayland_display}"&
+sh -c "MIR_SERVER_FILE=${socket} MIR_SERVER_WAYLAND_SOCKET_NAME=${wayland_display} ${hostsocket} ${bindir}${miral_server} $*"&
 
 while [ ! -e "${socket}" ]; do echo "waiting for ${socket}"; sleep 1 ;done
 
