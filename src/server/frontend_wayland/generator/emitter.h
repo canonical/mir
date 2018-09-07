@@ -102,7 +102,6 @@ private:
     std::string const indent;
 };
 
-#include <iostream>
 // a series of lines that is at the same indentation level as surrounding block
 // implicitly convertible to an Emitter
 struct Lines
