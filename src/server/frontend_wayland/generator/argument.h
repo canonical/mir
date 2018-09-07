@@ -24,6 +24,7 @@
 #include <experimental/optional>
 #include <functional>
 #include <unordered_map>
+#include <set>
 
 namespace xmlpp
 {
@@ -37,6 +38,7 @@ public:
     {
         std::string mir_type;
         std::string wl_type;
+        std::string wl_type_abbr; // abbreviated type (i for int, etc), used by libwayland
         std::experimental::optional<std::function<Emitter(std::string)>> converter;
     };
 
@@ -45,13 +47,19 @@ public:
     Emitter wl_prototype() const;
     Emitter mir_prototype() const;
     Emitter call_fragment() const;
+    Emitter object_type_fragment() const;
+    Emitter type_str_fragment() const;
     std::experimental::optional<Emitter> converter() const;
+
+    void populate_required_interfaces(std::set<std::string>& interfaces) const; // fills the set with interfaces used
 
 private:
     static TypeDescriptor get_type(xmlpp::Element const& node, bool is_event);
+    static std::experimental::optional<std::string> get_interface(xmlpp::Element const& node);
 
     std::string const name;
     TypeDescriptor descriptor;
+    std::experimental::optional<std::string> const interface;
 };
 
 #endif // MIR_WAYLAND_GENERATOR_ARGUMENT_H

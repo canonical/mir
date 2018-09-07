@@ -57,7 +57,6 @@ Emitter impl_includes(std::string const& protocol_name)
 {
     return Lines{
         {"#include \"", protocol_name, "_wrapper.h\""},
-        {"#include \"", protocol_name, ".h\""},
         empty_line,
         "#include <boost/throw_exception.hpp>",
         "#include <boost/exception/diagnostic_information.hpp>",
@@ -85,20 +84,12 @@ Emitter header_file(std::string input_file_path, std::vector<Interface> const& i
         interface_emitters.push_back(interface.declaration());
     }
 
-    std::vector<Emitter> fwd_declare_emitters;
-    for (auto const& interface : interfaces)
-    {
-        fwd_declare_emitters.push_back(interface.global_namespace_forward_declarations());
-    }
-
     return Lines{
         comment_header(input_file_path),
         empty_line,
         include_guard_top(include_guard_macro),
         empty_line,
         header_includes(),
-        empty_line,
-        List{fwd_declare_emitters, nullptr},
         empty_line,
         "namespace mir",
         "{",
@@ -107,7 +98,7 @@ Emitter header_file(std::string input_file_path, std::vector<Interface> const& i
         "namespace wayland",
         "{",
         empty_line,
-        List{interface_emitters, empty_line},
+        EmptyLineList{interface_emitters},
         empty_line,
         "}",
         "}",
@@ -119,10 +110,19 @@ Emitter header_file(std::string input_file_path, std::vector<Interface> const& i
 
 Emitter source_file(std::string input_file_path, std::vector<Interface> const& interfaces)
 {
-    std::vector<Emitter> interface_emitters;
+    std::vector<Emitter> interface_emitters, wl_interface_init_emitters;
+    std::set<std::string> fwd_declare_interfaces;
     for (auto const& interface : interfaces)
     {
         interface_emitters.push_back(interface.implementation());
+        wl_interface_init_emitters.push_back(interface.wl_interface_init());
+        interface.populate_required_interfaces(fwd_declare_interfaces);
+    }
+
+    std::vector<Emitter> fwd_declare_interface_emitters;
+    for (auto const& interface_name : fwd_declare_interfaces)
+    {
+        fwd_declare_interface_emitters.push_back({"extern struct wl_interface const ", interface_name, "_interface_data;"});
     }
 
     std::string protocol_name = file_name_from_path(input_file_path);
@@ -134,9 +134,39 @@ Emitter source_file(std::string input_file_path, std::vector<Interface> const& i
         empty_line,
         impl_includes(protocol_name),
         empty_line,
+        "namespace mir",
+        "{",
+        "namespace frontend",
+        "{",
+        "namespace wayland",
+        "{",
+        Lines{fwd_declare_interface_emitters},
+        "}",
+        "}",
+        "}",
+        empty_line,
         "namespace mfw = mir::frontend::wayland;",
         empty_line,
-        List{interface_emitters, empty_line},
+        "namespace",
+        "{",
+        {"struct wl_interface const* all_null_types [] ",
+            BraceList{std::vector<Emitter>(all_null_types_size, "nullptr")}},
+        "}",
+        empty_line,
+        EmptyLineList{interface_emitters},
+        empty_line,
+        "namespace mir",
+        "{",
+        "namespace frontend",
+        "{",
+        "namespace wayland",
+        "{",
+        empty_line,
+        EmptyLineList{wl_interface_init_emitters},
+        empty_line,
+        "}",
+        "}",
+        "}",
     };
 }
 

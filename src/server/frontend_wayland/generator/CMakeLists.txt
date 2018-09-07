@@ -34,20 +34,8 @@ set(GENERATED_FILES "")
 
 macro(GENERATE_PROTOCOL NAME_PREFIX PROTOCOL_NAME)
   set(PROTOCOL_PATH "${PROTOCOL_DIR}/${PROTOCOL_NAME}.xml")
-  set(OUTPUT_PATH_C "${GENERATED_DIR}/${PROTOCOL_NAME}.c")
-  set(OUTPUT_PATH_H "${GENERATED_DIR}/${PROTOCOL_NAME}.h")
   set(OUTPUT_PATH_HEADER "${GENERATED_DIR}/${PROTOCOL_NAME}_wrapper.h")
   set(OUTPUT_PATH_SRC "${GENERATED_DIR}/${PROTOCOL_NAME}_wrapper.cpp")
-  add_custom_command(OUTPUT "${OUTPUT_PATH_C}"
-    VERBATIM
-    COMMAND "wayland-scanner" "--include-core-only" "code" "${PROTOCOL_PATH}" "${OUTPUT_PATH_C}"
-    DEPENDS "${PROTOCOL_PATH}"
-  )
-  add_custom_command(OUTPUT "${OUTPUT_PATH_H}"
-    VERBATIM
-    COMMAND "wayland-scanner" "--include-core-only" "server-header" "${PROTOCOL_PATH}" "${OUTPUT_PATH_H}"
-    DEPENDS "${PROTOCOL_PATH}"
-  )
   add_custom_command(OUTPUT "${OUTPUT_PATH_HEADER}"
     VERBATIM
     COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator ${NAME_PREFIX} ${PROTOCOL_PATH} header > ${OUTPUT_PATH_HEADER}"

@@ -36,10 +36,23 @@ class Method
 public:
     Method(xmlpp::Element const& node, std::string const& class_name, bool is_global, bool is_event);
 
+    Emitter types_str() const;
+    Emitter types_declare() const;
+    Emitter types_init() const;
+    Emitter wl_message_init() const;
+
+    void populate_required_interfaces(std::set<std::string>& interfaces) const; // fills the set with interfaces used
+
 protected:
+
+    bool use_null_types() const;
+
+    static int get_since_version(xmlpp::Element const& node);
+
     std::string const name;
     std::string const class_name;
     bool const is_global;
+    int const min_version;
     std::vector<Argument> arguments;
 };
 

@@ -13,12 +13,6 @@
 #include "mir/fd.h"
 #include "../wayland_utils.h"
 
-struct zxdg_shell_v6_interface;
-struct zxdg_positioner_v6_interface;
-struct zxdg_surface_v6_interface;
-struct zxdg_toplevel_v6_interface;
-struct zxdg_popup_v6_interface;
-
 namespace mir
 {
 namespace frontend
@@ -56,17 +50,15 @@ public:
         static uint32_t const ping = 0;
     };
 
-private:
     struct Thunks;
 
+private:
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
     virtual void destroy(struct wl_client* client, struct wl_resource* resource) = 0;
     virtual void create_positioner(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
     virtual void get_xdg_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface) = 0;
     virtual void pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial) = 0;
-
-    static struct zxdg_shell_v6_interface const vtable;
 };
 
 class XdgPositionerV6
@@ -116,9 +108,9 @@ public:
         static uint32_t const resize_y = 32;
     };
 
-private:
     struct Thunks;
 
+private:
     virtual void destroy() = 0;
     virtual void set_size(int32_t width, int32_t height) = 0;
     virtual void set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
@@ -126,8 +118,6 @@ private:
     virtual void set_gravity(uint32_t gravity) = 0;
     virtual void set_constraint_adjustment(uint32_t constraint_adjustment) = 0;
     virtual void set_offset(int32_t x, int32_t y) = 0;
-
-    static struct zxdg_positioner_v6_interface const vtable;
 };
 
 class XdgSurfaceV6
@@ -157,16 +147,14 @@ public:
         static uint32_t const configure = 0;
     };
 
-private:
     struct Thunks;
 
+private:
     virtual void destroy() = 0;
     virtual void get_toplevel(uint32_t id) = 0;
     virtual void get_popup(uint32_t id, struct wl_resource* parent, struct wl_resource* positioner) = 0;
     virtual void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
     virtual void ack_configure(uint32_t serial) = 0;
-
-    static struct zxdg_surface_v6_interface const vtable;
 };
 
 class XdgToplevelV6
@@ -212,9 +200,9 @@ public:
         static uint32_t const close = 1;
     };
 
-private:
     struct Thunks;
 
+private:
     virtual void destroy() = 0;
     virtual void set_parent(std::experimental::optional<struct wl_resource*> const& parent) = 0;
     virtual void set_title(std::string const& title) = 0;
@@ -229,8 +217,6 @@ private:
     virtual void set_fullscreen(std::experimental::optional<struct wl_resource*> const& output) = 0;
     virtual void unset_fullscreen() = 0;
     virtual void set_minimized() = 0;
-
-    static struct zxdg_toplevel_v6_interface const vtable;
 };
 
 class XdgPopupV6
@@ -260,13 +246,11 @@ public:
         static uint32_t const popup_done = 1;
     };
 
-private:
     struct Thunks;
 
+private:
     virtual void destroy() = 0;
     virtual void grab(struct wl_resource* seat, uint32_t serial) = 0;
-
-    static struct zxdg_popup_v6_interface const vtable;
 };
 
 }

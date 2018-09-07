@@ -43,12 +43,17 @@ Emitter Request::thunk_impl() const
             "catch(...)",
             Block{{
                 "::mir::log(",
-                List{{"::mir::logging::Severity::critical",
-                    "\"frontend:Wayland\"",
-                    "std::current_exception()",
-                    {"\"Exception processing ", class_name, "::", name, "() request\""}},
-                    Line{{","}, false, true}, "           "},
-                    ");"
+                Emitter::layout(
+                    Emitter::seq({
+                            "::mir::logging::Severity::critical",
+                            "\"frontend:Wayland\"",
+                            "std::current_exception()",
+                            {"\"Exception processing ", class_name, "::", name, "() request\""}},
+                        Emitter::layout(",", false, true)),
+                    false,
+                    false,
+                    "           "),
+                ");"
             }}
         }
     };
@@ -67,7 +72,7 @@ Emitter Request::wl_args() const
     std::vector<Emitter> wl_args{client_arg, "struct wl_resource* resource"};
     for (auto const& arg : arguments)
         wl_args.push_back(arg.wl_prototype());
-    return List{wl_args, ", "};
+    return Emitter::seq(wl_args, ", ");
 }
 
 Emitter Request::mir_args() const
@@ -82,7 +87,7 @@ Emitter Request::mir_args() const
     {
         mir_args.push_back(i.mir_prototype());
     }
-    return List{mir_args, ", "};
+    return Emitter::seq(mir_args, ", ");
 }
 
 Emitter Request::wl2mir_converters() const
@@ -106,5 +111,5 @@ Emitter Request::mir_call_args() const
     }
     for (auto& arg : arguments)
         call_args.push_back(arg.call_fragment());
-    return List{call_args, ", "};
+    return Emitter::seq(call_args, ", ");
 }
