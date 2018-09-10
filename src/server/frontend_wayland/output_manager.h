@@ -34,7 +34,7 @@ namespace mir
 {
 namespace frontend
 {
-class DisplayChanger;
+class MirDisplay;
 
 class Output
 {
@@ -65,7 +65,7 @@ private:
 class OutputManager
 {
 public:
-    OutputManager(wl_display* display, DisplayChanger& display_config);
+    OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config);
 
     auto output_id_for(wl_client* client, std::experimental::optional<struct wl_resource*> const& /*output*/) const
         -> optional_value<graphics::DisplayConfigurationOutputId>;
@@ -78,6 +78,7 @@ private:
 
     void handle_configuration_change(graphics::DisplayConfiguration const& config);
 
+    std::shared_ptr<MirDisplay> const display_config;
     wl_display* const display;
     std::unordered_map<graphics::DisplayConfigurationOutputId, std::unique_ptr<Output>> outputs;
 };

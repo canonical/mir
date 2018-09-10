@@ -584,7 +584,7 @@ auto mir::frontend::WaylandExtensions::get_extension(std::string const& name) co
 mf::WaylandConnector::WaylandConnector(
     optional_value<std::string> const& display_name,
     std::shared_ptr<mf::Shell> const& shell,
-    DisplayChanger& display_config,
+    std::shared_ptr<MirDisplay> const& display_config,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,

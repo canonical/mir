@@ -18,7 +18,7 @@
 
 #include "output_manager.h"
 
-#include "mir/frontend/display_changer.h"
+#include "mir_display.h"
 
 #include <algorithm>
 
@@ -129,12 +129,12 @@ void mf::Output::resource_destructor(wl_resource* resource)
 }
 
 
-mf::OutputManager::OutputManager(wl_display* display, mf::DisplayChanger& display_config) :
+mf::OutputManager::OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config) :
+    display_config{display_config},
     display{display}
 {
     // TODO: Also register display configuration listeners
-    display_config.base_configuration()
-        ->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
+    display_config->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
 }
 
 auto mf::OutputManager::output_id_for(
