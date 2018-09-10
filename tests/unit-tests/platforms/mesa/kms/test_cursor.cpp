@@ -420,7 +420,8 @@ MATCHER_P(ContainsASingleWhitePixel, buffersize, "")
     auto pixels = static_cast<uint32_t const*>(arg);
     if (pixels[0] != 0xffffffff)
         return false;
-    typename std::remove_const<decltype(buffersize)>::type i; // get a non-const instance of the buffersize type
+    // get a non-const instance of the buffersize type (needed for gtest 1.8.1+)
+    typename std::remove_const<decltype(buffersize)>::type i;
     for (i = 1; i < buffersize; i++)
     {
         if (pixels[i] != 0x0)

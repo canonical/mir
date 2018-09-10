@@ -64,6 +64,7 @@ MATCHER_P2(EGLConfigContainsAttrib, attrib, value, "")
     bool attrib_position = true;
     bool attrib_found = false;
 
+    // arg is const, but we need to mutate it in the loop (needed for gtest 1.8.1+)
     auto arg_mut = arg;
 
     while (!attrib_position || *arg_mut != EGL_NONE)
