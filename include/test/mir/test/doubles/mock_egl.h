@@ -64,9 +64,11 @@ MATCHER_P2(EGLConfigContainsAttrib, attrib, value, "")
     bool attrib_position = true;
     bool attrib_found = false;
 
-    while (!attrib_position || *arg != EGL_NONE)
+    auto arg_mut = arg;
+
+    while (!attrib_position || *arg_mut != EGL_NONE)
     {
-        if (attrib_position && *arg == attrib)
+        if (attrib_position && *arg_mut == attrib)
         {
             attrib_found = true;
         }
@@ -80,7 +82,7 @@ MATCHER_P2(EGLConfigContainsAttrib, attrib, value, "")
             attrib_found = false;
         }
         attrib_position = !attrib_position;
-        ++arg;
+        ++arg_mut;
     }
 
     return false;

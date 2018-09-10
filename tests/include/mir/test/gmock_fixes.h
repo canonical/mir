@@ -76,10 +76,10 @@ class ActionResultHolder<std::unique_ptr<T, D>>
   template <typename F>
   static ActionResultHolder* PerformDefaultAction(
       const FunctionMockerBase<F>* func_mocker,
-      const typename Function<F>::ArgumentTuple& args,
+      typename Function<F>::ArgumentTuple args,
       const string& call_description) {
     return new ActionResultHolder(
-        func_mocker->PerformDefaultAction(args, call_description));
+        func_mocker->PerformDefaultAction(std::move(args), call_description));
   }
 
   // Performs the given action and returns the result in a new-ed

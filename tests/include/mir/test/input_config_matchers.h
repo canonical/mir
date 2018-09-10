@@ -36,7 +36,8 @@ public:
     // Constructs the matcher from a sequence of element values or
     // element matchers.
     template <typename InputIter>
-    InputConfigElementsMatcher(InputIter first, InputIter last)
+    InputConfigElementsMatcher(UnorderedMatcherRequire::Flags matcher_flags, InputIter first, InputIter last)
+        : UnorderedElementsAreMatcherImplBase{matcher_flags}
     {
         for (; first != last; ++first)
         {
@@ -72,7 +73,7 @@ public:
             return false;
         }
 
-        return VerifyAllElementsAndMatchersAreMatched(element_printouts, matrix, listener) &&
+        return VerifyMatchMatrix(element_printouts, matrix, listener) &&
                FindPairing(matrix, listener);
     }
 
