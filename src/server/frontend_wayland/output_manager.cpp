@@ -34,8 +34,16 @@ mf::Output::~Output()
     wl_global_destroy(output);
 }
 
-void mf::Output::handle_configuration_changed(mg::DisplayConfigurationOutput const& /*config*/)
+void mf::Output::handle_configuration_changed(mg::DisplayConfigurationOutput const& config)
 {
+    for (auto const& client : resource_map)
+    {
+        for (auto const& resource : client.second)
+        {
+            // Possibly not optimal
+            send_initial_config(resource, config);
+        }
+    }
 }
 
 bool mf::Output::matches_client_resource(wl_client* client, struct wl_resource* resource) const
