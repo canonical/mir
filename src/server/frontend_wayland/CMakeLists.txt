@@ -6,7 +6,7 @@ include_directories(../frontend_xwayland)
 set(
   WAYLAND_SOURCES
 
-        mir_display.cpp mir_display.h
+  mir_display.cpp               mir_display.h
   wayland_default_configuration.cpp
   wayland_connector.cpp         wayland_connector.h
   wlshmbuffer.cpp               wlshmbuffer.h
