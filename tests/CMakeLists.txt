@@ -1,20 +1,28 @@
-unset(GTEST_CONFIG_EXECUTABLE CACHE)
-find_program(GTEST_CONFIG_EXECUTABLE
-  NAMES "gtest-config" "gtest-conf")
-if(GTEST_CONFIG_EXECUTABLE)
-  message("GTest found: ${GTEST_CONFIG_EXECUTABLE}")
-  EXEC_PROGRAM(${GTEST_CONFIG_EXECUTABLE} "/"
-    ARGS "--version"
-    OUTPUT_VARIABLE GTEST_VERSION_STR)
+if (DEFINED ENV{GTEST_VERSION})
+  set(GTEST_VERSION_STR $ENV{GTEST_VERSION})
+else()
+  unset(GTEST_CONFIG_EXECUTABLE CACHE)
+  find_program(GTEST_CONFIG_EXECUTABLE
+    NAMES "gtest-config" "gtest-conf")
+  if(GTEST_CONFIG_EXECUTABLE)
+    message("GTest config found: ${GTEST_CONFIG_EXECUTABLE}")
+    EXEC_PROGRAM(${GTEST_CONFIG_EXECUTABLE} "/"
+      ARGS "--version"
+      OUTPUT_VARIABLE GTEST_VERSION_STR)
+  else()
+    message(WARNING "Could not detect GTest version (gtest-config not found)")
+  endif()
+endif()
+
+if (GTEST_VERSION_STR)
   string(REGEX MATCH
     "([0-9])\\.([0-9])\\.([0-9])" _dummy
     ${GTEST_VERSION_STR})
   set(GTEST_VERSION_MAJOR ${CMAKE_MATCH_1})
   set(GTEST_VERSION_MINOR ${CMAKE_MATCH_2})
   set(GTEST_VERSION_PATCH ${CMAKE_MATCH_3})
-  message("Found GTest v${GTEST_VERSION_MAJOR}.${GTEST_VERSION_MINOR}.${GTEST_VERSION_PATCH}")
+  message("Detected GTest v${GTEST_VERSION_MAJOR}.${GTEST_VERSION_MINOR}.${GTEST_VERSION_PATCH}")
 else()
-  message(WARNING "Could not detect GTest version (gtest-config not found)")
   message(WARNING "Assuming GTest v1.8.0 (or compatible) and hoping for the best")
   set(GTEST_VERSION_MAJOR 1)
   set(GTEST_VERSION_MINOR 8)
