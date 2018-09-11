@@ -1,3 +1,30 @@
+find_program(GTEST_CONFIG_EXECUTABLE
+  NAMES "gtest-config" "gtest-conf")
+if(NOT GTEST_CONFIG_EXECUTABLE)
+  message("GTest found: ${GTEST_CONFIG_EXECUTABLE}")
+  EXEC_PROGRAM(${GTEST_CONFIG_EXECUTABLE} "/"
+    ARGS "--version"
+    OUTPUT_VARIABLE GTEST_VERSION_STR)
+  string(REGEX MATCH
+    "([0-9])\\.([0-9])\\.([0-9])" _dummy
+    ${GTEST_VERSION_STR})
+  set(GTEST_VERSION_MAJOR ${CMAKE_MATCH_1})
+  set(GTEST_VERSION_MINOR ${CMAKE_MATCH_2})
+  set(GTEST_VERSION_PATCH ${CMAKE_MATCH_3})
+  message("Found GTest v${GTEST_VERSION_MAJOR}.${GTEST_VERSION_MINOR}.${GTEST_VERSION_PATCH}")
+else()
+  message(WARNING "Could not detect GTest version (gtest-config not found)")
+  message(WARNING "Assuming GTest v1.8.0 (or compatible) and hoping for the best")
+  set(GTEST_VERSION_MAJOR 1)
+  set(GTEST_VERSION_MINOR 8)
+  set(GTEST_VERSION_PATCH 0)
+  add_compile_definitions(GTEST_VERSION_UNKNOWN)
+endif()
+
+add_compile_definitions(GTEST_VERSION_MAJOR=${GTEST_VERSION_MAJOR})
+add_compile_definitions(GTEST_VERSION_MINOR=${GTEST_VERSION_MINOR})
+add_compile_definitions(GTEST_VERSION_PATCH=${GTEST_VERSION_PATCH})
+
 pkg_check_modules(UMOCKDEV REQUIRED umockdev-1.0>=0.6)
 if (NOT UMOCKDEV_FOUND)
   message(FATAL_ERROR "Umockdev not found, cannot build without disabling tests (via MIR_ENABLE_TESTS).")
