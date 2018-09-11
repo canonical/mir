@@ -148,6 +148,9 @@ geom::Size mgm::RealKMSOutput::size() const
 
 int mgm::RealKMSOutput::max_refresh_rate() const
 {
+    if (connector->connection == DRM_MODE_DISCONNECTED)
+        return 1;
+
     drmModeModeInfo const& current_mode = connector->modes[mode_index];
     return current_mode.vrefresh;
 }
