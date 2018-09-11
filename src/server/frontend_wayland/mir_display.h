@@ -62,7 +62,7 @@ public:
 
     void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const;
 
-    void register_interest(std::weak_ptr<OutputObserver> const& observer);
+    void register_interest(OutputObserver* observer);
     void unregister_interest(OutputObserver* observer);
 
 private:

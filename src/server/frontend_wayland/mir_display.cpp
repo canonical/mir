@@ -34,9 +34,9 @@ namespace
 {
 struct DisplayConfigurationObserverAdapter : mg::DisplayConfigurationObserver
 {
-    std::weak_ptr<mf::OutputObserver> const wrapped;
+    mf::OutputObserver* const wrapped;
 
-    DisplayConfigurationObserverAdapter(std::weak_ptr<mf::OutputObserver> const& adaptee) : 
+    DisplayConfigurationObserverAdapter(mf::OutputObserver* adaptee) :
         wrapped{adaptee}
     {
     }
@@ -47,8 +47,7 @@ struct DisplayConfigurationObserverAdapter : mg::DisplayConfigurationObserver
 
     void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
     {
-        if (auto const adaptee = wrapped.lock()) 
-            adaptee->handle_configuration_change(*config);
+        wrapped->handle_configuration_change(*config);
     }
 
     void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const&) override
@@ -99,10 +98,7 @@ mf::MirDisplay::MirDisplay(
 {
 }
 
-//std::shared_ptr<mir::ObserverRegistrar<mg::DisplayConfigurationObserver>>
-//mir::DefaultServerConfiguration::the_display_configuration_observer_registrar()
-
-void mf::MirDisplay::register_interest(std::weak_ptr<OutputObserver> const& observer)
+void mf::MirDisplay::register_interest(OutputObserver* observer)
 {
     auto const adapter = std::make_shared<DisplayConfigurationObserverAdapter>(observer);
 
@@ -121,7 +117,7 @@ void mf::MirDisplay::unregister_interest(OutputObserver* observer)
             end(self->adapters),
             [observer, registrar = self->registrar](auto const& adapter)
                 {
-                    auto const adaptee = adapter->wrapped.lock().get();
+                    auto const adaptee = adapter->wrapped;
 
                     if (adaptee == nullptr)
                     {

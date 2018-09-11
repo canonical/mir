@@ -18,8 +18,6 @@
 
 #include "output_manager.h"
 
-#include "mir_display.h"
-
 #include <algorithm>
 
 namespace mf = mir::frontend;
@@ -133,8 +131,13 @@ mf::OutputManager::OutputManager(wl_display* display, std::shared_ptr<MirDisplay
     display_config{display_config},
     display{display}
 {
-    // TODO: Also register display configuration listeners
+    display_config->register_interest(this);
     display_config->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
+}
+
+mf::OutputManager::~OutputManager()
+{
+    display_config->unregister_interest(this);
 }
 
 auto mf::OutputManager::output_id_for(
