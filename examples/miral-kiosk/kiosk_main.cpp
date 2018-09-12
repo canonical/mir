@@ -100,8 +100,6 @@ int main(int argc, char const* argv[])
         {
             display_config,
             display_config.layout_option(),
-            CommandLineOption{[&](std::string const& ) { },
-                              "desktop_file_hint", "Ignored for Unity8 compatability", "miral-shell.desktop"},
             set_window_management_policy<KioskWindowManagerPolicy>(splash),
             SetApplicationAuthorizer<KioskAuthorizer>{splash},
             Keymap{},

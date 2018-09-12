@@ -81,8 +81,6 @@ int main(int argc, char const* argv[])
 
     return runner.run_with(
         {
-            CommandLineOption{[&](std::string const& ) { },
-                              "desktop_file_hint", "Ignored for Unity8 compatibility", "miral-shell.desktop"},
             CursorTheme{"default:DMZ-White"},
             WaylandExtensions{},
             window_managers,
