@@ -18,8 +18,6 @@
 
 #include "output_manager.h"
 
-#include "mir/frontend/display_changer.h"
-
 #include <algorithm>
 
 namespace mf = mir::frontend;
@@ -36,8 +34,16 @@ mf::Output::~Output()
     wl_global_destroy(output);
 }
 
-void mf::Output::handle_configuration_changed(mg::DisplayConfigurationOutput const& /*config*/)
+void mf::Output::handle_configuration_changed(mg::DisplayConfigurationOutput const& config)
 {
+    for (auto const& client : resource_map)
+    {
+        for (auto const& resource : client.second)
+        {
+            // Possibly not optimal
+            send_initial_config(resource, config);
+        }
+    }
 }
 
 bool mf::Output::matches_client_resource(wl_client* client, struct wl_resource* resource) const
@@ -129,12 +135,17 @@ void mf::Output::resource_destructor(wl_resource* resource)
 }
 
 
-mf::OutputManager::OutputManager(wl_display* display, mf::DisplayChanger& display_config) :
+mf::OutputManager::OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config) :
+    display_config{display_config},
     display{display}
 {
-    // TODO: Also register display configuration listeners
-    display_config.base_configuration()
-        ->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
+    display_config->register_interest(this);
+    display_config->for_each_output(std::bind(&OutputManager::create_output, this, std::placeholders::_1));
+}
+
+mf::OutputManager::~OutputManager()
+{
+    display_config->unregister_interest(this);
 }
 
 auto mf::OutputManager::output_id_for(

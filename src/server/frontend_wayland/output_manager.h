@@ -21,6 +21,8 @@
 
 #include <mir/graphics/display_configuration.h>
 
+#include "mir_display.h"
+
 #include <wayland-server-core.h>
 #include <wayland-server-protocol.h>
 
@@ -34,7 +36,7 @@ namespace mir
 {
 namespace frontend
 {
-class DisplayChanger;
+class MirDisplay;
 
 class Output
 {
@@ -62,10 +64,11 @@ private:
     std::unordered_map<wl_client*, std::vector<wl_resource*>> resource_map;
 };
 
-class OutputManager
+class OutputManager : public OutputObserver
 {
 public:
-    OutputManager(wl_display* display, DisplayChanger& display_config);
+    OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config);
+    ~OutputManager();
 
     auto output_id_for(wl_client* client, std::experimental::optional<struct wl_resource*> const& /*output*/) const
         -> optional_value<graphics::DisplayConfigurationOutputId>;
@@ -76,8 +79,9 @@ public:
 private:
     void create_output(graphics::DisplayConfigurationOutput const& initial_config);
 
-    void handle_configuration_change(graphics::DisplayConfiguration const& config);
+    void handle_configuration_change(graphics::DisplayConfiguration const& config) override;
 
+    std::shared_ptr<MirDisplay> const display_config;
     wl_display* const display;
     std::unordered_map<graphics::DisplayConfigurationOutputId, std::unique_ptr<Output>> outputs;
 };

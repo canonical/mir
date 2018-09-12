@@ -21,8 +21,8 @@
 #include "xdg_shell_v6.h"
 #include "xdg_shell_stable.h"
 #include "xwayland_wm_shell.h"
+#include "mir_display.h"
 
-#include "mir/frontend/display_changer.h"
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
 
@@ -82,7 +82,6 @@ auto configure_wayland_extensions(std::string extensions, bool x11_enabled) -> s
 std::shared_ptr<mf::Connector>
     mir::DefaultServerConfiguration::the_wayland_connector()
 {
-
     return wayland_connector(
         [this]() -> std::shared_ptr<mf::Connector>
         {
@@ -97,10 +96,14 @@ std::shared_ptr<mf::Connector>
             auto const wayland_extensions =
                 options->get(mo::wayland_extensions_opt, mo::wayland_extensions_value);
 
+            auto const display_config = std::make_shared<mf::MirDisplay>(
+                the_frontend_display_changer(),
+                the_display_configuration_observer_registrar());
+
             return std::make_shared<mf::WaylandConnector>(
                 display_name,
                 the_frontend_shell(),
-                *the_frontend_display_changer(),
+                display_config,
                 the_input_device_hub(),
                 the_seat(),
                 the_buffer_allocator(),
