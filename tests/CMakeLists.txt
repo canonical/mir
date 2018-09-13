@@ -1,6 +1,7 @@
 # get a gtest version string the regex will match
 if (DEFINED ENV{GTEST_VERSION})
   set(GTEST_VERSION_STR $ENV{GTEST_VERSION})
+  set(GTEST_DETECTION_METHOD "GTEST_VERSION environment variable")
 else()
   find_program(APT_EXECUTABLE
     NAMES "apt")
