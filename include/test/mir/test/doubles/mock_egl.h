@@ -75,7 +75,7 @@ MATCHER_P2(EGLConfigContainsAttrib, attrib, value, "")
         }
         else if (!attrib_position)
         {
-            if (attrib_found && *arg == value)
+            if (attrib_found && *arg_mut == value)
             {
                 return true;
             }
