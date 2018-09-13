@@ -1,3 +1,64 @@
+# get a gtest version string the regex will match
+if (DEFINED ENV{GTEST_VERSION})
+  set(GTEST_VERSION_STR $ENV{GTEST_VERSION})
+  set(GTEST_DETECTION_METHOD "GTEST_VERSION environment variable")
+else()
+  find_program(APT_EXECUTABLE
+    NAMES "apt")
+  find_program(RPM_EXECUTABLE
+    NAMES "rpm")
+  find_program(PACMAN_EXECUTABLE
+    NAMES "pacman")
+  find_program(GTEST_CONFIG_EXECUTABLE
+    NAMES "gtest-config" "gtest-conf")
+  if(APT_EXECUTABLE)
+    EXEC_PROGRAM(${APT_EXECUTABLE} "/"
+      ARGS "policy" "libgtest-dev"
+      OUTPUT_VARIABLE GTEST_VERSION_STR)
+    set(GTEST_DETECTION_METHOD "output of apt")
+  elseif(RPM_EXECUTABLE)
+    EXEC_PROGRAM(${RPM_EXECUTABLE} "/"
+      ARGS "-q" "libgtest-dev"
+      OUTPUT_VARIABLE GTEST_VERSION_STR)
+    set(GTEST_DETECTION_METHOD "output of rpm")
+  elseif(PACMAN_EXECUTABLE)
+    EXEC_PROGRAM(${PACMAN_EXECUTABLE} "/"
+      ARGS "-Q" "gtest"
+      OUTPUT_VARIABLE GTEST_VERSION_STR)
+    set(GTEST_DETECTION_METHOD "output of pacman")
+  elseif(GTEST_CONFIG_EXECUTABLE)
+    EXEC_PROGRAM(${GTEST_CONFIG_EXECUTABLE} "/"
+      ARGS "--version"
+      OUTPUT_VARIABLE GTEST_VERSION_STR)
+    set(GTEST_DETECTION_METHOD "output of gtest-config")
+  else()
+    message(WARNING "Could not detect GTest version, Assuming v1.8.0 (or compatible) and hoping for the best")
+    set(GTEST_VERSION_STR "1.8.0")
+    add_definitions(-DGTEST_VERSION_UNKNOWN)
+    set(GTEST_DETECTION_METHOD "best guess, could not detect")
+  endif()
+endif()
+
+string(REGEX MATCH
+  "([0-9])\\.([0-9])\\.([0-9])" GTEST_VERSION_PARSED
+  ${GTEST_VERSION_STR})
+if (GTEST_VERSION_PARSED)
+  set(GTEST_VERSION_MAJOR ${CMAKE_MATCH_1})
+  set(GTEST_VERSION_MINOR ${CMAKE_MATCH_2})
+  set(GTEST_VERSION_PATCH ${CMAKE_MATCH_3})
+  message("Using GTest v${GTEST_VERSION_MAJOR}.${GTEST_VERSION_MINOR}.${GTEST_VERSION_PATCH} (parsed from ${GTEST_DETECTION_METHOD})")
+else()
+  message(WARNING "Could not parse GTest version: ${GTEST_VERSION_STR} (${GTEST_DETECTION_METHOD}), Assuming v1.8.0 (or compatible) and hoping for the best")
+  set(GTEST_VERSION_MAJOR 1)
+  set(GTEST_VERSION_MINOR 8)
+  set(GTEST_VERSION_PATCH 0)
+  add_definitions(-DGTEST_VERSION_UNKNOWN)
+endif()
+
+add_definitions(-DGTEST_VERSION_MAJOR=${GTEST_VERSION_MAJOR})
+add_definitions(-DGTEST_VERSION_MINOR=${GTEST_VERSION_MINOR})
+add_definitions(-DGTEST_VERSION_PATCH=${GTEST_VERSION_PATCH})
+
 pkg_check_modules(UMOCKDEV REQUIRED umockdev-1.0>=0.6)
 if (NOT UMOCKDEV_FOUND)
   message(FATAL_ERROR "Umockdev not found, cannot build without disabling tests (via MIR_ENABLE_TESTS).")
