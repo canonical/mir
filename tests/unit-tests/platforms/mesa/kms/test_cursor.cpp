@@ -37,7 +37,6 @@
 
 #include <unordered_map>
 #include <algorithm>
-#include <type_traits>
 
 #include <string.h>
 
@@ -420,9 +419,7 @@ MATCHER_P(ContainsASingleWhitePixel, buffersize, "")
     auto pixels = static_cast<uint32_t const*>(arg);
     if (pixels[0] != 0xffffffff)
         return false;
-    // get a non-const instance of the buffersize type (needed for gtest 1.8.1+)
-    typename std::remove_const<decltype(buffersize)>::type i;
-    for (i = 1; i < buffersize; i++)
+    for (auto i = decltype(buffersize){1}; i < buffersize; i++)
     {
         if (pixels[i] != 0x0)
             return false;
