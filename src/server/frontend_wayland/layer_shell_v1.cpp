@@ -29,8 +29,38 @@ namespace mir
 namespace frontend
 {
 
-LayerShellV1::LayerShellV1(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat,
-                           OutputManager* output_manager)
+class LayerSurfaceV1 : public wayland::LayerSurfaceV1, public WindowWlSurfaceRole
+{
+public:
+    LayerSurfaceV1(struct wl_client* client, struct wl_resource* parent_resource, uint32_t id, WlSurface* surface,
+                   LayerShellV1 const& layer_shell);
+    ~LayerSurfaceV1() = default;
+
+private:
+    // from wayland::LayerSurfaceV1
+    void set_size(uint32_t width, uint32_t height) override;
+    void set_anchor(uint32_t anchor) override;
+    void set_exclusive_zone(int32_t zone) override;
+    void set_margin(int32_t top, int32_t right, int32_t bottom, int32_t left) override;
+    void set_keyboard_interactivity(uint32_t keyboard_interactivity) override;
+    void get_popup(struct wl_resource* popup) override;
+    void ack_configure(uint32_t serial) override;
+    void destroy() override;
+
+    // from WindowWlSurfaceRole
+    void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
+                       geometry::Size const& new_size) override;
+
+    WlSurface* const surface;
+};
+
+}
+}
+
+// LayerShellV1
+
+mf::LayerShellV1::LayerShellV1(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat,
+                               OutputManager* output_manager)
     : wayland::LayerShellV1(display, 1),
       shell{shell},
       seat{seat},
@@ -38,18 +68,74 @@ LayerShellV1::LayerShellV1(struct wl_display* display, std::shared_ptr<Shell> co
 {
 }
 
-void LayerShellV1::get_layer_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id,
-                                     struct wl_resource* surface, std::experimental::optional<struct
-                                     wl_resource*> const& output, uint32_t layer, std::string const& namespace_)
+void mf::LayerShellV1::get_layer_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id,
+                                         struct wl_resource* surface,
+                                         std::experimental::optional<struct wl_resource*> const& output,
+                                         uint32_t layer, std::string const& namespace_)
 {
-    (void)client;
-    (void)resource;
-    (void)id;
-    (void)surface;
     (void)output;
     (void)layer;
     (void)namespace_;
+    new LayerSurfaceV1(client, resource, id, WlSurface::from(surface), *this);
 }
 
+// LayerSurfaceV1
+
+mf::LayerSurfaceV1::LayerSurfaceV1(struct wl_client* client, struct wl_resource* parent_resource, uint32_t id,
+                                   WlSurface* surface, LayerShellV1 const& layer_shell)
+    : wayland::LayerSurfaceV1(client, parent_resource, id),
+      WindowWlSurfaceRole(&layer_shell.seat, client, surface, layer_shell.shell, layer_shell.output_manager),
+      surface{surface}
+{
 }
+
+void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
+{
+    (void)width;
+    (void)height;
+}
+
+void mf::LayerSurfaceV1::set_anchor(uint32_t anchor)
+{
+    (void)anchor;
+}
+
+void mf::LayerSurfaceV1::set_exclusive_zone(int32_t zone)
+{
+    (void)zone;
+}
+
+void mf::LayerSurfaceV1::set_margin(int32_t top, int32_t right, int32_t bottom, int32_t left)
+{
+    (void)top;
+    (void)right;
+    (void)bottom;
+    (void)left;
+}
+
+void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactivity)
+{
+    (void)keyboard_interactivity;
+}
+
+void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
+{
+    (void)popup;
+}
+
+void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
+{
+    (void)serial;
+}
+
+void mf::LayerSurfaceV1::destroy()
+{
+    destroy_wayland_object();
+}
+
+void mf::LayerSurfaceV1::handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
+                                       geometry::Size const& new_size)
+{
+    (void)new_top_left;
+    (void)new_size;
 }
