@@ -54,6 +54,7 @@ struct miral::WaylandExtensions::Self
 
         std::set<std::string> supported_extension;
         std::string available_extensions = mo::wayland_extensions_value;
+        available_extensions += ":zwlr_layer_shell_v1";
         available_extensions += ':';
 
         for (char const* start = available_extensions.c_str(); char const* end = strchr(start, ':'); start = end+1)

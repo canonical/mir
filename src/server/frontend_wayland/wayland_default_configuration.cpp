@@ -20,6 +20,7 @@
 #include "wayland_connector.h"
 #include "xdg_shell_v6.h"
 #include "xdg_shell_stable.h"
+#include "layer_shell_v1.h"
 #include "xwayland_wm_shell.h"
 #include "mir_display.h"
 
@@ -31,9 +32,10 @@ namespace mo = mir::options;
 
 namespace
 {
-auto const wl_shell     = "wl_shell";
-auto const xdg_shell    = "xdg_wm_base";
-auto const xdg_shell_v6 = "zxdg_shell_v6";
+auto const wl_shell       = "wl_shell";
+auto const xdg_shell      = "xdg_wm_base";
+auto const xdg_shell_v6   = "zxdg_shell_v6";
+auto const layer_shell_v1 = "zwlr_layer_shell_v1";
 
 auto configure_wayland_extensions(std::string extensions, bool x11_enabled) -> std::unique_ptr<mf::WaylandExtensions>
 {
@@ -57,6 +59,10 @@ auto configure_wayland_extensions(std::string extensions, bool x11_enabled) -> s
 
             if (extension.find(xdg_shell) != extension.end())
                 add_extension(xdg_shell, std::make_shared<mf::XdgShellStable>(display, shell, *seat, output_manager));
+
+            if (extension.find(layer_shell_v1) != extension.end())
+                add_extension(layer_shell_v1, std::make_shared<mf::LayerShellV1>(display, shell, *seat,
+                                                                                 output_manager));
 
             if (x11_enabled)
                 add_extension("x11-support", std::make_shared<mf::XWaylandWMShell>(shell, *seat, output_manager));
