@@ -87,6 +87,7 @@ mf::LayerSurfaceV1::LayerSurfaceV1(struct wl_client* client, struct wl_resource*
       WindowWlSurfaceRole(&layer_shell.seat, client, surface, layer_shell.shell, layer_shell.output_manager),
       surface{surface}
 {
+    (void)this->surface;
 }
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
