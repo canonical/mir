@@ -1,6 +1,6 @@
-mir (0.32.2) UNRELEASED; urgency=medium
+mir (1.0.0) UNRELEASED; urgency=medium
 
-  * New upstream release 0.32.2
+  * New upstream release 1.0.0
 
     - ABI summary:
       . mirclient ABI unchanged at 9
