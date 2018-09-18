@@ -60,6 +60,52 @@ bool mf::Output::matches_client_resource(wl_client* client, struct wl_resource* 
     return false;
 }
 
+namespace
+{
+auto as_subpixel_arrangement(MirSubpixelArrangement arrangement) -> wl_output_subpixel
+{
+    switch (arrangement)
+    {
+    default:
+    case mir_subpixel_arrangement_unknown:
+        return WL_OUTPUT_SUBPIXEL_UNKNOWN;
+
+    case mir_subpixel_arrangement_horizontal_rgb:
+        return WL_OUTPUT_SUBPIXEL_HORIZONTAL_RGB;
+
+    case mir_subpixel_arrangement_horizontal_bgr:
+        return WL_OUTPUT_SUBPIXEL_HORIZONTAL_BGR;
+
+    case mir_subpixel_arrangement_vertical_rgb:
+        return WL_OUTPUT_SUBPIXEL_VERTICAL_RGB;
+
+    case mir_subpixel_arrangement_vertical_bgr:
+        return WL_OUTPUT_SUBPIXEL_VERTICAL_BGR;
+
+    case mir_subpixel_arrangement_none:
+        return WL_OUTPUT_SUBPIXEL_NONE;
+    }
+}
+
+auto as_transform(MirOrientation orientation) -> wl_output_transform
+{
+    switch (orientation)
+    {
+    default:
+    case mir_orientation_normal:
+        return WL_OUTPUT_TRANSFORM_NORMAL;
+
+    case mir_orientation_left:
+        return WL_OUTPUT_TRANSFORM_90;
+
+    case mir_orientation_inverted:
+        return WL_OUTPUT_TRANSFORM_180;
+
+    case mir_orientation_right:
+        return WL_OUTPUT_TRANSFORM_270;
+    }
+}
+}
 
 void mf::Output::send_initial_config(wl_resource* client_resource, mg::DisplayConfigurationOutput const& config)
 {
@@ -69,10 +115,10 @@ void mf::Output::send_initial_config(wl_resource* client_resource, mg::DisplayCo
         config.top_left.y.as_int(),
         config.physical_size_mm.width.as_int(),
         config.physical_size_mm.height.as_int(),
-        WL_OUTPUT_SUBPIXEL_UNKNOWN,
+        as_subpixel_arrangement(config.subpixel_arrangement),
         "Fake manufacturer",
         "Fake model",
-        WL_OUTPUT_TRANSFORM_NORMAL);
+        as_transform(config.orientation));
     for (size_t i = 0; i < config.modes.size(); ++i)
     {
         auto const& mode = config.modes[i];
