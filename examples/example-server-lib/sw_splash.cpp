@@ -78,6 +78,14 @@ auto create_window(MirConnection* connection, mir::client::Surface const& surfac
                 MirOutputMode const* mode = mir_output_get_current_mode(output);
                 width = mir_output_mode_get_width(mode);
                 height = mir_output_mode_get_height(mode);
+
+                switch (mir_output_get_orientation(output))
+                {
+                case mir_orientation_left:
+                case mir_orientation_right:
+                    std::swap(width, height);
+                default:;
+                }
             }
         });
 
