@@ -125,11 +125,17 @@ mg::PlatformPriority probe_graphics_platform(
         mir::log_info("Unsupported: EGL platform does not support client extensions.");
         return mg::PlatformPriority::unsupported;
     }
-    if (strstr(client_extensions, "EGL_MESA_platform_gbm") == nullptr)
+    if (strstr(client_extensions, "EGL_KHR_platform_gbm") == nullptr)
     {
-        // No platform_gbm support, so we can't work.
-        mir::log_info("Unsupported: EGL platform does not support EGL_MESA_platform_gbm extension");
-        return mg::PlatformPriority::unsupported;
+        // Doesn't support the Khronos-standardised GBM platform…
+        mir::log_info("EGL platform does not support EGL_KHR_platform_gbm extension");
+        // …maybe we support the old pre-standardised Mesa GBM platform?
+        if (strstr(client_extensions, "EGL_MESA_platform_gbm") == nullptr)
+        {
+            mir::log_info(
+                "Unsupported: EGL platform supports neither EGL_KHR_platform_gbm nor EGL_MESA_platform_gbm");
+            return mg::PlatformPriority::unsupported;
+        }
     }
 
     // Check for suitability
