@@ -421,7 +421,13 @@ void mie::LibInputDevice::update_device_info()
 
     if (contains(caps, mi::DeviceCapability::touchscreen) &&
         !contains(info.capabilities, mi::DeviceCapability::touchscreen))
+    {
         touchscreen = mi::TouchscreenSettings{};
+
+        // FIXME: hack to connect touchscreen to output. {arg}
+        touchscreen.value().output_id = 1;
+        touchscreen.value().mapping_mode = mir_touchscreen_mapping_mode_to_output;
+    }
 
     info = mi::InputDeviceInfo{name, unique_id.str(), caps};
 }
