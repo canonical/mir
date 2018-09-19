@@ -93,13 +93,28 @@ mf::LayerSurfaceV1::LayerSurfaceV1(struct wl_client* client, struct wl_resource*
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
 {
-    (void)width;
-    (void)height;
+    WindowWlSurfaceRole::set_geometry(0, 0, width, height);
 }
 
 void mf::LayerSurfaceV1::set_anchor(uint32_t anchor)
 {
-    (void)anchor;
+    MirPlacementGravity gravity = mir_placement_gravity_center;
+
+    if (anchor & Anchor::top)
+        gravity = MirPlacementGravity(gravity | mir_placement_gravity_north);
+
+    if (anchor & Anchor::bottom)
+        gravity = MirPlacementGravity(gravity | mir_placement_gravity_south);
+
+    if (anchor & Anchor::left)
+        gravity = MirPlacementGravity(gravity | mir_placement_gravity_west);
+
+    if (anchor & Anchor::right)
+        gravity = MirPlacementGravity(gravity | mir_placement_gravity_east);
+
+    shell::SurfaceSpecification spec;
+    spec.anchor_edge = gravity;
+    apply_spec(spec);
 }
 
 void mf::LayerSurfaceV1::set_exclusive_zone(int32_t zone)
