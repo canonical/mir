@@ -59,6 +59,8 @@ struct miral::WindowSpecification::Self
     mir::optional_value<InputReceptionMode> input_mode;
     mir::optional_value<MirShellChrome> shell_chrome;
     mir::optional_value<MirPointerConfinementState> confine_pointer;
+    mir::optional_value<MirPlacementGravity> anchor_edge;
+    mir::optional_value<int> anchor_exclusive_zone;
     mir::optional_value<std::shared_ptr<void>> userdata;
 };
 
@@ -88,8 +90,10 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     parent(spec.parent),
     input_shape(spec.input_shape),
     input_mode(),
-    shell_chrome(spec.shell_chrome)
-    ,confine_pointer(spec.confine_pointer)
+    shell_chrome(spec.shell_chrome),
+    confine_pointer(spec.confine_pointer),
+    anchor_edge(spec.anchor_edge),
+    anchor_exclusive_zone(spec.anchor_exclusive_zone)
 {
     if (spec.aux_rect_placement_offset_x.is_set() && spec.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{spec.aux_rect_placement_offset_x.value(), spec.aux_rect_placement_offset_y.value()};
@@ -213,8 +217,10 @@ miral::WindowSpecification::Self::Self(mir::scene::SurfaceCreationParameters con
     parent(params.parent),
     input_shape(params.input_shape),
     input_mode(static_cast<InputReceptionMode>(params.input_mode)),
-    shell_chrome(params.shell_chrome)
-    ,confine_pointer(params.confine_pointer)
+    shell_chrome(params.shell_chrome),
+    confine_pointer(params.confine_pointer),
+    anchor_edge(params.anchor_edge),
+    anchor_exclusive_zone(params.anchor_exclusive_zone)
 {
     if (params.aux_rect_placement_offset_x.is_set() && params.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{params.aux_rect_placement_offset_x.value(), params.aux_rect_placement_offset_y.value()};
@@ -283,6 +289,8 @@ void miral::WindowSpecification::Self::update(mir::scene::SurfaceCreationParamet
     copy_if_set(params.placement_hints, placement_hints);
     copy_if_set(params.surface_placement_gravity, window_placement_gravity);
     copy_if_set(params.aux_rect_placement_gravity, aux_rect_placement_gravity);
+    copy_if_set(params.anchor_edge, anchor_edge);
+    copy_if_set(params.anchor_exclusive_zone, anchor_exclusive_zone);
 
     if (aux_rect_placement_offset.is_set())
     {
@@ -450,6 +458,16 @@ auto miral::WindowSpecification::confine_pointer() const -> mir::optional_value<
     return self->confine_pointer;
 }
 
+auto miral::WindowSpecification::anchor_edge() const -> mir::optional_value<MirPlacementGravity> const&
+{
+    return self->anchor_edge;
+}
+
+auto miral::WindowSpecification::anchor_exclusive_zone() const -> mir::optional_value<int> const&
+{
+    return self->anchor_exclusive_zone;
+}
+
 auto miral::WindowSpecification::userdata() const -> mir::optional_value<std::shared_ptr<void>> const&
 {
     return self->userdata;
@@ -578,6 +596,16 @@ auto miral::WindowSpecification::shell_chrome() -> mir::optional_value<MirShellC
 auto miral::WindowSpecification::confine_pointer() -> mir::optional_value<MirPointerConfinementState>&
 {
     return self->confine_pointer;
+}
+
+auto miral::WindowSpecification::anchor_edge() -> mir::optional_value<MirPlacementGravity>&
+{
+    return self->anchor_edge;
+}
+
+auto miral::WindowSpecification::anchor_exclusive_zone() -> mir::optional_value<int>&
+{
+    return self->anchor_exclusive_zone;
 }
 
 auto miral::WindowSpecification::userdata() -> mir::optional_value<std::shared_ptr<void>>&

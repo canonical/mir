@@ -111,6 +111,12 @@ struct WindowInfo
     auto shell_chrome() const -> MirShellChrome;
     void shell_chrome(MirShellChrome chrome);
 
+    auto anchor_edge() const -> MirPlacementGravity;
+    void anchor_edge(MirPlacementGravity edge);
+
+    auto anchor_exclusive_zone() const -> int;
+    void anchor_exclusive_zone(int size);
+
     /// This can be used by client code to store window manager specific information
     auto userdata() const -> std::shared_ptr<void>;
     void userdata(std::shared_ptr<void> userdata);

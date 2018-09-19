@@ -98,7 +98,11 @@ struct SurfaceSpecification
     optional_value<MirShellChrome> shell_chrome;
     optional_value<MirPointerConfinementState> confine_pointer;
     optional_value<std::shared_ptr<graphics::CursorImage>> cursor_image;
-    optional_value<StreamCursor> stream_cursor; 
+    optional_value<StreamCursor> stream_cursor;
+
+    // used for anchored surfaces
+    optional_value<MirPlacementGravity> anchor_edge;
+    optional_value<int> anchor_exclusive_zone;
 };
 }
 }

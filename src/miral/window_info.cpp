@@ -94,6 +94,9 @@ struct miral::WindowInfo::Self
     mir::optional_value<int> output_id;
     MirShellChrome shell_chrome;
     std::shared_ptr<void> userdata;
+
+    MirPlacementGravity anchor_edge;
+    int anchor_exclusive_zone;
 };
 
 miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) :
@@ -112,7 +115,9 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
     height_inc{optional_value_or_default(params.height_inc(), default_height_inc)},
     min_aspect(optional_value_or_default(params.min_aspect(), default_min_aspect_ratio)),
     max_aspect(optional_value_or_default(params.max_aspect(), default_max_aspect_ratio)),
-    shell_chrome(optional_value_or_default(params.shell_chrome(), mir_shell_chrome_normal))
+    shell_chrome(optional_value_or_default(params.shell_chrome(), mir_shell_chrome_normal)),
+    anchor_edge(optional_value_or_default(params.anchor_edge(), mir_placement_gravity_center)),
+    anchor_exclusive_zone(optional_value_or_default(params.anchor_exclusive_zone(), 0))
 {
     if (params.output_id().is_set())
         output_id = params.output_id().value();
@@ -606,6 +611,26 @@ auto miral::WindowInfo::shell_chrome() const -> MirShellChrome
 void miral::WindowInfo::shell_chrome(MirShellChrome chrome)
 {
     self->shell_chrome = chrome;
+}
+
+auto miral::WindowInfo::anchor_edge() const -> MirPlacementGravity
+{
+    return self->anchor_edge;
+}
+
+void miral::WindowInfo::anchor_edge(MirPlacementGravity edge)
+{
+    self->anchor_edge = edge;
+}
+
+auto miral::WindowInfo::anchor_exclusive_zone() const -> int
+{
+    return self->anchor_exclusive_zone;
+}
+
+void miral::WindowInfo::anchor_exclusive_zone(int size)
+{
+    self->anchor_exclusive_zone = size;
 }
 
 auto miral::WindowInfo::name() const -> std::string

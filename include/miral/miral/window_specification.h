@@ -90,12 +90,13 @@ public:
     auto height_inc() const -> mir::optional_value<DeltaY> const&;
     auto min_aspect() const -> mir::optional_value<AspectRatio> const&;
     auto max_aspect() const -> mir::optional_value<AspectRatio> const&;
-
     auto parent() const -> mir::optional_value<std::weak_ptr<mir::scene::Surface>> const&;
     auto input_shape() const -> mir::optional_value<std::vector<Rectangle>> const&;
     auto input_mode() const -> mir::optional_value<InputReceptionMode> const&;
     auto shell_chrome() const -> mir::optional_value<MirShellChrome> const&;
     auto confine_pointer() const -> mir::optional_value<MirPointerConfinementState> const&;
+    auto anchor_edge() const -> mir::optional_value<MirPlacementGravity> const&;
+    auto anchor_exclusive_zone() const -> mir::optional_value<int> const&;
     auto userdata() const -> mir::optional_value<std::shared_ptr<void>> const&;
 
     auto top_left() -> mir::optional_value<Point>&;
@@ -123,6 +124,8 @@ public:
     auto input_mode() -> mir::optional_value<InputReceptionMode>&;
     auto shell_chrome() -> mir::optional_value<MirShellChrome>&;
     auto confine_pointer() -> mir::optional_value<MirPointerConfinementState>&;
+    auto anchor_edge() -> mir::optional_value<MirPlacementGravity>&;
+    auto anchor_exclusive_zone() -> mir::optional_value<int>&;
     auto userdata() -> mir::optional_value<std::shared_ptr<void>>&;
 
 private:
