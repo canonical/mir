@@ -60,6 +60,8 @@ struct miral::WindowSpecification::Self
     mir::optional_value<MirShellChrome> shell_chrome;
     mir::optional_value<MirPointerConfinementState> confine_pointer;
     mir::optional_value<MirDepthLayer> depth_layer;
+    mir::optional_value<MirPlacementGravity> attached_edges;
+    mir::optional_value<mir::optional_value<mir::geometry::Rectangle>> exclusive_rect;
     mir::optional_value<std::shared_ptr<void>> userdata;
 };
 
@@ -91,7 +93,9 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     input_mode(),
     shell_chrome(spec.shell_chrome),
     confine_pointer(spec.confine_pointer),
-    depth_layer(spec.depth_layer)
+    depth_layer(spec.depth_layer),
+    attached_edges(spec.attached_edges),
+    exclusive_rect(spec.exclusive_rect)
 {
     if (spec.aux_rect_placement_offset_x.is_set() && spec.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{spec.aux_rect_placement_offset_x.value(), spec.aux_rect_placement_offset_y.value()};
@@ -217,7 +221,9 @@ miral::WindowSpecification::Self::Self(mir::scene::SurfaceCreationParameters con
     input_mode(static_cast<InputReceptionMode>(params.input_mode)),
     shell_chrome(params.shell_chrome),
     confine_pointer(params.confine_pointer),
-    depth_layer(params.depth_layer)
+    depth_layer(params.depth_layer),
+    attached_edges(params.attached_edges),
+    exclusive_rect(params.exclusive_rect)
 {
     if (params.aux_rect_placement_offset_x.is_set() && params.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{params.aux_rect_placement_offset_x.value(), params.aux_rect_placement_offset_y.value()};
@@ -287,6 +293,8 @@ void miral::WindowSpecification::Self::update(mir::scene::SurfaceCreationParamet
     copy_if_set(params.surface_placement_gravity, window_placement_gravity);
     copy_if_set(params.aux_rect_placement_gravity, aux_rect_placement_gravity);
     copy_if_set(params.depth_layer, depth_layer);
+    copy_if_set(params.attached_edges, attached_edges);
+    copy_if_set(params.exclusive_rect, exclusive_rect.value());
 
     if (aux_rect_placement_offset.is_set())
     {
@@ -454,6 +462,22 @@ auto miral::WindowSpecification::confine_pointer() const -> mir::optional_value<
     return self->confine_pointer;
 }
 
+auto miral::WindowSpecification::depth_layer() const -> mir::optional_value<MirDepthLayer> const&
+{
+    return self->depth_layer;
+}
+
+auto miral::WindowSpecification::attached_edges() const -> mir::optional_value<MirPlacementGravity> const&
+{
+    return self->attached_edges;
+}
+
+auto miral::WindowSpecification::exclusive_rect() const
+    -> mir::optional_value<mir::optional_value<mir::geometry::Rectangle>> const&
+{
+    return self->exclusive_rect;
+}
+
 auto miral::WindowSpecification::userdata() const -> mir::optional_value<std::shared_ptr<void>> const&
 {
     return self->userdata;
@@ -584,17 +608,23 @@ auto miral::WindowSpecification::confine_pointer() -> mir::optional_value<MirPoi
     return self->confine_pointer;
 }
 
-auto miral::WindowSpecification::userdata() -> mir::optional_value<std::shared_ptr<void>>&
-{
-    return self->userdata;
-}
-
-auto miral::WindowSpecification::depth_layer() const -> mir::optional_value<MirDepthLayer> const&
-{
-    return self->depth_layer;
-}
-
 auto miral::WindowSpecification::depth_layer() -> mir::optional_value<MirDepthLayer>&
 {
     return self->depth_layer;
+}
+
+auto miral::WindowSpecification::attached_edges() -> mir::optional_value<MirPlacementGravity>&
+{
+    return self->attached_edges;
+}
+
+auto miral::WindowSpecification::exclusive_rect()
+    -> mir::optional_value<mir::optional_value<mir::geometry::Rectangle>>&
+{
+    return self->exclusive_rect;
+}
+
+auto miral::WindowSpecification::userdata() -> mir::optional_value<std::shared_ptr<void>>&
+{
+    return self->userdata;
 }
