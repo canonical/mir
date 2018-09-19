@@ -254,6 +254,7 @@ private:
     void erase(miral::WindowInfo const& info);
     void validate_modification_request(WindowSpecification const& modifications, WindowInfo const& window_info) const;
     void place_and_size(WindowInfo& root, Point const& new_pos, Size const& new_size);
+    void place_anchored(WindowInfo& root);
     void set_state(miral::WindowInfo& window_info, MirWindowState value);
     auto fullscreen_rect_for(WindowInfo const& window_info) const -> Rectangle;
     void remove_window(Application const& application, miral::WindowInfo const& info);

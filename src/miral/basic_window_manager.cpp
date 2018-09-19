@@ -153,6 +153,9 @@ auto miral::BasicWindowManager::add_surface(
         break;
     }
 
+    if (window_info.type() == mir_window_type_anchored)
+        place_anchored(window_info);
+
     policy->advise_new_window(window_info);
 
     std::shared_ptr<scene::Surface> const scene_surface = window_info.window();
@@ -930,6 +933,11 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
     Point new_pos = modifications.top_left().is_set() ? modifications.top_left().value() : window.top_left();
 
+    if (window_info.type() == mir_window_type_anchored && modifications.anchor_edge().is_set())
+    {
+        place_anchored(window_info);
+    }
+
     if (modifications.size().is_set())
     {
         place_and_size(window_info, new_pos, modifications.size().value());
@@ -999,6 +1007,34 @@ void miral::BasicWindowManager::place_and_size(WindowInfo& root, Point const& ne
     }
 
     move_tree(root, new_pos - root.window().top_left());
+}
+
+void miral::BasicWindowManager::place_anchored(WindowInfo& root)
+{
+    // We can't place the anchored window if there are'n any outputs
+    if (root.type() != mir_window_type_anchored || outputs.size() == 0)
+        return;
+
+    MirPlacementGravity gravity = root.anchor_edge();
+    Size const size = root.window().size();
+    Rectangle output = *outputs.begin();
+    Point top_left{};
+
+    if (gravity & mir_placement_gravity_west)
+        top_left.x = output.left();
+    else if (gravity & mir_placement_gravity_east)
+        top_left.x = output.right() - (size.width - Width{0});
+    else
+        top_left.x = output.top_left.x + (output.size.width - size.width) * 0.5;
+
+    if (gravity & mir_placement_gravity_north)
+        top_left.y = output.top();
+    else if (gravity & mir_placement_gravity_south)
+        top_left.y = output.bottom() - (size.height - Height{0});
+    else
+        top_left.y = output.top_left.y + (output.size.height - size.height) * 0.5;
+
+    move_tree(root, top_left - root.window().top_left());
 }
 
 void miral::BasicWindowManager::place_and_size_for_state(
