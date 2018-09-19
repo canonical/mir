@@ -59,6 +59,7 @@ public:
         wl_resource* new_resource,
         WlSurface* surface,
         LayerShellV1 const& layer_shell);
+
     ~LayerSurfaceV1() = default;
 
 private:
@@ -85,8 +86,11 @@ private:
 
 // LayerShellV1
 
-mf::LayerShellV1::LayerShellV1(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat,
-                               OutputManager* output_manager)
+mf::LayerShellV1::LayerShellV1(
+    struct wl_display* display,
+    std::shared_ptr<Shell> const shell,
+    WlSeat& seat,
+    OutputManager* output_manager)
     : Global(display, Version<1>()),
       shell{shell},
       seat{seat},
@@ -130,13 +134,28 @@ mf::LayerSurfaceV1::LayerSurfaceV1(wl_resource* new_resource, WlSurface* surface
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
 {
-    (void)width;
-    (void)height;
+    WindowWlSurfaceRole::set_geometry(0, 0, width, height);
 }
 
 void mf::LayerSurfaceV1::set_anchor(uint32_t anchor)
 {
-    (void)anchor;
+    MirPlacementGravity edges = mir_placement_gravity_center;
+
+    if (anchor & Anchor::top)
+        edges = MirPlacementGravity(edges | mir_placement_gravity_north);
+
+    if (anchor & Anchor::bottom)
+        edges = MirPlacementGravity(edges | mir_placement_gravity_south);
+
+    if (anchor & Anchor::left)
+        edges = MirPlacementGravity(edges | mir_placement_gravity_west);
+
+    if (anchor & Anchor::right)
+        edges = MirPlacementGravity(edges | mir_placement_gravity_east);
+
+    shell::SurfaceSpecification spec;
+    spec.attached_edges = edges;
+    apply_spec(spec);
 }
 
 void mf::LayerSurfaceV1::set_exclusive_zone(int32_t zone)
@@ -172,8 +191,9 @@ void mf::LayerSurfaceV1::destroy()
     destroy_wayland_object();
 }
 
-void mf::LayerSurfaceV1::handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
-                                       geometry::Size const& new_size)
+void mf::LayerSurfaceV1::handle_resize(
+    std::experimental::optional<geometry::Point> const& new_top_left,
+    geometry::Size const& new_size)
 {
     (void)new_top_left;
     (void)new_size;
