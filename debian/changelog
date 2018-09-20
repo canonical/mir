@@ -35,6 +35,8 @@ mir (1.0.0) UNRELEASED; urgency=medium
       . [Wayland] When setting the pointer cursor apply it. (Fixes #555)
       . [Wayland] Hook the OutputManager into display reconfiguration
         notifications. (Fixes #585)
+      . [Wayland] Remove hard coded values for output geometry (screen
+        orientation and pixel arrangement). (Fixes #601)
       . [miral-kiosk] Don't allow apps to specify size of "maximized" windows.
         (Fixes #454)
       . [Mir-on-X] Fixed keyboard grab issue on Arch. (Fixes #549)
@@ -51,6 +53,8 @@ mir (1.0.0) UNRELEASED; urgency=medium
         as we're not sure of the uniqueness of either. (Fixes #556)
       . [mesa] Disconnected hardware has no modes: invent a (slow) refresh rate.
         (Fixes #587)
+      . [input] Guess output for touchscreen (works with one of each).
+        (Fixes #605)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Wed, 29 Aug 2018 12:19:00 +0100
 
