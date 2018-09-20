@@ -268,6 +268,17 @@ struct LibInputDeviceOnTouchScreen : public LibInputDevice
     const float screen_y_pos = 30;
     const int width = 100;
     const int height = 200;
+
+    void SetUp() override
+    {
+        LibInputDevice::SetUp();
+        ON_CALL(mock_sink, output_info(0))
+            .WillByDefault(Return(
+                mi::OutputInfo{
+                    true,
+                    geom::Size{width, height},
+                    Matrix{{1.0f, 0.0f, 0, 0.0f, 1.0f, 0}}}));
+    }
 };
 
 struct LibInputDeviceOnTouchpad : public LibInputDevice
