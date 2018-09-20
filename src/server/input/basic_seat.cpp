@@ -148,7 +148,7 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
         else
         {
             // Output has not been populated sensibly, that's expected as there's no way to do that (yet).
-            // FIXME: We just guess (which works with a single touchscreen output). {arg}
+            // FIXME: We just guess (which works with a single touchscreen output). {alan_g}
             // https://github.com/MirServer/mir/issues/611
             auto const pos = begin(outputs);
             if (pos != end(outputs))
