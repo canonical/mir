@@ -139,9 +139,21 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
     mi::OutputInfo get_output_info(uint32_t output) const
     {
         std::lock_guard<std::mutex> lock(output_mutex);
-        auto pos = outputs.find(output);
-        if (pos != end(outputs))
-            return pos->second;
+        if (output)
+        {
+            auto pos = outputs.find(output);
+            if (pos != end(outputs))
+                return pos->second;
+        }
+        else
+        {
+            // Output has not been populated sensibly, that's expected as there's no way to do that (yet).
+            // FIXME: We just guess (which works with a single touchscreen output). {arg}
+            // https://github.com/MirServer/mir/issues/611
+            auto const pos = begin(outputs);
+            if (pos != end(outputs))
+                return pos->second;
+        }
         return OutputInfo{};
     }
 

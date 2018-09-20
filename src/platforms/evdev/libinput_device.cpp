@@ -424,8 +424,8 @@ void mie::LibInputDevice::update_device_info()
     {
         touchscreen = mi::TouchscreenSettings{};
 
-        // FIXME: hack to connect touchscreen to output. {arg}
-        touchscreen.value().output_id = 1;
+        // FIXME: We need a way to populate output_id sensibly. {arg}
+        // https://github.com/MirServer/mir/issues/611
         touchscreen.value().mapping_mode = mir_touchscreen_mapping_mode_to_output;
     }
 
