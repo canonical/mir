@@ -67,21 +67,28 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
                     1.0f, 0.0f, float(output.top_left.x.as_int()),
                     0.0f, 1.0f, float(output.top_left.y.as_int())}};
 
-                switch(output.orientation)
+                switch (output.orientation)
                 {
                 case mir_orientation_left:
-                    output_matrix[3] = -1;
-                    output_matrix[5] += width;
-                    break;
-                case mir_orientation_right:
+                    output_matrix[0] = 0;
                     output_matrix[1] = -1;
                     output_matrix[2] += height;
+                    output_matrix[3] = 1;
+                    output_matrix[4] = 0;
+                    break;
+                case mir_orientation_right:
+                    output_matrix[0] = 0;
+                    output_matrix[1] = 1;
+                    output_matrix[3] = -1;
+                    output_matrix[4] = 0;
+                    output_matrix[5] += width;
                     break;
                 case mir_orientation_inverted:
                     output_matrix[0] = -1;
                     output_matrix[2] += width;
                     output_matrix[4] = -1;
                     output_matrix[5] += height;
+                    break;
                 default:
                     break;
                 }
@@ -132,11 +139,24 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
     mi::OutputInfo get_output_info(uint32_t output) const
     {
         std::lock_guard<std::mutex> lock(output_mutex);
-        auto pos = outputs.find(output);
-        if (pos != end(outputs))
-            return pos->second;
+        if (output)
+        {
+            auto pos = outputs.find(output);
+            if (pos != end(outputs))
+                return pos->second;
+        }
+        else
+        {
+            // Output has not been populated sensibly, that's expected as there's no way to do that (yet).
+            // FIXME: We just guess (which works with a single touchscreen output). {alan_g}
+            // https://github.com/MirServer/mir/issues/611
+            auto const pos = begin(outputs);
+            if (pos != end(outputs))
+                return pos->second;
+        }
         return OutputInfo{};
     }
+
 private:
     mutable std::mutex output_mutex;
     mi::SeatInputDeviceTracker& input_state_tracker;
