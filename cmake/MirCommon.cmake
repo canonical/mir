@@ -201,6 +201,7 @@ function (mir_precompiled_header TARGET HEADER)
       GENERATE
       OUTPUT "${FLAGS_FILE}"
       CONTENT "
+        -std=c++14
         ${CMAKE_CXX_FLAGS}
         ${CMAKE_CXX_FLAGS_${UC_BUILD_TYPE}}
         ${TARGET_INCLUDE_DIRECTORIES_STRING}
