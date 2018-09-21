@@ -393,5 +393,10 @@ global:
     typeinfo?for?miral::WaylandExtensions::Context;
     vtable?for?miral::WaylandExtensions::Builder;
     vtable?for?miral::WaylandExtensions::Context;
+    miral::WaylandExtensions::with_extension*;
+    miral::WindowInfo::anchor_edge*;
+    miral::WindowInfo::anchor_exclusive_zone*;
+    miral::WindowSpecification::anchor_edge*;
+    miral::WindowSpecification::anchor_exclusive_zone*;
   };
 } MIRAL_2.4;
