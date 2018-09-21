@@ -59,7 +59,7 @@ if [[ "${GIT_BRANCH}" =~ ^(release/|v)([0-9\.]+)$ ]]; then
     fi
 
     # use the number of commits since master
-    GIT_COMMITS=$( git rev-list --count master..HEAD )
+    GIT_COMMITS=$( git rev-list --count origin/master..HEAD )
     MIR_VERSION=${MIR_VERSION}~rc${GIT_COMMITS}-g${GIT_REVISION}
   fi
 else
