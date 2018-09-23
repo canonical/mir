@@ -18,7 +18,7 @@ else()
     set(GTEST_DETECTION_METHOD "output of apt")
   elseif(RPM_EXECUTABLE)
     EXEC_PROGRAM(${RPM_EXECUTABLE} "/"
-      ARGS "-q" "libgtest-dev"
+      ARGS "-q" "gtest-devel"
       OUTPUT_VARIABLE GTEST_VERSION_STR)
     set(GTEST_DETECTION_METHOD "output of rpm")
   elseif(PACMAN_EXECUTABLE)
