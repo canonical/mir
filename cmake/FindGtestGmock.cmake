@@ -2,6 +2,14 @@ include(FindPackageHandleStandardArgs)
 
 find_package(GTest)
 
+pkg_check_modules (GTEST "gtest >= 1.8.0")
+pkg_check_modules (GTEST_MAIN "gtest_main >= 1.8.0")
+if (GTEST_FOUND AND GTEST_MAIN_FOUND)
+    set(GTEST_LIBRARY ${GTEST_LIBRARIES})
+    set(GTEST_MAIN_LIBRARY ${GTEST_MAIN_LIBRARIES})
+    set(GTEST_BOTH_LIBRARIES ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
+endif()
+
 if (NOT GTEST_FOUND)
     include(ExternalProject)
 
