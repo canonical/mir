@@ -356,7 +356,7 @@ TEST_F(TestCursorController, updates_cursor_image_when_entering_surface)
 
     TestController controller{targets, cursor, default_cursor_image};
 
-    EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
+    EXPECT_CALL(cursor, move_to(_)).Times(AtLeast(1));
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name_1))).Times(1);
 
     controller.cursor_moved_to(1.0f, 1.0f);
@@ -370,7 +370,7 @@ TEST_F(TestCursorController, surface_with_no_cursor_image_hides_cursor)
 
     TestController controller{targets, cursor, default_cursor_image};
 
-    EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
+    EXPECT_CALL(cursor, move_to(_)).Times(AtLeast(1));
     EXPECT_CALL(cursor, hide()).Times(1);
 
     controller.cursor_moved_to(1.0f, 1.0f);
@@ -384,7 +384,7 @@ TEST_F(TestCursorController, takes_cursor_image_from_topmost_surface)
 
     TestController controller{targets, cursor, default_cursor_image};
 
-    EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
+    EXPECT_CALL(cursor, move_to(_)).Times(AtLeast(1));
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name_2))).Times(1);
 
     controller.cursor_moved_to(1.0f, 1.0f);
@@ -398,7 +398,7 @@ TEST_F(TestCursorController, restores_cursor_when_leaving_surface)
 
     TestController controller{targets, cursor, default_cursor_image};
 
-    EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
+    EXPECT_CALL(cursor, move_to(_)).Times(AtLeast(1));
 
     {
         InSequence seq;
@@ -418,7 +418,7 @@ TEST_F(TestCursorController, change_in_cursor_request_triggers_image_update_with
 
     TestController controller{targets, cursor, default_cursor_image};
 
-    EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
+    EXPECT_CALL(cursor, move_to(_)).Times(AtLeast(1));
     {
         InSequence seq;
         EXPECT_CALL(cursor, show(CursorNamed(cursor_name_1))).Times(1);
@@ -438,7 +438,6 @@ TEST_F(TestCursorController, change_in_scene_triggers_image_update)
 
     TestController controller{targets, cursor, default_cursor_image};
 
-    EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name_1))).Times(1);
 
     targets.add_surface(mt::fake_shared(surface));
@@ -455,7 +454,6 @@ TEST_F(TestCursorController, cursor_image_not_reset_needlessly)
 
     TestController controller{targets, cursor, default_cursor_image};
 
-    EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     EXPECT_CALL(cursor, show(CursorNamed(cursor_name_1))).Times(1);
 
     targets.add_surface(mt::fake_shared(surface1));
@@ -493,7 +491,6 @@ TEST_F(TestCursorController, zero_sized_image_hides_cursor)
 
     TestController controller{targets, cursor, default_cursor_image};
 
-    EXPECT_CALL(cursor, move_to(_)).Times(AnyNumber());
     EXPECT_CALL(cursor, hide()).Times(1);
 
     targets.add_surface(mt::fake_shared(surface));
