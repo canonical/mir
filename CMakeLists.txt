@@ -89,6 +89,19 @@ if(HAS_W_PSABI)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
 endif()
 
+include(CheckCXXSourceCompiles)
+check_cxx_source_compiles(
+    "
+    #include <sys/ioctl.h>
+    extern \"C\" int ioctl (int, int,...);
+    int main() {}
+    "
+    HAVE_POSIX_IOCTL)
+
+if(HAVE_POSIX_IOCTL)
+  add_compile_definitions(HAVE_POSIX_IOCTL)
+endif()
+
 set(MIR_USE_LD gold CACHE STRING "Linker to use")
 set_property(CACHE MIR_USE_LD PROPERTY STRINGS "ld;gold;lld")
 if(MIR_USE_LD MATCHES "gold")
