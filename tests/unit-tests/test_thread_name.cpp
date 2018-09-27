@@ -77,6 +77,7 @@ MATCHER_P(IsPrefixOf, value, "")
 
 }
 
+#ifdef HAVE_PTHREAD_GETNAME_NP
 TEST_F(MirThreadName, sets_thread_name)
 {
     using namespace ::testing;
@@ -98,3 +99,4 @@ TEST_F(MirThreadName, sets_part_of_long_thread_name)
 
     EXPECT_THAT(name_of_thread(thread), IsPrefixOf(long_thread_name));
 }
+#endif

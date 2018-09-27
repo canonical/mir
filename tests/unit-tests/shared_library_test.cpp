@@ -92,7 +92,11 @@ TEST_F(SharedLibrary, load_nonexistent_library_fails_with_useful_info)
     {
         auto info = boost::diagnostic_information(error);
 
+#ifdef __GLIBC__
         MIR_EXPECT_THAT(info, HasSubstring("cannot open shared object")) << "What went wrong";
+#else
+	MIR_EXPECT_THAT(info, HasSubstring("Error loading shared library")) << "What went wrong";
+#endif
         MIR_EXPECT_THAT(info, HasSubstring(nonexistent_library)) << "Name of library";
     }
 }
@@ -121,7 +125,11 @@ TEST_F(SharedLibrary, load_nonexistent_function_fails_with_useful_info)
     {
         auto info = boost::diagnostic_information(error);
 
+#ifdef __GLIBC__
         MIR_EXPECT_THAT(info, HasSubstring("undefined symbol")) << "What went wrong";
+#else
+        MIR_EXPECT_THAT(info, HasSubstring("Symbol not found")) << "What went wrong";
+#endif
         MIR_EXPECT_THAT(info, HasSubstring(existing_library)) << "Name of library";
         MIR_EXPECT_THAT(info, HasSubstring(nonexistent_function)) << "Name of function";
     }
@@ -151,7 +159,11 @@ TEST_F(SharedLibrary, load_invalid_versioned_function_fails_with_appropriate_err
     {
         auto info = boost::diagnostic_information(error);
 
+#ifdef __GLIBC__
         MIR_EXPECT_THAT(info, HasSubstring("undefined symbol")) << "What went wrong";
+#else
+        MIR_EXPECT_THAT(info, HasSubstring("Symbol not found")) << "What went wrong";
+#endif
         MIR_EXPECT_THAT(info, HasSubstring(nonexistent_version)) << "Version info";
         MIR_EXPECT_THAT(info, HasSubstring(existing_library)) << "Name of library";
         MIR_EXPECT_THAT(info, HasSubstring(existing_function)) << "Name of function";
