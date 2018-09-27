@@ -29,6 +29,7 @@
 #include <vector>
 #include <unordered_map>
 #include <future>
+#include <sys/stat.h>
 
 struct libinput_device_group;
 struct libinput_device;
