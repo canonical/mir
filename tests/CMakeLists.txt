@@ -1,5 +1,8 @@
 # get a gtest version string the regex will match
-if (DEFINED ENV{GTEST_VERSION})
+if (DEFINED GTEST_VERSION)
+  set(GTEST_VERSION_STR ${GTEST_VERSION})
+  set(GTEST_DETECTION_METHOD "pkg-config")
+elseif (DEFINED ENV{GTEST_VERSION})
   set(GTEST_VERSION_STR $ENV{GTEST_VERSION})
   set(GTEST_DETECTION_METHOD "GTEST_VERSION environment variable")
 else()
