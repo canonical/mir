@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 x11_server=Xwayland
 

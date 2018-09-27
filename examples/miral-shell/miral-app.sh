@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env sh
 
 miral_server=miral-shell
 launcher=qterminal
