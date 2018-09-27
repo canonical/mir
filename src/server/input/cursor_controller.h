@@ -49,11 +49,15 @@ public:
         std::shared_ptr<graphics::CursorImage> const& default_cursor_image);
     virtual ~CursorController();
 
-    void cursor_moved_to(float abs_x, float abs_y);
+    void cursor_moved_to(float abs_x, float abs_y) override;
 
     // Trigger an update of the cursor image without cursor motion, e.g.
     // in response to scene changes.
     void update_cursor_image();
+
+    void pointer_usable() override;
+
+    void pointer_unusable() override;
 
 private:
     std::shared_ptr<Scene> const input_targets;
@@ -63,9 +67,11 @@ private:
     std::mutex cursor_state_guard;
     geometry::Point cursor_location;
     std::shared_ptr<graphics::CursorImage> current_cursor;
+    std::shared_ptr<graphics::CursorImage> pending_image;
+
 
     std::weak_ptr<scene::Observer> observer;
-    
+    bool usable = false;
 
     void update_cursor_image_locked(std::unique_lock<std::mutex>&);
     void set_cursor_image_locked(std::unique_lock<std::mutex>&, std::shared_ptr<graphics::CursorImage> const& image);

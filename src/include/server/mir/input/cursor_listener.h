@@ -32,6 +32,8 @@ public:
     virtual ~CursorListener() = default;
 
     virtual void cursor_moved_to(float abs_x, float abs_y) = 0;
+    virtual void pointer_usable() = 0;
+    virtual void pointer_unusable() = 0;
 
 protected:
     CursorListener() = default;

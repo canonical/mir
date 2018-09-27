@@ -27,6 +27,7 @@
 #include "mir/optional_value.h"
 #include "mir_toolkit/event.h"
 
+#include <atomic>
 #include <unordered_map>
 #include <memory>
 #include <mutex>
@@ -63,6 +64,8 @@ public:
                            std::shared_ptr<SeatObserver> const& observer);
     void add_device(MirInputDeviceId);
     void remove_device(MirInputDeviceId);
+    void add_pointing_device();
+    void remove_pointing_device();
 
     void dispatch(std::shared_ptr<MirEvent> const& event);
 
@@ -112,6 +115,7 @@ private:
     // Libinput's acceleration curve means the cursor moves by non-integer
     // increments, and often less than 1.0, so float is required...
     float cursor_x = 0.0f, cursor_y = 0.0f;
+    std::atomic<unsigned int> num_pointing_devices{0};
 
     MirPointerButtons buttons;
     std::unordered_map<MirInputDeviceId, DeviceData> device_data;

@@ -205,6 +205,7 @@ mi::CursorController::CursorController(std::shared_ptr<mi::Scene> const& input_t
         default_cursor_image(default_cursor_image),
         current_cursor(default_cursor_image)
 {
+    cursor->hide(); // Cursor should be hidden unless there's a pointing device
     // TODO: Add observer could return weak_ptr to eliminate this
     // pattern
     auto strong_observer = std::make_shared<UpdateCursorOnSceneChanges>(this);
@@ -237,7 +238,12 @@ void mi::CursorController::set_cursor_image_locked(std::unique_lock<std::mutex>&
     lock.unlock();
 
     if (image && !is_empty(image))
-        cursor->show(*image);
+    {
+        if (usable)
+            cursor->show(*image);
+        else
+            pending_image = image;
+    }
     else
         cursor->hide();
 }
@@ -274,4 +280,31 @@ void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
     }
 
     cursor->move_to(new_location);
+}
+
+void mir::input::CursorController::pointer_usable()
+{
+    bool became_usable = false;
+    std::shared_ptr<mg::CursorImage> image;
+    {
+        std::lock_guard<std::mutex> lock(cursor_state_guard);
+        became_usable = !usable;
+        image = current_cursor;
+        usable = true;
+    }
+
+    if (became_usable)
+    {
+        if (image && !is_empty(image))
+            cursor->show(*image);
+    }
+}
+
+void mir::input::CursorController::pointer_unusable()
+{
+    {
+        std::lock_guard<std::mutex> lock(cursor_state_guard);
+        usable = false;
+    }
+    cursor->hide();
 }

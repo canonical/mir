@@ -192,10 +192,14 @@ mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
 void mi::BasicSeat::add_device(input::Device const& device)
 {
     input_state_tracker.add_device(device.id());
+    if (contains(device.capabilities(), mi::DeviceCapability::pointer))
+        input_state_tracker.add_pointing_device();
 }
 
 void mi::BasicSeat::remove_device(input::Device const& device)
 {
+    if (contains(device.capabilities(), mi::DeviceCapability::pointer))
+        input_state_tracker.remove_pointing_device();
     input_state_tracker.remove_device(device.id());
 }
 
