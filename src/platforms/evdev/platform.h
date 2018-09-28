@@ -26,10 +26,11 @@
 #include "mir/input/platform.h"
 #include "mir/console_services.h"
 
+#include <sys/stat.h>
+
 #include <vector>
 #include <unordered_map>
 #include <future>
-#include <sys/stat.h>
 
 struct libinput_device_group;
 struct libinput_device;
