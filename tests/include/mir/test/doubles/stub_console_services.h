@@ -21,6 +21,7 @@
 
 #include "mir/console_services.h"
 
+#include <sys/stat.h>
 #include <string>
 #include <unordered_map>
 

@@ -18,13 +18,16 @@
 
 #include "mir_test_framework/main.h"
 
+#include <libgen.h>
+
 #include <cstring>
 #include <iostream>
 
 int main(int argc, char* argv[])
 {
     // Override this standard gtest message
-    std::cout << "Running main() from " << basename(__FILE__) << std::endl;
+    char path[] = __FILE__;
+    std::cout << "Running main() from " << basename(path) << std::endl;
 
     return mir_test_framework::main(argc, argv);
 }

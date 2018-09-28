@@ -26,6 +26,8 @@
 #include "mir/input/platform.h"
 #include "mir/console_services.h"
 
+#include <sys/stat.h>
+
 #include <vector>
 #include <unordered_map>
 #include <future>
