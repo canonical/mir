@@ -4,21 +4,7 @@ find_package(GTest)
 
 pkg_check_modules (GTEST "gtest >= 1.8.0")
 pkg_check_modules (GTEST_MAIN "gtest_main >= 1.8.0")
-# DEBUG START
-message("GTEST_FOUND: " ${GTEST_FOUND})
-message("GTEST_MAIN_FOUND: " ${GTEST_MAIN_FOUND})
-if (GTEST_FOUND)
-    message("GTEST FOUND!")
-endif()
-if (GTEST_MAIN_FOUND)
-    message("GTEST_MAIN FOUND!")
-endif()
-# DEBUG END
 if (GTEST_FOUND AND GTEST_MAIN_FOUND)
-# DEBUG START
-    message("GTEST AND GTEST_MAIN FOUND!")
-    message("GTEST_VERSION: " ${GTEST_VERSION})
-# DEBUG END
     set(GTEST_LIBRARY ${GTEST_LIBRARIES})
     set(GTEST_MAIN_LIBRARY ${GTEST_MAIN_LIBRARIES})
     set(GTEST_BOTH_LIBRARIES ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
