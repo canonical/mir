@@ -294,17 +294,8 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
         {
             BlendSeparate blend;
 
-            if (p.tex_id == 0)   // The client surface texture
-            {
-                blend = client_blend;
-                surface_tex->bind();
-            }
-            else   // Some other texture from the shell (e.g. decorations) which
-            {      // is always RGBA (valid SRC_ALPHA).
-                blend = {GL_ONE, GL_ONE_MINUS_SRC_ALPHA,
-                         GL_ONE, GL_ONE_MINUS_SRC_ALPHA};
-                glBindTexture(GL_TEXTURE_2D, p.tex_id);
-            }
+            blend = client_blend;
+            surface_tex->bind();
 
             glVertexAttribPointer(prog.position_attr, 3, GL_FLOAT,
                                   GL_FALSE, sizeof(mgl::Vertex),

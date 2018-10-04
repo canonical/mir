@@ -35,7 +35,6 @@ mgl::Primitive mgl::tessellate_renderable_into_rectangle(
     GLfloat bottom = top + rect.size.height.as_int();
 
     mgl::Primitive rectangle;
-    rectangle.tex_id = 0;
     rectangle.type = GL_TRIANGLE_STRIP;
 
     GLfloat tex_right = static_cast<GLfloat>(rect.size.width.as_int()) /

@@ -214,41 +214,6 @@ TEST_F(GLRenderer, avoids_src_alpha_for_rgbx_blending)  // LP: #1423462
     renderer.render(renderable_list);
 }
 
-TEST_F(GLRenderer, binds_for_every_primitive_when_tessellate_is_overridden)
-{
-    //'listening to the tests', it would be a bit easier to use a tessellator mock of some sort
-    struct OverriddenTessellateRenderer : public mrg::Renderer
-    {
-        OverriddenTessellateRenderer(
-            mg::DisplayBuffer& display_buffer, unsigned int num_primitives) :
-            Renderer(display_buffer),
-            num_primitives(num_primitives)
-        {
-        }
-
-        void tessellate(std::vector<mgl::Primitive>& primitives,
-                        mg::Renderable const&) const override
-        {
-            primitives.resize(num_primitives);
-            for(GLuint i=0; i < num_primitives; i++)
-            {
-                auto& p = primitives[i];
-                p.type = 0;
-                p.tex_id = i % 2;
-                p.nvertices = 0;
-            }
-        }
-        unsigned int num_primitives; 
-    };
-
-    int bind_count = 6;
-    EXPECT_CALL(mock_gl, glBindTexture(GL_TEXTURE_2D, _))
-        .Times(AtLeast(bind_count));
-
-    OverriddenTessellateRenderer renderer(display_buffer, bind_count);
-    renderer.render(renderable_list);
-}
-
 TEST_F(GLRenderer, clears_all_channels_zero)
 {
     InSequence seq;
