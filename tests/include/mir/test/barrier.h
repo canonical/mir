@@ -46,9 +46,9 @@ public:
             throw std::runtime_error("Timeout");
     }
 
+    Barrier(Barrier const&) = delete;
+    Barrier& operator=(Barrier const&) = delete;
 private:
-    Barrier(Barrier const&) = default;
-    Barrier& operator=(Barrier const&) = default;
     unsigned wait_threads;
     std::mutex mutex;
     std::condition_variable cv;
