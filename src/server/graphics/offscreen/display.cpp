@@ -187,7 +187,7 @@ std::shared_ptr<mg::Cursor> mgo::Display::create_hardware_cursor()
     return {};
 }
 
-std::unique_ptr<mir::renderer::gl::Context> mgo::Display::create_gl_context()
+std::unique_ptr<mir::renderer::gl::Context> mgo::Display::create_gl_context() const
 {
     eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
     return std::make_unique<SurfacelessEGLContext>(egl_display, egl_context_shared);

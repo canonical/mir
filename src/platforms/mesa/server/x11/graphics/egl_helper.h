@@ -55,12 +55,12 @@ public:
     bool make_current() const;
     bool release_current() const;
 
-    EGLContext context() { return egl_context; }
-    EGLDisplay display() { return egl_display; }
-    EGLConfig config() { return egl_config; }
+    EGLContext context() const { return egl_context; }
+    EGLDisplay display() const { return egl_display; }
+    EGLConfig config() const { return egl_config; }
     EGLSurface surface() const { return egl_surface; }
 
-    void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)>);
+    void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)>) const;
 private:
     void setup_internal(::Display* const x_dpy, bool initialize);
 

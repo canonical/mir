@@ -179,7 +179,7 @@ void mgxh::EGLHelper::setup_internal(::Display* const x_dpy, bool initialize)
     }
 }
 
-void mgxh::EGLHelper::report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> f)
+void mgxh::EGLHelper::report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)> f) const
 {
     f(egl_display, egl_config);
 }

@@ -99,7 +99,7 @@ public:
 
     NativeDisplay* native_display() override;
 
-    std::unique_ptr<renderer::gl::Context> create_gl_context() override;
+    std::unique_ptr<renderer::gl::Context> create_gl_context() const override;
 
     Frame last_frame_on(unsigned output_id) const override;
 
