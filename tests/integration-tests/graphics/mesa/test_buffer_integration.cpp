@@ -97,7 +97,8 @@ class StubGraphicBufferAllocator : public mtd::StubBufferAllocator
 class StubGraphicPlatform : public mtd::NullPlatform
 {
 public:
-    mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
+    UniqueModulePtr<mg::GraphicBufferAllocator>
+        create_buffer_allocator(mg::Display const&) override
     {
         return mir::make_module_ptr<StubGraphicBufferAllocator>();
     }
@@ -114,7 +115,7 @@ protected:
         display = platform->create_display(
             conf_policy,
             std::make_shared<mtd::StubGLConfig>());
-        allocator = platform->create_buffer_allocator();
+        allocator = platform->create_buffer_allocator(*display);
         size = geom::Size{100, 100};
         pf = mir_pixel_format_abgr_8888;
         usage = mg::BufferUsage::hardware;

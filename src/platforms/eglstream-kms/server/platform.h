@@ -47,7 +47,8 @@ namespace eglstream
 class RenderingPlatform : public graphics::RenderingPlatform
 {
 public:
-    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<GraphicBufferAllocator>
+        create_buffer_allocator(Display const& output) override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativeRenderingPlatform* native_rendering_platform() override;
 };
@@ -77,7 +78,8 @@ public:
         std::shared_ptr<DisplayPlatform> const&);
     ~Platform() = default;
 
-    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<GraphicBufferAllocator>
+        create_buffer_allocator(Display const& output) override;
 
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& /*initial_conf_policy*/,

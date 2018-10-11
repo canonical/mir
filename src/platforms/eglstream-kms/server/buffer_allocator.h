@@ -26,8 +26,17 @@
 
 namespace mir
 {
+namespace renderer
+{
+namespace gl
+{
+class Context;
+}
+}
+
 namespace graphics
 {
+class Display;
 
 namespace eglstream
 {
@@ -35,7 +44,8 @@ namespace eglstream
 class BufferAllocator: public graphics::GraphicBufferAllocator
 {
 public:
-    BufferAllocator();
+    BufferAllocator(graphics::Display const& output);
+    ~BufferAllocator();
 
     std::shared_ptr<Buffer> alloc_buffer(graphics::BufferProperties const& buffer_properties) override;
 
@@ -44,6 +54,8 @@ public:
         geometry::Size size, uint32_t native_format, uint32_t native_flags) override;
 
     std::vector<MirPixelFormat> supported_pixel_formats() override;
+private:
+    std::shared_ptr<renderer::gl::Context> const ctx;
 };
 
 }

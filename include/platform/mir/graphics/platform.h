@@ -85,7 +85,8 @@ public:
     /**
      * Creates the buffer allocator subsystem.
      */
-    virtual UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() = 0;
+    virtual UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator(
+        Display const& output) = 0;
 
     /**
      * Creates an object capable of doing platform specific processing of buffers

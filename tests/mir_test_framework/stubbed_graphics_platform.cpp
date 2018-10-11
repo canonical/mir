@@ -247,7 +247,8 @@ mtf::StubGraphicPlatform::StubGraphicPlatform(std::vector<geom::Rectangle> const
 {
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mtf::StubGraphicPlatform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mtf::StubGraphicPlatform::create_buffer_allocator(
+    mg::Display const&)
 {
     return mir::make_module_ptr<StubGraphicBufferAllocator>();
 }
@@ -288,9 +289,10 @@ struct GuestPlatformAdapter : mg::Platform
     {
     }
 
-    mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
+    mir::UniqueModulePtr<mir::graphics::GraphicBufferAllocator> create_buffer_allocator(
+        mg::Display const& output) override
     {
-        return adaptee->create_buffer_allocator();
+        return adaptee->create_buffer_allocator(output);
     }
 
     mir::UniqueModulePtr<mg::PlatformIpcOperations> make_ipc_operations() const override

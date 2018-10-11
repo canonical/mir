@@ -107,9 +107,10 @@ std::vector<mir::ExtensionDescription> mge::DisplayPlatform::extensions() const
     };
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_buffer_allocator(
+    mg::Display const& output)
 {
-    return mir::make_module_ptr<mge::BufferAllocator>();
+    return mir::make_module_ptr<mge::BufferAllocator>(output);
 }
 
 mg::NativeRenderingPlatform* mge::RenderingPlatform::native_rendering_platform()
@@ -172,9 +173,10 @@ mge::Platform::Platform(
 {
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::Platform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator>
+    mge::Platform::create_buffer_allocator(mg::Display const& output)
 {
-    return rendering->create_buffer_allocator();
+    return rendering->create_buffer_allocator(output);
 }
 
 mir::UniqueModulePtr<mg::PlatformIpcOperations> mge::Platform::make_ipc_operations() const

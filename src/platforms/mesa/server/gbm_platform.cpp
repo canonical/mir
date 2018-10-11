@@ -76,7 +76,8 @@ mgm::GBMPlatform::GBMPlatform(
 {
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GBMPlatform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgm::GBMPlatform::create_buffer_allocator(
+    Display const&)
 {
     return make_module_ptr<mgm::BufferAllocator>(gbm->device, bypass_option, import_method);
 }

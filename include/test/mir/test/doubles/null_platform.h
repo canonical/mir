@@ -34,7 +34,8 @@ namespace doubles
 class NullPlatform : public graphics::Platform
 {
  public:
-    mir::UniqueModulePtr<graphics::GraphicBufferAllocator> create_buffer_allocator() override
+    mir::UniqueModulePtr<graphics::GraphicBufferAllocator>
+        create_buffer_allocator(graphics::Display const&) override
     {
         return nullptr;
     }
