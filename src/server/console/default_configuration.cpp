@@ -149,7 +149,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                 []()
                 {
                     mir::log_debug("No session management supported");
-                    return std::make_shared<mir::NullConsoleServices>();
+                    return std::make_shared<mir::NullConsoleServices>(std::make_unique<RealVTFileOperations>());
                 };
 
             if (provider == options::auto_console)

@@ -19,42 +19,41 @@
 #ifndef MIR_NULL_CONSOLE_SERVICES_H_
 #define MIR_NULL_CONSOLE_SERVICES_H_
 
-#include <boost/throw_exception.hpp>
-#include <future>
+#include "linux_virtual_terminal.h"
 #include "mir/console_services.h"
 #include "mir/fd.h"
+#include <boost/throw_exception.hpp>
+#include <future>
 
 namespace mir
 {
+class NullConsoleDevice : public Device
+{
+public:
+    NullConsoleDevice(VTFileOperations& fops, std::unique_ptr<mir::Device::Observer> observer, std::string const& dev);
+    void on_activated();
+    void on_suspended();
+
+private:
+    VTFileOperations& fops;
+    std::unique_ptr<mir::Device::Observer> observer;
+    std::string dev;
+};
+
 class NullConsoleServices : public ConsoleServices
 {
 public:
+    NullConsoleServices(std::shared_ptr<VTFileOperations> const& fops);
     void register_switch_handlers(graphics::EventHandlerRegister&,
                                   std::function<bool()> const&,
-                                  std::function<bool()> const&) override
-    {
-    }
+                                  std::function<bool()> const&) override;
+    void restore() override;
+    std::unique_ptr<VTSwitcher> create_vt_switcher() override;
+    std::future<std::unique_ptr<Device>> acquire_device(int, int, std::unique_ptr<Device::Observer>) override;
 
-    void restore() override {}
-
-    std::unique_ptr<VTSwitcher> create_vt_switcher() override
-    {
-        BOOST_THROW_EXCEPTION((
-            std::runtime_error{"NullConsoleServices does not support VT switching"}));
-    }
-
-    std::future<std::unique_ptr<Device>> acquire_device(
-        int, int,
-        std::unique_ptr<Device::Observer>) override
-    {
-        std::promise<std::unique_ptr<Device>> exceptional;
-        exceptional.set_exception(
-            std::make_exception_ptr(
-                std::runtime_error{"Attempt to acquire device from NullConsoleServices."}));
-        return exceptional.get_future();
-    }
+private:
+    const std::shared_ptr<VTFileOperations> fops;
 };
-
-}
+}  // namespace mir
 
 #endif /* MIR_NULL_CONSOLE_SERVICES_H_ */
