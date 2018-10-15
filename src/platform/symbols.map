@@ -199,5 +199,18 @@ MIR_PLATFORM_0.32.3 {
     mir::options::wayland_extensions_opt;
     mir::options::wayland_extensions_value;
     mir::options::x11_display_opt;
+
+    mir::graphics::gl::Texture::?Texture*;
+    typeinfo?for?mir::graphics::gl::Texture;
+    vtable?for?mir::graphics::gl::Texture;
+
+    mir::graphics::gl::Program::?Program*;
+    typeinfo?for?mir::graphics::gl::Program;
+    vtable?for?mir::graphics::gl::Program;
+
+    mir::graphics::gl::ProgramFactory::?ProgramFactory*;
+    mir::graphics::gl::ProgramFactory::compile_fragment_shader*;
+    typeinfo?for?mir::graphics::gl::ProgramFactory;
+    vtable?for?mir::graphics::gl::ProgramFactory;
   };
 } MIR_PLATFORM_0.33;
