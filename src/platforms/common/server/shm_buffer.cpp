@@ -21,6 +21,8 @@
 #include "mir/shm_file.h"
 #include "shm_buffer.h"
 #include "buffer_texture_binder.h"
+#include "mir/graphics/program_factory.h"
+#include "mir/graphics/program.h"
 
 #include MIR_SERVER_GL_H
 #include MIR_SERVER_GLEXT_H
@@ -104,6 +106,10 @@ mgc::ShmBuffer::ShmBuffer(
 
 mgc::ShmBuffer::~ShmBuffer() noexcept
 {
+    if (tex_id != 0)
+    {
+        glDeleteTextures(1, &tex_id);
+    }
 }
 
 geom::Size mgc::ShmBuffer::size() const
@@ -175,7 +181,7 @@ mg::NativeBufferBase* mgc::ShmBuffer::native_buffer_base()
     return this;
 }
 
-void mgc::ShmBuffer::bind()
+void mgc::ShmBuffer::upload_to_texture()
 {
     gl_bind_to_texture();
 }
@@ -197,5 +203,46 @@ void mir::graphics::common::ShmBuffer::commit()
     {
         glReadPixels(0, 0, size_.width.as_int(), size_.height.as_int(), format, type, pixels);
     }
+}
+
+void mgc::ShmBuffer::tex_bind()
+{
+    bool const needs_initialisation = tex_id == 0;
+    if (needs_initialisation)
+    {
+        glGenTextures(1, &tex_id);
+    }
+    glBindTexture(GL_TEXTURE_2D, tex_id);
+    if (needs_initialisation)
+    {
+        // The ShmBuffer *should* be immutable, so we can just upload once.
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        gl_bind_to_texture();
+    }
+}
+
+mg::gl::Program const& mgc::ShmBuffer::shader(mg::gl::ProgramFactory& cache) const
+{
+    static auto const program = cache.compile_fragment_shader(
+        "",
+        "uniform sampler2D tex;\n"
+        "vec4 sample_to_rgba(in vec2 texcoord)\n"
+        "{\n"
+        "    return texture2D(tex, texcoord);\n"
+        "}\n");
+
+    return *program;
+}
+
+auto mgc::ShmBuffer::layout() const -> Layout
+{
+    return Layout::GL;
+}
+
+void mgc::ShmBuffer::add_syncpoint()
+{
 }
 
