@@ -29,6 +29,13 @@
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/buffer_ipc_message.h"
+#include "mir/raii.h"
+#include "mir/graphics/display.h"
+#include "mir/renderer/gl/context_source.h"
+#include "mir/renderer/gl/context.h"
+#include "mir/graphics/program_factory.h"
+#include "mir/graphics/program.h"
+
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 
@@ -205,13 +212,43 @@ auto make_texture_binder(
         return std::make_unique<NativePixmapTextureBinder>(bo, egl_extensions);
 }
 
+std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const& output)
+{
+    try
+    {
+        auto& context_source = dynamic_cast<mir::renderer::gl::ContextSource const&>(output);
+
+        /*
+         * We care about no part of this context's config; we will do no rendering with it.
+         * All we care is that we can allocate texture IDs and bind a texture, which is
+         * config independent.
+         *
+         * That's not *entirely* true; we also need it to be on the same device as we want
+         * to do the rendering on, and that GL must support all the extensions we care about,
+         * but since we don't yet support heterogeneous hybrid and implementing that will require
+         * broader interface changes it's a safe enough requirement for now.
+         */
+        return context_source.create_gl_context();
+    }
+    catch (std::bad_cast const& err)
+    {
+        std::throw_with_nested(
+            boost::enable_error_info(
+                std::runtime_error{"Output platform cannot provide a GL context"})
+                << boost::throw_function(__PRETTY_FUNCTION__)
+                << boost::throw_line(__LINE__)
+                << boost::throw_file(__FILE__));
+    }
+}
 }
 
 mgm::BufferAllocator::BufferAllocator(
+    mg::Display const& output,
     gbm_device* device,
     BypassOption bypass_option,
     mgm::BufferImportMethod const buffer_import_method)
-    : device(device),
+    : ctx{context_for_output(output)},
+      device(device),
       egl_extensions(std::make_shared<mg::EGLExtensions>()),
       bypass_option(buffer_import_method == mgm::BufferImportMethod::dma_buf ?
                         mgm::BypassOption::prohibited :
@@ -544,11 +581,212 @@ private:
     std::function<void()> const on_consumed;
     std::function<void()> const on_release;
 };
+
+GLuint get_tex_id(mir::renderer::gl::Context& ctx)
+{
+    ctx.make_current();
+    GLuint tex;
+    glGenTextures(1, &tex);
+    return tex;
+}
+
+geom::Size get_wl_buffer_size(wl_resource* buffer, mg::EGLExtensions::WaylandExtensions const& ext)
+{
+    EGLint width, height;
+
+    auto dpy = eglGetCurrentDisplay();
+    if (ext.eglQueryWaylandBufferWL(dpy, buffer, EGL_WIDTH, &width) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WaylandAllocator buffer width"));
+    }
+    if (ext.eglQueryWaylandBufferWL(dpy, buffer, EGL_HEIGHT, &height) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query WaylandAllocator buffer height"));
+    }
+
+    return geom::Size{width, height};
+}
+
+bool get_wl_y_inverted(wl_resource* resource, mg::EGLExtensions::WaylandExtensions const& ext)
+{
+    EGLint inverted;
+    auto dpy = eglGetCurrentDisplay();
+
+    if (ext.eglQueryWaylandBufferWL(dpy, resource, EGL_WAYLAND_Y_INVERTED_WL, &inverted) == EGL_FALSE)
+    {
+        // EGL_WAYLAND_Y_INVERTED_WL is unsupported; default is true
+        return true;
+    }
+    return inverted;
+}
+
+bool get_wl_egl_format(wl_resource* resource, mg::EGLExtensions::WaylandExtensions const& ext)
+{
+    EGLint format;
+    auto dpy = eglGetCurrentDisplay();
+
+    if (ext.eglQueryWaylandBufferWL(dpy, resource, EGL_TEXTURE_FORMAT, &format) == EGL_FALSE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query Wayland buffer format"));
+    }
+    return format;
+}
+
+class WaylandTexBuffer :
+    public mg::BufferBasic,
+    public mg::NativeBufferBase,
+    public mg::gl::Texture
+{
+public:
+    WaylandTexBuffer(
+        std::shared_ptr<mir::renderer::gl::Context> ctx,
+        wl_resource* buffer,
+        mg::EGLExtensions const& extensions,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release)
+        : ctx{std::move(ctx)},
+          tex{get_tex_id(*this->ctx)},
+          on_consumed{std::move(on_consumed)},
+          on_release{std::move(on_release)},
+          // These constructors rely on get_tex_id having bound ctx as current.
+          size_{get_wl_buffer_size(buffer, *extensions.wayland)},
+          y_inverted_{get_wl_y_inverted(buffer, *extensions.wayland)},
+          egl_format{get_wl_egl_format(buffer, *extensions.wayland)}
+    {
+        if (egl_format != EGL_TEXTURE_RGB && egl_format != EGL_TEXTURE_RGBA)
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"YUV textures unimplemented"}));
+        }
+        eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+
+        const EGLint image_attrs[] =
+            {
+                EGL_WAYLAND_PLANE_WL, 0,
+                EGL_NONE
+            };
+
+        auto egl_image = extensions.eglCreateImageKHR(
+            eglGetCurrentDisplay(),
+            EGL_NO_CONTEXT,
+            EGL_WAYLAND_BUFFER_WL,
+            buffer,
+            image_attrs);
+
+        if (egl_image == EGL_NO_IMAGE_KHR)
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGLImage"));
+
+        glBindTexture(GL_TEXTURE_2D, tex);
+        extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, egl_image);
+
+        // tex is now an EGLImage sibling, so we can free the EGLImage without
+        // freeing the backing data.
+        extensions.eglDestroyImageKHR(eglGetCurrentDisplay(), egl_image);
+    }
+
+    ~WaylandTexBuffer()
+    {
+        // TODO: We should really defer this to the Wayland main loop…
+        auto context_guard = mir::raii::paired_calls(
+            [this]() { ctx->make_current(); },
+            [this]() { ctx->release_current(); });
+
+        on_release();
+        glDeleteTextures(1, &tex);
+    }
+
+    std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const override
+    {
+        return {nullptr};
+    }
+
+    mir::geometry::Size size() const override
+    {
+        return size_;
+    }
+
+    MirPixelFormat pixel_format() const override
+    {
+        /* TODO: These are lies, but the only piece of information external code uses
+         * out of the MirPixelFormat is whether or not the buffer has an alpha channel.
+         */
+        switch(egl_format)
+        {
+            case EGL_TEXTURE_RGB:
+                return mir_pixel_format_xrgb_8888;
+            case EGL_TEXTURE_RGBA:
+                return mir_pixel_format_argb_8888;
+            case EGL_TEXTURE_EXTERNAL_WL:
+                // Unspecified whether it has an alpha channel; say it does.
+                return mir_pixel_format_argb_8888;
+            case EGL_TEXTURE_Y_U_V_WL:
+            case EGL_TEXTURE_Y_UV_WL:
+                // These are just absolutely not RGB at all!
+                // But they're defined to not have an alpha channel, so xrgb it is!
+                return mir_pixel_format_xrgb_8888;
+            case EGL_TEXTURE_Y_XUXV_WL:
+                // This is a planar format, but *does* have alpha.
+                return mir_pixel_format_argb_8888;
+            default:
+                // We've covered all possibilities above
+                BOOST_THROW_EXCEPTION((std::logic_error{"Unexpected texture format!"}));
+        }
+    }
+
+    NativeBufferBase* native_buffer_base() override
+    {
+        return this;
+    }
+
+    mir::graphics::gl::Program const& shader(mir::graphics::gl::ProgramFactory& cache) const override
+    {
+        static std::unique_ptr<mg::gl::Program> shader;
+        if (!shader)
+        {
+            shader = cache.compile_fragment_shader(
+                "",
+                "uniform sampler2D tex;\n"
+                "vec4 sample_to_rgba(in vec2 texcoord)\n"
+                "{\n"
+                "    return texture2D(tex, texcoord);\n"
+                "}\n");
+        }
+        return *shader;
+    }
+
+    bool y_inverted() const override
+    {
+        return y_inverted_;
+    }
+
+    void bind() override
+    {
+        glBindTexture(GL_TEXTURE_2D, tex);
+        on_consumed();
+        on_consumed = [](){};
+    }
+
+    void add_syncpoint() override
+    {
+    }
+private:
+    std::shared_ptr<mir::renderer::gl::Context> const ctx;
+    GLuint const tex;
+
+    std::function<void()> on_consumed;
+    std::function<void()> const on_release;
+
+    geom::Size const size_;
+    bool const y_inverted_;
+    EGLint const egl_format;
+};
 }
 
 void mgm::BufferAllocator::bind_display(wl_display* display)
 {
-    dpy = eglGetCurrentDisplay();
+    auto context_guard = mir::raii::paired_calls(
+        [this]() { ctx->make_current(); },
+        [this]() { ctx->release_current(); });
+    auto dpy = eglGetCurrentDisplay();
 
     if (dpy == EGL_NO_DISPLAY)
         BOOST_THROW_EXCEPTION((std::logic_error{"WaylandAllocator::bind_display called without an active EGL Display"}));
@@ -573,8 +811,12 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource(
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release)
 {
+    auto context_guard = mir::raii::paired_calls(
+        [this]() { ctx->make_current(); },
+        [this]() { ctx->release_current(); });
+
     return WaylandBuffer::mir_buffer_from_wl_buffer(
-        dpy,
+        eglGetCurrentDisplay(),
         buffer,
         egl_extensions,
         std::move(on_consumed),

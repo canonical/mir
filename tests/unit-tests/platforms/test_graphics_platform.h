@@ -23,18 +23,9 @@
 #include "mir/graphics/display.h"
 
 #include "mir/test/doubles/stub_gl_config.h"
+#include "mir/test/doubles/null_display_configuration_policy.h"
 
-
-namespace
-{
-class NullConfigurationPolicy : public mir::graphics::DisplayConfigurationPolicy
-{
-public:
-    void apply_to(mir::graphics::DisplayConfiguration&) override
-    {
-    }
-};
-}
+namespace mtd = mir::test::doubles;
 
 TEST_F(GraphicsPlatform, buffer_allocator_creation)
 {
@@ -43,7 +34,7 @@ TEST_F(GraphicsPlatform, buffer_allocator_creation)
     EXPECT_NO_THROW (
         auto platform = create_platform();
         auto display = platform->create_display(
-            std::make_shared<NullConfigurationPolicy>(),
+            std::make_shared<mtd::NullDisplayConfigurationPolicy>(),
             std::make_shared<mir::test::doubles::StubGLConfig>());
         auto allocator = platform->create_buffer_allocator(*display);
 
@@ -55,7 +46,7 @@ TEST_F(GraphicsPlatform, buffer_creation)
 {
     auto platform = create_platform();
     auto display = platform->create_display(
-        std::make_shared<NullConfigurationPolicy>(),
+        std::make_shared<mtd::NullDisplayConfigurationPolicy>(),
         std::make_shared<mir::test::doubles::StubGLConfig>());
     auto allocator = platform->create_buffer_allocator(*display);
     auto supported_pixel_formats = allocator->supported_pixel_formats();

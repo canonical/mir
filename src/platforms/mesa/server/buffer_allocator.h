@@ -36,8 +36,16 @@
 
 namespace mir
 {
+namespace renderer
+{
+namespace gl
+{
+class Context;
+}
+}
 namespace graphics
 {
+class Display;
 struct EGLExtensions;
 
 namespace mesa
@@ -54,7 +62,11 @@ class BufferAllocator:
     public graphics::WaylandAllocator
 {
 public:
-    BufferAllocator(gbm_device* device, BypassOption bypass_option, BufferImportMethod const buffer_import_method);
+    BufferAllocator(
+        Display const& output,
+        gbm_device* device,
+        BypassOption bypass_option,
+        BufferImportMethod const buffer_import_method);
 
     std::shared_ptr<Buffer> alloc_buffer(
         geometry::Size size, uint32_t native_format, uint32_t native_flags) override;
@@ -71,7 +83,7 @@ private:
     std::shared_ptr<Buffer> alloc_hardware_buffer(
         graphics::BufferProperties const& buffer_properties);
 
-    EGLDisplay dpy;
+    std::shared_ptr<renderer::gl::Context> const ctx;
     gbm_device* const device;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 

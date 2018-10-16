@@ -23,8 +23,14 @@
 #include "native_buffer.h"
 #include "gbm_format_conversions.h"
 
+#include "mir/graphics/program.h"
+#include "mir/graphics/program_factory.h"
+
 #include <fcntl.h>
 #include <xf86drm.h>
+
+#include MIR_SERVER_GL_H
+#include MIR_SERVER_GLEXT_H
 
 #include <boost/throw_exception.hpp>
 
@@ -112,12 +118,55 @@ void mgm::GBMBuffer::commit()
 {
 }
 
-void mgm::GBMBuffer::bind()
+void mgm::GBMBuffer::upload_to_texture()
 {
     gl_bind_to_texture();
 }
 
 void mgm::GBMBuffer::bind_for_write()
 {
-    bind();
+    upload_to_texture();
+}
+
+mg::gl::Program const& mgm::GBMBuffer::shader(
+    mg::gl::ProgramFactory& cache) const
+{
+    static auto const program = cache.compile_fragment_shader(
+        "",
+        "uniform sampler2D tex;\n"
+        "vec4 sample_to_rgba(in vec2 texcoord)\n"
+        "{\n"
+        "    return texture2D(tex, texcoord);\n"
+        "}\n");
+
+    return *program;
+}
+
+bool mgm::GBMBuffer::y_inverted() const
+{
+    return false;
+}
+
+void mgm::GBMBuffer::add_syncpoint()
+{
+
+}
+
+void mgm::GBMBuffer::tex_bind()
+{
+    bool const needs_initialisation = tex_id == 0;
+    if (needs_initialisation)
+    {
+        glGenTextures(1, &tex_id);
+    }
+    glBindTexture(GL_TEXTURE_2D, tex_id);
+    if (needs_initialisation)
+    {
+        // The ShmBuffer *should* be immutable, so we can just upload once.
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        gl_bind_to_texture();
+    }
 }

@@ -44,9 +44,9 @@ mgx::Platform::Platform(std::shared_ptr<::Display> const& conn,
 }
 
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgx::Platform::create_buffer_allocator(
-    mg::Display const&)
+    mg::Display const& output)
 {
-    return make_module_ptr<mgm::BufferAllocator>(gbm.device, mgm::BypassOption::prohibited, mgm::BufferImportMethod::dma_buf);
+    return make_module_ptr<mgm::BufferAllocator>(output, gbm.device, mgm::BypassOption::prohibited, mgm::BufferImportMethod::dma_buf);
 }
 
 mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
