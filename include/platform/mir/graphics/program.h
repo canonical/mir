@@ -30,8 +30,11 @@ namespace gl
 class Program
 {
 public:
+    Program() = default;
     virtual ~Program();
 
+    Program(Program const&) = delete;
+    Program& operator=(Program const&) = delete;
 };
 
 }

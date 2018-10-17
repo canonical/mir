@@ -32,7 +32,11 @@ class ProgramFactory;
 class Texture
 {
 public:
+    Texture() = default;
     virtual ~Texture();
+
+    Texture(Texture const&) = delete;
+    Texture& operator=(Texture const&) = delete;
 
     virtual Program const& shader(ProgramFactory& cache) const = 0;
 

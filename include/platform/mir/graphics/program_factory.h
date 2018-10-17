@@ -32,7 +32,11 @@ class Program;
 class ProgramFactory
 {
 public:
+    ProgramFactory() = default;
     virtual ~ProgramFactory();
+
+    ProgramFactory(ProgramFactory const&) = delete;
+    ProgramFactory& operator=(ProgramFactory const&) = delete;
 
     /**
      * Compile and link a fragment-shader fragment into a full shader Program
