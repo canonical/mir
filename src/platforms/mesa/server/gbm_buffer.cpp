@@ -41,6 +41,16 @@ namespace mgm=mir::graphics::mesa;
 namespace mgc = mir::graphics::common;
 namespace geom=mir::geometry;
 
+void mgm::BindResolverTex::bind()
+{
+    tex_bind();
+}
+
+void mgm::BindResolverTexTarget::bind()
+{
+    upload_to_texture();
+}
+
 mgm::GBMBuffer::GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
                           uint32_t bo_flags,
                           std::unique_ptr<mgc::BufferTextureBinder> texture_binder)

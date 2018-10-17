@@ -42,8 +42,6 @@ class BufferTextureBinder;
 
 namespace mesa
 {
-namespace
-{
 /*
  * renderer::gl::TextureSource and graphics::gl::Texture both have
  * a bind() method. They need to do different things.
@@ -58,11 +56,7 @@ class BindResolverTex : public gl::Texture
 public:
     BindResolverTex() = default;
 
-    void bind() override final
-    {
-        tex_bind();
-    }
-
+    void bind() override final;
 protected:
     virtual void tex_bind() = 0;
 };
@@ -72,15 +66,10 @@ class BindResolverTexTarget : public renderer::gl::TextureSource
 public:
     BindResolverTexTarget() = default;
 
-    void bind() override final
-    {
-        upload_to_texture();
-    }
-
+    void bind() override final;
 protected:
     virtual void upload_to_texture() = 0;
 };
-}
 
 class GBMBuffer: public BufferBasic, public NativeBufferBase,
                  public BindResolverTexTarget,
