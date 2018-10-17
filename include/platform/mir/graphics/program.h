@@ -27,6 +27,10 @@ namespace graphics
 {
 namespace gl
 {
+
+/**
+ * An opaque handle to one (or more) GLSL shader(s).
+ */
 class Program
 {
 public:
