@@ -199,7 +199,12 @@ MIR_PLATFORM_0.32.3 {
     mir::options::wayland_extensions_opt;
     mir::options::wayland_extensions_value;
     mir::options::x11_display_opt;
+  };
+} MIR_PLATFORM_0.33;
 
+MIR_PLATFORM_1.1.0 {
+ global:
+  extern "C++" {
     mir::graphics::gl::Texture::?Texture*;
     typeinfo?for?mir::graphics::gl::Texture;
     vtable?for?mir::graphics::gl::Texture;
@@ -213,4 +218,4 @@ MIR_PLATFORM_0.32.3 {
     typeinfo?for?mir::graphics::gl::ProgramFactory;
     vtable?for?mir::graphics::gl::ProgramFactory;
   };
-} MIR_PLATFORM_0.33;
+} MIR_PLATFORM_0.32.3;
