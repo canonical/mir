@@ -20,8 +20,8 @@
 #ifndef MIR_PLATFORM_GRAPHICS_WAYLAND_ALLOCATOR_H_
 #define MIR_PLATFORM_GRAPHICS_WAYLAND_ALLOCATOR_H_
 
-#include <vector>
 #include <memory>
+#include <functional>
 
 #include <wayland-server-core.h>
 
@@ -36,7 +36,11 @@ class Buffer;
 class WaylandAllocator
 {
 public:
-    virtual ~WaylandAllocator() = default;
+    WaylandAllocator();
+    virtual ~WaylandAllocator();
+
+    WaylandAllocator(WaylandAllocator const&) = delete;
+    WaylandAllocator& operator=(WaylandAllocator const&) = delete;
 
     virtual void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) = 0;
     virtual std::shared_ptr<Buffer> buffer_from_resource(
