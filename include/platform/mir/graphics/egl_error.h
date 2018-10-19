@@ -42,6 +42,11 @@ inline auto gl_error(std::string const& msg) -> std::system_error
     return std::system_error{static_cast<int>(glGetError()), gl_category(), msg};
 }
 
+inline auto gl_error(GLint err, std::string const& msg) -> std::system_error
+{
+    return std::system_error{static_cast<int>(err), gl_category(), msg};
+}
+
 }
 }
 

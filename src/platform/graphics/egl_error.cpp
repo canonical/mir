@@ -94,6 +94,9 @@ struct gl_category : std::error_category
         switch (ev)
         {
             CASE_FOR_ERROR(GL_NO_ERROR)
+            CASE_FOR_ERROR(GL_INVALID_VALUE)
+            CASE_FOR_ERROR(GL_INVALID_OPERATION)
+            CASE_FOR_ERROR(GL_INVALID_ENUM)
 
             default:
                 return "Unknown error (" + to_hex_string(ev) + ")";
