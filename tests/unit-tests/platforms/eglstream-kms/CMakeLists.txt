@@ -24,6 +24,7 @@ target_link_libraries(
   client_platform_common
   server_platform_common
   ${EPOXY_LDFLAGS} ${EPOXY_LIBRARIES}
+  nvidia-egl-wayland
 )
 
 if (MIR_RUN_UNIT_TESTS)
