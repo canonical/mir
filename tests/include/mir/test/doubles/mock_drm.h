@@ -182,6 +182,7 @@ public:
     void reset(char const* device);
 
     void generate_event_on(char const* device);
+    void consume_event_on(char const* device);
 
     class IsFdOfDeviceMatcher;
     friend class IsFdOfDeviceMatcher;

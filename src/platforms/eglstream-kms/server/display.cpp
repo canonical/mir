@@ -22,6 +22,7 @@
 #include "egl_output.h"
 
 #include "kms-utils/drm_mode_resources.h"
+#include "threaded_drm_event_handler.h"
 
 #include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display_configuration_policy.h"
@@ -33,15 +34,25 @@
 #include "mir/graphics/transformation.h"
 #include "mir/renderer/gl/render_target.h"
 #include "mir/renderer/gl/context.h"
+#include "mir/graphics/egl_extensions.h"
+
+#define MIR_LOG_COMPONENT "platform-eglstream-kms"
+#include "mir/log.h"
 
 #include <xf86drmMode.h>
 #include <sys/ioctl.h>
 #include <system_error>
+#include <poll.h>
 #include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
 namespace mge = mir::graphics::eglstream;
 namespace mgk = mir::graphics::kms;
+
+#ifndef EGL_NV_output_drm_flip_event
+#define EGL_NV_output_drm_flip_event 1
+#define EGL_DRM_FLIP_EVENT_DATA_NV            0x333E
+#endif /* EGL_NV_output_drm_flip_event */
 
 namespace
 {
@@ -120,15 +131,25 @@ class DisplayBuffer
       public mir::renderer::gl::RenderTarget
 {
 public:
-    DisplayBuffer(EGLDisplay dpy, EGLContext ctx, EGLConfig config, mge::kms::EGLOutput const& output)
+    DisplayBuffer(
+        mir::Fd drm_node,
+        EGLDisplay dpy,
+        EGLContext ctx,
+        EGLConfig config,
+        std::shared_ptr<mge::DRMEventHandler> event_handler,
+        mge::kms::EGLOutput const& output)
         : dpy{dpy},
           ctx{create_context(dpy, config, ctx)},
           layer{output.output_layer()},
+          crtc_id{output.crtc_id()},
           view_area_{output.extents()},
-          transform{output.transformation()}
+          transform{output.transformation()},
+          drm_node{std::move(drm_node)},
+          event_handler{std::move(event_handler)}
     {
         EGLint const stream_attribs[] = {
             EGL_STREAM_FIFO_LENGTH_KHR, 1,
+            EGL_CONSUMER_AUTO_ACQUIRE_EXT, EGL_FALSE,
             EGL_NONE
         };
         output_stream = eglCreateStreamKHR(dpy, stream_attribs);
@@ -164,6 +185,10 @@ public:
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create StreamProducerSurface"));
         }
 
+        // The first flip needs no wait!
+        std::promise<void> satisfied_promise;
+        satisfied_promise.set_value();
+        pending_flip = satisfied_promise.get_future();
     }
 
     /* gl::RenderTarget */
@@ -218,7 +243,21 @@ public:
 
     void post() override
     {
+        // Wait for the last flip to finish, if it hasn't already.
+        pending_flip.get();
 
+        pending_flip = event_handler->expect_flip_event(
+            crtc_id,
+            [](auto, auto) { /*TODO: capture the flip event to supportlast_frame_on() */ });
+
+        EGLAttrib const acquire_attribs[] = {
+            EGL_DRM_FLIP_EVENT_DATA_NV, reinterpret_cast<EGLAttrib>(event_handler->drm_event_data()),
+            EGL_NONE
+        };
+        if (nv_stream.eglStreamConsumerAcquireAttribNV(dpy, output_stream, acquire_attribs) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION(mg::egl_error("Failed to submit frame from EGLStream for display"));
+        }
     }
 
     void bind() override
@@ -231,13 +270,19 @@ public:
     }
 
 private:
+
     EGLDisplay dpy;
     EGLContext ctx;
     EGLOutputLayerEXT layer;
+    uint32_t crtc_id;
     mir::geometry::Rectangle const view_area_;
     glm::mat2 const transform;
     EGLStreamKHR output_stream;
     EGLSurface surface;
+    mir::Fd const drm_node;
+    std::shared_ptr<mge::DRMEventHandler> const event_handler;
+    std::future<void> pending_flip;
+    mg::EGLExtensions::NVStreamAttribExtensions nv_stream;
 };
 
 mge::KMSDisplayConfiguration create_display_configuration(
@@ -263,7 +308,8 @@ mge::Display::Display(
       display{display},
       config{choose_config(display, gl_conf)},
       context{create_context(display, config)},
-      display_configuration{create_display_configuration(this->drm_node, display, context)}
+      display_configuration{create_display_configuration(this->drm_node, display, context)},
+      event_handler{std::make_shared<ThreadedDRMEventHandler>(drm_node)}
 {
     auto ret = drmSetClientCap(drm_node, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
     if (ret != 0)
@@ -304,7 +350,7 @@ void mge::Display::configure(DisplayConfiguration const& conf)
              if (output.used)
              {
                  const_cast<kms::EGLOutput&>(output).configure(output.current_mode_index);
-                 active_sync_groups.emplace_back(std::make_unique<::DisplayBuffer>(display, context, config, output));
+                 active_sync_groups.emplace_back(std::make_unique<::DisplayBuffer>(drm_node, display, context, config, event_handler, output));
              }
          });
 }

@@ -33,6 +33,7 @@ class GLConfig;
 
 namespace eglstream
 {
+class DRMEventHandler;
 
 class Display : public mir::graphics::Display,
                 public mir::graphics::NativeDisplay,
@@ -78,6 +79,7 @@ private:
     EGLConfig config;
     EGLContext context;
     KMSDisplayConfiguration display_configuration;
+    std::shared_ptr<DRMEventHandler> const event_handler;
     std::vector<std::unique_ptr<DisplaySyncGroup>> active_sync_groups;
     std::shared_ptr<DisplayConfigurationPolicy> const configuration_policy;
 };

@@ -27,6 +27,9 @@ add_library(mirplatformgraphicseglstreamkmsobjects OBJECT
   software_buffer.cpp
   utils.cpp
   utils.h
+  drm_event_handler.h
+  threaded_drm_event_handler.h
+  threaded_drm_event_handler.cpp
 )
 
 add_library(mirplatformgraphicseglstreamkms MODULE

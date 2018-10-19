@@ -296,6 +296,11 @@ EGLOutputLayerEXT mgek::EGLOutput::output_layer() const
     return layer;
 }
 
+uint32_t mgek::EGLOutput::crtc_id() const
+{
+    return mgk::get_encoder(drm_fd, connector->encoder_id)->crtc_id;
+}
+
 void mgek::EGLOutput::clear_crtc()
 {
     using namespace std::string_literals;
