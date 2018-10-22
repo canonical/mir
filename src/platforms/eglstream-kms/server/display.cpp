@@ -35,6 +35,7 @@
 #include "mir/renderer/gl/render_target.h"
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/egl_extensions.h"
+#include "mir/graphics/display_report.h"
 
 #define MIR_LOG_COMPONENT "platform-eglstream-kms"
 #include "mir/log.h"
@@ -137,7 +138,8 @@ public:
         EGLContext ctx,
         EGLConfig config,
         std::shared_ptr<mge::DRMEventHandler> event_handler,
-        mge::kms::EGLOutput const& output)
+        mge::kms::EGLOutput const& output,
+        std::shared_ptr<mg::DisplayReport> display_report)
         : dpy{dpy},
           ctx{create_context(dpy, config, ctx)},
           layer{output.output_layer()},
@@ -145,7 +147,8 @@ public:
           view_area_{output.extents()},
           transform{output.transformation()},
           drm_node{std::move(drm_node)},
-          event_handler{std::move(event_handler)}
+          event_handler{std::move(event_handler)},
+          display_report{std::move(display_report)}
     {
         EGLint const stream_attribs[] = {
             EGL_STREAM_FIFO_LENGTH_KHR, 1,
@@ -184,6 +187,10 @@ public:
         {
             BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create StreamProducerSurface"));
         }
+
+        this->display_report->report_successful_setup_of_native_resources();
+        this->display_report->report_successful_display_construction();
+        this->display_report->report_egl_configuration(dpy, config);
 
         // The first flip needs no wait!
         std::promise<void> satisfied_promise;
@@ -248,7 +255,15 @@ public:
 
         pending_flip = event_handler->expect_flip_event(
             crtc_id,
-            [](auto, auto) { /*TODO: capture the flip event to supportlast_frame_on() */ });
+            [this](unsigned frame_count, std::chrono::milliseconds frame_time)
+            {
+                // TODO: Um, why does NVIDIA always call this with 0, 0ms?
+                display_report->report_vsync(
+                    crtc_id,
+                    mg::Frame {
+                        frame_count,
+                        mir::time::PosixTimestamp(CLOCK_MONOTONIC, frame_time)});
+            });
 
         EGLAttrib const acquire_attribs[] = {
             EGL_DRM_FLIP_EVENT_DATA_NV, reinterpret_cast<EGLAttrib>(event_handler->drm_event_data()),
@@ -283,6 +298,7 @@ private:
     std::shared_ptr<mge::DRMEventHandler> const event_handler;
     std::future<void> pending_flip;
     mg::EGLExtensions::NVStreamAttribExtensions nv_stream;
+    std::shared_ptr<mg::DisplayReport> const display_report;
 };
 
 mge::KMSDisplayConfiguration create_display_configuration(
@@ -303,13 +319,15 @@ mge::Display::Display(
     mir::Fd drm_node,
     EGLDisplay display,
     std::shared_ptr<DisplayConfigurationPolicy> const& configuration_policy,
-    GLConfig const& gl_conf)
+    GLConfig const& gl_conf,
+    std::shared_ptr<DisplayReport> display_report)
     : drm_node{drm_node},
       display{display},
       config{choose_config(display, gl_conf)},
       context{create_context(display, config)},
       display_configuration{create_display_configuration(this->drm_node, display, context)},
-      event_handler{std::make_shared<ThreadedDRMEventHandler>(drm_node)}
+      event_handler{std::make_shared<ThreadedDRMEventHandler>(drm_node)},
+      display_report{std::move(display_report)}
 {
     auto ret = drmSetClientCap(drm_node, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
     if (ret != 0)
@@ -350,7 +368,15 @@ void mge::Display::configure(DisplayConfiguration const& conf)
              if (output.used)
              {
                  const_cast<kms::EGLOutput&>(output).configure(output.current_mode_index);
-                 active_sync_groups.emplace_back(std::make_unique<::DisplayBuffer>(drm_node, display, context, config, event_handler, output));
+                 active_sync_groups.emplace_back(
+                     std::make_unique<::DisplayBuffer>(
+                         drm_node,
+                         display,
+                         context,
+                         config,
+                         event_handler,
+                         output,
+                         display_report));
              }
          });
 }

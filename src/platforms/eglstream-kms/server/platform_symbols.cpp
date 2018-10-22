@@ -84,24 +84,24 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const&,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mg::DisplayReport> const&, 
+    std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mir::logging::Logger> const&)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     return mir::make_module_ptr<mge::Platform>(
         std::make_shared<mge::RenderingPlatform>(),
-        std::make_shared<mge::DisplayPlatform>(*console, find_device()));
+        std::make_shared<mge::DisplayPlatform>(*console, find_device(), display_report));
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const&, 
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mg::DisplayReport> const&, 
+    std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mir::logging::Logger> const&) 
 {
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
-    return mir::make_module_ptr<mge::DisplayPlatform>(*console, find_device());
+    return mir::make_module_ptr<mge::DisplayPlatform>(*console, find_device(), display_report);
 }
 
 mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
