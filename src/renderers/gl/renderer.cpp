@@ -434,7 +434,7 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
             {
                 return texture_cache->load(renderable);
             }
-            catch (std::runtime_error const&)
+            catch (std::exception const&)
             {
                 return {nullptr};
             }
