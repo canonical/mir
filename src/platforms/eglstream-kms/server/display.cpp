@@ -36,6 +36,9 @@
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/egl_extensions.h"
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/event_handler_register.h"
+
+#include "mir/udev/wrapper.h"
 
 #define MIR_LOG_COMPONENT "platform-eglstream-kms"
 #include "mir/log.h"
@@ -356,6 +359,7 @@ void mge::Display::for_each_display_sync_group(const std::function<void(DisplayS
 
 std::unique_ptr<mg::DisplayConfiguration> mge::Display::configuration() const
 {
+    std::lock_guard<std::mutex> lock{configuration_mutex};
     return display_configuration.clone();
 }
 
@@ -381,10 +385,36 @@ void mge::Display::configure(DisplayConfiguration const& conf)
          });
 }
 
-void mge::Display::register_configuration_change_handler(
-    EventHandlerRegister& /*handlers*/,
-    DisplayConfigurationChangeHandler const& /*conf_change_handler*/)
+namespace
 {
+std::unique_ptr<mir::udev::Monitor> create_drm_monitor()
+{
+    auto monitor = std::make_unique<mir::udev::Monitor>(mir::udev::Context());
+    monitor->filter_by_subsystem_and_type("drm", "drm_minor");
+    monitor->enable();
+    return monitor;
+}
+}
+
+void mge::Display::register_configuration_change_handler(
+    EventHandlerRegister& handlers,
+    DisplayConfigurationChangeHandler const& conf_change_handler)
+{
+    auto monitor = create_drm_monitor();
+    handlers.register_fd_handler(
+        { monitor->fd() },
+        this,
+        make_module_ptr<std::function<void(int)>>(
+            [conf_change_handler, this, monitor = std::shared_ptr<mir::udev::Monitor>{std::move(monitor)}](int)
+            {
+                monitor->process_events(
+                    [conf_change_handler, this](mir::udev::Monitor::EventType, mir::udev::Device const&)
+                    {
+                        std::lock_guard<std::mutex> lock{configuration_mutex};
+                        display_configuration.update();
+                        conf_change_handler();
+                    });
+            }));
 }
 
 void mge::Display::register_pause_resume_handlers(
