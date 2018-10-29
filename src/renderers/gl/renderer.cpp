@@ -29,6 +29,10 @@
 #include "mir/gl/texture.h"
 #include "mir/log.h"
 #include "mir/report_exception.h"
+#include "mir/graphics/egl_error.h"
+#include "mir/graphics/texture.h"
+#include "mir/graphics/program_factory.h"
+#include "mir/graphics/program.h"
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
@@ -38,6 +42,7 @@
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
 #include <cmath>
+#include <sstream>
 
 namespace mg = mir::graphics;
 namespace mgl = mir::gl;
@@ -118,12 +123,205 @@ const GLchar* const mrg::Renderer::default_fshader =
     "}\n"
 };
 
+namespace
+{
+template<void (* deleter)(GLuint)>
+class GLHandle
+{
+public:
+    explicit GLHandle(GLuint id)
+        : id{id}
+    {
+    }
+
+    ~GLHandle()
+    {
+        if (id)
+            (*deleter)(id);
+    }
+
+    GLHandle(GLHandle const&) = delete;
+
+    GLHandle& operator=(GLHandle const&) = delete;
+
+    GLHandle(GLHandle&& from)
+        : id{from.id}
+    {
+        from.id = 0;
+    }
+
+    operator GLuint() const
+    {
+        return id;
+    }
+
+private:
+    GLuint id;
+};
+
+using ProgramHandle = GLHandle<&glDeleteProgram>;
+using ShaderHandle = GLHandle<&glDeleteShader>;
+
+struct Program : public mir::graphics::gl::Program
+{
+public:
+    Program(ProgramHandle&& opaque_shader, ProgramHandle&& alpha_shader)
+        : opaque_handle(std::move(opaque_shader)),
+          alpha_handle(std::move(alpha_shader)),
+          opaque{opaque_handle},
+          alpha{alpha_handle}
+    {
+    }
+
+    ProgramHandle opaque_handle, alpha_handle;
+    mir::renderer::gl::Renderer::Program opaque, alpha;
+};
+
+const GLchar* const vertex_shader_src =
+{
+    "attribute vec3 position;\n"
+    "attribute vec2 texcoord;\n"
+    "uniform mat4 screen_to_gl_coords;\n"
+    "uniform mat4 display_transform;\n"
+    "uniform mat4 transform;\n"
+    "uniform vec2 centre;\n"
+    "varying vec2 v_texcoord;\n"
+    "void main() {\n"
+    "   vec4 mid = vec4(centre, 0.0, 0.0);\n"
+    "   vec4 transformed = (transform * (vec4(position, 1.0) - mid)) + mid;\n"
+    "   gl_Position = display_transform * screen_to_gl_coords * transformed;\n"
+    "   v_texcoord = texcoord;\n"
+    "}\n"
+};
+}
+
+class mrg::Renderer::ProgramFactory : public mir::graphics::gl::ProgramFactory
+{
+public:
+    // NOTE: This must be called with a current GL context
+    ProgramFactory()
+        : vertex_shader{compile_shader(GL_VERTEX_SHADER, vertex_shader_src)}
+    {
+    }
+
+    std::unique_ptr<mir::graphics::gl::Program>
+    compile_fragment_shader(
+        char const* extension_fragment,
+        char const* fragment_fragment) override
+    {
+        std::stringstream opaque_fragment;
+        opaque_fragment
+            <<
+            "#ifdef GL_ES\n"
+            "precision mediump float;\n"
+            "#endif\n"
+            << "\n"
+            << extension_fragment
+            << "\n"
+            << fragment_fragment
+            << "\n"
+            <<
+            "varying vec2 v_texcoord;\n"
+            "void main() {\n"
+            "    gl_FragColor = sample_to_rgba(v_texcoord);\n"
+            "}\n";
+
+        std::stringstream alpha_fragment;
+        alpha_fragment
+            <<
+            "#ifdef GL_ES\n"
+            "precision mediump float;\n"
+            "#endif\n"
+            << "\n"
+            << extension_fragment
+            << "\n"
+            << fragment_fragment
+            << "\n"
+            <<
+            "varying vec2 v_texcoord;\n"
+            "uniform float alpha;\n"
+            "void main() {\n"
+            "    gl_FragColor = alpha * sample_to_rgba(v_texcoord);\n"
+            "}\n";
+
+        // GL shader compilation is *not* threadsafe, and requires external synchronisation
+        std::lock_guard<std::mutex> lock{compilation_mutex};
+
+        ShaderHandle const opaque_shader{
+            compile_shader(GL_FRAGMENT_SHADER, opaque_fragment.str().c_str())};
+        ShaderHandle const alpha_shader{
+            compile_shader(GL_FRAGMENT_SHADER, alpha_fragment.str().c_str())};
+
+        return std::make_unique<::Program>(
+            link_shader(vertex_shader, opaque_shader),
+            link_shader(vertex_shader, alpha_shader));
+
+        // We delete opaque_shader and alpha_shader here. This is fine; it only marks them
+        // for deletion. GL will only delete them once the GL Program they're linked in is destroyed.
+    }
+
+private:
+    static GLuint compile_shader(GLenum type, GLchar const* src)
+    {
+        GLuint id = glCreateShader(type);
+        if (!id)
+        {
+            BOOST_THROW_EXCEPTION(mg::gl_error("Failed to create shader"));
+        }
+
+        glShaderSource(id, 1, &src, NULL);
+        glCompileShader(id);
+        GLint ok;
+        glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
+        if (!ok)
+        {
+            GLchar log[1024];
+            glGetShaderInfoLog(id, sizeof log - 1, NULL, log);
+            log[sizeof log - 1] = '\0';
+            glDeleteShader(id);
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error(
+                    std::string("Compile failed: ") + log + " for:\n" + src));
+        }
+        return id;
+    }
+
+    static ProgramHandle link_shader(
+        ShaderHandle const& vertex_shader,
+        ShaderHandle const& fragment_shader)
+    {
+        ProgramHandle program{glCreateProgram()};
+        glAttachShader(program, fragment_shader);
+        glAttachShader(program, vertex_shader);
+        glLinkProgram(program);
+        GLint ok;
+        glGetProgramiv(program, GL_LINK_STATUS, &ok);
+        if (!ok)
+        {
+            GLchar log[1024];
+            glGetProgramInfoLog(program, sizeof log - 1, NULL, log);
+            log[sizeof log - 1] = '\0';
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error(
+                    std::string("Linking GL shader failed: ") + log));
+        }
+
+        return program;
+    }
+
+    ShaderHandle const vertex_shader;
+    // GL requires us to synchronise multi-threaded access to the shader APIs.
+    std::mutex compilation_mutex;
+};
+
 mrg::Renderer::Program::Program(GLuint program_id)
 {
     id = program_id;
     position_attr = glGetAttribLocation(id, "position");
     texcoord_attr = glGetAttribLocation(id, "texcoord");
-    tex_uniform = glGetUniformLocation(id, "tex");
+    tex_uniforms[0] = glGetUniformLocation(id, "tex");
+    tex_uniforms[1] = glGetUniformLocation(id, "tex1");
+    tex_uniforms[2] = glGetUniformLocation(id, "tex2");
     centre_uniform = glGetUniformLocation(id, "centre");
     display_transform_uniform = glGetUniformLocation(id, "display_transform");
     transform_uniform = glGetUniformLocation(id, "transform");
@@ -136,6 +334,7 @@ mrg::Renderer::Renderer(graphics::DisplayBuffer& display_buffer)
       clear_color{0.0f, 0.0f, 0.0f, 0.0f},
       default_program(family.add_program(vshader, default_fshader)),
       alpha_program(family.add_program(vshader, alpha_fshader)),
+      program_factory{std::make_unique<ProgramFactory>()},
       texture_cache(mgl::DefaultProgramFactory().create_texture_cache()),
       display_transform(1)
 {
@@ -211,7 +410,9 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
 
     ++frameno;
     for (auto const& r : renderables)
-        draw(*r, r->alpha() < 1.0f ? alpha_program : default_program);
+    {
+        draw(*r);
+    }
 
     render_target.swap_buffers();
 
@@ -223,14 +424,62 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
         mir::log_debug("GL error: %d", gl_error);
 }
 
-void mrg::Renderer::draw(mg::Renderable const& renderable,
-                          Renderer::Program const& prog) const
+void mrg::Renderer::draw(mg::Renderable const& renderable) const
 {
+    auto const texture = std::dynamic_pointer_cast<mg::gl::Texture>(renderable.buffer());
+    auto const surface_tex =
+        [this, &renderable]() -> std::shared_ptr<mir::gl::Texture>
+        {
+            try
+            {
+                return texture_cache->load(renderable);
+            }
+            catch (std::exception const&)
+            {
+                return {nullptr};
+            }
+        }();
+
+    auto const* maybe_prog =
+        [this, &texture, &surface_tex](bool alpha) -> Program const*
+        {
+            if (texture)
+            {
+                auto const& family = static_cast<::Program const&>(texture->shader(*program_factory));
+                if (alpha)
+                {
+                    return &family.alpha;
+                }
+                return &family.opaque;
+            }
+            else if(surface_tex)
+            {
+                if (alpha)
+                {
+                    return &alpha_program;
+                }
+                return &default_program;
+            }
+            return nullptr;
+        }(renderable.alpha() < 1.0f);
+
+    if (!maybe_prog)
+    {
+        mir::log_error("Buffer does not support GL rendering!");
+        return;
+    }
+
+    auto const& prog = *maybe_prog;
+
     glUseProgram(prog.id);
     if (prog.last_used_frameno != frameno)
     {   // Avoid reloading the screen-global uniforms on every renderable
+        // TODO: We actually only need to bind these *once*, right? Not once per frame?
         prog.last_used_frameno = frameno;
-        glUniform1i(prog.tex_uniform, 0);
+        for (int i = 0u; (i < 3 && prog.tex_uniforms[i] != -1); ++i)
+        {
+            glUniform1i(prog.tex_uniforms[i], i);
+        }
         glUniformMatrix4fv(prog.display_transform_uniform, 1, GL_FALSE,
                            glm::value_ptr(display_transform));
         glUniformMatrix4fv(prog.screen_to_gl_coords_uniform, 1, GL_FALSE,
@@ -246,8 +495,19 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
                       rect.size.height.as_int() / 2.0f;
     glUniform2f(prog.centre_uniform, centrex, centrey);
 
+    glm::mat4 transform = renderable.transformation();
+    if (texture && texture->y_inverted())
+    {
+        transform *= glm::mat4{
+            2.0, 0.0, 0.0, 0.0,
+            0.0, -2.0, 0.0, 0.0,
+            0.0, 0.0, 1.0, 0.0,
+            -1.0, 1.0, 0.0, 1.0
+        };
+    }
+
     glUniformMatrix4fv(prog.transform_uniform, 1, GL_FALSE,
-                       glm::value_ptr(renderable.transformation()));
+                       glm::value_ptr(transform));
 
     if (prog.alpha_uniform >= 0)
         glUniform1f(prog.alpha_uniform, renderable.alpha());
@@ -261,8 +521,6 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
     // if we fail to load the texture, we need to carry on (part of lp:1629275)
     try
     {
-        auto surface_tex = texture_cache->load(renderable);
-
         typedef struct  // Represents parameters of glBlendFuncSeparate()
         {
             GLenum src_rgb, dst_rgb, src_alpha, dst_alpha;
@@ -295,7 +553,14 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
             BlendSeparate blend;
 
             blend = client_blend;
-            surface_tex->bind();
+            if (surface_tex)
+            {
+                surface_tex->bind();
+            }
+            else
+            {
+                texture->bind();
+            }
 
             glVertexAttribPointer(prog.position_attr, 3, GL_FLOAT,
                                   GL_FALSE, sizeof(mgl::Vertex),
@@ -316,6 +581,12 @@ void mrg::Renderer::draw(mg::Renderable const& renderable,
             }
 
             glDrawArrays(p.type, 0, p.nvertices);
+
+            if (texture)
+            {
+                // We're done with the texture for now
+                texture->add_syncpoint();
+            }
         }
     }
     catch (std::exception const& ex)

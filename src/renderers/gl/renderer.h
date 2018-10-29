@@ -70,6 +70,21 @@ public:
     // This is called _without_ a GL context:
     void suspend() override;
 
+    struct Program
+    {
+        GLuint id = 0;
+        GLint tex_uniforms[3];
+        GLint position_attr = -1;
+        GLint texcoord_attr = -1;
+        GLint centre_uniform = -1;
+        GLint display_transform_uniform = -1;
+        GLint transform_uniform = -1;
+        GLint screen_to_gl_coords_uniform = -1;
+        GLint alpha_uniform = -1;
+        mutable long long last_used_frameno = 0;
+
+        Program(GLuint program_id);
+    };
 private:
     mutable CurrentRenderTarget render_target;
 
@@ -98,33 +113,19 @@ protected:
     mutable long long frameno = 0;
 
     ProgramFamily family;
-    struct Program
-    {
-       GLuint id = 0;
-       GLint tex_uniform = -1;
-       GLint position_attr = -1;
-       GLint texcoord_attr = -1;
-       GLint centre_uniform = -1;
-       GLint display_transform_uniform = -1;
-       GLint transform_uniform = -1;
-       GLint screen_to_gl_coords_uniform = -1;
-       GLint alpha_uniform = -1;
-       mutable long long last_used_frameno = 0;
-
-       Program(GLuint program_id);
-    };
     Program default_program, alpha_program;
 
     static const GLchar* const vshader;
     static const GLchar* const default_fshader;
     static const GLchar* const alpha_fshader;
 
-    virtual void draw(graphics::Renderable const& renderable,
-                      Renderer::Program const& prog) const;
+    virtual void draw(graphics::Renderable const& renderable) const;
 
 private:
     void update_gl_viewport();
 
+    class ProgramFactory;
+    std::unique_ptr<ProgramFactory> const program_factory;
     std::unique_ptr<mir::gl::TextureCache> const texture_cache;
     geometry::Rectangle viewport;
     glm::mat4 screen_to_gl_coords;

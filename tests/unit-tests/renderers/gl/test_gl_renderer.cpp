@@ -72,6 +72,10 @@ void SetUpMockProgramData(mtd::MockGL &mock_gl)
 
     ON_CALL(mock_gl, glGetUniformLocation(stub_program, "tex"))
         .WillByDefault(Return(tex_uniform_location));
+    ON_CALL(mock_gl, glGetUniformLocation(stub_program, "tex1"))
+        .WillByDefault(Return(-1));
+    ON_CALL(mock_gl, glGetUniformLocation(stub_program, "tex2"))
+        .WillByDefault(Return(-1));
     ON_CALL(mock_gl, glGetUniformLocation(stub_program, "centre"))
         .WillByDefault(Return(centre_uniform_location));
     ON_CALL(mock_gl, glGetUniformLocation(stub_program, "display_transform"))
@@ -246,13 +250,17 @@ TEST_F(GLRenderer, makes_display_buffer_current_before_deleting_programs)
 {
     mrg::Renderer renderer(mock_display_buffer);
 
-    InSequence seq;
-    EXPECT_CALL(mock_display_buffer, make_current());
-    EXPECT_CALL(mock_display_buffer, swap_buffers());
-    EXPECT_CALL(mock_display_buffer, make_current());
-    EXPECT_CALL(mock_gl, glDeleteProgram(_)).Times(AtLeast(1));
-    EXPECT_CALL(mock_gl, glDeleteShader(_)).Times(AtLeast(1));
-    EXPECT_CALL(mock_display_buffer, release_current());
+    testing::Sequence s1, s2;
+    EXPECT_CALL(mock_display_buffer, make_current()).InSequence(s1, s2);
+    EXPECT_CALL(mock_display_buffer, swap_buffers()).InSequence(s1, s2);
+    EXPECT_CALL(mock_display_buffer, make_current()).InSequence(s1, s2);
+    /*We only care that all glDeleteProgram() and glDeleteShader calls
+     * happen after make_current() and before the final release_current();
+     * we don't care what order they happen in otherwise.
+     */
+    EXPECT_CALL(mock_gl, glDeleteProgram(_)).Times(AtLeast(1)).InSequence(s1);
+    EXPECT_CALL(mock_gl, glDeleteShader(_)).Times(AtLeast(1)).InSequence(s2);
+    EXPECT_CALL(mock_display_buffer, release_current()).InSequence(s1, s2);
 
     renderer.render(renderable_list);
 }
