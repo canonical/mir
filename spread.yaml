@@ -27,7 +27,6 @@ backends:
                 image: ubuntu-os-cloud/ubuntu-1804-lts
             - ubuntu-devel-64:
                 image: ubuntu-os-cloud-devel/ubuntu-1810
-            - fedora-27-64
             - fedora-28-64
             - fedora-rawhide-64:
                 image: fedora-28-64
