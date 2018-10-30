@@ -86,6 +86,8 @@ jobs:
   - <<: *ppa-upload
     env: RELEASE=18.04
   - <<: *ppa-upload
+    env: RELEASE=18.10
+  - <<: *ppa-upload
     env: RELEASE=devel
   - &sanitize
     stage: sanitize
