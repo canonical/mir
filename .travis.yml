@@ -48,7 +48,6 @@ env:
   - SYSTEM=google:ubuntu-16.04-64 VARIANT=amd64
   - SYSTEM=google:ubuntu-16.04-64 VARIANT=arm64
   - SYSTEM=google:ubuntu-18.04-64 VARIANT=clang
-  - SYSTEM=google:fedora-27-64 VARIANT=amd64
   - SYSTEM=google:fedora-28-64 VARIANT=amd64
 
 before_install:
