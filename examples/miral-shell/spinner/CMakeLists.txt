@@ -60,6 +60,10 @@ add_library(miral-spinner STATIC
   ${CMAKE_CURRENT_BINARY_DIR}/spinner_glow.h
 )
 
+set_property(
+  SOURCE eglspinner.cpp
+  PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
+
 pkg_check_modules(WAYLAND_EGL REQUIRED wayland-egl)
 
 target_link_libraries(miral-spinner

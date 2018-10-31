@@ -63,6 +63,10 @@ add_library(mir-public-test-framework OBJECT
   input_device_faker.cpp ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/input_device_faker.h
 )
 
+set_property(
+    SOURCE udev_environment.cpp
+    PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
+
 # Umockdev uses glib, which uses the deprecated "register" storage qualifier
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
 

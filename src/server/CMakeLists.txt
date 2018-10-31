@@ -74,6 +74,10 @@ add_library(mirserverobjects OBJECT
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/synchronised.h
 )
 
+set_property(
+    SOURCE glib_main_loop.cpp glib_main_loop_sources.cpp default_server_configuration.cpp
+    PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
+
 set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirserverobjects>
   $<TARGET_OBJECTS:mirinput>
