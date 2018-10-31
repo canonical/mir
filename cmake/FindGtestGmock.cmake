@@ -1,5 +1,19 @@
 include(FindPackageHandleStandardArgs)
 
+# If we can find package configuration for gtest use it!
+pkg_check_modules(GTEST QUIET "gtest >= 1.8.0")
+pkg_check_modules(GTEST_MAIN QUIET "gtest_main >= 1.8.0")
+if (GTEST_FOUND AND GTEST_MAIN_FOUND)
+    set(GTEST_LIBRARY ${GTEST_LIBRARIES})
+    set(GTEST_MAIN_LIBRARY ${GTEST_MAIN_LIBRARIES})
+    set(GTEST_BOTH_LIBRARIES ${GTEST_LIBRARY} ${GTEST_MAIN_LIBRARY})
+    add_custom_target(GMock)
+    string(REPLACE gtest gmock GMOCK_LIBRARY ${GTEST_LIBRARY})
+    set(GMOCK_LIBRARIES ${GTEST_BOTH_LIBRARIES} ${GMOCK_LIBRARY})
+    return()
+endif()
+
+# If we CANNOT find package configuration for gtest we have different hoops for different distros & series
 find_package(GTest)
 
 if (NOT GTEST_FOUND)
