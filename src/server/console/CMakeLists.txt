@@ -23,6 +23,10 @@ set_source_files_properties(
     "${CMAKE_C_FLAGS} -Wno-unused-parameter -Wno-unused-function"
 )
 
+set_property(
+    SOURCE logind_console_services.cpp default_configuration.cpp
+    PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
+
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/logind-seat.h
   COMMAND

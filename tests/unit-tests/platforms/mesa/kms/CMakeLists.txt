@@ -21,6 +21,12 @@ mir_add_wrapped_executable(mir_unit_tests_mesa-kms NOINSTALL
   $<TARGET_OBJECTS:mir-umock-test-framework>
 )
 
+set_property(
+  SOURCE test_gbm_buffer.cpp test_platform.cpp test_graphics_platform.cpp test_buffer_allocator.cpp
+         test_display.cpp test_display_generic.cpp test_display_multi_monitor.cpp test_display_configuration.cpp
+         test_display_buffer.cpp test_drm_helper.cpp
+  PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
+
 add_dependencies(mir_unit_tests_mesa-kms GMock)
 
 target_link_libraries(
