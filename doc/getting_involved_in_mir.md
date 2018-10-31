@@ -35,7 +35,8 @@ You’ll need some development tools and packages installed:
     glib2-devel wayland-devel mesa-libgbm-devel libepoxy-devel nettle-devel \
     libinput-devel libxml++-devel libuuid-devel libxkbcommon-devel \
     freetype-devel lttng-ust-devel libatomic qterminal qt5-qtwayland \
-    python3-pillow libevdev-devel umockdev-devel gtest-devel gmock-devel
+    python3-pillow libevdev-devel umockdev-devel gtest-devel gmock-devel \
+    libXcursor-devel yaml-cpp-devel
 
 With these installed you can checkout Mir:
 
