@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 width=1920
 height=1080
 output=screencast.mp4

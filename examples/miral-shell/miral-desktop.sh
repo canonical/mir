@@ -1,4 +1,4 @@
-#!/usr/bin/env sh
+#!/usr/bin/env bash
 
 socket=${XDG_RUNTIME_DIR}/miral_socket
 wayland_display=miral_wayland
