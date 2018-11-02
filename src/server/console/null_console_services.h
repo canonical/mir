@@ -30,29 +30,27 @@ namespace mir
 class NullConsoleDevice : public Device
 {
 public:
-    NullConsoleDevice(VTFileOperations& fops, std::unique_ptr<mir::Device::Observer> observer, std::string const& dev);
-    void on_activated();
+    NullConsoleDevice(std::unique_ptr<mir::Device::Observer> observer);
+    void on_activated(mir::Fd&& fd);
     void on_suspended();
 
 private:
-    VTFileOperations& fops;
-    std::unique_ptr<mir::Device::Observer> observer;
-    std::string dev;
+    std::unique_ptr<mir::Device::Observer> const observer;
 };
 
 class NullConsoleServices : public ConsoleServices
 {
 public:
-    NullConsoleServices(std::shared_ptr<VTFileOperations> const& fops);
-    void register_switch_handlers(graphics::EventHandlerRegister&,
-                                  std::function<bool()> const&,
-                                  std::function<bool()> const&) override;
+    NullConsoleServices();
+    void register_switch_handlers(
+        graphics::EventHandlerRegister&,
+        std::function<bool()> const&,
+        std::function<bool()> const&) override;
     void restore() override;
     std::unique_ptr<VTSwitcher> create_vt_switcher() override;
-    std::future<std::unique_ptr<Device>> acquire_device(int, int, std::unique_ptr<Device::Observer>) override;
-
-private:
-    const std::shared_ptr<VTFileOperations> fops;
+    std::future<std::unique_ptr<Device>> acquire_device(
+        int major, int minor,
+        std::unique_ptr<Device::Observer>) override;
 };
 }  // namespace mir
 

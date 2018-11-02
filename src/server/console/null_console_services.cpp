@@ -31,16 +31,14 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-mir::NullConsoleDevice::NullConsoleDevice(VTFileOperations& fops,
-                                          std::unique_ptr<mir::Device::Observer> observer,
-                                          std::string const& dev)
-    : fops{fops}, observer{std::move(observer)}, dev{dev}
+mir::NullConsoleDevice::NullConsoleDevice(std::unique_ptr<mir::Device::Observer> observer)
+    : observer{std::move(observer)}
 {
 }
 
-void mir::NullConsoleDevice::on_activated()
+void mir::NullConsoleDevice::on_activated(mir::Fd&& fd)
 {
-    observer->activated(mir::Fd(fops.open(dev.c_str(), O_RDWR | O_CLOEXEC)));
+    observer->activated(std::move(fd));
 }
 
 void mir::NullConsoleDevice::on_suspended()
@@ -60,7 +58,7 @@ void mir::NullConsoleServices::restore()
     // no need to restore because we were never gone
 }
 
-mir::NullConsoleServices::NullConsoleServices(std::shared_ptr<VTFileOperations> const& vtops) : fops(vtops)
+mir::NullConsoleServices::NullConsoleServices()
 {
 }
 
@@ -69,19 +67,34 @@ std::unique_ptr<mir::VTSwitcher> mir::NullConsoleServices::create_vt_switcher()
     BOOST_THROW_EXCEPTION((std::runtime_error{"NullConsoleServices does not support VT switching"}));
 }
 
+namespace
+{
+mir::Fd checked_open(char const* filename, int flags, char const* exception_msg)
+{
+    mir::Fd fd{::open(filename, flags)};
+    if (fd == mir::Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION((
+            boost::enable_error_info(
+                std::system_error{
+                    errno,
+                    std::system_category(),
+                    exception_msg})
+                << boost::errinfo_file_name(filename)));
+    }
+    return fd;
+}
+}
+
 std::future<std::unique_ptr<mir::Device>> mir::NullConsoleServices::acquire_device(
     int major, int minor, std::unique_ptr<mir::Device::Observer> observer)
 {
     std::stringstream filename;
     filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
-    mir::Fd const fd{open(filename.str().c_str(), O_RDONLY | O_CLOEXEC)};
-
-    if (fd == mir::Fd::invalid)
-    {
-        BOOST_THROW_EXCEPTION((boost::enable_error_info(std::system_error{
-                                   errno, std::system_category(), "Failed to open /sys file to discover devnode"})
-                               << boost::errinfo_file_name(filename.str())));
-    }
+    auto const fd = checked_open(
+        filename.str().c_str(),
+        O_RDONLY | O_CLOEXEC,
+        "Failed to open /sys file to discover devnode");
 
     auto const devnode = [](auto const& fd) {
         using namespace boost::iostreams;
@@ -101,8 +114,15 @@ std::future<std::unique_ptr<mir::Device>> mir::NullConsoleServices::acquire_devi
     std::promise<std::unique_ptr<mir::Device>> device_promise;
     try
     {
-        auto device = std::make_unique<mir::NullConsoleDevice>(*fops, std::move(observer), devnode);
-        device->on_activated();
+        /* Ideally we would check DRM nodes for drmMaster, but there doesn't appear to be
+         * a way to do that!
+         */
+        auto device = std::make_unique<mir::NullConsoleDevice>(std::move(observer));
+        device->on_activated(
+            checked_open(
+                devnode.c_str(),
+                O_RDWR | O_CLOEXEC,
+                "Failed to open device node"));
         device_promise.set_value(std::move(device));
     }
     catch (std::exception const&)
