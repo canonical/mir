@@ -19,8 +19,6 @@
 #ifndef MIR_PLATFORM_PROGRAM_H_
 #define MIR_PLATFORM_PROGRAM_H_
 
-#include MIR_SERVER_GL_H
-
 namespace mir
 {
 namespace graphics
