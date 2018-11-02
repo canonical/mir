@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 
 qt_qpa=wayland
 gdk_backend=wayland,mir
