@@ -52,6 +52,20 @@ mir::PosixRWMutex::PosixRWMutex()
 
 mir::PosixRWMutex::PosixRWMutex(Type type)
 {
+    pthread_rwlockattr_t attr;
+    int err;
+
+    err = pthread_rwlockattr_init(&attr);
+    if (err != 0)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{
+            err,
+            std::system_category(),
+            "Failed to init pthread attrs"}));
+    }
+
+// pthread_rwlockattr_setkind_np() does not exist on e.g. musl
+#if  _XOPEN_SOURCE >= 500 || _POSIX_C_SOURCE >= 200809L
     int pthread_type;
     switch(type)
     {
@@ -78,17 +92,6 @@ mir::PosixRWMutex::PosixRWMutex(Type type)
 #endif
     }
 
-    pthread_rwlockattr_t attr;
-    int err;
-
-    err = pthread_rwlockattr_init(&attr);
-    if (err != 0)
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{
-            err,
-            std::system_category(),
-            "Failed to init pthread attrs"}));
-    }
     err = pthread_rwlockattr_setkind_np(&attr, pthread_type);
     if (err != 0)
     {
@@ -97,6 +100,8 @@ mir::PosixRWMutex::PosixRWMutex(Type type)
             std::system_category(),
             "Failed to set preferred rw-lock mode"}));
     }
+#endif
+
     err = pthread_rwlock_init(&mutex, &attr);
     if (err != 0)
     {
