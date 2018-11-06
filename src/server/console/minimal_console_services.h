@@ -16,8 +16,8 @@
  * Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#ifndef MIR_NULL_CONSOLE_SERVICES_H_
-#define MIR_NULL_CONSOLE_SERVICES_H_
+#ifndef MIR_MINIMAL_CONSOLE_SERVICES_H_
+#define MIR_MINIMAL_CONSOLE_SERVICES_H_
 
 #include "linux_virtual_terminal.h"
 #include "mir/console_services.h"
@@ -27,10 +27,10 @@
 
 namespace mir
 {
-class NullConsoleDevice : public Device
+class MinimalConsoleDevice : public Device
 {
 public:
-    NullConsoleDevice(std::unique_ptr<mir::Device::Observer> observer);
+    MinimalConsoleDevice(std::unique_ptr<mir::Device::Observer> observer);
     void on_activated(mir::Fd&& fd);
     void on_suspended();
 
@@ -38,10 +38,10 @@ private:
     std::unique_ptr<mir::Device::Observer> const observer;
 };
 
-class NullConsoleServices : public ConsoleServices
+class MinimalConsoleServices : public ConsoleServices
 {
 public:
-    NullConsoleServices();
+    MinimalConsoleServices();
     void register_switch_handlers(
         graphics::EventHandlerRegister&,
         std::function<bool()> const&,
@@ -54,4 +54,4 @@ public:
 };
 }  // namespace mir
 
-#endif /* MIR_NULL_CONSOLE_SERVICES_H_ */
+#endif /* MIR_MINIMAL_CONSOLE_SERVICES_H_ */

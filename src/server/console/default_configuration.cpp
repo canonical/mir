@@ -23,7 +23,7 @@
 #include "mir/glib_main_loop.h"
 #include "mir/abnormal_exit.h"
 
-#include "null_console_services.h"
+#include "minimal_console_services.h"
 #include "linux_virtual_terminal.h"
 #include "logind_console_services.h"
 
@@ -149,7 +149,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                 []()
                 {
                     mir::log_debug("No session management supported");
-                    return std::make_shared<mir::NullConsoleServices>();
+                    return std::make_shared<mir::MinimalConsoleServices>();
                 };
 
             if (provider == options::auto_console)

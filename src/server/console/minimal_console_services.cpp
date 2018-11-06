@@ -17,7 +17,7 @@
  *              Alexandros Frantzis <alexandros.frantzis@canonical.com>
  */
 
-#include "null_console_services.h"
+#include "minimal_console_services.h"
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/exception/errinfo_file_name.hpp>
@@ -31,40 +31,41 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-mir::NullConsoleDevice::NullConsoleDevice(std::unique_ptr<mir::Device::Observer> observer)
+mir::MinimalConsoleDevice::MinimalConsoleDevice(std::unique_ptr<mir::Device::Observer> observer)
     : observer{std::move(observer)}
 {
 }
 
-void mir::NullConsoleDevice::on_activated(mir::Fd&& fd)
+void mir::MinimalConsoleDevice::on_activated(mir::Fd&& fd)
 {
     observer->activated(std::move(fd));
 }
 
-void mir::NullConsoleDevice::on_suspended()
+void mir::MinimalConsoleDevice::on_suspended()
 {
     observer->suspended();
 }
 
-void mir::NullConsoleServices::register_switch_handlers(graphics::EventHandlerRegister&,
-                                                        std::function<bool()> const&,
-                                                        std::function<bool()> const&)
+void mir::MinimalConsoleServices::register_switch_handlers(
+    graphics::EventHandlerRegister&,
+    std::function<bool()> const&,
+    std::function<bool()> const&)
 {
     // do nothing since we do not switch away
 }
 
-void mir::NullConsoleServices::restore()
+void mir::MinimalConsoleServices::restore()
 {
     // no need to restore because we were never gone
 }
 
-mir::NullConsoleServices::NullConsoleServices()
+mir::MinimalConsoleServices::MinimalConsoleServices()
 {
 }
 
-std::unique_ptr<mir::VTSwitcher> mir::NullConsoleServices::create_vt_switcher()
+std::unique_ptr<mir::VTSwitcher> mir::MinimalConsoleServices::create_vt_switcher()
 {
-    BOOST_THROW_EXCEPTION((std::runtime_error{"NullConsoleServices does not support VT switching"}));
+    BOOST_THROW_EXCEPTION((std::runtime_error{"MinimalConsoleServices does not support VT switching"}));
 }
 
 namespace
@@ -86,7 +87,7 @@ mir::Fd checked_open(char const* filename, int flags, char const* exception_msg)
 }
 }
 
-std::future<std::unique_ptr<mir::Device>> mir::NullConsoleServices::acquire_device(
+std::future<std::unique_ptr<mir::Device>> mir::MinimalConsoleServices::acquire_device(
     int major, int minor, std::unique_ptr<mir::Device::Observer> observer)
 {
     std::stringstream filename;
@@ -117,7 +118,7 @@ std::future<std::unique_ptr<mir::Device>> mir::NullConsoleServices::acquire_devi
         /* Ideally we would check DRM nodes for drmMaster, but there doesn't appear to be
          * a way to do that!
          */
-        auto device = std::make_unique<mir::NullConsoleDevice>(std::move(observer));
+        auto device = std::make_unique<mir::MinimalConsoleDevice>(std::move(observer));
         device->on_activated(
             checked_open(
                 devnode.c_str(),
