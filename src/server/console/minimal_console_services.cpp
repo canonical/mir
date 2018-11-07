@@ -123,7 +123,7 @@ std::future<std::unique_ptr<mir::Device>> mir::MinimalConsoleServices::acquire_d
          */
         auto fd = checked_open(
             devnode.c_str(),
-            O_RDWR | O_CLOEXEC,
+            O_RDWR | O_CLOEXEC | O_NONBLOCK,
             "Failed to open device node");
 
         if (major == 226)

@@ -277,3 +277,49 @@ TEST_F(MinimalConsoleServicesTest, failure_to_open_sys_file_results_in_immediate
     EXPECT_TRUE(exception_caught);
 }
 
+namespace
+{
+MATCHER_P(FlagIsSet, flag, "")
+{
+    return (arg & flag) == flag;
+}
+}
+
+TEST_F(MinimalConsoleServicesTest, opens_input_devices_in_nonblocking_mode)
+{
+    char const* device_path = "/dev/input/event22";
+    set_expectations_for_uevent_probe_of_device(33, 22, device_path);
+
+    auto open_handler = mtf::add_open_handler(
+        [device_path, fd = mir::Fd{::open("/dev/null", O_RDWR)}](
+            char const* path,
+            int flags,
+            mode_t) -> std::experimental::optional<int>
+        {
+            if (strcmp(path, device_path))
+            {
+                return {};
+            }
+
+            EXPECT_THAT(flags, FlagIsSet(O_RDWR));
+            EXPECT_THAT(flags, FlagIsSet(O_CLOEXEC));
+            EXPECT_THAT(flags, FlagIsSet(O_NONBLOCK));
+
+            return fd;
+        });
+
+    mir::MinimalConsoleServices services;
+    bool activated{false};
+    auto observer = std::make_unique<mtd::SimpleDeviceObserver>(
+        [&activated](auto&& fd)
+        {
+            EXPECT_THAT(fd, Not(Eq(mir::Fd::invalid)));
+            activated = true;
+        },
+        [](){},
+        [](){});
+
+    services.acquire_device(33, 22, std::move(observer));
+
+    EXPECT_TRUE(activated);
+}
