@@ -121,9 +121,12 @@ std::future<std::unique_ptr<mir::Device>> mir::MinimalConsoleServices::acquire_d
         /* Ideally we would check DRM nodes for drmMaster, but there doesn't appear to be
          * a way to do that!
          */
+        auto const open_flags = O_RDWR | O_CLOEXEC |
+            ((major == 226) ? 0 : O_NONBLOCK);
+
         auto fd = checked_open(
             devnode.c_str(),
-            O_RDWR | O_CLOEXEC | O_NONBLOCK,
+            open_flags,
             "Failed to open device node");
 
         if (major == 226)
