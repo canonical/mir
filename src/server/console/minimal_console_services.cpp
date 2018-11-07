@@ -19,6 +19,8 @@
 
 #include "minimal_console_services.h"
 
+#include "mir/log.h"
+
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/exception/errinfo_file_name.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
@@ -27,6 +29,7 @@
 
 #include <sstream>
 
+#include <xf86drm.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -118,12 +121,31 @@ std::future<std::unique_ptr<mir::Device>> mir::MinimalConsoleServices::acquire_d
         /* Ideally we would check DRM nodes for drmMaster, but there doesn't appear to be
          * a way to do that!
          */
+        auto fd = checked_open(
+            devnode.c_str(),
+            O_RDWR | O_CLOEXEC,
+            "Failed to open device node");
+
+        if (major == 226)
+        {
+            /*
+             * Try to acquire DRM Master, but only warn if we fail:
+             * If there is no current DRM master then we'll get master when we open
+             * the device node, but drmSetMaster will still fail if we're not root.
+             */
+            if (auto ret = drmSetMaster(fd))
+            {
+                mir::log(
+                    mir::logging::Severity::warning,
+                    "MinimalConsoleServices",
+                    "Failed to acquire DRM master: %s (%i))",
+                    strerror(-ret),
+                    -ret);
+            }
+        }
+
         auto device = std::make_unique<mir::MinimalConsoleDevice>(std::move(observer));
-        device->on_activated(
-            checked_open(
-                devnode.c_str(),
-                O_RDWR | O_CLOEXEC,
-                "Failed to open device node"));
+        device->on_activated(std::move(fd));
         device_promise.set_value(std::move(device));
     }
     catch (std::exception const&)
