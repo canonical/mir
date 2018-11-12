@@ -400,7 +400,7 @@ bool get_wl_y_inverted(wl_resource* resource, mg::EGLExtensions::WaylandExtensio
     return inverted;
 }
 
-bool get_wl_egl_format(wl_resource* resource, mg::EGLExtensions::WaylandExtensions const& ext)
+EGLint get_wl_egl_format(wl_resource* resource, mg::EGLExtensions::WaylandExtensions const& ext)
 {
     EGLint format;
     auto dpy = eglGetCurrentDisplay();
