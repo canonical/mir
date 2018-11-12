@@ -363,9 +363,8 @@ std::vector<MirPixelFormat> mgm::BufferAllocator::supported_pixel_formats()
 
 namespace
 {
-GLuint get_tex_id(mir::renderer::gl::Context& ctx)
+GLuint get_tex_id()
 {
-    ctx.make_current();
     GLuint tex;
     glGenTextures(1, &tex);
     return tex;
@@ -419,6 +418,7 @@ class WaylandTexBuffer :
     public mg::gl::Texture
 {
 public:
+    // Note: Must be called with a current EGL context
     WaylandTexBuffer(
         std::shared_ptr<mir::renderer::gl::Context> ctx,
         wl_resource* buffer,
@@ -426,7 +426,7 @@ public:
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release)
         : ctx{std::move(ctx)},
-          tex{get_tex_id(*this->ctx)},
+          tex{get_tex_id()},
           on_consumed{std::move(on_consumed)},
           on_release{std::move(on_release)},
           // These constructors rely on get_tex_id having bound ctx as current.
