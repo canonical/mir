@@ -535,15 +535,27 @@ void miral::BasicWindowManager::focus_next_application()
             }
             while (focus_controller->focused_session() != prev.application());
         }
+        else
+        {
+            do
+            {
+                focus_controller->focus_next_session();
 
+                if (can_activate_window_for_session(focus_controller->focused_session()))
+                    return;
+            }
+            while (focus_controller->focused_session() != prev.application());
+        }
+    }
+    else
+    {
+        focus_controller->focus_next_session();
+
+        if (can_activate_window_for_session(focus_controller->focused_session()))
+            return;
     }
 
-    focus_controller->focus_next_session();
-
-    if (can_activate_window_for_session(focus_controller->focused_session()))
-        return;
-
-    // Last resort: accept wherever focus_controller placed focus
+    // Last resort: accept wherever focus_controller places focus
     auto const focussed_surface = focus_controller->focused_surface();
     select_active_window(focussed_surface ? info_for(focussed_surface).window() : Window{});
 }
