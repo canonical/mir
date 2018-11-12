@@ -31,6 +31,7 @@
 #pragma GCC diagnostic pop
 
 #include <EGL/egl.h>
+#include <wayland-server-core.h>
 
 #include <memory>
 
@@ -84,6 +85,7 @@ private:
         graphics::BufferProperties const& buffer_properties);
 
     std::shared_ptr<renderer::gl::Context> const ctx;
+    wl_event_loop* event_loop;
     gbm_device* const device;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 

@@ -424,7 +424,8 @@ public:
         wl_resource* buffer,
         mg::EGLExtensions const& extensions,
         std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release)
+        std::function<void()>&& on_release,
+        wl_event_loop* event_loop)
         : ctx{std::move(ctx)},
           tex{get_tex_id()},
           on_consumed{std::move(on_consumed)},
@@ -432,7 +433,8 @@ public:
           // These constructors rely on get_tex_id having bound ctx as current.
           size_{get_wl_buffer_size(buffer, *extensions.wayland)},
           y_inverted_{get_wl_y_inverted(buffer, *extensions.wayland)},
-          egl_format{get_wl_egl_format(buffer, *extensions.wayland)}
+          egl_format{get_wl_egl_format(buffer, *extensions.wayland)},
+          event_loop{event_loop}
     {
         if (egl_format != EGL_TEXTURE_RGB && egl_format != EGL_TEXTURE_RGBA)
         {
@@ -466,13 +468,25 @@ public:
 
     ~WaylandTexBuffer()
     {
-        // TODO: We should really defer this to the Wayland main loop…
-        auto context_guard = mir::raii::paired_calls(
-            [this]() { ctx->make_current(); },
-            [this]() { ctx->release_current(); });
+        struct DestroyData
+        {
+            std::shared_ptr<mir::renderer::gl::Context> ctx;
+            GLuint tex;
+        };
+        wl_event_loop_add_idle(
+            event_loop,
+            [](void* event_data)
+            {
+                auto const data = std::unique_ptr<DestroyData>{static_cast<DestroyData*>(event_data)};
+                data->ctx->make_current();
+
+                glDeleteTextures(1, &data->tex);
+
+                data->ctx->release_current();
+            },
+            new DestroyData { ctx, tex });
 
         on_release();
-        glDeleteTextures(1, &tex);
     }
 
     std::shared_ptr<mir::graphics::NativeBuffer> native_buffer_handle() const override
@@ -559,6 +573,8 @@ private:
     geom::Size const size_;
     bool const y_inverted_;
     EGLint const egl_format;
+
+    wl_event_loop* const event_loop;
 };
 }
 
@@ -582,6 +598,7 @@ void mgm::BufferAllocator::bind_display(wl_display* display)
     {
         mir::log_info("Bound WaylandAllocator display");
     }
+    event_loop = wl_display_get_event_loop(display);
 }
 
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource(
@@ -598,5 +615,6 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource(
         buffer,
         *egl_extensions,
         std::move(on_consumed),
-        std::move(on_release));
+        std::move(on_release),
+        event_loop);
 }
