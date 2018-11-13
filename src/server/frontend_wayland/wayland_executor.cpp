@@ -33,7 +33,7 @@
 
 namespace mf = mir::frontend;
 
-mf::WaylandExecutor::WaylandExecutor(wl_display* display)
+mf::WaylandExecutor::WaylandExecutor(wl_event_loop* loop)
     : notify_fd{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE | EFD_NONBLOCK)}
 {
     if (notify_fd == mir::Fd::invalid)
@@ -43,16 +43,7 @@ mf::WaylandExecutor::WaylandExecutor(wl_display* display)
             std::system_category(),
             "Failed to create IPC pause notification eventfd"}));
     }
-    if (!display)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Invalid wl_display"}));
-    }
-    wl_event_loop_add_fd(
-        wl_display_get_event_loop(display),
-        notify_fd,
-        WL_EVENT_READABLE,
-        &WaylandExecutor::on_notify,
-        this);
+    wl_event_loop_add_fd(loop, notify_fd, WL_EVENT_READABLE, &WaylandExecutor::on_notify, this);
 }
 
 mf::WaylandExecutor::~WaylandExecutor() = default;

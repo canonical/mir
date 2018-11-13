@@ -35,7 +35,7 @@ namespace frontend
 class WaylandExecutor : public Executor
 {
 public:
-    explicit WaylandExecutor(wl_display* display);
+    explicit WaylandExecutor(wl_event_loop* loop);
     ~WaylandExecutor();
 
     void spawn(std::function<void()>&& work) override;

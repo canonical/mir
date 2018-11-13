@@ -595,7 +595,7 @@ mf::WaylandConnector::WaylandConnector(
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       allocator{allocator_for_display(allocator, display.get())},
       extensions{std::move(extensions_)},
-      executor{std::make_shared<WaylandExecutor>(display.get())}
+      executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))}
 {
     if (pause_signal == mir::Fd::invalid)
     {

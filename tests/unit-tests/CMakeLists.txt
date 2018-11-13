@@ -38,7 +38,7 @@ include_directories(
   ${GIO_INCLUDE_DIRS}
 )
 
-add_library(example SHARED library_example.cpp)
+add_library(example SHARED library_example.cpp wayland/test_wayland_executor.cpp)
 target_link_libraries(example mircommon)
 set_target_properties(
   example PROPERTIES
@@ -99,6 +99,7 @@ add_subdirectory(scene/)
 add_subdirectory(thread/)
 add_subdirectory(dispatch/)
 add_subdirectory(renderers/gl)
+add_subdirectory(wayland/)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
@@ -144,6 +145,7 @@ target_link_libraries(
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
   ${Boost_LIBRARIES}
+  ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
