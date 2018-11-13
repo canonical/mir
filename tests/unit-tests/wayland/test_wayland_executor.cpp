@@ -24,6 +24,7 @@
 #include <wayland-server-core.h>
 
 #include "mir/test/fd_utils.h"
+#include "mir/test/auto_unblock_thread.h"
 
 namespace mt = mir::test;
 namespace mf = mir::frontend;
@@ -79,4 +80,82 @@ TEST_F(WaylandExecutorTest, dispatching_the_event_loop_dispatches_spawned_task)
     }
 
     EXPECT_TRUE(executed);
+}
+
+TEST_F(WaylandExecutorTest, can_spawn_more_tasks_from_a_task)
+{
+    using namespace std::literals::chrono_literals;
+
+    mf::WaylandExecutor executor{the_event_loop};
+
+    bool inner_executed{false};
+    executor.spawn(
+        [&executor, &inner_executed]()
+        {
+            executor.spawn([&inner_executed]() { inner_executed = true; });
+        });
+
+    while (mt::fd_is_readable(event_loop_fd))
+    {
+        wl_event_loop_dispatch(the_event_loop, 0);
+    }
+
+    EXPECT_TRUE(inner_executed);
+}
+
+TEST_F(WaylandExecutorTest, can_destroy_exectuor_from_spawned_task)
+{
+    using namespace std::literals::chrono_literals;
+
+    auto executor = new mf::WaylandExecutor{the_event_loop};
+
+    bool executed{false};
+    executor->spawn(
+        [executor, &executed]()
+        {
+            executed = true;
+            delete executor;
+        });
+
+    while (mt::fd_is_readable(event_loop_fd))
+    {
+        wl_event_loop_dispatch(the_event_loop, 0);
+    }
+
+    EXPECT_TRUE(executed);
+}
+
+TEST_F(WaylandExecutorTest, spawning_is_threadsafe)
+{
+    using namespace std::literals::chrono_literals;
+
+    auto executor = std::make_shared<mf::WaylandExecutor>(the_event_loop);
+
+    int const thread_count{100};
+    int counter{0};
+    std::vector<mt::AutoJoinThread> threads;
+
+    // Spawn the threads from the wayland loop, to ensure it's started…
+    executor->spawn(
+        [executor, &threads, &counter]()
+        {
+            for (auto i = 0u ; i < thread_count ; ++i)
+            {
+                threads.emplace_back(
+                    mt::AutoJoinThread{
+                        [executor, &counter]()
+                        {
+                            // These calls should all be serialised onto the wayland loop,
+                            // so no need for atomics or mutexes…
+                            executor->spawn([&counter]() { ++counter; });
+                        }});
+            }
+        });
+
+    while (mt::fd_becomes_readable(event_loop_fd, 1s))
+    {
+        wl_event_loop_dispatch(the_event_loop, 0);
+    }
+
+    EXPECT_THAT(counter, Eq(thread_count));
 }
