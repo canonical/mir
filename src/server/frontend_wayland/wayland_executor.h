@@ -20,25 +20,34 @@
 #define MIR_FRONTEND_EXECUTOR_H
 
 #include "mir/executor.h"
+#include "mir/fd.h"
 
 #include <wayland-server-core.h>
 
+#include <mutex>
 #include <memory>
+#include <deque>
 
 namespace mir
 {
 namespace frontend
 {
-/**
- * Get an Executor which dispatches onto a wl_event_loop
- *
- * \note    The executor may outlive the wl_event_loop, but no tasks will be dispatched
- *          after the wl_event_loop is destroyed.
- *
- * \param [in]  loop    The event loop to dispatch on
- * \return              An Executor that queues onto the wl_event_loop
- */
-std::shared_ptr<mir::Executor> executor_for_event_loop(wl_event_loop* loop);
+class WaylandExecutor : public Executor
+{
+public:
+    explicit WaylandExecutor(wl_display* display);
+    ~WaylandExecutor();
+
+    void spawn(std::function<void()>&& work) override;
+
+private:
+    std::function<void()> get_work();
+    static int on_notify(int fd, uint32_t, void* data);
+
+    mir::Fd const notify_fd;
+    std::mutex mutex;
+    std::deque<std::function<void()>> workqueue;
+};
 }
 }
 
