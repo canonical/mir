@@ -48,6 +48,13 @@ namespace mf = mir::frontend;
 
 class mf::WaylandExecutor::State
 {
+private:
+    enum class ExecutionState
+    {
+        Running,
+        TerminationRequested,
+        Stopped
+    };
 public:
     explicit State(wl_event_loop* loop)
         : loop{loop}
@@ -57,12 +64,22 @@ public:
     void enqueue(std::function<void()>&& work)
     {
         std::lock_guard<std::mutex> lock{mutex};
-        if (!terminated)
+        if (state == ExecutionState::Running)
         {
             workqueue.emplace_back(std::move(work));
         }
         // If we've been terminated then drop the work on the floor, letting the
         // std::function destructor clean up any necessary state.
+    }
+
+    void enqueue_termination(std::function<void()>&& terminator)
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        if (state == ExecutionState::Running)
+        {
+            workqueue.emplace_front(std::move(terminator));
+            state = ExecutionState::TerminationRequested;
+        }
     }
 
     std::function<void()> get_work()
@@ -80,28 +97,22 @@ public:
     std::unique_lock<std::mutex> drain()
     {
         std::unique_lock<std::mutex> lock{mutex};
-        while (!workqueue.empty())
-        {
-            auto const work = std::move(workqueue.front());
-            lock.unlock();
 
-            try
+        if (state == ExecutionState::TerminationRequested)
+        {
+            // If we've been asked to terminate then the front of the workqueue
+            // will contain the termination request.
             {
-                workqueue.pop_front();
+                std::function<void()> const work = std::move(workqueue.front());
+                lock.unlock();
+
                 work();
             }
-            catch (...)
-            {
-                mir::log(
-                    mir::logging::Severity::critical,
-                    MIR_LOG_COMPONENT,
-                    std::current_exception(),
-                    "Exception processing Wayland event loop work item during shutdown");
-            }
-
             lock.lock();
         }
-        terminated = true;
+
+        state = ExecutionState::Stopped;
+        workqueue.empty();
 
         return lock;
     }
@@ -109,7 +120,7 @@ public:
     static int on_notify(int fd, uint32_t, void* data);
 private:
     std::mutex mutex;
-    bool terminated{false};
+    ExecutionState state{ExecutionState::Running};
     wl_event_loop* const loop;
     std::deque<std::function<void()>> workqueue;
 };
@@ -221,7 +232,7 @@ int mf::WaylandExecutor::State::on_notify(int fd, uint32_t, void* data)
                 "Exception processing Wayland event loop work item");
         }
     }
-    if (state->terminated)
+    if (state->state != ExecutionState::Running)
     {
         EventLoopDestroyedHandler::remove_destruction_handler_for_loop(state->loop);
     }
@@ -277,10 +288,9 @@ mf::WaylandExecutor::~WaylandExecutor()
         [state_holder = std::move(state), source = this->source]()
         {
             wl_event_source_remove(source);
-            state_holder->drain();
         };
 
-    raw_state->enqueue(std::move(cleanup_functor));
+    raw_state->enqueue_termination(std::move(cleanup_functor));
 
     if (auto err = eventfd_write(notify_fd, 1))
     {
