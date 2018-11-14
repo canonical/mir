@@ -33,6 +33,18 @@
 
 namespace mf = mir::frontend;
 
+/*
+ * Theory of execution:
+ *
+ * Like many interactions with Wayland API we have the problem that we can only
+ * call Wayland functions on the mainloop thread *and* that the Wayland objects
+ * can be destroyed from underneath the wrappers.
+ *
+ * The solution we use here is to share ownership of the workqueue between the
+ * wl_event_source and the WaylandExecutor. WaylandExecutor can then always
+ * enqueue new work, even if no more work is going to be processed, and the work
+ * processing function always has a reference to the workqueue state.
+ */
 
 class mf::WaylandExecutor::State
 {
@@ -245,6 +257,21 @@ mf::WaylandExecutor::WaylandExecutor(wl_event_loop* loop)
 
 mf::WaylandExecutor::~WaylandExecutor()
 {
+    /*
+     * We need to move state into the functor; the destruction machinery relies
+     * on WaylandExecutor *not* having a ref on state to determine whether or not
+     * to unregister the source itself.
+     *
+     * If we enqueue the work before dropping WaylandExecutors' ref there's a potential
+     * race in destruction:
+     * T1:  enqueue(cleanup_functor) adds the functor to the queue.
+     * T2:  The wl_event_loop is destroyed, calling EventLoopDestroyedHandler::on_destroyed()
+     * T2:  on_destroyed() drains the workqueue, calling cleanup_functor() and so unregistering
+     *      the source.
+     * T2: on_destroyed() checks the refcount of work_queue, finding that it's not unique.
+     * T2: on_destroyed() unregisters the source, causing a double-free
+     * T1: ~WaylandExecutor completes, dropping the ref on the work queue.
+     */
     auto const raw_state = state.get();
     auto cleanup_functor =
         [state_holder = std::move(state), source = this->source]()
