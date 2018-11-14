@@ -33,6 +33,7 @@ add_library(mirplatform SHARED
 
   ${PROJECT_SOURCE_DIR}/include/platform/mir/input/input_sink.h
   ${PROJECT_SOURCE_DIR}/include/platform/mir/console_services.h
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/executor.h
 )
 
 target_link_libraries(mirplatform
