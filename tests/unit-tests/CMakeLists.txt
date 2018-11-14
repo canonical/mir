@@ -38,7 +38,7 @@ include_directories(
   ${GIO_INCLUDE_DIRS}
 )
 
-add_library(example SHARED library_example.cpp wayland/test_wayland_executor.cpp)
+add_library(example SHARED library_example.cpp)
 target_link_libraries(example mircommon)
 set_target_properties(
   example PROPERTIES
