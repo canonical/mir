@@ -35,6 +35,7 @@
 #include "mir/renderer/gl/context.h"
 #include "mir/graphics/program_factory.h"
 #include "mir/graphics/program.h"
+#include "mir/executor.h"
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -425,16 +426,15 @@ public:
         mg::EGLExtensions const& extensions,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release,
-        wl_event_loop* event_loop)
+        std::shared_ptr<mir::Executor> wayland_executor)
         : ctx{std::move(ctx)},
           tex{get_tex_id()},
           on_consumed{std::move(on_consumed)},
           on_release{std::move(on_release)},
-          // These constructors rely on get_tex_id having bound ctx as current.
           size_{get_wl_buffer_size(buffer, *extensions.wayland)},
           y_inverted_{get_wl_y_inverted(buffer, *extensions.wayland)},
           egl_format{get_wl_egl_format(buffer, *extensions.wayland)},
-          event_loop{event_loop}
+          wayland_executor{std::move(wayland_executor)}
     {
         if (egl_format != EGL_TEXTURE_RGB && egl_format != EGL_TEXTURE_RGBA)
         {
@@ -468,23 +468,15 @@ public:
 
     ~WaylandTexBuffer()
     {
-        struct DestroyData
-        {
-            std::shared_ptr<mir::renderer::gl::Context> ctx;
-            GLuint tex;
-        };
-        wl_event_loop_add_idle(
-            event_loop,
-            [](void* event_data)
+        wayland_executor->spawn(
+            [context = ctx, tex = tex]()
             {
-                auto const data = std::unique_ptr<DestroyData>{static_cast<DestroyData*>(event_data)};
-                data->ctx->make_current();
+                context->make_current();
 
-                glDeleteTextures(1, &data->tex);
+                glDeleteTextures(1, &tex);
 
-                data->ctx->release_current();
-            },
-            new DestroyData { ctx, tex });
+                context->release_current();
+            });
 
         on_release();
     }
@@ -574,11 +566,11 @@ private:
     bool const y_inverted_;
     EGLint const egl_format;
 
-    wl_event_loop* const event_loop;
+    std::shared_ptr<mir::Executor> const wayland_executor;
 };
 }
 
-void mgm::BufferAllocator::bind_display(wl_display* display)
+void mgm::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor)
 {
     auto context_guard = mir::raii::paired_calls(
         [this]() { ctx->make_current(); },
@@ -598,7 +590,7 @@ void mgm::BufferAllocator::bind_display(wl_display* display)
     {
         mir::log_info("Bound WaylandAllocator display");
     }
-    event_loop = wl_display_get_event_loop(display);
+    this->wayland_executor = std::move(wayland_executor);
 }
 
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource(
@@ -616,5 +608,5 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::buffer_from_resource(
         *egl_extensions,
         std::move(on_consumed),
         std::move(on_release),
-        event_loop);
+        wayland_executor);
 }

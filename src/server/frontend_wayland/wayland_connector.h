@@ -117,10 +117,10 @@ private:
     std::unique_ptr<WlSubcompositor> subcompositor_global;
     std::unique_ptr<WlSeat> seat_global;
     std::unique_ptr<OutputManager> output_manager;
-    std::shared_ptr<graphics::WaylandAllocator> const allocator;
     std::unique_ptr<DataDeviceManager> data_device_manager_global;
-    std::unique_ptr<WaylandExtensions> const extensions;
     std::shared_ptr<Executor> const executor;
+    std::shared_ptr<graphics::WaylandAllocator> const allocator;
+    std::unique_ptr<WaylandExtensions> const extensions;
     std::thread dispatch_thread;
     wl_event_source* pause_source;
     std::string wayland_display;
