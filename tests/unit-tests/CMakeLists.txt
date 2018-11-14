@@ -99,6 +99,7 @@ add_subdirectory(scene/)
 add_subdirectory(thread/)
 add_subdirectory(dispatch/)
 add_subdirectory(renderers/gl)
+add_subdirectory(wayland/)
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
@@ -144,6 +145,7 @@ target_link_libraries(
   ${GTEST_BOTH_LIBRARIES}
   ${GMOCK_LIBRARIES}
   ${Boost_LIBRARIES}
+  ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 

@@ -31,61 +31,60 @@
 #include <mutex>
 #include <system_error>
 
-namespace
+namespace mf = mir::frontend;
+
+/*
+ * Theory of execution:
+ *
+ * Like many interactions with Wayland API we have the problem that we can only
+ * call Wayland functions on the mainloop thread *and* that the Wayland objects
+ * can be destroyed from underneath the wrappers.
+ *
+ * The solution we use here is to share ownership of the workqueue between the
+ * wl_event_source and the WaylandExecutor. WaylandExecutor can then always
+ * enqueue new work, even if no more work is going to be processed, and the work
+ * processing function always has a reference to the workqueue state.
+ */
+
+class mf::WaylandExecutor::State
 {
-class WaylandExecutor : public mir::Executor
-{
-public:
-    void spawn (std::function<void ()>&& work) override
+private:
+    enum class ExecutionState
     {
+        Running,
+        TerminationRequested,
+        Stopped
+    };
+public:
+    explicit State(wl_event_loop* loop)
+        : loop{loop}
+    {
+    }
+
+    void enqueue(std::function<void()>&& work)
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        if (state == ExecutionState::Running)
         {
-            std::lock_guard<std::recursive_mutex> lock{mutex};
             workqueue.emplace_back(std::move(work));
         }
-        if (auto err = eventfd_write(notify_fd, 1))
-        {
-            BOOST_THROW_EXCEPTION((std::system_error{err, std::system_category(), "eventfd_write failed to notify event loop"}));
-        }
+        // If we've been terminated then drop the work on the floor, letting the
+        // std::function destructor clean up any necessary state.
     }
 
-    static std::shared_ptr<mir::Executor> executor_for_event_loop(wl_event_loop* loop)
+    void enqueue_termination(std::function<void()>&& terminator)
     {
-        if (auto notifier = wl_event_loop_get_destroy_listener(loop, &on_display_destruction))
+        std::lock_guard<std::mutex> lock{mutex};
+        if (state == ExecutionState::Running)
         {
-            DestructionShim* shim;
-            shim = wl_container_of(notifier, shim, destruction_listener);
-
-            return shim->executor;
-        }
-        else
-        {
-            auto const executor = std::shared_ptr<WaylandExecutor>{new WaylandExecutor{loop}};
-            auto shim = std::make_unique<DestructionShim>(executor);
-
-            shim->destruction_listener.notify = &on_display_destruction;
-            wl_event_loop_add_destroy_listener(loop, &(shim.release())->destruction_listener);
-
-            return executor;
-        }
-    }
-
-private:
-    WaylandExecutor(wl_event_loop* loop)
-        : notify_fd{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE | EFD_NONBLOCK)},
-        notify_source{wl_event_loop_add_fd(loop, notify_fd, WL_EVENT_READABLE, &on_notify, this)}
-    {
-        if (notify_fd == mir::Fd::invalid)
-        {
-            BOOST_THROW_EXCEPTION((std::system_error{
-                errno,
-                std::system_category(),
-                "Failed to create IPC pause notification eventfd"}));
+            workqueue.emplace_front(std::move(terminator));
+            state = ExecutionState::TerminationRequested;
         }
     }
 
     std::function<void()> get_work()
     {
-        std::lock_guard<std::recursive_mutex> lock{mutex};
+        std::lock_guard<std::mutex> lock{mutex};
         if (!workqueue.empty())
         {
             auto const work = std::move(workqueue.front());
@@ -95,73 +94,221 @@ private:
         return {};
     }
 
-    static int on_notify(int fd, uint32_t, void* data)
+    std::unique_lock<std::mutex> drain()
     {
-        auto executor = static_cast<WaylandExecutor*>(data);
+        std::unique_lock<std::mutex> lock{mutex};
 
-        eventfd_t unused;
-        if (auto err = eventfd_read(fd, &unused))
+        if (state == ExecutionState::TerminationRequested)
         {
-            mir::log_error(
-                "eventfd_read failed to consume wakeup notification: %s (%i)",
-                strerror(err),
-                err);
-        }
-
-        while (auto work = executor->get_work())
-        {
-            try
+            // If we've been asked to terminate then the front of the workqueue
+            // will contain the termination request.
             {
+                std::function<void()> const work = std::move(workqueue.front());
+                lock.unlock();
+
                 work();
             }
-            catch(...)
+            lock.lock();
+        }
+
+        state = ExecutionState::Stopped;
+        workqueue.empty();
+
+        return lock;
+    }
+
+    static int on_notify(int fd, uint32_t, void* data);
+private:
+    std::mutex mutex;
+    ExecutionState state{ExecutionState::Running};
+    wl_event_loop* const loop;
+    std::deque<std::function<void()>> workqueue;
+};
+
+namespace
+{
+class EventLoopDestroyedHandler
+{
+public:
+    static void setup_destruction_handler_for_loop(
+        wl_event_loop* loop,
+        wl_event_source* source,
+        std::shared_ptr<mf::WaylandExecutor::State> state)
+    {
+        new EventLoopDestroyedHandler(loop, source, std::move(state));
+    }
+
+    static void remove_destruction_handler_for_loop(
+        wl_event_loop* loop)
+    {
+        auto listener =
+            wl_event_loop_get_destroy_listener(loop, &EventLoopDestroyedHandler::on_destroyed);
+
+        EventLoopDestroyedHandler* me;
+        me = wl_container_of(listener, me, destruction_listener);
+        delete me;
+
+        wl_list_remove(&listener->link);
+    }
+private:
+    EventLoopDestroyedHandler(
+        wl_event_loop* loop,
+        wl_event_source* source,
+        std::shared_ptr<mf::WaylandExecutor::State> state)
+        : source{source},
+          work_queue{std::move(state)}
+    {
+        destruction_listener.notify = &EventLoopDestroyedHandler::on_destroyed;
+        wl_event_loop_add_destroy_listener(loop, &destruction_listener);
+    }
+
+    static void on_destroyed(wl_listener* listener, void*)
+    {
+        EventLoopDestroyedHandler* me;
+
+        me = wl_container_of(listener, me, destruction_listener);
+
+        {
+            /*
+             * We drain the work queue to ensure that any shutdown work has a chance
+             * to be processed.
+             */
+            auto queue_lock = me->work_queue->drain();
+
+            /*
+             * We take no weak pointers to the work_queue, so if it's unique now it's
+             * guaranteed to remain unique. We've got a lock on the queue, so
+             * ~WaylandExecutor can't sneakily add a cleanup work item we would never
+             * process.
+             *
+             * If work_queue *is* unique that means that ~WaylandExecutor has already
+             * unregistered the event source, so we should not try to do so again.
+             */
+            if (!me->work_queue.unique())
             {
-                mir::log(
-                    mir::logging::Severity::critical,
-                    MIR_LOG_COMPONENT,
-                    std::current_exception(),
-                    "Exception processing Wayland event loop work item");
+                wl_event_source_remove(me->source);
             }
         }
 
-        return 0;
+        delete me;
     }
 
-    static void on_display_destruction(wl_listener* listener, void*)
-    {
-        DestructionShim* shim;
-        shim = wl_container_of(listener, shim, destruction_listener);
+    wl_event_source* const source;
+    std::shared_ptr<mf::WaylandExecutor::State> const work_queue;
 
-        {
-            std::lock_guard<std::recursive_mutex> lock{shim->executor->mutex};
-            wl_event_source_remove(shim->executor->notify_source);
-        }
-        delete shim;
-    }
-
-    std::recursive_mutex mutex;
-    mir::Fd const notify_fd;
-    std::deque<std::function<void()>> workqueue;
-
-    wl_event_source* const notify_source;
-
-    struct DestructionShim
-    {
-        explicit DestructionShim(std::shared_ptr<WaylandExecutor> const& executor)
-            : executor{executor}
-        {
-        }
-
-        std::shared_ptr<WaylandExecutor> const executor;
-        wl_listener destruction_listener;
-    };
-    static_assert(
-        std::is_standard_layout<DestructionShim>::value,
-        "DestructionShim must be Standard Layout for wl_container_of to be defined behaviour");
+    wl_listener destruction_listener;
 };
+
+static_assert(
+    std::is_standard_layout<EventLoopDestroyedHandler>::value,
+    "DestructionShim must be Standard Layout for wl_container_of to be defined behaviour");
 }
 
-std::shared_ptr<mir::Executor> mir::frontend::executor_for_event_loop(wl_event_loop* loop)
+int mf::WaylandExecutor::State::on_notify(int fd, uint32_t, void* data)
 {
-    return WaylandExecutor::executor_for_event_loop(loop);
+    auto state = static_cast<State*>(data);
+
+    eventfd_t unused;
+    if (auto err = eventfd_read(fd, &unused))
+    {
+        mir::log_error(
+            "eventfd_read failed to consume wakeup notification: %s (%i)",
+            strerror(err),
+            err);
+    }
+
+    while (auto work = state->get_work())
+    {
+        try
+        {
+            work();
+        }
+        catch (...)
+        {
+            mir::log(
+                mir::logging::Severity::critical,
+                MIR_LOG_COMPONENT,
+                std::current_exception(),
+                "Exception processing Wayland event loop work item");
+        }
+    }
+    if (state->state != ExecutionState::Running)
+    {
+        EventLoopDestroyedHandler::remove_destruction_handler_for_loop(state->loop);
+    }
+
+    return 0;
 }
+
+
+
+mf::WaylandExecutor::WaylandExecutor(wl_event_loop* loop)
+    : state{std::make_shared<State>(loop)},
+      notify_fd{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE | EFD_NONBLOCK)},
+      source{wl_event_loop_add_fd(
+          loop,
+          notify_fd,
+          WL_EVENT_READABLE,
+          &State::on_notify,
+          state.get())}
+{
+    if (notify_fd == mir::Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{
+            errno,
+            std::system_category(),
+            "Failed to create IPC pause notification eventfd"}));
+    }
+    if (!source)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create Wayland notify source"}));
+    }
+    EventLoopDestroyedHandler::setup_destruction_handler_for_loop(loop, source, state);
+}
+
+mf::WaylandExecutor::~WaylandExecutor()
+{
+    /*
+     * We need to move state into the functor; the destruction machinery relies
+     * on WaylandExecutor *not* having a ref on state to determine whether or not
+     * to unregister the source itself.
+     *
+     * If we enqueue the work before dropping WaylandExecutors' ref there's a potential
+     * race in destruction:
+     * T1:  enqueue(cleanup_functor) adds the functor to the queue.
+     * T2:  The wl_event_loop is destroyed, calling EventLoopDestroyedHandler::on_destroyed()
+     * T2:  on_destroyed() drains the workqueue, calling cleanup_functor() and so unregistering
+     *      the source.
+     * T2: on_destroyed() checks the refcount of work_queue, finding that it's not unique.
+     * T2: on_destroyed() unregisters the source, causing a double-free
+     * T1: ~WaylandExecutor completes, dropping the ref on the work queue.
+     */
+    auto const raw_state = state.get();
+    auto cleanup_functor =
+        [state_holder = std::move(state), source = this->source]()
+        {
+            wl_event_source_remove(source);
+        };
+
+    raw_state->enqueue_termination(std::move(cleanup_functor));
+
+    if (auto err = eventfd_write(notify_fd, 1))
+    {
+        mir::log_critical(
+            "Failed to create event notification for ~WaylandExecutor: %s (%i)",
+            strerror(err),
+            err);
+    }
+}
+
+void mf::WaylandExecutor::spawn (std::function<void()>&& work)
+{
+    state->enqueue(std::move(work));
+
+    if (auto err = eventfd_write(notify_fd, 1))
+    {
+        BOOST_THROW_EXCEPTION(
+            (std::system_error{err, std::system_category(), "eventfd_write failed to notify event loop"}));
+    }
+}
+

@@ -29,6 +29,8 @@
 
 namespace mir
 {
+class Executor;
+
 namespace input
 {
 class InputDeviceHub;
@@ -118,6 +120,7 @@ private:
     std::shared_ptr<graphics::WaylandAllocator> const allocator;
     std::unique_ptr<DataDeviceManager> data_device_manager_global;
     std::unique_ptr<WaylandExtensions> const extensions;
+    std::shared_ptr<Executor> const executor;
     std::thread dispatch_thread;
     wl_event_source* pause_source;
     std::string wayland_display;
