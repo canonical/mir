@@ -40,13 +40,11 @@ public:
 
     void spawn(std::function<void()>&& work) override;
 
+    class State;
 private:
-    std::function<void()> get_work();
-    static int on_notify(int fd, uint32_t, void* data);
-
+    std::shared_ptr<State> state;
     mir::Fd const notify_fd;
-    std::mutex mutex;
-    std::deque<std::function<void()>> workqueue;
+    wl_event_source* const source;
 };
 }
 }
