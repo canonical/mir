@@ -388,17 +388,29 @@ geom::Size get_wl_buffer_size(wl_resource* buffer, mg::EGLExtensions::WaylandExt
     return geom::Size{width, height};
 }
 
-bool get_wl_y_inverted(wl_resource* resource, mg::EGLExtensions::WaylandExtensions const& ext)
+mg::gl::Texture::Layout get_texture_layout(
+    wl_resource* resource,
+    mg::EGLExtensions::WaylandExtensions const& ext)
 {
     EGLint inverted;
     auto dpy = eglGetCurrentDisplay();
 
     if (ext.eglQueryWaylandBufferWL(dpy, resource, EGL_WAYLAND_Y_INVERTED_WL, &inverted) == EGL_FALSE)
     {
-        // EGL_WAYLAND_Y_INVERTED_WL is unsupported; default is true
-        return true;
+        // EGL_WAYLAND_Y_INVERTED_WL is unsupported; the default is that the texture is in standard
+        // GL texture layout
+        return mg::gl::Texture::Layout::GL;
     }
-    return inverted;
+    if (inverted)
+    {
+        // It has the standard y-decreases-with-row layout of GL textures
+        return mg::gl::Texture::Layout::GL;
+    }
+    else
+    {
+        // It has y-increases-with-row layout.
+        return mg::gl::Texture::Layout::TopRowFirst;
+    }
 }
 
 EGLint get_wl_egl_format(wl_resource* resource, mg::EGLExtensions::WaylandExtensions const& ext)
@@ -432,7 +444,7 @@ public:
           on_consumed{std::move(on_consumed)},
           on_release{std::move(on_release)},
           size_{get_wl_buffer_size(buffer, *extensions.wayland)},
-          y_inverted_{get_wl_y_inverted(buffer, *extensions.wayland)},
+          layout_{get_texture_layout(buffer, *extensions.wayland)},
           egl_format{get_wl_egl_format(buffer, *extensions.wayland)},
           wayland_executor{std::move(wayland_executor)}
     {
@@ -544,9 +556,9 @@ public:
         return *shader;
     }
 
-    bool y_inverted() const override
+    Layout layout() const override
     {
-        return y_inverted_;
+        return layout_;
     }
 
     void bind() override
@@ -567,7 +579,7 @@ private:
     std::function<void()> const on_release;
 
     geom::Size const size_;
-    bool const y_inverted_;
+    Layout const layout_;
     EGLint const egl_format;
 
     std::shared_ptr<mir::Executor> const wayland_executor;

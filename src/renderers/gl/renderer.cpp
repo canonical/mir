@@ -496,8 +496,10 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     glUniform2f(prog.centre_uniform, centrex, centrey);
 
     glm::mat4 transform = renderable.transformation();
-    if (texture && texture->y_inverted())
+    if (texture && (texture->layout() == mg::gl::Texture::Layout::TopRowFirst))
     {
+        // GL textures have (0,0) at bottom-left rather than top-left
+        // We have to invert this texture to get it the way up GL expects.
         transform *= glm::mat4{
             2.0, 0.0, 0.0, 0.0,
             0.0, -2.0, 0.0, 0.0,

@@ -102,7 +102,7 @@ public:
     NativeBufferBase* native_buffer_base() override;
 
     gl::Program const& shader(gl::ProgramFactory& cache) const override;
-    bool y_inverted() const override;
+    Layout layout() const override;
     void add_syncpoint() override;
 
 protected:

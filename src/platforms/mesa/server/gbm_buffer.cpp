@@ -152,9 +152,9 @@ mg::gl::Program const& mgm::GBMBuffer::shader(
     return *program;
 }
 
-bool mgm::GBMBuffer::y_inverted() const
+mir::graphics::gl::Texture::Layout mgm::GBMBuffer::layout() const
 {
-    return false;
+    return Layout::GL;
 }
 
 void mgm::GBMBuffer::add_syncpoint()
