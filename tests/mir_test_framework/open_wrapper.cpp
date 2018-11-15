@@ -124,5 +124,31 @@ int __open64(char const* path, int flags, mode_t mode)
     return (*real_open64)(path, flags, mode);
 }
 
+int __open_2(char const* path, int flags)
+{
+    if (auto val = run_handlers(path, flags, 0))
+    {
+        return *val;
+    }
+
+    int (*real_open_2)(char const *path, int flags);
+    *(void **)(&real_open_2) = dlsym(RTLD_NEXT, "__open_2");
+
+    return (*real_open_2)(path, flags);
+}
+
+int __open64_2(char const* path, int flags)
+{
+    if (auto val = run_handlers(path, flags, 0))
+    {
+        return *val;
+    }
+
+    int (*real_open64_2)(char const *path, int flags);
+    *(void **)(&real_open64_2) = dlsym(RTLD_NEXT, "__open64_2");
+
+    return (*real_open64_2)(path, flags);
+
+}
 }
 
