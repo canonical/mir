@@ -501,8 +501,8 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
         // GL textures have (0,0) at bottom-left rather than top-left
         // We have to invert this texture to get it the way up GL expects.
         transform *= glm::mat4{
-            2.0, 0.0, 0.0, 0.0,
-            0.0, -2.0, 0.0, 0.0,
+            1.0, 0.0, 0.0, 0.0,
+            0.0, -1.0, 0.0, 0.0,
             0.0, 0.0, 1.0, 0.0,
             -1.0, 1.0, 0.0, 1.0
         };
