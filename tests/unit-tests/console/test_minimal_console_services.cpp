@@ -81,7 +81,7 @@ public:
                 {
                     if (device_path == path)
                     {
-                        return stub_fd;
+                        return static_cast<int>(stub_fd);
                     }
                     return {};
                 }));
@@ -305,7 +305,7 @@ TEST_F(MinimalConsoleServicesTest, opens_input_devices_in_nonblocking_mode)
             EXPECT_THAT(flags, FlagIsSet(O_CLOEXEC));
             EXPECT_THAT(flags, FlagIsSet(O_NONBLOCK));
 
-            return fd;
+            return static_cast<int>(fd);
         });
 
     mir::MinimalConsoleServices services;
@@ -344,7 +344,7 @@ TEST_F(MinimalConsoleServicesTest, does_not_open_drm_devices_in_nonblocking_mode
             EXPECT_THAT(flags, FlagIsSet(O_CLOEXEC));
             EXPECT_THAT(flags, Not(FlagIsSet(O_NONBLOCK)));
 
-            return fd;
+            return static_cast<int>(fd);
         });
 
     mir::MinimalConsoleServices services;
