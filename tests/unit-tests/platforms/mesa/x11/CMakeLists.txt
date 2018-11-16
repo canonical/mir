@@ -19,9 +19,9 @@ target_link_libraries(
   mir_unit_tests_mesa-x11
 
   mir-test-static
-  mir-test-framework-static
   mir-test-doubles-static
   mir-test-doubles-platform-static
+  mir-test-framework-static
   mirsharedmesaservercommon-static
   server_platform_common
 )

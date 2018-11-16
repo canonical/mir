@@ -61,6 +61,8 @@ add_library(mir-public-test-framework OBJECT
   basic_window_manager.cpp  ${PROJECT_SOURCE_DIR}/tests/include/mir/shell/basic_window_manager.h
   canonical_window_manager.cpp  ${PROJECT_SOURCE_DIR}/tests/include/mir/shell/canonical_window_manager.h
   input_device_faker.cpp ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/input_device_faker.h
+  open_wrapper.cpp
+  ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/open_wrapper.h
 )
 
 set_property(

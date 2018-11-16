@@ -19,6 +19,8 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_DRM_H_
 #define MIR_TEST_DOUBLES_MOCK_DRM_H_
 
+#include "mir_test_framework/open_wrapper.h"
+
 #include <gmock/gmock.h>
 
 #include <xf86drm.h>
@@ -190,6 +192,7 @@ private:
     std::unordered_map<std::string, FakeDRMResources> fake_drms;
     std::unordered_map<int, FakeDRMResources&> fd_to_drm;
     drmModeObjectProperties empty_object_props;
+    mir_test_framework::OpenHandlerHandle open_interposer;
 };
 
 testing::Matcher<int> IsFdOfDevice(char const* device);

@@ -5,7 +5,7 @@ add_library(
 
   linux_virtual_terminal.cpp                linux_virtual_terminal.h
   logind_console_services.cpp               logind_console_services.h
-  null_console_services.h
+  minimal_console_services.h                minimal_console_services.cpp
   logind-seat.c                             logind-seat.h
   logind-session.c                          logind-session.h
   default_configuration.cpp

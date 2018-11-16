@@ -90,6 +90,8 @@ target_link_libraries(mir-test-doubles-static
 
   mirserver
 
+  mir-test-framework-static
+
   ${Boost_LIBRARIES}
   ${GMOCK_LIBRARIES}
   ${GMOCK_MAIN_LIBRARY}

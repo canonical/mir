@@ -762,9 +762,13 @@ struct StubEmergencyCleanupRegistry : mir::EmergencyCleanupRegistry
     mir::ModuleEmergencyCleanupHandler handler;
 };
 
-MATCHER_P(FlagsSet, flag, "")
+
+MATCHER_P2(FlagsSet, access, flags, "")
 {
-    return (arg & flag);
+    // Need to check specifically for access mode as O_RDONLY == 0,
+    // so (flag | O_RDONLY) is a no-op and (flag & O_RDONLY) is identically false.
+    return ((arg & O_ACCMODE) == access) &&
+        (arg & flags);
 }
 
 void set_expectations_for_uevent_probe(
@@ -780,7 +784,7 @@ void set_expectations_for_uevent_probe(
     auto uevent = std::make_shared<mir::AnonymousShmFile>(strlen(content));
     ::memcpy(uevent->base_ptr(), content, strlen(content));
 
-    EXPECT_CALL(fops, open(StrEq(expected_filename.str()), FlagsSet(O_RDONLY | O_CLOEXEC)))
+    EXPECT_CALL(fops, open(StrEq(expected_filename.str()), FlagsSet(O_RDONLY, O_CLOEXEC)))
         .WillRepeatedly(InvokeWithoutArgs(
             [uevent]() { return uevent->fd(); }));
 }
@@ -902,7 +906,7 @@ TEST_F(LinuxVirtualTerminalTest, throws_expected_error_when_opening_file_fails)
     int const minor = 321;
     char const* const expected_filename = "/sys/dev/char/123:321/uevent";
 
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), FlagsSet(O_RDONLY | O_CLOEXEC)))
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), FlagsSet(O_RDONLY, O_CLOEXEC)))
         .WillOnce(Return(-1));
 
     EXPECT_THROW(
@@ -934,7 +938,7 @@ TEST_F(LinuxVirtualTerminalTest, throws_error_when_parsing_fails)
     mir::AnonymousShmFile uevent{strlen(uevent_content)};
     ::memcpy(uevent.base_ptr(), uevent_content, strlen(uevent_content));
 
-    EXPECT_CALL(*fops, open(StrEq(expected_filename), FlagsSet(O_RDONLY | O_CLOEXEC)))
+    EXPECT_CALL(*fops, open(StrEq(expected_filename), FlagsSet(O_RDONLY, O_CLOEXEC)))
         .WillOnce(Return(uevent.fd()));
 
     EXPECT_THROW(
@@ -960,7 +964,7 @@ TEST_F(LinuxVirtualTerminalTest, opens_correct_device_node)
     auto const device_node = "/dev/fb0";
     set_expectations_for_uevent_probe_of_device(*fops, 55, 61, device_node);
 
-    EXPECT_CALL(*fops, open(StrEq(device_node), FlagsSet(O_RDWR | O_CLOEXEC)))
+    EXPECT_CALL(*fops, open(StrEq(device_node), FlagsSet(O_RDWR, O_CLOEXEC)))
         .WillOnce(Return(-1));
 
     auto device = vt.acquire_device(55, 61, std::make_unique<mtd::NullDeviceObserver>());
@@ -1107,7 +1111,7 @@ TEST_F(LinuxVirtualTerminalTest, does_not_call_set_master_on_non_drm_node)
 
     EXPECT_CALL(
         *fops,
-        open(StrEq(device_node), FlagsSet(O_RDWR | O_CLOEXEC | O_NONBLOCK)))
+        open(StrEq(device_node), FlagsSet(O_RDWR, O_CLOEXEC | O_NONBLOCK)))
         .WillOnce(Return(fake_device_fd));
     EXPECT_CALL(drm, drmSetMaster(fake_device_fd))
         .Times(0);
