@@ -131,8 +131,9 @@ private:
     std::vector<mtf::OpenHandlerHandle> expectations;
 };
 
-TEST_F(MinimalConsoleServicesTest, failure_to_claim_drm_master_is_non_fatal)
+TEST_F(MinimalConsoleServicesTest, if_DISPLAY_is_unset_failure_to_claim_drm_master_is_non_fatal)
 {
+    unsetenv("DISPLAY");
     int drm_fd = set_expectations_for_uevent_probe_of_drm(5, "/dev/dri/card5");
     ON_CALL(drm, drmSetMaster(drm_fd)).WillByDefault(Return(-EPERM));
 
@@ -150,6 +151,34 @@ TEST_F(MinimalConsoleServicesTest, failure_to_claim_drm_master_is_non_fatal)
     services.acquire_device(226, 5, std::move(observer));
 
     EXPECT_TRUE(activated);
+}
+
+TEST_F(MinimalConsoleServicesTest, if_DISPLAY_is_set_failure_to_claim_drm_master_is_fatal)
+{
+    setenv("DISPLAY", ":0", 0);
+    int drm_fd = set_expectations_for_uevent_probe_of_drm(5, "/dev/dri/card5");
+    ON_CALL(drm, drmSetMaster(drm_fd)).WillByDefault(Return(-EPERM));
+
+    mir::MinimalConsoleServices services;
+    bool activated{false};
+    auto observer = std::make_unique<mtd::SimpleDeviceObserver>(
+        [&activated](auto&& fd)
+            {
+            EXPECT_THAT(fd, Not(Eq(mir::Fd::invalid)));
+            activated = true;
+            },
+        [](){},
+        [](){});
+
+    try
+    {
+        services.acquire_device(226, 5, std::move(observer)).get();
+        FAIL();
+    }
+    catch (std::runtime_error const& err)
+    {
+        EXPECT_THAT(err.what(), HasSubstr("Failed to acquire DRM master"));
+    }
 }
 
 TEST_F(MinimalConsoleServicesTest, doesnt_try_to_set_master_on_non_drm_devices)

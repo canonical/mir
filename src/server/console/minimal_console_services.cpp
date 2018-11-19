@@ -138,6 +138,12 @@ std::future<std::unique_ptr<mir::Device>> mir::MinimalConsoleServices::acquire_d
              */
             if (auto ret = drmSetMaster(fd))
             {
+                // If DISPLAY is set, then X11 probably has DRM master
+                if (getenv("DISPLAY"))
+                {
+                    BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to acquire DRM master"}));
+                }
+
                 mir::log(
                     mir::logging::Severity::warning,
                     "MinimalConsoleServices",
