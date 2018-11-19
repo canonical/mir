@@ -91,11 +91,12 @@ mir::graphics::module_for_device(
                     }
                 }() ;
             auto desc = describe();
-            mir::log_info("Found graphics driver: %s (version %d.%d.%d)",
+            mir::log_info("Found graphics driver: %s (version %d.%d.%d) Support priority: %d",
                           desc->name,
                           desc->major_version,
                           desc->minor_version,
-                          desc->micro_version);
+                          desc->micro_version,
+                          module_priority);
         }
         catch (std::runtime_error const&)
         {
