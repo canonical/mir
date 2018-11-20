@@ -348,30 +348,76 @@ mg::NativeDisplay* mge::Display::native_display()
     return this;
 }
 
-std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context()
+std::unique_ptr<mir::renderer::gl::Context> mge::Display::create_gl_context() const
 {
     class GLContext : public renderer::gl::Context
     {
     public:
-        GLContext(EGLDisplay display, EGLContext context)
+        GLContext(EGLDisplay display, EGLContext shared_context)
             : display{display},
-              context{context}
+              context{make_context(display, shared_context)}
         {
         }
 
         void make_current() const override
         {
-            eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, context);
+            if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, context) != EGL_TRUE)
+            {
+                BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make context current"));
+            }
         }
 
         void release_current() const override
         {
-            eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+            if (eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
+            {
+                BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release context"));
+            }
         }
 
     private:
-        EGLDisplay display;
-        EGLContext context;
+        static EGLContext make_context(EGLDisplay dpy, EGLContext shared_context)
+        {
+            eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+
+            static const EGLint context_attr[] = {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
+                EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
+                EGL_NONE
+            };
+
+            EGLint const config_attr[] = {
+                EGL_SURFACE_TYPE, EGL_STREAM_BIT_KHR,
+                EGL_RED_SIZE, 8,
+                EGL_GREEN_SIZE, 8,
+                EGL_BLUE_SIZE, 8,
+                EGL_ALPHA_SIZE, 0,
+                EGL_DEPTH_SIZE, 0,
+                EGL_STENCIL_SIZE, 0,
+                EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
+                EGL_NONE
+            };
+
+            EGLint num_egl_configs;
+            EGLConfig egl_config;
+            if (eglChooseConfig(dpy, config_attr, &egl_config, 1, &num_egl_configs) != EGL_TRUE)
+            {
+                BOOST_THROW_EXCEPTION(mg::egl_error("Failed to chose EGL config"));
+            } else if (num_egl_configs != 1)
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find compatible EGL config"});
+            }
+
+            auto egl_context = eglCreateContext(dpy, egl_config, shared_context, context_attr);
+            if (egl_context == EGL_NO_CONTEXT)
+                BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
+
+            return egl_context;
+        }
+
+        EGLDisplay const display;
+        EGLContext const context;
     };
     return std::make_unique<GLContext>(display, context);
 }

@@ -24,11 +24,14 @@
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "src/platforms/mesa/server/buffer_allocator.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/graphics/display.h"
 
 #include "mir/test/doubles/mock_drm.h"
 #include "mir/test/doubles/mock_gbm.h"
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
+#include "mir/test/doubles/null_gl_config.h"
+#include "mir/test/doubles/null_display_configuration_policy.h"
 #include "mir_test_framework/udev_environment.h"
 
 #include <cstdlib>
@@ -61,6 +64,20 @@ protected:
         usage = mg::BufferUsage::hardware;
         buffer_properties = mg::BufferProperties{size, pf, usage};
 
+        ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
+            .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                                 SetArgPointee<4>(1),
+                                 Return(EGL_TRUE)));
+
+        ON_CALL(mock_egl, eglGetConfigAttrib(_, mock_egl.fake_configs[0], EGL_NATIVE_VISUAL_ID, _))
+            .WillByDefault(
+                DoAll(
+                    SetArgPointee<3>(GBM_FORMAT_XRGB8888),
+                    Return(EGL_TRUE)));
+
+        mock_egl.provide_egl_extensions();
+        mock_gl.provide_gles_extensions();
+
         ON_CALL(mock_gbm, gbm_bo_get_handle(_))
         .WillByDefault(Return(mock_gbm.fake_gbm.bo_handle));
 
@@ -69,8 +86,14 @@ protected:
                 std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgm::BypassOption::allowed);
+        display = platform->create_display(
+            std::make_shared<mtd::NullDisplayConfigurationPolicy>(),
+            std::make_shared<mtd::NullGLConfig>());
         allocator.reset(new mgm::BufferAllocator(
-            platform->gbm->device, mgm::BypassOption::allowed, mgm::BufferImportMethod::gbm_native_pixmap));
+            *display,
+            platform->gbm->device,
+            mgm::BypassOption::allowed,
+            mgm::BufferImportMethod::gbm_native_pixmap));
     }
 
     // Defaults
@@ -84,6 +107,7 @@ protected:
     ::testing::NiceMock<mtd::MockEGL> mock_egl;
     ::testing::NiceMock<mtd::MockGL> mock_gl;
     std::shared_ptr<mgm::Platform> platform;
+    std::unique_ptr<mg::Display> display;
     std::unique_ptr<mgm::BufferAllocator> allocator;
     mtf::UdevEnvironment fake_devices;
 };
@@ -157,6 +181,7 @@ TEST_F(MesaBufferAllocatorTest, bypass_disables_when_option_is_disabled)
                                           mg::BufferUsage::hardware);
 
     mgm::BufferAllocator alloc(
+        *display,
         platform->gbm->device,
         mgm::BypassOption::prohibited,
         mgm::BufferImportMethod::gbm_native_pixmap);

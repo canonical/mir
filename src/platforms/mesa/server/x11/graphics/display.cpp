@@ -350,7 +350,7 @@ mg::NativeDisplay* mgx::Display::native_display()
     return this;
 }
 
-std::unique_ptr<mir::renderer::gl::Context> mgx::Display::create_gl_context()
+std::unique_ptr<mir::renderer::gl::Context> mgx::Display::create_gl_context() const
 {
     return std::make_unique<XGLContext>(x_dpy, gl_config, shared_egl.context());
 }

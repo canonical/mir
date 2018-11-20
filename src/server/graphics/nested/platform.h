@@ -75,7 +75,8 @@ public:
         std::shared_ptr<DisplayReport> const& display_report,
         std::shared_ptr<options::Option> const& options);
 
-    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<GraphicBufferAllocator>
+        create_buffer_allocator(graphics::Display const& output) override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativeRenderingPlatform* native_rendering_platform() override;
     MirServerEGLNativeDisplayType egl_native_display() const override;
@@ -99,7 +100,8 @@ public:
         std::shared_ptr<GLConfig> const& gl_config) override;
     NativeDisplayPlatform* native_display_platform() override;
 
-    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<GraphicBufferAllocator>
+        create_buffer_allocator(graphics::Display const& output) override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativeRenderingPlatform* native_rendering_platform() override;
     std::vector<mir::ExtensionDescription> extensions() const override;

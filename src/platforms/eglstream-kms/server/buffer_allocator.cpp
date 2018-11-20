@@ -22,6 +22,9 @@
 #include "mir/anonymous_shm_file.h"
 #include "shm_buffer.h"
 #include "mir/graphics/buffer_properties.h"
+#include "mir/renderer/gl/context_source.h"
+#include "mir/renderer/gl/context.h"
+#include "mir/graphics/display.h"
 #include "software_buffer.h"
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -34,9 +37,44 @@ namespace mge = mg::eglstream;
 namespace mgc = mg::common;
 namespace geom = mir::geometry;
 
-mge::BufferAllocator::BufferAllocator()
+namespace
+{
+std::unique_ptr<mir::renderer::gl::Context> context_for_output(mg::Display const& output)
+{
+    try
+    {
+        auto& context_source = dynamic_cast<mir::renderer::gl::ContextSource const&>(output);
+
+        /*
+         * We care about no part of this context's config; we will do no rendering with it.
+         * All we care is that we can allocate texture IDs and bind a texture, which is
+         * config independent.
+         *
+         * That's not *entirely* true; we also need it to be on the same device as we want
+         * to do the rendering on, and that GL must support all the extensions we care about,
+         * but since we don't yet support heterogeneous hybrid and implementing that will require
+         * broader interface changes it's a safe enough requirement for now.
+         */
+        return context_source.create_gl_context();
+    }
+    catch (std::bad_cast const& err)
+    {
+        std::throw_with_nested(
+            boost::enable_error_info(
+                std::runtime_error{"Output platform cannot provide a GL context"})
+                << boost::throw_function(__PRETTY_FUNCTION__)
+                << boost::throw_line(__LINE__)
+                << boost::throw_file(__FILE__));
+    }
+}
+}
+
+mge::BufferAllocator::BufferAllocator(mg::Display const& output)
+    : ctx{context_for_output(output)}
 {
 }
+
+mge::BufferAllocator::~BufferAllocator() = default;
 
 std::shared_ptr<mg::Buffer> mge::BufferAllocator::alloc_buffer(
     BufferProperties const& buffer_properties)

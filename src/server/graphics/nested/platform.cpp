@@ -113,16 +113,18 @@ private:
 };
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::NestedBufferPlatform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::NestedBufferPlatform::create_buffer_allocator(
+    mg::Display const& display)
 {
     if (connection->supports_passthrough(mg::BufferUsage::software) ||
         connection->supports_passthrough(mg::BufferUsage::hardware))
     {
-        return mir::make_module_ptr<BufferAllocator>(connection, rendering_platform->create_buffer_allocator());
+        return mir::make_module_ptr<BufferAllocator>(connection,
+                                                     rendering_platform->create_buffer_allocator(display));
     }
     else
     {
-        return rendering_platform->create_buffer_allocator();
+        return rendering_platform->create_buffer_allocator(display);
     }
 }
 
@@ -198,9 +200,10 @@ mir::UniqueModulePtr<mg::Display> mgn::Platform::create_display(
     return display_platform->create_display(initial_conf_policy, gl_config);
 }
  
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> mgn::Platform::create_buffer_allocator(
+    mg::Display const& output)
 {
-    return buffer_platform->create_buffer_allocator();
+    return buffer_platform->create_buffer_allocator(output);
 }
 
 mg::NativeDisplayPlatform* mgn::Platform::native_display_platform()

@@ -192,10 +192,11 @@ struct StubPlatform : public mg::Platform
     {
     }
 
-    mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
+    mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator(
+        mg::Display const& output) override
     {
         return mir::make_module_ptr<RecordingBufferAllocator>(
-            underlying_platform->create_buffer_allocator(),
+            underlying_platform->create_buffer_allocator(output),
             allocated_buffers,
             buffer_mutex);
     }

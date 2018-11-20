@@ -31,13 +31,22 @@
 #pragma GCC diagnostic pop
 
 #include <EGL/egl.h>
+#include <wayland-server-core.h>
 
 #include <memory>
 
 namespace mir
 {
+namespace renderer
+{
+namespace gl
+{
+class Context;
+}
+}
 namespace graphics
 {
+class Display;
 struct EGLExtensions;
 
 namespace mesa
@@ -54,7 +63,11 @@ class BufferAllocator:
     public graphics::WaylandAllocator
 {
 public:
-    BufferAllocator(gbm_device* device, BypassOption bypass_option, BufferImportMethod const buffer_import_method);
+    BufferAllocator(
+        Display const& output,
+        gbm_device* device,
+        BypassOption bypass_option,
+        BufferImportMethod const buffer_import_method);
 
     std::shared_ptr<Buffer> alloc_buffer(
         geometry::Size size, uint32_t native_format, uint32_t native_flags) override;
@@ -62,7 +75,7 @@ public:
     std::shared_ptr<Buffer> alloc_buffer(graphics::BufferProperties const& buffer_properties) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
-    void bind_display(wl_display* display) override;
+    void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) override;
     std::shared_ptr<Buffer> buffer_from_resource(
         wl_resource* buffer,
         std::function<void()>&& on_consumed,
@@ -71,7 +84,8 @@ private:
     std::shared_ptr<Buffer> alloc_hardware_buffer(
         graphics::BufferProperties const& buffer_properties);
 
-    EGLDisplay dpy;
+    std::shared_ptr<renderer::gl::Context> const ctx;
+    std::shared_ptr<Executor> wayland_executor;
     gbm_device* const device;
     std::shared_ptr<EGLExtensions> const egl_extensions;
 

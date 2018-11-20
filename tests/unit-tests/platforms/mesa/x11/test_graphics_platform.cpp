@@ -64,6 +64,18 @@ public:
         .WillByDefault(Return(GBM_FORMAT_ARGB8888));
 
         fake_devices.add_standard_device("standard-drm-render-nodes");
+
+        ON_CALL(mock_x11, XNextEvent(_, _))
+            .WillByDefault(
+                DoAll(
+                    Invoke(
+                        [](auto, XEvent* ev)
+                        {
+                            ev->type = Expose;
+                        }),
+                    Return(true)));
+        ON_CALL(mock_egl, eglQueryString(_, EGL_EXTENSIONS))
+            .WillByDefault(Return(""));
     }
 
     std::shared_ptr<mg::Platform> create_platform()

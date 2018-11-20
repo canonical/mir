@@ -105,7 +105,7 @@ public:
     NativeDisplay* native_display() override;
     Frame last_frame_on(unsigned output_id) const override;
 
-    std::unique_ptr<renderer::gl::Context> create_gl_context() override;
+    std::unique_ptr<renderer::gl::Context> create_gl_context() const override;
     bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const& conf) override;
 private:
     detail::EGLDisplayHandle const egl_display;

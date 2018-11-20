@@ -179,7 +179,7 @@ mir::DefaultServerConfiguration::the_buffer_allocator()
     return buffer_allocator(
         [&]()
         {
-            return the_graphics_platform()->create_buffer_allocator();
+            return the_graphics_platform()->create_buffer_allocator(*the_display());
         });
 }
 

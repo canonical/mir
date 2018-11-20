@@ -62,6 +62,21 @@ public:
         ON_CALL(mock_gbm, gbm_bo_get_format(_))
         .WillByDefault(Return(GBM_FORMAT_ARGB8888));
 
+        ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
+            .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                                 SetArgPointee<4>(1),
+                                 Return(EGL_TRUE)));
+
+        ON_CALL(mock_egl, eglGetConfigAttrib(_, mock_egl.fake_configs[0], EGL_NATIVE_VISUAL_ID, _))
+            .WillByDefault(
+                DoAll(
+                    SetArgPointee<3>(GBM_FORMAT_XRGB8888),
+                    Return(EGL_TRUE)));
+
+        mock_egl.provide_egl_extensions();
+        mock_gl.provide_gles_extensions();
+
+
         fake_devices.add_standard_device("standard-drm-devices");
     }
 

@@ -46,7 +46,8 @@ public:
         std::shared_ptr<mir::udev::Context> const& udev,
         std::shared_ptr<helpers::DRMHelper> const& drm);
 
-    UniqueModulePtr<GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<GraphicBufferAllocator>
+        create_buffer_allocator(Display const& output) override;
     UniqueModulePtr<PlatformIpcOperations> make_ipc_operations() const override;
     NativeRenderingPlatform* native_rendering_platform() override;
     MirServerEGLNativeDisplayType egl_native_display() const override;

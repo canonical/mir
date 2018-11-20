@@ -16,6 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include "mir/graphics/display.h"
+
 #include "mir/test/doubles/mock_egl.h"
 #include "mir/test/doubles/mock_gl.h"
 #include "mir/test/doubles/mock_drm.h"
@@ -31,6 +33,8 @@
 #include "mir/test/doubles/null_emergency_cleanup.h"
 #include "src/server/report/null_report_factory.h"
 #include "mir/test/doubles/stub_console_services.h"
+#include "mir/test/doubles/null_gl_config.h"
+#include "mir/test/doubles/null_display_configuration_policy.h"
 
 #include <gbm.h>
 
@@ -61,6 +65,20 @@ protected:
         usage = mg::BufferUsage::hardware;
         buffer_properties = mg::BufferProperties{size, pf, usage};
 
+        ON_CALL(mock_egl, eglChooseConfig(_,_,_,1,_))
+            .WillByDefault(DoAll(SetArgPointee<2>(mock_egl.fake_configs[0]),
+                                 SetArgPointee<4>(1),
+                                 Return(EGL_TRUE)));
+
+        ON_CALL(mock_egl, eglGetConfigAttrib(_, mock_egl.fake_configs[0], EGL_NATIVE_VISUAL_ID, _))
+            .WillByDefault(
+                DoAll(
+                    SetArgPointee<3>(GBM_FORMAT_XRGB8888),
+                    Return(EGL_TRUE)));
+
+        mock_egl.provide_egl_extensions();
+        mock_gl.provide_gles_extensions();
+
         ON_CALL(mock_gbm, gbm_bo_get_width(_))
         .WillByDefault(Return(size.width.as_uint32_t()));
 
@@ -78,8 +96,14 @@ protected:
                 std::make_shared<mtd::StubConsoleServices>(),
                 *std::make_shared<mtd::NullEmergencyCleanup>(),
                 mgm::BypassOption::allowed);
-
-        allocator.reset(new mgm::BufferAllocator(platform->gbm->device, mgm::BypassOption::allowed, mgm::BufferImportMethod::gbm_native_pixmap));
+        auto const display = platform->create_display(
+            std::make_shared<mtd::NullDisplayConfigurationPolicy>(),
+            std::make_shared<mtd::NullGLConfig>());
+        allocator.reset(new mgm::BufferAllocator(
+            *display,
+            platform->gbm->device,
+            mgm::BypassOption::allowed,
+            mgm::BufferImportMethod::gbm_native_pixmap));
     }
 
     mir::renderer::gl::TextureSource* as_texture_source(std::shared_ptr<mg::Buffer> const& buffer)

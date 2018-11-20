@@ -507,7 +507,7 @@ void cleanup_display(wl_display *display)
 class ThrowingAllocator : public mg::WaylandAllocator
 {
 public:
-    void bind_display(wl_display*) override
+    void bind_display(wl_display*, std::shared_ptr<mir::Executor>) override
     {
     }
 
@@ -522,13 +522,14 @@ public:
 
 std::shared_ptr<mg::WaylandAllocator> allocator_for_display(
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
-    wl_display* display)
+    wl_display* display,
+    std::shared_ptr<mir::Executor> executor)
 {
     if (auto allocator = std::dynamic_pointer_cast<mg::WaylandAllocator>(buffer_allocator))
     {
         try
         {
-            allocator->bind_display(display);
+            allocator->bind_display(display, std::move(executor));
             return allocator;
         }
         catch (...)
@@ -593,9 +594,9 @@ mf::WaylandConnector::WaylandConnector(
     std::unique_ptr<WaylandExtensions> extensions_)
     : display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
-      allocator{allocator_for_display(allocator, display.get())},
-      extensions{std::move(extensions_)},
-      executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))}
+      executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
+      allocator{allocator_for_display(allocator, display.get(), executor)},
+      extensions{std::move(extensions_)}
 {
     if (pause_signal == mir::Fd::invalid)
     {

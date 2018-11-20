@@ -47,7 +47,8 @@ public:
     ~Platform() = default;
 
     /* From Platform */
-    UniqueModulePtr<graphics::GraphicBufferAllocator> create_buffer_allocator() override;
+    UniqueModulePtr<GraphicBufferAllocator>
+        create_buffer_allocator(graphics::Display const& output) override;
 
     UniqueModulePtr<graphics::Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,

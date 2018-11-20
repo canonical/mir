@@ -58,12 +58,13 @@ public:
         stub_platform = create_stub_platform(nullptr, nullptr, nullptr, nullptr, nullptr);
     }
 
-    mir::UniqueModulePtr<mg::GraphicBufferAllocator> create_buffer_allocator() override
+    mir::UniqueModulePtr<mir::graphics::GraphicBufferAllocator>
+    create_buffer_allocator(mg::Display const& output) override
     {
         if (should_throw.at(ExceptionLocation::at_create_buffer_allocator))
             BOOST_THROW_EXCEPTION(std::runtime_error("Exception during create_buffer_allocator"));
 
-        return stub_platform->create_buffer_allocator();
+        return stub_platform->create_buffer_allocator(output);
     }
 
     mir::UniqueModulePtr<mg::Display> create_display(

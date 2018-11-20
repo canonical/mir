@@ -55,7 +55,7 @@ public:
     bool make_current() const;
     bool release_current() const;
 
-    EGLContext context() { return egl_context; }
+    EGLContext context() const { return egl_context; }
 
     void report_egl_configuration(std::function<void(EGLDisplay, EGLConfig)>);
 private:

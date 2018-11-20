@@ -56,7 +56,13 @@ public:
      */
     virtual Program const& shader(ProgramFactory& factory) const = 0;
 
-    virtual bool y_inverted() const = 0;
+    enum class Layout
+    {
+        TopRowFirst,            //< First row has y-coördinate 0, y increases with each row.
+        BottomRowFirst,         //< First row has y-coördinate $height, y decreases with each row
+        GL = BottomRowFirst     //< GL texture layout is in decreasing-y order.
+    };
+    virtual Layout layout() const = 0;
 
     /**
      * Bind this texture to the necessary texture unit(s)

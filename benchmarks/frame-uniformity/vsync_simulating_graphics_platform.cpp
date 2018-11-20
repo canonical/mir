@@ -96,7 +96,8 @@ VsyncSimulatingPlatform::VsyncSimulatingPlatform(geom::Size const& output_size, 
 {
 }
 
-mir::UniqueModulePtr<mg::GraphicBufferAllocator> VsyncSimulatingPlatform::create_buffer_allocator()
+mir::UniqueModulePtr<mg::GraphicBufferAllocator> VsyncSimulatingPlatform::create_buffer_allocator(
+    mg::Display const&)
 {
     return mir::make_module_ptr<mtd::StubBufferAllocator>();
 }

@@ -34,7 +34,7 @@ class ContextSource
 public:
     virtual ~ContextSource() = default;
 
-    virtual std::unique_ptr<Context> create_gl_context() = 0;
+    virtual std::unique_ptr<Context> create_gl_context() const = 0;
 
 protected:
     ContextSource() = default;

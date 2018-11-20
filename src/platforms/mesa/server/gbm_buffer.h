@@ -23,8 +23,10 @@
 #include "mir/graphics/buffer_basic.h"
 #include "mir/renderer/gl/texture_source.h"
 #include "mir/renderer/gl/texture_target.h"
+#include "mir/graphics/texture.h"
 
 #include <gbm.h>
+#include MIR_SERVER_GL_H
 
 #include <memory>
 #include <limits>
@@ -40,10 +42,39 @@ class BufferTextureBinder;
 
 namespace mesa
 {
+/*
+ * renderer::gl::TextureSource and graphics::gl::Texture both have
+ * a bind() method. They need to do different things.
+ *
+ * Because we can't just override them based on their signature,
+ * do the intermediate-base-class trick of having two proxy bases
+ * which do nothing but rename bind() to something unique.
+ */
+
+class BindResolverTex : public gl::Texture
+{
+public:
+    BindResolverTex() = default;
+
+    void bind() override final;
+protected:
+    virtual void tex_bind() = 0;
+};
+
+class BindResolverTexTarget : public renderer::gl::TextureSource
+{
+public:
+    BindResolverTexTarget() = default;
+
+    void bind() override final;
+protected:
+    virtual void upload_to_texture() = 0;
+};
 
 class GBMBuffer: public BufferBasic, public NativeBufferBase,
-                 public renderer::gl::TextureSource,
-                 public renderer::gl::TextureTarget
+                 public BindResolverTexTarget,
+                 public renderer::gl::TextureTarget,
+                 public BindResolverTex
 {
 public:
     GBMBuffer(std::shared_ptr<gbm_bo> const& handle,
@@ -63,18 +94,26 @@ public:
     virtual std::shared_ptr<graphics::NativeBuffer> native_buffer_handle() const override;
 
     virtual void gl_bind_to_texture() override;
-    virtual void bind() override;
+    virtual void upload_to_texture() override;
     virtual void secure_for_render() override;
     void commit() override;
     void bind_for_write() override;
 
     NativeBufferBase* native_buffer_base() override;
 
+    gl::Program const& shader(gl::ProgramFactory& cache) const override;
+    Layout layout() const override;
+    void add_syncpoint() override;
+
+protected:
+    void tex_bind() override;
+
 private:
     std::shared_ptr<gbm_bo> const gbm_handle;
     uint32_t bo_flags;
     std::unique_ptr<common::BufferTextureBinder> const texture_binder;
     int prime_fd;
+    GLuint tex_id{0};
 };
 
 }
