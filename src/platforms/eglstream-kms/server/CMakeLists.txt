@@ -49,8 +49,7 @@ target_link_libraries(
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
   ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
   ${EPOXY_LDFLAGS} ${EPOXY_LIBRARIES}
-  # This could be better :)
-  nvidia-egl-wayland
+  ${NVIDIA_EGL_WAYLAND}
 )
 
 set_target_properties(

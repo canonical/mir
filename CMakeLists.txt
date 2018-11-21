@@ -208,14 +208,26 @@ endif(MIR_DISABLE_EPOLL_REACTOR)
 
 add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 
-# Default to KMS backend, but build all of them
-set(
-  MIR_PLATFORM
-  mesa-kms;mesa-x11;eglstream-kms
-  CACHE
-  STRING
-  "a list of graphics backends to build (options are 'mesa-kms', 'mesa-x11', or 'eglstream-kms')"
-)
+find_library(NVIDIA_EGL_WAYLAND NAMES nvidia-egl-wayland libnvidia-egl-wayland.so.1 libnvidia-egl-wayland.so.1.0.2 libnvidia-egl-wayland.so.1.0.3)
+
+# Set the default platforms based on availability of NVIDIA libraries
+if (NVIDIA_EGL_WAYLAND)
+  set(
+    MIR_PLATFORM
+    mesa-kms;mesa-x11;eglstream-kms
+    CACHE
+    STRING
+    "a list of graphics backends to build (options are 'mesa-kms', 'mesa-x11', or 'eglstream-kms')"
+  )
+else()
+  set(
+    MIR_PLATFORM
+    mesa-kms;mesa-x11
+    CACHE
+    STRING
+    "a list of graphics backends to build (options are 'mesa-kms', 'mesa-x11', or 'eglstream-kms')"
+  )
+endif()
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
 
@@ -229,6 +241,9 @@ foreach(platform IN LISTS MIR_PLATFORM)
      set(MIR_BUILD_PLATFORM_MESA_X11 TRUE)
   endif()
   if (platform STREQUAL "eglstream-kms")
+     if (NOT NVIDIA_EGL_WAYLAND)
+        message(FATAL_ERROR "EGLStream platform requested, but required NVIDIA external EGL platform nvidia-egl-wayland not found")
+     endif()
      set(MIR_BUILD_PLATFORM_EGLSTREAM_KMS TRUE)
   endif()
 endforeach(platform)
