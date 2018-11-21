@@ -58,7 +58,10 @@ Build-Depends: cmake,
                libyaml-cpp-dev,
 # WARNING: this is going to be annoying until the split-out
 # NVIDIA external EGL platform is in the archive.
-               libnvidia-gl-390 [i386 amd64 armhf]
+#
+# Abuse alternative dependencies here so that we can build on
+# Xenial (which doesn't have a new enough NVIDIA driver)
+               libnvidia-gl-390 [i386 amd64 armhf] | build-essential
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
