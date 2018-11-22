@@ -44,9 +44,9 @@ $(info COMMON_CONFIGURE_OPTIONS: ${COMMON_CONFIGURE_OPTIONS})
 
 ifneq ($(filter amd64 i386,$(DEB_HOST_ARCH)),)
   ifeq ($(filter xenial,$(DEB_DISTRIBUTION)),)
-	AVAILABLE_PLATFORMS=mesa-kms\;mesa-x11\;eglstream-kms
+	  AVAILABLE_PLATFORMS=mesa-kms\;mesa-x11\;eglstream-kms
   else
-	AVAILABLE_PLATFORMS=mesa-kms\;mesa-x11
+	  AVAILABLE_PLATFORMS=mesa-kms\;mesa-x11
   endif
 else
 	AVAILABLE_PLATFORMS=mesa-kms\;mesa-x11
