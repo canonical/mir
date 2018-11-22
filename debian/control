@@ -61,7 +61,7 @@ Build-Depends: cmake,
 #
 # Abuse alternative dependencies here so that we can build on
 # Xenial (which doesn't have a new enough NVIDIA driver)
-               libnvidia-gl-390 [i386 amd64 armhf] | apt-file
+               libnvidia-gl-390 [i386 amd64 armhf] | apt-file [i386 amd64 armhf]
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
