@@ -51,7 +51,8 @@ execute: |
         python3-dbus \
         mesa-libwayland-egl-devel\
         libXcursor-devel \
-        yaml-cpp-devel
+        yaml-cpp-devel\
+        egl-wayland-devel
 
     BUILD_DIR=$(mktemp --directory)
     cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_USE_LD_GOLD=ON
