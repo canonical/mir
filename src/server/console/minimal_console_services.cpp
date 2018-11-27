@@ -33,6 +33,29 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <drm.h>
+
+#ifndef LIBDRM_HAS_IS_MASTER
+bool drmIsMaster(int fd)
+{
+    struct drm_mode_mode_cmd cmd;
+
+    ::memset(&cmd, 0, sizeof cmd);
+    /* Set an invalid connector_id to ensure that ATTACHMODE errors with
+     * EINVAL in the unlikely event someone feels like calling this on a
+     * kernel prior to 3.9. */
+    cmd.connector_id = -1;
+
+    if (drmIoctl(fd, DRM_IOCTL_MODE_ATTACHMODE, &cmd) != -1)
+    {
+        /* On 3.9 ATTACHMODE was changed to drm_noop, and so will succeed
+         * iff we've got a master fd */
+        return true;
+    }
+
+    return errno == EINVAL;
+}
+#endif
 
 mir::MinimalConsoleDevice::MinimalConsoleDevice(std::unique_ptr<mir::Device::Observer> observer)
     : observer{std::move(observer)}
@@ -129,27 +152,16 @@ std::future<std::unique_ptr<mir::Device>> mir::MinimalConsoleServices::acquire_d
             open_flags,
             "Failed to open device node");
 
-        if (major == 226)
+        if (major == 226 && !drmIsMaster(fd))
         {
-            /*
-             * Try to acquire DRM Master, but only warn if we fail:
-             * If there is no current DRM master then we'll get master when we open
-             * the device node, but drmSetMaster will still fail if we're not root.
-             */
+            // We haven't received implicit master, so explicitly try to acquire master
             if (auto ret = drmSetMaster(fd))
             {
-                // If DISPLAY is set, then X11 probably has DRM master
-                if (getenv("DISPLAY"))
-                {
-                    BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to acquire DRM master"}));
-                }
-
-                mir::log(
-                    mir::logging::Severity::warning,
-                    "MinimalConsoleServices",
-                    "Failed to acquire DRM master: %s (%i))",
-                    strerror(-ret),
-                    -ret);
+                BOOST_THROW_EXCEPTION((
+                    std::system_error{
+                        -ret,
+                        std::system_category(),
+                        "Failed to acquire DRM master"}));
             }
         }
 
