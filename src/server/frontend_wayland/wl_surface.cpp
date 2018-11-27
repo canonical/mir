@@ -106,6 +106,12 @@ mf::WlSurface::~WlSurface()
         listener.second();
     }
 
+    if (role != &null_role)
+    {
+        log_warning("Surface role should have been destroyed before surface object, but was not");
+        // TODO: send protocol error?
+    }
+
     role->destroy();
     session->destroy_buffer_stream(stream_id);
 }

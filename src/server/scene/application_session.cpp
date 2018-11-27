@@ -217,6 +217,7 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
             case mir_window_type_freestyle:
             case mir_window_type_menu:
             case mir_window_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
+            case mir_window_type_anchored:
                 return true;
 
             case mir_window_type_gloss:
