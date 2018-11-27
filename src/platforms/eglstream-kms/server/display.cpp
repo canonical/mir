@@ -401,8 +401,9 @@ void mge::Display::register_configuration_change_handler(
     DisplayConfigurationChangeHandler const& conf_change_handler)
 {
     auto monitor = create_drm_monitor();
+    auto const fd = monitor->fd();
     handlers.register_fd_handler(
-        { monitor->fd() },
+        { fd },
         this,
         make_module_ptr<std::function<void(int)>>(
             [conf_change_handler, this, monitor = std::shared_ptr<mir::udev::Monitor>{std::move(monitor)}](int)
