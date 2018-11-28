@@ -183,7 +183,7 @@ mf::XdgSurfaceStable::XdgSurfaceStable(wl_client* client, wl_resource* resource_
 
 void mf::XdgSurfaceStable::destroy()
 {
-    wl_resource_destroy(resource);
+    destroy_wayland_object();
 }
 
 void mf::XdgSurfaceStable::get_toplevel(uint32_t id)
@@ -287,7 +287,7 @@ void mf::XdgPopupStable::grab(struct wl_resource* seat, uint32_t serial)
 
 void mf::XdgPopupStable::destroy()
 {
-    wl_resource_destroy(resource);
+    destroy_wayland_object();
 }
 
 void mf::XdgPopupStable::handle_resize(const std::experimental::optional<geometry::Point>& new_top_left,
@@ -328,7 +328,7 @@ mf::XdgToplevelStable::XdgToplevelStable(struct wl_client* client, struct wl_res
 
 void mf::XdgToplevelStable::destroy()
 {
-    wl_resource_destroy(resource);
+    destroy_wayland_object();
 }
 
 void mf::XdgToplevelStable::set_parent(std::experimental::optional<struct wl_resource*> const& parent)
@@ -503,7 +503,7 @@ mf::XdgPositionerStable::XdgPositionerStable(struct wl_client* client, struct wl
 
 void mf::XdgPositionerStable::destroy()
 {
-    wl_resource_destroy(resource);
+    destroy_wayland_object();
 }
 
 void mf::XdgPositionerStable::set_size(int32_t width, int32_t height)

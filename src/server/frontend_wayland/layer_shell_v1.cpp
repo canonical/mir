@@ -50,8 +50,6 @@ private:
     // from WindowWlSurfaceRole
     void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
                        geometry::Size const& new_size) override;
-
-    WlSurface* const surface;
 };
 
 }
@@ -84,10 +82,8 @@ void mf::LayerShellV1::get_layer_surface(struct wl_client* client, struct wl_res
 mf::LayerSurfaceV1::LayerSurfaceV1(struct wl_client* client, struct wl_resource* parent_resource, uint32_t id,
                                    WlSurface* surface, LayerShellV1 const& layer_shell)
     : wayland::LayerSurfaceV1(client, parent_resource, id),
-      WindowWlSurfaceRole(&layer_shell.seat, client, surface, layer_shell.shell, layer_shell.output_manager),
-      surface{surface}
+      WindowWlSurfaceRole(&layer_shell.seat, client, surface, layer_shell.shell, layer_shell.output_manager)
 {
-    (void)this->surface;
 }
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
