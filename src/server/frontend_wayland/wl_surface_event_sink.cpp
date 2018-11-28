@@ -88,8 +88,8 @@ void mf::WlSurfaceEventSink::handle_event(EventUPtr&& event)
 void mf::WlSurfaceEventSink::handle_resize(mir::geometry::Size const& new_size)
 {
     requested_size = new_size;
-    if (requested_size != window_size)
-        window->handle_resize(std::experimental::nullopt, requested_size);
+    if (requested_size.value() != window_size)
+        window->handle_resize(std::experimental::nullopt, requested_size.value());
 }
 
 void mf::WlSurfaceEventSink::handle_input_event(MirInputEvent const* event)
@@ -139,12 +139,14 @@ void mf::WlSurfaceEventSink::handle_window_event(MirWindowEvent const* event)
         has_focus = mir_window_event_get_attribute_value(event);
         if (has_focus)
             seat->notify_focus(client);
-        window->handle_resize(std::experimental::nullopt, requested_size);
+        if (requested_size)
+            window->handle_resize(std::experimental::nullopt, requested_size.value());
         break;
 
     case mir_window_attrib_state:
         current_state = MirWindowState(mir_window_event_get_attribute_value(event));
-        window->handle_resize(std::experimental::nullopt, requested_size);
+        if (requested_size)
+            window->handle_resize(std::experimental::nullopt, requested_size.value());
         break;
 
     default:;
