@@ -47,7 +47,7 @@ public:
      *                                          vec4 sample_to_rgba(in vec2 texcoord)
      *                                          returning a vector containing the RGBA value at texcoord.
      *                                          The elements of the uniform array tex[n] will be bound to
-     *                                          GL_TEXTURE0, GL_TEXTURE1, …, GL_TEXTUREn. (n <= 8)
+     *                                          GL_TEXTURE0, GL_TEXTURE1, …, GL_TEXTURE(n-1). (n <= 8)
      * \return  A fully compiled and linked Program
      */
     virtual std::unique_ptr<Program> compile_fragment_shader(
