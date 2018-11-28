@@ -202,6 +202,12 @@ void mf::XdgSurfaceV6::get_popup(uint32_t id, struct wl_resource* parent_surface
 
 void mf::XdgSurfaceV6::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
+    if (width <= 0 || height <= 0)
+    {
+        log_warning("XdgSurfaceV6::set_window_geometry sent invalid dimensions, %dx%d", width, height);
+        return;
+    }
+
     if (auto& role = window_role())
         role.value()->set_geometry(x, y, width, height);
 }

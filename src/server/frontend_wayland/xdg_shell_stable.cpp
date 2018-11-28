@@ -220,6 +220,12 @@ void mf::XdgSurfaceStable::get_popup(uint32_t id,
 
 void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
+    if (width <= 0 || height <= 0)
+    {
+        log_warning("XdgSurfaceStable::set_window_geometry sent invalid dimensions, %dx%d", width, height);
+        return;
+    }
+
     if (auto& role = window_role())
         role.value()->set_geometry(x, y, width, height);
 }
@@ -299,6 +305,12 @@ void mf::XdgPopupStable::handle_resize(const std::experimental::optional<geometr
         cached_top_left = new_top_left;
 
     cached_size = new_size;
+
+    if (cached_size  && (cached_size.value().width.as_int() <= 0 || cached_size.value().height.as_int() <= 0))
+    {
+        log_warning("XdgPopupStable::handle_resize sent invalid new size %dx%d", cached_size.value().width.as_int(), cached_size.value().height.as_int());
+        return;
+    }
 
     if (needs_configure && cached_top_left && cached_size)
     {
