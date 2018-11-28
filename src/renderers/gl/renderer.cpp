@@ -319,9 +319,22 @@ mrg::Renderer::Program::Program(GLuint program_id)
     id = program_id;
     position_attr = glGetAttribLocation(id, "position");
     texcoord_attr = glGetAttribLocation(id, "texcoord");
-    tex_uniforms[0] = glGetUniformLocation(id, "tex");
-    tex_uniforms[1] = glGetUniformLocation(id, "tex1");
-    tex_uniforms[2] = glGetUniformLocation(id, "tex2");
+    for (int i = 0; i < 8 ; ++i)
+    {
+        /* You can reference uniform arrays as tex[0], tex[1], tex[2], … until you
+         * hit the end of the array, which will return -1 as the location.
+         */
+        auto const uniform_name = std::string{"tex["} + std::to_string(i) + "]";
+        auto const uniform_loc = glGetUniformLocation(id, uniform_name.c_str());
+        if (uniform_loc == -1)
+        {
+            break;
+        }
+        else
+        {
+            tex_uniforms.push_back(uniform_loc);
+        }
+    }
     centre_uniform = glGetUniformLocation(id, "centre");
     display_transform_uniform = glGetUniformLocation(id, "display_transform");
     transform_uniform = glGetUniformLocation(id, "transform");
@@ -476,7 +489,7 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     {   // Avoid reloading the screen-global uniforms on every renderable
         // TODO: We actually only need to bind these *once*, right? Not once per frame?
         prog.last_used_frameno = frameno;
-        for (int i = 0u; (i < 3 && prog.tex_uniforms[i] != -1); ++i)
+        for (auto i = 0u; i < prog.tex_uniforms.size(); ++i)
         {
             glUniform1i(prog.tex_uniforms[i], i);
         }

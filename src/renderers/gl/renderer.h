@@ -73,7 +73,7 @@ public:
     struct Program
     {
         GLuint id = 0;
-        GLint tex_uniforms[3];
+        std::vector<GLint> tex_uniforms;
         GLint position_attr = -1;
         GLint texcoord_attr = -1;
         GLint centre_uniform = -1;
