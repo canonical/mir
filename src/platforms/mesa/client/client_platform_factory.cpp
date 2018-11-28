@@ -41,6 +41,7 @@ namespace
 // find them with a simple dlsym(NULL,)
 void ensure_loaded_with_rtld_global_mesa_client()
 {
+#ifdef MIR_EGL_SUPPORTED
     Dl_info info;
 
     dladdr(reinterpret_cast<void*>(&ensure_loaded_with_rtld_global_mesa_client), &info);
@@ -49,6 +50,7 @@ void ensure_loaded_with_rtld_global_mesa_client()
     // Yes, RTLD_NOLOAD does increase the ref count. So dlclose...
     if (reexport_self_global)
         dlclose(reexport_self_global);
+#endif
 }
 
 struct RealBufferFileOps : public mclm::BufferFileOps
