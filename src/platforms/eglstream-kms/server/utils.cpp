@@ -59,3 +59,20 @@ dev_t mg::eglstream::devnum_for_device(EGLDeviceEXT device)
 
     return info.st_rdev;
 }
+
+auto mg::eglstream::parse_nvidia_version(char const* gl_version) -> std::experimental::optional<VersionInfo>
+{
+    /* Parses the GL_VERSION output of the NVIDIA binary drivers, which has the form
+     * $GL_VERSION NVIDIA $NVIDIA_DRIVER_MAJOR.$NVIDIA_DRIVER_MINOR
+     *
+     * We only want the NVIDIA driver version.
+     */
+    VersionInfo info;
+    auto const matches = ::sscanf(gl_version, "%*d.%*d NVIDIA %d.%d", &info.major, &info.minor);
+    if (matches == 2)
+    {
+        // If we successfully parsed into the two bits, return them.
+        return info;
+    }
+    return {};
+}

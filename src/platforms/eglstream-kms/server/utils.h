@@ -21,6 +21,7 @@
 
 #include <epoxy/egl.h>
 #include <sys/types.h>
+#include <experimental/optional>
 
 namespace mir
 {
@@ -29,6 +30,14 @@ namespace graphics
 namespace eglstream
 {
 dev_t devnum_for_device(EGLDeviceEXT device);
+
+struct VersionInfo
+{
+    int major;
+    int minor;
+};
+
+std::experimental::optional<VersionInfo> parse_nvidia_version(char const* gl_version);
 }
 }
 }

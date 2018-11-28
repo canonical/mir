@@ -1,5 +1,6 @@
 list(APPEND EGLSTREAM_KMS_UNIT_TEST_SOURCES
   $<TARGET_OBJECTS:mirplatformgraphicseglstreamkmsobjects>
   ${CMAKE_CURRENT_SOURCE_DIR}/test_threaded_drm_event_handler.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_utils.cpp
 )
 set(EGLSTREAM_KMS_UNIT_TEST_SOURCES ${EGLSTREAM_KMS_UNIT_TEST_SOURCES} PARENT_SCOPE)

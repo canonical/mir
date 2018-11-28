@@ -225,6 +225,28 @@ mg::PlatformPriority probe_graphics_platform(
                         return false;
                     }
 
+                    auto const gl_version = reinterpret_cast<char const*>(glGetString(GL_VERSION));
+                    if (!gl_version)
+                    {
+                        mir::log_warning("glGetString(GL_VERSION) call failed. This probably indicates a problem with the GL drivers.");
+                    }
+                    else if (auto version = mge::parse_nvidia_version(gl_version))
+                    {
+                        mir::log_debug("Detected NVIDIA driver version %i.%i", version->major, version->minor);
+                        if (version->major < 396)
+                        {
+                            mir::log_warning(
+                                "Detected NVIDIA driver version %i.%i is older than 396.xx",
+                                version->major,
+                                version->minor);
+                            mir::log_warning(
+                                "This driver is known to interact badly with Mir. See https://github.com/MirServer/mir/issues/650");
+                            mir::log_warning(
+                                "Mir will not auto-load the eglstream-kms platform on this driver. To proceed anyway, manually specify the platform library.");
+                            return false;
+                        }
+                    }
+
                     if (epoxy_has_egl_extension(display, "EGL_EXT_output_base"))
                     {
                         return true;
