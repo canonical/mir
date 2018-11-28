@@ -57,6 +57,9 @@ execute: |
 
     cd $SPREAD_PATH
 
+    # Mark the "release" in the changelog
+    debchange --release "CI release"
+
     # install dependencies
     mk-build-deps \
       --install \

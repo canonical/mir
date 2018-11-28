@@ -13,34 +13,12 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
+ * Authored by:
+ *   Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_PROGRAM_H_
-#define MIR_PLATFORM_PROGRAM_H_
+#include "mir/graphics/wayland_allocator.h"
 
-namespace mir
-{
-namespace graphics
-{
-namespace gl
-{
-
-/**
- * An opaque handle to one (or more) GLSL shader(s).
- */
-class Program
-{
-public:
-    Program() = default;
-    virtual ~Program();
-
-    Program(Program const&) = delete;
-    Program& operator=(Program const&) = delete;
-};
-
-}
-}
-}
-
-#endif //MIR_PLATFORM_PROGRAM_H_
+// Define a key function to ensure libmirplatform contains the vtbl and typeinfo
+mir::graphics::WaylandAllocator::~WaylandAllocator() = default;
+mir::graphics::WaylandAllocator::WaylandAllocator() = default;

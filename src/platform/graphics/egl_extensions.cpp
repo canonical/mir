@@ -77,3 +77,18 @@ mg::EGLExtensions::WaylandExtensions::WaylandExtensions() :
         BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGL_WL_bind_wayland_display"));
     }
 }
+
+mg::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions() :
+    eglCreateStreamAttribNV{
+        reinterpret_cast<PFNEGLCREATESTREAMATTRIBNVPROC>(eglGetProcAddress("eglCreateStreamAttribNV"))
+    },
+    eglStreamConsumerAcquireAttribNV{
+        reinterpret_cast<PFNEGLSTREAMCONSUMERACQUIREATTRIBNVPROC>(
+            eglGetProcAddress("eglStreamConsumerAcquireAttribNV"))
+    }
+{
+    if (!eglCreateStreamAttribNV || !eglStreamConsumerAcquireAttribNV)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"EGL implementation doesn't support EGL_NV_stream_attrib"}));
+    }
+}

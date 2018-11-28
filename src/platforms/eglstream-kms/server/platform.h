@@ -56,7 +56,10 @@ public:
 class DisplayPlatform : public graphics::DisplayPlatform
 {
 public:
-    DisplayPlatform(ConsoleServices& console, EGLDeviceEXT device);
+    DisplayPlatform(
+        ConsoleServices& console,
+        EGLDeviceEXT device,
+        std::shared_ptr<DisplayReport> display_report);
 
     UniqueModulePtr<Display> create_display(
         std::shared_ptr<DisplayConfigurationPolicy> const& /*initial_conf_policy*/,
@@ -65,6 +68,7 @@ public:
     std::vector<ExtensionDescription> extensions() const override;
 
 private:
+    std::shared_ptr<DisplayReport> const display_report;
     EGLDisplay display;
     mir::Fd drm_node;
     std::unique_ptr<mir::Device> drm_device;

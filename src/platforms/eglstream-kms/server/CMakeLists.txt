@@ -27,6 +27,9 @@ add_library(mirplatformgraphicseglstreamkmsobjects OBJECT
   software_buffer.cpp
   utils.cpp
   utils.h
+  drm_event_handler.h
+  threaded_drm_event_handler.h
+  threaded_drm_event_handler.cpp
 )
 
 add_library(mirplatformgraphicseglstreamkms MODULE
@@ -44,7 +47,9 @@ target_link_libraries(
   ${DRM_LDFLAGS} ${DRM_LIBRARIES}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GLESv2_LDFLAGS} ${GLESv2_LIBRARIES}
+  ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
   ${EPOXY_LDFLAGS} ${EPOXY_LIBRARIES}
+  ${NVIDIA_EGL_WAYLAND}
 )
 
 set_target_properties(

@@ -371,6 +371,18 @@ void mtd::MockDRM::generate_event_on(char const *device)
     }
 }
 
+void mtd::MockDRM::consume_event_on(char const* device)
+{
+    auto const fd = fake_drms[device].fd();
+
+    char consume_buf;
+    if (::read(fd, &consume_buf, 1) != 1)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "Failed to consume fake DRM event"));
+    }
+}
+
 void mtd::MockDRM::add_connector(
     char const *device,
     uint32_t connector_id,

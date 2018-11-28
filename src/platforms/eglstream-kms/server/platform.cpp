@@ -43,8 +43,12 @@ namespace mg = mir::graphics;
 namespace mge = mir::graphics::eglstream;
 namespace mgc = mir::graphics::common;
 
-mge::DisplayPlatform::DisplayPlatform(ConsoleServices& console, EGLDeviceEXT device)
-    : display{EGL_NO_DISPLAY}
+mge::DisplayPlatform::DisplayPlatform(
+    ConsoleServices& console,
+    EGLDeviceEXT device,
+    std::shared_ptr<mg::DisplayReport> display_report)
+    : display_report{std::move(display_report)},
+      display{EGL_NO_DISPLAY}
 {
     using namespace std::literals;
 
@@ -91,7 +95,14 @@ mir::UniqueModulePtr<mg::Display> mge::DisplayPlatform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& configuration_policy,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-    return mir::make_module_ptr<mge::Display>(drm_node, display, configuration_policy, *gl_config);
+    auto retval =
+        mir::make_module_ptr<mge::Display>(
+            drm_node,
+            display,
+            configuration_policy,
+            *gl_config,
+            display_report);
+    return retval;
 }
 
 mg::NativeDisplayPlatform* mge::DisplayPlatform::native_display_platform()

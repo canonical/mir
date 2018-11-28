@@ -20,7 +20,11 @@
 #define MIR_PLATFORMS_EGLSTREAM_BUFFER_ALLOCATOR_
 
 #include "mir/graphics/graphic_buffer_allocator.h"
+#include "mir/graphics/wayland_allocator.h"
 #include "mir/graphics/buffer_id.h"
+#include "mir/graphics/egl_extensions.h"
+
+#include "wayland-eglstream-controller.h"
 
 #include <memory>
 
@@ -38,10 +42,17 @@ namespace graphics
 {
 class Display;
 
+namespace gl
+{
+class Program;
+}
+
 namespace eglstream
 {
 
-class BufferAllocator: public graphics::GraphicBufferAllocator
+class BufferAllocator:
+    public graphics::GraphicBufferAllocator,
+    public graphics::WaylandAllocator
 {
 public:
     BufferAllocator(graphics::Display const& output);
@@ -54,8 +65,31 @@ public:
         geometry::Size size, uint32_t native_format, uint32_t native_flags) override;
 
     std::vector<MirPixelFormat> supported_pixel_formats() override;
+
+    void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) override;
+
+    std::shared_ptr<Buffer> buffer_from_resource(
+        wl_resource* buffer,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release) override;
+
 private:
+    static void create_buffer_eglstream_resource(
+        wl_client* client,
+        wl_resource* eglstream_controller,
+        wl_resource* surface,
+        wl_resource* buffer);
+    static void bind_eglstream_controller(
+        wl_client* client,
+        void* ctx,
+        uint32_t version,
+        uint32_t id);
+
+    EGLExtensions::WaylandExtensions const extensions;
+    EGLExtensions::NVStreamAttribExtensions const nv_extensions;
     std::shared_ptr<renderer::gl::Context> const ctx;
+    std::unique_ptr<gl::Program> shader;
+    static struct wl_eglstream_controller_interface const impl;
 };
 
 }

@@ -205,6 +205,11 @@ MIR_PLATFORM_0.32.3 {
 MIR_PLATFORM_1.1.0 {
  global:
   extern "C++" {
+    mir::graphics::WaylandAllocator::WaylandAllocator*;
+    mir::graphics::WaylandAllocator::?WaylandAllocator*;
+    typeinfo?for?mir::graphics::WaylandAllocator;
+    vtable?for?mir::graphics::WaylandAllocator;
+
     mir::graphics::gl::Texture::?Texture*;
     typeinfo?for?mir::graphics::gl::Texture;
     vtable?for?mir::graphics::gl::Texture;
@@ -217,5 +222,8 @@ MIR_PLATFORM_1.1.0 {
     mir::graphics::gl::ProgramFactory::compile_fragment_shader*;
     typeinfo?for?mir::graphics::gl::ProgramFactory;
     vtable?for?mir::graphics::gl::ProgramFactory;
+
+    mir::graphics::EGLExtensions::WaylandExtensions::WaylandExtensions*;
+    mir::graphics::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions*;
   };
 } MIR_PLATFORM_0.32.3;

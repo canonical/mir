@@ -84,24 +84,24 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mo::Option> const&,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mg::DisplayReport> const&, 
+    std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mir::logging::Logger> const&)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
     return mir::make_module_ptr<mge::Platform>(
         std::make_shared<mge::RenderingPlatform>(),
-        std::make_shared<mge::DisplayPlatform>(*console, find_device()));
+        std::make_shared<mge::DisplayPlatform>(*console, find_device(), display_report));
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     std::shared_ptr<mo::Option> const&, 
     std::shared_ptr<mir::EmergencyCleanupRegistry> const&,
     std::shared_ptr<mir::ConsoleServices> const& console,
-    std::shared_ptr<mg::DisplayReport> const&, 
+    std::shared_ptr<mg::DisplayReport> const& display_report,
     std::shared_ptr<mir::logging::Logger> const&) 
 {
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
-    return mir::make_module_ptr<mge::DisplayPlatform>(*console, find_device());
+    return mir::make_module_ptr<mge::DisplayPlatform>(*console, find_device(), display_report);
 }
 
 mir::UniqueModulePtr<mg::RenderingPlatform> create_rendering_platform(
@@ -223,6 +223,28 @@ mg::PlatformPriority probe_graphics_platform(
                     if (display == EGL_NO_DISPLAY)
                     {
                         return false;
+                    }
+
+                    auto const gl_version = reinterpret_cast<char const*>(glGetString(GL_VERSION));
+                    if (!gl_version)
+                    {
+                        mir::log_warning("glGetString(GL_VERSION) call failed. This probably indicates a problem with the GL drivers.");
+                    }
+                    else if (auto version = mge::parse_nvidia_version(gl_version))
+                    {
+                        mir::log_debug("Detected NVIDIA driver version %i.%i", version->major, version->minor);
+                        if (version->major < 396)
+                        {
+                            mir::log_warning(
+                                "Detected NVIDIA driver version %i.%i is older than 396.xx",
+                                version->major,
+                                version->minor);
+                            mir::log_warning(
+                                "This driver is known to interact badly with Mir. See https://github.com/MirServer/mir/issues/650");
+                            mir::log_warning(
+                                "Mir will not auto-load the eglstream-kms platform on this driver. To proceed anyway, manually specify the platform library.");
+                            return false;
+                        }
                     }
 
                     if (epoxy_has_egl_extension(display, "EGL_EXT_output_base"))

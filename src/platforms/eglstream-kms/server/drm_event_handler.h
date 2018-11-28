@@ -16,31 +16,35 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#ifndef MIR_PLATFORM_PROGRAM_H_
-#define MIR_PLATFORM_PROGRAM_H_
+#ifndef MIR_PLATFORM_EGLSTREAM_DRM_EVENT_HANDLER_H_
+#define MIR_PLATFORM_EGLSTREAM_DRM_EVENT_HANDLER_H_
+
+#include <future>
 
 namespace mir
 {
 namespace graphics
 {
-namespace gl
+namespace eglstream
 {
-
-/**
- * An opaque handle to one (or more) GLSL shader(s).
- */
-class Program
+class DRMEventHandler
 {
 public:
-    Program() = default;
-    virtual ~Program();
+    DRMEventHandler() = default;
+    virtual ~DRMEventHandler() = default;
 
-    Program(Program const&) = delete;
-    Program& operator=(Program const&) = delete;
+    DRMEventHandler(DRMEventHandler const&) = delete;
+    DRMEventHandler& operator=(DRMEventHandler const&) = delete;
+
+    virtual void const* drm_event_data() const = 0;
+
+    using KMSCrtcId = uint32_t;
+    virtual std::future<void> expect_flip_event(
+        KMSCrtcId id,
+        std::function<void(unsigned int frame_number, std::chrono::milliseconds frame_time)> on_flip) = 0;
 };
-
 }
 }
 }
 
-#endif //MIR_PLATFORM_PROGRAM_H_
+#endif //MIR_PLATFORM_EGLSTREAM_DRM_EVENT_HANDLER_H_

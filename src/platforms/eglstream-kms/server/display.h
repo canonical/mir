@@ -24,15 +24,19 @@
 #include "mir/fd.h"
 #include "mir/renderer/gl/context_source.h"
 
+#include <mutex>
+
 namespace mir
 {
 namespace graphics
 {
 class DisplayConfigurationPolicy;
 class GLConfig;
+class DisplayReport;
 
 namespace eglstream
 {
+class DRMEventHandler;
 
 class Display : public mir::graphics::Display,
                 public mir::graphics::NativeDisplay,
@@ -43,7 +47,8 @@ public:
         mir::Fd drm_node,
         EGLDisplay display,
         std::shared_ptr<DisplayConfigurationPolicy> const& configuration_policy,
-        GLConfig const& gl_conf);
+        GLConfig const& gl_conf,
+        std::shared_ptr<DisplayReport> display_report);
 
     void for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f) override;
 
@@ -77,9 +82,14 @@ private:
     EGLDisplay display;
     EGLConfig config;
     EGLContext context;
+
+    std::mutex mutable configuration_mutex;
     KMSDisplayConfiguration display_configuration;
+
+    std::shared_ptr<DRMEventHandler> const event_handler;
     std::vector<std::unique_ptr<DisplaySyncGroup>> active_sync_groups;
     std::shared_ptr<DisplayConfigurationPolicy> const configuration_policy;
+    std::shared_ptr<DisplayReport> const display_report;
 };
 
 }

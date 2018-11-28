@@ -296,6 +296,19 @@ EGLOutputLayerEXT mgek::EGLOutput::output_layer() const
     return layer;
 }
 
+uint32_t mgek::EGLOutput::crtc_id() const
+{
+    EGLAttrib crtc_id;
+    if (eglQueryOutputLayerAttribEXT(display, layer, EGL_DRM_CRTC_EXT, &crtc_id)  != EGL_TRUE)
+    {
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query DRM CRTC ID from EGLOutputLayer"));
+    } else if (crtc_id == 0)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"EGLOutputLayer is associated with invalid CRTC?!"}));
+    }
+    return static_cast<uint32_t>(crtc_id);
+}
+
 void mgek::EGLOutput::clear_crtc()
 {
     using namespace std::string_literals;
