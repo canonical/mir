@@ -35,7 +35,8 @@
 #include <sys/types.h>
 #include <drm.h>
 
-#ifndef LIBDRM_HAS_IS_MASTER
+// TODO: once libdrm provides this symbol, we need a way to set MIR_LIBDRM_HAS_IS_MASTER
+#ifndef MIR_LIBDRM_HAS_IS_MASTER
 bool drmIsMaster(int fd)
 {
     struct drm_mode_mode_cmd cmd;
