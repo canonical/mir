@@ -61,7 +61,7 @@ Build-Depends: cmake,
 #
 # Abuse alternative dependencies here so that we can build on
 # Xenial (which doesn't have a new enough NVIDIA driver)
-               libnvidia-gl-390 [amd64 armhf i386] | base-files (<< 10.1ubuntu2) [amd64 armhf i386],
+               libnvidia-gl-390 [amd64 i386] | base-files (<< 10.1ubuntu2) [amd64 i386],
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
@@ -378,7 +378,7 @@ Description: Display server for Ubuntu - platform library for KMS Mesa
 
 Package: mir-client-platform-eglstream5
 Section: libs
-Architecture: amd64 armhf i386
+Architecture: amd64 i386
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
@@ -393,7 +393,7 @@ Description: Display server for Ubuntu - client platform library for NVIDIA
 
 Package: mir-platform-graphics-eglstream-kms16
 Section: libs
-Architecture: amd64 armhf i386
+Architecture: amd64 i386
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
