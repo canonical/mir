@@ -378,7 +378,7 @@ Description: Display server for Ubuntu - platform library for KMS Mesa
 
 Package: mir-platform-graphics-eglstream-kms16
 Section: libs
-Architecture: linux-any
+Architecture: amd64 armhf i386
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
