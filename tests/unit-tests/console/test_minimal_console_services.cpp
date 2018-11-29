@@ -24,6 +24,7 @@
 #include "mir/anonymous_shm_file.h"
 
 #include <fcntl.h>
+#include <drm.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -131,11 +132,14 @@ private:
     std::vector<mtf::OpenHandlerHandle> expectations;
 };
 
-TEST_F(MinimalConsoleServicesTest, if_DISPLAY_is_unset_failure_to_claim_drm_master_is_non_fatal)
+TEST_F(MinimalConsoleServicesTest, calls_drm_set_master_if_not_already_master)
 {
-    unsetenv("DISPLAY");
     int drm_fd = set_expectations_for_uevent_probe_of_drm(5, "/dev/dri/card5");
-    ON_CALL(drm, drmSetMaster(drm_fd)).WillByDefault(Return(-EPERM));
+
+    // drmIsMaster checks the ATTACHMODE ioctl, detecting EPERM as not master.
+    ON_CALL(drm, drmIoctl(drm_fd, DRM_IOCTL_MODE_ATTACHMODE, _))
+        .WillByDefault(SetErrnoAndReturn(EPERM, -1));
+    EXPECT_CALL(drm, drmSetMaster(drm_fd));
 
     mir::MinimalConsoleServices services;
     bool activated{false};
@@ -153,20 +157,18 @@ TEST_F(MinimalConsoleServicesTest, if_DISPLAY_is_unset_failure_to_claim_drm_mast
     EXPECT_TRUE(activated);
 }
 
-TEST_F(MinimalConsoleServicesTest, if_DISPLAY_is_set_failure_to_claim_drm_master_is_fatal)
+TEST_F(MinimalConsoleServicesTest, failure_to_set_master_is_fatal)
 {
-    setenv("DISPLAY", ":0", 0);
     int drm_fd = set_expectations_for_uevent_probe_of_drm(5, "/dev/dri/card5");
+
+    // drmIsMaster checks the ATTACHMODE ioctl, detecting EPERM as not master.
+    ON_CALL(drm, drmIoctl(drm_fd, DRM_IOCTL_MODE_ATTACHMODE, _))
+        .WillByDefault(SetErrnoAndReturn(EPERM, - 1));
     ON_CALL(drm, drmSetMaster(drm_fd)).WillByDefault(Return(-EPERM));
 
     mir::MinimalConsoleServices services;
-    bool activated{false};
     auto observer = std::make_unique<mtd::SimpleDeviceObserver>(
-        [&activated](auto&& fd)
-            {
-            EXPECT_THAT(fd, Not(Eq(mir::Fd::invalid)));
-            activated = true;
-            },
+        [](auto){},
         [](){},
         [](){});
 
@@ -179,6 +181,31 @@ TEST_F(MinimalConsoleServicesTest, if_DISPLAY_is_set_failure_to_claim_drm_master
     {
         EXPECT_THAT(err.what(), HasSubstr("Failed to acquire DRM master"));
     }
+}
+
+TEST_F(MinimalConsoleServicesTest, does_not_call_set_master_if_already_master)
+{
+    int drm_fd = set_expectations_for_uevent_probe_of_drm(5, "/dev/dri/card5");
+
+    // drmIsMaster checks the ATTACHMODE ioctl, detecting EINVAL as master.
+    ON_CALL(drm, drmIoctl(drm_fd, DRM_IOCTL_MODE_ATTACHMODE, _))
+        .WillByDefault(SetErrnoAndReturn(EINVAL, -1));
+    ON_CALL(drm, drmSetMaster(drm_fd)).WillByDefault(Return(-EPERM));
+
+    mir::MinimalConsoleServices services;
+    bool activated{false};
+    auto observer = std::make_unique<mtd::SimpleDeviceObserver>(
+        [&activated](auto&& fd)
+        {
+            EXPECT_THAT(fd, Not(Eq(mir::Fd::invalid)));
+            activated = true;
+        },
+        [](){},
+        [](){});
+
+    services.acquire_device(226, 5, std::move(observer));
+
+    EXPECT_TRUE(activated);
 }
 
 TEST_F(MinimalConsoleServicesTest, doesnt_try_to_set_master_on_non_drm_devices)
@@ -198,27 +225,6 @@ TEST_F(MinimalConsoleServicesTest, doesnt_try_to_set_master_on_non_drm_devices)
         [](){});
 
     services.acquire_device(33, 22, std::move(observer));
-
-    EXPECT_TRUE(activated);
-}
-
-TEST_F(MinimalConsoleServicesTest, tries_to_set_drm_master_on_drm_devices)
-{
-    auto drm_fd = set_expectations_for_uevent_probe_of_drm(22, "/dev/dri/card2");
-    EXPECT_CALL(drm, drmSetMaster(static_cast<int>(drm_fd))).Times(1);
-
-    mir::MinimalConsoleServices services;
-    bool activated{false};
-    auto observer = std::make_unique<mtd::SimpleDeviceObserver>(
-        [&activated](auto&& fd)
-        {
-            EXPECT_THAT(fd, Not(Eq(mir::Fd::invalid)));
-            activated = true;
-        },
-        [](){},
-        [](){});
-
-    services.acquire_device(226, 22, std::move(observer));
 
     EXPECT_TRUE(activated);
 }
