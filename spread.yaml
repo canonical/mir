@@ -1,6 +1,6 @@
 project: mir
 
-kill-timeout: 50m
+kill-timeout: 45m
 
 backends:
     lxd:
