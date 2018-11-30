@@ -2,15 +2,6 @@ summary: Build (on Fedora)
 systems: [fedora-*]
 
 execute: |
-    if [ "${SPREAD_SYSTEM}" = "fedora-rawhide-64" -a "${SPREAD_REBOOT}" -eq 0 ]; then
-      # upgrade to rawhide
-      dnf upgrade --assumeyes --refresh
-      dnf install --assumeyes fedora-gpg-keys
-      # rawhide being rolling breaks from time to time, fall through an incomplete upgrade
-      dnf distro-sync --assumeyes --releasever=rawhide || /bin/true
-      REBOOT
-    fi
-
     dnf install --assumeyes \
         cmake \
         make \
