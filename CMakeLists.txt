@@ -184,6 +184,7 @@ endif()
 add_definitions(-DLOG_NDEBUG=1)
 
 enable_testing()
+find_package(PkgConfig)
 
 include_directories(include/core)
 include_directories(include/common)
@@ -208,10 +209,10 @@ endif(MIR_DISABLE_EPOLL_REACTOR)
 
 add_definitions(-DMESA_EGL_NO_X11_HEADERS)
 
-find_library(NVIDIA_EGL_WAYLAND NAMES nvidia-egl-wayland libnvidia-egl-wayland.so.1 libnvidia-egl-wayland.so.1.0.2 libnvidia-egl-wayland.so.1.0.3)
+pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream)
 
 # Set the default platforms based on availability of NVIDIA libraries
-if (NVIDIA_EGL_WAYLAND)
+if (WAYLAND_EGLSTREAM_FOUND)
   set(
     MIR_PLATFORM
     mesa-kms;mesa-x11;eglstream-kms
@@ -241,7 +242,7 @@ foreach(platform IN LISTS MIR_PLATFORM)
      set(MIR_BUILD_PLATFORM_MESA_X11 TRUE)
   endif()
   if (platform STREQUAL "eglstream-kms")
-     if (NOT NVIDIA_EGL_WAYLAND)
+     if (NOT WAYLAND_EGLSTREAM_FOUND)
         message(FATAL_ERROR "EGLStream platform requested, but required NVIDIA external EGL platform nvidia-egl-wayland not found")
      endif()
      set(MIR_BUILD_PLATFORM_EGLSTREAM_KMS TRUE)
@@ -310,7 +311,6 @@ else()
 endif()
 
 if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
-  find_package( PkgConfig )
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
   pkg_check_modules( DRM REQUIRED libdrm )
   if (GBM_VERSION VERSION_LESS 11)
