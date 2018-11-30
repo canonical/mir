@@ -401,6 +401,22 @@ Description: Display server for Ubuntu - platform library for NVIDIA
  the hardware platform using the EGLStream EGL extensions, such as the
  NVIDIA binary driver.
 
+Package: mir-graphics-drivers-nvidia
+Section: libs
+Architecture: amd64 i386
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         mir-platform-graphics-eglstream-kms16,
+         mir-platform-graphics-mesa-x16,
+         mir-client-platform-eglstream5,
+         mir-platform-input-evdev7,
+Description: Display server for Ubuntu - Nvidia driver metapackage
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ This package depends on a full set of graphics drivers for Nvidia systems.
+
 Package: mir-platform-input-evdev7
 Section: libs
 Architecture: linux-any
