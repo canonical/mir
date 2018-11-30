@@ -56,7 +56,7 @@ TEST(EGLStreamUtils, returns_empty_option_on_empty_string)
 TEST(EGLStreamUtils, returns_nvidia_driver_version)
 {
     auto const version = mge::parse_nvidia_version("4.5 NVIDIA 390.23");
-    EXPECT_TRUE(version);
+    EXPECT_TRUE(!!version);
     EXPECT_THAT(*version, Eq(mge::VersionInfo { 390, 23 }));
 }
 
