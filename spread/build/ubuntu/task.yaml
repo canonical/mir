@@ -9,6 +9,7 @@ summary: Build Ubuntu packages
 execute: |
     # Get any out-of-archive dependencies
     # (Currently just libnvidia-egl-wayland-dev)
+    add-apt-repository --yes ppa:mir-team/release
     add-apt-repository --yes ppa:mir-team/dev
 
     apt-get update
