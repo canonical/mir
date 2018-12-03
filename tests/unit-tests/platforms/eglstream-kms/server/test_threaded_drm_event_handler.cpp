@@ -20,6 +20,9 @@
 
 #include "mir/test/doubles/mock_drm.h"
 
+#include <mutex>
+#include <deque>
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -30,10 +33,54 @@ using namespace testing;
 
 class ThreadedDRMEventHandlerTest : public testing::Test
 {
+private:
+    struct EventDetails
+    {
+        unsigned int frame_no;
+        unsigned int tv_sec;
+        unsigned int tv_usec;
+        uint32_t crtc_id;
+        void const* userdata;
+    };
+
 public:
     ThreadedDRMEventHandlerTest()
         : mock_drm_fd{mock_drm.open(device_node, 0, 0)}
     {
+        ON_CALL(mock_drm, drmHandleEvent(static_cast<int>(mock_drm_fd), _))
+            .WillByDefault(
+                Invoke(
+                    [this](auto drm_fd, drmEventContextPtr ctx) -> int
+                    {
+
+                        EXPECT_THAT(ctx->version, Ge(3));
+                        EXPECT_THAT(ctx->page_flip_handler2, NotNull());
+                        if (!ctx->page_flip_handler2)
+                            return -1;
+
+                        EventDetails event;
+                        {
+                            std::lock_guard<std::mutex> lock{event_mutex};
+                            if (expected_events.empty())
+                            {
+                                ADD_FAILURE() << "drmHandleEvent called with no pending event";
+                                return -1;
+                            }
+                            event = expected_events.front();
+                            expected_events.pop_front();
+                        }
+
+                        ctx->page_flip_handler2(
+                            drm_fd,
+                            event.frame_no,
+                            event.tv_sec,
+                            event.tv_usec,
+                            event.crtc_id,
+                            const_cast<void*>(event.userdata));
+
+                        mock_drm.consume_event_on(device_node);
+                        return 0;
+                    }));
     }
 
     void add_flip_event(
@@ -43,30 +90,20 @@ public:
         uint32_t crtc_id,
         void const* userdata)
     {
-        EXPECT_CALL(mock_drm, drmHandleEvent(static_cast<int>(mock_drm_fd), _))
-            .Times(AtMost(1))
-            .WillRepeatedly(
-                Invoke(
-                    [this, frame_no, tv_sec, tv_usec, crtc_id, userdata](
-                        auto drm_fd,
-                        drmEventContextPtr event_context) -> int
-                    {
-                        EXPECT_THAT(event_context->version, Ge(3));
-                        EXPECT_THAT(event_context->page_flip_handler2, NotNull());
-                        if (!event_context->page_flip_handler2)
-                            return -1;
+        using namespace std::literals::chrono_literals;
 
-                        event_context->page_flip_handler2(
-                            drm_fd,
-                            frame_no,
-                            tv_sec,
-                            tv_usec,
-                            crtc_id,
-                            const_cast<void*>(userdata));
+        std::lock_guard<std::mutex> lock{event_mutex};
 
-                        mock_drm.consume_event_on(device_node);
-                        return 0;
-                    }));
+        expected_events.emplace_back(
+            EventDetails
+            {
+                frame_no,
+                tv_sec,
+                tv_usec,
+                crtc_id,
+                userdata
+            });
+
         mock_drm.generate_event_on(device_node);
     }
 
@@ -74,6 +111,10 @@ public:
 
     char const* const device_node = "/dev/dri/card0";
     mir::Fd mock_drm_fd;
+
+private:
+    std::mutex event_mutex;
+    std::deque<EventDetails> expected_events;
 };
 
 TEST_F(ThreadedDRMEventHandlerTest, flip_completion_handle_becomes_ready_on_flip)
