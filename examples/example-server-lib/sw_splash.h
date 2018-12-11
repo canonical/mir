@@ -35,8 +35,8 @@ public:
 
     operator std::shared_ptr<SplashSession>() const;
 
-private:
     struct Self;
+private:
     std::shared_ptr<Self> const self;
 };
 

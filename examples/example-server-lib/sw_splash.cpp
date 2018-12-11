@@ -31,6 +31,36 @@
 #include <cstring>
 #include <thread>
 #include <mutex>
+#include <vector>
+
+struct SwSplash::Self : SplashSession
+{
+    struct wl_compositor* compositor = nullptr;
+    struct wl_shm* shm = nullptr;
+    struct wl_seat* seat = nullptr;
+    struct wl_output* output = nullptr;
+    struct wl_shell* shell = nullptr;
+
+    struct OutputInfo
+    {
+        struct wl_output* wl_output;
+        int32_t x;
+        int32_t y;
+        int32_t width;
+        int32_t height;
+    };
+
+    std::vector<OutputInfo> output_info;
+
+    std::mutex mutable mutex;
+    std::weak_ptr<mir::scene::Session> session_;
+
+    std::shared_ptr<mir::scene::Session> session() const override
+    {
+        std::lock_guard<decltype(mutex)> lock{mutex};
+        return session_.lock();
+    }
+};
 
 namespace
 {
@@ -59,15 +89,6 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
     return pool;
 }
 
-struct globals
-{
-    struct wl_compositor* compositor;
-    struct wl_shm* shm;
-    struct wl_seat* seat;
-    struct wl_output* output;
-    struct wl_shell* shell;
-};
-
 void new_global(
     void* data,
     struct wl_registry* registry,
@@ -76,30 +97,30 @@ void new_global(
     uint32_t version)
 {
     (void)version;
-    struct globals* globals = static_cast<decltype(globals)>(data);
+    SwSplash::Self* self = static_cast<decltype(self)>(data);
 
     if (strcmp(interface, "wl_compositor") == 0)
     {
-        globals->compositor =
-            static_cast<decltype(globals->compositor)>(wl_registry_bind(registry, id, &wl_compositor_interface, 3));
+        self->compositor =
+            static_cast<decltype(self->compositor)>(wl_registry_bind(registry, id, &wl_compositor_interface, 3));
     }
     else if (strcmp(interface, "wl_shm") == 0)
     {
-        globals->shm = static_cast<decltype(globals->shm)>(wl_registry_bind(registry, id, &wl_shm_interface, 1));
+        self->shm = static_cast<decltype(self->shm)>(wl_registry_bind(registry, id, &wl_shm_interface, 1));
         // Normally we'd add a listener to pick up the supported formats here
         // As luck would have it, I know that argb8888 is the only format we support :)
     }
     else if (strcmp(interface, "wl_seat") == 0)
     {
-        globals->seat = static_cast<decltype(globals->seat)>(wl_registry_bind(registry, id, &wl_seat_interface, 4));
+        self->seat = static_cast<decltype(self->seat)>(wl_registry_bind(registry, id, &wl_seat_interface, 4));
     }
     else if (strcmp(interface, "wl_output") == 0)
     {
-        globals->output = static_cast<decltype(globals->output)>(wl_registry_bind(registry, id, &wl_output_interface, 2));
+        self->output = static_cast<decltype(self->output)>(wl_registry_bind(registry, id, &wl_output_interface, 2));
     }
     else if (strcmp(interface, "wl_shell") == 0)
     {
-        globals->shell = static_cast<decltype(globals->shell)>(wl_registry_bind(registry, id, &wl_shell_interface, 1));
+        self->shell = static_cast<decltype(self->shell)>(wl_registry_bind(registry, id, &wl_shell_interface, 1));
     }
 }
 
@@ -127,6 +148,9 @@ wl_callback_listener const frame_listener =
 
 struct draw_context
 {
+    int width = 400;
+    int height = 400;
+
     void* content_area;
     struct wl_display* display;
     struct wl_surface* surface;
@@ -170,7 +194,7 @@ void draw_new_stuff(
         return;
     }
 
-    memset(ctx->content_area, current_value, 400 * 400 * 4);
+    memset(ctx->content_area, current_value, ctx->width * ctx->height * 4);
     ++current_value;
 
     ctx->new_frame_signal = wl_surface_frame(ctx->surface);
@@ -207,20 +231,25 @@ void output_geometry(void *data,
     struct wl_output *wl_output,
     int32_t x,
     int32_t y,
-    int32_t physical_width,
-    int32_t physical_height,
-    int32_t subpixel,
-    const char *make,
-    const char *model,
-    int32_t transform)
+    int32_t /*physical_width*/,
+    int32_t /*physical_height*/,
+    int32_t /*subpixel*/,
+    const char */*make*/,
+    const char */*model*/,
+    int32_t /*transform*/)
 {
-    (void)data;
-    (void)wl_output;
-    (void)subpixel;
-    (void)make;
-    (void)model;
-    (void)transform;
-    printf("Got geometry: (%imm × %imm)@(%i, %i)\n", physical_width, physical_height, x, y);
+    SwSplash::Self* self = static_cast<decltype(self)>(data);
+
+    for (auto& oi : self->output_info)
+    {
+        if (wl_output == oi.wl_output)
+        {
+            oi.x = x;
+            oi.y = y;
+            return;
+        }
+    }
+    self->output_info.push_back({wl_output, x, y, 0, 0});
 }
 
 void output_mode(void *data,
@@ -228,25 +257,36 @@ void output_mode(void *data,
     uint32_t flags,
     int32_t width,
     int32_t height,
-    int32_t refresh)
+    int32_t /*refresh*/)
 {
-    (void)data;
-    (void)wl_output;
-    printf("Got mode: %i×%i@%i (flags: %i)\n", width, height, refresh, flags);
+    if (!(WL_OUTPUT_MODE_CURRENT & flags))
+        return;
+
+    SwSplash::Self* self = static_cast<decltype(self)>(data);
+
+    for (auto& oi : self->output_info)
+    {
+        if (wl_output == oi.wl_output)
+        {
+            oi.width = width;
+            oi.height = height;
+            return;
+        }
+    }
+    self->output_info.push_back({wl_output, 0, 0, width, height});
 }
 
 void output_done(void* data, struct wl_output* wl_output)
 {
     (void)data;
     (void)wl_output;
-    printf("Output events done\n");
 }
 
 void output_scale(void* data, struct wl_output* wl_output, int32_t factor)
 {
     (void)data;
     (void)wl_output;
-    printf("Output scale: %i\n", factor);
+    (void)factor;
 }
 
 wl_output_listener const output_listener = {
@@ -326,18 +366,6 @@ wl_output_listener const output_listener = {
 //}
 }
 
-struct SwSplash::Self : SplashSession
-{
-    std::mutex mutable mutex;
-    std::weak_ptr<mir::scene::Session> session_;
-
-    std::shared_ptr<mir::scene::Session> session() const override
-    {
-        std::lock_guard<decltype(mutex)> lock{mutex};
-        return session_.lock();
-    }
-};
-
 SwSplash::SwSplash() : self{std::make_shared<Self>()} {}
 
 SwSplash::~SwSplash() = default;
@@ -355,38 +383,40 @@ SwSplash::operator std::shared_ptr<SplashSession>() const
 
 void SwSplash::operator()(struct wl_display* display)
 {
-    struct globals* globals;
-    globals = new struct globals;
-
     struct wl_registry* registry = wl_display_get_registry(display);
 
-    wl_registry_add_listener(registry, &registry_listener, globals);
-
+    wl_registry_add_listener(registry, &registry_listener, self.get());
     wl_display_roundtrip(display);
 
-    void* pool_data = NULL;
-    struct wl_shm_pool* shm_pool = make_shm_pool(globals->shm, 400 * 400 * 4, &pool_data);
+    wl_output_add_listener(self->output, &output_listener, self.get());
+    wl_display_roundtrip(display);
 
-    struct draw_context* ctx = new draw_context;
+    struct draw_context ctx = new draw_context;
+
+    for (auto const& oi : self->output_info)
+    {
+        ctx->width = std::max(ctx->width, oi.width);
+        ctx->height = std::max(ctx->height, oi.height);
+    }
+
+    struct wl_shm_pool* shm_pool = make_shm_pool(self->shm, ctx->width * ctx->height * 4, &ctx->content_area);
 
     for (int i = 0; i < 4; ++i)
     {
-        ctx->buffers[i].buffer = wl_shm_pool_create_buffer(shm_pool, 0, 400, 400, 400*4, WL_SHM_FORMAT_ARGB8888);
+        ctx->buffers[i].buffer =
+            wl_shm_pool_create_buffer(shm_pool, 0, ctx->width, ctx->height, ctx->width*4, WL_SHM_FORMAT_ARGB8888);
         ctx->buffers[i].available = true;
         wl_buffer_add_listener(ctx->buffers[i].buffer, &buffer_listener, ctx);
     }
 
     ctx->display = display;
-    ctx->surface = wl_compositor_create_surface(globals->compositor);
-    ctx->content_area = pool_data;
+    ctx->surface = wl_compositor_create_surface(self->compositor);
 
-    struct wl_shell_surface* window = wl_shell_get_shell_surface(globals->shell, ctx->surface);
+    struct wl_shell_surface* window = wl_shell_get_shell_surface(self->shell, ctx->surface);
     wl_shell_surface_set_toplevel(window);
 
     struct wl_callback* first_frame = wl_display_sync(display);
     wl_callback_add_listener(first_frame, &frame_listener, ctx);
-
-    wl_output_add_listener(globals->output, &output_listener, NULL);
 
     auto const time_limit = std::chrono::steady_clock::now() + std::chrono::seconds(2);
 
