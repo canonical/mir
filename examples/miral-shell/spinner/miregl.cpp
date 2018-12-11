@@ -340,8 +340,8 @@ MirEglApp::MirEglApp(struct wl_display* display) :
     if (!eglInitialize(egldisplay, &major, &minor))
         throw std::runtime_error("Can't eglInitialize");
 
-    if (major != 1 || minor != 4)
-        throw std::runtime_error("EGL version is not 1.4");
+    if (major != 1 || minor < 4)
+        throw std::runtime_error("EGL version is not at least 1.4");
 
     if (!eglChooseConfig(egldisplay, attribs, &eglconfig, 1, &neglconfigs))
         throw std::runtime_error("Could not eglChooseConfig");
