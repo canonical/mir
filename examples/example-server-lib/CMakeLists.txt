@@ -17,4 +17,4 @@ target_include_directories(example-shell-lib
     PRIVATE
         ${FREETYPE_INCLUDE_DIRS}
 )
-target_link_libraries(example-shell-lib PUBLIC miral mirclient PRIVATE ${WAYLAND_CLIENT_LIBRARIES} ${FREETYPE_LIBRARIES})
+target_link_libraries(example-shell-lib PUBLIC miral PRIVATE ${WAYLAND_CLIENT_LIBRARIES} ${FREETYPE_LIBRARIES})
