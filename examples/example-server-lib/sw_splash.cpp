@@ -30,7 +30,7 @@
 #include <cstring>
 #include <thread>
 #include <mutex>
-#include <vector>
+#include <map>
 
 namespace
 {
@@ -124,14 +124,13 @@ void Globals::init(struct wl_display* display)
 
 struct OutputInfo
 {
-    struct wl_output* wl_output;
     int32_t x;
     int32_t y;
     int32_t width;
     int32_t height;
 };
 
-using Outputs = std::vector<OutputInfo>;
+using Outputs = std::map<struct wl_output*, OutputInfo>;
 
 void output_geometry(void *data,
     struct wl_output *wl_output,
@@ -146,16 +145,16 @@ void output_geometry(void *data,
 {
     Outputs* outputs = static_cast<decltype(outputs)>(data);
 
-    for (auto& oi : *outputs)
+    auto const& output = outputs->find(wl_output);
+    if (output != outputs->end())
     {
-        if (wl_output == oi.wl_output)
-        {
-            oi.x = x;
-            oi.y = y;
-            return;
-        }
+        output->second.x = x;
+        output->second.y = y;
     }
-    outputs->push_back({wl_output, x, y, 0, 0});
+    else
+    {
+        outputs->insert({wl_output, {x, y, 0, 0}});
+    }
 }
 
 void output_mode(void *data,
@@ -170,16 +169,16 @@ void output_mode(void *data,
 
     Outputs* outputs = static_cast<decltype(outputs)>(data);
 
-    for (auto& oi : *outputs)
+    auto const& output = outputs->find(wl_output);
+    if (output != outputs->end())
     {
-        if (wl_output == oi.wl_output)
-        {
-            oi.width = width;
-            oi.height = height;
-            return;
-        }
+        output->second.width = width;
+        output->second.height = height;
     }
-    outputs->push_back({wl_output, 0, 0, width, height});
+    else
+    {
+        outputs->insert({wl_output, {0, 0, width, height}});
+    }
 }
 
 void output_done(void* data, struct wl_output* wl_output)
@@ -368,8 +367,8 @@ void SwSplash::Self::operator()(struct wl_display* display)
 
     for (auto const& oi : outputs)
     {
-        ctx.width = std::max(ctx.width, oi.width);
-        ctx.height = std::max(ctx.height, oi.height);
+        ctx.width = std::max(ctx.width, oi.second.width);
+        ctx.height = std::max(ctx.height, oi.second.height);
     }
 
     struct wl_shm_pool* shm_pool = make_shm_pool(globals.shm, ctx.width * ctx.height * 4, &ctx.content_area);
