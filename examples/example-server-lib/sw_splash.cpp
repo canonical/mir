@@ -33,6 +33,28 @@
 #include <mutex>
 #include <vector>
 
+namespace
+{
+struct DrawContext
+{
+    int width = 400;
+    int height = 400;
+
+    void* content_area;
+    struct wl_display* display;
+    struct wl_surface* surface;
+    struct wl_callback* new_frame_signal;
+    struct Buffers
+    {
+        struct wl_buffer* buffer;
+        bool available;
+    } buffers[4];
+    bool waiting_for_buffer;
+
+    uint8_t pattern[4] = { 0x14, 0x48, 0xDD, 0xFF };
+};
+}
+
 struct SwSplash::Self : SplashSession
 {
     struct wl_compositor* compositor = nullptr;
@@ -51,6 +73,8 @@ struct SwSplash::Self : SplashSession
     };
 
     std::vector<OutputInfo> output_info;
+
+    DrawContext ctx;
 
     std::mutex mutable mutex;
     std::weak_ptr<mir::scene::Session> session_;
@@ -146,24 +170,7 @@ wl_callback_listener const frame_listener =
     &draw_new_stuff
 };
 
-struct draw_context
-{
-    int width = 400;
-    int height = 400;
-
-    void* content_area;
-    struct wl_display* display;
-    struct wl_surface* surface;
-    struct wl_callback* new_frame_signal;
-    struct Buffers
-    {
-        struct wl_buffer* buffer;
-        bool available;
-    } buffers[4];
-    bool waiting_for_buffer;
-};
-
-wl_buffer* find_free_buffer(struct draw_context* ctx)
+wl_buffer* find_free_buffer(DrawContext* ctx)
 {
     for (int i = 0; i < 4 ; ++i)
     {
@@ -179,11 +186,9 @@ wl_buffer* find_free_buffer(struct draw_context* ctx)
 void draw_new_stuff(
     void* data,
     struct wl_callback* callback,
-    uint32_t time)
+    uint32_t /*time*/)
 {
-    (void)time;
-    static unsigned char current_value = 128;
-    struct draw_context* ctx = static_cast<decltype(ctx)>(data);
+    DrawContext* ctx = static_cast<decltype(ctx)>(data);
 
     wl_callback_destroy(callback);
 
@@ -194,8 +199,16 @@ void draw_new_stuff(
         return;
     }
 
-    memset(ctx->content_area, current_value, ctx->width * ctx->height * 4);
-    ++current_value;
+    char* row = static_cast<decltype(row)>(ctx->content_area);
+    for (int j = 0; j < ctx->height; j++)
+    {
+        uint32_t* pixel = (uint32_t*)row;
+
+        for (int i = 0; i < ctx->width; i++)
+            memcpy(pixel + i, ctx->pattern, sizeof pixel[i]);
+
+        row += 4*ctx->width;
+    }
 
     ctx->new_frame_signal = wl_surface_frame(ctx->surface);
     wl_callback_add_listener(ctx->new_frame_signal, &frame_listener, ctx);
@@ -205,7 +218,7 @@ void draw_new_stuff(
 
 void update_free_buffers(void* data, struct wl_buffer* buffer)
 {
-    struct draw_context* ctx = static_cast<decltype(ctx)>(data);
+    DrawContext* ctx = static_cast<decltype(ctx)>(data);
     for (int i = 0; i < 4 ; ++i)
     {
         if (ctx->buffers[i].buffer == buffer)
@@ -295,75 +308,6 @@ wl_output_listener const output_listener = {
     &output_done,
     &output_scale,
 };
-
-//MirPixelFormat find_8888_format(MirConnection* connection)
-//{
-//    unsigned int const num_formats = 32;
-//    MirPixelFormat pixel_formats[num_formats];
-//    unsigned int valid_formats;
-//    mir_connection_get_available_surface_formats(connection, pixel_formats, num_formats, &valid_formats);
-//
-//    for (unsigned int i = 0; i < num_formats; ++i)
-//    {
-//        MirPixelFormat cur_pf = pixel_formats[i];
-//        if (cur_pf == mir_pixel_format_abgr_8888 ||
-//            cur_pf == mir_pixel_format_argb_8888)
-//        {
-//            return cur_pf;
-//        }
-//    }
-//
-//    for (unsigned int i = 0; i < num_formats; ++i)
-//    {
-//        MirPixelFormat cur_pf = pixel_formats[i];
-//        if (cur_pf == mir_pixel_format_xbgr_8888 ||
-//            cur_pf == mir_pixel_format_xrgb_8888)
-//        {
-//            return cur_pf;
-//        }
-//    }
-//
-//    return *pixel_formats;
-//}
-
-//auto create_window(MirConnection* connection, mir::client::Surface const& surface) -> mir::client::Window
-//{
-//    int id = 0;
-//    int width = 0;
-//    int height = 0;
-//
-//    mir::client::DisplayConfig{connection}.for_each_output([&](MirOutput const* output)
-//        {
-//            if (mir_output_get_connection_state(output) == mir_output_connection_state_connected &&
-//                mir_output_is_enabled(output))
-//            {
-//                id = mir_output_get_id(output);
-//                width = mir_output_get_logical_width(output);
-//                height = mir_output_get_logical_height(output);
-//            }
-//        });
-//
-//    return mir::client::WindowSpec::for_normal_window(connection, width, height)
-//        .set_name("splash")
-//        .set_fullscreen_on_output(id)
-//        .add_surface(surface, width, height, 0, 0)
-//        .create_window();
-//}
-
-//void render_pattern(MirGraphicsRegion *region, uint8_t pattern[])
-//{
-//    char *row = region->vaddr;
-//
-//    for (int j = 0; j < region->height; j++)
-//    {
-//        uint32_t *pixel = (uint32_t*)row;
-//
-//        for (int i = 0; i < region->width; i++)
-//            memcpy(pixel+i, pattern, sizeof pixel[i]);
-//
-//        row += region->stride;
-//    }
-//}
 }
 
 SwSplash::SwSplash() : self{std::make_shared<Self>()} {}
@@ -391,7 +335,7 @@ void SwSplash::operator()(struct wl_display* display)
     wl_output_add_listener(self->output, &output_listener, self.get());
     wl_display_roundtrip(display);
 
-    struct draw_context ctx = new draw_context;
+    DrawContext* ctx = &self->ctx;
 
     for (auto const& oi : self->output_info)
     {
@@ -420,52 +364,14 @@ void SwSplash::operator()(struct wl_display* display)
 
     auto const time_limit = std::chrono::steady_clock::now() + std::chrono::seconds(2);
 
-    while (wl_display_dispatch(display) && std::chrono::steady_clock::now() < time_limit)
-        ;
-}
+    do
+    {
+        wl_display_dispatch(display);
 
-//void SwSplash::operator()(MirConnection* connection)
-//{
-//    MirPixelFormat pixel_format = find_8888_format(connection);
-//
-//    uint8_t pattern[4] = { 0x14, 0x48, 0xDD, 0xFF };
-//
-//    switch(pixel_format)
-//    {
-//    case mir_pixel_format_abgr_8888:
-//    case mir_pixel_format_xbgr_8888:
-//        std::swap(pattern[2],pattern[0]);
-//        break;
-//
-//    case mir_pixel_format_argb_8888:
-//    case mir_pixel_format_xrgb_8888:
-//        break;
-//
-//    default:
-//        return;
-//    };
-//
-//
-//    mir::client::Surface surface{mir_connection_create_render_surface_sync(connection, 42, 42)};
-//    MirBufferStream* buffer_stream = mir_render_surface_get_buffer_stream(surface, 42, 42, pixel_format);
-//
-//    auto const window = create_window(connection, surface);
-//
-//    MirGraphicsRegion graphics_region;
-//
-//    auto const time_limit = std::chrono::steady_clock::now() + std::chrono::seconds(2);
-//
-//    do
-//    {
-//        mir_buffer_stream_get_graphics_region(buffer_stream, &graphics_region);
-//
-//        render_pattern(&graphics_region, pattern);
-//        mir_buffer_stream_swap_buffers_sync(buffer_stream);
-//
-//        for (auto& x : pattern)
-//            x =  3*x/4;
-//
-//        std::this_thread::sleep_for(std::chrono::milliseconds(200));
-//    }
-//    while (std::chrono::steady_clock::now() < time_limit);
-//}
+        for (auto& x : ctx->pattern)
+            x =  3*x/4;
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    }
+    while (std::chrono::steady_clock::now() < time_limit);
+}
