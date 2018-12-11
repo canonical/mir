@@ -147,7 +147,7 @@ try
         miral::display_configuration_options,
         me::add_log_host_lifecycle_option_to,
         me::add_glog_options_to,
-        miral::StartupInternalClient{"Intro", spinner},
+        miral::StartupInternalClient{spinner},
         miral::X11Support{},
         miral::WaylandExtensions{"wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1"},
         launcher,

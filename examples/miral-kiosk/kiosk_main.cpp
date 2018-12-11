@@ -104,6 +104,6 @@ int main(int argc, char const* argv[])
             SetApplicationAuthorizer<KioskAuthorizer>{splash},
             Keymap{},
             startup_only,
-            StartupInternalClient{"Intro", splash}
+            StartupInternalClient{splash}
         });
 }
