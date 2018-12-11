@@ -230,12 +230,12 @@ wl_callback_listener const frame_listener =
 
 wl_buffer* find_free_buffer(DrawContext* ctx)
 {
-    for (int i = 0; i < 4 ; ++i)
+    for (auto& b: ctx->buffers)
     {
-        if (ctx->buffers[i].available)
+        if (b.available)
         {
-            ctx->buffers[i].available = false;
-            return ctx->buffers[i].buffer;
+            b.available = false;
+            return b.buffer;
         }
     }
     return NULL;
