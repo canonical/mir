@@ -21,8 +21,6 @@
 
 #include "splash_session.h"
 
-#include <mir_toolkit/client_types.h>
-
 // A very simple s/w rendered splash animation
 class SwSplash
 {
@@ -35,8 +33,8 @@ public:
 
     operator std::shared_ptr<SplashSession>() const;
 
-    struct Self;
 private:
+    struct Self;
     std::shared_ptr<Self> const self;
 };
 
