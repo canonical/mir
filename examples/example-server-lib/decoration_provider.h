@@ -22,15 +22,15 @@
 
 #include <miral/window_manager_tools.h>
 
-#include <mir/client/connection.h>
-#include <mir/client/surface.h>
-#include <mir/client/window.h>
-
-#include <mir/geometry/rectangle.h>
-#include <mir_toolkit/client_types.h>
-
-#include <atomic>
-#include <map>
+//#include <mir/client/connection.h>
+//#include <mir/client/surface.h>
+//#include <mir/client/window.h>
+//
+//#include <mir/geometry/rectangle.h>
+//#include <mir_toolkit/client_types.h>
+//
+//#include <atomic>
+//#include <map>
 #include <mutex>
 #include <condition_variable>
 #include <queue>
@@ -61,7 +61,7 @@ public:
     DecorationProvider(miral::WindowManagerTools const& tools);
     ~DecorationProvider();
 
-    void operator()(mir::client::Connection connection);
+    void operator()(struct wl_display* display);
     void operator()(std::weak_ptr<mir::scene::Session> const& session);
 
     auto session() const -> std::shared_ptr<mir::scene::Session>;
@@ -71,15 +71,18 @@ public:
     bool is_decoration(miral::Window const& window) const;
 
 private:
-    miral::WindowManagerTools tools;
-    std::mutex mutable mutex;
-    mir::client::Connection connection;
-    struct Wallpaper { mir::client::Surface surface; mir::client::Window window; MirBufferStream* stream; };
-    std::vector<Wallpaper> wallpaper;
-    std::weak_ptr<mir::scene::Session> weak_session;
+    struct Self;
+    std::shared_ptr<Self> const self;
 
-    static void handle_event_for_background(MirWindow* window, MirEvent const* event, void* context_);
-    void handle_event_for_background(MirWindow* window, MirEvent const* ev);
+//    miral::WindowManagerTools tools;
+//    std::mutex mutable mutex;
+//    mir::client::Connection connection;
+//    struct Wallpaper { mir::client::Surface surface; mir::client::Window window; MirBufferStream* stream; };
+//    std::vector<Wallpaper> wallpaper;
+//    std::weak_ptr<mir::scene::Session> weak_session;
+//
+//    static void handle_event_for_background(MirWindow* window, MirEvent const* event, void* context_);
+//    void handle_event_for_background(MirWindow* window, MirEvent const* ev);
 };
 
 

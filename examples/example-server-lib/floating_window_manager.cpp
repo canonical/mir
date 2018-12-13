@@ -55,7 +55,7 @@ FloatingWindowManagerPolicy::FloatingWindowManagerPolicy(
     spinner{spinner},
     decoration_provider{std::make_unique<DecorationProvider>(tools)}
 {
-    launcher.launch("decorations", *decoration_provider);
+    launcher.launch(*decoration_provider);
     shutdown_hook = [this] { decoration_provider->stop(); };
 
     for (auto key : {KEY_F1, KEY_F2, KEY_F3, KEY_F4})

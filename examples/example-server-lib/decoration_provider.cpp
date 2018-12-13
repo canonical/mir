@@ -20,10 +20,10 @@
 
 #include "titlebar_config.h"
 
-#include <mir/client/display_config.h>
-#include <mir/client/window_spec.h>
-
-#include <mir_toolkit/mir_buffer_stream.h>
+//#include <mir/client/display_config.h>
+//#include <mir/client/window_spec.h>
+//
+//#include <mir_toolkit/mir_buffer_stream.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
