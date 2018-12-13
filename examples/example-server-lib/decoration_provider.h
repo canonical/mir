@@ -22,40 +22,10 @@
 
 #include <miral/window_manager_tools.h>
 
-//#include <mir/client/connection.h>
-//#include <mir/client/surface.h>
-//#include <mir/client/window.h>
-//
-//#include <mir/geometry/rectangle.h>
-//#include <mir_toolkit/client_types.h>
-//
-//#include <atomic>
-//#include <map>
+#include <atomic>
 #include <mutex>
-#include <condition_variable>
-#include <queue>
 
-class Worker
-{
-public:
-    ~Worker();
-
-    void start_work();
-    void enqueue_work(std::function<void()> const& functor);
-    void stop_work();
-
-private:
-    using WorkQueue = std::queue<std::function<void()>>;
-
-    std::mutex mutable work_mutex;
-    std::condition_variable work_cv;
-    WorkQueue work_queue;
-    bool work_done = false;
-
-    void do_work();
-};
-
-class DecorationProvider : Worker
+class DecorationProvider
 {
 public:
     DecorationProvider(miral::WindowManagerTools const& tools);
@@ -73,16 +43,10 @@ public:
 private:
     struct Self;
     std::shared_ptr<Self> const self;
+    std::atomic<bool> running{false};
 
-//    miral::WindowManagerTools tools;
-//    std::mutex mutable mutex;
-//    mir::client::Connection connection;
-//    struct Wallpaper { mir::client::Surface surface; mir::client::Window window; MirBufferStream* stream; };
-//    std::vector<Wallpaper> wallpaper;
-//    std::weak_ptr<mir::scene::Session> weak_session;
-//
-//    static void handle_event_for_background(MirWindow* window, MirEvent const* event, void* context_);
-//    void handle_event_for_background(MirWindow* window, MirEvent const* ev);
+    std::mutex mutable mutex;
+    std::weak_ptr<mir::scene::Session> weak_session;
 };
 
 
