@@ -53,7 +53,7 @@ FloatingWindowManagerPolicy::FloatingWindowManagerPolicy(
     std::function<void()>& shutdown_hook) :
     CanonicalWindowManagerPolicy(tools),
     spinner{spinner},
-    decoration_provider{std::make_unique<DecorationProvider>(tools)}
+    decoration_provider{std::make_unique<DecorationProvider>()}
 {
     launcher.launch(*decoration_provider);
     shutdown_hook = [this] { decoration_provider->stop(); };

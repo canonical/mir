@@ -215,19 +215,19 @@ using namespace mir::geometry;
 struct DecorationProvider::Self
 {
 public:
-    Self(miral::WindowManagerTools const& tools);
+    Self();
 
     void init(struct wl_display* display);
     void teardown();
 
 private:
-    miral::WindowManagerTools tools;
+    void draw_background(wl_display* display, OutputInfo& ctx) const;
+
     Globals globals;
     Outputs outputs;
 };
 
-DecorationProvider::Self::Self(miral::WindowManagerTools const& tools) :
-    tools{tools},
+DecorationProvider::Self::Self() :
     globals{
         [this](Output const& output) { outputs.insert({&output, OutputInfo{output}}); },
         [](Output const&) { },
@@ -242,35 +242,39 @@ void DecorationProvider::Self::init(struct wl_display* display)
 
     for (auto& o : outputs)
     {
-        auto& ctx = o.second;
+        draw_background(display, o.second);
+    }
+}
 
-        struct wl_shm_pool* shm_pool =
-            make_shm_pool(globals.shm, ctx.output.width * ctx.output.height * 4, &ctx.content_area);
-        ctx.buffer =
+void DecorationProvider::Self::draw_background(wl_display* display, OutputInfo& ctx) const
+{
+    struct wl_shm_pool* shm_pool =
+            make_shm_pool(this->globals.shm, ctx.output.width * ctx.output.height * 4, &ctx.content_area);
+    ctx.buffer =
             wl_shm_pool_create_buffer(
                 shm_pool,
                 0,
                 ctx.output.width, ctx.output.height,
                 ctx.output.width*4,
                 WL_SHM_FORMAT_ARGB8888);
-        wl_shm_pool_destroy(shm_pool);
+    wl_shm_pool_destroy(shm_pool);
 
-        ctx.display = display;
-        ctx.surface = wl_compositor_create_surface(globals.compositor);
+    ctx.display = display;
+    ctx.surface = wl_compositor_create_surface(this->globals.compositor);
 
-        auto const window = make_scoped(wl_shell_get_shell_surface(globals.shell, ctx.surface), &wl_shell_surface_destroy);
-        wl_shell_surface_set_fullscreen(
+    auto const window = make_scoped(wl_shell_get_shell_surface(this->globals.shell, ctx.surface), &wl_shell_surface_destroy);
+    wl_shell_surface_set_fullscreen(
             window.get(),
             WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT,
             0,
             ctx.output.output);
 
-        uint8_t const bottom_colour[] = { 0x20, 0x54, 0xe9 };   // Ubuntu orange
-        uint8_t const top_colour[] =    { 0x33, 0x33, 0x33 };   // Cool grey
+    uint8_t const bottom_colour[] = { 0x20, 0x54, 0xe9 };   // Ubuntu orange
+    uint8_t const top_colour[] =    { 0x33, 0x33, 0x33 };   // Cool grey
 
-        char* row = static_cast<decltype(row)>(ctx.content_area);
+    char* row = static_cast<decltype(row)>(ctx.content_area);
 
-        for (int j = 0; j < ctx.output.height; j++)
+    for (int j = 0; j < ctx.output.height; j++)
         {
             uint8_t pattern[4];
 
@@ -285,14 +289,13 @@ void DecorationProvider::Self::init(struct wl_display* display)
             row += 4*ctx.output.width;
         }
 
-        static Printer printer;
+    static Printer printer;
 
-        printer.printhelp(ctx);
+    printer.printhelp(ctx);
 
-        wl_surface_attach(ctx.surface, ctx.buffer, 0, 0);
-        wl_surface_commit(ctx.surface);
-        wl_display_roundtrip(display);
-    }
+    wl_surface_attach(ctx.surface, ctx.buffer, 0, 0);
+    wl_surface_commit(ctx.surface);
+    wl_display_roundtrip(display);
 }
 
 void DecorationProvider::Self::teardown()
@@ -312,8 +315,8 @@ void DecorationProvider::Self::teardown()
     globals.teardown();
 }
 
-DecorationProvider::DecorationProvider(miral::WindowManagerTools const& tools) :
-    self{std::make_shared<Self>(tools)}
+DecorationProvider::DecorationProvider() :
+    self{std::make_shared<Self>()}
 {
 }
 

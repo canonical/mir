@@ -28,7 +28,7 @@
 class DecorationProvider
 {
 public:
-    DecorationProvider(miral::WindowManagerTools const& tools);
+    DecorationProvider();
     ~DecorationProvider();
 
     void operator()(struct wl_display* display);
