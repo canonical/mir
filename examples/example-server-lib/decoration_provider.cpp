@@ -37,7 +37,7 @@
 
 namespace
 {
-struct OutputInfo;
+struct BackgroundInfo;
 
 struct preferred_codecvt : std::codecvt_byname<wchar_t, char, std::mbstate_t>
 {
@@ -52,7 +52,7 @@ struct Printer
     Printer(Printer const&) = delete;
     Printer& operator=(Printer const&) = delete;
 
-    void printhelp(OutputInfo const& region);
+    void printhelp(BackgroundInfo const& region);
 
 private:
     std::wstring_convert<preferred_codecvt> converter;
@@ -87,25 +87,35 @@ Printer::~Printer()
     }
 }
 
-struct OutputInfo
+struct BackgroundInfo
 {
-    OutputInfo(Output const& output) :
+    BackgroundInfo(Output const& output) :
         output{output}
     {}
+    
+    ~BackgroundInfo()
+    {
+        if (buffer)
+            wl_buffer_destroy(buffer);
+
+        if (shell_surface)
+            wl_shell_surface_destroy(shell_surface);
+
+        if (surface)
+            wl_surface_destroy(surface);
+    }
 
     // Screen description
     Output const& output;
 
     // Content
     void* content_area = nullptr;
-    struct wl_display* display;
-    struct wl_surface* surface;
-    struct wl_callback* new_frame_signal;
+    wl_surface* surface = nullptr;
+    wl_shell_surface* shell_surface = nullptr;
     wl_buffer* buffer = nullptr;
-    bool waiting_for_buffer;
 };
 
-void Printer::printhelp(OutputInfo const& region)
+void Printer::printhelp(BackgroundInfo const& region)
 {
     if (!working)
         return;
@@ -206,7 +216,7 @@ void Printer::printhelp(OutputInfo const& region)
     }
 }
 
-using Outputs = std::map<Output const*, OutputInfo>;
+using Outputs = std::map<Output const*, BackgroundInfo>;
 
 }
 
@@ -217,76 +227,107 @@ struct DecorationProvider::Self
 public:
     Self();
 
-    void init(struct wl_display* display);
+    void init(wl_display* display);
     void teardown();
 
 private:
-    void draw_background(wl_display* display, OutputInfo& ctx) const;
+    void draw_background(BackgroundInfo& ctx) const;
+    void on_new_output(Output const*);
+    void on_output_changed(Output const*);
+    void on_output_gone(Output const*);
 
+    wl_display* display = nullptr;
     Globals globals;
     Outputs outputs;
 };
 
 DecorationProvider::Self::Self() :
     globals{
-        [this](Output const& output) { outputs.insert({&output, OutputInfo{output}}); },
-        [](Output const&) { },
-        [this](Output const& output) { outputs.erase(&output); }
+        [this](Output const& output) { on_new_output(&output); },
+        [this](Output const& output) { on_output_changed(&output); },
+        [this](Output const& output) { on_output_gone(&output); }
     }
 {
 }
 
-void DecorationProvider::Self::init(struct wl_display* display)
+void DecorationProvider::Self::on_output_changed(Output const* output)
 {
+    auto const p = outputs.find(output);
+    if (p != end(outputs))
+        draw_background(p->second);
+}
+
+void DecorationProvider::Self::on_output_gone(Output const* output)
+{
+    outputs.erase(output);
+}
+
+void DecorationProvider::Self::on_new_output(Output const* output)
+{
+    draw_background(outputs.insert({output, BackgroundInfo{*output}}).first->second);
+}
+
+void DecorationProvider::Self::init(wl_display* display)
+{
+    this->display = display;
     globals.init(display);
-
-    for (auto& o : outputs)
-    {
-        draw_background(display, o.second);
-    }
 }
 
-void DecorationProvider::Self::draw_background(wl_display* display, OutputInfo& ctx) const
+void DecorationProvider::Self::draw_background(BackgroundInfo& ctx) const
 {
-    struct wl_shm_pool* shm_pool =
-            make_shm_pool(this->globals.shm, ctx.output.width * ctx.output.height * 4, &ctx.content_area);
-    ctx.buffer =
-            wl_shm_pool_create_buffer(
-                shm_pool,
-                0,
-                ctx.output.width, ctx.output.height,
-                ctx.output.width*4,
-                WL_SHM_FORMAT_ARGB8888);
-    wl_shm_pool_destroy(shm_pool);
+    auto const width = ctx.output.width;
+    auto const height = ctx.output.height;
+    auto const stride = 4*width;
 
-    ctx.display = display;
-    ctx.surface = wl_compositor_create_surface(this->globals.compositor);
+    if (!ctx.surface)
+    {
+        ctx.surface = wl_compositor_create_surface(this->globals.compositor);
+    }
 
-    auto const window = make_scoped(wl_shell_get_shell_surface(this->globals.shell, ctx.surface), &wl_shell_surface_destroy);
-    wl_shell_surface_set_fullscreen(
-            window.get(),
+    if (!ctx.shell_surface)
+    {
+        ctx.shell_surface = wl_shell_get_shell_surface(this->globals.shell, ctx.surface);
+        wl_shell_surface_set_fullscreen(
+            ctx.shell_surface,
             WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT,
             0,
             ctx.output.output);
+    }
+
+    if (ctx.buffer)
+    {
+        wl_buffer_destroy(ctx.buffer);
+    }
+
+    struct wl_shm_pool* shm_pool =
+        make_shm_pool(this->globals.shm, stride * height, &ctx.content_area);
+    ctx.buffer =
+        wl_shm_pool_create_buffer(
+            shm_pool,
+            0,
+            width, height,
+            width * 4,
+            WL_SHM_FORMAT_ARGB8888);
+    wl_shm_pool_destroy(shm_pool);
 
     uint8_t const bottom_colour[] = { 0x20, 0x54, 0xe9 };   // Ubuntu orange
     uint8_t const top_colour[] =    { 0x33, 0x33, 0x33 };   // Cool grey
 
     char* row = static_cast<decltype(row)>(ctx.content_area);
 
-    for (int j = 0; j < ctx.output.height; j++)
+    for (int j = 0; j < height; j++)
         {
             uint8_t pattern[4];
 
             for (auto i = 0; i != 3; ++i)
-                pattern[i] = (j*bottom_colour[i] + (ctx.output.height-j)*top_colour[i])/ctx.output.height;
+                pattern[i] = (j*bottom_colour[i] + (height-j)*top_colour[i])/height;
             pattern[3] = 0xff;
 
             uint32_t* pixel = (uint32_t*)row;
-            for (int i = 0; i < ctx.output.width; i++)
+            for (int i = 0; i < width; i++)
                 memcpy(pixel + i, pattern, sizeof pixel[i]);
 
-            row += 4*ctx.output.width;
+            row += stride;
         }
 
     static Printer printer;
@@ -300,17 +341,6 @@ void DecorationProvider::Self::draw_background(wl_display* display, OutputInfo& 
 
 void DecorationProvider::Self::teardown()
 {
-    for (auto& o : outputs)
-    {
-        auto& ctx = o.second;
-
-        if (ctx.buffer)
-            wl_buffer_destroy(ctx.buffer);
-
-        if (ctx.surface)
-            wl_surface_destroy(ctx.surface);
-    }
-
     outputs.clear();
     globals.teardown();
 }
