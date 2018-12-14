@@ -40,76 +40,7 @@ struct OutputInfo
     int32_t height;
 };
 
-using Outputs = std::map<struct wl_output*, OutputInfo>;
-
-void output_geometry(void *data,
-    struct wl_output *wl_output,
-    int32_t x,
-    int32_t y,
-    int32_t /*physical_width*/,
-    int32_t /*physical_height*/,
-    int32_t /*subpixel*/,
-    const char */*make*/,
-    const char */*model*/,
-    int32_t /*transform*/)
-{
-    Outputs* outputs = static_cast<decltype(outputs)>(data);
-
-    auto const& output = outputs->find(wl_output);
-    if (output != outputs->end())
-    {
-        output->second.x = x;
-        output->second.y = y;
-    }
-    else
-    {
-        outputs->insert({wl_output, {x, y, 0, 0}});
-    }
-}
-
-void output_mode(void *data,
-    struct wl_output *wl_output,
-    uint32_t flags,
-    int32_t width,
-    int32_t height,
-    int32_t /*refresh*/)
-{
-    if (!(WL_OUTPUT_MODE_CURRENT & flags))
-        return;
-
-    Outputs* outputs = static_cast<decltype(outputs)>(data);
-
-    auto const& output = outputs->find(wl_output);
-    if (output != outputs->end())
-    {
-        output->second.width = width;
-        output->second.height = height;
-    }
-    else
-    {
-        outputs->insert({wl_output, {0, 0, width, height}});
-    }
-}
-
-void output_done(void* data, struct wl_output* wl_output)
-{
-    (void)data;
-    (void)wl_output;
-}
-
-void output_scale(void* data, struct wl_output* wl_output, int32_t factor)
-{
-    (void)data;
-    (void)wl_output;
-    (void)factor;
-}
-
-wl_output_listener const output_listener = {
-    &output_geometry,
-    &output_mode,
-    &output_done,
-    &output_scale,
-};
+using Outputs = std::vector<OutputInfo>;
 
 struct DrawContext
 {
@@ -210,6 +141,19 @@ wl_buffer_listener const buffer_listener = {
 
 struct SwSplash::Self : SplashSession
 {
+    Self()
+        : globals{
+              [this](Output const& output)
+              {
+                  outputs.emplace_back(OutputInfo{output.x, output.y, output.width, output.height});
+              },
+              [](auto const&) {},
+              [](auto const&) {}}
+    {
+        // Because we use the outputs exactly once, to enumerate the set of outputs at startup,
+        // we don't need to care about outputs changing or disappearing.
+    }
+
     Globals globals;
 
     Outputs outputs;
@@ -247,13 +191,10 @@ void SwSplash::Self::operator()(struct wl_display* display)
 {
     globals.init(display);
 
-    wl_output_add_listener(globals.output, &output_listener, &outputs);
-    wl_display_roundtrip(display);
-
     for (auto const& oi : outputs)
     {
-        ctx.width = std::max(ctx.width, oi.second.width);
-        ctx.height = std::max(ctx.height, oi.second.height);
+        ctx.width = std::max(ctx.width, oi.width);
+        ctx.height = std::max(ctx.height, oi.height);
     }
 
     struct wl_shm_pool* shm_pool = make_shm_pool(globals.shm, ctx.width * ctx.height * 4, &ctx.content_area);

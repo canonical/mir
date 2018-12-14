@@ -21,6 +21,9 @@
 
 #include <wayland-client.h>
 #include <memory>
+#include <vector>
+#include <functional>
+#include <unordered_map>
 
 template<typename Type>
 auto make_scoped(Type* owned, void(*deleter)(Type*)) -> std::unique_ptr<Type, void(*)(Type*)>
@@ -30,12 +33,44 @@ auto make_scoped(Type* owned, void(*deleter)(Type*)) -> std::unique_ptr<Type, vo
 
 wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data);
 
-struct Globals
+class Output
 {
+public:
+    Output(
+        wl_output* output,
+        std::function<void(Output const&)> on_constructed,
+        std::function<void(Output const&)> on_change);
+    ~Output();
+
+    Output(Output const&) = delete;
+    Output(Output&&) = delete;
+
+    Output& operator=(Output const&) = delete;
+    Output& operator=(Output&&) = delete;
+
+    int32_t x, y;
+    int32_t width, height;
+    wl_output* output;
+private:
+    static void output_done(void* data, wl_output* output);
+
+    static wl_output_listener const output_listener;
+
+    std::function<void(Output const&)> on_constructed;
+    std::function<void(Output const&)> on_change;
+};
+
+class Globals
+{
+public:
+    Globals(
+        std::function<void(Output const&)> on_new_output,
+        std::function<void(Output const&)> on_output_changed,
+        std::function<void(Output const&)> on_output_gone);
+
     wl_compositor* compositor = nullptr;
     wl_shm* shm = nullptr;
     wl_seat* seat = nullptr;
-    wl_output* output = nullptr;
     wl_shell* shell = nullptr;
 
     void init(struct wl_display* display);
@@ -52,6 +87,12 @@ private:
         void* data,
         struct wl_registry* registry,
         uint32_t name);
+
+    std::unordered_map<uint32_t, std::unique_ptr<Output>> bound_outputs;
+
+    std::function<void(Output const&)> const on_new_output;
+    std::function<void(Output const&)> const on_output_changed;
+    std::function<void(Output const&)> const on_output_gone;
 };
 
 #endif //MIRAL_WAYLAND_HELPERS_H

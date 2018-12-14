@@ -37,7 +37,7 @@
 
 namespace
 {
-char const* const wallpaper_name = "wallpaper";
+//char const* const wallpaper_name = "wallpaper";
 
 struct preferred_codecvt : std::codecvt_byname<wchar_t, char, std::mbstate_t>
 {
@@ -220,15 +220,12 @@ Printer::~Printer()
 
 struct OutputInfo
 {
-    OutputInfo(int32_t x, int32_t y, int32_t width, int32_t height) :
-        x{x}, y{y}, width{width}, height{height}
+    OutputInfo(Output const& output) :
+        output{output}
     {}
 
     // Screen description
-    int32_t x;
-    int32_t y;
-    int32_t width;
-    int32_t height;
+    Output const& output;
 
     // Content
     void* content_area = nullptr;
@@ -239,76 +236,8 @@ struct OutputInfo
     bool waiting_for_buffer;
 };
 
-using Outputs = std::map<struct wl_output*, OutputInfo>;
+using Outputs = std::map<Output const*, OutputInfo>;
 
-void output_geometry(void *data,
-                     struct wl_output *wl_output,
-                     int32_t x,
-                     int32_t y,
-                     int32_t /*physical_width*/,
-                     int32_t /*physical_height*/,
-                     int32_t /*subpixel*/,
-                     const char */*make*/,
-                     const char */*model*/,
-                     int32_t /*transform*/)
-{
-    Outputs* outputs = static_cast<decltype(outputs)>(data);
-
-    auto const& output = outputs->find(wl_output);
-    if (output != outputs->end())
-    {
-        output->second.x = x;
-        output->second.y = y;
-    }
-    else
-    {
-        outputs->insert({wl_output, {x, y, 0, 0}});
-    }
-}
-
-void output_mode(void *data,
-                 struct wl_output *wl_output,
-                 uint32_t flags,
-                 int32_t width,
-                 int32_t height,
-                 int32_t /*refresh*/)
-{
-    if (!(WL_OUTPUT_MODE_CURRENT & flags))
-        return;
-
-    Outputs* outputs = static_cast<decltype(outputs)>(data);
-
-    auto const& output = outputs->find(wl_output);
-    if (output != outputs->end())
-    {
-        output->second.width = width;
-        output->second.height = height;
-    }
-    else
-    {
-        outputs->insert({wl_output, {0, 0, width, height}});
-    }
-}
-
-void output_done(void* data, struct wl_output* wl_output)
-{
-    (void)data;
-    (void)wl_output;
-}
-
-void output_scale(void* data, struct wl_output* wl_output, int32_t factor)
-{
-    (void)data;
-    (void)wl_output;
-    (void)factor;
-}
-
-wl_output_listener const output_listener = {
-    &output_geometry,
-    &output_mode,
-    &output_done,
-    &output_scale,
-};
 }
 
 using namespace mir::geometry;
@@ -334,48 +263,63 @@ private:
 };
 
 DecorationProvider::Self::Self(miral::WindowManagerTools const& tools) :
-    tools{tools}
+    tools{tools},
+    globals{
+        [this](Output const& output) { outputs.insert({&output, OutputInfo{output}}); },
+        [](Output const&) { },
+        [this](Output const& output) { outputs.erase(&output); }
+    }
 {
 }
 
 void DecorationProvider::Self::init(struct wl_display* display)
 {
     globals.init(display);
-    wl_output_add_listener(globals.output, &output_listener, &outputs);
     wl_display_roundtrip(display);
 
     for (auto& o : outputs)
     {
         auto& ctx = o.second;
 
-        struct wl_shm_pool* shm_pool = make_shm_pool(globals.shm, ctx.width * ctx.height * 4, &ctx.content_area);
-        ctx.buffer = wl_shm_pool_create_buffer(shm_pool, 0, ctx.width, ctx.height, ctx.width*4, WL_SHM_FORMAT_ARGB8888);
+        struct wl_shm_pool* shm_pool =
+            make_shm_pool(globals.shm, ctx.output.width * ctx.output.height * 4, &ctx.content_area);
+        ctx.buffer =
+            wl_shm_pool_create_buffer(
+                shm_pool,
+                0,
+                ctx.output.width, ctx.output.height,
+                ctx.output.width*4,
+                WL_SHM_FORMAT_ARGB8888);
         wl_shm_pool_destroy(shm_pool);
 
         ctx.display = display;
         ctx.surface = wl_compositor_create_surface(globals.compositor);
 
         auto const window = make_scoped(wl_shell_get_shell_surface(globals.shell, ctx.surface), &wl_shell_surface_destroy);
-        wl_shell_surface_set_fullscreen(window.get(), WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT, 0, nullptr);
+        wl_shell_surface_set_fullscreen(
+            window.get(),
+            WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT,
+            0,
+            ctx.output.output);
 
         uint8_t const bottom_colour[] = { 0x20, 0x54, 0xe9 };   // Ubuntu orange
         uint8_t const top_colour[] =    { 0x33, 0x33, 0x33 };   // Cool grey
 
         char* row = static_cast<decltype(row)>(ctx.content_area);
 
-        for (int j = 0; j < ctx.height; j++)
+        for (int j = 0; j < ctx.output.height; j++)
         {
             uint8_t pattern[4];
 
             for (auto i = 0; i != 3; ++i)
-                pattern[i] = (j*bottom_colour[i] + (ctx.height-j)*top_colour[i])/ctx.height;
+                pattern[i] = (j*bottom_colour[i] + (ctx.output.height-j)*top_colour[i])/ctx.output.height;
             pattern[3] = 0xff;
 
             uint32_t* pixel = (uint32_t*)row;
-            for (int i = 0; i < ctx.width; i++)
+            for (int i = 0; i < ctx.output.width; i++)
                 memcpy(pixel + i, pattern, sizeof pixel[i]);
 
-            row += 4*ctx.width;
+            row += 4*ctx.output.width;
         }
 
         wl_surface_attach(ctx.surface, ctx.buffer, 0, 0);

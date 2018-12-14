@@ -49,6 +49,101 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
     return pool;
 }
 
+void Output::output_done(void* data, struct wl_output* /*wl_output*/)
+{
+    auto output = static_cast<Output*>(data);
+    if (output->on_constructed)
+    {
+        output->on_constructed(*output);
+        output->on_constructed = nullptr;
+    }
+    else
+    {
+        output->on_change(*output);
+    }
+}
+
+namespace
+{
+void output_geometry(
+    void* data,
+    struct wl_output* /*wl_output*/,
+    int32_t x,
+    int32_t y,
+    int32_t /*physical_width*/,
+    int32_t /*physical_height*/,
+    int32_t /*subpixel*/,
+    const char */*make*/,
+    const char */*model*/,
+    int32_t /*transform*/)
+{
+    auto output = static_cast<Output*>(data);
+
+    output->x = x;
+    output->y = y;
+}
+
+
+void output_mode(
+    void *data,
+    struct wl_output* /*wl_output*/,
+    uint32_t flags,
+    int32_t width,
+    int32_t height,
+    int32_t /*refresh*/)
+{
+    if (!(WL_OUTPUT_MODE_CURRENT & flags))
+        return;
+
+    auto output = static_cast<Output*>(data);
+
+    output->width = width,
+    output->height = height;
+}
+
+void output_scale(void* data, struct wl_output* wl_output, int32_t factor)
+{
+    (void)data;
+    (void)wl_output;
+    (void)factor;
+}
+
+}
+
+wl_output_listener const Output::output_listener = {
+    &output_geometry,
+    &output_mode,
+    &Output::output_done,
+    &output_scale,
+};
+
+Output::Output(
+    wl_output* output,
+    std::function<void(Output const&)> on_constructed,
+    std::function<void(Output const&)> on_change)
+    : output{output},
+      on_constructed{std::move(on_constructed)},
+      on_change{std::move(on_change)}
+{
+    wl_output_add_listener(output, &output_listener, this);
+}
+
+Output::~Output()
+{
+    if (output)
+        wl_output_destroy(output);
+}
+
+Globals::Globals(
+    std::function<void(Output const&)> on_new_output,
+    std::function<void(Output const&)> on_output_changed,
+    std::function<void(Output const&)> on_output_gone)
+    : on_new_output{std::move(on_new_output)},
+      on_output_changed{std::move(on_output_changed)},
+      on_output_gone{std::move(on_output_gone)}
+{
+}
+
 void Globals::new_global(
     void* data,
     struct wl_registry* registry,
@@ -76,7 +171,14 @@ void Globals::new_global(
     }
     else if (strcmp(interface, "wl_output") == 0)
     {
-        self->output = static_cast<decltype(self->output)>(wl_registry_bind(registry, id, &wl_output_interface, 2));
+        // NOTE: We'd normally need to do std::min(version, 2), lest the compositor only support version 1
+        // of the interface. However, we're an internal client of a compositor that supports version 2, so…
+        auto output =
+            static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, 2));
+        self->bound_outputs.insert(
+            std::make_pair(
+                id,
+                std::make_unique<Output>(output, self->on_new_output, self->on_output_changed)));
     }
     else if (strcmp(interface, "wl_shell") == 0)
     {
@@ -87,11 +189,18 @@ void Globals::new_global(
 void Globals::global_remove(
     void* data,
     struct wl_registry* registry,
-    uint32_t name)
+    uint32_t id)
 {
-    (void)data;
     (void)registry;
-    (void)name;
+    Globals* self = static_cast<decltype(self)>(data);
+
+    auto const output = self->bound_outputs.find(id);
+    if (output != self->bound_outputs.end())
+    {
+        self->on_output_gone(*output->second);
+        self->bound_outputs.erase(output);
+    }
+    // TODO: We should probably also delete any other globals we've bound to that disappear.
 }
 
 void Globals::init(struct wl_display* display)
