@@ -22,7 +22,7 @@
 
 #include <miral/window_manager_tools.h>
 
-#include <atomic>
+#include <condition_variable>
 #include <mutex>
 
 class DecorationProvider
@@ -43,9 +43,10 @@ public:
 private:
     struct Self;
     std::shared_ptr<Self> const self;
-    std::atomic<bool> running{false};
 
     std::mutex mutable mutex;
+    bool running{false};
+    std::condition_variable running_cv;
     std::weak_ptr<mir::scene::Session> weak_session;
 };
 

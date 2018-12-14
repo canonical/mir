@@ -248,6 +248,7 @@ public:
     Self(miral::WindowManagerTools const& tools);
 
     void init(struct wl_display* display);
+    void teardown();
 
 private:
     miral::WindowManagerTools tools;
@@ -323,7 +324,25 @@ void DecorationProvider::Self::init(struct wl_display* display)
 
         wl_surface_attach(ctx.surface, ctx.buffer, 0, 0);
         wl_surface_commit(ctx.surface);
+        wl_display_roundtrip(display);
     }
+}
+
+void DecorationProvider::Self::teardown()
+{
+    for (auto& o : outputs)
+    {
+        auto& ctx = o.second;
+
+        if (ctx.buffer)
+            wl_buffer_destroy(ctx.buffer);
+
+        if (ctx.surface)
+            wl_surface_destroy(ctx.surface);
+    }
+
+    outputs.clear();
+    globals.teardown();
 }
 
 DecorationProvider::DecorationProvider(miral::WindowManagerTools const& tools) :
@@ -335,7 +354,9 @@ DecorationProvider::~DecorationProvider() = default;
 
 void DecorationProvider::stop()
 {
+    std::lock_guard<decltype(mutex)> lock{mutex};
     running = false;
+    running_cv.notify_one();
 }
 
 
@@ -343,12 +364,13 @@ void DecorationProvider::operator()(struct wl_display* display)
 {
     self->init(display);
 
+    std::unique_lock<decltype(mutex)> lock{mutex};
     running = true;
-    do
-    {
-        wl_display_dispatch(display);
-    }
-    while (running);
+
+    running_cv.wait(lock, [this] { return !running; });
+
+    self->teardown();
+    wl_display_roundtrip(display);
 }
 
 void DecorationProvider::operator()(std::weak_ptr<mir::scene::Session> const& session)
@@ -367,52 +389,3 @@ bool DecorationProvider::is_decoration(miral::Window const& window) const
 {
     return window.application() == session();
 }
-
-//void DecorationProvider::handle_event_for_background(MirWindow* window, MirEvent const* event, void* context)
-//{
-//    static_cast<DecorationProvider*>(context)->handle_event_for_background(window, event);
-//}
-//
-//void DecorationProvider::handle_event_for_background(MirWindow* window, MirEvent const* ev)
-//{
-//    switch (mir_event_get_type(ev))
-//    {
-//    case mir_event_type_resize:
-//    {
-//        MirResizeEvent const* resize = mir_event_get_resize_event(ev);
-//        int const new_width = mir_resize_event_get_width(resize);
-//        int const new_height = mir_resize_event_get_height(resize);
-//
-//        enqueue_work([window, new_width, new_height, this]()
-//            {
-//                auto found = find_if(begin(wallpaper), end(wallpaper), [&](Wallpaper const& w) { return w.window == window;});
-//                if (found == end(wallpaper)) return;
-//
-//                mir_buffer_stream_set_size(found->stream, new_width, new_height);
-//                mir_render_surface_set_size(found->surface, new_width, new_height);
-//
-//                WindowSpec::for_changes(connection)
-//                    .add_surface(found->surface, new_width, new_height, 0, 0)
-//                    .apply_to(window);
-//
-//                MirGraphicsRegion graphics_region;
-//
-//                // We expect a buffer of the right size so we shouldn't need to limit repaints
-//                // but we also to avoid an infinite loop.
-//                int repaint_limit = 3;
-//
-//                do
-//                {
-//                    mir_buffer_stream_get_graphics_region(found->stream, &graphics_region);
-//                    render_background(found->stream, graphics_region);
-//                }
-//                while ((new_width != graphics_region.width || new_height != graphics_region.height)
-//                       && --repaint_limit != 0);
-//            });
-//        break;
-//    }
-//
-//    default:
-//        break;
-//    }
-//}

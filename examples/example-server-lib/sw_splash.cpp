@@ -240,6 +240,8 @@ void SwSplash::Self::operator()(struct wl_display* display)
     }
 
     wl_surface_destroy(ctx.surface);
+    outputs.clear();
+    globals.teardown();
 }
 
 void SwSplash::operator()(struct wl_display* display)

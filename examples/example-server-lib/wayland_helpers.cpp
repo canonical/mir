@@ -216,3 +216,8 @@ void Globals::init(struct wl_display* display)
     wl_display_roundtrip(display);
     wl_display_roundtrip(display);
 }
+
+void Globals::teardown()
+{
+    bound_outputs.clear();
+}

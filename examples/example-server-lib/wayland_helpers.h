@@ -74,6 +74,7 @@ public:
     wl_shell* shell = nullptr;
 
     void init(struct wl_display* display);
+    void teardown();
 
 private:
     static void new_global(
