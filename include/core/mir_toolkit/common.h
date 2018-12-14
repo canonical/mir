@@ -117,6 +117,7 @@ typedef enum MirWindowType
     mir_window_type_inputmethod,  /**< AKA "OSK" or handwriting etc.       */
     mir_window_type_satellite,    /**< AKA "toolbox"/"toolbar"             */
     mir_window_type_tip,          /**< AKA "tooltip"                       */
+    mir_window_type_decoration,
     mir_window_types
 } MirWindowType;
 
