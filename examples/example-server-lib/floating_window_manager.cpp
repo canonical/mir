@@ -381,11 +381,6 @@ void FloatingWindowManagerPolicy::handle_window_ready(WindowInfo& window_info)
     keep_spinner_on_top();
 }
 
-void FloatingWindowManagerPolicy::advise_focus_lost(WindowInfo const& info)
-{
-    CanonicalWindowManagerPolicy::advise_focus_lost(info);
-}
-
 void FloatingWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
 {
     CanonicalWindowManagerPolicy::advise_focus_gained(info);
@@ -402,21 +397,6 @@ void FloatingWindowManagerPolicy::keep_spinner_on_top()
         for (auto const& window : spinner_info.windows())
             tools.raise_tree(window);
     }
-}
-
-void FloatingWindowManagerPolicy::advise_state_change(WindowInfo const& window_info, MirWindowState state)
-{
-    CanonicalWindowManagerPolicy::advise_state_change(window_info, state);
-}
-
-void FloatingWindowManagerPolicy::advise_resize(WindowInfo const& window_info, Size const& new_size)
-{
-    CanonicalWindowManagerPolicy::advise_resize(window_info, new_size);
-}
-
-void FloatingWindowManagerPolicy::advise_delete_window(WindowInfo const& window_info)
-{
-    CanonicalWindowManagerPolicy::advise_delete_window(window_info);
 }
 
 bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)

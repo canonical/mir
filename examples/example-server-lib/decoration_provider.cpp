@@ -299,16 +299,17 @@ void DecorationProvider::Self::draw_background(BackgroundInfo& ctx) const
         wl_buffer_destroy(ctx.buffer);
     }
 
-    struct wl_shm_pool* shm_pool =
-        make_shm_pool(this->globals.shm, stride * height, &ctx.content_area);
-    ctx.buffer =
-        wl_shm_pool_create_buffer(
-            shm_pool,
-            0,
-            width, height,
-            width * 4,
-            WL_SHM_FORMAT_ARGB8888);
-    wl_shm_pool_destroy(shm_pool);
+    {
+        auto const shm_pool = make_scoped(
+            make_shm_pool(this->globals.shm, stride * height, &ctx.content_area),
+            &wl_shm_pool_destroy);
+
+        ctx.buffer = wl_shm_pool_create_buffer(
+                shm_pool.get(),
+                0,
+                width, height, stride,
+                WL_SHM_FORMAT_ARGB8888);
+    }
 
     uint8_t const bottom_colour[] = { 0x20, 0x54, 0xe9 };   // Ubuntu orange
     uint8_t const top_colour[] =    { 0x33, 0x33, 0x33 };   // Cool grey
