@@ -214,4 +214,5 @@ void Globals::init(struct wl_display* display)
 
     wl_registry_add_listener(registry.get(), &registry_listener, this);
     wl_display_roundtrip(display);
+    wl_display_roundtrip(display);
 }

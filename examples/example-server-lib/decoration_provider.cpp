@@ -275,7 +275,6 @@ DecorationProvider::Self::Self(miral::WindowManagerTools const& tools) :
 void DecorationProvider::Self::init(struct wl_display* display)
 {
     globals.init(display);
-    wl_display_roundtrip(display);
 
     for (auto& o : outputs)
     {
