@@ -65,11 +65,7 @@ public:
      *  @{ */
     void advise_new_window(miral::WindowInfo const& window_info) override;
     void handle_window_ready(miral::WindowInfo& window_info) override;
-    void advise_focus_lost(miral::WindowInfo const& info) override;
     void advise_focus_gained(miral::WindowInfo const& info) override;
-    void advise_state_change(miral::WindowInfo const& window_info, MirWindowState state) override;
-    void advise_resize(miral::WindowInfo const& window_info, Size const& new_size) override;
-    void advise_delete_window(miral::WindowInfo const& window_info) override;
 
     void handle_modify_window(miral::WindowInfo& window_info, miral::WindowSpecification const& modifications) override;
     /** @} */

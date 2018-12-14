@@ -171,6 +171,7 @@ bool miral::WindowInfo::can_be_active() const
     case mir_window_type_inputmethod:  /**< AKA "OSK" or handwriting etc.       */
     case mir_window_type_gloss:
     case mir_window_type_tip:          /**< AKA "tooltip"                       */
+    case mir_window_type_decoration:
     default:
         // Cannot have input focus
         return false;

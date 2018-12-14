@@ -8,6 +8,7 @@ add_library(example-shell-lib STATIC
     titlebar_config.cpp         titlebar_config.h
         splash_session.h
     sw_splash.cpp               sw_splash.h
+    wayland_helpers.cpp         wayland_helpers.h
 )
 
 target_include_directories(example-shell-lib

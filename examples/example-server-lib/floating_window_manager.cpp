@@ -53,9 +53,9 @@ FloatingWindowManagerPolicy::FloatingWindowManagerPolicy(
     std::function<void()>& shutdown_hook) :
     CanonicalWindowManagerPolicy(tools),
     spinner{spinner},
-    decoration_provider{std::make_unique<DecorationProvider>(tools)}
+    decoration_provider{std::make_unique<DecorationProvider>()}
 {
-    launcher.launch("decorations", *decoration_provider);
+    launcher.launch(*decoration_provider);
     shutdown_hook = [this] { decoration_provider->stop(); };
 
     for (auto key : {KEY_F1, KEY_F2, KEY_F3, KEY_F4})
@@ -381,11 +381,6 @@ void FloatingWindowManagerPolicy::handle_window_ready(WindowInfo& window_info)
     keep_spinner_on_top();
 }
 
-void FloatingWindowManagerPolicy::advise_focus_lost(WindowInfo const& info)
-{
-    CanonicalWindowManagerPolicy::advise_focus_lost(info);
-}
-
 void FloatingWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
 {
     CanonicalWindowManagerPolicy::advise_focus_gained(info);
@@ -402,21 +397,6 @@ void FloatingWindowManagerPolicy::keep_spinner_on_top()
         for (auto const& window : spinner_info.windows())
             tools.raise_tree(window);
     }
-}
-
-void FloatingWindowManagerPolicy::advise_state_change(WindowInfo const& window_info, MirWindowState state)
-{
-    CanonicalWindowManagerPolicy::advise_state_change(window_info, state);
-}
-
-void FloatingWindowManagerPolicy::advise_resize(WindowInfo const& window_info, Size const& new_size)
-{
-    CanonicalWindowManagerPolicy::advise_resize(window_info, new_size);
-}
-
-void FloatingWindowManagerPolicy::advise_delete_window(WindowInfo const& window_info)
-{
-    CanonicalWindowManagerPolicy::advise_delete_window(window_info);
 }
 
 bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
@@ -657,6 +637,11 @@ WindowSpecification FloatingWindowManagerPolicy::place_new_window(
     ApplicationInfo const& app_info, WindowSpecification const& request_parameters)
 {
     auto parameters = CanonicalWindowManagerPolicy::place_new_window(app_info, request_parameters);
+
+    if (app_info.application() == decoration_provider->session())
+    {
+        parameters.type() = mir_window_type_decoration;
+    }
 
     bool const needs_titlebar = WindowInfo::needs_titlebar(parameters.type().value());
 
