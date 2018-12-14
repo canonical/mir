@@ -277,6 +277,10 @@ void DecorationProvider::Self::draw_background(BackgroundInfo& ctx) const
 {
     auto const width = ctx.output.width;
     auto const height = ctx.output.height;
+
+    if (width <= 0 || height <= 0)
+        return;
+
     auto const stride = 4*width;
 
     if (!ctx.surface)
