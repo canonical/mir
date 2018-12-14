@@ -658,6 +658,11 @@ WindowSpecification FloatingWindowManagerPolicy::place_new_window(
 {
     auto parameters = CanonicalWindowManagerPolicy::place_new_window(app_info, request_parameters);
 
+    if (app_info.application() == decoration_provider->session())
+    {
+        parameters.type() = mir_window_type_gloss;
+    }
+
     bool const needs_titlebar = WindowInfo::needs_titlebar(parameters.type().value());
 
     if (parameters.state().value() != mir_window_state_fullscreen && needs_titlebar)
