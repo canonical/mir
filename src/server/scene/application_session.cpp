@@ -223,6 +223,7 @@ std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_p
 
             case mir_window_type_gloss:
             case mir_window_type_tip:          /**< AKA "tooltip"                       */
+            case mir_window_type_decoration:
             default:
                 // Cannot have input focus - skip it
                 return false;

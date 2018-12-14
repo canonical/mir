@@ -1337,6 +1337,7 @@ void miral::BasicWindowManager::drag_window(miral::Window const& window, Displac
     case mir_window_type_menu:
     case mir_window_type_inputmethod:
     case mir_window_type_tip:
+    case mir_window_type_decoration:
     case mir_window_types:
         return;
     }
@@ -1904,6 +1905,7 @@ void miral::BasicWindowManager::validate_modification_request(WindowSpecificatio
         case mir_window_type_freestyle:
         case mir_window_type_inputmethod:
         case mir_window_type_tip:
+        case mir_window_type_decoration:
             if (target_type != original_type)
                 BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
             break;
@@ -1932,6 +1934,7 @@ void miral::BasicWindowManager::validate_modification_request(WindowSpecificatio
     case mir_window_type_dialog:
     case mir_window_type_menu:
     case mir_window_type_freestyle:
+    case mir_window_type_decoration:
         break;
 
     default:

@@ -22,46 +22,16 @@
 
 #include <miral/window_manager_tools.h>
 
-#include <mir/client/connection.h>
-#include <mir/client/surface.h>
-#include <mir/client/window.h>
-
-#include <mir/geometry/rectangle.h>
-#include <mir_toolkit/client_types.h>
-
-#include <atomic>
-#include <map>
-#include <mutex>
 #include <condition_variable>
-#include <queue>
+#include <mutex>
 
-class Worker
+class DecorationProvider
 {
 public:
-    ~Worker();
-
-    void start_work();
-    void enqueue_work(std::function<void()> const& functor);
-    void stop_work();
-
-private:
-    using WorkQueue = std::queue<std::function<void()>>;
-
-    std::mutex mutable work_mutex;
-    std::condition_variable work_cv;
-    WorkQueue work_queue;
-    bool work_done = false;
-
-    void do_work();
-};
-
-class DecorationProvider : Worker
-{
-public:
-    DecorationProvider(miral::WindowManagerTools const& tools);
+    DecorationProvider();
     ~DecorationProvider();
 
-    void operator()(mir::client::Connection connection);
+    void operator()(struct wl_display* display);
     void operator()(std::weak_ptr<mir::scene::Session> const& session);
 
     auto session() const -> std::shared_ptr<mir::scene::Session>;
@@ -71,15 +41,13 @@ public:
     bool is_decoration(miral::Window const& window) const;
 
 private:
-    miral::WindowManagerTools tools;
-    std::mutex mutable mutex;
-    mir::client::Connection connection;
-    struct Wallpaper { mir::client::Surface surface; mir::client::Window window; MirBufferStream* stream; };
-    std::vector<Wallpaper> wallpaper;
-    std::weak_ptr<mir::scene::Session> weak_session;
+    struct Self;
+    std::shared_ptr<Self> const self;
 
-    static void handle_event_for_background(MirWindow* window, MirEvent const* event, void* context_);
-    void handle_event_for_background(MirWindow* window, MirEvent const* ev);
+    std::mutex mutable mutex;
+    bool running{false};
+    std::condition_variable running_cv;
+    std::weak_ptr<mir::scene::Session> weak_session;
 };
 
 

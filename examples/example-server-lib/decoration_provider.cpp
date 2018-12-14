@@ -20,25 +20,24 @@
 
 #include "titlebar_config.h"
 
-#include <mir/client/display_config.h>
-#include <mir/client/window_spec.h>
-
-#include <mir_toolkit/mir_buffer_stream.h>
+#include "wayland_helpers.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
 #include <locale>
 #include <codecvt>
+#include <map>
 #include <string>
 #include <cstring>
 #include <sstream>
 
 #include <iostream>
+#include <thread>
 
 namespace
 {
-char const* const wallpaper_name = "wallpaper";
+struct BackgroundInfo;
 
 struct preferred_codecvt : std::codecvt_byname<wchar_t, char, std::mbstate_t>
 {
@@ -53,7 +52,7 @@ struct Printer
     Printer(Printer const&) = delete;
     Printer& operator=(Printer const&) = delete;
 
-    void printhelp(MirGraphicsRegion const& region);
+    void printhelp(BackgroundInfo const& region);
 
 private:
     std::wstring_convert<preferred_codecvt> converter;
@@ -88,7 +87,35 @@ Printer::~Printer()
     }
 }
 
-void Printer::printhelp(MirGraphicsRegion const& region)
+struct BackgroundInfo
+{
+    BackgroundInfo(Output const& output) :
+        output{output}
+    {}
+    
+    ~BackgroundInfo()
+    {
+        if (buffer)
+            wl_buffer_destroy(buffer);
+
+        if (shell_surface)
+            wl_shell_surface_destroy(shell_surface);
+
+        if (surface)
+            wl_surface_destroy(surface);
+    }
+
+    // Screen description
+    Output const& output;
+
+    // Content
+    void* content_area = nullptr;
+    wl_surface* surface = nullptr;
+    wl_shell_surface* shell_surface = nullptr;
+    wl_buffer* buffer = nullptr;
+};
+
+void Printer::printhelp(BackgroundInfo const& region)
 {
     if (!working)
         return;
@@ -125,7 +152,7 @@ void Printer::printhelp(MirGraphicsRegion const& region)
 
         auto const line = converter.from_bytes(rawline);
 
-        auto const fwidth = std::min(region.width / 60, 20);
+        auto const fwidth = std::min(region.output.width / 60, 20);
 
         FT_Set_Pixel_Sizes(face, fwidth, 0);
 
@@ -143,12 +170,12 @@ void Printer::printhelp(MirGraphicsRegion const& region)
         help_height += line_height;
     }
 
-    int base_y = (region.height - help_height)/2;
-    auto* const region_address = reinterpret_cast<char unsigned*>(region.vaddr);
+    int base_y = (region.output.height - help_height)/2;
+    auto* const region_address = reinterpret_cast<char unsigned*>(region.content_area);
 
     for (auto const* rawline : helptext)
     {
-        int base_x = (region.width - help_width)/2;
+        int base_x = (region.output.width - help_width)/2;
 
         auto const line = converter.from_bytes(rawline);
 
@@ -161,12 +188,12 @@ void Printer::printhelp(MirGraphicsRegion const& region)
             auto const& bitmap = glyph->bitmap;
             auto const x = base_x + glyph->bitmap_left;
 
-            if (static_cast<int>(x + bitmap.width) <= region.width)
+            if (static_cast<int>(x + bitmap.width) <= region.output.width)
             {
                 unsigned char* src = bitmap.buffer;
 
                 auto const y = base_y - glyph->bitmap_top;
-                auto* dest = region_address + y * region.stride + 4 * x;
+                auto* dest = region_address + y * 4*region.output.width + 4 * x;
 
                 for (auto row = 0u; row != bitmap.rows; ++row)
                 {
@@ -176,9 +203,9 @@ void Printer::printhelp(MirGraphicsRegion const& region)
                     }
 
                     src += bitmap.pitch;
-                    dest += region.stride;
+                    dest += 4*region.output.width;
 
-                    if (dest > region_address + region.height * region.stride)
+                    if (dest > region_address + region.output.height * 4*region.output.width)
                         break;
                 }
             }
@@ -189,97 +216,166 @@ void Printer::printhelp(MirGraphicsRegion const& region)
     }
 }
 
-void render_background(MirBufferStream* buffer_stream, MirGraphicsRegion& graphics_region)
+using Outputs = std::map<Output const*, BackgroundInfo>;
+
+}
+
+using namespace mir::geometry;
+
+struct DecorationProvider::Self
 {
+public:
+    Self();
+
+    void init(wl_display* display);
+    void teardown();
+
+private:
+    void draw_background(BackgroundInfo& ctx) const;
+    void on_new_output(Output const*);
+    void on_output_changed(Output const*);
+    void on_output_gone(Output const*);
+
+    wl_display* display = nullptr;
+    Globals globals;
+    Outputs outputs;
+};
+
+DecorationProvider::Self::Self() :
+    globals{
+        [this](Output const& output) { on_new_output(&output); },
+        [this](Output const& output) { on_output_changed(&output); },
+        [this](Output const& output) { on_output_gone(&output); }
+    }
+{
+}
+
+void DecorationProvider::Self::on_output_changed(Output const* output)
+{
+    auto const p = outputs.find(output);
+    if (p != end(outputs))
+        draw_background(p->second);
+}
+
+void DecorationProvider::Self::on_output_gone(Output const* output)
+{
+    outputs.erase(output);
+}
+
+void DecorationProvider::Self::on_new_output(Output const* output)
+{
+    draw_background(outputs.insert({output, BackgroundInfo{*output}}).first->second);
+}
+
+void DecorationProvider::Self::init(wl_display* display)
+{
+    this->display = display;
+    globals.init(display);
+}
+
+void DecorationProvider::Self::draw_background(BackgroundInfo& ctx) const
+{
+    auto const width = ctx.output.width;
+    auto const height = ctx.output.height;
+
+    if (width <= 0 || height <= 0)
+        return;
+
+    auto const stride = 4*width;
+
+    if (!ctx.surface)
     {
-        uint8_t const bottom_colour[] = { 0x20, 0x54, 0xe9 };   // Ubuntu orange
-        uint8_t const top_colour[] =    { 0x33, 0x33, 0x33 };   // Cool grey
+        ctx.surface = wl_compositor_create_surface(this->globals.compositor);
+    }
 
-        char* row = graphics_region.vaddr;
+    if (!ctx.shell_surface)
+    {
+        ctx.shell_surface = wl_shell_get_shell_surface(this->globals.shell, ctx.surface);
+        wl_shell_surface_set_fullscreen(
+            ctx.shell_surface,
+            WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT,
+            0,
+            ctx.output.output);
+    }
 
-        for (int j = 0; j < graphics_region.height; j++)
+    if (ctx.buffer)
+    {
+        wl_buffer_destroy(ctx.buffer);
+    }
+
+    {
+        auto const shm_pool = make_scoped(
+            make_shm_pool(this->globals.shm, stride * height, &ctx.content_area),
+            &wl_shm_pool_destroy);
+
+        ctx.buffer = wl_shm_pool_create_buffer(
+                shm_pool.get(),
+                0,
+                width, height, stride,
+                WL_SHM_FORMAT_ARGB8888);
+    }
+
+    uint8_t const bottom_colour[] = { 0x20, 0x54, 0xe9 };   // Ubuntu orange
+    uint8_t const top_colour[] =    { 0x33, 0x33, 0x33 };   // Cool grey
+
+    char* row = static_cast<decltype(row)>(ctx.content_area);
+
+    for (int j = 0; j < height; j++)
         {
             uint8_t pattern[4];
 
             for (auto i = 0; i != 3; ++i)
-                pattern[i] = (j*bottom_colour[i] + (graphics_region.height-j)*top_colour[i])/graphics_region.height;
+                pattern[i] = (j*bottom_colour[i] + (height-j)*top_colour[i])/height;
             pattern[3] = 0xff;
 
             uint32_t* pixel = (uint32_t*)row;
-            for (int i = 0; i < graphics_region.width; i++)
+            for (int i = 0; i < width; i++)
                 memcpy(pixel + i, pattern, sizeof pixel[i]);
 
-            row += graphics_region.stride;
+            row += stride;
         }
-    }
 
     static Printer printer;
-    printer.printhelp(*&graphics_region);
 
-    mir_buffer_stream_swap_buffers_sync(buffer_stream);
+    printer.printhelp(ctx);
+
+    wl_surface_attach(ctx.surface, ctx.buffer, 0, 0);
+    wl_surface_commit(ctx.surface);
+    wl_display_roundtrip(display);
 }
-}
 
-using namespace mir::client;
-using namespace mir::geometry;
-
-DecorationProvider::DecorationProvider(miral::WindowManagerTools const& tools) : tools{tools}
+void DecorationProvider::Self::teardown()
 {
-
+    outputs.clear();
+    globals.teardown();
 }
 
-DecorationProvider::~DecorationProvider()
+DecorationProvider::DecorationProvider() :
+    self{std::make_shared<Self>()}
 {
 }
+
+DecorationProvider::~DecorationProvider() = default;
 
 void DecorationProvider::stop()
 {
-    enqueue_work([this]
-        {
-            if (connection)
-            {
-                wallpaper.erase(begin(wallpaper), end(wallpaper));
-            }
-            connection.reset();
-        });
-    stop_work();
+    std::lock_guard<decltype(mutex)> lock{mutex};
+    running = false;
+    running_cv.notify_one();
 }
 
-void DecorationProvider::operator()(Connection connection)
+
+void DecorationProvider::operator()(struct wl_display* display)
 {
-    this->connection = connection;
+    self->init(display);
 
-    DisplayConfig const display_conf{this->connection};
+    std::unique_lock<decltype(mutex)> lock{mutex};
+    running = true;
 
-    display_conf.for_each_output([this](MirOutput const* output)
-        {
-            if (!mir_output_is_enabled(output))
-                return;
+    running_cv.wait(lock, [this] { return !running; });
 
-            auto const mode = mir_output_get_current_mode(output);
-            auto const output_id = mir_output_get_id(output);
-            auto const width = mir_output_mode_get_width(mode);
-            auto const height = mir_output_mode_get_height(mode);
-
-            Surface surface{mir_connection_create_render_surface_sync(DecorationProvider::connection, width, height)};
-
-            auto const buffer_stream =
-                mir_render_surface_get_buffer_stream(surface, width, height, mir_pixel_format_xrgb_8888);
-
-            auto window = WindowSpec::for_gloss(DecorationProvider::connection, width, height)
-                .set_fullscreen_on_output(output_id)
-                .set_event_handler(&handle_event_for_background, this)
-                .add_surface(surface, width, height, 0, 0)
-                .set_name(wallpaper_name).create_window();
-
-            wallpaper.push_back(Wallpaper{surface, window, buffer_stream});
-
-            MirGraphicsRegion graphics_region;
-            mir_buffer_stream_get_graphics_region(buffer_stream, &graphics_region);
-            render_background(buffer_stream, graphics_region);
-        });
-
-    start_work();
+    self->teardown();
+    wl_display_roundtrip(display);
 }
 
 void DecorationProvider::operator()(std::weak_ptr<mir::scene::Session> const& session)
@@ -297,90 +393,4 @@ auto DecorationProvider::session() const -> std::shared_ptr<mir::scene::Session>
 bool DecorationProvider::is_decoration(miral::Window const& window) const
 {
     return window.application() == session();
-}
-
-void DecorationProvider::handle_event_for_background(MirWindow* window, MirEvent const* event, void* context)
-{
-    static_cast<DecorationProvider*>(context)->handle_event_for_background(window, event);
-}
-
-void DecorationProvider::handle_event_for_background(MirWindow* window, MirEvent const* ev)
-{
-    switch (mir_event_get_type(ev))
-    {
-    case mir_event_type_resize:
-    {
-        MirResizeEvent const* resize = mir_event_get_resize_event(ev);
-        int const new_width = mir_resize_event_get_width(resize);
-        int const new_height = mir_resize_event_get_height(resize);
-
-        enqueue_work([window, new_width, new_height, this]()
-            {
-                auto found = find_if(begin(wallpaper), end(wallpaper), [&](Wallpaper const& w) { return w.window == window;});
-                if (found == end(wallpaper)) return;
-
-                mir_buffer_stream_set_size(found->stream, new_width, new_height);
-                mir_render_surface_set_size(found->surface, new_width, new_height);
-
-                WindowSpec::for_changes(connection)
-                    .add_surface(found->surface, new_width, new_height, 0, 0)
-                    .apply_to(window);
-
-                MirGraphicsRegion graphics_region;
-
-                // We expect a buffer of the right size so we shouldn't need to limit repaints
-                // but we also to avoid an infinite loop.
-                int repaint_limit = 3;
-
-                do
-                {
-                    mir_buffer_stream_get_graphics_region(found->stream, &graphics_region);
-                    render_background(found->stream, graphics_region);
-                }
-                while ((new_width != graphics_region.width || new_height != graphics_region.height)
-                       && --repaint_limit != 0);
-            });
-        break;
-    }
-
-    default:
-        break;
-    }
-}
-
-Worker::~Worker()
-{
-}
-
-void Worker::do_work()
-{
-    while (!work_done)
-    {
-        WorkQueue::value_type work;
-        {
-            std::unique_lock<decltype(work_mutex)> lock{work_mutex};
-            work_cv.wait(lock, [this] { return !work_queue.empty(); });
-            work = work_queue.front();
-            work_queue.pop();
-        }
-
-        work();
-    }
-}
-
-void Worker::enqueue_work(std::function<void()> const& functor)
-{
-    std::lock_guard<decltype(work_mutex)> lock{work_mutex};
-    work_queue.push(functor);
-    work_cv.notify_one();
-}
-
-void Worker::start_work()
-{
-    do_work();
-}
-
-void Worker::stop_work()
-{
-    enqueue_work([this] { work_done = true; });
 }
