@@ -22,7 +22,6 @@
 
 #include <miral/window_manager_tools.h>
 
-#include <condition_variable>
 #include <mutex>
 
 class DecorationProvider
@@ -46,7 +45,6 @@ private:
 
     std::mutex mutable mutex;
     bool running{false};
-    std::condition_variable running_cv;
     std::weak_ptr<mir::scene::Session> weak_session;
 };
 

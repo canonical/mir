@@ -75,12 +75,13 @@ void output_geometry(
     int32_t /*subpixel*/,
     const char */*make*/,
     const char */*model*/,
-    int32_t /*transform*/)
+    int32_t transform)
 {
     auto output = static_cast<Output*>(data);
 
     output->x = x;
     output->y = y;
+    output->transform = transform;
 }
 
 

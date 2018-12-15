@@ -120,6 +120,10 @@ void Printer::printhelp(BackgroundInfo const& region)
     if (!working)
         return;
 
+    bool rotated = region.output.transform == WL_OUTPUT_TRANSFORM_90 || region.output.transform == WL_OUTPUT_TRANSFORM_270;
+    auto const width = rotated ? region.output.height : region.output.width;
+    auto const height = rotated ? region.output.width : region.output.height;
+
     static char const* const helptext[] =
         {
             "Welcome to miral-shell",
@@ -152,7 +156,7 @@ void Printer::printhelp(BackgroundInfo const& region)
 
         auto const line = converter.from_bytes(rawline);
 
-        auto const fwidth = std::min(region.output.width / 60, 20);
+        auto const fwidth = std::min(width / 60, 20);
 
         FT_Set_Pixel_Sizes(face, fwidth, 0);
 
@@ -170,12 +174,12 @@ void Printer::printhelp(BackgroundInfo const& region)
         help_height += line_height;
     }
 
-    int base_y = (region.output.height - help_height)/2;
+    int base_y = (height - help_height) / 2;
     auto* const region_address = reinterpret_cast<char unsigned*>(region.content_area);
 
     for (auto const* rawline : helptext)
     {
-        int base_x = (region.output.width - help_width)/2;
+        int base_x = (width - help_width) / 2;
 
         auto const line = converter.from_bytes(rawline);
 
@@ -188,12 +192,12 @@ void Printer::printhelp(BackgroundInfo const& region)
             auto const& bitmap = glyph->bitmap;
             auto const x = base_x + glyph->bitmap_left;
 
-            if (static_cast<int>(x + bitmap.width) <= region.output.width)
+            if (static_cast<int>(x + bitmap.width) <= width)
             {
                 unsigned char* src = bitmap.buffer;
 
                 auto const y = base_y - glyph->bitmap_top;
-                auto* dest = region_address + y * 4*region.output.width + 4 * x;
+                auto* dest = region_address + y * 4 * width + 4 * x;
 
                 for (auto row = 0u; row != bitmap.rows; ++row)
                 {
@@ -203,9 +207,9 @@ void Printer::printhelp(BackgroundInfo const& region)
                     }
 
                     src += bitmap.pitch;
-                    dest += 4*region.output.width;
+                    dest += 4 * width;
 
-                    if (dest > region_address + region.output.height * 4*region.output.width)
+                    if (dest > region_address + height * 4 * width)
                         break;
                 }
             }
@@ -275,8 +279,9 @@ void DecorationProvider::Self::init(wl_display* display)
 
 void DecorationProvider::Self::draw_background(BackgroundInfo& ctx) const
 {
-    auto const width = ctx.output.width;
-    auto const height = ctx.output.height;
+    bool rotated = ctx.output.transform == WL_OUTPUT_TRANSFORM_90 || ctx.output.transform == WL_OUTPUT_TRANSFORM_270;
+    auto const width = rotated ? ctx.output.height : ctx.output.width;
+    auto const height = rotated ? ctx.output.width : ctx.output.height;
 
     if (width <= 0 || height <= 0)
         return;
@@ -361,7 +366,6 @@ void DecorationProvider::stop()
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
     running = false;
-    running_cv.notify_one();
 }
 
 
@@ -372,7 +376,15 @@ void DecorationProvider::operator()(struct wl_display* display)
     std::unique_lock<decltype(mutex)> lock{mutex};
     running = true;
 
-    running_cv.wait(lock, [this] { return !running; });
+    do
+    {
+        lock.unlock();
+        while (wl_display_prepare_read(display) != 0)
+            wl_display_dispatch_pending(display);
+        wl_display_read_events(display);
+        lock.lock();
+    }
+    while (running);
 
     self->teardown();
     wl_display_roundtrip(display);
