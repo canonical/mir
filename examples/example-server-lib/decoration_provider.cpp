@@ -25,6 +25,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <sys/poll.h>
 #include <locale>
 #include <codecvt>
 #include <map>
@@ -376,11 +377,16 @@ void DecorationProvider::operator()(struct wl_display* display)
     std::unique_lock<decltype(mutex)> lock{mutex};
     running = true;
 
+    pollfd fd = { wl_display_get_fd(display), POLLIN, 0 };
+    // TODO: use an additional FD pair to exit loop
+
     do
     {
         lock.unlock();
         while (wl_display_prepare_read(display) != 0)
             wl_display_dispatch_pending(display);
+
+        poll(&fd, 1, 200);
         wl_display_read_events(display);
         lock.lock();
     }
