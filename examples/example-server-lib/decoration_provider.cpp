@@ -225,17 +225,11 @@ void Printer::printhelp(BackgroundInfo const& region)
 
 using Outputs = std::map<Output const*, BackgroundInfo>;
 
-}
-
-using namespace mir::geometry;
-
-struct DecorationProvider::Self
+struct DecorationProviderClient
 {
 public:
-    Self();
-
-    void init(wl_display* display);
-    void teardown();
+    DecorationProviderClient(wl_display* display);
+    ~DecorationProviderClient();
 
 private:
     void draw_background(BackgroundInfo& ctx) const;
@@ -248,39 +242,35 @@ private:
     Outputs outputs;
 };
 
-DecorationProvider::Self::Self() :
+DecorationProviderClient::DecorationProviderClient(wl_display* display) :
     globals{
         [this](Output const& output) { on_new_output(&output); },
         [this](Output const& output) { on_output_changed(&output); },
         [this](Output const& output) { on_output_gone(&output); }
     }
 {
+    this->display = display;
+    globals.init(display);
 }
 
-void DecorationProvider::Self::on_output_changed(Output const* output)
+void DecorationProviderClient::on_output_changed(Output const* output)
 {
     auto const p = outputs.find(output);
     if (p != end(outputs))
         draw_background(p->second);
 }
 
-void DecorationProvider::Self::on_output_gone(Output const* output)
+void DecorationProviderClient::on_output_gone(Output const* output)
 {
     outputs.erase(output);
 }
 
-void DecorationProvider::Self::on_new_output(Output const* output)
+void DecorationProviderClient::on_new_output(Output const* output)
 {
     draw_background(outputs.insert({output, BackgroundInfo{*output}}).first->second);
 }
 
-void DecorationProvider::Self::init(wl_display* display)
-{
-    this->display = display;
-    globals.init(display);
-}
-
-void DecorationProvider::Self::draw_background(BackgroundInfo& ctx) const
+void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 {
     bool rotated = ctx.output.transform == WL_OUTPUT_TRANSFORM_90 || ctx.output.transform == WL_OUTPUT_TRANSFORM_270;
     auto const width = rotated ? ctx.output.height : ctx.output.width;
@@ -317,10 +307,10 @@ void DecorationProvider::Self::draw_background(BackgroundInfo& ctx) const
             &wl_shm_pool_destroy);
 
         ctx.buffer = wl_shm_pool_create_buffer(
-                shm_pool.get(),
-                0,
-                width, height, stride,
-                WL_SHM_FORMAT_ARGB8888);
+            shm_pool.get(),
+            0,
+            width, height, stride,
+            WL_SHM_FORMAT_ARGB8888);
     }
 
     uint8_t const bottom_colour[] = { 0x20, 0x54, 0xe9 };   // Ubuntu orange
@@ -329,19 +319,19 @@ void DecorationProvider::Self::draw_background(BackgroundInfo& ctx) const
     char* row = static_cast<decltype(row)>(ctx.content_area);
 
     for (int j = 0; j < height; j++)
-        {
-            uint8_t pattern[4];
+    {
+        uint8_t pattern[4];
 
-            for (auto i = 0; i != 3; ++i)
-                pattern[i] = (j*bottom_colour[i] + (height-j)*top_colour[i])/height;
-            pattern[3] = 0xff;
+        for (auto i = 0; i != 3; ++i)
+            pattern[i] = (j*bottom_colour[i] + (height-j)*top_colour[i])/height;
+        pattern[3] = 0xff;
 
-            uint32_t* pixel = (uint32_t*)row;
-            for (int i = 0; i < width; i++)
-                memcpy(pixel + i, pattern, sizeof pixel[i]);
+        uint32_t* pixel = (uint32_t*)row;
+        for (int i = 0; i < width; i++)
+            memcpy(pixel + i, pattern, sizeof pixel[i]);
 
-            row += stride;
-        }
+        row += stride;
+    }
 
     static Printer printer;
 
@@ -352,15 +342,17 @@ void DecorationProvider::Self::draw_background(BackgroundInfo& ctx) const
     wl_display_roundtrip(display);
 }
 
-void DecorationProvider::Self::teardown()
+DecorationProviderClient::~DecorationProviderClient()
 {
     outputs.clear();
     globals.teardown();
     wl_display_roundtrip(display);
 }
+}
+
+using namespace mir::geometry;
 
 DecorationProvider::DecorationProvider() :
-    self{std::make_shared<Self>()},
     shutdown_signal{::eventfd(0, EFD_CLOEXEC)}
 {
     if (shutdown_signal == mir::Fd::invalid)
@@ -386,16 +378,7 @@ void DecorationProvider::stop()
 
 void DecorationProvider::operator()(wl_display* display)
 {
-    struct SetupTeardown
-    {
-        SetupTeardown(std::shared_ptr<Self> const& self, wl_display* display) :
-        self{self}, display{display} { self->init(display); }
-
-        ~SetupTeardown() { self->teardown(); }
-
-        std::shared_ptr<Self> const& self;
-        wl_display* display;
-    } setup_teardown{self, display};
+    DecorationProviderClient self(display);
 
     enum FdIndices {
         display_fd = 0,

@@ -41,11 +41,9 @@ public:
     bool is_decoration(miral::Window const& window) const;
 
 private:
-    struct Self;
-    std::shared_ptr<Self> const self;
+    mir::Fd const shutdown_signal;
 
     std::mutex mutable mutex;
-    mir::Fd shutdown_signal;
     std::weak_ptr<mir::scene::Session> weak_session;
 };
 
