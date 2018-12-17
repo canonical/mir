@@ -39,6 +39,7 @@
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <boost/exception/errinfo_file_name.hpp>
+#include <xf86drmMode.h>
 
 namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
@@ -188,6 +189,44 @@ mg::PlatformPriority probe_graphics_platform(
                     {
                         mir::log_debug(
                             "EGL_EXT_device_drm found, but can't acquire DRM node.");
+                        return false;
+                    }
+
+                    // Check that the drm device is usable by setting the interface version we use (1.4)
+                    drmSetVersion sv;
+                    sv.drm_di_major = 1;
+                    sv.drm_di_minor = 4;
+                    sv.drm_dd_major = -1;     /* Don't care */
+                    sv.drm_dd_minor = -1;     /* Don't care */
+
+                    if (auto error = -drmSetInterfaceVersion(drm_fd, &sv))
+                    {
+                        mir::log_warning(
+                            "Failed to set DRM interface version on device: %i (%s)",
+                            error,
+                            strerror(error));
+                        return false;
+                    }
+
+                    auto busid = std::unique_ptr<char, decltype(&drmFreeBusid)>{
+                        drmGetBusid(drm_fd),
+                        &drmFreeBusid
+                    };
+                    if (auto err = drmCheckModesettingSupported(busid.get()))
+                    {
+                        if (err == -ENOSYS)
+                        {
+                            mir::log_info("EGL_EXT_device_drm found, but no KMS support");
+                            mir::log_info("You may need to set the nvidia_drm.modeset kernel parameter");
+                        }
+                        else
+                        {
+                            mir::log_warning(
+                                "Failed to check DRM modesetting support for device %s: %s (%i)",
+                                busid.get(),
+                                strerror(-err),
+                                -err);
+                        }
                         return false;
                     }
 
