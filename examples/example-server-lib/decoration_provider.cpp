@@ -356,6 +356,7 @@ void DecorationProvider::Self::teardown()
 {
     outputs.clear();
     globals.teardown();
+    wl_display_roundtrip(display);
 }
 
 DecorationProvider::DecorationProvider() :
@@ -383,9 +384,18 @@ void DecorationProvider::stop()
     }
 }
 
-void DecorationProvider::operator()(struct wl_display* display)
+void DecorationProvider::operator()(wl_display* display)
 {
-    self->init(display);
+    struct SetupTeardown
+    {
+        SetupTeardown(std::shared_ptr<Self> const& self, wl_display* display) :
+        self{self}, display{display} { self->init(display); }
+
+        ~SetupTeardown() { self->teardown(); }
+
+        std::shared_ptr<Self> const& self;
+        wl_display* display;
+    } setup_teardown{self, display};
 
     enum FdIndices {
         display_fd = 0,
@@ -428,9 +438,6 @@ void DecorationProvider::operator()(struct wl_display* display)
             wl_display_cancel_read(display);
         }
     }
-
-    self->teardown();
-    wl_display_roundtrip(display);
 }
 
 void DecorationProvider::operator()(std::weak_ptr<mir::scene::Session> const& session)
