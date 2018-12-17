@@ -21,6 +21,7 @@
 
 
 #include <miral/window_manager_tools.h>
+#include <mir/fd.h>
 
 #include <mutex>
 
@@ -44,7 +45,7 @@ private:
     std::shared_ptr<Self> const self;
 
     std::mutex mutable mutex;
-    bool running{false};
+    mir::Fd shutdown_signal;
     std::weak_ptr<mir::scene::Session> weak_session;
 };
 

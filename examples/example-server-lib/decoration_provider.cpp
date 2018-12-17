@@ -26,6 +26,7 @@
 #include FT_FREETYPE_H
 
 #include <sys/poll.h>
+#include <sys/eventfd.h>
 #include <locale>
 #include <codecvt>
 #include <map>
@@ -33,8 +34,9 @@
 #include <cstring>
 #include <sstream>
 
+#include <boost/throw_exception.hpp>
+#include <system_error>
 #include <iostream>
-#include <thread>
 
 namespace
 {
@@ -357,40 +359,75 @@ void DecorationProvider::Self::teardown()
 }
 
 DecorationProvider::DecorationProvider() :
-    self{std::make_shared<Self>()}
+    self{std::make_shared<Self>()},
+    shutdown_signal{::eventfd(0, EFD_CLOEXEC)}
 {
+    if (shutdown_signal == mir::Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{errno, std::system_category(), "Failed to create shutdown notifier"}));
+    }
 }
 
 DecorationProvider::~DecorationProvider() = default;
 
 void DecorationProvider::stop()
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
-    running = false;
+    if (eventfd_write(shutdown_signal, 1) == -1)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to shutdown internal decoration client"}));
+    }
 }
-
 
 void DecorationProvider::operator()(struct wl_display* display)
 {
     self->init(display);
 
-    std::unique_lock<decltype(mutex)> lock{mutex};
-    running = true;
+    enum FdIndices {
+        Display = 0,
+        Shutdown,
+        NumIndices
+    };
 
-    pollfd fd = { wl_display_get_fd(display), POLLIN, 0 };
-    // TODO: use an additional FD pair to exit loop
+    pollfd fds[NumIndices];
+    fds[Display] = {wl_display_get_fd(display), POLLIN, 0};
+    fds[Shutdown] = {shutdown_signal, POLLIN, 0};
 
-    do
+    while (!(fds[Shutdown].revents & (POLLIN | POLLERR)))
     {
-        lock.unlock();
         while (wl_display_prepare_read(display) != 0)
-            wl_display_dispatch_pending(display);
+        {
+            if (wl_display_dispatch_pending(display) == -1)
+            {
+                BOOST_THROW_EXCEPTION((
+                    std::system_error{errno, std::system_category(), "Failed to dispatch Wayland events"}));
+            }
+        }
 
-        poll(&fd, 1, 200);
-        wl_display_read_events(display);
-        lock.lock();
+        if (poll(fds, NumIndices, -1) == -1)
+        {
+            wl_display_cancel_read(display);
+            BOOST_THROW_EXCEPTION((
+                std::system_error{errno, std::system_category(), "Failed to wait for event"}));
+        }
+
+        if (fds[Display].revents & (POLLIN | POLLERR))
+        {
+            if (wl_display_read_events(display))
+            {
+                BOOST_THROW_EXCEPTION((
+                    std::system_error{errno, std::system_category(), "Failed to read Wayland events"}));
+            }
+        }
+        else
+        {
+            wl_display_cancel_read(display);
+        }
     }
-    while (running);
 
     self->teardown();
     wl_display_roundtrip(display);
