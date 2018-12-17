@@ -217,4 +217,5 @@ void Globals::init(struct wl_display* display)
 void Globals::teardown()
 {
     bound_outputs.clear();
+    registry.reset();
 }
