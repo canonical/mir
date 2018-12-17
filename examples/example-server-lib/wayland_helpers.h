@@ -90,6 +90,13 @@ private:
         struct wl_registry* registry,
         uint32_t name);
 
+    wl_registry_listener const registry_listener = {
+        new_global,
+        global_remove
+    };
+
+    std::unique_ptr<wl_registry, decltype(&wl_registry_destroy)> registry;
+
     std::unordered_map<uint32_t, std::unique_ptr<Output>> bound_outputs;
 
     std::function<void(Output const&)> const on_new_output;
