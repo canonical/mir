@@ -75,12 +75,13 @@ void output_geometry(
     int32_t /*subpixel*/,
     const char */*make*/,
     const char */*model*/,
-    int32_t /*transform*/)
+    int32_t transform)
 {
     auto output = static_cast<Output*>(data);
 
     output->x = x;
     output->y = y;
+    output->transform = transform;
 }
 
 
@@ -138,7 +139,8 @@ Globals::Globals(
     std::function<void(Output const&)> on_new_output,
     std::function<void(Output const&)> on_output_changed,
     std::function<void(Output const&)> on_output_gone)
-    : on_new_output{std::move(on_new_output)},
+    : registry{nullptr, [](auto){}},
+      on_new_output{std::move(on_new_output)},
       on_output_changed{std::move(on_output_changed)},
       on_output_gone{std::move(on_output_gone)}
 {
@@ -205,12 +207,7 @@ void Globals::global_remove(
 
 void Globals::init(struct wl_display* display)
 {
-    wl_registry_listener const registry_listener = {
-        new_global,
-        global_remove
-    };
-
-    auto const registry = make_scoped(wl_display_get_registry(display), &wl_registry_destroy);
+    registry = {wl_display_get_registry(display), &wl_registry_destroy};
 
     wl_registry_add_listener(registry.get(), &registry_listener, this);
     wl_display_roundtrip(display);
@@ -220,4 +217,5 @@ void Globals::init(struct wl_display* display)
 void Globals::teardown()
 {
     bound_outputs.clear();
+    registry.reset();
 }
