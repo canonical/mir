@@ -388,16 +388,16 @@ void DecorationProvider::operator()(struct wl_display* display)
     self->init(display);
 
     enum FdIndices {
-        Display = 0,
-        Shutdown,
-        NumIndices
+        display_fd = 0,
+        shutdown,
+        indices
     };
 
-    pollfd fds[NumIndices];
-    fds[Display] = {wl_display_get_fd(display), POLLIN, 0};
-    fds[Shutdown] = {shutdown_signal, POLLIN, 0};
+    pollfd fds[indices];
+    fds[display_fd] = {wl_display_get_fd(display), POLLIN, 0};
+    fds[shutdown] = {shutdown_signal, POLLIN, 0};
 
-    while (!(fds[Shutdown].revents & (POLLIN | POLLERR)))
+    while (!(fds[shutdown].revents & (POLLIN | POLLERR)))
     {
         while (wl_display_prepare_read(display) != 0)
         {
@@ -408,14 +408,14 @@ void DecorationProvider::operator()(struct wl_display* display)
             }
         }
 
-        if (poll(fds, NumIndices, -1) == -1)
+        if (poll(fds, indices, -1) == -1)
         {
             wl_display_cancel_read(display);
             BOOST_THROW_EXCEPTION((
                 std::system_error{errno, std::system_category(), "Failed to wait for event"}));
         }
 
-        if (fds[Display].revents & (POLLIN | POLLERR))
+        if (fds[display_fd].revents & (POLLIN | POLLERR))
         {
             if (wl_display_read_events(display))
             {
