@@ -21,8 +21,8 @@
 
 
 #include <miral/window_manager_tools.h>
+#include <mir/fd.h>
 
-#include <condition_variable>
 #include <mutex>
 
 class DecorationProvider
@@ -41,12 +41,9 @@ public:
     bool is_decoration(miral::Window const& window) const;
 
 private:
-    struct Self;
-    std::shared_ptr<Self> const self;
+    mir::Fd const shutdown_signal;
 
     std::mutex mutable mutex;
-    bool running{false};
-    std::condition_variable running_cv;
     std::weak_ptr<mir::scene::Session> weak_session;
 };
 

@@ -50,6 +50,7 @@ public:
 
     int32_t x, y;
     int32_t width, height;
+    int32_t transform;
     wl_output* output;
 private:
     static void output_done(void* data, wl_output* output);
@@ -88,6 +89,13 @@ private:
         void* data,
         struct wl_registry* registry,
         uint32_t name);
+
+    wl_registry_listener const registry_listener = {
+        new_global,
+        global_remove
+    };
+
+    std::unique_ptr<wl_registry, decltype(&wl_registry_destroy)> registry;
 
     std::unordered_map<uint32_t, std::unique_ptr<Output>> bound_outputs;
 

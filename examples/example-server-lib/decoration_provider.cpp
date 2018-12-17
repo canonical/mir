@@ -25,6 +25,8 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include <sys/poll.h>
+#include <sys/eventfd.h>
 #include <locale>
 #include <codecvt>
 #include <map>
@@ -32,8 +34,9 @@
 #include <cstring>
 #include <sstream>
 
+#include <boost/throw_exception.hpp>
+#include <system_error>
 #include <iostream>
-#include <thread>
 
 namespace
 {
@@ -120,6 +123,10 @@ void Printer::printhelp(BackgroundInfo const& region)
     if (!working)
         return;
 
+    bool rotated = region.output.transform == WL_OUTPUT_TRANSFORM_90 || region.output.transform == WL_OUTPUT_TRANSFORM_270;
+    auto const width = rotated ? region.output.height : region.output.width;
+    auto const height = rotated ? region.output.width : region.output.height;
+
     static char const* const helptext[] =
         {
             "Welcome to miral-shell",
@@ -152,7 +159,7 @@ void Printer::printhelp(BackgroundInfo const& region)
 
         auto const line = converter.from_bytes(rawline);
 
-        auto const fwidth = std::min(region.output.width / 60, 20);
+        auto const fwidth = std::min(width / 60, 20);
 
         FT_Set_Pixel_Sizes(face, fwidth, 0);
 
@@ -170,12 +177,12 @@ void Printer::printhelp(BackgroundInfo const& region)
         help_height += line_height;
     }
 
-    int base_y = (region.output.height - help_height)/2;
+    int base_y = (height - help_height) / 2;
     auto* const region_address = reinterpret_cast<char unsigned*>(region.content_area);
 
     for (auto const* rawline : helptext)
     {
-        int base_x = (region.output.width - help_width)/2;
+        int base_x = (width - help_width) / 2;
 
         auto const line = converter.from_bytes(rawline);
 
@@ -188,12 +195,12 @@ void Printer::printhelp(BackgroundInfo const& region)
             auto const& bitmap = glyph->bitmap;
             auto const x = base_x + glyph->bitmap_left;
 
-            if (static_cast<int>(x + bitmap.width) <= region.output.width)
+            if (static_cast<int>(x + bitmap.width) <= width)
             {
                 unsigned char* src = bitmap.buffer;
 
                 auto const y = base_y - glyph->bitmap_top;
-                auto* dest = region_address + y * 4*region.output.width + 4 * x;
+                auto* dest = region_address + y * 4 * width + 4 * x;
 
                 for (auto row = 0u; row != bitmap.rows; ++row)
                 {
@@ -203,9 +210,9 @@ void Printer::printhelp(BackgroundInfo const& region)
                     }
 
                     src += bitmap.pitch;
-                    dest += 4*region.output.width;
+                    dest += 4 * width;
 
-                    if (dest > region_address + region.output.height * 4*region.output.width)
+                    if (dest > region_address + height * 4 * width)
                         break;
                 }
             }
@@ -218,17 +225,11 @@ void Printer::printhelp(BackgroundInfo const& region)
 
 using Outputs = std::map<Output const*, BackgroundInfo>;
 
-}
-
-using namespace mir::geometry;
-
-struct DecorationProvider::Self
+struct DecorationProviderClient
 {
 public:
-    Self();
-
-    void init(wl_display* display);
-    void teardown();
+    DecorationProviderClient(wl_display* display);
+    ~DecorationProviderClient();
 
 private:
     void draw_background(BackgroundInfo& ctx) const;
@@ -241,42 +242,39 @@ private:
     Outputs outputs;
 };
 
-DecorationProvider::Self::Self() :
+DecorationProviderClient::DecorationProviderClient(wl_display* display) :
     globals{
         [this](Output const& output) { on_new_output(&output); },
         [this](Output const& output) { on_output_changed(&output); },
         [this](Output const& output) { on_output_gone(&output); }
     }
 {
+    this->display = display;
+    globals.init(display);
 }
 
-void DecorationProvider::Self::on_output_changed(Output const* output)
+void DecorationProviderClient::on_output_changed(Output const* output)
 {
     auto const p = outputs.find(output);
     if (p != end(outputs))
         draw_background(p->second);
 }
 
-void DecorationProvider::Self::on_output_gone(Output const* output)
+void DecorationProviderClient::on_output_gone(Output const* output)
 {
     outputs.erase(output);
 }
 
-void DecorationProvider::Self::on_new_output(Output const* output)
+void DecorationProviderClient::on_new_output(Output const* output)
 {
     draw_background(outputs.insert({output, BackgroundInfo{*output}}).first->second);
 }
 
-void DecorationProvider::Self::init(wl_display* display)
+void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 {
-    this->display = display;
-    globals.init(display);
-}
-
-void DecorationProvider::Self::draw_background(BackgroundInfo& ctx) const
-{
-    auto const width = ctx.output.width;
-    auto const height = ctx.output.height;
+    bool rotated = ctx.output.transform == WL_OUTPUT_TRANSFORM_90 || ctx.output.transform == WL_OUTPUT_TRANSFORM_270;
+    auto const width = rotated ? ctx.output.height : ctx.output.width;
+    auto const height = rotated ? ctx.output.width : ctx.output.height;
 
     if (width <= 0 || height <= 0)
         return;
@@ -309,10 +307,10 @@ void DecorationProvider::Self::draw_background(BackgroundInfo& ctx) const
             &wl_shm_pool_destroy);
 
         ctx.buffer = wl_shm_pool_create_buffer(
-                shm_pool.get(),
-                0,
-                width, height, stride,
-                WL_SHM_FORMAT_ARGB8888);
+            shm_pool.get(),
+            0,
+            width, height, stride,
+            WL_SHM_FORMAT_ARGB8888);
     }
 
     uint8_t const bottom_colour[] = { 0x20, 0x54, 0xe9 };   // Ubuntu orange
@@ -321,19 +319,19 @@ void DecorationProvider::Self::draw_background(BackgroundInfo& ctx) const
     char* row = static_cast<decltype(row)>(ctx.content_area);
 
     for (int j = 0; j < height; j++)
-        {
-            uint8_t pattern[4];
+    {
+        uint8_t pattern[4];
 
-            for (auto i = 0; i != 3; ++i)
-                pattern[i] = (j*bottom_colour[i] + (height-j)*top_colour[i])/height;
-            pattern[3] = 0xff;
+        for (auto i = 0; i != 3; ++i)
+            pattern[i] = (j*bottom_colour[i] + (height-j)*top_colour[i])/height;
+        pattern[3] = 0xff;
 
-            uint32_t* pixel = (uint32_t*)row;
-            for (int i = 0; i < width; i++)
-                memcpy(pixel + i, pattern, sizeof pixel[i]);
+        uint32_t* pixel = (uint32_t*)row;
+        for (int i = 0; i < width; i++)
+            memcpy(pixel + i, pattern, sizeof pixel[i]);
 
-            row += stride;
-        }
+        row += stride;
+    }
 
     static Printer printer;
 
@@ -344,38 +342,85 @@ void DecorationProvider::Self::draw_background(BackgroundInfo& ctx) const
     wl_display_roundtrip(display);
 }
 
-void DecorationProvider::Self::teardown()
+DecorationProviderClient::~DecorationProviderClient()
 {
     outputs.clear();
     globals.teardown();
+    wl_display_roundtrip(display);
+}
 }
 
+using namespace mir::geometry;
+
 DecorationProvider::DecorationProvider() :
-    self{std::make_shared<Self>()}
+    shutdown_signal{::eventfd(0, EFD_CLOEXEC)}
 {
+    if (shutdown_signal == mir::Fd::invalid)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{errno, std::system_category(), "Failed to create shutdown notifier"}));
+    }
 }
 
 DecorationProvider::~DecorationProvider() = default;
 
 void DecorationProvider::stop()
 {
-    std::lock_guard<decltype(mutex)> lock{mutex};
-    running = false;
-    running_cv.notify_one();
+    if (eventfd_write(shutdown_signal, 1) == -1)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to shutdown internal decoration client"}));
+    }
 }
 
-
-void DecorationProvider::operator()(struct wl_display* display)
+void DecorationProvider::operator()(wl_display* display)
 {
-    self->init(display);
+    DecorationProviderClient self(display);
 
-    std::unique_lock<decltype(mutex)> lock{mutex};
-    running = true;
+    enum FdIndices {
+        display_fd = 0,
+        shutdown,
+        indices
+    };
 
-    running_cv.wait(lock, [this] { return !running; });
+    pollfd fds[indices];
+    fds[display_fd] = {wl_display_get_fd(display), POLLIN, 0};
+    fds[shutdown] = {shutdown_signal, POLLIN, 0};
 
-    self->teardown();
-    wl_display_roundtrip(display);
+    while (!(fds[shutdown].revents & (POLLIN | POLLERR)))
+    {
+        while (wl_display_prepare_read(display) != 0)
+        {
+            if (wl_display_dispatch_pending(display) == -1)
+            {
+                BOOST_THROW_EXCEPTION((
+                    std::system_error{errno, std::system_category(), "Failed to dispatch Wayland events"}));
+            }
+        }
+
+        if (poll(fds, indices, -1) == -1)
+        {
+            wl_display_cancel_read(display);
+            BOOST_THROW_EXCEPTION((
+                std::system_error{errno, std::system_category(), "Failed to wait for event"}));
+        }
+
+        if (fds[display_fd].revents & (POLLIN | POLLERR))
+        {
+            if (wl_display_read_events(display))
+            {
+                BOOST_THROW_EXCEPTION((
+                    std::system_error{errno, std::system_category(), "Failed to read Wayland events"}));
+            }
+        }
+        else
+        {
+            wl_display_cancel_read(display);
+        }
+    }
 }
 
 void DecorationProvider::operator()(std::weak_ptr<mir::scene::Session> const& session)
