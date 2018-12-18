@@ -159,6 +159,7 @@ public:
     MOCK_METHOD1(drmGetVersion, drmVersionPtr(int));
     MOCK_METHOD1(drmFreeVersion, void(drmVersionPtr));
 
+    MOCK_METHOD1(drmCheckModesettingSupported, int(char const*));
 
     void add_crtc(
         char const* device,

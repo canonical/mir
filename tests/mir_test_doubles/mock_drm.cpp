@@ -329,6 +329,9 @@ mtd::MockDRM::MockDRM()
     };
     ON_CALL(*this, drmGetVersion(_))
         .WillByDefault(Return(const_cast<drmVersionPtr>(&version)));
+
+    ON_CALL(*this, drmCheckModesettingSupported(_))
+    .WillByDefault(Return(0));
 }
 
 mtd::MockDRM::~MockDRM() noexcept
@@ -699,3 +702,7 @@ char* drmGetDeviceNameFromFd(int fd)
     return global_mock->drmGetDeviceNameFromFd(fd);
 }
 
+int drmCheckModesettingSupported(char const* busid)
+{
+    return global_mock->drmCheckModesettingSupported(busid);
+}
