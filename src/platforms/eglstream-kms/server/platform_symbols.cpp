@@ -225,6 +225,48 @@ mg::PlatformPriority probe_graphics_platform(
                         return false;
                     }
 
+                    eglBindAPI(MIR_SERVER_EGL_OPENGL_API);
+                    EGLint const config_attribs[] = {
+                        EGL_RENDERABLE_TYPE, MIR_SERVER_EGL_OPENGL_BIT,
+                        EGL_SURFACE_TYPE, EGL_STREAM_BIT_KHR,
+                        EGL_NONE
+                    };
+                    EGLConfig config;
+                    EGLint num_configs;
+                    if (eglChooseConfig(display, config_attribs, &config, 1, &num_configs) != EGL_TRUE)
+                    {
+                        mir::log_warning("Failed to create EGL context");
+                        return false;
+                    }
+                    EGLContext ctx{EGL_NO_CONTEXT};
+                    auto ctx_init = mir::raii::paired_calls(
+                        [&ctx, display, config]()
+                        {
+                            EGLint const context_attr[] = {
+#if MIR_SERVER_EGL_OPENGL_BIT == EGL_OPENGL_ES2_BIT
+                                EGL_CONTEXT_CLIENT_VERSION, 2,
+#endif
+                                EGL_NONE
+                            };
+                            ctx = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attr);
+                        },
+                        [ctx, display]()
+                        {
+                            if (ctx != EGL_NO_CONTEXT)
+                            {
+                                eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+                                eglDestroyContext(display, ctx);
+                            }
+                        });
+
+                    if (ctx == EGL_NO_CONTEXT)
+                    {
+                        mir::log_warning("Failed to create EGL context");
+                        return false;
+                    }
+
+                    eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx);
+
                     auto const gl_version = reinterpret_cast<char const*>(glGetString(GL_VERSION));
                     if (!gl_version)
                     {
