@@ -389,6 +389,44 @@ TEST_F(MesaDisplayTest, create_display_gbm_failure)
     }, std::runtime_error) << "Expected c'tor of Platform to throw an exception";
 }
 
+TEST_F(MesaDisplayTest, platform_fails_if_no_modesetting_drm_nodes)
+{
+    using namespace testing;
+
+    ON_CALL(mock_drm, drmCheckModesettingSupported(_)).WillByDefault(Return(-ENOSYS));
+
+    EXPECT_THROW({
+        auto platform = create_platform();
+    }, std::system_error) << "Expected c'tor of Platform to throw an exception";
+}
+
+TEST_F(MesaDisplayTest, ignores_non_modesetting_nodes)
+{
+    using namespace testing;
+
+    // The platform should open all DRM nodes. In particular, it should open the second one…
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card0"), _, _)).Times(AtLeast(1));
+    EXPECT_CALL(mock_drm, open(StrEq("/dev/dri/card1"), _, _)).Times(AtLeast(1));
+
+    // …mark the second DRM node as not supporting modesetting…
+    char const busid[] = "pci:00:01:02:03";
+    ON_CALL(mock_drm, drmGetBusid(mtd::IsFdOfDevice("/dev/dri/card1")))
+        .WillByDefault(Return(const_cast<char*>(busid)));
+    ON_CALL(mock_drm, drmFreeBusid(busid))
+        .WillByDefault(Invoke([](auto){}));
+    ON_CALL(mock_drm, drmCheckModesettingSupported(busid))
+        .WillByDefault(Return(-ENOSYS));
+
+    // …and ensure that if we query the modesetting API, we'll fail.
+    ON_CALL(mock_drm, drmModeGetResources(mtd::IsFdOfDevice("/dev/dri/card1")))
+        .WillByDefault(SetErrnoAndReturn(EINVAL, nullptr));
+
+    EXPECT_NO_THROW({
+        auto platform = create_platform();
+        auto display = create_display(platform);
+    });
+}
+
 namespace
 {
 
