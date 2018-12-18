@@ -156,6 +156,19 @@ mg::PlatformPriority probe_graphics_platform(
 
             if (tmp_fd != mir::Fd::invalid)
             {
+                // Check if modesetting is supported on this DRM node 
+                auto const busid = std::unique_ptr<char, decltype(&drmFreeBusid)>{
+                    drmGetBusid(tmp_fd),
+                    &drmFreeBusid
+                };
+                if (auto err = -drmCheckModesettingSupported(busid.get()))
+                {
+                    throw std::system_error{
+                        err,
+                        std::system_category(),
+                        std::string("Device ") + device.devnode() + " does not support KMS"};
+                }
+
                 mgm::helpers::GBMHelper gbm_device{tmp_fd};
                 mgm::helpers::EGLHelper egl{MinimalGLConfig()};
 
