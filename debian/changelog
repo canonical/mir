@@ -1,3 +1,36 @@
+mir (1.1.0) UNRELEASED; urgency=medium
+
+  * New upstream release 1.1.0
+
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 3
+      . mirserver ABI unchanged at 47
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 16
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI bumped to 16
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+    - Enhancements:
+      . eglstream-kms: Fully functional platform for Nvidia drivers >= 396
+      . MinimalConsoleServices: Android has no VTs, but also doesn't need
+        anything but `open()` to access devices.
+      . Clarify and fix focus switching logic
+      . [Musl] Don't call pthread_rwlockattr_setkind_np() on systems where it
+        is not defined
+      . Detect GTest/GMock via pkg-config when possible. Otherwise fall back to
+        the old huristic
+      . Add missing packages to Fedora documentation
+      . Use the more modern method of specifying standard in CMake
+    - Bugs fixed:
+      . [Musl] Add missing includes
+      . Use the correct package name to detect gtest on RPM distributions
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 29 Nov 2018 12:19:00 +0100
+
 mir (1.0.0) UNRELEASED; urgency=medium
 
   * New upstream release 1.0.0
