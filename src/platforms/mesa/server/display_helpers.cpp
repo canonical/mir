@@ -100,6 +100,17 @@ mgmh::DRMHelper::open_all_devices(
             continue;
         }
 
+        auto busid = std::unique_ptr<char, decltype(&drmFreeBusid)>{
+            drmGetBusid(tmp_fd), &drmFreeBusid
+        };
+
+        if (auto modeset_error = -drmCheckModesettingSupported(busid.get()))
+        {
+            mir::log_info("Ignoring non-KMS DRM device %s", device.devnode());
+            error = modeset_error;
+            continue;
+        }
+
         // Can't use make_shared with the private constructor.
         opened_devices.push_back(
             std::shared_ptr<DRMHelper>{
