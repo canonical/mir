@@ -69,6 +69,7 @@ public:
                                        uint32_t clock, uint16_t htotal, uint16_t vtotal,
                                        ModePreference preferred);
 
+    bool drm_setversion_called{false};
 private:
     int pipe_fds[2];
 
