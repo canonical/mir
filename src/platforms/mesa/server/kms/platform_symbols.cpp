@@ -156,7 +156,25 @@ mg::PlatformPriority probe_graphics_platform(
 
             if (tmp_fd != mir::Fd::invalid)
             {
-                // Check if modesetting is supported on this DRM node 
+                // Check that the drm device is usable by setting the interface version we use (1.4)
+                drmSetVersion sv;
+                sv.drm_di_major = 1;
+                sv.drm_di_minor = 4;
+                sv.drm_dd_major = -1;     /* Don't care */
+                sv.drm_dd_minor = -1;     /* Don't care */
+
+                if (auto error = -drmSetInterfaceVersion(tmp_fd, &sv))
+                {
+                    throw std::system_error{
+                        error,
+                        std::system_category(),
+                        std::string{"Failed to set DRM interface version on device "} + device.devnode()};
+                }
+
+                /* Check if modesetting is supported on this DRM node
+                 * This must be done after drmSetInterfaceVersion() as, for Hysterical Raisins,
+                 * drmGetBusid() will return nullptr unless drmSetInterfaceVersion() has already been called
+                 */
                 auto const busid = std::unique_ptr<char, decltype(&drmFreeBusid)>{
                     drmGetBusid(tmp_fd),
                     &drmFreeBusid
