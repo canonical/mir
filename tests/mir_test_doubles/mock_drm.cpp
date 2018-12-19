@@ -308,13 +308,35 @@ mtd::MockDRM::MockDRM()
         .WillByDefault(Return(&empty_object_props));
 
     ON_CALL(*this, drmSetInterfaceVersion(_, _))
-    .WillByDefault(Return(0));
+        .WillByDefault(
+            Invoke(
+                [this](auto fd, auto version)
+                {
+                    if (version->drm_di_major != 1 || version->drm_di_minor != 4)
+                    {
+                        ADD_FAILURE() << "We should only ever request DRM version 1.4";
+                        errno = EINVAL;
+                        return -1;
+                    }
+
+                    fd_to_drm.at(fd).drm_setversion_called = true;
+                    return 0;
+                }));
 
     ON_CALL(*this, drmGetBusid(_))
-    .WillByDefault(WithoutArgs(Invoke([]{ return static_cast<char*>(malloc(10)); })));
+        .WillByDefault(
+            Invoke(
+                [this](auto fd) -> char*
+                {
+                    if (!fd_to_drm.at(fd).drm_setversion_called)
+                    {
+                        return nullptr;
+                    }
+                    return static_cast<char*>(malloc(10));
+                }));
 
     ON_CALL(*this, drmFreeBusid(_))
-    .WillByDefault(WithArg<0>(Invoke([&](const char* busid){ free(const_cast<char*>(busid)); })));
+        .WillByDefault(WithArg<0>(Invoke([&](const char* busid) { free(const_cast<char*>(busid)); })));
 
     static drmVersion const version{
         1,
@@ -329,6 +351,11 @@ mtd::MockDRM::MockDRM()
     };
     ON_CALL(*this, drmGetVersion(_))
         .WillByDefault(Return(const_cast<drmVersionPtr>(&version)));
+
+    ON_CALL(*this, drmCheckModesettingSupported(NotNull()))
+        .WillByDefault(Return(0));
+    ON_CALL(*this, drmCheckModesettingSupported(IsNull()))
+        .WillByDefault(Return(-EINVAL));
 }
 
 mtd::MockDRM::~MockDRM() noexcept
@@ -699,3 +726,7 @@ char* drmGetDeviceNameFromFd(int fd)
     return global_mock->drmGetDeviceNameFromFd(fd);
 }
 
+int drmCheckModesettingSupported(char const* busid)
+{
+    return global_mock->drmCheckModesettingSupported(busid);
+}
