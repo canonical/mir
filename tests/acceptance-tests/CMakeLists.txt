@@ -1,6 +1,8 @@
 include(CMakeDependentOption)
 
-add_subdirectory(wayland)
+if (MIR_ENABLE_WLCS_TESTS)
+  add_subdirectory(wayland)
+endif()
 
 set(
   SOURCES

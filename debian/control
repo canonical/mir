@@ -57,7 +57,8 @@ Build-Depends: cmake,
                libxcursor-dev,
                libyaml-cpp-dev,
                libnvidia-egl-wayland-dev [amd64 i386],
-               eglexternalplatform-dev [amd64 i386]
+               eglexternalplatform-dev [amd64 i386],
+               wlcs
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
 # If you aren't a member of ~mir-team but need to upload packaging changes,
