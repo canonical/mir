@@ -21,6 +21,7 @@
 #include <functional>
 #include <memory>
 #include <experimental/optional>
+#include <sys/stat.h>
 
 namespace mir_test_framework
 {
