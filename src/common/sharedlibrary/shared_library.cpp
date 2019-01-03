@@ -56,7 +56,11 @@ void* mir::SharedLibrary::load_symbol(char const* function_name) const
 
 void* mir::SharedLibrary::load_symbol(char const* function_name, char const* version) const
 {
+#ifdef HAVE_DLVSYM
     if (void* result = dlvsym(so, function_name, version))
+#else
+    if (void* result = dlsym(so, function_name))
+#endif
     {
         return result;
     }

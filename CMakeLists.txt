@@ -55,6 +55,14 @@ include (cmake/MirCommon.cmake)
 include (GNUInstallDirs)
 include (cmake/Doxygen.cmake)
 
+include(CheckSymbolExists)
+set(CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
+set(CMAKE_REQUIRED_LIBRARIES dl)
+check_symbol_exists(dlvsym dlfcn.h HAVE_DLVSYM)
+if(HAVE_DLVSYM)
+  add_compile_definitions(HAVE_DLVSYM)
+endif()
+
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer;UBSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
 set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "${build_types}" FORCE)
