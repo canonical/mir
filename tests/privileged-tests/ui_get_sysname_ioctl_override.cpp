@@ -43,8 +43,9 @@
 #include <string>
 #include <iostream>
 
-#include <linux/uinput.h>
 #include <sys/ioctl.h>
+#include <linux/ioctl.h>
+#include <linux/uinput.h>
 #include <dlfcn.h>
 #include <dirent.h>
 #include <time.h>
