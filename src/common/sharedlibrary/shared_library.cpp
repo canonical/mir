@@ -54,6 +54,12 @@ void* mir::SharedLibrary::load_symbol(char const* function_name) const
     }
 }
 
+// On systems providing dlvsym() an unused overload, on musl libc it falls back to dlsym()
+inline static void dlvsym(void* so, const char* function_name, ...)
+{
+    dlsym(so, function_name);
+}
+
 void* mir::SharedLibrary::load_symbol(char const* function_name, char const* version) const
 {
     if (void* result = dlvsym(so, function_name, version))
