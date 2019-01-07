@@ -96,7 +96,7 @@ template<typename Param1>
 auto request_param_type(int (* ioctl)(int, Param1, ...)) -> Param1;
 }
 
-extern "C" int ioctl(int fd, decltype(request_param_type(&ioctl)) request, ...) __THROW
+extern "C" int ioctl(int fd, decltype(request_param_type(&ioctl)) request, ...) noexcept
 {
     va_list vargs;
     va_start(vargs, request);
