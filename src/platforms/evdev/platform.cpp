@@ -76,7 +76,6 @@ public:
         mu::Context& context,
         std::function<void(mu::Monitor::EventType, mu::Device const&)> on_event)
         : monitor(context),
-          fd{monitor.fd()},
           on_event{std::move(on_event)}
     {
         monitor.filter_by_subsystem("input");
@@ -99,7 +98,9 @@ public:
 
     mir::Fd watch_fd() const override
     {
-        return fd;
+        // The mu::Monitor owns the file descriptor; don't close it
+        // (cf: https://github.com/MirServer/mir/issues/684 )
+        return mir::Fd{mir::IntOwnedFd{monitor.fd()}};
     }
 
     bool dispatch(md::FdEvents events) override
@@ -120,7 +121,6 @@ public:
 
 private:
     mu::Monitor monitor;
-    mir::Fd fd;
     std::function<void(mu::Monitor::EventType, mu::Device const&)> const on_event;
 };
 
