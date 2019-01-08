@@ -30,25 +30,25 @@ get_filename_component(
   BASE_DIR ${PROJECT_SOURCE_DIR}
 )
 
-set(GENERATED_FILES "")
+add_custom_target(refresh-wayland-wrapper
+  DEPENDS wrapper-generator
+)
 
 macro(GENERATE_PROTOCOL NAME_PREFIX PROTOCOL_NAME)
   set(PROTOCOL_PATH "${PROTOCOL_DIR}/${PROTOCOL_NAME}.xml")
   set(OUTPUT_PATH_HEADER "${GENERATED_DIR}/${PROTOCOL_NAME}_wrapper.h")
   set(OUTPUT_PATH_SRC "${GENERATED_DIR}/${PROTOCOL_NAME}_wrapper.cpp")
-  add_custom_command(OUTPUT "${OUTPUT_PATH_HEADER}"
+  set(PROTOCOL_TARGET "${PROTOCOL_NAME}-protocol")
+  add_custom_target("${PROTOCOL_TARGET}"
+    DEPENDS "${PROTOCOL_PATH}"
+    DEPENDS wrapper-generator
+    SOURCES "${OUTPUT_PATH_HEADER}" "${OUTPUT_PATH_SRC}"
     VERBATIM
     COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator ${NAME_PREFIX} ${PROTOCOL_PATH} header > ${OUTPUT_PATH_HEADER}"
-    DEPENDS "${PROTOCOL_PATH}"
-    DEPENDS wrapper-generator
-  )
-  add_custom_command(OUTPUT "${OUTPUT_PATH_SRC}"
-    VERBATIM
     COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator ${NAME_PREFIX} ${PROTOCOL_PATH} source > ${OUTPUT_PATH_SRC}"
-    DEPENDS "${PROTOCOL_PATH}"
-    DEPENDS wrapper-generator
+    COMMAND "printf" "\\x1b[34;1mGenerated wrapper files for ${PROTOCOL_NAME} protocol\\x1b[0m\\n"
   )
-  set(GENERATED_FILES ${GENERATED_FILES} "${OUTPUT_PATH_H}" "${OUTPUT_PATH_C}" "${OUTPUT_PATH_HEADER}" "${OUTPUT_PATH_SRC}")
+  add_dependencies(refresh-wayland-wrapper "${PROTOCOL_TARGET}")
 endmacro()
 
 # when adding a protocol, don't forget to add the generated .c file to CMake
@@ -57,9 +57,4 @@ GENERATE_PROTOCOL("z" "xdg-shell-unstable-v6")
 GENERATE_PROTOCOL("_" "xdg-shell") # empty prefix is not allowed, but '_' won't match anything, so it is ignored
 GENERATE_PROTOCOL("zwlr_" "wlr-layer-shell-unstable-v1")
 
-add_custom_target(refresh-wayland-wrapper
-  DEPENDS ${GENERATED_FILES}
-  DEPENDS wrapper-generator
-  SOURCES ${GENERATED_FILES}
-)
 
