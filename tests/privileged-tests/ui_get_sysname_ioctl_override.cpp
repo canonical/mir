@@ -94,10 +94,12 @@ bool request_is_ui_get_sysname(unsigned long int request)
 }
 
 template<typename Param1>
-auto request_param_type(int (* ioctl)(int, Param1, ...)) -> Param1;
+auto request_param_type(int (*ioctl)(int, Param1, ...)) -> Param1;
 }
 
-extern "C" int ioctl(int fd, decltype(request_param_type(&ioctl)) request, ...) noexcept
+using ioctl_request_t = decltype(request_param_type(&ioctl));
+
+extern "C" int ioctl(int fd, ioctl_request_t request, ...) noexcept
 {
     va_list vargs;
     va_start(vargs, request);
