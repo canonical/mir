@@ -43,6 +43,8 @@
 #include <string>
 #include <iostream>
 
+#include <sys/ioctl.h>
+#include <linux/ioctl.h>
 #include <linux/uinput.h>
 #include <dlfcn.h>
 #include <dirent.h>
@@ -91,14 +93,18 @@ bool request_is_ui_get_sysname(unsigned long int request)
            static_cast<unsigned long>(UI_GET_SYSNAME(0));
 }
 
+template<typename Param1>
+auto request_param_type(int (*ioctl)(int, Param1, ...)) -> Param1;
 }
 
-extern "C" int ioctl(int fd, unsigned long int request, ...) __THROW
+using ioctl_request_t = decltype(request_param_type(&ioctl));
+
+extern "C" int ioctl(int fd, ioctl_request_t request, ...) noexcept
 {
     va_list vargs;
     va_start(vargs, request);
 
-    using ioctl_func = int(*)(int, unsigned long int, void*);
+    using ioctl_func = decltype(&ioctl);
     static ioctl_func const real_ioctl =
         reinterpret_cast<ioctl_func>(dlsym(RTLD_NEXT, "ioctl"));
 
