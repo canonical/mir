@@ -63,3 +63,4 @@ add_custom_target(refresh-wayland-wrapper
   SOURCES ${GENERATED_FILES}
 )
 
+set_directory_properties(PROPERTIES CLEAN_NO_CUSTOM 1)

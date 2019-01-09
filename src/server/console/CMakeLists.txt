@@ -74,3 +74,5 @@ add_custom_command(
     ${CMAKE_CURRENT_SOURCE_DIR}/logind-session.xml
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+set_directory_properties(PROPERTIES CLEAN_NO_CUSTOM 1)
