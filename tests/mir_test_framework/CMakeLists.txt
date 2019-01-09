@@ -176,6 +176,10 @@ set_target_properties(
   LINK_FLAGS "-Wl,--version-script,${server_symbol_map}"
 )
 
+install(TARGETS mirplatformgraphicsstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
+install(TARGETS mirplatforminputstub LIBRARY DESTINATION ${MIR_SERVER_PLATFORM_PATH})
+install(TARGETS mirclientplatformstub LIBRARY DESTINATION ${MIR_CLIENT_PLATFORM_PATH})
+
 add_library(
   mirplatformgraphicsthrow MODULE
   platform_graphics_throw.cpp
