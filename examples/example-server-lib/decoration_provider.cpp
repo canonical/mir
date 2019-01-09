@@ -25,7 +25,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include <sys/poll.h>
+#include <poll.h>
 #include <sys/eventfd.h>
 #include <locale>
 #include <codecvt>
