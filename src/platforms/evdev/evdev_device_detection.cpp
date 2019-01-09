@@ -48,6 +48,16 @@ struct DeviceInfo
     uint8_t property_bit_mask[(INPUT_PROP_MAX+1)/8];
 };
 
+namespace
+{
+// On Alpine Linux there's a mismatch between the signed type of the ioctl() request parameter and the
+// unsigned type returned by EVIOCGPROP. (See #692)
+// We use a bit of magic to suppress the compiler diagnostic.
+template<typename Param1>
+auto request_param_type(int (*ioctl)(int, Param1, ...)) -> Param1;
+using ioctl_request_t = decltype(request_param_type(&ioctl));
+}
+
 DeviceInfo::DeviceInfo(mir::Fd const& fd)
 {
     auto const get_bitmask = [&](int bit, size_t size, uint8_t* buf) -> void
@@ -62,7 +72,7 @@ DeviceInfo::DeviceInfo(mir::Fd const& fd)
     get_bitmask(EV_ABS, sizeof abs_bit_mask, abs_bit_mask);
     get_bitmask(EV_SW, sizeof sw_bit_mask, sw_bit_mask);
 
-    if (ioctl(fd, EVIOCGPROP(sizeof property_bit_mask), property_bit_mask) < 1)
+    if (ioctl(fd, static_cast<ioctl_request_t>(EVIOCGPROP(sizeof property_bit_mask)), property_bit_mask) < 1)
         BOOST_THROW_EXCEPTION(
             std::system_error(std::error_code(errno, std::system_category()), "Failed to query devices properties"));
 }
