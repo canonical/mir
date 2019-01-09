@@ -48,7 +48,7 @@ macro(GENERATE_PROTOCOL NAME_PREFIX PROTOCOL_NAME)
     DEPENDS "${PROTOCOL_PATH}"
     DEPENDS wrapper-generator
   )
-  set(GENERATED_FILES ${GENERATED_FILES} "${OUTPUT_PATH_H}" "${OUTPUT_PATH_C}" "${OUTPUT_PATH_HEADER}" "${OUTPUT_PATH_SRC}")
+  set(GENERATED_FILES ${GENERATED_FILES} "${OUTPUT_PATH_HEADER}" "${OUTPUT_PATH_SRC}")
 endmacro()
 
 # when adding a protocol, don't forget to add the generated .c file to CMake
