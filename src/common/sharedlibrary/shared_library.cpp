@@ -54,15 +54,16 @@ void* mir::SharedLibrary::load_symbol(char const* function_name) const
     }
 }
 
-#ifdef NEEDS_STUB_DLVSYM
-static void* dlvsym(void* handle, char const* function_name, char const* /*version*/)
-{
-    return dlsym(handle, function_name);
-}
-#endif
-
 void* mir::SharedLibrary::load_symbol(char const* function_name, char const* version) const
 {
+    // Some libc implementations (such as musl) do not support dlvsym
+
+#ifdef DONT_USE_DLVSYM
+    // Load the function without checking the version
+    return load_symbol(function_name);
+    // Suppress unused argument warning
+    (void)version;
+#else
     if (void* result = dlvsym(so, function_name, version))
     {
         return result;
@@ -71,4 +72,5 @@ void* mir::SharedLibrary::load_symbol(char const* function_name, char const* ver
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(dlerror()));
     }
+#endif
 }

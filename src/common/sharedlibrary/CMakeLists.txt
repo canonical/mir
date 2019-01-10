@@ -25,7 +25,7 @@ list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
 check_function_exists("dlvsym" HAS_DLVSYM)
 
 if (NOT HAS_DLVSYM)
-  add_compile_definitions(NEEDS_STUB_DLVSYM)
+  add_compile_definitions(DONT_USE_DLVSYM)
   message(
     WARNING
     "dlvsym() not supported by libc. Mir may attempt to load ABI-incompatible platform modules"
