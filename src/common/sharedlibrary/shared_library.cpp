@@ -17,6 +17,7 @@
  */
 
 #include "mir/shared_library.h"
+#include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/info.hpp>
@@ -54,20 +55,29 @@ void* mir::SharedLibrary::load_symbol(char const* function_name) const
     }
 }
 
-// On systems providing dlvsym() an unused overload, on musl libc it falls back to dlsym()
-inline static void* dlvsym(void* so, const char* function_name, ...)
-{
-    return dlsym(so, function_name);
-}
+// This is never called, just declared in order to detect dlvsym()
+//  - On gibc systems providing dlvsym() it is an unused overload,
+//  - On musl libc we fall back to  the no-version load_symbol() overload.
+int* dlvsym(void* so, const char* function_name, ...);
 
 void* mir::SharedLibrary::load_symbol(char const* function_name, char const* version) const
 {
-    if (void* result = dlvsym(so, function_name, version))
+    auto constexpr dlvsym_is_available = !std::is_same<int*, decltype(dlvsym(so, function_name, version))>::value;
+
+    if (dlvsym_is_available)
     {
-        return result;
+        if (void* result = dlvsym(so, function_name, version))
+        {
+            return result;
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error(dlerror()));
+        }
     }
     else
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error(dlerror()));
+        log_debug("Cannot check %s symbol version is %d: dlvsym() is unavailable", function_name, version);
+        return load_symbol(function_name);
     }
 }

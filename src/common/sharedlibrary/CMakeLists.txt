@@ -20,11 +20,6 @@ add_library(mirsharedsharedlibrary OBJECT
   shared_library_prober.cpp
 )
 
-# we overload dlvsym() for systems that don't have it
-set_source_files_properties(shared_library.cpp
-  PROPERTIES COMPILE_FLAGS "-Wno-unused-function"
-)
-
 list(APPEND MIR_COMMON_SOURCES
   $<TARGET_OBJECTS:mirsharedsharedlibrary>
 )
