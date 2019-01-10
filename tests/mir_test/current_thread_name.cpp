@@ -25,7 +25,7 @@ std::string mir::test::current_thread_name()
     static size_t const max_thread_name_size = 16;
     char thread_name[max_thread_name_size] = "unknown";
 
-#ifdef HAVE_PTHREAD_GETNAME_NP
+#ifndef MIR_DONT_USE_PTHREAD_GETNAME_NP
     pthread_getname_np(pthread_self(), thread_name, sizeof thread_name);
 #endif
 

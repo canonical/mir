@@ -30,7 +30,7 @@ namespace mt = mir::test;
 namespace
 {
 
-#ifdef HAVE_PTHREAD_GETNAME_NP
+#ifndef MIR_DONT_USE_PTHREAD_GETNAME_NP
 std::string name_of_thread(std::thread& t)
 {
     static size_t const max_thread_name_size = 16;

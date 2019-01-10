@@ -73,7 +73,6 @@ check_cxx_compiler_flag(-Woverloaded-virtual HAS_W_OVERLOADED_VIRTUAL)
 check_cxx_compiler_flag(-Winconsistent-missing-override HAS_W_INCONSISTENT_MISSING_OVERRIDE)
 check_cxx_compiler_flag(-Wgnu-zero-variadic-macro-arguments HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
 check_cxx_compiler_flag(-Wno-sign-compare HAS_W_GNU_SIGN_COMPARE)
-check_symbol_exists(pthread_getname_np pthread.h HAVE_PTHREAD_GETNAME_NP)
 
 if (HAS_W_NULL_DEREFERENCE)
   # Avoid clang complaints about poor quality gmock/gtest headers
