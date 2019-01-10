@@ -100,6 +100,8 @@ mir::PosixRWMutex::PosixRWMutex(Type type)
             std::system_category(),
             "Failed to set preferred rw-lock mode"}));
     }
+#else
+    (void)type;
 #endif
 
     err = pthread_rwlock_init(&mutex, &attr);
