@@ -14,15 +14,12 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
-include(CheckFunctionExists)
+include(CheckCXXSymbolExists)
 
 list(APPEND CMAKE_REQUIRED_LIBRARIES dl)
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
 
-# CMake docs suggests that we should, instead, be using check_symbol_exists.
-# The only problem there is that check_symbol_exists("dlvsym", "dlfcn.h", HAS_DLVSYM) never finds
-# the dlvsym symbol ☹.
-check_function_exists("dlvsym" HAS_DLVSYM)
+check_cxx_symbol_exists("dlvsym" "dlfcn.h" HAS_DLVSYM)
 
 if (NOT HAS_DLVSYM)
   add_compile_definitions(DONT_USE_DLVSYM)
