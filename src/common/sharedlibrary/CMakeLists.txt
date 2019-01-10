@@ -22,7 +22,10 @@ list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
 check_cxx_symbol_exists("dlvsym" "dlfcn.h" HAS_DLVSYM)
 
 if (NOT HAS_DLVSYM)
-  add_compile_definitions(DONT_USE_DLVSYM)
+  set_source_files_properties (
+    "shared_library.cpp"
+    PROPERTIES COMPILE_DEFINITIONS DONT_USE_DLVSYM="1"
+  )
   message(
     WARNING
     "dlvsym() not supported by libc. Mir may attempt to load ABI-incompatible platform modules"
