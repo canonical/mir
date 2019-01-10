@@ -61,7 +61,7 @@ void* mir::SharedLibrary::load_symbol(char const* function_name, char const* ver
 
 #ifdef MIR_DONT_USE_DLVSYM
     // Load the function without checking the version
-    log_debug("Cannot check %s symbol version is %d: dlvsym() is unavailable", function_name, version);
+    log_debug("Cannot check \"%s\" symbol version is \"%s\": dlvsym() is unavailable", function_name, version);
     return load_symbol(function_name);
 #else
     if (void* result = dlvsym(so, function_name, version))
