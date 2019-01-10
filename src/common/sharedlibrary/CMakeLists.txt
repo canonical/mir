@@ -14,6 +14,24 @@
 #
 # Authored by: Alexandros Frantzis <alexandros.frantzis@canonical.com>
 
+include(CheckFunctionExists)
+
+list(APPEND CMAKE_REQUIRED_LIBRARIES dl)
+list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
+
+# CMake docs suggests that we should, instead, be using check_symbol_exists.
+# The only problem there is that check_symbol_exists("dlvsym", "dlfcn.h", HAS_DLVSYM) never finds
+# the dlvsym symbol ☹.
+check_function_exists("dlvsym" HAS_DLVSYM)
+
+if (NOT HAS_DLVSYM)
+  add_compile_definitions(NEEDS_STUB_DLVSYM)
+  message(
+    WARNING
+    "dlvsym() not supported by libc. Mir may attempt to load ABI-incompatible platform modules"
+  )
+endif()
+
 add_library(mirsharedsharedlibrary OBJECT
   module_deleter.cpp
   shared_library.cpp

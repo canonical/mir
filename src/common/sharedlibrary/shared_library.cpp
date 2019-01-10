@@ -54,6 +54,13 @@ void* mir::SharedLibrary::load_symbol(char const* function_name) const
     }
 }
 
+#ifdef NEEDS_STUB_DLVSYM
+static void* dlvsym(void* handle, char const* function_name, char const* /*version*/)
+{
+    return dlsym(handle, function_name);
+}
+#endif
+
 void* mir::SharedLibrary::load_symbol(char const* function_name, char const* version) const
 {
     if (void* result = dlvsym(so, function_name, version))
