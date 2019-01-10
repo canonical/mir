@@ -24,7 +24,7 @@ check_cxx_symbol_exists("dlvsym" "dlfcn.h" HAS_DLVSYM)
 if (NOT HAS_DLVSYM)
   set_source_files_properties (
     "shared_library.cpp"
-    PROPERTIES COMPILE_DEFINITIONS DONT_USE_DLVSYM="1"
+    PROPERTIES COMPILE_DEFINITIONS MIR_DONT_USE_DLVSYM="1"
   )
   message(
     WARNING

@@ -59,7 +59,7 @@ void* mir::SharedLibrary::load_symbol(char const* function_name, char const* ver
 {
     // Some libc implementations (such as musl) do not support dlvsym
 
-#ifdef DONT_USE_DLVSYM
+#ifdef MIR_DONT_USE_DLVSYM
     // Load the function without checking the version
     log_debug("Cannot check %s symbol version is %d: dlvsym() is unavailable", function_name, version);
     return load_symbol(function_name);
