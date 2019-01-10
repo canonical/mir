@@ -17,6 +17,7 @@
  */
 
 #include "mir/shared_library.h"
+#include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
 #include <boost/exception/info.hpp>
@@ -60,9 +61,8 @@ void* mir::SharedLibrary::load_symbol(char const* function_name, char const* ver
 
 #ifdef DONT_USE_DLVSYM
     // Load the function without checking the version
+    log_debug("Cannot check %s symbol version is %d: dlvsym() is unavailable", function_name, version);
     return load_symbol(function_name);
-    // Suppress unused argument warning
-    (void)version;
 #else
     if (void* result = dlvsym(so, function_name, version))
     {
