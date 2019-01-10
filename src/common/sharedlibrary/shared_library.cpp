@@ -59,7 +59,7 @@ void* mir::SharedLibrary::load_symbol(char const* function_name) const
 //  - On gibc systems providing dlvsym() it is an unused overload,
 //  - On musl libc we fall back to  the no-version load_symbol() overload.
 int* dlvsym(void* so, const char* function_name, ...);
-static auto constexpr dlvsym_is_available = !std::is_same<int*, decltype(dlvsym(nullptr, nullptr, nullptr))>::value;
+static auto constexpr dlvsym_is_available = !std::is_same<int*, decltype(dlvsym(nullptr, "", ""))>::value;
 
 void* mir::SharedLibrary::load_symbol(char const* function_name, char const* version) const
 {
