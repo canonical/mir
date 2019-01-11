@@ -19,15 +19,18 @@
 #include "mir/test/current_thread_name.h"
 
 #include <pthread.h>
+#include <stdexcept>
 
 std::string mir::test::current_thread_name()
 {
-    static size_t const max_thread_name_size = 16;
-    char thread_name[max_thread_name_size] = "unknown";
-
 #ifndef MIR_DONT_USE_PTHREAD_GETNAME_NP
+    static size_t const max_thread_name_size = 16;
+    char thread_name[max_thread_name_size];
+
     pthread_getname_np(pthread_self(), thread_name, sizeof thread_name);
-#endif
 
     return {thread_name};
+#else
+    throw std::logic_error("mir::test::current_thread_name() is not supported on this system");
+#endif
 }

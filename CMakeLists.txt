@@ -60,14 +60,6 @@ list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
 list(APPEND CMAKE_REQUIRED_LIBRARIES "-lpthread")
 check_symbol_exists(pthread_getname_np pthread.h HAVE_PTHREAD_GETNAME_NP)
 list(REMOVE_ITEM CMAKE_REQUIRED_LIBRARIES "-lpthread")
-if (NOT HAVE_PTHREAD_GETNAME_NP)
-    set_source_files_properties (
-      "current_thread_name.cpp"
-      "test_threaded_dispatcher.cpp"
-      "test_thread_name.cpp"
-      PROPERTIES COMPILE_DEFINITIONS MIR_DONT_USE_PTHREAD_GETNAME_NP="1"
-    )
-endif()
 
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer;UBSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
