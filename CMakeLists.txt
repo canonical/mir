@@ -55,12 +55,6 @@ include (cmake/MirCommon.cmake)
 include (GNUInstallDirs)
 include (cmake/Doxygen.cmake)
 
-include(CheckSymbolExists)
-list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
-list(APPEND CMAKE_REQUIRED_LIBRARIES "-lpthread")
-check_symbol_exists(pthread_getname_np pthread.h HAVE_PTHREAD_GETNAME_NP)
-list(REMOVE_ITEM CMAKE_REQUIRED_LIBRARIES "-lpthread")
-
 set(build_types "None;Debug;Release;RelWithDebInfo;MinSizeRel;Coverage;AddressSanitizer;ThreadSanitizer;UBSanitizer")
 # Change informational string for CMAKE_BUILD_TYPE
 set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "${build_types}" FORCE)
