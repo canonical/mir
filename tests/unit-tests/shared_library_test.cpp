@@ -130,7 +130,9 @@ TEST_F(SharedLibrary, load_nonexistent_function_fails_with_useful_info)
 #else
         MIR_EXPECT_THAT(info, HasSubstring("Symbol not found")) << "What went wrong";
 #endif
+#ifdef __GLIBC__
         MIR_EXPECT_THAT(info, HasSubstring(existing_library)) << "Name of library";
+#endif
         MIR_EXPECT_THAT(info, HasSubstring(nonexistent_function)) << "Name of function";
     }
 }
