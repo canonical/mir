@@ -25,7 +25,6 @@
 #include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/signal.h"
-#include "mir/test/current_thread_name.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
