@@ -23,3 +23,9 @@ add_library(mir-test-static STATIC
   wait_object.cpp
   $<TARGET_OBJECTS:mir-public-test>
 )
+
+if (NOT HAVE_PTHREAD_GETNAME_NP)
+    set_source_files_properties (current_thread_name.cpp PROPERTIES COMPILE_DEFINITIONS MIR_DONT_USE_PTHREAD_GETNAME_NP
+    )
+    message(WARNING "pthread_getname_np() not supported by libc. Stubbing out mir::test::current_thread_name() that relies on it")
+endif()

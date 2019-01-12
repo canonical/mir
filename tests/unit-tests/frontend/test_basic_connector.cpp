@@ -41,7 +41,11 @@ struct StubConnectorReport : mir::report::null::ConnectorReport
 
 }
 
+#ifndef MIR_DONT_USE_PTHREAD_GETNAME_NP
 TEST(BasicConnector, names_ipc_threads)
+#else
+TEST(BasicConnector, DISABLED_names_ipc_threads)
+#endif
 {
     using namespace testing;
 

@@ -61,7 +61,6 @@ set(
   shared_library_test.cpp
   test_raii.cpp
   test_variable_length_array.cpp
-  test_thread_name.cpp
   test_default_emergency_cleanup.cpp
   test_thread_safe_list.cpp
   test_fatal.cpp
@@ -76,6 +75,12 @@ set(
   test_observer_multiplexer.cpp
   test_edid.cpp
 )
+
+if (HAVE_PTHREAD_GETNAME_NP)
+  list(APPEND UNIT_TEST_SOURCES test_thread_name.cpp)
+else()
+  message(WARNING "pthread_getname_np() not supported: Omitting test_thread_name.cpp which relies on it")
+endif()
 
 CMAKE_DEPENDENT_OPTION(
   MIR_RUN_UNIT_TESTS
@@ -100,6 +105,17 @@ add_subdirectory(thread/)
 add_subdirectory(dispatch/)
 add_subdirectory(renderers/gl)
 add_subdirectory(wayland/)
+
+if (NOT HAVE_PTHREAD_GETNAME_NP)
+  set_source_files_properties (
+    ${CMAKE_CURRENT_SOURCE_DIR}/dispatch/test_threaded_dispatcher.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/frontend/test_basic_connector.cpp
+
+    PROPERTIES COMPILE_DEFINITIONS MIR_DONT_USE_PTHREAD_GETNAME_NP
+  )
+  message(WARNING "pthread_getname_np() not supported: Disabling test_threaded_dispatcher.cpp tests that rely on it")
+  message(WARNING "pthread_getname_np() not supported: Disabling test_basic_connector.cpp tests that rely on it")
+endif()
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 

@@ -19,6 +19,7 @@
 #include "mir/dispatch/threaded_dispatcher.h"
 #include "mir/dispatch/dispatchable.h"
 #include "mir/fd.h"
+#include "mir/test/current_thread_name.h"
 #include "mir/test/death.h"
 #include "mir/test/pipe.h"
 #include "mir/test/signal.h"
@@ -278,7 +279,11 @@ TEST_F(ThreadedDispatcherDeathTest, exceptions_in_threadpool_trigger_termination
     }, KilledBySignal(SIGABRT), (std::string{".*"} + exception_msg + ".*").c_str());
 }
 
+#ifndef MIR_DONT_USE_PTHREAD_GETNAME_NP
 TEST_F(ThreadedDispatcherTest, sets_thread_names_appropriately)
+#else
+TEST_F(ThreadedDispatcherTest, DISABLED_sets_thread_names_appropriately)
+#endif
 {
     using namespace testing;
     using namespace std::chrono_literals;
@@ -290,9 +295,7 @@ TEST_F(ThreadedDispatcherTest, sets_thread_names_appropriately)
 
     auto dispatchable = std::make_shared<mt::TestDispatchable>([dispatched, &dispatch_count]()
     {
-        char buffer[80] = {0};
-        pthread_getname_np(pthread_self(), buffer, sizeof(buffer));
-        EXPECT_THAT(buffer, StartsWith(threadname_base));
+        EXPECT_THAT(mt::current_thread_name(), StartsWith(threadname_base));
 
         if (++dispatch_count == threadcount)
         {
