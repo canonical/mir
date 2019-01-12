@@ -105,6 +105,13 @@ endif()
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-lto")
 
+include(CheckSymbolExists)
+list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
+list(APPEND CMAKE_REQUIRED_LIBRARIES "-lpthread")
+string(REPLACE " -Werror " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})    # This flag breaks check_symbol_exists()
+check_symbol_exists(pthread_getname_np pthread.h HAVE_PTHREAD_GETNAME_NP)
+list(REMOVE_ITEM CMAKE_REQUIRED_LIBRARIES "-lpthread")
+
 if (MIR_BUILD_PLATFORM_MESA_KMS)
   add_definitions(-DMIR_BUILD_PLATFORM_MESA_KMS)
 endif()
