@@ -19,6 +19,7 @@
 #include "mir/shared_library.h"
 
 #include <gtest/gtest.h>
+#include <gmock/gmock.h>
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <stdexcept>
@@ -26,34 +27,10 @@
 #include "mir_test_framework/executable_path.h"
 
 namespace mtf = mir_test_framework;
+using namespace testing;
 
 namespace
 {
-class HasSubstring
-{
-public:
-    HasSubstring(char const* substring) : substring(substring) {}
-    HasSubstring(std::string const& substring) : substring{substring.c_str()} {}
-
-    friend::testing::AssertionResult operator,(std::string const& target, HasSubstring const& match)
-    {
-      if (std::string::npos != target.find(match.substring))
-        return ::testing::AssertionSuccess();
-      else
-        return ::testing::AssertionFailure() <<
-            "The target:\n\"" << target << "\"\n"
-            "Does not contain:\n\"" << match.substring << "\"";
-    }
-
-private:
-    char const* const substring;
-
-    HasSubstring(HasSubstring const&) = delete;
-    HasSubstring& operator=(HasSubstring const&) = delete;
-};
-
-#define MIR_EXPECT_THAT(target, condition) EXPECT_TRUE((target, condition))
-
 class SharedLibrary : public testing::Test
 {
 public:
@@ -74,7 +51,6 @@ public:
     std::string const existent_version;
     std::string const nonexistent_version;
 };
-
 }
 
 TEST_F(SharedLibrary, load_nonexistent_library_fails)
@@ -92,8 +68,8 @@ TEST_F(SharedLibrary, load_nonexistent_library_fails_with_useful_info)
     {
         auto info = boost::diagnostic_information(error);
 
-        MIR_EXPECT_THAT(info, HasSubstring("cannot open shared object")) << "What went wrong";
-        MIR_EXPECT_THAT(info, HasSubstring(nonexistent_library)) << "Name of library";
+        EXPECT_THAT(info, HasSubstr("cannot open shared object")) << "What went wrong";
+        EXPECT_THAT(info, HasSubstr(nonexistent_library)) << "Name of library";
     }
 }
 
@@ -121,9 +97,9 @@ TEST_F(SharedLibrary, load_nonexistent_function_fails_with_useful_info)
     {
         auto info = boost::diagnostic_information(error);
 
-        MIR_EXPECT_THAT(info, HasSubstring("undefined symbol")) << "What went wrong";
-        MIR_EXPECT_THAT(info, HasSubstring(existing_library)) << "Name of library";
-        MIR_EXPECT_THAT(info, HasSubstring(nonexistent_function)) << "Name of function";
+        EXPECT_THAT(info, HasSubstr("undefined symbol")) << "What went wrong";
+        EXPECT_THAT(info, HasSubstr(existing_library)) << "Name of library";
+        EXPECT_THAT(info, HasSubstr(nonexistent_function)) << "Name of function";
     }
 }
 
@@ -151,9 +127,9 @@ TEST_F(SharedLibrary, load_invalid_versioned_function_fails_with_appropriate_err
     {
         auto info = boost::diagnostic_information(error);
 
-        MIR_EXPECT_THAT(info, HasSubstring("undefined symbol")) << "What went wrong";
-        MIR_EXPECT_THAT(info, HasSubstring(nonexistent_version)) << "Version info";
-        MIR_EXPECT_THAT(info, HasSubstring(existing_library)) << "Name of library";
-        MIR_EXPECT_THAT(info, HasSubstring(existing_function)) << "Name of function";
+        EXPECT_THAT(info, HasSubstr("undefined symbol")) << "What went wrong";
+        EXPECT_THAT(info, HasSubstr(nonexistent_version)) << "Version info";
+        EXPECT_THAT(info, HasSubstr(existing_library)) << "Name of library";
+        EXPECT_THAT(info, HasSubstr(existing_function)) << "Name of function";
     }
 }
