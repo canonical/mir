@@ -68,14 +68,9 @@ TEST_F(SharedLibrary, load_nonexistent_library_fails_with_useful_info)
     {
         auto info = boost::diagnostic_information(error);
 
-        EXPECT_THAT(info, HasSubstr("cannot open shared object")) << "What went wrong";
+        EXPECT_THAT(info, AnyOf(HasSubstr("cannot open shared object"),
+                                HasSubstr("Error loading shared library"))) << "What went wrong";
         EXPECT_THAT(info, HasSubstr(nonexistent_library)) << "Name of library";
-#ifdef __GLIBC__
-        MIR_EXPECT_THAT(info, HasSubstring("cannot open shared object")) << "What went wrong";
-#else
-	MIR_EXPECT_THAT(info, HasSubstring("Error loading shared library")) << "What went wrong";
-#endif
-        MIR_EXPECT_THAT(info, HasSubstring(nonexistent_library)) << "Name of library";
     }
 }
 
@@ -103,18 +98,10 @@ TEST_F(SharedLibrary, load_nonexistent_function_fails_with_useful_info)
     {
         auto info = boost::diagnostic_information(error);
 
-        EXPECT_THAT(info, HasSubstr("undefined symbol")) << "What went wrong";
+        EXPECT_THAT(info, AnyOf(HasSubstr("undefined symbol"),
+                                HasSubstr("Symbol not found"))) << "What went wrong";
         EXPECT_THAT(info, HasSubstr(existing_library)) << "Name of library";
         EXPECT_THAT(info, HasSubstr(nonexistent_function)) << "Name of function";
-#ifdef __GLIBC__
-        MIR_EXPECT_THAT(info, HasSubstring("undefined symbol")) << "What went wrong";
-#else
-        MIR_EXPECT_THAT(info, HasSubstring("Symbol not found")) << "What went wrong";
-#endif
-#ifdef __GLIBC__
-        MIR_EXPECT_THAT(info, HasSubstring(existing_library)) << "Name of library";
-#endif
-        MIR_EXPECT_THAT(info, HasSubstring(nonexistent_function)) << "Name of function";
     }
 }
 
@@ -142,17 +129,10 @@ TEST_F(SharedLibrary, load_invalid_versioned_function_fails_with_appropriate_err
     {
         auto info = boost::diagnostic_information(error);
 
-        EXPECT_THAT(info, HasSubstr("undefined symbol")) << "What went wrong";
+        EXPECT_THAT(info, AnyOf(HasSubstr("undefined symbol"),
+                                HasSubstr("Symbol not found"))) << "What went wrong";
         EXPECT_THAT(info, HasSubstr(nonexistent_version)) << "Version info";
         EXPECT_THAT(info, HasSubstr(existing_library)) << "Name of library";
         EXPECT_THAT(info, HasSubstr(existing_function)) << "Name of function";
-#ifdef __GLIBC__
-        MIR_EXPECT_THAT(info, HasSubstring("undefined symbol")) << "What went wrong";
-#else
-        MIR_EXPECT_THAT(info, HasSubstring("Symbol not found")) << "What went wrong";
-#endif
-        MIR_EXPECT_THAT(info, HasSubstring(nonexistent_version)) << "Version info";
-        MIR_EXPECT_THAT(info, HasSubstring(existing_library)) << "Name of library";
-        MIR_EXPECT_THAT(info, HasSubstring(existing_function)) << "Name of function";
     }
 }
