@@ -817,7 +817,11 @@ TEST(MultiThreadedCompositor, cleans_up_after_throw_in_start)
     EXPECT_TRUE(db_compositor_factory->each_buffer_rendered_in_single_thread());
 }
 
+#ifndef MIR_DONT_USE_PTHREAD_GETNAME_NP
 TEST(MultiThreadedCompositor, names_compositor_threads)
+#else
+TEST(MultiThreadedCompositor, DISABLED_names_compositor_threads)
+#endif
 {
     using namespace testing;
 
