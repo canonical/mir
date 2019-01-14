@@ -54,9 +54,21 @@ public:
     MOCK_CONST_METHOD0(stride, geom::Stride());
 };
 
+struct NamedThreadBufferStream : mtd::StubBufferStream
+{
+    void with_most_recent_buffer_do(std::function<void(mg::Buffer & )> const& fn) override
+    {
+#ifndef MIR_DONT_USE_PTHREAD_GETNAME_NP
+        thread_name = mt::current_thread_name();
+#endif
+        StubBufferStream::with_most_recent_buffer_do(fn);
+    }
+    std::string thread_name;
+};
+
 struct ThreadedSnapshotStrategyTest : testing::Test
 {
-    mtd::StubBufferStream buffer_access;
+    NamedThreadBufferStream buffer_access;
 };
 
 }
@@ -100,6 +112,7 @@ TEST_F(ThreadedSnapshotStrategyTest, takes_snapshot)
     EXPECT_EQ(pixels, snapshot.pixels);
 }
 
+#ifndef MIR_DONT_USE_PTHREAD_GETNAME_NP
 TEST_F(ThreadedSnapshotStrategyTest, names_snapshot_thread)
 {
     using namespace testing;
@@ -121,3 +134,4 @@ TEST_F(ThreadedSnapshotStrategyTest, names_snapshot_thread)
 
     EXPECT_THAT(buffer_access.thread_name, Eq("Mir/Snapshot"));
 }
+#endif

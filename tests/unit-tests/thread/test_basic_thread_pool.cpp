@@ -73,9 +73,10 @@ public:
         called = true;
         if (!name.empty())
             mir::set_thread_name(name);
+#ifndef MIR_DONT_USE_PTHREAD_GETNAME_NP
         else
             name = mt::current_thread_name();
-
+#endif
         if (block)
             signal.wait();
     }
@@ -120,7 +121,11 @@ TEST_F(BasicThreadPool, executes_given_functor)
     EXPECT_TRUE(task.was_called());
 }
 
+#ifndef MIR_DONT_USE_PTHREAD_GETNAME_NP
 TEST_F(BasicThreadPool, executes_on_preferred_thread)
+#else
+TEST_F(BasicThreadPool, DISABLED_executes_on_preferred_thread)
+#endif
 {
     using namespace testing;
     mth::BasicThreadPool p{default_num_threads};
@@ -144,7 +149,11 @@ TEST_F(BasicThreadPool, executes_on_preferred_thread)
     EXPECT_THAT(task2.thread_name(), Eq(expected_name));
 }
 
-TEST_F(BasicThreadPool, recycles_threads)
+#ifndef MIR_DONT_USE_PTHREAD_GETNAME_NP
+TEST_F(BasicThreadPool, executes_recycles_threads)
+#else
+TEST_F(BasicThreadPool, DISABLED_recycles_threads)
+#endif
 {
     using namespace testing;
     mth::BasicThreadPool p{2};

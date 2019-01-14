@@ -110,11 +110,17 @@ if (NOT HAVE_PTHREAD_GETNAME_NP)
   set_source_files_properties (
     ${CMAKE_CURRENT_SOURCE_DIR}/dispatch/test_threaded_dispatcher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/frontend/test_basic_connector.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/compositor/test_multi_threaded_compositor.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene/test_threaded_snapshot_strategy.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/thread/test_basic_thread_pool.cpp
 
     PROPERTIES COMPILE_DEFINITIONS MIR_DONT_USE_PTHREAD_GETNAME_NP
   )
   message(WARNING "pthread_getname_np() not supported: Disabling test_threaded_dispatcher.cpp tests that rely on it")
   message(WARNING "pthread_getname_np() not supported: Disabling test_basic_connector.cpp tests that rely on it")
+  message(WARNING "pthread_getname_np() not supported: Disabling test_multi_threaded_compositor.cpp tests that rely on it")
+  message(WARNING "pthread_getname_np() not supported: Disabling test_threaded_snapshot_strategy.cpp tests that rely on it")
+  message(WARNING "pthread_getname_np() not supported: Disabling test_basic_thread_pool.cpp tests that rely on it")
 endif()
 
 link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})

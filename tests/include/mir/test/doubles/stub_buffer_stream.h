@@ -21,7 +21,6 @@
 
 #include <mir/compositor/buffer_stream.h>
 #include <mir/test/doubles/stub_buffer.h>
-#include "mir/test/current_thread_name.h"
 #include "mir_test_framework/stub_platform_native_buffer.h"
 
 namespace mir
@@ -72,7 +71,6 @@ public:
     }
     void with_most_recent_buffer_do(std::function<void(graphics::Buffer&)> const& fn) override
     {
-        thread_name = current_thread_name();
         fn(*stub_compositor_buffer);
     }
     MirPixelFormat pixel_format() const override { return mir_pixel_format_abgr_8888; }
@@ -82,7 +80,6 @@ public:
 
     std::shared_ptr<graphics::Buffer> stub_compositor_buffer;
     int nready = 0;
-    std::string thread_name;
 };
 
 }
