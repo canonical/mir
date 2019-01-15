@@ -45,6 +45,15 @@ execute: |
         yaml-cpp-devel\
         egl-wayland-devel
 
+    WLCS_DIR=$(mktemp --directory)
+    WLCS_BUILD_DIR=$WLCS_DIR/build
+    mkdir $WLCS_BUILD_DIR
+
+    git clone https://github.com/MirServer/wlcs $WLCS_DIR
+    cmake -H$WLCS_DIR -B$WLCS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug
+    cmake --build $WLCS_BUILD_DIR -- -j`nproc`
+    cmake --build $WLCS_BUILD_DIR -- install
+
     BUILD_DIR=$(mktemp --directory)
     cmake -H$SPREAD_PATH -B$BUILD_DIR -DCMAKE_BUILD_TYPE=Debug -DMIR_USE_LD_GOLD=ON
     # Run cmake again to pick up wlcs?!?!?!?!
