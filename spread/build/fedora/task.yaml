@@ -48,7 +48,7 @@ execute: |
     WLCS_DIR=$(mktemp --directory)
     WLCS_BUILD_DIR=$WLCS_DIR/build
 
-    git clone https://github.com/MirServer/wlcs $WLCS_DIR
+    git clone -b wlcs-test-runner https://github.com/MirServer/wlcs $WLCS_DIR
     
     mkdir $WLCS_BUILD_DIR
     cmake -H$WLCS_DIR -B$WLCS_BUILD_DIR -DCMAKE_BUILD_TYPE=Debug
