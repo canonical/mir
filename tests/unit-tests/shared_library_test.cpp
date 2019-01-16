@@ -100,7 +100,6 @@ TEST_F(SharedLibrary, load_nonexistent_function_fails_with_useful_info)
 
         EXPECT_THAT(info, AnyOf(HasSubstr("undefined symbol"),
                                 HasSubstr("Symbol not found"))) << "What went wrong";
-        EXPECT_THAT(info, HasSubstr(existing_library)) << "Name of library";
         EXPECT_THAT(info, HasSubstr(nonexistent_function)) << "Name of function";
     }
 }
