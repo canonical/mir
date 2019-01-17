@@ -179,12 +179,16 @@ mg::PlatformPriority probe_graphics_platform(
                     drmGetBusid(tmp_fd),
                     &drmFreeBusid
                 };
-                if (auto err = -drmCheckModesettingSupported(busid.get()))
+
+                if (getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") == nullptr)
                 {
-                    throw std::system_error{
-                        err,
-                        std::system_category(),
-                        std::string("Device ") + device.devnode() + " does not support KMS"};
+                    if (auto err = -drmCheckModesettingSupported(busid.get()))
+                    {
+                        throw std::system_error{
+                            err,
+                            std::system_category(),
+                            std::string("Device ") + device.devnode() + " does not support KMS"};
+                    }
                 }
 
                 mgm::helpers::GBMHelper gbm_device{tmp_fd};
