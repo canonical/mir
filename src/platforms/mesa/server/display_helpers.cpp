@@ -104,11 +104,14 @@ mgmh::DRMHelper::open_all_devices(
             drmGetBusid(tmp_fd), &drmFreeBusid
         };
 
-        if (auto modeset_error = -drmCheckModesettingSupported(busid.get()))
+        if (getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") == nullptr)
         {
-            mir::log_info("Ignoring non-KMS DRM device %s", device.devnode());
-            error = modeset_error;
-            continue;
+            if (auto modeset_error = -drmCheckModesettingSupported(busid.get()))
+            {
+                mir::log_info("Ignoring non-KMS DRM device %s", device.devnode());
+                error = modeset_error;
+                continue;
+            }
         }
 
         // Can't use make_shared with the private constructor.
