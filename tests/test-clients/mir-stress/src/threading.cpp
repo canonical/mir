@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -21,7 +21,6 @@
 #include "client.h"
 #include "results.h"
 
-#include <iostream>
 #include <sstream>
 #include <thread>
 
@@ -37,9 +36,9 @@ ThreadResults run_mir_test(std::chrono::seconds for_seconds)
 {
     std::string thread_name(get_application_unique_name());
     ThreadResults results(thread_name);
-    auto start_time = std::chrono::steady_clock::now();
+    auto const end_time = std::chrono::steady_clock::now() + for_seconds;
 
-    while (start_time + for_seconds > std::chrono::steady_clock::now())
+    while (!terminate_signalled.load() && (end_time > std::chrono::steady_clock::now()))
     {
         ClientStateMachine::Ptr p = ClientStateMachine::Create();
         if (!p->connect(thread_name))

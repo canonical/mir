@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -19,11 +19,14 @@
 #ifndef MIR_STRESS_TEST_THREADING_H_
 #define MIR_STRESS_TEST_THREADING_H_
 
+#include <atomic>
 #include <chrono>
 
 class ThreadResults;
 
 // Run the mir test suite for some time, and return the results.
 ThreadResults run_mir_test(std::chrono::seconds for_seconds);
+
+extern std::atomic<bool> terminate_signalled;
 
 #endif
