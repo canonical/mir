@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2017 Canonical Ltd.
+ * Copyright © 2016-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -18,7 +18,7 @@
 
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
-#include "titlebar_config.h"
+#include "wallpaper_config.h"
 #include "spinner/splash.h"
 
 #include <miral/display_configuration_option.h>
@@ -90,7 +90,7 @@ int main(int argc, char const* argv[])
             debug_extensions,
             AppendEventFilter{quit_on_ctrl_alt_bksp},
             StartupInternalClient{spinner},
-            pre_init(CommandLineOption{[&](std::string const& typeface) { ::titlebar::font_file(typeface); },
-                              "shell-titlebar-font", "font file to use for titlebars", ::titlebar::font_file()})
+            pre_init(CommandLineOption{[&](std::string const& typeface) { ::wallpaper::font_file(typeface); },
+                              "shell-wallpaper-font", "font file to use for wallpaper", ::wallpaper::font_file()})
         });
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -21,7 +21,7 @@
 
 #include <string>
 
-namespace titlebar
+namespace wallpaper
 {
 void font_file(std::string const& font_file);
 auto font_file() -> std::string;

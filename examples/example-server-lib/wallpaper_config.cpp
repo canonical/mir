@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2018 Canonical Ltd.
+ * Copyright © 2016-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "titlebar_config.h"
+#include "wallpaper_config.h"
 #include <unistd.h>
 #include <mutex>
 
@@ -45,13 +45,13 @@ std::mutex mutex;
 std::string font_file{default_font()};
 }
 
-void titlebar::font_file(std::string const& font_file)
+void wallpaper::font_file(std::string const& font_file)
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
     ::font_file = font_file;
 }
 
-auto titlebar::font_file() -> std::string
+auto wallpaper::font_file() -> std::string
 {
     std::lock_guard<decltype(mutex)> lock{mutex};
     return ::font_file;

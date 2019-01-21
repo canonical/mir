@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2017 Canonical Ltd.
+ * Copyright © 2012-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -26,9 +26,10 @@
 
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
-#include "titlebar_config.h"
+#include "wallpaper_config.h"
 #include "sw_splash.h"
 
+#include <miral/command_line_option.h>
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
 #include <miral/runner.h>
@@ -156,6 +157,9 @@ try
         me::add_input_device_configuration_options_to,
         add_timeout_option_to,
         miral::CursorTheme{"default:DMZ-White"},
+        pre_init(miral::CommandLineOption{
+            [&](std::string const& font) { ::wallpaper::font_file(font); },
+            "wallpaper-font", "font file to use for wallpaper", ::wallpaper::font_file()}),
         input_filters,
         test_runner
     });
