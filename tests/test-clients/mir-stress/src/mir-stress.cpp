@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -20,6 +20,7 @@
 #include "threading.h"
 
 #include <unistd.h>
+#include <csignal>
 
 #include <chrono>
 #include <future>
@@ -27,6 +28,7 @@
 #include <string>
 #include <thread>
 #include <vector>
+#include <cstring>
 
 const std::string option_str("hn:t:p");
 const std::string usage("Usage:\n"
@@ -36,8 +38,29 @@ const std::string usage("Usage:\n"
     "               on this machine.\n"
     );
 
+std::atomic<bool> terminate_signalled{false};
+
+namespace
+{
+extern "C" void shutdown(int)
+{
+    terminate_signalled.store(true);
+}
+}
+
 int main(int argc, char **argv)
 {
+    if (auto const socket = getenv("MIR_SOCKET"))
+    {
+        // If we've been started by mir_demo_server --test-client mir_stress
+        // we have and FD that can ONLY be used for one connection.
+        // Ignore it and try to use default socket for all our clients.
+        if (strstr(socket, "fd://") == socket)
+        {
+            unsetenv("MIR_SOCKET");
+        }
+    }
+
     std::chrono::seconds duration_to_run(60 * 10);
     unsigned int num_threads = std::thread::hardware_concurrency();
     int arg;
@@ -74,6 +97,12 @@ int main(int argc, char **argv)
                 )
             );
     }
+
+    for (auto sig : {SIGINT, SIGTERM, SIGHUP})
+    {
+        signal(sig, &shutdown);
+    }
+
     std::vector<ThreadResults> results;
     for (auto &t: futures)
     {
