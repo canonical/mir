@@ -84,7 +84,7 @@ auto WindowProperties::build_window_manager_policy(WindowManagerTools const& too
     ON_CALL(*result, advise_focus_gained(_))
         .WillByDefault(InvokeWithoutArgs([this] { window_ready.raise(); }));
 
-    return std::move(result);
+    return result;
 }
 }
 
