@@ -18,7 +18,7 @@
 
 #include "decoration_provider.h"
 
-#include "titlebar_config.h"
+#include "wallpaper_config.h"
 
 #include "wayland_helpers.h"
 
@@ -70,9 +70,9 @@ Printer::Printer()
     if (FT_Init_FreeType(&lib))
         return;
 
-    if (FT_New_Face(lib, titlebar::font_file().c_str(), 0, &face))
+    if (FT_New_Face(lib, wallpaper::font_file().c_str(), 0, &face))
     {
-        std::cerr << "WARNING: failed to load font: \"" <<  titlebar::font_file() << "\"\n";
+        std::cerr << "WARNING: failed to load font: \"" <<  wallpaper::font_file() << "\"\n";
         FT_Done_FreeType(lib);
         return;
     }
