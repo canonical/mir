@@ -62,11 +62,11 @@ std::string mir_test_framework::library_path()
 std::string mir_test_framework::server_platform_path()
 {
     for (auto const& option : {library_path() + "/server-modules/",
-                               library_path() + "/server-platform/",
+                               library_path() + "/mir/server-platform/",
                                std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
         if (boost::filesystem::exists(option))
             return option;
-    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server platform in standard search locations"));
+    BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find server platform directory in standard search locations"));
 }
 
 std::string mir_test_framework::test_data_path()
@@ -90,7 +90,7 @@ std::string mir_test_framework::server_platform(std::string const& name)
         libname += ".so." MIR_SERVER_GRAPHICS_PLATFORM_ABI_STRING;
 
     for (auto const& option :
-         {library_path() + "/server-modules/", library_path() + "/server-platform/", std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
+         {library_path() + "/server-modules/", library_path() + "/mir/server-platform/", std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
     {
         auto path_to_test = option + libname;
         if (boost::filesystem::exists(path_to_test))
@@ -108,7 +108,7 @@ std::string mir_test_framework::server_input_platform(std::string const& name)
         libname += ".so." MIR_SERVER_INPUT_PLATFORM_ABI_STRING;
 
     for (auto const& option :
-         {library_path() + "/server-modules/", library_path() + "/server-platform/", std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
+         {library_path() + "/server-modules/", library_path() + "/mir/server-platform/", std::string(MIR_SERVER_PLATFORM_PATH) + '/'})
     {
         auto path_to_test = option + libname;
         if (boost::filesystem::exists(path_to_test))
@@ -126,7 +126,7 @@ std::string mir_test_framework::client_platform(std::string const& name)
         libname += ".so." MIR_CLIENT_PLATFORM_ABI_STRING;
 
     for (auto const& option :
-         {library_path() + "/client-modules/", library_path() + "/client-platform/", std::string(MIR_CLIENT_PLATFORM_PATH) + '/'})
+         {library_path() + "/client-modules/", library_path() + "/mir/client-platform/", std::string(MIR_CLIENT_PLATFORM_PATH) + '/'})
     {
         auto path_to_test = option + libname;
         if (boost::filesystem::exists(path_to_test))
