@@ -185,7 +185,7 @@ struct TestWindowManagerTools : testing::Test
                 auto policy = std::make_unique<testing::NiceMock<MockWindowManagerPolicy>>(tools);
                 window_manager_policy = policy.get();
                 window_manager_tools = tools;
-                return std::move(policy);
+                return policy;
             }
     };
 
