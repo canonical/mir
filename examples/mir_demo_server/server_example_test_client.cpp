@@ -130,6 +130,14 @@ void me::TestClientRunner::operator()(mir::Server& server)
 
                 setenv("MIR_SOCKET", connect_string, 1);
 
+                // Enable tests with toolkits supporting Wayland
+                auto const wayland_display = server.wayland_display();
+                setenv("WAYLAND_DISPLAY", wayland_display.value().c_str(),  true);   // configure Wayland socket
+                setenv("GDK_BACKEND", "wayland", true);             // configure GTK to use Wayland
+                setenv("QT_QPA_PLATFORM", "wayland", true);         // configure Qt to use Wayland
+                unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
+                setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland
+
                 auto const client = options1->get<std::string>(test_client_opt);
                 execlp(client.c_str(), client.c_str(), static_cast<char const*>(nullptr));
                 // If execl() returns then something is badly wrong
