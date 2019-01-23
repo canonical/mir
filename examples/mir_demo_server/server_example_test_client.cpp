@@ -133,7 +133,7 @@ void me::TestClientRunner::operator()(mir::Server& server)
                 // Enable tests with toolkits supporting Wayland
                 auto const wayland_display = server.wayland_display();
                 setenv("WAYLAND_DISPLAY", wayland_display.value().c_str(),  true);   // configure Wayland socket
-                setenv("GDK_BACKEND", "wayland,mir", true);         // configure GTK to use Wayland (or Mir)
+                setenv("GDK_BACKEND", "wayland", true);             // configure GTK to use Wayland
                 setenv("QT_QPA_PLATFORM", "wayland", true);         // configure Qt to use Wayland
                 unsetenv("QT_QPA_PLATFORMTHEME");                   // Discourage Qt from unsupported theme
                 setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland
