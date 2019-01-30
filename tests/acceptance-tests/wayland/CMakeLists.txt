@@ -26,7 +26,7 @@ set_target_properties(
 
 pkg_get_variable(WLCS_BINARY wlcs test_runner)
 
-add_test(
+mir_add_test(
   NAME wlcs
-  COMMAND ${WLCS_BINARY} $<TARGET_FILE:miral_wlcs_integration>
+  COMMAND ${WLCS_BINARY} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/miral_wlcs_integration.so
 )
