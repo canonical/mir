@@ -35,11 +35,9 @@
 #include <atomic>
 #include <sys/eventfd.h>
 #include <mir/log.h>
-#include "display_server.h"
-#include "pointer.h"
-#include "touch.h"
-
-#include "mutex.h"
+#include <wlcs/display_server.h>
+#include <wlcs/pointer.h>
+#include <wlcs/touch.h>
 
 #include "mir/fd.h"
 
@@ -86,6 +84,108 @@ struct hash<::std::chrono::nanoseconds>
 
 namespace
 {
+/**
+ * Smart-pointer-esque accessor for Mutex<> protected data.
+ *
+ * Ensures exclusive access to the referenced data.
+ *
+ * \tparam Guarded Type of data guarded by the mutex.
+ */
+template<typename Guarded>
+class MutexGuard
+{
+public:
+    MutexGuard(std::unique_lock<std::mutex>&& lock, Guarded& value)
+        : value{value},
+          lock{std::move(lock)}
+    {
+    }
+    MutexGuard(MutexGuard&& from) = default;
+    ~MutexGuard() noexcept(false)
+    {
+        if (lock.owns_lock())
+        {
+            lock.unlock();
+        }
+    }
+
+    Guarded& operator*()
+    {
+        return value;
+    }
+    Guarded* operator->()
+    {
+        return &value;
+    }
+private:
+    Guarded& value;
+    std::unique_lock<std::mutex> lock;
+};
+
+/**
+ * A data-locking mutex
+ *
+ * This is a mutex which owns the data it guards, and can give out a
+ * smart-pointer-esque lock to lock and access it.
+ *
+ * \tparam Guarded  The type of data guarded by the mutex
+ */
+template<typename Guarded>
+class Mutex
+{
+public:
+    Mutex() = default;
+    Mutex(Guarded&& initial_value)
+        : value{std::move(initial_value)}
+    {
+    }
+
+    Mutex(Mutex const&) = delete;
+    Mutex& operator=(Mutex const&) = delete;
+
+    /**
+     * Lock the mutex and return an accessor for the protected data.
+     *
+     * \return A smart-pointer-esque accessor for the contained data.
+     *          While code has access to the MutexGuard it is guaranteed to have exclusive
+     *          access to the contained data.
+     */
+    MutexGuard<Guarded> lock()
+    {
+        return MutexGuard<Guarded>{std::unique_lock<std::mutex>{mutex}, value};
+    }
+
+protected:
+    std::mutex mutex;
+    Guarded value;
+};
+
+template<typename Guarded>
+class WaitableMutex : public Mutex<Guarded>
+{
+public:
+    using Mutex<Guarded>::Mutex;
+
+    template<typename Predicate, typename Rep, typename Period>
+    MutexGuard<Guarded> wait_for(Predicate predicate, std::chrono::duration<Rep, Period> timeout)
+    {
+        std::unique_lock<std::mutex> lock{this->mutex};
+        if (!notifier.wait_for(lock, timeout, [this, &predicate]() { return predicate(this->value); }))
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Notification timeout"}));
+        }
+        return MutexGuard<Guarded>{std::move(lock), this->value};
+    }
+
+    void notify_all()
+    {
+        notifier.notify_all();
+    }
+private:
+    std::condition_variable notifier;
+};
+
+
 auto constexpr a_long_time = 5s;
 
 using ClientFd = int;
@@ -227,11 +327,11 @@ private:
         std::unordered_map<ClientFd, wl_client*> client_session_map;
         std::unordered_map<wl_client*, ResourceListener> resource_listener;
     };
-    wlcs::WaitableMutex<State> state;
+    WaitableMutex<State> state;
 
     struct Listeners
     {
-        Listeners(wlcs::WaitableMutex<State>* const state)
+        Listeners(WaitableMutex<State>* const state)
             : state{state}
         {
         }
@@ -241,7 +341,7 @@ private:
         wl_resource* last_wl_surface{nullptr};
         wl_resource* last_wl_window{nullptr};
 
-        wlcs::WaitableMutex<State>* const state;
+        WaitableMutex<State>* const state;
     } listeners;
 
     static void resource_created(wl_listener* listener, void* ctx)
@@ -441,8 +541,10 @@ private:
 
 class InputEventListener;
 
-struct MirWlcsDisplayServer : miral::TestDisplayServer
+struct MirWlcsDisplayServer : miral::TestDisplayServer, public WlcsDisplayServer
 {
+    MirWlcsDisplayServer();
+
     testing::NiceMock<mir::test::doubles::MockGL> mockgl;
     std::shared_ptr<ResourceMapper> const resource_mapper{std::make_shared<ResourceMapper>()};
     std::shared_ptr<InputEventListener> event_listener;
@@ -519,7 +621,7 @@ public:
     }
 
 private:
-    wlcs::Mutex<std::unordered_map<std::chrono::nanoseconds, std::shared_ptr<mir::test::Signal>>> expected_events;
+    Mutex<std::unordered_map<std::chrono::nanoseconds, std::shared_ptr<mir::test::Signal>>> expected_events;
     MirWlcsDisplayServer& runner;
 };
 
@@ -543,7 +645,7 @@ void wlcs_server_start(WlcsDisplayServer* server)
 {
     mir::test::Signal started;
 
-    auto runner = reinterpret_cast<MirWlcsDisplayServer*>(server);
+    auto runner = static_cast<MirWlcsDisplayServer*>(server);
 
     runner->start_server();
 
@@ -568,7 +670,7 @@ void wlcs_server_start(WlcsDisplayServer* server)
 
 void wlcs_server_stop(WlcsDisplayServer* server)
 {
-    auto runner = reinterpret_cast<MirWlcsDisplayServer*>(server);
+    auto runner = static_cast<MirWlcsDisplayServer*>(server);
 
     runner->stop_server();
 }
@@ -624,18 +726,18 @@ WlcsDisplayServer* wlcs_create_server(int argc, char const** argv)
             runner->server = &server;
         };
 
-    return reinterpret_cast<WlcsDisplayServer*>(runner);
+    return static_cast<WlcsDisplayServer*>(runner);
 }
 
 void wlcs_destroy_server(WlcsDisplayServer* server)
 {
-    auto runner = reinterpret_cast<MirWlcsDisplayServer*>(server);
+    auto runner = static_cast<MirWlcsDisplayServer*>(server);
     delete runner;
 }
 
 int wlcs_server_create_client_socket(WlcsDisplayServer* server)
 {
-    auto runner = reinterpret_cast<MirWlcsDisplayServer*>(server);
+    auto runner = static_cast<MirWlcsDisplayServer*>(server);
 
     try
     {
@@ -660,15 +762,17 @@ int wlcs_server_create_client_socket(WlcsDisplayServer* server)
     return -1;
 }
 
-struct FakePointer
+struct FakePointer : public WlcsPointer
 {
+    FakePointer();
+
     decltype(mtf::add_fake_input_device(mi::InputDeviceInfo())) pointer;
     MirWlcsDisplayServer* runner;
 };
 
 WlcsPointer* wlcs_server_create_pointer(WlcsDisplayServer* server)
 {
-    auto runner = reinterpret_cast<MirWlcsDisplayServer*>(server);
+    auto runner = static_cast<MirWlcsDisplayServer*>(server);
 
     auto constexpr uid = "mouse-uid";
 
@@ -721,17 +825,17 @@ WlcsPointer* wlcs_server_create_pointer(WlcsDisplayServer* server)
     fake_pointer->runner = runner;
     fake_pointer->pointer = std::move(fake_mouse);
 
-    return reinterpret_cast<WlcsPointer*>(fake_pointer);
+    return static_cast<WlcsPointer*>(fake_pointer);
 }
 
 void wlcs_destroy_pointer(WlcsPointer* pointer)
 {
-    delete reinterpret_cast<FakePointer*>(pointer);
+    delete static_cast<FakePointer*>(pointer);
 }
 
 void wlcs_pointer_move_relative(WlcsPointer* pointer, wl_fixed_t x, wl_fixed_t y)
 {
-    auto device = reinterpret_cast<FakePointer*>(pointer);
+    auto device = static_cast<FakePointer*>(pointer);
 
     auto event = mir::input::synthesis::a_pointer_event()
                     .with_movement(wl_fixed_to_int(x), wl_fixed_to_int(y));
@@ -741,7 +845,7 @@ void wlcs_pointer_move_relative(WlcsPointer* pointer, wl_fixed_t x, wl_fixed_t y
 
 void wlcs_pointer_move_absolute(WlcsPointer* pointer, wl_fixed_t x, wl_fixed_t y)
 {
-    auto device = reinterpret_cast<FakePointer*>(pointer);
+    auto device = static_cast<FakePointer*>(pointer);
 
     auto rel_x = wl_fixed_to_double(x) - device->runner->cursor_x;
     auto rel_y = wl_fixed_to_double(y) - device->runner->cursor_y;
@@ -751,7 +855,7 @@ void wlcs_pointer_move_absolute(WlcsPointer* pointer, wl_fixed_t x, wl_fixed_t y
 
 void wlcs_pointer_button_down(WlcsPointer* pointer, int button)
 {
-    auto device = reinterpret_cast<FakePointer*>(pointer);
+    auto device = static_cast<FakePointer*>(pointer);
 
     auto event = mir::input::synthesis::a_button_down_event()
                     .of_button(button);
@@ -761,7 +865,7 @@ void wlcs_pointer_button_down(WlcsPointer* pointer, int button)
 
 void wlcs_pointer_button_up(WlcsPointer* pointer, int button)
 {
-    auto device = reinterpret_cast<FakePointer*>(pointer);
+    auto device = static_cast<FakePointer*>(pointer);
 
     auto event = mir::input::synthesis::a_button_up_event()
                     .of_button(button);
@@ -769,8 +873,20 @@ void wlcs_pointer_button_up(WlcsPointer* pointer, int button)
     emit_mir_event(device->runner, device->pointer, event);
 }
 
-struct FakeTouch
+FakePointer::FakePointer()
 {
+    version = WLCS_POINTER_VERSION;
+    move_absolute = &wlcs_pointer_move_absolute;
+    move_relative = &wlcs_pointer_move_relative;
+    button_up = &wlcs_pointer_button_up;
+    button_down = &wlcs_pointer_button_down;
+    destroy = &wlcs_destroy_pointer;
+}
+
+struct FakeTouch : public WlcsTouch
+{
+    FakeTouch();
+
     decltype(mtf::add_fake_input_device(mi::InputDeviceInfo())) touch;
     int last_x{0}, last_y{0};
     MirWlcsDisplayServer* runner;
@@ -778,7 +894,7 @@ struct FakeTouch
 
 WlcsTouch* wlcs_server_create_touch(WlcsDisplayServer* server)
 {
-    auto runner = reinterpret_cast<MirWlcsDisplayServer*>(server);
+    auto runner = static_cast<MirWlcsDisplayServer*>(server);
 
     auto constexpr uid = "touch-uid";
 
@@ -830,17 +946,17 @@ WlcsTouch* wlcs_server_create_touch(WlcsDisplayServer* server)
     fake_touch->runner = runner;
     fake_touch->touch = std::move(fake_touch_dev);
 
-    return reinterpret_cast<WlcsTouch*>(fake_touch);
+    return static_cast<WlcsTouch*>(fake_touch);
 }
 
 void wlcs_destroy_touch(WlcsTouch* touch)
 {
-    delete reinterpret_cast<FakeTouch*>(touch);
+    delete static_cast<FakeTouch*>(touch);
 }
 
 void wlcs_touch_down(WlcsTouch* touch, int x, int y)
 {
-    auto device = reinterpret_cast<FakeTouch*>(touch);
+    auto device = static_cast<FakeTouch*>(touch);
 
     device->last_x = x;
     device->last_y = y;
@@ -854,7 +970,7 @@ void wlcs_touch_down(WlcsTouch* touch, int x, int y)
 
 void wlcs_touch_move(WlcsTouch* touch, int x, int y)
 {
-    auto device = reinterpret_cast<FakeTouch*>(touch);
+    auto device = static_cast<FakeTouch*>(touch);
 
     device->last_x = x;
     device->last_y = y;
@@ -868,7 +984,7 @@ void wlcs_touch_move(WlcsTouch* touch, int x, int y)
 
 void wlcs_touch_up(WlcsTouch* touch)
 {
-    auto device = reinterpret_cast<FakeTouch*>(touch);
+    auto device = static_cast<FakeTouch*>(touch);
 
     auto event = mir::input::synthesis::a_touch_event()
                     .with_action(mir::input::synthesis::TouchParameters::Action::Release)
@@ -877,9 +993,20 @@ void wlcs_touch_up(WlcsTouch* touch)
     emit_mir_event(device->runner, device->touch, event);
 }
 
+FakeTouch::FakeTouch()
+{
+    version = WLCS_TOUCH_VERSION;
+
+    touch_down = &wlcs_touch_down;
+    touch_move = &wlcs_touch_move;
+    touch_up = &wlcs_touch_up;
+
+    destroy = &wlcs_destroy_touch;
+}
+
 void wlcs_server_position_window_absolute(WlcsDisplayServer* server, wl_display* client, wl_surface* surface, int x, int y)
 {
-    auto runner = reinterpret_cast<MirWlcsDisplayServer*>(server);
+    auto runner = static_cast<MirWlcsDisplayServer*>(server);
 
     try
     {
@@ -906,4 +1033,24 @@ void wlcs_server_position_window_absolute(WlcsDisplayServer* server, wl_display*
         abort();
         // TODO: Error handling.
     }
+}
+
+extern WlcsServerIntegration const wlcs_server_integration {
+    WLCS_SERVER_INTEGRATION_VERSION,
+    &wlcs_create_server,
+    &wlcs_destroy_server,
+};
+
+namespace
+{
+MirWlcsDisplayServer::MirWlcsDisplayServer()
+{
+    version = WLCS_DISPLAY_SERVER_VERSION;
+    start = &wlcs_server_start;
+    stop = &wlcs_server_stop;
+    create_client_socket = &wlcs_server_create_client_socket;
+    position_window_absolute = &wlcs_server_position_window_absolute;
+    create_pointer = &wlcs_server_create_pointer;
+    create_touch = &wlcs_server_create_touch;
+}
 }
