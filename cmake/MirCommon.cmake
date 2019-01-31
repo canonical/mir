@@ -138,6 +138,22 @@ function (mir_discover_tests_with_fd_leak_detection_and_env EXECUTABLE TEST_ENV_
   mir_discover_tests_internal(${EXECUTABLE} ${TEST_ENV_OPTION} TRUE ${ARGN})
 endfunction()
 
+function (mir_discover_external_gtests)
+  set(one_value_args NAME WORKING_DIRECTORY)
+  set(multi_value_args COMMAND EXCLUDE_FILTER)
+  cmake_parse_arguments(TEST "" "${one_value_args}" "${multi_value_args}" ${ARGN})
+
+  list(JOIN TEST_COMMAND " " TEST_COMMAND_STRING)
+
+  add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND_STRING})
+  if (TEST_WORKING_DIRECTORY)
+    set_tests_properties(${TEST_NAME} PROPERTIES WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY})
+  endif()
+
+  file(APPEND ${CMAKE_BINARY_DIR}/discover_all_tests.sh
+    "sh ${CMAKE_SOURCE_DIR}/tools/discover_gtests.sh --test-name ${TEST_NAME} --gtest-executable \"${TEST_COMMAND_STRING}\" -- ${TEST_COMMAND_STRING}\n")
+endfunction()
+
 function (mir_add_memcheck_test)
   if (ENABLE_MEMCHECK_OPTION)
     add_custom_target(memcheck_test ALL)
