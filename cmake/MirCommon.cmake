@@ -143,7 +143,7 @@ function (mir_discover_external_gtests)
   set(multi_value_args COMMAND EXCLUDE_FILTER)
   cmake_parse_arguments(TEST "" "${one_value_args}" "${multi_value_args}" ${ARGN})
 
-  list(JOIN TEST_COMMAND " " TEST_COMMAND_STRING)
+  string(REPLACE ";" " " TEST_COMMAND_STRING "${TEST_COMMAND}")
 
   add_test(NAME ${TEST_NAME} COMMAND ${TEST_COMMAND_STRING})
   if (TEST_WORKING_DIRECTORY)
