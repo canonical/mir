@@ -5,7 +5,6 @@ usr/lib/*/mir/tools/libmirclientlttng.so
 usr/lib/*/mir/tools/libmirserverlttng.so
 usr/bin/mir_demo_client_*
 usr/bin/mir_demo_server
-usr/lib/*/libmir_demo_server_loadable.so
 usr/lib/*/mir/server-platform/graphics-dummy.so
 usr/lib/*/mir/server-platform/input-stub.so
 usr/lib/*/mir/client-platform/dummy.so
