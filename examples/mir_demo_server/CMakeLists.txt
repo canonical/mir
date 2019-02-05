@@ -20,28 +20,16 @@ include_directories(
   ${GL_INCLUDE_DIRS}
 )
 
-add_library(mir_demo_server_loadable MODULE
-  server_example.cpp
-  glog_logger.cpp
-  server_example_test_client.cpp
+mir_add_wrapped_executable(mir_demo_server
+    server_example.cpp
+    glog_logger.cpp
+    server_example_test_client.cpp
 )
 
-target_link_libraries(mir_demo_server_loadable
+target_link_libraries(mir_demo_server
   example-shell-lib
   exampleserverconfig
   ${GLog_LIBRARY}
   ${GFlags_LIBRARY}
   ${Boost_LIBRARIES}
-)
-
-install(TARGETS mir_demo_server_loadable
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-)
-
-mir_add_wrapped_executable(mir_demo_server
-  mir_demo_server_loader.cpp
-)
-
-target_link_libraries(mir_demo_server
-  dl
 )
