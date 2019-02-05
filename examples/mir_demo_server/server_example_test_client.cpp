@@ -139,6 +139,7 @@ void me::TestClientRunner::operator()(mir::Server& server)
                 setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland
 
                 auto const client = options1->get<std::string>(test_client_opt);
+                log(logging::Severity::informational, "mir::examples", "Starting test client: %s", client.c_str());
                 execlp(client.c_str(), client.c_str(), static_cast<char const*>(nullptr));
                 // If execl() returns then something is badly wrong
                 log(logging::Severity::critical, "mir::examples",
