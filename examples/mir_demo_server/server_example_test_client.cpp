@@ -116,19 +116,13 @@ void me::TestClientRunner::operator()(mir::Server& server)
         {
             self->test_failed = true;
 
-            auto const client_fd = server.open_client_socket();
-
             auto const pid = fork();
 
             if (pid == 0)
             {
-                char connect_string[64] = {0};
-                // We can't have both the server and the client owning the same fd, since
-                // that will result in a double-close(). We give the client a duplicate which
-                // the client can safely own (and should close when done).
-                sprintf(connect_string, "fd://%d", dup(client_fd));
-
-                setenv("MIR_SOCKET", connect_string, 1);
+                // Enable tests with toolkits supporting mirclient
+                auto const mir_socket = server.mir_socket_name().value();
+                setenv("MIR_SOCKET", mir_socket.c_str(), 1);
 
                 // Enable tests with toolkits supporting Wayland
                 auto const wayland_display = server.wayland_display();
