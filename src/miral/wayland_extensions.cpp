@@ -101,3 +101,13 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
 miral::WaylandExtensions::~WaylandExtensions() = default;
 miral::WaylandExtensions::WaylandExtensions(WaylandExtensions const&) = default;
 auto miral::WaylandExtensions::operator=(WaylandExtensions const&) -> WaylandExtensions& = default;
+
+auto miral::with_extension(
+    WaylandExtensions const& wayland_extensions,
+    std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder) -> WaylandExtensions
+{
+    (void)name;
+    (void)builder;
+    // TODO: implement something
+    return wayland_extensions;
+}
