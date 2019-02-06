@@ -111,6 +111,12 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
     self->validate(self->default_value);
     server.add_configuration_option(mo::wayland_extensions_opt, "Wayland extensions to enable", self->default_value);
 
+    server.add_pre_init_callback([self=self, &server]
+        {
+            for (auto const& hook : self->wayland_extension_hooks)
+                server.add_wayland_extension(hook.name, hook.builder);
+        });
+
     server.add_init_callback([this, &server]{ self->callback(server); });
 }
 
