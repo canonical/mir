@@ -150,7 +150,7 @@ try
         me::add_glog_options_to,
         miral::StartupInternalClient{spinner},
         miral::X11Support{},
-        with_extension(miral::WaylandExtensions{"wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1"},
+        with_extension(miral::WaylandExtensions{"wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1:xdg_decoration_unstable_v1"},
             "xdg_decoration_unstable_v1", [](wl_display*) { return std::shared_ptr<void>{}; },
             "some_other_extension", [](wl_display*) { return std::shared_ptr<void>{}; }),
         launcher,

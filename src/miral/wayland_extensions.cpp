@@ -31,12 +31,12 @@ struct miral::WaylandExtensions::Self
 {
     Self(std::string const& default_value) : default_value{default_value}
     {
-        validate(default_value);
     }
 
     void callback(mir::Server& server) const
     {
         validate(server.get_options()->get<std::string>(mo::wayland_extensions_opt));
+        // TODO pass bespoke stuff into server!
     }
 
     std::string const default_value;
@@ -54,6 +54,8 @@ struct miral::WaylandExtensions::Self
 
         std::set<std::string> supported_extension;
         std::string available_extensions = mo::wayland_extensions_value;
+        for (auto const& extension : wayland_extension_hooks)
+            available_extensions += ":" + extension.name;
         available_extensions += ":zwlr_layer_shell_v1";
         available_extensions += ':';
 
@@ -74,6 +76,19 @@ struct miral::WaylandExtensions::Self
             throw mir::AbnormalExit{"Unsupported wayland extensions in: " + extensions};
         }
     }
+
+    struct WaylandExtensionHook
+    {
+        std::string name;
+        std::function<std::shared_ptr<void>(wl_display*)> builder;
+    };
+
+    std::vector<WaylandExtensionHook> wayland_extension_hooks;
+
+    void add_extension(std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder)
+    {
+        wayland_extension_hooks.push_back({name, builder});
+    }
 };
 
 miral::WaylandExtensions::WaylandExtensions() :
@@ -93,6 +108,7 @@ auto miral::WaylandExtensions::supported_extensions() const -> std::string
 
 void miral::WaylandExtensions::operator()(mir::Server& server) const
 {
+    self->validate(self->default_value);
     server.add_configuration_option(mo::wayland_extensions_opt, "Wayland extensions to enable", self->default_value);
 
     server.add_init_callback([this, &server]{ self->callback(server); });
@@ -106,8 +122,6 @@ auto miral::with_extension(
     WaylandExtensions const& wayland_extensions,
     std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder) -> WaylandExtensions
 {
-    (void)name;
-    (void)builder;
-    // TODO: implement something
+    wayland_extensions.self->add_extension(name, builder);
     return wayland_extensions;
 }
