@@ -26,6 +26,7 @@
 #include <wayland-server-core.h>
 #include <unordered_map>
 #include <thread>
+#include <vector>
 
 namespace mir
 {
@@ -72,7 +73,7 @@ public:
 
 protected:
 
-    virtual void add_extension(std::string const name, std::shared_ptr<void> implementation);
+    void add_extension(std::string const name, std::shared_ptr<void> implementation);
     virtual void custom_extensions(wl_display* display, std::shared_ptr<Shell> const& shell, WlSeat* seat, OutputManager* const output_manager);
 
 private:
