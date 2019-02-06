@@ -166,6 +166,12 @@ namespace renderer
 class RendererFactory;
 }
 
+struct WaylandExtensionHook
+{
+    std::string name;
+    std::function<std::shared_ptr<void>(wl_display*)> builder;
+};
+
 class DefaultServerConfiguration : public virtual ServerConfiguration
 {
 public:
@@ -190,6 +196,8 @@ public:
     std::shared_ptr<EmergencyCleanup>       the_emergency_cleanup() override;
     std::shared_ptr<cookie::Authority>      the_cookie_authority() override;
     std::function<void()>                   the_stop_callback() override;
+    void add_wayland_extension(std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder) override;
+
     /**
      * Function to call when a "fatal" error occurs. This implementation allows
      * the default strategy to be overridden by --on-fatal-error-except to avoid a
@@ -474,6 +482,7 @@ private:
 
     CachedPtr<shell::detail::FrontendShell> frontend_shell;
     std::vector<mir::ExtensionDescription> the_extensions();
+    std::vector<WaylandExtensionHook> wayland_extension_hooks;
 };
 }
 

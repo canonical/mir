@@ -947,3 +947,11 @@ MIR_SERVER_0.32 {
     mir::DefaultServerConfiguration::default_reports*;
   };
 } MIR_SERVER_0.31;
+
+MIR_SERVER_1.2 {
+ global:
+  extern "C++" {
+    mir::Server::add_wayland_extension*;
+    mir::DefaultServerConfiguration::add_wayland_extension*;
+  };
+} MIR_SERVER_0.32;
