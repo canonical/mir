@@ -9,3 +9,4 @@ usr/lib/*/libmir_demo_server_loadable.so
 usr/lib/*/mir/server-platform/graphics-dummy.so
 usr/lib/*/mir/server-platform/input-stub.so
 usr/lib/*/mir/client-platform/dummy.so
+usr/lib/*/mir/miral_wlcs_integration.so

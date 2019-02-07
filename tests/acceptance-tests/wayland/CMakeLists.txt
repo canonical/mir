@@ -30,3 +30,5 @@ mir_discover_external_gtests(
   NAME wlcs
   COMMAND ${WLCS_BINARY} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/miral_wlcs_integration.so
 )
+
+install(TARGETS miral_wlcs_integration LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir)
