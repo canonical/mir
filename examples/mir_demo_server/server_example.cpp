@@ -120,6 +120,22 @@ catch (std::exception const& error)
 catch (...)
 {
 }
+
+auto xdg_decoration_unstable_v1(wl_display* display, miral::WaylandExtensions::Executor const& run_on_wayland_mainloop)
+-> std::shared_ptr<void>
+{
+    (void)display, (void)run_on_wayland_mainloop;
+    // Implement the protocol here
+    return {};
+}
+
+auto some_other_extension(wl_display* display, miral::WaylandExtensions::Executor const& run_on_wayland_mainloop)
+-> std::shared_ptr<void>
+{
+    (void)display, (void)run_on_wayland_mainloop;
+    // Implement the protocol here
+    return {};
+}
 }
 
 int main(int argc, char const* argv[])
@@ -151,8 +167,8 @@ try
         miral::StartupInternalClient{spinner},
         miral::X11Support{},
         with_extension(miral::WaylandExtensions{"wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1:xdg_decoration_unstable_v1"},
-            "xdg_decoration_unstable_v1", [](wl_display*, miral::WaylandExtensions::Executor const&) { return std::shared_ptr<void>{}; },
-            "some_other_extension", [](wl_display*, miral::WaylandExtensions::Executor const&) { return std::shared_ptr<void>{}; }),
+            "xdg_decoration_unstable_v1", &xdg_decoration_unstable_v1,
+            "some_other_extension", &some_other_extension),
         launcher,
         window_managers,
         me::add_custom_compositor_option_to,
