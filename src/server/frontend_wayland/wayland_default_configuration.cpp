@@ -23,6 +23,7 @@
 #include "layer_shell_v1.h"
 #include "xwayland_wm_shell.h"
 #include "mir_display.h"
+#include "wl_seat.h"
 
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
@@ -69,10 +70,15 @@ auto configure_wayland_extensions(std::string extensions,
             if (extension.find(layer_shell_v1) != extension.end())
                 add_extension(layer_shell_v1, std::make_shared<mf::LayerShellV1>(display, shell, *seat,
                                                                                  output_manager));
+
+            std::function<void(std::function<void()>&& work)> run_on_wayland_mainloop = [seat](std::function<void()>&& work)
+                {
+                    seat->spawn(std::move(work));
+                };
             for (auto const& hook : wayland_extension_hooks)
             {
                 if (extension.find(hook.name) != extension.end())
-                    add_extension(hook.name, hook.builder(display));
+                    add_extension(hook.name, hook.builder(display, run_on_wayland_mainloop));
             }
 
             if (x11_enabled)
@@ -132,7 +138,10 @@ std::shared_ptr<mf::Connector>
 }
 
 void mir::DefaultServerConfiguration::add_wayland_extension(
-    std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder)
+    std::string const& name,
+    std::function<std::shared_ptr<void>(
+        wl_display*,
+        std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop)> builder)
 {
     wayland_extension_hooks.push_back({name, builder});
 }

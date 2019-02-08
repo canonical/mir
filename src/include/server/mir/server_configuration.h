@@ -88,7 +88,11 @@ public:
     virtual auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) = 0;
     virtual std::shared_ptr<scene::ApplicationNotRespondingDetector> the_application_not_responding_detector() = 0;
     virtual std::function<void()> the_stop_callback() = 0;
-    virtual void add_wayland_extension(std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder) = 0;
+    virtual void add_wayland_extension(
+        std::string const& name,
+        std::function<std::shared_ptr<void>(
+            wl_display*,
+            std::function<void(std::function<void()>&& work)> const&)> builder) = 0;
 
 protected:
     ServerConfiguration() = default;

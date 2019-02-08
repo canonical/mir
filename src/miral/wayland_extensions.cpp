@@ -80,12 +80,12 @@ struct miral::WaylandExtensions::Self
     struct WaylandExtensionHook
     {
         std::string name;
-        std::function<std::shared_ptr<void>(wl_display*)> builder;
+        Builder builder;
     };
 
     std::vector<WaylandExtensionHook> wayland_extension_hooks;
 
-    void add_extension(std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder)
+    void add_extension(std::string const& name, Builder builder)
     {
         wayland_extension_hooks.push_back({name, builder});
     }
@@ -126,7 +126,7 @@ auto miral::WaylandExtensions::operator=(WaylandExtensions const&) -> WaylandExt
 
 auto miral::with_extension(
     WaylandExtensions const& wayland_extensions,
-    std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder) -> WaylandExtensions
+    std::string const& name, WaylandExtensions::Builder const& builder) -> WaylandExtensions
 {
     wayland_extensions.self->add_extension(name, builder);
     return wayland_extensions;
