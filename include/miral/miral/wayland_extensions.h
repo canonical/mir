@@ -54,25 +54,37 @@ public:
     WaylandExtensions(WaylandExtensions const&);
     auto operator=(WaylandExtensions const&) -> WaylandExtensions&;
 
+    /// \remark Since MirAL 2.5
+    using Executor = std::function<void(std::function<void()>&& work)>;
+
+    /// A Builder creates and registers an extension protocol.
+    /// The Builder is provided the wl_display so that the extension can be registered and
+    /// an executor that allows server initiated code to be executed on the Wayland mainloop.
+    /// It returns a shared pointer to the implementation. Mir will manage the lifetime.
+    /// \remark Since MirAL 2.5
+    using Builder  = std::function<std::shared_ptr<void>(wl_display* display, Executor const& run_on_wayland_mainloop)>;
+
 private:
     struct Self;
     std::shared_ptr<Self> self;
 
     friend auto with_extension(
         WaylandExtensions const& wayland_extensions,
-        std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder) -> WaylandExtensions;
+        std::string const& name, Builder const& builder) -> WaylandExtensions;
 };
 
-/// Add a bespoke Wayland extension
+/// Add a bespoke Wayland extension.
 /// \remark Since MirAL 2.5
 auto with_extension(
     WaylandExtensions const& wayland_extensions,
-    std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder) -> WaylandExtensions;
+    std::string const& name, WaylandExtensions::Builder const& builder) -> WaylandExtensions;
 
+/// Add multiple bespoke Wayland extensions.
+/// \remark Since MirAL 2.5
 template<typename... Extensions>
 auto with_extension(WaylandExtensions const& wayland_extensions,
-                   std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder,
-                   Extensions... extensions) -> WaylandExtensions
+    std::string const& name, WaylandExtensions::Builder const& builder,
+    Extensions... extensions) -> WaylandExtensions
 {
     return with_extension(with_extension(wayland_extensions, name, builder), extensions...);
 }

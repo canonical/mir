@@ -507,11 +507,13 @@ void mir::Server::run_on_wayland_display(std::function<void(wl_display*)> const&
     }
 }
 
-void mir::Server::add_wayland_extension(std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder)
+void mir::Server::add_wayland_extension(
+    std::string const& name, std::function<std::shared_ptr<void>(
+        wl_display*,
+        std::function<void(std::function<void()>&& work)> const&)> builder)
 {
     if (auto const config = self->server_config)
     {
-//        config->wayland_extension_hooks.push_back({name, builder});
         config->add_wayland_extension(name, builder);
     }
 }
