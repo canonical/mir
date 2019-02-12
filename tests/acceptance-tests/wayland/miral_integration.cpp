@@ -1043,14 +1043,39 @@ extern WlcsServerIntegration const wlcs_server_integration {
 
 namespace
 {
+WlcsExtensionDescriptor const extensions[] = {
+    {"wl_compositor", 4},
+    {"wl_shm", 1},
+    {"wl_data_device_manager", 3},
+    {"wl_shell", 1},
+    {"wl_seat", 6},
+    {"wl_output", 3},
+    {"wl_subcompositor", 1},
+    {"xdg_wm_base", 1},
+    {"zxdg_shell_unstable_v6", 1},
+    {"wlr_layer_shell_unstable_v1", 1}
+};
+
+WlcsIntegrationDescriptor const descriptor {
+    1,
+    sizeof(extensions) / sizeof(extensions[0]),
+    extensions
+};
+
+WlcsIntegrationDescriptor const* get_descriptor()
+{
+    return &descriptor;
+}
+
 MirWlcsDisplayServer::MirWlcsDisplayServer()
 {
-    version = 1;
+    version = 2;
     start = &wlcs_server_start;
     stop = &wlcs_server_stop;
     create_client_socket = &wlcs_server_create_client_socket;
     position_window_absolute = &wlcs_server_position_window_absolute;
     create_pointer = &wlcs_server_create_pointer;
     create_touch = &wlcs_server_create_touch;
+    get_descriptor = &::get_descriptor;
 }
 }
