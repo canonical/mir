@@ -326,7 +326,7 @@ mgm::GBMSurfaceUPtr mgmh::GBMHelper::create_scanout_surface(
     }
 
     auto surface_raw = gbm_surface_create(device, width, height,
-                                          GBM_BO_FORMAT_XRGB8888,
+                                          GBM_FORMAT_XRGB8888,
                                           format_flags);
 
     auto gbm_surface_deleter = [](gbm_surface *p) { if (p) gbm_surface_destroy(p); };
