@@ -875,7 +875,7 @@ void wlcs_pointer_button_up(WlcsPointer* pointer, int button)
 
 FakePointer::FakePointer()
 {
-    version = WLCS_POINTER_VERSION;
+    version = 1;
     move_absolute = &wlcs_pointer_move_absolute;
     move_relative = &wlcs_pointer_move_relative;
     button_up = &wlcs_pointer_button_up;
@@ -995,7 +995,7 @@ void wlcs_touch_up(WlcsTouch* touch)
 
 FakeTouch::FakeTouch()
 {
-    version = WLCS_TOUCH_VERSION;
+    version = 1;
 
     touch_down = &wlcs_touch_down;
     touch_move = &wlcs_touch_move;
@@ -1036,7 +1036,7 @@ void wlcs_server_position_window_absolute(WlcsDisplayServer* server, wl_display*
 }
 
 extern WlcsServerIntegration const wlcs_server_integration {
-    WLCS_SERVER_INTEGRATION_VERSION,
+    1,
     &wlcs_create_server,
     &wlcs_destroy_server,
 };
@@ -1045,7 +1045,7 @@ namespace
 {
 MirWlcsDisplayServer::MirWlcsDisplayServer()
 {
-    version = WLCS_DISPLAY_SERVER_VERSION;
+    version = 1;
     start = &wlcs_server_start;
     stop = &wlcs_server_stop;
     create_client_socket = &wlcs_server_create_client_socket;
