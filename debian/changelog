@@ -1,4 +1,4 @@
-mir (1.1.0) UNRELEASED; urgency=medium
+mir (1.1.1) UNRELEASED; urgency=medium
 
   * New upstream release 1.1.0
 
@@ -28,6 +28,41 @@ mir (1.1.0) UNRELEASED; urgency=medium
     - Bugs fixed:
       . [Musl] Add missing includes
       . Use the correct package name to detect gtest on RPM distributions
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 29 Nov 2018 12:19:00 +0100
+
+mir (1.1.0) UNRELEASED; urgency=medium
+
+  * New upstream release 1.1.0
+
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 3
+      . mirserver ABI unchanged at 47
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 16
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged to 16
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+    - Enhancements:
+      . Rework the miral-kiosk splash screen to use Wayland
+      . Rework the miral-shell background to use Wayland
+      . Fix build issues using Musl instead of glibc
+      . Enable mir-test-tools to be packaged in a snap
+      . Add Wayland support for `mir_demo_server --test-client`
+    - Bugs fixed:
+      . [eglstreams-kms] the NVIDIA driver now supports 1.5. (Fixes #661)
+      . [eglstreams-kms] Fix NVIDIA driver version detection
+      . [eglstreams-kms] Check explicitly for modesetting support on the node
+        we're planning to use, so we can fall back to something that might
+        work. (Fixes: #672)
+      . [input/evdev] Avoid double-closing udev monitor fd. (Fixes #684)
+      . Install & package the stub modules used by mir_performance_tests.
+        (Fixes #675)
+      . Drop the problematic libmir_demo_server_loadable.so. (Fixes #716)
 
  -- Alan Griffiths <alan.griffiths@canonical.com>  Thu, 29 Nov 2018 12:19:00 +0100
 
