@@ -517,6 +517,7 @@ mgm::DisplayBuffer::DisplayBuffer(
 
     if (needs_bounce_buffer(*outputs.front(), temporary_front))
     {
+        mir::log_info("Hybrid GPU setup detected; DisplayBuffer using EGL buffer copies for migration");
         get_front_buffer = std::bind(
             std::mem_fn(&EGLBufferCopier::copy_front_buffer_from),
             std::make_shared<EGLBufferCopier>(
@@ -528,6 +529,7 @@ mgm::DisplayBuffer::DisplayBuffer(
     }
     else
     {
+        mir::log_info("Detected single-GPU DisplayBuffer. Rendering will be sent directly to output");
         get_front_buffer = [](auto&& fb) { return std::move(fb); };
     }
 
