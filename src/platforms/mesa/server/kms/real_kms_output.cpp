@@ -23,6 +23,7 @@
 #include "mir/fatal.h"
 #include "mir/log.h"
 #include <string.h> // strcmp
+#include <sys/stat.h>
 
 #include <boost/throw_exception.hpp>
 #include <system_error>
@@ -675,8 +676,37 @@ bool mgm::RealKMSOutput::buffer_requires_migration(gbm_bo* bo) const
      * DisplayLink.
      *
      * For a first go, just say that *every* device scans out of GPU-private memory.
+     *
+     * To complicate matters, Mali's gbm implementation does *not* return the same
+     * integer fd from gbm_device_get_fd() as the drm fd that the device was created
+     * from. We therefore do the full fstat() dance to check whether the two fds
+     * point to the same device.
      */
-    return gbm_device_get_fd(gbm_bo_get_device(bo)) != drm_fd_;
+    struct stat drm_info, gbm_info;
+
+    // fstat() failures should be unusual enough to throw an exception
+    if (fstat(drm_fd_, &drm_info) == -1)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to fstat() DRM fd"}));
+    }
+    if (fstat(gbm_device_get_fd(gbm_bo_get_device(bo)), &gbm_info) == -1)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to fstat() GBM fd"}));
+    }
+
+    // POSIX guarantees that the (st_dev, st_ino) tuple uniquely identifies
+    // a file.
+    return
+        (drm_info.st_dev != gbm_info.st_dev) ||
+        (drm_info.st_ino != gbm_info.st_ino);
 }
 
 int mgm::RealKMSOutput::drm_fd() const
