@@ -191,6 +191,7 @@ MIR_PLATFORM_0.33 {
 MIR_PLATFORM_0.32.3 {
  global:
   extern "C++" {
+    mir::graphics::EGLExtensions::PlatformBaseEXT*;
     mir::options::auto_console;
     mir::options::console_provider;
     mir::options::logind_console;

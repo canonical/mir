@@ -61,6 +61,15 @@ EGLBoolean extension_eglQueryWaylandBufferWL(
     EGLDisplay dpy,
     struct wl_resource *buffer,
     EGLint attribute, EGLint *value);
+EGLDisplay extension_eglGetPlatformDisplayEXT(
+    EGLenum platform,
+    void *native_display,
+    const EGLint *attrib_list);
+EGLSurface extension_eglCreatePlatformWindowSurfaceEXT(
+    EGLDisplay dpy,
+    EGLConfig config,
+    void *native_window,
+    const EGLint *attrib_list);
 
 /* EGL{Surface,Display,Config,Context} are all opaque types, so we can put whatever
    we want in them for testing */
@@ -80,6 +89,8 @@ mtd::MockEGL::MockEGL()
 
     ON_CALL(*this, eglGetDisplay(_))
     .WillByDefault(Return(fake_egl_display));
+    ON_CALL(*this, eglGetPlatformDisplayEXT(_,_,_))
+        .WillByDefault(Return(fake_egl_display));
     ON_CALL(*this, eglInitialize(_,_,_))
     .WillByDefault(DoAll(
                        SetArgPointee<1>(1),
@@ -117,6 +128,8 @@ mtd::MockEGL::MockEGL()
         }));
 
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
+        .WillByDefault(Return(fake_egl_surface));
+    ON_CALL(*this, eglCreatePlatformWindowSurfaceEXT(_,_,_,_))
         .WillByDefault(Return(fake_egl_surface));
 
     ON_CALL(*this, eglCreatePbufferSurface(_,_,_))
@@ -173,6 +186,10 @@ mtd::MockEGL::MockEGL()
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglBindWaylandDisplayWL)));
     ON_CALL(*this, eglGetProcAddress(StrEq("eglUnbindWaylandDisplayWL")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglUnbindWaylandDisplayWL)));
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglGetPlatformDisplayEXT")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglGetPlatformDisplayEXT)));
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglCreatePlatformWindowSurfaceEXT")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglCreatePlatformWindowSurfaceEXT)));
 }
 
 void mtd::MockEGL::provide_egl_extensions()
@@ -184,7 +201,8 @@ void mtd::MockEGL::provide_egl_extensions()
         "EGL_KHR_image_base "
         "EGL_KHR_image_pixmap "
         "EGL_EXT_image_dma_buf_import "
-        "EGL_WL_bind_wayland_display";
+        "EGL_WL_bind_wayland_display "
+        "EGL_EXT_platform_base";
     ON_CALL(*this, eglQueryString(_,EGL_EXTENSIONS))
         .WillByDefault(Return(egl_exts));
 }
@@ -483,4 +501,31 @@ EGLBoolean extension_eglQueryWaylandBufferWL(
     CHECK_GLOBAL_MOCK(EGLBoolean);
     return global_mock_egl->eglQueryWaylandBufferWL(
         dpy, buffer, attribute, value);
+}
+
+
+EGLDisplay extension_eglGetPlatformDisplayEXT(
+    EGLenum platform,
+    void *native_display,
+    const EGLint *attrib_list)
+{
+    CHECK_GLOBAL_MOCK(EGLDisplay);
+    return global_mock_egl->eglGetPlatformDisplayEXT(
+        platform,
+        native_display,
+        attrib_list);
+}
+
+EGLSurface extension_eglCreatePlatformWindowSurfaceEXT(
+    EGLDisplay dpy,
+    EGLConfig config,
+    void *native_window,
+    const EGLint *attrib_list)
+{
+    CHECK_GLOBAL_MOCK(EGLSurface);
+    return global_mock_egl->eglCreatePlatformWindowSurfaceEXT(
+        dpy,
+        config,
+        native_window,
+        attrib_list);
 }

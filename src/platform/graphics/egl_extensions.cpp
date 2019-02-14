@@ -20,6 +20,7 @@
 #include "mir/graphics/egl_extensions.h"
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
+#include <cstring>
 
 #define MIR_LOG_COMPONENT "EGL extensions"
 #include "mir/log.h"
@@ -33,6 +34,18 @@ std::experimental::optional<mg::EGLExtensions::WaylandExtensions> maybe_wayland_
     try
     {
         return mg::EGLExtensions::WaylandExtensions{};
+    }
+    catch (std::runtime_error const&)
+    {
+        return {};
+    }
+}
+
+std::experimental::optional<mg::EGLExtensions::PlatformBaseEXT> maybe_platform_base_ext()
+{
+    try
+    {
+        return mg::EGLExtensions::PlatformBaseEXT{};
     }
     catch (std::runtime_error const&)
     {
@@ -55,7 +68,8 @@ mg::EGLExtensions::EGLExtensions() :
      */
     glEGLImageTargetTexture2DOES{
         reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))},
-    wayland{maybe_wayland_ext()}
+    wayland{maybe_wayland_ext()},
+    platform_base{maybe_platform_base_ext()}
 {
     if (!eglCreateImageKHR || !eglDestroyImageKHR)
         BOOST_THROW_EXCEPTION(std::runtime_error("EGL implementation doesn't support EGLImage"));
@@ -90,5 +104,24 @@ mg::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions() :
     if (!eglCreateStreamAttribNV || !eglStreamConsumerAcquireAttribNV)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"EGL implementation doesn't support EGL_NV_stream_attrib"}));
+    }
+}
+
+mg::EGLExtensions::PlatformBaseEXT::PlatformBaseEXT()
+    : eglGetPlatformDisplay{
+        reinterpret_cast<PFNEGLGETPLATFORMDISPLAYEXTPROC>(eglGetProcAddress("eglGetPlatformDisplayEXT"))
+    },
+    eglCreatePlatformWindowSurface{
+          reinterpret_cast<PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC>(
+              eglGetProcAddress("eglCreatePlatformWindowSurfaceEXT"))
+    }
+{
+    auto const* client_extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
+    if (!client_extensions ||
+        !strstr(client_extensions, "EGL_EXT_platform_base") ||
+        !eglGetPlatformDisplay ||
+        !eglCreatePlatformWindowSurface)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"EGL implementation doesn't support EGL_EXT_platform_base"}));
     }
 }
