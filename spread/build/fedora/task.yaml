@@ -29,8 +29,6 @@ execute: |
         freetype-devel \
         lttng-ust-devel \
         libatomic \
-        qterminal \
-        qt5-qtwayland \
         python3-pillow \
         libevdev-devel \
         umockdev-devel \
