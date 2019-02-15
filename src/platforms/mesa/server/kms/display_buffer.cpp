@@ -523,7 +523,7 @@ mgm::DisplayBuffer::DisplayBuffer(
                 outputs.front()->drm_fd(),
                 surface.size().width.as_int(),
                 surface.size().height.as_int(),
-                GBM_BO_FORMAT_XRGB8888),
+                GBM_FORMAT_XRGB8888),
             std::placeholders::_1);
     }
     else
