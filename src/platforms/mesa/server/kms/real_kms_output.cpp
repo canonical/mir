@@ -23,9 +23,11 @@
 #include "mir/fatal.h"
 #include "mir/log.h"
 #include <string.h> // strcmp
+#include <sys/stat.h>
 
 #include <boost/throw_exception.hpp>
 #include <system_error>
+#include <xf86drm.h>
 
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
@@ -675,8 +677,42 @@ bool mgm::RealKMSOutput::buffer_requires_migration(gbm_bo* bo) const
      * DisplayLink.
      *
      * For a first go, just say that *every* device scans out of GPU-private memory.
+     *
+     * To complicate matters, Mali's gbm implementation does *not* return the same
+     * integer fd from gbm_device_get_fd() as the drm fd that the device was created
+     * from, and GBM may choose to internally open the DRM render node associated
+     * with the DRM node passed to gbm_create_device.
      */
-    return gbm_device_get_fd(gbm_bo_get_device(bo)) != drm_fd_;
+
+    errno = 0;
+    auto const gbm_device_node = std::unique_ptr<char, decltype(&free)>{
+        drmGetPrimaryDeviceNameFromFd(gbm_device_get_fd(gbm_bo_get_device(bo))),
+        &free
+    };
+    if (!gbm_device_node)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to query DRM device backing GBM buffer"}));
+    }
+
+    auto const drm_device_node = std::unique_ptr<char, decltype(&free)>{
+        drmGetPrimaryDeviceNameFromFd(drm_fd_),
+        &free
+    };
+    if (!drm_device_node)
+    {
+        BOOST_THROW_EXCEPTION((
+            std::system_error{
+                errno,
+                std::system_category(),
+                "Failed to query DRM device node of display device"}));
+    }
+
+    // These *should* match if we're on the same device
+    return strcmp(gbm_device_node.get(), drm_device_node.get()) != 0;
 }
 
 int mgm::RealKMSOutput::drm_fd() const
