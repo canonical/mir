@@ -338,6 +338,9 @@ mtd::MockDRM::MockDRM()
     ON_CALL(*this, drmFreeBusid(_))
         .WillByDefault(WithArg<0>(Invoke([&](const char* busid) { free(const_cast<char*>(busid)); })));
 
+    ON_CALL(*this, drmGetPrimaryDeviceNameFromFd(_))
+        .WillByDefault(InvokeWithoutArgs([]() { return strdup("/dev/dri/card0"); }));
+
     static drmVersion const version{
         1,
         2,
@@ -724,6 +727,11 @@ void drmFreeBusid(const char* busid)
 char* drmGetDeviceNameFromFd(int fd)
 {
     return global_mock->drmGetDeviceNameFromFd(fd);
+}
+
+char* drmGetPrimaryDeviceNameFromFd(int fd)
+{
+    return global_mock->drmGetPrimaryDeviceNameFromFd(fd);
 }
 
 int drmCheckModesettingSupported(char const* busid)
