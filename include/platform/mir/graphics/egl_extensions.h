@@ -87,6 +87,14 @@ struct EGLExtensions
         PFNEGLCREATESTREAMATTRIBNVPROC const eglCreateStreamAttribNV;
         PFNEGLSTREAMCONSUMERACQUIREATTRIBNVPROC const eglStreamConsumerAcquireAttribNV;
     };
+    struct PlatformBaseEXT
+    {
+        PlatformBaseEXT();
+
+        PFNEGLGETPLATFORMDISPLAYEXTPROC const eglGetPlatformDisplay;
+        PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC const eglCreatePlatformWindowSurface;
+    };
+    std::experimental::optional<PlatformBaseEXT> const platform_base;
 };
 
 }

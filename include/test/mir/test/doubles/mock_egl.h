@@ -114,12 +114,15 @@ public:
     MOCK_METHOD1(eglBindApi, EGLBoolean(EGLenum));
     MOCK_METHOD1(eglGetProcAddress,generic_function_pointer_t(const char*));
 
+    MOCK_METHOD3(eglGetPlatformDisplayEXT, EGLDisplay(EGLenum, AnyNativeType, EGLint const*));
+
     // Config management
     MOCK_METHOD4(eglGetConfigs, EGLBoolean(EGLDisplay,EGLConfig*,EGLint,EGLint*));
     MOCK_METHOD5(eglChooseConfig, EGLBoolean(EGLDisplay, const EGLint*,EGLConfig*,EGLint,EGLint*));
     MOCK_METHOD4(eglGetConfigAttrib, EGLBoolean(EGLDisplay,EGLConfig,EGLint,EGLint*));
 
     // Surface management
+    MOCK_METHOD4(eglCreatePlatformWindowSurfaceEXT, EGLSurface(EGLDisplay,EGLConfig,AnyNativeType, EGLint const*));
     MOCK_METHOD4(eglCreateWindowSurface, EGLSurface(EGLDisplay,EGLConfig,AnyNativeType,const EGLint*));
     MOCK_METHOD4(eglCreatePixmapSurface, EGLSurface(EGLDisplay,EGLConfig,AnyNativeType,const EGLint*));
     MOCK_METHOD3(eglCreatePbufferSurface, EGLSurface(EGLDisplay,EGLConfig,const EGLint*));

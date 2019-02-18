@@ -456,6 +456,7 @@ public:
 
         const EGLint image_attrs[] =
             {
+                EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
                 EGL_WAYLAND_PLANE_WL, 0,
                 EGL_NONE
             };

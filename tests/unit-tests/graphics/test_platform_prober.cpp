@@ -81,7 +81,7 @@ std::shared_ptr<void> ensure_mesa_probing_succeeds()
 
     env->udev.add_standard_device("standard-drm-devices");
     ON_CALL(env->egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
-        .WillByDefault(Return("EGL_MESA_platform_gbm"));
+        .WillByDefault(Return("EGL_MESA_platform_gbm EGL_EXT_platform_base"));
     ON_CALL(env->gbm, gbm_create_device(_))
         .WillByDefault(Return(fake_gbm_device));
     ON_CALL(env->egl, eglGetDisplay(fake_gbm_device))
