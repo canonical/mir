@@ -227,3 +227,10 @@ MIR_PLATFORM_1.1.0 {
     mir::graphics::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions*;
   };
 } MIR_PLATFORM_0.32.3;
+
+MIR_PLATFORM_1.1.1 {
+ global:
+  extern "C++" {
+    mir::graphics::EGLExtensions::PlatformBaseEXT*;
+  };
+} MIR_PLATFORM_1.1.0;

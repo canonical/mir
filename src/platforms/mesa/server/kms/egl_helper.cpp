@@ -116,7 +116,11 @@ void mgmh::EGLHelper::setup(GBMHelper const& gbm, gbm_surface* surface_gbm,
     // TODO: Take the required format as a parameter, so we can select the framebuffer format.
     setup_internal(gbm, false, GBM_FORMAT_XRGB8888);
 
-    egl_surface = eglCreateWindowSurface(egl_display, egl_config, surface_gbm, nullptr);
+    egl_surface = platform_base.eglCreatePlatformWindowSurface(
+        egl_display,
+        egl_config,
+        surface_gbm,
+        nullptr);
     if(egl_surface == EGL_NO_SURFACE)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL window surface"));
 
@@ -204,7 +208,10 @@ void mgmh::EGLHelper::setup_internal(GBMHelper const& gbm, bool initialize, EGLi
     static const EGLint required_egl_version_major = 1;
     static const EGLint required_egl_version_minor = 4;
 
-    egl_display = eglGetDisplay(static_cast<EGLNativeDisplayType>(gbm.device));
+    egl_display = platform_base.eglGetPlatformDisplay(
+        EGL_PLATFORM_GBM_KHR,      // EGL_PLATFORM_GBM_MESA has the same value.
+        static_cast<EGLNativeDisplayType>(gbm.device),
+        nullptr);
     if (egl_display == EGL_NO_DISPLAY)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to get EGL display"));
 

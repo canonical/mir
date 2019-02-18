@@ -20,6 +20,7 @@
 #define MIR_GRAPHICS_MESA_EGL_HELPER_H_
 
 #include "display_helpers.h"
+#include "mir/graphics/egl_extensions.h"
 #include <EGL/egl.h>
 
 namespace mir
@@ -68,6 +69,7 @@ private:
     EGLContext egl_context;
     EGLSurface egl_surface;
     bool should_terminate_egl;
+    EGLExtensions::PlatformBaseEXT platform_base;
 };
 }
 }

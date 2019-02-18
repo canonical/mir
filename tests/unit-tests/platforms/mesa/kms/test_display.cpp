@@ -252,9 +252,10 @@ TEST_F(MesaDisplayTest, create_display)
         .Times(Exactly(1));
 
     /* Create an EGL window surface backed by the gbm surface */
-    EXPECT_CALL(mock_egl, eglCreateWindowSurface(mock_egl.fake_egl_display,
-                                                 mock_egl.fake_configs[0],
-                                                 mock_gbm.fake_gbm.surface, _))
+    EXPECT_CALL(mock_egl, eglCreatePlatformWindowSurfaceEXT(
+        mock_egl.fake_egl_display,
+        mock_egl.fake_configs[0],
+        mock_gbm.fake_gbm.surface, _))
         .Times(Exactly(1));
 
     /* Swap the EGL window surface to bring the back buffer to the front */
