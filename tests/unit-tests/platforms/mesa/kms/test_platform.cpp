@@ -231,7 +231,7 @@ TEST_F(MesaGraphicsPlatform, probe_returns_supported_when_old_egl_mesa_gbm_platf
     udev_environment.add_standard_device("standard-drm-devices");
 
     ON_CALL(mock_egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
-        .WillByDefault(Return("EGL_KHR_not_really_an_extension EGL_MESA_platform_gbm EGL_EXT_master_of_the_house"));
+        .WillByDefault(Return("EGL_KHR_not_really_an_extension EGL_MESA_platform_gbm EGL_EXT_master_of_the_house EGL_EXT_platform_base"));
 
     mir::SharedLibrary platform_lib{mtf::server_platform("graphics-mesa-kms")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
