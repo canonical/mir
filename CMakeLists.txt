@@ -233,6 +233,14 @@ endif()
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
 
 option(MIR_ENABLE_TESTS "Build tests" ON)
+CMAKE_DEPENDENT_OPTION(
+  MIR_ENABLE_WLCS_TESTS "Also Build WLCS tests" ON
+  "MIR_ENABLE_TESTS" OFF
+)
+
+if (MIR_ENABLE_WLCS_TESTS)
+  pkg_check_modules(WLCS REQUIRED wlcs)
+endif()
 
 foreach(platform IN LISTS MIR_PLATFORM)
   if (platform STREQUAL "mesa-kms")

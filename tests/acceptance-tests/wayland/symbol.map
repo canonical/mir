@@ -1,0 +1,6 @@
+MIRAL_WLCS_INTEGRATION {
+  global:
+    wlcs_server_integration;
+  local:
+    *;
+};
