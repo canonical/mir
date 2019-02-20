@@ -3166,42 +3166,24 @@ Thomas Voss
       <p>
         If the arguments do not all fit on one line, they should be
         broken up onto multiple lines, with each subsequent line
-        aligned with the first argument.  Do not add spaces after the
+        indented four spaced.  Do not add spaces after the
         open paren or before the close paren:
       </p>
       <CODE_SNIPPET>
-        bool retval = do_something(averyveryveryverylongargument1,
-                                   argument2, argument3);
+        bool retval = do_something(
+            averyveryveryverylongargument1,
+            argument2, argument3);
       </CODE_SNIPPET>
       <p>
         If the function has many arguments, consider having one per
         line if this makes the code more readable:
       </p>
       <CODE_SNIPPET>
-        bool retval = do_something(argument1,
-                                   argument2,
-                                   argument3,
-                                   argument4);
-      </CODE_SNIPPET>
-      <p>
-        If the function signature is so long that it cannot fit within
-        the maximum <a href="#Line_Length">line length</a>, you may
-        place all arguments on subsequent lines:
-      </p>
-      <CODE_SNIPPET>
-        if (...)
-        {
-            ...
-            ...
-            if (...)
-            {
-                do_something_that_requires_a_long_function_name(
-                    very_long_argument1,  // 4 space indent
-                    argument2,
-                    argument3,
-                    argument4);
-            }
-        }
+        bool retval = do_something(
+            argument1,
+            argument2,
+            argument3,
+            argument4);
       </CODE_SNIPPET>
     </BODY>
   </STYLEPOINT>
