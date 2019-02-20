@@ -3095,9 +3095,8 @@ Thomas Voss
               <li> Place each parameter in a separate line and indent each with 4
                 spaces.
               </li>
-              <li> Wrap groups of parameters into the next line, and align the
-                   first wrapped parameter to the first parameter in the previous
-                   line.
+              <li> Wrap groups of parameters into the next line, and indent each
+                with 4 spaces.
               </li>
             </ul>
         </li>
@@ -3115,8 +3114,9 @@ Thomas Voss
 
         // This function signature requires multiple lines, but
         // the const keyword is on the line with the last parameter.
-        void really_long_function_name(Type par1,
-                                       Type par2) const
+        void really_long_function_name(
+            Type par1,
+            Type par2) const
         {
             ...
         }
