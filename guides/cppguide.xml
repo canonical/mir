@@ -3025,15 +3025,15 @@ Thomas Voss
 
   <STYLEPOINT title="Function Declarations and Definitions">
     <SUMMARY>
-      Return type on the same line as function name, parameters on the
-      same line if they fit.
+      <code>void</code> or <code>auto</code> on the same line as function name,
+      parameters and return type on the same line if they fit.
     </SUMMARY>
     <BODY>
       <p>
         Functions look like this:
       </p>
       <CODE_SNIPPET>
-        ReturnType ClassName::function_name(Type par_name1, Type par_name2)
+        auto ClassName::function_name(Type par_name1, Type par_name2) -> ReturnType
         {
             do_something();
             ...
@@ -3043,8 +3043,8 @@ Thomas Voss
         or:
       </p>
       <CODE_SNIPPET>
-        ReturnType ClassName::really_long_function_name(Type par_name1, Type par_name2,
-                                                        Type par_name3)
+        auto ClassName::long_function_name(Type par_name1, Type par_name2, Type par_name3)
+        -> ReturnType
         {
             do_something();
             ...
@@ -3054,12 +3054,12 @@ Thomas Voss
         or:
       </p>
       <CODE_SNIPPET>
-        ReturnType LongClassName::really_really_really_long_function_name(
-            Type par_name1,  // 4 space indent
+        auto ClassName::really_really_really_long_function_name(
+            Type par_name1,
             Type par_name2,
-            Type par_name3)
+            Type par_name3) -> ReturnType
         {
-            do_something();  // 4 space indent
+            do_something();
             ...
         }
       </CODE_SNIPPET>
@@ -3067,39 +3067,40 @@ Thomas Voss
         Some points to note:
       </p>
       <ul>
-        <li> The return type is always on the same line as the
-             function name.
-             </li>
+        <li> <code>void</code> or <code>auto</code>  is always on the same line
+             as the function name.
+        </li>
         <li> The open parenthesis is always on the same line as the
              function name.
-             </li>
+        </li>
         <li> There is never a space between the function name and the
              open parenthesis.
-             </li>
+        </li>
         <li> There is never a space between the parentheses and the
              parameters.
-             </li>
-        <li> The open curly brace is always on the line following the last parameter.
-             </li>
+        </li>
+        <li> The open curly brace is always on the line following the last parameter
+             or return type.
+       </li>
         <li> The close curly brace is either on the last line by itself
              or (if other style rules permit) on the same line as the
              open curly brace.
-             </li>
+       </li>
         <li> All parameters should be named, with identical names in the
              declaration and implementation. (Except where unused parameters
              are suppressed in the implementation.)
-             </li>
+       </li>
         <li> All parameters should be in a single line if possible, otherwise:
             <ul>
-                <li> Wrap groups of parameters into the next line, and align the 
-                     first wrapped parameter to the first parameter in the previous 
-                     line.
-                     </li>
-                <li> Place each parameter in a separate line and indent each with 4 
-                     spaces.
-                     </li>
+              <li> Place each parameter in a separate line and indent each with 4
+                spaces.
+              </li>
+              <li> Wrap groups of parameters into the next line, and align the
+                   first wrapped parameter to the first parameter in the previous
+                   line.
+              </li>
             </ul>
-             </li>
+        </li>
       </ul>
       <p>
         If your function is <code>const</code>, the <code>const</code>
@@ -3107,15 +3108,15 @@ Thomas Voss
       </p>
       <CODE_SNIPPET>
         // Everything in this function signature fits on a single line
-        ReturnType function_name(Type par) const
+        auto function_name(Type par) const -> ReturnType
         {
             ...
         }
 
         // This function signature requires multiple lines, but
         // the const keyword is on the line with the last parameter.
-        ReturnType really_long_function_name(Type par1,
-                                             Type par2) const
+        void really_long_function_name(Type par1,
+                                       Type par2) const
         {
             ...
         }
