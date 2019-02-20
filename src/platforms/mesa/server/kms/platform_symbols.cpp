@@ -155,6 +155,8 @@ mg::PlatformPriority probe_graphics_platform(
 
         try
         {
+            auto maximum_suitability = mg::PlatformPriority::best;
+
             // Rely on the console handing us a DRM master...
             auto const device_cleanup = console->acquire_device(
                 major(devnum), minor(devnum),
@@ -186,14 +188,45 @@ mg::PlatformPriority probe_graphics_platform(
                     &drmFreeBusid
                 };
 
-                if (getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") == nullptr)
+                if (!busid)
+                {
+                    mir::log_warning(
+                        "Failed to query BusID for device %s; cannot check if KMS is available",
+                        device.devnode());
+                    maximum_suitability = mg::PlatformPriority::supported;
+                }
+                else
                 {
                     if (auto err = -drmCheckModesettingSupported(busid.get()))
                     {
-                        throw std::system_error{
-                            err,
-                            std::system_category(),
-                            std::string("Device ") + device.devnode() + " does not support KMS"};
+                        if (err == ENOSYS)
+                        {
+                            throw std::runtime_error{
+                                std::string{"Device "} +
+                                device.devnode() +
+                                " does not support KMS"};
+                        }
+                        if (err == EINVAL)
+                        {
+                            mir::log_warning(
+                                "Failed to detect whether device %s supports KMS, continuing with lower confidence",
+                                device.devnode());
+                            maximum_suitability = mg::PlatformPriority::supported;
+                        }
+                        else
+                        {
+                            mir::log_warning(
+                                "Unexpected error from drmCheckModesettingSupported()");
+                            mir::log_warning(
+                                "Please file a bug at https://github.com/MirServer/mir/issues containing this message");
+                            mir::log_warning(
+                                "drmCheckModesettingSupported() failed: %s (%i)",
+                                strerror(err),
+                                err);
+                            mir::log_warning(
+                                "Continuing probe with lower confidence");
+                            maximum_suitability = mg::PlatformPriority::supported;
+                        }
                     }
                 }
 
@@ -219,10 +252,10 @@ mg::PlatformPriority probe_graphics_platform(
                      mir::log_info("Detected software renderer: %s", renderer_string);
                      // TODO:   Check if any *other* DRM devices support HW acceleration, and
                      //         use them instead.
-                     return mg::PlatformPriority::supported;
+                     maximum_suitability = mg::PlatformPriority::supported;
                 }
 
-                return mg::PlatformPriority::best;
+                return maximum_suitability;
             }
         }
         catch (std::exception const& e)

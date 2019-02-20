@@ -104,13 +104,41 @@ mgmh::DRMHelper::open_all_devices(
             drmGetBusid(tmp_fd), &drmFreeBusid
         };
 
-        if (getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") == nullptr)
+        if (!busid)
         {
-            if (auto modeset_error = -drmCheckModesettingSupported(busid.get()))
+            mir::log_warning(
+                "Failed to query BusID for device %s; cannot check if KMS is available",
+                device.devnode());
+        }
+        else
+        {
+            if (auto err = -drmCheckModesettingSupported(busid.get()))
             {
-                mir::log_info("Ignoring non-KMS DRM device %s", device.devnode());
-                error = modeset_error;
-                continue;
+                if (err == ENOSYS)
+                {
+                    mir::log_info("Ignoring non-KMS DRM device %s", device.devnode());
+                    error = ENOSYS;
+                    continue;
+                }
+                if (err == EINVAL)
+                {
+                    mir::log_warning(
+                        "Failed to detect whether device %s supports KMS, but continuing anyway",
+                        device.devnode());
+                }
+                else
+                {
+                    mir::log_warning(
+                        "Unexpected error from drmCheckModesettingSupported()");
+                    mir::log_warning(
+                        "Please file a bug at https://github.com/MirServer/mir/issues containing this message");
+                    mir::log_warning(
+                        "drmCheckModesettingSupported() failed: %s (%i)",
+                        strerror(err),
+                        err);
+                    mir::log_warning(
+                        "Continuing anyway");
+                }
             }
         }
 
