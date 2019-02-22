@@ -67,8 +67,11 @@ public:
 
     void emit(Emitter::State state) const override
     {
-        if (*state.on_fresh_line)
-            state.out << state.indent;
+        if (*state.on_fresh_line) // if on a fresh line, we may need to indent
+        {
+            if (text.size() > 0 && text[0] != '#') // if this is a preprocessor line don't indent
+                state.out << state.indent;
+        }
         state.out << text;
         *state.on_fresh_line = false;
     }

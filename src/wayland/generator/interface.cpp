@@ -377,18 +377,7 @@ Emitter Interface::bind_thunk() const
             },
             "catch(...)",
             Block{{
-                "::mir::log(",
-                Emitter::layout(
-                    Emitter::seq({
-                            "::mir::logging::Severity::critical",
-                            "\"frontend:Wayland\"",
-                            "std::current_exception()",
-                            {"\"Exception processing ", generated_name, "::bind() request\""}},
-                        Emitter::layout(",", false, true)),
-                    false,
-                    false,
-                    "           "),
-                ");"
+                {"internal_error_processing_request(client, \"", generated_name, "::bind()\");"},
             }}
         }
     };
