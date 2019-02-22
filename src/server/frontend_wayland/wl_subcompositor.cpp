@@ -16,6 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include "mir/log.h"
+
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
 
@@ -98,13 +100,13 @@ void mf::WlSubsurface::set_position(int32_t x, int32_t y)
 void mf::WlSubsurface::place_above(struct wl_resource* sibling)
 {
     (void)sibling;
-    // TODO
+    log_warning("TODO: wl_subsurface.place_above not implemented");
 }
 
 void mf::WlSubsurface::place_below(struct wl_resource* sibling)
 {
     (void)sibling;
-    // TODO
+    log_warning("TODO: wl_subsurface.place_below not implemented");
 }
 
 void mf::WlSubsurface::set_sync()
@@ -152,5 +154,5 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 void mf::WlSubsurface::visiblity(bool visible)
 {
     (void)visible;
-    // TODO
+    log_warning("TODO: wl_subsurface.visiblity not implemented");
 }
