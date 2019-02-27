@@ -1151,7 +1151,15 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
     {
     case mir_window_state_hidden:
     case mir_window_state_minimized:
-        window_info.state(value);
+        // This is a bit hacky as it relies on non-local knowledge, but it works without adding complexity elsewhere.
+        //
+        // We set the state to mir_window_state_hidden (even if value is mir_window_state_minimized) before
+        // looking for another window in the same "tree" to give focus. This means we can call the widely used
+        // function select_active_window() which would otherwise restore the window we want to minimize.
+        //
+        // We set the correct state after working out the new active window.  alan_g
+        window_info.state(mir_window_state_hidden);
+
         if (window == active_window())
         {
             select_active_window(window);
@@ -1195,6 +1203,7 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
                 select_active_window({});
         }
 
+        window_info.state(value);
         mir_surface->configure(mir_window_attrib_state, value);
         mir_surface->hide();
 
@@ -1273,7 +1282,7 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
         return hint;
     }
 
-    auto const& info_for_hint = info_for(hint);
+    auto& info_for_hint = info_for(hint);
 
     for (auto const& child : info_for_hint.children())
     {
@@ -1283,8 +1292,17 @@ auto miral::BasicWindowManager::select_active_window(Window const& hint) -> mira
             return select_active_window(child);
     }
 
-    if (info_for_hint.can_be_active() && info_for_hint.is_visible())
+    if (info_for_hint.can_be_active() && info_for_hint.state() != mir_window_state_hidden)
     {
+        if (!info_for_hint.is_visible())
+        {
+            policy->advise_state_change(info_for_hint, mir_window_state_restored);
+            info_for_hint.state(mir_window_state_restored);
+            std::shared_ptr<scene::Surface> const& mir_surface = hint;
+            mir_surface->configure(mir_window_attrib_state, mir_window_state_restored);
+            mir_surface->show();
+        }
+
         mru_active_windows.push(hint);
         focus_controller->set_focus_to(hint.application(), hint);
 
