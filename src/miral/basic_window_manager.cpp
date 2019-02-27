@@ -542,7 +542,9 @@ void miral::BasicWindowManager::focus_next_application()
                 focus_controller->focus_next_session();
 
                 if (can_activate_window_for_session(focus_controller->focused_session()))
+                {
                     return;
+                }
             }
             while (focus_controller->focused_session() != prev.application());
         }
@@ -552,7 +554,9 @@ void miral::BasicWindowManager::focus_next_application()
         focus_controller->focus_next_session();
 
         if (can_activate_window_for_session(focus_controller->focused_session()))
+        {
             return;
+        }
     }
 
     // Last resort: accept wherever focus_controller places focus
