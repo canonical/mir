@@ -27,15 +27,7 @@ namespace
 bool visible(miral::Window const& window)
 {
     std::shared_ptr<mir::scene::Surface> const& surface{window};
-
-    switch (surface->state())
-    {
-    case mir_window_state_hidden:
-    case mir_window_state_minimized:
-        return false;
-    default:
-        return surface->visible();
-    }
+    return surface->state() != mir_window_state_hidden;
 }
 }
 
