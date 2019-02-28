@@ -234,6 +234,7 @@ auto msh::BasicWindowManager::focused_surface() const
 void msh::BasicWindowManager::focus_next_session()
 {
     focus_controller->focus_next_session();
+    focus_controller->set_focus_to(focus_controller->focused_session(), focused_surface());
 }
 
 void msh::BasicWindowManager::set_focus_to(
