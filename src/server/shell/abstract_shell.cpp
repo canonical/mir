@@ -306,7 +306,7 @@ void msh::AbstractShell::focus_next_session()
     if (!surface)
         successor = nullptr;
 
-    set_focus_to_locked(lock, successor, surface);
+    update_focus_locked(lock, successor, surface);
 }
 
 std::shared_ptr<ms::Session> msh::AbstractShell::focused_session() const
@@ -327,15 +327,16 @@ void msh::AbstractShell::set_focus_to(
 {
     std::unique_lock<std::mutex> lock(focus_mutex);
 
-    set_focus_to_locked(lock, focus_session, focus_surface);
+    notify_focus_locked(lock, focus_session, focus_surface);
+    update_focus_locked(lock, focus_session, focus_surface);
 }
 
-void msh::AbstractShell::set_focus_to_locked(
+void msh::AbstractShell::notify_focus_locked(
     std::unique_lock<std::mutex> const& /*lock*/,
-    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Session> const& /*session*/,
     std::shared_ptr<ms::Surface> const& surface)
 {
-    auto const current_focus = focus_surface.lock();
+    auto const current_focus = notified_focus_surface.lock();
 
     std::vector<std::shared_ptr<ms::Surface>> new_focus_tree;
 
@@ -353,7 +354,7 @@ void msh::AbstractShell::set_focus_to_locked(
 
     if (surface != current_focus)
     {
-        focus_surface = surface;
+        notified_focus_surface = surface;
         seat->reset_confinement_regions();
 
         for (auto const& item : current_focus_tree)
@@ -394,7 +395,13 @@ void msh::AbstractShell::set_focus_to_locked(
             input_targeter->clear_focus();
         }
     }
+}
 
+void msh::AbstractShell::update_focus_locked(
+    std::unique_lock<std::mutex> const& /*lock*/,
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface)
+{
     auto const current_session = focus_session.lock();
 
     if (session != current_session)
@@ -410,7 +417,7 @@ void msh::AbstractShell::set_focus_to_locked(
             session_coordinator->unset_focus();
         }
     }
-
+    focus_surface = surface;
     report->input_focus_set_to(session.get(), surface.get());
 }
 
