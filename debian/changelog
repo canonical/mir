@@ -16,6 +16,7 @@ mir (1.1.2) UNRELEASED; urgency=medium
       . mircookie ABI unchanged at 2
     - Enhancements:
       . [build] Add option to disable fatal compile warnings
+      . Fix build issues using Musl instead of glibc
     - Bugs fixed:
       . [mesa-kms] On systems where the DRM device isn't hooked up to a PCI bus
          we don't (can't) check if KMS is available. (Fixes: #704)
