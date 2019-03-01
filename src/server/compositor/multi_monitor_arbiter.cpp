@@ -48,8 +48,10 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
     if (current_buffer_users.find(id) != current_buffer_users.end() || !current_buffer)
     {
         if (schedule->num_scheduled())
+        {
             current_buffer = schedule->next_buffer();
-        current_buffer_users.clear();
+            current_buffer_users.clear();
+        }
     }
     current_buffer_users.insert(id);
 
