@@ -28,7 +28,7 @@ void internal_error_processing_request(struct wl_client* client, std::string con
     wl_client_post_no_memory(client);
 #endif
     ::mir::log(
-        ::mir::logging::Severity::critical,
+        ::mir::logging::Severity::error,
         "frontend:Wayland",
         std::current_exception(),
         "Exception processing " + method_name + " request");
