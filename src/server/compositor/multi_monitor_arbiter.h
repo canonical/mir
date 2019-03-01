@@ -45,7 +45,6 @@ public:
     std::shared_ptr<graphics::Buffer> snapshot_acquire() override;
     void set_schedule(std::shared_ptr<Schedule> const& schedule);
     bool buffer_ready_for(compositor::CompositorID id);
-    bool has_buffer();
     void advance_schedule();
 
 private:
