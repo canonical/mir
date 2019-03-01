@@ -201,7 +201,10 @@ struct ms::CursorStreamImageAdapter
 private:
     void post_cursor_image_from_current_buffer() const
     {
-        surface.set_cursor_from_buffer(*stream->lock_compositor_buffer(this), hotspot);
+        if (stream->has_submitted_buffer())
+        {
+            surface.set_cursor_from_buffer(*stream->lock_compositor_buffer(this), hotspot);
+        }
     }
 
     ms::BasicSurface& surface;
