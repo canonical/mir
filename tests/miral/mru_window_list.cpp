@@ -30,7 +30,10 @@ namespace
 {
 struct StubSurface : mir::test::doubles::StubSurface
 {
-    bool visible() const override { return visible_; }
+    MirWindowState state() const override
+    {
+        return visible_ ? mir::test::doubles::StubSurface::state() : mir_window_state_hidden;
+    }
 
     bool visible_ = true;
 };
