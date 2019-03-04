@@ -248,9 +248,12 @@ void mf::WindowWlSurfaceRole::set_state_now(MirWindowState state)
     }
 }
 
-geom::Size mf::WindowWlSurfaceRole::window_size()
+std::experimental::optional<geom::Size> mf::WindowWlSurfaceRole::window_size()
 {
-     return window_size_.is_set()? window_size_.value() : surface->buffer_size();
+     if (window_size_)
+         return window_size_;
+     else
+         return surface->buffer_size();
 }
 
 MirWindowState mf::WindowWlSurfaceRole::window_state()
@@ -278,13 +281,15 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     {
         auto const scene_surface = scene_surface_from(session, surface_id_);
 
-        sink->latest_client_size(window_size());
+        if (window_size())
+            sink->latest_client_size(window_size().value());
 
-        if (!window_size_.is_set())
+        if (!window_size_)
         {
             auto& new_size_spec = spec();
-            new_size_spec.width = window_size().width;
-            new_size_spec.height = window_size().height;
+            auto size = window_size().value_or(geom::Size{});
+            new_size_spec.width = size.width;
+            new_size_spec.height = size.height;
         }
 
         if (state.surface_data_needs_refresh())
@@ -340,9 +345,7 @@ void mf::WindowWlSurfaceRole::create_mir_window()
     auto const session = get_session(client);
 
     if (params->size == geometry::Size{})
-        params->size = window_size();
-    if (params->size == geometry::Size{})
-        params->size = geometry::Size{640, 480};
+        params->size = window_size().value_or(geometry::Size{640, 480});
 
     params->streams = std::vector<shell::StreamSpecification>{};
     params->input_shape = std::vector<geom::Rectangle>{};

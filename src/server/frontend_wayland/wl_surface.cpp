@@ -124,7 +124,7 @@ mf::WlSurface::Position mf::WlSurface::transform_point(geom::Point point)
             return result;
     }
     geom::Rectangle surface_rect = {geom::Point{}, buffer_size_.value_or(geom::Size{})};
-    for (auto& rect : input_shape.value_or(std::vector<geom::Rectangle>{{{}, buffer_size()}}))
+    for (auto& rect : input_shape.value_or(std::vector<geom::Rectangle>{{{}, buffer_size_.value_or(geom::Size{})}}))
     {
         if (rect.intersection_with(surface_rect).contains(point))
             return {point, this, true};

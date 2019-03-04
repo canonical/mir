@@ -85,7 +85,7 @@ public:
 protected:
     std::shared_ptr<bool> const destroyed;
 
-    geometry::Size window_size();
+    std::experimental::optional<geometry::Size> window_size();
     MirWindowState window_state();
     bool is_active();
     uint64_t latest_timestamp_ns();
@@ -99,7 +99,7 @@ private:
     OutputManager* output_manager;
     std::shared_ptr<WlSurfaceEventSink> const sink;
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
-    optional_value<geometry::Size> window_size_;
+    std::experimental::optional<geometry::Size> window_size_;
     SurfaceId surface_id_;
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
 
