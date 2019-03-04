@@ -31,11 +31,11 @@ void ml::DumbConsoleLogger::log(ml::Severity severity,
 
     static const char* lut[5] =
     {
-        "<CRITICAL> ",
-        "<ERROR> ",
-        "<WARNING> ",
-        "",
-        "<DEBUG> "
+        "< CRITICAL! > ",
+        "< - ERROR - > ",
+        "< -warning- > ",
+        "<information> ",
+        "< - debug - > "
     };
 
     std::ostream& out = severity < ml::Severity::informational ? std::cerr : std::cout;
