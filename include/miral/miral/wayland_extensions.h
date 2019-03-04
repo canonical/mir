@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -18,6 +18,8 @@
 
 #ifndef MIRAL_WAYLAND_EXTENSIONS_H
 #define MIRAL_WAYLAND_EXTENSIONS_H
+
+#include "application.h"
 
 #include <functional>
 #include <memory>
@@ -64,6 +66,13 @@ public:
     /// \remark Since MirAL 2.5
     using Builder  = std::function<std::shared_ptr<void>(wl_display* display, Executor const& run_on_wayland_mainloop)>;
 
+    /// \remark Since MirAL 2.5
+    using Filter = std::function<bool(Application const& app, char const* protocol)>;
+
+    /// Set an extension filter callback to control the extensions available to specific clients
+    /// \remark Since MirAL 2.5
+    void set_filter(Filter const& extension_filter);
+
 private:
     struct Self;
     std::shared_ptr<Self> self;
@@ -87,6 +96,16 @@ auto with_extension(WaylandExtensions const& wayland_extensions,
     Extensions... extensions) -> WaylandExtensions
 {
     return with_extension(with_extension(wayland_extensions, name, builder), extensions...);
+}
+
+/// Set an extension filter callback to control the extensions available to specific clients.
+/// \remark Since MirAL 2.5
+inline auto with_filter(
+    WaylandExtensions wayland_extensions,
+    WaylandExtensions::Filter const& extension_filter) -> WaylandExtensions
+{
+    wayland_extensions.set_filter(extension_filter);
+    return wayland_extensions;
 }
 }
 

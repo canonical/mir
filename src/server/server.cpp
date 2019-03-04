@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -515,6 +515,15 @@ void mir::Server::add_wayland_extension(
     if (auto const config = self->server_config)
     {
         config->add_wayland_extension(name, builder);
+    }
+}
+
+void mir::Server::set_wayland_extension_filter(
+    std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter)
+{
+    if (auto const config = self->server_config)
+    {
+        config->set_wayland_extension_filter(extension_filter);
     }
 }
 

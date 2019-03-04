@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -201,6 +201,8 @@ public:
         std::function<std::shared_ptr<void>(
             wl_display*,
             std::function<void(std::function<void()>&& work)> const&)> builder) override;
+
+    void set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter) override;
 
     /**
      * Function to call when a "fatal" error occurs. This implementation allows
@@ -487,6 +489,8 @@ private:
     CachedPtr<shell::detail::FrontendShell> frontend_shell;
     std::vector<mir::ExtensionDescription> the_extensions();
     std::vector<WaylandExtensionHook> wayland_extension_hooks;
+    WaylandProtocolExtensionFilter wayland_extension_filter =
+        [](std::shared_ptr<scene::Session> const&, char const*) { return true; };
 };
 }
 

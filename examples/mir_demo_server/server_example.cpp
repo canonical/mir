@@ -136,6 +136,13 @@ auto some_other_extension(wl_display* display, miral::WaylandExtensions::Executo
     // Implement the protocol here
     return {};
 }
+
+auto dummy_wayland_protocol_extension_filter(miral::Application const& app, char const* protocol) -> bool
+{
+    printf("***** dummy_wayland_protocol_extension_filter(%p, %s)\n", (void*)app.get(), protocol);
+    return true;
+}
+
 }
 
 int main(int argc, char const* argv[])
@@ -166,7 +173,10 @@ try
         me::add_glog_options_to,
         miral::StartupInternalClient{spinner},
         miral::X11Support{},
-        with_extension(miral::WaylandExtensions{"wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1:xdg_decoration_unstable_v1"},
+        with_extension(
+            with_filter(
+                miral::WaylandExtensions{"wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1:xdg_decoration_unstable_v1"},
+                &dummy_wayland_protocol_extension_filter),
             "xdg_decoration_unstable_v1", &xdg_decoration_unstable_v1,
             "some_other_extension", &some_other_extension),
         launcher,
