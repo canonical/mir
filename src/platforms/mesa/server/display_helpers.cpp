@@ -112,33 +112,30 @@ mgmh::DRMHelper::open_all_devices(
         }
         else
         {
-            if (auto err = -drmCheckModesettingSupported(busid.get()))
+            switch (auto err = -drmCheckModesettingSupported(busid.get()))
             {
-                if (err == ENOSYS)
+            case 0: break;
+
+            case ENOSYS:
+                if (getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") == nullptr)
                 {
                     mir::log_info("Ignoring non-KMS DRM device %s", device.devnode());
                     error = ENOSYS;
                     continue;
                 }
-                if (err == EINVAL)
-                {
-                    mir::log_warning(
-                        "Failed to detect whether device %s supports KMS, but continuing anyway",
-                        device.devnode());
-                }
-                else
-                {
-                    mir::log_warning(
-                        "Unexpected error from drmCheckModesettingSupported()");
-                    mir::log_warning(
-                        "Please file a bug at https://github.com/MirServer/mir/issues containing this message");
-                    mir::log_warning(
-                        "drmCheckModesettingSupported() failed: %s (%i)",
-                        strerror(err),
-                        err);
-                    mir::log_warning(
-                        "Continuing anyway");
-                }
+
+                mir::log_debug("MIR_MESA_KMS_DISABLE_MODESET_PROBE is set");
+                // Falls through.
+            case EINVAL:
+                mir::log_warning(
+                    "Failed to detect whether device %s supports KMS, but continuing anyway",
+                    device.devnode());
+                break;
+
+            default:
+                mir::log_warning("Unexpected error from drmCheckModesettingSupported(): %s (%i), but continuing anyway",
+                    strerror(err), err);
+                mir::log_warning("Please file a bug at https://github.com/MirServer/mir/issues containing this message");
             }
         }
 
