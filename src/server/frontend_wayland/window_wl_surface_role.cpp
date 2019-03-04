@@ -103,16 +103,8 @@ void mf::WindowWlSurfaceRole::apply_spec(mir::shell::SurfaceSpecification const&
 
 void mf::WindowWlSurfaceRole::set_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    geom::Displacement const offset{-x, -y};
-
-    surface->set_pending_offset(offset);
-    window_size_ = geom::Size{width, height};
-
-    if (surface_id().as_value())
-    {
-        spec().width = geom::Width{width};
-        spec().height = geom::Height{height};
-    }
+    surface->set_pending_offset({-x, -y});
+    pending_window_size = {width, height};
 }
 
 void mf::WindowWlSurfaceRole::set_title(std::string const& title)
@@ -250,10 +242,12 @@ void mf::WindowWlSurfaceRole::set_state_now(MirWindowState state)
 
 std::experimental::optional<geom::Size> mf::WindowWlSurfaceRole::window_size()
 {
-     if (window_size_)
-         return window_size_;
-     else
-         return surface->buffer_size();
+    if (pending_window_size)
+        return pending_window_size;
+    else if (committed_window_size)
+        return committed_window_size;
+    else
+        return surface->buffer_size();
 }
 
 MirWindowState mf::WindowWlSurfaceRole::window_state()
@@ -284,12 +278,11 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
         if (window_size())
             sink->latest_client_size(window_size().value());
 
-        if (!window_size_)
+        auto size = window_size();
+        if (size && size != committed_window_size)
         {
-            auto& new_size_spec = spec();
-            auto size = window_size().value_or(geom::Size{});
-            new_size_spec.width = size.width;
-            new_size_spec.height = size.height;
+            spec().width = size.value().width;
+            spec().height = size.value().height;
         }
 
         if (state.surface_data_needs_refresh())
@@ -306,6 +299,11 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     {
         create_mir_window();
     }
+
+    if (pending_window_size)
+        committed_window_size = pending_window_size;
+
+    pending_window_size = std::experimental::nullopt;
 }
 
 void mf::WindowWlSurfaceRole::visiblity(bool visible)

@@ -99,7 +99,8 @@ private:
     OutputManager* output_manager;
     std::shared_ptr<WlSurfaceEventSink> const sink;
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
-    std::experimental::optional<geometry::Size> window_size_;
+    std::experimental::optional<geometry::Size> pending_window_size;
+    std::experimental::optional<geometry::Size> committed_window_size;
     SurfaceId surface_id_;
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
 
