@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Canonical Ltd.
+ * Copyright © 2015-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -27,6 +27,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
+#include "mir/scene/session.h"
 
 namespace mf = mir::frontend;
 namespace mo = mir::options;
@@ -124,6 +125,11 @@ std::shared_ptr<mf::Connector>
                 the_frontend_display_changer(),
                 the_display_configuration_observer_registrar());
 
+            auto wayland_filter = [this](std::shared_ptr<frontend::Session> const& session, char const* protocol)
+                {
+                    return wayland_extension_filter(std::static_pointer_cast<scene::Session>(session), protocol);
+                };
+
             return std::make_shared<mf::WaylandConnector>(
                 display_name,
                 the_frontend_shell(),
@@ -133,7 +139,8 @@ std::shared_ptr<mf::Connector>
                 the_buffer_allocator(),
                 the_session_authorizer(),
                 arw_socket,
-                configure_wayland_extensions(wayland_extensions, options->is_set(mo::x11_display_opt), wayland_extension_hooks));
+                configure_wayland_extensions(wayland_extensions, options->is_set(mo::x11_display_opt), wayland_extension_hooks),
+                wayland_filter);
         });
 }
 
@@ -144,4 +151,9 @@ void mir::DefaultServerConfiguration::add_wayland_extension(
         std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop)> builder)
 {
     wayland_extension_hooks.push_back({name, builder});
+}
+
+void mir::DefaultServerConfiguration::set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter)
+{
+    wayland_extension_filter = extension_filter;
 }

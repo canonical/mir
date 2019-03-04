@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -89,6 +89,8 @@ struct miral::WaylandExtensions::Self
     {
         wayland_extension_hooks.push_back({name, builder});
     }
+
+    WaylandExtensions::Filter extensions_filter = [](Application const&, char const*) { return true; };
 };
 
 miral::WaylandExtensions::WaylandExtensions() :
@@ -115,6 +117,8 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
         {
             for (auto const& hook : self->wayland_extension_hooks)
                 server.add_wayland_extension(hook.name, hook.builder);
+
+            server.set_wayland_extension_filter(self->extensions_filter);
         });
 
     server.add_init_callback([this, &server]{ self->callback(server); });
@@ -130,4 +134,9 @@ auto miral::with_extension(
 {
     wayland_extensions.self->add_extension(name, builder);
     return wayland_extensions;
+}
+
+void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const& extension_filter)
+{
+    self->extensions_filter = extension_filter;
 }
