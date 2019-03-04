@@ -207,7 +207,7 @@ private:
         }
         else
         {
-            surface.set_cursor_image(nullptr);
+            surface.remove_cursor_image();
         }
     }
 
@@ -623,6 +623,12 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
         observers.cursor_image_set_to(this, *image);
     else
         observers.cursor_image_removed(this);
+}
+
+void ms::BasicSurface::remove_cursor_image()
+{
+    cursor_image_ = nullptr;
+    observers.cursor_image_removed(this);
 }
 
 std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const
