@@ -205,6 +205,10 @@ private:
         {
             surface.set_cursor_from_buffer(*stream->lock_compositor_buffer(this), hotspot);
         }
+        else
+        {
+            surface.set_cursor_image(nullptr);
+        }
     }
 
     ms::BasicSurface& surface;
