@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012, 2016 Canonical Ltd.
+ * Copyright © 2012-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -59,6 +59,7 @@ class EventFilter;
 namespace scene
 {
 class ApplicationNotRespondingDetector;
+class Session;
 }
 
 class MainLoop;
@@ -93,6 +94,9 @@ public:
         std::function<std::shared_ptr<void>(
             wl_display*,
             std::function<void(std::function<void()>&& work)> const&)> builder) = 0;
+
+    using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<scene::Session> const&, char const*)>;
+    virtual void set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter) = 0;
 
 protected:
     ServerConfiguration() = default;

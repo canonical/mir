@@ -952,6 +952,8 @@ MIR_SERVER_1.2 {
  global:
   extern "C++" {
     mir::Server::add_wayland_extension*;
+    mir::Server::set_wayland_extension_filter*;
     mir::DefaultServerConfiguration::add_wayland_extension*;
+    mir::DefaultServerConfiguration::set_wayland_extension_filter*;
   };
 } MIR_SERVER_0.32;
