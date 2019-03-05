@@ -104,7 +104,7 @@ void mf::WindowWlSurfaceRole::apply_spec(mir::shell::SurfaceSpecification const&
 void mf::WindowWlSurfaceRole::set_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
     surface->set_pending_offset({-x, -y});
-    pending_window_size = {width, height};
+    pending_window_size = geom::Size{width, height};
 }
 
 void mf::WindowWlSurfaceRole::set_title(std::string const& title)
