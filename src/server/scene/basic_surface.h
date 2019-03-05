@@ -115,6 +115,7 @@ public:
     void show() override;
     
     void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) override;
+    void remove_cursor_image(); // Removes the cursor image without resetting the stream
     std::shared_ptr<graphics::CursorImage> cursor_image() const override;
 
     void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const& stream,

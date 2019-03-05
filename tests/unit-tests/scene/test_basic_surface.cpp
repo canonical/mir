@@ -653,6 +653,75 @@ TEST_F(BasicSurfaceTest, notifies_about_cursor_image_removal)
     surface.set_cursor_image({});
 }
 
+TEST_F(BasicSurfaceTest, notifies_when_cursor_stream_set)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto stub_buffer = std::make_shared<mtd::StubBuffer>();
+
+    ON_CALL(*buffer_stream, lock_compositor_buffer(_))
+        .WillByDefault(Return(stub_buffer));
+    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_, _));
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_cursor_stream(buffer_stream, {});
+}
+
+TEST_F(BasicSurfaceTest, notifies_about_cursor_removal_when_empty_stream_set)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+
+    ON_CALL(*buffer_stream, has_submitted_buffer())
+        .WillByDefault(Return(false));
+    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_, _)).Times(0);
+    EXPECT_CALL(mock_surface_observer, cursor_image_removed(_));
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_cursor_stream(buffer_stream, {});
+}
+
+TEST_F(BasicSurfaceTest, cursor_can_be_set_from_stream_that_started_empty)
+{
+    using namespace testing;
+
+    NiceMock<MockSurfaceObserver> mock_surface_observer;
+    auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    std::shared_ptr<mtd::StubBuffer> stub_buffer;
+    // Must be a shared pointer, because it is set by CursorStreamImageAdapter::reset() in the destructor
+    auto frame_posted_callback = std::make_shared<std::function<void(mir::geometry::Size const&)>>([](auto)
+        {
+            FAIL() << "frame_posted_callback should have been set by the surface";
+        });
+
+    ON_CALL(*buffer_stream, has_submitted_buffer())
+        .WillByDefault(Invoke([&]
+            {
+                return stub_buffer != nullptr;
+            }));
+    ON_CALL(*buffer_stream, lock_compositor_buffer(_))
+        .WillByDefault(Invoke([&](auto)
+            {
+                return stub_buffer;
+            }));
+    ON_CALL(*buffer_stream, set_frame_posted_callback(_))
+        .WillByDefault(Invoke([=](auto const& callback)
+            {
+                *frame_posted_callback = callback;
+            }));
+    EXPECT_CALL(mock_surface_observer, cursor_image_removed(_)).Times(1);
+    EXPECT_CALL(mock_surface_observer, cursor_image_set_to(_, _)).Times(1);
+
+    surface.add_observer(mt::fake_shared(mock_surface_observer));
+    surface.set_cursor_stream(buffer_stream, {});
+    stub_buffer = std::make_shared<mtd::StubBuffer>();
+    (*frame_posted_callback)({});
+}
+
 TEST_F(BasicSurfaceTest, observer_can_trigger_state_change_within_notification)
 {
     using namespace testing;
