@@ -693,7 +693,7 @@ TEST_F(BasicSurfaceTest, cursor_can_be_set_from_stream_that_started_empty)
     auto buffer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     std::shared_ptr<mtd::StubBuffer> stub_buffer;
     // Must be a shared pointer, because it is set by CursorStreamImageAdapter::reset() in the destructor
-    auto frame_posted_callback = std::make_shared<std::function<void(mir::geometry::Size const&)>>([this](auto)
+    auto frame_posted_callback = std::make_shared<std::function<void(mir::geometry::Size const&)>>([](auto)
         {
             FAIL() << "frame_posted_callback should have been set by the surface";
         });
