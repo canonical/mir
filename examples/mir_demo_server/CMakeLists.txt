@@ -23,6 +23,7 @@ add_library(exampleserverconfig STATIC
   server_example_adorning_compositor.cpp
   server_example_decoration.cpp server_example_decoration.h
   server-decoration_wrapper.cpp server-decoration_wrapper.h
+  server_example_decoration.cpp server_example_decoration.h
 )
 
 target_link_libraries(exampleserverconfig

@@ -23,6 +23,7 @@
 #include "server_example_custom_compositor.h"
 #include "server_example_test_client.h"
 #include "server_example_input_device_config.h"
+#include "server_example_decoration.h"
 
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
@@ -121,14 +122,6 @@ catch (...)
 {
 }
 
-auto xdg_decoration_unstable_v1(wl_display* display, miral::WaylandExtensions::Executor const& run_on_wayland_mainloop)
--> std::shared_ptr<void>
-{
-    (void)display, (void)run_on_wayland_mainloop;
-    // Implement the protocol here
-    return {};
-}
-
 auto some_other_extension(wl_display* display, miral::WaylandExtensions::Executor const& run_on_wayland_mainloop)
 -> std::shared_ptr<void>
 {
@@ -175,9 +168,9 @@ try
         miral::X11Support{},
         with_extension(
             with_filter(
-                miral::WaylandExtensions{"wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1:xdg_decoration_unstable_v1"},
+                miral::WaylandExtensions{"wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1:org_kde_kwin_server_decoration_manager"},
                 &dummy_wayland_protocol_extension_filter),
-            "xdg_decoration_unstable_v1", &xdg_decoration_unstable_v1,
+            "org_kde_kwin_server_decoration_manager", &me::server_decoration_extension,
             "some_other_extension", &some_other_extension),
         launcher,
         window_managers,
