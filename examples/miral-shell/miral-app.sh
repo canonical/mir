@@ -35,6 +35,7 @@ do
     echo "    -qt-mirclient                 use ubuntumirclient instead of qtwayland"
     echo "    -gtk-mirclient                GTK uses mir instead of wayland,mir"
     echo "    -sdl-mirclient                SDL uses mir instead of wayland"
+    # omit    -demo-server as mir_demo_server is in the mir-test-tools package
     exit 0
   elif [ "$1" == "-kiosk" ];              then miral_server=miral-kiosk
   elif [ "$1" == "-launcher" ];           then shift; launcher=$1
@@ -44,6 +45,7 @@ do
   elif [ "$1" == "-qt-mirclient" ];       then qt_qpa=ubuntumirclient
   elif [ "$1" == "-gtk-mirclient" ];      then gdk_backend=mir
   elif [ "$1" == "-sdl-mirclient" ];      then sdl_videodriver=mir
+  elif [ "$1" == "-demo-server" ];        then miral_server=mir_demo_server
   elif [ "${1:0:2}" == "--" ];            then break
   fi
   shift
