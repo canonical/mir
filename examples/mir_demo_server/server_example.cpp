@@ -139,7 +139,7 @@ auto some_other_extension(wl_display* display, miral::WaylandExtensions::Executo
 
 auto dummy_wayland_protocol_extension_filter(miral::Application const& app, char const* protocol) -> bool
 {
-    printf("***** dummy_wayland_protocol_extension_filter(%p, %s)\n", (void*)app.get(), protocol);
+    printf("***** dummy_wayland_protocol_extension_filter(%p (pid=%d), %s)\n", (void*)app.get(), miral::pid_of(app), protocol);
     return true;
 }
 
