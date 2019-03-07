@@ -11,7 +11,7 @@
 #include <experimental/optional>
 
 #include "mir/fd.h"
-#include "../wayland_utils.h"
+#include <wayland-server-core.h>
 
 namespace mir
 {
