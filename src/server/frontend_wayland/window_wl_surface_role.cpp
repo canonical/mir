@@ -103,16 +103,8 @@ void mf::WindowWlSurfaceRole::apply_spec(mir::shell::SurfaceSpecification const&
 
 void mf::WindowWlSurfaceRole::set_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    geom::Displacement const offset{-x, -y};
-
-    surface->set_pending_offset(offset);
-    window_size_ = geom::Size{width, height};
-
-    if (surface_id().as_value())
-    {
-        spec().width = geom::Width{width};
-        spec().height = geom::Height{height};
-    }
+    surface->set_pending_offset({-x, -y});
+    pending_window_size = geom::Size{width, height};
 }
 
 void mf::WindowWlSurfaceRole::set_title(std::string const& title)
@@ -248,9 +240,14 @@ void mf::WindowWlSurfaceRole::set_state_now(MirWindowState state)
     }
 }
 
-geom::Size mf::WindowWlSurfaceRole::window_size()
+std::experimental::optional<geom::Size> mf::WindowWlSurfaceRole::window_size()
 {
-     return window_size_.is_set()? window_size_.value() : surface->buffer_size();
+    if (pending_window_size)
+        return pending_window_size;
+    else if (committed_window_size)
+        return committed_window_size;
+    else
+        return surface->buffer_size();
 }
 
 MirWindowState mf::WindowWlSurfaceRole::window_state()
@@ -278,13 +275,14 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     {
         auto const scene_surface = scene_surface_from(session, surface_id_);
 
-        sink->latest_client_size(window_size());
+        if (window_size())
+            sink->latest_client_size(window_size().value());
 
-        if (!window_size_.is_set())
+        auto size = window_size();
+        if (size && size != committed_window_size)
         {
-            auto& new_size_spec = spec();
-            new_size_spec.width = window_size().width;
-            new_size_spec.height = window_size().height;
+            spec().width = size.value().width;
+            spec().height = size.value().height;
         }
 
         if (state.surface_data_needs_refresh())
@@ -301,6 +299,11 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     {
         create_mir_window();
     }
+
+    if (pending_window_size)
+        committed_window_size = pending_window_size;
+
+    pending_window_size = std::experimental::nullopt;
 }
 
 void mf::WindowWlSurfaceRole::visiblity(bool visible)
@@ -340,9 +343,7 @@ void mf::WindowWlSurfaceRole::create_mir_window()
     auto const session = get_session(client);
 
     if (params->size == geometry::Size{})
-        params->size = window_size();
-    if (params->size == geometry::Size{})
-        params->size = geometry::Size{640, 480};
+        params->size = window_size().value_or(geometry::Size{640, 480});
 
     params->streams = std::vector<shell::StreamSpecification>{};
     params->input_shape = std::vector<geom::Rectangle>{};
