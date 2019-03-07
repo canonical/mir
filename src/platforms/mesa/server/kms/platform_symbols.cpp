@@ -197,36 +197,31 @@ mg::PlatformPriority probe_graphics_platform(
                 }
                 else
                 {
-                    if (auto err = -drmCheckModesettingSupported(busid.get()))
+                    switch (auto err = -drmCheckModesettingSupported(busid.get()))
                     {
-                        if (err == ENOSYS)
+                    case 0: break;
+
+                    case ENOSYS:
+                        if (getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") == nullptr)
                         {
-                            throw std::runtime_error{
-                                std::string{"Device "} +
-                                device.devnode() +
-                                " does not support KMS"};
+                            throw std::runtime_error{std::string{"Device "}+device.devnode()+" does not support KMS"};
                         }
-                        if (err == EINVAL)
-                        {
-                            mir::log_warning(
-                                "Failed to detect whether device %s supports KMS, continuing with lower confidence",
-                                device.devnode());
-                            maximum_suitability = mg::PlatformPriority::supported;
-                        }
-                        else
-                        {
-                            mir::log_warning(
-                                "Unexpected error from drmCheckModesettingSupported()");
-                            mir::log_warning(
-                                "Please file a bug at https://github.com/MirServer/mir/issues containing this message");
-                            mir::log_warning(
-                                "drmCheckModesettingSupported() failed: %s (%i)",
-                                strerror(err),
-                                err);
-                            mir::log_warning(
-                                "Continuing probe with lower confidence");
-                            maximum_suitability = mg::PlatformPriority::supported;
-                        }
+
+                        mir::log_debug("MIR_MESA_KMS_DISABLE_MODESET_PROBE is set");
+                        // Falls through.
+                    case EINVAL:
+                        mir::log_warning(
+                            "Failed to detect whether device %s supports KMS, continuing with lower confidence",
+                            device.devnode());
+                        maximum_suitability = mg::PlatformPriority::supported;
+                        break;
+
+                    default:
+                        mir::log_warning("Unexpected error from drmCheckModesettingSupported(): %s (%i), "
+                                         "but continuing anyway", strerror(err), err);
+                        mir::log_warning("Please file a bug at "
+                                         "https://github.com/MirServer/mir/issues containing this message");
+                        maximum_suitability = mg::PlatformPriority::supported;
                     }
                 }
 
