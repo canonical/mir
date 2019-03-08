@@ -8,7 +8,10 @@ add_library(exampleserverconfig STATIC
   server_example_adorning_compositor.cpp
 )
 
-target_link_libraries(exampleserverconfig mirserver)
+target_link_libraries(exampleserverconfig
+  mirserver
+  mirwayland
+)
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/include/miral
