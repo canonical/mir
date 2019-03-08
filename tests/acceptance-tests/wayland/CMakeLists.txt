@@ -26,9 +26,16 @@ set_target_properties(
 
 pkg_get_variable(WLCS_BINARY wlcs test_runner)
 
+set(GTEST_FILTER "--gtest_filter=-\
+ClientSurfaceEventsTest.frame_timestamp_increases:\
+ClientSurfaceEventsTest.surface_gets_enter_event:\
+ClientSurfaceEventsTest.surface_gets_leave_event:\
+SubsurfaceTest.place_below_simple:\
+SubsurfaceTest.place_above_simple")
+
 mir_discover_external_gtests(
   NAME wlcs
-  COMMAND ${WLCS_BINARY} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/miral_wlcs_integration.so
+  COMMAND ${WLCS_BINARY} ${GTEST_FILTER} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/miral_wlcs_integration.so
 )
 
 install(TARGETS miral_wlcs_integration LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/mir)
