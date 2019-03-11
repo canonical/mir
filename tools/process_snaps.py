@@ -5,7 +5,9 @@ import json
 import logging
 import os
 import re
+import sys
 
+from launchpadlib import errors as lp_errors
 from launchpadlib.credentials import (RequestTokenAuthorizationEngine,
                                       UnencryptedFileCredentialStore)
 from launchpadlib.launchpad import Launchpad
@@ -96,14 +98,21 @@ if __name__ == '__main__':
     team = lp.people[TEAM]
     logger.debug("Got team: %s", team)
 
+    errors = []
+
     for channel in CHANNELS:
         logger.info("Processing channel %s…", channel)
 
         ppa = team.getPPAByName(name=CHANNELS[channel][0])
         logger.debug("Got ppa: %s", ppa)
 
-        snap = lp.snaps.getByName(owner=team, name=CHANNELS[channel][1])
-        logger.debug("Got snap: %s", snap)
+        try:
+            snap = lp.snaps.getByName(owner=team, name=CHANNELS[channel][1])
+            logger.debug("Got snap: %s", snap)
+        except lp_errors.NotFound as ex:
+            logger.error("Snap not found: %s", CHANNELS[channel][1])
+            errors.append(ex)
+            continue
 
         latest_source = ppa.getPublishedSources(
             source_name=SOURCE_NAME,
@@ -152,3 +161,9 @@ if __name__ == '__main__':
 
         builds = snap.requestAutoBuilds()
         logger.debug("Triggered builds: %s", snap.web_link)
+
+    for error in errors:
+        logger.debug(error)
+
+    if errors:
+        sys.exit(1)
