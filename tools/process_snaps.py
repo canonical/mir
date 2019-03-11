@@ -28,6 +28,17 @@ SNAPS = {
         "edge": ("dev", "mir-kiosk-edge"),
         "candidate": ("rc", "mir-kiosk-candidate"),
     },
+    "mir-test-tools": {
+        "edge": ("dev", "mir-test-tools-edge"),
+        "candidate": ("rc", "mir-test-tools"),
+    },
+    "egmde": {
+        "edge": ("dev", "egmde-mir-master"),
+        "beta": ("release", "egmde-mir-release"),
+    },
+    "egmde-confined-desktop": {
+        "edge": ("dev", "egmde-confined-desktop"),
+    },
 }
 
 
