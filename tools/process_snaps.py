@@ -20,7 +20,7 @@ logger.setLevel(logging.INFO)
 
 APPLICATION = "mir-ci"
 LAUNCHPAD = "production"
-RELEASE = "xenial"
+RELEASE = "bionic"
 TEAM = "mir-team"
 SNAP = "mir-kiosk"
 SOURCE_NAME = "mir"
