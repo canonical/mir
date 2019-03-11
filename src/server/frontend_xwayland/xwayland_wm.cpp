@@ -161,6 +161,7 @@ void mf::XWaylandWM::start(wl_client *wlc, const int fd)
     set_cursor(xcb_screen->root, CursorLeftPointer);
 
     create_wm_window();
+    xcb_flush(xcb_connection);
 }
 
 void mf::XWaylandWM::wm_selector()

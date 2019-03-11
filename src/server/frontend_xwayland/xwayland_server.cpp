@@ -87,6 +87,8 @@ void mf::XWaylandServer::spawn()
     int status;
     std::string fd_str, abs_fd_str, wm_fd_str;
 
+    xserver_status = STARTING;
+
     // Try 5 times
     if (xserver_spawn_tries >= 5) {
       mir::log_error("Xwayland failed to start 5 times in a row, disabling Xserver");
@@ -131,6 +133,9 @@ void mf::XWaylandServer::spawn()
         setenv("WAYLAND_SOCKET", std::to_string(fd).c_str(), 1);
         setenv("EGL_PLATFORM", "DRM", 1);
 
+        set_cloexec(socket_fd, false);
+        set_cloexec(abstract_socket_fd, false);
+
         fd = dup(socket_fd);
         if (fd < 0)
             mir::log_error("Failed to duplicate xwayland FD");
@@ -157,6 +162,8 @@ void mf::XWaylandServer::spawn()
                   "Xwayland",
                   dsp_str.c_str(),
                   "-rootless",
+                  "-listen", abs_fd_str.c_str(),
+                  "-listen", fd_str.c_str(),
                   "-wm", wm_fd_str.c_str(),
                   NULL);
         else
@@ -189,7 +196,7 @@ void mf::XWaylandServer::spawn()
           if (waitpid(pid, NULL, WNOHANG) != 0 || tries > 200) {
             xserver_status = FAILED;
             mir::log_info("Stalled start of Xserver, trying to start again!");
-            new_spawn_thread();
+            spawn();
             return;
           }
 
@@ -222,7 +229,7 @@ void mf::XWaylandServer::spawn()
 
         if (xserver_status == FAILED) {
           mir::log_info("Trying to start Xwayland again!");
-          new_spawn_thread();
+          spawn();
           return;
         }
 
@@ -233,58 +240,66 @@ void mf::XWaylandServer::spawn()
     }
 }
 
-void mf::XWaylandServer::bind_to_socket()
-{
-    struct sockaddr_un addr;
-    socklen_t size, name_size;
-
-    socket_fd = socket(PF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
-
-    addr.sun_family = AF_LOCAL;
-    name_size = snprintf(addr.sun_path, sizeof addr.sun_path, "/tmp/.X11-unix/X%d", xdisplay) + 1;
-    size = offsetof(struct sockaddr_un, sun_path) + name_size;
-    unlink(addr.sun_path);
-
-    if (bind(socket_fd, (struct sockaddr *)&addr, size) < 0)
-    {
-        mir::fatal_error("Failed to bind to x11 socket");
-        close(socket_fd);
-        return;
-    }
-
-    if (listen(socket_fd, 1) < 0)
-    {
-        mir::fatal_error("Failed to listen to x11 socket");
-        unlink(addr.sun_path);
-        close(socket_fd);
-        return;
-    }
+bool mf::XWaylandServer::set_cloexec(int fd, bool cloexec) {
+      	int flags = fcntl(fd, F_GETFD);
+      	if (flags == -1) {
+      		mir::fatal_error("fcntl failed");
+      		return false;
+      	}
+      	if (cloexec) {
+      		flags = flags | FD_CLOEXEC;
+      	} else {
+      		flags = flags & ~FD_CLOEXEC;
+      	}
+      	if (fcntl(fd, F_SETFD, flags) == -1) {
+      		mir::fatal_error("fcntl failed");
+      		return false;
+      	}
+        mir::log_info("set ok");
+      	return true;
 }
 
-void mf::XWaylandServer::bind_to_abstract_socket()
-{
-    struct sockaddr_un addr;
-    socklen_t size, name_size;
+int mf::XWaylandServer::create_socket(struct sockaddr_un *addr, size_t path_size) {
+      int fd;
+      socklen_t size = offsetof(struct sockaddr_un, sun_path) + path_size + 1;
 
-    abstract_socket_fd = socket(PF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    	fd = socket(AF_UNIX, SOCK_STREAM, 0);
+    	if (fd < 0) {
+    		mir::fatal_error("Failed to create socket %c%s",
+    			addr->sun_path[0] ? addr->sun_path[0] : '@',
+    			addr->sun_path + 1);
+    		return -1;
+    	}
+    	if (!set_cloexec(fd, true)) {
+    		close(fd);
+    		return -1;
+    	}
 
-    addr.sun_family = AF_LOCAL;
-    name_size = snprintf(addr.sun_path, sizeof addr.sun_path, "%c/tmp/.X11-unix/X%d", 0, xdisplay);
-    size = offsetof(struct sockaddr_un, sun_path) + name_size;
-    if (bind(abstract_socket_fd, (struct sockaddr *)&addr, size) < 0)
-    {
-        mir::fatal_error("Failed to bind to X11 abstract socket");
-        close(abstract_socket_fd);
-        return;
+    	if (addr->sun_path[0]) {
+    		unlink(addr->sun_path);
+    	}
+    	if (bind(fd, (struct sockaddr*)addr, size) < 0) {
+    		mir::fatal_error("Failed to bind socket %c%s",
+    			addr->sun_path[0] ? addr->sun_path[0] : '@',
+    			addr->sun_path + 1);
+          close(fd);
+          if (addr->sun_path[0])
+            unlink(addr->sun_path);
+          return -1;
+    	}
+    	if (listen(fd, 1) < 0) {
+    		mir::fatal_error("Failed to listen to socket %c%s",
+    			addr->sun_path[0] ? addr->sun_path[0] : '@',
+    			addr->sun_path + 1);
+          close(fd);
+          if (addr->sun_path[0])
+            unlink(addr->sun_path);
+          return -1;
+    	}
+
+    	return fd;
+
     }
-
-    if (listen(abstract_socket_fd, 1) < 0)
-    {
-        mir::fatal_error("Failed to listen to X11 abstract socket");
-        close(abstract_socket_fd);
-        return;
-    }
-}
 
 // TODO this can be written with more modern c++
 int mf::XWaylandServer::create_lockfile()
@@ -343,6 +358,9 @@ int mf::XWaylandServer::create_lockfile()
 void mf::XWaylandServer::setup_socket()
 {
     char path[256];
+    struct sockaddr_un addr;
+    size_t path_size;
+
     int i = create_lockfile();
     while (i == EAGAIN)
     {
@@ -357,15 +375,21 @@ void mf::XWaylandServer::setup_socket()
     snprintf(path, sizeof path, "/tmp/.X11-unix/X%d", xdisplay);
     unlink(path);
 
-    bind_to_abstract_socket();
-    if (errno == EADDRINUSE) {
-        mir::fatal_error("X11 socket is already in use");
-        snprintf(path, sizeof path, "/tmp/.X%d-lock", xdisplay);
-        unlink(path);
-        return;
+    addr.sun_family = AF_UNIX;
+    addr.sun_path[0] = 0;
+    path_size = snprintf(addr.sun_path + 1, sizeof(addr.sun_path) - 1, "/tmp/.X11-unix/X%d", xdisplay);
+    abstract_socket_fd = create_socket(&addr, path_size);
+    if (abstract_socket_fd < 0) {
+      return;
     }
 
-    bind_to_socket();
+    path_size = snprintf(addr.sun_path, sizeof(addr.sun_path), "/tmp/.X11-unix/X%d", xdisplay);
+    socket_fd = create_socket(&addr, path_size);
+    if (socket_fd < 0) {
+      close(abstract_socket_fd);
+      abstract_socket_fd = -1;
+      return;
+    }
 }
 
 void mf::XWaylandServer::new_spawn_thread() {
@@ -396,5 +420,6 @@ void mf::XWaylandServer::spawn_xserver_on_event_loop()
 void mf::XWaylandServer::spawn_lazy_xserver()
 {
     lazy = true;
+    setup_socket();
     new_spawn_thread();
 }
