@@ -150,8 +150,8 @@ if __name__ == '__main__':
 
             logger.debug("Got store versions: %s", store_versions)
 
-            if all(version.startswith(SNAP_VERSION_RE.match(store_version)
-                                      .group("mir"))
+            if all(store_version is None
+                   or version.startswith(SNAP_VERSION_RE.match(store_version).group("mir"))
                    for store_version in store_versions.values()):
                 logger.info("Skipping %s: store versions are current",
                             latest_source.display_name)
