@@ -22,11 +22,12 @@ APPLICATION = "mir-ci"
 LAUNCHPAD = "production"
 RELEASE = "bionic"
 TEAM = "mir-team"
-SNAP = "mir-kiosk"
 SOURCE_NAME = "mir"
-CHANNELS = {
-    "edge": ("dev", "mir-kiosk-edge"),
-    "candidate": ("rc", "mir-kiosk-candidate"),
+SNAPS = {
+    "mir-kiosk": {
+        "edge": ("dev", "mir-kiosk-edge"),
+        "candidate": ("rc", "mir-kiosk-candidate"),
+    },
 }
 
 
@@ -37,7 +38,10 @@ PENDING_BUILD = (
     "Uploading build",
 )
 
-VERSION_RE = re.compile(r"^(.*)-[^-]+$")
+MIR_VERSION_RE = re.compile(r"^(.*)-[^-]+$")
+SNAP_VERSION_RE = re.compile(r"^(?:(?P<server>.+)-mir)?"
+                             r"(?P<mir>.+?)"
+                             r"(?:-snap(?P<snap>.+))?$")
 
 STORE_URL = ("https://api.snapcraft.io/api/v1/snaps"
              "/details/{snap}?channel={channel}")
@@ -47,10 +51,10 @@ STORE_HEADERS = {
 }
 
 
-def check_store_version(processor):
+def check_store_version(processor, snap, channel):
     logger.debug("Checking version for: %s", processor)
     data = {
-        "snap": SNAP,
+        "snap": snap,
         "channel": channel,
         "arch": processor,
     }
@@ -71,7 +75,7 @@ def check_store_version(processor):
         return result["version"]
     except KeyError:
         logger.debug("Could not find version for %s (%s): %s",
-                     SNAP, processor, result["error_list"])
+                     snap, processor, result["error_list"])
     return None
 
 
@@ -100,67 +104,74 @@ if __name__ == '__main__':
 
     errors = []
 
-    for channel in CHANNELS:
-        logger.info("Processing channel %s…", channel)
+    for snap, channels in SNAPS.items():
+        for channel, snap_map in channels.items():
+            logger.info("Processing channel %s for snap %s…", channel, snap)
 
-        ppa = team.getPPAByName(name=CHANNELS[channel][0])
-        logger.debug("Got ppa: %s", ppa)
+            ppa = team.getPPAByName(name=snap_map[0])
+            logger.debug("Got ppa: %s", ppa)
 
-        try:
-            snap = lp.snaps.getByName(owner=team, name=CHANNELS[channel][1])
-            logger.debug("Got snap: %s", snap)
-        except lp_errors.NotFound as ex:
-            logger.error("Snap not found: %s", CHANNELS[channel][1])
-            errors.append(ex)
-            continue
+            try:
+                snap_recipe = lp.snaps.getByName(owner=team, name=snap_map[1])
+                logger.debug("Got snap: %s", snap_recipe)
+            except lp_errors.NotFound as ex:
+                logger.error("Snap not found: %s", snap_map[1])
+                errors.append(ex)
+                continue
 
-        latest_source = ppa.getPublishedSources(
-            source_name=SOURCE_NAME,
-            distro_series=series
-        )[0]
-        logger.debug("Latest source: %s", latest_source.display_name)
+            latest_source = ppa.getPublishedSources(
+                source_name=SOURCE_NAME,
+                distro_series=series
+            )[0]
+            logger.debug("Latest source: %s", latest_source.display_name)
 
-        version = VERSION_RE.match(latest_source.source_package_version)[1]
-        logger.debug("Parsed upstream version: %s", version)
+            version = (
+                MIR_VERSION_RE.match(latest_source.source_package_version)[1]
+            )
+            logger.debug("Parsed upstream version: %s", version)
 
-        store_versions = {
-            processor.name: check_store_version(processor.name)
-            for processor in snap.processors
-        }
+            store_versions = {
+                processor.name: check_store_version(processor.name,
+                                                    snap,
+                                                    channel)
+                for processor in snap_recipe.processors
+            }
 
-        logger.debug("Got store versions: %s", store_versions)
+            logger.debug("Got store versions: %s", store_versions)
 
-        if all(store_version == version
-               for store_version in store_versions.values()):
-            logger.info("Skipping %s: store versions are current",
-                        latest_source.display_name)
-            continue
+            if all(version.startswith(SNAP_VERSION_RE.match(store_version)
+                                      .group("mir"))
+                   for store_version in store_versions.values()):
+                logger.info("Skipping %s: store versions are current",
+                            latest_source.display_name)
+                continue
 
-        if latest_source.status != "Published":
-            logger.info("Skipping %s: %s",
-                        latest_source.display_name, latest_source.status)
-            continue
+            if latest_source.status != "Published":
+                logger.info("Skipping %s: %s",
+                            latest_source.display_name, latest_source.status)
+                continue
 
-        if any(build.buildstate in PENDING_BUILD
-               for build in latest_source.getBuilds()):
-            logger.info("Skipping %s: builds pending…",
-                        latest_source.display_name)
-            continue
+            if any(build.buildstate in PENDING_BUILD
+                   for build in latest_source.getBuilds()):
+                logger.info("Skipping %s: builds pending…",
+                            latest_source.display_name)
+                continue
 
-        if any(binary.status != "Published"
-               for binary in latest_source.getPublishedBinaries()):
-            logger.info("Skipping %s: binaries pending…",
-                        latest_source.display_name)
-            continue
+            if any(binary.status != "Published"
+                   for binary in latest_source.getPublishedBinaries()):
+                logger.info("Skipping %s: binaries pending…",
+                            latest_source.display_name)
+                continue
 
-        if len(snap.pending_builds) > 0:
-            logger.info("Skipping %s: snap builds pending…", snap.web_link)
-            continue
+            if len(snap_recipe.pending_builds) > 0:
+                logger.info("Skipping %s: snap builds pending…",
+                            snap_recipe.web_link)
+                continue
 
-        logger.info("Triggering for %s…", latest_source.display_name)
+            logger.info("Triggering for %s…", latest_source.display_name)
 
-        builds = snap.requestAutoBuilds()
-        logger.debug("Triggered builds: %s", snap.web_link)
+            builds = snap_recipe.requestAutoBuilds()
+            logger.debug("Triggered builds: %s", snap_recipe.web_link)
 
     for error in errors:
         logger.debug(error)
