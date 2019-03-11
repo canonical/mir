@@ -7,11 +7,11 @@ import os
 import re
 import sys
 
-from launchpadlib import errors as lp_errors
+from launchpadlib import errors as lp_errors  # fades
 from launchpadlib.credentials import (RequestTokenAuthorizationEngine,
                                       UnencryptedFileCredentialStore)
 from launchpadlib.launchpad import Launchpad
-import requests
+import requests  # fades
 
 
 logger = logging.getLogger("mir.process_snaps")
