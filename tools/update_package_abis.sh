@@ -23,7 +23,8 @@ packages="\
     mir-platform-graphics-mesa-x:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-graphics-mesa-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-graphics-eglstream-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
-    mir-platform-input-evdev:MIR_SERVER_INPUT_PLATFORM_ABI"
+    mir-platform-input-evdev:MIR_SERVER_INPUT_PLATFORM_ABI\
+    libmirwayland:MIRWAYLAND_ABI"
 
 package_name()
 {
