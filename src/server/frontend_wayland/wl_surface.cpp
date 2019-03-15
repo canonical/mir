@@ -25,7 +25,7 @@
 #include "wlshmbuffer.h"
 #include "deleted_for_resource.h"
 
-#include "generated/wayland_wrapper.h"
+#include "wayland_wrapper.h"
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/frontend/session.h"

@@ -18,7 +18,7 @@
 #ifndef MIR_FRONTEND_XWAYLAND_WM_SHELLSURFACE_ROLE_H
 #define MIR_FRONTEND_XWAYLAND_WM_SHELLSURFACE_ROLE_H
 
-#include "generated/wayland_wrapper.h"
+#include "wayland_wrapper.h"
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"
 #include "xwayland_wm_surface.h"

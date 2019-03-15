@@ -21,7 +21,7 @@
 
 #include "mir/geometry/point.h"
 
-#include "generated/wayland_wrapper.h"
+#include "wayland_wrapper.h"
 
 #include <functional>
 

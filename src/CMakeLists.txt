@@ -28,6 +28,7 @@ add_subdirectory(protobuf/)
 include_directories(${MIR_GENERATED_INCLUDE_DIRECTORIES})
 
 add_subdirectory(platform/)
+add_subdirectory(wayland/)
 add_subdirectory(server/)
 add_subdirectory(miral/)
 add_subdirectory(client/)

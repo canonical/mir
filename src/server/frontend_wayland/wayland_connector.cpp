@@ -32,7 +32,7 @@
 #include "wayland_executor.h"
 #include "wlshmbuffer.h"
 
-#include "generated/wayland_wrapper.h"
+#include "wayland_wrapper.h"
 
 #include "mir/frontend/shell.h"
 #include "mir/frontend/surface.h"

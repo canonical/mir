@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_XDG_SHELL_STABLE_H
 #define MIR_FRONTEND_XDG_SHELL_STABLE_H
 
-#include "generated/xdg-shell_wrapper.h"
+#include "xdg-shell_wrapper.h"
 
 namespace mir
 {

@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_LAYER_SHELL_V1_H
 #define MIR_FRONTEND_LAYER_SHELL_V1_H
 
-#include "generated/wlr-layer-shell-unstable-v1_wrapper.h"
+#include "wlr-layer-shell-unstable-v1_wrapper.h"
 
 namespace mir
 {

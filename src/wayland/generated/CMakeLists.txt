@@ -7,10 +7,15 @@ add_library(
   wlr-layer-shell-unstable-v1_wrapper.cpp   wlr-layer-shell-unstable-v1_wrapper.h
 )
 
-target_link_libraries( mirwayland LINK_PUBLIC
+target_link_libraries(mirwayland LINK_PUBLIC
   mircore
   mircommon
   ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
+)
+
+target_include_directories(mirwayland
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 # TODO ABI, publishing, debian/*.symbols

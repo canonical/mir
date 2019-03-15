@@ -20,7 +20,7 @@
 #ifndef MIR_FRONTEND_WL_REGION_H_
 #define MIR_FRONTEND_WL_REGION_H_
 
-#include "generated/wayland_wrapper.h"
+#include "wayland_wrapper.h"
 
 #include "mir/geometry/rectangle.h"
 
