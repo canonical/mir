@@ -19,15 +19,15 @@ macro(GENERATE_PROTOCOL NAME_PREFIX PROTOCOL_NAME)
     set(OUTPUT_PATH_SRC "${GENERATED_DIR}/${PROTOCOL_NAME}_wrapper.cpp")
     add_custom_command(OUTPUT "${OUTPUT_PATH_HEADER}"
             VERBATIM
-            COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator ${NAME_PREFIX} ${PROTOCOL_PATH} header > ${OUTPUT_PATH_HEADER}"
+            COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator ${NAME_PREFIX} ${PROTOCOL_PATH} header > ${OUTPUT_PATH_HEADER}"
             DEPENDS "${PROTOCOL_PATH}"
-            DEPENDS wrapper-generator
+            DEPENDS mir_wayland_generator
             )
     add_custom_command(OUTPUT "${OUTPUT_PATH_SRC}"
             VERBATIM
-            COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/wrapper-generator ${NAME_PREFIX} ${PROTOCOL_PATH} source > ${OUTPUT_PATH_SRC}"
+            COMMAND "sh" "-c" "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator ${NAME_PREFIX} ${PROTOCOL_PATH} source > ${OUTPUT_PATH_SRC}"
             DEPENDS "${PROTOCOL_PATH}"
-            DEPENDS wrapper-generator
+            DEPENDS mir_wayland_generator
             )
     set(GENERATED_FILES ${GENERATED_FILES} "${OUTPUT_PATH_HEADER}" "${OUTPUT_PATH_SRC}")
 endmacro()
@@ -39,7 +39,7 @@ GENERATE_PROTOCOL("zwlr_" "wlr-layer-shell-unstable-v1")
 
 add_custom_target(refresh-wayland-wrapper
     DEPENDS ${GENERATED_FILES}
-    DEPENDS wrapper-generator
+    DEPENDS mir_wayland_generator
     SOURCES ${GENERATED_FILES}
 )
 
