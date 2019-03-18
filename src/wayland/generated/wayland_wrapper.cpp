@@ -16,8 +16,6 @@
 
 namespace mir
 {
-namespace frontend
-{
 namespace wayland
 {
 extern struct wl_interface const wl_buffer_interface_data;
@@ -42,9 +40,8 @@ extern struct wl_interface const wl_surface_interface_data;
 extern struct wl_interface const wl_touch_interface_data;
 }
 }
-}
 
-namespace mfw = mir::frontend::wayland;
+namespace mw = mir::wayland;
 
 namespace
 {
@@ -59,17 +56,17 @@ struct wl_interface const* all_null_types [] {
 
 // Callback
 
-mfw::Callback* mfw::Callback::from(struct wl_resource* resource)
+mw::Callback* mw::Callback::from(struct wl_resource* resource)
 {
     return static_cast<Callback*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Callback::Thunks
+struct mw::Callback::Thunks
 {
     static struct wl_message const event_messages[];
 };
 
-mfw::Callback::Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::Callback::Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_callback_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -80,27 +77,27 @@ mfw::Callback::Callback(struct wl_client* client, struct wl_resource* parent, ui
     }
 }
 
-void mfw::Callback::send_done_event(uint32_t callback_data) const
+void mw::Callback::send_done_event(uint32_t callback_data) const
 {
     wl_resource_post_event(resource, Opcode::done, callback_data);
 }
 
-void mfw::Callback::destroy_wayland_object() const
+void mw::Callback::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_message const mfw::Callback::Thunks::event_messages[] {
+struct wl_message const mw::Callback::Thunks::event_messages[] {
     {"done", "u", all_null_types}};
 
 // Compositor
 
-mfw::Compositor* mfw::Compositor::from(struct wl_resource* resource)
+mw::Compositor* mw::Compositor::from(struct wl_resource* resource)
 {
     return static_cast<Compositor*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Compositor::Thunks
+struct mw::Compositor::Thunks
 {
     static void create_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
@@ -164,7 +161,7 @@ struct mfw::Compositor::Thunks
     static void const* request_vtable[];
 };
 
-mfw::Compositor::Compositor(struct wl_display* display, uint32_t max_version)
+mw::Compositor::Compositor(struct wl_display* display, uint32_t max_version)
     : global{wl_global_create(display, &wl_compositor_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
@@ -174,38 +171,38 @@ mfw::Compositor::Compositor(struct wl_display* display, uint32_t max_version)
     }
 }
 
-mfw::Compositor::~Compositor()
+mw::Compositor::~Compositor()
 {
     wl_global_destroy(global);
 }
 
-void mfw::Compositor::destroy_wayland_object(struct wl_resource* resource) const
+void mw::Compositor::destroy_wayland_object(struct wl_resource* resource) const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::Compositor::Thunks::create_surface_types[] {
+struct wl_interface const* mw::Compositor::Thunks::create_surface_types[] {
     &wl_surface_interface_data};
 
-struct wl_interface const* mfw::Compositor::Thunks::create_region_types[] {
+struct wl_interface const* mw::Compositor::Thunks::create_region_types[] {
     &wl_region_interface_data};
 
-struct wl_message const mfw::Compositor::Thunks::request_messages[] {
+struct wl_message const mw::Compositor::Thunks::request_messages[] {
     {"create_surface", "n", create_surface_types},
     {"create_region", "n", create_region_types}};
 
-void const* mfw::Compositor::Thunks::request_vtable[] {
+void const* mw::Compositor::Thunks::request_vtable[] {
     (void*)Thunks::create_surface_thunk,
     (void*)Thunks::create_region_thunk};
 
 // ShmPool
 
-mfw::ShmPool* mfw::ShmPool::from(struct wl_resource* resource)
+mw::ShmPool* mw::ShmPool::from(struct wl_resource* resource)
 {
     return static_cast<ShmPool*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::ShmPool::Thunks
+struct mw::ShmPool::Thunks
 {
     static void create_buffer_thunk(struct wl_client*, struct wl_resource* resource, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format)
     {
@@ -265,7 +262,7 @@ struct mfw::ShmPool::Thunks
     static void const* request_vtable[];
 };
 
-mfw::ShmPool::ShmPool(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::ShmPool::ShmPool(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_shm_pool_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -277,12 +274,12 @@ mfw::ShmPool::ShmPool(struct wl_client* client, struct wl_resource* parent, uint
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::ShmPool::destroy_wayland_object() const
+void mw::ShmPool::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::ShmPool::Thunks::create_buffer_types[] {
+struct wl_interface const* mw::ShmPool::Thunks::create_buffer_types[] {
     &wl_buffer_interface_data,
     nullptr,
     nullptr,
@@ -290,24 +287,24 @@ struct wl_interface const* mfw::ShmPool::Thunks::create_buffer_types[] {
     nullptr,
     nullptr};
 
-struct wl_message const mfw::ShmPool::Thunks::request_messages[] {
+struct wl_message const mw::ShmPool::Thunks::request_messages[] {
     {"create_buffer", "niiiiu", create_buffer_types},
     {"destroy", "", all_null_types},
     {"resize", "i", all_null_types}};
 
-void const* mfw::ShmPool::Thunks::request_vtable[] {
+void const* mw::ShmPool::Thunks::request_vtable[] {
     (void*)Thunks::create_buffer_thunk,
     (void*)Thunks::destroy_thunk,
     (void*)Thunks::resize_thunk};
 
 // Shm
 
-mfw::Shm* mfw::Shm::from(struct wl_resource* resource)
+mw::Shm* mw::Shm::from(struct wl_resource* resource)
 {
     return static_cast<Shm*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Shm::Thunks
+struct mw::Shm::Thunks
 {
     static void create_pool_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int32_t fd, int32_t size)
     {
@@ -356,7 +353,7 @@ struct mfw::Shm::Thunks
     static void const* request_vtable[];
 };
 
-mfw::Shm::Shm(struct wl_display* display, uint32_t max_version)
+mw::Shm::Shm(struct wl_display* display, uint32_t max_version)
     : global{wl_global_create(display, &wl_shm_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
@@ -366,43 +363,43 @@ mfw::Shm::Shm(struct wl_display* display, uint32_t max_version)
     }
 }
 
-mfw::Shm::~Shm()
+mw::Shm::~Shm()
 {
     wl_global_destroy(global);
 }
 
-void mfw::Shm::send_format_event(struct wl_resource* resource, uint32_t format) const
+void mw::Shm::send_format_event(struct wl_resource* resource, uint32_t format) const
 {
     wl_resource_post_event(resource, Opcode::format, format);
 }
 
-void mfw::Shm::destroy_wayland_object(struct wl_resource* resource) const
+void mw::Shm::destroy_wayland_object(struct wl_resource* resource) const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::Shm::Thunks::create_pool_types[] {
+struct wl_interface const* mw::Shm::Thunks::create_pool_types[] {
     &wl_shm_pool_interface_data,
     nullptr,
     nullptr};
 
-struct wl_message const mfw::Shm::Thunks::request_messages[] {
+struct wl_message const mw::Shm::Thunks::request_messages[] {
     {"create_pool", "nhi", create_pool_types}};
 
-struct wl_message const mfw::Shm::Thunks::event_messages[] {
+struct wl_message const mw::Shm::Thunks::event_messages[] {
     {"format", "u", all_null_types}};
 
-void const* mfw::Shm::Thunks::request_vtable[] {
+void const* mw::Shm::Thunks::request_vtable[] {
     (void*)Thunks::create_pool_thunk};
 
 // Buffer
 
-mfw::Buffer* mfw::Buffer::from(struct wl_resource* resource)
+mw::Buffer* mw::Buffer::from(struct wl_resource* resource)
 {
     return static_cast<Buffer*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Buffer::Thunks
+struct mw::Buffer::Thunks
 {
     static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
     {
@@ -430,7 +427,7 @@ struct mfw::Buffer::Thunks
     static void const* request_vtable[];
 };
 
-mfw::Buffer::Buffer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::Buffer::Buffer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_buffer_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -442,33 +439,33 @@ mfw::Buffer::Buffer(struct wl_client* client, struct wl_resource* parent, uint32
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::Buffer::send_release_event() const
+void mw::Buffer::send_release_event() const
 {
     wl_resource_post_event(resource, Opcode::release);
 }
 
-void mfw::Buffer::destroy_wayland_object() const
+void mw::Buffer::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_message const mfw::Buffer::Thunks::request_messages[] {
+struct wl_message const mw::Buffer::Thunks::request_messages[] {
     {"destroy", "", all_null_types}};
 
-struct wl_message const mfw::Buffer::Thunks::event_messages[] {
+struct wl_message const mw::Buffer::Thunks::event_messages[] {
     {"release", "", all_null_types}};
 
-void const* mfw::Buffer::Thunks::request_vtable[] {
+void const* mw::Buffer::Thunks::request_vtable[] {
     (void*)Thunks::destroy_thunk};
 
 // DataOffer
 
-mfw::DataOffer* mfw::DataOffer::from(struct wl_resource* resource)
+mw::DataOffer* mw::DataOffer::from(struct wl_resource* resource)
 {
     return static_cast<DataOffer*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::DataOffer::Thunks
+struct mw::DataOffer::Thunks
 {
     static void accept_thunk(struct wl_client*, struct wl_resource* resource, uint32_t serial, char const* mime_type)
     {
@@ -566,7 +563,7 @@ struct mfw::DataOffer::Thunks
     static void const* request_vtable[];
 };
 
-mfw::DataOffer::DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::DataOffer::DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_data_offer_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -578,50 +575,50 @@ mfw::DataOffer::DataOffer(struct wl_client* client, struct wl_resource* parent, 
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::DataOffer::send_offer_event(std::string const& mime_type) const
+void mw::DataOffer::send_offer_event(std::string const& mime_type) const
 {
     const char* mime_type_resolved = mime_type.c_str();
     wl_resource_post_event(resource, Opcode::offer, mime_type_resolved);
 }
 
-bool mfw::DataOffer::version_supports_source_actions()
+bool mw::DataOffer::version_supports_source_actions()
 {
     return wl_resource_get_version(resource) >= 3;
 }
 
-void mfw::DataOffer::send_source_actions_event(uint32_t source_actions) const
+void mw::DataOffer::send_source_actions_event(uint32_t source_actions) const
 {
     wl_resource_post_event(resource, Opcode::source_actions, source_actions);
 }
 
-bool mfw::DataOffer::version_supports_action()
+bool mw::DataOffer::version_supports_action()
 {
     return wl_resource_get_version(resource) >= 3;
 }
 
-void mfw::DataOffer::send_action_event(uint32_t dnd_action) const
+void mw::DataOffer::send_action_event(uint32_t dnd_action) const
 {
     wl_resource_post_event(resource, Opcode::action, dnd_action);
 }
 
-void mfw::DataOffer::destroy_wayland_object() const
+void mw::DataOffer::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_message const mfw::DataOffer::Thunks::request_messages[] {
+struct wl_message const mw::DataOffer::Thunks::request_messages[] {
     {"accept", "u?s", all_null_types},
     {"receive", "sh", all_null_types},
     {"destroy", "", all_null_types},
     {"finish", "3", all_null_types},
     {"set_actions", "3uu", all_null_types}};
 
-struct wl_message const mfw::DataOffer::Thunks::event_messages[] {
+struct wl_message const mw::DataOffer::Thunks::event_messages[] {
     {"offer", "s", all_null_types},
     {"source_actions", "3u", all_null_types},
     {"action", "3u", all_null_types}};
 
-void const* mfw::DataOffer::Thunks::request_vtable[] {
+void const* mw::DataOffer::Thunks::request_vtable[] {
     (void*)Thunks::accept_thunk,
     (void*)Thunks::receive_thunk,
     (void*)Thunks::destroy_thunk,
@@ -630,12 +627,12 @@ void const* mfw::DataOffer::Thunks::request_vtable[] {
 
 // DataSource
 
-mfw::DataSource* mfw::DataSource::from(struct wl_resource* resource)
+mw::DataSource* mw::DataSource::from(struct wl_resource* resource)
 {
     return static_cast<DataSource*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::DataSource::Thunks
+struct mw::DataSource::Thunks
 {
     static void offer_thunk(struct wl_client*, struct wl_resource* resource, char const* mime_type)
     {
@@ -695,7 +692,7 @@ struct mfw::DataSource::Thunks
     static void const* request_vtable[];
 };
 
-mfw::DataSource::DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::DataSource::DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_data_source_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -707,7 +704,7 @@ mfw::DataSource::DataSource(struct wl_client* client, struct wl_resource* parent
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::DataSource::send_target_event(std::experimental::optional<std::string> const& mime_type) const
+void mw::DataSource::send_target_event(std::experimental::optional<std::string> const& mime_type) const
 {
     const char* mime_type_resolved = nullptr;
     if (mime_type)
@@ -717,59 +714,59 @@ void mfw::DataSource::send_target_event(std::experimental::optional<std::string>
     wl_resource_post_event(resource, Opcode::target, mime_type_resolved);
 }
 
-void mfw::DataSource::send_send_event(std::string const& mime_type, mir::Fd fd) const
+void mw::DataSource::send_send_event(std::string const& mime_type, mir::Fd fd) const
 {
     const char* mime_type_resolved = mime_type.c_str();
     int32_t fd_resolved{fd};
     wl_resource_post_event(resource, Opcode::send, mime_type_resolved, fd_resolved);
 }
 
-void mfw::DataSource::send_cancelled_event() const
+void mw::DataSource::send_cancelled_event() const
 {
     wl_resource_post_event(resource, Opcode::cancelled);
 }
 
-bool mfw::DataSource::version_supports_dnd_drop_performed()
+bool mw::DataSource::version_supports_dnd_drop_performed()
 {
     return wl_resource_get_version(resource) >= 3;
 }
 
-void mfw::DataSource::send_dnd_drop_performed_event() const
+void mw::DataSource::send_dnd_drop_performed_event() const
 {
     wl_resource_post_event(resource, Opcode::dnd_drop_performed);
 }
 
-bool mfw::DataSource::version_supports_dnd_finished()
+bool mw::DataSource::version_supports_dnd_finished()
 {
     return wl_resource_get_version(resource) >= 3;
 }
 
-void mfw::DataSource::send_dnd_finished_event() const
+void mw::DataSource::send_dnd_finished_event() const
 {
     wl_resource_post_event(resource, Opcode::dnd_finished);
 }
 
-bool mfw::DataSource::version_supports_action()
+bool mw::DataSource::version_supports_action()
 {
     return wl_resource_get_version(resource) >= 3;
 }
 
-void mfw::DataSource::send_action_event(uint32_t dnd_action) const
+void mw::DataSource::send_action_event(uint32_t dnd_action) const
 {
     wl_resource_post_event(resource, Opcode::action, dnd_action);
 }
 
-void mfw::DataSource::destroy_wayland_object() const
+void mw::DataSource::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_message const mfw::DataSource::Thunks::request_messages[] {
+struct wl_message const mw::DataSource::Thunks::request_messages[] {
     {"offer", "s", all_null_types},
     {"destroy", "", all_null_types},
     {"set_actions", "3u", all_null_types}};
 
-struct wl_message const mfw::DataSource::Thunks::event_messages[] {
+struct wl_message const mw::DataSource::Thunks::event_messages[] {
     {"target", "?s", all_null_types},
     {"send", "sh", all_null_types},
     {"cancelled", "", all_null_types},
@@ -777,19 +774,19 @@ struct wl_message const mfw::DataSource::Thunks::event_messages[] {
     {"dnd_finished", "3", all_null_types},
     {"action", "3u", all_null_types}};
 
-void const* mfw::DataSource::Thunks::request_vtable[] {
+void const* mw::DataSource::Thunks::request_vtable[] {
     (void*)Thunks::offer_thunk,
     (void*)Thunks::destroy_thunk,
     (void*)Thunks::set_actions_thunk};
 
 // DataDevice
 
-mfw::DataDevice* mfw::DataDevice::from(struct wl_resource* resource)
+mw::DataDevice* mw::DataDevice::from(struct wl_resource* resource)
 {
     return static_cast<DataDevice*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::DataDevice::Thunks
+struct mw::DataDevice::Thunks
 {
     static void start_drag_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* source, struct wl_resource* origin, struct wl_resource* icon, uint32_t serial)
     {
@@ -869,7 +866,7 @@ struct mfw::DataDevice::Thunks
     static void const* request_vtable[];
 };
 
-mfw::DataDevice::DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::DataDevice::DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_data_device_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -881,12 +878,12 @@ mfw::DataDevice::DataDevice(struct wl_client* client, struct wl_resource* parent
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::DataDevice::send_data_offer_event(struct wl_resource* id) const
+void mw::DataDevice::send_data_offer_event(struct wl_resource* id) const
 {
     wl_resource_post_event(resource, Opcode::data_offer, id);
 }
 
-void mfw::DataDevice::send_enter_event(uint32_t serial, struct wl_resource* surface, double x, double y, std::experimental::optional<struct wl_resource*> const& id) const
+void mw::DataDevice::send_enter_event(uint32_t serial, struct wl_resource* surface, double x, double y, std::experimental::optional<struct wl_resource*> const& id) const
 {
     wl_fixed_t x_resolved{wl_fixed_from_double(x)};
     wl_fixed_t y_resolved{wl_fixed_from_double(y)};
@@ -898,24 +895,24 @@ void mfw::DataDevice::send_enter_event(uint32_t serial, struct wl_resource* surf
     wl_resource_post_event(resource, Opcode::enter, serial, surface, x_resolved, y_resolved, id_resolved);
 }
 
-void mfw::DataDevice::send_leave_event() const
+void mw::DataDevice::send_leave_event() const
 {
     wl_resource_post_event(resource, Opcode::leave);
 }
 
-void mfw::DataDevice::send_motion_event(uint32_t time, double x, double y) const
+void mw::DataDevice::send_motion_event(uint32_t time, double x, double y) const
 {
     wl_fixed_t x_resolved{wl_fixed_from_double(x)};
     wl_fixed_t y_resolved{wl_fixed_from_double(y)};
     wl_resource_post_event(resource, Opcode::motion, time, x_resolved, y_resolved);
 }
 
-void mfw::DataDevice::send_drop_event() const
+void mw::DataDevice::send_drop_event() const
 {
     wl_resource_post_event(resource, Opcode::drop);
 }
 
-void mfw::DataDevice::send_selection_event(std::experimental::optional<struct wl_resource*> const& id) const
+void mw::DataDevice::send_selection_event(std::experimental::optional<struct wl_resource*> const& id) const
 {
     struct wl_resource* id_resolved = nullptr;
     if (id)
@@ -925,40 +922,40 @@ void mfw::DataDevice::send_selection_event(std::experimental::optional<struct wl
     wl_resource_post_event(resource, Opcode::selection, id_resolved);
 }
 
-void mfw::DataDevice::destroy_wayland_object() const
+void mw::DataDevice::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::DataDevice::Thunks::start_drag_types[] {
+struct wl_interface const* mw::DataDevice::Thunks::start_drag_types[] {
     &wl_data_source_interface_data,
     &wl_surface_interface_data,
     &wl_surface_interface_data,
     nullptr};
 
-struct wl_interface const* mfw::DataDevice::Thunks::set_selection_types[] {
+struct wl_interface const* mw::DataDevice::Thunks::set_selection_types[] {
     &wl_data_source_interface_data,
     nullptr};
 
-struct wl_interface const* mfw::DataDevice::Thunks::data_offer_types[] {
+struct wl_interface const* mw::DataDevice::Thunks::data_offer_types[] {
     &wl_data_offer_interface_data};
 
-struct wl_interface const* mfw::DataDevice::Thunks::enter_types[] {
+struct wl_interface const* mw::DataDevice::Thunks::enter_types[] {
     nullptr,
     &wl_surface_interface_data,
     nullptr,
     nullptr,
     &wl_data_offer_interface_data};
 
-struct wl_interface const* mfw::DataDevice::Thunks::selection_types[] {
+struct wl_interface const* mw::DataDevice::Thunks::selection_types[] {
     &wl_data_offer_interface_data};
 
-struct wl_message const mfw::DataDevice::Thunks::request_messages[] {
+struct wl_message const mw::DataDevice::Thunks::request_messages[] {
     {"start_drag", "?oo?ou", start_drag_types},
     {"set_selection", "?ou", set_selection_types},
     {"release", "2", all_null_types}};
 
-struct wl_message const mfw::DataDevice::Thunks::event_messages[] {
+struct wl_message const mw::DataDevice::Thunks::event_messages[] {
     {"data_offer", "n", data_offer_types},
     {"enter", "uoff?o", enter_types},
     {"leave", "", all_null_types},
@@ -966,19 +963,19 @@ struct wl_message const mfw::DataDevice::Thunks::event_messages[] {
     {"drop", "", all_null_types},
     {"selection", "?o", selection_types}};
 
-void const* mfw::DataDevice::Thunks::request_vtable[] {
+void const* mw::DataDevice::Thunks::request_vtable[] {
     (void*)Thunks::start_drag_thunk,
     (void*)Thunks::set_selection_thunk,
     (void*)Thunks::release_thunk};
 
 // DataDeviceManager
 
-mfw::DataDeviceManager* mfw::DataDeviceManager::from(struct wl_resource* resource)
+mw::DataDeviceManager* mw::DataDeviceManager::from(struct wl_resource* resource)
 {
     return static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::DataDeviceManager::Thunks
+struct mw::DataDeviceManager::Thunks
 {
     static void create_data_source_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
@@ -1042,7 +1039,7 @@ struct mfw::DataDeviceManager::Thunks
     static void const* request_vtable[];
 };
 
-mfw::DataDeviceManager::DataDeviceManager(struct wl_display* display, uint32_t max_version)
+mw::DataDeviceManager::DataDeviceManager(struct wl_display* display, uint32_t max_version)
     : global{wl_global_create(display, &wl_data_device_manager_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
@@ -1052,39 +1049,39 @@ mfw::DataDeviceManager::DataDeviceManager(struct wl_display* display, uint32_t m
     }
 }
 
-mfw::DataDeviceManager::~DataDeviceManager()
+mw::DataDeviceManager::~DataDeviceManager()
 {
     wl_global_destroy(global);
 }
 
-void mfw::DataDeviceManager::destroy_wayland_object(struct wl_resource* resource) const
+void mw::DataDeviceManager::destroy_wayland_object(struct wl_resource* resource) const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::DataDeviceManager::Thunks::create_data_source_types[] {
+struct wl_interface const* mw::DataDeviceManager::Thunks::create_data_source_types[] {
     &wl_data_source_interface_data};
 
-struct wl_interface const* mfw::DataDeviceManager::Thunks::get_data_device_types[] {
+struct wl_interface const* mw::DataDeviceManager::Thunks::get_data_device_types[] {
     &wl_data_device_interface_data,
     &wl_seat_interface_data};
 
-struct wl_message const mfw::DataDeviceManager::Thunks::request_messages[] {
+struct wl_message const mw::DataDeviceManager::Thunks::request_messages[] {
     {"create_data_source", "n", create_data_source_types},
     {"get_data_device", "no", get_data_device_types}};
 
-void const* mfw::DataDeviceManager::Thunks::request_vtable[] {
+void const* mw::DataDeviceManager::Thunks::request_vtable[] {
     (void*)Thunks::create_data_source_thunk,
     (void*)Thunks::get_data_device_thunk};
 
 // Shell
 
-mfw::Shell* mfw::Shell::from(struct wl_resource* resource)
+mw::Shell* mw::Shell::from(struct wl_resource* resource)
 {
     return static_cast<Shell*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Shell::Thunks
+struct mw::Shell::Thunks
 {
     static void get_shell_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
@@ -1131,7 +1128,7 @@ struct mfw::Shell::Thunks
     static void const* request_vtable[];
 };
 
-mfw::Shell::Shell(struct wl_display* display, uint32_t max_version)
+mw::Shell::Shell(struct wl_display* display, uint32_t max_version)
     : global{wl_global_create(display, &wl_shell_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
@@ -1141,34 +1138,34 @@ mfw::Shell::Shell(struct wl_display* display, uint32_t max_version)
     }
 }
 
-mfw::Shell::~Shell()
+mw::Shell::~Shell()
 {
     wl_global_destroy(global);
 }
 
-void mfw::Shell::destroy_wayland_object(struct wl_resource* resource) const
+void mw::Shell::destroy_wayland_object(struct wl_resource* resource) const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::Shell::Thunks::get_shell_surface_types[] {
+struct wl_interface const* mw::Shell::Thunks::get_shell_surface_types[] {
     &wl_shell_surface_interface_data,
     &wl_surface_interface_data};
 
-struct wl_message const mfw::Shell::Thunks::request_messages[] {
+struct wl_message const mw::Shell::Thunks::request_messages[] {
     {"get_shell_surface", "no", get_shell_surface_types}};
 
-void const* mfw::Shell::Thunks::request_vtable[] {
+void const* mw::Shell::Thunks::request_vtable[] {
     (void*)Thunks::get_shell_surface_thunk};
 
 // ShellSurface
 
-mfw::ShellSurface* mfw::ShellSurface::from(struct wl_resource* resource)
+mw::ShellSurface* mw::ShellSurface::from(struct wl_resource* resource)
 {
     return static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::ShellSurface::Thunks
+struct mw::ShellSurface::Thunks
 {
     static void pong_thunk(struct wl_client*, struct wl_resource* resource, uint32_t serial)
     {
@@ -1356,7 +1353,7 @@ struct mfw::ShellSurface::Thunks
     static void const* request_vtable[];
 };
 
-mfw::ShellSurface::ShellSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::ShellSurface::ShellSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_shell_surface_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -1368,47 +1365,47 @@ mfw::ShellSurface::ShellSurface(struct wl_client* client, struct wl_resource* pa
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::ShellSurface::send_ping_event(uint32_t serial) const
+void mw::ShellSurface::send_ping_event(uint32_t serial) const
 {
     wl_resource_post_event(resource, Opcode::ping, serial);
 }
 
-void mfw::ShellSurface::send_configure_event(uint32_t edges, int32_t width, int32_t height) const
+void mw::ShellSurface::send_configure_event(uint32_t edges, int32_t width, int32_t height) const
 {
     wl_resource_post_event(resource, Opcode::configure, edges, width, height);
 }
 
-void mfw::ShellSurface::send_popup_done_event() const
+void mw::ShellSurface::send_popup_done_event() const
 {
     wl_resource_post_event(resource, Opcode::popup_done);
 }
 
-void mfw::ShellSurface::destroy_wayland_object() const
+void mw::ShellSurface::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::ShellSurface::Thunks::move_types[] {
+struct wl_interface const* mw::ShellSurface::Thunks::move_types[] {
     &wl_seat_interface_data,
     nullptr};
 
-struct wl_interface const* mfw::ShellSurface::Thunks::resize_types[] {
+struct wl_interface const* mw::ShellSurface::Thunks::resize_types[] {
     &wl_seat_interface_data,
     nullptr,
     nullptr};
 
-struct wl_interface const* mfw::ShellSurface::Thunks::set_transient_types[] {
+struct wl_interface const* mw::ShellSurface::Thunks::set_transient_types[] {
     &wl_surface_interface_data,
     nullptr,
     nullptr,
     nullptr};
 
-struct wl_interface const* mfw::ShellSurface::Thunks::set_fullscreen_types[] {
+struct wl_interface const* mw::ShellSurface::Thunks::set_fullscreen_types[] {
     nullptr,
     nullptr,
     &wl_output_interface_data};
 
-struct wl_interface const* mfw::ShellSurface::Thunks::set_popup_types[] {
+struct wl_interface const* mw::ShellSurface::Thunks::set_popup_types[] {
     &wl_seat_interface_data,
     nullptr,
     &wl_surface_interface_data,
@@ -1416,10 +1413,10 @@ struct wl_interface const* mfw::ShellSurface::Thunks::set_popup_types[] {
     nullptr,
     nullptr};
 
-struct wl_interface const* mfw::ShellSurface::Thunks::set_maximized_types[] {
+struct wl_interface const* mw::ShellSurface::Thunks::set_maximized_types[] {
     &wl_output_interface_data};
 
-struct wl_message const mfw::ShellSurface::Thunks::request_messages[] {
+struct wl_message const mw::ShellSurface::Thunks::request_messages[] {
     {"pong", "u", all_null_types},
     {"move", "ou", move_types},
     {"resize", "ouu", resize_types},
@@ -1431,12 +1428,12 @@ struct wl_message const mfw::ShellSurface::Thunks::request_messages[] {
     {"set_title", "s", all_null_types},
     {"set_class", "s", all_null_types}};
 
-struct wl_message const mfw::ShellSurface::Thunks::event_messages[] {
+struct wl_message const mw::ShellSurface::Thunks::event_messages[] {
     {"ping", "u", all_null_types},
     {"configure", "uii", all_null_types},
     {"popup_done", "", all_null_types}};
 
-void const* mfw::ShellSurface::Thunks::request_vtable[] {
+void const* mw::ShellSurface::Thunks::request_vtable[] {
     (void*)Thunks::pong_thunk,
     (void*)Thunks::move_thunk,
     (void*)Thunks::resize_thunk,
@@ -1450,12 +1447,12 @@ void const* mfw::ShellSurface::Thunks::request_vtable[] {
 
 // Surface
 
-mfw::Surface* mfw::Surface::from(struct wl_resource* resource)
+mw::Surface* mw::Surface::from(struct wl_resource* resource)
 {
     return static_cast<Surface*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Surface::Thunks
+struct mw::Surface::Thunks
 {
     static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
     {
@@ -1648,7 +1645,7 @@ struct mfw::Surface::Thunks
     static void const* request_vtable[];
 };
 
-mfw::Surface::Surface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::Surface::Surface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_surface_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -1660,42 +1657,42 @@ mfw::Surface::Surface(struct wl_client* client, struct wl_resource* parent, uint
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::Surface::send_enter_event(struct wl_resource* output) const
+void mw::Surface::send_enter_event(struct wl_resource* output) const
 {
     wl_resource_post_event(resource, Opcode::enter, output);
 }
 
-void mfw::Surface::send_leave_event(struct wl_resource* output) const
+void mw::Surface::send_leave_event(struct wl_resource* output) const
 {
     wl_resource_post_event(resource, Opcode::leave, output);
 }
 
-void mfw::Surface::destroy_wayland_object() const
+void mw::Surface::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::Surface::Thunks::attach_types[] {
+struct wl_interface const* mw::Surface::Thunks::attach_types[] {
     &wl_buffer_interface_data,
     nullptr,
     nullptr};
 
-struct wl_interface const* mfw::Surface::Thunks::frame_types[] {
+struct wl_interface const* mw::Surface::Thunks::frame_types[] {
     &wl_callback_interface_data};
 
-struct wl_interface const* mfw::Surface::Thunks::set_opaque_region_types[] {
+struct wl_interface const* mw::Surface::Thunks::set_opaque_region_types[] {
     &wl_region_interface_data};
 
-struct wl_interface const* mfw::Surface::Thunks::set_input_region_types[] {
+struct wl_interface const* mw::Surface::Thunks::set_input_region_types[] {
     &wl_region_interface_data};
 
-struct wl_interface const* mfw::Surface::Thunks::enter_types[] {
+struct wl_interface const* mw::Surface::Thunks::enter_types[] {
     &wl_output_interface_data};
 
-struct wl_interface const* mfw::Surface::Thunks::leave_types[] {
+struct wl_interface const* mw::Surface::Thunks::leave_types[] {
     &wl_output_interface_data};
 
-struct wl_message const mfw::Surface::Thunks::request_messages[] {
+struct wl_message const mw::Surface::Thunks::request_messages[] {
     {"destroy", "", all_null_types},
     {"attach", "?oii", attach_types},
     {"damage", "iiii", all_null_types},
@@ -1707,11 +1704,11 @@ struct wl_message const mfw::Surface::Thunks::request_messages[] {
     {"set_buffer_scale", "3i", all_null_types},
     {"damage_buffer", "4iiii", all_null_types}};
 
-struct wl_message const mfw::Surface::Thunks::event_messages[] {
+struct wl_message const mw::Surface::Thunks::event_messages[] {
     {"enter", "o", enter_types},
     {"leave", "o", leave_types}};
 
-void const* mfw::Surface::Thunks::request_vtable[] {
+void const* mw::Surface::Thunks::request_vtable[] {
     (void*)Thunks::destroy_thunk,
     (void*)Thunks::attach_thunk,
     (void*)Thunks::damage_thunk,
@@ -1725,12 +1722,12 @@ void const* mfw::Surface::Thunks::request_vtable[] {
 
 // Seat
 
-mfw::Seat* mfw::Seat::from(struct wl_resource* resource)
+mw::Seat* mw::Seat::from(struct wl_resource* resource)
 {
     return static_cast<Seat*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Seat::Thunks
+struct mw::Seat::Thunks
 {
     static void get_pointer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
@@ -1828,7 +1825,7 @@ struct mfw::Seat::Thunks
     static void const* request_vtable[];
 };
 
-mfw::Seat::Seat(struct wl_display* display, uint32_t max_version)
+mw::Seat::Seat(struct wl_display* display, uint32_t max_version)
     : global{wl_global_create(display, &wl_seat_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
@@ -1838,52 +1835,52 @@ mfw::Seat::Seat(struct wl_display* display, uint32_t max_version)
     }
 }
 
-mfw::Seat::~Seat()
+mw::Seat::~Seat()
 {
     wl_global_destroy(global);
 }
 
-void mfw::Seat::send_capabilities_event(struct wl_resource* resource, uint32_t capabilities) const
+void mw::Seat::send_capabilities_event(struct wl_resource* resource, uint32_t capabilities) const
 {
     wl_resource_post_event(resource, Opcode::capabilities, capabilities);
 }
 
-bool mfw::Seat::version_supports_name(struct wl_resource* resource)
+bool mw::Seat::version_supports_name(struct wl_resource* resource)
 {
     return wl_resource_get_version(resource) >= 2;
 }
 
-void mfw::Seat::send_name_event(struct wl_resource* resource, std::string const& name) const
+void mw::Seat::send_name_event(struct wl_resource* resource, std::string const& name) const
 {
     const char* name_resolved = name.c_str();
     wl_resource_post_event(resource, Opcode::name, name_resolved);
 }
 
-void mfw::Seat::destroy_wayland_object(struct wl_resource* resource) const
+void mw::Seat::destroy_wayland_object(struct wl_resource* resource) const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::Seat::Thunks::get_pointer_types[] {
+struct wl_interface const* mw::Seat::Thunks::get_pointer_types[] {
     &wl_pointer_interface_data};
 
-struct wl_interface const* mfw::Seat::Thunks::get_keyboard_types[] {
+struct wl_interface const* mw::Seat::Thunks::get_keyboard_types[] {
     &wl_keyboard_interface_data};
 
-struct wl_interface const* mfw::Seat::Thunks::get_touch_types[] {
+struct wl_interface const* mw::Seat::Thunks::get_touch_types[] {
     &wl_touch_interface_data};
 
-struct wl_message const mfw::Seat::Thunks::request_messages[] {
+struct wl_message const mw::Seat::Thunks::request_messages[] {
     {"get_pointer", "n", get_pointer_types},
     {"get_keyboard", "n", get_keyboard_types},
     {"get_touch", "n", get_touch_types},
     {"release", "5", all_null_types}};
 
-struct wl_message const mfw::Seat::Thunks::event_messages[] {
+struct wl_message const mw::Seat::Thunks::event_messages[] {
     {"capabilities", "u", all_null_types},
     {"name", "2s", all_null_types}};
 
-void const* mfw::Seat::Thunks::request_vtable[] {
+void const* mw::Seat::Thunks::request_vtable[] {
     (void*)Thunks::get_pointer_thunk,
     (void*)Thunks::get_keyboard_thunk,
     (void*)Thunks::get_touch_thunk,
@@ -1891,12 +1888,12 @@ void const* mfw::Seat::Thunks::request_vtable[] {
 
 // Pointer
 
-mfw::Pointer* mfw::Pointer::from(struct wl_resource* resource)
+mw::Pointer* mw::Pointer::from(struct wl_resource* resource)
 {
     return static_cast<Pointer*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Pointer::Thunks
+struct mw::Pointer::Thunks
 {
     static void set_cursor_thunk(struct wl_client*, struct wl_resource* resource, uint32_t serial, struct wl_resource* surface, int32_t hotspot_x, int32_t hotspot_y)
     {
@@ -1948,7 +1945,7 @@ struct mfw::Pointer::Thunks
     static void const* request_vtable[];
 };
 
-mfw::Pointer::Pointer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::Pointer::Pointer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_pointer_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -1960,102 +1957,102 @@ mfw::Pointer::Pointer(struct wl_client* client, struct wl_resource* parent, uint
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::Pointer::send_enter_event(uint32_t serial, struct wl_resource* surface, double surface_x, double surface_y) const
+void mw::Pointer::send_enter_event(uint32_t serial, struct wl_resource* surface, double surface_x, double surface_y) const
 {
     wl_fixed_t surface_x_resolved{wl_fixed_from_double(surface_x)};
     wl_fixed_t surface_y_resolved{wl_fixed_from_double(surface_y)};
     wl_resource_post_event(resource, Opcode::enter, serial, surface, surface_x_resolved, surface_y_resolved);
 }
 
-void mfw::Pointer::send_leave_event(uint32_t serial, struct wl_resource* surface) const
+void mw::Pointer::send_leave_event(uint32_t serial, struct wl_resource* surface) const
 {
     wl_resource_post_event(resource, Opcode::leave, serial, surface);
 }
 
-void mfw::Pointer::send_motion_event(uint32_t time, double surface_x, double surface_y) const
+void mw::Pointer::send_motion_event(uint32_t time, double surface_x, double surface_y) const
 {
     wl_fixed_t surface_x_resolved{wl_fixed_from_double(surface_x)};
     wl_fixed_t surface_y_resolved{wl_fixed_from_double(surface_y)};
     wl_resource_post_event(resource, Opcode::motion, time, surface_x_resolved, surface_y_resolved);
 }
 
-void mfw::Pointer::send_button_event(uint32_t serial, uint32_t time, uint32_t button, uint32_t state) const
+void mw::Pointer::send_button_event(uint32_t serial, uint32_t time, uint32_t button, uint32_t state) const
 {
     wl_resource_post_event(resource, Opcode::button, serial, time, button, state);
 }
 
-void mfw::Pointer::send_axis_event(uint32_t time, uint32_t axis, double value) const
+void mw::Pointer::send_axis_event(uint32_t time, uint32_t axis, double value) const
 {
     wl_fixed_t value_resolved{wl_fixed_from_double(value)};
     wl_resource_post_event(resource, Opcode::axis, time, axis, value_resolved);
 }
 
-bool mfw::Pointer::version_supports_frame()
+bool mw::Pointer::version_supports_frame()
 {
     return wl_resource_get_version(resource) >= 5;
 }
 
-void mfw::Pointer::send_frame_event() const
+void mw::Pointer::send_frame_event() const
 {
     wl_resource_post_event(resource, Opcode::frame);
 }
 
-bool mfw::Pointer::version_supports_axis_source()
+bool mw::Pointer::version_supports_axis_source()
 {
     return wl_resource_get_version(resource) >= 5;
 }
 
-void mfw::Pointer::send_axis_source_event(uint32_t axis_source) const
+void mw::Pointer::send_axis_source_event(uint32_t axis_source) const
 {
     wl_resource_post_event(resource, Opcode::axis_source, axis_source);
 }
 
-bool mfw::Pointer::version_supports_axis_stop()
+bool mw::Pointer::version_supports_axis_stop()
 {
     return wl_resource_get_version(resource) >= 5;
 }
 
-void mfw::Pointer::send_axis_stop_event(uint32_t time, uint32_t axis) const
+void mw::Pointer::send_axis_stop_event(uint32_t time, uint32_t axis) const
 {
     wl_resource_post_event(resource, Opcode::axis_stop, time, axis);
 }
 
-bool mfw::Pointer::version_supports_axis_discrete()
+bool mw::Pointer::version_supports_axis_discrete()
 {
     return wl_resource_get_version(resource) >= 5;
 }
 
-void mfw::Pointer::send_axis_discrete_event(uint32_t axis, int32_t discrete) const
+void mw::Pointer::send_axis_discrete_event(uint32_t axis, int32_t discrete) const
 {
     wl_resource_post_event(resource, Opcode::axis_discrete, axis, discrete);
 }
 
-void mfw::Pointer::destroy_wayland_object() const
+void mw::Pointer::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::Pointer::Thunks::set_cursor_types[] {
+struct wl_interface const* mw::Pointer::Thunks::set_cursor_types[] {
     nullptr,
     &wl_surface_interface_data,
     nullptr,
     nullptr};
 
-struct wl_interface const* mfw::Pointer::Thunks::enter_types[] {
+struct wl_interface const* mw::Pointer::Thunks::enter_types[] {
     nullptr,
     &wl_surface_interface_data,
     nullptr,
     nullptr};
 
-struct wl_interface const* mfw::Pointer::Thunks::leave_types[] {
+struct wl_interface const* mw::Pointer::Thunks::leave_types[] {
     nullptr,
     &wl_surface_interface_data};
 
-struct wl_message const mfw::Pointer::Thunks::request_messages[] {
+struct wl_message const mw::Pointer::Thunks::request_messages[] {
     {"set_cursor", "u?oii", set_cursor_types},
     {"release", "3", all_null_types}};
 
-struct wl_message const mfw::Pointer::Thunks::event_messages[] {
+struct wl_message const mw::Pointer::Thunks::event_messages[] {
     {"enter", "uoff", enter_types},
     {"leave", "uo", leave_types},
     {"motion", "uff", all_null_types},
@@ -2066,18 +2063,18 @@ struct wl_message const mfw::Pointer::Thunks::event_messages[] {
     {"axis_stop", "5uu", all_null_types},
     {"axis_discrete", "5ui", all_null_types}};
 
-void const* mfw::Pointer::Thunks::request_vtable[] {
+void const* mw::Pointer::Thunks::request_vtable[] {
     (void*)Thunks::set_cursor_thunk,
     (void*)Thunks::release_thunk};
 
 // Keyboard
 
-mfw::Keyboard* mfw::Keyboard::from(struct wl_resource* resource)
+mw::Keyboard* mw::Keyboard::from(struct wl_resource* resource)
 {
     return static_cast<Keyboard*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Keyboard::Thunks
+struct mw::Keyboard::Thunks
 {
     static void release_thunk(struct wl_client*, struct wl_resource* resource)
     {
@@ -2107,7 +2104,7 @@ struct mfw::Keyboard::Thunks
     static void const* request_vtable[];
 };
 
-mfw::Keyboard::Keyboard(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::Keyboard::Keyboard(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_keyboard_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -2119,60 +2116,60 @@ mfw::Keyboard::Keyboard(struct wl_client* client, struct wl_resource* parent, ui
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::Keyboard::send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const
+void mw::Keyboard::send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const
 {
     int32_t fd_resolved{fd};
     wl_resource_post_event(resource, Opcode::keymap, format, fd_resolved, size);
 }
 
-void mfw::Keyboard::send_enter_event(uint32_t serial, struct wl_resource* surface, struct wl_array* keys) const
+void mw::Keyboard::send_enter_event(uint32_t serial, struct wl_resource* surface, struct wl_array* keys) const
 {
     wl_resource_post_event(resource, Opcode::enter, serial, surface, keys);
 }
 
-void mfw::Keyboard::send_leave_event(uint32_t serial, struct wl_resource* surface) const
+void mw::Keyboard::send_leave_event(uint32_t serial, struct wl_resource* surface) const
 {
     wl_resource_post_event(resource, Opcode::leave, serial, surface);
 }
 
-void mfw::Keyboard::send_key_event(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const
+void mw::Keyboard::send_key_event(uint32_t serial, uint32_t time, uint32_t key, uint32_t state) const
 {
     wl_resource_post_event(resource, Opcode::key, serial, time, key, state);
 }
 
-void mfw::Keyboard::send_modifiers_event(uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) const
+void mw::Keyboard::send_modifiers_event(uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) const
 {
     wl_resource_post_event(resource, Opcode::modifiers, serial, mods_depressed, mods_latched, mods_locked, group);
 }
 
-bool mfw::Keyboard::version_supports_repeat_info()
+bool mw::Keyboard::version_supports_repeat_info()
 {
     return wl_resource_get_version(resource) >= 4;
 }
 
-void mfw::Keyboard::send_repeat_info_event(int32_t rate, int32_t delay) const
+void mw::Keyboard::send_repeat_info_event(int32_t rate, int32_t delay) const
 {
     wl_resource_post_event(resource, Opcode::repeat_info, rate, delay);
 }
 
-void mfw::Keyboard::destroy_wayland_object() const
+void mw::Keyboard::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::Keyboard::Thunks::enter_types[] {
+struct wl_interface const* mw::Keyboard::Thunks::enter_types[] {
     nullptr,
     &wl_surface_interface_data,
     nullptr};
 
-struct wl_interface const* mfw::Keyboard::Thunks::leave_types[] {
+struct wl_interface const* mw::Keyboard::Thunks::leave_types[] {
     nullptr,
     &wl_surface_interface_data};
 
-struct wl_message const mfw::Keyboard::Thunks::request_messages[] {
+struct wl_message const mw::Keyboard::Thunks::request_messages[] {
     {"release", "3", all_null_types}};
 
-struct wl_message const mfw::Keyboard::Thunks::event_messages[] {
+struct wl_message const mw::Keyboard::Thunks::event_messages[] {
     {"keymap", "uhu", all_null_types},
     {"enter", "uoa", enter_types},
     {"leave", "uo", leave_types},
@@ -2180,17 +2177,17 @@ struct wl_message const mfw::Keyboard::Thunks::event_messages[] {
     {"modifiers", "uuuuu", all_null_types},
     {"repeat_info", "4ii", all_null_types}};
 
-void const* mfw::Keyboard::Thunks::request_vtable[] {
+void const* mw::Keyboard::Thunks::request_vtable[] {
     (void*)Thunks::release_thunk};
 
 // Touch
 
-mfw::Touch* mfw::Touch::from(struct wl_resource* resource)
+mw::Touch* mw::Touch::from(struct wl_resource* resource)
 {
     return static_cast<Touch*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Touch::Thunks
+struct mw::Touch::Thunks
 {
     static void release_thunk(struct wl_client*, struct wl_resource* resource)
     {
@@ -2219,7 +2216,7 @@ struct mfw::Touch::Thunks
     static void const* request_vtable[];
 };
 
-mfw::Touch::Touch(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::Touch::Touch(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_touch_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -2231,64 +2228,64 @@ mfw::Touch::Touch(struct wl_client* client, struct wl_resource* parent, uint32_t
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::Touch::send_down_event(uint32_t serial, uint32_t time, struct wl_resource* surface, int32_t id, double x, double y) const
+void mw::Touch::send_down_event(uint32_t serial, uint32_t time, struct wl_resource* surface, int32_t id, double x, double y) const
 {
     wl_fixed_t x_resolved{wl_fixed_from_double(x)};
     wl_fixed_t y_resolved{wl_fixed_from_double(y)};
     wl_resource_post_event(resource, Opcode::down, serial, time, surface, id, x_resolved, y_resolved);
 }
 
-void mfw::Touch::send_up_event(uint32_t serial, uint32_t time, int32_t id) const
+void mw::Touch::send_up_event(uint32_t serial, uint32_t time, int32_t id) const
 {
     wl_resource_post_event(resource, Opcode::up, serial, time, id);
 }
 
-void mfw::Touch::send_motion_event(uint32_t time, int32_t id, double x, double y) const
+void mw::Touch::send_motion_event(uint32_t time, int32_t id, double x, double y) const
 {
     wl_fixed_t x_resolved{wl_fixed_from_double(x)};
     wl_fixed_t y_resolved{wl_fixed_from_double(y)};
     wl_resource_post_event(resource, Opcode::motion, time, id, x_resolved, y_resolved);
 }
 
-void mfw::Touch::send_frame_event() const
+void mw::Touch::send_frame_event() const
 {
     wl_resource_post_event(resource, Opcode::frame);
 }
 
-void mfw::Touch::send_cancel_event() const
+void mw::Touch::send_cancel_event() const
 {
     wl_resource_post_event(resource, Opcode::cancel);
 }
 
-bool mfw::Touch::version_supports_shape()
+bool mw::Touch::version_supports_shape()
 {
     return wl_resource_get_version(resource) >= 6;
 }
 
-void mfw::Touch::send_shape_event(int32_t id, double major, double minor) const
+void mw::Touch::send_shape_event(int32_t id, double major, double minor) const
 {
     wl_fixed_t major_resolved{wl_fixed_from_double(major)};
     wl_fixed_t minor_resolved{wl_fixed_from_double(minor)};
     wl_resource_post_event(resource, Opcode::shape, id, major_resolved, minor_resolved);
 }
 
-bool mfw::Touch::version_supports_orientation()
+bool mw::Touch::version_supports_orientation()
 {
     return wl_resource_get_version(resource) >= 6;
 }
 
-void mfw::Touch::send_orientation_event(int32_t id, double orientation) const
+void mw::Touch::send_orientation_event(int32_t id, double orientation) const
 {
     wl_fixed_t orientation_resolved{wl_fixed_from_double(orientation)};
     wl_resource_post_event(resource, Opcode::orientation, id, orientation_resolved);
 }
 
-void mfw::Touch::destroy_wayland_object() const
+void mw::Touch::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::Touch::Thunks::down_types[] {
+struct wl_interface const* mw::Touch::Thunks::down_types[] {
     nullptr,
     nullptr,
     &wl_surface_interface_data,
@@ -2296,10 +2293,10 @@ struct wl_interface const* mfw::Touch::Thunks::down_types[] {
     nullptr,
     nullptr};
 
-struct wl_message const mfw::Touch::Thunks::request_messages[] {
+struct wl_message const mw::Touch::Thunks::request_messages[] {
     {"release", "3", all_null_types}};
 
-struct wl_message const mfw::Touch::Thunks::event_messages[] {
+struct wl_message const mw::Touch::Thunks::event_messages[] {
     {"down", "uuoiff", down_types},
     {"up", "uui", all_null_types},
     {"motion", "uiff", all_null_types},
@@ -2308,17 +2305,17 @@ struct wl_message const mfw::Touch::Thunks::event_messages[] {
     {"shape", "6iff", all_null_types},
     {"orientation", "6if", all_null_types}};
 
-void const* mfw::Touch::Thunks::request_vtable[] {
+void const* mw::Touch::Thunks::request_vtable[] {
     (void*)Thunks::release_thunk};
 
 // Output
 
-mfw::Output* mfw::Output::from(struct wl_resource* resource)
+mw::Output* mw::Output::from(struct wl_resource* resource)
 {
     return static_cast<Output*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Output::Thunks
+struct mw::Output::Thunks
 {
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -2366,7 +2363,7 @@ struct mfw::Output::Thunks
     static void const* request_vtable[];
 };
 
-mfw::Output::Output(struct wl_display* display, uint32_t max_version)
+mw::Output::Output(struct wl_display* display, uint32_t max_version)
     : global{wl_global_create(display, &wl_output_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
@@ -2376,49 +2373,49 @@ mfw::Output::Output(struct wl_display* display, uint32_t max_version)
     }
 }
 
-mfw::Output::~Output()
+mw::Output::~Output()
 {
     wl_global_destroy(global);
 }
 
-void mfw::Output::send_geometry_event(struct wl_resource* resource, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const
+void mw::Output::send_geometry_event(struct wl_resource* resource, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const
 {
     const char* make_resolved = make.c_str();
     const char* model_resolved = model.c_str();
     wl_resource_post_event(resource, Opcode::geometry, x, y, physical_width, physical_height, subpixel, make_resolved, model_resolved, transform);
 }
 
-void mfw::Output::send_mode_event(struct wl_resource* resource, uint32_t flags, int32_t width, int32_t height, int32_t refresh) const
+void mw::Output::send_mode_event(struct wl_resource* resource, uint32_t flags, int32_t width, int32_t height, int32_t refresh) const
 {
     wl_resource_post_event(resource, Opcode::mode, flags, width, height, refresh);
 }
 
-bool mfw::Output::version_supports_done(struct wl_resource* resource)
+bool mw::Output::version_supports_done(struct wl_resource* resource)
 {
     return wl_resource_get_version(resource) >= 2;
 }
 
-void mfw::Output::send_done_event(struct wl_resource* resource) const
+void mw::Output::send_done_event(struct wl_resource* resource) const
 {
     wl_resource_post_event(resource, Opcode::done);
 }
 
-bool mfw::Output::version_supports_scale(struct wl_resource* resource)
+bool mw::Output::version_supports_scale(struct wl_resource* resource)
 {
     return wl_resource_get_version(resource) >= 2;
 }
 
-void mfw::Output::send_scale_event(struct wl_resource* resource, int32_t factor) const
+void mw::Output::send_scale_event(struct wl_resource* resource, int32_t factor) const
 {
     wl_resource_post_event(resource, Opcode::scale, factor);
 }
 
-void mfw::Output::destroy_wayland_object(struct wl_resource* resource) const
+void mw::Output::destroy_wayland_object(struct wl_resource* resource) const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::Output::Thunks::geometry_types[] {
+struct wl_interface const* mw::Output::Thunks::geometry_types[] {
     nullptr,
     nullptr,
     nullptr,
@@ -2428,26 +2425,26 @@ struct wl_interface const* mfw::Output::Thunks::geometry_types[] {
     nullptr,
     nullptr};
 
-struct wl_message const mfw::Output::Thunks::request_messages[] {
+struct wl_message const mw::Output::Thunks::request_messages[] {
     {"release", "3", all_null_types}};
 
-struct wl_message const mfw::Output::Thunks::event_messages[] {
+struct wl_message const mw::Output::Thunks::event_messages[] {
     {"geometry", "iiiiissi", geometry_types},
     {"mode", "uiii", all_null_types},
     {"done", "2", all_null_types},
     {"scale", "2i", all_null_types}};
 
-void const* mfw::Output::Thunks::request_vtable[] {
+void const* mw::Output::Thunks::request_vtable[] {
     (void*)Thunks::release_thunk};
 
 // Region
 
-mfw::Region* mfw::Region::from(struct wl_resource* resource)
+mw::Region* mw::Region::from(struct wl_resource* resource)
 {
     return static_cast<Region*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Region::Thunks
+struct mw::Region::Thunks
 {
     static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
     {
@@ -2506,7 +2503,7 @@ struct mfw::Region::Thunks
     static void const* request_vtable[];
 };
 
-mfw::Region::Region(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::Region::Region(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_region_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -2518,29 +2515,29 @@ mfw::Region::Region(struct wl_client* client, struct wl_resource* parent, uint32
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::Region::destroy_wayland_object() const
+void mw::Region::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_message const mfw::Region::Thunks::request_messages[] {
+struct wl_message const mw::Region::Thunks::request_messages[] {
     {"destroy", "", all_null_types},
     {"add", "iiii", all_null_types},
     {"subtract", "iiii", all_null_types}};
 
-void const* mfw::Region::Thunks::request_vtable[] {
+void const* mw::Region::Thunks::request_vtable[] {
     (void*)Thunks::destroy_thunk,
     (void*)Thunks::add_thunk,
     (void*)Thunks::subtract_thunk};
 
 // Subcompositor
 
-mfw::Subcompositor* mfw::Subcompositor::from(struct wl_resource* resource)
+mw::Subcompositor* mw::Subcompositor::from(struct wl_resource* resource)
 {
     return static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Subcompositor::Thunks
+struct mw::Subcompositor::Thunks
 {
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -2603,7 +2600,7 @@ struct mfw::Subcompositor::Thunks
     static void const* request_vtable[];
 };
 
-mfw::Subcompositor::Subcompositor(struct wl_display* display, uint32_t max_version)
+mw::Subcompositor::Subcompositor(struct wl_display* display, uint32_t max_version)
     : global{wl_global_create(display, &wl_subcompositor_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
@@ -2613,37 +2610,37 @@ mfw::Subcompositor::Subcompositor(struct wl_display* display, uint32_t max_versi
     }
 }
 
-mfw::Subcompositor::~Subcompositor()
+mw::Subcompositor::~Subcompositor()
 {
     wl_global_destroy(global);
 }
 
-void mfw::Subcompositor::destroy_wayland_object(struct wl_resource* resource) const
+void mw::Subcompositor::destroy_wayland_object(struct wl_resource* resource) const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::Subcompositor::Thunks::get_subsurface_types[] {
+struct wl_interface const* mw::Subcompositor::Thunks::get_subsurface_types[] {
     &wl_subsurface_interface_data,
     &wl_surface_interface_data,
     &wl_surface_interface_data};
 
-struct wl_message const mfw::Subcompositor::Thunks::request_messages[] {
+struct wl_message const mw::Subcompositor::Thunks::request_messages[] {
     {"destroy", "", all_null_types},
     {"get_subsurface", "noo", get_subsurface_types}};
 
-void const* mfw::Subcompositor::Thunks::request_vtable[] {
+void const* mw::Subcompositor::Thunks::request_vtable[] {
     (void*)Thunks::destroy_thunk,
     (void*)Thunks::get_subsurface_thunk};
 
 // Subsurface
 
-mfw::Subsurface* mfw::Subsurface::from(struct wl_resource* resource)
+mw::Subsurface* mw::Subsurface::from(struct wl_resource* resource)
 {
     return static_cast<Subsurface*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::Subsurface::Thunks
+struct mw::Subsurface::Thunks
 {
     static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
     {
@@ -2752,7 +2749,7 @@ struct mfw::Subsurface::Thunks
     static void const* request_vtable[];
 };
 
-mfw::Subsurface::Subsurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::Subsurface::Subsurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &wl_subsurface_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -2764,18 +2761,18 @@ mfw::Subsurface::Subsurface(struct wl_client* client, struct wl_resource* parent
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::Subsurface::destroy_wayland_object() const
+void mw::Subsurface::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::Subsurface::Thunks::place_above_types[] {
+struct wl_interface const* mw::Subsurface::Thunks::place_above_types[] {
     &wl_surface_interface_data};
 
-struct wl_interface const* mfw::Subsurface::Thunks::place_below_types[] {
+struct wl_interface const* mw::Subsurface::Thunks::place_below_types[] {
     &wl_surface_interface_data};
 
-struct wl_message const mfw::Subsurface::Thunks::request_messages[] {
+struct wl_message const mw::Subsurface::Thunks::request_messages[] {
     {"destroy", "", all_null_types},
     {"set_position", "ii", all_null_types},
     {"place_above", "o", place_above_types},
@@ -2783,7 +2780,7 @@ struct wl_message const mfw::Subsurface::Thunks::request_messages[] {
     {"set_sync", "", all_null_types},
     {"set_desync", "", all_null_types}};
 
-void const* mfw::Subsurface::Thunks::request_vtable[] {
+void const* mw::Subsurface::Thunks::request_vtable[] {
     (void*)Thunks::destroy_thunk,
     (void*)Thunks::set_position_thunk,
     (void*)Thunks::place_above_thunk,
@@ -2793,111 +2790,108 @@ void const* mfw::Subsurface::Thunks::request_vtable[] {
 
 namespace mir
 {
-namespace frontend
-{
 namespace wayland
 {
 
 struct wl_interface const wl_callback_interface_data {
     "wl_callback", 1,
     0, nullptr,
-    1, mfw::Callback::Thunks::event_messages};
+    1, mw::Callback::Thunks::event_messages};
 
 struct wl_interface const wl_compositor_interface_data {
     "wl_compositor", 4,
-    2, mfw::Compositor::Thunks::request_messages,
+    2, mw::Compositor::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_shm_pool_interface_data {
     "wl_shm_pool", 1,
-    3, mfw::ShmPool::Thunks::request_messages,
+    3, mw::ShmPool::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_shm_interface_data {
     "wl_shm", 1,
-    1, mfw::Shm::Thunks::request_messages,
-    1, mfw::Shm::Thunks::event_messages};
+    1, mw::Shm::Thunks::request_messages,
+    1, mw::Shm::Thunks::event_messages};
 
 struct wl_interface const wl_buffer_interface_data {
     "wl_buffer", 1,
-    1, mfw::Buffer::Thunks::request_messages,
-    1, mfw::Buffer::Thunks::event_messages};
+    1, mw::Buffer::Thunks::request_messages,
+    1, mw::Buffer::Thunks::event_messages};
 
 struct wl_interface const wl_data_offer_interface_data {
     "wl_data_offer", 3,
-    5, mfw::DataOffer::Thunks::request_messages,
-    3, mfw::DataOffer::Thunks::event_messages};
+    5, mw::DataOffer::Thunks::request_messages,
+    3, mw::DataOffer::Thunks::event_messages};
 
 struct wl_interface const wl_data_source_interface_data {
     "wl_data_source", 3,
-    3, mfw::DataSource::Thunks::request_messages,
-    6, mfw::DataSource::Thunks::event_messages};
+    3, mw::DataSource::Thunks::request_messages,
+    6, mw::DataSource::Thunks::event_messages};
 
 struct wl_interface const wl_data_device_interface_data {
     "wl_data_device", 3,
-    3, mfw::DataDevice::Thunks::request_messages,
-    6, mfw::DataDevice::Thunks::event_messages};
+    3, mw::DataDevice::Thunks::request_messages,
+    6, mw::DataDevice::Thunks::event_messages};
 
 struct wl_interface const wl_data_device_manager_interface_data {
     "wl_data_device_manager", 3,
-    2, mfw::DataDeviceManager::Thunks::request_messages,
+    2, mw::DataDeviceManager::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_shell_interface_data {
     "wl_shell", 1,
-    1, mfw::Shell::Thunks::request_messages,
+    1, mw::Shell::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_shell_surface_interface_data {
     "wl_shell_surface", 1,
-    10, mfw::ShellSurface::Thunks::request_messages,
-    3, mfw::ShellSurface::Thunks::event_messages};
+    10, mw::ShellSurface::Thunks::request_messages,
+    3, mw::ShellSurface::Thunks::event_messages};
 
 struct wl_interface const wl_surface_interface_data {
     "wl_surface", 4,
-    10, mfw::Surface::Thunks::request_messages,
-    2, mfw::Surface::Thunks::event_messages};
+    10, mw::Surface::Thunks::request_messages,
+    2, mw::Surface::Thunks::event_messages};
 
 struct wl_interface const wl_seat_interface_data {
     "wl_seat", 6,
-    4, mfw::Seat::Thunks::request_messages,
-    2, mfw::Seat::Thunks::event_messages};
+    4, mw::Seat::Thunks::request_messages,
+    2, mw::Seat::Thunks::event_messages};
 
 struct wl_interface const wl_pointer_interface_data {
     "wl_pointer", 6,
-    2, mfw::Pointer::Thunks::request_messages,
-    9, mfw::Pointer::Thunks::event_messages};
+    2, mw::Pointer::Thunks::request_messages,
+    9, mw::Pointer::Thunks::event_messages};
 
 struct wl_interface const wl_keyboard_interface_data {
     "wl_keyboard", 6,
-    1, mfw::Keyboard::Thunks::request_messages,
-    6, mfw::Keyboard::Thunks::event_messages};
+    1, mw::Keyboard::Thunks::request_messages,
+    6, mw::Keyboard::Thunks::event_messages};
 
 struct wl_interface const wl_touch_interface_data {
     "wl_touch", 6,
-    1, mfw::Touch::Thunks::request_messages,
-    7, mfw::Touch::Thunks::event_messages};
+    1, mw::Touch::Thunks::request_messages,
+    7, mw::Touch::Thunks::event_messages};
 
 struct wl_interface const wl_output_interface_data {
     "wl_output", 3,
-    1, mfw::Output::Thunks::request_messages,
-    4, mfw::Output::Thunks::event_messages};
+    1, mw::Output::Thunks::request_messages,
+    4, mw::Output::Thunks::event_messages};
 
 struct wl_interface const wl_region_interface_data {
     "wl_region", 1,
-    3, mfw::Region::Thunks::request_messages,
+    3, mw::Region::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_subcompositor_interface_data {
     "wl_subcompositor", 1,
-    2, mfw::Subcompositor::Thunks::request_messages,
+    2, mw::Subcompositor::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_subsurface_interface_data {
     "wl_subsurface", 1,
-    6, mfw::Subsurface::Thunks::request_messages,
+    6, mw::Subsurface::Thunks::request_messages,
     0, nullptr};
 
-}
 }
 }

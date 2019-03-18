@@ -28,7 +28,7 @@ Interface::Interface(xmlpp::Element const& node,
     : wl_name{node.get_attribute_value("name")},
       version{std::stoi(node.get_attribute_value("version"))},
       generated_name{name_transform(wl_name)},
-      nmspace{"mfw::" + generated_name + "::"},
+      nmspace{"mw::" + generated_name + "::"},
       is_global{constructable_interfaces.count(wl_name) == 0},
       requests{get_requests(node, generated_name, is_global)},
       events{get_events(node, generated_name, is_global)},
@@ -73,7 +73,7 @@ Emitter Interface::implementation() const
         empty_line,
         EmptyLineList{
             Lines{
-                {"mfw::", generated_name, "* ", nmspace, "from(struct wl_resource* resource)"},
+                {"mw::", generated_name, "* ", nmspace, "from(struct wl_resource* resource)"},
                 Block{
                     {"return static_cast<", generated_name, "*>(wl_resource_get_user_data(resource));"}
                 }

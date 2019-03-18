@@ -15,8 +15,6 @@
 
 namespace mir
 {
-namespace frontend
-{
 namespace wayland
 {
 
@@ -106,7 +104,6 @@ private:
     virtual void destroy() = 0;
 };
 
-}
 }
 }
 

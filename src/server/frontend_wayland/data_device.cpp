@@ -23,13 +23,14 @@
 #include <algorithm>
 
 namespace mf = mir::frontend;
+namespace mw = mir::wayland;
 
 namespace
 {
 class DataDeviceManager;
 class DataSource;
 
-struct DataOffer : mf::wayland::DataOffer
+struct DataOffer : mw::DataOffer
 {
     DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id, DataSource* source);
 
@@ -56,11 +57,11 @@ struct DataOffer : mf::wayland::DataOffer
     DataSource* const source;
 };
 
-struct DataSource : mf::wayland::DataSource
+struct DataSource : mw::DataSource
 {
 public:
     DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id, DataDeviceManager* manager)
-        : mf::wayland::DataSource{client, parent, id},
+        : mw::DataSource{client, parent, id},
           manager{manager}
     {
     }
@@ -93,7 +94,7 @@ public:
     void send_send(std::string const& mime_type, mir::Fd fd);
 };
 
-struct DataDevice : mf::wayland::DataDevice, mf::WlSeat::ListenerTracker
+struct DataDevice : mw::DataDevice, mf::WlSeat::ListenerTracker
 {
     DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id, DataDeviceManager* manager, mf::WlSeat* seat);
     ~DataDevice();
@@ -236,7 +237,7 @@ void DataDeviceManager::remove_listener(DataDevice* listener)
 }
 
 DataDevice::DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id, DataDeviceManager* manager, mf::WlSeat* seat) :
-    mf::wayland::DataDevice(client, parent, id),
+    mw::DataDevice(client, parent, id),
     manager{manager},
     seat{seat}
 {
@@ -293,11 +294,11 @@ void DataDevice::focus_on(wl_client* focus)
 }
 
 DataOffer::DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id, DataSource* source) :
-    mf::wayland::DataOffer(client, parent, id),
+    mw::DataOffer(client, parent, id),
     source{source}
 {
     source->add_listener(this);
-    auto device = mf::wayland::DataDevice::from(parent);
+    auto device = mw::DataDevice::from(parent);
     device->send_data_offer_event(resource);
     for (auto const& type : source->mime_types)
     {

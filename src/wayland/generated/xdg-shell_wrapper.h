@@ -15,8 +15,6 @@
 
 namespace mir
 {
-namespace frontend
-{
 namespace wayland
 {
 
@@ -261,7 +259,6 @@ private:
     virtual void grab(struct wl_resource* seat, uint32_t serial) = 0;
 };
 
-}
 }
 }
 
