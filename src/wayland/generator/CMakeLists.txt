@@ -17,3 +17,7 @@ add_executable(mir_wayland_generator
 target_link_libraries(mir_wayland_generator
   ${XMLPP_LDFLAGS} ${XMLPP_LIBRARIES}
 )
+
+install(TARGETS mir_wayland_generator
+    DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
