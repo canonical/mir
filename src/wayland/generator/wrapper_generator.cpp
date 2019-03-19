@@ -166,7 +166,7 @@ int main(int argc, char** argv)
     Emitter usage_emitter = Lines{
         empty_line,
         "/*",
-        {"Usage: ./", file_name_from_path(argv[0]), " prefix header input mode"},
+        {"Usage: ./", file_name_from_path(argv[0]), " <prefix> <input> <mode>"},
         Block{
             "prefix: the name prefix which will be removed, such as wl_",
             "        to not use a prefix, use _ or anything that won't match the start of a name",
