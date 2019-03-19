@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_DATA_DEVICE_H_
 #define MIR_FRONTEND_DATA_DEVICE_H_
 
-#include "generated/wayland_wrapper.h"
+#include "wayland_wrapper.h"
 
 namespace mir
 {

@@ -1,0 +1,207 @@
+MIRWAYLAND_1.2 {
+global:
+  extern "C++" {
+    mir::wayland::Buffer::*;
+    non-virtual?thunk?to?mir::wayland::Buffer::*;
+    typeinfo?for?mir::wayland::Buffer;
+    vtable?for?mir::wayland::Buffer;
+
+    mir::wayland::Callback::*;
+    non-virtual?thunk?to?mir::wayland::Callback::*;
+    typeinfo?for?mir::wayland::Callback;
+    vtable?for?mir::wayland::Callback;
+
+    mir::wayland::Compositor::*;
+    non-virtual?thunk?to?mir::wayland::Compositor::*;
+    typeinfo?for?mir::wayland::Compositor;
+    vtable?for?mir::wayland::Compositor;
+
+    mir::wayland::DataDevice::*;
+    non-virtual?thunk?to?mir::wayland::DataDevice::*;
+    typeinfo?for?mir::wayland::DataDevice;
+    vtable?for?mir::wayland::DataDevice;
+
+    mir::wayland::DataDeviceManager::*;
+    non-virtual?thunk?to?mir::wayland::DataDeviceManager::*;
+    typeinfo?for?mir::wayland::DataDeviceManager;
+    vtable?for?mir::wayland::DataDeviceManager;
+
+    mir::wayland::DataOffer::*;
+    non-virtual?thunk?to?mir::wayland::DataOffer::*;
+    typeinfo?for?mir::wayland::DataOffer;
+    vtable?for?mir::wayland::DataOffer;
+
+    mir::wayland::DataSource::*;
+    non-virtual?thunk?to?mir::wayland::DataSource::*;
+    typeinfo?for?mir::wayland::DataSource;
+    vtable?for?mir::wayland::DataSource;
+
+    mir::wayland::Keyboard::*;
+    non-virtual?thunk?to?mir::wayland::Keyboard::*;
+    typeinfo?for?mir::wayland::Keyboard;
+    vtable?for?mir::wayland::Keyboard;
+
+    mir::wayland::LayerShellV1::*;
+    non-virtual?thunk?to?mir::wayland::LayerShellV1::*;
+    typeinfo?for?mir::wayland::LayerShellV1;
+    vtable?for?mir::wayland::LayerShellV1;
+
+    mir::wayland::LayerSurfaceV1::*;
+    non-virtual?thunk?to?mir::wayland::LayerSurfaceV1::*;
+    typeinfo?for?mir::wayland::LayerSurfaceV1;
+    vtable?for?mir::wayland::LayerSurfaceV1;
+
+    mir::wayland::Output::*;
+    non-virtual?thunk?to?mir::wayland::Output::*;
+    typeinfo?for?mir::wayland::Output;
+    vtable?for?mir::wayland::Output;
+
+    mir::wayland::Pointer::*;
+    non-virtual?thunk?to?mir::wayland::Pointer::*;
+    typeinfo?for?mir::wayland::Pointer;
+    vtable?for?mir::wayland::Pointer;
+
+    mir::wayland::Region::*;
+    non-virtual?thunk?to?mir::wayland::Region::*;
+    typeinfo?for?mir::wayland::Region;
+    vtable?for?mir::wayland::Region;
+
+    mir::wayland::Seat::*;
+    non-virtual?thunk?to?mir::wayland::Seat::*;
+    typeinfo?for?mir::wayland::Seat;
+    vtable?for?mir::wayland::Seat;
+
+    mir::wayland::Shell::*;
+    non-virtual?thunk?to?mir::wayland::Shell::*;
+    typeinfo?for?mir::wayland::Shell;
+    vtable?for?mir::wayland::Shell;
+
+    mir::wayland::ShellSurface::*;
+    non-virtual?thunk?to?mir::wayland::ShellSurface::*;
+    typeinfo?for?mir::wayland::ShellSurface;
+    vtable?for?mir::wayland::ShellSurface;
+
+    mir::wayland::Shm::*;
+    non-virtual?thunk?to?mir::wayland::Shm::*;
+    typeinfo?for?mir::wayland::Shm;
+    vtable?for?mir::wayland::Shm;
+
+    mir::wayland::ShmPool::*;
+    non-virtual?thunk?to?mir::wayland::ShmPool::*;
+    typeinfo?for?mir::wayland::ShmPool;
+    vtable?for?mir::wayland::ShmPool;
+
+    mir::wayland::Subcompositor::*;
+    non-virtual?thunk?to?mir::wayland::Subcompositor::*;
+    typeinfo?for?mir::wayland::Subcompositor;
+    vtable?for?mir::wayland::Subcompositor;
+
+    mir::wayland::Subsurface::*;
+    non-virtual?thunk?to?mir::wayland::Subsurface::*;
+    typeinfo?for?mir::wayland::Subsurface;
+    vtable?for?mir::wayland::Subsurface;
+
+    mir::wayland::Surface::*;
+    non-virtual?thunk?to?mir::wayland::Surface::*;
+    typeinfo?for?mir::wayland::Surface;
+    vtable?for?mir::wayland::Surface;
+
+    mir::wayland::Touch::*;
+    non-virtual?thunk?to?mir::wayland::Touch::*;
+    typeinfo?for?mir::wayland::Touch;
+    vtable?for?mir::wayland::Touch;
+
+    mir::wayland::XdgPopup::*;
+    non-virtual?thunk?to?mir::wayland::XdgPopup::*;
+    typeinfo?for?mir::wayland::XdgPopup;
+    vtable?for?mir::wayland::XdgPopup;
+
+    mir::wayland::XdgPopupV6::*;
+    non-virtual?thunk?to?mir::wayland::XdgPopupV6::*;
+    typeinfo?for?mir::wayland::XdgPopupV6;
+    vtable?for?mir::wayland::XdgPopupV6;
+
+    mir::wayland::XdgPositioner::*;
+    non-virtual?thunk?to?mir::wayland::XdgPositioner::*;
+    typeinfo?for?mir::wayland::XdgPositioner;
+    vtable?for?mir::wayland::XdgPositioner;
+
+    mir::wayland::XdgPositionerV6::*;
+    non-virtual?thunk?to?mir::wayland::XdgPositionerV6::*;
+    typeinfo?for?mir::wayland::XdgPositionerV6;
+    vtable?for?mir::wayland::XdgPositionerV6;
+
+    mir::wayland::XdgShellV6::*;
+    non-virtual?thunk?to?mir::wayland::XdgShellV6::*;
+    typeinfo?for?mir::wayland::XdgShellV6;
+    vtable?for?mir::wayland::XdgShellV6;
+
+    mir::wayland::XdgSurface::*;
+    non-virtual?thunk?to?mir::wayland::XdgSurface::*;
+    typeinfo?for?mir::wayland::XdgSurface;
+    vtable?for?mir::wayland::XdgSurface;
+
+    mir::wayland::XdgSurfaceV6::*;
+    non-virtual?thunk?to?mir::wayland::XdgSurfaceV6::*;
+    typeinfo?for?mir::wayland::XdgSurfaceV6;
+    vtable?for?mir::wayland::XdgSurfaceV6;
+
+    mir::wayland::XdgToplevel::*;
+    non-virtual?thunk?to?mir::wayland::XdgToplevel::*;
+    typeinfo?for?mir::wayland::XdgToplevel;
+    vtable?for?mir::wayland::XdgToplevel;
+
+    mir::wayland::XdgToplevelV6::*;
+    non-virtual?thunk?to?mir::wayland::XdgToplevelV6::*;
+    typeinfo?for?mir::wayland::XdgToplevelV6;
+    vtable?for?mir::wayland::XdgToplevelV6;
+
+    mir::wayland::XdgWmBase::*;
+    non-virtual?thunk?to?mir::wayland::XdgWmBase::*;
+    typeinfo?for?mir::wayland::XdgWmBase;
+    vtable?for?mir::wayland::XdgWmBase;
+
+    mir::wayland::wl_buffer_interface_data;
+    mir::wayland::wl_callback_interface_data;
+    mir::wayland::wl_compositor_interface_data;
+    mir::wayland::wl_data_device_interface_data;
+    mir::wayland::wl_data_device_manager_interface_data;
+    mir::wayland::wl_data_offer_interface_data;
+    mir::wayland::wl_data_source_interface_data;
+    mir::wayland::wl_keyboard_interface_data;
+    mir::wayland::wl_output_interface_data;
+    mir::wayland::wl_output_interface_data;
+    mir::wayland::wl_output_interface_data;
+    mir::wayland::wl_output_interface_data;
+    mir::wayland::wl_pointer_interface_data;
+    mir::wayland::wl_region_interface_data;
+    mir::wayland::wl_seat_interface_data;
+    mir::wayland::wl_seat_interface_data;
+    mir::wayland::wl_seat_interface_data;
+    mir::wayland::wl_shell_interface_data;
+    mir::wayland::wl_shell_surface_interface_data;
+    mir::wayland::wl_shm_interface_data;
+    mir::wayland::wl_shm_pool_interface_data;
+    mir::wayland::wl_subcompositor_interface_data;
+    mir::wayland::wl_subsurface_interface_data;
+    mir::wayland::wl_surface_interface_data;
+    mir::wayland::wl_surface_interface_data;
+    mir::wayland::wl_surface_interface_data;
+    mir::wayland::wl_surface_interface_data;
+    mir::wayland::wl_touch_interface_data;
+    mir::wayland::xdg_popup_interface_data;
+    mir::wayland::xdg_popup_interface_data;
+    mir::wayland::xdg_positioner_interface_data;
+    mir::wayland::xdg_surface_interface_data;
+    mir::wayland::xdg_toplevel_interface_data;
+    mir::wayland::xdg_wm_base_interface_data;
+    mir::wayland::zwlr_layer_shell_v1_interface_data;
+    mir::wayland::zwlr_layer_surface_v1_interface_data;
+    mir::wayland::zxdg_popup_v6_interface_data;
+    mir::wayland::zxdg_positioner_v6_interface_data;
+    mir::wayland::zxdg_shell_v6_interface_data;
+    mir::wayland::zxdg_surface_v6_interface_data;
+    mir::wayland::zxdg_toplevel_v6_interface_data;
+  };
+  local: *;
+};

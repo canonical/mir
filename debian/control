@@ -563,3 +563,30 @@ Description: Developer files for the Mir ABI-stable abstraction layer
  .
  Contains header files required for development using the MirAL abstraction
  layer.
+
+Package: libmirwayland0
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - generated wrappers for Wayland
+ protocol extensions.
+ .
+ Contains the shared library containing generated wrappers for Wayland
+ protocol extensions
+
+Package: libmirwayland-dev
+Section: libdevel
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: libmirwayland0 (= ${binary:Version}),
+         libmircore-dev (= ${binary:Version}),
+         ${misc:Depends},
+Description: Display server for Ubuntu - generated wrappers for Wayland
+ protocol extensions.
+ .
+ Contains the developer files for using the shared library containing generated
+ wrappers for Wayland protocol extensions

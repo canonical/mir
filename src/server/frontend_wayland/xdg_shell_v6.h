@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_XDG_SHELL_V6_H
 #define MIR_FRONTEND_XDG_SHELL_V6_H
 
-#include "generated/xdg-shell-unstable-v6_wrapper.h"
+#include "xdg-shell-unstable-v6_wrapper.h"
 
 namespace mir
 {

@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "generated/wayland_wrapper.h"
+#include "wayland_wrapper.h"
 
 #include "wl_seat.h"
 

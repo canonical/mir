@@ -11,9 +11,11 @@ set(
 )
 
 include_directories(../frontend_wayland)
+# One day, maybe, we can add include dependences to an OBJECT library. Until then...
+get_property(mirwayland_includes TARGET mirwayland PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+include_directories(${mirwayland_includes})
 
-add_library(
-  mirfrontend-xwayland OBJECT
+add_library(mirfrontend-xwayland OBJECT
 
   ${XWAYLAND_SOURCES}
 )

@@ -16,8 +16,6 @@
 
 namespace mir
 {
-namespace frontend
-{
 namespace wayland
 {
 extern struct wl_interface const wl_output_interface_data;
@@ -27,9 +25,8 @@ extern struct wl_interface const zwlr_layer_shell_v1_interface_data;
 extern struct wl_interface const zwlr_layer_surface_v1_interface_data;
 }
 }
-}
 
-namespace mfw = mir::frontend::wayland;
+namespace mw = mir::wayland;
 
 namespace
 {
@@ -44,12 +41,12 @@ struct wl_interface const* all_null_types [] {
 
 // LayerShellV1
 
-mfw::LayerShellV1* mfw::LayerShellV1::from(struct wl_resource* resource)
+mw::LayerShellV1* mw::LayerShellV1::from(struct wl_resource* resource)
 {
     return static_cast<LayerShellV1*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::LayerShellV1::Thunks
+struct mw::LayerShellV1::Thunks
 {
     static void get_layer_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* output, uint32_t layer, char const* namespace_)
     {
@@ -101,7 +98,7 @@ struct mfw::LayerShellV1::Thunks
     static void const* request_vtable[];
 };
 
-mfw::LayerShellV1::LayerShellV1(struct wl_display* display, uint32_t max_version)
+mw::LayerShellV1::LayerShellV1(struct wl_display* display, uint32_t max_version)
     : global{wl_global_create(display, &zwlr_layer_shell_v1_interface_data, max_version, this, &Thunks::bind_thunk)},
       max_version{max_version}
 {
@@ -111,37 +108,37 @@ mfw::LayerShellV1::LayerShellV1(struct wl_display* display, uint32_t max_version
     }
 }
 
-mfw::LayerShellV1::~LayerShellV1()
+mw::LayerShellV1::~LayerShellV1()
 {
     wl_global_destroy(global);
 }
 
-void mfw::LayerShellV1::destroy_wayland_object(struct wl_resource* resource) const
+void mw::LayerShellV1::destroy_wayland_object(struct wl_resource* resource) const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::LayerShellV1::Thunks::get_layer_surface_types[] {
+struct wl_interface const* mw::LayerShellV1::Thunks::get_layer_surface_types[] {
     &zwlr_layer_surface_v1_interface_data,
     &wl_surface_interface_data,
     &wl_output_interface_data,
     nullptr,
     nullptr};
 
-struct wl_message const mfw::LayerShellV1::Thunks::request_messages[] {
+struct wl_message const mw::LayerShellV1::Thunks::request_messages[] {
     {"get_layer_surface", "no?ous", get_layer_surface_types}};
 
-void const* mfw::LayerShellV1::Thunks::request_vtable[] {
+void const* mw::LayerShellV1::Thunks::request_vtable[] {
     (void*)Thunks::get_layer_surface_thunk};
 
 // LayerSurfaceV1
 
-mfw::LayerSurfaceV1* mfw::LayerSurfaceV1::from(struct wl_resource* resource)
+mw::LayerSurfaceV1* mw::LayerSurfaceV1::from(struct wl_resource* resource)
 {
     return static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
 }
 
-struct mfw::LayerSurfaceV1::Thunks
+struct mw::LayerSurfaceV1::Thunks
 {
     static void set_size_thunk(struct wl_client*, struct wl_resource* resource, uint32_t width, uint32_t height)
     {
@@ -282,7 +279,7 @@ struct mfw::LayerSurfaceV1::Thunks
     static void const* request_vtable[];
 };
 
-mfw::LayerSurfaceV1::LayerSurfaceV1(struct wl_client* client, struct wl_resource* parent, uint32_t id)
+mw::LayerSurfaceV1::LayerSurfaceV1(struct wl_client* client, struct wl_resource* parent, uint32_t id)
     : client{client},
       resource{wl_resource_create(client, &zwlr_layer_surface_v1_interface_data, wl_resource_get_version(parent), id)}
 {
@@ -294,25 +291,25 @@ mfw::LayerSurfaceV1::LayerSurfaceV1(struct wl_client* client, struct wl_resource
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-void mfw::LayerSurfaceV1::send_configure_event(uint32_t serial, uint32_t width, uint32_t height) const
+void mw::LayerSurfaceV1::send_configure_event(uint32_t serial, uint32_t width, uint32_t height) const
 {
     wl_resource_post_event(resource, Opcode::configure, serial, width, height);
 }
 
-void mfw::LayerSurfaceV1::send_closed_event() const
+void mw::LayerSurfaceV1::send_closed_event() const
 {
     wl_resource_post_event(resource, Opcode::closed);
 }
 
-void mfw::LayerSurfaceV1::destroy_wayland_object() const
+void mw::LayerSurfaceV1::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
 }
 
-struct wl_interface const* mfw::LayerSurfaceV1::Thunks::get_popup_types[] {
+struct wl_interface const* mw::LayerSurfaceV1::Thunks::get_popup_types[] {
     &xdg_popup_interface_data};
 
-struct wl_message const mfw::LayerSurfaceV1::Thunks::request_messages[] {
+struct wl_message const mw::LayerSurfaceV1::Thunks::request_messages[] {
     {"set_size", "uu", all_null_types},
     {"set_anchor", "u", all_null_types},
     {"set_exclusive_zone", "i", all_null_types},
@@ -322,11 +319,11 @@ struct wl_message const mfw::LayerSurfaceV1::Thunks::request_messages[] {
     {"ack_configure", "u", all_null_types},
     {"destroy", "", all_null_types}};
 
-struct wl_message const mfw::LayerSurfaceV1::Thunks::event_messages[] {
+struct wl_message const mw::LayerSurfaceV1::Thunks::event_messages[] {
     {"configure", "uuu", all_null_types},
     {"closed", "", all_null_types}};
 
-void const* mfw::LayerSurfaceV1::Thunks::request_vtable[] {
+void const* mw::LayerSurfaceV1::Thunks::request_vtable[] {
     (void*)Thunks::set_size_thunk,
     (void*)Thunks::set_anchor_thunk,
     (void*)Thunks::set_exclusive_zone_thunk,
@@ -338,21 +335,18 @@ void const* mfw::LayerSurfaceV1::Thunks::request_vtable[] {
 
 namespace mir
 {
-namespace frontend
-{
 namespace wayland
 {
 
 struct wl_interface const zwlr_layer_shell_v1_interface_data {
     "zwlr_layer_shell_v1", 1,
-    1, mfw::LayerShellV1::Thunks::request_messages,
+    1, mw::LayerShellV1::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const zwlr_layer_surface_v1_interface_data {
     "zwlr_layer_surface_v1", 1,
-    8, mfw::LayerSurfaceV1::Thunks::request_messages,
-    2, mfw::LayerSurfaceV1::Thunks::event_messages};
+    8, mw::LayerSurfaceV1::Thunks::request_messages,
+    2, mw::LayerSurfaceV1::Thunks::event_messages};
 
-}
 }
 }

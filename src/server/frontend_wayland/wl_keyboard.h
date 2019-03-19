@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_WL_KEYBOARD_H
 #define MIR_FRONTEND_WL_KEYBOARD_H
 
-#include "generated/wayland_wrapper.h"
+#include "wayland_wrapper.h"
 
 #include <vector>
 #include <functional>

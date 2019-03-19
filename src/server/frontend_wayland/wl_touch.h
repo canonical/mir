@@ -19,7 +19,7 @@
 #ifndef MIR_FRONTEND_WL_TOUCH_H
 #define MIR_FRONTEND_WL_TOUCH_H
 
-#include "generated/wayland_wrapper.h"
+#include "wayland_wrapper.h"
 
 #include "mir/geometry/point.h"
 

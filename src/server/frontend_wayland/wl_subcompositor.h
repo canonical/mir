@@ -20,7 +20,7 @@
 #ifndef MIR_FRONTEND_WL_SUBSURFACE_H
 #define MIR_FRONTEND_WL_SUBSURFACE_H
 
-#include "generated/wayland_wrapper.h"
+#include "wayland_wrapper.h"
 #include "wl_surface_role.h"
 #include "wl_surface.h"
 

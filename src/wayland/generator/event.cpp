@@ -50,7 +50,7 @@ Emitter Event::impl() const
 {
     return Lines{
         (min_version > 0 ? Lines{
-            {"bool mfw::", class_name, "::version_supports_", name, "(",
+            {"bool mw::", class_name, "::version_supports_", name, "(",
                 (is_global ? "struct wl_resource* resource" : Emitter{nullptr}),
                 ")"},
             Block{
@@ -58,7 +58,7 @@ Emitter Event::impl() const
             },
             empty_line
         } : Emitter{nullptr}),
-        {"void mfw::", class_name, "::send_", name, "_event(", mir_args(), ") const"},
+        {"void mw::", class_name, "::send_", name, "_event(", mir_args(), ") const"},
         Block{
             mir2wl_converters(),
             {"wl_resource_post_event(", wl_call_args(), ");"},

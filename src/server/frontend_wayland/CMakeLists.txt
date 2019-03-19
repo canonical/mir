@@ -1,7 +1,8 @@
-add_subdirectory(generator/)
-add_subdirectory(generated/)
-
 include_directories(../frontend_xwayland)
+
+# One day, maybe, we can add include dependences to an OBJECT library. Until then...
+get_property(mirwayland_includes TARGET mirwayland PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
+include_directories(${mirwayland_includes})
 
 set(
   WAYLAND_SOURCES
@@ -29,8 +30,7 @@ set(
   deleted_for_resource.cpp      deleted_for_resource.h
   wl_region.cpp                 wl_region.h)
 
-add_library(
-  mirfrontend-wayland OBJECT
+add_library(mirfrontend-wayland OBJECT
 
   ${WAYLAND_SOURCES}
 )

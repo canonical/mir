@@ -85,7 +85,6 @@ set(MIR_SERVER_OBJECTS
   $<TARGET_OBJECTS:mirgraphics>
   $<TARGET_OBJECTS:mirfrontend>
   $<TARGET_OBJECTS:mirfrontend-wayland>
-  $<TARGET_OBJECTS:mirfrontend-waylandgenerated>
   $<TARGET_OBJECTS:mirfrontend-xwayland>
   $<TARGET_OBJECTS:mirshell>
   $<TARGET_OBJECTS:mirlttng>
@@ -125,10 +124,9 @@ target_link_libraries(mirserver LINK_PUBLIC
   mircommon
   mirprotobuf
   mircookie
+  mirwayland
 
   server_platform_common
-  ${GLog_LIBRARY}
-  ${GFlags_LIBRARY}
   ${EGL_LDFLAGS} ${EGL_LIBRARIES}
   ${GL_LDFLAGS} ${GL_LIBRARIES}
   ${EPOXY_LDFLAGS} ${EPOXY_LIBRARIES}
@@ -136,7 +134,6 @@ target_link_libraries(mirserver LINK_PUBLIC
   ${GLIB_LDFLAGS} ${GLIB_LIBRARIES}
   ${GIO_LDFLAGS} ${GIO_LIBRARIES}
   ${UUID_LDFLAGS} ${UUID_LIBRARIES}
-  ${WAYLAND_SERVER_LDFLAGS} ${WAYLAND_SERVER_LIBRARIES}
   ${XCB_LDFLAGS} ${XCB_LIBRARIES}
   ${XCB_COMPOSITE_LDFLAGS} ${XCB_COMPOSITE_LIBRARIES}
   ${XCB_XFIXES_LDFLAGS} ${XCB_XFIXES_LIBRARIES}

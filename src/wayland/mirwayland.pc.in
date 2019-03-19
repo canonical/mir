@@ -1,0 +1,8 @@
+libdir=@LIBDIR@
+
+Name: mirwayland
+Description: Mir Wayland library
+Version: @MIRAL_VERSION@
+Requires: mircore
+Libs: -L${libdir} -lmirwayland
+Cflags: -I${includedir}

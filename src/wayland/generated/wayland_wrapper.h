@@ -15,8 +15,6 @@
 
 namespace mir
 {
-namespace frontend
-{
 namespace wayland
 {
 
@@ -852,7 +850,6 @@ private:
     virtual void set_desync() = 0;
 };
 
-}
 }
 }
 
