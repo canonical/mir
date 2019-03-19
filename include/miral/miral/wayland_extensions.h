@@ -19,8 +19,11 @@
 #ifndef MIRAL_WAYLAND_EXTENSIONS_H
 #define MIRAL_WAYLAND_EXTENSIONS_H
 
+#include <functional>
 #include <memory>
 #include <string>
+
+struct wl_display;
 
 namespace mir { class Server; }
 
@@ -35,7 +38,7 @@ namespace miral
 class WaylandExtensions
 {
 public:
-    /// Default extensions supported by Mir
+    /// Provide the default extensions supported by Mir
     WaylandExtensions();
 
     /// Provide a custom set of default extensions (colon separated list)
@@ -54,7 +57,25 @@ public:
 private:
     struct Self;
     std::shared_ptr<Self> self;
+
+    friend auto with_extension(
+        WaylandExtensions const& wayland_extensions,
+        std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder) -> WaylandExtensions;
 };
+
+/// Add a bespoke Wayland extension
+/// \remark Since MirAL 2.5
+auto with_extension(
+    WaylandExtensions const& wayland_extensions,
+    std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder) -> WaylandExtensions;
+
+template<typename... Extensions>
+auto with_extension(WaylandExtensions const& wayland_extensions,
+                   std::string const& name, std::function<std::shared_ptr<void>(wl_display*)> builder,
+                   Extensions... extensions) -> WaylandExtensions
+{
+    return with_extension(with_extension(wayland_extensions, name, builder), extensions...);
+}
 }
 
 #endif //MIRAL_WAYLAND_EXTENSIONS_H
