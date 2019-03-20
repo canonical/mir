@@ -40,7 +40,7 @@ class BufferStream
 {
 public:
     virtual ~BufferStream() = default;
-    
+
     virtual void submit_buffer(std::shared_ptr<graphics::Buffer> const& buffer) = 0;
 
     virtual void set_frame_posted_callback(
