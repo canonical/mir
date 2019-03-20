@@ -64,18 +64,7 @@ target_link_libraries(miral-test-internal
     mir-test-assist
 )
 
-set(GENERATOR ${CMAKE_BINARY_DIR}/bin/mir_wayland_generator)
-set(PROTOCOL "${CMAKE_CURRENT_SOURCE_DIR}/protocol/server-decoration.xml")
-set(OUTPUT_PATH_HEADER "${CMAKE_CURRENT_SOURCE_DIR}/server-decoration_wrapper.h")
-
-add_custom_command(
-    OUTPUT server-decoration_wrapper.cpp
-    OUTPUT server-decoration_wrapper.h
-    DEPENDS mir_wayland_generator
-    DEPENDS ${PROTOCOL}
-    COMMAND "sh" "-c" "${GENERATOR} org_kde_kwin_ ${PROTOCOL} header >server-decoration_wrapper.h"
-    COMMAND "sh" "-c" "${GENERATOR} org_kde_kwin_ ${PROTOCOL} source >server-decoration_wrapper.cpp"
-)
+add_subdirectory(generated/)
 
 mir_add_wrapped_executable(miral-test NOINSTALL
     window_id.cpp
@@ -86,11 +75,11 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     wayland_extensions.cpp
     workspaces.cpp
     drag_and_drop.cpp
-    server-decoration_wrapper.cpp server-decoration_wrapper.h
     server_example_decoration.cpp server_example_decoration.h
+    generated/server-decoration_wrapper.cpp generated/server-decoration_wrapper.h
 )
 
-set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}")
+set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/generated/")
 
 target_link_libraries(miral-test
     miral-test-framework
