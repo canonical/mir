@@ -20,6 +20,8 @@
 
 #include <memory>
 #include <thread>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 namespace mir
 {
@@ -59,9 +61,9 @@ public:
 private:
     void spawn();
     void new_spawn_thread();
-    void bind_to_socket();
-    void bind_to_abstract_socket();
     int create_lockfile();
+    int create_socket(struct sockaddr_un *addr, size_t path_size);
+    bool set_cloexec(int fd, bool cloexec);
 
     std::shared_ptr<XWaylandWM> wm;
     int xdisplay;
@@ -73,7 +75,7 @@ private:
     std::unique_ptr<std::thread> spawn_thread;
     int socket_fd;
     int abstract_socket_fd;
-    bool lazy;
+    bool lazy = false;
     bool terminate = false;
     Status xserver_status = STOPPED;
     int xserver_spawn_tries = 0;
