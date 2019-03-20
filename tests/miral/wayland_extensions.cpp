@@ -19,12 +19,16 @@
 #include "test_server.h"
 
 #include <miral/internal_client.h>
+#include <miral/wayland_extensions.h>
+
+#include <wayland-client.h>
+
+#include <memory>
+#include <mutex>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <memory>
-#include <mutex>
 
 using namespace testing;
 
@@ -62,8 +66,19 @@ struct WaylandExtensions : miral::TestServer
 {
     void SetUp() override
     {
-        init_server = launcher;
-        TestServer::SetUp();
+        testing::Test::SetUp();
+        add_server_init(launcher);
+    }
+
+    void add_server_init(std::function<void(mir::Server&)>&& init)
+    {
+        auto temp = [old_init=init_server, new_init=init](mir::Server& server)
+            {
+                old_init(server);
+                new_init(server);
+            };
+
+        init_server = temp;
     }
 
     void run_as_client(std::function<void (struct wl_display*)>&& code)
@@ -88,13 +103,34 @@ private:
     miral::InternalClientLauncher launcher;
     WaylandClient client;
 };
+
+void trivial_client(wl_display* display)
+{
+    std::unique_ptr<wl_registry, decltype(&wl_registry_destroy)> registry{wl_display_get_registry(display), &wl_registry_destroy};
+    wl_display_roundtrip(display);
+}
 }
 
 TEST_F(WaylandExtensions, client_connects)
 {
     bool client_connected = false;
+    start_server();
 
     run_as_client([&](auto) { client_connected = true; });
 
     EXPECT_THAT(client_connected, Eq(true));
+}
+
+TEST_F(WaylandExtensions, filter_is_called)
+{
+    bool filter_called = false;
+
+    miral::WaylandExtensions extensions;
+    add_server_init(extensions);
+    extensions.set_filter([&](auto, auto) { filter_called = true; return true; });
+    start_server();
+
+    run_as_client(trivial_client);
+
+    EXPECT_THAT(filter_called, Eq(true));
 }
