@@ -143,7 +143,7 @@ struct ClientGlobalEnumerator
         char const* interface,
         uint32_t /*version*/)
     {
-        InterfaceNames* const interfaces = static_cast<decltype(interfaces)>(data);
+        auto const interfaces = static_cast<InterfaceNames*>(data);
         interfaces->push_back(interface);
     }
 
