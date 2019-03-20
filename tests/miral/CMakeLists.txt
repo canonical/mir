@@ -70,6 +70,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     window_placement_client_api.cpp
     window_properties.cpp
     active_window.cpp
+    wayland_extensions.cpp
     workspaces.cpp
     drag_and_drop.cpp
 )
