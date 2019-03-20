@@ -100,6 +100,9 @@ struct WaylandExtensions : miral::TestServer
         launcher.launch(client);
         cv.wait(lock, [&]{ return client_run; });
     }
+
+    static auto constexpr unavailable_extension = "zxdg_shell_v6";
+
 private:
     miral::InternalClientLauncher launcher;
     WaylandClient client;
@@ -192,7 +195,7 @@ TEST_F(WaylandExtensions, client_sees_default_extensions)
 
     run_as_client(enumerator_client);
 
-    auto const available_extensions = extensions.supported_extensions();
+    auto available_extensions = extensions.supported_extensions();
     available_extensions += ':';
 
     for (char const* start = available_extensions.c_str(); char const* end = strchr(start, ':'); start = end+1)
@@ -202,4 +205,17 @@ TEST_F(WaylandExtensions, client_sees_default_extensions)
             EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq(std::string{start, end})));
         }
     }
+}
+
+TEST_F(WaylandExtensions, filter_controls_extensions_exposed_to_client)
+{
+    ClientGlobalEnumerator enumerator_client;
+    miral::WaylandExtensions extensions;
+    add_server_init(extensions);
+    extensions.set_filter([&](auto, char const* protocol) { return strcmp(protocol, unavailable_extension); });
+    start_server();
+
+    run_as_client(enumerator_client);
+
+    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(std::string{unavailable_extension}))));
 }
