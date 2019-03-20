@@ -25,6 +25,7 @@
 
 #include <memory>
 #include <mutex>
+#include <vector>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -104,11 +105,58 @@ private:
     WaylandClient client;
 };
 
+template<typename Type>
+auto make_scoped(Type* owned, void(*deleter)(Type*)) -> std::unique_ptr<Type, void(*)(Type*)>
+{
+    return {owned, deleter};
+}
+
 void trivial_client(wl_display* display)
 {
-    std::unique_ptr<wl_registry, decltype(&wl_registry_destroy)> registry{wl_display_get_registry(display), &wl_registry_destroy};
+    auto const registry = make_scoped(wl_display_get_registry(display), &wl_registry_destroy);
     wl_display_roundtrip(display);
 }
+
+struct ClientGlobalEnumerator
+{
+    using InterfaceNames = std::vector<std::string>;
+
+    void operator()(wl_display* display)
+    {
+        auto const registry = make_scoped(wl_display_get_registry(display), &wl_registry_destroy);
+        wl_registry_add_listener(registry.get(), &registry_listener, interfaces.get());
+        wl_display_roundtrip(display);
+        wl_display_roundtrip(display);
+    }
+
+    static void new_global(
+        void* data,
+        struct wl_registry* /*registry*/,
+        uint32_t /*id*/,
+        char const* interface,
+        uint32_t /*version*/)
+    {
+        InterfaceNames* const interfaces = static_cast<decltype(interfaces)>(data);
+        interfaces->push_back(interface);
+    }
+
+    static void global_remove(
+        void* /*data*/,
+        struct wl_registry* /*registry*/,
+        uint32_t /*name*/)
+    {
+
+    }
+
+    static wl_registry_listener constexpr registry_listener = {
+        new_global,
+        global_remove
+    };
+
+    std::shared_ptr<InterfaceNames> interfaces = std::make_shared<InterfaceNames>();
+};
+
+wl_registry_listener constexpr ClientGlobalEnumerator::registry_listener;
 }
 
 TEST_F(WaylandExtensions, client_connects)
@@ -133,4 +181,25 @@ TEST_F(WaylandExtensions, filter_is_called)
     run_as_client(trivial_client);
 
     EXPECT_THAT(filter_called, Eq(true));
+}
+
+TEST_F(WaylandExtensions, client_sees_default_extensions)
+{
+    ClientGlobalEnumerator enumerator_client;
+    miral::WaylandExtensions extensions;
+    add_server_init(extensions);
+    start_server();
+
+    run_as_client(enumerator_client);
+
+    auto const available_extensions = extensions.supported_extensions();
+    available_extensions += ':';
+
+    for (char const* start = available_extensions.c_str(); char const* end = strchr(start, ':'); start = end+1)
+    {
+        if (start != end)
+        {
+            EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq(std::string{start, end})));
+        }
+    }
 }
