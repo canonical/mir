@@ -17,6 +17,7 @@
  */
 
 #include "test_server.h"
+#include "server_example_decoration.h"
 
 #include <miral/internal_client.h>
 #include <miral/wayland_extensions.h>
@@ -102,11 +103,14 @@ struct WaylandExtensions : miral::TestServer
     }
 
     static auto constexpr unavailable_extension = "zxdg_shell_v6";
+    static std::string const bespoke_extension;
 
 private:
     miral::InternalClientLauncher launcher;
     WaylandClient client;
 };
+
+std::string const WaylandExtensions::bespoke_extension{"org_kde_kwin_server_decoration_manager"};
 
 template<typename Type>
 auto make_scoped(Type* owned, void(*deleter)(Type*)) -> std::unique_ptr<Type, void(*)(Type*)>
@@ -218,4 +222,21 @@ TEST_F(WaylandExtensions, filter_controls_extensions_exposed_to_client)
     run_as_client(enumerator_client);
 
     EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(std::string{unavailable_extension}))));
+}
+
+TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
+{
+    bool filter_saw_bespoke_extension = false;
+
+    ClientGlobalEnumerator enumerator_client;
+    miral::WaylandExtensions extensions{"wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1:" + bespoke_extension};
+    extensions.set_filter([&](auto, char const* protocol)
+        { if (strcmp(protocol, unavailable_extension) == 0) filter_saw_bespoke_extension = true; return true; });
+    add_server_init(with_extension(extensions, bespoke_extension, &mir::examples::server_decoration_extension));
+    start_server();
+
+    run_as_client(enumerator_client);
+
+    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq(bespoke_extension)));
+    EXPECT_THAT(filter_saw_bespoke_extension, Eq(true));
 }
