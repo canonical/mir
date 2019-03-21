@@ -350,15 +350,6 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     std::move(release_buffer));
             }
 
-            /*
-             * This is technically incorrect - the resize and submit_buffer *should* be atomic,
-             * but are not, so a client in the process of resizing can have buffers rendered at
-             * an unexpected size.
-             *
-             * It should be good enough for now, though.
-             *
-             * TODO: Provide a mg::Buffer::logical_size() to do this properly.
-             */
             if (!input_shape && (!buffer_size_ || mir_buffer->size() != buffer_size_.value()))
             {
                 state.invalidate_surface_data(); // input shape needs to be recalculated for the new size
