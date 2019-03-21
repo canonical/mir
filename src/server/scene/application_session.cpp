@@ -125,7 +125,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     std::list<StreamInfo> streams;
     if (the_params.content_id.is_set())
     {
-        streams.push_back({checked_find(the_params.content_id.value())->second, {0,0}, {}});
+        streams.push_back({checked_find(the_params.content_id.value())->second, {0,0}, the_params.size});
     }
     else
     {
