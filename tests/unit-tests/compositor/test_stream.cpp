@@ -197,8 +197,9 @@ TEST_F(Stream, throws_on_nullptr_submissions)
 TEST_F(Stream, reports_size)
 {
     geom::Size new_size{333,139};
+    auto new_size_buffer = std::make_shared<mtd::StubBuffer>(new_size);
     EXPECT_THAT(stream.stream_size(), Eq(initial_size));
-    stream.resize(new_size);
+    stream.submit_buffer(new_size_buffer);
     EXPECT_THAT(stream.stream_size(), Eq(new_size));
 }
 

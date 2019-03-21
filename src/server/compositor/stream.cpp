@@ -57,6 +57,7 @@ void mc::Stream::submit_buffer(std::shared_ptr<mg::Buffer> const& buffer)
         std::lock_guard<decltype(mutex)> lk(mutex); 
         first_frame_posted = true;
         pf = buffer->pixel_format();
+        size = buffer->size();
         schedule->schedule(buffer);
     }
     {
@@ -93,13 +94,6 @@ geom::Size mc::Stream::stream_size()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
     return size;
-}
-
-void mc::Stream::resize(geom::Size const& new_size)
-{
-    //TODO: the client should be resizing itself via the buffer creation/destruction rpc calls
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    size = new_size; 
 }
 
 void mc::Stream::allow_framedropping(bool dropping)

@@ -51,10 +51,6 @@ public:
         return geometry::Size();
     }
 
-    void resize(geometry::Size const&) override
-    {
-    }
-
     void allow_framedropping(bool) override
     {
     }

@@ -50,7 +50,6 @@ public:
     std::shared_ptr<graphics::Buffer>
         lock_compositor_buffer(void const* user_id) override;
     geometry::Size stream_size() override;
-    void resize(geometry::Size const& size) override;
     void allow_framedropping(bool) override;
     bool framedropping() const override;
     int buffers_ready_for_compositor(void const* user_id) const override;

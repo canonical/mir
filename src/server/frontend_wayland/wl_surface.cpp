@@ -364,7 +364,6 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                 state.invalidate_surface_data(); // input shape needs to be recalculated for the new size
             }
             buffer_size_ = mir_buffer->size();
-            stream->resize(buffer_size_.value());
             stream->submit_buffer(mir_buffer);
         }
     }

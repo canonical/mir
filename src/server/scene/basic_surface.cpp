@@ -335,15 +335,6 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
     if (new_size == size())
         return;
 
-    /*
-     * Other combinations may still be invalid (like dimensions too big or
-     * insufficient resources), but those are runtime and platform-specific, so
-     * not predictable here. Such critical exceptions would arise from
-     * the platform buffer allocator as a runtime_error via:
-     */
-    surface_buffer_stream->resize(new_size);
-
-    // Now the buffer stream has successfully resized, update the state second;
     {
         std::unique_lock<std::mutex> lock(guard);
         surface_rect.size = new_size;
