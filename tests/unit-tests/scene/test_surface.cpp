@@ -242,9 +242,6 @@ TEST_F(SurfaceCreation, resize_updates_stream_and_state)
     using namespace testing;
     geom::Size const new_size{123, 456};
 
-    EXPECT_CALL(*mock_buffer_stream, resize(new_size))
-        .Times(1);
-
     auto const mock_event_sink = std::make_shared<mt::doubles::MockEventSink>();
     ms::OutputPropertiesCache cache;
     auto const observer = std::make_shared<ms::SurfaceEventSource>(mf::SurfaceId(), surface, cache, mock_event_sink);
@@ -270,7 +267,6 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
 
     ASSERT_THAT(surface.size(), Ne(new_size));
 
-    EXPECT_CALL(*mock_buffer_stream, resize(new_size)).Times(1);
     EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(1);
     surface.resize(new_size);
     EXPECT_THAT(surface.size(), Eq(new_size));
@@ -278,26 +274,9 @@ TEST_F(SurfaceCreation, duplicate_resize_ignored)
     Mock::VerifyAndClearExpectations(mock_buffer_stream.get());
     Mock::VerifyAndClearExpectations(mock_event_sink.get());
 
-    EXPECT_CALL(*mock_buffer_stream, resize(_)).Times(0);
     EXPECT_CALL(*mock_event_sink, handle_event(_)).Times(0);
     surface.resize(new_size);
     EXPECT_THAT(surface.size(), Eq(new_size));
-}
-
-TEST_F(SurfaceCreation, unsuccessful_resize_does_not_update_state)
-{
-    using namespace testing;
-    geom::Size const new_size{123, 456};
-
-    EXPECT_CALL(*mock_buffer_stream, resize(new_size))
-        .Times(1)
-        .WillOnce(Throw(std::runtime_error("bad resize")));
-
-    EXPECT_THROW({
-        surface.resize(new_size);
-    }, std::runtime_error);
-
-    EXPECT_EQ(size, surface.size());
 }
 
 TEST_F(SurfaceCreation, impossible_resize_clamps)
@@ -321,7 +300,6 @@ TEST_F(SurfaceCreation, impossible_resize_clamps)
         if (expect_size.height <= geom::Height{0})
             expect_size.height = geom::Height{1};
 
-        EXPECT_CALL(*mock_buffer_stream, resize(expect_size)).Times(1);
         EXPECT_NO_THROW({ surface.resize(size); });
         EXPECT_EQ(expect_size, surface.size());
     }
