@@ -63,7 +63,6 @@ struct MockBufferStream : public compositor::BufferStream
 
     MOCK_METHOD0(get_stream_pixel_format, MirPixelFormat());
     MOCK_METHOD0(stream_size, geometry::Size());
-    MOCK_METHOD1(resize, void(geometry::Size const&));
     MOCK_METHOD0(force_client_completion, void());
     MOCK_METHOD1(allow_framedropping, void(bool));
     MOCK_CONST_METHOD0(framedropping, bool());

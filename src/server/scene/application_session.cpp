@@ -112,8 +112,6 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     {
         stream_id = params.content_id.value();
         buffer_stream = checked_find(stream_id)->second;
-        if (params.size != buffer_stream->stream_size())
-            buffer_stream->resize(params.size);
     }
     else
     {
@@ -127,7 +125,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     std::list<StreamInfo> streams;
     if (the_params.content_id.is_set())
     {
-        streams.push_back({checked_find(the_params.content_id.value())->second, {0,0}, {}});
+        streams.push_back({checked_find(the_params.content_id.value())->second, {0,0}, the_params.size});
     }
     else
     {
