@@ -240,7 +240,7 @@ TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
     miral::WaylandExtensions extensions{"wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1:" + bespoke_extension};
     extensions.set_filter([&](auto, char const* protocol)
         { if (strcmp(protocol, unavailable_extension) == 0) filter_saw_bespoke_extension = true; return true; });
-    add_server_init(with_extension(extensions, bespoke_extension, &mir::examples::server_decoration_extension));
+    add_server_init(with_extension(extensions, std::make_shared<mir::examples::ServerDecorationExtension>()));
     start_server();
 
     run_as_client(enumerator_client);

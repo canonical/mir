@@ -27,6 +27,33 @@
 
 namespace mo = mir::options;
 
+struct miral::WaylandExtension::Context::Self
+{
+    Self(
+        struct wl_display* wayland_display,
+        std::function<void(std::function<void()>&& work)> executor)
+        : wayland_display(wayland_display),
+          executor(executor)
+    {}
+
+    wl_display* wayland_display;
+    std::function<void(std::function<void()>&& work)> executor;
+};
+
+auto miral::WaylandExtension::Context::wayland_display() const -> wl_display*
+{
+    return self->wayland_display;
+}
+
+void miral::WaylandExtension::Context::run_on_wayland_mainloop(std::function<void()>&& work) const
+{
+    self->executor(std::move(work));
+}
+
+miral::WaylandExtension::Context::Context(std::unique_ptr<Self> self)
+    : self(std::move(self))
+{}
+
 struct miral::WaylandExtensions::Self
 {
     Self(std::string const& default_value) : default_value{default_value}
@@ -55,7 +82,7 @@ struct miral::WaylandExtensions::Self
         std::set<std::string> supported_extension;
         std::string available_extensions = mo::wayland_extensions_value;
         for (auto const& extension : wayland_extension_hooks)
-            available_extensions += ":" + extension.name;
+            available_extensions += ":" + extension->interface_name();
         available_extensions += ":zwlr_layer_shell_v1";
         available_extensions += ':';
 
@@ -77,17 +104,11 @@ struct miral::WaylandExtensions::Self
         }
     }
 
-    struct WaylandExtensionHook
-    {
-        std::string name;
-        Builder builder;
-    };
+    std::vector<std::shared_ptr<WaylandExtension>> wayland_extension_hooks;
 
-    std::vector<WaylandExtensionHook> wayland_extension_hooks;
-
-    void add_extension(std::string const& name, Builder builder)
+    void add_extension(std::shared_ptr<WaylandExtension> extension)
     {
-        wayland_extension_hooks.push_back({name, builder});
+        wayland_extension_hooks.push_back(extension);
     }
 
     WaylandExtensions::Filter extensions_filter = [](Application const&, char const*) { return true; };
@@ -116,7 +137,15 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
     server.add_pre_init_callback([self=self, &server]
         {
             for (auto const& hook : self->wayland_extension_hooks)
-                server.add_wayland_extension(hook.name, hook.builder);
+                server.add_wayland_extension(
+                    hook->interface_name(),
+                    [hook](
+                        wl_display* display,
+                        std::function<void(std::function<void()>&& work)> const& executor) -> std::shared_ptr<void>
+                        {
+                            return hook->instantiate_for(
+                                {std::make_unique<WaylandExtension::Context::Self>(display, executor)});
+                        });
 
             server.set_wayland_extension_filter(self->extensions_filter);
         });
@@ -130,9 +159,9 @@ auto miral::WaylandExtensions::operator=(WaylandExtensions const&) -> WaylandExt
 
 auto miral::with_extension(
     WaylandExtensions const& wayland_extensions,
-    std::string const& name, WaylandExtensions::Builder const& builder) -> WaylandExtensions
+    std::shared_ptr<WaylandExtension> extension) -> WaylandExtensions
 {
-    wayland_extensions.self->add_extension(name, builder);
+    wayland_extensions.self->add_extension(extension);
     return wayland_extensions;
 }
 

@@ -47,7 +47,8 @@ struct ServerDecoration :
 };
 
 struct ServerDecorationManager :
-    mir::wayland::ServerDecorationManager
+    mir::wayland::ServerDecorationManager,
+    public miral::WaylandExtension::Instance
 {
     using mir::wayland::ServerDecorationManager::ServerDecorationManager;
 
@@ -58,11 +59,13 @@ struct ServerDecorationManager :
 };
 }
 
-auto mir::examples::server_decoration_extension(
-    wl_display* display,
-    miral::WaylandExtensions::Executor const& run_on_wayland_mainloop)
--> std::shared_ptr<void>
+auto mir::examples::ServerDecorationExtension::interface_name() const -> std::string
 {
-    (void)run_on_wayland_mainloop;
-    return std::make_shared<ServerDecorationManager>(display, 1);
+    return "org_kde_kwin_server_decoration_manager";
+}
+
+auto mir::examples::ServerDecorationExtension::instantiate_for(
+    Context const& context) const -> std::shared_ptr<Instance>
+{
+    return std::make_shared<ServerDecorationManager>(context.wayland_display(), 1);
 }

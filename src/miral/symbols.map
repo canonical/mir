@@ -375,7 +375,17 @@ global:
 MIRAL_2.5 {
 global:
   extern "C++" {
-    miral::with_extension*;
+    miral::WaylandExtension::?WaylandExtension*;
+    miral::WaylandExtension::Context::run_on_wayland_mainloop*;
+    miral::WaylandExtension::Context::wayland_display*;
     miral::WaylandExtensions::set_filter*;
+    miral::with_extension*;
+    non-virtual?thunk?to?miral::WaylandExtension::?WaylandExtension*;
+    typeinfo?for?miral::WaylandExtension;
+    typeinfo?for?miral::WaylandExtension::Context;
+    typeinfo?for?miral::WaylandExtension::Instance;
+    vtable?for?miral::WaylandExtension;
+    vtable?for?miral::WaylandExtension::Context;
+    vtable?for?miral::WaylandExtension::Instance;
   };
 } MIRAL_2.4;

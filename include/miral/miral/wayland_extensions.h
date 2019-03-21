@@ -31,6 +31,43 @@ namespace mir { class Server; }
 
 namespace miral
 {
+class WaylandExtensions;
+
+/// A Wayland protocol extension
+/// Not connected to any specific Wayland display
+/// an instance of this extension is created for a specific display before it can have effect
+/// \remark Since MirAL 2.5
+class WaylandExtension
+{
+public:
+    /// The context provides what an extension needs to create an instance
+    class Context
+    {
+    public:
+        auto wayland_display() const -> wl_display*;
+        void run_on_wayland_mainloop(std::function<void()>&& work) const;
+
+    private:
+        struct Self;
+        std::unique_ptr<Self> self;
+        Context(std::unique_ptr<Self> self);
+        friend WaylandExtensions;
+    };
+
+    /// An instance of this extension, connected to a specific Wayland display
+    class Instance
+    {
+    };
+
+    /// The name of the implemented Wayland protocol interface
+    virtual auto interface_name() const -> std::string = 0;
+
+    /// Create an instance for the given context
+    virtual auto instantiate_for(Context const& context) const -> std::shared_ptr<Instance> = 0;
+
+    virtual ~WaylandExtension() = default;
+};
+
 /// Add a user configuration option to Mir's option handling to select
 /// the supported Wayland extensions.
 /// This adds the command line option '--wayland-extensions' the corresponding
@@ -57,16 +94,6 @@ public:
     auto operator=(WaylandExtensions const&) -> WaylandExtensions&;
 
     /// \remark Since MirAL 2.5
-    using Executor = std::function<void(std::function<void()>&& work)>;
-
-    /// A Builder creates and registers an extension protocol.
-    /// The Builder is provided the wl_display so that the extension can be registered and
-    /// an executor that allows server initiated code to be executed on the Wayland mainloop.
-    /// It returns a shared pointer to the implementation. Mir will manage the lifetime.
-    /// \remark Since MirAL 2.5
-    using Builder  = std::function<std::shared_ptr<void>(wl_display* display, Executor const& run_on_wayland_mainloop)>;
-
-    /// \remark Since MirAL 2.5
     using Filter = std::function<bool(Application const& app, char const* protocol)>;
 
     /// Set an extension filter callback to control the extensions available to specific clients
@@ -79,23 +106,24 @@ private:
 
     friend auto with_extension(
         WaylandExtensions const& wayland_extensions,
-        std::string const& name, Builder const& builder) -> WaylandExtensions;
+        std::shared_ptr<WaylandExtension> extension) -> WaylandExtensions;
 };
 
 /// Add a bespoke Wayland extension.
 /// \remark Since MirAL 2.5
 auto with_extension(
     WaylandExtensions const& wayland_extensions,
-    std::string const& name, WaylandExtensions::Builder const& builder) -> WaylandExtensions;
+    std::shared_ptr<WaylandExtension> extension) -> WaylandExtensions;
 
 /// Add multiple bespoke Wayland extensions.
 /// \remark Since MirAL 2.5
 template<typename... Extensions>
-auto with_extension(WaylandExtensions const& wayland_extensions,
-    std::string const& name, WaylandExtensions::Builder const& builder,
+auto with_extension(
+    WaylandExtensions const& wayland_extensions,
+    std::shared_ptr<WaylandExtension> extension,
     Extensions... extensions) -> WaylandExtensions
 {
-    return with_extension(with_extension(wayland_extensions, name, builder), extensions...);
+    return with_extension(with_extension(wayland_extensions, extension), extensions...);
 }
 
 /// Set an extension filter callback to control the extensions available to specific clients.

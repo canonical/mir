@@ -25,8 +25,12 @@ namespace mir
 {
 namespace examples
 {
-auto server_decoration_extension(wl_display *display, miral::WaylandExtensions::Executor const &run_on_wayland_mainloop)
--> std::shared_ptr<void>;
+class ServerDecorationExtension :
+    public miral::WaylandExtension
+{
+    auto interface_name() const -> std::string override;
+    auto instantiate_for(Context const& context) const -> std::shared_ptr<Instance> override;
+};
 }
 }
 
