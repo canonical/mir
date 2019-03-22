@@ -58,7 +58,9 @@ struct ServerDecorationManager : mir::wayland::ServerDecorationManager
     }
 };
 
-static_assert(mir::wayland::ServerDecorationManager::interface_version >= ServerDecorationManager::interface_supported);
+static_assert(
+    mir::wayland::ServerDecorationManager::interface_version >= ServerDecorationManager::interface_supported,
+    "Server decoration protocol newer than supported version");
 
 int const ServerDecorationManager::interface_supported;
 }
