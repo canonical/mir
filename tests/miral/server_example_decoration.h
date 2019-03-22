@@ -27,6 +27,8 @@ namespace examples
 {
 auto server_decoration_extension(miral::WaylandExtensions::Context const* context)
 -> std::shared_ptr<void>;
+
+extern std::string const server_decoration_extension_name;
 }
 }
 

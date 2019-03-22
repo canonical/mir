@@ -58,6 +58,8 @@ struct ServerDecorationManager :
 };
 }
 
+std::string const mir::examples::server_decoration_extension_name{wayland::ServerDecorationManager::interface_name};
+
 auto mir::examples::server_decoration_extension(miral::WaylandExtensions::Context const* context)
 -> std::shared_ptr<void>
 {

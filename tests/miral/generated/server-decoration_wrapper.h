@@ -21,6 +21,9 @@ namespace wayland
 class ServerDecorationManager
 {
 public:
+    static char const constexpr* interface_name = "org_kde_kwin_server_decoration_manager";
+    static int const interface_version = 1;
+
     static ServerDecorationManager* from(struct wl_resource*);
 
     ServerDecorationManager(struct wl_display* display, uint32_t max_version);
@@ -56,6 +59,9 @@ private:
 class ServerDecoration
 {
 public:
+    static char const constexpr* interface_name = "org_kde_kwin_server_decoration";
+    static int const interface_version = 1;
+
     static ServerDecoration* from(struct wl_resource*);
 
     ServerDecoration(struct wl_client* client, struct wl_resource* parent, uint32_t id);

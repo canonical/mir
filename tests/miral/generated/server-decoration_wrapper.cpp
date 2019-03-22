@@ -220,12 +220,14 @@ namespace wayland
 {
 
 struct wl_interface const org_kde_kwin_server_decoration_manager_interface_data {
-    "org_kde_kwin_server_decoration_manager", 1,
+    mw::ServerDecorationManager::interface_name,
+    mw::ServerDecorationManager::interface_version,
     1, mw::ServerDecorationManager::Thunks::request_messages,
     1, mw::ServerDecorationManager::Thunks::event_messages};
 
 struct wl_interface const org_kde_kwin_server_decoration_interface_data {
-    "org_kde_kwin_server_decoration", 1,
+    mw::ServerDecoration::interface_name,
+    mw::ServerDecoration::interface_version,
     2, mw::ServerDecoration::Thunks::request_messages,
     1, mw::ServerDecoration::Thunks::event_messages};
 
