@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Canonical Ltd.
+ * Copyright © 2015-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -83,6 +83,10 @@
 #include <unordered_set>
 #include "mir/anonymous_shm_file.h"
 
+#if (WAYLAND_VERSION_MAJOR == 1) && (WAYLAND_VERSION_MINOR < 14)
+#define MIR_NO_WAYLAND_FILTER
+#endif
+
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -128,7 +132,6 @@ struct ClientPrivate
 static_assert(
     std::is_standard_layout<ClientPrivate>::value,
     "ClientPrivate must be standard layout for wl_container_of to be defined behaviour");
-
 
 ClientPrivate* private_from_listener(wl_listener* listener)
 {
@@ -591,12 +594,14 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
     bool arw_socket,
-    std::unique_ptr<WaylandExtensions> extensions_)
+    std::unique_ptr<WaylandExtensions> extensions_,
+    WaylandProtocolExtensionFilter const& extension_filter)
     : display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
       allocator{allocator_for_display(allocator, display.get(), executor)},
-      extensions{std::move(extensions_)}
+      extensions{std::move(extensions_)},
+      extension_filter{extension_filter}
 {
     if (pause_signal == mir::Fd::invalid)
     {
@@ -610,6 +615,14 @@ mf::WaylandConnector::WaylandConnector(
     {
         BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to create wl_display"});
     }
+
+#ifndef MIR_NO_WAYLAND_FILTER
+    wl_display_set_global_filter(display.get(), &wl_display_global_filter_func_thunk, this);
+#else
+    log_warning("Cannot set Wayland protocol filter: "
+        "wl_display_set_global_filter() is unavailable in libwayland-dev "
+        WAYLAND_VERSION);
+#endif
 
     /*
      * Here be Dragons!
@@ -794,4 +807,21 @@ auto mf::WaylandConnector::get_extension(std::string const& name) const -> std::
 auto mf::WaylandConnector::get_wl_display() const -> wl_display*
 {
     return display.get();
+}
+
+bool mf::WaylandConnector::wl_display_global_filter_func_thunk(wl_client const* client, wl_global const* global, void *data)
+{
+    return static_cast<WaylandConnector*>(data)->wl_display_global_filter_func(client, global);
+}
+
+bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client, wl_global const* global) const
+{
+#ifndef MIR_NO_WAYLAND_FILTER
+    auto const* const interface = wl_global_get_interface(global);
+    auto const session = get_session(const_cast<wl_client*>(client));
+    return extension_filter(session, interface->name);
+#else
+    (void)client, (void)global;
+    return true;
+#endif
 }

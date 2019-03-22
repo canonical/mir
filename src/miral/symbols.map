@@ -371,3 +371,11 @@ global:
     vtable?for?miral::X11Support;
   };
 } MIRAL_2.3;
+
+MIRAL_2.5 {
+global:
+  extern "C++" {
+    miral::WaylandExtensions::set_filter*;
+    miral::WaylandExtensions::with_extension*;
+  };
+} MIRAL_2.4;

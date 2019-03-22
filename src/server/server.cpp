@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -43,6 +43,8 @@
 #include "frontend_wayland/wayland_connector.h"
 
 #include <iostream>
+#include <mir/server.h>
+
 
 namespace mo = mir::options;
 namespace mi = mir::input;
@@ -502,6 +504,26 @@ void mir::Server::run_on_wayland_display(std::function<void(wl_display*)> const&
     {
         std::dynamic_pointer_cast<mir::frontend::WaylandConnector>(config->the_wayland_connector())
             ->run_on_wayland_display(functor);
+    }
+}
+
+void mir::Server::add_wayland_extension(
+    std::string const& name, std::function<std::shared_ptr<void>(
+        wl_display*,
+        std::function<void(std::function<void()>&& work)> const&)> builder)
+{
+    if (auto const config = self->server_config)
+    {
+        config->add_wayland_extension(name, builder);
+    }
+}
+
+void mir::Server::set_wayland_extension_filter(
+    std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter)
+{
+    if (auto const config = self->server_config)
+    {
+        config->set_wayland_extension_filter(extension_filter);
     }
 }
 

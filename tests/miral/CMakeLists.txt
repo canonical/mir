@@ -64,15 +64,22 @@ target_link_libraries(miral-test-internal
     mir-test-assist
 )
 
+add_subdirectory(generated/)
+
 mir_add_wrapped_executable(miral-test NOINSTALL
     window_id.cpp
     runner.cpp
     window_placement_client_api.cpp
     window_properties.cpp
     active_window.cpp
+    wayland_extensions.cpp
     workspaces.cpp
     drag_and_drop.cpp
+    server_example_decoration.cpp server_example_decoration.h
+    generated/server-decoration_wrapper.cpp generated/server-decoration_wrapper.h
 )
+
+set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/generated/")
 
 target_link_libraries(miral-test
     miral-test-framework

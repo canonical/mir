@@ -428,9 +428,37 @@ global:
 } MIRAL_2.2;
 
 MIRAL_2.4 {
+global:
+  extern "C++" {
+    miral::DisplayConfiguration::?DisplayConfiguration*;
+    miral::DisplayConfiguration::DisplayConfiguration*;
+    miral::DisplayConfiguration::layout_option*;
+    miral::DisplayConfiguration::list_layouts*;
+    miral::DisplayConfiguration::operator*;
+    miral::DisplayConfiguration::select_layout*;
+    miral::ExternalClientLauncher::pid*;
+    miral::MirRunner::config_file*;
+    miral::MirRunner::display_config_file*;
+    miral::WaylandExtensions::?WaylandExtensions*;
+    miral::WaylandExtensions::WaylandExtensions*;
+    miral::WaylandExtensions::operator*;
+    miral::WaylandExtensions::supported_extensions*;
+    miral::X11Support::?X11Support*;
+    miral::X11Support::X11Support*;
+    miral::X11Support::operator*;
+    typeinfo?for?miral::DisplayConfiguration;
+    typeinfo?for?miral::WaylandExtensions;
+    typeinfo?for?miral::X11Support;
+    vtable?for?miral::DisplayConfiguration;
+    vtable?for?miral::WaylandExtensions;
+    vtable?for?miral::X11Support;
+  };
+} MIRAL_2.3;
+
+MIRAL_2.5 {
 global:'''
 
-END_NEW_STANZA = '''} MIRAL_2.3;'''
+END_NEW_STANZA = '''} MIRAL_2.4;'''
 
 def _print_report():
     print(OLD_STANZAS)

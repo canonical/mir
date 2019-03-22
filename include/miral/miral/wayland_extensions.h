@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -19,8 +19,13 @@
 #ifndef MIRAL_WAYLAND_EXTENSIONS_H
 #define MIRAL_WAYLAND_EXTENSIONS_H
 
+#include "application.h"
+
+#include <functional>
 #include <memory>
 #include <string>
+
+struct wl_display;
 
 namespace mir { class Server; }
 
@@ -35,7 +40,7 @@ namespace miral
 class WaylandExtensions
 {
 public:
-    /// Default extensions supported by Mir
+    /// Provide the default extensions supported by Mir
     WaylandExtensions();
 
     /// Provide a custom set of default extensions (colon separated list)
@@ -50,6 +55,46 @@ public:
     ~WaylandExtensions();
     WaylandExtensions(WaylandExtensions const&);
     auto operator=(WaylandExtensions const&) -> WaylandExtensions&;
+
+    /// \remark Since MirAL 2.5
+    class Context
+    {
+    public:
+        virtual auto display() const -> wl_display* = 0;
+        virtual void run_on_wayland_mainloop(std::function<void()>&& work) const = 0;
+
+    protected:
+        Context() = default;
+        virtual ~Context() = default;
+        Context(Context const&) = delete;
+        Context& operator=(Context const&) = delete;
+    };
+
+    /// A Builder creates and registers an extension protocol.
+    /// \remark Since MirAL 2.5
+    struct Builder
+    {
+        /// Name of the protocol extension
+        std::string name;
+
+        /// Functor that creates and registers an extension protocol
+        /// \param context giving access to:
+        ///   * the wl_display (so that, for example, the extension can be registered); and,
+        ///   * allowing server initiated code to be executed on the Wayland mainloop.
+        /// \return a shared pointer to the implementation. (Mir will manage the lifetime)
+        std::function<std::shared_ptr<void>(Context const* context)> build;
+    };
+
+    /// \remark Since MirAL 2.5
+    using Filter = std::function<bool(Application const& app, char const* protocol)>;
+
+    /// Set an extension filter callback to control the extensions available to specific clients
+    /// \remark Since MirAL 2.5
+    void set_filter(Filter const& extension_filter);
+
+    /// Add a bespoke Wayland extension.
+    /// \remark Since MirAL 2.5
+    void with_extension(Builder const& builder);
 
 private:
     struct Self;

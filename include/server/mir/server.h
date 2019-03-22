@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2018 Canonical Ltd.
+ * Copyright © 2014-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -41,6 +41,7 @@ namespace graphics { class Cursor; class Platform; class Display; class GLConfig
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub;}
 namespace logging { class Logger; }
 namespace options { class Option; }
+namespace scene { class Session; }
 namespace cookie
 {
 using Secret = std::vector<uint8_t>;
@@ -468,6 +469,14 @@ public:
     auto open_wayland_client_socket() -> Fd;
 
     void run_on_wayland_display(std::function<void(wl_display*)> const& functor);
+    void add_wayland_extension(
+        std::string const& name,
+        std::function<std::shared_ptr<void>(
+            wl_display*,
+            std::function<void(std::function<void()>&& work)> const&)> builder);
+
+    void set_wayland_extension_filter(
+        std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter);
 
     /// Get the name of the Mir endpoint (if any) usable as a $MIR_SERVER value
     auto mir_socket_name() const -> optional_value<std::string>;
