@@ -104,27 +104,16 @@ private:
     struct Self;
     std::shared_ptr<Self> self;
 
-    friend auto with_extension(
+    friend auto with_extensions(
         WaylandExtensions const& wayland_extensions,
-        std::shared_ptr<WaylandExtension> extension) -> WaylandExtensions;
+        std::initializer_list<std::shared_ptr<WaylandExtension>> extensions) -> WaylandExtensions;
 };
-
-/// Add a bespoke Wayland extension.
-/// \remark Since MirAL 2.5
-auto with_extension(
-    WaylandExtensions const& wayland_extensions,
-    std::shared_ptr<WaylandExtension> extension) -> WaylandExtensions;
 
 /// Add multiple bespoke Wayland extensions.
 /// \remark Since MirAL 2.5
-template<typename... Extensions>
-auto with_extension(
+auto with_extensions(
     WaylandExtensions const& wayland_extensions,
-    std::shared_ptr<WaylandExtension> extension,
-    Extensions... extensions) -> WaylandExtensions
-{
-    return with_extension(with_extension(wayland_extensions, extension), extensions...);
-}
+    std::initializer_list<std::shared_ptr<WaylandExtension>> extensions) -> WaylandExtensions;
 
 /// Set an extension filter callback to control the extensions available to specific clients.
 /// \remark Since MirAL 2.5
