@@ -954,27 +954,32 @@ namespace wayland
 {
 
 struct wl_interface const xdg_wm_base_interface_data {
-    "xdg_wm_base", 1,
+    mw::XdgWmBase::interface_name,
+    mw::XdgWmBase::interface_version,
     4, mw::XdgWmBase::Thunks::request_messages,
     1, mw::XdgWmBase::Thunks::event_messages};
 
 struct wl_interface const xdg_positioner_interface_data {
-    "xdg_positioner", 1,
+    mw::XdgPositioner::interface_name,
+    mw::XdgPositioner::interface_version,
     7, mw::XdgPositioner::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const xdg_surface_interface_data {
-    "xdg_surface", 1,
+    mw::XdgSurface::interface_name,
+    mw::XdgSurface::interface_version,
     5, mw::XdgSurface::Thunks::request_messages,
     1, mw::XdgSurface::Thunks::event_messages};
 
 struct wl_interface const xdg_toplevel_interface_data {
-    "xdg_toplevel", 1,
+    mw::XdgToplevel::interface_name,
+    mw::XdgToplevel::interface_version,
     14, mw::XdgToplevel::Thunks::request_messages,
     2, mw::XdgToplevel::Thunks::event_messages};
 
 struct wl_interface const xdg_popup_interface_data {
-    "xdg_popup", 1,
+    mw::XdgPopup::interface_name,
+    mw::XdgPopup::interface_version,
     2, mw::XdgPopup::Thunks::request_messages,
     2, mw::XdgPopup::Thunks::event_messages};
 

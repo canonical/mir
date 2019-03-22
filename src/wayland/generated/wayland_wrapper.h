@@ -21,6 +21,9 @@ namespace wayland
 class Callback
 {
 public:
+    static char const constexpr* interface_name = "wl_callback";
+    static int const interface_version = 1;
+
     static Callback* from(struct wl_resource*);
 
     Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -46,6 +49,9 @@ private:
 class Compositor
 {
 public:
+    static char const constexpr* interface_name = "wl_compositor";
+    static int const interface_version = 4;
+
     static Compositor* from(struct wl_resource*);
 
     Compositor(struct wl_display* display, uint32_t max_version);
@@ -68,6 +74,9 @@ private:
 class ShmPool
 {
 public:
+    static char const constexpr* interface_name = "wl_shm_pool";
+    static int const interface_version = 1;
+
     static ShmPool* from(struct wl_resource*);
 
     ShmPool(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -89,6 +98,9 @@ private:
 class Shm
 {
 public:
+    static char const constexpr* interface_name = "wl_shm";
+    static int const interface_version = 1;
+
     static Shm* from(struct wl_resource*);
 
     Shm(struct wl_display* display, uint32_t max_version);
@@ -186,6 +198,9 @@ private:
 class Buffer
 {
 public:
+    static char const constexpr* interface_name = "wl_buffer";
+    static int const interface_version = 1;
+
     static Buffer* from(struct wl_resource*);
 
     Buffer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -212,6 +227,9 @@ private:
 class DataOffer
 {
 public:
+    static char const constexpr* interface_name = "wl_data_offer";
+    static int const interface_version = 3;
+
     static DataOffer* from(struct wl_resource*);
 
     DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -256,6 +274,9 @@ private:
 class DataSource
 {
 public:
+    static char const constexpr* interface_name = "wl_data_source";
+    static int const interface_version = 3;
+
     static DataSource* from(struct wl_resource*);
 
     DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -303,6 +324,9 @@ private:
 class DataDevice
 {
 public:
+    static char const constexpr* interface_name = "wl_data_device";
+    static int const interface_version = 3;
+
     static DataDevice* from(struct wl_resource*);
 
     DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -346,6 +370,9 @@ private:
 class DataDeviceManager
 {
 public:
+    static char const constexpr* interface_name = "wl_data_device_manager";
+    static int const interface_version = 3;
+
     static DataDeviceManager* from(struct wl_resource*);
 
     DataDeviceManager(struct wl_display* display, uint32_t max_version);
@@ -376,6 +403,9 @@ private:
 class Shell
 {
 public:
+    static char const constexpr* interface_name = "wl_shell";
+    static int const interface_version = 1;
+
     static Shell* from(struct wl_resource*);
 
     Shell(struct wl_display* display, uint32_t max_version);
@@ -402,6 +432,9 @@ private:
 class ShellSurface
 {
 public:
+    static char const constexpr* interface_name = "wl_shell_surface";
+    static int const interface_version = 1;
+
     static ShellSurface* from(struct wl_resource*);
 
     ShellSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -467,6 +500,9 @@ private:
 class Surface
 {
 public:
+    static char const constexpr* interface_name = "wl_surface";
+    static int const interface_version = 4;
+
     static Surface* from(struct wl_resource*);
 
     Surface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -510,6 +546,9 @@ private:
 class Seat
 {
 public:
+    static char const constexpr* interface_name = "wl_seat";
+    static int const interface_version = 6;
+
     static Seat* from(struct wl_resource*);
 
     Seat(struct wl_display* display, uint32_t max_version);
@@ -551,6 +590,9 @@ private:
 class Pointer
 {
 public:
+    static char const constexpr* interface_name = "wl_pointer";
+    static int const interface_version = 6;
+
     static Pointer* from(struct wl_resource*);
 
     Pointer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -623,6 +665,9 @@ private:
 class Keyboard
 {
 public:
+    static char const constexpr* interface_name = "wl_keyboard";
+    static int const interface_version = 6;
+
     static Keyboard* from(struct wl_resource*);
 
     Keyboard(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -672,6 +717,9 @@ private:
 class Touch
 {
 public:
+    static char const constexpr* interface_name = "wl_touch";
+    static int const interface_version = 6;
+
     static Touch* from(struct wl_resource*);
 
     Touch(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -712,6 +760,9 @@ private:
 class Output
 {
 public:
+    static char const constexpr* interface_name = "wl_output";
+    static int const interface_version = 3;
+
     static Output* from(struct wl_resource*);
 
     Output(struct wl_display* display, uint32_t max_version);
@@ -776,6 +827,9 @@ private:
 class Region
 {
 public:
+    static char const constexpr* interface_name = "wl_region";
+    static int const interface_version = 1;
+
     static Region* from(struct wl_resource*);
 
     Region(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -797,6 +851,9 @@ private:
 class Subcompositor
 {
 public:
+    static char const constexpr* interface_name = "wl_subcompositor";
+    static int const interface_version = 1;
+
     static Subcompositor* from(struct wl_resource*);
 
     Subcompositor(struct wl_display* display, uint32_t max_version);
@@ -824,6 +881,9 @@ private:
 class Subsurface
 {
 public:
+    static char const constexpr* interface_name = "wl_subsurface";
+    static int const interface_version = 1;
+
     static Subsurface* from(struct wl_resource*);
 
     Subsurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);

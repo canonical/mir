@@ -339,12 +339,14 @@ namespace wayland
 {
 
 struct wl_interface const zwlr_layer_shell_v1_interface_data {
-    "zwlr_layer_shell_v1", 1,
+    mw::LayerShellV1::interface_name,
+    mw::LayerShellV1::interface_version,
     1, mw::LayerShellV1::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const zwlr_layer_surface_v1_interface_data {
-    "zwlr_layer_surface_v1", 1,
+    mw::LayerSurfaceV1::interface_name,
+    mw::LayerSurfaceV1::interface_version,
     8, mw::LayerSurfaceV1::Thunks::request_messages,
     2, mw::LayerSurfaceV1::Thunks::event_messages};
 
