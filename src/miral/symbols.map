@@ -379,7 +379,7 @@ global:
     miral::WaylandExtension::Context::run_on_wayland_mainloop*;
     miral::WaylandExtension::Context::wayland_display*;
     miral::WaylandExtensions::set_filter*;
-    miral::with_extension*;
+    miral::WaylandExtensions::with_extensions*;
     non-virtual?thunk?to?miral::WaylandExtension::?WaylandExtension*;
     typeinfo?for?miral::WaylandExtension;
     typeinfo?for?miral::WaylandExtension::Context;

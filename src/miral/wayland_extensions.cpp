@@ -157,15 +157,14 @@ miral::WaylandExtensions::~WaylandExtensions() = default;
 miral::WaylandExtensions::WaylandExtensions(WaylandExtensions const&) = default;
 auto miral::WaylandExtensions::operator=(WaylandExtensions const&) -> WaylandExtensions& = default;
 
-auto miral::with_extensions(
-    WaylandExtensions const& wayland_extensions,
-    std::initializer_list<std::shared_ptr<WaylandExtension>> extensions) -> WaylandExtensions
+auto miral::WaylandExtensions::with_extensions(
+    std::initializer_list<std::shared_ptr<WaylandExtension>> extensions) const -> WaylandExtensions
 {
     for (auto const& extension : extensions)
     {
-        wayland_extensions.self->add_extension(extension);
+        self->add_extension(extension);
     }
-    return wayland_extensions;
+    return *this;
 }
 
 void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const& extension_filter)
