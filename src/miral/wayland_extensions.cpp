@@ -116,7 +116,34 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
     server.add_pre_init_callback([self=self, &server]
         {
             for (auto const& hook : self->wayland_extension_hooks)
-                server.add_wayland_extension(hook.name, hook.builder);
+            {
+                struct FrigContext : Context
+                {
+                    wl_display* display_ = nullptr;
+                    std::function<void(std::function<void()>&& work)> executor;
+
+                    wl_display* display() const override
+                    {
+                        return display_;
+                    }
+
+                    void run_on_wayland_mainloop(std::function<void()>&& work) const override
+                    {
+                        executor(std::move(work));
+                    }
+                };
+
+                // TODO: we can propagage this change into the implementation, but this supports the API
+                auto frig = [builder=hook.builder, context=std::make_shared<FrigContext>()]
+                    (wl_display* display, std::function<void(std::function<void()>&& work)> const& executor)
+                {
+                    context->display_ = display;
+                    context->executor = executor;
+                    return builder(context.get());
+                };
+
+                server.add_wayland_extension(hook.name, std::move(frig));
+            }
 
             server.set_wayland_extension_filter(self->extensions_filter);
         });

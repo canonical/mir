@@ -58,11 +58,8 @@ struct ServerDecorationManager :
 };
 }
 
-auto mir::examples::server_decoration_extension(
-    wl_display* display,
-    miral::WaylandExtensions::Executor const& run_on_wayland_mainloop)
+auto mir::examples::server_decoration_extension(miral::WaylandExtensions::Context const* context)
 -> std::shared_ptr<void>
 {
-    (void)run_on_wayland_mainloop;
-    return std::make_shared<ServerDecorationManager>(display, 1);
+    return std::make_shared<ServerDecorationManager>(context->display(), 1);
 }

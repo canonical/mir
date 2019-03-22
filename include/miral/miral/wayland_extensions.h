@@ -57,14 +57,26 @@ public:
     auto operator=(WaylandExtensions const&) -> WaylandExtensions&;
 
     /// \remark Since MirAL 2.5
-    using Executor = std::function<void(std::function<void()>&& work)>;
+    class Context
+    {
+    public:
+        virtual auto display() const -> wl_display* = 0;
+        virtual void run_on_wayland_mainloop(std::function<void()>&& work) const = 0;
+
+    protected:
+        Context() = default;
+        virtual ~Context() = default;
+        Context(Context const&) = delete;
+        Context& operator=(Context const&) = delete;
+    };
 
     /// A Builder creates and registers an extension protocol.
-    /// The Builder is provided the wl_display so that the extension can be registered and
-    /// an executor that allows server initiated code to be executed on the Wayland mainloop.
+    /// The Builder is provided the context so that it can access the wl_display (so that
+    /// the extension can be registered and allow server initiated code to be executed on
+    /// the Wayland mainloop.
     /// It returns a shared pointer to the implementation. Mir will manage the lifetime.
     /// \remark Since MirAL 2.5
-    using Builder  = std::function<std::shared_ptr<void>(wl_display* display, Executor const& run_on_wayland_mainloop)>;
+    using Builder  = std::function<std::shared_ptr<void>(Context const* context)>;
 
     /// \remark Since MirAL 2.5
     using Filter = std::function<bool(Application const& app, char const* protocol)>;

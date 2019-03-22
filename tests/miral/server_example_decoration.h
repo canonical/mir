@@ -25,7 +25,7 @@ namespace mir
 {
 namespace examples
 {
-auto server_decoration_extension(wl_display *display, miral::WaylandExtensions::Executor const &run_on_wayland_mainloop)
+auto server_decoration_extension(miral::WaylandExtensions::Context const* context)
 -> std::shared_ptr<void>;
 }
 }
