@@ -24,6 +24,9 @@ namespace
 struct ServerDecoration :
     mir::wayland::ServerDecoration
 {
+    static int const interface_supported = 1;
+    static_assert(mir::wayland::ServerDecorationManager::interface_version >= interface_supported);
+
     ServerDecoration(struct wl_client *client, struct wl_resource *parent, uint32_t id) :
         mir::wayland::ServerDecoration::ServerDecoration(client, parent, id)
     {
@@ -46,8 +49,7 @@ struct ServerDecoration :
     uint32_t decoration_mode = Mode::Server;
 };
 
-struct ServerDecorationManager :
-    mir::wayland::ServerDecorationManager
+struct ServerDecorationManager : mir::wayland::ServerDecorationManager
 {
     using mir::wayland::ServerDecorationManager::ServerDecorationManager;
 
@@ -56,12 +58,14 @@ struct ServerDecorationManager :
         new ServerDecoration{client, resource, id};
     }
 };
+
+int const ServerDecoration::interface_supported;
 }
 
-std::string const mir::examples::server_decoration_extension_name{wayland::ServerDecorationManager::interface_name};
-
-auto mir::examples::server_decoration_extension(miral::WaylandExtensions::Context const* context)
--> std::shared_ptr<void>
-{
-    return std::make_shared<ServerDecorationManager>(context->display(), 1);
-}
+miral::WaylandExtensions::Builder const mir::examples::server_decoration_extension{
+    ServerDecorationManager::interface_name,
+    [](miral::WaylandExtensions::Context const* context)
+        {
+            return std::make_shared<ServerDecorationManager>(context->display(), ServerDecoration::interface_supported);
+        }
+};

@@ -77,17 +77,11 @@ struct miral::WaylandExtensions::Self
         }
     }
 
-    struct WaylandExtensionHook
-    {
-        std::string name;
-        Builder builder;
-    };
+    std::vector<Builder> wayland_extension_hooks;
 
-    std::vector<WaylandExtensionHook> wayland_extension_hooks;
-
-    void add_extension(std::string const& name, Builder builder)
+    void add_extension(Builder const& builder)
     {
-        wayland_extension_hooks.push_back({name, builder});
+        wayland_extension_hooks.push_back(builder);
     }
 
     WaylandExtensions::Filter extensions_filter = [](Application const&, char const*) { return true; };
@@ -133,13 +127,12 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                     }
                 };
 
-                // TODO: we can propagage this change into the implementation, but this supports the API
-                auto frig = [builder=hook.builder, context=std::make_shared<FrigContext>()]
+                auto frig = [build=hook.build, context=std::make_shared<FrigContext>()]
                     (wl_display* display, std::function<void(std::function<void()>&& work)> const& executor)
                 {
                     context->display_ = display;
                     context->executor = executor;
-                    return builder(context.get());
+                    return build(context.get());
                 };
 
                 server.add_wayland_extension(hook.name, std::move(frig));
@@ -157,9 +150,9 @@ auto miral::WaylandExtensions::operator=(WaylandExtensions const&) -> WaylandExt
 
 auto miral::with_extension(
     WaylandExtensions const& wayland_extensions,
-    std::string const& name, WaylandExtensions::Builder const& builder) -> WaylandExtensions
+    WaylandExtensions::Builder const& builder) -> WaylandExtensions
 {
-    wayland_extensions.self->add_extension(name, builder);
+    wayland_extensions.self->add_extension(builder);
     return wayland_extensions;
 }
 

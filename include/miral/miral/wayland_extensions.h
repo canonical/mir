@@ -71,12 +71,19 @@ public:
     };
 
     /// A Builder creates and registers an extension protocol.
-    /// The Builder is provided the context giving access to:
-    ///   * the wl_display (so that, for example, the extension can be registered); and,
-    ///   * allowing server initiated code to be executed on the Wayland mainloop.
-    /// It returns a shared pointer to the implementation. Mir will manage the lifetime.
     /// \remark Since MirAL 2.5
-    using Builder  = std::function<std::shared_ptr<void>(Context const* context)>;
+    struct Builder
+    {
+        /// Name of the protocol extension
+        std::string name;
+
+        /// Functor that creates and registers an extension protocol
+        /// \param context giving access to:
+        ///   * the wl_display (so that, for example, the extension can be registered); and,
+        ///   * allowing server initiated code to be executed on the Wayland mainloop.
+        /// \return a shared pointer to the implementation. (Mir will manage the lifetime)
+        std::function<std::shared_ptr<void>(Context const* context)> build;
+    };
 
     /// \remark Since MirAL 2.5
     using Filter = std::function<bool(Application const& app, char const* protocol)>;
@@ -90,24 +97,23 @@ private:
     std::shared_ptr<Self> self;
 
     friend auto with_extension(
-        WaylandExtensions const& wayland_extensions,
-        std::string const& name, Builder const& builder) -> WaylandExtensions;
+        WaylandExtensions const& wayland_extensions, Builder const& builder) -> WaylandExtensions;
 };
 
 /// Add a bespoke Wayland extension.
 /// \remark Since MirAL 2.5
 auto with_extension(
     WaylandExtensions const& wayland_extensions,
-    std::string const& name, WaylandExtensions::Builder const& builder) -> WaylandExtensions;
+    WaylandExtensions::Builder const& builder) -> WaylandExtensions;
 
 /// Add multiple bespoke Wayland extensions.
 /// \remark Since MirAL 2.5
 template<typename... Extensions>
 auto with_extension(WaylandExtensions const& wayland_extensions,
-    std::string const& name, WaylandExtensions::Builder const& builder,
+    WaylandExtensions::Builder const& builder,
     Extensions... extensions) -> WaylandExtensions
 {
-    return with_extension(with_extension(wayland_extensions, name, builder), extensions...);
+    return with_extension(with_extension(wayland_extensions, builder), extensions...);
 }
 
 /// Set an extension filter callback to control the extensions available to specific clients.
