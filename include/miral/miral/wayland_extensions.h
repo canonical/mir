@@ -71,9 +71,9 @@ public:
     };
 
     /// A Builder creates and registers an extension protocol.
-    /// The Builder is provided the context so that it can access the wl_display (so that
-    /// the extension can be registered and allow server initiated code to be executed on
-    /// the Wayland mainloop.
+    /// The Builder is provided the context giving access to:
+    ///   * the wl_display (so that, for example, the extension can be registered); and,
+    ///   * allowing server initiated code to be executed on the Wayland mainloop.
     /// It returns a shared pointer to the implementation. Mir will manage the lifetime.
     /// \remark Since MirAL 2.5
     using Builder  = std::function<std::shared_ptr<void>(Context const* context)>;
