@@ -21,6 +21,9 @@ namespace wayland
 class XdgShellV6
 {
 public:
+    static char const constexpr* interface_name = "zxdg_shell_v6";
+    static int const interface_version = 1;
+
     static XdgShellV6* from(struct wl_resource*);
 
     XdgShellV6(struct wl_display* display, uint32_t max_version);
@@ -62,6 +65,9 @@ private:
 class XdgPositionerV6
 {
 public:
+    static char const constexpr* interface_name = "zxdg_positioner_v6";
+    static int const interface_version = 1;
+
     static XdgPositionerV6* from(struct wl_resource*);
 
     XdgPositionerV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -121,6 +127,9 @@ private:
 class XdgSurfaceV6
 {
 public:
+    static char const constexpr* interface_name = "zxdg_surface_v6";
+    static int const interface_version = 1;
+
     static XdgSurfaceV6* from(struct wl_resource*);
 
     XdgSurfaceV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -158,6 +167,9 @@ private:
 class XdgToplevelV6
 {
 public:
+    static char const constexpr* interface_name = "zxdg_toplevel_v6";
+    static int const interface_version = 1;
+
     static XdgToplevelV6* from(struct wl_resource*);
 
     XdgToplevelV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -220,6 +232,9 @@ private:
 class XdgPopupV6
 {
 public:
+    static char const constexpr* interface_name = "zxdg_popup_v6";
+    static int const interface_version = 1;
+
     static XdgPopupV6* from(struct wl_resource*);
 
     XdgPopupV6(struct wl_client* client, struct wl_resource* parent, uint32_t id);

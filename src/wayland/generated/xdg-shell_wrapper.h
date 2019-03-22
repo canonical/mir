@@ -21,6 +21,9 @@ namespace wayland
 class XdgWmBase
 {
 public:
+    static char const constexpr* interface_name = "xdg_wm_base";
+    static int const interface_version = 1;
+
     static XdgWmBase* from(struct wl_resource*);
 
     XdgWmBase(struct wl_display* display, uint32_t max_version);
@@ -62,6 +65,9 @@ private:
 class XdgPositioner
 {
 public:
+    static char const constexpr* interface_name = "xdg_positioner";
+    static int const interface_version = 1;
+
     static XdgPositioner* from(struct wl_resource*);
 
     XdgPositioner(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -129,6 +135,9 @@ private:
 class XdgSurface
 {
 public:
+    static char const constexpr* interface_name = "xdg_surface";
+    static int const interface_version = 1;
+
     static XdgSurface* from(struct wl_resource*);
 
     XdgSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -166,6 +175,9 @@ private:
 class XdgToplevel
 {
 public:
+    static char const constexpr* interface_name = "xdg_toplevel";
+    static int const interface_version = 1;
+
     static XdgToplevel* from(struct wl_resource*);
 
     XdgToplevel(struct wl_client* client, struct wl_resource* parent, uint32_t id);
@@ -228,6 +240,9 @@ private:
 class XdgPopup
 {
 public:
+    static char const constexpr* interface_name = "xdg_popup";
+    static int const interface_version = 1;
+
     static XdgPopup* from(struct wl_resource*);
 
     XdgPopup(struct wl_client* client, struct wl_resource* parent, uint32_t id);

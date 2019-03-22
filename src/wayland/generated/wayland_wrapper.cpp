@@ -2794,102 +2794,122 @@ namespace wayland
 {
 
 struct wl_interface const wl_callback_interface_data {
-    "wl_callback", 1,
+    mw::Callback::interface_name,
+    mw::Callback::interface_version,
     0, nullptr,
     1, mw::Callback::Thunks::event_messages};
 
 struct wl_interface const wl_compositor_interface_data {
-    "wl_compositor", 4,
+    mw::Compositor::interface_name,
+    mw::Compositor::interface_version,
     2, mw::Compositor::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_shm_pool_interface_data {
-    "wl_shm_pool", 1,
+    mw::ShmPool::interface_name,
+    mw::ShmPool::interface_version,
     3, mw::ShmPool::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_shm_interface_data {
-    "wl_shm", 1,
+    mw::Shm::interface_name,
+    mw::Shm::interface_version,
     1, mw::Shm::Thunks::request_messages,
     1, mw::Shm::Thunks::event_messages};
 
 struct wl_interface const wl_buffer_interface_data {
-    "wl_buffer", 1,
+    mw::Buffer::interface_name,
+    mw::Buffer::interface_version,
     1, mw::Buffer::Thunks::request_messages,
     1, mw::Buffer::Thunks::event_messages};
 
 struct wl_interface const wl_data_offer_interface_data {
-    "wl_data_offer", 3,
+    mw::DataOffer::interface_name,
+    mw::DataOffer::interface_version,
     5, mw::DataOffer::Thunks::request_messages,
     3, mw::DataOffer::Thunks::event_messages};
 
 struct wl_interface const wl_data_source_interface_data {
-    "wl_data_source", 3,
+    mw::DataSource::interface_name,
+    mw::DataSource::interface_version,
     3, mw::DataSource::Thunks::request_messages,
     6, mw::DataSource::Thunks::event_messages};
 
 struct wl_interface const wl_data_device_interface_data {
-    "wl_data_device", 3,
+    mw::DataDevice::interface_name,
+    mw::DataDevice::interface_version,
     3, mw::DataDevice::Thunks::request_messages,
     6, mw::DataDevice::Thunks::event_messages};
 
 struct wl_interface const wl_data_device_manager_interface_data {
-    "wl_data_device_manager", 3,
+    mw::DataDeviceManager::interface_name,
+    mw::DataDeviceManager::interface_version,
     2, mw::DataDeviceManager::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_shell_interface_data {
-    "wl_shell", 1,
+    mw::Shell::interface_name,
+    mw::Shell::interface_version,
     1, mw::Shell::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_shell_surface_interface_data {
-    "wl_shell_surface", 1,
+    mw::ShellSurface::interface_name,
+    mw::ShellSurface::interface_version,
     10, mw::ShellSurface::Thunks::request_messages,
     3, mw::ShellSurface::Thunks::event_messages};
 
 struct wl_interface const wl_surface_interface_data {
-    "wl_surface", 4,
+    mw::Surface::interface_name,
+    mw::Surface::interface_version,
     10, mw::Surface::Thunks::request_messages,
     2, mw::Surface::Thunks::event_messages};
 
 struct wl_interface const wl_seat_interface_data {
-    "wl_seat", 6,
+    mw::Seat::interface_name,
+    mw::Seat::interface_version,
     4, mw::Seat::Thunks::request_messages,
     2, mw::Seat::Thunks::event_messages};
 
 struct wl_interface const wl_pointer_interface_data {
-    "wl_pointer", 6,
+    mw::Pointer::interface_name,
+    mw::Pointer::interface_version,
     2, mw::Pointer::Thunks::request_messages,
     9, mw::Pointer::Thunks::event_messages};
 
 struct wl_interface const wl_keyboard_interface_data {
-    "wl_keyboard", 6,
+    mw::Keyboard::interface_name,
+    mw::Keyboard::interface_version,
     1, mw::Keyboard::Thunks::request_messages,
     6, mw::Keyboard::Thunks::event_messages};
 
 struct wl_interface const wl_touch_interface_data {
-    "wl_touch", 6,
+    mw::Touch::interface_name,
+    mw::Touch::interface_version,
     1, mw::Touch::Thunks::request_messages,
     7, mw::Touch::Thunks::event_messages};
 
 struct wl_interface const wl_output_interface_data {
-    "wl_output", 3,
+    mw::Output::interface_name,
+    mw::Output::interface_version,
     1, mw::Output::Thunks::request_messages,
     4, mw::Output::Thunks::event_messages};
 
 struct wl_interface const wl_region_interface_data {
-    "wl_region", 1,
+    mw::Region::interface_name,
+    mw::Region::interface_version,
     3, mw::Region::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_subcompositor_interface_data {
-    "wl_subcompositor", 1,
+    mw::Subcompositor::interface_name,
+    mw::Subcompositor::interface_version,
     2, mw::Subcompositor::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_subsurface_interface_data {
-    "wl_subsurface", 1,
+    mw::Subsurface::interface_name,
+    mw::Subsurface::interface_version,
     6, mw::Subsurface::Thunks::request_messages,
     0, nullptr};
 

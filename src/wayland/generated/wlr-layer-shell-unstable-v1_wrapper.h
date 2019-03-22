@@ -21,6 +21,9 @@ namespace wayland
 class LayerShellV1
 {
 public:
+    static char const constexpr* interface_name = "zwlr_layer_shell_v1";
+    static int const interface_version = 1;
+
     static LayerShellV1* from(struct wl_resource*);
 
     LayerShellV1(struct wl_display* display, uint32_t max_version);
@@ -57,6 +60,9 @@ private:
 class LayerSurfaceV1
 {
 public:
+    static char const constexpr* interface_name = "zwlr_layer_surface_v1";
+    static int const interface_version = 1;
+
     static LayerSurfaceV1* from(struct wl_resource*);
 
     LayerSurfaceV1(struct wl_client* client, struct wl_resource* parent, uint32_t id);

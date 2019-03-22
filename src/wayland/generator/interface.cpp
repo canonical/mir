@@ -44,6 +44,10 @@ Emitter Interface::declaration() const
         "{",
         "public:",
         Emitter::layout(EmptyLineList{
+            Lines {
+                {"static char const constexpr* interface_name = \"", wl_name, "\";"},
+                {"static int const interface_version = ", std::to_string(version), ";"},
+            },
             {"static ", generated_name, "* from(struct wl_resource*);"},
             Lines {
                 constructor_prototype(),
@@ -98,7 +102,8 @@ Emitter Interface::wl_interface_init() const
     return Lines{
         {"struct wl_interface const ", wl_name, "_interface_data ",
             BraceList{
-                {"\"", wl_name, "\", ", std::to_string(version)},
+                {nmspace, "interface_name"},
+                {nmspace, "interface_version"},
                 {std::to_string(requests.size()), ", ",  (requests.empty() ? "nullptr" : nmspace + "Thunks::request_messages")},
                 {std::to_string(events.size()), ", ",  (events.empty() ? "nullptr" : nmspace + "Thunks::event_messages")}
             }}

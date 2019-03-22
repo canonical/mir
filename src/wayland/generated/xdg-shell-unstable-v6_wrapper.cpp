@@ -949,27 +949,32 @@ namespace wayland
 {
 
 struct wl_interface const zxdg_shell_v6_interface_data {
-    "zxdg_shell_v6", 1,
+    mw::XdgShellV6::interface_name,
+    mw::XdgShellV6::interface_version,
     4, mw::XdgShellV6::Thunks::request_messages,
     1, mw::XdgShellV6::Thunks::event_messages};
 
 struct wl_interface const zxdg_positioner_v6_interface_data {
-    "zxdg_positioner_v6", 1,
+    mw::XdgPositionerV6::interface_name,
+    mw::XdgPositionerV6::interface_version,
     7, mw::XdgPositionerV6::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const zxdg_surface_v6_interface_data {
-    "zxdg_surface_v6", 1,
+    mw::XdgSurfaceV6::interface_name,
+    mw::XdgSurfaceV6::interface_version,
     5, mw::XdgSurfaceV6::Thunks::request_messages,
     1, mw::XdgSurfaceV6::Thunks::event_messages};
 
 struct wl_interface const zxdg_toplevel_v6_interface_data {
-    "zxdg_toplevel_v6", 1,
+    mw::XdgToplevelV6::interface_name,
+    mw::XdgToplevelV6::interface_version,
     14, mw::XdgToplevelV6::Thunks::request_messages,
     2, mw::XdgToplevelV6::Thunks::event_messages};
 
 struct wl_interface const zxdg_popup_v6_interface_data {
-    "zxdg_popup_v6", 1,
+    mw::XdgPopupV6::interface_name,
+    mw::XdgPopupV6::interface_version,
     2, mw::XdgPopupV6::Thunks::request_messages,
     2, mw::XdgPopupV6::Thunks::event_messages};
 
