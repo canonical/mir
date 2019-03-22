@@ -92,39 +92,14 @@ public:
     /// \remark Since MirAL 2.5
     void set_filter(Filter const& extension_filter);
 
+    /// Add a bespoke Wayland extension.
+    /// \remark Since MirAL 2.5
+    void with_extension(Builder const& builder);
+
 private:
     struct Self;
     std::shared_ptr<Self> self;
-
-    friend auto with_extension(
-        WaylandExtensions const& wayland_extensions, Builder const& builder) -> WaylandExtensions;
 };
-
-/// Add a bespoke Wayland extension.
-/// \remark Since MirAL 2.5
-auto with_extension(
-    WaylandExtensions const& wayland_extensions,
-    WaylandExtensions::Builder const& builder) -> WaylandExtensions;
-
-/// Add multiple bespoke Wayland extensions.
-/// \remark Since MirAL 2.5
-template<typename... Extensions>
-auto with_extension(WaylandExtensions const& wayland_extensions,
-    WaylandExtensions::Builder const& builder,
-    Extensions... extensions) -> WaylandExtensions
-{
-    return with_extension(with_extension(wayland_extensions, builder), extensions...);
-}
-
-/// Set an extension filter callback to control the extensions available to specific clients.
-/// \remark Since MirAL 2.5
-inline auto with_filter(
-    WaylandExtensions wayland_extensions,
-    WaylandExtensions::Filter const& extension_filter) -> WaylandExtensions
-{
-    wayland_extensions.set_filter(extension_filter);
-    return wayland_extensions;
-}
 }
 
 #endif //MIRAL_WAYLAND_EXTENSIONS_H

@@ -238,7 +238,8 @@ TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
         "wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1:" + mir::examples::server_decoration_extension.name};
     extensions.set_filter([&](auto, char const* protocol)
         { if (strcmp(protocol, unavailable_extension) == 0) filter_saw_bespoke_extension = true; return true; });
-    add_server_init(with_extension(extensions, mir::examples::server_decoration_extension));
+    extensions.with_extension(mir::examples::server_decoration_extension);
+    add_server_init(extensions);
 
     start_server();
 

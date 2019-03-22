@@ -148,12 +148,9 @@ miral::WaylandExtensions::~WaylandExtensions() = default;
 miral::WaylandExtensions::WaylandExtensions(WaylandExtensions const&) = default;
 auto miral::WaylandExtensions::operator=(WaylandExtensions const&) -> WaylandExtensions& = default;
 
-auto miral::with_extension(
-    WaylandExtensions const& wayland_extensions,
-    WaylandExtensions::Builder const& builder) -> WaylandExtensions
+void miral::WaylandExtensions::with_extension(Builder const& builder)
 {
-    wayland_extensions.self->add_extension(builder);
-    return wayland_extensions;
+    self->add_extension(builder);
 }
 
 void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const& extension_filter)

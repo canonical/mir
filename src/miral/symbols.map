@@ -375,7 +375,7 @@ global:
 MIRAL_2.5 {
 global:
   extern "C++" {
-    miral::with_extension*;
     miral::WaylandExtensions::set_filter*;
+    miral::WaylandExtensions::with_extension*;
   };
 } MIRAL_2.4;
