@@ -31,6 +31,7 @@ struct miral::WaylandExtensions::Self
 {
     Self(std::string const& default_value) : default_value{default_value}
     {
+        available_extensions += ":zwlr_layer_shell_v1:";
     }
 
     void callback(mir::Server& server) const
@@ -40,6 +41,7 @@ struct miral::WaylandExtensions::Self
     }
 
     std::string const default_value;
+    std::string available_extensions = mo::wayland_extensions_value;
 
     void validate(std::string extensions) const
     {
@@ -53,11 +55,6 @@ struct miral::WaylandExtensions::Self
         }
 
         std::set<std::string> supported_extension;
-        std::string available_extensions = mo::wayland_extensions_value;
-        for (auto const& extension : wayland_extension_hooks)
-            available_extensions += ":" + extension.name;
-        available_extensions += ":zwlr_layer_shell_v1";
-        available_extensions += ':';
 
         for (char const* start = available_extensions.c_str(); char const* end = strchr(start, ':'); start = end+1)
         {
@@ -82,6 +79,7 @@ struct miral::WaylandExtensions::Self
     void add_extension(Builder const& builder)
     {
         wayland_extension_hooks.push_back(builder);
+        available_extensions += builder.name + ":";
     }
 
     WaylandExtensions::Filter extensions_filter = [](Application const&, char const*) { return true; };
@@ -98,6 +96,16 @@ miral::WaylandExtensions::WaylandExtensions(std::string const& default_value) :
 }
 
 auto miral::WaylandExtensions::supported_extensions() const -> std::string
+{
+    return self->available_extensions.substr(0, self->available_extensions.size()-1);
+}
+
+auto miral::WaylandExtensions::default_extensions() const -> std::string
+{
+    return self->default_value;
+}
+
+auto miral::WaylandExtensions::standard_extensions() -> std::string
 {
     return mo::wayland_extensions_value;
 }

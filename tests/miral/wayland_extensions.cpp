@@ -202,7 +202,7 @@ TEST_F(WaylandExtensions, client_sees_default_extensions)
 
     run_as_client(enumerator_client);
 
-    auto available_extensions = extensions.supported_extensions();
+    auto available_extensions = extensions.default_extensions();
     available_extensions += ':';
 
     for (char const* start = available_extensions.c_str(); char const* end = strchr(start, ':'); start = end+1)
@@ -235,7 +235,7 @@ TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
 
     ClientGlobalEnumerator enumerator_client;
     miral::WaylandExtensions extensions{
-        "wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1:" + mir::examples::server_decoration_extension.name};
+        miral::WaylandExtensions::standard_extensions() + ":" + mir::examples::server_decoration_extension.name};
     extensions.set_filter([&](auto, char const* protocol)
         { if (strcmp(protocol, unavailable_extension) == 0) filter_saw_bespoke_extension = true; return true; });
     extensions.with_extension(mir::examples::server_decoration_extension);
@@ -249,4 +249,16 @@ TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
 #ifndef MIR_NO_WAYLAND_FILTER
     EXPECT_THAT(filter_saw_bespoke_extension, Eq(true));
 #endif
+}
+
+TEST_F(WaylandExtensions, with_extension_adds_protocol_to_supported_extensions)
+{
+    miral::WaylandExtensions extensions{
+        miral::WaylandExtensions::standard_extensions() + ":" + mir::examples::server_decoration_extension.name};
+
+    EXPECT_THAT(extensions.supported_extensions(), Not(HasSubstr(mir::examples::server_decoration_extension.name)));
+
+    extensions.with_extension(mir::examples::server_decoration_extension);
+
+    EXPECT_THAT(extensions.supported_extensions(), HasSubstr(mir::examples::server_decoration_extension.name));
 }

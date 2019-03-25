@@ -49,13 +49,25 @@ public:
 
     void operator()(mir::Server& server) const;
 
-    /// All extensions extensions supported by Mir (colon separated list)
+    /// All Wayland extensions supported (colon separated list).
+    /// This includes both the standard_extensions() and any extensions that have
+    /// been added using with_extension().
     auto supported_extensions() const -> std::string;
+
+    /// Configuration default for Wayland extensions enabled (colon separated list).
+    /// Can be overridden by configuration (e.g. on command line).
+    /// \remark Since MirAL 2.5
+    auto default_extensions() const -> std::string;
+
+    /// Standard Wayland extensions enabled by Mir (colon separated list)
+    /// \remark Since MirAL 2.5
+    static auto standard_extensions() -> std::string;
 
     ~WaylandExtensions();
     WaylandExtensions(WaylandExtensions const&);
     auto operator=(WaylandExtensions const&) -> WaylandExtensions&;
 
+    /// Context information useful for implementing Wayland extensions
     /// \remark Since MirAL 2.5
     class Context
     {
