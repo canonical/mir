@@ -1,3 +1,5 @@
+add_subdirectory(generated/)
+
 add_library(exampleserverconfig STATIC
   server_example_input_device_config.cpp
   server_example_input_event_filter.cpp
@@ -27,7 +29,11 @@ mir_add_wrapped_executable(mir_demo_server
     server_example.cpp
     glog_logger.cpp
     server_example_test_client.cpp
+    server_example_decoration.cpp server_example_decoration.h
+    generated/server-decoration_wrapper.cpp generated/server-decoration_wrapper.h
 )
+
+set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/generated/")
 
 target_link_libraries(mir_demo_server
   example-shell-lib

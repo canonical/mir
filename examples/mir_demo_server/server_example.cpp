@@ -23,6 +23,7 @@
 #include "server_example_custom_compositor.h"
 #include "server_example_test_client.h"
 #include "server_example_input_device_config.h"
+#include "server_example_decoration.h"
 
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
@@ -143,6 +144,11 @@ try
     InputFilters input_filters;
     me::TestClientRunner test_runner;
 
+    miral::WaylandExtensions extensions{
+        miral::WaylandExtensions::recommended_extensions() + ":zwlr_layer_shell_v1:" + mir::examples::server_decoration_extension.name};
+    extensions.with_extension(mir::examples::server_decoration_extension);
+    extensions.set_filter([&](auto, char const* protocol) { puts(protocol); return true; });
+
     auto const server_exit_status = runner.run_with({
         // example options for display layout, logging and timeout
         miral::display_configuration_options,
@@ -150,7 +156,7 @@ try
         me::add_glog_options_to,
         miral::StartupInternalClient{spinner},
         miral::X11Support{},
-        miral::WaylandExtensions{miral::WaylandExtensions::recommended_extensions() + ":zwlr_layer_shell_v1"},
+        miral::WaylandExtensions{"wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1"},
         launcher,
         window_managers,
         me::add_custom_compositor_option_to,
