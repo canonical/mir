@@ -303,7 +303,7 @@ void miral::StaticDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
                         {
                             if (conf.refresh.is_set())
                             {
-                                if (abs(conf.refresh.value() - mode->vrefresh_hz) < 1.0)
+                                if (std::abs(conf.refresh.value() - mode->vrefresh_hz) < 1.0)
                                 {
                                     conf_output.current_mode_index = distance(begin(conf_output.modes), mode);
                                     matched_mode = true;
