@@ -24,6 +24,7 @@
 #include "server_example_test_client.h"
 #include "server_example_input_device_config.h"
 #include "server_example_decoration.h"
+#include "xdg-decoration-unstable-v1.h"
 
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
@@ -145,8 +146,11 @@ try
     me::TestClientRunner test_runner;
 
     miral::WaylandExtensions extensions{
-        miral::WaylandExtensions::recommended_extensions() + ":zwlr_layer_shell_v1:" + mir::examples::server_decoration_extension.name};
-    extensions.with_extension(mir::examples::server_decoration_extension);
+        miral::WaylandExtensions::recommended_extensions()
+            + ":" + mir::examples::server_decoration_extension.name
+            + ":" + mir::examples::xdg_decoration_extension.name};
+    extensions.add_extension(mir::examples::server_decoration_extension);
+    extensions.add_extension(mir::examples::xdg_decoration_extension);
     extensions.set_filter([&](auto, char const* protocol) { puts(protocol); return true; });
 
     auto const server_exit_status = runner.run_with({
@@ -156,7 +160,7 @@ try
         me::add_glog_options_to,
         miral::StartupInternalClient{spinner},
         miral::X11Support{},
-        miral::WaylandExtensions{"wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1"},
+        extensions,
         launcher,
         window_managers,
         me::add_custom_compositor_option_to,

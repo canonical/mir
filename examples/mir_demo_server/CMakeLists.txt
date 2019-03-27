@@ -30,10 +30,13 @@ mir_add_wrapped_executable(mir_demo_server
     glog_logger.cpp
     server_example_test_client.cpp
     server_example_decoration.cpp server_example_decoration.h
-    generated/server-decoration_wrapper.cpp generated/server-decoration_wrapper.h
+    xdg-decoration-unstable-v1.cpp xdg-decoration-unstable-v1.h
+    generated/server-decoration_wrapper.cpp          generated/server-decoration_wrapper.h
+    generated/xdg-decoration-unstable-v1_wrapper.cpp generated/xdg-decoration-unstable-v1_wrapper.h
 )
 
-set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/generated/")
+set_source_files_properties(server_example_decoration.cpp  PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/generated/")
+set_source_files_properties(xdg-decoration-unstable-v1.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/generated/")
 
 target_link_libraries(mir_demo_server
   example-shell-lib
