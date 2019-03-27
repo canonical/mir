@@ -21,27 +21,32 @@
 
 namespace
 {
-struct ToplevelDecorationV1 :
-    mir::wayland::ToplevelDecorationV1
+struct ToplevelDecorationV1 : mir::wayland::ToplevelDecorationV1
 {
     ToplevelDecorationV1(struct wl_client *client, struct wl_resource *parent, uint32_t id) :
         mir::wayland::ToplevelDecorationV1::ToplevelDecorationV1(client, parent, id)
     {
+        send_configure_event(mode);
     }
 
-private:
     void destroy() override
     {
         destroy_wayland_object();
     }
 
-    void set_mode(uint32_t /*mode*/) override
+    void set_mode(uint32_t mode) override
     {
+        this->mode = mode;
+        send_configure_event(mode);
     }
 
     void unset_mode() override
     {
+        mode = Mode::server_side;
+        send_configure_event(mode);
     }
+
+    uint32_t mode = Mode::server_side;
 };
 
 struct DecorationManagerV1 : mir::wayland::DecorationManagerV1
@@ -55,9 +60,10 @@ struct DecorationManagerV1 : mir::wayland::DecorationManagerV1
         destroy_wayland_object(resource);
     }
 
-    void get_toplevel_decoration(
-        struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* /*toplevel*/) override
+    void get_toplevel_decoration(wl_client* client, wl_resource* resource, uint32_t id, wl_resource* /*toplevel*/) override
     {
+        // TODO: we need a way to map `client` to a miral::Application
+        // TODO: we need a way to map `toplevel` to a miral::Surface
         new ToplevelDecorationV1{client, resource, id};
     }
 };
@@ -73,7 +79,6 @@ miral::WaylandExtensions::Builder const mir::examples::xdg_decoration_extension{
     DecorationManagerV1::interface_name,
     [](miral::WaylandExtensions::Context const* context)
         {
-            printf("******************** display=%p ********************\n", (void*)context->display());
             return std::make_shared<DecorationManagerV1>(context->display(), DecorationManagerV1::interface_supported);
         }
 };
