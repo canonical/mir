@@ -933,6 +933,7 @@ MIR_SERVER_DETAIL_FOR_TESTING_0.31 {
     mir::DefaultServerConfiguration::the_stop_callback*;
     typeinfo?for?mir::DefaultServerConfiguration;
     VTT?for?mir::DefaultServerConfiguration;
+    vtable?for?mir::DefaultServerConfiguration;
 
     mir::run_mir*;
   };
