@@ -117,6 +117,7 @@ INSTANTIATE_TEST_CASE_P(DragActiveWindow, ForMoveableTypes, ::testing::Values(
 //    mir_window_type_inputmethod,
 //    mir_window_type_satellite,
 //    mir_window_type_tip,
+//    mir_window_type_anchored,
 //    mir_window_types
 ));
 

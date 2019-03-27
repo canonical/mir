@@ -48,6 +48,7 @@ bool must_not_have_parent(MirWindowType type)
     {
     case mir_window_type_normal:
     case mir_window_type_utility:
+    case mir_window_type_anchored:
         return true;
 
     default:

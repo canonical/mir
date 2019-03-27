@@ -165,6 +165,7 @@ bool miral::WindowInfo::can_be_active() const
     case mir_window_type_dialog:
     case mir_window_type_freestyle:
     case mir_window_type_menu:
+    case mir_window_type_anchored:
         return true;
 
     case mir_window_type_satellite:    /**< AKA "toolbox"/"toolbar"             */
@@ -172,10 +173,11 @@ bool miral::WindowInfo::can_be_active() const
     case mir_window_type_gloss:
     case mir_window_type_tip:          /**< AKA "tooltip"                       */
     case mir_window_type_decoration:
-    default:
+    case mir_window_types:
         // Cannot have input focus
-        return false;
+        break;
     }
+    return false;
 }
 
 bool miral::WindowInfo::must_have_parent() const

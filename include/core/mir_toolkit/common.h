@@ -118,6 +118,7 @@ typedef enum MirWindowType
     mir_window_type_satellite,    /**< AKA "toolbox"/"toolbar"             */
     mir_window_type_tip,          /**< AKA "tooltip"                       */
     mir_window_type_decoration,
+    mir_window_type_anchored,     /**< AKA "panel"/"notification"/"etc"    */
     mir_window_types
 } MirWindowType;
 

@@ -21,6 +21,8 @@
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"
 
+#include "mir/shell/surface_specification.h"
+
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
@@ -84,6 +86,9 @@ mf::LayerSurfaceV1::LayerSurfaceV1(struct wl_client* client, struct wl_resource*
     : wayland::LayerSurfaceV1(client, parent_resource, id),
       WindowWlSurfaceRole(&layer_shell.seat, client, surface, layer_shell.shell, layer_shell.output_manager)
 {
+    shell::SurfaceSpecification spec;
+    spec.type = mir_window_type_anchored;
+    apply_spec(spec);
 }
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
