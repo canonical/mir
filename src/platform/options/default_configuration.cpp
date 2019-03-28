@@ -56,7 +56,7 @@ char const* const mo::debug_opt                   = "debug";
 char const* const mo::composite_delay_opt         = "composite-delay";
 char const* const mo::enable_key_repeat_opt       = "enable-key-repeat";
 char const* const mo::x11_display_opt             = "x11-display-experimental";
-char const* const mo::wayland_extensions_opt      = "wayland_extensions";
+char const* const mo::wayland_extensions_opt      = "wayland-extensions";
 char const* const mo::wayland_extensions_value    = "wl_shell:xdg_wm_base:zxdg_shell_v6";
 
 char const* const mo::off_opt_value = "off";

@@ -196,13 +196,11 @@ TEST_F(WaylandExtensions, filter_is_called)
 TEST_F(WaylandExtensions, client_sees_default_extensions)
 {
     ClientGlobalEnumerator enumerator_client;
-    miral::WaylandExtensions extensions;
-    add_server_init(extensions);
     start_server();
 
     run_as_client(enumerator_client);
 
-    auto available_extensions = extensions.default_extensions();
+    auto available_extensions = miral::WaylandExtensions::recommended_extensions();
     available_extensions += ':';
 
     for (char const* start = available_extensions.c_str(); char const* end = strchr(start, ':'); start = end+1)
@@ -235,10 +233,10 @@ TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
 
     ClientGlobalEnumerator enumerator_client;
     miral::WaylandExtensions extensions{
-        miral::WaylandExtensions::standard_extensions() + ":" + mir::examples::server_decoration_extension.name};
+        miral::WaylandExtensions::recommended_extensions() + ":" + mir::examples::server_decoration_extension.name};
     extensions.set_filter([&](auto, char const* protocol)
         { if (strcmp(protocol, unavailable_extension) == 0) filter_saw_bespoke_extension = true; return true; });
-    extensions.with_extension(mir::examples::server_decoration_extension);
+    extensions.add_extension(mir::examples::server_decoration_extension);
     add_server_init(extensions);
 
     start_server();
@@ -254,11 +252,11 @@ TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
 TEST_F(WaylandExtensions, with_extension_adds_protocol_to_supported_extensions)
 {
     miral::WaylandExtensions extensions{
-        miral::WaylandExtensions::standard_extensions() + ":" + mir::examples::server_decoration_extension.name};
+        miral::WaylandExtensions::recommended_extensions() + ":" + mir::examples::server_decoration_extension.name};
 
     EXPECT_THAT(extensions.supported_extensions(), Not(HasSubstr(mir::examples::server_decoration_extension.name)));
 
-    extensions.with_extension(mir::examples::server_decoration_extension);
+    extensions.add_extension(mir::examples::server_decoration_extension);
 
     EXPECT_THAT(extensions.supported_extensions(), HasSubstr(mir::examples::server_decoration_extension.name));
 }

@@ -31,37 +31,39 @@ namespace mir { class Server; }
 
 namespace miral
 {
-/// Add a user configuration option to Mir's option handling to select
-/// the supported Wayland extensions.
+/// Enable configuration of the Wayland extensions enabled at runtime.
+///
 /// This adds the command line option '--wayland-extensions' the corresponding
 /// MIR_SERVER_WAYLAND_EXTENSIONS environment variable, and the wayland-extensions
 /// config line.
+///   * The server can add support for additional extensions
+///   * The server can specify the configuration defaults
+///   * Mir's option handling allows the defaults to be overridden
 /// \remark Since MirAL 2.4
 class WaylandExtensions
 {
 public:
-    /// Provide the default extensions supported by Mir
+    /// Default to enabling the extensions recommended by Mir
     WaylandExtensions();
 
-    /// Provide a custom set of default extensions (colon separated list)
-    /// \note This can only be a subset of supported_extensions().
+    /// Default to enabling a custom set of extensions (colon separated list)
+    /// \note This is validated when the WaylandExtensions object is passed to
+    /// MirRunner::run_with() and can only include extensions supported by Mir
+    /// or added by the server.
     explicit WaylandExtensions(std::string const& default_value);
 
     void operator()(mir::Server& server) const;
 
-    /// All Wayland extensions supported (colon separated list).
-    /// This includes both the standard_extensions() and any extensions that have
-    /// been added using with_extension().
+    /// All Wayland extensions currently supported (colon separated list).
+    /// This includes both the recommended_extensions() and any extensions that
+    /// have been added using add_extension().
+    /// \deprecated This is of no real use to the server, just for documenting
+    /// the configuration option.
     auto supported_extensions() const -> std::string;
 
-    /// Configuration default for Wayland extensions enabled (colon separated list).
-    /// Can be overridden by configuration (e.g. on command line).
+    /// Default for extensions to enabled recommended by Mir (colon separated list)
     /// \remark Since MirAL 2.5
-    auto default_extensions() const -> std::string;
-
-    /// Standard Wayland extensions enabled by Mir (colon separated list)
-    /// \remark Since MirAL 2.5
-    static auto standard_extensions() -> std::string;
+    static auto recommended_extensions() -> std::string;
 
     ~WaylandExtensions();
     WaylandExtensions(WaylandExtensions const&);
@@ -106,7 +108,7 @@ public:
 
     /// Add a bespoke Wayland extension.
     /// \remark Since MirAL 2.5
-    void with_extension(Builder const& builder);
+    void add_extension(Builder const& builder);
 
 private:
     struct Self;

@@ -100,12 +100,7 @@ auto miral::WaylandExtensions::supported_extensions() const -> std::string
     return self->available_extensions.substr(0, self->available_extensions.size()-1);
 }
 
-auto miral::WaylandExtensions::default_extensions() const -> std::string
-{
-    return self->default_value;
-}
-
-auto miral::WaylandExtensions::standard_extensions() -> std::string
+auto miral::WaylandExtensions::recommended_extensions() -> std::string
 {
     return mo::wayland_extensions_value;
 }
@@ -113,7 +108,10 @@ auto miral::WaylandExtensions::standard_extensions() -> std::string
 void miral::WaylandExtensions::operator()(mir::Server& server) const
 {
     self->validate(self->default_value);
-    server.add_configuration_option(mo::wayland_extensions_opt, "Wayland extensions to enable", self->default_value);
+    server.add_configuration_option(
+        mo::wayland_extensions_opt,
+        ("Wayland extensions to enable. [" + supported_extensions() + "]"),
+        self->default_value);
 
     server.add_pre_init_callback([self=self, &server]
         {
@@ -156,7 +154,7 @@ miral::WaylandExtensions::~WaylandExtensions() = default;
 miral::WaylandExtensions::WaylandExtensions(WaylandExtensions const&) = default;
 auto miral::WaylandExtensions::operator=(WaylandExtensions const&) -> WaylandExtensions& = default;
 
-void miral::WaylandExtensions::with_extension(Builder const& builder)
+void miral::WaylandExtensions::add_extension(Builder const& builder)
 {
     self->add_extension(builder);
 }
