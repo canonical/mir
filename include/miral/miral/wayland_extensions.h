@@ -46,10 +46,11 @@ public:
     /// Default to enabling the extensions recommended by Mir
     WaylandExtensions();
 
-    /// Default to enabling a custom set of extensions (colon separated list)
-    /// \note This is validated when the WaylandExtensions object is passed to
-    /// MirRunner::run_with() and can only include extensions supported by Mir
-    /// or added by the server.
+    /// Initialize "enabled by default" to a custom set of extensions (colon
+    /// separated list).
+    /// \note "enabled by default" is validated when the WaylandExtensions
+    /// object is passed to MirRunner::run_with() and can only include
+    /// extensions supported by Mir or added by the server.
     explicit WaylandExtensions(std::string const& default_value);
 
     void operator()(mir::Server& server) const;
@@ -106,9 +107,13 @@ public:
     /// \remark Since MirAL 2.5
     void set_filter(Filter const& extension_filter);
 
-    /// Add a bespoke Wayland extension.
+    /// Add a bespoke Wayland extension both to "supported" and "enabled by default".
     /// \remark Since MirAL 2.5
     void add_extension(Builder const& builder);
+
+    /// Add a bespoke Wayland extension both to "supported" but not "enabled by default".
+    /// \remark Since MirAL 2.5
+    void add_extension_disabled_by_default(Builder const& builder);
 
 private:
     struct Self;

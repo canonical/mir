@@ -200,8 +200,7 @@ TEST_F(WaylandExtensions, client_sees_default_extensions)
 
     run_as_client(enumerator_client);
 
-    auto available_extensions = miral::WaylandExtensions::recommended_extensions();
-    available_extensions += ':';
+    auto const available_extensions = miral::WaylandExtensions::recommended_extensions() += ':';
 
     for (char const* start = available_extensions.c_str(); char const* end = strchr(start, ':'); start = end+1)
     {
@@ -232,8 +231,7 @@ TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
     bool filter_saw_bespoke_extension = false;
 
     ClientGlobalEnumerator enumerator_client;
-    miral::WaylandExtensions extensions{
-        miral::WaylandExtensions::recommended_extensions() + ":" + mir::examples::server_decoration_extension.name};
+    miral::WaylandExtensions extensions;
     extensions.set_filter([&](auto, char const* protocol)
         { if (strcmp(protocol, unavailable_extension) == 0) filter_saw_bespoke_extension = true; return true; });
     extensions.add_extension(mir::examples::server_decoration_extension);
@@ -249,14 +247,46 @@ TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
 #endif
 }
 
-TEST_F(WaylandExtensions, with_extension_adds_protocol_to_supported_extensions)
+TEST_F(WaylandExtensions, add_extension_adds_protocol_to_supported_enabled_extensions)
 {
-    miral::WaylandExtensions extensions{
-        miral::WaylandExtensions::recommended_extensions() + ":" + mir::examples::server_decoration_extension.name};
+    miral::WaylandExtensions extensions;
 
     EXPECT_THAT(extensions.supported_extensions(), Not(HasSubstr(mir::examples::server_decoration_extension.name)));
 
     extensions.add_extension(mir::examples::server_decoration_extension);
 
     EXPECT_THAT(extensions.supported_extensions(), HasSubstr(mir::examples::server_decoration_extension.name));
+}
+
+TEST_F(WaylandExtensions, server_can_remove_default_extensions)
+{
+    std::string const extension_to_remove{":zxdg_shell_v6"};
+    auto reduced_default_extensions = miral::WaylandExtensions::recommended_extensions();
+    auto const find = reduced_default_extensions.find(extension_to_remove);
+    ASSERT_THAT(find, Gt(0));
+    reduced_default_extensions.replace(find, extension_to_remove.size(), "");
+
+    miral::WaylandExtensions extensions;
+    ClientGlobalEnumerator enumerator_client;
+
+    add_server_init(extensions);
+    start_server();
+
+    run_as_client(enumerator_client);
+
+    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(extension_to_remove))));
+}
+
+TEST_F(WaylandExtensions, add_extension_disabled_by_default_adds_protocol_to_supported_extensions_only)
+{
+    miral::WaylandExtensions extensions;
+    extensions.add_extension_disabled_by_default(mir::examples::server_decoration_extension);
+    ClientGlobalEnumerator enumerator_client;
+
+    add_server_init(extensions);
+    start_server();
+
+    run_as_client(enumerator_client);
+
+    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(mir::examples::server_decoration_extension.name))));
 }

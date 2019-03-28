@@ -24,6 +24,7 @@
 
 #include <set>
 #include <mir/abnormal_exit.h>
+#include <miral/wayland_extensions.h>
 
 namespace mo = mir::options;
 
@@ -40,7 +41,7 @@ struct miral::WaylandExtensions::Self
         // TODO pass bespoke stuff into server!
     }
 
-    std::string const default_value;
+    std::string default_value;
     std::string available_extensions = mo::wayland_extensions_value;
 
     void validate(std::string extensions) const
@@ -80,6 +81,11 @@ struct miral::WaylandExtensions::Self
     {
         wayland_extension_hooks.push_back(builder);
         available_extensions += builder.name + ":";
+    }
+
+    void add_to_default(Builder const& builder)
+    {
+        default_value += ":" + builder.name;
     }
 
     WaylandExtensions::Filter extensions_filter = [](Application const&, char const*) { return true; };
@@ -157,9 +163,15 @@ auto miral::WaylandExtensions::operator=(WaylandExtensions const&) -> WaylandExt
 void miral::WaylandExtensions::add_extension(Builder const& builder)
 {
     self->add_extension(builder);
+    self->add_to_default(builder);
 }
 
 void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const& extension_filter)
 {
     self->extensions_filter = extension_filter;
+}
+
+void miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const& builder)
+{
+    self->add_extension(builder);
 }
