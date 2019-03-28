@@ -150,7 +150,7 @@ try
         me::add_glog_options_to,
         miral::StartupInternalClient{spinner},
         miral::X11Support{},
-        miral::WaylandExtensions{"wl_shell:xdg_wm_base:zxdg_shell_v6:zwlr_layer_shell_v1"},
+        miral::WaylandExtensions{miral::WaylandExtensions::recommended_extensions() + ":zwlr_layer_shell_v1"},
         launcher,
         window_managers,
         me::add_custom_compositor_option_to,
