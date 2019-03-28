@@ -33,11 +33,20 @@ class OutputManager;
 class LayerShellV1 : public wayland::LayerShellV1
 {
 public:
-    LayerShellV1(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat, OutputManager* output_manager);
+    LayerShellV1(
+        struct wl_display* display,
+        std::shared_ptr<Shell> const shell,
+        WlSeat& seat,
+        OutputManager* output_manager);
 
-    void get_layer_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id,
-                           struct wl_resource* surface, std::experimental::optional<struct wl_resource*> const& output,
-                           uint32_t layer, std::string const& namespace_) override;
+    void get_layer_surface(
+        struct wl_client* client,
+        struct wl_resource* resource,
+        uint32_t id,
+        struct wl_resource* surface,
+        std::experimental::optional<struct wl_resource*> const& output,
+        uint32_t layer,
+        std::string const& namespace_) override;
 
     std::shared_ptr<Shell> const shell;
     WlSeat& seat;

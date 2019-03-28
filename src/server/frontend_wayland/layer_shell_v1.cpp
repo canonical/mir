@@ -35,8 +35,13 @@ namespace frontend
 class LayerSurfaceV1 : public wayland::LayerSurfaceV1, public WindowWlSurfaceRole
 {
 public:
-    LayerSurfaceV1(struct wl_client* client, struct wl_resource* parent_resource, uint32_t id, WlSurface* surface,
-                   LayerShellV1 const& layer_shell);
+    LayerSurfaceV1(
+        struct wl_client* client,
+        struct wl_resource* parent_resource,
+        uint32_t id,
+        WlSurface* surface,
+        LayerShellV1 const& layer_shell);
+
     ~LayerSurfaceV1() = default;
 
 private:
@@ -51,8 +56,9 @@ private:
     void destroy() override;
 
     // from WindowWlSurfaceRole
-    void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
-                       geometry::Size const& new_size) override;
+    void handle_resize(
+        std::experimental::optional<geometry::Point> const& new_top_left,
+        geometry::Size const& new_size) override;
 };
 
 }
@@ -60,8 +66,11 @@ private:
 
 // LayerShellV1
 
-mf::LayerShellV1::LayerShellV1(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat,
-                               OutputManager* output_manager)
+mf::LayerShellV1::LayerShellV1(
+    struct wl_display* display,
+    std::shared_ptr<Shell> const shell,
+    WlSeat& seat,
+    OutputManager* output_manager)
     : wayland::LayerShellV1(display, 1),
       shell{shell},
       seat{seat},
@@ -69,10 +78,14 @@ mf::LayerShellV1::LayerShellV1(struct wl_display* display, std::shared_ptr<Shell
 {
 }
 
-void mf::LayerShellV1::get_layer_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id,
-                                         struct wl_resource* surface,
-                                         std::experimental::optional<struct wl_resource*> const& output,
-                                         uint32_t layer, std::string const& namespace_)
+void mf::LayerShellV1::get_layer_surface(
+    struct wl_client* client,
+    struct wl_resource* resource,
+    uint32_t id,
+    struct wl_resource* surface,
+    std::experimental::optional<struct wl_resource*> const& output,
+    uint32_t layer,
+    std::string const& namespace_)
 {
     (void)output;
     (void)layer;
@@ -82,8 +95,12 @@ void mf::LayerShellV1::get_layer_surface(struct wl_client* client, struct wl_res
 
 // LayerSurfaceV1
 
-mf::LayerSurfaceV1::LayerSurfaceV1(struct wl_client* client, struct wl_resource* parent_resource, uint32_t id,
-                                   WlSurface* surface, LayerShellV1 const& layer_shell)
+mf::LayerSurfaceV1::LayerSurfaceV1(
+    struct wl_client* client,
+    struct wl_resource* parent_resource,
+    uint32_t id,
+    WlSurface* surface,
+    LayerShellV1 const& layer_shell)
     : wayland::LayerSurfaceV1(client, parent_resource, id),
       WindowWlSurfaceRole(&layer_shell.seat, client, surface, layer_shell.shell, layer_shell.output_manager)
 {
@@ -138,10 +155,11 @@ void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactiv
 
 void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
 {
-    auto popup_window_role = static_cast<WindowWlSurfaceRole*>(
-                                 static_cast<XdgPopupStable*>(
-                                     static_cast<wayland::XdgPopup*>(
-                                         wl_resource_get_user_data(popup))));
+    auto popup_window_role =
+        static_cast<WindowWlSurfaceRole*>(
+            static_cast<XdgPopupStable*>(
+                static_cast<wayland::XdgPopup*>(
+                    wl_resource_get_user_data(popup))));
 
     mir::shell::SurfaceSpecification specification;
     specification.parent_id = surface_id();
@@ -159,8 +177,9 @@ void mf::LayerSurfaceV1::destroy()
     destroy_wayland_object();
 }
 
-void mf::LayerSurfaceV1::handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
-                                       geometry::Size const& new_size)
+void mf::LayerSurfaceV1::handle_resize(
+    std::experimental::optional<geometry::Point> const& new_top_left,
+    geometry::Size const& new_size)
 {
     (void)new_top_left;
     (void)new_size;
