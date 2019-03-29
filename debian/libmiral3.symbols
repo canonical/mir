@@ -335,7 +335,7 @@ libmiral.so.3 libmiral3 #MINVER#
  MIRAL_2.5@MIRAL_2.5 2.5.0
  (c++)"miral::WaylandExtensions::set_filter(std::function<bool (std::shared_ptr<mir::scene::Session> const&, char const*)> const&)@MIRAL_2.5" 2.5.0
  (c++)"miral::WaylandExtensions::add_extension(miral::WaylandExtensions::Builder const&)@MIRAL_2.5" 2.5.0
- (c++)"miral::WaylandExtensions::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const&)@MIRAL_2.5" 2.5.0
+ (c++)"miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const&)@MIRAL_2.5" 2.5.0
  (c++)"miral::WaylandExtensions::recommended_extensions[abi:cxx11]()@MIRAL_2.5" 2.5.0
  (c++)"typeinfo for miral::WaylandExtensions::Context@MIRAL_2.5" 2.5.0
 
