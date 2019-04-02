@@ -59,6 +59,7 @@ Emitter Interface::declaration() const
             enum_declarations(),
             event_opcodes(),
             (thunks_impl_contents().is_valid() ? "struct Thunks;" : nullptr),
+            is_instance_prototype(),
         }, true, true, Emitter::single_indent),
         empty_line,
         "private:",
@@ -86,6 +87,7 @@ Emitter Interface::implementation() const
             constructor_impl(),
             destructor_impl(),
             event_impls(),
+            is_instance_impl(),
             Lines{
                 {"void ", nmspace, "destroy_wayland_object(", is_global ? "struct wl_resource* resource" : nullptr, ") const"},
                 Block{
@@ -251,6 +253,26 @@ Emitter Interface::member_vars() const
             {"struct wl_resource* const resource;"}
         };
     }
+}
+
+
+Emitter Interface::is_instance_prototype() const
+{
+    if (is_global || !has_vtable)
+        return Lines{};
+
+    return "static bool is_instance(wl_resource* resource);";
+}
+
+Emitter Interface::is_instance_impl() const
+{
+    if (is_global || !has_vtable)
+        return Lines{};
+
+    return Lines{
+        {"bool ", nmspace, "is_instance(wl_resource* resource)"},
+        Block{"return wl_resource_instance_of(resource, &" + wl_name + "_interface_data, Thunks::request_vtable);"}
+    };
 }
 
 Emitter Interface::enum_declarations() const

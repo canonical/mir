@@ -122,6 +122,8 @@ public:
 
     struct Thunks;
 
+    static bool is_instance(wl_resource* resource);
+
 private:
     virtual void destroy() = 0;
     virtual void set_size(int32_t width, int32_t height) = 0;
@@ -163,6 +165,8 @@ public:
     };
 
     struct Thunks;
+
+    static bool is_instance(wl_resource* resource);
 
 private:
     virtual void destroy() = 0;
@@ -220,6 +224,8 @@ public:
 
     struct Thunks;
 
+    static bool is_instance(wl_resource* resource);
+
 private:
     virtual void destroy() = 0;
     virtual void set_parent(std::experimental::optional<struct wl_resource*> const& parent) = 0;
@@ -268,6 +274,8 @@ public:
     };
 
     struct Thunks;
+
+    static bool is_instance(wl_resource* resource);
 
 private:
     virtual void destroy() = 0;

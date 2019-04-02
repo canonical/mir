@@ -301,6 +301,11 @@ void mw::LayerSurfaceV1::send_closed_event() const
     wl_resource_post_event(resource, Opcode::closed);
 }
 
+bool mw::LayerSurfaceV1::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &zwlr_layer_surface_v1_interface_data, Thunks::request_vtable);
+}
+
 void mw::LayerSurfaceV1::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
