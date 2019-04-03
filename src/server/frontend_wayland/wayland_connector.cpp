@@ -38,6 +38,7 @@
 #include "mir/frontend/surface.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
+#include "mir/frontend/wayland.h"
 
 #include "mir/compositor/buffer_stream.h"
 
@@ -227,16 +228,6 @@ void setup_new_client_handler(wl_display* display, std::shared_ptr<mf::Shell> co
     context->destruction_listener.notify = &cleanup_client_handler;
     wl_display_add_destroy_listener(display, &context->destruction_listener);
 }
-}
-
-std::shared_ptr<mir::frontend::Session> get_session(wl_client* client)
-{
-    auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
-
-    if (listener)
-        return private_from_listener(listener)->session;
-
-    return nullptr;
 }
 
 int64_t mir_input_event_get_event_time_ms(const MirInputEvent* event)
@@ -811,3 +802,14 @@ bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client
     return true;
 #endif
 }
+
+auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<Session>
+{
+    auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
+
+    if (listener)
+        return private_from_listener(listener)->session;
+
+    return {};
+}
+
