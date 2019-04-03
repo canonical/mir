@@ -65,6 +65,8 @@ private:
     Emitter bind_thunk() const;
     Emitter resource_destroyed_thunk() const;
     Emitter types_init() const;
+    Emitter is_instance_prototype() const;
+    Emitter is_instance_impl() const;
 
     static std::vector<Request> get_requests(xmlpp::Element const& node, std::string generated_name, bool is_global);
     static std::vector<Event> get_events(xmlpp::Element const& node, std::string generated_name, bool is_global);

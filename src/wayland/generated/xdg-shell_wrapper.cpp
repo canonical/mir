@@ -335,6 +335,11 @@ mw::XdgPositioner::XdgPositioner(struct wl_client* client, struct wl_resource* p
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+bool mw::XdgPositioner::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &xdg_positioner_interface_data, Thunks::request_vtable);
+}
+
 void mw::XdgPositioner::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
@@ -479,6 +484,11 @@ mw::XdgSurface::XdgSurface(struct wl_client* client, struct wl_resource* parent,
 void mw::XdgSurface::send_configure_event(uint32_t serial) const
 {
     wl_resource_post_event(resource, Opcode::configure, serial);
+}
+
+bool mw::XdgSurface::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &xdg_surface_interface_data, Thunks::request_vtable);
 }
 
 void mw::XdgSurface::destroy_wayland_object() const
@@ -791,6 +801,11 @@ void mw::XdgToplevel::send_close_event() const
     wl_resource_post_event(resource, Opcode::close);
 }
 
+bool mw::XdgToplevel::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &xdg_toplevel_interface_data, Thunks::request_vtable);
+}
+
 void mw::XdgToplevel::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
@@ -925,6 +940,11 @@ void mw::XdgPopup::send_configure_event(int32_t x, int32_t y, int32_t width, int
 void mw::XdgPopup::send_popup_done_event() const
 {
     wl_resource_post_event(resource, Opcode::popup_done);
+}
+
+bool mw::XdgPopup::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &xdg_popup_interface_data, Thunks::request_vtable);
 }
 
 void mw::XdgPopup::destroy_wayland_object() const

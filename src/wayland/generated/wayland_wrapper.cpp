@@ -274,6 +274,11 @@ mw::ShmPool::ShmPool(struct wl_client* client, struct wl_resource* parent, uint3
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+bool mw::ShmPool::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_shm_pool_interface_data, Thunks::request_vtable);
+}
+
 void mw::ShmPool::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
@@ -444,6 +449,11 @@ void mw::Buffer::send_release_event() const
     wl_resource_post_event(resource, Opcode::release);
 }
 
+bool mw::Buffer::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_buffer_interface_data, Thunks::request_vtable);
+}
+
 void mw::Buffer::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
@@ -601,6 +611,11 @@ void mw::DataOffer::send_action_event(uint32_t dnd_action) const
     wl_resource_post_event(resource, Opcode::action, dnd_action);
 }
 
+bool mw::DataOffer::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_data_offer_interface_data, Thunks::request_vtable);
+}
+
 void mw::DataOffer::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
@@ -754,6 +769,11 @@ bool mw::DataSource::version_supports_action()
 void mw::DataSource::send_action_event(uint32_t dnd_action) const
 {
     wl_resource_post_event(resource, Opcode::action, dnd_action);
+}
+
+bool mw::DataSource::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_data_source_interface_data, Thunks::request_vtable);
 }
 
 void mw::DataSource::destroy_wayland_object() const
@@ -920,6 +940,11 @@ void mw::DataDevice::send_selection_event(std::experimental::optional<struct wl_
         id_resolved = id.value();
     }
     wl_resource_post_event(resource, Opcode::selection, id_resolved);
+}
+
+bool mw::DataDevice::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_data_device_interface_data, Thunks::request_vtable);
 }
 
 void mw::DataDevice::destroy_wayland_object() const
@@ -1380,6 +1405,11 @@ void mw::ShellSurface::send_popup_done_event() const
     wl_resource_post_event(resource, Opcode::popup_done);
 }
 
+bool mw::ShellSurface::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_shell_surface_interface_data, Thunks::request_vtable);
+}
+
 void mw::ShellSurface::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
@@ -1665,6 +1695,11 @@ void mw::Surface::send_enter_event(struct wl_resource* output) const
 void mw::Surface::send_leave_event(struct wl_resource* output) const
 {
     wl_resource_post_event(resource, Opcode::leave, output);
+}
+
+bool mw::Surface::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_surface_interface_data, Thunks::request_vtable);
 }
 
 void mw::Surface::destroy_wayland_object() const
@@ -2027,6 +2062,11 @@ void mw::Pointer::send_axis_discrete_event(uint32_t axis, int32_t discrete) cons
     wl_resource_post_event(resource, Opcode::axis_discrete, axis, discrete);
 }
 
+bool mw::Pointer::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_pointer_interface_data, Thunks::request_vtable);
+}
+
 void mw::Pointer::destroy_wayland_object() const
 {
     wl_resource_destroy(resource);
@@ -2150,6 +2190,11 @@ bool mw::Keyboard::version_supports_repeat_info()
 void mw::Keyboard::send_repeat_info_event(int32_t rate, int32_t delay) const
 {
     wl_resource_post_event(resource, Opcode::repeat_info, rate, delay);
+}
+
+bool mw::Keyboard::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_keyboard_interface_data, Thunks::request_vtable);
 }
 
 void mw::Keyboard::destroy_wayland_object() const
@@ -2278,6 +2323,11 @@ void mw::Touch::send_orientation_event(int32_t id, double orientation) const
 {
     wl_fixed_t orientation_resolved{wl_fixed_from_double(orientation)};
     wl_resource_post_event(resource, Opcode::orientation, id, orientation_resolved);
+}
+
+bool mw::Touch::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_touch_interface_data, Thunks::request_vtable);
 }
 
 void mw::Touch::destroy_wayland_object() const
@@ -2513,6 +2563,11 @@ mw::Region::Region(struct wl_client* client, struct wl_resource* parent, uint32_
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+bool mw::Region::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_region_interface_data, Thunks::request_vtable);
 }
 
 void mw::Region::destroy_wayland_object() const
@@ -2759,6 +2814,11 @@ mw::Subsurface::Subsurface(struct wl_client* client, struct wl_resource* parent,
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+bool mw::Subsurface::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_subsurface_interface_data, Thunks::request_vtable);
 }
 
 void mw::Subsurface::destroy_wayland_object() const

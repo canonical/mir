@@ -89,6 +89,8 @@ public:
 
     struct Thunks;
 
+    static bool is_instance(wl_resource* resource);
+
 private:
     virtual void create_buffer(uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) = 0;
     virtual void destroy() = 0;
@@ -220,6 +222,8 @@ public:
 
     struct Thunks;
 
+    static bool is_instance(wl_resource* resource);
+
 private:
     virtual void destroy() = 0;
 };
@@ -262,6 +266,8 @@ public:
     };
 
     struct Thunks;
+
+    static bool is_instance(wl_resource* resource);
 
 private:
     virtual void accept(uint32_t serial, std::experimental::optional<std::string> const& mime_type) = 0;
@@ -315,6 +321,8 @@ public:
 
     struct Thunks;
 
+    static bool is_instance(wl_resource* resource);
+
 private:
     virtual void offer(std::string const& mime_type) = 0;
     virtual void destroy() = 0;
@@ -360,6 +368,8 @@ public:
     };
 
     struct Thunks;
+
+    static bool is_instance(wl_resource* resource);
 
 private:
     virtual void start_drag(std::experimental::optional<struct wl_resource*> const& source, struct wl_resource* origin, std::experimental::optional<struct wl_resource*> const& icon, uint32_t serial) = 0;
@@ -484,6 +494,8 @@ public:
 
     struct Thunks;
 
+    static bool is_instance(wl_resource* resource);
+
 private:
     virtual void pong(uint32_t serial) = 0;
     virtual void move(struct wl_resource* seat, uint32_t serial) = 0;
@@ -529,6 +541,8 @@ public:
     };
 
     struct Thunks;
+
+    static bool is_instance(wl_resource* resource);
 
 private:
     virtual void destroy() = 0;
@@ -657,6 +671,8 @@ public:
 
     struct Thunks;
 
+    static bool is_instance(wl_resource* resource);
+
 private:
     virtual void set_cursor(uint32_t serial, std::experimental::optional<struct wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) = 0;
     virtual void release() = 0;
@@ -710,6 +726,8 @@ public:
 
     struct Thunks;
 
+    static bool is_instance(wl_resource* resource);
+
 private:
     virtual void release() = 0;
 };
@@ -752,6 +770,8 @@ public:
     };
 
     struct Thunks;
+
+    static bool is_instance(wl_resource* resource);
 
 private:
     virtual void release() = 0;
@@ -842,6 +862,8 @@ public:
 
     struct Thunks;
 
+    static bool is_instance(wl_resource* resource);
+
 private:
     virtual void destroy() = 0;
     virtual void add(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
@@ -900,6 +922,8 @@ public:
     };
 
     struct Thunks;
+
+    static bool is_instance(wl_resource* resource);
 
 private:
     virtual void destroy() = 0;
