@@ -1062,7 +1062,7 @@ WlcsIntegrationDescriptor const descriptor {
     extensions
 };
 
-WlcsIntegrationDescriptor const* get_descriptor()
+WlcsIntegrationDescriptor const* get_descriptor(WlcsDisplayServer const* /*server*/)
 {
     return &descriptor;
 }
