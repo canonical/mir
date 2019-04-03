@@ -227,20 +227,6 @@ void setup_new_client_handler(wl_display* display, std::shared_ptr<mf::Shell> co
     context->destruction_listener.notify = &cleanup_client_handler;
     wl_display_add_destroy_listener(display, &context->destruction_listener);
 }
-
-/*
-std::shared_ptr<mf::BufferStream> create_buffer_stream(mf::Session& session)
-{
-    mg::BufferProperties const props{
-        geom::Size{geom::Width{0}, geom::Height{0}},
-        mir_pixel_format_invalid,
-        mg::BufferUsage::undefined
-    };
-
-    auto const id = session.create_buffer_stream(props);
-    return session.get_buffer_stream(id);
-}
-*/
 }
 
 std::shared_ptr<mir::frontend::Session> get_session(wl_client* client)
