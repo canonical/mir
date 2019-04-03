@@ -19,19 +19,33 @@
 #include "xdg-decoration-unstable-v1.h"
 #include "xdg-decoration-unstable-v1_wrapper.h"
 
+#include <miral/window.h>
+
+#include <thread>
+
 namespace
 {
 struct ToplevelDecorationV1 : mir::wayland::ToplevelDecorationV1
 {
-    ToplevelDecorationV1(struct wl_client *client, struct wl_resource *parent, uint32_t id) :
-        mir::wayland::ToplevelDecorationV1::ToplevelDecorationV1(client, parent, id)
+    ToplevelDecorationV1(struct wl_client *client, struct wl_resource *parent, uint32_t id, wl_resource* toplevel) :
+        mir::wayland::ToplevelDecorationV1::ToplevelDecorationV1(client, parent, id),
+        toplevel{toplevel}
     {
         send_configure_event(mode);
+        if (auto window = miral::window_for(client, toplevel))
+            puts("###################### window not null ######################");
+        else
+            puts("######################## window NULL ########################");
     }
 
     void destroy() override
     {
         destroy_wayland_object();
+    }
+
+    ~ToplevelDecorationV1() override
+    {
+        test.join();
     }
 
     void set_mode(uint32_t mode) override
@@ -47,6 +61,18 @@ struct ToplevelDecorationV1 : mir::wayland::ToplevelDecorationV1
     }
 
     uint32_t mode = Mode::server_side;
+    wl_resource* const toplevel;
+
+    std::thread test{[this]
+        {
+            // We put this on a thread and sleep because we need to wait for the client
+            // to 'commit' before the Window object exists
+            std::this_thread::sleep_for(std::chrono::seconds{1});
+            if (auto window = miral::window_for(client, toplevel))
+                puts("###################### window not null ######################");
+            else
+                puts("######################## window NULL ########################");
+        }};
 };
 
 struct DecorationManagerV1 : mir::wayland::DecorationManagerV1
@@ -60,11 +86,14 @@ struct DecorationManagerV1 : mir::wayland::DecorationManagerV1
         destroy_wayland_object(resource);
     }
 
-    void get_toplevel_decoration(wl_client* client, wl_resource* resource, uint32_t id, wl_resource* /*toplevel*/) override
+    void get_toplevel_decoration(wl_client* client, wl_resource* resource, uint32_t id, wl_resource* toplevel) override
     {
-        // TODO: we need a way to map `client` to a miral::Application
-        // TODO: we need a way to map `toplevel` to a miral::Surface
-        new ToplevelDecorationV1{client, resource, id};
+        if (auto app = miral::application_for(client))
+            puts("###################### app not null ######################");
+        else
+            puts("######################## app NULL ########################");
+
+        new ToplevelDecorationV1{client, resource, id, toplevel};
     }
 };
 
