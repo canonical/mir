@@ -26,6 +26,7 @@
 #include <string>
 
 struct wl_display;
+struct wl_client;
 
 namespace mir { class Server; }
 
@@ -119,6 +120,11 @@ private:
     struct Self;
     std::shared_ptr<Self> self;
 };
+
+/// Get the MirAL application for a wl_client.
+/// \return The application (null if no application is found)
+/// \remark Since MirAL 2.5
+auto application_for(wl_client* client) -> Application;
 }
 
 #endif //MIRAL_WAYLAND_EXTENSIONS_H

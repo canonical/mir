@@ -38,6 +38,7 @@
 #include "mir/frontend/surface.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
+#include "mir/frontend/wayland.h"
 
 #include "mir/compositor/buffer_stream.h"
 
@@ -241,16 +242,6 @@ std::shared_ptr<mf::BufferStream> create_buffer_stream(mf::Session& session)
     return session.get_buffer_stream(id);
 }
 */
-}
-
-std::shared_ptr<mir::frontend::Session> get_session(wl_client* client)
-{
-    auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
-
-    if (listener)
-        return private_from_listener(listener)->session;
-
-    return nullptr;
 }
 
 int64_t mir_input_event_get_event_time_ms(const MirInputEvent* event)
@@ -825,3 +816,14 @@ bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client
     return true;
 #endif
 }
+
+auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<Session>
+{
+    auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
+
+    if (listener)
+        return private_from_listener(listener)->session;
+
+    return {};
+}
+

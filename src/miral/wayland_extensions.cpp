@@ -18,6 +18,8 @@
 
 #include "miral/wayland_extensions.h"
 
+#include <mir/frontend/wayland.h>
+#include <mir/scene/session.h>
 #include <mir/server.h>
 #include <mir/options/option.h>
 #include <mir/options/configuration.h>
@@ -174,4 +176,9 @@ void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const
 void miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const& builder)
 {
     self->add_extension(builder);
+}
+
+auto miral::application_for(wl_client* client) -> Application
+{
+    return std::dynamic_pointer_cast<mir::scene::Session>(mir::frontend::get_session(client));
 }

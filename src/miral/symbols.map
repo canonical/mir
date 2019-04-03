@@ -382,6 +382,7 @@ global:
     miral::WaylandExtensions::add_extension_disabled_by_default*;
     miral::WaylandExtensions::recommended_extensions*;
     miral::WaylandExtensions::set_filter*;
+    miral::application_for*;
     non-virtual?thunk?to?miral::WaylandExtensions::Context::?Context*;
     typeinfo?for?miral::WaylandExtensions::Builder;
     typeinfo?for?miral::WaylandExtensions::Context;

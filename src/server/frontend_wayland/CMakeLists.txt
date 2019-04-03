@@ -28,7 +28,9 @@ set(
   xdg_shell_stable.cpp          xdg_shell_stable.h
   layer_shell_v1.cpp            layer_shell_v1.h
   deleted_for_resource.cpp      deleted_for_resource.h
-  wl_region.cpp                 wl_region.h)
+  wl_region.cpp                 wl_region.h
+  ${PROJECT_SOURCE_DIR}/include/server/mir/frontend/wayland.h
+)
 
 add_library(mirfrontend-wayland OBJECT
 
