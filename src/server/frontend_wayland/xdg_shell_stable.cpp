@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -619,3 +619,33 @@ void mf::XdgPositionerStable::set_offset(int32_t x, int32_t y)
     aux_rect_placement_offset_y = y;
 }
 
+auto mf::XdgShellStable::get_window(wl_resource* window) -> std::shared_ptr<Surface>
+{
+    if (mir::wayland::XdgToplevel::is_instance(window))
+    {
+        puts("************ XdgToplevel ************");
+        // TODO
+    }
+    else if (mir::wayland::XdgPositioner::is_instance(window))
+    {
+        puts("*********** XdgPositioner ***********");
+        // TODO
+    }
+    else if (mir::wayland::XdgSurface::is_instance(window))
+    {
+        puts("*********** XdgSurface ***********");
+        // TODO
+    }
+    else if (mir::wayland::XdgPopup::is_instance(window))
+    {
+        puts("*********** XdgPopup ***********");
+        // TODO
+    }
+    else
+    {
+        puts("****** not XdgShellStable ******");
+        // TODO
+    }
+
+    return std::shared_ptr<Surface>();
+}

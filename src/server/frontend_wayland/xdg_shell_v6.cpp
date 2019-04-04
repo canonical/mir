@@ -553,3 +553,32 @@ void mf::XdgPositionerV6::set_offset(int32_t x, int32_t y)
     aux_rect_placement_offset_y = y;
 }
 
+auto mf::XdgShellV6::get_window(wl_resource* window) -> std::shared_ptr<Surface>
+{
+    if (mir::wayland::XdgToplevelV6::is_instance(window))
+    {
+        puts("************ XdgToplevelV6 ************");
+        // TODO
+    }
+    else if (mir::wayland::XdgPositionerV6::is_instance(window))
+    {
+        puts("*********** XdgPositionerV6 ***********");
+        // TODO
+    }
+    else if (mir::wayland::XdgSurfaceV6::is_instance(window))
+    {
+        puts("*********** XdgSurfaceV6 ***********");
+        // TODO
+    }
+    else if (mir::wayland::XdgPopupV6::is_instance(window))
+    {
+        puts("*********** XdgPopupV6 ***********");
+        // TODO
+    }
+    else
+    {
+        puts("********* not XdgShellV6 *********");
+        // TODO
+    }
+    return std::shared_ptr<Surface>();
+}

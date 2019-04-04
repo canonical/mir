@@ -449,6 +449,9 @@ public:
     {
         new WlShellSurface(client, resource, id, WlSurface::from(surface), shell, seat, output_manager);
     }
+
+    static auto get_window(wl_resource* window) -> std::shared_ptr<Surface>;
+
 private:
     std::shared_ptr<mf::Shell> const shell;
     WlSeat& seat;
@@ -813,3 +816,29 @@ auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<Session>
     return {};
 }
 
+auto mir::frontend::get_wl_shell_window(wl_resource* window) -> std::shared_ptr<Surface>
+{
+    if (mir::wayland::ShellSurface::is_instance(window))
+    {
+        puts("************ ShellSurface ************");
+        // TODO
+    }
+    else if (mir::wayland::Surface::is_instance(window))
+    {
+        puts("************** Surface ***************");
+        // TODO
+    }
+    else if (mir::wayland::Subsurface::is_instance(window))
+    {
+        puts("*********** Subsurface ***********");
+        // TODO
+    }
+    else
+    {
+        puts("****** not WlShell ******");
+        // TODO
+    }
+
+    return std::shared_ptr<Surface>();
+
+}

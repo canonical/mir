@@ -957,5 +957,6 @@ MIR_SERVER_1.2 {
     mir::DefaultServerConfiguration::add_wayland_extension*;
     mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     mir::frontend::get_session*;
+    mir::frontend::get_window*;
   };
 } MIR_SERVER_0.32;
