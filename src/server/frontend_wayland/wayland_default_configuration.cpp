@@ -160,15 +160,15 @@ void mir::DefaultServerConfiguration::set_wayland_extension_filter(WaylandProtoc
     wayland_extension_filter = extension_filter;
 }
 
-auto mir::frontend::get_window(wl_resource* window) -> std::shared_ptr<Surface>
+auto mir::frontend::get_window(wl_resource* surface) -> std::shared_ptr<Surface>
 {
-    if (auto result = get_wl_shell_window(window))
+    if (auto result = get_wl_shell_window(surface))
         return result;
 
-    if (auto result = XdgShellStable::get_window(window))
+    if (auto result = XdgShellStable::get_window(surface))
         return result;
 
-    if (auto result = XdgShellV6::get_window(window))
+    if (auto result = XdgShellV6::get_window(surface))
         return result;
 
     return {};
