@@ -35,7 +35,7 @@ class Surface;
 auto get_session(wl_client* client) -> std::shared_ptr<Session>;
 
 /// Utility function to recover the window associated with a wl_client
-auto get_window(wl_resource* window) -> std::shared_ptr<Surface>;
+auto get_window(wl_resource* surface) -> std::shared_ptr<Surface>;
 }
 }
 

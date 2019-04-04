@@ -21,6 +21,8 @@
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"
 
+#include "mir/frontend/session.h"
+#include "mir/frontend/wayland.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"
 
@@ -51,6 +53,9 @@ public:
     void send_configure();
 
     std::experimental::optional<WindowWlSurfaceRole*> const& window_role();
+
+    using wayland::XdgSurface::client;
+    using wayland::XdgSurface::resource;
 
 private:
     void set_window_role(WindowWlSurfaceRole* role);
@@ -619,33 +624,25 @@ void mf::XdgPositionerStable::set_offset(int32_t x, int32_t y)
     aux_rect_placement_offset_y = y;
 }
 
-auto mf::XdgShellStable::get_window(wl_resource* window) -> std::shared_ptr<Surface>
+auto mf::XdgShellStable::get_window(wl_resource* surface) -> std::shared_ptr<Surface>
 {
-    if (mir::wayland::XdgToplevel::is_instance(window))
+    namespace mw = mir::wayland;
+
+    if (mw::XdgSurface::is_instance(surface))
     {
-        puts("************ XdgToplevel ************");
-        // TODO
-    }
-    else if (mir::wayland::XdgPositioner::is_instance(window))
-    {
-        puts("*********** XdgPositioner ***********");
-        // TODO
-    }
-    else if (mir::wayland::XdgSurface::is_instance(window))
-    {
-        puts("*********** XdgSurface ***********");
-        // TODO
-    }
-    else if (mir::wayland::XdgPopup::is_instance(window))
-    {
-        puts("*********** XdgPopup ***********");
-        // TODO
-    }
-    else
-    {
-        puts("****** not XdgShellStable ******");
-        // TODO
+        auto const xdgsurface = XdgSurfaceStable::from(surface);
+        if (auto const role = xdgsurface->window_role())
+        {
+            auto const id = role.value()->surface_id();
+            if (id.as_value())
+            {
+                auto const session = get_session(xdgsurface->client);
+                return session->get_surface(id);
+            }
+        }
+
+        log_debug("No window currently associated with wayland::XdgSurface %p", surface);
     }
 
-    return std::shared_ptr<Surface>();
+    return {};
 }

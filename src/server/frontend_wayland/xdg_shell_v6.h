@@ -47,7 +47,7 @@ public:
     OutputManager* const output_manager;
 
     // Returns the Mir surface if the window is recognised by XdgShellV6
-    static auto get_window(wl_resource* window) -> std::shared_ptr<Surface>;
+    static auto get_window(wl_resource* surface) -> std::shared_ptr<Surface>;
 };
 
 }

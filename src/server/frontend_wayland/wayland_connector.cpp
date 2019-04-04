@@ -816,29 +816,21 @@ auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<Session>
     return {};
 }
 
-auto mir::frontend::get_wl_shell_window(wl_resource* window) -> std::shared_ptr<Surface>
+auto mir::frontend::get_wl_shell_window(wl_resource* surface) -> std::shared_ptr<Surface>
 {
-    if (mir::wayland::ShellSurface::is_instance(window))
+    if (mir::wayland::Surface::is_instance(surface))
     {
-        puts("************ ShellSurface ************");
-        // TODO
-    }
-    else if (mir::wayland::Surface::is_instance(window))
-    {
-        puts("************** Surface ***************");
-        // TODO
-    }
-    else if (mir::wayland::Subsurface::is_instance(window))
-    {
-        puts("*********** Subsurface ***********");
-        // TODO
-    }
-    else
-    {
-        puts("****** not WlShell ******");
-        // TODO
+        auto const wlsurface = WlSurface::from(surface);
+
+        auto const id = wlsurface->surface_id();
+        if (id.as_value())
+        {
+            auto const session = get_session(wlsurface->client);
+            return session->get_surface(id);
+        }
+
+        log_debug("No window currently associated with wayland::Surface %p", surface);
     }
 
-    return std::shared_ptr<Surface>();
-
+    return {};
 }
