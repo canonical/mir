@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -27,6 +27,7 @@ namespace frontend
 {
 
 class Shell;
+class Surface;
 class WlSeat;
 class OutputManager;
 
@@ -41,6 +42,7 @@ public:
                          struct wl_resource* surface) override;
     void pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial) override;
 
+    static auto get_window(wl_resource* window) -> std::shared_ptr<Surface>;
     std::shared_ptr<Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;
