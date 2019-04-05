@@ -48,9 +48,7 @@ public:
 
     /// Initialize "enabled by default" to a custom set of extensions (colon
     /// separated list).
-    /// \note "enabled by default" is validated when the WaylandExtensions
-    /// object is passed to MirRunner::run_with() and can only include
-    /// extensions supported by Mir or added by the server.
+    /// \note This can only be a subset of supported_extensions()
     explicit WaylandExtensions(std::string const& default_value);
 
     void operator()(mir::Server& server) const;
