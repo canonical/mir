@@ -145,10 +145,7 @@ try
     InputFilters input_filters;
     me::TestClientRunner test_runner;
 
-    miral::WaylandExtensions extensions{
-        miral::WaylandExtensions::recommended_extensions()
-            + ":" + mir::examples::server_decoration_extension.name
-            + ":" + mir::examples::xdg_decoration_extension.name};
+    miral::WaylandExtensions extensions;
     extensions.add_extension(mir::examples::server_decoration_extension);
     extensions.add_extension(mir::examples::xdg_decoration_extension);
     extensions.set_filter([&](auto, char const* protocol) { puts(protocol); return true; });
