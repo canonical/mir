@@ -32,7 +32,7 @@ struct ServerDecoration :
         surface{surface}
     {
         send_mode_event(decoration_mode);
-        if (auto window = miral::window_for(client, surface))
+        if (auto window = miral::window_for(surface))
             puts("********************** window not null **********************");
         else
             puts("************************ window NULL ************************");
@@ -61,7 +61,7 @@ struct ServerDecoration :
             // We put this on a thread and sleep because we need to wait for the client
             // to 'commit' before the Window object exists
             std::this_thread::sleep_for(std::chrono::seconds{1});
-            if (auto window = miral::window_for(client, surface))
+            if (auto window = miral::window_for(surface))
                 puts("********************** window not null **********************");
             else
                 puts("************************ window NULL ************************");

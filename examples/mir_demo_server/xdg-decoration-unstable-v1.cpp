@@ -32,7 +32,7 @@ struct ToplevelDecorationV1 : mir::wayland::ToplevelDecorationV1
         toplevel{toplevel}
     {
         send_configure_event(mode);
-        if (auto window = miral::window_for(client, toplevel))
+        if (auto window = miral::window_for(toplevel))
             puts("###################### window not null ######################");
         else
             puts("######################## window NULL ########################");
@@ -68,7 +68,7 @@ struct ToplevelDecorationV1 : mir::wayland::ToplevelDecorationV1
             // We put this on a thread and sleep because we need to wait for the client
             // to 'commit' before the Window object exists
             std::this_thread::sleep_for(std::chrono::seconds{1});
-            if (auto window = miral::window_for(client, toplevel))
+            if (auto window = miral::window_for(toplevel))
                 puts("###################### window not null ######################");
             else
                 puts("######################## window NULL ########################");
