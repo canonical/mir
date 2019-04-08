@@ -129,6 +129,11 @@ private:
 /// \remark Since MirAL 2.5
 auto application_for(wl_client* client) -> Application;
 
+/// Get the MirAL application for a wl_resource.
+/// \return The application (null if no application is found)
+/// \remark Since MirAL 2.5
+auto application_for(wl_resource* resource) -> Application;
+
 /// Get the MirAL Window for a Wayland Surface, XdgSurface, etc.
 /// Note that there may not be a corresponding miral::Window (e.g. the
 /// surface is created and assigned properties before 'commit' creates the
@@ -136,7 +141,7 @@ auto application_for(wl_client* client) -> Application;
 ///
 /// \return The window (null if no window is found)
 /// \remark Since MirAL 2.5
-auto window_for(wl_client* client, wl_resource* surface) -> Window;
+auto window_for(wl_resource* surface) -> Window;
 }
 
 #endif //MIRAL_WAYLAND_EXTENSIONS_H

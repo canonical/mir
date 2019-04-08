@@ -830,6 +830,11 @@ auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<Session>
     return {};
 }
 
+auto mir::frontend::get_session(wl_resource* surface) -> std::shared_ptr<Session>
+{
+    return get_session(wl_resource_get_client(surface));
+}
+
 auto mir::frontend::get_wl_shell_window(wl_resource* surface) -> std::shared_ptr<Surface>
 {
     if (mir::wayland::Surface::is_instance(surface))
