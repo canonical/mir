@@ -185,7 +185,19 @@ auto miral::application_for(wl_client* client) -> Application
     return std::dynamic_pointer_cast<mir::scene::Session>(mir::frontend::get_session(client));
 }
 
-auto miral::window_for(wl_client* client, wl_resource* surface) -> Window
+auto miral::application_for(wl_resource* resource) -> Application
 {
-    return {application_for(client), std::dynamic_pointer_cast<mir::scene::Surface>(mir::frontend::get_window(surface))};
+    return std::dynamic_pointer_cast<mir::scene::Session>(mir::frontend::get_session(resource));
+}
+
+auto miral::window_for(wl_resource* surface) -> Window
+{
+    if (auto const& app = application_for(surface))
+    {
+        return {app, std::dynamic_pointer_cast<mir::scene::Surface>(mir::frontend::get_window(surface))};
+    }
+    else
+    {
+        return {};
+    }
 }
