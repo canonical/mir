@@ -421,7 +421,6 @@ TEST_F(WaylandExtensions, can_retrieve_window_for_surface)
     run_as_client(ClientDecorationCreator{[&]
         {
             EXPECT_THAT(surface, NotNull());
-            //EXPECT_THAT(miral::window_for(surface), NotNull()); // Fails to build on 16.04LTS
-            EXPECT_THAT(miral::window_for(surface), Ne(nullptr));
+            EXPECT_THAT(miral::window_for(surface), Ne(nullptr));   // NotNull() fails to build on 16.04LTS
         }});
 }
