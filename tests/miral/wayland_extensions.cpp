@@ -18,6 +18,7 @@
 
 #include "test_server.h"
 #include "server_example_decoration.h"
+#include "org_kde_kwin_server_decoration.h"
 
 #include <miral/internal_client.h>
 #include <miral/wayland_extensions.h>
@@ -164,6 +165,87 @@ struct ClientGlobalEnumerator
 };
 
 wl_registry_listener constexpr ClientGlobalEnumerator::registry_listener;
+
+struct ClientDecorationCreator
+{
+    ClientDecorationCreator(std::function<void()>&& test) :
+        test{test} {}
+
+    std::function<void()> test = []{};
+
+    void operator()(wl_display* display)
+    {
+        auto const registry = make_scoped(wl_display_get_registry(display), &wl_registry_destroy);
+        wl_registry_add_listener(registry.get(), &registry_listener, this);
+        wl_display_roundtrip(display);
+        wl_display_roundtrip(display);
+
+        auto const surface = make_scoped(
+            wl_compositor_create_surface(compositor),
+            &wl_surface_destroy);
+        wl_display_roundtrip(display);
+
+        auto  const decoration = make_scoped(
+            org_kde_kwin_server_decoration_manager_create(decoration_manager, surface.get()),
+            &org_kde_kwin_server_decoration_release);
+        wl_display_roundtrip(display);
+
+        auto const window = make_scoped(wl_shell_get_shell_surface(shell, surface.get()), &wl_shell_surface_destroy);
+        wl_shell_surface_set_toplevel(window.get());
+        wl_display_roundtrip(display);
+
+        wl_surface_commit(surface.get());
+        wl_display_roundtrip(display);
+
+        test();
+    }
+
+    static void new_global(
+        void* data,
+        struct wl_registry* registry,
+        uint32_t id,
+        char const* interface,
+        uint32_t /*version*/)
+    {
+        ClientDecorationCreator* self = static_cast<decltype(self)>(data);
+
+        if (strcmp(interface, wl_compositor_interface.name) == 0)
+        {
+            self->compositor = static_cast<decltype(self->compositor)>
+            (wl_registry_bind(registry, id, &wl_compositor_interface, 1));
+        }
+
+        if (strcmp(interface, org_kde_kwin_server_decoration_manager_interface.name) == 0)
+        {
+            self->decoration_manager = static_cast<decltype(self->decoration_manager)>
+                (wl_registry_bind(registry, id, &org_kde_kwin_server_decoration_manager_interface, 1));
+        }
+
+        if (strcmp(interface, wl_shell_interface.name) == 0)
+        {
+            self->shell = static_cast<decltype(self->shell)>(wl_registry_bind(registry, id, &wl_shell_interface, 1));
+        }
+    }
+
+    static void global_remove(
+        void* /*data*/,
+        struct wl_registry* /*registry*/,
+        uint32_t /*name*/)
+    {
+
+    }
+
+    static wl_registry_listener constexpr registry_listener = {
+        new_global,
+        global_remove
+    };
+
+    wl_compositor* compositor = nullptr;
+    org_kde_kwin_server_decoration_manager* decoration_manager = nullptr;
+    wl_shell* shell = nullptr;
+};
+
+wl_registry_listener constexpr ClientDecorationCreator::registry_listener;
 }
 
 TEST_F(WaylandExtensions, client_connects)
@@ -234,14 +316,14 @@ TEST_F(WaylandExtensions, server_can_add_bespoke_protocol)
     miral::WaylandExtensions extensions;
     extensions.set_filter([&](auto, char const* protocol)
         { if (strcmp(protocol, unavailable_extension) == 0) filter_saw_bespoke_extension = true; return true; });
-    extensions.add_extension(mir::examples::server_decoration_extension);
+    extensions.add_extension(mir::examples::server_decoration_extension());
     add_server_init(extensions);
 
     start_server();
 
     run_as_client(enumerator_client);
 
-    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq(mir::examples::server_decoration_extension.name)));
+    EXPECT_THAT(*enumerator_client.interfaces, Contains(Eq(mir::examples::server_decoration_extension().name)));
 #ifndef MIR_NO_WAYLAND_FILTER
     EXPECT_THAT(filter_saw_bespoke_extension, Eq(true));
 #endif
@@ -251,11 +333,11 @@ TEST_F(WaylandExtensions, add_extension_adds_protocol_to_supported_enabled_exten
 {
     miral::WaylandExtensions extensions;
 
-    EXPECT_THAT(extensions.supported_extensions(), Not(HasSubstr(mir::examples::server_decoration_extension.name)));
+    EXPECT_THAT(extensions.supported_extensions(), Not(HasSubstr(mir::examples::server_decoration_extension().name)));
 
-    extensions.add_extension(mir::examples::server_decoration_extension);
+    extensions.add_extension(mir::examples::server_decoration_extension());
 
-    EXPECT_THAT(extensions.supported_extensions(), HasSubstr(mir::examples::server_decoration_extension.name));
+    EXPECT_THAT(extensions.supported_extensions(), HasSubstr(mir::examples::server_decoration_extension().name));
 }
 
 TEST_F(WaylandExtensions, server_can_remove_default_extensions)
@@ -280,7 +362,7 @@ TEST_F(WaylandExtensions, server_can_remove_default_extensions)
 TEST_F(WaylandExtensions, add_extension_disabled_by_default_adds_protocol_to_supported_extensions_only)
 {
     miral::WaylandExtensions extensions;
-    extensions.add_extension_disabled_by_default(mir::examples::server_decoration_extension);
+    extensions.add_extension_disabled_by_default(mir::examples::server_decoration_extension());
     ClientGlobalEnumerator enumerator_client;
 
     add_server_init(extensions);
@@ -288,5 +370,57 @@ TEST_F(WaylandExtensions, add_extension_disabled_by_default_adds_protocol_to_sup
 
     run_as_client(enumerator_client);
 
-    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(mir::examples::server_decoration_extension.name))));
+    EXPECT_THAT(*enumerator_client.interfaces, Not(Contains(Eq(mir::examples::server_decoration_extension().name))));
+}
+
+TEST_F(WaylandExtensions, can_retrieve_application_for_client)
+{
+    miral::WaylandExtensions extensions;
+    wl_client* client = nullptr;
+
+    extensions.add_extension(mir::examples::server_decoration_extension([&](wl_client* c, auto){ client = c; }));
+
+    add_server_init(extensions);
+    start_server();
+
+    run_as_client(ClientDecorationCreator{[&]
+        {
+            EXPECT_THAT(client, NotNull());
+            EXPECT_THAT(miral::application_for(client), NotNull());
+        }});
+}
+
+TEST_F(WaylandExtensions, can_retrieve_application_for_surface)
+{
+    miral::WaylandExtensions extensions;
+
+    wl_resource* surface = nullptr;
+    extensions.add_extension(mir::examples::server_decoration_extension([&](auto, wl_resource* s){ surface =s; }));
+
+    add_server_init(extensions);
+    start_server();
+
+    run_as_client(ClientDecorationCreator{[&]
+        {
+            EXPECT_THAT(surface, NotNull());
+            EXPECT_THAT(miral::application_for(surface), NotNull());
+        }});
+}
+
+
+TEST_F(WaylandExtensions, can_retrieve_window_for_surface)
+{
+    miral::WaylandExtensions extensions;
+
+    wl_resource* surface = nullptr;
+    extensions.add_extension(mir::examples::server_decoration_extension([&](auto, wl_resource* s){ surface =s; }));
+
+    add_server_init(extensions);
+    start_server();
+
+    run_as_client(ClientDecorationCreator{[&]
+        {
+            EXPECT_THAT(surface, NotNull());
+            EXPECT_THAT(miral::window_for(surface), NotNull());
+        }});
 }

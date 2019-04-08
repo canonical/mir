@@ -76,6 +76,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     workspaces.cpp
     drag_and_drop.cpp
     server_example_decoration.cpp server_example_decoration.h
+    org_kde_kwin_server_decoration.c org_kde_kwin_server_decoration.h
     generated/server-decoration_wrapper.cpp generated/server-decoration_wrapper.h
 )
 
