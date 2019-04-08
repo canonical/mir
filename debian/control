@@ -58,6 +58,7 @@ Build-Depends: cmake,
                libyaml-cpp-dev,
                libnvidia-egl-wayland-dev [amd64 i386],
                eglexternalplatform-dev [amd64 i386],
+               systemtap-sdt-dev,
                wlcs
 Standards-Version: 3.9.4
 Homepage: https://launchpad.net/mir
