@@ -15,8 +15,8 @@ add_compile_options(
 # USDT integration. The integration only involves #include-ing a
 # SystemTap header and calling a macro from it in the LTTNG macro,
 # but there aren't guarantees this won't change in future.
-add_compile_definitions(
-  LTTNG_UST_HAVE_SDT_INTEGRATION
+add_definitions(  # Drop in favour of add_compile_definitions when we drop 16.04
+  -DLTTNG_UST_HAVE_SDT_INTEGRATION
 )
 
 # Using LTO on the lttng DSO causes a gcc ICE.
