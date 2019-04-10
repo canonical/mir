@@ -19,6 +19,10 @@ add_definitions(  # Drop in favour of add_compile_definitions when we drop 16.04
   -DLTTNG_UST_HAVE_SDT_INTEGRATION
 )
 
+# Using LTO on the lttng DSO causes a gcc ICE.
+# Since LTO is reasonably uninteresting for the lttng tracer, disable it.
+string(REPLACE "-flto" "" NO_LTO_FLAGS ${CMAKE_C_FLAGS})
+set(CMAKE_C_FLAGS ${NO_LTO_FLAGS})
 
 # lttng-ust uses urcu headers which contain code blocks inside expressions 
 # this is a gnu extension.
