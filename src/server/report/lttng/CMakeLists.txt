@@ -24,6 +24,10 @@ add_definitions(  # Drop in favour of add_compile_definitions when we drop 16.04
 string(REPLACE "-flto" "" NO_LTO_FLAGS ${CMAKE_C_FLAGS})
 set(CMAKE_C_FLAGS ${NO_LTO_FLAGS})
 
+if (LTTNG_UST_VERSION VERSION_GREATER 2.9)
+    add_definitions(-DMIR_LTTNG_HAS_VOID_TRACEPOINTS)
+endif()
+
 # lttng-ust uses urcu headers which contain code blocks inside expressions 
 # this is a gnu extension.
 string(REPLACE "-pedantic" "" NO_PEDANTIC_CHECK_FLAGS ${CMAKE_CXX_FLAGS})
