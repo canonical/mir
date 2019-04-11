@@ -50,31 +50,34 @@ TRACEPOINT_EVENT(
     )
 )
 
-TRACEPOINT_EVENT(
+TRACEPOINT_EVENT_CLASS(
     mir_server_compositor,
+    subcompositor_event,
+    TP_ARGS(void const*, id),
+    TP_FIELDS(
+        ctf_integer_hex(uintptr_t, id, (uintptr_t)(id))
+    )
+)
+
+TRACEPOINT_EVENT_INSTANCE(
+    mir_server_compositor,
+    subcompositor_event,
     began_frame,
-    TP_ARGS(void const*, id),
-    TP_FIELDS(
-        ctf_integer_hex(uintptr_t, id, (uintptr_t)(id))
-    )
+    TP_ARGS(void const*, id)
 )
 
-TRACEPOINT_EVENT(
+TRACEPOINT_EVENT_INSTANCE(
     mir_server_compositor,
+    subcompositor_event,
     rendered_frame,
-    TP_ARGS(void const*, id),
-    TP_FIELDS(
-        ctf_integer_hex(uintptr_t, id, (uintptr_t)(id))
-    )
+    TP_ARGS(void const*, id)
 )
 
-TRACEPOINT_EVENT(
+TRACEPOINT_EVENT_INSTANCE(
     mir_server_compositor,
+    subcompositor_event,
     finished_frame,
-    TP_ARGS(void const*, id),
-    TP_FIELDS(
-        ctf_integer_hex(uintptr_t, id, (uintptr_t)(id))
-    )
+    TP_ARGS(void const*, id)
 )
 
 TRACEPOINT_EVENT(

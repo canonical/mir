@@ -32,25 +32,40 @@
 
 #undef SCENE_TRACE_POINT
 
-TRACEPOINT_EVENT(TRACEPOINT_PROVIDER,
-                 surface_created,
-                 TP_ARGS(char const*, name),
-                 TP_FIELDS(ctf_string(name, name)))
+TRACEPOINT_EVENT_CLASS(
+    mir_server_scene,
+    surface_event,
+    TP_ARGS(char const*, name),
+    TP_FIELDS(ctf_string(name, name))
+)
 
-TRACEPOINT_EVENT(TRACEPOINT_PROVIDER,
-                 surface_added,
-                 TP_ARGS(char const*, name),
-                 TP_FIELDS(ctf_string(name, name)))
+TRACEPOINT_EVENT_INSTANCE(
+    mir_server_scene,
+    surface_event,
+    surface_created,
+    TP_ARGS(char const*, name)
+)
 
-TRACEPOINT_EVENT(TRACEPOINT_PROVIDER,
-                 surface_removed,
-                 TP_ARGS(char const*, name),
-                 TP_FIELDS(ctf_string(name, name)))
+TRACEPOINT_EVENT_INSTANCE(
+    mir_server_scene,
+    surface_event,
+    surface_added,
+    TP_ARGS(char const*, name)
+)
 
-TRACEPOINT_EVENT(TRACEPOINT_PROVIDER,
-                 surface_deleted,
-                 TP_ARGS(char const*, name),
-                 TP_FIELDS(ctf_string(name, name)))
+TRACEPOINT_EVENT_INSTANCE(
+    mir_server_scene,
+    surface_event,
+    surface_removed,
+    TP_ARGS(char const*, name)
+)
+
+TRACEPOINT_EVENT_INSTANCE(
+    mir_server_scene,
+    surface_event,
+    surface_deleted,
+    TP_ARGS(char const*, name)
+)
 
 #endif /* MIR_LTTNG_SCENE_REPORT_TP_H_ */
 
