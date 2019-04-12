@@ -39,46 +39,53 @@ TRACEPOINT_EVENT(
      )
 )
 
-TRACEPOINT_EVENT(
+TRACEPOINT_EVENT_CLASS(
     mir_server_input,
+    published_event,
+    TP_ARGS(int, dest_fd, uint32_t, seq_id, int64_t, event_time),
+    TP_FIELDS(
+        ctf_integer(int, dest_fd, dest_fd)
+        ctf_integer(uint32_t, seq_id, seq_id)
+        ctf_integer(int64_t, event_time, event_time)
+    )
+)
+
+TRACEPOINT_EVENT_INSTANCE(
+    mir_server_input,
+    published_event,
     published_key_event,
-    TP_ARGS(int, dest_fd, uint32_t, seq_id, int64_t, event_time),
-    TP_FIELDS(
-        ctf_integer(int, dest_fd, dest_fd)
-        ctf_integer(uint32_t, seq_id, seq_id)
-        ctf_integer(int64_t, event_time, event_time)
-     )
+    TP_ARGS(int, dest_fd, uint32_t, seq_id, int64_t, event_time)
 )
 
-TRACEPOINT_EVENT(
+TRACEPOINT_EVENT_INSTANCE(
     mir_server_input,
+    published_event,
     published_motion_event,
-    TP_ARGS(int, dest_fd, uint32_t, seq_id, int64_t, event_time),
-    TP_FIELDS(
-        ctf_integer(int, dest_fd, dest_fd)
-        ctf_integer(uint32_t, seq_id, seq_id)
-        ctf_integer(int64_t, event_time, event_time)
-     )
+    TP_ARGS(int, dest_fd, uint32_t, seq_id, int64_t, event_time)
 )
 
-TRACEPOINT_EVENT(
+TRACEPOINT_EVENT_CLASS(
     mir_server_input,
+    device_event,
+    TP_ARGS(const char*, device, const char*, platform),
+    TP_FIELDS(
+        ctf_string(device, device)
+        ctf_string(platform, platform)
+    )
+)
+
+TRACEPOINT_EVENT_INSTANCE(
+    mir_server_input,
+    device_event,
     opened_input_device,
-    TP_ARGS(const char*, device, const char*, platform),
-    TP_FIELDS(
-        ctf_string(device, device)
-        ctf_string(platform, platform)
-    )
+    TP_ARGS(const char*, device, const char*, platform)
 )
 
-TRACEPOINT_EVENT(
+TRACEPOINT_EVENT_INSTANCE(
     mir_server_input,
+    device_event,
     failed_to_open_input_device,
-    TP_ARGS(const char*, device, const char*, platform),
-    TP_FIELDS(
-        ctf_string(device, device)
-        ctf_string(platform, platform)
-    )
+    TP_ARGS(const char*, device, const char*, platform)
 )
 
 #endif /* MIR_LTTNG_DISPLAY_REPORT_TP_H_ */
