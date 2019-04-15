@@ -38,6 +38,7 @@
 #include "mir/frontend/surface.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
+#include "mir/frontend/wayland.h"
 
 #include "mir/compositor/buffer_stream.h"
 
@@ -227,16 +228,6 @@ void setup_new_client_handler(wl_display* display, std::shared_ptr<mf::Shell> co
     context->destruction_listener.notify = &cleanup_client_handler;
     wl_display_add_destroy_listener(display, &context->destruction_listener);
 }
-}
-
-std::shared_ptr<mir::frontend::Session> get_session(wl_client* client)
-{
-    auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
-
-    if (listener)
-        return private_from_listener(listener)->session;
-
-    return nullptr;
 }
 
 int64_t mir_input_event_get_event_time_ms(const MirInputEvent* event)
@@ -458,6 +449,9 @@ public:
     {
         new WlShellSurface(client, resource, id, WlSurface::from(surface), shell, seat, output_manager);
     }
+
+    static auto get_window(wl_resource* window) -> std::shared_ptr<Surface>;
+
 private:
     std::shared_ptr<mf::Shell> const shell;
     WlSeat& seat;
@@ -810,4 +804,38 @@ bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client
     (void)client, (void)global;
     return true;
 #endif
+}
+
+auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<Session>
+{
+    auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
+
+    if (listener)
+        return private_from_listener(listener)->session;
+
+    return {};
+}
+
+auto mir::frontend::get_session(wl_resource* surface) -> std::shared_ptr<Session>
+{
+    return get_session(wl_resource_get_client(surface));
+}
+
+auto mir::frontend::get_wl_shell_window(wl_resource* surface) -> std::shared_ptr<Surface>
+{
+    if (mir::wayland::Surface::is_instance(surface))
+    {
+        auto const wlsurface = WlSurface::from(surface);
+
+        auto const id = wlsurface->surface_id();
+        if (id.as_value())
+        {
+            auto const session = get_session(wlsurface->client);
+            return session->get_surface(id);
+        }
+
+        log_debug("No window currently associated with wayland::Surface %p", surface);
+    }
+
+    return {};
 }

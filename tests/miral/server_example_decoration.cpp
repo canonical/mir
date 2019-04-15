@@ -19,6 +19,8 @@
 #include "server_example_decoration.h"
 #include "server-decoration_wrapper.h"
 
+using mir::examples::ServerDecorationCreateCallback;
+
 namespace
 {
 struct ServerDecoration :
@@ -50,12 +52,24 @@ struct ServerDecorationManager : mir::wayland::ServerDecorationManager
 {
     static int const interface_supported = 1;
 
-    using mir::wayland::ServerDecorationManager::ServerDecorationManager;
+    ServerDecorationManager(struct wl_display* display) :
+        mir::wayland::ServerDecorationManager::ServerDecorationManager(display, interface_supported)
+    {
+    };
 
-    void create(wl_client *client, wl_resource *resource, uint32_t id, wl_resource */*surface*/) override
+    ServerDecorationManager(struct wl_display* display, ServerDecorationCreateCallback callback) :
+        mir::wayland::ServerDecorationManager::ServerDecorationManager(display, interface_supported),
+        callback{callback}
+    {
+    };
+
+    void create(wl_client* client, wl_resource* resource, uint32_t id, wl_resource* surface) override
     {
         new ServerDecoration{client, resource, id};
+        callback(client, surface);
     }
+
+    ServerDecorationCreateCallback const callback = [](auto, auto) {};
 };
 
 static_assert(
@@ -65,10 +79,26 @@ static_assert(
 int const ServerDecorationManager::interface_supported;
 }
 
-miral::WaylandExtensions::Builder const mir::examples::server_decoration_extension{
-    ServerDecorationManager::interface_name,
-    [](miral::WaylandExtensions::Context const* context)
+auto mir::examples::server_decoration_extension() -> miral::WaylandExtensions::Builder
+{
+    return
         {
-            return std::make_shared<ServerDecorationManager>(context->display(), ServerDecorationManager::interface_supported);
-        }
-};
+            ServerDecorationManager::interface_name,
+            [](miral::WaylandExtensions::Context const* context)
+                {
+                    return std::make_shared<ServerDecorationManager>(context->display());
+                }
+        };
+}
+
+auto mir::examples::server_decoration_extension(ServerDecorationCreateCallback callback) -> miral::WaylandExtensions::Builder
+{
+    return
+        {
+            ServerDecorationManager::interface_name,
+            [callback](miral::WaylandExtensions::Context const* context)
+                {
+                    return std::make_shared<ServerDecorationManager>(context->display(), callback);
+                }
+        };
+}

@@ -26,11 +26,15 @@
 #include <string>
 
 struct wl_display;
+struct wl_client;
+struct wl_resource;
 
 namespace mir { class Server; }
 
 namespace miral
 {
+class Window;
+
 /// Enable configuration of the Wayland extensions enabled at runtime.
 ///
 /// This adds the command line option '--wayland-extensions' the corresponding
@@ -117,6 +121,25 @@ private:
     struct Self;
     std::shared_ptr<Self> self;
 };
+
+/// Get the MirAL application for a wl_client.
+/// \return The application (null if no application is found)
+/// \remark Since MirAL 2.5
+auto application_for(wl_client* client) -> Application;
+
+/// Get the MirAL application for a wl_resource.
+/// \return The application (null if no application is found)
+/// \remark Since MirAL 2.5
+auto application_for(wl_resource* resource) -> Application;
+
+/// Get the MirAL Window for a Wayland Surface, XdgSurface, etc.
+/// Note that there may not be a corresponding miral::Window (e.g. the
+/// surface is created and assigned properties before 'commit' creates the
+/// miral::Window).
+///
+/// \return The window (null if no window is found)
+/// \remark Since MirAL 2.5
+auto window_for(wl_resource* surface) -> Window;
 }
 
 #endif //MIRAL_WAYLAND_EXTENSIONS_H

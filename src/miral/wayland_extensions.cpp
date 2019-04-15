@@ -17,14 +17,17 @@
  */
 
 #include "miral/wayland_extensions.h"
+#include "miral/window.h"
 
+#include <mir/abnormal_exit.h>
+#include <mir/frontend/wayland.h>
+#include <mir/scene/session.h>
+#include <mir/scene/surface.h>
 #include <mir/server.h>
 #include <mir/options/option.h>
 #include <mir/options/configuration.h>
 
 #include <set>
-#include <mir/abnormal_exit.h>
-#include <miral/wayland_extensions.h>
 
 namespace mo = mir::options;
 
@@ -175,4 +178,26 @@ void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const
 void miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const& builder)
 {
     self->add_extension(builder);
+}
+
+auto miral::application_for(wl_client* client) -> Application
+{
+    return std::dynamic_pointer_cast<mir::scene::Session>(mir::frontend::get_session(client));
+}
+
+auto miral::application_for(wl_resource* resource) -> Application
+{
+    return std::dynamic_pointer_cast<mir::scene::Session>(mir::frontend::get_session(resource));
+}
+
+auto miral::window_for(wl_resource* surface) -> Window
+{
+    if (auto const& app = application_for(surface))
+    {
+        return {app, std::dynamic_pointer_cast<mir::scene::Surface>(mir::frontend::get_window(surface))};
+    }
+    else
+    {
+        return {};
+    }
 }

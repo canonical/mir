@@ -56,6 +56,7 @@ class WlSeat;
 class OutputManager;
 
 class Shell;
+class Surface;
 class MirDisplay;
 class SessionAuthorizer;
 class DataDeviceManager;
@@ -141,6 +142,8 @@ private:
 
 auto create_wl_shell(wl_display* display, std::shared_ptr<Shell> const& shell, WlSeat* seat, OutputManager* const output_manager)
     -> std::shared_ptr<void>;
+
+auto get_wl_shell_window(wl_resource* surface) -> std::shared_ptr<Surface>;
 }
 }
 

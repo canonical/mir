@@ -17,6 +17,8 @@
  */
 
 #include "mir/default_server_configuration.h"
+#include "mir/frontend/wayland.h"
+
 #include "wayland_connector.h"
 #include "xdg_shell_v6.h"
 #include "xdg_shell_stable.h"
@@ -156,4 +158,18 @@ void mir::DefaultServerConfiguration::add_wayland_extension(
 void mir::DefaultServerConfiguration::set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter)
 {
     wayland_extension_filter = extension_filter;
+}
+
+auto mir::frontend::get_window(wl_resource* surface) -> std::shared_ptr<Surface>
+{
+    if (auto result = get_wl_shell_window(surface))
+        return result;
+
+    if (auto result = XdgShellStable::get_window(surface))
+        return result;
+
+    if (auto result = XdgShellV6::get_window(surface))
+        return result;
+
+    return {};
 }

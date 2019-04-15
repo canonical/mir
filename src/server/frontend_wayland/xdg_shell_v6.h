@@ -27,6 +27,7 @@ namespace frontend
 {
 
 class Shell;
+class Surface;
 class WlSeat;
 class OutputManager;
 
@@ -44,6 +45,9 @@ public:
     std::shared_ptr<Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;
+
+    // Returns the Mir surface if the window is recognised by XdgShellV6
+    static auto get_window(wl_resource* surface) -> std::shared_ptr<Surface>;
 };
 
 }

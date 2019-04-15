@@ -25,7 +25,11 @@ namespace mir
 {
 namespace examples
 {
-extern miral::WaylandExtensions::Builder const server_decoration_extension;
+auto server_decoration_extension() -> miral::WaylandExtensions::Builder;
+
+using ServerDecorationCreateCallback = std::function<void(wl_client* client, wl_resource* surface)>;
+
+auto server_decoration_extension(ServerDecorationCreateCallback callback) -> miral::WaylandExtensions::Builder;
 }
 }
 

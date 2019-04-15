@@ -338,4 +338,7 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const&)@MIRAL_2.5" 2.5.0
  (c++)"miral::WaylandExtensions::recommended_extensions[abi:cxx11]()@MIRAL_2.5" 2.5.0
  (c++)"typeinfo for miral::WaylandExtensions::Context@MIRAL_2.5" 2.5.0
+ (c++)"miral::application_for(wl_client*)@MIRAL_2.5" 2.5.0
+ (c++)"miral::application_for(wl_resource*)@MIRAL_2.5" 2.5.0
+ (c++)"miral::window_for(wl_resource*)@MIRAL_2.5" 2.5.0
 

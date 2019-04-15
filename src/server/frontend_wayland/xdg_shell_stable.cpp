@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -21,6 +21,8 @@
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"
 
+#include "mir/frontend/session.h"
+#include "mir/frontend/wayland.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"
 
@@ -51,6 +53,9 @@ public:
     void send_configure();
 
     std::experimental::optional<WindowWlSurfaceRole*> const& window_role();
+
+    using wayland::XdgSurface::client;
+    using wayland::XdgSurface::resource;
 
 private:
     void set_window_role(WindowWlSurfaceRole* role);
@@ -619,3 +624,25 @@ void mf::XdgPositionerStable::set_offset(int32_t x, int32_t y)
     aux_rect_placement_offset_y = y;
 }
 
+auto mf::XdgShellStable::get_window(wl_resource* surface) -> std::shared_ptr<Surface>
+{
+    namespace mw = mir::wayland;
+
+    if (mw::XdgSurface::is_instance(surface))
+    {
+        auto const xdgsurface = XdgSurfaceStable::from(surface);
+        if (auto const role = xdgsurface->window_role())
+        {
+            auto const id = role.value()->surface_id();
+            if (id.as_value())
+            {
+                auto const session = get_session(xdgsurface->client);
+                return session->get_surface(id);
+            }
+        }
+
+        log_debug("No window currently associated with wayland::XdgSurface %p", surface);
+    }
+
+    return {};
+}
