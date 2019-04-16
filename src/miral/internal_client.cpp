@@ -222,6 +222,7 @@ void WlInternalClientRunner<Base>::run(mir::Server& server)
             {
                 auto const deleter = mir::raii::deleter_for(display, &wl_display_disconnect);
                 client_code(display);
+                wl_display_roundtrip(display);
             }
         }};
 }
