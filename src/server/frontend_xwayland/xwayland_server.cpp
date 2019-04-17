@@ -64,7 +64,12 @@ mf::XWaylandServer::~XWaylandServer()
       if (xserver_status == RUNNING)
         wm->destroy();
 
-      kill(pid, SIGTERM);
+      if (kill(pid, SIGTERM) == 0)
+      {
+          usleep(100000);           // After 100ms...
+          if (kill(pid, 0) == 0)    // ...if Xwayland is still running...
+            kill(pid, SIGKILL);     // ...then kill it!
+      }
       spawn_thread->join();
     }
 
