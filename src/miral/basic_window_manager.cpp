@@ -1011,14 +1011,34 @@ void miral::BasicWindowManager::place_and_size(WindowInfo& root, Point const& ne
 
 void miral::BasicWindowManager::place_anchored(WindowInfo& root)
 {
-    // We can't place the anchored window if there are'n any outputs
+    // We can't place the anchored window if there aren't any outputs
     if (root.type() != mir_window_type_anchored || outputs.size() == 0)
         return;
 
     MirPlacementGravity gravity = root.anchor_edge();
-    Size const size = root.window().size();
+    Size size = root.window().size();
     Rectangle output = *outputs.begin();
     Point top_left{};
+    bool needs_resize = true;
+
+    if ((gravity & mir_placement_gravity_west) &&
+        (gravity & mir_placement_gravity_east))
+    {
+        size.width = output.size.width;
+        needs_resize = true;
+    }
+
+    if ((gravity & mir_placement_gravity_north) &&
+        (gravity & mir_placement_gravity_south))
+    {
+        size.height = output.size.height;
+        needs_resize = true;
+    }
+
+    if (needs_resize)
+    {
+        root.window().resize(size);
+    }
 
     if (gravity & mir_placement_gravity_west)
         top_left.x = output.left();
