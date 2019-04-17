@@ -130,6 +130,8 @@ mf::LayerSurfaceV1::LayerSurfaceV1(wl_resource* new_resource, WlSurface* surface
     shell::SurfaceSpecification spec;
     spec.state = mir_window_state_attached;
     apply_spec(spec);
+    auto const serial = wl_display_next_serial(wl_client_get_display(wayland::LayerSurfaceV1::client));
+    send_configure_event (serial, 0, 0);
 }
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
@@ -196,5 +198,7 @@ void mf::LayerSurfaceV1::handle_resize(
     geometry::Size const& new_size)
 {
     (void)new_top_left;
-    (void)new_size;
+
+    auto const serial = wl_display_next_serial(wl_client_get_display(wayland::LayerSurfaceV1::client));
+    send_configure_event (serial, new_size.width.as_int(), new_size.height.as_int());
 }
