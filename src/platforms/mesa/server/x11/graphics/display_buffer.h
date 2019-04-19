@@ -21,6 +21,7 @@
 #define MIR_GRAPHICS_X_DISPLAY_BUFFER_H_
 
 #include "mir/graphics/display_buffer.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/graphics/display.h"
 #include "mir/renderer/gl/render_target.h"
 #include "egl_helper.h"
@@ -48,6 +49,7 @@ class DisplayBuffer : public graphics::DisplayBuffer,
 public:
     DisplayBuffer(
             ::Display* const x_dpy,
+            DisplayConfigurationOutputId output_id,
             Window const win,
             geometry::Size const& view_area_size,
             EGLContext const shared_context,
@@ -78,6 +80,7 @@ private:
     glm::mat2 transform;
     helpers::EGLHelper egl;
     std::shared_ptr<AtomicFrame> const last_frame;
+    DisplayConfigurationOutputId output_id;
 
     typedef EGLBoolean (EGLAPIENTRY EglGetSyncValuesCHROMIUM)
         (EGLDisplay dpy, EGLSurface surface, int64_t *ust,

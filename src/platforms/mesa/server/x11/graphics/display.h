@@ -39,6 +39,7 @@ namespace graphics
 class AtomicFrame;
 class GLConfig;
 class DisplayReport;
+struct DisplayConfigurationOutput;
 
 namespace X
 {
@@ -69,7 +70,7 @@ class Display : public graphics::Display,
 {
 public:
     explicit Display(::Display* x_dpy,
-                     geometry::Size const requested_size,
+                     std::vector<geometry::Size> const& requested_size,
                      std::shared_ptr<GLConfig> const& gl_config,
                      std::shared_ptr<DisplayReport> const& report);
     ~Display() noexcept;
@@ -104,19 +105,26 @@ public:
     Frame last_frame_on(unsigned output_id) const override;
 
 private:
+    struct OutputInfo
+    {
+        OutputInfo(
+            std::unique_ptr<X11Window> window,
+            std::unique_ptr<DisplayBuffer> display_buffer,
+            std::unique_ptr<graphics::DisplayConfigurationOutput> configuration);
+
+        std::unique_ptr<X11Window> window;
+        std::unique_ptr<DisplayBuffer> display_buffer;
+        std::unique_ptr<graphics::DisplayConfigurationOutput> configuration;
+    };
+
+    std::vector<std::unique_ptr<OutputInfo>> outputs;
     helpers::EGLHelper shared_egl;
     ::Display* const x_dpy;
-    mir::geometry::Size const actual_size;
     std::shared_ptr<GLConfig> const gl_config;
     float pixel_width;
     float pixel_height;
-    float scale;
-    std::unique_ptr<X11Window> win;
-    MirPixelFormat pf;
     std::shared_ptr<DisplayReport> const report;
-    MirOrientation orientation; //TODO: keep entire current display configuration
     std::shared_ptr<AtomicFrame> last_frame;
-    std::unique_ptr<DisplayBuffer> display_buffer;
 };
 
 }

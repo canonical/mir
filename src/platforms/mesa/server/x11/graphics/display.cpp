@@ -18,6 +18,7 @@
 
 #include "mir/graphics/platform.h"
 #include "mir/graphics/display_report.h"
+#include "mir/graphics/display_configuration.h"
 #include "mir/graphics/egl_error.h"
 #include "mir/graphics/virtual_output.h"
 #include "mir/renderer/gl/context.h"
@@ -231,39 +232,45 @@ unsigned long mgx::X11Window::red_mask() const
 }
 
 mgx::Display::Display(::Display* x_dpy,
-                      geom::Size const requested_size,
+                      std::vector<geom::Size> const& requested_sizes,
                       std::shared_ptr<GLConfig> const& gl_config,
                       std::shared_ptr<DisplayReport> const& report)
     : shared_egl{*gl_config},
       x_dpy{x_dpy},
-      actual_size{clip_to_display(x_dpy, requested_size)},
       gl_config{gl_config},
       pixel_width{get_pixel_width(x_dpy)},
       pixel_height{get_pixel_height(x_dpy)},
-      scale{1.0f},
       report{report},
-      orientation{mir_orientation_normal},
       last_frame{std::make_shared<AtomicFrame>()}
 {
     shared_egl.setup(x_dpy);
 
-    win = std::make_unique<X11Window>(x_dpy,
-                                      shared_egl.display(),
-                                      actual_size,
-                                      shared_egl.config());
-
-    auto red_mask = win->red_mask();
-    pf = (red_mask == 0xFF0000 ? mir_pixel_format_argb_8888
-                               : mir_pixel_format_abgr_8888);
-
-    display_buffer = std::make_unique<mgx::DisplayBuffer>(
-                         x_dpy,
-                         *win,
-                         actual_size,
-                         shared_egl.context(),
-                         last_frame,
-                         report,
-                         *gl_config);
+    for (auto const& requested_size : requested_sizes)
+    {
+        auto actual_size = clip_to_display(x_dpy, requested_size);
+        auto window = std::make_unique<X11Window>(x_dpy, shared_egl.display(), actual_size, shared_egl.config());
+        auto red_mask = window->red_mask();
+        auto pf = (red_mask == 0xFF0000 ?
+            mir_pixel_format_argb_8888 :
+            mir_pixel_format_abgr_8888);
+        auto configuration = static_cast<std::unique_ptr<graphics::DisplayConfigurationOutput>>(
+            std::make_unique<DisplayConfigurationOutput>(
+                pf,
+                actual_size,
+                geom::Size{actual_size.width * pixel_width, actual_size.height * pixel_height},
+                1.0f,
+                mir_orientation_normal));
+        auto display_buffer = std::make_unique<mgx::DisplayBuffer>(
+            x_dpy,
+            configuration->id,
+            *window,
+            actual_size,
+            shared_egl.context(),
+            last_frame,
+            report,
+            *gl_config);
+        outputs.push_back(std::make_unique<OutputInfo>(move(window), move(display_buffer), move(configuration)));
+    }
 
     shared_egl.make_current();
 
@@ -276,13 +283,20 @@ mgx::Display::~Display() noexcept
 
 void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f)
 {
-    f(*display_buffer);
+    for (auto const& output : outputs)
+    {
+        f(*output->display_buffer);
+    }
 }
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
-    return std::make_unique<mgx::DisplayConfiguration>(
-        pf, actual_size, geom::Size{actual_size.width * pixel_width, actual_size.height * pixel_height}, scale, orientation);
+    std::vector<mg::DisplayConfigurationOutput> output_configurations;
+    for (auto const& output : outputs)
+    {
+        output_configurations.push_back(*output->configuration);
+    }
+    return std::make_unique<mgx::DisplayConfiguration>(output_configurations);
 }
 
 void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
@@ -293,23 +307,25 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
             std::logic_error("Invalid or inconsistent display configuration"));
     }
 
-    glm::mat2 trans;
-    MirOrientation o = mir_orientation_normal;
-    float new_scale = scale;
-    geom::Rectangle logical_area;
-
-    new_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
+    new_configuration.for_each_output([&](graphics::DisplayConfigurationOutput const& conf_output)
     {
-        trans = conf_output.transformation();
-        o = conf_output.orientation;
-        new_scale = conf_output.scale;
-        logical_area = conf_output.extents();
-    });
+        bool found_info = false;
 
-    orientation = o;
-    display_buffer->set_view_area(logical_area);
-    display_buffer->set_transformation(trans);
-    scale = new_scale;
+        for (auto& output : outputs)
+        {
+            if (output->configuration->id == conf_output.id)
+            {
+                *output->configuration = conf_output;
+                output->display_buffer->set_view_area(output->configuration->extents());
+                output->display_buffer->set_transformation(output->configuration->transformation());
+                found_info = true;
+                break;
+            }
+        }
+
+        if (!found_info)
+            mir::log_error("Could not find info for output %d", conf_output.id.as_value());
+    });
 }
 
 void mgx::Display::register_configuration_change_handler(
@@ -364,4 +380,14 @@ bool mgx::Display::apply_if_configuration_preserves_display_buffers(
 mg::Frame mgx::Display::last_frame_on(unsigned) const
 {
     return last_frame->load();
+}
+
+mgx::Display::OutputInfo::OutputInfo(
+    std::unique_ptr<X11Window> window,
+    std::unique_ptr<DisplayBuffer> display_buffer,
+    std::unique_ptr<graphics::DisplayConfigurationOutput> configuration)
+    : window{move(window)},
+      display_buffer{move(display_buffer)},
+      configuration{move(configuration)}
+{
 }

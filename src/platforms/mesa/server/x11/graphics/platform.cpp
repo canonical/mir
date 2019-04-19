@@ -28,14 +28,14 @@ namespace mgx = mg::X;
 namespace geom = mir::geometry;
 
 mgx::Platform::Platform(std::shared_ptr<::Display> const& conn,
-                        geom::Size const size,
+                        std::vector<geom::Size> const output_sizes,
                         std::shared_ptr<mg::DisplayReport> const& report)
     : x11_connection{conn},
       udev{std::make_shared<mir::udev::Context>()},
       drm{mgm::helpers::DRMHelper::open_any_render_node(udev)},
       report{report},
       gbm{drm->fd},
-      size{size}
+      output_sizes{output_sizes}
 {
     if (!x11_connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
@@ -53,8 +53,7 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& /*initial_conf_policy*/,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-    return make_module_ptr<mgx::Display>(x11_connection.get(), size, gl_config,
-                                         report);
+    return make_module_ptr<mgx::Display>(x11_connection.get(), output_sizes, gl_config, report);
 }
 
 mg::NativeDisplayPlatform* mgx::Platform::native_display_platform()

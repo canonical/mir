@@ -42,7 +42,7 @@ class Platform : public graphics::Platform,
 {
 public:
     explicit Platform(std::shared_ptr<::Display> const& conn,
-                      mir::geometry::Size const size,
+                      std::vector<mir::geometry::Size> const output_sizes,
                       std::shared_ptr<DisplayReport> const& report);
     ~Platform() = default;
 
@@ -66,7 +66,7 @@ private:
     std::shared_ptr<mesa::helpers::DRMHelper> const drm;
     std::shared_ptr<DisplayReport> const report;
     mesa::helpers::GBMHelper gbm;
-    mir::geometry::Size const size;
+    std::vector<mir::geometry::Size> const output_sizes;
     std::unique_ptr<mesa::DRMNativePlatformAuthFactory> auth_factory;
 };
 

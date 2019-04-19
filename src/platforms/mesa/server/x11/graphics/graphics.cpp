@@ -60,9 +60,9 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
 
     return mir::make_module_ptr<mgx::Platform>(
         x11_resources.get_conn(),
-        geom::Size{
+        std::vector<geom::Size>{{
             std::stoi(display_dims_str.substr(0, pos)),
-            std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))},
+            std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))}},
         report
     );
 }
@@ -134,11 +134,11 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
         BOOST_THROW_EXCEPTION(std::runtime_error("Malformed output size option"));
 
     return mir::make_module_ptr<mgx::Platform>(
-               x11_resources.get_conn(),
-               geom::Size{std::stoi(display_dims_str.substr(0, pos)),
-                          std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))},
-               report
-           );
+        x11_resources.get_conn(),
+        std::vector<geom::Size>{{
+            std::stoi(display_dims_str.substr(0, pos)),
+            std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))}},
+        report);
 }
 
 mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(

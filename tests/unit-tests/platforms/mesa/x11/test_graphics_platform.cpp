@@ -80,13 +80,15 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-      return std::make_shared<mg::X::Platform>(std::shared_ptr<::Display>(
-              XOpenDisplay(nullptr),
-              [](::Display* display)
-              {
-                  XCloseDisplay(display);
-              }), mir::geometry::Size{1280,1024},
-              std::make_shared<mir::report::null::DisplayReport>());
+        return std::make_shared<mg::X::Platform>(
+            std::shared_ptr<::Display>(
+                XOpenDisplay(nullptr),
+                [](::Display* display)
+                {
+                    XCloseDisplay(display);
+                }),
+            std::vector<mir::geometry::Size>{{1280, 1024}},
+            std::make_shared<mir::report::null::DisplayReport>());
     }
 
     std::shared_ptr<ml::Logger> logger;

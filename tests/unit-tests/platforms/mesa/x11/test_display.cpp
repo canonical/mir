@@ -106,7 +106,7 @@ public:
     {
         return std::make_shared<mgx::Display>(
                    mock_x11.fake_x11.display,
-                   size,
+                   std::vector<geom::Size>{size},
                    mt::fake_shared(mock_gl_config),
                    std::make_shared<mir::report::null::DisplayReport>());
     }

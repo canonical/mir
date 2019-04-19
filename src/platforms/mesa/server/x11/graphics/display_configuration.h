@@ -30,27 +30,33 @@ namespace graphics
 namespace X
 {
 
+struct DisplayConfigurationOutput : graphics::DisplayConfigurationOutput
+{
+    DisplayConfigurationOutput(
+        MirPixelFormat pf,
+        mir::geometry::Size const pixels,
+        mir::geometry::Size const size_mm,
+        float const scale,
+        MirOrientation orientation);
+
+    static int next_output_id;
+};
+
 class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    DisplayConfiguration(MirPixelFormat pf,
-                         mir::geometry::Size const pixels,
-                         mir::geometry::Size const size_mm,
-                         float const scale,
-                         MirOrientation orientation);
+    DisplayConfiguration(std::vector<graphics::DisplayConfigurationOutput> const& outputs);
     DisplayConfiguration(DisplayConfiguration const&);
 
     virtual ~DisplayConfiguration() = default;
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override;
-    void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
+    void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const override;
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
     std::unique_ptr<graphics::DisplayConfiguration> clone() const override;
 
-    static DisplayConfigurationOutputId const the_output_id;
-
 private:
-    DisplayConfigurationOutput configuration;
+    std::vector<graphics::DisplayConfigurationOutput> configuration;
     DisplayConfigurationCard card;
 };
 
