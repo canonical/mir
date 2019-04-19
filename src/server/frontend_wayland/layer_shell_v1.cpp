@@ -136,6 +136,13 @@ mf::LayerSurfaceV1::LayerSurfaceV1(wl_resource* new_resource, WlSurface* surface
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
 {
+    // HACK: Leaving zero sizes zero causes a validation error, and setting them to window_size() causes
+    //       to not call WlSurfaceEventSink::handle_resize(). Setting them to 1 works for now. This will get fixed when
+    //       we refactor size negotiation between the window manager and the frontend.
+    if (width == 0)
+        width = 1;
+    if (height == 0)
+        height = 1;
     WindowWlSurfaceRole::set_geometry(0, 0, width, height);
 }
 
