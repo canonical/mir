@@ -933,11 +933,6 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
     Point new_pos = modifications.top_left().is_set() ? modifications.top_left().value() : window.top_left();
 
-    if (window_info.type() == mir_window_type_anchored && modifications.anchor_edge().is_set())
-    {
-        place_anchored(window_info);
-    }
-
     if (modifications.size().is_set())
     {
         place_and_size(window_info, new_pos, modifications.size().value());
@@ -954,6 +949,11 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     else if (modifications.top_left().is_set())
     {
         place_and_size(window_info, new_pos, window.size());
+    }
+
+    if (window_info.type() == mir_window_type_anchored && modifications.anchor_edge().is_set())
+    {
+        place_anchored(window_info);
     }
 
     if (modifications.placement_hints().is_set())
