@@ -113,6 +113,13 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
 {
+    // HACK: Leaving zero sizes zero causes a validation error, and setting them to window_size() causes handle_resize()
+    //       To be suppressed when returning to a previous size
+    //       (don't ask me exactly why, but probably something to do with how event sink caches and checks)
+    if (width == 0)
+        width = 1;
+    if (height == 0)
+        height = 1;
     WindowWlSurfaceRole::set_geometry(0, 0, width, height);
 }
 
