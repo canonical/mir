@@ -111,6 +111,7 @@ private:
             std::unique_ptr<X11Window> window,
             std::unique_ptr<DisplayBuffer> display_buffer,
             std::unique_ptr<graphics::DisplayConfigurationOutput> configuration);
+        ~OutputInfo();
 
         std::unique_ptr<X11Window> window;
         std::unique_ptr<DisplayBuffer> display_buffer;

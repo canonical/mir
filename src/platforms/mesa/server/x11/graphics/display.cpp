@@ -28,6 +28,7 @@
 #include "display_configuration.h"
 #include "display.h"
 #include "display_buffer.h"
+#include "../X11_resources.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -37,6 +38,7 @@
 #define MIR_LOG_COMPONENT "display"
 #include "mir/log.h"
 
+namespace mx=mir::X;
 namespace mg=mir::graphics;
 namespace mgx=mg::X;
 namespace geom=mir::geometry;
@@ -390,4 +392,10 @@ mgx::Display::OutputInfo::OutputInfo(
       display_buffer{move(display_buffer)},
       configuration{move(configuration)}
 {
+    mx::X11Resources::instance.set_output_config_for_win(*this->window, this->configuration.get());
+}
+
+mgx::Display::OutputInfo::~OutputInfo()
+{
+    mx::X11Resources::instance.clear_output_config_for_win(*this->window);
 }
