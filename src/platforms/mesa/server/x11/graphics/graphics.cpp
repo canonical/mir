@@ -35,8 +35,6 @@ namespace mx = mir::X;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
 
-mx::X11Resources x11_resources;
-
 namespace
 {
 char const* x11_displays_option_name{"x11-output"};
@@ -50,7 +48,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mir::logging::Logger> const& /*logger*/)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
-    if (!x11_resources.get_conn())
+    if (!mx::X11Resources::instance.get_conn())
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 output"));
 
     auto display_dims_str = options->get<std::string>(x11_displays_option_name);
@@ -59,7 +57,7 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
         BOOST_THROW_EXCEPTION(std::runtime_error("Malformed output size option"));
 
     return mir::make_module_ptr<mgx::Platform>(
-        x11_resources.get_conn(),
+        mx::X11Resources::instance.get_conn(),
         std::vector<geom::Size>{{
             std::stoi(display_dims_str.substr(0, pos)),
             std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))}},
@@ -125,7 +123,7 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
 {
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
 
-    if (!x11_resources.get_conn())
+    if (!mx::X11Resources::instance.get_conn())
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 output"));
 
     auto display_dims_str = options->get<std::string>(x11_displays_option_name);
@@ -134,7 +132,7 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
         BOOST_THROW_EXCEPTION(std::runtime_error("Malformed output size option"));
 
     return mir::make_module_ptr<mgx::Platform>(
-        x11_resources.get_conn(),
+        mx::X11Resources::instance.get_conn(),
         std::vector<geom::Size>{{
             std::stoi(display_dims_str.substr(0, pos)),
             std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))}},

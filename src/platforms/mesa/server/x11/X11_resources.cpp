@@ -26,6 +26,8 @@ namespace mx = mir::X;
 //Force synchronous Xlib operation - for debugging
 //#define FORCE_SYNCHRONOUS
 
+mx::X11Resources mx::X11Resources::instance;
+
 int mx::mir_x11_error_handler(Display* dpy, XErrorEvent* eev)
 {
     char msg[80];

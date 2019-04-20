@@ -33,6 +33,8 @@ class X11Resources
 public:
     std::shared_ptr<::Display> get_conn();
 
+    static X11Resources instance;
+
 private:
     std::weak_ptr<::Display> connection;
 };
