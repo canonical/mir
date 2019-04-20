@@ -19,9 +19,11 @@
 #include "input_platform.h"
 #include "input_device.h"
 
+#include "mir/graphics/display_configuration.h"
 #include "mir/input/input_device_registry.h"
 #include "mir/input/input_device_info.h"
 #include "mir/dispatch/readable_fd.h"
+#include "../X11_resources.h"
 
 #define MIR_LOG_COMPONENT "x11-input"
 #include "mir/log.h"
@@ -45,6 +47,24 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 namespace md = mir::dispatch;
 namespace mix = mi::X;
+namespace mx = mir::X;
+
+namespace
+{
+geom::Point get_pos_on_output(Window x11_window, int x, int y)
+{
+    auto output = mx::X11Resources::instance.get_output_config_for_win(x11_window);
+    if (output)
+    {
+        return output.value()->top_left + geom::Displacement{x, y};
+    }
+    else
+    {
+        mir::log_warning("X11 window %d does not map to any known output, not applying input transformation", x11_window);
+        return geom::Point{x, y};
+    }
+}
+}
 
 mix::XInputPlatform::XInputPlatform(std::shared_ptr<mi::InputDeviceRegistry> const& input_device_registry,
                                     std::shared_ptr<::Display> const& conn) :
@@ -215,13 +235,14 @@ void mix::XInputPlatform::process_input_event()
                     }
                     auto const event_time =
                         std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::milliseconds{xbev.time});
+                    auto pos = get_pos_on_output(xbev.window, xbev.x, xbev.y);
                     core_pointer->update_button_state(xbev.state);
 
                     if (xbev.button >= up && xbev.button <= right)
                     {  // scroll event
                         core_pointer->pointer_motion(
                             event_time,
-                            geom::Point{xbev.x, xbev.y},
+                            pos,
                             geom::Displacement{xbev.button == right ? 1 : xbev.button == left ? -1 : 0,
                                                xbev.button == up ? 1 : xbev.button == down ? -1 : 0});
                     }
@@ -231,13 +252,13 @@ void mix::XInputPlatform::process_input_event()
                             core_pointer->pointer_press(
                                 event_time,
                                 xbev.button,
-                                geom::Point{xbev.x, xbev.y},
+                                pos,
                                 geom::Displacement{0, 0});
                         else
                             core_pointer->pointer_release(
                                 event_time,
                                 xbev.button,
-                                geom::Point{xbev.x, xbev.y},
+                                pos,
                                 geom::Displacement{0, 0});
                     }
                     break;
@@ -258,8 +279,9 @@ void mix::XInputPlatform::process_input_event()
 #endif
 
                     core_pointer->update_button_state(xmev.state);
+                    auto pos = get_pos_on_output(xmev.window, xmev.x, xmev.y);
                     core_pointer->pointer_motion(
-                        std::chrono::milliseconds{xmev.time}, geom::Point{xmev.x, xmev.y}, geom::Displacement{0, 0});
+                        std::chrono::milliseconds{xmev.time}, pos, geom::Displacement{0, 0});
 
                     break;
                 }
