@@ -34,8 +34,9 @@ struct DisplayConfigurationOutput : graphics::DisplayConfigurationOutput
 {
     DisplayConfigurationOutput(
         MirPixelFormat pf,
-        mir::geometry::Size const pixels,
-        mir::geometry::Size const size_mm,
+        geometry::Size const pixels,
+        geometry::Point const top_left,
+        geometry::Size const size_mm,
         float const scale,
         MirOrientation orientation);
 

@@ -29,6 +29,7 @@ int mgx::DisplayConfigurationOutput::next_output_id{1};
 mgx::DisplayConfigurationOutput::DisplayConfigurationOutput(
     MirPixelFormat pf,
     geom::Size const pixels,
+    geom::Point const top_left,
     geom::Size const size,
     const float scale,
     MirOrientation orientation)
@@ -43,7 +44,7 @@ mgx::DisplayConfigurationOutput::DisplayConfigurationOutput(
             size,
             true,
             true,
-            geom::Point{0, 0},
+            top_left,
             0,
             pf,
             mir_power_mode_on,
@@ -60,7 +61,7 @@ mgx::DisplayConfigurationOutput::DisplayConfigurationOutput(
 
 mgx::DisplayConfiguration::DisplayConfiguration(std::vector<mg::DisplayConfigurationOutput> const& configuration)
     : configuration{configuration},
-      card{mg::DisplayConfigurationCardId{0}, 1}
+      card{mg::DisplayConfigurationCardId{0}, configuration.size()}
 {
 }
 

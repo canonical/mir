@@ -247,6 +247,8 @@ mgx::Display::Display(::Display* x_dpy,
 {
     shared_egl.setup(x_dpy);
 
+    geom::Point top_left{0, 0};
+
     for (auto const& requested_size : requested_sizes)
     {
         auto actual_size = clip_to_display(x_dpy, requested_size);
@@ -259,6 +261,7 @@ mgx::Display::Display(::Display* x_dpy,
             std::make_unique<DisplayConfigurationOutput>(
                 pf,
                 actual_size,
+                top_left,
                 geom::Size{actual_size.width * pixel_width, actual_size.height * pixel_height},
                 1.0f,
                 mir_orientation_normal));
@@ -271,7 +274,9 @@ mgx::Display::Display(::Display* x_dpy,
             last_frame,
             report,
             *gl_config);
+        display_buffer->set_view_area(configuration->extents());
         outputs.push_back(std::make_unique<OutputInfo>(move(window), move(display_buffer), move(configuration)));
+        top_left.x = geom::X{top_left.x.as_int() + actual_size.width.as_int()};
     }
 
     shared_egl.make_current();
