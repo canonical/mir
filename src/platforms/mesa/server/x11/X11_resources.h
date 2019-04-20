@@ -20,9 +20,16 @@
 #define MIR_X11_RESOURCES_H_
 
 #include <X11/Xlib.h>
+#include <experimental/optional>
+#include <unordered_map>
 
 namespace mir
 {
+namespace graphics
+{
+struct DisplayConfigurationOutput;
+}
+
 namespace X
 {
 
@@ -32,11 +39,15 @@ class X11Resources
 {
 public:
     std::shared_ptr<::Display> get_conn();
+    void set_output_config_for_win(Window win, graphics::DisplayConfigurationOutput* configuration);
+    void clear_output_config_for_win(Window win);
+    std::experimental::optional<graphics::DisplayConfigurationOutput*> get_output_config_for_win(Window win);
 
     static X11Resources instance;
 
 private:
     std::weak_ptr<::Display> connection;
+    std::unordered_map<Window, graphics::DisplayConfigurationOutput*> output_configs;
 };
 
 }

@@ -21,6 +21,7 @@
 
 #include "X11_resources.h"
 
+namespace mg=mir::graphics;
 namespace mx = mir::X;
 
 //Force synchronous Xlib operation - for debugging
@@ -56,4 +57,23 @@ std::shared_ptr<::Display> mx::X11Resources::get_conn()
 #endif
     connection = new_conn;
     return new_conn;
+}
+
+void mx::X11Resources::set_output_config_for_win(Window win, mg::DisplayConfigurationOutput* configuration)
+{
+    output_configs[win] = configuration;
+}
+
+void mx::X11Resources::clear_output_config_for_win(Window win)
+{
+    output_configs.erase(win);
+}
+
+std::experimental::optional<mg::DisplayConfigurationOutput*> mx::X11Resources::get_output_config_for_win(Window win)
+{
+    auto configuration = output_configs.find(win);
+    if (configuration != output_configs.end() && configuration->second != nullptr)
+        return {configuration->second};
+    else
+        return std::experimental::nullopt;
 }
