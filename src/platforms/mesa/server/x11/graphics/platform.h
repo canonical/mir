@@ -41,6 +41,9 @@ class Platform : public graphics::Platform,
                  public mir::renderer::gl::EGLPlatform
 {
 public:
+    // Parses comma separated list of WIDTHxHEIGHT
+    static std::vector<geometry::Size> parse_output_sizes(std::string output_sizes);
+
     explicit Platform(std::shared_ptr<::Display> const& conn,
                       std::vector<mir::geometry::Size> const output_sizes,
                       std::shared_ptr<DisplayReport> const& report);
