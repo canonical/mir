@@ -30,9 +30,10 @@ namespace graphics
 namespace X
 {
 
-struct DisplayConfigurationOutput : graphics::DisplayConfigurationOutput
+class DisplayConfiguration : public graphics::DisplayConfiguration
 {
-    DisplayConfigurationOutput(
+public:
+    static std::unique_ptr<DisplayConfigurationOutput> build_output(
         MirPixelFormat pf,
         geometry::Size const pixels,
         geometry::Point const top_left,
@@ -40,24 +41,20 @@ struct DisplayConfigurationOutput : graphics::DisplayConfigurationOutput
         float const scale,
         MirOrientation orientation);
 
-    static int next_output_id;
-};
-
-class DisplayConfiguration : public graphics::DisplayConfiguration
-{
-public:
-    DisplayConfiguration(std::vector<graphics::DisplayConfigurationOutput> const& outputs);
+    DisplayConfiguration(std::vector<DisplayConfigurationOutput> const& outputs);
     DisplayConfiguration(DisplayConfiguration const&);
 
     virtual ~DisplayConfiguration() = default;
 
     void for_each_card(std::function<void(DisplayConfigurationCard const&)> f) const override;
-    void for_each_output(std::function<void(graphics::DisplayConfigurationOutput const&)> f) const override;
+    void for_each_output(std::function<void(DisplayConfigurationOutput const&)> f) const override;
     void for_each_output(std::function<void(UserDisplayConfigurationOutput&)> f) override;
     std::unique_ptr<graphics::DisplayConfiguration> clone() const override;
 
 private:
-    std::vector<graphics::DisplayConfigurationOutput> configuration;
+    static int last_output_id;
+
+    std::vector<DisplayConfigurationOutput> configuration;
     DisplayConfigurationCard card;
 };
 

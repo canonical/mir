@@ -24,17 +24,20 @@ namespace mg = mir::graphics;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
 
-int mgx::DisplayConfigurationOutput::next_output_id{1};
+int mgx::DisplayConfiguration::last_output_id{0};
 
-mgx::DisplayConfigurationOutput::DisplayConfigurationOutput(
+std::unique_ptr<mg::DisplayConfigurationOutput> mgx::DisplayConfiguration::build_output(
     MirPixelFormat pf,
     geom::Size const pixels,
     geom::Point const top_left,
     geom::Size const size,
     const float scale,
     MirOrientation orientation)
-    : graphics::DisplayConfigurationOutput{
-            mg::DisplayConfigurationOutputId{next_output_id++},
+{
+    last_output_id++;
+    return std::unique_ptr<DisplayConfigurationOutput>(
+        new DisplayConfigurationOutput{
+            mg::DisplayConfigurationOutputId{last_output_id},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::unknown,
             {pf},
@@ -55,8 +58,7 @@ mgx::DisplayConfigurationOutput::DisplayConfigurationOutput(
             {},
             mir_output_gamma_unsupported,
             {},
-            {}}
-{
+            {}});
 }
 
 mgx::DisplayConfiguration::DisplayConfiguration(std::vector<mg::DisplayConfigurationOutput> const& configuration)

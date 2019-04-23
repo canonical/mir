@@ -257,14 +257,13 @@ mgx::Display::Display(::Display* x_dpy,
         auto pf = (red_mask == 0xFF0000 ?
             mir_pixel_format_argb_8888 :
             mir_pixel_format_abgr_8888);
-        auto configuration = static_cast<std::unique_ptr<graphics::DisplayConfigurationOutput>>(
-            std::make_unique<DisplayConfigurationOutput>(
-                pf,
-                actual_size,
-                top_left,
-                geom::Size{actual_size.width * pixel_width, actual_size.height * pixel_height},
-                1.0f,
-                mir_orientation_normal));
+        auto configuration = DisplayConfiguration::build_output(
+            pf,
+            actual_size,
+            top_left,
+            geom::Size{actual_size.width * pixel_width, actual_size.height * pixel_height},
+            1.0f,
+            mir_orientation_normal);
         auto display_buffer = std::make_unique<mgx::DisplayBuffer>(
             x_dpy,
             configuration->id,
@@ -298,7 +297,7 @@ void mgx::Display::for_each_display_sync_group(std::function<void(mg::DisplaySyn
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::Display::configuration() const
 {
-    std::vector<mg::DisplayConfigurationOutput> output_configurations;
+    std::vector<DisplayConfigurationOutput> output_configurations;
     for (auto const& output : outputs)
     {
         output_configurations.push_back(*output->configuration);
@@ -314,7 +313,7 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
             std::logic_error("Invalid or inconsistent display configuration"));
     }
 
-    new_configuration.for_each_output([&](graphics::DisplayConfigurationOutput const& conf_output)
+    new_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
     {
         bool found_info = false;
 
@@ -392,7 +391,7 @@ mg::Frame mgx::Display::last_frame_on(unsigned) const
 mgx::Display::OutputInfo::OutputInfo(
     std::unique_ptr<X11Window> window,
     std::unique_ptr<DisplayBuffer> display_buffer,
-    std::unique_ptr<graphics::DisplayConfigurationOutput> configuration)
+    std::unique_ptr<DisplayConfigurationOutput> configuration)
     : window{move(window)},
       display_buffer{move(display_buffer)},
       configuration{move(configuration)}
