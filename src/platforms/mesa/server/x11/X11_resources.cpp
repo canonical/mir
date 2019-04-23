@@ -38,7 +38,7 @@ int mx::mir_x11_error_handler(Display* dpy, XErrorEvent* eev)
     return 0;
 }
 
-std::shared_ptr<::Display> mx::X11Resources::get_conn()
+auto mx::X11Resources::get_conn() -> std::shared_ptr<::Display>
 {
     if (auto conn = connection.lock())
         return conn;
@@ -59,7 +59,9 @@ std::shared_ptr<::Display> mx::X11Resources::get_conn()
     return new_conn;
 }
 
-void mx::X11Resources::set_output_config_for_win(Window win, mg::DisplayConfigurationOutput* configuration)
+void mx::X11Resources::set_output_config_for_win(
+    Window win,
+    std::weak_ptr<graphics::DisplayConfigurationOutput const> configuration)
 {
     output_configs[win] = configuration;
 }
@@ -69,11 +71,17 @@ void mx::X11Resources::clear_output_config_for_win(Window win)
     output_configs.erase(win);
 }
 
-std::experimental::optional<mg::DisplayConfigurationOutput*> mx::X11Resources::get_output_config_for_win(Window win)
+auto mx::X11Resources::get_output_config_for_win(Window win)
+    -> std::experimental::optional<graphics::DisplayConfigurationOutput const* const>
 {
-    auto configuration = output_configs.find(win);
-    if (configuration != output_configs.end() && configuration->second != nullptr)
-        return {configuration->second};
+    auto iter = output_configs.find(win);
+    std::shared_ptr<graphics::DisplayConfigurationOutput const> configuration;
+    if (iter != output_configs.end() && (configuration = iter->second.lock()))
+    {
+        return {configuration.get()};
+    }
     else
+    {
         return std::experimental::nullopt;
+    }
 }

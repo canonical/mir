@@ -274,7 +274,7 @@ mgx::Display::Display(::Display* x_dpy,
             report,
             *gl_config);
         display_buffer->set_view_area(configuration->extents());
-        outputs.push_back(std::make_unique<OutputInfo>(move(window), move(display_buffer), move(configuration)));
+        outputs.push_back(std::make_unique<OutputInfo>(move(window), move(display_buffer), configuration));
         top_left.x = geom::X{top_left.x.as_int() + actual_size.width.as_int()};
     }
 
@@ -391,12 +391,12 @@ mg::Frame mgx::Display::last_frame_on(unsigned) const
 mgx::Display::OutputInfo::OutputInfo(
     std::unique_ptr<X11Window> window,
     std::unique_ptr<DisplayBuffer> display_buffer,
-    std::unique_ptr<DisplayConfigurationOutput> configuration)
+    std::shared_ptr<DisplayConfigurationOutput> configuration)
     : window{move(window)},
       display_buffer{move(display_buffer)},
-      configuration{move(configuration)}
+      configuration{configuration}
 {
-    mx::X11Resources::instance.set_output_config_for_win(*this->window, this->configuration.get());
+    mx::X11Resources::instance.set_output_config_for_win(*this->window, this->configuration);
 }
 
 mgx::Display::OutputInfo::~OutputInfo()

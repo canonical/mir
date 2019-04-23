@@ -26,7 +26,7 @@ namespace geom = mir::geometry;
 
 int mgx::DisplayConfiguration::last_output_id{0};
 
-std::unique_ptr<mg::DisplayConfigurationOutput> mgx::DisplayConfiguration::build_output(
+std::shared_ptr<mg::DisplayConfigurationOutput> mgx::DisplayConfiguration::build_output(
     MirPixelFormat pf,
     geom::Size const pixels,
     geom::Point const top_left,
@@ -35,7 +35,7 @@ std::unique_ptr<mg::DisplayConfigurationOutput> mgx::DisplayConfiguration::build
     MirOrientation orientation)
 {
     last_output_id++;
-    return std::unique_ptr<DisplayConfigurationOutput>(
+    return std::shared_ptr<DisplayConfigurationOutput>(
         new DisplayConfigurationOutput{
             mg::DisplayConfigurationOutputId{last_output_id},
             mg::DisplayConfigurationCardId{0},

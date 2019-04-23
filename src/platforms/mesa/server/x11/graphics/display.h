@@ -110,12 +110,12 @@ private:
         OutputInfo(
             std::unique_ptr<X11Window> window,
             std::unique_ptr<DisplayBuffer> display_buffer,
-            std::unique_ptr<DisplayConfigurationOutput> configuration);
+            std::shared_ptr<DisplayConfigurationOutput> configuration);
         ~OutputInfo();
 
         std::unique_ptr<X11Window> window;
         std::unique_ptr<DisplayBuffer> display_buffer;
-        std::unique_ptr<DisplayConfigurationOutput> configuration;
+        std::shared_ptr<DisplayConfigurationOutput> configuration;
     };
 
     std::vector<std::unique_ptr<OutputInfo>> outputs;

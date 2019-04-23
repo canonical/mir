@@ -33,7 +33,7 @@ namespace X
 class DisplayConfiguration : public graphics::DisplayConfiguration
 {
 public:
-    static std::unique_ptr<DisplayConfigurationOutput> build_output(
+    static std::shared_ptr<DisplayConfigurationOutput> build_output(
         MirPixelFormat pf,
         geometry::Size const pixels,
         geometry::Point const top_left,

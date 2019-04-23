@@ -38,16 +38,19 @@ int mir_x11_error_handler(Display* dpy, XErrorEvent* eev);
 class X11Resources
 {
 public:
-    std::shared_ptr<::Display> get_conn();
-    void set_output_config_for_win(Window win, graphics::DisplayConfigurationOutput* configuration);
+    auto get_conn() -> std::shared_ptr<::Display>;
+    void set_output_config_for_win(
+        Window win,
+        std::weak_ptr<graphics::DisplayConfigurationOutput const> configuration);
     void clear_output_config_for_win(Window win);
-    std::experimental::optional<graphics::DisplayConfigurationOutput*> get_output_config_for_win(Window win);
+    auto get_output_config_for_win(Window win)
+        -> std::experimental::optional<graphics::DisplayConfigurationOutput const* const>;
 
     static X11Resources instance;
 
 private:
     std::weak_ptr<::Display> connection;
-    std::unordered_map<Window, graphics::DisplayConfigurationOutput*> output_configs;
+    std::unordered_map<Window, std::weak_ptr<graphics::DisplayConfigurationOutput const>> output_configs;
 };
 
 }
