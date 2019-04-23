@@ -131,3 +131,37 @@ TEST_F(X11GraphicsPlatformTest, probe_returns_supported_when_drm_render_nodes_ex
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::supported, probe(nullptr, options));
 }
+
+TEST_F(X11GraphicsPlatformTest, parses_simple_output_size)
+{
+    using namespace ::testing;
+
+    auto str = "1280x720";
+    auto parsed = mg::X::Platform::parse_output_sizes(str);
+
+    EXPECT_THAT(parsed, Eq(std::vector<mir::geometry::Size>{{1280, 720}}));
+}
+
+TEST_F(X11GraphicsPlatformTest, parses_multiple_output_size)
+{
+    using namespace ::testing;
+
+    auto str = "1280x1024,600x600,30x750";
+    auto parsed = mg::X::Platform::parse_output_sizes(str);
+
+    EXPECT_THAT(parsed, Eq(std::vector<mir::geometry::Size>{{1280, 1024}, {600, 600}, {30, 750}}));
+}
+
+TEST_F(X11GraphicsPlatformTest, output_size_parsing_throws_on_bad_input)
+{
+    using namespace ::testing;
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("1280"), std::runtime_error);
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("1280x"), std::runtime_error);
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("x1280"), std::runtime_error);
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("1280x720,"), std::runtime_error);
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("1280x720,500"), std::runtime_error);
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("1280x1024:1280x1024"), std::runtime_error);
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("0x0"), std::runtime_error);
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("0x200"), std::runtime_error);
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("50x50,20,50x50"), std::runtime_error);
+}

@@ -64,10 +64,10 @@ auto parse_size(std::string const& str) -> geom::Size
 std::vector<geom::Size> mgx::Platform::parse_output_sizes(std::string output_sizes)
 {
     std::vector<geom::Size> sizes;
-    for (size_t start = 0, end; start < output_sizes.size(); start = end + 1)
+    for (int start = 0, end; start - 1 < (int)output_sizes.size(); start = end + 1)
     {
         end = output_sizes.find(',', start);
-        if (end == std::string::npos)
+        if (end == (int)std::string::npos)
             end = output_sizes.size();
         sizes.push_back(parse_size(output_sizes.substr(start, end - start)));
     }
