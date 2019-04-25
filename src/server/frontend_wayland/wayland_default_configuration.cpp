@@ -36,10 +36,6 @@ namespace mo = mir::options;
 
 namespace
 {
-auto const wl_shell       = "wl_shell";
-auto const xdg_shell      = "xdg_wm_base";
-auto const xdg_shell_v6   = "zxdg_shell_v6";
-auto const layer_shell_v1 = "zwlr_layer_shell_v1";
 
 auto configure_wayland_extensions(std::string extensions,
     bool x11_enabled,
@@ -61,18 +57,33 @@ auto configure_wayland_extensions(std::string extensions,
             mf::WlSeat* seat,
             mf::OutputManager* const output_manager)
         {
-            if (extension.find(wl_shell) != extension.end())
-                add_extension(wl_shell, mf::create_wl_shell(display, shell, seat, output_manager));
+            if (extension.find(mir::wayland::Shell::interface_name) != extension.end())
+            {
+                add_extension(
+                    mir::wayland::Shell::interface_name,
+                    mf::create_wl_shell(display, shell, seat, output_manager));
+            }
 
-            if (extension.find(xdg_shell_v6) != extension.end())
-                add_extension(xdg_shell_v6, std::make_shared<mf::XdgShellV6>(display, shell, *seat, output_manager));
+            if (extension.find(mf::XdgShellV6::interface_name) != extension.end())
+            {
+                add_extension(
+                    mf::XdgShellV6::interface_name,
+                    std::make_shared<mf::XdgShellV6>(display, shell, *seat, output_manager));
+            }
 
-            if (extension.find(xdg_shell) != extension.end())
-                add_extension(xdg_shell, std::make_shared<mf::XdgShellStable>(display, shell, *seat, output_manager));
+            if (extension.find(mf::XdgShellStable::interface_name) != extension.end())
+            {
+                add_extension(
+                    mf::XdgShellStable::interface_name,
+                    std::make_shared<mf::XdgShellStable>(display, shell, *seat, output_manager));
+            }
 
-            if (extension.find(layer_shell_v1) != extension.end())
-                add_extension(layer_shell_v1, std::make_shared<mf::LayerShellV1>(display, shell, *seat,
-                                                                                 output_manager));
+            if (extension.find(mf::LayerShellV1::interface_name) != extension.end())
+            {
+                add_extension(
+                    mf::LayerShellV1::interface_name,
+                    std::make_shared<mf::LayerShellV1>(display, shell, *seat, output_manager));
+            }
 
             std::function<void(std::function<void()>&& work)> run_on_wayland_mainloop = [seat](std::function<void()>&& work)
                 {
