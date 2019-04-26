@@ -24,11 +24,20 @@ namespace mg = mir::graphics;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
 
-mg::DisplayConfigurationOutputId const mgx::DisplayConfiguration::the_output_id{1};
+int mgx::DisplayConfiguration::last_output_id{0};
 
-mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, geom::Size const pixels, geom::Size const size, const float scale, MirOrientation orientation) :
-    configuration{
-            the_output_id,
+std::shared_ptr<mg::DisplayConfigurationOutput> mgx::DisplayConfiguration::build_output(
+    MirPixelFormat pf,
+    geom::Size const pixels,
+    geom::Point const top_left,
+    geom::Size const size,
+    const float scale,
+    MirOrientation orientation)
+{
+    last_output_id++;
+    return std::shared_ptr<DisplayConfigurationOutput>(
+        new DisplayConfigurationOutput{
+            mg::DisplayConfigurationOutputId{last_output_id},
             mg::DisplayConfigurationCardId{0},
             mg::DisplayConfigurationOutputType::unknown,
             {pf},
@@ -38,7 +47,7 @@ mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, geom::Size co
             size,
             true,
             true,
-            geom::Point{0, 0},
+            top_left,
             0,
             pf,
             mir_power_mode_on,
@@ -49,8 +58,12 @@ mgx::DisplayConfiguration::DisplayConfiguration(MirPixelFormat pf, geom::Size co
             {},
             mir_output_gamma_unsupported,
             {},
-            {}},
-    card{mg::DisplayConfigurationCardId{0}, 1}
+            {}});
+}
+
+mgx::DisplayConfiguration::DisplayConfiguration(std::vector<mg::DisplayConfigurationOutput> const& configuration)
+    : configuration{configuration},
+      card{mg::DisplayConfigurationCardId{0}, configuration.size()}
 {
 }
 
@@ -68,13 +81,19 @@ void mgx::DisplayConfiguration::for_each_card(std::function<void(mg::DisplayConf
 
 void mgx::DisplayConfiguration::for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> f) const
 {
-    f(configuration);
+    for (auto const& output : configuration)
+    {
+        f(output);
+    }
 }
 
 void mgx::DisplayConfiguration::for_each_output(std::function<void(mg::UserDisplayConfigurationOutput&)> f)
 {
-    mg::UserDisplayConfigurationOutput user(configuration);
-    f(user);
+    for (auto& output : configuration)
+    {
+        mg::UserDisplayConfigurationOutput user(output);
+        f(user);
+    }
 }
 
 std::unique_ptr<mg::DisplayConfiguration> mgx::DisplayConfiguration::clone() const

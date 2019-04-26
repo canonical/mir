@@ -49,13 +49,15 @@ public:
 
     std::shared_ptr<mg::Platform> create_platform()
     {
-        return std::make_shared<mg::X::Platform>(std::shared_ptr<::Display>(
+        return std::make_shared<mg::X::Platform>(
+            std::shared_ptr<::Display>(
                 XOpenDisplay(nullptr),
                 [](::Display* display)
                 {
                     XCloseDisplay(display);
-                }), mir::geometry::Size{1280,1024},
-                std::make_shared<mir::report::null::DisplayReport>());
+                }),
+            std::vector<mir::geometry::Size>{{1280, 1024}},
+            std::make_shared<mir::report::null::DisplayReport>());
     }
 
     ::testing::NiceMock<mtd::MockDRM> mock_drm;
@@ -128,4 +130,42 @@ TEST_F(X11GraphicsPlatformTest, probe_returns_supported_when_drm_render_nodes_ex
     mir::SharedLibrary platform_lib{mtf::server_platform("server-mesa-x11")};
     auto probe = platform_lib.load_function<mg::PlatformProbe>(probe_platform);
     EXPECT_EQ(mg::PlatformPriority::supported, probe(nullptr, options));
+}
+
+TEST_F(X11GraphicsPlatformTest, parses_simple_output_size)
+{
+    using namespace ::testing;
+
+    auto str = "1280x720";
+    auto parsed = mg::X::Platform::parse_output_sizes(str);
+
+    EXPECT_THAT(parsed, Eq(std::vector<mir::geometry::Size>{{1280, 720}}));
+}
+
+TEST_F(X11GraphicsPlatformTest, parses_multiple_output_size)
+{
+    using namespace ::testing;
+
+    auto str = "1280x1024:600x600:30x750";
+    auto parsed = mg::X::Platform::parse_output_sizes(str);
+
+    EXPECT_THAT(parsed, Eq(std::vector<mir::geometry::Size>{{1280, 1024}, {600, 600}, {30, 750}}));
+}
+
+TEST_F(X11GraphicsPlatformTest, output_size_parsing_throws_on_bad_input)
+{
+    using namespace ::testing;
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("1280"), std::runtime_error) << "No height or 'x'";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("1280x"), std::runtime_error) << "No height";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("x1280"), std::runtime_error) << "No width";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("=20x40"), std::runtime_error) << "Random equals";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("20x30x40"), std::runtime_error) << "Too many dimensions";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("1280x720:"), std::runtime_error) << "Ends with delim";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes(":1280x720"), std::runtime_error) << "Starts with delim";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("1280x720:500"), std::runtime_error) << "No height or x on 2nd size";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("50x50:x20:50x50"), std::runtime_error) << "No width on 2nd size";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("1280x1024,1280x1024"), std::runtime_error) << "Uses comma delim";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("0x0"), std::runtime_error) << "Zero size";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("0x200"), std::runtime_error) << "Zero width";
+    EXPECT_THROW(mg::X::Platform::parse_output_sizes("200x-300"), std::runtime_error) << "Negative height";
 }

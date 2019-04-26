@@ -35,8 +35,6 @@ namespace mx = mir::X;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
 
-mx::X11Resources x11_resources;
-
 namespace
 {
 char const* x11_displays_option_name{"x11-output"};
@@ -50,19 +48,14 @@ mir::UniqueModulePtr<mg::Platform> create_host_platform(
     std::shared_ptr<mir::logging::Logger> const& /*logger*/)
 {
     mir::assert_entry_point_signature<mg::CreateHostPlatform>(&create_host_platform);
-    if (!x11_resources.get_conn())
+    if (!mx::X11Resources::instance.get_conn())
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 output"));
 
-    auto display_dims_str = options->get<std::string>(x11_displays_option_name);
-    auto pos = display_dims_str.find('x');
-    if (pos == std::string::npos)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Malformed output size option"));
+    auto output_sizes = mgx::Platform::parse_output_sizes(options->get<std::string>(x11_displays_option_name));
 
     return mir::make_module_ptr<mgx::Platform>(
-        x11_resources.get_conn(),
-        geom::Size{
-            std::stoi(display_dims_str.substr(0, pos)),
-            std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))},
+        mx::X11Resources::instance.get_conn(),
+        output_sizes,
         report
     );
 }
@@ -73,7 +66,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     config.add_options()
         (x11_displays_option_name,
          boost::program_options::value<std::string>()->default_value("1280x1024"),
-         "[mir-on-X specific] WIDTHxHEIGHT of \"output\" window.");
+         "[mir-on-X specific] Colon separated list of WIDTHxHEIGHT sizes for \"output\" windows.");
 }
 
 mg::PlatformPriority probe_graphics_platform(
@@ -125,20 +118,15 @@ mir::UniqueModulePtr<mir::graphics::DisplayPlatform> create_display_platform(
 {
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
 
-    if (!x11_resources.get_conn())
+    if (!mx::X11Resources::instance.get_conn())
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 output"));
 
-    auto display_dims_str = options->get<std::string>(x11_displays_option_name);
-    auto pos = display_dims_str.find('x');
-    if (pos == std::string::npos)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Malformed output size option"));
+    auto output_sizes = mgx::Platform::parse_output_sizes(options->get<std::string>(x11_displays_option_name));
 
     return mir::make_module_ptr<mgx::Platform>(
-               x11_resources.get_conn(),
-               geom::Size{std::stoi(display_dims_str.substr(0, pos)),
-                          std::stoi(display_dims_str.substr(pos+1, display_dims_str.find(':')))},
-               report
-           );
+        mx::X11Resources::instance.get_conn(),
+        output_sizes,
+        report);
 }
 
 mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform(

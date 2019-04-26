@@ -30,6 +30,7 @@ namespace mgx=mg::X;
 namespace geom=mir::geometry;
 
 mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
+                                  DisplayConfigurationOutputId output_id,
                                   Window const win,
                                   geometry::Size const& view_area_size,
                                   EGLContext const shared_context,
@@ -41,6 +42,7 @@ mgx::DisplayBuffer::DisplayBuffer(::Display* const x_dpy,
                                     transform(1),
                                     egl{gl_config},
                                     last_frame{f},
+                                    output_id{output_id},
                                     eglGetSyncValues{nullptr}
 {
     egl.setup(x_dpy, win, shared_context);
@@ -137,8 +139,7 @@ void mgx::DisplayBuffer::swap_buffers()
      * but this is best-effort. And besides, we don't want Mir reporting all
      * real vsyncs because that would mean the compositor never sleeps.
      */
-    report->report_vsync(mgx::DisplayConfiguration::the_output_id.as_value(),
-                         last_frame->load());
+    report->report_vsync(output_id.as_value(), last_frame->load());
 }
 
 void mgx::DisplayBuffer::bind()

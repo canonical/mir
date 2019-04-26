@@ -21,21 +21,68 @@
 #include "buffer_allocator.h"
 #include "ipc_operations.h"
 #include "mesa_extensions.h"
+#include "mir/options/option.h"
 
+namespace mo = mir::options;
 namespace mg = mir::graphics;
 namespace mgm = mg::mesa;
 namespace mgx = mg::X;
 namespace geom = mir::geometry;
 
+namespace
+{
+auto parse_size_dimension(std::string const& str) -> int
+{
+    try
+    {
+        size_t num_end = 0;
+        int const value = std::stoi(str, &num_end);
+        if (num_end != str.size())
+            BOOST_THROW_EXCEPTION(std::runtime_error("Output dimension \"" + str + "\" is not a valid number"));
+        if (value <= 0)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Output dimensions must be greater than zero"));
+        return value;
+    }
+    catch (std::invalid_argument const &e)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Output dimension \"" + str + "\" is not a valid number"));
+    }
+}
+
+auto parse_size(std::string const& str) -> geom::Size
+{
+    size_t x = str.find('x');
+    if (x == std::string::npos || x <= 0 || x >= str.size() - 1)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Output size \"" + str + "\" does not have two dimensions"));
+    return geom::Size{
+        parse_size_dimension(str.substr(0, x)),
+        parse_size_dimension(str.substr(x + 1, std::string::npos))};
+
+}
+}
+
+std::vector<geom::Size> mgx::Platform::parse_output_sizes(std::string output_sizes)
+{
+    std::vector<geom::Size> sizes;
+    for (int start = 0, end; start - 1 < (int)output_sizes.size(); start = end + 1)
+    {
+        end = output_sizes.find(':', start);
+        if (end == (int)std::string::npos)
+            end = output_sizes.size();
+        sizes.push_back(parse_size(output_sizes.substr(start, end - start)));
+    }
+    return sizes;
+}
+
 mgx::Platform::Platform(std::shared_ptr<::Display> const& conn,
-                        geom::Size const size,
+                        std::vector<geom::Size> const output_sizes,
                         std::shared_ptr<mg::DisplayReport> const& report)
     : x11_connection{conn},
       udev{std::make_shared<mir::udev::Context>()},
       drm{mgm::helpers::DRMHelper::open_any_render_node(udev)},
       report{report},
       gbm{drm->fd},
-      size{size}
+      output_sizes{output_sizes}
 {
     if (!x11_connection)
         BOOST_THROW_EXCEPTION(std::runtime_error("Need valid x11 display"));
@@ -53,8 +100,7 @@ mir::UniqueModulePtr<mg::Display> mgx::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const& /*initial_conf_policy*/,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-    return make_module_ptr<mgx::Display>(x11_connection.get(), size, gl_config,
-                                         report);
+    return make_module_ptr<mgx::Display>(x11_connection.get(), output_sizes, gl_config, report);
 }
 
 mg::NativeDisplayPlatform* mgx::Platform::native_display_platform()
