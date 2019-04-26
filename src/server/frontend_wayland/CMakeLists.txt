@@ -1,4 +1,4 @@
-include_directories(../frontend_xwayland ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(../frontend_xwayland ${CMAKE_CURRENT_BINARY_DIR})
 
 # One day, maybe, we can add include dependences to an OBJECT library. Until then...
 get_property(mirwayland_includes TARGET mirwayland PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
@@ -30,7 +30,23 @@ set(
   deleted_for_resource.cpp      deleted_for_resource.h
   wl_region.cpp                 wl_region.h
   ${PROJECT_SOURCE_DIR}/include/server/mir/frontend/wayland.h
-  wayland_frontend.tp.c         wayland_frontend.tp.h
+  ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
+  ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h
+)
+
+add_custom_command(
+  OUTPUT
+    ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
+    ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h
+  COMMAND
+    lttng-gen-tp
+        ${CMAKE_CURRENT_SOURCE_DIR}/wayland_frontend.tp
+        -o wayland_frontend.tp.h
+        -o wayland_frontend.tp.c
+  WORKING_DIRECTORY
+    ${CMAKE_CURRENT_BINARY_DIR}
+  DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/wayland_frontend.tp
 )
 
 add_library(mirfrontend-wayland OBJECT
