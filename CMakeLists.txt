@@ -287,16 +287,6 @@ include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
 include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
 include_directories (SYSTEM ${GLM_INCLUDE_DIRS})
 
-# Add USDT hooks to all LTTNG tracepoints
-#
-# This might be gnarly; this tweaks an LTTNG header to enable its
-# USDT integration. The integration only involves #include-ing a
-# SystemTap header and calling a macro from it in the LTTNG macro,
-# but there aren't guarantees this won't change in future.
-add_definitions(  # Drop in favour of add_compile_definitions when we drop 16.04
-  -DLTTNG_UST_HAVE_SDT_INTEGRATION
-)
-
 #
 # Full OpenGL support is possibly complete but not yet perfect. So is
 # presently disabled by default due to:

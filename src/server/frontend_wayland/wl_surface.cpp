@@ -27,8 +27,6 @@
 
 #include "wayland_wrapper.h"
 
-#include "wayland_frontend.tp.h"
-
 #include "mir/graphics/buffer_properties.h"
 #include "mir/frontend/session.h"
 #include "mir/compositor/buffer_stream.h"
@@ -334,11 +332,6 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                 mir_buffer = WlShmBuffer::mir_buffer_from_wl_buffer(
                     buffer,
                     std::move(executor_send_frame_callbacks));
-                tracepoint(
-                    mir_server_wayland,
-                    sw_buffer_committed,
-                    wl_resource_get_client(resource),
-                    mir_buffer->id().as_value());
             }
             else
             {
@@ -355,11 +348,6 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     buffer,
                     std::move(executor_send_frame_callbacks),
                     std::move(release_buffer));
-                tracepoint(
-                    mir_server_wayland,
-                    hw_buffer_committed,
-                    wl_resource_get_client(resource),
-                    mir_buffer->id().as_value());
             }
 
             if (!input_shape && (!buffer_size_ || mir_buffer->size() != buffer_size_.value()))

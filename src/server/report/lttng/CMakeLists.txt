@@ -9,6 +9,16 @@ add_compile_options(
   -Wno-error=unused-parameter
 )
 
+# Add USDT hooks to all LTTNG tracepoints
+#
+# This might be gnarly; this tweaks an LTTNG header to enable its
+# USDT integration. The integration only involves #include-ing a
+# SystemTap header and calling a macro from it in the LTTNG macro,
+# but there aren't guarantees this won't change in future.
+add_definitions(  # Drop in favour of add_compile_definitions when we drop 16.04
+  -DLTTNG_UST_HAVE_SDT_INTEGRATION
+)
+
 # Using LTO on the lttng DSO causes a gcc ICE.
 # Since LTO is reasonably uninteresting for the lttng tracer, disable it.
 string(REPLACE "-flto" "" NO_LTO_FLAGS ${CMAKE_C_FLAGS})
