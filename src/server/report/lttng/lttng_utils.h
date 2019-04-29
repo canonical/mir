@@ -22,6 +22,20 @@
 #ifndef _MIR_LTTNG_UTILS_H_
 #define _MIR_LTTNG_UTILS_H_
 
+#ifdef MIR_LTTNG_HAS_VOID_TRACEPOINTS
+#define MIR_LTTNG_VOID_TRACE_CALL(klass, comp, name) \
+    void mir::report::lttng::klass::name()           \
+    {                                                \
+        mir_tracepoint(comp, name);                  \
+    }
+
+#define MIR_LTTNG_VOID_TRACE_CLASS(comp) \
+    TRACEPOINT_EVENT_CLASS(comp, dummy_event, TP_ARGS(void), TP_FIELDS())
+#define MIR_LTTNG_VOID_TRACE_POINT(comp, name) \
+    TRACEPOINT_EVENT_INSTANCE(comp, dummy_event, name, TP_ARGS(void))
+
+#else   // LTTNG does not support void tracepoints; add a dummy integer
+
 #define MIR_LTTNG_VOID_TRACE_CALL(klass, comp, name) \
     void mir::report::lttng::klass::name()           \
     {                                                \
@@ -32,5 +46,7 @@
     TRACEPOINT_EVENT_CLASS(comp, dummy_event, TP_ARGS(int,empty), TP_FIELDS(ctf_integer(int,empty,empty)))
 #define MIR_LTTNG_VOID_TRACE_POINT(comp, name) \
     TRACEPOINT_EVENT_INSTANCE(comp, dummy_event, name, TP_ARGS(int,empty))
+#endif
+
 
 #endif

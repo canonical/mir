@@ -24,6 +24,16 @@ add_definitions(  # Drop in favour of add_compile_definitions when we drop 16.04
 string(REPLACE "-flto" "" NO_LTO_FLAGS ${CMAKE_C_FLAGS})
 set(CMAKE_C_FLAGS ${NO_LTO_FLAGS})
 
+if (LTTNG_UST_VERSION VERSION_GREATER 2.9)
+    add_definitions(-DMIR_LTTNG_HAS_VOID_TRACEPOINTS)
+endif()
+
+# lttng relies on a gcc extension to support backward-compatible code, So...
+check_cxx_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments MIR_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
+if ("${CMAKE_CXX_COMPILER}" MATCHES ".*clang.*" AND MIR_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
+endif()
+
 # lttng-ust uses urcu headers which contain code blocks inside expressions 
 # this is a gnu extension.
 string(REPLACE "-pedantic" "" NO_PEDANTIC_CHECK_FLAGS ${CMAKE_CXX_FLAGS})
