@@ -49,6 +49,16 @@ add_custom_command(
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_frontend.tp
 )
 
+check_cxx_compiler_flag(-Wgnu-empty-initializer HAS_W_GNU_EMPTY_INITIALIZER)
+if (HAS_W_GNU_EMPTY_INITIALIZER)
+  set_source_files_properties(
+    ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
+    ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h
+    PROPERTIES
+      COMPILE_FLAGS -Wno-error=gnu-empty-initializer
+  )
+endif()
+
 add_library(mirfrontend-wayland OBJECT
 
   ${WAYLAND_SOURCES}
