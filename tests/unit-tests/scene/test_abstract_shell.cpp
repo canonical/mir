@@ -158,7 +158,7 @@ struct AbstractShell : Test
     }
 
     std::chrono::nanoseconds const event_timestamp = std::chrono::nanoseconds(0);
-    std::vector<uint8_t> const cookie;
+    std::vector<uint8_t> const cookie{};
     mg::BufferProperties properties { geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software};
 };
 }
