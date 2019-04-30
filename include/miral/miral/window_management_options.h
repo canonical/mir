@@ -53,7 +53,7 @@ inline auto add_window_manager_policy(std::string const& name, Args&... args) ->
 class WindowManagerOptions
 {
 public:
-    WindowManagerOptions();
+    WindowManagerOptions() = delete;
     explicit WindowManagerOptions(std::initializer_list<WindowManagerOption> const& policies) : policies(policies) {}
 
     void operator()(mir::Server& server) const;

@@ -36,11 +36,6 @@ char const* const wm_system_compositor = "system-compositor";
 char const* const trace_option = "window-management-trace";
 }
 
-miral::WindowManagerOptions::WindowManagerOptions()
-    : policies{}
-{
-}
-
 void miral::WindowManagerOptions::operator()(mir::Server& server) const
 {
     std::string description = "window management strategy [{";
