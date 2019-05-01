@@ -1,0 +1,23 @@
+TRACEPOINT_EVENT_CLASS(
+    mir_server_wayland,
+    buffer_committed,
+    TP_ARGS(void*, client, int, buffer_id),
+    TP_FIELDS(
+        ctf_integer_hex(uintptr_t, client, (uintptr_t)(client))
+        ctf_integer(int, buffer_id, buffer_id)
+    )
+)
+
+TRACEPOINT_EVENT_INSTANCE(
+    mir_server_wayland,
+    buffer_committed,
+    sw_buffer_committed,
+    TP_ARGS(void*, client, int, buffer_id)
+)
+
+TRACEPOINT_EVENT_INSTANCE(
+    mir_server_wayland,
+    buffer_committed,
+    hw_buffer_committed,
+    TP_ARGS(void*, client, int, buffer_id)
+)
