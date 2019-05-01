@@ -49,15 +49,24 @@ add_custom_command(
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_frontend.tp
 )
 
+# Inconveniently, GCC on 16.04 hits an ICE when attempting to use LTO
+# on the tracepoints. Fortunately we can turn it off for just that translation
+# unit.
+if (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 6))
+  set(TRACEPOINT_COMPILE_FLAGS "-fno-lto")
+endif()
+
 check_cxx_compiler_flag(-Wgnu-empty-initializer HAS_W_GNU_EMPTY_INITIALIZER)
 if (HAS_W_GNU_EMPTY_INITIALIZER)
-  set_source_files_properties(
-    ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
-    ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h
-    PROPERTIES
-      COMPILE_FLAGS -Wno-error=gnu-empty-initializer
-  )
+  set(TRACEPOINT_COMPILE_FLAGS "${TRACEPOINT_COMPILE_FLAGS} -Wno-error=gnu-empty-initializer")
 endif()
+
+set_source_files_properties(
+        ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
+        ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h
+        PROPERTIES
+        COMPILE_FLAGS ${TRACEPOINT_COMPILE_FLAGS}
+)
 
 add_library(mirfrontend-wayland OBJECT
 
