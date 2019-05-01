@@ -182,7 +182,7 @@ void mf::Output::resource_destructor(wl_resource* resource)
 
 
 mf::OutputManager::OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config) :
-    display_config{display_config},
+    display_config_{display_config},
     display{display}
 {
     display_config->register_interest(this);
@@ -191,7 +191,7 @@ mf::OutputManager::OutputManager(wl_display* display, std::shared_ptr<MirDisplay
 
 mf::OutputManager::~OutputManager()
 {
-    display_config->unregister_interest(this);
+    display_config_->unregister_interest(this);
 }
 
 auto mf::OutputManager::output_id_for(
