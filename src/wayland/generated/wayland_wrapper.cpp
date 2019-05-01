@@ -22,8 +22,7 @@ void internal_error_processing_request(struct wl_client* client, std::string con
     wl_client_post_implementation_error(
         client,
         "Mir internal error processing %s request",
-        method_name.c_str(),
-        "Exception processing " + method_name + " request");
+        method_name.c_str());
 #else
     wl_client_post_no_memory(client);
 #endif

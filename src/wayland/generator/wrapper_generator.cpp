@@ -85,8 +85,7 @@ Emitter post_error_helper()
                 Emitter::seq({
                         "client",
                         "\"Mir internal error processing %s request\"",
-                        "method_name.c_str()",
-                        "\"Exception processing \" + method_name + \" request\""},
+                        "method_name.c_str()"},
                     Emitter::layout(",", false, true))},
                 true,
                 false,
