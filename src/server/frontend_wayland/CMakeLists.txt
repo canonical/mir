@@ -65,7 +65,7 @@ set_source_files_properties(
         ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
         ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h
         PROPERTIES
-        COMPILE_FLAGS ${TRACEPOINT_COMPILE_FLAGS}
+        COMPILE_FLAGS "${TRACEPOINT_COMPILE_FLAGS}"
 )
 
 add_library(mirfrontend-wayland OBJECT
