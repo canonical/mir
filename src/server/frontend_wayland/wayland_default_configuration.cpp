@@ -80,7 +80,7 @@ auto configure_wayland_extensions(std::string extensions,
             {
                 add_extension(
                     xdg_output_v1,
-                    std::make_shared<mf::XdgOutputManagerV1>(display, output_manager));
+                    create_xdg_output_manager_v1(display, output_manager));
             }
 
             std::function<void(std::function<void()>&& work)> run_on_wayland_mainloop = [seat](std::function<void()>&& work)

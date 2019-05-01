@@ -19,7 +19,7 @@
 #include "xdg_output_v1.h"
 
 #include "wl_surface.h"
-
+#include "xdg-output-unstable-v1_wrapper.h"
 #include "mir/log.h"
 #include "output_manager.h"
 #include <boost/throw_exception.hpp>
@@ -32,6 +32,24 @@ namespace mir
 {
 namespace frontend
 {
+
+class XdgOutputManagerV1 : public wayland::XdgOutputManagerV1
+{
+public:
+    XdgOutputManagerV1(struct wl_display* display, OutputManager* const output_manager);
+    ~XdgOutputManagerV1() = default;
+
+private:
+    void destroy(struct wl_client* client, struct wl_resource* resource) override;
+
+    void get_xdg_output(
+        struct wl_client* client,
+        struct wl_resource* resource,
+        uint32_t id,
+        struct wl_resource* output) override;
+
+    OutputManager* const output_manager;
+};
 
 class XdgOutputV1 : public wayland::XdgOutputV1
 {
@@ -47,6 +65,12 @@ private:
 };
 
 }
+}
+
+auto mf::create_xdg_output_manager_v1(struct wl_display* display, OutputManager* const output_manager)
+    -> std::shared_ptr<XdgOutputManagerV1>
+{
+    return std::make_shared<XdgOutputManagerV1>(display, output_manager);
 }
 
 mf::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_display* display, mf::OutputManager* const output_manager)
