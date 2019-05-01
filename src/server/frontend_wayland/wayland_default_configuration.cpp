@@ -22,6 +22,7 @@
 #include "wayland_connector.h"
 #include "xdg_shell_v6.h"
 #include "xdg_shell_stable.h"
+#include "xdg_output_v1.h"
 #include "layer_shell_v1.h"
 #include "xwayland_wm_shell.h"
 #include "mir_display.h"
@@ -40,6 +41,7 @@ auto const wl_shell       = "wl_shell";
 auto const xdg_shell      = "xdg_wm_base";
 auto const xdg_shell_v6   = "zxdg_shell_v6";
 auto const layer_shell_v1 = "zwlr_layer_shell_v1";
+auto const xdg_output_v1  = "zxdg_output_v1";
 
 auto configure_wayland_extensions(std::string extensions,
     bool x11_enabled,
@@ -73,6 +75,13 @@ auto configure_wayland_extensions(std::string extensions,
             if (extension.find(layer_shell_v1) != extension.end())
                 add_extension(layer_shell_v1, std::make_shared<mf::LayerShellV1>(display, shell, *seat,
                                                                                  output_manager));
+
+            if (extension.find(xdg_output_v1) != extension.end())
+            {
+                add_extension(
+                    xdg_output_v1,
+                    std::make_shared<mf::XdgOutputManagerV1>(display, output_manager));
+            }
 
             std::function<void(std::function<void()>&& work)> run_on_wayland_mainloop = [seat](std::function<void()>&& work)
                 {

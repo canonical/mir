@@ -35,7 +35,7 @@ struct miral::WaylandExtensions::Self
 {
     Self(std::string const& default_value) : default_value{default_value}
     {
-        available_extensions += ":zwlr_layer_shell_v1:";
+        available_extensions += ":zwlr_layer_shell_v1:zxdg_output_v1:";
         validate(default_value);
     }
 

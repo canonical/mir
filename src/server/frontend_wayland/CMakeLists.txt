@@ -26,6 +26,7 @@ set(
   wl_touch.cpp                  wl_touch.h
   xdg_shell_v6.cpp              xdg_shell_v6.h
   xdg_shell_stable.cpp          xdg_shell_stable.h
+  xdg_output_v1.cpp             xdg_output_v1.h
   layer_shell_v1.cpp            layer_shell_v1.h
   deleted_for_resource.cpp      deleted_for_resource.h
   wl_region.cpp                 wl_region.h
