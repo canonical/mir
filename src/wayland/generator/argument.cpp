@@ -36,6 +36,21 @@ Emitter fd_mir2wl(Argument const* me)
     return Line{"int32_t ", me->name, "_resolved{", me->name, "};"};
 }
 
+Emitter new_id_wl2mir(Argument const* me)
+{
+    return Lines{
+        {"wl_resource* ", me->name, "_resolved{"},
+        {Emitter::layout({
+            "wl_resource_create(client, ", me->object_type_fragment(), ", wl_resource_get_version(resource), ", me->name, ")"
+        }, true, false, Emitter::single_indent), "};"},
+        {"if (", me->name, "_resolved == nullptr)"},
+        Block{
+            "wl_client_post_no_memory(client);",
+            "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
+        }
+    };
+}
+
 Emitter fixed_wl2mir(Argument const* me)
 {
     return Line{"double ", me->name, "_resolved{wl_fixed_to_double(", me->name, ")};"};
@@ -103,7 +118,7 @@ std::unordered_map<std::string, Argument::TypeDescriptor const> const request_ty
     { "fd", { "mir::Fd", "int32_t", "h", { fd_wl2mir } }},
     { "object", { "struct wl_resource*", "struct wl_resource*", "o", {} }},
     { "string", { "std::string const&", "char const*", "s", {} }},
-    { "new_id", { "uint32_t", "uint32_t", "n", {} }},
+    { "new_id", { "struct wl_resource*", "uint32_t", "n", {new_id_wl2mir} }},
     { "fixed", { "double", "wl_fixed_t", "f", { fixed_wl2mir } }},
     { "array", { "struct wl_array*", "struct wl_array*", "a", {} }}
 };

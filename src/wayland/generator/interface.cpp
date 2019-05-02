@@ -152,12 +152,11 @@ Emitter Interface::constructor_impl() const
     {
         return Lines{
             {nmspace, generated_name, "(", constructor_args(), ")"},
-            {"    : client{client},"},
-            {"      resource{wl_resource_create(client, &", wl_name, "_interface_data, wl_resource_get_version(parent), id)}"},
+            {"    : client{wl_resource_get_client(resource)},"},
+            {"      resource{resource}"},
             Block{
                 "if (resource == nullptr)",
                 Block{
-                    "wl_resource_post_no_memory(parent);",
                     "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
                 },
                 (has_vtable ?
@@ -176,7 +175,7 @@ Emitter Interface::constructor_args() const
     }
     else
     {
-        return {"struct wl_client* client, struct wl_resource* parent, uint32_t id"};
+        return {"struct wl_resource* resource"};
     }
 }
 
@@ -361,8 +360,13 @@ Emitter Interface::bind_thunk() const
         "static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)",
         Block{
             {"auto me = static_cast<", generated_name, "*>(data);"},
-            {"auto resource = wl_resource_create(client, &", wl_name, "_interface_data,"},
-            {"                                   std::min(version, me->max_version), id);"},
+            {"auto resource = wl_resource_create("},
+            Emitter::layout(Lines{
+                "client,",
+                {"&", wl_name, "_interface_data,"},
+                "std::min(version, me->max_version),",
+                "id);",
+            }, true, false, Emitter::single_indent),
             "if (resource == nullptr)",
             Block{
                 "wl_client_post_no_memory(client);",
