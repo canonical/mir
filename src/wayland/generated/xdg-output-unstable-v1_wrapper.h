@@ -40,7 +40,7 @@ private:
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
     virtual void destroy(struct wl_client* client, struct wl_resource* resource) = 0;
-    virtual void get_xdg_output(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* output) = 0;
+    virtual void get_xdg_output(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* output) = 0;
 };
 
 class XdgOutputV1
@@ -51,7 +51,7 @@ public:
 
     static XdgOutputV1* from(struct wl_resource*);
 
-    XdgOutputV1(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    XdgOutputV1(struct wl_resource* resource);
     virtual ~XdgOutputV1() = default;
 
     void send_logical_position_event(int32_t x, int32_t y) const;

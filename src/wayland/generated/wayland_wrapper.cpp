@@ -86,13 +86,12 @@ struct mw::Callback::Thunks
     static struct wl_message const event_messages[];
 };
 
-mw::Callback::Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &wl_callback_interface_data, wl_resource_get_version(parent), id)}
+mw::Callback::Callback(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
 }
@@ -122,9 +121,16 @@ struct mw::Compositor::Thunks
     static void create_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<Compositor*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &wl_surface_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->create_surface(client, resource, id);
+            me->create_surface(client, resource, id_resolved);
         }
         catch(...)
         {
@@ -135,9 +141,16 @@ struct mw::Compositor::Thunks
     static void create_region_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<Compositor*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &wl_region_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->create_region(client, resource, id);
+            me->create_region(client, resource, id_resolved);
         }
         catch(...)
         {
@@ -148,8 +161,11 @@ struct mw::Compositor::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Compositor*>(data);
-        auto resource = wl_resource_create(client, &wl_compositor_interface_data,
-                                           std::min(version, me->max_version), id);
+        auto resource = wl_resource_create(
+            client,
+            &wl_compositor_interface_data,
+            std::min(version, me->max_version),
+            id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -218,9 +234,16 @@ struct mw::ShmPool::Thunks
     static void create_buffer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format)
     {
         auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &wl_buffer_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->create_buffer(id, offset, width, height, stride, format);
+            me->create_buffer(id_resolved, offset, width, height, stride, format);
         }
         catch(...)
         {
@@ -264,13 +287,12 @@ struct mw::ShmPool::Thunks
     static void const* request_vtable[];
 };
 
-mw::ShmPool::ShmPool(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &wl_shm_pool_interface_data, wl_resource_get_version(parent), id)}
+mw::ShmPool::ShmPool(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -316,10 +338,17 @@ struct mw::Shm::Thunks
     static void create_pool_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int32_t fd, int32_t size)
     {
         auto me = static_cast<Shm*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &wl_shm_pool_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         mir::Fd fd_resolved{fd};
         try
         {
-            me->create_pool(client, resource, id, fd_resolved, size);
+            me->create_pool(client, resource, id_resolved, fd_resolved, size);
         }
         catch(...)
         {
@@ -330,8 +359,11 @@ struct mw::Shm::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Shm*>(data);
-        auto resource = wl_resource_create(client, &wl_shm_interface_data,
-                                           std::min(version, me->max_version), id);
+        auto resource = wl_resource_create(
+            client,
+            &wl_shm_interface_data,
+            std::min(version, me->max_version),
+            id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -425,13 +457,12 @@ struct mw::Buffer::Thunks
     static void const* request_vtable[];
 };
 
-mw::Buffer::Buffer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &wl_buffer_interface_data, wl_resource_get_version(parent), id)}
+mw::Buffer::Buffer(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -551,13 +582,12 @@ struct mw::DataOffer::Thunks
     static void const* request_vtable[];
 };
 
-mw::DataOffer::DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &wl_data_offer_interface_data, wl_resource_get_version(parent), id)}
+mw::DataOffer::DataOffer(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -676,13 +706,12 @@ struct mw::DataSource::Thunks
     static void const* request_vtable[];
 };
 
-mw::DataSource::DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &wl_data_source_interface_data, wl_resource_get_version(parent), id)}
+mw::DataSource::DataSource(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -846,13 +875,12 @@ struct mw::DataDevice::Thunks
     static void const* request_vtable[];
 };
 
-mw::DataDevice::DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &wl_data_device_interface_data, wl_resource_get_version(parent), id)}
+mw::DataDevice::DataDevice(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -965,9 +993,16 @@ struct mw::DataDeviceManager::Thunks
     static void create_data_source_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &wl_data_source_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->create_data_source(client, resource, id);
+            me->create_data_source(client, resource, id_resolved);
         }
         catch(...)
         {
@@ -978,9 +1013,16 @@ struct mw::DataDeviceManager::Thunks
     static void get_data_device_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat)
     {
         auto me = static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &wl_data_device_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->get_data_device(client, resource, id, seat);
+            me->get_data_device(client, resource, id_resolved, seat);
         }
         catch(...)
         {
@@ -991,8 +1033,11 @@ struct mw::DataDeviceManager::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<DataDeviceManager*>(data);
-        auto resource = wl_resource_create(client, &wl_data_device_manager_interface_data,
-                                           std::min(version, me->max_version), id);
+        auto resource = wl_resource_create(
+            client,
+            &wl_data_device_manager_interface_data,
+            std::min(version, me->max_version),
+            id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -1062,9 +1107,16 @@ struct mw::Shell::Thunks
     static void get_shell_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
         auto me = static_cast<Shell*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &wl_shell_surface_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->get_shell_surface(client, resource, id, surface);
+            me->get_shell_surface(client, resource, id_resolved, surface);
         }
         catch(...)
         {
@@ -1075,8 +1127,11 @@ struct mw::Shell::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Shell*>(data);
-        auto resource = wl_resource_create(client, &wl_shell_interface_data,
-                                           std::min(version, me->max_version), id);
+        auto resource = wl_resource_create(
+            client,
+            &wl_shell_interface_data,
+            std::min(version, me->max_version),
+            id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -1293,13 +1348,12 @@ struct mw::ShellSurface::Thunks
     static void const* request_vtable[];
 };
 
-mw::ShellSurface::ShellSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &wl_shell_surface_interface_data, wl_resource_get_version(parent), id)}
+mw::ShellSurface::ShellSurface(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -1446,9 +1500,16 @@ struct mw::Surface::Thunks
     static void frame_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t callback)
     {
         auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
+        wl_resource* callback_resolved{
+            wl_resource_create(client, &wl_callback_interface_data, wl_resource_get_version(resource), callback)};
+        if (callback_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->frame(callback);
+            me->frame(callback_resolved);
         }
         catch(...)
         {
@@ -1560,13 +1621,12 @@ struct mw::Surface::Thunks
     static void const* request_vtable[];
 };
 
-mw::Surface::Surface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &wl_surface_interface_data, wl_resource_get_version(parent), id)}
+mw::Surface::Surface(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -1652,9 +1712,16 @@ struct mw::Seat::Thunks
     static void get_pointer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &wl_pointer_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->get_pointer(client, resource, id);
+            me->get_pointer(client, resource, id_resolved);
         }
         catch(...)
         {
@@ -1665,9 +1732,16 @@ struct mw::Seat::Thunks
     static void get_keyboard_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &wl_keyboard_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->get_keyboard(client, resource, id);
+            me->get_keyboard(client, resource, id_resolved);
         }
         catch(...)
         {
@@ -1678,9 +1752,16 @@ struct mw::Seat::Thunks
     static void get_touch_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &wl_touch_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->get_touch(client, resource, id);
+            me->get_touch(client, resource, id_resolved);
         }
         catch(...)
         {
@@ -1704,8 +1785,11 @@ struct mw::Seat::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Seat*>(data);
-        auto resource = wl_resource_create(client, &wl_seat_interface_data,
-                                           std::min(version, me->max_version), id);
+        auto resource = wl_resource_create(
+            client,
+            &wl_seat_interface_data,
+            std::min(version, me->max_version),
+            id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -1844,13 +1928,12 @@ struct mw::Pointer::Thunks
     static void const* request_vtable[];
 };
 
-mw::Pointer::Pointer(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &wl_pointer_interface_data, wl_resource_get_version(parent), id)}
+mw::Pointer::Pointer(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -2005,13 +2088,12 @@ struct mw::Keyboard::Thunks
     static void const* request_vtable[];
 };
 
-mw::Keyboard::Keyboard(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &wl_keyboard_interface_data, wl_resource_get_version(parent), id)}
+mw::Keyboard::Keyboard(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -2119,13 +2201,12 @@ struct mw::Touch::Thunks
     static void const* request_vtable[];
 };
 
-mw::Touch::Touch(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &wl_touch_interface_data, wl_resource_get_version(parent), id)}
+mw::Touch::Touch(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -2241,8 +2322,11 @@ struct mw::Output::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Output*>(data);
-        auto resource = wl_resource_create(client, &wl_output_interface_data,
-                                           std::min(version, me->max_version), id);
+        auto resource = wl_resource_create(
+            client,
+            &wl_output_interface_data,
+            std::min(version, me->max_version),
+            id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -2396,13 +2480,12 @@ struct mw::Region::Thunks
     static void const* request_vtable[];
 };
 
-mw::Region::Region(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &wl_region_interface_data, wl_resource_get_version(parent), id)}
+mw::Region::Region(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -2453,9 +2536,16 @@ struct mw::Subcompositor::Thunks
     static void get_subsurface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* parent)
     {
         auto me = static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &wl_subsurface_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->get_subsurface(client, resource, id, surface, parent);
+            me->get_subsurface(client, resource, id_resolved, surface, parent);
         }
         catch(...)
         {
@@ -2466,8 +2556,11 @@ struct mw::Subcompositor::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<Subcompositor*>(data);
-        auto resource = wl_resource_create(client, &wl_subcompositor_interface_data,
-                                           std::min(version, me->max_version), id);
+        auto resource = wl_resource_create(
+            client,
+            &wl_subcompositor_interface_data,
+            std::min(version, me->max_version),
+            id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -2620,13 +2713,12 @@ struct mw::Subsurface::Thunks
     static void const* request_vtable[];
 };
 
-mw::Subsurface::Subsurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &wl_subsurface_interface_data, wl_resource_get_version(parent), id)}
+mw::Subsurface::Subsurface(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);

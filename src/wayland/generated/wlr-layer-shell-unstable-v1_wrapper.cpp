@@ -71,6 +71,13 @@ struct mw::LayerShellV1::Thunks
     static void get_layer_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* output, uint32_t layer, char const* namespace_)
     {
         auto me = static_cast<LayerShellV1*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &zwlr_layer_surface_v1_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         std::experimental::optional<struct wl_resource*> output_resolved;
         if (output != nullptr)
         {
@@ -78,7 +85,7 @@ struct mw::LayerShellV1::Thunks
         }
         try
         {
-            me->get_layer_surface(client, resource, id, surface, output_resolved, layer, namespace_);
+            me->get_layer_surface(client, resource, id_resolved, surface, output_resolved, layer, namespace_);
         }
         catch(...)
         {
@@ -89,8 +96,11 @@ struct mw::LayerShellV1::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<LayerShellV1*>(data);
-        auto resource = wl_resource_create(client, &zwlr_layer_shell_v1_interface_data,
-                                           std::min(version, me->max_version), id);
+        auto resource = wl_resource_create(
+            client,
+            &zwlr_layer_shell_v1_interface_data,
+            std::min(version, me->max_version),
+            id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -269,13 +279,12 @@ struct mw::LayerSurfaceV1::Thunks
     static void const* request_vtable[];
 };
 
-mw::LayerSurfaceV1::LayerSurfaceV1(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &zwlr_layer_surface_v1_interface_data, wl_resource_get_version(parent), id)}
+mw::LayerSurfaceV1::LayerSurfaceV1(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);

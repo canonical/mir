@@ -57,8 +57,8 @@ private:
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
     virtual void destroy(struct wl_client* client, struct wl_resource* resource) = 0;
-    virtual void create_positioner(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
-    virtual void get_xdg_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface) = 0;
+    virtual void create_positioner(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
+    virtual void get_xdg_surface(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* surface) = 0;
     virtual void pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial) = 0;
 };
 
@@ -70,7 +70,7 @@ public:
 
     static XdgPositioner* from(struct wl_resource*);
 
-    XdgPositioner(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    XdgPositioner(struct wl_resource* resource);
     virtual ~XdgPositioner() = default;
 
     void destroy_wayland_object() const;
@@ -142,7 +142,7 @@ public:
 
     static XdgSurface* from(struct wl_resource*);
 
-    XdgSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    XdgSurface(struct wl_resource* resource);
     virtual ~XdgSurface() = default;
 
     void send_configure_event(uint32_t serial) const;
@@ -170,8 +170,8 @@ public:
 
 private:
     virtual void destroy() = 0;
-    virtual void get_toplevel(uint32_t id) = 0;
-    virtual void get_popup(uint32_t id, std::experimental::optional<struct wl_resource*> const& parent, struct wl_resource* positioner) = 0;
+    virtual void get_toplevel(struct wl_resource* id) = 0;
+    virtual void get_popup(struct wl_resource* id, std::experimental::optional<struct wl_resource*> const& parent, struct wl_resource* positioner) = 0;
     virtual void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
     virtual void ack_configure(uint32_t serial) = 0;
 };
@@ -184,7 +184,7 @@ public:
 
     static XdgToplevel* from(struct wl_resource*);
 
-    XdgToplevel(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    XdgToplevel(struct wl_resource* resource);
     virtual ~XdgToplevel() = default;
 
     void send_configure_event(int32_t width, int32_t height, struct wl_array* states) const;
@@ -251,7 +251,7 @@ public:
 
     static XdgPopup* from(struct wl_resource*);
 
-    XdgPopup(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    XdgPopup(struct wl_resource* resource);
     virtual ~XdgPopup() = default;
 
     void send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height) const;
