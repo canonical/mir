@@ -252,33 +252,31 @@ private:
     std::shared_ptr<mg::WaylandAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
 
-    void create_surface(wl_client* client, wl_resource* resource, uint32_t id) override;
-    void create_region(wl_client* client, wl_resource* resource, uint32_t id) override;
+    void create_surface(wl_client* client, wl_resource* resource, wl_resource* new_surface) override;
+    void create_region(wl_client* client, wl_resource* resource, wl_resource* new_region) override;
 };
 
-void WlCompositor::create_surface(wl_client* client, wl_resource* resource, uint32_t id)
+void WlCompositor::create_surface(wl_client* /*client*/, wl_resource* /*resource*/, wl_resource* new_surface)
 {
-    new WlSurface{client, resource, id, executor, allocator};
+    new WlSurface{new_surface, executor, allocator};
 }
 
-void WlCompositor::create_region(wl_client* client, wl_resource* resource, uint32_t id)
+void WlCompositor::create_region(wl_client* /*client*/, wl_resource* /*resource*/, wl_resource* new_region)
 {
-    new WlRegion{client, resource, id};
+    new WlRegion{new_region};
 }
 
 class WlShellSurface  : public wayland::ShellSurface, public WindowWlSurfaceRole
 {
 public:
     WlShellSurface(
-        wl_client* client,
-        wl_resource* parent,
-        uint32_t id,
+        wl_resource* new_resource,
         WlSurface* surface,
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat,
         OutputManager* output_manager)
-        : ShellSurface(client, parent, id),
-          WindowWlSurfaceRole{&seat, client, surface, shell, output_manager}
+        : ShellSurface(new_resource),
+          WindowWlSurfaceRole{&seat, wayland::ShellSurface::client, surface, shell, output_manager}
     {
     }
 
@@ -442,12 +440,12 @@ public:
     }
 
     void get_shell_surface(
-        wl_client* client,
-        wl_resource* resource,
-        uint32_t id,
+        wl_client* /*client*/,
+        wl_resource* /*resource*/,
+        wl_resource* new_shell_surface,
         wl_resource* surface) override
     {
-        new WlShellSurface(client, resource, id, WlSurface::from(surface), shell, seat, output_manager);
+        new WlShellSurface(new_shell_surface, WlSurface::from(surface), shell, seat, output_manager);
     }
 
     static auto get_window(wl_resource* window) -> std::shared_ptr<Surface>;

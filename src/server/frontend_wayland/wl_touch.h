@@ -41,9 +41,7 @@ class WlTouch : public wayland::Touch
 {
 public:
     WlTouch(
-        wl_client* client,
-        wl_resource* parent,
-        uint32_t id,
+        wl_resource* new_resource,
         std::function<void(WlTouch*)> const& on_destroy);
 
     ~WlTouch();

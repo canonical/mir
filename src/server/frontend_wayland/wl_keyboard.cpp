@@ -34,13 +34,11 @@
 namespace mf = mir::frontend;
 
 mf::WlKeyboard::WlKeyboard(
-    wl_client* client,
-    wl_resource* parent,
-    uint32_t id,
+    wl_resource* new_resource,
     mir::input::Keymap const& initial_keymap,
     std::function<void(WlKeyboard*)> const& on_destroy,
     std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state)
-    : Keyboard(client, parent, id),
+    : Keyboard(new_resource),
       keymap{nullptr, &xkb_keymap_unref},
       state{nullptr, &xkb_state_unref},
       context{xkb_context_new(XKB_CONTEXT_NO_FLAGS), &xkb_context_unref},

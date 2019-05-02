@@ -24,8 +24,8 @@
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
-mf::WlRegion::WlRegion(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : wayland::Region(client, parent, id)
+mf::WlRegion::WlRegion(wl_resource* new_resource)
+    : wayland::Region(new_resource)
 {}
 
 mf::WlRegion::~WlRegion()

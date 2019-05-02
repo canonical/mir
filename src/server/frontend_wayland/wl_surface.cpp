@@ -42,8 +42,8 @@
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
-mf::WlSurfaceState::Callback::Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : wayland::Callback{client, parent, id},
+mf::WlSurfaceState::Callback::Callback(wl_resource* new_resource)
+    : wayland::Callback{new_resource},
       destroyed{deleted_flag_for_resource(resource)}
 {
 }
@@ -75,12 +75,10 @@ bool mf::WlSurfaceState::surface_data_needs_refresh() const
 }
 
 mf::WlSurface::WlSurface(
-    wl_client* client,
-    wl_resource* parent,
-    uint32_t id,
+    wl_resource* new_resource,
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<graphics::WaylandAllocator> const& allocator)
-    : Surface(client, parent, id),
+    : Surface(new_resource),
         session{mf::get_session(client)},
         stream_id{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
         stream{session->get_buffer_stream(stream_id)},
@@ -266,9 +264,9 @@ void mf::WlSurface::damage_buffer(int32_t x, int32_t y, int32_t width, int32_t h
     // This isn't essential, but could enable optimizations
 }
 
-void mf::WlSurface::frame(uint32_t callback)
+void mf::WlSurface::frame(wl_resource* new_callback)
 {
-    pending.frame_callbacks.push_back(std::make_shared<WlSurfaceState::Callback>(client, resource, callback));
+    pending.frame_callbacks.push_back(std::make_shared<WlSurfaceState::Callback>(new_callback));
 }
 
 void mf::WlSurface::set_opaque_region(std::experimental::optional<wl_resource*> const& region)

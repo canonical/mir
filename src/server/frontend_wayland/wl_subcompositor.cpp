@@ -35,15 +35,18 @@ void mf::WlSubcompositor::destroy(struct wl_client* /*client*/, struct wl_resour
     destroy_wayland_object(resource);
 }
 
-void mf::WlSubcompositor::get_subsurface(struct wl_client* client, struct wl_resource* resource, uint32_t id,
-                                         struct wl_resource* surface, struct wl_resource* parent)
+void mf::WlSubcompositor::get_subsurface(
+    wl_client* /*client*/,
+    wl_resource* /*resource*/,
+    wl_resource* new_subsurface,
+    wl_resource* surface,
+    wl_resource* parent)
 {
-    new WlSubsurface(client, resource, id, WlSurface::from(surface), WlSurface::from(parent));
+    new WlSubsurface(new_subsurface, WlSurface::from(surface), WlSurface::from(parent));
 }
 
-mf::WlSubsurface::WlSubsurface(struct wl_client* client, struct wl_resource* object_parent, uint32_t id,
-                               WlSurface* surface, WlSurface* parent_surface)
-    : wayland::Subsurface(client, object_parent, id),
+mf::WlSubsurface::WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, WlSurface* parent_surface)
+    : wayland::Subsurface(new_subsurface),
       surface{surface},
       parent{parent_surface->add_child(this)},
       parent_destroyed{parent_surface->destroyed_flag()},

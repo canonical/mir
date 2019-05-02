@@ -32,8 +32,10 @@ namespace frontend
 class LayerSurfaceV1 : public wayland::LayerSurfaceV1, public WindowWlSurfaceRole
 {
 public:
-    LayerSurfaceV1(struct wl_client* client, struct wl_resource* parent_resource, uint32_t id, WlSurface* surface,
-                   LayerShellV1 const& layer_shell);
+    LayerSurfaceV1(
+        wl_resource* new_resource,
+        WlSurface* surface,
+        LayerShellV1 const& layer_shell);
     ~LayerSurfaceV1() = default;
 
 private:
@@ -43,13 +45,14 @@ private:
     void set_exclusive_zone(int32_t zone) override;
     void set_margin(int32_t top, int32_t right, int32_t bottom, int32_t left) override;
     void set_keyboard_interactivity(uint32_t keyboard_interactivity) override;
-    void get_popup(struct wl_resource* popup) override;
+    void get_popup(wl_resource* popup) override;
     void ack_configure(uint32_t serial) override;
     void destroy() override;
 
     // from WindowWlSurfaceRole
-    void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
-                       geometry::Size const& new_size) override;
+    void handle_resize(
+        std::experimental::optional<geometry::Point> const& new_top_left,
+        geometry::Size const& new_size) override;
 };
 
 }
@@ -66,23 +69,31 @@ mf::LayerShellV1::LayerShellV1(struct wl_display* display, std::shared_ptr<Shell
 {
 }
 
-void mf::LayerShellV1::get_layer_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id,
-                                         struct wl_resource* surface,
-                                         std::experimental::optional<struct wl_resource*> const& output,
-                                         uint32_t layer, std::string const& namespace_)
+void mf::LayerShellV1::get_layer_surface(
+    wl_client* /*client*/,
+    wl_resource* /*resource*/,
+    wl_resource* new_layer_surface,
+    wl_resource* surface,
+    std::experimental::optional<wl_resource*> const& output,
+    uint32_t layer,
+    std::string const& namespace_)
 {
     (void)output;
     (void)layer;
     (void)namespace_;
-    new LayerSurfaceV1(client, resource, id, WlSurface::from(surface), *this);
+    new LayerSurfaceV1(new_layer_surface, WlSurface::from(surface), *this);
 }
 
 // LayerSurfaceV1
 
-mf::LayerSurfaceV1::LayerSurfaceV1(struct wl_client* client, struct wl_resource* parent_resource, uint32_t id,
-                                   WlSurface* surface, LayerShellV1 const& layer_shell)
-    : wayland::LayerSurfaceV1(client, parent_resource, id),
-      WindowWlSurfaceRole(&layer_shell.seat, client, surface, layer_shell.shell, layer_shell.output_manager)
+mf::LayerSurfaceV1::LayerSurfaceV1(wl_resource* new_resource, WlSurface* surface, LayerShellV1 const& layer_shell)
+    : wayland::LayerSurfaceV1(new_resource),
+      WindowWlSurfaceRole(
+          &layer_shell.seat,
+          wayland::LayerSurfaceV1::client,
+          surface,
+          layer_shell.shell,
+          layer_shell.output_manager)
 {
 }
 

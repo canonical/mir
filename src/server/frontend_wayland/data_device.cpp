@@ -25,14 +25,23 @@
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
+namespace mir
+{
+namespace wayland
+{
+extern struct wl_interface const wl_data_offer_interface_data;
+}
+}
+
 namespace
 {
 class DataDeviceManager;
 class DataSource;
+struct DataDevice;
 
 struct DataOffer : mw::DataOffer
 {
-    DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id, DataSource* source);
+    DataOffer(wl_resource* new_resource, DataSource* source, DataDevice* device);
 
     void accept(uint32_t serial, std::experimental::optional<std::string> const& mime_type) override
     {
@@ -60,8 +69,8 @@ struct DataOffer : mw::DataOffer
 struct DataSource : mw::DataSource
 {
 public:
-    DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id, DataDeviceManager* manager)
-        : mw::DataSource{client, parent, id},
+    DataSource(wl_resource* new_resource, DataDeviceManager* manager)
+        : mw::DataSource{new_resource},
           manager{manager}
     {
     }
@@ -96,7 +105,7 @@ public:
 
 struct DataDevice : mw::DataDevice, mf::WlSeat::ListenerTracker
 {
-    DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id, DataDeviceManager* manager, mf::WlSeat* seat);
+    DataDevice(wl_resource* new_resource, DataDeviceManager* manager, mf::WlSeat* seat);
     ~DataDevice();
 
     void start_drag(
@@ -134,10 +143,16 @@ public:
     DataDeviceManager(struct wl_display* display);
     ~DataDeviceManager();
 
-    void create_data_source(struct wl_client* client, struct wl_resource* resource, uint32_t id) override;
+    void create_data_source(
+        wl_client* client,
+        wl_resource* resource,
+        wl_resource* new_resource) override;
 
     void get_data_device(
-        struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat) override;
+        wl_client* client,
+        wl_resource* resource,
+        wl_resource* new_data_device,
+        wl_resource* seat) override;
 
     void notify_destroyed(DataSource* source);
 
@@ -197,21 +212,24 @@ DataDeviceManager::~DataDeviceManager()
     current_data_source.release();
 }
 
-void DataDeviceManager::create_data_source(struct wl_client* client, struct wl_resource* resource, uint32_t id)
+void DataDeviceManager::create_data_source(wl_client* client, wl_resource* resource, wl_resource* new_data_source)
 {
-    (void)client, (void)resource, (void)id;
+    (void)client, (void)resource;
 
-    current_data_source.reset(new DataSource{client, resource, id, this});
+    current_data_source.reset(new DataSource{new_data_source, this});
 
     for (auto const& listener : listeners)
         listener->notify_new(current_data_source.get());
 }
 
 void DataDeviceManager::get_data_device(
-    struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat)
+    wl_client* /*client*/,
+    wl_resource* /*resource*/,
+    wl_resource* new_data_device,
+    wl_resource* seat)
 {
     auto const realseat = mf::WlSeat::from(seat);
-    auto const result = new DataDevice{client, resource, id, this, realseat};
+    auto const result = new DataDevice{new_data_device, this, realseat};
 
     if (current_data_source)
         result->notify_new(current_data_source.get());
@@ -236,8 +254,8 @@ void DataDeviceManager::remove_listener(DataDevice* listener)
     listeners.erase(remove(begin(listeners), end(listeners), listener), end(listeners));
 }
 
-DataDevice::DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id, DataDeviceManager* manager, mf::WlSeat* seat) :
-    mw::DataDevice(client, parent, id),
+DataDevice::DataDevice(wl_resource* new_resource, DataDeviceManager* manager, mf::WlSeat* seat) :
+    mw::DataDevice(new_resource),
     manager{manager},
     seat{seat}
 {
@@ -262,7 +280,12 @@ void DataDevice::notify_new(DataSource* source)
 
     if (has_focus)
     {
-        current_offer = new DataOffer{client, resource, 0, source};
+        wl_resource* new_resource = wl_resource_create(
+            client,
+            &mw::wl_data_offer_interface_data,
+            wl_resource_get_version(resource),
+            0);
+        current_offer = new DataOffer{new_resource, source, this};
     }
 }
 
@@ -289,16 +312,20 @@ void DataDevice::focus_on(wl_client* focus)
 
     if (has_focus && current_source && !current_offer)
     {
-        current_offer = new DataOffer{client, resource, 0, current_source};
+        wl_resource* new_resource = wl_resource_create(
+            client,
+            &mw::wl_data_offer_interface_data,
+            wl_resource_get_version(resource),
+            0);
+        current_offer = new DataOffer{new_resource, current_source, this};
     }
 }
 
-DataOffer::DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id, DataSource* source) :
-    mw::DataOffer(client, parent, id),
+DataOffer::DataOffer(wl_resource* new_resource, DataSource* source, DataDevice* device) :
+    mw::DataOffer(new_resource),
     source{source}
 {
     source->add_listener(this);
-    auto device = mw::DataDevice::from(parent);
     device->send_data_offer_event(resource);
     for (auto const& type : source->mime_types)
     {
