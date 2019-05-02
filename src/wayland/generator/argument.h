@@ -39,7 +39,7 @@ public:
         std::string mir_type;
         std::string wl_type;
         std::string wl_type_abbr; // abbreviated type (i for int, etc), used by libwayland
-        std::experimental::optional<std::function<Emitter(std::string)>> converter;
+        std::experimental::optional<std::function<Emitter(Argument const*)>> converter;
     };
 
     Argument(xmlpp::Element const& node, bool is_event);
@@ -53,13 +53,13 @@ public:
 
     void populate_required_interfaces(std::set<std::string>& interfaces) const; // fills the set with interfaces used
 
+    std::string const name;
+    std::experimental::optional<std::string> const interface;
 private:
     static TypeDescriptor get_type(xmlpp::Element const& node, bool is_event);
     static std::experimental::optional<std::string> get_interface(xmlpp::Element const& node);
 
-    std::string const name;
     TypeDescriptor descriptor;
-    std::experimental::optional<std::string> const interface;
 };
 
 #endif // MIR_WAYLAND_GENERATOR_ARGUMENT_H

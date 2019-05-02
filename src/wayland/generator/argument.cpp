@@ -26,73 +26,73 @@
 namespace
 {
 
-Emitter fd_wl2mir(std::string name)
+Emitter fd_wl2mir(Argument const* me)
 {
-    return Line{"mir::Fd ", name, "_resolved{", name, "};"};
+    return Line{"mir::Fd ", me->name, "_resolved{", me->name, "};"};
 }
 
-Emitter fd_mir2wl(std::string name)
+Emitter fd_mir2wl(Argument const* me)
 {
-    return Line{"int32_t ", name, "_resolved{", name, "};"};
+    return Line{"int32_t ", me->name, "_resolved{", me->name, "};"};
 }
 
-Emitter fixed_wl2mir(std::string name)
+Emitter fixed_wl2mir(Argument const* me)
 {
-    return Line{"double ", name, "_resolved{wl_fixed_to_double(", name, ")};"};
+    return Line{"double ", me->name, "_resolved{wl_fixed_to_double(", me->name, ")};"};
 }
 
-Emitter fixed_mir2wl(std::string name)
+Emitter fixed_mir2wl(Argument const* me)
 {
-    return Line{"wl_fixed_t ", name, "_resolved{wl_fixed_from_double(", name, ")};"};
+    return Line{"wl_fixed_t ", me->name, "_resolved{wl_fixed_from_double(", me->name, ")};"};
 }
 
-Emitter string_mir2wl(std::string name)
+Emitter string_mir2wl(Argument const* me)
 {
     return Lines{
-        {"const char* ", name, "_resolved = ", name, ".c_str();"}
+        {"const char* ", me->name, "_resolved = ", me->name, ".c_str();"}
     };
 }
 
-Emitter optional_object_wl2mir(std::string name)
+Emitter optional_object_wl2mir(Argument const* me)
 {
     return Lines{
-        {"std::experimental::optional<struct wl_resource*> ", name, "_resolved;"},
-        {"if (", name, " != nullptr)"},
+        {"std::experimental::optional<struct wl_resource*> ", me->name, "_resolved;"},
+        {"if (", me->name, " != nullptr)"},
         Block{
-            {name, "_resolved = {", name, "};"}
+            {me->name, "_resolved = {", me->name, "};"}
         }
     };
 }
 
-Emitter optional_object_mir2wl(std::string name)
+Emitter optional_object_mir2wl(Argument const* me)
 {
     return Lines{
-        {"struct wl_resource* ", name, "_resolved = nullptr;"},
-        {"if (", name, ")"},
+        {"struct wl_resource* ", me->name, "_resolved = nullptr;"},
+        {"if (", me->name, ")"},
         Block{
-            {name, "_resolved = ", name, ".value();"}
+            {me->name, "_resolved = ", me->name, ".value();"}
         }
     };
 }
 
-Emitter optional_string_wl2mir(std::string name)
+Emitter optional_string_wl2mir(Argument const* me)
 {
     return Lines{
-        {"std::experimental::optional<std::string> ", name, "_resolved;"},
-        {"if (", name, " != nullptr)"},
+        {"std::experimental::optional<std::string> ", me->name, "_resolved;"},
+        {"if (", me->name, " != nullptr)"},
         Block{
-            {name, "_resolved = {", name, "};"}
+            {me->name, "_resolved = {", me->name, "};"}
         }
     };
 }
 
-Emitter optional_string_mir2wl(std::string name)
+Emitter optional_string_mir2wl(Argument const* me)
 {
     return Lines{
-        {"const char* ", name, "_resolved = nullptr;"},
-        {"if (", name, ")"},
+        {"const char* ", me->name, "_resolved = nullptr;"},
+        {"if (", me->name, ")"},
         Block{
-            {name, "_resolved = ", name, ".value().c_str();"}
+            {me->name, "_resolved = ", me->name, ".value().c_str();"}
         }
     };
 }
@@ -132,8 +132,8 @@ std::unordered_map<std::string, Argument::TypeDescriptor const> const event_opti
 
 Argument::Argument(xmlpp::Element const& node, bool is_event)
     : name{sanitize_name(node.get_attribute_value("name"))},
-      descriptor{get_type(node, is_event)},
-      interface{get_interface(node)}
+      interface{get_interface(node)},
+      descriptor{get_type(node, is_event)}
 {
 }
 
@@ -168,7 +168,7 @@ Emitter Argument::type_str_fragment() const
 std::experimental::optional<Emitter> Argument::converter() const
 {
     if (descriptor.converter)
-        return descriptor.converter.value()(name);
+        return descriptor.converter.value()(this);
     else
         return std::experimental::nullopt;
 }
@@ -215,10 +215,10 @@ Argument::TypeDescriptor Argument::get_type(xmlpp::Element const& node, bool is_
     {
         // its an error message, so who cares about the memory leak?
         return TypeDescriptor{"unknown_type_" + type, "unknown_type_" + type, "!",
-            {[=](std::string name) -> Emitter
+            {[=](Argument const* me) -> Emitter
             {
                 return Lines{
-                    {"#error '", name, "' is of type '" + type + "' (which is unknown for a", is_event ? "n event" : " request", is_optional ? " optional" : "", ")"},
+                    {"#error '", me->name, "' is of type '" + type + "' (which is unknown for a", is_event ? "n event" : " request", is_optional ? " optional" : "", ")"},
                     {"#error type resolving code can be found in argument.cpp in the wayland scanner"}
                 };
             }}};
