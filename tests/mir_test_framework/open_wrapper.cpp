@@ -18,7 +18,7 @@
 
 #include "mir_test_framework/open_wrapper.h"
 
-#include <list>
+#include <vector>
 #include <mutex>
 #include <unistd.h>
 #include <dlfcn.h>
@@ -28,7 +28,7 @@ namespace mtf = mir_test_framework;
 namespace
 {
 std::mutex handlers_mutex;
-std::list<mtf::OpenHandler> handlers;
+std::vector<mtf::OpenHandler> handlers;
 
 void remove_handler(void* iterator)
 {
