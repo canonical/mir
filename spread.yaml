@@ -10,7 +10,6 @@ backends:
             - ubuntu-18.10
             - ubuntu-devel:
                image: ubuntu-daily:devel/amd64
-            - fedora-28
             - fedora-29
     google:
         key: "$(HOST: echo $SPREAD_GOOGLE_KEY)"
@@ -25,7 +24,6 @@ backends:
                 image: ubuntu-os-cloud/ubuntu-1810
             - ubuntu-devel-64:
                 image: ubuntu-os-cloud/ubuntu-1810
-            - fedora-28-64
             - fedora-29-64
             - fedora-rawhide-64
 
