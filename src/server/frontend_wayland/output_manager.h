@@ -76,12 +76,14 @@ public:
     auto output_id_for(wl_client* client, struct wl_resource* /*output*/) const
         -> graphics::DisplayConfigurationOutputId;
 
+    auto display_config() const -> std::shared_ptr<MirDisplay> {return display_config_;}
+
 private:
     void create_output(graphics::DisplayConfigurationOutput const& initial_config);
 
     void handle_configuration_change(graphics::DisplayConfiguration const& config) override;
 
-    std::shared_ptr<MirDisplay> const display_config;
+    std::shared_ptr<MirDisplay> const display_config_;
     wl_display* const display;
     std::unordered_map<graphics::DisplayConfigurationOutputId, std::unique_ptr<Output>> outputs;
 };
