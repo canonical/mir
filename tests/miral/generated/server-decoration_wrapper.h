@@ -88,6 +88,8 @@ public:
 
     struct Thunks;
 
+    static bool is_instance(wl_resource* resource);
+
 private:
     virtual void release() = 0;
     virtual void request_mode(uint32_t mode) = 0;
