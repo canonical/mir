@@ -153,6 +153,11 @@ void ms::SurfaceObservers::start_drag_and_drop(Surface const* surf, std::vector<
                  { observer->start_drag_and_drop(surf, handle); });
 }
 
+void ms::SurfaceObservers::depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer)
+{
+    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+                 { observer->depth_layer_set_to(surf, depth_layer); });
+}
 
 struct ms::CursorStreamImageAdapter
 {
@@ -937,4 +942,5 @@ void mir::scene::BasicSurface::set_depth_layer(MirDepthLayer depth_layer)
         std::unique_lock<std::mutex> lg(guard);
         depth_layer_ = depth_layer;
     }
+    observers.depth_layer_set_to(this, depth_layer);
 }

@@ -54,6 +54,7 @@ public:
     void placed_relative(Surface const* surf, geometry::Rectangle const& placement) override;
     void input_consumed(Surface const* surf, MirEvent const* event) override;
     void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) override;
+    void depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer) override;
 
 protected:
     NullSurfaceObserver(NullSurfaceObserver const&) = delete;
