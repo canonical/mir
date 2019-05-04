@@ -162,6 +162,8 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
         surface->configure(mir_window_attrib_preferred_orientation, params.preferred_orientation.value());
     if (params.input_shape.is_set())
         surface->set_input_region(params.input_shape.value());
+    if (params.z_index.is_set())
+        surface->set_z_index(params.z_index.value());
 
     return id;
 }

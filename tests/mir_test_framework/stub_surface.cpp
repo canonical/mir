@@ -197,6 +197,15 @@ void mtd::StubSurface::start_drag_and_drop(std::vector<uint8_t> const& /*handle*
 {
 }
 
+int mtd::StubSurface::z_index()
+{
+    return 0;
+}
+
+void mtd::StubSurface::set_z_index(int /*z_index*/)
+{
+}
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class

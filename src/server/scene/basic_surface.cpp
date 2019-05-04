@@ -924,3 +924,17 @@ void mir::scene::BasicSurface::start_drag_and_drop(std::vector<uint8_t> const& h
 {
     observers.start_drag_and_drop(this, handle);
 }
+
+int mir::scene::BasicSurface::z_index()
+{
+    std::unique_lock<std::mutex> lg(guard);
+    return z_index_;
+}
+
+void mir::scene::BasicSurface::set_z_index(int const z_index)
+{
+    {
+        std::unique_lock<std::mutex> lg(guard);
+        z_index_ = z_index;
+    }
+}

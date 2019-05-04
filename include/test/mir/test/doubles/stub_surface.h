@@ -70,6 +70,8 @@ struct StubSurface : scene::Surface
     MirPointerConfinementState confine_pointer_state() const override;
     void placed_relative(geometry::Rectangle const& placement) override;
     void start_drag_and_drop(std::vector<uint8_t> const& handle) override;
+    int z_index() override;
+    void set_z_index(int z_index) override;
 };
 }
 }

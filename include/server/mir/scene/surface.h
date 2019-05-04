@@ -116,6 +116,9 @@ public:
 
     virtual void placed_relative(geometry::Rectangle const& placement) = 0;
     virtual void start_drag_and_drop(std::vector<uint8_t> const& handle) = 0;
+
+    virtual int z_index() = 0;
+    virtual void set_z_index(int z_index) = 0;
 };
 }
 }
