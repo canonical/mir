@@ -57,6 +57,7 @@ public:
     void placed_relative(Surface const* surf, geometry::Rectangle const& placement) override;
     void input_consumed(Surface const* surf, MirEvent const* event) override;
     void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) override;
+    void z_index_set_to(Surface const* surf, int z_index) override;
 
 private:
     std::function<void()> const notify_scene_change;

@@ -153,6 +153,11 @@ void ms::SurfaceObservers::start_drag_and_drop(Surface const* surf, std::vector<
                  { observer->start_drag_and_drop(surf, handle); });
 }
 
+void ms::SurfaceObservers::z_index_set_to(Surface const* surf, int z_index)
+{
+    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+                 { observer->z_index_set_to(surf, z_index); });
+}
 
 struct ms::CursorStreamImageAdapter
 {
@@ -937,4 +942,5 @@ void mir::scene::BasicSurface::set_z_index(int const z_index)
         std::unique_lock<std::mutex> lg(guard);
         z_index_ = z_index;
     }
+    observers.z_index_set_to(this, z_index);
 }

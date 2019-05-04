@@ -158,6 +158,10 @@ struct InputDispatcherSceneObserver :
     {
     }
 
+    void z_index_set_to(ms::Surface const*, int) override
+    {
+    }
+
     std::function<void(ms::Surface*)> const on_removed;
     std::function<void(ms::Surface const*)> const on_surface_moved;
     std::function<void()> const on_surface_resized;

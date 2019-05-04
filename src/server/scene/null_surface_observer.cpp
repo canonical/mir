@@ -44,3 +44,4 @@ void ms::NullSurfaceObserver::cursor_image_removed(Surface const*) {}
 void ms::NullSurfaceObserver::placed_relative(Surface const*, geometry::Rectangle const&) {}
 void ms::NullSurfaceObserver::input_consumed(Surface const*, MirEvent const*) {}
 void ms::NullSurfaceObserver::start_drag_and_drop(Surface const*, std::vector<uint8_t> const&) {}
+void ms::NullSurfaceObserver::z_index_set_to(Surface const*, int) {}

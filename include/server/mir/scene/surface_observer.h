@@ -71,6 +71,7 @@ public:
     virtual void placed_relative(Surface const* surf, geometry::Rectangle const& placement) = 0;
     virtual void input_consumed(Surface const* surf, MirEvent const* event) = 0;
     virtual void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) = 0;
+    virtual void z_index_set_to(Surface const* surf, int z_index) = 0;
 
 protected:
     SurfaceObserver() = default;

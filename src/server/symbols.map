@@ -958,5 +958,7 @@ MIR_SERVER_1.2 {
     mir::DefaultServerConfiguration::set_wayland_extension_filter*;
     mir::frontend::get_session*;
     mir::frontend::get_window*;
+    mir::scene::NullSurfaceObserver::z_index_set_to*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::z_index_set_to*;
   };
 } MIR_SERVER_0.32;
