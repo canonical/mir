@@ -21,6 +21,7 @@
 #include "surface_stack.h"
 #include "rendering_tracker.h"
 #include "mir/scene/surface.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/scene/scene_report.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/graphics/renderable.h"
@@ -106,13 +107,38 @@ private:
     std::shared_ptr<mg::Renderable> const renderable_;
 };
 
+struct SurfaceZIndexObserver : ms::NullSurfaceObserver
+{
+    SurfaceZIndexObserver(ms::SurfaceStack* stack)
+        : stack{stack}
+    {
+    }
+
+    void z_index_set_to(ms::Surface const* surface, int /*z_index*/) override
+    {
+        stack->raise(surface);
+    }
+
+private:
+    ms::SurfaceStack* stack;
+};
+
 }
 
 ms::SurfaceStack::SurfaceStack(
     std::shared_ptr<SceneReport> const& report) :
     report{report},
-    scene_changed{false}
+    scene_changed{false},
+    surface_observer{std::make_shared<SurfaceZIndexObserver>(this)}
 {
+}
+
+ms::SurfaceStack::~SurfaceStack() noexcept(true)
+{
+    for (auto const& surface : surfaces)
+    {
+        surface->remove_observer(surface_observer);
+    }
 }
 
 mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID id)
@@ -227,8 +253,9 @@ void ms::SurfaceStack::add_surface(
 {
     {
         RecursiveWriteLock lg(guard);
-        surfaces.push_back(surface);
+        insert_surface_at_top_of_z_layer(surface);
         create_rendering_tracker_for(surface);
+        surface->add_observer(surface_observer);
     }
     surface->set_reception_mode(input_mode);
     observers.surface_added(surface.get());
@@ -250,6 +277,7 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
         {
             surfaces.erase(surface);
             rendering_trackers.erase(keep_alive.get());
+            keep_alive->remove_observer(surface_observer);
             found_surface = true;
         }
     }
@@ -302,20 +330,25 @@ void ms::SurfaceStack::for_each(std::function<void(std::shared_ptr<mi::Surface> 
     }
 }
 
-void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
+void ms::SurfaceStack::raise(Surface const* surface)
 {
     bool surfaces_reordered{false};
 
     {
-        auto const surface = s.lock();
-
         RecursiveWriteLock ul(guard);
-        auto const p = std::find(surfaces.begin(), surfaces.end(), surface);
+        auto const p = std::find_if(
+            surfaces.begin(),
+            surfaces.end(),
+            [surface](auto const& i)
+                {
+                    return surface == i.get();
+                });
 
         if (p != surfaces.end())
         {
+            std::shared_ptr<Surface> surface_shared = *p;
             surfaces.erase(p);
-            surfaces.push_back(surface);
+            insert_surface_at_top_of_z_layer(surface_shared);
             surfaces_reordered = true;
         }
     }
@@ -324,7 +357,11 @@ void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
 
     observers.surfaces_reordered();
-    return;
+}
+
+void ms::SurfaceStack::raise(std::weak_ptr<Surface> const& s)
+{
+    raise(s.lock().get());
 }
 
 void ms::SurfaceStack::raise(SurfaceSet const& ss)
@@ -334,9 +371,18 @@ void ms::SurfaceStack::raise(SurfaceSet const& ss)
         RecursiveWriteLock ul(guard);
 
         auto const old_surfaces = surfaces;
-        std::stable_partition(
+        // Put all the surfaces to raise at the end of the list (preserving order)
+        auto split = std::stable_partition(
             begin(surfaces), end(surfaces),
             [&](std::weak_ptr<Surface> const& s) { return !ss.count(s); });
+        // Make a new vector with only the surfaces to raise
+        auto to_raise = std::vector<std::shared_ptr<Surface>>{split, surfaces.end()};
+        // Chop off the surfaces we are moving from the old vector (they are now only in to_raise)
+        surfaces.erase(split, surfaces.end());
+        // One by one insert to_raise surfaces into the surfaces vector at the correct position
+        // It is important that to_raise is still in the original order
+        for (auto const& surface : to_raise)
+            insert_surface_at_top_of_z_layer(surface);
 
         if (old_surfaces != surfaces)
             surfaces_reordered = true;
@@ -361,6 +407,15 @@ void ms::SurfaceStack::update_rendering_tracker_compositors()
 
     for (auto const& pair : rendering_trackers)
         pair.second->active_compositors(registered_compositors);
+}
+
+void ms::SurfaceStack::insert_surface_at_top_of_z_layer(std::shared_ptr<Surface> const& surface)
+{
+    auto reverse_iter = surfaces.rbegin();
+    while (reverse_iter != surfaces.rend() && (*reverse_iter)->z_index() > surface->z_index())
+        reverse_iter++;
+
+    surfaces.insert(reverse_iter.base(), surface);
 }
 
 void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observer)

@@ -27,6 +27,7 @@
 #include "mir/recursive_read_write_mutex.h"
 
 #include "mir/basic_observers.h"
+#include "mir/scene/surface_observer.h"
 
 #include <atomic>
 #include <map>
@@ -69,7 +70,7 @@ class SurfaceStack : public compositor::Scene, public input::Scene, public shell
 public:
     explicit SurfaceStack(
         std::shared_ptr<SceneReport> const& report);
-    virtual ~SurfaceStack() noexcept(true) {}
+    virtual ~SurfaceStack() noexcept(true);
 
     // From Scene
     compositor::SceneElementSequence scene_elements_for(compositor::CompositorID id) override;
@@ -82,23 +83,23 @@ public:
 
     virtual void remove_surface(std::weak_ptr<Surface> const& surface) override;
 
+    void raise(Surface const* surface);
     virtual void raise(std::weak_ptr<Surface> const& surface) override;
-
     void raise(SurfaceSet const& surfaces) override;
 
     void add_surface(
         std::shared_ptr<Surface> const& surface,
         input::InputReceptionMode input_mode) override;
-    
+
     auto surface_at(geometry::Point) const -> std::shared_ptr<Surface> override;
 
     void add_observer(std::shared_ptr<Observer> const& observer) override;
     void remove_observer(std::weak_ptr<Observer> const& observer) override;
-    
+
     // Intended for input overlays, as described in mir::input::Scene documentation.
     void add_input_visualization(std::shared_ptr<graphics::Renderable> const& overlay) override;
     void remove_input_visualization(std::weak_ptr<graphics::Renderable> const& overlay) override;
-    
+
     void emit_scene_changed() override;
 
 private:
@@ -106,6 +107,7 @@ private:
     SurfaceStack& operator=(const SurfaceStack&) = delete;
     void create_rendering_tracker_for(std::shared_ptr<Surface> const&);
     void update_rendering_tracker_compositors();
+    void insert_surface_at_top_of_z_layer(std::shared_ptr<Surface> const& surface);
 
     RecursiveReadWriteMutex mutable guard;
 
@@ -119,6 +121,7 @@ private:
 
     Observers observers;
     std::atomic<bool> scene_changed;
+    std::shared_ptr<SurfaceObserver> surface_observer;
 };
 
 }
