@@ -481,6 +481,21 @@ typedef enum MirOutputGammaSupported
     mir_output_gamma_supported
 } MirOutputGammaSupported;
 
+/**
+ * Depth layer controls Z ordering of surfaces.
+ * A surface will always appear on top of surfaces with a lower depth layer, and below those with a higher one.
+ */
+typedef enum MirDepthLayer
+{
+    mir_depth_layer_background,         /**< For desktop backgrounds and alike (lowest layer) */
+    mir_depth_layer_below,              /**< For panels or other controls/decorations below normal windows */
+    mir_depth_layer_application,        /**< For normal application windows */
+    mir_depth_layer_always_on_top,      /**< For always-on-top application windows */
+    mir_depth_layer_above,              /**< For panels or notifications that want to be above normal windows */
+    mir_depth_layer_overlay,            /**< For overlays such as lock screens (heighest layer) */
+} MirDepthLayer;
+
+
 /**@}*/
 
 #endif

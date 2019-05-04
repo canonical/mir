@@ -94,6 +94,9 @@ public:
     MirPointerConfinementState confine_pointer_state() const override { return {}; }
     void placed_relative(geometry::Rectangle const& /*placement*/) override {}
     void start_drag_and_drop(std::vector<uint8_t> const& /*handle*/) override {}
+
+    auto depth_layer() const -> MirDepthLayer override { return mir_depth_layer_application; }
+    void set_depth_layer(MirDepthLayer /*depth_layer*/) override {}
 };
 
 }

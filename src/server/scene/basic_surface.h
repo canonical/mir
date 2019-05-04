@@ -142,6 +142,9 @@ public:
     void placed_relative(geometry::Rectangle const& placement) override;
     void start_drag_and_drop(std::vector<uint8_t> const& handle) override;
 
+    auto depth_layer() const -> MirDepthLayer override;
+    void set_depth_layer(MirDepthLayer depth_layer) override;
+
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
     MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
@@ -178,6 +181,8 @@ private:
     MirPointerConfinementState confine_pointer_state_ = mir_pointer_unconfined;
 
     std::unique_ptr<CursorStreamImageAdapter> const cursor_stream_adapter;
+
+    MirDepthLayer depth_layer_ = mir_depth_layer_application;
 };
 
 }

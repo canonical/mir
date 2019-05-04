@@ -924,3 +924,17 @@ void mir::scene::BasicSurface::start_drag_and_drop(std::vector<uint8_t> const& h
 {
     observers.start_drag_and_drop(this, handle);
 }
+
+auto mir::scene::BasicSurface::depth_layer() const -> MirDepthLayer
+{
+    std::unique_lock<std::mutex> lg(guard);
+    return depth_layer_;
+}
+
+void mir::scene::BasicSurface::set_depth_layer(MirDepthLayer depth_layer)
+{
+    {
+        std::unique_lock<std::mutex> lg(guard);
+        depth_layer_ = depth_layer;
+    }
+}
