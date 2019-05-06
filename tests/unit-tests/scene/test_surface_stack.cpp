@@ -1027,3 +1027,90 @@ TEST_F(SurfaceStack, raise_surfaces_to_top)
             SceneElementForStream(stub_buffer_stream2),
             SceneElementForStream(stub_buffer_stream3)));
 }
+
+TEST_F(SurfaceStack, new_surface_is_placed_under_old_according_to_z_index)
+{
+    stub_surface1->set_z_index(0);
+    stub_surface2->set_z_index(-1);
+
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.input_mode);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream2),
+            SceneElementForStream(stub_buffer_stream1)));
+}
+
+TEST_F(SurfaceStack, raise_does_not_reorder_surfaces_when_z_indecies_are_different)
+{
+    stub_surface1->set_z_index(-1);
+    stub_surface2->set_z_index(0);
+    stub_surface3->set_z_index(1);
+
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface3, default_params.input_mode);
+
+    NiceMock<MockSceneObserver> observer;
+    stack.add_observer(mt::fake_shared(observer));
+
+    EXPECT_CALL(observer, surfaces_reordered()).Times(0);
+
+    stack.raise({stub_surface1, stub_surface3});
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream1),
+            SceneElementForStream(stub_buffer_stream2),
+            SceneElementForStream(stub_buffer_stream3)));
+}
+
+TEST_F(SurfaceStack, changing_z_index_causes_reorder)
+{
+    NiceMock<MockSceneObserver> observer;
+    stack.add_observer(mt::fake_shared(observer));
+
+    EXPECT_CALL(observer, surfaces_reordered()).Times(0);
+
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.input_mode);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream1),
+            SceneElementForStream(stub_buffer_stream2)));
+
+    Mock::VerifyAndClearExpectations(&observer);
+    EXPECT_CALL(observer, surfaces_reordered()).Times(1);
+
+    stub_surface1->set_z_index(1);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream2),
+            SceneElementForStream(stub_buffer_stream1)));
+}
+
+TEST_F(SurfaceStack, changing_z_index_does_not_cause_reorder_when_it_shouldnt)
+{
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.input_mode);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream1),
+            SceneElementForStream(stub_buffer_stream2)));
+
+    stub_surface1->set_z_index(-1);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream1),
+            SceneElementForStream(stub_buffer_stream2)));
+}
