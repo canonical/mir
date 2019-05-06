@@ -14,6 +14,26 @@
 
 #include "mir/log.h"
 
+namespace
+{
+void internal_error_processing_request(struct wl_client* client, std::string const& method_name)
+{
+#if (WAYLAND_VERSION_MAJOR > 1 || (WAYLAND_VERSION_MAJOR == 1 && WAYLAND_VERSION_MINOR > 16))
+    wl_client_post_implementation_error(
+        client,
+        "Mir internal error processing %s request",
+        method_name.c_str());
+#else
+    wl_client_post_no_memory(client);
+#endif
+    ::mir::log(
+        ::mir::logging::Severity::error,
+        "frontend:Wayland",
+        std::current_exception(),
+        "Exception processing " + method_name + " request");
+}
+}
+
 namespace mir
 {
 namespace wayland
@@ -62,10 +82,7 @@ struct mw::LayerShellV1::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing LayerShellV1::get_layer_surface() request");
+            internal_error_processing_request(client, "LayerShellV1::get_layer_surface()");
         }
     }
 
@@ -86,10 +103,7 @@ struct mw::LayerShellV1::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing LayerShellV1::bind() request");
+            internal_error_processing_request(client, "LayerShellV1::bind()");
         }
     }
 
@@ -140,7 +154,7 @@ mw::LayerSurfaceV1* mw::LayerSurfaceV1::from(struct wl_resource* resource)
 
 struct mw::LayerSurfaceV1::Thunks
 {
-    static void set_size_thunk(struct wl_client*, struct wl_resource* resource, uint32_t width, uint32_t height)
+    static void set_size_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t width, uint32_t height)
     {
         auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
@@ -149,14 +163,11 @@ struct mw::LayerSurfaceV1::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing LayerSurfaceV1::set_size() request");
+            internal_error_processing_request(client, "LayerSurfaceV1::set_size()");
         }
     }
 
-    static void set_anchor_thunk(struct wl_client*, struct wl_resource* resource, uint32_t anchor)
+    static void set_anchor_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t anchor)
     {
         auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
@@ -165,14 +176,11 @@ struct mw::LayerSurfaceV1::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing LayerSurfaceV1::set_anchor() request");
+            internal_error_processing_request(client, "LayerSurfaceV1::set_anchor()");
         }
     }
 
-    static void set_exclusive_zone_thunk(struct wl_client*, struct wl_resource* resource, int32_t zone)
+    static void set_exclusive_zone_thunk(struct wl_client* client, struct wl_resource* resource, int32_t zone)
     {
         auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
@@ -181,14 +189,11 @@ struct mw::LayerSurfaceV1::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing LayerSurfaceV1::set_exclusive_zone() request");
+            internal_error_processing_request(client, "LayerSurfaceV1::set_exclusive_zone()");
         }
     }
 
-    static void set_margin_thunk(struct wl_client*, struct wl_resource* resource, int32_t top, int32_t right, int32_t bottom, int32_t left)
+    static void set_margin_thunk(struct wl_client* client, struct wl_resource* resource, int32_t top, int32_t right, int32_t bottom, int32_t left)
     {
         auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
@@ -197,14 +202,11 @@ struct mw::LayerSurfaceV1::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing LayerSurfaceV1::set_margin() request");
+            internal_error_processing_request(client, "LayerSurfaceV1::set_margin()");
         }
     }
 
-    static void set_keyboard_interactivity_thunk(struct wl_client*, struct wl_resource* resource, uint32_t keyboard_interactivity)
+    static void set_keyboard_interactivity_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t keyboard_interactivity)
     {
         auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
@@ -213,14 +215,11 @@ struct mw::LayerSurfaceV1::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing LayerSurfaceV1::set_keyboard_interactivity() request");
+            internal_error_processing_request(client, "LayerSurfaceV1::set_keyboard_interactivity()");
         }
     }
 
-    static void get_popup_thunk(struct wl_client*, struct wl_resource* resource, struct wl_resource* popup)
+    static void get_popup_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* popup)
     {
         auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
@@ -229,14 +228,11 @@ struct mw::LayerSurfaceV1::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing LayerSurfaceV1::get_popup() request");
+            internal_error_processing_request(client, "LayerSurfaceV1::get_popup()");
         }
     }
 
-    static void ack_configure_thunk(struct wl_client*, struct wl_resource* resource, uint32_t serial)
+    static void ack_configure_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
     {
         auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
@@ -245,14 +241,11 @@ struct mw::LayerSurfaceV1::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing LayerSurfaceV1::ack_configure() request");
+            internal_error_processing_request(client, "LayerSurfaceV1::ack_configure()");
         }
     }
 
-    static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
+    static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<LayerSurfaceV1*>(wl_resource_get_user_data(resource));
         try
@@ -261,10 +254,7 @@ struct mw::LayerSurfaceV1::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing LayerSurfaceV1::destroy() request");
+            internal_error_processing_request(client, "LayerSurfaceV1::destroy()");
         }
     }
 

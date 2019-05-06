@@ -14,6 +14,26 @@
 
 #include "mir/log.h"
 
+namespace
+{
+void internal_error_processing_request(struct wl_client* client, std::string const& method_name)
+{
+#if (WAYLAND_VERSION_MAJOR > 1 || (WAYLAND_VERSION_MAJOR == 1 && WAYLAND_VERSION_MINOR > 16))
+    wl_client_post_implementation_error(
+        client,
+        "Mir internal error processing %s request",
+        method_name.c_str());
+#else
+    wl_client_post_no_memory(client);
+#endif
+    ::mir::log(
+        ::mir::logging::Severity::error,
+        "frontend:Wayland",
+        std::current_exception(),
+        "Exception processing " + method_name + " request");
+}
+}
+
 namespace mir
 {
 namespace wayland
@@ -55,10 +75,7 @@ struct mw::ServerDecorationManager::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ServerDecorationManager::create() request");
+            internal_error_processing_request(client, "ServerDecorationManager::create()");
         }
     }
 
@@ -79,10 +96,7 @@ struct mw::ServerDecorationManager::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ServerDecorationManager::bind() request");
+            internal_error_processing_request(client, "ServerDecorationManager::bind()");
         }
     }
 
@@ -139,7 +153,7 @@ mw::ServerDecoration* mw::ServerDecoration::from(struct wl_resource* resource)
 
 struct mw::ServerDecoration::Thunks
 {
-    static void release_thunk(struct wl_client*, struct wl_resource* resource)
+    static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<ServerDecoration*>(wl_resource_get_user_data(resource));
         try
@@ -148,14 +162,11 @@ struct mw::ServerDecoration::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ServerDecoration::release() request");
+            internal_error_processing_request(client, "ServerDecoration::release()");
         }
     }
 
-    static void request_mode_thunk(struct wl_client*, struct wl_resource* resource, uint32_t mode)
+    static void request_mode_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t mode)
     {
         auto me = static_cast<ServerDecoration*>(wl_resource_get_user_data(resource));
         try
@@ -164,10 +175,7 @@ struct mw::ServerDecoration::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing ServerDecoration::request_mode() request");
+            internal_error_processing_request(client, "ServerDecoration::request_mode()");
         }
     }
 
@@ -196,6 +204,11 @@ mw::ServerDecoration::ServerDecoration(struct wl_client* client, struct wl_resou
 void mw::ServerDecoration::send_mode_event(uint32_t mode) const
 {
     wl_resource_post_event(resource, Opcode::mode, mode);
+}
+
+bool mw::ServerDecoration::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &org_kde_kwin_server_decoration_interface_data, Thunks::request_vtable);
 }
 
 void mw::ServerDecoration::destroy_wayland_object() const

@@ -41,20 +41,9 @@ Emitter Request::thunk_impl() const
                 {"me->", name, "(", mir_call_args(), ");"}
             },
             "catch(...)",
-            Block{{
-                "::mir::log(",
-                Emitter::layout(
-                    Emitter::seq({
-                            "::mir::logging::Severity::critical",
-                            "\"frontend:Wayland\"",
-                            "std::current_exception()",
-                            {"\"Exception processing ", class_name, "::", name, "() request\""}},
-                        Emitter::layout(",", false, true)),
-                    false,
-                    false,
-                    "           "),
-                ");"
-            }}
+            Block{
+                {"internal_error_processing_request(client, \"", class_name, "::", name, "()\");"},
+            }
         }
     };
 }
@@ -66,9 +55,7 @@ Emitter Request::vtable_initialiser() const
 
 Emitter Request::wl_args() const
 {
-    Emitter client_arg = "struct wl_client*";
-    if (is_global) // only bind it to a variable if we need it
-        client_arg = {client_arg, " client"};
+    Emitter client_arg = "struct wl_client* client";
     std::vector<Emitter> wl_args{client_arg, "struct wl_resource* resource"};
     for (auto const& arg : arguments)
         wl_args.push_back(arg.wl_prototype());
