@@ -116,13 +116,19 @@ auto miral::BasicWindowManager::add_surface(
 
     WindowSpecification const& spec = policy->place_new_window(session_info, place_new_surface(session_info, params));
     scene::SurfaceCreationParameters parameters;
+    if (params.z_index.is_set())
+        parameters.z_index = params.z_index;
     spec.update(parameters);
     auto const surface_id = build(session, parameters);
-    Window const window{session, session->surface(surface_id)};
+    auto surface = session->surface(surface_id);
+    Window const window{session, surface};
     auto& window_info = this->window_info.emplace(window, WindowInfo{window, spec}).first->second;
 
     if (spec.parent().is_set() && spec.parent().value().lock())
+    {
         window_info.parent(info_for(spec.parent().value()).window());
+        surface->set_z_index(spec.parent().value().lock()->z_index());
+    }
 
     if (spec.userdata().is_set())
         window_info.userdata() = spec.userdata().value();
@@ -178,6 +184,8 @@ void miral::BasicWindowManager::modify_surface(
     shell::SurfaceSpecification const& modifications)
 {
     Locker lock{this};
+    if (modifications.z_index.is_set())
+        surface->set_z_index(modifications.z_index.value());
     auto& info = info_for(surface);
     WindowSpecification mods{modifications};
     validate_modification_request(mods, info);
