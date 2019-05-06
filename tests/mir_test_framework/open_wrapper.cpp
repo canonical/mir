@@ -30,38 +30,26 @@ namespace
 class OpenHandlers
 {
 public:
-    static auto instance() -> OpenHandlers&
+    static auto add(mtf::OpenHandler handler) -> mtf::OpenHandlerHandle
     {
-        // static local so we don't have to worry about initialization order
-        static OpenHandlers open_handlers;
-        return open_handlers;
-    }
-
-    auto add(mtf::OpenHandler handler) -> mtf::OpenHandlerHandle
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        auto iterator = handlers.emplace(handlers.begin(), std::move(handler));
+        auto& me = instance();
+        std::lock_guard<std::mutex> lock{me.mutex};
+        auto iterator = me.handlers.emplace(me.handlers.begin(), std::move(handler));
         auto remove_callback = +[](void* iterator)
             {
                 auto to_remove = static_cast<std::list<mtf::OpenHandler>::iterator*>(iterator);
-                instance().remove(to_remove);
+                remove(to_remove);
             };
         return mtf::OpenHandlerHandle{
             static_cast<void*>(new std::list<mtf::OpenHandler>::iterator{iterator}),
             remove_callback};
     }
 
-    void remove(std::list<mtf::OpenHandler>::iterator* to_remove)
+    static auto run(char const* path, int flags, mode_t mode) -> std::experimental::optional<int>
     {
-        std::lock_guard<std::mutex> lock{mutex};
-        handlers.erase(*to_remove);
-        delete to_remove;
-    }
-
-    auto run(char const* path, int flags, mode_t mode) -> std::experimental::optional<int>
-    {
-        std::lock_guard<std::mutex> lock{mutex};
-        for (auto const& handler : handlers)
+        auto& me = instance();
+        std::lock_guard<std::mutex> lock{me.mutex};
+        for (auto const& handler : me.handlers)
         {
             if (auto val = handler(path, flags, mode))
             {
@@ -72,6 +60,21 @@ public:
     }
 
 private:
+    static auto instance() -> OpenHandlers&
+    {
+        // static local so we don't have to worry about initialization order
+        static OpenHandlers open_handlers;
+        return open_handlers;
+    }
+
+    static void remove(std::list<mtf::OpenHandler>::iterator* to_remove)
+    {
+        auto& me = instance();
+        std::lock_guard<std::mutex> lock{me.mutex};
+        me.handlers.erase(*to_remove);
+        delete to_remove;
+    }
+
     std::mutex mutex;
     std::list<mtf::OpenHandler> handlers;
 };
@@ -79,7 +82,7 @@ private:
 
 mtf::OpenHandlerHandle mtf::add_open_handler(OpenHandler handler)
 {
-    return OpenHandlers::instance().add(std::move(handler));
+    return OpenHandlers::add(std::move(handler));
 }
 
 // We need to explicitly mark this as C because we don't match the
@@ -88,7 +91,7 @@ extern "C"
 {
 int open(char const* path, int flags, mode_t mode)
 {
-    if (auto val = OpenHandlers::instance().run(path, flags, mode))
+    if (auto val = OpenHandlers::run(path, flags, mode))
     {
         return *val;
     }
@@ -101,7 +104,7 @@ int open(char const* path, int flags, mode_t mode)
 
 int open64(char const* path, int flags, mode_t mode)
 {
-    if (auto val = OpenHandlers::instance().run(path, flags, mode))
+    if (auto val = OpenHandlers::run(path, flags, mode))
     {
         return *val;
     }
@@ -114,7 +117,7 @@ int open64(char const* path, int flags, mode_t mode)
 
 int __open(char const* path, int flags, mode_t mode)
 {
-    if (auto val = OpenHandlers::instance().run(path, flags, mode))
+    if (auto val = OpenHandlers::run(path, flags, mode))
     {
         return *val;
     }
@@ -127,7 +130,7 @@ int __open(char const* path, int flags, mode_t mode)
 
 int __open64(char const* path, int flags, mode_t mode)
 {
-    if (auto val = OpenHandlers::instance().run(path, flags, mode))
+    if (auto val = OpenHandlers::run(path, flags, mode))
     {
         return *val;
     }
@@ -140,7 +143,7 @@ int __open64(char const* path, int flags, mode_t mode)
 
 int __open_2(char const* path, int flags)
 {
-    if (auto val = OpenHandlers::instance().run(path, flags, 0))
+    if (auto val = OpenHandlers::run(path, flags, 0))
     {
         return *val;
     }
@@ -153,7 +156,7 @@ int __open_2(char const* path, int flags)
 
 int __open64_2(char const* path, int flags)
 {
-    if (auto val = OpenHandlers::instance().run(path, flags, 0))
+    if (auto val = OpenHandlers::run(path, flags, 0))
     {
         return *val;
     }
