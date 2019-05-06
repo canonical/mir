@@ -42,13 +42,12 @@ class BufferStream : public frontend::BufferStream
 public:
     virtual ~BufferStream() = default;
 
-    virtual std::shared_ptr<graphics::Buffer>
-        lock_compositor_buffer(void const* user_id) = 0;
-    virtual geometry::Size stream_size() = 0;
-    virtual int buffers_ready_for_compositor(void const* user_id) const = 0;
+    virtual auto lock_compositor_buffer(void const* user_id) -> std::shared_ptr<graphics::Buffer> = 0;
+    virtual auto stream_size() -> geometry::Size = 0;
+    virtual auto buffers_ready_for_compositor(void const* user_id) const -> int = 0;
     virtual void drop_old_buffers() = 0;
-    virtual bool has_submitted_buffer() const = 0;
-    virtual bool framedropping() const = 0;
+    virtual auto has_submitted_buffer() const -> bool = 0;
+    virtual auto framedropping() const -> bool = 0;
 };
 
 }

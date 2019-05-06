@@ -85,12 +85,6 @@ bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
        ((current_buffer_users.find(id) == current_buffer_users.end()) && current_buffer);
 }
 
-bool mc::MultiMonitorArbiter::has_buffer()
-{
-    std::lock_guard<decltype(mutex)> lk(mutex);
-    return static_cast<bool>(current_buffer);
-}
-
 void mc::MultiMonitorArbiter::advance_schedule()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);

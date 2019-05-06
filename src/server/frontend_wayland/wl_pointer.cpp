@@ -57,9 +57,9 @@ mf::WlPointer::WlPointer(
     uint32_t id,
     std::function<void(WlPointer*)> const& on_destroy)
     : Pointer(client, parent, id),
-        display{wl_client_get_display(client)},
-        on_destroy{on_destroy},
-        cursor{std::make_unique<NullCursor>()}
+      display{wl_client_get_display(client)},
+      on_destroy{on_destroy},
+      cursor{std::make_unique<NullCursor>()}
 {
 }
 
@@ -109,8 +109,9 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
         }
         case mir_pointer_action_enter:
         {
-            auto point = Point{mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-                                        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+            auto point = Point{
+                mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+                mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
             auto transformed = surface->transform_point(point);
             handle_enter(transformed.position, transformed.surface);
             handle_frame();
@@ -130,17 +131,19 @@ void mf::WlPointer::handle_event(MirPointerEvent const* event, WlSurface* surfac
 
             bool needs_frame = false;
             auto const timestamp = mir_input_event_get_event_time_ms(mir_pointer_event_input_event(event));
-            auto point = Point{mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-                                        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+            auto point = Point{
+                mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+                mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
             auto transformed = surface->transform_point(point);
 
             if (focused_surface && transformed.surface == focused_surface.value())
             {
                 if (!last_position || transformed.position != last_position.value())
                 {
-                    send_motion_event(timestamp,
-                                      transformed.position.x.as_int(),
-                                      transformed.position.y.as_int());
+                    send_motion_event(
+                        timestamp,
+                        transformed.position.x.as_int(),
+                        transformed.position.y.as_int());
                     last_position = transformed.position;
                     needs_frame = true;
                 }
@@ -186,11 +189,14 @@ void mf::WlPointer::handle_enter(Point position, WlSurface* surface)
 {
     cursor->apply_to(surface);
     auto const serial = wl_display_next_serial(display);
-    send_enter_event(serial,
-                     surface->raw_resource(),
-                     position.x.as_int(),
-                     position.y.as_int());
-    surface->add_destroy_listener(this, [this]()
+    send_enter_event(
+        serial,
+        surface->raw_resource(),
+        position.x.as_int(),
+        position.y.as_int());
+    surface->add_destroy_listener(
+        this,
+        [this]()
         {
             handle_leave();
         });
@@ -203,8 +209,9 @@ void mf::WlPointer::handle_leave()
         return;
     focused_surface.value()->remove_destroy_listener(this);
     auto const serial = wl_display_next_serial(display);
-    send_leave_event(serial,
-                     focused_surface.value()->raw_resource());
+    send_leave_event(
+        serial,
+        focused_surface.value()->raw_resource());
     focused_surface = std::experimental::nullopt;
     last_position = std::experimental::nullopt;
 }
@@ -219,12 +226,16 @@ namespace
 {
 struct WlStreamCursor : mf::WlPointer::Cursor
 {
-    WlStreamCursor(std::shared_ptr<mf::Session> const session, std::shared_ptr<mf::BufferStream> const& stream, Displacement hotspot);
+    WlStreamCursor(
+        std::shared_ptr<mf::Session> const session,
+        std::shared_ptr<mf::BufferStream> const& stream,
+        Displacement hotspot);
+
     void apply_to(mf::WlSurface* surface) override;
 
-    std::shared_ptr<mf::Session>        const session;
-    std::shared_ptr<mf::BufferStream>   const stream;
-    Displacement        const hotspot;
+    std::shared_ptr<mf::Session> const session;
+    std::shared_ptr<mf::BufferStream> const stream;
+    Displacement const hotspot;
 };
 
 struct WlHiddenCursor : mf::WlPointer::Cursor
@@ -232,12 +243,14 @@ struct WlHiddenCursor : mf::WlPointer::Cursor
     WlHiddenCursor(std::shared_ptr<mf::Session> const session);
     void apply_to(mf::WlSurface* surface) override;
 
-    std::shared_ptr<mf::Session>        const session;
+    std::shared_ptr<mf::Session> const session;
 };
 }
 
-
-void mf::WlPointer::set_cursor(uint32_t serial, std::experimental::optional<wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y)
+void mf::WlPointer::set_cursor(
+    uint32_t serial,
+    std::experimental::optional<wl_resource*> const& surface,
+    int32_t hotspot_x, int32_t hotspot_y)
 {
     if (surface)
     {

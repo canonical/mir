@@ -16,7 +16,6 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-
 #ifndef MIR_FRONTEND_SURFACE_H_
 #define MIR_FRONTEND_SURFACE_H_
 
@@ -48,12 +47,13 @@ public:
     virtual ~Surface() = default;
 
     /// Size of the client area of the surface (excluding any decorations)
-    virtual geometry::Size client_size() const = 0;
+    virtual auto client_size() const -> geometry::Size = 0;
 
-    virtual std::shared_ptr<frontend::BufferStream> primary_buffer_stream() const = 0;
+    virtual auto primary_buffer_stream() const -> std::shared_ptr<frontend::BufferStream> = 0;
 
     virtual void set_cursor_image(std::shared_ptr<graphics::CursorImage> const& image) = 0;
-    virtual void set_cursor_stream(std::shared_ptr<frontend::BufferStream> const& image,
+    virtual void set_cursor_stream(
+        std::shared_ptr<frontend::BufferStream> const& image,
         geometry::Displacement const& hotspot) = 0;
 
 protected:
