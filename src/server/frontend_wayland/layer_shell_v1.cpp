@@ -22,10 +22,33 @@
 #include "window_wl_surface_role.h"
 
 #include "mir/shell/surface_specification.h"
+#include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
+
+namespace
+{
+
+auto layer_shell_layer_to_mir_depth_layer(uint32_t layer) -> MirDepthLayer
+{
+    switch (layer)
+    {
+    case mw::LayerShellV1::Layer::background:
+        return mir_depth_layer_background;
+    case mw::LayerShellV1::Layer::bottom:
+        return mir_depth_layer_below;
+    case mw::LayerShellV1::Layer::top:
+        return mir_depth_layer_above;
+    case mw::LayerShellV1::Layer::overlay:
+        return mir_depth_layer_overlay;
+    default:
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid Layer Shell layer " + std::to_string(layer)));
+    }
+}
+
+}
 
 namespace mir
 {
@@ -58,7 +81,8 @@ public:
     LayerSurfaceV1(
         wl_resource* new_resource,
         WlSurface* surface,
-        LayerShellV1 const& layer_shell);
+        LayerShellV1 const& layer_shell,
+        MirDepthLayer layer);
 
     ~LayerSurfaceV1() = default;
 
@@ -110,15 +134,23 @@ void mf::LayerShellV1::Instance::get_layer_surface(
     uint32_t layer,
     std::string const& namespace_)
 {
-    (void)output;
-    (void)layer;
-    (void)namespace_;
-    new LayerSurfaceV1(new_layer_surface, WlSurface::from(surface), *shell);
+    (void)output; // TODO
+    (void)namespace_; // TODO
+
+    new LayerSurfaceV1(
+        new_layer_surface,
+        WlSurface::from(surface),
+        *shell,
+        layer_shell_layer_to_mir_depth_layer(layer));
 }
 
 // LayerSurfaceV1
 
-mf::LayerSurfaceV1::LayerSurfaceV1(wl_resource* new_resource, WlSurface* surface, LayerShellV1 const& layer_shell)
+mf::LayerSurfaceV1::LayerSurfaceV1(
+    wl_resource* new_resource,
+    WlSurface* surface,
+    LayerShellV1 const& layer_shell,
+    MirDepthLayer layer)
     : mw::LayerSurfaceV1(new_resource, Version<1>()),
       WindowWlSurfaceRole(
           &layer_shell.seat,
@@ -129,6 +161,7 @@ mf::LayerSurfaceV1::LayerSurfaceV1(wl_resource* new_resource, WlSurface* surface
 {
     shell::SurfaceSpecification spec;
     spec.state = mir_window_state_attached;
+    spec.depth_layer = layer;
     apply_spec(spec);
     auto const serial = wl_display_next_serial(wl_client_get_display(wayland::LayerSurfaceV1::client));
     send_configure_event (serial, 0, 0);
