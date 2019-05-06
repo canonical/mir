@@ -282,6 +282,7 @@ pkg_check_modules(XCB_COMPOSITE REQUIRED xcb-composite)
 pkg_check_modules(XCB_XFIXES REQUIRED xcb-xfixes)
 pkg_check_modules(XCB_RENDER REQUIRED xcb-render)
 pkg_check_modules(X11_XCURSOR REQUIRED xcursor)
+pkg_check_modules(DRM REQUIRED libdrm)
 
 include_directories (SYSTEM ${GLESv2_INCLUDE_DIRS})
 include_directories (SYSTEM ${EGL_INCLUDE_DIRS})
@@ -336,7 +337,6 @@ endif()
 
 if (MIR_BUILD_PLATFORM_MESA_KMS OR MIR_BUILD_PLATFORM_MESA_X11)
   pkg_check_modules( GBM REQUIRED gbm>=9.0.0)
-  pkg_check_modules( DRM REQUIRED libdrm )
   if (GBM_VERSION VERSION_LESS 11)
     message(WARNING "Hybrid support requires libgbm from Mesa 11.0 or greater. Hybrid setups will not work")
     add_definitions(-DMIR_NO_HYBRID_SUPPORT)
@@ -348,7 +348,6 @@ endif()
 
 if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
   pkg_check_modules(EPOXY REQUIRED epoxy)
-  pkg_check_modules(DRM REQUIRED libdrm)
 endif()
 
 # This incantation gets the MIR_EGL_SUPPORTED default right for Mesa
