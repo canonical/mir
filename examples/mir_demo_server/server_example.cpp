@@ -23,19 +23,17 @@
 #include "server_example_custom_compositor.h"
 #include "server_example_test_client.h"
 #include "server_example_input_device_config.h"
-
-#include "tiling_window_manager.h"
-#include "floating_window_manager.h"
-#include "wallpaper_config.h"
 #include "sw_splash.h"
 
 #include <miral/command_line_option.h>
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
+#include <miral/internal_client.h>
+#include <miral/minimal_window_manager.h>
 #include <miral/runner.h>
-#include <miral/window_management_options.h>
-#include <miral/x11_support.h>
+#include <miral/set_window_management_policy.h>
 #include <miral/wayland_extensions.h>
+#include <miral/x11_support.h>
 
 #include "mir/abnormal_exit.h"
 #include "mir/server.h"
@@ -133,12 +131,6 @@ try
     runner.add_stop_callback([&] { shutdown_hook(); });
 
     SwSplash spinner;
-    miral::InternalClientLauncher launcher;
-    miral::WindowManagerOptions window_managers
-        {
-            miral::add_window_manager_policy<FloatingWindowManagerPolicy>("floating", spinner, launcher, shutdown_hook),
-            miral::add_window_manager_policy<TilingWindowManagerPolicy>("tiling", spinner, launcher),
-        };
 
     InputFilters input_filters;
     me::TestClientRunner test_runner;
@@ -151,15 +143,11 @@ try
         miral::StartupInternalClient{spinner},
         miral::X11Support{},
         miral::WaylandExtensions{miral::WaylandExtensions::recommended_extensions() + ":zwlr_layer_shell_v1"},
-        launcher,
-        window_managers,
+        miral::set_window_management_policy<miral::MinimalWindowManager>(),
         me::add_custom_compositor_option_to,
         me::add_input_device_configuration_options_to,
         add_timeout_option_to,
         miral::CursorTheme{"default:DMZ-White"},
-        pre_init(miral::CommandLineOption{
-            [&](std::string const& font) { ::wallpaper::font_file(font); },
-            "wallpaper-font", "font file to use for wallpaper", ::wallpaper::font_file()}),
         input_filters,
         test_runner
     });
