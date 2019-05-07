@@ -341,4 +341,21 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::application_for(wl_client*)@MIRAL_2.5" 2.5.0
  (c++)"miral::application_for(wl_resource*)@MIRAL_2.5" 2.5.0
  (c++)"miral::window_for(wl_resource*)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::advise_focus_gained(miral::WindowInfo const&)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::Displacement)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::Rectangle const&)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const*)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::handle_pointer_event(MirPointerEvent const*)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::handle_raise_window(miral::WindowInfo&)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::handle_request_drag_and_drop(miral::WindowInfo&)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::handle_request_move(miral::WindowInfo&, MirInputEvent const*)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::handle_touch_event(MirTouchEvent const*)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::handle_window_ready(miral::WindowInfo&)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::MinimalWindowManager(miral::WindowManagerTools const&)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::place_new_window(miral::ApplicationInfo const&, miral::WindowSpecification const&)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::~MinimalWindowManager()@MIRAL_2.5" 2.5.0
+ (c++)"typeinfo for miral::MinimalWindowManager@MIRAL_2.5" 2.5.0
+ (c++)"vtable for miral::MinimalWindowManager@MIRAL_2.5" 2.5.0
 
