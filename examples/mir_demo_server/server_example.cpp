@@ -23,12 +23,10 @@
 #include "server_example_custom_compositor.h"
 #include "server_example_test_client.h"
 #include "server_example_input_device_config.h"
-#include "sw_splash.h"
 
 #include <miral/command_line_option.h>
 #include <miral/cursor_theme.h>
 #include <miral/display_configuration_option.h>
-#include <miral/internal_client.h>
 #include <miral/minimal_window_manager.h>
 #include <miral/runner.h>
 #include <miral/set_window_management_policy.h>
@@ -130,8 +128,6 @@ try
     std::function<void()> shutdown_hook{[]{}};
     runner.add_stop_callback([&] { shutdown_hook(); });
 
-    SwSplash spinner;
-
     InputFilters input_filters;
     me::TestClientRunner test_runner;
 
@@ -140,7 +136,6 @@ try
         miral::display_configuration_options,
         me::add_log_host_lifecycle_option_to,
         me::add_glog_options_to,
-        miral::StartupInternalClient{spinner},
         miral::X11Support{},
         miral::WaylandExtensions{miral::WaylandExtensions::recommended_extensions() + ":zwlr_layer_shell_v1"},
         miral::set_window_management_policy<miral::MinimalWindowManager>(),
