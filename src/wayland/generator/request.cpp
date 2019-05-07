@@ -18,8 +18,8 @@
 
 #include "request.h"
 
-Request::Request(xmlpp::Element const& node, std::string const& class_name, bool is_global)
-    : Method{node, class_name, is_global, false}
+Request::Request(xmlpp::Element const& node, std::string const& class_name)
+    : Method{node, class_name, false}
 {
 }
 
@@ -65,11 +65,6 @@ Emitter Request::wl_args() const
 Emitter Request::mir_args() const
 {
     std::vector<Emitter> mir_args;
-    if (is_global)
-    {
-        mir_args.push_back("struct wl_client* client");
-        mir_args.push_back("struct wl_resource* resource");
-    }
     for (auto& i : arguments)
     {
         mir_args.push_back(i.mir_prototype());
@@ -91,11 +86,6 @@ Emitter Request::wl2mir_converters() const
 Emitter Request::mir_call_args() const
 {
     std::vector<Emitter> call_args;
-    if (is_global)
-    {
-        call_args.push_back("client");
-        call_args.push_back("resource");
-    }
     for (auto& arg : arguments)
         call_args.push_back(arg.call_fragment());
     return Emitter::seq(call_args, ", ");

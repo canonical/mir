@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -16,30 +16,33 @@
  * Authored By: William Wold <william.wold@canonical.com>
  */
 
-#ifndef MIR_WAYLAND_GENERATOR_EVENT_H
-#define MIR_WAYLAND_GENERATOR_EVENT_H
+#ifndef MIR_WAYLAND_GENERATOR_GLOBAL_H
+#define MIR_WAYLAND_GENERATOR_GLOBAL_H
 
-#include "method.h"
+#include "emitter.h"
 
-class Event : public Method
+namespace xmlpp
+{
+class Element;
+}
+
+class Global
 {
 public:
-    Event(xmlpp::Element const& node, std::string const& class_name, int opcode);
+    Global(std::string const& wl_name, std::string const& generated_name, std::string const& nmspace);
 
-    Emitter opcode_declare() const;
-    Emitter prototype() const;
-    Emitter impl() const;
+    Emitter declaration() const;
+    Emitter implementation() const;
+    Emitter bind_thunk_impl() const;
 
-protected:
-    // converts wl input types to mir types
-    Emitter mir2wl_converters() const;
+private:
+    Emitter constructor_args() const;
+    Emitter bind_prototype() const;
+    Emitter member_vars() const;
 
-    Emitter mir_args() const;
-
-    // arguments to call the virtual mir function call (just names, no types)
-    Emitter wl_call_args() const;
-
-    int const opcode;
+    std::string const wl_name;
+    std::string const generated_name;
+    std::string const nmspace;
 };
 
-#endif // MIR_WAYLAND_GENERATOR_EVENT_H
+#endif // MIR_WAYLAND_GENERATOR_GLOBAL_H

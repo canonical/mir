@@ -21,10 +21,9 @@
 
 #include <libxml++/libxml++.h>
 
-Method::Method(xmlpp::Element const& node, std::string const& class_name, bool is_global, bool is_event)
+Method::Method(xmlpp::Element const& node, std::string const& class_name, bool is_event)
     : name{node.get_attribute_value("name")},
       class_name{class_name},
-      is_global{is_global},
       min_version{get_since_version(node)}
 {
     for (auto const& child : node.get_children("arg"))

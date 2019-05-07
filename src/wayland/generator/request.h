@@ -24,7 +24,7 @@
 class Request : public Method
 {
 public:
-    Request(xmlpp::Element const& node, std::string const& class_name, bool is_global);
+    Request(xmlpp::Element const& node, std::string const& class_name);
 
     // prototype of virtual function that is overridden in Mir
     Emitter virtual_mir_prototype() const;
