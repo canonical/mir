@@ -69,9 +69,16 @@ struct mw::ServerDecorationManager::Thunks
     static void create_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
         auto me = static_cast<ServerDecorationManager*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &org_kde_kwin_server_decoration_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->create(client, resource, id, surface);
+            me->create(client, resource, id_resolved, surface);
         }
         catch(...)
         {
@@ -82,8 +89,11 @@ struct mw::ServerDecorationManager::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<ServerDecorationManager*>(data);
-        auto resource = wl_resource_create(client, &org_kde_kwin_server_decoration_manager_interface_data,
-                                           std::min(version, me->max_version), id);
+        auto resource = wl_resource_create(
+            client,
+            &org_kde_kwin_server_decoration_manager_interface_data,
+            std::min(version, me->max_version),
+            id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -189,13 +199,12 @@ struct mw::ServerDecoration::Thunks
     static void const* request_vtable[];
 };
 
-mw::ServerDecoration::ServerDecoration(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &org_kde_kwin_server_decoration_interface_data, wl_resource_get_version(parent), id)}
+mw::ServerDecoration::ServerDecoration(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
