@@ -32,32 +32,47 @@ public:
     explicit MinimalWindowManager(WindowManagerTools const& tools);
     ~MinimalWindowManager();
 
+    /// Honours the requested specification
     auto place_new_window(
         ApplicationInfo const& app_info,
         WindowSpecification const& requested_specification) -> WindowSpecification override;
 
+    /// If the window can have focus it is given focus
     void handle_window_ready(WindowInfo& window_info) override;
 
+    /// Honours the requested modifications
     void handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications) override;
 
+    /// Gives focus to the requesting window (tree)
     void handle_raise_window(WindowInfo& window_info) override;
 
-    Rectangle confirm_placement_on_display(
-        WindowInfo const& window_info, MirWindowState new_state, Rectangle const& new_placement) override;
+    /// Honours the requested placement
+    auto confirm_placement_on_display(
+        WindowInfo const& window_info, MirWindowState new_state, Rectangle const& new_placement) -> Rectangle override;
 
+    /// Handles Alt-Tab, Alt-Grave and Alt-F4
     bool handle_keyboard_event(MirKeyboardEvent const* event) override;
 
+    /// Handles touch to focus
     bool handle_touch_event(MirTouchEvent const* event) override;
 
+    /// Handles pre-existing move & resize gestures, plus click to focus
     bool handle_pointer_event(MirPointerEvent const* event) override;
 
+    /// Currently unimplemented
     void handle_request_drag_and_drop(WindowInfo& window_info) override;
 
+    /// Initiates a move gesture (only implemented for pointers)
     void handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event) override;
 
+    /// Initiates a resize gesture (only implemented for pointers)
     void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) override;
 
-    Rectangle confirm_inherited_move(WindowInfo const& window_info, Displacement movement) override;
+    /// Honours the requested movement
+    auto confirm_inherited_move(WindowInfo const& window_info, Displacement movement) -> Rectangle override;
+
+    /// Raises newly focused window
+    void advise_focus_gained(WindowInfo const& window_info) override;
 
 protected:
     WindowManagerTools tools;
