@@ -52,11 +52,9 @@ struct NullCursor : mf::WlPointer::Cursor
 }
 
 mf::WlPointer::WlPointer(
-    wl_client* client,
-    wl_resource* parent,
-    uint32_t id,
+    wl_resource* new_resource,
     std::function<void(WlPointer*)> const& on_destroy)
-    : Pointer(client, parent, id),
+    : Pointer(new_resource),
       display{wl_client_get_display(client)},
       on_destroy{on_destroy},
       cursor{std::make_unique<NullCursor>()}

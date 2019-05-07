@@ -103,9 +103,9 @@ private:
     std::shared_ptr<mir::Executor> const executor;
 
     void bind(wl_client* client, wl_resource* resource) override;
-    void get_pointer(wl_client* client, wl_resource* resource, uint32_t id) override;
-    void get_keyboard(wl_client* client, wl_resource* resource, uint32_t id) override;
-    void get_touch(wl_client* client, wl_resource* resource, uint32_t id) override;
+    void get_pointer(wl_client* client, wl_resource* resource, wl_resource* new_pointer) override;
+    void get_keyboard(wl_client* client, wl_resource* resource, wl_resource* new_keyboard) override;
+    void get_touch(wl_client* client, wl_resource* resource, wl_resource* new_touch) override;
     void release(struct wl_client* /*client*/, struct wl_resource* us) override;
 };
 }

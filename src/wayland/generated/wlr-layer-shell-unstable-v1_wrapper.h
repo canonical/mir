@@ -54,7 +54,7 @@ public:
 private:
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
-    virtual void get_layer_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, std::experimental::optional<struct wl_resource*> const& output, uint32_t layer, std::string const& namespace_) = 0;
+    virtual void get_layer_surface(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* surface, std::experimental::optional<struct wl_resource*> const& output, uint32_t layer, std::string const& namespace_) = 0;
 };
 
 class LayerSurfaceV1
@@ -65,7 +65,7 @@ public:
 
     static LayerSurfaceV1* from(struct wl_resource*);
 
-    LayerSurfaceV1(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    LayerSurfaceV1(struct wl_resource* resource);
     virtual ~LayerSurfaceV1() = default;
 
     void send_configure_event(uint32_t serial, uint32_t width, uint32_t height) const;

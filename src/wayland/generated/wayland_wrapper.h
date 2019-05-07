@@ -26,7 +26,7 @@ public:
 
     static Callback* from(struct wl_resource*);
 
-    Callback(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    Callback(struct wl_resource* resource);
     virtual ~Callback() = default;
 
     void send_done_event(uint32_t callback_data) const;
@@ -67,8 +67,8 @@ public:
 private:
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
-    virtual void create_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
-    virtual void create_region(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
+    virtual void create_surface(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
+    virtual void create_region(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
 };
 
 class ShmPool
@@ -79,7 +79,7 @@ public:
 
     static ShmPool* from(struct wl_resource*);
 
-    ShmPool(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    ShmPool(struct wl_resource* resource);
     virtual ~ShmPool() = default;
 
     void destroy_wayland_object() const;
@@ -92,7 +92,7 @@ public:
     static bool is_instance(wl_resource* resource);
 
 private:
-    virtual void create_buffer(uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) = 0;
+    virtual void create_buffer(struct wl_resource* id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format) = 0;
     virtual void destroy() = 0;
     virtual void resize(int32_t size) = 0;
 };
@@ -194,7 +194,7 @@ public:
 private:
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
-    virtual void create_pool(struct wl_client* client, struct wl_resource* resource, uint32_t id, mir::Fd fd, int32_t size) = 0;
+    virtual void create_pool(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, mir::Fd fd, int32_t size) = 0;
 };
 
 class Buffer
@@ -205,7 +205,7 @@ public:
 
     static Buffer* from(struct wl_resource*);
 
-    Buffer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    Buffer(struct wl_resource* resource);
     virtual ~Buffer() = default;
 
     void send_release_event() const;
@@ -236,7 +236,7 @@ public:
 
     static DataOffer* from(struct wl_resource*);
 
-    DataOffer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    DataOffer(struct wl_resource* resource);
     virtual ~DataOffer() = default;
 
     void send_offer_event(std::string const& mime_type) const;
@@ -285,7 +285,7 @@ public:
 
     static DataSource* from(struct wl_resource*);
 
-    DataSource(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    DataSource(struct wl_resource* resource);
     virtual ~DataSource() = default;
 
     void send_target_event(std::experimental::optional<std::string> const& mime_type) const;
@@ -337,7 +337,7 @@ public:
 
     static DataDevice* from(struct wl_resource*);
 
-    DataDevice(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    DataDevice(struct wl_resource* resource);
     virtual ~DataDevice() = default;
 
     void send_data_offer_event(struct wl_resource* id) const;
@@ -406,8 +406,8 @@ public:
 private:
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
-    virtual void create_data_source(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
-    virtual void get_data_device(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* seat) = 0;
+    virtual void create_data_source(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
+    virtual void get_data_device(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* seat) = 0;
 };
 
 class Shell
@@ -436,7 +436,7 @@ public:
 private:
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
-    virtual void get_shell_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface) = 0;
+    virtual void get_shell_surface(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* surface) = 0;
 };
 
 class ShellSurface
@@ -447,7 +447,7 @@ public:
 
     static ShellSurface* from(struct wl_resource*);
 
-    ShellSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    ShellSurface(struct wl_resource* resource);
     virtual ~ShellSurface() = default;
 
     void send_ping_event(uint32_t serial) const;
@@ -517,7 +517,7 @@ public:
 
     static Surface* from(struct wl_resource*);
 
-    Surface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    Surface(struct wl_resource* resource);
     virtual ~Surface() = default;
 
     void send_enter_event(struct wl_resource* output) const;
@@ -548,7 +548,7 @@ private:
     virtual void destroy() = 0;
     virtual void attach(std::experimental::optional<struct wl_resource*> const& buffer, int32_t x, int32_t y) = 0;
     virtual void damage(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
-    virtual void frame(uint32_t callback) = 0;
+    virtual void frame(struct wl_resource* callback) = 0;
     virtual void set_opaque_region(std::experimental::optional<struct wl_resource*> const& region) = 0;
     virtual void set_input_region(std::experimental::optional<struct wl_resource*> const& region) = 0;
     virtual void commit() = 0;
@@ -595,9 +595,9 @@ public:
 private:
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
-    virtual void get_pointer(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
-    virtual void get_keyboard(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
-    virtual void get_touch(struct wl_client* client, struct wl_resource* resource, uint32_t id) = 0;
+    virtual void get_pointer(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
+    virtual void get_keyboard(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
+    virtual void get_touch(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
     virtual void release(struct wl_client* client, struct wl_resource* resource) = 0;
 };
 
@@ -609,7 +609,7 @@ public:
 
     static Pointer* from(struct wl_resource*);
 
-    Pointer(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    Pointer(struct wl_resource* resource);
     virtual ~Pointer() = default;
 
     void send_enter_event(uint32_t serial, struct wl_resource* surface, double surface_x, double surface_y) const;
@@ -686,7 +686,7 @@ public:
 
     static Keyboard* from(struct wl_resource*);
 
-    Keyboard(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    Keyboard(struct wl_resource* resource);
     virtual ~Keyboard() = default;
 
     void send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const;
@@ -740,7 +740,7 @@ public:
 
     static Touch* from(struct wl_resource*);
 
-    Touch(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    Touch(struct wl_resource* resource);
     virtual ~Touch() = default;
 
     void send_down_event(uint32_t serial, uint32_t time, struct wl_resource* surface, int32_t id, double x, double y) const;
@@ -852,7 +852,7 @@ public:
 
     static Region* from(struct wl_resource*);
 
-    Region(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    Region(struct wl_resource* resource);
     virtual ~Region() = default;
 
     void destroy_wayland_object() const;
@@ -897,7 +897,7 @@ private:
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
     virtual void destroy(struct wl_client* client, struct wl_resource* resource) = 0;
-    virtual void get_subsurface(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* parent) = 0;
+    virtual void get_subsurface(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* surface, struct wl_resource* parent) = 0;
 };
 
 class Subsurface
@@ -908,7 +908,7 @@ public:
 
     static Subsurface* from(struct wl_resource*);
 
-    Subsurface(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    Subsurface(struct wl_resource* resource);
     virtual ~Subsurface() = default;
 
     void destroy_wayland_object() const;

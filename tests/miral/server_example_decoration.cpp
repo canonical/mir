@@ -26,8 +26,8 @@ namespace
 struct ServerDecoration :
     mir::wayland::ServerDecoration
 {
-    ServerDecoration(struct wl_client *client, struct wl_resource *parent, uint32_t id) :
-        mir::wayland::ServerDecoration::ServerDecoration(client, parent, id)
+    ServerDecoration(wl_resource* new_resource) :
+        mir::wayland::ServerDecoration::ServerDecoration(new_resource)
     {
         send_mode_event(decoration_mode);
     }
@@ -63,9 +63,9 @@ struct ServerDecorationManager : mir::wayland::ServerDecorationManager
     {
     };
 
-    void create(wl_client* client, wl_resource* resource, uint32_t id, wl_resource* surface) override
+    void create(wl_client* client, wl_resource* /*resource*/, wl_resource* new_resource, wl_resource* surface) override
     {
-        new ServerDecoration{client, resource, id};
+        new ServerDecoration{new_resource};
         callback(client, surface);
     }
 

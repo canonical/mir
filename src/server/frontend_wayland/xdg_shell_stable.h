@@ -37,8 +37,8 @@ public:
     XdgShellStable(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat, OutputManager* output_manager);
 
     void destroy(struct wl_client* client, struct wl_resource* resource) override;
-    void create_positioner(struct wl_client* client, struct wl_resource* resource, uint32_t id) override;
-    void get_xdg_surface(struct wl_client* client, struct wl_resource* resource, uint32_t id,
+    void create_positioner(struct wl_client* client, struct wl_resource* resource, wl_resource* new_positioner) override;
+    void get_xdg_surface(struct wl_client* client, struct wl_resource* resource, wl_resource* new_xdg_surface,
                          struct wl_resource* surface) override;
     void pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial) override;
 

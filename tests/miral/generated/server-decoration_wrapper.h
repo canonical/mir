@@ -53,7 +53,7 @@ public:
 private:
     virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
 
-    virtual void create(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface) = 0;
+    virtual void create(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* surface) = 0;
 };
 
 class ServerDecoration
@@ -64,7 +64,7 @@ public:
 
     static ServerDecoration* from(struct wl_resource*);
 
-    ServerDecoration(struct wl_client* client, struct wl_resource* parent, uint32_t id);
+    ServerDecoration(struct wl_resource* resource);
     virtual ~ServerDecoration() = default;
 
     void send_mode_event(uint32_t mode) const;

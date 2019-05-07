@@ -14,6 +14,26 @@
 
 #include "mir/log.h"
 
+namespace
+{
+void internal_error_processing_request(struct wl_client* client, std::string const& method_name)
+{
+#if (WAYLAND_VERSION_MAJOR > 1 || (WAYLAND_VERSION_MAJOR == 1 && WAYLAND_VERSION_MINOR > 16))
+    wl_client_post_implementation_error(
+        client,
+        "Mir internal error processing %s request",
+        method_name.c_str());
+#else
+    wl_client_post_no_memory(client);
+#endif
+    ::mir::log(
+        ::mir::logging::Severity::error,
+        "frontend:Wayland",
+        std::current_exception(),
+        "Exception processing " + method_name + " request");
+}
+}
+
 namespace mir
 {
 namespace wayland
@@ -55,34 +75,38 @@ struct mw::XdgOutputManagerV1::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing XdgOutputManagerV1::destroy() request");
+            internal_error_processing_request(client, "XdgOutputManagerV1::destroy()");
         }
     }
 
     static void get_xdg_output_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* output)
     {
         auto me = static_cast<XdgOutputManagerV1*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &zxdg_output_v1_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->get_xdg_output(client, resource, id, output);
+            me->get_xdg_output(client, resource, id_resolved, output);
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing XdgOutputManagerV1::get_xdg_output() request");
+            internal_error_processing_request(client, "XdgOutputManagerV1::get_xdg_output()");
         }
     }
 
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<XdgOutputManagerV1*>(data);
-        auto resource = wl_resource_create(client, &zxdg_output_manager_v1_interface_data,
-                                           std::min(version, me->max_version), id);
+        auto resource = wl_resource_create(
+            client,
+            &zxdg_output_manager_v1_interface_data,
+            std::min(version, me->max_version),
+            id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -95,10 +119,7 @@ struct mw::XdgOutputManagerV1::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing XdgOutputManagerV1::bind() request");
+            internal_error_processing_request(client, "XdgOutputManagerV1::bind()");
         }
     }
 
@@ -148,7 +169,7 @@ mw::XdgOutputV1* mw::XdgOutputV1::from(struct wl_resource* resource)
 
 struct mw::XdgOutputV1::Thunks
 {
-    static void destroy_thunk(struct wl_client*, struct wl_resource* resource)
+    static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<XdgOutputV1*>(wl_resource_get_user_data(resource));
         try
@@ -157,10 +178,7 @@ struct mw::XdgOutputV1::Thunks
         }
         catch(...)
         {
-            ::mir::log(::mir::logging::Severity::critical,
-                       "frontend:Wayland",
-                       std::current_exception(),
-                       "Exception processing XdgOutputV1::destroy() request");
+            internal_error_processing_request(client, "XdgOutputV1::destroy()");
         }
     }
 
@@ -174,13 +192,12 @@ struct mw::XdgOutputV1::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgOutputV1::XdgOutputV1(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &zxdg_output_v1_interface_data, wl_resource_get_version(parent), id)}
+mw::XdgOutputV1::XdgOutputV1(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);

@@ -87,9 +87,16 @@ struct mw::XdgWmBase::Thunks
     static void create_positioner_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<XdgWmBase*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &xdg_positioner_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->create_positioner(client, resource, id);
+            me->create_positioner(client, resource, id_resolved);
         }
         catch(...)
         {
@@ -100,9 +107,16 @@ struct mw::XdgWmBase::Thunks
     static void get_xdg_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
         auto me = static_cast<XdgWmBase*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &xdg_surface_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->get_xdg_surface(client, resource, id, surface);
+            me->get_xdg_surface(client, resource, id_resolved, surface);
         }
         catch(...)
         {
@@ -126,8 +140,11 @@ struct mw::XdgWmBase::Thunks
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
         auto me = static_cast<XdgWmBase*>(data);
-        auto resource = wl_resource_create(client, &xdg_wm_base_interface_data,
-                                           std::min(version, me->max_version), id);
+        auto resource = wl_resource_create(
+            client,
+            &xdg_wm_base_interface_data,
+            std::min(version, me->max_version),
+            id);
         if (resource == nullptr)
         {
             wl_client_post_no_memory(client);
@@ -307,13 +324,12 @@ struct mw::XdgPositioner::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgPositioner::XdgPositioner(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &xdg_positioner_interface_data, wl_resource_get_version(parent), id)}
+mw::XdgPositioner::XdgPositioner(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -372,9 +388,16 @@ struct mw::XdgSurface::Thunks
     static void get_toplevel_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<XdgSurface*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &xdg_toplevel_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         try
         {
-            me->get_toplevel(id);
+            me->get_toplevel(id_resolved);
         }
         catch(...)
         {
@@ -385,6 +408,13 @@ struct mw::XdgSurface::Thunks
     static void get_popup_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* parent, struct wl_resource* positioner)
     {
         auto me = static_cast<XdgSurface*>(wl_resource_get_user_data(resource));
+        wl_resource* id_resolved{
+            wl_resource_create(client, &xdg_popup_interface_data, wl_resource_get_version(resource), id)};
+        if (id_resolved == nullptr)
+        {
+            wl_client_post_no_memory(client);
+            BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+        }
         std::experimental::optional<struct wl_resource*> parent_resolved;
         if (parent != nullptr)
         {
@@ -392,7 +422,7 @@ struct mw::XdgSurface::Thunks
         }
         try
         {
-            me->get_popup(id, parent_resolved, positioner);
+            me->get_popup(id_resolved, parent_resolved, positioner);
         }
         catch(...)
         {
@@ -438,13 +468,12 @@ struct mw::XdgSurface::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgSurface::XdgSurface(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &xdg_surface_interface_data, wl_resource_get_version(parent), id)}
+mw::XdgSurface::XdgSurface(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -706,13 +735,12 @@ struct mw::XdgToplevel::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgToplevel::XdgToplevel(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &xdg_toplevel_interface_data, wl_resource_get_version(parent), id)}
+mw::XdgToplevel::XdgToplevel(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
@@ -841,13 +869,12 @@ struct mw::XdgPopup::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgPopup::XdgPopup(struct wl_client* client, struct wl_resource* parent, uint32_t id)
-    : client{client},
-      resource{wl_resource_create(client, &xdg_popup_interface_data, wl_resource_get_version(parent), id)}
+mw::XdgPopup::XdgPopup(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
 {
     if (resource == nullptr)
     {
-        wl_resource_post_no_memory(parent);
         BOOST_THROW_EXCEPTION((std::bad_alloc{}));
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);

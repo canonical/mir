@@ -45,15 +45,14 @@ public:
 
 private:
     void destroy(struct wl_client* client, struct wl_resource* resource) override;
-    void get_subsurface(struct wl_client* client, struct wl_resource* resource, uint32_t id,
+    void get_subsurface(struct wl_client* client, struct wl_resource* resource, struct wl_resource* new_subsurface,
                         struct wl_resource* surface, struct wl_resource* parent) override;
 };
 
 class WlSubsurface: public WlSurfaceRole, wayland::Subsurface
 {
 public:
-    WlSubsurface(struct wl_client* client, struct wl_resource* object_parent, uint32_t id, WlSurface* surface,
-                 WlSurface* parent_surface);
+    WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, WlSurface* parent_surface);
     ~WlSubsurface();
 
     void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,

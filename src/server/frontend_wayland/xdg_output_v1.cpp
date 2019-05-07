@@ -45,7 +45,7 @@ private:
     void get_xdg_output(
         struct wl_client* client,
         struct wl_resource* resource,
-        uint32_t id,
+        wl_resource* new_output,
         struct wl_resource* output) override;
 
     OutputManager* const output_manager;
@@ -55,9 +55,7 @@ class XdgOutputV1 : public wayland::XdgOutputV1
 {
 public:
     XdgOutputV1(
-        wl_client* client,
-        wl_resource* resource_parent,
-        uint32_t id,
+        wl_resource* new_resource,
         graphics::DisplayConfigurationOutput const& config);
 
 private:
@@ -87,14 +85,14 @@ void mf::XdgOutputManagerV1::destroy(struct wl_client* client, struct wl_resourc
 
 void mf::XdgOutputManagerV1::get_xdg_output(
     struct wl_client* client,
-    struct wl_resource* resource,
-    uint32_t id,
+    struct wl_resource* /*resource*/,
+    wl_resource* new_output,
     struct wl_resource* output)
 {
     bool found = false;
     auto const output_id = output_manager->output_id_for(client, output);
     output_manager->display_config()->for_each_output(
-        [&found, output_id, client, resource, id](mg::DisplayConfigurationOutput const& config)
+        [&found, output_id, new_output](mg::DisplayConfigurationOutput const& config)
         {
             if (config.id == output_id)
             {
@@ -103,7 +101,7 @@ void mf::XdgOutputManagerV1::get_xdg_output(
                     BOOST_THROW_EXCEPTION(std::runtime_error(
                         "Found multiple output configs with id " + std::to_string(output_id.as_value())));
                 }
-                new XdgOutputV1{client, resource, id, config};
+                new XdgOutputV1{new_output, config};
                 found = true;
             }
         });
@@ -116,11 +114,9 @@ void mf::XdgOutputManagerV1::get_xdg_output(
 }
 
 mf::XdgOutputV1::XdgOutputV1(
-    wl_client* client,
-    wl_resource* resource_parent,
-    uint32_t id,
+    wl_resource* new_resource,
     mg::DisplayConfigurationOutput const& config)
-    : wayland::XdgOutputV1(client, resource_parent, id)
+    : wayland::XdgOutputV1(new_resource)
 {
     auto extents = config.extents();
     send_logical_position_event(extents.left().as_int(), extents.top().as_int());

@@ -208,28 +208,24 @@ void mf::WlSeat::bind(wl_client* /*client*/, wl_resource* resource)
         send_name_event(resource, "seat0");
 }
 
-void mf::WlSeat::get_pointer(wl_client* client, wl_resource* resource, uint32_t id)
+void mf::WlSeat::get_pointer(wl_client* client, wl_resource* /*resource*/, wl_resource* new_pointer)
 {
     pointer_listeners->register_listener(
         client,
         new WlPointer{
-            client,
-            resource,
-            id,
+            new_pointer,
             [listeners = pointer_listeners, client](WlPointer* listener)
             {
                 listeners->unregister_listener(client, listener);
             }});
 }
 
-void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t id)
+void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* /*resource*/, wl_resource* new_keyboard)
 {
     keyboard_listeners->register_listener(
         client,
         new WlKeyboard{
-            client,
-            resource,
-            id,
+            new_keyboard,
             *keymap,
             [listeners = keyboard_listeners, client](WlKeyboard* listener)
             {
@@ -263,14 +259,12 @@ void mf::WlSeat::get_keyboard(wl_client* client, wl_resource* resource, uint32_t
             }});
 }
 
-void mf::WlSeat::get_touch(wl_client* client, wl_resource* resource, uint32_t id)
+void mf::WlSeat::get_touch(wl_client* client, wl_resource* /*resource*/, wl_resource* new_touch)
 {
     touch_listeners->register_listener(
         client,
         new WlTouch{
-            client,
-            resource,
-            id,
+            new_touch,
             [listeners = touch_listeners, client](WlTouch* listener)
             {
                 listeners->unregister_listener(client, listener);
