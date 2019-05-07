@@ -52,25 +52,9 @@ char const* const trace_option = "window-management-trace";
 
 miral::TestDisplayServer::TestWindowManagerPolicy::TestWindowManagerPolicy(
     WindowManagerTools const& tools, TestDisplayServer& test_fixture) :
-    CanonicalWindowManagerPolicy{tools}
+    MinimalWindowManager{tools}
 {
     test_fixture.tools = tools;
-}
-
-bool TestDisplayServer::TestWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* event)
-{
-    auto const action = mir_pointer_event_action(event);
-
-    Point const cursor{
-        mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
-
-    if (action == mir_pointer_action_button_down)
-    {
-        tools.select_active_window(tools.window_at(cursor));
-    }
-
-    return false;
 }
 
 miral::TestDisplayServer::TestDisplayServer() :

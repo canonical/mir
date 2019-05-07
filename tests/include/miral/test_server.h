@@ -21,7 +21,7 @@
 
 #include <mir/client/connection.h>
 
-#include <miral/canonical_window_manager.h>
+#include <miral/minimal_window_manager.h>
 #include <miral/runner.h>
 #include <miral/window_manager_tools.h>
 
@@ -86,23 +86,9 @@ struct TestServer : TestDisplayServer, testing::Test
     void TearDown() override;
 };
 
-struct TestDisplayServer::TestWindowManagerPolicy : CanonicalWindowManagerPolicy
+struct TestDisplayServer::TestWindowManagerPolicy : MinimalWindowManager
 {
     TestWindowManagerPolicy(WindowManagerTools const& tools, TestDisplayServer& test_fixture);
-
-    bool handle_keyboard_event(MirKeyboardEvent const*) override { return false; }
-    bool handle_pointer_event(MirPointerEvent const*) override;
-    bool handle_touch_event(MirTouchEvent const*) override { return false; }
-    void handle_request_drag_and_drop(miral::WindowInfo&) override {}
-    void handle_request_move(miral::WindowInfo&, MirInputEvent const*) override {}
-    void handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge) override {}
-    mir::geometry::Rectangle confirm_placement_on_display(
-        const miral::WindowInfo&,
-        MirWindowState,
-        mir::geometry::Rectangle const& new_placement) override
-    {
-        return new_placement;
-    }
 };
 
 }
