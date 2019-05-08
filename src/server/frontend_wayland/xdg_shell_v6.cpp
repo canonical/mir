@@ -138,6 +138,47 @@ private:
 }
 namespace mf = mir::frontend;  // Keep CLion's parsing happy
 
+class mf::XdgShellV6::Instance : public wayland::XdgShellV6
+{
+public:
+    Instance(wl_resource* new_resource, mf::XdgShellV6* shell);
+
+private:
+    void destroy() override;
+    void create_positioner(wl_resource* new_positioner) override;
+    void get_xdg_surface(wl_resource* new_xdg_surface, wl_resource* surface) override;
+    void pong(uint32_t serial) override;
+
+    mf::XdgShellV6* const shell;
+};
+
+mf::XdgShellV6::Instance::Instance(wl_resource* new_resource, mf::XdgShellV6* shell)
+    : wayland::XdgShellV6{new_resource},
+      shell{shell}
+{
+}
+
+void mf::XdgShellV6::Instance::destroy()
+{
+    destroy_wayland_object();
+}
+
+void mf::XdgShellV6::Instance::create_positioner(wl_resource* new_positioner)
+{
+    new XdgPositionerV6{new_positioner};
+}
+
+void mf::XdgShellV6::Instance::get_xdg_surface(wl_resource* new_xdg_surface, wl_resource* surface)
+{
+    new XdgSurfaceV6{new_xdg_surface, WlSurface::from(surface), *shell};
+}
+
+void mf::XdgShellV6::Instance::pong(uint32_t serial)
+{
+    (void)serial;
+    // TODO
+}
+
 // XdgShellV6
 
 mf::XdgShellV6::XdgShellV6(
@@ -145,36 +186,16 @@ mf::XdgShellV6::XdgShellV6(
     std::shared_ptr<mf::Shell> const shell,
     WlSeat& seat,
     OutputManager* output_manager) :
-    wayland::XdgShellV6(display, 1),
+    Global(display, 1),
     shell{shell},
     seat{seat},
     output_manager{output_manager}
-{}
-
-void mf::XdgShellV6::destroy(struct wl_client* client, struct wl_resource* resource)
 {
-    (void)client, (void)resource;
-    // TODO
 }
 
-void mf::XdgShellV6::create_positioner(wl_client* /*client*/, wl_resource* /*resource*/, wl_resource* new_positioner)
+void mf::XdgShellV6::bind(wl_resource* new_resource)
 {
-    new XdgPositionerV6{new_positioner};
-}
-
-void mf::XdgShellV6::get_xdg_surface(
-    wl_client* /*client*/,
-    wl_resource* /*resource*/,
-    wl_resource* new_xdg_surface,
-    wl_resource* surface)
-{
-    new XdgSurfaceV6{new_xdg_surface, WlSurface::from(surface), *this};
-}
-
-void mf::XdgShellV6::pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
-{
-    (void)client, (void)resource, (void)serial;
-    // TODO
+    new Instance{new_resource, this};
 }
 
 // XdgSurfaceV6
