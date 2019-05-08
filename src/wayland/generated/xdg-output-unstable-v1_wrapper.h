@@ -26,21 +26,35 @@ public:
 
     static XdgOutputManagerV1* from(struct wl_resource*);
 
-    XdgOutputManagerV1(struct wl_display* display, uint32_t max_version);
-    virtual ~XdgOutputManagerV1();
+    XdgOutputManagerV1(struct wl_resource* resource);
+    virtual ~XdgOutputManagerV1() = default;
 
-    void destroy_wayland_object(struct wl_resource* resource) const;
+    void destroy_wayland_object() const;
 
-    struct wl_global* const global;
-    uint32_t const max_version;
+    struct wl_client* const client;
+    struct wl_resource* const resource;
 
     struct Thunks;
 
-private:
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+    static bool is_instance(wl_resource* resource);
 
-    virtual void destroy(struct wl_client* client, struct wl_resource* resource) = 0;
-    virtual void get_xdg_output(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* output) = 0;
+    class Global
+    {
+    public:
+        Global(wl_display* display, uint32_t max_version);
+        virtual ~Global();
+
+        wl_global* const global;
+        uint32_t const max_version;
+
+    private:
+        virtual void bind(wl_resource* new_zxdg_output_manager_v1) = 0;
+        friend XdgOutputManagerV1::Thunks;
+    };
+
+private:
+    virtual void destroy() = 0;
+    virtual void get_xdg_output(struct wl_resource* id, struct wl_resource* output) = 0;
 };
 
 class XdgOutputV1

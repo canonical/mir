@@ -76,7 +76,7 @@ struct mw::XdgWmBase::Thunks
         auto me = static_cast<XdgWmBase*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy(client, resource);
+            me->destroy();
         }
         catch(...)
         {
@@ -96,7 +96,7 @@ struct mw::XdgWmBase::Thunks
         }
         try
         {
-            me->create_positioner(client, resource, id_resolved);
+            me->create_positioner(id_resolved);
         }
         catch(...)
         {
@@ -116,7 +116,7 @@ struct mw::XdgWmBase::Thunks
         }
         try
         {
-            me->get_xdg_surface(client, resource, id_resolved, surface);
+            me->get_xdg_surface(id_resolved, surface);
         }
         catch(...)
         {
@@ -129,7 +129,7 @@ struct mw::XdgWmBase::Thunks
         auto me = static_cast<XdgWmBase*>(wl_resource_get_user_data(resource));
         try
         {
-            me->pong(client, resource, serial);
+            me->pong(serial);
         }
         catch(...)
         {
@@ -137,9 +137,14 @@ struct mw::XdgWmBase::Thunks
         }
     }
 
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<XdgWmBase*>(wl_resource_get_user_data(resource));
+    }
+
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<XdgWmBase*>(data);
+        auto me = static_cast<XdgWmBase::Global*>(data);
         auto resource = wl_resource_create(
             client,
             &xdg_wm_base_interface_data,
@@ -150,14 +155,13 @@ struct mw::XdgWmBase::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
-            me->bind(client, resource);
+            me->bind(resource);
         }
         catch(...)
         {
-            internal_error_processing_request(client, "XdgWmBase::bind()");
+            internal_error_processing_request(client, "XdgWmBase global bind");
         }
     }
 
@@ -168,8 +172,39 @@ struct mw::XdgWmBase::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgWmBase::XdgWmBase(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &xdg_wm_base_interface_data, max_version, this, &Thunks::bind_thunk)},
+mw::XdgWmBase::XdgWmBase(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
+{
+    if (resource == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+void mw::XdgWmBase::send_ping_event(uint32_t serial) const
+{
+    wl_resource_post_event(resource, Opcode::ping, serial);
+}
+
+bool mw::XdgWmBase::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &xdg_wm_base_interface_data, Thunks::request_vtable);
+}
+
+void mw::XdgWmBase::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
+}
+
+mw::XdgWmBase::Global::Global(wl_display* display, uint32_t max_version)
+    : global{wl_global_create(
+        display,
+        &xdg_wm_base_interface_data,
+        max_version,
+        this,
+        &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -178,19 +213,9 @@ mw::XdgWmBase::XdgWmBase(struct wl_display* display, uint32_t max_version)
     }
 }
 
-mw::XdgWmBase::~XdgWmBase()
+mw::XdgWmBase::Global::~Global()
 {
     wl_global_destroy(global);
-}
-
-void mw::XdgWmBase::send_ping_event(struct wl_resource* resource, uint32_t serial) const
-{
-    wl_resource_post_event(resource, Opcode::ping, serial);
-}
-
-void mw::XdgWmBase::destroy_wayland_object(struct wl_resource* resource) const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::XdgWmBase::Thunks::create_positioner_types[] {
