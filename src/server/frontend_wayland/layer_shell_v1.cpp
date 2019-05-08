@@ -29,6 +29,26 @@ namespace mir
 namespace frontend
 {
 
+class LayerShellV1::Instance : wayland::LayerShellV1
+{
+public:
+    Instance(wl_resource* new_resource, mf::LayerShellV1* shell)
+        : LayerShellV1{new_resource},
+          shell{shell}
+    {
+    }
+
+private:
+    void get_layer_surface(
+        wl_resource* new_layer_surface,
+        wl_resource* surface,
+        std::experimental::optional<wl_resource*> const& output,
+        uint32_t layer,
+        std::string const& namespace_) override;
+
+    mf::LayerShellV1* const shell;
+};
+
 class LayerSurfaceV1 : public wayland::LayerSurfaceV1, public WindowWlSurfaceRole
 {
 public:
@@ -62,16 +82,19 @@ private:
 
 mf::LayerShellV1::LayerShellV1(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat,
                                OutputManager* output_manager)
-    : wayland::LayerShellV1(display, 1),
+    : Global(display, 1),
       shell{shell},
       seat{seat},
       output_manager{output_manager}
 {
 }
 
-void mf::LayerShellV1::get_layer_surface(
-    wl_client* /*client*/,
-    wl_resource* /*resource*/,
+void mf::LayerShellV1::bind(wl_resource* new_resource)
+{
+    new Instance{new_resource, this};
+}
+
+void mf::LayerShellV1::Instance::get_layer_surface(
     wl_resource* new_layer_surface,
     wl_resource* surface,
     std::experimental::optional<wl_resource*> const& output,
@@ -81,7 +104,7 @@ void mf::LayerShellV1::get_layer_surface(
     (void)output;
     (void)layer;
     (void)namespace_;
-    new LayerSurfaceV1(new_layer_surface, WlSurface::from(surface), *this);
+    new LayerSurfaceV1(new_layer_surface, WlSurface::from(surface), *shell);
 }
 
 // LayerSurfaceV1
