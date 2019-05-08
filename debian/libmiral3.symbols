@@ -344,6 +344,8 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::MinimalWindowManager::advise_focus_gained(miral::WindowInfo const&)@MIRAL_2.5" 2.5.0
  (c++)"miral::MinimalWindowManager::begin_pointer_move(miral::WindowInfo const&, MirInputEvent const*)@MIRAL_2.5" 2.5.0
  (c++)"miral::MinimalWindowManager::begin_pointer_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::begin_touch_move(miral::WindowInfo const&, MirInputEvent const*)@MIRAL_2.5" 2.5.0
+ (c++)"miral::MinimalWindowManager::begin_touch_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_2.5" 2.5.0
  (c++)"miral::MinimalWindowManager::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::Displacement)@MIRAL_2.5" 2.5.0
  (c++)"miral::MinimalWindowManager::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::Rectangle const&)@MIRAL_2.5" 2.5.0
  (c++)"miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const*)@MIRAL_2.5" 2.5.0

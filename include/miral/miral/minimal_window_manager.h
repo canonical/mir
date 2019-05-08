@@ -80,8 +80,12 @@ protected:
     bool begin_pointer_move(WindowInfo const& window_info, MirInputEvent const* input_event);
     bool begin_pointer_resize(WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge);
 
+    bool begin_touch_move(WindowInfo const& window_info, MirInputEvent const* input_event);
+    bool begin_touch_resize(WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge);
+
 private:
-    struct Impl* const self;
+    struct Impl;
+    Impl* const self;
 };
 }
 

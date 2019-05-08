@@ -380,6 +380,8 @@ global:
     miral::MinimalWindowManager::advise_focus_gained*;
     miral::MinimalWindowManager::begin_pointer_move*;
     miral::MinimalWindowManager::begin_pointer_resize*;
+    miral::MinimalWindowManager::begin_touch_move*;
+    miral::MinimalWindowManager::begin_touch_resize*;
     miral::MinimalWindowManager::confirm_inherited_move*;
     miral::MinimalWindowManager::confirm_placement_on_display*;
     miral::MinimalWindowManager::handle_keyboard_event*;
