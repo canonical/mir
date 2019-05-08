@@ -19,6 +19,7 @@
 #include <miral/minimal_window_manager.h>
 
 #include <linux/input.h>
+#include <gmpxx.h>
 
 namespace
 {
@@ -159,7 +160,7 @@ void miral::MinimalWindowManager::handle_request_drag_and_drop(WindowInfo& /*win
 
 void miral::MinimalWindowManager::handle_request_move(WindowInfo& window_info, MirInputEvent const* input_event)
 {
-    if (self->begin_pointer_gesture(window_info, input_event, PointerGesture::moving, mir_resize_edge_none))
+    if (begin_pointer_move(window_info, input_event))
     {
         return;
     }
@@ -169,10 +170,15 @@ void miral::MinimalWindowManager::handle_request_move(WindowInfo& window_info, M
     }
 }
 
+bool miral::MinimalWindowManager::begin_pointer_move(miral::WindowInfo const& window_info, MirInputEvent const* input_event)
+{
+    return self->begin_pointer_gesture(window_info, input_event, PointerGesture::moving, mir_resize_edge_none);
+}
+
 void miral::MinimalWindowManager::handle_request_resize(
     WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge)
 {
-    if (self->begin_pointer_gesture(window_info, input_event, PointerGesture::resizing, edge))
+    if (begin_pointer_resize(window_info, input_event, edge))
     {
         return;
     }
@@ -180,6 +186,12 @@ void miral::MinimalWindowManager::handle_request_resize(
     {
         // TODO touch
     }
+}
+
+bool miral::MinimalWindowManager::begin_pointer_resize(
+    WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge)
+{
+    return self->begin_pointer_gesture(window_info, input_event, PointerGesture::resizing, edge);
 }
 
 auto miral::MinimalWindowManager::confirm_inherited_move(WindowInfo const& window_info, Displacement movement)
