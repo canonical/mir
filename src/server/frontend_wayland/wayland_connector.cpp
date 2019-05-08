@@ -235,14 +235,14 @@ int64_t mir_input_event_get_event_time_ms(const MirInputEvent* event)
     return mir_input_event_get_event_time(event) / 1000000;
 }
 
-class WlCompositor : public wayland::Compositor
+class WlCompositor : public wayland::Compositor::Global
 {
 public:
     WlCompositor(
         struct wl_display* display,
         std::shared_ptr<mir::Executor> const& executor,
         std::shared_ptr<mg::WaylandAllocator> const& allocator)
-        : Compositor(display, 3),
+        : Global(display, 3),
           allocator{allocator},
           executor{executor}
     {
@@ -252,16 +252,33 @@ private:
     std::shared_ptr<mg::WaylandAllocator> const allocator;
     std::shared_ptr<mir::Executor> const executor;
 
-    void create_surface(wl_client* client, wl_resource* resource, wl_resource* new_surface) override;
-    void create_region(wl_client* client, wl_resource* resource, wl_resource* new_region) override;
+    class Instance : wayland::Compositor
+    {
+    public:
+        Instance(wl_resource* new_resource, WlCompositor* compositor)
+            : wayland::Compositor{new_resource},
+              compositor{compositor}
+        {
+        }
+
+    private:
+        void create_surface(wl_resource* new_surface) override;
+        void create_region(wl_resource* new_region) override;
+        WlCompositor* const compositor;
+    };
+
+    void bind(wl_resource* new_resource)
+    {
+        new Instance{new_resource, this};
+    }
 };
 
-void WlCompositor::create_surface(wl_client* /*client*/, wl_resource* /*resource*/, wl_resource* new_surface)
+void WlCompositor::Instance::create_surface(wl_resource* new_surface)
 {
-    new WlSurface{new_surface, executor, allocator};
+    new WlSurface{new_surface, compositor->executor, compositor->allocator};
 }
 
-void WlCompositor::create_region(wl_client* /*client*/, wl_resource* /*resource*/, wl_resource* new_region)
+void WlCompositor::Instance::create_region(wl_resource* new_region)
 {
     new WlRegion{new_region};
 }
@@ -424,7 +441,7 @@ protected:
     }
 };
 
-class WlShell : public wayland::Shell
+class WlShell : public wayland::Shell::Global
 {
 public:
     WlShell(
@@ -432,20 +449,11 @@ public:
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat,
         OutputManager* const output_manager)
-        : Shell(display, 1),
+        : Global(display, 1),
           shell{shell},
           seat{seat},
           output_manager{output_manager}
     {
-    }
-
-    void get_shell_surface(
-        wl_client* /*client*/,
-        wl_resource* /*resource*/,
-        wl_resource* new_shell_surface,
-        wl_resource* surface) override
-    {
-        new WlShellSurface(new_shell_surface, WlSurface::from(surface), shell, seat, output_manager);
     }
 
     static auto get_window(wl_resource* window) -> std::shared_ptr<Surface>;
@@ -454,6 +462,34 @@ private:
     std::shared_ptr<mf::Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;
+
+    class Instance : public wayland::Shell
+    {
+    public:
+        Instance(wl_resource* new_resource, WlShell* shell)
+            : wayland::Shell{new_resource},
+              shell{shell}
+        {
+        }
+
+    private:
+        WlShell* const shell;
+
+        void get_shell_surface(wl_resource* new_shell_surface, wl_resource* surface) override
+        {
+            new WlShellSurface(
+                new_shell_surface,
+                WlSurface::from(surface),
+                shell->shell,
+                shell->seat,
+                shell->output_manager);
+        }
+    };
+
+    void bind(wl_resource* new_resource) override
+    {
+        new Instance{new_resource, this};
+    }
 };
 }
 }
