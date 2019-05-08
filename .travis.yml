@@ -50,6 +50,7 @@ env:
   - SYSTEM=google:ubuntu-18.04-64 VARIANT=clang
   - SYSTEM=google:ubuntu-18.10-64 VARIANT=amd64
   - SYSTEM=google:fedora-29-64 VARIANT=amd64
+  - SYSTEM=google:fedora-30-64 VARIANT=amd64
 
 before_install:
 - mkdir -p ${SPREAD_PATH}
