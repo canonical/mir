@@ -74,12 +74,14 @@ struct miral::MinimalWindowManager::Impl
     bool begin_pointer_gesture(
         WindowInfo const& window_info, MirInputEvent const* input_event, Gesture gesture, MirResizeEdge edge);
 
-    bool handle_pointer_event(MirPointerEvent const* event);
-
     bool begin_touch_gesture(
         WindowInfo const& window_info, MirInputEvent const* input_event, Gesture gesture, MirResizeEdge edge);
 
+    bool handle_pointer_event(MirPointerEvent const* event);
+
     bool handle_touch_event(MirTouchEvent const* event);
+
+    void apply_resize_by(Displacement movement);
 };
 
 miral::MinimalWindowManager::MinimalWindowManager(WindowManagerTools const& tools):
@@ -261,111 +263,6 @@ bool miral::MinimalWindowManager::Impl::begin_pointer_gesture(
     return true;
 }
 
-bool miral::MinimalWindowManager::Impl::handle_pointer_event(MirPointerEvent const* event)
-{
-    auto const action = mir_pointer_event_action(event);
-    auto const shift_keys = mir_pointer_event_modifiers(event) & shift_states;
-    Point const cursor{
-        mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
-
-    bool consumes_event = false;
-
-    switch (gesture)
-    {
-    case Gesture::pointer_resizing:
-        if (action == mir_pointer_action_motion &&
-            shift_keys == gesture_shift_keys &&
-            mir_pointer_event_button_state(event, pointer_gesture_button))
-        {
-            if (gesture_window &&
-                tools.select_active_window(gesture_window) == gesture_window)
-            {
-                auto const top_left = resize_top_left;
-                Rectangle const old_pos{top_left, resize_size};
-
-                auto movement = cursor - old_cursor;
-
-                auto new_width = old_pos.size.width;
-                auto new_height = old_pos.size.height;
-
-                if (resize_edge & mir_resize_edge_east)
-                    new_width = old_pos.size.width + movement.dx;
-
-                if (resize_edge & mir_resize_edge_west)
-                    new_width = old_pos.size.width - movement.dx;
-
-                if (resize_edge & mir_resize_edge_north)
-                    new_height = old_pos.size.height - movement.dy;
-
-                if (resize_edge & mir_resize_edge_south)
-                    new_height = old_pos.size.height + movement.dy;
-
-                Size new_size{new_width, new_height};
-
-                Point new_pos = top_left;
-
-                if (resize_edge & mir_resize_edge_west)
-                    new_pos.x = top_left.x + movement.dx;
-
-                if (resize_edge & mir_resize_edge_north)
-                    new_pos.y = top_left.y + movement.dy;
-
-                WindowSpecification modifications;
-                modifications.top_left() = new_pos;
-                modifications.size() = new_size;
-                tools.modify_window(gesture_window, modifications);
-                resize_top_left = new_pos;
-                resize_size = new_size;
-            }
-            else
-            {
-                gesture = Gesture::none;
-            }
-
-            consumes_event = true;
-        }
-        else
-        {
-            gesture = Gesture::none;
-        }
-        break;
-
-    case Gesture::pointer_moving:
-        if (action == mir_pointer_action_motion &&
-            shift_keys == gesture_shift_keys &&
-            mir_pointer_event_button_state(event, pointer_gesture_button))
-        {
-            if (auto const target = tools.window_at(old_cursor))
-            {
-                if (tools.select_active_window(target) == target)
-                    tools.drag_active_window(cursor - old_cursor);
-            }
-            consumes_event = true;
-        }
-        else
-        {
-            gesture = Gesture::none;
-        }
-        break;
-
-    default:
-        break;
-    }
-
-    if (!consumes_event && action == mir_pointer_action_button_down)
-    {
-        if (auto const window = tools.window_at(cursor))
-        {
-            if (tools.active_window() != tools.select_active_window(window))
-                consumes_event = true;
-        }
-    }
-
-    old_cursor = cursor;
-    return consumes_event;
-}
-
 bool miral::MinimalWindowManager::Impl::begin_touch_gesture(
     WindowInfo const& window_info,
     MirInputEvent const* input_event,
@@ -387,6 +284,67 @@ bool miral::MinimalWindowManager::Impl::begin_touch_gesture(
     resize_edge = edge;
 
     return true;
+}
+
+bool miral::MinimalWindowManager::Impl::handle_pointer_event(MirPointerEvent const* event)
+{
+    auto const action = mir_pointer_event_action(event);
+    auto const shift_keys = mir_pointer_event_modifiers(event) & shift_states;
+    Point const new_cursor{
+        mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+
+    bool consumes_event = false;
+
+    switch (gesture)
+    {
+    case Gesture::pointer_resizing:
+        if (action == mir_pointer_action_motion &&
+            shift_keys == gesture_shift_keys &&
+            mir_pointer_event_button_state(event, pointer_gesture_button))
+        {
+            apply_resize_by(new_cursor - old_cursor);
+            consumes_event = true;
+        }
+        else
+        {
+            gesture = Gesture::none;
+        }
+        break;
+
+    case Gesture::pointer_moving:
+        if (action == mir_pointer_action_motion &&
+            shift_keys == gesture_shift_keys &&
+            mir_pointer_event_button_state(event, pointer_gesture_button))
+        {
+            if (auto const target = tools.window_at(old_cursor))
+            {
+                if (tools.select_active_window(target) == target)
+                    tools.drag_active_window(new_cursor - old_cursor);
+            }
+            consumes_event = true;
+        }
+        else
+        {
+            gesture = Gesture::none;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    if (!consumes_event && action == mir_pointer_action_button_down)
+    {
+        if (auto const window = tools.window_at(new_cursor))
+        {
+            if (tools.active_window() != tools.select_active_window(window))
+                consumes_event = true;
+        }
+    }
+
+    old_cursor = new_cursor;
+    return consumes_event;
 }
 
 bool miral::MinimalWindowManager::Impl::handle_touch_event(MirTouchEvent const* event)
@@ -418,49 +376,13 @@ bool miral::MinimalWindowManager::Impl::handle_touch_event(MirTouchEvent const* 
             if (gesture_window &&
                 tools.select_active_window(gesture_window) == gesture_window)
             {
-                auto const top_left = resize_top_left;
-                Rectangle const old_pos{top_left, resize_size};
-
-                auto movement = new_touch - old_touch;
-
-                auto new_width = old_pos.size.width;
-                auto new_height = old_pos.size.height;
-
-                if (resize_edge & mir_resize_edge_east)
-                    new_width = old_pos.size.width + movement.dx;
-
-                if (resize_edge & mir_resize_edge_west)
-                    new_width = old_pos.size.width - movement.dx;
-
-                if (resize_edge & mir_resize_edge_north)
-                    new_height = old_pos.size.height - movement.dy;
-
-                if (resize_edge & mir_resize_edge_south)
-                    new_height = old_pos.size.height + movement.dy;
-
-                Size new_size{new_width, new_height};
-
-                Point new_pos = top_left;
-
-                if (resize_edge & mir_resize_edge_west)
-                    new_pos.x = top_left.x + movement.dx;
-
-                if (resize_edge & mir_resize_edge_north)
-                    new_pos.y = top_left.y + movement.dy;
-
-                WindowSpecification modifications;
-                modifications.top_left() = new_pos;
-                modifications.size() = new_size;
-                tools.modify_window(gesture_window, modifications);
-                resize_top_left = new_pos;
-                resize_size = new_size;
+                apply_resize_by(new_touch - old_touch);
+                consumes_event = true;
             }
             else
             {
                 gesture = Gesture::none;
             }
-
-            consumes_event = true;
         }
         else
         {
@@ -471,12 +393,16 @@ bool miral::MinimalWindowManager::Impl::handle_touch_event(MirTouchEvent const* 
     case Gesture::touch_moving:
         if (is_drag && gesture_shift_keys == shift_keys)
         {
-            if (auto const target = tools.window_at(old_touch))
+            if (gesture_window &&
+                tools.select_active_window(gesture_window) == gesture_window)
             {
-                if (tools.select_active_window(target) == target)
-                    tools.drag_active_window(new_touch - old_touch);
+                tools.drag_active_window(new_touch - old_touch);
+                consumes_event = true;
             }
-            consumes_event = true;
+            else
+            {
+                gesture = Gesture::none;
+            }
         }
         else
         {
@@ -490,7 +416,7 @@ bool miral::MinimalWindowManager::Impl::handle_touch_event(MirTouchEvent const* 
 
     if (!consumes_event && count == 1 && mir_touch_event_action(event, 0) == mir_touch_action_down)
     {
-        if (auto const window = tools.window_at(touch_center(event)))
+        if (auto const window = tools.window_at(new_touch))
         {
             if (tools.active_window() != tools.select_active_window(window))
                 consumes_event = true;
@@ -499,4 +425,50 @@ bool miral::MinimalWindowManager::Impl::handle_touch_event(MirTouchEvent const* 
 
     old_touch = new_touch;
     return consumes_event;
+}
+
+void miral::MinimalWindowManager::Impl::apply_resize_by(Displacement movement)
+{
+    if (gesture_window &&
+        tools.select_active_window(gesture_window) == gesture_window)
+    {
+        auto const top_left = resize_top_left;
+        Rectangle const old_pos{top_left, resize_size};
+
+        auto new_width = old_pos.size.width;
+        auto new_height = old_pos.size.height;
+
+        if (resize_edge & mir_resize_edge_east)
+            new_width = old_pos.size.width + movement.dx;
+
+        if (resize_edge & mir_resize_edge_west)
+            new_width = old_pos.size.width - movement.dx;
+
+        if (resize_edge & mir_resize_edge_north)
+            new_height = old_pos.size.height - movement.dy;
+
+        if (resize_edge & mir_resize_edge_south)
+            new_height = old_pos.size.height + movement.dy;
+
+        Size new_size{new_width, new_height};
+
+        Point new_pos = top_left;
+
+        if (resize_edge & mir_resize_edge_west)
+            new_pos.x = top_left.x + movement.dx;
+
+        if (resize_edge & mir_resize_edge_north)
+            new_pos.y = top_left.y + movement.dy;
+
+        WindowSpecification modifications;
+        modifications.top_left() = new_pos;
+        modifications.size() = new_size;
+        tools.modify_window(gesture_window, modifications);
+        resize_top_left = new_pos;
+        resize_size = new_size;
+    }
+    else
+    {
+        gesture = Gesture::none;
+    }
 }
