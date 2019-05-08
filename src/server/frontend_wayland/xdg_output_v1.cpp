@@ -33,20 +33,26 @@ namespace mir
 namespace frontend
 {
 
-class XdgOutputManagerV1 : public wayland::XdgOutputManagerV1
+class XdgOutputManagerV1 : public wayland::XdgOutputManagerV1::Global
 {
 public:
     XdgOutputManagerV1(struct wl_display* display, OutputManager* const output_manager);
     ~XdgOutputManagerV1() = default;
 
 private:
-    void destroy(struct wl_client* client, struct wl_resource* resource) override;
+    class Instance : public wayland::XdgOutputManagerV1
+    {
+    public:
+        Instance(wl_resource* new_resource, OutputManager* manager);
 
-    void get_xdg_output(
-        struct wl_client* client,
-        struct wl_resource* resource,
-        wl_resource* new_output,
-        struct wl_resource* output) override;
+    private:
+        void destroy() override;
+        void get_xdg_output(wl_resource* new_output, wl_resource* output) override;
+
+        OutputManager* const output_manager;
+    };
+
+    void bind(wl_resource* new_resource) override;
 
     OutputManager* const output_manager;
 };
@@ -72,22 +78,28 @@ auto mf::create_xdg_output_manager_v1(struct wl_display* display, OutputManager*
 }
 
 mf::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_display* display, mf::OutputManager* const output_manager)
-    : wayland::XdgOutputManagerV1(display, wayland::XdgOutputManagerV1::interface_version),
+    : Global(display, wayland::XdgOutputManagerV1::interface_version),
       output_manager{output_manager}
 {
 }
 
-void mf::XdgOutputManagerV1::destroy(struct wl_client* client, struct wl_resource* resource)
+void mf::XdgOutputManagerV1::bind(wl_resource* new_resource)
 {
-    (void)client;
-    destroy_wayland_object(resource);
+    new Instance{new_resource, output_manager};
 }
 
-void mf::XdgOutputManagerV1::get_xdg_output(
-    struct wl_client* client,
-    struct wl_resource* /*resource*/,
-    wl_resource* new_output,
-    struct wl_resource* output)
+mf::XdgOutputManagerV1::Instance::Instance(wl_resource* new_resource, OutputManager* manager)
+    : XdgOutputManagerV1{new_resource},
+      output_manager{manager}
+{
+}
+
+void mf::XdgOutputManagerV1::Instance::destroy()
+{
+    destroy_wayland_object();
+}
+
+void mf::XdgOutputManagerV1::Instance::get_xdg_output(wl_resource* new_output, wl_resource* output)
 {
     bool found = false;
     auto const output_id = output_manager->output_id_for(client, output);
