@@ -71,7 +71,18 @@ miral::TestDisplayServer::~TestDisplayServer() = default;
 auto miral::TestDisplayServer::build_window_manager_policy(WindowManagerTools const& tools)
 -> std::unique_ptr<TestWindowManagerPolicy>
 {
-    return std::make_unique<TestWindowManagerPolicy>(tools, *this);
+    // TODO: Fix the acceptance tests that rely on this
+    // (And then remove MirWlcsDisplayServer::build_window_manager_policy()
+    // which reinstates the correct behaviour.)
+    struct XX : TestWindowManagerPolicy
+    {
+        using TestWindowManagerPolicy::TestWindowManagerPolicy;
+        bool handle_pointer_event(MirPointerEvent const*) override
+        {
+            return false;
+        }
+    };
+    return std::make_unique<XX>(tools, *this);
 }
 
 void miral::TestDisplayServer::start_server()
