@@ -51,6 +51,11 @@ env:
   - SYSTEM=google:ubuntu-18.10-64 VARIANT=amd64
   - SYSTEM=google:fedora-29-64 VARIANT=amd64
 
+matrix:
+  allow_failures:
+    - env: SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
+  fast_finish: true
+
 before_install:
 - mkdir -p ${SPREAD_PATH}
 - pushd "${SPREAD_PATH}"
