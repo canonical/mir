@@ -50,6 +50,8 @@ Emitter header_includes()
         empty_line,
         "#include \"mir/fd.h\"",
         "#include <wayland-server-core.h>",
+        empty_line,
+        "#include \"wayland_base.h\"",
     };
 }
 

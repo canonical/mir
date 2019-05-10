@@ -5,8 +5,13 @@ add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mirwayland")
 add_subdirectory(generator/)
 add_subdirectory(generated/)
 
+set(STANDARD_SOURCES
+  base/wayland_base.cpp         base/wayland_base.h
+)
+
 add_library(mirwayland SHARED
     ${GENERATED_FILES}
+    ${STANDARD_SOURCES}
 )
 
 target_link_libraries(mirwayland
@@ -19,6 +24,7 @@ target_link_libraries(mirwayland
 
 target_include_directories(mirwayland
   PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/base
     ${CMAKE_CURRENT_SOURCE_DIR}/generated
 )
 

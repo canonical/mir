@@ -42,7 +42,7 @@ Interface::Interface(xmlpp::Element const& node,
 Emitter Interface::declaration() const
 {
     return Lines{
-        {"class ", generated_name},
+        {"class ", generated_name, " : public Resource"},
         "{",
         "public:",
         Emitter::layout(EmptyLineList{
