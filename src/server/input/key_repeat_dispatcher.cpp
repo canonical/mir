@@ -182,9 +182,8 @@ bool mi::KeyRepeatDispatcher::handle_key_input(MirInputDeviceId id, MirKeyboardE
         }
         auto& capture_alarm = device_state.repeat_alarms_by_scancode[scan_code];
         std::shared_ptr<mir::time::Alarm> alarm = alarm_factory->create_alarm(
-            [this, clone_event, &capture_alarm]() mutable
+            [repeat_delay=repeat_delay, clone_event, &capture_alarm]()
             {
-                std::lock_guard<std::mutex> lg(repeat_state_mutex);
                 clone_event();
 
                 capture_alarm->reschedule_in(repeat_delay);
