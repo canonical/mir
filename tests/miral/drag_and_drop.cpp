@@ -537,7 +537,8 @@ auto DragAndDrop::count_of_handles_when_moving_mouse() -> int
     move_mouse({1,1});
     release_mouse();
 
-    EXPECT_TRUE(have_3_events.wait_for(receive_event_timeout));
+    EXPECT_TRUE(have_3_events.wait_for(receive_event_timeout))
+        << "events=" << events.load();
 
     reset_window_event_handler(window);
     reset_window_event_handler(target_window);
@@ -557,6 +558,22 @@ auto DragAndDrop::build_window_manager_policy(miral::WindowManagerTools const& t
             std::vector<uint8_t> const handle{std::begin(uuid), std::end(uuid)};
 
             tools.start_drag_and_drop(window_info, handle);
+        }
+
+        bool handle_pointer_event(MirPointerEvent const* event) override
+        {
+            auto const action = mir_pointer_event_action(event);
+
+            Point const cursor{
+                mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+                mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+
+            if (action == mir_pointer_action_button_down)
+            {
+                tools.select_active_window(tools.window_at(cursor));
+            }
+
+            return false;
         }
 
         void handle_request_move(miral::WindowInfo&, MirInputEvent const*) override {}
