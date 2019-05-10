@@ -359,7 +359,11 @@ void msh::AbstractShell::notify_focus_locked(
 
         for (auto const& item : current_focus_tree)
         {
-            if (find(begin(new_focus_tree), end(new_focus_tree), item) == end(new_focus_tree))
+            // It looks odd to unfocus `surface` here and focus it later, but this is a workaround
+            // for bug 823: There seems to be no easy alternative to prod the surface event source.
+            // TODO: find a better way.
+            if (find(begin(new_focus_tree), end(new_focus_tree), item) == end(new_focus_tree) ||
+                item == surface)
             {
                 item->configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
             }
@@ -384,7 +388,8 @@ void msh::AbstractShell::notify_focus_locked(
 
             for (auto const& item : new_focus_tree)
             {
-                if (find(begin(current_focus_tree), end(current_focus_tree), item) == end(current_focus_tree))
+                if (find(begin(current_focus_tree), end(current_focus_tree), item) == end(current_focus_tree) ||
+                    item == surface)
                 {
                     item->configure(mir_window_attrib_focus, mir_window_focus_state_focused);
                 }
