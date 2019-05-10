@@ -144,39 +144,60 @@ private:
 }
 namespace mf = mir::frontend;  // Keep CLion's parsing happy
 
+class mf::XdgShellStable::Instance : public wayland::XdgWmBase
+{
+public:
+    Instance(wl_resource* new_resource, mf::XdgShellStable* shell);
+
+private:
+    void destroy() override;
+    void create_positioner(wl_resource* new_positioner) override;
+    void get_xdg_surface(wl_resource* new_xdg_surface, wl_resource* surface) override;
+    void pong(uint32_t serial) override;
+
+    mf::XdgShellStable* const shell;
+};
+
 // XdgShellStable
 
 mf::XdgShellStable::XdgShellStable(struct wl_display* display, std::shared_ptr<mf::Shell> const shell, WlSeat& seat,
                                    OutputManager* output_manager)
-    : wayland::XdgWmBase(display, 1),
+    : Global(display, 1),
       shell{shell},
       seat{seat},
       output_manager{output_manager}
-{}
-
-void mf::XdgShellStable::destroy(struct wl_client* client, struct wl_resource* resource)
 {
-    (void)client, (void)resource;
-    // TODO
 }
 
-void mf::XdgShellStable::create_positioner(wl_client* /*client*/, wl_resource* /*resource*/, wl_resource* new_positioner)
+void mf::XdgShellStable::bind(wl_resource* new_resource)
+{
+    new Instance{new_resource, this};
+}
+
+mf::XdgShellStable::Instance::Instance(wl_resource* new_resource, mf::XdgShellStable* shell)
+    : XdgWmBase{new_resource},
+      shell{shell}
+{
+}
+
+void mf::XdgShellStable::Instance::destroy()
+{
+    destroy_wayland_object();
+}
+
+void mf::XdgShellStable::Instance::create_positioner(wl_resource* new_positioner)
 {
     new XdgPositionerStable{new_positioner};
 }
 
-void mf::XdgShellStable::get_xdg_surface(
-    wl_client* /*client*/,
-    wl_resource* /*resource*/,
-    wl_resource* new_shell_surface,
-    wl_resource* surface)
+void mf::XdgShellStable::Instance::get_xdg_surface(wl_resource* new_shell_surface, wl_resource* surface)
 {
-    new XdgSurfaceStable{new_shell_surface, WlSurface::from(surface), *this};
+    new XdgSurfaceStable{new_shell_surface, WlSurface::from(surface), *shell};
 }
 
-void mf::XdgShellStable::pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
+void mf::XdgShellStable::Instance::pong(uint32_t serial)
 {
-    (void)client, (void)resource, (void)serial;
+    (void)serial;
     // TODO
 }
 

@@ -11,6 +11,7 @@ add_executable(mir_wayland_generator
   request.cpp               request.h
   event.cpp                 event.h
   interface.cpp             interface.h
+  global.cpp                global.h
   emitter.cpp               emitter.h
 )
 

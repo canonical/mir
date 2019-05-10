@@ -48,25 +48,43 @@ struct ServerDecoration :
     uint32_t decoration_mode = Mode::Server;
 };
 
-struct ServerDecorationManager : mir::wayland::ServerDecorationManager
+struct ServerDecorationManager : mir::wayland::ServerDecorationManager::Global
 {
     static int const interface_supported = 1;
 
     ServerDecorationManager(struct wl_display* display) :
-        mir::wayland::ServerDecorationManager::ServerDecorationManager(display, interface_supported)
+        Global(display, interface_supported)
     {
     };
 
     ServerDecorationManager(struct wl_display* display, ServerDecorationCreateCallback callback) :
-        mir::wayland::ServerDecorationManager::ServerDecorationManager(display, interface_supported),
+        Global(display, interface_supported),
         callback{callback}
     {
     };
 
-    void create(wl_client* client, wl_resource* /*resource*/, wl_resource* new_resource, wl_resource* surface) override
+    class Instance : public mir::wayland::ServerDecorationManager
     {
-        new ServerDecoration{new_resource};
-        callback(client, surface);
+    public:
+        Instance(wl_resource* new_resource, ::ServerDecorationManager* manager)
+            : mir::wayland::ServerDecorationManager(new_resource),
+              manager{manager}
+        {
+        }
+
+    private:
+        void create(wl_resource* new_resource, wl_resource* surface) override
+        {
+            new ServerDecoration{new_resource};
+            manager->callback(client, surface);
+        }
+
+        ::ServerDecorationManager* const manager;
+    };
+
+    void bind(wl_resource* new_resource)
+    {
+        new Instance{new_resource, this};
     }
 
     ServerDecorationCreateCallback const callback = [](auto, auto) {};
@@ -83,7 +101,7 @@ auto mir::examples::server_decoration_extension() -> miral::WaylandExtensions::B
 {
     return
         {
-            ServerDecorationManager::interface_name,
+            wayland::ServerDecorationManager::interface_name,
             [](miral::WaylandExtensions::Context const* context)
                 {
                     return std::make_shared<ServerDecorationManager>(context->display());
@@ -95,7 +113,7 @@ auto mir::examples::server_decoration_extension(ServerDecorationCreateCallback c
 {
     return
         {
-            ServerDecorationManager::interface_name,
+            wayland::ServerDecorationManager::interface_name,
             [callback](miral::WaylandExtensions::Context const* context)
                 {
                     return std::make_shared<ServerDecorationManager>(context->display(), callback);

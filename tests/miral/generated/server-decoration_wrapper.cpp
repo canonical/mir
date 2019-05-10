@@ -78,7 +78,7 @@ struct mw::ServerDecorationManager::Thunks
         }
         try
         {
-            me->create(client, resource, id_resolved, surface);
+            me->create(id_resolved, surface);
         }
         catch(...)
         {
@@ -86,9 +86,14 @@ struct mw::ServerDecorationManager::Thunks
         }
     }
 
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<ServerDecorationManager*>(wl_resource_get_user_data(resource));
+    }
+
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<ServerDecorationManager*>(data);
+        auto me = static_cast<ServerDecorationManager::Global*>(data);
         auto resource = wl_resource_create(
             client,
             &org_kde_kwin_server_decoration_manager_interface_data,
@@ -99,14 +104,13 @@ struct mw::ServerDecorationManager::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
-            me->bind(client, resource);
+            me->bind(resource);
         }
         catch(...)
         {
-            internal_error_processing_request(client, "ServerDecorationManager::bind()");
+            internal_error_processing_request(client, "ServerDecorationManager global bind");
         }
     }
 
@@ -116,8 +120,39 @@ struct mw::ServerDecorationManager::Thunks
     static void const* request_vtable[];
 };
 
-mw::ServerDecorationManager::ServerDecorationManager(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &org_kde_kwin_server_decoration_manager_interface_data, max_version, this, &Thunks::bind_thunk)},
+mw::ServerDecorationManager::ServerDecorationManager(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
+{
+    if (resource == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+void mw::ServerDecorationManager::send_default_mode_event(uint32_t mode) const
+{
+    wl_resource_post_event(resource, Opcode::default_mode, mode);
+}
+
+bool mw::ServerDecorationManager::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &org_kde_kwin_server_decoration_manager_interface_data, Thunks::request_vtable);
+}
+
+void mw::ServerDecorationManager::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
+}
+
+mw::ServerDecorationManager::Global::Global(wl_display* display, uint32_t max_version)
+    : global{wl_global_create(
+        display,
+        &org_kde_kwin_server_decoration_manager_interface_data,
+        max_version,
+        this,
+        &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -126,19 +161,9 @@ mw::ServerDecorationManager::ServerDecorationManager(struct wl_display* display,
     }
 }
 
-mw::ServerDecorationManager::~ServerDecorationManager()
+mw::ServerDecorationManager::Global::~Global()
 {
     wl_global_destroy(global);
-}
-
-void mw::ServerDecorationManager::send_default_mode_event(struct wl_resource* resource, uint32_t mode) const
-{
-    wl_resource_post_event(resource, Opcode::default_mode, mode);
-}
-
-void mw::ServerDecorationManager::destroy_wayland_object(struct wl_resource* resource) const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::ServerDecorationManager::Thunks::create_types[] {

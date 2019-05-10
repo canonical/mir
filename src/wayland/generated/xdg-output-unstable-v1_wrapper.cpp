@@ -71,7 +71,7 @@ struct mw::XdgOutputManagerV1::Thunks
         auto me = static_cast<XdgOutputManagerV1*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy(client, resource);
+            me->destroy();
         }
         catch(...)
         {
@@ -91,7 +91,7 @@ struct mw::XdgOutputManagerV1::Thunks
         }
         try
         {
-            me->get_xdg_output(client, resource, id_resolved, output);
+            me->get_xdg_output(id_resolved, output);
         }
         catch(...)
         {
@@ -99,9 +99,14 @@ struct mw::XdgOutputManagerV1::Thunks
         }
     }
 
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<XdgOutputManagerV1*>(wl_resource_get_user_data(resource));
+    }
+
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<XdgOutputManagerV1*>(data);
+        auto me = static_cast<XdgOutputManagerV1::Global*>(data);
         auto resource = wl_resource_create(
             client,
             &zxdg_output_manager_v1_interface_data,
@@ -112,14 +117,13 @@ struct mw::XdgOutputManagerV1::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
-            me->bind(client, resource);
+            me->bind(resource);
         }
         catch(...)
         {
-            internal_error_processing_request(client, "XdgOutputManagerV1::bind()");
+            internal_error_processing_request(client, "XdgOutputManagerV1 global bind");
         }
     }
 
@@ -128,8 +132,34 @@ struct mw::XdgOutputManagerV1::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &zxdg_output_manager_v1_interface_data, max_version, this, &Thunks::bind_thunk)},
+mw::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
+{
+    if (resource == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+bool mw::XdgOutputManagerV1::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &zxdg_output_manager_v1_interface_data, Thunks::request_vtable);
+}
+
+void mw::XdgOutputManagerV1::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
+}
+
+mw::XdgOutputManagerV1::Global::Global(wl_display* display, uint32_t max_version)
+    : global{wl_global_create(
+        display,
+        &zxdg_output_manager_v1_interface_data,
+        max_version,
+        this,
+        &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -138,14 +168,9 @@ mw::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_display* display, uint32_t 
     }
 }
 
-mw::XdgOutputManagerV1::~XdgOutputManagerV1()
+mw::XdgOutputManagerV1::Global::~Global()
 {
     wl_global_destroy(global);
-}
-
-void mw::XdgOutputManagerV1::destroy_wayland_object(struct wl_resource* resource) const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::XdgOutputManagerV1::Thunks::get_xdg_output_types[] {

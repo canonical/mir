@@ -26,18 +26,43 @@
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 
-mf::WlSubcompositor::WlSubcompositor(struct wl_display* display)
-    : wayland::Subcompositor(display, 1)
-{}
-
-void mf::WlSubcompositor::destroy(struct wl_client* /*client*/, struct wl_resource* resource)
+namespace mir
 {
-    destroy_wayland_object(resource);
+namespace frontend
+{
+class WlSubcompositorInstance: wayland::Subcompositor
+{
+public:
+    WlSubcompositorInstance(wl_resource* new_resource);
+
+private:
+    void destroy() override;
+    void get_subsurface(wl_resource* new_subsurface, wl_resource* surface, wl_resource* parent) override;
+};
+}
 }
 
-void mf::WlSubcompositor::get_subsurface(
-    wl_client* /*client*/,
-    wl_resource* /*resource*/,
+mf::WlSubcompositor::WlSubcompositor(wl_display* display)
+    : Global{display, 1}
+{
+}
+
+void mf::WlSubcompositor::bind(wl_resource* new_wl_subcompositor)
+{
+    new WlSubcompositorInstance(new_wl_subcompositor);
+}
+
+mf::WlSubcompositorInstance::WlSubcompositorInstance(wl_resource* new_resource)
+    : wayland::Subcompositor(new_resource)
+{
+}
+
+void mf::WlSubcompositorInstance::destroy()
+{
+    destroy_wayland_object();
+}
+
+void mf::WlSubcompositorInstance::get_subsurface(
     wl_resource* new_subsurface,
     wl_resource* surface,
     wl_resource* parent)
