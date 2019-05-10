@@ -46,10 +46,7 @@ Emitter Interface::declaration() const
         "{",
         "public:",
         Emitter::layout(EmptyLineList{
-            Lines {
-                {"static char const constexpr* interface_name = \"", wl_name, "\";"},
-                {"static int const interface_version = ", std::to_string(version), ";"},
-            },
+            {"static char const constexpr* interface_name = \"", wl_name, "\";"},
             {"static ", generated_name, "* from(struct wl_resource*);"},
             Lines {
                 constructor_prototype(),
@@ -107,7 +104,7 @@ Emitter Interface::wl_interface_init() const
         {"struct wl_interface const ", wl_name, "_interface_data ",
             BraceList{
                 {nmspace, "interface_name"},
-                {nmspace, "interface_version"},
+                {nmspace, "Thunks::supported_version"},
                 {std::to_string(requests.size()), ", ",  (requests.empty() ? "nullptr" : nmspace + "Thunks::request_messages")},
                 {std::to_string(events.size()), ", ",  (events.empty() ? "nullptr" : nmspace + "Thunks::event_messages")}
             }}
@@ -272,6 +269,9 @@ Emitter Interface::thunks_impl() const
 Emitter Interface::thunks_impl_contents() const
 {
     std::vector<Emitter> impls;
+    impls.push_back(
+        {"static int const supported_version = ", std::to_string(version), ";"});
+
     for (auto const& request : requests)
         impls.push_back(request.thunk_impl());
 
