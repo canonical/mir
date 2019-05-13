@@ -34,7 +34,7 @@ class Element;
 class Method
 {
 public:
-    Method(xmlpp::Element const& node, std::string const& class_name, bool is_global, bool is_event);
+    Method(xmlpp::Element const& node, std::string const& class_name, bool is_event);
 
     Emitter types_str() const;
     Emitter types_declare() const;
@@ -51,7 +51,6 @@ protected:
 
     std::string const name;
     std::string const class_name;
-    bool const is_global;
     int const min_version;
     std::vector<Argument> arguments;
 };

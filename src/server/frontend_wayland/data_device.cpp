@@ -143,26 +143,29 @@ public:
     DataDeviceManager(struct wl_display* display);
     ~DataDeviceManager();
 
-    void create_data_source(
-        wl_client* client,
-        wl_resource* resource,
-        wl_resource* new_resource) override;
-
-    void get_data_device(
-        wl_client* client,
-        wl_resource* resource,
-        wl_resource* new_data_device,
-        wl_resource* seat) override;
-
     void notify_destroyed(DataSource* source);
 
     void add_listener(DataDevice* listener);
     void remove_listener(DataDevice* listener);
 
-    private:
+private:
     using ds_ptr = std::unique_ptr<DataSource, void(*)(DataSource*)>;
     ds_ptr current_data_source;
     std::vector<DataDevice*> listeners;
+
+    void bind(wl_resource* new_resource) override;
+
+    class Instance : mir::wayland::DataDeviceManager
+    {
+    public:
+        Instance(wl_resource* new_resource, ::DataDeviceManager* manager);
+
+    private:
+        void create_data_source(wl_resource* new_resource) override;
+        void get_data_device(wl_resource* new_data_device, wl_resource* seat) override;
+
+        ::DataDeviceManager* const manager;
+    };
 };
 }
 
@@ -212,27 +215,27 @@ DataDeviceManager::~DataDeviceManager()
     current_data_source.release();
 }
 
-void DataDeviceManager::create_data_source(wl_client* client, wl_resource* resource, wl_resource* new_data_source)
+DataDeviceManager::Instance::Instance(wl_resource* new_resource, ::DataDeviceManager* manager)
+    : mir::wayland::DataDeviceManager(new_resource),
+      manager{manager}
 {
-    (void)client, (void)resource;
-
-    current_data_source.reset(new DataSource{new_data_source, this});
-
-    for (auto const& listener : listeners)
-        listener->notify_new(current_data_source.get());
 }
 
-void DataDeviceManager::get_data_device(
-    wl_client* /*client*/,
-    wl_resource* /*resource*/,
-    wl_resource* new_data_device,
-    wl_resource* seat)
+void DataDeviceManager::Instance::create_data_source(wl_resource* new_data_source)
+{
+    manager->current_data_source.reset(new DataSource{new_data_source, manager});
+
+    for (auto const& listener : manager->listeners)
+        listener->notify_new(manager->current_data_source.get());
+}
+
+void DataDeviceManager::Instance::get_data_device(wl_resource* new_data_device, wl_resource* seat)
 {
     auto const realseat = mf::WlSeat::from(seat);
-    auto const result = new DataDevice{new_data_device, this, realseat};
+    auto const result = new DataDevice{new_data_device, manager, realseat};
 
-    if (current_data_source)
-        result->notify_new(current_data_source.get());
+    if (manager->current_data_source)
+        result->notify_new(manager->current_data_source.get());
 }
 
 void DataDeviceManager::notify_destroyed(DataSource* source)
@@ -252,6 +255,11 @@ void DataDeviceManager::add_listener(DataDevice* listener)
 void DataDeviceManager::remove_listener(DataDevice* listener)
 {
     listeners.erase(remove(begin(listeners), end(listeners), listener), end(listeners));
+}
+
+void DataDeviceManager::bind(wl_resource* new_resource)
+{
+    new DataDeviceManager::Instance{new_resource, this};
 }
 
 DataDevice::DataDevice(wl_resource* new_resource, DataDeviceManager* manager, mf::WlSeat* seat) :

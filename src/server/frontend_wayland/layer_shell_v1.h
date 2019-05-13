@@ -30,23 +30,18 @@ class Shell;
 class WlSeat;
 class OutputManager;
 
-class LayerShellV1 : public wayland::LayerShellV1
+class LayerShellV1 : public wayland::LayerShellV1::Global
 {
 public:
     LayerShellV1(wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat, OutputManager* output_manager);
 
-    void get_layer_surface(
-        wl_client* client,
-        wl_resource* resource,
-        wl_resource* new_layer_surface,
-        wl_resource* surface,
-        std::experimental::optional<wl_resource*> const& output,
-        uint32_t layer,
-        std::string const& namespace_) override;
-
     std::shared_ptr<Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;
+
+private:
+    class Instance;
+    void bind(wl_resource* new_resource);
 };
 
 }

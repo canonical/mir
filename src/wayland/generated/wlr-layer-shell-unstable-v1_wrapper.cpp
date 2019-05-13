@@ -85,7 +85,7 @@ struct mw::LayerShellV1::Thunks
         }
         try
         {
-            me->get_layer_surface(client, resource, id_resolved, surface, output_resolved, layer, namespace_);
+            me->get_layer_surface(id_resolved, surface, output_resolved, layer, namespace_);
         }
         catch(...)
         {
@@ -93,9 +93,14 @@ struct mw::LayerShellV1::Thunks
         }
     }
 
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<LayerShellV1*>(wl_resource_get_user_data(resource));
+    }
+
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<LayerShellV1*>(data);
+        auto me = static_cast<LayerShellV1::Global*>(data);
         auto resource = wl_resource_create(
             client,
             &zwlr_layer_shell_v1_interface_data,
@@ -106,14 +111,13 @@ struct mw::LayerShellV1::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
-            me->bind(client, resource);
+            me->bind(resource);
         }
         catch(...)
         {
-            internal_error_processing_request(client, "LayerShellV1::bind()");
+            internal_error_processing_request(client, "LayerShellV1 global bind");
         }
     }
 
@@ -122,8 +126,34 @@ struct mw::LayerShellV1::Thunks
     static void const* request_vtable[];
 };
 
-mw::LayerShellV1::LayerShellV1(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &zwlr_layer_shell_v1_interface_data, max_version, this, &Thunks::bind_thunk)},
+mw::LayerShellV1::LayerShellV1(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
+{
+    if (resource == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+bool mw::LayerShellV1::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &zwlr_layer_shell_v1_interface_data, Thunks::request_vtable);
+}
+
+void mw::LayerShellV1::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
+}
+
+mw::LayerShellV1::Global::Global(wl_display* display, uint32_t max_version)
+    : global{wl_global_create(
+        display,
+        &zwlr_layer_shell_v1_interface_data,
+        max_version,
+        this,
+        &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -132,14 +162,9 @@ mw::LayerShellV1::LayerShellV1(struct wl_display* display, uint32_t max_version)
     }
 }
 
-mw::LayerShellV1::~LayerShellV1()
+mw::LayerShellV1::Global::~Global()
 {
     wl_global_destroy(global);
-}
-
-void mw::LayerShellV1::destroy_wayland_object(struct wl_resource* resource) const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::LayerShellV1::Thunks::get_layer_surface_types[] {

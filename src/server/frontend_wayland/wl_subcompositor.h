@@ -37,16 +37,15 @@ namespace frontend
 {
 
 class WlSurface;
+class WlSubcompositorInstance;
 
-class WlSubcompositor: wayland::Subcompositor
+class WlSubcompositor : wayland::Subcompositor::Global
 {
 public:
-    WlSubcompositor(struct wl_display* display);
+    WlSubcompositor(wl_display* display);
 
 private:
-    void destroy(struct wl_client* client, struct wl_resource* resource) override;
-    void get_subsurface(struct wl_client* client, struct wl_resource* resource, struct wl_resource* new_subsurface,
-                        struct wl_resource* surface, struct wl_resource* parent) override;
+    void bind(wl_resource* new_wl_subcompositor);
 };
 
 class WlSubsurface: public WlSurfaceRole, wayland::Subsurface

@@ -26,13 +26,13 @@ public:
 
     static LayerShellV1* from(struct wl_resource*);
 
-    LayerShellV1(struct wl_display* display, uint32_t max_version);
-    virtual ~LayerShellV1();
+    LayerShellV1(struct wl_resource* resource);
+    virtual ~LayerShellV1() = default;
 
-    void destroy_wayland_object(struct wl_resource* resource) const;
+    void destroy_wayland_object() const;
 
-    struct wl_global* const global;
-    uint32_t const max_version;
+    struct wl_client* const client;
+    struct wl_resource* const resource;
 
     struct Error
     {
@@ -51,10 +51,24 @@ public:
 
     struct Thunks;
 
-private:
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+    static bool is_instance(wl_resource* resource);
 
-    virtual void get_layer_surface(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* surface, std::experimental::optional<struct wl_resource*> const& output, uint32_t layer, std::string const& namespace_) = 0;
+    class Global
+    {
+    public:
+        Global(wl_display* display, uint32_t max_version);
+        virtual ~Global();
+
+        wl_global* const global;
+        uint32_t const max_version;
+
+    private:
+        virtual void bind(wl_resource* new_zwlr_layer_shell_v1) = 0;
+        friend LayerShellV1::Thunks;
+    };
+
+private:
+    virtual void get_layer_surface(struct wl_resource* id, struct wl_resource* surface, std::experimental::optional<struct wl_resource*> const& output, uint32_t layer, std::string const& namespace_) = 0;
 };
 
 class LayerSurfaceV1

@@ -26,15 +26,15 @@ public:
 
     static ServerDecorationManager* from(struct wl_resource*);
 
-    ServerDecorationManager(struct wl_display* display, uint32_t max_version);
-    virtual ~ServerDecorationManager();
+    ServerDecorationManager(struct wl_resource* resource);
+    virtual ~ServerDecorationManager() = default;
 
-    void send_default_mode_event(struct wl_resource* resource, uint32_t mode) const;
+    void send_default_mode_event(uint32_t mode) const;
 
-    void destroy_wayland_object(struct wl_resource* resource) const;
+    void destroy_wayland_object() const;
 
-    struct wl_global* const global;
-    uint32_t const max_version;
+    struct wl_client* const client;
+    struct wl_resource* const resource;
 
     struct Mode
     {
@@ -50,10 +50,24 @@ public:
 
     struct Thunks;
 
-private:
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+    static bool is_instance(wl_resource* resource);
 
-    virtual void create(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* surface) = 0;
+    class Global
+    {
+    public:
+        Global(wl_display* display, uint32_t max_version);
+        virtual ~Global();
+
+        wl_global* const global;
+        uint32_t const max_version;
+
+    private:
+        virtual void bind(wl_resource* new_org_kde_kwin_server_decoration_manager) = 0;
+        friend ServerDecorationManager::Thunks;
+    };
+
+private:
+    virtual void create(struct wl_resource* id, struct wl_resource* surface) = 0;
 };
 
 class ServerDecoration

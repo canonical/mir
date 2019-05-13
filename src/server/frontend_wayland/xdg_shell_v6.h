@@ -31,16 +31,10 @@ class Surface;
 class WlSeat;
 class OutputManager;
 
-class XdgShellV6 : public wayland::XdgShellV6
+class XdgShellV6 : public wayland::XdgShellV6::Global
 {
 public:
-    XdgShellV6(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat, OutputManager* output_manager);
-
-    void destroy(struct wl_client* client, struct wl_resource* resource) override;
-    void create_positioner(struct wl_client* client, struct wl_resource* resource, wl_resource* new_positioner) override;
-    void get_xdg_surface(struct wl_client* client, struct wl_resource* resource, wl_resource* new_xdg_surface,
-                         struct wl_resource* surface) override;
-    void pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial) override;
+    XdgShellV6(wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat, OutputManager* output_manager);
 
     std::shared_ptr<Shell> const shell;
     WlSeat& seat;
@@ -48,6 +42,10 @@ public:
 
     // Returns the Mir surface if the window is recognised by XdgShellV6
     static auto get_window(wl_resource* surface) -> std::shared_ptr<Surface>;
+
+private:
+    class Instance;
+    void bind(wl_resource* new_resource) override;
 };
 
 }

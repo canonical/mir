@@ -21,8 +21,8 @@
 
 #include <libxml++/libxml++.h>
 
-Event::Event(xmlpp::Element const& node, std::string const& class_name, bool is_global, int opcode)
-    : Method{node, class_name, is_global, true},
+Event::Event(xmlpp::Element const& node, std::string const& class_name, int opcode)
+    : Method{node, class_name, true},
       opcode{opcode}
 {
 }
@@ -37,9 +37,7 @@ Emitter Event::prototype() const
 {
     return Lines{
         (min_version > 0 ? Lines{
-            {"bool version_supports_", name, "(",
-                (is_global ? "struct wl_resource* resource" : Emitter{nullptr}),
-                ");"}
+            {"bool version_supports_", name, "();"}
         } : Emitter{nullptr}),
         {"void send_", name, "_event(", mir_args(), ") const;"}
     };
@@ -50,9 +48,7 @@ Emitter Event::impl() const
 {
     return Lines{
         (min_version > 0 ? Lines{
-            {"bool mw::", class_name, "::version_supports_", name, "(",
-                (is_global ? "struct wl_resource* resource" : Emitter{nullptr}),
-                ")"},
+            {"bool mw::", class_name, "::version_supports_", name, "()"},
             Block{
                 {"return wl_resource_get_version(resource) >= ", std::to_string(min_version), ";"}
             },
@@ -80,10 +76,6 @@ Emitter Event::mir2wl_converters() const
 Emitter Event::mir_args() const
 {
     std::vector<Emitter> mir_args;
-    if (is_global)
-    {
-        mir_args.push_back("struct wl_resource* resource");
-    }
     for (auto& i : arguments)
     {
         mir_args.push_back(i.mir_prototype());

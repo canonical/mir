@@ -43,6 +43,8 @@ public:
 
     struct Thunks;
 
+    static bool is_instance(wl_resource* resource);
+
 private:
 };
 
@@ -54,21 +56,35 @@ public:
 
     static Compositor* from(struct wl_resource*);
 
-    Compositor(struct wl_display* display, uint32_t max_version);
-    virtual ~Compositor();
+    Compositor(struct wl_resource* resource);
+    virtual ~Compositor() = default;
 
-    void destroy_wayland_object(struct wl_resource* resource) const;
+    void destroy_wayland_object() const;
 
-    struct wl_global* const global;
-    uint32_t const max_version;
+    struct wl_client* const client;
+    struct wl_resource* const resource;
 
     struct Thunks;
 
-private:
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+    static bool is_instance(wl_resource* resource);
 
-    virtual void create_surface(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
-    virtual void create_region(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
+    class Global
+    {
+    public:
+        Global(wl_display* display, uint32_t max_version);
+        virtual ~Global();
+
+        wl_global* const global;
+        uint32_t const max_version;
+
+    private:
+        virtual void bind(wl_resource* new_wl_compositor) = 0;
+        friend Compositor::Thunks;
+    };
+
+private:
+    virtual void create_surface(struct wl_resource* id) = 0;
+    virtual void create_region(struct wl_resource* id) = 0;
 };
 
 class ShmPool
@@ -105,15 +121,15 @@ public:
 
     static Shm* from(struct wl_resource*);
 
-    Shm(struct wl_display* display, uint32_t max_version);
-    virtual ~Shm();
+    Shm(struct wl_resource* resource);
+    virtual ~Shm() = default;
 
-    void send_format_event(struct wl_resource* resource, uint32_t format) const;
+    void send_format_event(uint32_t format) const;
 
-    void destroy_wayland_object(struct wl_resource* resource) const;
+    void destroy_wayland_object() const;
 
-    struct wl_global* const global;
-    uint32_t const max_version;
+    struct wl_client* const client;
+    struct wl_resource* const resource;
 
     struct Error
     {
@@ -191,10 +207,24 @@ public:
 
     struct Thunks;
 
-private:
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+    static bool is_instance(wl_resource* resource);
 
-    virtual void create_pool(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, mir::Fd fd, int32_t size) = 0;
+    class Global
+    {
+    public:
+        Global(wl_display* display, uint32_t max_version);
+        virtual ~Global();
+
+        wl_global* const global;
+        uint32_t const max_version;
+
+    private:
+        virtual void bind(wl_resource* new_wl_shm) = 0;
+        friend Shm::Thunks;
+    };
+
+private:
+    virtual void create_pool(struct wl_resource* id, mir::Fd fd, int32_t size) = 0;
 };
 
 class Buffer
@@ -385,13 +415,13 @@ public:
 
     static DataDeviceManager* from(struct wl_resource*);
 
-    DataDeviceManager(struct wl_display* display, uint32_t max_version);
-    virtual ~DataDeviceManager();
+    DataDeviceManager(struct wl_resource* resource);
+    virtual ~DataDeviceManager() = default;
 
-    void destroy_wayland_object(struct wl_resource* resource) const;
+    void destroy_wayland_object() const;
 
-    struct wl_global* const global;
-    uint32_t const max_version;
+    struct wl_client* const client;
+    struct wl_resource* const resource;
 
     struct DndAction
     {
@@ -403,11 +433,25 @@ public:
 
     struct Thunks;
 
-private:
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+    static bool is_instance(wl_resource* resource);
 
-    virtual void create_data_source(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
-    virtual void get_data_device(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* seat) = 0;
+    class Global
+    {
+    public:
+        Global(wl_display* display, uint32_t max_version);
+        virtual ~Global();
+
+        wl_global* const global;
+        uint32_t const max_version;
+
+    private:
+        virtual void bind(wl_resource* new_wl_data_device_manager) = 0;
+        friend DataDeviceManager::Thunks;
+    };
+
+private:
+    virtual void create_data_source(struct wl_resource* id) = 0;
+    virtual void get_data_device(struct wl_resource* id, struct wl_resource* seat) = 0;
 };
 
 class Shell
@@ -418,13 +462,13 @@ public:
 
     static Shell* from(struct wl_resource*);
 
-    Shell(struct wl_display* display, uint32_t max_version);
-    virtual ~Shell();
+    Shell(struct wl_resource* resource);
+    virtual ~Shell() = default;
 
-    void destroy_wayland_object(struct wl_resource* resource) const;
+    void destroy_wayland_object() const;
 
-    struct wl_global* const global;
-    uint32_t const max_version;
+    struct wl_client* const client;
+    struct wl_resource* const resource;
 
     struct Error
     {
@@ -433,10 +477,24 @@ public:
 
     struct Thunks;
 
-private:
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+    static bool is_instance(wl_resource* resource);
 
-    virtual void get_shell_surface(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* surface) = 0;
+    class Global
+    {
+    public:
+        Global(wl_display* display, uint32_t max_version);
+        virtual ~Global();
+
+        wl_global* const global;
+        uint32_t const max_version;
+
+    private:
+        virtual void bind(wl_resource* new_wl_shell) = 0;
+        friend Shell::Thunks;
+    };
+
+private:
+    virtual void get_shell_surface(struct wl_resource* id, struct wl_resource* surface) = 0;
 };
 
 class ShellSurface
@@ -565,17 +623,17 @@ public:
 
     static Seat* from(struct wl_resource*);
 
-    Seat(struct wl_display* display, uint32_t max_version);
-    virtual ~Seat();
+    Seat(struct wl_resource* resource);
+    virtual ~Seat() = default;
 
-    void send_capabilities_event(struct wl_resource* resource, uint32_t capabilities) const;
-    bool version_supports_name(struct wl_resource* resource);
-    void send_name_event(struct wl_resource* resource, std::string const& name) const;
+    void send_capabilities_event(uint32_t capabilities) const;
+    bool version_supports_name();
+    void send_name_event(std::string const& name) const;
 
-    void destroy_wayland_object(struct wl_resource* resource) const;
+    void destroy_wayland_object() const;
 
-    struct wl_global* const global;
-    uint32_t const max_version;
+    struct wl_client* const client;
+    struct wl_resource* const resource;
 
     struct Capability
     {
@@ -592,13 +650,27 @@ public:
 
     struct Thunks;
 
-private:
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+    static bool is_instance(wl_resource* resource);
 
-    virtual void get_pointer(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
-    virtual void get_keyboard(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
-    virtual void get_touch(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
-    virtual void release(struct wl_client* client, struct wl_resource* resource) = 0;
+    class Global
+    {
+    public:
+        Global(wl_display* display, uint32_t max_version);
+        virtual ~Global();
+
+        wl_global* const global;
+        uint32_t const max_version;
+
+    private:
+        virtual void bind(wl_resource* new_wl_seat) = 0;
+        friend Seat::Thunks;
+    };
+
+private:
+    virtual void get_pointer(struct wl_resource* id) = 0;
+    virtual void get_keyboard(struct wl_resource* id) = 0;
+    virtual void get_touch(struct wl_resource* id) = 0;
+    virtual void release() = 0;
 };
 
 class Pointer
@@ -785,20 +857,20 @@ public:
 
     static Output* from(struct wl_resource*);
 
-    Output(struct wl_display* display, uint32_t max_version);
-    virtual ~Output();
+    Output(struct wl_resource* resource);
+    virtual ~Output() = default;
 
-    void send_geometry_event(struct wl_resource* resource, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const;
-    void send_mode_event(struct wl_resource* resource, uint32_t flags, int32_t width, int32_t height, int32_t refresh) const;
-    bool version_supports_done(struct wl_resource* resource);
-    void send_done_event(struct wl_resource* resource) const;
-    bool version_supports_scale(struct wl_resource* resource);
-    void send_scale_event(struct wl_resource* resource, int32_t factor) const;
+    void send_geometry_event(int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const;
+    void send_mode_event(uint32_t flags, int32_t width, int32_t height, int32_t refresh) const;
+    bool version_supports_done();
+    void send_done_event() const;
+    bool version_supports_scale();
+    void send_scale_event(int32_t factor) const;
 
-    void destroy_wayland_object(struct wl_resource* resource) const;
+    void destroy_wayland_object() const;
 
-    struct wl_global* const global;
-    uint32_t const max_version;
+    struct wl_client* const client;
+    struct wl_resource* const resource;
 
     struct Subpixel
     {
@@ -838,10 +910,24 @@ public:
 
     struct Thunks;
 
-private:
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+    static bool is_instance(wl_resource* resource);
 
-    virtual void release(struct wl_client* client, struct wl_resource* resource) = 0;
+    class Global
+    {
+    public:
+        Global(wl_display* display, uint32_t max_version);
+        virtual ~Global();
+
+        wl_global* const global;
+        uint32_t const max_version;
+
+    private:
+        virtual void bind(wl_resource* new_wl_output) = 0;
+        friend Output::Thunks;
+    };
+
+private:
+    virtual void release() = 0;
 };
 
 class Region
@@ -878,13 +964,13 @@ public:
 
     static Subcompositor* from(struct wl_resource*);
 
-    Subcompositor(struct wl_display* display, uint32_t max_version);
-    virtual ~Subcompositor();
+    Subcompositor(struct wl_resource* resource);
+    virtual ~Subcompositor() = default;
 
-    void destroy_wayland_object(struct wl_resource* resource) const;
+    void destroy_wayland_object() const;
 
-    struct wl_global* const global;
-    uint32_t const max_version;
+    struct wl_client* const client;
+    struct wl_resource* const resource;
 
     struct Error
     {
@@ -893,11 +979,25 @@ public:
 
     struct Thunks;
 
-private:
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+    static bool is_instance(wl_resource* resource);
 
-    virtual void destroy(struct wl_client* client, struct wl_resource* resource) = 0;
-    virtual void get_subsurface(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* surface, struct wl_resource* parent) = 0;
+    class Global
+    {
+    public:
+        Global(wl_display* display, uint32_t max_version);
+        virtual ~Global();
+
+        wl_global* const global;
+        uint32_t const max_version;
+
+    private:
+        virtual void bind(wl_resource* new_wl_subcompositor) = 0;
+        friend Subcompositor::Thunks;
+    };
+
+private:
+    virtual void destroy() = 0;
+    virtual void get_subsurface(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* parent) = 0;
 };
 
 class Subsurface

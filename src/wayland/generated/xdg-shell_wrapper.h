@@ -26,15 +26,15 @@ public:
 
     static XdgWmBase* from(struct wl_resource*);
 
-    XdgWmBase(struct wl_display* display, uint32_t max_version);
-    virtual ~XdgWmBase();
+    XdgWmBase(struct wl_resource* resource);
+    virtual ~XdgWmBase() = default;
 
-    void send_ping_event(struct wl_resource* resource, uint32_t serial) const;
+    void send_ping_event(uint32_t serial) const;
 
-    void destroy_wayland_object(struct wl_resource* resource) const;
+    void destroy_wayland_object() const;
 
-    struct wl_global* const global;
-    uint32_t const max_version;
+    struct wl_client* const client;
+    struct wl_resource* const resource;
 
     struct Error
     {
@@ -53,13 +53,27 @@ public:
 
     struct Thunks;
 
-private:
-    virtual void bind(struct wl_client* client, struct wl_resource* resource) { (void)client; (void)resource; }
+    static bool is_instance(wl_resource* resource);
 
-    virtual void destroy(struct wl_client* client, struct wl_resource* resource) = 0;
-    virtual void create_positioner(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id) = 0;
-    virtual void get_xdg_surface(struct wl_client* client, struct wl_resource* resource, struct wl_resource* id, struct wl_resource* surface) = 0;
-    virtual void pong(struct wl_client* client, struct wl_resource* resource, uint32_t serial) = 0;
+    class Global
+    {
+    public:
+        Global(wl_display* display, uint32_t max_version);
+        virtual ~Global();
+
+        wl_global* const global;
+        uint32_t const max_version;
+
+    private:
+        virtual void bind(wl_resource* new_xdg_wm_base) = 0;
+        friend XdgWmBase::Thunks;
+    };
+
+private:
+    virtual void destroy() = 0;
+    virtual void create_positioner(struct wl_resource* id) = 0;
+    virtual void get_xdg_surface(struct wl_resource* id, struct wl_resource* surface) = 0;
+    virtual void pong(uint32_t serial) = 0;
 };
 
 class XdgPositioner

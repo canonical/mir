@@ -23,6 +23,7 @@
 #include "request.h"
 #include "event.h"
 #include "enum.h"
+#include "global.h"
 
 #include <experimental/optional>
 #include <functional>
@@ -52,8 +53,6 @@ private:
     Emitter constructor_impl() const;
     Emitter constructor_args() const;
     Emitter destructor_prototype() const;
-    Emitter destructor_impl() const;
-    Emitter bind_prototype() const;
     Emitter virtual_request_prototypes() const;
     Emitter event_prototypes() const;
     Emitter event_impls() const;
@@ -62,21 +61,20 @@ private:
     Emitter event_opcodes() const;
     Emitter thunks_impl() const;
     Emitter thunks_impl_contents() const;
-    Emitter bind_thunk() const;
     Emitter resource_destroyed_thunk() const;
     Emitter types_init() const;
     Emitter is_instance_prototype() const;
     Emitter is_instance_impl() const;
 
-    static std::vector<Request> get_requests(xmlpp::Element const& node, std::string generated_name, bool is_global);
-    static std::vector<Event> get_events(xmlpp::Element const& node, std::string generated_name, bool is_global);
+    static std::vector<Request> get_requests(xmlpp::Element const& node, std::string generated_name);
+    static std::vector<Event> get_events(xmlpp::Element const& node, std::string generated_name);
     static std::vector<Enum> get_enums(xmlpp::Element const& node);
 
     std::string const wl_name;
     int const version;
     std::string const generated_name;
     std::string const nmspace;
-    bool const is_global;
+    std::experimental::optional<Global> const global;
     std::vector<Request> const requests;
     std::vector<Event> const events;
     std::vector<Enum> const enums;

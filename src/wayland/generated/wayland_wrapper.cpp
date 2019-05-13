@@ -130,7 +130,7 @@ struct mw::Compositor::Thunks
         }
         try
         {
-            me->create_surface(client, resource, id_resolved);
+            me->create_surface(id_resolved);
         }
         catch(...)
         {
@@ -150,7 +150,7 @@ struct mw::Compositor::Thunks
         }
         try
         {
-            me->create_region(client, resource, id_resolved);
+            me->create_region(id_resolved);
         }
         catch(...)
         {
@@ -158,9 +158,14 @@ struct mw::Compositor::Thunks
         }
     }
 
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<Compositor*>(wl_resource_get_user_data(resource));
+    }
+
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<Compositor*>(data);
+        auto me = static_cast<Compositor::Global*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_compositor_interface_data,
@@ -171,14 +176,13 @@ struct mw::Compositor::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
-            me->bind(client, resource);
+            me->bind(resource);
         }
         catch(...)
         {
-            internal_error_processing_request(client, "Compositor::bind()");
+            internal_error_processing_request(client, "Compositor global bind");
         }
     }
 
@@ -188,8 +192,34 @@ struct mw::Compositor::Thunks
     static void const* request_vtable[];
 };
 
-mw::Compositor::Compositor(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_compositor_interface_data, max_version, this, &Thunks::bind_thunk)},
+mw::Compositor::Compositor(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
+{
+    if (resource == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+bool mw::Compositor::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_compositor_interface_data, Thunks::request_vtable);
+}
+
+void mw::Compositor::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
+}
+
+mw::Compositor::Global::Global(wl_display* display, uint32_t max_version)
+    : global{wl_global_create(
+        display,
+        &wl_compositor_interface_data,
+        max_version,
+        this,
+        &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -198,14 +228,9 @@ mw::Compositor::Compositor(struct wl_display* display, uint32_t max_version)
     }
 }
 
-mw::Compositor::~Compositor()
+mw::Compositor::Global::~Global()
 {
     wl_global_destroy(global);
-}
-
-void mw::Compositor::destroy_wayland_object(struct wl_resource* resource) const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::Compositor::Thunks::create_surface_types[] {
@@ -348,7 +373,7 @@ struct mw::Shm::Thunks
         mir::Fd fd_resolved{fd};
         try
         {
-            me->create_pool(client, resource, id_resolved, fd_resolved, size);
+            me->create_pool(id_resolved, fd_resolved, size);
         }
         catch(...)
         {
@@ -356,9 +381,14 @@ struct mw::Shm::Thunks
         }
     }
 
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<Shm*>(wl_resource_get_user_data(resource));
+    }
+
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<Shm*>(data);
+        auto me = static_cast<Shm::Global*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_shm_interface_data,
@@ -369,14 +399,13 @@ struct mw::Shm::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
-            me->bind(client, resource);
+            me->bind(resource);
         }
         catch(...)
         {
-            internal_error_processing_request(client, "Shm::bind()");
+            internal_error_processing_request(client, "Shm global bind");
         }
     }
 
@@ -386,8 +415,39 @@ struct mw::Shm::Thunks
     static void const* request_vtable[];
 };
 
-mw::Shm::Shm(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_shm_interface_data, max_version, this, &Thunks::bind_thunk)},
+mw::Shm::Shm(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
+{
+    if (resource == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+void mw::Shm::send_format_event(uint32_t format) const
+{
+    wl_resource_post_event(resource, Opcode::format, format);
+}
+
+bool mw::Shm::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_shm_interface_data, Thunks::request_vtable);
+}
+
+void mw::Shm::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
+}
+
+mw::Shm::Global::Global(wl_display* display, uint32_t max_version)
+    : global{wl_global_create(
+        display,
+        &wl_shm_interface_data,
+        max_version,
+        this,
+        &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -396,19 +456,9 @@ mw::Shm::Shm(struct wl_display* display, uint32_t max_version)
     }
 }
 
-mw::Shm::~Shm()
+mw::Shm::Global::~Global()
 {
     wl_global_destroy(global);
-}
-
-void mw::Shm::send_format_event(struct wl_resource* resource, uint32_t format) const
-{
-    wl_resource_post_event(resource, Opcode::format, format);
-}
-
-void mw::Shm::destroy_wayland_object(struct wl_resource* resource) const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::Shm::Thunks::create_pool_types[] {
@@ -1002,7 +1052,7 @@ struct mw::DataDeviceManager::Thunks
         }
         try
         {
-            me->create_data_source(client, resource, id_resolved);
+            me->create_data_source(id_resolved);
         }
         catch(...)
         {
@@ -1022,7 +1072,7 @@ struct mw::DataDeviceManager::Thunks
         }
         try
         {
-            me->get_data_device(client, resource, id_resolved, seat);
+            me->get_data_device(id_resolved, seat);
         }
         catch(...)
         {
@@ -1030,9 +1080,14 @@ struct mw::DataDeviceManager::Thunks
         }
     }
 
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
+    }
+
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<DataDeviceManager*>(data);
+        auto me = static_cast<DataDeviceManager::Global*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_data_device_manager_interface_data,
@@ -1043,14 +1098,13 @@ struct mw::DataDeviceManager::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
-            me->bind(client, resource);
+            me->bind(resource);
         }
         catch(...)
         {
-            internal_error_processing_request(client, "DataDeviceManager::bind()");
+            internal_error_processing_request(client, "DataDeviceManager global bind");
         }
     }
 
@@ -1060,8 +1114,34 @@ struct mw::DataDeviceManager::Thunks
     static void const* request_vtable[];
 };
 
-mw::DataDeviceManager::DataDeviceManager(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_data_device_manager_interface_data, max_version, this, &Thunks::bind_thunk)},
+mw::DataDeviceManager::DataDeviceManager(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
+{
+    if (resource == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+bool mw::DataDeviceManager::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_data_device_manager_interface_data, Thunks::request_vtable);
+}
+
+void mw::DataDeviceManager::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
+}
+
+mw::DataDeviceManager::Global::Global(wl_display* display, uint32_t max_version)
+    : global{wl_global_create(
+        display,
+        &wl_data_device_manager_interface_data,
+        max_version,
+        this,
+        &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -1070,14 +1150,9 @@ mw::DataDeviceManager::DataDeviceManager(struct wl_display* display, uint32_t ma
     }
 }
 
-mw::DataDeviceManager::~DataDeviceManager()
+mw::DataDeviceManager::Global::~Global()
 {
     wl_global_destroy(global);
-}
-
-void mw::DataDeviceManager::destroy_wayland_object(struct wl_resource* resource) const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::DataDeviceManager::Thunks::create_data_source_types[] {
@@ -1116,7 +1191,7 @@ struct mw::Shell::Thunks
         }
         try
         {
-            me->get_shell_surface(client, resource, id_resolved, surface);
+            me->get_shell_surface(id_resolved, surface);
         }
         catch(...)
         {
@@ -1124,9 +1199,14 @@ struct mw::Shell::Thunks
         }
     }
 
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<Shell*>(wl_resource_get_user_data(resource));
+    }
+
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<Shell*>(data);
+        auto me = static_cast<Shell::Global*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_shell_interface_data,
@@ -1137,14 +1217,13 @@ struct mw::Shell::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
-            me->bind(client, resource);
+            me->bind(resource);
         }
         catch(...)
         {
-            internal_error_processing_request(client, "Shell::bind()");
+            internal_error_processing_request(client, "Shell global bind");
         }
     }
 
@@ -1153,8 +1232,34 @@ struct mw::Shell::Thunks
     static void const* request_vtable[];
 };
 
-mw::Shell::Shell(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_shell_interface_data, max_version, this, &Thunks::bind_thunk)},
+mw::Shell::Shell(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
+{
+    if (resource == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+bool mw::Shell::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_shell_interface_data, Thunks::request_vtable);
+}
+
+void mw::Shell::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
+}
+
+mw::Shell::Global::Global(wl_display* display, uint32_t max_version)
+    : global{wl_global_create(
+        display,
+        &wl_shell_interface_data,
+        max_version,
+        this,
+        &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -1163,14 +1268,9 @@ mw::Shell::Shell(struct wl_display* display, uint32_t max_version)
     }
 }
 
-mw::Shell::~Shell()
+mw::Shell::Global::~Global()
 {
     wl_global_destroy(global);
-}
-
-void mw::Shell::destroy_wayland_object(struct wl_resource* resource) const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::Shell::Thunks::get_shell_surface_types[] {
@@ -1721,7 +1821,7 @@ struct mw::Seat::Thunks
         }
         try
         {
-            me->get_pointer(client, resource, id_resolved);
+            me->get_pointer(id_resolved);
         }
         catch(...)
         {
@@ -1741,7 +1841,7 @@ struct mw::Seat::Thunks
         }
         try
         {
-            me->get_keyboard(client, resource, id_resolved);
+            me->get_keyboard(id_resolved);
         }
         catch(...)
         {
@@ -1761,7 +1861,7 @@ struct mw::Seat::Thunks
         }
         try
         {
-            me->get_touch(client, resource, id_resolved);
+            me->get_touch(id_resolved);
         }
         catch(...)
         {
@@ -1774,7 +1874,7 @@ struct mw::Seat::Thunks
         auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
         try
         {
-            me->release(client, resource);
+            me->release();
         }
         catch(...)
         {
@@ -1782,9 +1882,14 @@ struct mw::Seat::Thunks
         }
     }
 
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<Seat*>(wl_resource_get_user_data(resource));
+    }
+
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<Seat*>(data);
+        auto me = static_cast<Seat::Global*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_seat_interface_data,
@@ -1795,14 +1900,13 @@ struct mw::Seat::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
-            me->bind(client, resource);
+            me->bind(resource);
         }
         catch(...)
         {
-            internal_error_processing_request(client, "Seat::bind()");
+            internal_error_processing_request(client, "Seat global bind");
         }
     }
 
@@ -1814,8 +1918,50 @@ struct mw::Seat::Thunks
     static void const* request_vtable[];
 };
 
-mw::Seat::Seat(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_seat_interface_data, max_version, this, &Thunks::bind_thunk)},
+mw::Seat::Seat(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
+{
+    if (resource == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+void mw::Seat::send_capabilities_event(uint32_t capabilities) const
+{
+    wl_resource_post_event(resource, Opcode::capabilities, capabilities);
+}
+
+bool mw::Seat::version_supports_name()
+{
+    return wl_resource_get_version(resource) >= 2;
+}
+
+void mw::Seat::send_name_event(std::string const& name) const
+{
+    const char* name_resolved = name.c_str();
+    wl_resource_post_event(resource, Opcode::name, name_resolved);
+}
+
+bool mw::Seat::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_seat_interface_data, Thunks::request_vtable);
+}
+
+void mw::Seat::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
+}
+
+mw::Seat::Global::Global(wl_display* display, uint32_t max_version)
+    : global{wl_global_create(
+        display,
+        &wl_seat_interface_data,
+        max_version,
+        this,
+        &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -1824,30 +1970,9 @@ mw::Seat::Seat(struct wl_display* display, uint32_t max_version)
     }
 }
 
-mw::Seat::~Seat()
+mw::Seat::Global::~Global()
 {
     wl_global_destroy(global);
-}
-
-void mw::Seat::send_capabilities_event(struct wl_resource* resource, uint32_t capabilities) const
-{
-    wl_resource_post_event(resource, Opcode::capabilities, capabilities);
-}
-
-bool mw::Seat::version_supports_name(struct wl_resource* resource)
-{
-    return wl_resource_get_version(resource) >= 2;
-}
-
-void mw::Seat::send_name_event(struct wl_resource* resource, std::string const& name) const
-{
-    const char* name_resolved = name.c_str();
-    wl_resource_post_event(resource, Opcode::name, name_resolved);
-}
-
-void mw::Seat::destroy_wayland_object(struct wl_resource* resource) const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::Seat::Thunks::get_pointer_types[] {
@@ -2311,7 +2436,7 @@ struct mw::Output::Thunks
         auto me = static_cast<Output*>(wl_resource_get_user_data(resource));
         try
         {
-            me->release(client, resource);
+            me->release();
         }
         catch(...)
         {
@@ -2319,9 +2444,14 @@ struct mw::Output::Thunks
         }
     }
 
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<Output*>(wl_resource_get_user_data(resource));
+    }
+
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<Output*>(data);
+        auto me = static_cast<Output::Global*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_output_interface_data,
@@ -2332,14 +2462,13 @@ struct mw::Output::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
-            me->bind(client, resource);
+            me->bind(resource);
         }
         catch(...)
         {
-            internal_error_processing_request(client, "Output::bind()");
+            internal_error_processing_request(client, "Output global bind");
         }
     }
 
@@ -2349,8 +2478,66 @@ struct mw::Output::Thunks
     static void const* request_vtable[];
 };
 
-mw::Output::Output(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_output_interface_data, max_version, this, &Thunks::bind_thunk)},
+mw::Output::Output(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
+{
+    if (resource == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+void mw::Output::send_geometry_event(int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const
+{
+    const char* make_resolved = make.c_str();
+    const char* model_resolved = model.c_str();
+    wl_resource_post_event(resource, Opcode::geometry, x, y, physical_width, physical_height, subpixel, make_resolved, model_resolved, transform);
+}
+
+void mw::Output::send_mode_event(uint32_t flags, int32_t width, int32_t height, int32_t refresh) const
+{
+    wl_resource_post_event(resource, Opcode::mode, flags, width, height, refresh);
+}
+
+bool mw::Output::version_supports_done()
+{
+    return wl_resource_get_version(resource) >= 2;
+}
+
+void mw::Output::send_done_event() const
+{
+    wl_resource_post_event(resource, Opcode::done);
+}
+
+bool mw::Output::version_supports_scale()
+{
+    return wl_resource_get_version(resource) >= 2;
+}
+
+void mw::Output::send_scale_event(int32_t factor) const
+{
+    wl_resource_post_event(resource, Opcode::scale, factor);
+}
+
+bool mw::Output::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_output_interface_data, Thunks::request_vtable);
+}
+
+void mw::Output::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
+}
+
+mw::Output::Global::Global(wl_display* display, uint32_t max_version)
+    : global{wl_global_create(
+        display,
+        &wl_output_interface_data,
+        max_version,
+        this,
+        &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -2359,46 +2546,9 @@ mw::Output::Output(struct wl_display* display, uint32_t max_version)
     }
 }
 
-mw::Output::~Output()
+mw::Output::Global::~Global()
 {
     wl_global_destroy(global);
-}
-
-void mw::Output::send_geometry_event(struct wl_resource* resource, int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const
-{
-    const char* make_resolved = make.c_str();
-    const char* model_resolved = model.c_str();
-    wl_resource_post_event(resource, Opcode::geometry, x, y, physical_width, physical_height, subpixel, make_resolved, model_resolved, transform);
-}
-
-void mw::Output::send_mode_event(struct wl_resource* resource, uint32_t flags, int32_t width, int32_t height, int32_t refresh) const
-{
-    wl_resource_post_event(resource, Opcode::mode, flags, width, height, refresh);
-}
-
-bool mw::Output::version_supports_done(struct wl_resource* resource)
-{
-    return wl_resource_get_version(resource) >= 2;
-}
-
-void mw::Output::send_done_event(struct wl_resource* resource) const
-{
-    wl_resource_post_event(resource, Opcode::done);
-}
-
-bool mw::Output::version_supports_scale(struct wl_resource* resource)
-{
-    return wl_resource_get_version(resource) >= 2;
-}
-
-void mw::Output::send_scale_event(struct wl_resource* resource, int32_t factor) const
-{
-    wl_resource_post_event(resource, Opcode::scale, factor);
-}
-
-void mw::Output::destroy_wayland_object(struct wl_resource* resource) const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::Output::Thunks::geometry_types[] {
@@ -2525,7 +2675,7 @@ struct mw::Subcompositor::Thunks
         auto me = static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
         try
         {
-            me->destroy(client, resource);
+            me->destroy();
         }
         catch(...)
         {
@@ -2545,7 +2695,7 @@ struct mw::Subcompositor::Thunks
         }
         try
         {
-            me->get_subsurface(client, resource, id_resolved, surface, parent);
+            me->get_subsurface(id_resolved, surface, parent);
         }
         catch(...)
         {
@@ -2553,9 +2703,14 @@ struct mw::Subcompositor::Thunks
         }
     }
 
+    static void resource_destroyed_thunk(wl_resource* resource)
+    {
+        delete static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
+    }
+
     static void bind_thunk(struct wl_client* client, void* data, uint32_t version, uint32_t id)
     {
-        auto me = static_cast<Subcompositor*>(data);
+        auto me = static_cast<Subcompositor::Global*>(data);
         auto resource = wl_resource_create(
             client,
             &wl_subcompositor_interface_data,
@@ -2566,14 +2721,13 @@ struct mw::Subcompositor::Thunks
             wl_client_post_no_memory(client);
             BOOST_THROW_EXCEPTION((std::bad_alloc{}));
         }
-        wl_resource_set_implementation(resource, Thunks::request_vtable, me, nullptr);
         try
         {
-            me->bind(client, resource);
+            me->bind(resource);
         }
         catch(...)
         {
-            internal_error_processing_request(client, "Subcompositor::bind()");
+            internal_error_processing_request(client, "Subcompositor global bind");
         }
     }
 
@@ -2582,8 +2736,34 @@ struct mw::Subcompositor::Thunks
     static void const* request_vtable[];
 };
 
-mw::Subcompositor::Subcompositor(struct wl_display* display, uint32_t max_version)
-    : global{wl_global_create(display, &wl_subcompositor_interface_data, max_version, this, &Thunks::bind_thunk)},
+mw::Subcompositor::Subcompositor(struct wl_resource* resource)
+    : client{wl_resource_get_client(resource)},
+      resource{resource}
+{
+    if (resource == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+    wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
+}
+
+bool mw::Subcompositor::is_instance(wl_resource* resource)
+{
+    return wl_resource_instance_of(resource, &wl_subcompositor_interface_data, Thunks::request_vtable);
+}
+
+void mw::Subcompositor::destroy_wayland_object() const
+{
+    wl_resource_destroy(resource);
+}
+
+mw::Subcompositor::Global::Global(wl_display* display, uint32_t max_version)
+    : global{wl_global_create(
+        display,
+        &wl_subcompositor_interface_data,
+        max_version,
+        this,
+        &Thunks::bind_thunk)},
       max_version{max_version}
 {
     if (global == nullptr)
@@ -2592,14 +2772,9 @@ mw::Subcompositor::Subcompositor(struct wl_display* display, uint32_t max_versio
     }
 }
 
-mw::Subcompositor::~Subcompositor()
+mw::Subcompositor::Global::~Global()
 {
     wl_global_destroy(global);
-}
-
-void mw::Subcompositor::destroy_wayland_object(struct wl_resource* resource) const
-{
-    wl_resource_destroy(resource);
 }
 
 struct wl_interface const* mw::Subcompositor::Thunks::get_subsurface_types[] {
