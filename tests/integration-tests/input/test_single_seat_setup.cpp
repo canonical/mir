@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2016 Canonical Ltd.
+ * Copyright © 2015-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -30,7 +30,6 @@
 #include "mir/test/doubles/mock_seat_report.h"
 #include "mir/test/doubles/mock_server_status_listener.h"
 #include "mir/test/doubles/mock_scene_session.h"
-#include "mir/test/doubles/stub_session_container.h"
 #include "mir/test/doubles/triggered_main_loop.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/doubles/advanceable_clock.h"
@@ -41,6 +40,7 @@
 #include "mir/cookie/authority.h"
 #include "mir/graphics/buffer.h"
 #include "mir/graphics/display_configuration_observer.h"
+#include "mir/scene/session_container.h"
 
 #include "mir/input/device.h"
 #include "mir/input/xkb_mapper.h"
@@ -125,7 +125,7 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     mir::dispatch::MultiplexingDispatchable multiplexer;
     mtd::AdvanceableClock clock;
     mtd::MockInputManager mock_input_manager;
-    mtd::StubSessionContainer stub_session_container;
+    ms::SessionContainer session_container;
     ms::BroadcastingSessionEventSink session_event_sink;
     FakeDisplayConfigurationObserverRegistrar display_config;
     mi::BasicSeat seat{mt::fake_shared(mock_dispatcher),      mt::fake_shared(mock_visualizer),
@@ -139,7 +139,7 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     mi::ConfigChanger changer{
         mt::fake_shared(mock_input_manager),
             mt::fake_shared(hub),
-            mt::fake_shared(stub_session_container),
+            mt::fake_shared(session_container),
             mt::fake_shared(session_event_sink),
             mt::fake_shared(hub)
     };
@@ -527,7 +527,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, tracks_a_single_button_state_from_multiple
 TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_session)
 {
     NiceMock<mtd::MockSceneSession> session;
-    stub_session_container.insert_session(mt::fake_shared(session));
+    session_container.insert_session(mt::fake_shared(session));
 
     EXPECT_CALL(session, send_input_config(UnorderedElementsAre(DeviceMatches(device.get_device_info()))));
     hub.add_device(mt::fake_shared(device));
@@ -536,7 +536,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_session)
 TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_session_multiple_devices)
 {
     NiceMock<mtd::MockSceneSession> session;
-    stub_session_container.insert_session(mt::fake_shared(session));
+    session_container.insert_session(mt::fake_shared(session));
 
     hub.add_device(mt::fake_shared(device));
 
@@ -552,7 +552,7 @@ TEST_F(SingleSeatInputDeviceHubSetup, input_device_changes_sent_to_sink_removal)
     hub.add_device(mt::fake_shared(another_device));
 
     NiceMock<mtd::MockSceneSession> session;
-    stub_session_container.insert_session(mt::fake_shared(session));
+    session_container.insert_session(mt::fake_shared(session));
     EXPECT_CALL(session,
                 send_input_config(UnorderedElementsAre(DeviceMatches(another_device.get_device_info()))));
     hub.remove_device(mt::fake_shared(device));

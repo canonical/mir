@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -16,7 +16,7 @@
  * Authored By: Robert Carr <robert.carr@canonical.com>
  */
 
-#include "default_session_container.h"
+#include "mir/scene/session_container.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -25,14 +25,17 @@
 
 namespace ms = mir::scene;
 
-void ms::DefaultSessionContainer::insert_session(std::shared_ptr<Session> const& session)
+ms::SessionContainer::SessionContainer() = default;
+ms::SessionContainer::~SessionContainer() = default;
+
+void ms::SessionContainer::insert_session(std::shared_ptr<Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
 
     apps.push_back(session);
 }
 
-void ms::DefaultSessionContainer::remove_session(std::shared_ptr<Session> const& session)
+void ms::SessionContainer::remove_session(std::shared_ptr<Session> const& session)
 {
     std::unique_lock<std::mutex> lk(guard);
 
@@ -47,7 +50,7 @@ void ms::DefaultSessionContainer::remove_session(std::shared_ptr<Session> const&
     }
 }
 
-void ms::DefaultSessionContainer::for_each(std::function<void(std::shared_ptr<Session> const&)> f) const
+void ms::SessionContainer::for_each(std::function<void(std::shared_ptr<Session> const&)> f) const
 {
     std::unique_lock<std::mutex> lk(guard);
 
@@ -57,7 +60,7 @@ void ms::DefaultSessionContainer::for_each(std::function<void(std::shared_ptr<Se
     }
 }
 
-std::shared_ptr<ms::Session> ms::DefaultSessionContainer::successor_of(std::shared_ptr<Session> const& session) const
+std::shared_ptr<ms::Session> ms::SessionContainer::successor_of(std::shared_ptr<Session> const& session) const
 {
     std::shared_ptr<Session> result, first;
 

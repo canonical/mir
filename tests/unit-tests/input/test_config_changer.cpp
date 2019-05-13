@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -20,6 +20,7 @@
 #include "src/server/input/config_changer.h"
 #include "src/server/scene/broadcasting_session_event_sink.h"
 #include "mir/input/device.h"
+#include "mir/scene/session_container.h"
 #include "mir/scene/session_event_handler_register.h"
 #include "mir/input/input_device_observer.h"
 #include "mir/input/mir_pointer_config.h"
@@ -32,7 +33,6 @@
 #include "mir/test/doubles/mock_device.h"
 #include "mir/test/doubles/mock_scene_session.h"
 #include "mir/test/doubles/stub_session.h"
-#include "mir/test/doubles/stub_session_container.h"
 #include "mir/test/fake_shared.h"
 
 #include <gtest/gtest.h>
@@ -108,11 +108,11 @@ struct ConfigChanger : Test
 {
     NiceMock<mtd::MockInputManager> mock_input_manager;
     FakeInputDeviceHub hub;
-    mtd::StubSessionContainer stub_session_container;
+    ms::SessionContainer session_container;
     ms::BroadcastingSessionEventSink session_event_sink;
 
     mi::ConfigChanger changer{mt::fake_shared(mock_input_manager), mt::fake_shared(hub),
-                              mt::fake_shared(stub_session_container), mt::fake_shared(session_event_sink),
+                              mt::fake_shared(session_container), mt::fake_shared(session_event_sink),
                               mt::fake_shared(hub)};
 
     auto get_full_device_conf(MirInputDeviceId id,
@@ -192,8 +192,8 @@ TEST_F(ConfigChanger, notifies_all_sessions_on_hardware_config_change)
     mtd::MockSceneSession mock_session1;
     mtd::MockSceneSession mock_session2;
 
-    stub_session_container.insert_session(mt::fake_shared(mock_session1));
-    stub_session_container.insert_session(mt::fake_shared(mock_session2));
+    session_container.insert_session(mt::fake_shared(mock_session1));
+    session_container.insert_session(mt::fake_shared(mock_session2));
 
     EXPECT_CALL(mock_session1, send_input_config(_));
     EXPECT_CALL(mock_session2, send_input_config(_));
@@ -210,7 +210,7 @@ TEST_F(ConfigChanger, focusing_a_session_with_attached_config_applies_config)
     auto changed_config = get_populated_conf(std::move(changed_device_config));
     auto session1 = std::make_shared<mtd::StubSession>();
 
-    stub_session_container.insert_session(session1);
+    session_container.insert_session(session1);
     changer.configure(session1, std::move(changed_config));
 
     EXPECT_CALL(hub.first_device, apply_pointer_configuration(changed_ptr_config));
@@ -221,7 +221,7 @@ TEST_F(ConfigChanger, focusing_a_session_with_attached_config_applies_config)
 TEST_F(ConfigChanger, configuring_a_focused_session_sends_changed_config_to_client)
 {
     auto session = std::make_shared<mtd::MockSceneSession>();
-    stub_session_container.insert_session(session);
+    session_container.insert_session(session);
     session_event_sink.handle_focus_change(session);
 
     auto changed_ptr_config = MirPointerConfig{mir_pointer_handedness_right, mir_pointer_acceleration_none, 0, -1, 1};

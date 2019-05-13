@@ -12,7 +12,6 @@ ADD_LIBRARY(
   default_configuration.cpp
   default_session_container.cpp
   gl_pixel_buffer.cpp
-  global_event_sender.cpp
   mediating_display_changer.cpp
   session_manager.cpp
   surface_allocator.cpp

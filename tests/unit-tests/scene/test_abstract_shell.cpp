@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -21,11 +21,11 @@
 #include "mir/events/event_builders.h"
 #include "mir/scene/session.h"
 #include "mir/scene/null_session_listener.h"
+#include "mir/scene/session_container.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface_factory.h"
 
 #include "src/server/report/null/shell_report.h"
-#include "src/server/scene/default_session_container.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/scene/session_manager.h"
 
@@ -109,7 +109,7 @@ struct AbstractShell : Test
 {
     NiceMock<mtd::MockSurface> mock_surface;
     NiceMock<mtd::MockSurfaceStack> surface_stack;
-    NiceMock<MockSessionContainer> session_container;
+    ms::SessionContainer session_container;
     NiceMock<MockSessionEventSink> session_event_sink;
     NiceMock<MockSurfaceFactory> surface_factory;
     NiceMock<mtd::MockInputSeat> seat;
@@ -141,7 +141,6 @@ struct AbstractShell : Test
 
     void SetUp() override
     {
-        ON_CALL(session_container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
         ON_CALL(session_manager, set_focus_to(_)).
             WillByDefault(Invoke(&session_manager, &MockSessionManager::unmocked_set_focus_to));
         ON_CALL(mock_surface, size())
@@ -168,7 +167,6 @@ TEST_F(AbstractShell, open_session_adds_session_to_window_manager)
     std::shared_ptr<ms::Session> new_session;
 
     InSequence s;
-    EXPECT_CALL(session_container, insert_session(_)).Times(1);
     EXPECT_CALL(*wm, add_session(_)).WillOnce(SaveArg<0>(&new_session));
 
     auto session = shell.open_session(__LINE__, "Visual Basic Studio", std::shared_ptr<mf::EventSink>());
@@ -180,7 +178,6 @@ TEST_F(AbstractShell, close_session_removes_session_from_window_manager)
     std::shared_ptr<ms::Session> old_session;
 
     InSequence s;
-    EXPECT_CALL(session_container, insert_session(_));
     EXPECT_CALL(*wm, remove_session(_)).WillOnce(SaveArg<0>(&old_session));
 
     auto session = shell.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
@@ -423,9 +420,6 @@ TEST_F(AbstractShell, as_focus_controller_focus_next_session_notifies_session_ev
 
     focus_controller.set_focus_to(session, {});
 
-    EXPECT_CALL(session_container, successor_of(session)).
-        WillOnce(Return(session1));
-
     EXPECT_CALL(session_event_sink, handle_focus_change(session1));
 
     focus_controller.focus_next_session();
@@ -441,9 +435,6 @@ TEST_F(AbstractShell, as_focus_controller_focused_session_follows_focus)
         .with_buffer_stream(session1->create_buffer_stream(properties));
     shell.create_surface(session, params, nullptr);
     shell.create_surface(session1, params2, nullptr);
-
-    EXPECT_CALL(session_container, successor_of(session1)).
-        WillOnce(Return(session));
 
     msh::FocusController& focus_controller = shell;
 
@@ -464,8 +455,6 @@ TEST_F(AbstractShell, as_focus_controller_focused_surface_follows_focus)
     EXPECT_CALL(surface_factory, create_surface(_,_)).Times(AnyNumber())
         .WillOnce(Return(mt::fake_shared(dummy_surface)))
         .WillOnce(Return(mt::fake_shared(mock_surface)));
-    EXPECT_CALL(session_container, successor_of(session1)).
-        WillOnce(Return(session0));
 
     auto const params = ms::a_surface()
         .with_buffer_stream(session0->create_buffer_stream(properties));
@@ -519,11 +508,6 @@ TEST_F(AbstractShell, as_focus_controller_focus_next_session_skips_surfaceless_s
 
     focus_controller.set_focus_to(session, session->surface(surface_id));
 
-    EXPECT_CALL(session_container, successor_of(session)).
-        WillOnce(Return(session1));
-    EXPECT_CALL(session_container, successor_of(session1)).
-        WillOnce(Return(session2));
-
     EXPECT_CALL(session_event_sink, handle_focus_change(session2));
 
     focus_controller.focus_next_session();
@@ -542,11 +526,6 @@ TEST_F(AbstractShell,
     focus_controller.set_focus_to(session, session->surface(surface_id));
 
     session->destroy_surface(surface_id);
-
-    EXPECT_CALL(session_container, successor_of(session)).
-        WillRepeatedly(Return(session1));
-    EXPECT_CALL(session_container, successor_of(session1)).
-        WillRepeatedly(Return(session));
 
     EXPECT_CALL(session_event_sink, handle_no_focus());
 
@@ -607,8 +586,6 @@ TEST_F(AbstractShell, when_remaining_session_has_no_surface_focus_next_session_d
 
         shell.close_session(another_session);
     }
-
-    ON_CALL(session_container, successor_of(_)).WillByDefault(Return(empty_session));
 
     shell.focus_next_session();
 }

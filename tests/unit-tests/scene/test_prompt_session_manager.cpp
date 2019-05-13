@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -37,31 +37,6 @@ using namespace ::testing;
 
 namespace
 {
-struct StubSessionContainer : ms::SessionContainer
-{
-    void insert_session(std::shared_ptr<ms::Session> const& session)
-    {
-        sessions.push_back(session);
-    }
-
-    void remove_session(std::shared_ptr<ms::Session> const&)
-    {
-    }
-
-    void for_each(std::function<void(std::shared_ptr<ms::Session> const&)> f) const
-    {
-        for (auto const& session : sessions)
-            f(session);
-    }
-
-    std::shared_ptr<ms::Session> successor_of(std::shared_ptr<ms::Session> const&) const
-    {
-        return {};
-    }
-
-    std::vector<std::shared_ptr<ms::Session>> sessions;
-};
-
 struct PromptSessionManager : public testing::Test
 {
     pid_t const helper_pid = __LINE__;
@@ -72,7 +47,7 @@ struct PromptSessionManager : public testing::Test
     std::shared_ptr<ms::Session> const provider_session{std::make_shared<mtd::StubSession>(prompt_provider_pid)};
     std::shared_ptr<ms::Session> const another_prompt_provider{std::make_shared<mtd::StubSession>(__LINE__)};
     ms::PromptSessionCreationParameters parameters;
-    StubSessionContainer existing_sessions;
+    ms::SessionContainer existing_sessions;
 
     NiceMock<mtd::MockPromptSessionListener> prompt_session_listener;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2015 Canonical Ltd.
+ * Copyright © 2012-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -19,11 +19,11 @@
 #include "src/server/scene/session_manager.h"
 
 #include "mir/scene/session.h"
+#include "mir/scene/session_container.h"
 #include "mir/scene/session_listener.h"
 #include "mir/scene/null_session_listener.h"
 
 #include "src/server/scene/basic_surface.h"
-#include "src/server/scene/default_session_container.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/report/null_report_factory.h"
 
@@ -54,17 +54,6 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-struct MockSessionContainer : public ms::SessionContainer
-{
-    MOCK_METHOD1(insert_session, void(std::shared_ptr<ms::Session> const&));
-    MOCK_METHOD1(remove_session, void(std::shared_ptr<ms::Session> const&));
-    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<ms::Session>(std::shared_ptr<ms::Session> const&));
-    MOCK_CONST_METHOD1(for_each, void(std::function<void(std::shared_ptr<ms::Session> const&)>));
-    MOCK_METHOD0(lock, void());
-    MOCK_METHOD0(unlock, void());
-    ~MockSessionContainer() noexcept {}
-};
-
 struct MockSessionEventSink : public ms::SessionEventSink
 {
     MOCK_METHOD1(handle_focus_change, void(std::shared_ptr<ms::Session> const& session));
@@ -74,12 +63,6 @@ struct MockSessionEventSink : public ms::SessionEventSink
 
 struct SessionManagerSetup : public testing::Test
 {
-    void SetUp() override
-    {
-        using namespace ::testing;
-        ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
-    }
-
     std::shared_ptr<ms::Surface> dummy_surface = std::make_shared<ms::BasicSurface>(
         std::string("stub"),
         geom::Rectangle{{},{}},
@@ -88,7 +71,7 @@ struct SessionManagerSetup : public testing::Test
         std::shared_ptr<mg::CursorImage>(),
         mir::report::null_scene_report());
     testing::NiceMock<mtd::MockSurfaceStack> surface_stack;
-    testing::NiceMock<MockSessionContainer> container;
+    ms::SessionContainer container;
     ms::NullSessionListener session_listener;
     mtd::StubBufferStreamFactory buffer_stream_factory;
     mtd::StubSurfaceFactory stub_surface_factory;
@@ -110,50 +93,12 @@ struct SessionManagerSetup : public testing::Test
 
 }
 
-TEST_F(SessionManagerSetup, open_and_close_session)
-{
-    using namespace ::testing;
-
-    EXPECT_CALL(container, insert_session(_)).Times(1);
-    EXPECT_CALL(container, remove_session(_)).Times(1);
-
-    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", mt::fake_shared(event_sink));
-    session_manager.close_session(session);
-}
-
-TEST_F(SessionManagerSetup, closing_session_removes_surfaces)
-{
-    using namespace ::testing;
-
-    EXPECT_CALL(surface_stack, add_surface(_,_)).Times(1);
-
-    EXPECT_CALL(container, insert_session(_)).Times(1);
-    EXPECT_CALL(container, remove_session(_)).Times(1);
-
-    mg::BufferProperties properties {
-        geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software };
-    auto session = session_manager.open_session(__LINE__, "Visual Basic Studio", mt::fake_shared(event_sink));
-    session->create_surface(
-        ms::a_surface()
-            .of_size(geom::Size{geom::Width{1024}, geom::Height{768}})
-            .with_buffer_stream(session->create_buffer_stream(properties)),
-        mt::fake_shared(event_sink));
-
-    session_manager.close_session(session);
-}
-
 namespace
 {
 struct SessionManagerSessionListenerSetup : public testing::Test
 {
-    void SetUp() override
-    {
-        using namespace ::testing;
-        ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
-    }
-
     mtd::MockSurfaceStack surface_stack;
-    testing::NiceMock<MockSessionContainer> container;
+    ms::SessionContainer container;
     testing::NiceMock<mtd::MockSessionListener> session_listener;
     mtd::StubSurfaceFactory stub_surface_factory;
     mtd::StubDisplay display{2};
@@ -231,14 +176,8 @@ namespace
 {
 struct SessionManagerSessionEventsSetup : public testing::Test
 {
-    void SetUp() override
-    {
-        using namespace ::testing;
-        ON_CALL(container, successor_of(_)).WillByDefault(Return((std::shared_ptr<ms::Session>())));
-    }
-
     mtd::MockSurfaceStack surface_stack;
-    testing::NiceMock<MockSessionContainer> container;    // Inelegant but some tests need a stub
+    ms::SessionContainer container;
     MockSessionEventSink session_event_sink;
     testing::NiceMock<mtd::MockSessionListener> session_listener;
     mtd::StubSurfaceFactory stub_surface_factory;
