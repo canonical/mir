@@ -268,7 +268,6 @@ public:
     // the_frontend_shell() is an adapter for the_shell().
     // To customize this behaviour it is recommended you override wrap_shell().
     std::shared_ptr<frontend::Shell>                          the_frontend_shell();
-    virtual std::shared_ptr<frontend::EventSink>              the_global_event_sink();
     virtual std::shared_ptr<frontend::DisplayChanger>         the_frontend_display_changer();
     virtual std::shared_ptr<frontend::InputConfigurationChanger> the_input_configuration_changer();
     virtual std::shared_ptr<frontend::Screencast>             the_screencast();

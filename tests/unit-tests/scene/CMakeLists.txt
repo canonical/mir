@@ -3,7 +3,6 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_application_session.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_broadcasting_session_event_sink.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_gl_pixel_buffer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_global_event_sender.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_session_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_the_session_container_implementation.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_threaded_snapshot_strategy.cpp

@@ -30,7 +30,6 @@
 
 #include "broadcasting_session_event_sink.h"
 #include "gl_pixel_buffer.h"
-#include "global_event_sender.h"
 #include "mediating_display_changer.h"
 #include "mir/scene/session_container.h"
 #include "session_manager.h"
@@ -155,16 +154,6 @@ std::shared_ptr<mir::DisplayChanger>
 mir::DefaultServerConfiguration::the_display_changer()
 {
     return the_mediating_display_changer();
-}
-
-std::shared_ptr<mf::EventSink>
-mir::DefaultServerConfiguration::the_global_event_sink()
-{
-    return global_event_sink(
-        [this]()
-        {
-            return std::make_shared<ms::GlobalEventSender>(the_session_container());
-        });
 }
 
 std::shared_ptr<ms::SessionCoordinator>
