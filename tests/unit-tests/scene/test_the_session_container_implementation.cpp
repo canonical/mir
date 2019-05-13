@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -17,8 +17,8 @@
  */
 
 #include "src/server/scene/application_session.h"
-#include "src/server/scene/default_session_container.h"
 #include "mir/test/doubles/stub_session.h"
+#include "mir/scene/session_container.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -28,10 +28,10 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mtd = mir::test::doubles;
 
-TEST(DefaultSessionContainer, for_each)
+TEST(SessionContainer, for_each)
 {
     using namespace ::testing;
-    ms::DefaultSessionContainer container;
+    ms::SessionContainer container;
 
     auto session1 = std::make_shared<mtd::StubSession>();
     auto session2 = std::make_shared<mtd::StubSession>();
@@ -55,10 +55,10 @@ TEST(DefaultSessionContainer, for_each)
     container.for_each(std::ref(functor));
 }
 
-TEST(DefaultSessionContainer, successor_of)
+TEST(SessionContainer, successor_of)
 {
     using namespace ::testing;
-    ms::DefaultSessionContainer container;
+    ms::SessionContainer container;
 
     auto session1 = std::make_shared<mtd::StubSession>();
     auto session2 = std::make_shared<mtd::StubSession>();
@@ -76,10 +76,10 @@ TEST(DefaultSessionContainer, successor_of)
     EXPECT_EQ(session3, container.successor_of(std::shared_ptr<ms::Session>()));
 }
 
-TEST(DefaultSessionContainer, invalid_session_throw_behavior)
+TEST(SessionContainer, invalid_session_throw_behavior)
 {
     using namespace ::testing;
-    ms::DefaultSessionContainer container;
+    ms::SessionContainer container;
 
     EXPECT_THROW({
         container.remove_session(std::make_shared<mtd::StubSession>());

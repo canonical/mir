@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -29,37 +29,21 @@ namespace mt=mir::test;
 namespace mtd=mir::test::doubles;
 namespace ms = mir::scene;
 
-namespace
-{
-class MockSessionStorage : public ms::SessionContainer
-{
-public:
-    MOCK_METHOD1(insert_session, void(std::shared_ptr<ms::Session> const&));
-    MOCK_METHOD1(remove_session, void(std::shared_ptr<ms::Session> const&));
-    MOCK_CONST_METHOD1(for_each, void(std::function<void(std::shared_ptr<ms::Session> const&)>));
-    MOCK_CONST_METHOD1(successor_of, std::shared_ptr<ms::Session>(std::shared_ptr<ms::Session> const&));
-};
-}
-
-TEST(GlobalEventSender, sender)
+TEST(GlobalEventSender, display_config_change_is_propagated)
 {
     using namespace testing;
 
-    MockSessionStorage mock_storage;
+    ms::SessionContainer storage;
 
     std::function<void(std::shared_ptr<ms::Session> const&)> called_fn;
-
-    EXPECT_CALL(mock_storage, for_each(_))
-        .Times(1)
-        .WillOnce(SaveArg<0>(&called_fn));
-
-    ms::GlobalEventSender g_sender(mt::fake_shared(mock_storage));
-
-    mtd::StubDisplayConfig stub_display_config;
-    g_sender.handle_display_config_change(stub_display_config);
 
     auto mock_session = std::make_shared<mtd::MockSceneSession>();
     EXPECT_CALL(*mock_session, send_display_config(_))
         .Times(1);
-    called_fn(mock_session);
+
+    storage.insert_session(mock_session);
+    ms::GlobalEventSender g_sender(mt::fake_shared(storage));
+
+    mtd::StubDisplayConfig stub_display_config;
+    g_sender.handle_display_config_change(stub_display_config);
 }

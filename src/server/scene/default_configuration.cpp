@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -25,10 +25,10 @@
 #include "mir/input/scene.h"
 #include "mir/abnormal_exit.h"
 #include "mir/scene/session.h"
+#include "mir/scene/session_container.h"
 #include "mir/shell/display_configuration_controller.h"
 
 #include "broadcasting_session_event_sink.h"
-#include "default_session_container.h"
 #include "gl_pixel_buffer.h"
 #include "global_event_sender.h"
 #include "mediating_display_changer.h"
@@ -123,7 +123,7 @@ std::shared_ptr<ms::SessionContainer>
 mir::DefaultServerConfiguration::the_session_container()
 {
     return session_container(
-        []{ return std::make_shared<ms::DefaultSessionContainer>(); });
+        []{ return std::make_shared<ms::SessionContainer>(); });
 }
 
 std::shared_ptr<ms::MediatingDisplayChanger>

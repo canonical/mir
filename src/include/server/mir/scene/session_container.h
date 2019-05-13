@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012 Canonical Ltd.
+ * Copyright © 2012-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -33,21 +33,24 @@ class Session;
 class SessionContainer
 {
 public:
-    virtual void insert_session(std::shared_ptr<Session> const& session) = 0;
-    virtual void remove_session(std::shared_ptr<Session> const& session) = 0;
+    SessionContainer();
+    ~SessionContainer();
 
-    virtual void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const = 0;
+    void insert_session(std::shared_ptr<Session> const& session);
+    void remove_session(std::shared_ptr<Session> const& session);
+
+    void for_each(std::function<void(std::shared_ptr<Session> const&)> f) const;
 
     // For convenience the successor of the null session is defined as the last session
     // which would be passed to the for_each callback
-    virtual std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const&) const = 0;
-
-protected:
-    SessionContainer() = default;
-    virtual ~SessionContainer() = default;
+    std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const&) const;
 
     SessionContainer(const SessionContainer&) = delete;
     SessionContainer& operator=(const SessionContainer&) = delete;
+
+private:
+    std::vector<std::shared_ptr<Session>> apps;
+    mutable std::mutex guard;
 };
 
 }
