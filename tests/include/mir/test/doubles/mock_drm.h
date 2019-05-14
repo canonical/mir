@@ -141,6 +141,8 @@ public:
     MOCK_METHOD4(drmPrimeHandleToFD, int(int fd, uint32_t handle, uint32_t flags, int *prime_fd));
     MOCK_METHOD3(drmPrimeFDToHandle, int(int fd, int prime_fd, uint32_t *handle));
 
+    MOCK_METHOD1(drmIsMaster,int(int fd));
+
     MOCK_METHOD1(drmSetMaster, int(int fd));
     MOCK_METHOD1(drmDropMaster, int(int fd));
 
