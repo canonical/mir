@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2017 Canonical Ltd.
+ * Copyright © 2015-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -174,6 +174,7 @@ public:
     void drag_window(Window const& window, Displacement& movement) override;
 
     void focus_next_application() override;
+    void focus_prev_application() override;
 
     void focus_next_within_application() override;
     void focus_prev_within_application() override;

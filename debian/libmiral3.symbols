@@ -362,3 +362,4 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::MinimalWindowManager::~MinimalWindowManager()@MIRAL_2.5" 2.5.0
  (c++)"typeinfo for miral::MinimalWindowManager@MIRAL_2.5" 2.5.0
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_2.5" 2.5.0
+ (c++)"miral::WindowManagerTools::focus_prev_application()@MIRAL_2.5" 2.5.0
