@@ -153,6 +153,23 @@ bool miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const* 
         }
     }
 
+    if (action == mir_keyboard_action_down &&
+        shift_state == (mir_input_event_modifier_alt | mir_input_event_modifier_shift))
+    {
+        switch (mir_keyboard_event_scan_code(event))
+        {
+        case KEY_TAB:
+            tools.focus_prev_application();
+            return true;
+
+        case KEY_GRAVE:
+            tools.focus_prev_within_application();
+            return true;
+
+        default:;
+        }
+    }
+
     return false;
 }
 
