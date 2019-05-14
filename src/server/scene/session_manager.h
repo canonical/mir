@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2014 Canonical Ltd.
+ * Copyright © 2012-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -65,14 +65,15 @@ public:
 
     virtual ~SessionManager() noexcept;
 
-    std::shared_ptr<Session> open_session(
+    auto open_session(
         pid_t client_pid,
         std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink) override;
+        std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<Session> override;
 
     void close_session(std::shared_ptr<Session> const& session) override;
 
-    std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const&) const override;
+    auto successor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> override;
+    auto predecessor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> override;
 
     void set_focus_to(std::shared_ptr<Session> const& focus) override;
     void unset_focus() override;
