@@ -309,6 +309,29 @@ void msh::AbstractShell::focus_next_session()
     update_focus_locked(lock, successor, surface);
 }
 
+void msh::AbstractShell::focus_prev_session()
+{
+    std::unique_lock<std::mutex> lock(focus_mutex);
+    auto const focused_session = focus_session.lock();
+    auto predecessor = session_coordinator->predecessor_of(focused_session);
+    auto const sentinel = predecessor;
+
+    while (predecessor != nullptr &&
+           predecessor->default_surface() == nullptr)
+    {
+        predecessor = session_coordinator->predecessor_of(predecessor);
+        if (predecessor == sentinel)
+            break;
+    }
+
+    auto const surface = predecessor ? predecessor->default_surface() : nullptr;
+
+    if (!surface)
+        predecessor = nullptr;
+
+    update_focus_locked(lock, predecessor, surface);
+}
+
 std::shared_ptr<ms::Session> msh::AbstractShell::focused_session() const
 {
     std::unique_lock<std::mutex> lg(focus_mutex);

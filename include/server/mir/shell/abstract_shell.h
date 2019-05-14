@@ -117,6 +117,7 @@ public:
  * Simply providing them as part of AbstractShell is probably adequate.
  *  @{ */
     void focus_next_session() override;
+    void focus_prev_session() override;
 
     std::shared_ptr<scene::Session> focused_session() const override;
 

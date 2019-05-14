@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -40,6 +40,7 @@
 struct StubFocusController : mir::shell::FocusController
 {
     void focus_next_session() override {}
+    void focus_prev_session() override {}
 
     auto focused_session() const -> std::shared_ptr<mir::scene::Session> override { return {}; }
 
