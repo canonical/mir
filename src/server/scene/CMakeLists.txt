@@ -10,7 +10,7 @@ ADD_LIBRARY(
   basic_surface.cpp
   broadcasting_session_event_sink.cpp
   default_configuration.cpp
-  default_session_container.cpp
+        session_container.cpp
   gl_pixel_buffer.cpp
   mediating_display_changer.cpp
   session_manager.cpp

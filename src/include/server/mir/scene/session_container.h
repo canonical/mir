@@ -43,7 +43,8 @@ public:
 
     // For convenience the successor of the null session is defined as the last session
     // which would be passed to the for_each callback
-    std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const&) const;
+    auto successor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> ;
+    auto predecessor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> ;
 
     SessionContainer(const SessionContainer&) = delete;
     SessionContainer& operator=(const SessionContainer&) = delete;
