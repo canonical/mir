@@ -34,7 +34,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-// Older versions of libdrm do not provides drmIsMaster()
+// Older versions of libdrm do not provide drmIsMaster()
 #ifndef MIR_LIBDRM_HAS_IS_MASTER
 #include <drm.h>
 

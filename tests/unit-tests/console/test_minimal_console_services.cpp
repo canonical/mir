@@ -140,7 +140,7 @@ TEST_F(MinimalConsoleServicesTest, calls_drm_set_master_if_not_already_master)
     ON_CALL(drm, drmIsMaster(drm_fd))
         .WillByDefault(Return(0));
 #else
-    // Older versions of libdrm do not provides drmIsMaster()
+    // Older versions of libdrm do not provide drmIsMaster()
     // drmIsMaster checks the ATTACHMODE ioctl, detecting EPERM as not master.
     ON_CALL(drm, drmIoctl(drm_fd, DRM_IOCTL_MODE_ATTACHMODE, _))
         .WillByDefault(SetErrnoAndReturn(EPERM, -1));
@@ -172,7 +172,7 @@ TEST_F(MinimalConsoleServicesTest, failure_to_set_master_is_fatal)
     ON_CALL(drm, drmIsMaster(drm_fd))
         .WillByDefault(Return(0));
 #else
-    // Older versions of libdrm do not provides drmIsMaster()
+    // Older versions of libdrm do not provide drmIsMaster()
     // drmIsMaster checks the ATTACHMODE ioctl, detecting EPERM as not master.
     ON_CALL(drm, drmIoctl(drm_fd, DRM_IOCTL_MODE_ATTACHMODE, _))
         .WillByDefault(SetErrnoAndReturn(EPERM, -1));
@@ -205,7 +205,7 @@ TEST_F(MinimalConsoleServicesTest, does_not_call_set_master_if_already_master)
     ON_CALL(drm, drmIsMaster(drm_fd))
         .WillByDefault(Return(1));
 #else
-    // Older versions of libdrm do not provides drmIsMaster()
+    // Older versions of libdrm do not provide drmIsMaster()
     // drmIsMaster checks the ATTACHMODE ioctl, detecting EPERM as not master.
     ON_CALL(drm, drmIoctl(drm_fd, DRM_IOCTL_MODE_ATTACHMODE, _))
         .WillByDefault(SetErrnoAndReturn(EINVAL, -1));
