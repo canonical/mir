@@ -47,6 +47,8 @@ public:
     uint32_t const max_version;
 };
 
+void internal_error_processing_request(wl_client* client, char const* method_name);
+
 }
 }
 

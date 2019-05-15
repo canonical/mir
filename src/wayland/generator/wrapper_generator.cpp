@@ -69,48 +69,6 @@ Emitter impl_includes(std::string const& protocol_name)
     };
 }
 
-Emitter post_error_helper()
-{
-    Emitter error_message = {
-        "\"Mir internal error processing %s request\",",
-        "method_name.c_str());"
-    };
-
-    return Lines{
-        "namespace",
-        "{",
-        "void internal_error_processing_request(struct wl_client* client, std::string const& method_name)",
-        Block{
-            "#if (WAYLAND_VERSION_MAJOR > 1 || (WAYLAND_VERSION_MAJOR == 1 && WAYLAND_VERSION_MINOR > 16))",
-            "wl_client_post_implementation_error(",
-            {Emitter::layout({
-                Emitter::seq({
-                        "client",
-                        "\"Mir internal error processing %s request\"",
-                        "method_name.c_str()"},
-                    Emitter::layout(",", false, true))},
-                true,
-                false,
-                Emitter::single_indent), ");"},
-            "#else",
-            "wl_client_post_no_memory(client);",
-            "#endif",
-            "::mir::log(",
-            {Emitter::layout({
-                Emitter::seq({
-                        "::mir::logging::Severity::error",
-                        "\"frontend:Wayland\"",
-                        "std::current_exception()",
-                        "\"Exception processing \" + method_name + \" request\""},
-                    Emitter::layout(",", false, true))},
-                true,
-                false,
-                Emitter::single_indent), ");"},
-        },
-        "}",
-    };
-}
-
 Emitter include_guard_bottom(std::string const& macro)
 {
     return Lines{
@@ -174,8 +132,6 @@ Emitter source_file(std::string input_file_path, std::vector<Interface> const& i
         comment_header(input_file_path),
         empty_line,
         impl_includes(protocol_name),
-        empty_line,
-        post_error_helper(),
         empty_line,
         "namespace mir",
         "{",

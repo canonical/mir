@@ -290,6 +290,8 @@ global:
     mir::wayland::Global::*;
     typeinfo?for?mir::wayland::Global;
     vtable?for?mir::wayland::Global;
+
+    mir::wayland::internal_error_processing_request*;
   };
   local: *;
 };
