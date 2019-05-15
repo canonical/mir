@@ -286,6 +286,10 @@ global:
     mir::wayland::Resource::*;
     typeinfo?for?mir::wayland::Resource;
     vtable?for?mir::wayland::Resource;
+
+    mir::wayland::Global::*;
+    typeinfo?for?mir::wayland::Global;
+    vtable?for?mir::wayland::Global;
   };
   local: *;
 };

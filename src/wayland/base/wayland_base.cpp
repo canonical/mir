@@ -27,3 +27,18 @@ namespace mw = mir::wayland;
 mw::Resource::Resource()
 {
 }
+
+mw::Global::Global(wl_global* global, uint32_t max_version)
+    : global{global},
+      max_version{max_version}
+{
+    if (global == nullptr)
+    {
+        BOOST_THROW_EXCEPTION((std::bad_alloc{}));
+    }
+}
+
+mw::Global::~Global()
+{
+    wl_global_destroy(global);
+}

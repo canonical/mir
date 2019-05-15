@@ -35,6 +35,18 @@ public:
     virtual ~Resource() = default;
 };
 
+class Global
+{
+public:
+    explicit Global(wl_global* global, uint32_t max_version);
+    virtual ~Global();
+
+    virtual auto interface_name() const -> char const* = 0;
+
+    wl_global* const global;
+    uint32_t const max_version;
+};
+
 }
 }
 
