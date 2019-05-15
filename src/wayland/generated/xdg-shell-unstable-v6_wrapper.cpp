@@ -14,26 +14,6 @@
 
 #include "mir/log.h"
 
-namespace
-{
-void internal_error_processing_request(struct wl_client* client, std::string const& method_name)
-{
-#if (WAYLAND_VERSION_MAJOR > 1 || (WAYLAND_VERSION_MAJOR == 1 && WAYLAND_VERSION_MINOR > 16))
-    wl_client_post_implementation_error(
-        client,
-        "Mir internal error processing %s request",
-        method_name.c_str());
-#else
-    wl_client_post_no_memory(client);
-#endif
-    ::mir::log(
-        ::mir::logging::Severity::error,
-        "frontend:Wayland",
-        std::current_exception(),
-        "Exception processing " + method_name + " request");
-}
-}
-
 namespace mir
 {
 namespace wayland
@@ -71,6 +51,8 @@ mw::XdgShellV6* mw::XdgShellV6::from(struct wl_resource* resource)
 
 struct mw::XdgShellV6::Thunks
 {
+    static int const supported_version = 1;
+
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<XdgShellV6*>(wl_resource_get_user_data(resource));
@@ -199,23 +181,19 @@ void mw::XdgShellV6::destroy_wayland_object() const
 }
 
 mw::XdgShellV6::Global::Global(wl_display* display, uint32_t max_version)
-    : global{wl_global_create(
-        display,
-        &zxdg_shell_v6_interface_data,
-        max_version,
-        this,
-        &Thunks::bind_thunk)},
-      max_version{max_version}
-{
-    if (global == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export zxdg_shell_v6 interface"}));
-    }
-}
+    : wayland::Global{
+          wl_global_create(
+              display,
+              &zxdg_shell_v6_interface_data,
+              max_version,
+              this,
+              &Thunks::bind_thunk),
+          max_version}
+{}
 
-mw::XdgShellV6::Global::~Global()
+auto mw::XdgShellV6::Global::interface_name() const -> char const*
 {
-    wl_global_destroy(global);
+    return XdgShellV6::interface_name;
 }
 
 struct wl_interface const* mw::XdgShellV6::Thunks::create_positioner_types[] {
@@ -249,6 +227,8 @@ mw::XdgPositionerV6* mw::XdgPositionerV6::from(struct wl_resource* resource)
 
 struct mw::XdgPositionerV6::Thunks
 {
+    static int const supported_version = 1;
+
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<XdgPositionerV6*>(wl_resource_get_user_data(resource));
@@ -397,6 +377,8 @@ mw::XdgSurfaceV6* mw::XdgSurfaceV6::from(struct wl_resource* resource)
 
 struct mw::XdgSurfaceV6::Thunks
 {
+    static int const supported_version = 1;
+
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<XdgSurfaceV6*>(wl_resource_get_user_data(resource));
@@ -548,6 +530,8 @@ mw::XdgToplevelV6* mw::XdgToplevelV6::from(struct wl_resource* resource)
 
 struct mw::XdgToplevelV6::Thunks
 {
+    static int const supported_version = 1;
+
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<XdgToplevelV6*>(wl_resource_get_user_data(resource));
@@ -852,6 +836,8 @@ mw::XdgPopupV6* mw::XdgPopupV6::from(struct wl_resource* resource)
 
 struct mw::XdgPopupV6::Thunks
 {
+    static int const supported_version = 1;
+
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<XdgPopupV6*>(wl_resource_get_user_data(resource));
@@ -943,31 +929,31 @@ namespace wayland
 
 struct wl_interface const zxdg_shell_v6_interface_data {
     mw::XdgShellV6::interface_name,
-    mw::XdgShellV6::interface_version,
+    mw::XdgShellV6::Thunks::supported_version,
     4, mw::XdgShellV6::Thunks::request_messages,
     1, mw::XdgShellV6::Thunks::event_messages};
 
 struct wl_interface const zxdg_positioner_v6_interface_data {
     mw::XdgPositionerV6::interface_name,
-    mw::XdgPositionerV6::interface_version,
+    mw::XdgPositionerV6::Thunks::supported_version,
     7, mw::XdgPositionerV6::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const zxdg_surface_v6_interface_data {
     mw::XdgSurfaceV6::interface_name,
-    mw::XdgSurfaceV6::interface_version,
+    mw::XdgSurfaceV6::Thunks::supported_version,
     5, mw::XdgSurfaceV6::Thunks::request_messages,
     1, mw::XdgSurfaceV6::Thunks::event_messages};
 
 struct wl_interface const zxdg_toplevel_v6_interface_data {
     mw::XdgToplevelV6::interface_name,
-    mw::XdgToplevelV6::interface_version,
+    mw::XdgToplevelV6::Thunks::supported_version,
     14, mw::XdgToplevelV6::Thunks::request_messages,
     2, mw::XdgToplevelV6::Thunks::event_messages};
 
 struct wl_interface const zxdg_popup_v6_interface_data {
     mw::XdgPopupV6::interface_name,
-    mw::XdgPopupV6::interface_version,
+    mw::XdgPopupV6::Thunks::supported_version,
     2, mw::XdgPopupV6::Thunks::request_messages,
     2, mw::XdgPopupV6::Thunks::event_messages};
 

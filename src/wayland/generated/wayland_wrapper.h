@@ -13,16 +13,17 @@
 #include "mir/fd.h"
 #include <wayland-server-core.h>
 
+#include "wayland_base.h"
+
 namespace mir
 {
 namespace wayland
 {
 
-class Callback
+class Callback : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_callback";
-    static int const interface_version = 1;
 
     static Callback* from(struct wl_resource*);
 
@@ -48,11 +49,10 @@ public:
 private:
 };
 
-class Compositor
+class Compositor : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_compositor";
-    static int const interface_version = 4;
 
     static Compositor* from(struct wl_resource*);
 
@@ -68,14 +68,12 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global
+    class Global : wayland::Global
     {
     public:
         Global(wl_display* display, uint32_t max_version);
-        virtual ~Global();
 
-        wl_global* const global;
-        uint32_t const max_version;
+        auto interface_name() const -> char const* override;
 
     private:
         virtual void bind(wl_resource* new_wl_compositor) = 0;
@@ -87,11 +85,10 @@ private:
     virtual void create_region(struct wl_resource* id) = 0;
 };
 
-class ShmPool
+class ShmPool : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_shm_pool";
-    static int const interface_version = 1;
 
     static ShmPool* from(struct wl_resource*);
 
@@ -113,11 +110,10 @@ private:
     virtual void resize(int32_t size) = 0;
 };
 
-class Shm
+class Shm : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_shm";
-    static int const interface_version = 1;
 
     static Shm* from(struct wl_resource*);
 
@@ -209,14 +205,12 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global
+    class Global : wayland::Global
     {
     public:
         Global(wl_display* display, uint32_t max_version);
-        virtual ~Global();
 
-        wl_global* const global;
-        uint32_t const max_version;
+        auto interface_name() const -> char const* override;
 
     private:
         virtual void bind(wl_resource* new_wl_shm) = 0;
@@ -227,11 +221,10 @@ private:
     virtual void create_pool(struct wl_resource* id, mir::Fd fd, int32_t size) = 0;
 };
 
-class Buffer
+class Buffer : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_buffer";
-    static int const interface_version = 1;
 
     static Buffer* from(struct wl_resource*);
 
@@ -258,11 +251,10 @@ private:
     virtual void destroy() = 0;
 };
 
-class DataOffer
+class DataOffer : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_data_offer";
-    static int const interface_version = 3;
 
     static DataOffer* from(struct wl_resource*);
 
@@ -307,11 +299,10 @@ private:
     virtual void set_actions(uint32_t dnd_actions, uint32_t preferred_action) = 0;
 };
 
-class DataSource
+class DataSource : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_data_source";
-    static int const interface_version = 3;
 
     static DataSource* from(struct wl_resource*);
 
@@ -359,11 +350,10 @@ private:
     virtual void set_actions(uint32_t dnd_actions) = 0;
 };
 
-class DataDevice
+class DataDevice : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_data_device";
-    static int const interface_version = 3;
 
     static DataDevice* from(struct wl_resource*);
 
@@ -407,11 +397,10 @@ private:
     virtual void release() = 0;
 };
 
-class DataDeviceManager
+class DataDeviceManager : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_data_device_manager";
-    static int const interface_version = 3;
 
     static DataDeviceManager* from(struct wl_resource*);
 
@@ -435,14 +424,12 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global
+    class Global : wayland::Global
     {
     public:
         Global(wl_display* display, uint32_t max_version);
-        virtual ~Global();
 
-        wl_global* const global;
-        uint32_t const max_version;
+        auto interface_name() const -> char const* override;
 
     private:
         virtual void bind(wl_resource* new_wl_data_device_manager) = 0;
@@ -454,11 +441,10 @@ private:
     virtual void get_data_device(struct wl_resource* id, struct wl_resource* seat) = 0;
 };
 
-class Shell
+class Shell : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_shell";
-    static int const interface_version = 1;
 
     static Shell* from(struct wl_resource*);
 
@@ -479,14 +465,12 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global
+    class Global : wayland::Global
     {
     public:
         Global(wl_display* display, uint32_t max_version);
-        virtual ~Global();
 
-        wl_global* const global;
-        uint32_t const max_version;
+        auto interface_name() const -> char const* override;
 
     private:
         virtual void bind(wl_resource* new_wl_shell) = 0;
@@ -497,11 +481,10 @@ private:
     virtual void get_shell_surface(struct wl_resource* id, struct wl_resource* surface) = 0;
 };
 
-class ShellSurface
+class ShellSurface : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_shell_surface";
-    static int const interface_version = 1;
 
     static ShellSurface* from(struct wl_resource*);
 
@@ -567,11 +550,10 @@ private:
     virtual void set_class(std::string const& class_) = 0;
 };
 
-class Surface
+class Surface : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_surface";
-    static int const interface_version = 4;
 
     static Surface* from(struct wl_resource*);
 
@@ -615,11 +597,10 @@ private:
     virtual void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
 };
 
-class Seat
+class Seat : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_seat";
-    static int const interface_version = 6;
 
     static Seat* from(struct wl_resource*);
 
@@ -652,14 +633,12 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global
+    class Global : wayland::Global
     {
     public:
         Global(wl_display* display, uint32_t max_version);
-        virtual ~Global();
 
-        wl_global* const global;
-        uint32_t const max_version;
+        auto interface_name() const -> char const* override;
 
     private:
         virtual void bind(wl_resource* new_wl_seat) = 0;
@@ -673,11 +652,10 @@ private:
     virtual void release() = 0;
 };
 
-class Pointer
+class Pointer : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_pointer";
-    static int const interface_version = 6;
 
     static Pointer* from(struct wl_resource*);
 
@@ -750,11 +728,10 @@ private:
     virtual void release() = 0;
 };
 
-class Keyboard
+class Keyboard : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_keyboard";
-    static int const interface_version = 6;
 
     static Keyboard* from(struct wl_resource*);
 
@@ -804,11 +781,10 @@ private:
     virtual void release() = 0;
 };
 
-class Touch
+class Touch : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_touch";
-    static int const interface_version = 6;
 
     static Touch* from(struct wl_resource*);
 
@@ -849,11 +825,10 @@ private:
     virtual void release() = 0;
 };
 
-class Output
+class Output : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_output";
-    static int const interface_version = 3;
 
     static Output* from(struct wl_resource*);
 
@@ -912,14 +887,12 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global
+    class Global : wayland::Global
     {
     public:
         Global(wl_display* display, uint32_t max_version);
-        virtual ~Global();
 
-        wl_global* const global;
-        uint32_t const max_version;
+        auto interface_name() const -> char const* override;
 
     private:
         virtual void bind(wl_resource* new_wl_output) = 0;
@@ -930,11 +903,10 @@ private:
     virtual void release() = 0;
 };
 
-class Region
+class Region : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_region";
-    static int const interface_version = 1;
 
     static Region* from(struct wl_resource*);
 
@@ -956,11 +928,10 @@ private:
     virtual void subtract(int32_t x, int32_t y, int32_t width, int32_t height) = 0;
 };
 
-class Subcompositor
+class Subcompositor : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_subcompositor";
-    static int const interface_version = 1;
 
     static Subcompositor* from(struct wl_resource*);
 
@@ -981,14 +952,12 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global
+    class Global : wayland::Global
     {
     public:
         Global(wl_display* display, uint32_t max_version);
-        virtual ~Global();
 
-        wl_global* const global;
-        uint32_t const max_version;
+        auto interface_name() const -> char const* override;
 
     private:
         virtual void bind(wl_resource* new_wl_subcompositor) = 0;
@@ -1000,11 +969,10 @@ private:
     virtual void get_subsurface(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* parent) = 0;
 };
 
-class Subsurface
+class Subsurface : public Resource
 {
 public:
     static char const constexpr* interface_name = "wl_subsurface";
-    static int const interface_version = 1;
 
     static Subsurface* from(struct wl_resource*);
 

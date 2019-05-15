@@ -13,16 +13,17 @@
 #include "mir/fd.h"
 #include <wayland-server-core.h>
 
+#include "wayland_base.h"
+
 namespace mir
 {
 namespace wayland
 {
 
-class ServerDecorationManager
+class ServerDecorationManager : public Resource
 {
 public:
     static char const constexpr* interface_name = "org_kde_kwin_server_decoration_manager";
-    static int const interface_version = 1;
 
     static ServerDecorationManager* from(struct wl_resource*);
 
@@ -52,14 +53,12 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global
+    class Global : wayland::Global
     {
     public:
         Global(wl_display* display, uint32_t max_version);
-        virtual ~Global();
 
-        wl_global* const global;
-        uint32_t const max_version;
+        auto interface_name() const -> char const* override;
 
     private:
         virtual void bind(wl_resource* new_org_kde_kwin_server_decoration_manager) = 0;
@@ -70,11 +69,10 @@ private:
     virtual void create(struct wl_resource* id, struct wl_resource* surface) = 0;
 };
 
-class ServerDecoration
+class ServerDecoration : public Resource
 {
 public:
     static char const constexpr* interface_name = "org_kde_kwin_server_decoration";
-    static int const interface_version = 1;
 
     static ServerDecoration* from(struct wl_resource*);
 
