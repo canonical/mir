@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -44,6 +44,11 @@ void msh::ShellWrapper::close_session(std::shared_ptr<ms::Session> const& sessio
 void msh::ShellWrapper::focus_next_session()
 {
     wrapped->focus_next_session();
+}
+
+void msh::ShellWrapper::focus_prev_session()
+{
+    wrapped->focus_prev_session();
 }
 
 std::shared_ptr<ms::Session> msh::ShellWrapper::focused_session() const

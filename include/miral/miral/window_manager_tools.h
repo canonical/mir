@@ -151,6 +151,10 @@ public:
     /// make the next application active
     void focus_next_application();
 
+    /// make the previous application active
+    /// \remark Since MirAL 2.5
+    void focus_prev_application();
+
     /// make the next surface active within the active application
     void focus_next_within_application();
 

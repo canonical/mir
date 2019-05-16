@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2015 Canonical Ltd.
+ * Copyright © 2012-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -189,10 +189,16 @@ void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
 }
 
 
-std::shared_ptr<ms::Session> ms::SessionManager::successor_of(
-    std::shared_ptr<Session> const& session) const
+auto ms::SessionManager::successor_of(std::shared_ptr<Session> const& session) const
+    -> std::shared_ptr<ms::Session>
 {
     return app_container->successor_of(session);
+}
+
+auto ms::SessionManager::predecessor_of(std::shared_ptr<Session> const& session) const
+    -> std::shared_ptr<mir::scene::Session>
+{
+    return app_container->predecessor_of(session);
 }
 
 void ms::SessionManager::add_listener(std::shared_ptr<SessionListener> const& listener)

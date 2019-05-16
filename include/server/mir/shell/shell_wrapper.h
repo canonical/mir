@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2015-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -31,6 +31,7 @@ public:
     explicit ShellWrapper(std::shared_ptr<Shell> const& wrapped);
 
     void focus_next_session() override;
+    void focus_prev_session() override;
 
     std::shared_ptr<scene::Session> focused_session() const override;
 

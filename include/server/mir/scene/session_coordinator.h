@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014 Canonical Ltd.
+ * Copyright © 2014-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -45,14 +45,15 @@ public:
     virtual void set_focus_to(std::shared_ptr<Session> const& focus) = 0;
     virtual void unset_focus() = 0;
 
-    virtual std::shared_ptr<Session> open_session(
+    virtual auto open_session(
         pid_t client_pid,
         std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink) = 0;
+        std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<Session> = 0;
 
     virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
 
-    virtual std::shared_ptr<Session> successor_of(std::shared_ptr<Session> const&) const = 0;
+    virtual auto successor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> = 0;
+    virtual auto predecessor_of(std::shared_ptr<Session> const&) const -> std::shared_ptr<Session> = 0;
 
     virtual void add_listener(std::shared_ptr<SessionListener> const&) = 0;
     virtual void remove_listener(std::shared_ptr<SessionListener> const&) = 0;

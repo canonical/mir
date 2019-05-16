@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Canonical Ltd.
+ * Copyright © 2013-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -33,16 +33,13 @@ namespace shell
 {
 using SurfaceSet = std::set<std::weak_ptr<scene::Surface>, std::owner_less<std::weak_ptr<scene::Surface>>>;
 
-// TODO I don't think this interface serves a meaningful purpose
-// TODO (It is referenced by a couple of example WindowManagers, and
-// TODO to get the active session in unity-system-compositor.)
-// TODO I think there's a better approach possible.
 class FocusController
 {
 public:
     virtual ~FocusController() = default;
 
     virtual void focus_next_session() = 0;
+    virtual void focus_prev_session() = 0;
 
     virtual auto focused_session() const -> std::shared_ptr<scene::Session> = 0;
 

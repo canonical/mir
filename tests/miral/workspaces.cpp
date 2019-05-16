@@ -255,7 +255,7 @@ void WorkspacesWindowManagerPolicy::advise_new_window(miral::WindowInfo const& w
 
 void WorkspacesWindowManagerPolicy::handle_window_ready(miral::WindowInfo& window_info)
 {
-    miral::CanonicalWindowManagerPolicy::handle_window_ready(window_info);
+    miral::TestServer::TestWindowManagerPolicy::handle_window_ready(window_info);
     advise_window_ready(window_info);
 }
 }

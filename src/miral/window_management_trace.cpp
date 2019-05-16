@@ -536,6 +536,15 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
+void miral::WindowManagementTrace::focus_prev_application()
+try {
+    log_input();
+    mir::log_info("%s", __func__);
+    trace_count++;
+    wrapped.focus_next_application();
+}
+MIRAL_TRACE_EXCEPTION
+
 void miral::WindowManagementTrace::focus_next_within_application()
 try {
     log_input();

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2016-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -62,6 +62,7 @@ public:
     virtual void drag_active_window(mir::geometry::Displacement movement) = 0;
     virtual void drag_window(Window const& window, mir::geometry::Displacement& movement) = 0;
     virtual void focus_next_application() = 0;
+    virtual void focus_prev_application() = 0;
     virtual void focus_next_within_application() = 0;
     virtual void focus_prev_within_application() = 0;
     virtual auto window_at(mir::geometry::Point cursor) const -> Window = 0;
