@@ -242,7 +242,7 @@ public:
         struct wl_display* display,
         std::shared_ptr<mir::Executor> const& executor,
         std::shared_ptr<mg::WaylandAllocator> const& allocator)
-        : Global(display, 3),
+        : Global(display, 4),
           allocator{allocator},
           executor{executor}
     {
