@@ -132,6 +132,12 @@ bool FloatingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
 {
     auto const count = mir_touch_event_point_count(event);
 
+    if (MinimalWindowManager::handle_touch_event(event) || count != 3)
+    {
+        pinching = false;
+        return false;
+    }
+
     long total_x = 0;
     long total_y = 0;
 
@@ -141,19 +147,14 @@ bool FloatingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
         total_y += mir_touch_event_axis_value(event, i, mir_touch_axis_y);
     }
 
-    Point cursor{total_x/count, total_y/count};
-
-    bool is_drag = true;
     for (auto i = 0U; i != count; ++i)
     {
         switch (mir_touch_event_action(event, i))
         {
         case mir_touch_action_up:
-            return false;
-
         case mir_touch_action_down:
-            is_drag = false;
-            continue;
+            pinching = false;
+            return false;
 
         default:
             continue;
@@ -193,57 +194,51 @@ bool FloatingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
             touch_pinch_left = x;
     }
 
-    bool consumes_event = false;
-    if (is_drag)
+    if (auto window = tools.active_window())
     {
-        if (count == 3)
-        {
-            if (auto window = tools.active_window())
-            {
-                auto const old_size = window.size();
-                auto const delta_width = DeltaX{touch_pinch_width - old_touch_pinch_width};
-                auto const delta_height = DeltaY{touch_pinch_height - old_touch_pinch_height};
+        auto const old_size = window.size();
+        auto const delta_width = DeltaX{touch_pinch_width - old_touch_pinch_width};
+        auto const delta_height = DeltaY{touch_pinch_height - old_touch_pinch_height};
 
-                auto new_width = std::max(old_size.width + delta_width, Width{5});
-                auto new_height = std::max(old_size.height + delta_height, Height{5});
-                Displacement movement{
-                    DeltaX{touch_pinch_left - old_touch_pinch_left},
-                    DeltaY{touch_pinch_top  - old_touch_pinch_top}};
+        auto new_width = std::max(old_size.width + delta_width, Width{5});
+        auto new_height = std::max(old_size.height + delta_height, Height{5});
+        Displacement movement{
+            DeltaX{touch_pinch_left - old_touch_pinch_left},
+            DeltaY{touch_pinch_top  - old_touch_pinch_top}};
 
-                auto& window_info = tools.info_for(window);
-                keep_window_within_constraints(window_info, movement, new_width, new_height);
+        auto& window_info = tools.info_for(window);
+        keep_window_within_constraints(window_info, movement, new_width, new_height);
 
-                auto new_pos = window.top_left() + movement;
-                Size new_size{new_width, new_height};
+        auto new_pos = window.top_left() + movement;
+        Size new_size{new_width, new_height};
 
-                {   // Workaround for lp:1627697
-                    auto now = std::chrono::steady_clock::now();
-                    if (pinching && now < last_resize+std::chrono::milliseconds(20))
-                        return true;
+        {   // Workaround for lp:1627697
+            auto now = std::chrono::steady_clock::now();
+            if (pinching && now < last_resize+std::chrono::milliseconds(20))
+                return true;
 
-                    last_resize = now;
-                }
-
-                WindowSpecification modifications;
-                modifications.top_left() = new_pos;
-                modifications.size() = new_size;
-                tools.modify_window(window_info, modifications);
-                pinching = true;
-            }
-            consumes_event = true;
+            last_resize = now;
         }
-    }
-    else
-    {
-        if (auto const& window = tools.window_at(cursor))
-            tools.select_active_window(window);
+
+        if (pinching)
+        {
+            WindowSpecification modifications;
+            modifications.top_left() = new_pos;
+            modifications.size() = new_size;
+            tools.modify_window(window_info, modifications);
+        }
+        else
+        {
+            pinching = true;
+        }
+
+        old_touch_pinch_top = touch_pinch_top;
+        old_touch_pinch_left = touch_pinch_left;
+        old_touch_pinch_width = touch_pinch_width;
+        old_touch_pinch_height = touch_pinch_height;
     }
 
-    old_touch_pinch_top = touch_pinch_top;
-    old_touch_pinch_left = touch_pinch_left;
-    old_touch_pinch_width = touch_pinch_width;
-    old_touch_pinch_height = touch_pinch_height;
-    return consumes_event;
+    return true;
 }
 
 void FloatingWindowManagerPolicy::advise_new_window(WindowInfo const& window_info)
