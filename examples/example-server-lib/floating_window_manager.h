@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2018 Canonical Ltd.
+ * Copyright © 2016-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -19,7 +19,7 @@
 #ifndef MIRAL_SHELL_FLOATING_WINDOW_MANAGER_H
 #define MIRAL_SHELL_FLOATING_WINDOW_MANAGER_H
 
-#include <miral/canonical_window_manager.h>
+#include <miral/minimal_window_manager.h>
 
 #include "splash_session.h"
 
@@ -32,7 +32,7 @@ using namespace mir::geometry;
 
 class DecorationProvider;
 
-class FloatingWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy
+class FloatingWindowManagerPolicy : public miral::MinimalWindowManager
 {
 public:
     FloatingWindowManagerPolicy(

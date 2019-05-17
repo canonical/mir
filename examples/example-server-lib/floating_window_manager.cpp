@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2018 Canonical Ltd.
+ * Copyright © 2016-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -51,7 +51,7 @@ FloatingWindowManagerPolicy::FloatingWindowManagerPolicy(
     std::shared_ptr<SplashSession> const& spinner,
     miral::InternalClientLauncher const& launcher,
     std::function<void()>& shutdown_hook) :
-    CanonicalWindowManagerPolicy(tools),
+    MinimalWindowManager(tools),
     spinner{spinner},
     decoration_provider{std::make_unique<DecorationProvider>()}
 {
@@ -362,7 +362,7 @@ bool FloatingWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
 
 void FloatingWindowManagerPolicy::advise_new_window(WindowInfo const& window_info)
 {
-    CanonicalWindowManagerPolicy::advise_new_window(window_info);
+    MinimalWindowManager::advise_new_window(window_info);
 
     auto const parent = window_info.parent();
 
@@ -377,13 +377,13 @@ void FloatingWindowManagerPolicy::advise_new_window(WindowInfo const& window_inf
 
 void FloatingWindowManagerPolicy::handle_window_ready(WindowInfo& window_info)
 {
-    CanonicalWindowManagerPolicy::handle_window_ready(window_info);
+    MinimalWindowManager::handle_window_ready(window_info);
     keep_spinner_on_top();
 }
 
 void FloatingWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
 {
-    CanonicalWindowManagerPolicy::advise_focus_gained(info);
+    MinimalWindowManager::advise_focus_gained(info);
     keep_spinner_on_top();
 }
 
@@ -636,7 +636,7 @@ void FloatingWindowManagerPolicy::keep_window_within_constraints(
 WindowSpecification FloatingWindowManagerPolicy::place_new_window(
     ApplicationInfo const& app_info, WindowSpecification const& request_parameters)
 {
-    auto parameters = CanonicalWindowManagerPolicy::place_new_window(app_info, request_parameters);
+    auto parameters = MinimalWindowManager::place_new_window(app_info, request_parameters);
 
     if (app_info.application() == decoration_provider->session())
     {
@@ -795,7 +795,7 @@ void FloatingWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, 
     if (pdata.in_hidden_workspace && mods.state().is_set())
         pdata.old_state = mods.state().consume();
 
-    CanonicalWindowManagerPolicy::handle_modify_window(window_info, mods);
+    MinimalWindowManager::handle_modify_window(window_info, mods);
 }
 
 void FloatingWindowManagerPolicy::handle_request_drag_and_drop(WindowInfo& /*window_info*/)
