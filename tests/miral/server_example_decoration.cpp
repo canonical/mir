@@ -21,13 +21,15 @@
 
 using mir::examples::ServerDecorationCreateCallback;
 
+namespace mw = mir::wayland;
+
 namespace
 {
 struct ServerDecoration :
-    mir::wayland::ServerDecoration
+    mw::ServerDecoration
 {
     ServerDecoration(wl_resource* new_resource) :
-        mir::wayland::ServerDecoration::ServerDecoration(new_resource)
+        mw::ServerDecoration::ServerDecoration(new_resource, mw::Version<1>())
     {
         send_mode_event(decoration_mode);
     }
@@ -48,26 +50,26 @@ struct ServerDecoration :
     uint32_t decoration_mode = Mode::Server;
 };
 
-struct ServerDecorationManager : mir::wayland::ServerDecorationManager::Global
+struct ServerDecorationManager : mw::ServerDecorationManager::Global
 {
     static int const interface_supported = 1;
 
     ServerDecorationManager(struct wl_display* display) :
-        Global(display, mir::wayland::Version<interface_supported>())
+        Global(display, mw::Version<interface_supported>())
     {
     };
 
     ServerDecorationManager(struct wl_display* display, ServerDecorationCreateCallback callback) :
-        Global(display, mir::wayland::Version<interface_supported>()),
+        Global(display, mw::Version<interface_supported>()),
         callback{callback}
     {
     };
 
-    class Instance : public mir::wayland::ServerDecorationManager
+    class Instance : public mw::ServerDecorationManager
     {
     public:
         Instance(wl_resource* new_resource, ::ServerDecorationManager* manager)
-            : mir::wayland::ServerDecorationManager(new_resource),
+            : mw::ServerDecorationManager(new_resource, mw::Version<1>()),
               manager{manager}
         {
         }
