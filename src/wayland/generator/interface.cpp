@@ -151,7 +151,7 @@ Emitter Interface::constructor_impl() const
 
 Emitter Interface::constructor_args() const
 {
-    return {"struct wl_resource* resource"};
+    return {"struct wl_resource* resource, Version<", std::to_string(version), ">"};
 }
 
 Emitter Interface::destructor_prototype() const
