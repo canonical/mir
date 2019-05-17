@@ -27,7 +27,7 @@ public:
 
     static XdgShellV6* from(struct wl_resource*);
 
-    XdgShellV6(struct wl_resource* resource);
+    XdgShellV6(struct wl_resource* resource, Version<1>);
     virtual ~XdgShellV6() = default;
 
     void send_ping_event(uint32_t serial) const;
@@ -59,7 +59,7 @@ public:
     class Global : wayland::Global
     {
     public:
-        Global(wl_display* display, uint32_t max_version);
+        Global(wl_display* display, Version<1>);
 
         auto interface_name() const -> char const* override;
 
@@ -82,7 +82,7 @@ public:
 
     static XdgPositionerV6* from(struct wl_resource*);
 
-    XdgPositionerV6(struct wl_resource* resource);
+    XdgPositionerV6(struct wl_resource* resource, Version<1>);
     virtual ~XdgPositionerV6() = default;
 
     void destroy_wayland_object() const;
@@ -145,7 +145,7 @@ public:
 
     static XdgSurfaceV6* from(struct wl_resource*);
 
-    XdgSurfaceV6(struct wl_resource* resource);
+    XdgSurfaceV6(struct wl_resource* resource, Version<1>);
     virtual ~XdgSurfaceV6() = default;
 
     void send_configure_event(uint32_t serial) const;
@@ -186,7 +186,7 @@ public:
 
     static XdgToplevelV6* from(struct wl_resource*);
 
-    XdgToplevelV6(struct wl_resource* resource);
+    XdgToplevelV6(struct wl_resource* resource, Version<1>);
     virtual ~XdgToplevelV6() = default;
 
     void send_configure_event(int32_t width, int32_t height, struct wl_array* states) const;
@@ -252,7 +252,7 @@ public:
 
     static XdgPopupV6* from(struct wl_resource*);
 
-    XdgPopupV6(struct wl_resource* resource);
+    XdgPopupV6(struct wl_resource* resource, Version<1>);
     virtual ~XdgPopupV6() = default;
 
     void send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height) const;

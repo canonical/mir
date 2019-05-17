@@ -27,7 +27,7 @@ public:
 
     static LayerShellV1* from(struct wl_resource*);
 
-    LayerShellV1(struct wl_resource* resource);
+    LayerShellV1(struct wl_resource* resource, Version<1>);
     virtual ~LayerShellV1() = default;
 
     void destroy_wayland_object() const;
@@ -57,7 +57,7 @@ public:
     class Global : wayland::Global
     {
     public:
-        Global(wl_display* display, uint32_t max_version);
+        Global(wl_display* display, Version<1>);
 
         auto interface_name() const -> char const* override;
 
@@ -77,7 +77,7 @@ public:
 
     static LayerSurfaceV1* from(struct wl_resource*);
 
-    LayerSurfaceV1(struct wl_resource* resource);
+    LayerSurfaceV1(struct wl_resource* resource, Version<1>);
     virtual ~LayerSurfaceV1() = default;
 
     void send_configure_event(uint32_t serial, uint32_t width, uint32_t height) const;

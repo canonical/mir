@@ -46,7 +46,7 @@ mw::XdgOutputManagerV1* mw::XdgOutputManagerV1::from(struct wl_resource* resourc
 
 struct mw::XdgOutputManagerV1::Thunks
 {
-    static int const supported_version = 2;
+    static int const supported_version;
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -92,7 +92,7 @@ struct mw::XdgOutputManagerV1::Thunks
         auto resource = wl_resource_create(
             client,
             &zxdg_output_manager_v1_interface_data,
-            std::min(version, me->max_version),
+            std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -114,7 +114,9 @@ struct mw::XdgOutputManagerV1::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_resource* resource)
+int const mw::XdgOutputManagerV1::Thunks::supported_version = 2;
+
+mw::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_resource* resource, Version<2>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -135,15 +137,14 @@ void mw::XdgOutputManagerV1::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-mw::XdgOutputManagerV1::Global::Global(wl_display* display, uint32_t max_version)
+mw::XdgOutputManagerV1::Global::Global(wl_display* display, Version<2>)
     : wayland::Global{
           wl_global_create(
               display,
               &zxdg_output_manager_v1_interface_data,
-              max_version,
+              Thunks::supported_version,
               this,
-              &Thunks::bind_thunk),
-          max_version}
+              &Thunks::bind_thunk)}
 {}
 
 auto mw::XdgOutputManagerV1::Global::interface_name() const -> char const*
@@ -172,7 +173,7 @@ mw::XdgOutputV1* mw::XdgOutputV1::from(struct wl_resource* resource)
 
 struct mw::XdgOutputV1::Thunks
 {
-    static int const supported_version = 2;
+    static int const supported_version;
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -197,7 +198,9 @@ struct mw::XdgOutputV1::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgOutputV1::XdgOutputV1(struct wl_resource* resource)
+int const mw::XdgOutputV1::Thunks::supported_version = 2;
+
+mw::XdgOutputV1::XdgOutputV1(struct wl_resource* resource, Version<2>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
