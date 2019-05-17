@@ -282,6 +282,9 @@ void FloatingWindowManagerPolicy::keep_spinner_on_top()
 
 bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
 {
+    if (MinimalWindowManager::handle_keyboard_event(event))
+        return true;
+
     auto const action = mir_keyboard_event_action(event);
     auto const scan_code = mir_keyboard_event_scan_code(event);
     auto const modifiers = mir_keyboard_event_modifiers(event) & modifier_mask;
@@ -336,45 +339,11 @@ bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* 
             break;
         }
     }
-    else if (action == mir_keyboard_action_down && scan_code == KEY_F4)
+    else if (action == mir_keyboard_action_down && scan_code == KEY_F4 &&
+        modifiers == (mir_input_event_modifier_alt|mir_input_event_modifier_shift))
     {
-        switch (modifiers)
-        {
-        case mir_input_event_modifier_alt|mir_input_event_modifier_shift:
-            if (auto const& window = tools.active_window())
-                kill(window.application(), SIGTERM);
-            return true;
-
-        case mir_input_event_modifier_alt:
-            tools.ask_client_to_close(tools.active_window());;
-            return true;
-
-        default:
-            break;
-        }
-    }
-    else if (action == mir_keyboard_action_down &&
-             modifiers == mir_input_event_modifier_alt &&
-             scan_code == KEY_TAB)
-    {
-        tools.focus_next_application();
-
-        return true;
-    }
-    else if (action == mir_keyboard_action_down &&
-             modifiers == mir_input_event_modifier_alt &&
-             scan_code == KEY_GRAVE)
-    {
-        tools.focus_next_within_application();
-
-        return true;
-    }
-    else if (action == mir_keyboard_action_down &&
-             modifiers == (mir_input_event_modifier_alt | mir_input_event_modifier_shift) &&
-             scan_code == KEY_GRAVE)
-    {
-        tools.focus_prev_within_application();
-
+        if (auto const& window = tools.active_window())
+            kill(window.application(), SIGTERM);
         return true;
     }
     else if (action == mir_keyboard_action_down &&
