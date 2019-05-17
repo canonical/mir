@@ -34,7 +34,7 @@ class LayerShellV1::Instance : wayland::LayerShellV1
 {
 public:
     Instance(wl_resource* new_resource, mf::LayerShellV1* shell)
-        : LayerShellV1{new_resource},
+        : LayerShellV1{new_resource, mw::Version<1>()},
           shell{shell}
     {
     }
@@ -111,7 +111,7 @@ void mf::LayerShellV1::Instance::get_layer_surface(
 // LayerSurfaceV1
 
 mf::LayerSurfaceV1::LayerSurfaceV1(wl_resource* new_resource, WlSurface* surface, LayerShellV1 const& layer_shell)
-    : wayland::LayerSurfaceV1(new_resource),
+    : mw::LayerSurfaceV1(new_resource, mw::Version<1>()),
       WindowWlSurfaceRole(
           &layer_shell.seat,
           wayland::LayerSurfaceV1::client,

@@ -257,7 +257,7 @@ private:
     {
     public:
         Instance(wl_resource* new_resource, WlCompositor* compositor)
-            : wayland::Compositor{new_resource},
+            : mw::Compositor{new_resource, mw::Version<4>()},
               compositor{compositor}
         {
         }
@@ -293,7 +293,7 @@ public:
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat,
         OutputManager* output_manager)
-        : ShellSurface(new_resource),
+        : ShellSurface(new_resource, mw::Version<1>()),
           WindowWlSurfaceRole{&seat, wayland::ShellSurface::client, surface, shell, output_manager}
     {
     }
@@ -468,7 +468,7 @@ private:
     {
     public:
         Instance(wl_resource* new_resource, WlShell* shell)
-            : wayland::Shell{new_resource},
+            : mw::Shell{new_resource, mw::Version<1>()},
               shell{shell}
         {
         }

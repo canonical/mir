@@ -70,7 +70,7 @@ struct DataSource : mw::DataSource
 {
 public:
     DataSource(wl_resource* new_resource, DataDeviceManager* manager)
-        : mw::DataSource{new_resource},
+        : mw::DataSource{new_resource, mw::Version<3>()},
           manager{manager}
     {
     }
@@ -205,7 +205,7 @@ DataSource::~DataSource()
 }
 
 DataDeviceManager::DataDeviceManager(struct wl_display* display) :
-    mf::DataDeviceManager(display, mw::Version<3>()),
+    mf::DataDeviceManager(display, mir::wayland::Version<3>()),
     current_data_source{nullptr, [](DataSource* ds) { if(ds) ds->send_cancelled(); }}
 {
 }
@@ -216,7 +216,7 @@ DataDeviceManager::~DataDeviceManager()
 }
 
 DataDeviceManager::Instance::Instance(wl_resource* new_resource, ::DataDeviceManager* manager)
-    : mir::wayland::DataDeviceManager(new_resource),
+    : mir::wayland::DataDeviceManager(new_resource, mir::wayland::Version<3>()),
       manager{manager}
 {
 }
@@ -263,7 +263,7 @@ void DataDeviceManager::bind(wl_resource* new_resource)
 }
 
 DataDevice::DataDevice(wl_resource* new_resource, DataDeviceManager* manager, mf::WlSeat* seat) :
-    mw::DataDevice(new_resource),
+    mw::DataDevice(new_resource, mw::Version<3>()),
     manager{manager},
     seat{seat}
 {
@@ -330,7 +330,7 @@ void DataDevice::focus_on(wl_client* focus)
 }
 
 DataOffer::DataOffer(wl_resource* new_resource, DataSource* source, DataDevice* device) :
-    mw::DataOffer(new_resource),
+    mw::DataOffer(new_resource, mw::Version<3>()),
     source{source}
 {
     source->add_listener(this);

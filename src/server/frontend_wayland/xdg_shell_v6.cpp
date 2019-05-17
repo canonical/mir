@@ -154,7 +154,7 @@ private:
 };
 
 mf::XdgShellV6::Instance::Instance(wl_resource* new_resource, mf::XdgShellV6* shell)
-    : wayland::XdgShellV6{new_resource},
+    : mw::XdgShellV6{new_resource, mw::Version<1>()},
       shell{shell}
 {
 }
@@ -209,7 +209,7 @@ mf::XdgSurfaceV6* mf::XdgSurfaceV6::from(wl_resource* surface)
 
 mf::XdgSurfaceV6::XdgSurfaceV6(wl_resource* new_resource, WlSurface* surface,
                                XdgShellV6 const& xdg_shell)
-    : wayland::XdgSurfaceV6(new_resource),
+    : mw::XdgSurfaceV6(new_resource, mw::Version<1>()),
       surface{surface},
       xdg_shell{xdg_shell}
 {
@@ -278,7 +278,7 @@ mf::XdgPopupV6::XdgPopupV6(
     XdgSurfaceV6* parent_surface,
     wl_resource* positioner,
     WlSurface* surface)
-    : wayland::XdgPopupV6(new_resource),
+    : mw::XdgPopupV6(new_resource, mw::Version<1>()),
       WindowWlSurfaceRole(
           &xdg_surface->xdg_shell.seat,
           wayland::XdgPopupV6::client,
@@ -338,7 +338,7 @@ void mf::XdgPopupV6::handle_resize(const std::experimental::optional<geometry::P
 // XdgToplevelV6
 
 mf::XdgToplevelV6::XdgToplevelV6(struct wl_resource* new_resource, XdgSurfaceV6* xdg_surface, WlSurface* surface)
-    : wayland::XdgToplevelV6(new_resource),
+    : mw::XdgToplevelV6(new_resource, mw::Version<1>()),
       WindowWlSurfaceRole(
           &xdg_surface->xdg_shell.seat,
           wayland::XdgToplevelV6::client,
@@ -522,7 +522,7 @@ mf::XdgToplevelV6* mf::XdgToplevelV6::from(wl_resource* surface)
 // XdgPositionerV6
 
 mf::XdgPositionerV6::XdgPositionerV6(wl_resource* new_resource)
-    : wayland::XdgPositionerV6(new_resource)
+    : mw::XdgPositionerV6(new_resource, mw::Version<1>())
 {
     // specifying gravity is not required by the xdg shell protocol, but is by Mir window managers
     surface_placement_gravity = mir_placement_gravity_center;
