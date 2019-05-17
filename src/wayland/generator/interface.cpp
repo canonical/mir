@@ -30,7 +30,7 @@ Interface::Interface(xmlpp::Element const& node,
       generated_name{name_transform(wl_name)},
       nmspace{"mw::" + generated_name + "::"},
       global{(constructable_interfaces.count(wl_name) == 0) ?
-          std::experimental::make_optional(Global{wl_name, generated_name, nmspace}) :
+          std::experimental::make_optional(Global{wl_name, generated_name, version, nmspace}) :
           std::experimental::nullopt},
       requests{get_requests(node, generated_name)},
       events{get_events(node, generated_name)},
@@ -258,6 +258,8 @@ Emitter Interface::thunks_impl() const
             {Block{
                 contents
             }, ";"},
+            empty_line,
+            {"int const ", nmspace, "Thunks::supported_version = ", std::to_string(version), ";"},
         };
     }
     else
@@ -270,7 +272,7 @@ Emitter Interface::thunks_impl_contents() const
 {
     std::vector<Emitter> impls;
     impls.push_back(
-        {"static int const supported_version = ", std::to_string(version), ";"});
+        {"static int const supported_version;"});
 
     for (auto const& request : requests)
         impls.push_back(request.thunk_impl());

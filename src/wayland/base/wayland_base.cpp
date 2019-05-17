@@ -28,9 +28,8 @@ mw::Resource::Resource()
 {
 }
 
-mw::Global::Global(wl_global* global, uint32_t max_version)
-    : global{global},
-      max_version{max_version}
+mw::Global::Global(wl_global* global)
+    : global{global}
 {
     if (global == nullptr)
     {

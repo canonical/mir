@@ -42,6 +42,7 @@
 
 namespace mf = mir::frontend;
 namespace mi = mir::input;
+namespace mw = mir::wayland;
 
 namespace mir
 {
@@ -158,7 +159,7 @@ mf::WlSeat::WlSeat(
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<mir::Executor> const& executor)
-    :   Global(display, 6),
+    :   Global(display, mw::Version<6>()),
         keymap{std::make_unique<input::Keymap>()},
         config_observer{
             std::make_shared<ConfigObserver>(
