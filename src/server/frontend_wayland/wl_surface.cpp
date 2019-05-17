@@ -41,9 +41,10 @@
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
+namespace mw = mir::wayland;
 
 mf::WlSurfaceState::Callback::Callback(wl_resource* new_resource)
-    : wayland::Callback{new_resource},
+    : mw::Callback{new_resource, mw::Version<1>()},
       destroyed{deleted_flag_for_resource(resource)}
 {
 }
@@ -78,7 +79,7 @@ mf::WlSurface::WlSurface(
     wl_resource* new_resource,
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<graphics::WaylandAllocator> const& allocator)
-    : Surface(new_resource),
+    : Surface(new_resource, mw::Version<4>()),
         session{mf::get_session(client)},
         stream_id{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
         stream{session->get_buffer_stream(stream_id)},
