@@ -28,6 +28,7 @@
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
+namespace mw = mir::wayland;
 
 namespace mir
 {
@@ -167,7 +168,7 @@ private:
 
 mf::XdgShellStable::XdgShellStable(struct wl_display* display, std::shared_ptr<mf::Shell> const shell, WlSeat& seat,
                                    OutputManager* output_manager)
-    : Global(display, 1),
+    : Global(display, mw::Version<1>()),
       shell{shell},
       seat{seat},
       output_manager{output_manager}

@@ -20,8 +20,9 @@
 
 #include <libxml++/libxml++.h>
 
-Global::Global(std::string const& wl_name, std::string const& generated_name, std::string const& nmspace)
+Global::Global(std::string const& wl_name, std::string const& generated_name, int version, std::string const& nmspace)
     : wl_name{wl_name},
+      version{version},
       generated_name{generated_name},
       nmspace{nmspace}
 {
@@ -57,10 +58,9 @@ Emitter Global::implementation() const
             {"          wl_global_create("},
             {"              display,"},
             {"              &", wl_name, "_interface_data,"},
-            {"              max_version,"},
+            {"              Thunks::supported_version,"},
             {"              this,"},
-            {"              &Thunks::bind_thunk),"},
-            {"          max_version}"},
+            {"              &Thunks::bind_thunk)}"},
             Block{
             }
         },
@@ -83,7 +83,7 @@ Emitter Global::bind_thunk_impl() const
             Emitter::layout(Lines{
                 "client,",
                 {"&", wl_name, "_interface_data,"},
-                "std::min(version, me->max_version),",
+                {"std::min((int)version, Thunks::supported_version),"},
                 "id);",
             }, true, true, Emitter::single_indent),
             "if (resource == nullptr)",
@@ -105,7 +105,7 @@ Emitter Global::bind_thunk_impl() const
 
 Emitter Global::constructor_args() const
 {
-    return {"wl_display* display, uint32_t max_version"};
+    return {"wl_display* display, Version<", std::to_string(version), ">"};
 }
 
 Emitter Global::bind_prototype() const

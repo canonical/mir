@@ -27,6 +27,7 @@
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mw = mir::wayland;
 
 namespace mir
 {
@@ -78,7 +79,7 @@ auto mf::create_xdg_output_manager_v1(struct wl_display* display, OutputManager*
 }
 
 mf::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_display* display, mf::OutputManager* const output_manager)
-    : Global(display, 2),
+    : Global(display, mw::Version<2>()),
       output_manager{output_manager}
 {
 }

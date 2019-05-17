@@ -28,6 +28,11 @@ namespace mir
 namespace wayland
 {
 
+template<int V>
+struct Version
+{
+};
+
 class Resource
 {
 public:
@@ -41,7 +46,7 @@ public:
 class Global
 {
 public:
-    explicit Global(wl_global* global, uint32_t max_version);
+    explicit Global(wl_global* global);
     virtual ~Global();
 
     Global(Global const&) = delete;
@@ -51,7 +56,6 @@ public:
     virtual auto interface_name() const -> char const* = 0;
 
     wl_global* const global;
-    uint32_t const max_version;
 };
 
 void internal_error_processing_request(wl_client* client, char const* method_name);

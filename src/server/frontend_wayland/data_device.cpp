@@ -205,7 +205,7 @@ DataSource::~DataSource()
 }
 
 DataDeviceManager::DataDeviceManager(struct wl_display* display) :
-    mf::DataDeviceManager(display, 3),
+    mf::DataDeviceManager(display, mw::Version<3>()),
     current_data_source{nullptr, [](DataSource* ds) { if(ds) ds->send_cancelled(); }}
 {
 }

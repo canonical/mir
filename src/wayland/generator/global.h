@@ -29,7 +29,7 @@ class Element;
 class Global
 {
 public:
-    Global(std::string const& wl_name, std::string const& generated_name, std::string const& nmspace);
+    Global(std::string const& wl_name, std::string const& generated_name, int version, std::string const& nmspace);
 
     Emitter declaration() const;
     Emitter implementation() const;
@@ -40,6 +40,7 @@ private:
     Emitter bind_prototype() const;
 
     std::string const wl_name;
+    int const version;
     std::string const generated_name;
     std::string const nmspace;
 };

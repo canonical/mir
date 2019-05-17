@@ -95,6 +95,7 @@ namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
 namespace mi = mir::input;
+namespace mw = mir::wayland;
 
 namespace mir
 {
@@ -242,7 +243,7 @@ public:
         struct wl_display* display,
         std::shared_ptr<mir::Executor> const& executor,
         std::shared_ptr<mg::WaylandAllocator> const& allocator)
-        : Global(display, 4),
+        : Global(display, mw::Version<4>()),
           allocator{allocator},
           executor{executor}
     {
@@ -453,7 +454,7 @@ public:
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat,
         OutputManager* const output_manager)
-        : Global(display, 1),
+        : Global(display, mw::Version<1>()),
           shell{shell},
           seat{seat},
           output_manager{output_manager}

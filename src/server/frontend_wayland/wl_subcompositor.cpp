@@ -25,6 +25,7 @@
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
+namespace mw = mir::wayland;
 
 namespace mir
 {
@@ -43,7 +44,7 @@ private:
 }
 
 mf::WlSubcompositor::WlSubcompositor(wl_display* display)
-    : Global{display, 1}
+    : Global{display, mw::Version<1>()}
 {
 }
 

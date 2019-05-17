@@ -53,12 +53,12 @@ struct ServerDecorationManager : mir::wayland::ServerDecorationManager::Global
     static int const interface_supported = 1;
 
     ServerDecorationManager(struct wl_display* display) :
-        Global(display, interface_supported)
+        Global(display, mir::wayland::Version<interface_supported>())
     {
     };
 
     ServerDecorationManager(struct wl_display* display, ServerDecorationCreateCallback callback) :
-        Global(display, interface_supported),
+        Global(display, mir::wayland::Version<interface_supported>()),
         callback{callback}
     {
     };
