@@ -27,7 +27,7 @@ public:
 
     static Callback* from(struct wl_resource*);
 
-    Callback(struct wl_resource* resource);
+    Callback(struct wl_resource* resource, Version<1>);
     virtual ~Callback() = default;
 
     void send_done_event(uint32_t callback_data) const;
@@ -56,7 +56,7 @@ public:
 
     static Compositor* from(struct wl_resource*);
 
-    Compositor(struct wl_resource* resource);
+    Compositor(struct wl_resource* resource, Version<4>);
     virtual ~Compositor() = default;
 
     void destroy_wayland_object() const;
@@ -71,7 +71,7 @@ public:
     class Global : wayland::Global
     {
     public:
-        Global(wl_display* display, uint32_t max_version);
+        Global(wl_display* display, Version<4>);
 
         auto interface_name() const -> char const* override;
 
@@ -92,7 +92,7 @@ public:
 
     static ShmPool* from(struct wl_resource*);
 
-    ShmPool(struct wl_resource* resource);
+    ShmPool(struct wl_resource* resource, Version<1>);
     virtual ~ShmPool() = default;
 
     void destroy_wayland_object() const;
@@ -117,7 +117,7 @@ public:
 
     static Shm* from(struct wl_resource*);
 
-    Shm(struct wl_resource* resource);
+    Shm(struct wl_resource* resource, Version<1>);
     virtual ~Shm() = default;
 
     void send_format_event(uint32_t format) const;
@@ -208,7 +208,7 @@ public:
     class Global : wayland::Global
     {
     public:
-        Global(wl_display* display, uint32_t max_version);
+        Global(wl_display* display, Version<1>);
 
         auto interface_name() const -> char const* override;
 
@@ -228,7 +228,7 @@ public:
 
     static Buffer* from(struct wl_resource*);
 
-    Buffer(struct wl_resource* resource);
+    Buffer(struct wl_resource* resource, Version<1>);
     virtual ~Buffer() = default;
 
     void send_release_event() const;
@@ -258,7 +258,7 @@ public:
 
     static DataOffer* from(struct wl_resource*);
 
-    DataOffer(struct wl_resource* resource);
+    DataOffer(struct wl_resource* resource, Version<3>);
     virtual ~DataOffer() = default;
 
     void send_offer_event(std::string const& mime_type) const;
@@ -306,7 +306,7 @@ public:
 
     static DataSource* from(struct wl_resource*);
 
-    DataSource(struct wl_resource* resource);
+    DataSource(struct wl_resource* resource, Version<3>);
     virtual ~DataSource() = default;
 
     void send_target_event(std::experimental::optional<std::string> const& mime_type) const;
@@ -357,7 +357,7 @@ public:
 
     static DataDevice* from(struct wl_resource*);
 
-    DataDevice(struct wl_resource* resource);
+    DataDevice(struct wl_resource* resource, Version<3>);
     virtual ~DataDevice() = default;
 
     void send_data_offer_event(struct wl_resource* id) const;
@@ -404,7 +404,7 @@ public:
 
     static DataDeviceManager* from(struct wl_resource*);
 
-    DataDeviceManager(struct wl_resource* resource);
+    DataDeviceManager(struct wl_resource* resource, Version<3>);
     virtual ~DataDeviceManager() = default;
 
     void destroy_wayland_object() const;
@@ -427,7 +427,7 @@ public:
     class Global : wayland::Global
     {
     public:
-        Global(wl_display* display, uint32_t max_version);
+        Global(wl_display* display, Version<3>);
 
         auto interface_name() const -> char const* override;
 
@@ -448,7 +448,7 @@ public:
 
     static Shell* from(struct wl_resource*);
 
-    Shell(struct wl_resource* resource);
+    Shell(struct wl_resource* resource, Version<1>);
     virtual ~Shell() = default;
 
     void destroy_wayland_object() const;
@@ -468,7 +468,7 @@ public:
     class Global : wayland::Global
     {
     public:
-        Global(wl_display* display, uint32_t max_version);
+        Global(wl_display* display, Version<1>);
 
         auto interface_name() const -> char const* override;
 
@@ -488,7 +488,7 @@ public:
 
     static ShellSurface* from(struct wl_resource*);
 
-    ShellSurface(struct wl_resource* resource);
+    ShellSurface(struct wl_resource* resource, Version<1>);
     virtual ~ShellSurface() = default;
 
     void send_ping_event(uint32_t serial) const;
@@ -557,7 +557,7 @@ public:
 
     static Surface* from(struct wl_resource*);
 
-    Surface(struct wl_resource* resource);
+    Surface(struct wl_resource* resource, Version<4>);
     virtual ~Surface() = default;
 
     void send_enter_event(struct wl_resource* output) const;
@@ -604,7 +604,7 @@ public:
 
     static Seat* from(struct wl_resource*);
 
-    Seat(struct wl_resource* resource);
+    Seat(struct wl_resource* resource, Version<6>);
     virtual ~Seat() = default;
 
     void send_capabilities_event(uint32_t capabilities) const;
@@ -636,7 +636,7 @@ public:
     class Global : wayland::Global
     {
     public:
-        Global(wl_display* display, uint32_t max_version);
+        Global(wl_display* display, Version<6>);
 
         auto interface_name() const -> char const* override;
 
@@ -659,7 +659,7 @@ public:
 
     static Pointer* from(struct wl_resource*);
 
-    Pointer(struct wl_resource* resource);
+    Pointer(struct wl_resource* resource, Version<6>);
     virtual ~Pointer() = default;
 
     void send_enter_event(uint32_t serial, struct wl_resource* surface, double surface_x, double surface_y) const;
@@ -735,7 +735,7 @@ public:
 
     static Keyboard* from(struct wl_resource*);
 
-    Keyboard(struct wl_resource* resource);
+    Keyboard(struct wl_resource* resource, Version<6>);
     virtual ~Keyboard() = default;
 
     void send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const;
@@ -788,7 +788,7 @@ public:
 
     static Touch* from(struct wl_resource*);
 
-    Touch(struct wl_resource* resource);
+    Touch(struct wl_resource* resource, Version<6>);
     virtual ~Touch() = default;
 
     void send_down_event(uint32_t serial, uint32_t time, struct wl_resource* surface, int32_t id, double x, double y) const;
@@ -832,7 +832,7 @@ public:
 
     static Output* from(struct wl_resource*);
 
-    Output(struct wl_resource* resource);
+    Output(struct wl_resource* resource, Version<3>);
     virtual ~Output() = default;
 
     void send_geometry_event(int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const;
@@ -890,7 +890,7 @@ public:
     class Global : wayland::Global
     {
     public:
-        Global(wl_display* display, uint32_t max_version);
+        Global(wl_display* display, Version<3>);
 
         auto interface_name() const -> char const* override;
 
@@ -910,7 +910,7 @@ public:
 
     static Region* from(struct wl_resource*);
 
-    Region(struct wl_resource* resource);
+    Region(struct wl_resource* resource, Version<1>);
     virtual ~Region() = default;
 
     void destroy_wayland_object() const;
@@ -935,7 +935,7 @@ public:
 
     static Subcompositor* from(struct wl_resource*);
 
-    Subcompositor(struct wl_resource* resource);
+    Subcompositor(struct wl_resource* resource, Version<1>);
     virtual ~Subcompositor() = default;
 
     void destroy_wayland_object() const;
@@ -955,7 +955,7 @@ public:
     class Global : wayland::Global
     {
     public:
-        Global(wl_display* display, uint32_t max_version);
+        Global(wl_display* display, Version<1>);
 
         auto interface_name() const -> char const* override;
 
@@ -976,7 +976,7 @@ public:
 
     static Subsurface* from(struct wl_resource*);
 
-    Subsurface(struct wl_resource* resource);
+    Subsurface(struct wl_resource* resource, Version<1>);
     virtual ~Subsurface() = default;
 
     void destroy_wayland_object() const;
