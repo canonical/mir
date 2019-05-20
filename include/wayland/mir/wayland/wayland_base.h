@@ -33,6 +33,9 @@ class Resource
 public:
     Resource();
     virtual ~Resource() = default;
+
+    Resource(Resource const&) = delete;
+    Resource& operator=(Resource const&) = delete;
 };
 
 class Global
@@ -40,6 +43,10 @@ class Global
 public:
     explicit Global(wl_global* global, uint32_t max_version);
     virtual ~Global();
+
+    Global(Global const&) = delete;
+    Global& operator=(Global const&) = delete;
+
 
     virtual auto interface_name() const -> char const* = 0;
 
