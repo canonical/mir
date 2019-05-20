@@ -51,7 +51,7 @@ Emitter header_includes()
         "#include \"mir/fd.h\"",
         "#include <wayland-server-core.h>",
         empty_line,
-        "#include \"wayland_base.h\"",
+        "#include \"mir/wayland/wayland_base.h\"",
     };
 }
 

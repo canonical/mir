@@ -20,7 +20,7 @@
 #include <wayland-server-core.h>
 #include "mir/log.h"
 
-#include "wayland_base.h"
+#include "mir/wayland/wayland_base.h"
 
 namespace mw = mir::wayland;
 

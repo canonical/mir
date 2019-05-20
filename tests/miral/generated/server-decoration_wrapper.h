@@ -13,7 +13,7 @@
 #include "mir/fd.h"
 #include <wayland-server-core.h>
 
-#include "wayland_base.h"
+#include "mir/wayland/wayland_base.h"
 
 namespace mir
 {
