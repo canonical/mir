@@ -159,7 +159,7 @@ void Printer::printhelp(BackgroundInfo const& region)
 
         auto const line = converter.from_bytes(rawline);
 
-        auto const fwidth = std::min(width / 60, 20);
+        auto const fwidth = std::min({width/60, height/40, 20});
 
         FT_Set_Pixel_Sizes(face, fwidth, 0);
 
