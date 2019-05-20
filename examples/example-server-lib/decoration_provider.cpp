@@ -177,6 +177,10 @@ void Printer::printhelp(BackgroundInfo const& region)
         help_height += line_height;
     }
 
+    // Ensure we don't have a crazy font that extends the text beyond the screen
+    if (help_height > static_cast<decltype(help_height)>(height) || help_width > width)
+        return;
+
     int base_y = (height - help_height) / 2;
     auto* const region_address = reinterpret_cast<char unsigned*>(region.content_area);
 
