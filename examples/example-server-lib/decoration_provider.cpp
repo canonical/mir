@@ -38,6 +38,8 @@
 #include <system_error>
 #include <iostream>
 
+using namespace mir::geometry;
+
 namespace
 {
 struct BackgroundInfo;
@@ -124,8 +126,9 @@ void Printer::printhelp(BackgroundInfo const& region)
         return;
 
     bool rotated = region.output.transform == WL_OUTPUT_TRANSFORM_90 || region.output.transform == WL_OUTPUT_TRANSFORM_270;
-    auto const width = rotated ? region.output.height : region.output.width;
-    auto const height = rotated ? region.output.width : region.output.height;
+    auto const region_size = rotated ?
+        Size{region.output.height, region.output.width} :
+        Size{region.output.width, region.output.height};
 
     static char const* const helptext[] =
         {
@@ -149,77 +152,91 @@ void Printer::printhelp(BackgroundInfo const& region)
             "  o To exit: Ctrl-Alt-BkSp",
         };
 
-    int help_width = 0;
-    unsigned int help_height = 0;
-    unsigned int line_height = 0;
+    auto const min_char_width = std::min({region_size.width.as_int()/60, region_size.height.as_int()/35, 20});
+    FT_Set_Pixel_Sizes(face, min_char_width, 0);
+    Width help_width;
+    Height help_height;
+    DeltaY line_height;
 
-    for (auto const* rawline : helptext)
+    for (char const* rawline : helptext)
     {
-        int line_width = 0;
+        auto const line_text = converter.from_bytes(rawline);
+        auto line_width = Width{};
 
-        auto const line = converter.from_bytes(rawline);
-
-        auto const fwidth = std::min(width / 60, 20);
-
-        FT_Set_Pixel_Sizes(face, fwidth, 0);
-
-        for (auto const& ch : line)
+        for (auto const& character : line_text)
         {
-            FT_Load_Glyph(face, FT_Get_Char_Index(face, ch), FT_LOAD_DEFAULT);
+            FT_Load_Glyph(face, FT_Get_Char_Index(face, character), FT_LOAD_DEFAULT);
             auto const glyph = face->glyph;
             FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
 
-            line_width += glyph->advance.x >> 6;
-            line_height = std::max(line_height, glyph->bitmap.rows + glyph->bitmap.rows/2);
+            line_width = line_width + DeltaX{glyph->advance.x >> 6};
+            line_height = std::max(line_height, DeltaY{glyph->bitmap.rows * 1.5});
         }
 
-        if (help_width < line_width) help_width = line_width;
-        help_height += line_height;
+        help_width = std::max(help_width, line_width);
+        help_height = help_height + line_height;
     }
 
-    int base_y = (height - help_height) / 2;
-    auto* const region_address = reinterpret_cast<char unsigned*>(region.content_area);
+    auto base_pos_y = 0.5*(region_size.height - help_height);
+    static auto const region_pixel_bytes = 4;
+    unsigned char* const region_buffer = reinterpret_cast<char unsigned*>(region.content_area);
 
     for (auto const* rawline : helptext)
     {
-        int base_x = (width - help_width) / 2;
+        auto base_pos_x = 0.5*(region_size.width - help_width);
+        auto const line_text = converter.from_bytes(rawline);
 
-        auto const line = converter.from_bytes(rawline);
-
-        for (auto const& ch : line)
+        for (auto const& character : line_text)
         {
-            FT_Load_Glyph(face, FT_Get_Char_Index(face, ch), FT_LOAD_DEFAULT);
+            FT_Load_Glyph(face, FT_Get_Char_Index(face, character), FT_LOAD_DEFAULT);
             auto const glyph = face->glyph;
             FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
 
-            auto const& bitmap = glyph->bitmap;
-            auto const x = base_x + glyph->bitmap_left;
+            auto const glyph_size = Size{glyph->bitmap.width, glyph->bitmap.rows};
+            auto const pos = Point{glyph->bitmap_left, -glyph->bitmap_top} + Displacement{base_pos_x, base_pos_y};
+            auto const region_top_left_in_glyph_space = Point{} + (pos - Point{}) * -1; // literally just -pos
+            auto const region_lower_right_in_glyph_space = region_top_left_in_glyph_space + as_displacement(region_size);
+            auto const clipped_glyph_upper_left = Point{
+                    std::max(X{}, region_top_left_in_glyph_space.x),
+                    std::max(Y{}, region_top_left_in_glyph_space.y)};
+            auto const clipped_glyph_lower_right = Point{
+                    std::min(X{} + as_displacement(glyph_size).dx, region_lower_right_in_glyph_space.x),
+                    std::min(Y{} + as_displacement(glyph_size).dy, region_lower_right_in_glyph_space.y)};
 
-            if (static_cast<int>(x + bitmap.width) <= width)
+            unsigned char* const glyph_buffer = glyph->bitmap.buffer;
+            auto glyph_pixel = Point{};
+            auto region_pixel = Point{};
+            for (
+                glyph_pixel.y = clipped_glyph_upper_left.y;
+                glyph_pixel.y < clipped_glyph_lower_right.y;
+                glyph_pixel.y += DeltaY{1})
             {
-                unsigned char* src = bitmap.buffer;
-
-                auto const y = base_y - glyph->bitmap_top;
-                auto* dest = region_address + y * 4 * width + 4 * x;
-
-                for (auto row = 0u; row != bitmap.rows; ++row)
+                region_pixel.y = glyph_pixel.y + (pos.y - Y{});
+                unsigned char* glyph_buffer_row = glyph_buffer + glyph_pixel.y.as_int() * glyph->bitmap.pitch;
+                unsigned char* const region_buffer_row =
+                    region_buffer + ((long)region_pixel.y.as_int() * (long)region_size.width.as_int() * region_pixel_bytes);
+                for (
+                    glyph_pixel.x = clipped_glyph_upper_left.x;
+                    glyph_pixel.x < clipped_glyph_lower_right.x;
+                    glyph_pixel.x += DeltaX{1})
                 {
-                    for (auto col = 0u; col != 4 * bitmap.width; ++col)
+                    region_pixel.x = glyph_pixel.x + (pos.x - X{});
+                    double const source_value = glyph_buffer_row[glyph_pixel.x.as_int()] / 255.0;
+                    (void)source_value;
+                    unsigned char* const region_buffer_offset =
+                        region_buffer_row + ((long long)region_pixel.x.as_int() * region_pixel_bytes);
+                    for (
+                        unsigned char* region_ptr = region_buffer_offset;
+                        region_ptr < region_buffer_offset + region_pixel_bytes;
+                        region_ptr++)
                     {
-                        dest[col] = (0xff*src[col / 4] + (dest[col] * (0xff - src[col / 4])))/0xff;
+                        *region_ptr = 0xff - (int)((0xff - *region_ptr) * (1 - source_value));
                     }
-
-                    src += bitmap.pitch;
-                    dest += 4 * width;
-
-                    if (dest > region_address + height * 4 * width)
-                        break;
                 }
             }
-
-            base_x += glyph->advance.x >> 6;
+            base_pos_x = base_pos_x + DeltaX{glyph->advance.x >> 6};
         }
-        base_y += line_height;
+        base_pos_y = base_pos_y + line_height;
     }
 }
 
