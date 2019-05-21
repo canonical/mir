@@ -38,7 +38,7 @@
 #include <system_error>
 #include <iostream>
 
-namespace geom = mir::geometry;
+using namespace mir::geometry;
 
 namespace
 {
@@ -126,9 +126,9 @@ void Printer::printhelp(BackgroundInfo const& region)
         return;
 
     bool rotated = region.output.transform == WL_OUTPUT_TRANSFORM_90 || region.output.transform == WL_OUTPUT_TRANSFORM_270;
-    auto region_size = rotated ?
-        geom::Size{region.output.height, region.output.width} :
-        geom::Size{region.output.width, region.output.height};
+    auto const region_size = rotated ?
+        Size{region.output.height, region.output.width} :
+        Size{region.output.width, region.output.height};
 
     static char const* const helptext[] =
         {
@@ -152,15 +152,16 @@ void Printer::printhelp(BackgroundInfo const& region)
             "  o To exit: Ctrl-Alt-BkSp",
         };
 
-    auto help_size = geom::Size{};
-    auto const min_char_width = std::min(geom::Width{region_size.width.as_int() / 60}, geom::Width{20});
-    FT_Set_Pixel_Sizes(face, min_char_width.as_int(), 0);
-    auto line_height = geom::Height{};
+    auto const min_char_width = std::min({region_size.width.as_int()/60, region_size.height.as_int()/35, 20});
+    FT_Set_Pixel_Sizes(face, min_char_width, 0);
+    Width help_width;
+    Height help_height;
+    DeltaY line_height;
 
     for (char const* rawline : helptext)
     {
         auto const line_text = converter.from_bytes(rawline);
-        auto line_width = geom::Width{};
+        auto line_width = Width{};
 
         for (auto const& character : line_text)
         {
@@ -168,21 +169,21 @@ void Printer::printhelp(BackgroundInfo const& region)
             auto const glyph = face->glyph;
             FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
 
-            line_width = line_width + geom::DeltaX{glyph->advance.x >> 6};
-            line_height = std::max(line_height, geom::Height{glyph->bitmap.rows * 1.5});
+            line_width = line_width + DeltaX{glyph->advance.x >> 6};
+            line_height = std::max(line_height, DeltaY{glyph->bitmap.rows * 1.5});
         }
 
-        help_size.width = std::max(help_size.width, line_width);
-        help_size.height = geom::Height{help_size.height.as_int() + line_height.as_int()};
+        help_width = std::max(help_width, line_width);
+        help_height = help_height + line_height;
     }
 
-    auto base_pos = geom::Point{0, (region_size.height.as_int() - help_size.height.as_int()) / 2};
+    auto base_pos_y = 0.5*(region_size.height - help_height);
     static auto const region_pixel_bytes = 4;
     unsigned char* const region_buffer = reinterpret_cast<char unsigned*>(region.content_area);
 
     for (auto const* rawline : helptext)
     {
-        base_pos.x = geom::X{(region_size.width.as_int() - help_size.width.as_int()) / 2};
+        auto base_pos_x = 0.5*(region_size.width - help_width);
         auto const line_text = converter.from_bytes(rawline);
 
         for (auto const& character : line_text)
@@ -191,35 +192,35 @@ void Printer::printhelp(BackgroundInfo const& region)
             auto const glyph = face->glyph;
             FT_Render_Glyph(glyph, FT_RENDER_MODE_NORMAL);
 
-            auto glyph_size = geom::Size{glyph->bitmap.width, glyph->bitmap.rows};
-            auto pos = base_pos + geom::Displacement{glyph->bitmap_left, -glyph->bitmap_top};
-            auto region_top_left_in_glyph_space = geom::Point{} + (pos - geom::Point{}) * -1; // literally just -pos
-            auto region_lower_right_in_glyph_space = region_top_left_in_glyph_space + geom::as_displacement(region_size);
-            auto clipped_glyph_upper_left = geom::Point{
-                    std::max(geom::X{}, region_top_left_in_glyph_space.x),
-                    std::max(geom::Y{}, region_top_left_in_glyph_space.y)};
-            auto clipped_glyph_lower_right = geom::Point{
-                    std::min(geom::X{} + geom::as_displacement(glyph_size).dx, region_lower_right_in_glyph_space.x),
-                    std::min(geom::Y{} + geom::as_displacement(glyph_size).dy, region_lower_right_in_glyph_space.y)};
+            auto const glyph_size = Size{glyph->bitmap.width, glyph->bitmap.rows};
+            auto const pos = Point{glyph->bitmap_left, -glyph->bitmap_top} + Displacement{base_pos_x, base_pos_y};
+            auto const region_top_left_in_glyph_space = Point{} + (pos - Point{}) * -1; // literally just -pos
+            auto const region_lower_right_in_glyph_space = region_top_left_in_glyph_space + as_displacement(region_size);
+            auto const clipped_glyph_upper_left = Point{
+                    std::max(X{}, region_top_left_in_glyph_space.x),
+                    std::max(Y{}, region_top_left_in_glyph_space.y)};
+            auto const clipped_glyph_lower_right = Point{
+                    std::min(X{} + as_displacement(glyph_size).dx, region_lower_right_in_glyph_space.x),
+                    std::min(Y{} + as_displacement(glyph_size).dy, region_lower_right_in_glyph_space.y)};
 
-            unsigned char* glyph_buffer = glyph->bitmap.buffer;
-            auto glyph_pixel = geom::Point{};
-            auto region_pixel = geom::Point{};
+            unsigned char* const glyph_buffer = glyph->bitmap.buffer;
+            auto glyph_pixel = Point{};
+            auto region_pixel = Point{};
             for (
                 glyph_pixel.y = clipped_glyph_upper_left.y;
                 glyph_pixel.y < clipped_glyph_lower_right.y;
-                glyph_pixel.y += geom::DeltaY{1})
+                glyph_pixel.y += DeltaY{1})
             {
-                region_pixel.y = glyph_pixel.y + (pos.y - geom::Y{});
+                region_pixel.y = glyph_pixel.y + (pos.y - Y{});
                 unsigned char* glyph_buffer_row = glyph_buffer + glyph_pixel.y.as_int() * glyph->bitmap.pitch;
                 unsigned char* const region_buffer_row =
                     region_buffer + ((long)region_pixel.y.as_int() * (long)region_size.width.as_int() * region_pixel_bytes);
                 for (
                     glyph_pixel.x = clipped_glyph_upper_left.x;
                     glyph_pixel.x < clipped_glyph_lower_right.x;
-                    glyph_pixel.x += geom::DeltaX{1})
+                    glyph_pixel.x += DeltaX{1})
                 {
-                    region_pixel.x = glyph_pixel.x + (pos.x - geom::X{});
+                    region_pixel.x = glyph_pixel.x + (pos.x - X{});
                     double const source_value = glyph_buffer_row[glyph_pixel.x.as_int()] / 255.0;
                     (void)source_value;
                     unsigned char* const region_buffer_offset =
@@ -233,9 +234,9 @@ void Printer::printhelp(BackgroundInfo const& region)
                     }
                 }
             }
-            base_pos.x += geom::DeltaX{glyph->advance.x >> 6};
+            base_pos_x = base_pos_x + DeltaX{glyph->advance.x >> 6};
         }
-        base_pos.y += geom::DeltaY{line_height.as_int()};
+        base_pos_y = base_pos_y + line_height;
     }
 }
 
