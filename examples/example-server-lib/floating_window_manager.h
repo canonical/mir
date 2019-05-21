@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2018 Canonical Ltd.
+ * Copyright © 2016-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -19,7 +19,7 @@
 #ifndef MIRAL_SHELL_FLOATING_WINDOW_MANAGER_H
 #define MIRAL_SHELL_FLOATING_WINDOW_MANAGER_H
 
-#include <miral/canonical_window_manager.h>
+#include <miral/minimal_window_manager.h>
 
 #include "splash_session.h"
 
@@ -32,7 +32,7 @@ using namespace mir::geometry;
 
 class DecorationProvider;
 
-class FloatingWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy
+class FloatingWindowManagerPolicy : public miral::MinimalWindowManager
 {
 public:
     FloatingWindowManagerPolicy(
@@ -70,16 +70,6 @@ public:
     void handle_modify_window(miral::WindowInfo& window_info, miral::WindowSpecification const& modifications) override;
     /** @} */
 
-    /** @name support for CSD invoked sizing and movement
-     *  @{ */
-    void handle_request_drag_and_drop(miral::WindowInfo& window_info) override;
-
-    void handle_request_move(miral::WindowInfo& window_info, MirInputEvent const* input_event) override;
-
-    void handle_request_resize(
-        miral::WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) override;
-    /** @} */
-
 protected:
     static const int modifier_mask =
         mir_input_event_modifier_alt |
@@ -91,28 +81,15 @@ protected:
 private:
     void toggle(MirWindowState state);
 
-    Point old_cursor{};
-
     int old_touch_pinch_top = 0;
     int old_touch_pinch_left = 0;
     int old_touch_pinch_width = 0;
     int old_touch_pinch_height = 0;
     bool pinching = false;
 
-    bool pointer_moving = false;
-    bool pointer_resizing = false;
-    MirPointerButton active_pointer_button;
-    unsigned active_pointer_modifiers = 0;
-    MirResizeEdge resize_edge = mir_resize_edge_none;
-    miral::Window resize_window;
-    Point resize_top_left;
-    Size resize_size;
-
     std::shared_ptr<SplashSession> const spinner;
 
     std::unique_ptr<DecorationProvider> const decoration_provider;
-
-    void end_resize();
 
     void keep_window_within_constraints(
         miral::WindowInfo const& window_info,
