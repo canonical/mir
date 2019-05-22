@@ -49,6 +49,7 @@ env:
   - SYSTEM=google:ubuntu-16.04-64 VARIANT=arm64
   - SYSTEM=google:ubuntu-18.04-64 VARIANT=clang
   - SYSTEM=google:ubuntu-18.10-64 VARIANT=amd64
+  - SYSTEM=google:ubuntu-19.04-64 VARIANT=amd64
   - SYSTEM=google:fedora-29-64 VARIANT=amd64
   - SYSTEM=google:fedora-30-64 VARIANT=amd64
 
@@ -93,7 +94,9 @@ jobs:
   - <<: *ppa-upload
     env: RELEASE=18.04
   - <<: *ppa-upload
-    env: RELEASE=18.10
+      env: RELEASE=18.10
+  - <<: *ppa-upload
+      env: RELEASE=19.04
   - <<: *ppa-upload
     env: RELEASE=devel
   - &sanitize
