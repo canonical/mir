@@ -27,11 +27,12 @@ mir (1.2.0) UNRELEASED; urgency=medium
       . [benchmarks] Add a commit-top-present latency script
       . Support multi-output in Mir-on-X
     - Bugs fixed:
+      . [Wayland] Better handle window role state changes (fixes #836)
       . [X11] Improve listen/x-client sockets (Fixes: #478)
       . Additional symbol needed for g++8.3/ld/Alpine. (Fixes #771)
+      . [X11] Make sure Xwayland exits to ensure a clean shutdown. (Fixes: #796)
       . [MirAL] Ensure internal clients don't hang because of queued requests.
         (Fixes #753)
-      . [X11] Make sure Xwayland exits to ensure a clean shutdown. (Fixes: #796)
       . Don't lock KeyRepeatDispatcher::repeat_state_mutex unnecessarily in a
         callback. (Fixes: #818)
       . Use drmIsMaster() from libdrm when it is provided. (Fixes: #813)
