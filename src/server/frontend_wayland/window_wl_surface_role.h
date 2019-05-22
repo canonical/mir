@@ -79,6 +79,8 @@ public:
 
     void set_state_now(MirWindowState state);
 
+    virtual void handle_state_change(MirWindowState new_state) = 0;
+    virtual void handle_active_change(bool is_now_active) = 0;
     virtual void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
                                geometry::Size const& new_size) = 0;
 
@@ -86,6 +88,7 @@ protected:
     std::shared_ptr<bool> const destroyed;
 
     std::experimental::optional<geometry::Size> window_size();
+    std::experimental::optional<geometry::Size> requested_window_size(); // Window size requested by Mir
     MirWindowState window_state();
     bool is_active();
     uint64_t latest_timestamp_ns();
