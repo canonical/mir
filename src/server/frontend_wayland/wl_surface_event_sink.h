@@ -21,6 +21,8 @@
 
 #include "mir/frontend/event_sink.h"
 
+#include <experimental/optional>
+
 struct wl_client;
 
 namespace mir
@@ -55,6 +57,11 @@ public:
         this->window_size = window_size;
     }
 
+    std::experimental::optional<geometry::Size> requested_window_size()
+    {
+        return requested_size;
+    }
+
     auto latest_timestamp_ns() const -> uint64_t
     {
         return timestamp_ns;
@@ -79,7 +86,7 @@ protected:
     WindowWlSurfaceRole* window;
     geometry::Size window_size;
     int64_t timestamp_ns{0};
-    geometry::Size requested_size;
+    std::experimental::optional<geometry::Size> requested_size;
     bool has_focus{false};
     MirWindowState current_state{mir_window_state_unknown};
     std::shared_ptr<bool> const destroyed;

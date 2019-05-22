@@ -82,6 +82,8 @@ public:
     void grab(struct wl_resource* seat, uint32_t serial) override;
     void destroy() override;
 
+    void handle_state_change(MirWindowState /*new_state*/) override {};
+    void handle_active_change(bool /*is_now_active*/) override {};
     void handle_resize(
         std::experimental::optional<geometry::Point> const& new_top_left,
         geometry::Size const& new_size) override;
@@ -116,11 +118,14 @@ public:
     void unset_fullscreen() override;
     void set_minimized() override;
 
+    void handle_state_change(MirWindowState /*new_state*/) override;
+    void handle_active_change(bool /*is_now_active*/) override;
     void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
                        geometry::Size const& new_size) override;
 
 private:
     static XdgToplevelStable* from(wl_resource* surface);
+    void send_configure(std::experimental::optional<geometry::Size> new_size);
 
     XdgSurfaceStable* const xdg_surface;
 };
@@ -492,8 +497,23 @@ void mf::XdgToplevelStable::set_minimized()
     set_state_now(mir_window_state_minimized);
 }
 
+void mf::XdgToplevelStable::handle_state_change(MirWindowState /*new_state*/)
+{
+    send_configure(std::experimental::nullopt);
+}
+
+void mf::XdgToplevelStable::handle_active_change(bool /*is_now_active*/)
+{
+    send_configure(std::experimental::nullopt);
+}
+
 void mf::XdgToplevelStable::handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
                                           geometry::Size const& new_size)
+{
+    send_configure(new_size);
+}
+
+void mf::XdgToplevelStable::send_configure(std::experimental::optional<geometry::Size> new_size)
 {
     wl_array states;
     wl_array_init(&states);
@@ -522,7 +542,11 @@ void mf::XdgToplevelStable::handle_resize(std::experimental::optional<geometry::
         break;
     }
 
-    send_configure_event(new_size.width.as_int(), new_size.height.as_int(), &states);
+    geom::Size size = new_size.value_or(
+        requested_window_size().value_or(
+            geom::Size{})); // 0 size values means default for toplevel comfigure
+
+    send_configure_event(size.width.as_int(), size.height.as_int(), &states);
     wl_array_release(&states);
 
     xdg_surface->send_configure();

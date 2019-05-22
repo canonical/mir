@@ -250,6 +250,11 @@ std::experimental::optional<geom::Size> mf::WindowWlSurfaceRole::window_size()
         return surface->buffer_size();
 }
 
+std::experimental::optional<geom::Size> mf::WindowWlSurfaceRole::requested_window_size()
+{
+    return sink->requested_window_size();
+}
+
 MirWindowState mf::WindowWlSurfaceRole::window_state()
 {
     return sink->state();
