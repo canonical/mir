@@ -41,7 +41,7 @@ auto const wl_shell       = "wl_shell";
 auto const xdg_shell      = "xdg_wm_base";
 auto const xdg_shell_v6   = "zxdg_shell_v6";
 auto const layer_shell_v1 = "zwlr_layer_shell_v1";
-auto const xdg_output_v1  = "zxdg_output_v1";
+auto const xdg_output_v1  = "zxdg_output_manager_v1";
 
 auto configure_wayland_extensions(std::string extensions,
     bool x11_enabled,
