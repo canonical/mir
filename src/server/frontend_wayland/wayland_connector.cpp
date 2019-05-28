@@ -243,7 +243,7 @@ public:
         struct wl_display* display,
         std::shared_ptr<mir::Executor> const& executor,
         std::shared_ptr<mg::WaylandAllocator> const& allocator)
-        : Global(display, mw::Version<4>()),
+        : Global(display, Version<4>()),
           allocator{allocator},
           executor{executor}
     {
@@ -257,7 +257,7 @@ private:
     {
     public:
         Instance(wl_resource* new_resource, WlCompositor* compositor)
-            : mw::Compositor{new_resource, mw::Version<4>()},
+            : mw::Compositor{new_resource, Version<4>()},
               compositor{compositor}
         {
         }
@@ -293,7 +293,7 @@ public:
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat,
         OutputManager* output_manager)
-        : ShellSurface(new_resource, mw::Version<1>()),
+        : ShellSurface(new_resource, Version<1>()),
           WindowWlSurfaceRole{&seat, wayland::ShellSurface::client, surface, shell, output_manager}
     {
     }
@@ -454,7 +454,7 @@ public:
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat,
         OutputManager* const output_manager)
-        : Global(display, mw::Version<1>()),
+        : Global(display, Version<1>()),
           shell{shell},
           seat{seat},
           output_manager{output_manager}
@@ -472,7 +472,7 @@ private:
     {
     public:
         Instance(wl_resource* new_resource, WlShell* shell)
-            : mw::Shell{new_resource, mw::Version<1>()},
+            : mw::Shell{new_resource, Version<1>()},
               shell{shell}
         {
         }

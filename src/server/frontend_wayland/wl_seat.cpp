@@ -159,7 +159,7 @@ mf::WlSeat::WlSeat(
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<mi::Seat> const& seat,
     std::shared_ptr<mir::Executor> const& executor)
-    :   Global(display, mw::Version<6>()),
+    :   Global(display, Version<6>()),
         keymap{std::make_unique<input::Keymap>()},
         config_observer{
             std::make_shared<ConfigObserver>(
@@ -220,7 +220,7 @@ void mf::WlSeat::bind(wl_resource* new_wl_seat)
 }
 
 mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
-    : mw::Seat(new_resource, mw::Version<6>()),
+    : mw::Seat(new_resource, Version<6>()),
       seat{seat}
 {
     // TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?

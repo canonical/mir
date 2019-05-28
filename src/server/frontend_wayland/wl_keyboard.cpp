@@ -39,7 +39,7 @@ mf::WlKeyboard::WlKeyboard(
     mir::input::Keymap const& initial_keymap,
     std::function<void(WlKeyboard*)> const& on_destroy,
     std::function<std::vector<uint32_t>()> const& acquire_current_keyboard_state)
-    : Keyboard(new_resource, mw::Version<6>()),
+    : Keyboard(new_resource, Version<6>()),
       keymap{nullptr, &xkb_keymap_unref},
       state{nullptr, &xkb_state_unref},
       context{xkb_context_new(XKB_CONTEXT_NO_FLAGS), &xkb_context_unref},

@@ -44,7 +44,7 @@ private:
 }
 
 mf::WlSubcompositor::WlSubcompositor(wl_display* display)
-    : Global{display, mw::Version<1>()}
+    : Global{display, Version<1>()}
 {
 }
 
@@ -54,7 +54,7 @@ void mf::WlSubcompositor::bind(wl_resource* new_wl_subcompositor)
 }
 
 mf::WlSubcompositorInstance::WlSubcompositorInstance(wl_resource* new_resource)
-    : wayland::Subcompositor(new_resource, mw::Version<1>())
+    : wayland::Subcompositor(new_resource, Version<1>())
 {
 }
 
@@ -72,7 +72,7 @@ void mf::WlSubcompositorInstance::get_subsurface(
 }
 
 mf::WlSubsurface::WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, WlSurface* parent_surface)
-    : wayland::Subsurface(new_subsurface, mw::Version<1>()),
+    : wayland::Subsurface(new_subsurface, Version<1>()),
       surface{surface},
       parent{parent_surface->add_child(this)},
       parent_destroyed{parent_surface->destroyed_flag()},

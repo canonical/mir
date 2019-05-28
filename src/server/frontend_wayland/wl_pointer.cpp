@@ -55,7 +55,7 @@ struct NullCursor : mf::WlPointer::Cursor
 mf::WlPointer::WlPointer(
     wl_resource* new_resource,
     std::function<void(WlPointer*)> const& on_destroy)
-    : Pointer(new_resource, mw::Version<6>()),
+    : Pointer(new_resource, Version<6>()),
       display{wl_client_get_display(client)},
       on_destroy{on_destroy},
       cursor{std::make_unique<NullCursor>()}

@@ -79,7 +79,7 @@ auto mf::create_xdg_output_manager_v1(struct wl_display* display, OutputManager*
 }
 
 mf::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_display* display, mf::OutputManager* const output_manager)
-    : Global(display, mw::Version<2>()),
+    : Global(display, Version<2>()),
       output_manager{output_manager}
 {
 }
@@ -90,7 +90,7 @@ void mf::XdgOutputManagerV1::bind(wl_resource* new_resource)
 }
 
 mf::XdgOutputManagerV1::Instance::Instance(wl_resource* new_resource, OutputManager* manager)
-    : XdgOutputManagerV1{new_resource, mw::Version<2>()},
+    : XdgOutputManagerV1{new_resource, Version<2>()},
       output_manager{manager}
 {
 }
@@ -129,7 +129,7 @@ void mf::XdgOutputManagerV1::Instance::get_xdg_output(wl_resource* new_output, w
 mf::XdgOutputV1::XdgOutputV1(
     wl_resource* new_resource,
     mg::DisplayConfigurationOutput const& config)
-    : mw::XdgOutputV1(new_resource, mw::Version<2>())
+    : mw::XdgOutputV1(new_resource, Version<2>())
 {
     auto extents = config.extents();
     send_logical_position_event(extents.left().as_int(), extents.top().as_int());

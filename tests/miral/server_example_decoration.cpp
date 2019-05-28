@@ -29,7 +29,7 @@ struct ServerDecoration :
     mw::ServerDecoration
 {
     ServerDecoration(wl_resource* new_resource) :
-        mw::ServerDecoration::ServerDecoration(new_resource, mw::Version<1>())
+        mw::ServerDecoration::ServerDecoration(new_resource, Version<1>())
     {
         send_mode_event(decoration_mode);
     }
@@ -55,12 +55,12 @@ struct ServerDecorationManager : mw::ServerDecorationManager::Global
     static int const interface_supported = 1;
 
     ServerDecorationManager(struct wl_display* display) :
-        Global(display, mw::Version<interface_supported>())
+        Global(display, Version<interface_supported>())
     {
     };
 
     ServerDecorationManager(struct wl_display* display, ServerDecorationCreateCallback callback) :
-        Global(display, mw::Version<interface_supported>()),
+        Global(display, Version<interface_supported>()),
         callback{callback}
     {
     };
@@ -69,7 +69,7 @@ struct ServerDecorationManager : mw::ServerDecorationManager::Global
     {
     public:
         Instance(wl_resource* new_resource, ::ServerDecorationManager* manager)
-            : mw::ServerDecorationManager(new_resource, mw::Version<1>()),
+            : mw::ServerDecorationManager(new_resource, Version<1>()),
               manager{manager}
         {
         }

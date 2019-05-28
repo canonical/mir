@@ -34,7 +34,7 @@ class LayerShellV1::Instance : wayland::LayerShellV1
 {
 public:
     Instance(wl_resource* new_resource, mf::LayerShellV1* shell)
-        : LayerShellV1{new_resource, mw::Version<1>()},
+        : LayerShellV1{new_resource, Version<1>()},
           shell{shell}
     {
     }
@@ -85,7 +85,7 @@ private:
 
 mf::LayerShellV1::LayerShellV1(struct wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat,
                                OutputManager* output_manager)
-    : Global(display, mw::Version<1>()),
+    : Global(display, Version<1>()),
       shell{shell},
       seat{seat},
       output_manager{output_manager}
@@ -113,7 +113,7 @@ void mf::LayerShellV1::Instance::get_layer_surface(
 // LayerSurfaceV1
 
 mf::LayerSurfaceV1::LayerSurfaceV1(wl_resource* new_resource, WlSurface* surface, LayerShellV1 const& layer_shell)
-    : mw::LayerSurfaceV1(new_resource, mw::Version<1>()),
+    : mw::LayerSurfaceV1(new_resource, Version<1>()),
       WindowWlSurfaceRole(
           &layer_shell.seat,
           wayland::LayerSurfaceV1::client,

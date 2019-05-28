@@ -168,7 +168,7 @@ private:
 
 mf::XdgShellStable::XdgShellStable(struct wl_display* display, std::shared_ptr<mf::Shell> const shell, WlSeat& seat,
                                    OutputManager* output_manager)
-    : Global(display, mw::Version<1>()),
+    : Global(display, Version<1>()),
       shell{shell},
       seat{seat},
       output_manager{output_manager}
@@ -181,7 +181,7 @@ void mf::XdgShellStable::bind(wl_resource* new_resource)
 }
 
 mf::XdgShellStable::Instance::Instance(wl_resource* new_resource, mf::XdgShellStable* shell)
-    : XdgWmBase{new_resource, mw::Version<1>()},
+    : XdgWmBase{new_resource, Version<1>()},
       shell{shell}
 {
 }
@@ -216,7 +216,7 @@ mf::XdgSurfaceStable* mf::XdgSurfaceStable::from(wl_resource* surface)
 }
 
 mf::XdgSurfaceStable::XdgSurfaceStable(wl_resource* new_resource, WlSurface* surface, XdgShellStable const& xdg_shell)
-    : mw::XdgSurface(new_resource, mw::Version<1>()),
+    : mw::XdgSurface(new_resource, Version<1>()),
       surface{surface},
       xdg_shell{xdg_shell}
 {
@@ -304,7 +304,7 @@ mf::XdgPopupStable::XdgPopupStable(
     WlSurfaceRole* parent_role,
     wl_resource* positioner,
     WlSurface* surface)
-    : mw::XdgPopup(new_resource, mw::Version<1>()),
+    : mw::XdgPopup(new_resource, Version<1>()),
       WindowWlSurfaceRole(
           &xdg_surface->xdg_shell.seat,
           mw::XdgPopup::client,
@@ -359,7 +359,7 @@ void mf::XdgPopupStable::handle_resize(const std::experimental::optional<geometr
 // XdgToplevelStable
 
 mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceStable* xdg_surface, WlSurface* surface)
-    : mw::XdgToplevel(new_resource, mw::Version<1>()),
+    : mw::XdgToplevel(new_resource, Version<1>()),
       WindowWlSurfaceRole(
           &xdg_surface->xdg_shell.seat,
           wayland::XdgToplevel::client,
@@ -562,7 +562,7 @@ mf::XdgToplevelStable* mf::XdgToplevelStable::from(wl_resource* surface)
 // XdgPositionerStable
 
 mf::XdgPositionerStable::XdgPositionerStable(wl_resource* new_resource)
-    : mw::XdgPositioner(new_resource, mw::Version<1>())
+    : mw::XdgPositioner(new_resource, Version<1>())
 {
     // specifying gravity is not required by the xdg shell protocol, but is by Mir window managers
     surface_placement_gravity = mir_placement_gravity_center;

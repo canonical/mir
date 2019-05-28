@@ -26,7 +26,7 @@ namespace geom = mir::geometry;
 namespace mw = mir::wayland;
 
 mf::WlRegion::WlRegion(wl_resource* new_resource)
-    : mw::Region(new_resource, mw::Version<1>())
+    : mw::Region(new_resource, Version<1>())
 {}
 
 mf::WlRegion::~WlRegion()

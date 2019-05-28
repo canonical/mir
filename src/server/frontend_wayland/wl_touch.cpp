@@ -31,7 +31,7 @@ namespace mw = mir::wayland;
 mf::WlTouch::WlTouch(
     wl_resource* new_resource,
     std::function<void(WlTouch*)> const& on_destroy)
-    : Touch(new_resource, mw::Version<6>()),
+    : Touch(new_resource, Version<6>()),
       on_destroy{on_destroy}
 {
 }

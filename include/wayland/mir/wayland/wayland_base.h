@@ -36,6 +36,9 @@ struct Version
 class Resource
 {
 public:
+    template<int V>
+    using Version = Version<V>;
+
     Resource();
     virtual ~Resource() = default;
 
@@ -46,6 +49,9 @@ public:
 class Global
 {
 public:
+    template<int V>
+    using Version = Version<V>;
+
     explicit Global(wl_global* global);
     virtual ~Global();
 
