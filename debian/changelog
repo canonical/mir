@@ -1,3 +1,45 @@
+mir (1.2.0) UNRELEASED; urgency=medium
+
+  * New upstream release 1.1.2
+
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 3
+      . mirserver ABI bumped to 48
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 16
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged to 16
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+    - Enhancements:
+      . [Wayland] Split out a new mirwayland package to enable shell
+        implementors to add protocol extensions.
+      . [Wayland] Initial support for XDG output protocol
+      . [Wayland] Disconnect clients when Mir exceptions are raised in
+        processing requests
+      . [MirAL] Extend MirAL API for managing Wayland extensions
+      . [MirAL] Provide a new MinimalWindowManager strategy. (Fixes #761, #816)
+      . [MirAL] Improve miral-shell help text rendering. (Fixes #799)
+      . [benchmarks] Generate USDT tracepoints from LTTNG tracepoints
+      . [benchmarks] Add a commit-top-present latency script
+      . Support multi-output in Mir-on-X
+    - Bugs fixed:
+      . [Wayland] Better handle window role state changes (fixes #836)
+      . [X11] Improve listen/x-client sockets (Fixes: #478)
+      . Additional symbol needed for g++8.3/ld/Alpine. (Fixes #771)
+      . [X11] Make sure Xwayland exits to ensure a clean shutdown. (Fixes: #796)
+      . [MirAL] Ensure internal clients don't hang because of queued requests.
+        (Fixes #753)
+      . Don't lock KeyRepeatDispatcher::repeat_state_mutex unnecessarily in a
+        callback. (Fixes: #818)
+      . Use drmIsMaster() from libdrm when it is provided. (Fixes: #813)
+      . Ensure an already focussed surface really gets input focus. (Fixes #823)
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Tue, 21 May 2019 16:03:00 +0100
+
 mir (1.1.2) UNRELEASED; urgency=medium
 
   * New upstream release 1.1.2
