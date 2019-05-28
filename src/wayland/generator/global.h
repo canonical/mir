@@ -38,7 +38,6 @@ public:
 private:
     Emitter constructor_args() const;
     Emitter bind_prototype() const;
-    Emitter member_vars() const;
 
     std::string const wl_name;
     std::string const generated_name;

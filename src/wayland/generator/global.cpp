@@ -30,14 +30,13 @@ Global::Global(std::string const& wl_name, std::string const& generated_name, st
 Emitter Global::declaration() const
 {
     return Lines{
-        {"class Global"},
+        {"class Global : wayland::Global"},
         "{",
         "public:",
         Emitter::layout(Lines{
             {"Global(", constructor_args(), ");"},
-            "virtual ~Global();",
             empty_line,
-            member_vars(),
+            {"auto interface_name() const -> char const* override;"}
         }, true, true, Emitter::single_indent),
         empty_line,
         "private:",
@@ -54,26 +53,23 @@ Emitter Global::implementation() const
     return EmptyLineList{
         Lines{
             {nmspace, "Global::Global(", constructor_args(), ")"},
-            {"    : global{wl_global_create("},
-            {"        display,"},
-            {"        &", wl_name, "_interface_data,"},
-            {"        max_version,"},
-            {"        this,"},
-            {"        &Thunks::bind_thunk)},"},
-            {"      max_version{max_version}"},
+            {"    : wayland::Global{"},
+            {"          wl_global_create("},
+            {"              display,"},
+            {"              &", wl_name, "_interface_data,"},
+            {"              max_version,"},
+            {"              this,"},
+            {"              &Thunks::bind_thunk),"},
+            {"          max_version}"},
             Block{
-                "if (global == nullptr)",
-                Block{
-                    {"BOOST_THROW_EXCEPTION((std::runtime_error{\"Failed to export ", wl_name, " interface\"}));"}
-                }
             }
         },
         Lines{
-            {nmspace, "Global::~Global()"},
+            {"auto ", nmspace, "Global::interface_name() const -> char const*"},
             Block{
-                "wl_global_destroy(global);"
+                {"return ", generated_name, "::interface_name;"},
             }
-        },
+        }
     };
 }
 
@@ -115,12 +111,4 @@ Emitter Global::constructor_args() const
 Emitter Global::bind_prototype() const
 {
     return {"virtual void bind(wl_resource* new_", wl_name, ") = 0;"};
-}
-
-Emitter Global::member_vars() const
-{
-    return Lines{
-        "wl_global* const global;",
-        "uint32_t const max_version;",
-    };
 }

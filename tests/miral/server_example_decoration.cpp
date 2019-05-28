@@ -90,10 +90,6 @@ struct ServerDecorationManager : mir::wayland::ServerDecorationManager::Global
     ServerDecorationCreateCallback const callback = [](auto, auto) {};
 };
 
-static_assert(
-    mir::wayland::ServerDecorationManager::interface_version >= ServerDecorationManager::interface_supported,
-    "Generated Server decoration protocol version may not be less than the supported version");
-
 int const ServerDecorationManager::interface_supported;
 }
 

@@ -14,26 +14,6 @@
 
 #include "mir/log.h"
 
-namespace
-{
-void internal_error_processing_request(struct wl_client* client, std::string const& method_name)
-{
-#if (WAYLAND_VERSION_MAJOR > 1 || (WAYLAND_VERSION_MAJOR == 1 && WAYLAND_VERSION_MINOR > 16))
-    wl_client_post_implementation_error(
-        client,
-        "Mir internal error processing %s request",
-        method_name.c_str());
-#else
-    wl_client_post_no_memory(client);
-#endif
-    ::mir::log(
-        ::mir::logging::Severity::error,
-        "frontend:Wayland",
-        std::current_exception(),
-        "Exception processing " + method_name + " request");
-}
-}
-
 namespace mir
 {
 namespace wayland
@@ -83,6 +63,8 @@ mw::Callback* mw::Callback::from(struct wl_resource* resource)
 
 struct mw::Callback::Thunks
 {
+    static int const supported_version = 1;
+
     static struct wl_message const event_messages[];
 };
 
@@ -118,6 +100,8 @@ mw::Compositor* mw::Compositor::from(struct wl_resource* resource)
 
 struct mw::Compositor::Thunks
 {
+    static int const supported_version = 4;
+
     static void create_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<Compositor*>(wl_resource_get_user_data(resource));
@@ -214,23 +198,19 @@ void mw::Compositor::destroy_wayland_object() const
 }
 
 mw::Compositor::Global::Global(wl_display* display, uint32_t max_version)
-    : global{wl_global_create(
-        display,
-        &wl_compositor_interface_data,
-        max_version,
-        this,
-        &Thunks::bind_thunk)},
-      max_version{max_version}
-{
-    if (global == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_compositor interface"}));
-    }
-}
+    : wayland::Global{
+          wl_global_create(
+              display,
+              &wl_compositor_interface_data,
+              max_version,
+              this,
+              &Thunks::bind_thunk),
+          max_version}
+{}
 
-mw::Compositor::Global::~Global()
+auto mw::Compositor::Global::interface_name() const -> char const*
 {
-    wl_global_destroy(global);
+    return Compositor::interface_name;
 }
 
 struct wl_interface const* mw::Compositor::Thunks::create_surface_types[] {
@@ -256,6 +236,8 @@ mw::ShmPool* mw::ShmPool::from(struct wl_resource* resource)
 
 struct mw::ShmPool::Thunks
 {
+    static int const supported_version = 1;
+
     static void create_buffer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format)
     {
         auto me = static_cast<ShmPool*>(wl_resource_get_user_data(resource));
@@ -360,6 +342,8 @@ mw::Shm* mw::Shm::from(struct wl_resource* resource)
 
 struct mw::Shm::Thunks
 {
+    static int const supported_version = 1;
+
     static void create_pool_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int32_t fd, int32_t size)
     {
         auto me = static_cast<Shm*>(wl_resource_get_user_data(resource));
@@ -442,23 +426,19 @@ void mw::Shm::destroy_wayland_object() const
 }
 
 mw::Shm::Global::Global(wl_display* display, uint32_t max_version)
-    : global{wl_global_create(
-        display,
-        &wl_shm_interface_data,
-        max_version,
-        this,
-        &Thunks::bind_thunk)},
-      max_version{max_version}
-{
-    if (global == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_shm interface"}));
-    }
-}
+    : wayland::Global{
+          wl_global_create(
+              display,
+              &wl_shm_interface_data,
+              max_version,
+              this,
+              &Thunks::bind_thunk),
+          max_version}
+{}
 
-mw::Shm::Global::~Global()
+auto mw::Shm::Global::interface_name() const -> char const*
 {
-    wl_global_destroy(global);
+    return Shm::interface_name;
 }
 
 struct wl_interface const* mw::Shm::Thunks::create_pool_types[] {
@@ -484,6 +464,8 @@ mw::Buffer* mw::Buffer::from(struct wl_resource* resource)
 
 struct mw::Buffer::Thunks
 {
+    static int const supported_version = 1;
+
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<Buffer*>(wl_resource_get_user_data(resource));
@@ -551,6 +533,8 @@ mw::DataOffer* mw::DataOffer::from(struct wl_resource* resource)
 
 struct mw::DataOffer::Thunks
 {
+    static int const supported_version = 3;
+
     static void accept_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial, char const* mime_type)
     {
         auto me = static_cast<DataOffer*>(wl_resource_get_user_data(resource));
@@ -707,6 +691,8 @@ mw::DataSource* mw::DataSource::from(struct wl_resource* resource)
 
 struct mw::DataSource::Thunks
 {
+    static int const supported_version = 3;
+
     static void offer_thunk(struct wl_client* client, struct wl_resource* resource, char const* mime_type)
     {
         auto me = static_cast<DataSource*>(wl_resource_get_user_data(resource));
@@ -856,6 +842,8 @@ mw::DataDevice* mw::DataDevice::from(struct wl_resource* resource)
 
 struct mw::DataDevice::Thunks
 {
+    static int const supported_version = 3;
+
     static void start_drag_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* source, struct wl_resource* origin, struct wl_resource* icon, uint32_t serial)
     {
         auto me = static_cast<DataDevice*>(wl_resource_get_user_data(resource));
@@ -1040,6 +1028,8 @@ mw::DataDeviceManager* mw::DataDeviceManager::from(struct wl_resource* resource)
 
 struct mw::DataDeviceManager::Thunks
 {
+    static int const supported_version = 3;
+
     static void create_data_source_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<DataDeviceManager*>(wl_resource_get_user_data(resource));
@@ -1136,23 +1126,19 @@ void mw::DataDeviceManager::destroy_wayland_object() const
 }
 
 mw::DataDeviceManager::Global::Global(wl_display* display, uint32_t max_version)
-    : global{wl_global_create(
-        display,
-        &wl_data_device_manager_interface_data,
-        max_version,
-        this,
-        &Thunks::bind_thunk)},
-      max_version{max_version}
-{
-    if (global == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_data_device_manager interface"}));
-    }
-}
+    : wayland::Global{
+          wl_global_create(
+              display,
+              &wl_data_device_manager_interface_data,
+              max_version,
+              this,
+              &Thunks::bind_thunk),
+          max_version}
+{}
 
-mw::DataDeviceManager::Global::~Global()
+auto mw::DataDeviceManager::Global::interface_name() const -> char const*
 {
-    wl_global_destroy(global);
+    return DataDeviceManager::interface_name;
 }
 
 struct wl_interface const* mw::DataDeviceManager::Thunks::create_data_source_types[] {
@@ -1179,6 +1165,8 @@ mw::Shell* mw::Shell::from(struct wl_resource* resource)
 
 struct mw::Shell::Thunks
 {
+    static int const supported_version = 1;
+
     static void get_shell_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
         auto me = static_cast<Shell*>(wl_resource_get_user_data(resource));
@@ -1254,23 +1242,19 @@ void mw::Shell::destroy_wayland_object() const
 }
 
 mw::Shell::Global::Global(wl_display* display, uint32_t max_version)
-    : global{wl_global_create(
-        display,
-        &wl_shell_interface_data,
-        max_version,
-        this,
-        &Thunks::bind_thunk)},
-      max_version{max_version}
-{
-    if (global == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_shell interface"}));
-    }
-}
+    : wayland::Global{
+          wl_global_create(
+              display,
+              &wl_shell_interface_data,
+              max_version,
+              this,
+              &Thunks::bind_thunk),
+          max_version}
+{}
 
-mw::Shell::Global::~Global()
+auto mw::Shell::Global::interface_name() const -> char const*
 {
-    wl_global_destroy(global);
+    return Shell::interface_name;
 }
 
 struct wl_interface const* mw::Shell::Thunks::get_shell_surface_types[] {
@@ -1292,6 +1276,8 @@ mw::ShellSurface* mw::ShellSurface::from(struct wl_resource* resource)
 
 struct mw::ShellSurface::Thunks
 {
+    static int const supported_version = 1;
+
     static void pong_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
     {
         auto me = static_cast<ShellSurface*>(wl_resource_get_user_data(resource));
@@ -1553,6 +1539,8 @@ mw::Surface* mw::Surface::from(struct wl_resource* resource)
 
 struct mw::Surface::Thunks
 {
+    static int const supported_version = 4;
+
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<Surface*>(wl_resource_get_user_data(resource));
@@ -1809,6 +1797,8 @@ mw::Seat* mw::Seat::from(struct wl_resource* resource)
 
 struct mw::Seat::Thunks
 {
+    static int const supported_version = 6;
+
     static void get_pointer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
         auto me = static_cast<Seat*>(wl_resource_get_user_data(resource));
@@ -1956,23 +1946,19 @@ void mw::Seat::destroy_wayland_object() const
 }
 
 mw::Seat::Global::Global(wl_display* display, uint32_t max_version)
-    : global{wl_global_create(
-        display,
-        &wl_seat_interface_data,
-        max_version,
-        this,
-        &Thunks::bind_thunk)},
-      max_version{max_version}
-{
-    if (global == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_seat interface"}));
-    }
-}
+    : wayland::Global{
+          wl_global_create(
+              display,
+              &wl_seat_interface_data,
+              max_version,
+              this,
+              &Thunks::bind_thunk),
+          max_version}
+{}
 
-mw::Seat::Global::~Global()
+auto mw::Seat::Global::interface_name() const -> char const*
 {
-    wl_global_destroy(global);
+    return Seat::interface_name;
 }
 
 struct wl_interface const* mw::Seat::Thunks::get_pointer_types[] {
@@ -2009,6 +1995,8 @@ mw::Pointer* mw::Pointer::from(struct wl_resource* resource)
 
 struct mw::Pointer::Thunks
 {
+    static int const supported_version = 6;
+
     static void set_cursor_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial, struct wl_resource* surface, int32_t hotspot_x, int32_t hotspot_y)
     {
         auto me = static_cast<Pointer*>(wl_resource_get_user_data(resource));
@@ -2188,6 +2176,8 @@ mw::Keyboard* mw::Keyboard::from(struct wl_resource* resource)
 
 struct mw::Keyboard::Thunks
 {
+    static int const supported_version = 6;
+
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<Keyboard*>(wl_resource_get_user_data(resource));
@@ -2302,6 +2292,8 @@ mw::Touch* mw::Touch::from(struct wl_resource* resource)
 
 struct mw::Touch::Thunks
 {
+    static int const supported_version = 6;
+
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<Touch*>(wl_resource_get_user_data(resource));
@@ -2431,6 +2423,8 @@ mw::Output* mw::Output::from(struct wl_resource* resource)
 
 struct mw::Output::Thunks
 {
+    static int const supported_version = 3;
+
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<Output*>(wl_resource_get_user_data(resource));
@@ -2532,23 +2526,19 @@ void mw::Output::destroy_wayland_object() const
 }
 
 mw::Output::Global::Global(wl_display* display, uint32_t max_version)
-    : global{wl_global_create(
-        display,
-        &wl_output_interface_data,
-        max_version,
-        this,
-        &Thunks::bind_thunk)},
-      max_version{max_version}
-{
-    if (global == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_output interface"}));
-    }
-}
+    : wayland::Global{
+          wl_global_create(
+              display,
+              &wl_output_interface_data,
+              max_version,
+              this,
+              &Thunks::bind_thunk),
+          max_version}
+{}
 
-mw::Output::Global::~Global()
+auto mw::Output::Global::interface_name() const -> char const*
 {
-    wl_global_destroy(global);
+    return Output::interface_name;
 }
 
 struct wl_interface const* mw::Output::Thunks::geometry_types[] {
@@ -2582,6 +2572,8 @@ mw::Region* mw::Region::from(struct wl_resource* resource)
 
 struct mw::Region::Thunks
 {
+    static int const supported_version = 1;
+
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<Region*>(wl_resource_get_user_data(resource));
@@ -2670,6 +2662,8 @@ mw::Subcompositor* mw::Subcompositor::from(struct wl_resource* resource)
 
 struct mw::Subcompositor::Thunks
 {
+    static int const supported_version = 1;
+
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<Subcompositor*>(wl_resource_get_user_data(resource));
@@ -2758,23 +2752,19 @@ void mw::Subcompositor::destroy_wayland_object() const
 }
 
 mw::Subcompositor::Global::Global(wl_display* display, uint32_t max_version)
-    : global{wl_global_create(
-        display,
-        &wl_subcompositor_interface_data,
-        max_version,
-        this,
-        &Thunks::bind_thunk)},
-      max_version{max_version}
-{
-    if (global == nullptr)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to export wl_subcompositor interface"}));
-    }
-}
+    : wayland::Global{
+          wl_global_create(
+              display,
+              &wl_subcompositor_interface_data,
+              max_version,
+              this,
+              &Thunks::bind_thunk),
+          max_version}
+{}
 
-mw::Subcompositor::Global::~Global()
+auto mw::Subcompositor::Global::interface_name() const -> char const*
 {
-    wl_global_destroy(global);
+    return Subcompositor::interface_name;
 }
 
 struct wl_interface const* mw::Subcompositor::Thunks::get_subsurface_types[] {
@@ -2799,6 +2789,8 @@ mw::Subsurface* mw::Subsurface::from(struct wl_resource* resource)
 
 struct mw::Subsurface::Thunks
 {
+    static int const supported_version = 1;
+
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
         auto me = static_cast<Subsurface*>(wl_resource_get_user_data(resource));
@@ -2938,121 +2930,121 @@ namespace wayland
 
 struct wl_interface const wl_callback_interface_data {
     mw::Callback::interface_name,
-    mw::Callback::interface_version,
+    mw::Callback::Thunks::supported_version,
     0, nullptr,
     1, mw::Callback::Thunks::event_messages};
 
 struct wl_interface const wl_compositor_interface_data {
     mw::Compositor::interface_name,
-    mw::Compositor::interface_version,
+    mw::Compositor::Thunks::supported_version,
     2, mw::Compositor::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_shm_pool_interface_data {
     mw::ShmPool::interface_name,
-    mw::ShmPool::interface_version,
+    mw::ShmPool::Thunks::supported_version,
     3, mw::ShmPool::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_shm_interface_data {
     mw::Shm::interface_name,
-    mw::Shm::interface_version,
+    mw::Shm::Thunks::supported_version,
     1, mw::Shm::Thunks::request_messages,
     1, mw::Shm::Thunks::event_messages};
 
 struct wl_interface const wl_buffer_interface_data {
     mw::Buffer::interface_name,
-    mw::Buffer::interface_version,
+    mw::Buffer::Thunks::supported_version,
     1, mw::Buffer::Thunks::request_messages,
     1, mw::Buffer::Thunks::event_messages};
 
 struct wl_interface const wl_data_offer_interface_data {
     mw::DataOffer::interface_name,
-    mw::DataOffer::interface_version,
+    mw::DataOffer::Thunks::supported_version,
     5, mw::DataOffer::Thunks::request_messages,
     3, mw::DataOffer::Thunks::event_messages};
 
 struct wl_interface const wl_data_source_interface_data {
     mw::DataSource::interface_name,
-    mw::DataSource::interface_version,
+    mw::DataSource::Thunks::supported_version,
     3, mw::DataSource::Thunks::request_messages,
     6, mw::DataSource::Thunks::event_messages};
 
 struct wl_interface const wl_data_device_interface_data {
     mw::DataDevice::interface_name,
-    mw::DataDevice::interface_version,
+    mw::DataDevice::Thunks::supported_version,
     3, mw::DataDevice::Thunks::request_messages,
     6, mw::DataDevice::Thunks::event_messages};
 
 struct wl_interface const wl_data_device_manager_interface_data {
     mw::DataDeviceManager::interface_name,
-    mw::DataDeviceManager::interface_version,
+    mw::DataDeviceManager::Thunks::supported_version,
     2, mw::DataDeviceManager::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_shell_interface_data {
     mw::Shell::interface_name,
-    mw::Shell::interface_version,
+    mw::Shell::Thunks::supported_version,
     1, mw::Shell::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_shell_surface_interface_data {
     mw::ShellSurface::interface_name,
-    mw::ShellSurface::interface_version,
+    mw::ShellSurface::Thunks::supported_version,
     10, mw::ShellSurface::Thunks::request_messages,
     3, mw::ShellSurface::Thunks::event_messages};
 
 struct wl_interface const wl_surface_interface_data {
     mw::Surface::interface_name,
-    mw::Surface::interface_version,
+    mw::Surface::Thunks::supported_version,
     10, mw::Surface::Thunks::request_messages,
     2, mw::Surface::Thunks::event_messages};
 
 struct wl_interface const wl_seat_interface_data {
     mw::Seat::interface_name,
-    mw::Seat::interface_version,
+    mw::Seat::Thunks::supported_version,
     4, mw::Seat::Thunks::request_messages,
     2, mw::Seat::Thunks::event_messages};
 
 struct wl_interface const wl_pointer_interface_data {
     mw::Pointer::interface_name,
-    mw::Pointer::interface_version,
+    mw::Pointer::Thunks::supported_version,
     2, mw::Pointer::Thunks::request_messages,
     9, mw::Pointer::Thunks::event_messages};
 
 struct wl_interface const wl_keyboard_interface_data {
     mw::Keyboard::interface_name,
-    mw::Keyboard::interface_version,
+    mw::Keyboard::Thunks::supported_version,
     1, mw::Keyboard::Thunks::request_messages,
     6, mw::Keyboard::Thunks::event_messages};
 
 struct wl_interface const wl_touch_interface_data {
     mw::Touch::interface_name,
-    mw::Touch::interface_version,
+    mw::Touch::Thunks::supported_version,
     1, mw::Touch::Thunks::request_messages,
     7, mw::Touch::Thunks::event_messages};
 
 struct wl_interface const wl_output_interface_data {
     mw::Output::interface_name,
-    mw::Output::interface_version,
+    mw::Output::Thunks::supported_version,
     1, mw::Output::Thunks::request_messages,
     4, mw::Output::Thunks::event_messages};
 
 struct wl_interface const wl_region_interface_data {
     mw::Region::interface_name,
-    mw::Region::interface_version,
+    mw::Region::Thunks::supported_version,
     3, mw::Region::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_subcompositor_interface_data {
     mw::Subcompositor::interface_name,
-    mw::Subcompositor::interface_version,
+    mw::Subcompositor::Thunks::supported_version,
     2, mw::Subcompositor::Thunks::request_messages,
     0, nullptr};
 
 struct wl_interface const wl_subsurface_interface_data {
     mw::Subsurface::interface_name,
-    mw::Subsurface::interface_version,
+    mw::Subsurface::Thunks::supported_version,
     6, mw::Subsurface::Thunks::request_messages,
     0, nullptr};
 

@@ -282,6 +282,16 @@ global:
     mir::wayland::zxdg_toplevel_v6_interface_data;
     mir::wayland::zxdg_output_v1_interface_data;
     mir::wayland::zxdg_output_manager_v1_interface_data;
+
+    mir::wayland::Resource::*;
+    typeinfo?for?mir::wayland::Resource;
+    vtable?for?mir::wayland::Resource;
+
+    mir::wayland::Global::*;
+    typeinfo?for?mir::wayland::Global;
+    vtable?for?mir::wayland::Global;
+
+    mir::wayland::internal_error_processing_request*;
   };
   local: *;
 };

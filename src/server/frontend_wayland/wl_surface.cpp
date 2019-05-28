@@ -346,7 +346,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     {
                         executor->spawn(run_unless(
                             destroyed,
-                            [buffer](){ wl_resource_queue_event(buffer, wayland::Buffer::Opcode::release); }));
+                            [buffer](){ wl_resource_post_event(buffer, wayland::Buffer::Opcode::release); }));
                     };
 
                 mir_buffer = allocator->buffer_from_resource(

@@ -5,8 +5,13 @@ add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="mirwayland")
 add_subdirectory(generator/)
 add_subdirectory(generated/)
 
+set(STANDARD_SOURCES
+  wayland_base.cpp
+)
+
 add_library(mirwayland SHARED
     ${GENERATED_FILES}
+    ${STANDARD_SOURCES}
 )
 
 target_link_libraries(mirwayland
@@ -19,6 +24,7 @@ target_link_libraries(mirwayland
 
 target_include_directories(mirwayland
   PUBLIC
+    ${PROJECT_SOURCE_DIR}/include/wayland
     ${CMAKE_CURRENT_SOURCE_DIR}/generated
 )
 
@@ -36,4 +42,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mirwayland.pc.in
 
 install(TARGETS     mirwayland                           LIBRARY DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}")
 install(FILES       ${CMAKE_CURRENT_BINARY_DIR}/mirwayland.pc    DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig")
+install(DIRECTORY   ${CMAKE_SOURCE_DIR}/include/wayland/mir      DESTINATION "include/mirwayland")
 
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include/mirwayland")

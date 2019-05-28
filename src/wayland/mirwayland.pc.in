@@ -1,4 +1,6 @@
+prefix=@PREFIX@
 libdir=@LIBDIR@
+includedir=@INCLUDEDIR@
 
 Name: mirwayland
 Description: Mir Wayland library
