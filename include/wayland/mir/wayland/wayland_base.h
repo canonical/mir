@@ -28,16 +28,13 @@ namespace mir
 namespace wayland
 {
 
-template<int V>
-struct Version
-{
-};
-
 class Resource
 {
 public:
     template<int V>
-    using Version = Version<V>;
+    struct Version
+    {
+    };
 
     Resource();
     virtual ~Resource() = default;
@@ -50,7 +47,9 @@ class Global
 {
 public:
     template<int V>
-    using Version = Version<V>;
+    struct Version
+    {
+    };
 
     explicit Global(wl_global* global);
     virtual ~Global();
