@@ -426,3 +426,11 @@ global:
     vtable?for?miral::WaylandExtensions::Context;
   };
 } MIRAL_2.4;
+
+MIRAL_2.6 {
+global:
+  extern "C++" {
+    miral::WindowSpecification::depth_layer*;
+    miral::WindowInfo::depth_layer*;
+  };
+} MIRAL_2.5;

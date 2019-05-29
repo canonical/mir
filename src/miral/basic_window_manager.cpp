@@ -878,6 +878,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     COPY_IF_SET(confine_pointer);
     COPY_IF_SET(userdata);
     COPY_IF_SET(shell_chrome);
+    COPY_IF_SET(depth_layer);
 
 #undef COPY_IF_SET
 
@@ -919,6 +920,9 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     std::swap(window_info_tmp, window_info);
 
     auto& window = window_info.window();
+
+    if (modifications.depth_layer().is_set())
+        std::shared_ptr<scene::Surface>(window)->set_depth_layer(modifications.depth_layer().value());
 
     if (window_info.type() != window_info_tmp.type())
         std::shared_ptr<scene::Surface>(window)->configure(mir_window_attrib_type, window_info.type());

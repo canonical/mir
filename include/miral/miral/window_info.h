@@ -116,6 +116,9 @@ struct WindowInfo
     void userdata(std::shared_ptr<void> userdata);
 
     void swap(WindowInfo& rhs) { std::swap(self, rhs.self); }
+
+    auto depth_layer() const -> MirDepthLayer;
+    void depth_layer(MirDepthLayer depth_layer);
 private:
     struct Self;
     std::unique_ptr<Self> self;

@@ -125,6 +125,9 @@ public:
     auto confine_pointer() -> mir::optional_value<MirPointerConfinementState>&;
     auto userdata() -> mir::optional_value<std::shared_ptr<void>>&;
 
+    auto depth_layer() const -> mir::optional_value<MirDepthLayer> const&;
+    auto depth_layer() -> mir::optional_value<MirDepthLayer>&;
+
 private:
     struct Self;
     std::unique_ptr<Self> self;
