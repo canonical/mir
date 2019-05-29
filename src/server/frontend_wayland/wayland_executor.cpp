@@ -59,10 +59,21 @@ public:
     explicit State(wl_event_loop* loop)
         : loop{loop}
     {
+        enqueue(
+            []()
+            {
+                on_wayland_thread = true;
+            });
     }
 
     void enqueue(std::function<void()>&& work)
     {
+        if (on_wayland_thread)
+        {
+            work();
+            return;
+        }
+
         std::lock_guard<std::mutex> lock{mutex};
         if (state == ExecutionState::Running)
         {
@@ -78,6 +89,7 @@ public:
         if (state == ExecutionState::Running)
         {
             workqueue.emplace_front(std::move(terminator));
+            on_wayland_thread = false;
             state = ExecutionState::TerminationRequested;
         }
     }
@@ -111,6 +123,7 @@ public:
             lock.lock();
         }
 
+        on_wayland_thread = false;
         state = ExecutionState::Stopped;
         workqueue.empty();
 
@@ -119,11 +132,14 @@ public:
 
     static int on_notify(int fd, uint32_t, void* data);
 private:
+    static thread_local bool on_wayland_thread;
     std::mutex mutex;
     ExecutionState state{ExecutionState::Running};
     wl_event_loop* const loop;
     std::deque<std::function<void()>> workqueue;
 };
+
+thread_local bool mf::WaylandExecutor::State::on_wayland_thread{false};
 
 namespace
 {
