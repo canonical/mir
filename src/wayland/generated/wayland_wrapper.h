@@ -68,7 +68,7 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : wayland::Global
+    class Global : public wayland::Global
     {
     public:
         Global(wl_display* display, Version<4>);
@@ -205,7 +205,7 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : wayland::Global
+    class Global : public wayland::Global
     {
     public:
         Global(wl_display* display, Version<1>);
@@ -424,7 +424,7 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : wayland::Global
+    class Global : public wayland::Global
     {
     public:
         Global(wl_display* display, Version<3>);
@@ -465,7 +465,7 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : wayland::Global
+    class Global : public wayland::Global
     {
     public:
         Global(wl_display* display, Version<1>);
@@ -633,7 +633,7 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : wayland::Global
+    class Global : public wayland::Global
     {
     public:
         Global(wl_display* display, Version<6>);
@@ -887,7 +887,7 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : wayland::Global
+    class Global : public wayland::Global
     {
     public:
         Global(wl_display* display, Version<3>);
@@ -952,7 +952,7 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : wayland::Global
+    class Global : public wayland::Global
     {
     public:
         Global(wl_display* display, Version<1>);

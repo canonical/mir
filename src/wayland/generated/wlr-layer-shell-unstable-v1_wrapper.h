@@ -54,7 +54,7 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : wayland::Global
+    class Global : public wayland::Global
     {
     public:
         Global(wl_display* display, Version<1>);

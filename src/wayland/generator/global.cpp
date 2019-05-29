@@ -31,7 +31,7 @@ Global::Global(std::string const& wl_name, std::string const& generated_name, in
 Emitter Global::declaration() const
 {
     return Lines{
-        {"class Global : wayland::Global"},
+        {"class Global : public wayland::Global"},
         "{",
         "public:",
         Emitter::layout(Lines{
