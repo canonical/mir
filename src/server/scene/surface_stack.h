@@ -109,11 +109,6 @@ private:
     void update_rendering_tracker_compositors();
     void insert_surface_at_top_of_depth_layer(std::shared_ptr<Surface> const& surface);
 
-    /**
-     * Converts a MirDepthLayer into an index for a list of layers (0 is bottom-most layer)
-     */
-    static auto mir_depth_layer_to_index(MirDepthLayer depth_layer) -> unsigned int;
-
     RecursiveReadWriteMutex mutable guard;
 
     std::shared_ptr<SceneReport> const report;

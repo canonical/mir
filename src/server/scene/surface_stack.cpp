@@ -25,6 +25,7 @@
 #include "mir/scene/scene_report.h"
 #include "mir/compositor/scene_element.h"
 #include "mir/graphics/renderable.h"
+#include "mir/depth_layer.h"
 
 #include <boost/throw_exception.hpp>
 
@@ -445,24 +446,10 @@ void ms::SurfaceStack::update_rendering_tracker_compositors()
 
 void ms::SurfaceStack::insert_surface_at_top_of_depth_layer(std::shared_ptr<Surface> const& surface)
 {
-    unsigned int depth_index = mir_depth_layer_to_index(surface->depth_layer());
+    unsigned int depth_index = mir_depth_layer_get_index(surface->depth_layer());
     if (surface_layers.size() <= depth_index)
         surface_layers.resize(depth_index + 1);
     surface_layers[depth_index].push_back(surface);
-}
-
-auto ms::SurfaceStack::mir_depth_layer_to_index(MirDepthLayer depth_layer) -> unsigned int
-{
-    switch (depth_layer)
-    {
-    case mir_depth_layer_background:        return 0;
-    case mir_depth_layer_below:             return 1;
-    case mir_depth_layer_application:       return 2;
-    case mir_depth_layer_always_on_top:     return 3;
-    case mir_depth_layer_above:             return 4;
-    case mir_depth_layer_overlay:           return 5;
-    }
-    assert(false);
 }
 
 void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observer)

@@ -483,7 +483,10 @@ typedef enum MirOutputGammaSupported
 
 /**
  * Depth layer controls Z ordering of surfaces.
+ *
  * A surface will always appear on top of surfaces with a lower depth layer, and below those with a higher one.
+ * A depth layer can be converted to a number with mir::mir_depth_layer_get_index().
+ * This is useful for creating a list indexed by depth layer, or comparing the height of two layers.
  */
 typedef enum MirDepthLayer
 {
