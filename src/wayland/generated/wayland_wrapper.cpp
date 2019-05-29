@@ -63,12 +63,14 @@ mw::Callback* mw::Callback::from(struct wl_resource* resource)
 
 struct mw::Callback::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static struct wl_message const event_messages[];
 };
 
-mw::Callback::Callback(struct wl_resource* resource)
+int const mw::Callback::Thunks::supported_version = 1;
+
+mw::Callback::Callback(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -100,7 +102,7 @@ mw::Compositor* mw::Compositor::from(struct wl_resource* resource)
 
 struct mw::Compositor::Thunks
 {
-    static int const supported_version = 4;
+    static int const supported_version;
 
     static void create_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
@@ -153,7 +155,7 @@ struct mw::Compositor::Thunks
         auto resource = wl_resource_create(
             client,
             &wl_compositor_interface_data,
-            std::min(version, me->max_version),
+            std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -176,7 +178,9 @@ struct mw::Compositor::Thunks
     static void const* request_vtable[];
 };
 
-mw::Compositor::Compositor(struct wl_resource* resource)
+int const mw::Compositor::Thunks::supported_version = 4;
+
+mw::Compositor::Compositor(struct wl_resource* resource, Version<4>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -197,15 +201,14 @@ void mw::Compositor::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-mw::Compositor::Global::Global(wl_display* display, uint32_t max_version)
+mw::Compositor::Global::Global(wl_display* display, Version<4>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_compositor_interface_data,
-              max_version,
+              Thunks::supported_version,
               this,
-              &Thunks::bind_thunk),
-          max_version}
+              &Thunks::bind_thunk)}
 {}
 
 auto mw::Compositor::Global::interface_name() const -> char const*
@@ -236,7 +239,7 @@ mw::ShmPool* mw::ShmPool::from(struct wl_resource* resource)
 
 struct mw::ShmPool::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void create_buffer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format)
     {
@@ -294,7 +297,9 @@ struct mw::ShmPool::Thunks
     static void const* request_vtable[];
 };
 
-mw::ShmPool::ShmPool(struct wl_resource* resource)
+int const mw::ShmPool::Thunks::supported_version = 1;
+
+mw::ShmPool::ShmPool(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -342,7 +347,7 @@ mw::Shm* mw::Shm::from(struct wl_resource* resource)
 
 struct mw::Shm::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void create_pool_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, int32_t fd, int32_t size)
     {
@@ -376,7 +381,7 @@ struct mw::Shm::Thunks
         auto resource = wl_resource_create(
             client,
             &wl_shm_interface_data,
-            std::min(version, me->max_version),
+            std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -399,7 +404,9 @@ struct mw::Shm::Thunks
     static void const* request_vtable[];
 };
 
-mw::Shm::Shm(struct wl_resource* resource)
+int const mw::Shm::Thunks::supported_version = 1;
+
+mw::Shm::Shm(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -425,15 +432,14 @@ void mw::Shm::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-mw::Shm::Global::Global(wl_display* display, uint32_t max_version)
+mw::Shm::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_shm_interface_data,
-              max_version,
+              Thunks::supported_version,
               this,
-              &Thunks::bind_thunk),
-          max_version}
+              &Thunks::bind_thunk)}
 {}
 
 auto mw::Shm::Global::interface_name() const -> char const*
@@ -464,7 +470,7 @@ mw::Buffer* mw::Buffer::from(struct wl_resource* resource)
 
 struct mw::Buffer::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -489,7 +495,9 @@ struct mw::Buffer::Thunks
     static void const* request_vtable[];
 };
 
-mw::Buffer::Buffer(struct wl_resource* resource)
+int const mw::Buffer::Thunks::supported_version = 1;
+
+mw::Buffer::Buffer(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -533,7 +541,7 @@ mw::DataOffer* mw::DataOffer::from(struct wl_resource* resource)
 
 struct mw::DataOffer::Thunks
 {
-    static int const supported_version = 3;
+    static int const supported_version;
 
     static void accept_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial, char const* mime_type)
     {
@@ -616,7 +624,9 @@ struct mw::DataOffer::Thunks
     static void const* request_vtable[];
 };
 
-mw::DataOffer::DataOffer(struct wl_resource* resource)
+int const mw::DataOffer::Thunks::supported_version = 3;
+
+mw::DataOffer::DataOffer(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -691,7 +701,7 @@ mw::DataSource* mw::DataSource::from(struct wl_resource* resource)
 
 struct mw::DataSource::Thunks
 {
-    static int const supported_version = 3;
+    static int const supported_version;
 
     static void offer_thunk(struct wl_client* client, struct wl_resource* resource, char const* mime_type)
     {
@@ -742,7 +752,9 @@ struct mw::DataSource::Thunks
     static void const* request_vtable[];
 };
 
-mw::DataSource::DataSource(struct wl_resource* resource)
+int const mw::DataSource::Thunks::supported_version = 3;
+
+mw::DataSource::DataSource(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -842,7 +854,7 @@ mw::DataDevice* mw::DataDevice::from(struct wl_resource* resource)
 
 struct mw::DataDevice::Thunks
 {
-    static int const supported_version = 3;
+    static int const supported_version;
 
     static void start_drag_thunk(struct wl_client* client, struct wl_resource* resource, struct wl_resource* source, struct wl_resource* origin, struct wl_resource* icon, uint32_t serial)
     {
@@ -913,7 +925,9 @@ struct mw::DataDevice::Thunks
     static void const* request_vtable[];
 };
 
-mw::DataDevice::DataDevice(struct wl_resource* resource)
+int const mw::DataDevice::Thunks::supported_version = 3;
+
+mw::DataDevice::DataDevice(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -1028,7 +1042,7 @@ mw::DataDeviceManager* mw::DataDeviceManager::from(struct wl_resource* resource)
 
 struct mw::DataDeviceManager::Thunks
 {
-    static int const supported_version = 3;
+    static int const supported_version;
 
     static void create_data_source_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
@@ -1081,7 +1095,7 @@ struct mw::DataDeviceManager::Thunks
         auto resource = wl_resource_create(
             client,
             &wl_data_device_manager_interface_data,
-            std::min(version, me->max_version),
+            std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -1104,7 +1118,9 @@ struct mw::DataDeviceManager::Thunks
     static void const* request_vtable[];
 };
 
-mw::DataDeviceManager::DataDeviceManager(struct wl_resource* resource)
+int const mw::DataDeviceManager::Thunks::supported_version = 3;
+
+mw::DataDeviceManager::DataDeviceManager(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -1125,15 +1141,14 @@ void mw::DataDeviceManager::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-mw::DataDeviceManager::Global::Global(wl_display* display, uint32_t max_version)
+mw::DataDeviceManager::Global::Global(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_data_device_manager_interface_data,
-              max_version,
+              Thunks::supported_version,
               this,
-              &Thunks::bind_thunk),
-          max_version}
+              &Thunks::bind_thunk)}
 {}
 
 auto mw::DataDeviceManager::Global::interface_name() const -> char const*
@@ -1165,7 +1180,7 @@ mw::Shell* mw::Shell::from(struct wl_resource* resource)
 
 struct mw::Shell::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void get_shell_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
@@ -1198,7 +1213,7 @@ struct mw::Shell::Thunks
         auto resource = wl_resource_create(
             client,
             &wl_shell_interface_data,
-            std::min(version, me->max_version),
+            std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -1220,7 +1235,9 @@ struct mw::Shell::Thunks
     static void const* request_vtable[];
 };
 
-mw::Shell::Shell(struct wl_resource* resource)
+int const mw::Shell::Thunks::supported_version = 1;
+
+mw::Shell::Shell(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -1241,15 +1258,14 @@ void mw::Shell::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-mw::Shell::Global::Global(wl_display* display, uint32_t max_version)
+mw::Shell::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_shell_interface_data,
-              max_version,
+              Thunks::supported_version,
               this,
-              &Thunks::bind_thunk),
-          max_version}
+              &Thunks::bind_thunk)}
 {}
 
 auto mw::Shell::Global::interface_name() const -> char const*
@@ -1276,7 +1292,7 @@ mw::ShellSurface* mw::ShellSurface::from(struct wl_resource* resource)
 
 struct mw::ShellSurface::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void pong_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial)
     {
@@ -1434,7 +1450,9 @@ struct mw::ShellSurface::Thunks
     static void const* request_vtable[];
 };
 
-mw::ShellSurface::ShellSurface(struct wl_resource* resource)
+int const mw::ShellSurface::Thunks::supported_version = 1;
+
+mw::ShellSurface::ShellSurface(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -1539,7 +1557,7 @@ mw::Surface* mw::Surface::from(struct wl_resource* resource)
 
 struct mw::Surface::Thunks
 {
-    static int const supported_version = 4;
+    static int const supported_version;
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -1709,7 +1727,9 @@ struct mw::Surface::Thunks
     static void const* request_vtable[];
 };
 
-mw::Surface::Surface(struct wl_resource* resource)
+int const mw::Surface::Thunks::supported_version = 4;
+
+mw::Surface::Surface(struct wl_resource* resource, Version<4>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -1797,7 +1817,7 @@ mw::Seat* mw::Seat::from(struct wl_resource* resource)
 
 struct mw::Seat::Thunks
 {
-    static int const supported_version = 6;
+    static int const supported_version;
 
     static void get_pointer_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id)
     {
@@ -1883,7 +1903,7 @@ struct mw::Seat::Thunks
         auto resource = wl_resource_create(
             client,
             &wl_seat_interface_data,
-            std::min(version, me->max_version),
+            std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -1908,7 +1928,9 @@ struct mw::Seat::Thunks
     static void const* request_vtable[];
 };
 
-mw::Seat::Seat(struct wl_resource* resource)
+int const mw::Seat::Thunks::supported_version = 6;
+
+mw::Seat::Seat(struct wl_resource* resource, Version<6>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -1945,15 +1967,14 @@ void mw::Seat::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-mw::Seat::Global::Global(wl_display* display, uint32_t max_version)
+mw::Seat::Global::Global(wl_display* display, Version<6>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_seat_interface_data,
-              max_version,
+              Thunks::supported_version,
               this,
-              &Thunks::bind_thunk),
-          max_version}
+              &Thunks::bind_thunk)}
 {}
 
 auto mw::Seat::Global::interface_name() const -> char const*
@@ -1995,7 +2016,7 @@ mw::Pointer* mw::Pointer::from(struct wl_resource* resource)
 
 struct mw::Pointer::Thunks
 {
-    static int const supported_version = 6;
+    static int const supported_version;
 
     static void set_cursor_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t serial, struct wl_resource* surface, int32_t hotspot_x, int32_t hotspot_y)
     {
@@ -2041,7 +2062,9 @@ struct mw::Pointer::Thunks
     static void const* request_vtable[];
 };
 
-mw::Pointer::Pointer(struct wl_resource* resource)
+int const mw::Pointer::Thunks::supported_version = 6;
+
+mw::Pointer::Pointer(struct wl_resource* resource, Version<6>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -2176,7 +2199,7 @@ mw::Keyboard* mw::Keyboard::from(struct wl_resource* resource)
 
 struct mw::Keyboard::Thunks
 {
-    static int const supported_version = 6;
+    static int const supported_version;
 
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -2203,7 +2226,9 @@ struct mw::Keyboard::Thunks
     static void const* request_vtable[];
 };
 
-mw::Keyboard::Keyboard(struct wl_resource* resource)
+int const mw::Keyboard::Thunks::supported_version = 6;
+
+mw::Keyboard::Keyboard(struct wl_resource* resource, Version<6>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -2292,7 +2317,7 @@ mw::Touch* mw::Touch::from(struct wl_resource* resource)
 
 struct mw::Touch::Thunks
 {
-    static int const supported_version = 6;
+    static int const supported_version;
 
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -2318,7 +2343,9 @@ struct mw::Touch::Thunks
     static void const* request_vtable[];
 };
 
-mw::Touch::Touch(struct wl_resource* resource)
+int const mw::Touch::Thunks::supported_version = 6;
+
+mw::Touch::Touch(struct wl_resource* resource, Version<6>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -2423,7 +2450,7 @@ mw::Output* mw::Output::from(struct wl_resource* resource)
 
 struct mw::Output::Thunks
 {
-    static int const supported_version = 3;
+    static int const supported_version;
 
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -2449,7 +2476,7 @@ struct mw::Output::Thunks
         auto resource = wl_resource_create(
             client,
             &wl_output_interface_data,
-            std::min(version, me->max_version),
+            std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -2472,7 +2499,9 @@ struct mw::Output::Thunks
     static void const* request_vtable[];
 };
 
-mw::Output::Output(struct wl_resource* resource)
+int const mw::Output::Thunks::supported_version = 3;
+
+mw::Output::Output(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -2525,15 +2554,14 @@ void mw::Output::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-mw::Output::Global::Global(wl_display* display, uint32_t max_version)
+mw::Output::Global::Global(wl_display* display, Version<3>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_output_interface_data,
-              max_version,
+              Thunks::supported_version,
               this,
-              &Thunks::bind_thunk),
-          max_version}
+              &Thunks::bind_thunk)}
 {}
 
 auto mw::Output::Global::interface_name() const -> char const*
@@ -2572,7 +2600,7 @@ mw::Region* mw::Region::from(struct wl_resource* resource)
 
 struct mw::Region::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -2622,7 +2650,9 @@ struct mw::Region::Thunks
     static void const* request_vtable[];
 };
 
-mw::Region::Region(struct wl_resource* resource)
+int const mw::Region::Thunks::supported_version = 1;
+
+mw::Region::Region(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -2662,7 +2692,7 @@ mw::Subcompositor* mw::Subcompositor::from(struct wl_resource* resource)
 
 struct mw::Subcompositor::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -2708,7 +2738,7 @@ struct mw::Subcompositor::Thunks
         auto resource = wl_resource_create(
             client,
             &wl_subcompositor_interface_data,
-            std::min(version, me->max_version),
+            std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -2730,7 +2760,9 @@ struct mw::Subcompositor::Thunks
     static void const* request_vtable[];
 };
 
-mw::Subcompositor::Subcompositor(struct wl_resource* resource)
+int const mw::Subcompositor::Thunks::supported_version = 1;
+
+mw::Subcompositor::Subcompositor(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -2751,15 +2783,14 @@ void mw::Subcompositor::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-mw::Subcompositor::Global::Global(wl_display* display, uint32_t max_version)
+mw::Subcompositor::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &wl_subcompositor_interface_data,
-              max_version,
+              Thunks::supported_version,
               this,
-              &Thunks::bind_thunk),
-          max_version}
+              &Thunks::bind_thunk)}
 {}
 
 auto mw::Subcompositor::Global::interface_name() const -> char const*
@@ -2789,7 +2820,7 @@ mw::Subsurface* mw::Subsurface::from(struct wl_resource* resource)
 
 struct mw::Subsurface::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -2880,7 +2911,9 @@ struct mw::Subsurface::Thunks
     static void const* request_vtable[];
 };
 
-mw::Subsurface::Subsurface(struct wl_resource* resource)
+int const mw::Subsurface::Thunks::supported_version = 1;
+
+mw::Subsurface::Subsurface(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {

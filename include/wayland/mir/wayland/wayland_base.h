@@ -31,6 +31,11 @@ namespace wayland
 class Resource
 {
 public:
+    template<int V>
+    struct Version
+    {
+    };
+
     Resource();
     virtual ~Resource() = default;
 
@@ -41,7 +46,12 @@ public:
 class Global
 {
 public:
-    explicit Global(wl_global* global, uint32_t max_version);
+    template<int V>
+    struct Version
+    {
+    };
+
+    explicit Global(wl_global* global);
     virtual ~Global();
 
     Global(Global const&) = delete;
@@ -51,7 +61,6 @@ public:
     virtual auto interface_name() const -> char const* = 0;
 
     wl_global* const global;
-    uint32_t const max_version;
 };
 
 void internal_error_processing_request(wl_client* client, char const* method_name);

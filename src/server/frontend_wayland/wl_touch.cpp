@@ -26,11 +26,12 @@
 #include "mir/log.h"
 
 namespace mf = mir::frontend;
+namespace mw = mir::wayland;
 
 mf::WlTouch::WlTouch(
     wl_resource* new_resource,
     std::function<void(WlTouch*)> const& on_destroy)
-    : Touch(new_resource),
+    : Touch(new_resource, Version<6>()),
       on_destroy{on_destroy}
 {
 }

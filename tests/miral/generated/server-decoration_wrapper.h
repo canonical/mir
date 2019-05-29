@@ -27,7 +27,7 @@ public:
 
     static ServerDecorationManager* from(struct wl_resource*);
 
-    ServerDecorationManager(struct wl_resource* resource);
+    ServerDecorationManager(struct wl_resource* resource, Version<1>);
     virtual ~ServerDecorationManager() = default;
 
     void send_default_mode_event(uint32_t mode) const;
@@ -53,10 +53,10 @@ public:
 
     static bool is_instance(wl_resource* resource);
 
-    class Global : wayland::Global
+    class Global : public wayland::Global
     {
     public:
-        Global(wl_display* display, uint32_t max_version);
+        Global(wl_display* display, Version<1>);
 
         auto interface_name() const -> char const* override;
 
@@ -76,7 +76,7 @@ public:
 
     static ServerDecoration* from(struct wl_resource*);
 
-    ServerDecoration(struct wl_resource* resource);
+    ServerDecoration(struct wl_resource* resource, Version<1>);
     virtual ~ServerDecoration() = default;
 
     void send_mode_event(uint32_t mode) const;

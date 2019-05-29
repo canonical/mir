@@ -95,6 +95,7 @@ namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
 namespace mi = mir::input;
+namespace mw = mir::wayland;
 
 namespace mir
 {
@@ -242,7 +243,7 @@ public:
         struct wl_display* display,
         std::shared_ptr<mir::Executor> const& executor,
         std::shared_ptr<mg::WaylandAllocator> const& allocator)
-        : Global(display, 3),
+        : Global(display, Version<4>()),
           allocator{allocator},
           executor{executor}
     {
@@ -256,7 +257,7 @@ private:
     {
     public:
         Instance(wl_resource* new_resource, WlCompositor* compositor)
-            : wayland::Compositor{new_resource},
+            : mw::Compositor{new_resource, Version<4>()},
               compositor{compositor}
         {
         }
@@ -292,7 +293,7 @@ public:
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat,
         OutputManager* output_manager)
-        : ShellSurface(new_resource),
+        : ShellSurface(new_resource, Version<1>()),
           WindowWlSurfaceRole{&seat, wayland::ShellSurface::client, surface, shell, output_manager}
     {
     }
@@ -453,7 +454,7 @@ public:
         std::shared_ptr<mf::Shell> const& shell,
         WlSeat& seat,
         OutputManager* const output_manager)
-        : Global(display, 1),
+        : Global(display, Version<1>()),
           shell{shell},
           seat{seat},
           output_manager{output_manager}
@@ -471,7 +472,7 @@ private:
     {
     public:
         Instance(wl_resource* new_resource, WlShell* shell)
-            : wayland::Shell{new_resource},
+            : mw::Shell{new_resource, Version<1>()},
               shell{shell}
         {
         }

@@ -46,7 +46,7 @@ mw::ServerDecorationManager* mw::ServerDecorationManager::from(struct wl_resourc
 
 struct mw::ServerDecorationManager::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void create_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface)
     {
@@ -79,7 +79,7 @@ struct mw::ServerDecorationManager::Thunks
         auto resource = wl_resource_create(
             client,
             &org_kde_kwin_server_decoration_manager_interface_data,
-            std::min(version, me->max_version),
+            std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -102,7 +102,9 @@ struct mw::ServerDecorationManager::Thunks
     static void const* request_vtable[];
 };
 
-mw::ServerDecorationManager::ServerDecorationManager(struct wl_resource* resource)
+int const mw::ServerDecorationManager::Thunks::supported_version = 1;
+
+mw::ServerDecorationManager::ServerDecorationManager(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -128,15 +130,14 @@ void mw::ServerDecorationManager::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-mw::ServerDecorationManager::Global::Global(wl_display* display, uint32_t max_version)
+mw::ServerDecorationManager::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &org_kde_kwin_server_decoration_manager_interface_data,
-              max_version,
+              Thunks::supported_version,
               this,
-              &Thunks::bind_thunk),
-          max_version}
+              &Thunks::bind_thunk)}
 {}
 
 auto mw::ServerDecorationManager::Global::interface_name() const -> char const*
@@ -166,7 +167,7 @@ mw::ServerDecoration* mw::ServerDecoration::from(struct wl_resource* resource)
 
 struct mw::ServerDecoration::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void release_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -204,7 +205,9 @@ struct mw::ServerDecoration::Thunks
     static void const* request_vtable[];
 };
 
-mw::ServerDecoration::ServerDecoration(struct wl_resource* resource)
+int const mw::ServerDecoration::Thunks::supported_version = 1;
+
+mw::ServerDecoration::ServerDecoration(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {

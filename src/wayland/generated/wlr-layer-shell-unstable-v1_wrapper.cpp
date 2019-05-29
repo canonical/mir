@@ -48,7 +48,7 @@ mw::LayerShellV1* mw::LayerShellV1::from(struct wl_resource* resource)
 
 struct mw::LayerShellV1::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void get_layer_surface_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t id, struct wl_resource* surface, struct wl_resource* output, uint32_t layer, char const* namespace_)
     {
@@ -86,7 +86,7 @@ struct mw::LayerShellV1::Thunks
         auto resource = wl_resource_create(
             client,
             &zwlr_layer_shell_v1_interface_data,
-            std::min(version, me->max_version),
+            std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -108,7 +108,9 @@ struct mw::LayerShellV1::Thunks
     static void const* request_vtable[];
 };
 
-mw::LayerShellV1::LayerShellV1(struct wl_resource* resource)
+int const mw::LayerShellV1::Thunks::supported_version = 1;
+
+mw::LayerShellV1::LayerShellV1(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -129,15 +131,14 @@ void mw::LayerShellV1::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-mw::LayerShellV1::Global::Global(wl_display* display, uint32_t max_version)
+mw::LayerShellV1::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &zwlr_layer_shell_v1_interface_data,
-              max_version,
+              Thunks::supported_version,
               this,
-              &Thunks::bind_thunk),
-          max_version}
+              &Thunks::bind_thunk)}
 {}
 
 auto mw::LayerShellV1::Global::interface_name() const -> char const*
@@ -167,7 +168,7 @@ mw::LayerSurfaceV1* mw::LayerSurfaceV1::from(struct wl_resource* resource)
 
 struct mw::LayerSurfaceV1::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void set_size_thunk(struct wl_client* client, struct wl_resource* resource, uint32_t width, uint32_t height)
     {
@@ -284,7 +285,9 @@ struct mw::LayerSurfaceV1::Thunks
     static void const* request_vtable[];
 };
 
-mw::LayerSurfaceV1::LayerSurfaceV1(struct wl_resource* resource)
+int const mw::LayerSurfaceV1::Thunks::supported_version = 1;
+
+mw::LayerSurfaceV1::LayerSurfaceV1(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {

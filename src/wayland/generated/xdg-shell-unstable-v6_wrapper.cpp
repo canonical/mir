@@ -51,7 +51,7 @@ mw::XdgShellV6* mw::XdgShellV6::from(struct wl_resource* resource)
 
 struct mw::XdgShellV6::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -130,7 +130,7 @@ struct mw::XdgShellV6::Thunks
         auto resource = wl_resource_create(
             client,
             &zxdg_shell_v6_interface_data,
-            std::min(version, me->max_version),
+            std::min((int)version, Thunks::supported_version),
             id);
         if (resource == nullptr)
         {
@@ -154,7 +154,9 @@ struct mw::XdgShellV6::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgShellV6::XdgShellV6(struct wl_resource* resource)
+int const mw::XdgShellV6::Thunks::supported_version = 1;
+
+mw::XdgShellV6::XdgShellV6(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -180,15 +182,14 @@ void mw::XdgShellV6::destroy_wayland_object() const
     wl_resource_destroy(resource);
 }
 
-mw::XdgShellV6::Global::Global(wl_display* display, uint32_t max_version)
+mw::XdgShellV6::Global::Global(wl_display* display, Version<1>)
     : wayland::Global{
           wl_global_create(
               display,
               &zxdg_shell_v6_interface_data,
-              max_version,
+              Thunks::supported_version,
               this,
-              &Thunks::bind_thunk),
-          max_version}
+              &Thunks::bind_thunk)}
 {}
 
 auto mw::XdgShellV6::Global::interface_name() const -> char const*
@@ -227,7 +228,7 @@ mw::XdgPositionerV6* mw::XdgPositionerV6::from(struct wl_resource* resource)
 
 struct mw::XdgPositionerV6::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -329,7 +330,9 @@ struct mw::XdgPositionerV6::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgPositionerV6::XdgPositionerV6(struct wl_resource* resource)
+int const mw::XdgPositionerV6::Thunks::supported_version = 1;
+
+mw::XdgPositionerV6::XdgPositionerV6(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -377,7 +380,7 @@ mw::XdgSurfaceV6* mw::XdgSurfaceV6::from(struct wl_resource* resource)
 
 struct mw::XdgSurfaceV6::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -470,7 +473,9 @@ struct mw::XdgSurfaceV6::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgSurfaceV6::XdgSurfaceV6(struct wl_resource* resource)
+int const mw::XdgSurfaceV6::Thunks::supported_version = 1;
+
+mw::XdgSurfaceV6::XdgSurfaceV6(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -530,7 +535,7 @@ mw::XdgToplevelV6* mw::XdgToplevelV6::from(struct wl_resource* resource)
 
 struct mw::XdgToplevelV6::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -739,7 +744,9 @@ struct mw::XdgToplevelV6::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgToplevelV6::XdgToplevelV6(struct wl_resource* resource)
+int const mw::XdgToplevelV6::Thunks::supported_version = 1;
+
+mw::XdgToplevelV6::XdgToplevelV6(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
@@ -836,7 +843,7 @@ mw::XdgPopupV6* mw::XdgPopupV6::from(struct wl_resource* resource)
 
 struct mw::XdgPopupV6::Thunks
 {
-    static int const supported_version = 1;
+    static int const supported_version;
 
     static void destroy_thunk(struct wl_client* client, struct wl_resource* resource)
     {
@@ -875,7 +882,9 @@ struct mw::XdgPopupV6::Thunks
     static void const* request_vtable[];
 };
 
-mw::XdgPopupV6::XdgPopupV6(struct wl_resource* resource)
+int const mw::XdgPopupV6::Thunks::supported_version = 1;
+
+mw::XdgPopupV6::XdgPopupV6(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
 {
