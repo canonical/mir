@@ -252,6 +252,7 @@ private:
         -> mir::optional_value<Rectangle>;
 
     void move_tree(miral::WindowInfo& root, mir::geometry::Displacement movement);
+    void set_tree_depth_layer(miral::WindowInfo& root, MirDepthLayer new_layer);
     void erase(miral::WindowInfo const& info);
     void validate_modification_request(WindowSpecification const& modifications, WindowInfo const& window_info) const;
     void place_and_size(WindowInfo& root, Point const& new_pos, Size const& new_size);

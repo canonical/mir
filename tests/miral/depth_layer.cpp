@@ -126,6 +126,156 @@ TEST_P(DepthLayer, modify_window_updates_depth_layer)
     EXPECT_THAT(surface->depth_layer(), Eq(layer));
 }
 
+TEST_P(DepthLayer, child_created_on_same_layer_as_parent)
+{
+    MirDepthLayer layer = GetParam();
+
+    Window parent_window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.depth_layer = layer;
+        parent_window = create_window(params);
+    }
+
+    Window child_window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.parent = parent_window;
+        child_window = create_window(params);
+    }
+    auto const& child_info = basic_window_manager.info_for(child_window);
+    std::shared_ptr<mir::scene::Surface> child_surface = child_window;
+    ASSERT_THAT(child_surface, NotNull());
+
+    EXPECT_THAT(child_info.depth_layer(), Eq(layer));
+    EXPECT_THAT(child_surface->depth_layer(), Eq(layer));
+}
+
+TEST_P(DepthLayer, child_created_on_specific_layer_if_set)
+{
+    MirDepthLayer layer = GetParam();
+
+    Window parent_window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.depth_layer = mir_depth_layer_above;
+        parent_window = create_window(params);
+    }
+    std::shared_ptr<mir::scene::Surface> parent_surface = parent_window;
+
+    Window child_window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.parent = parent_window;
+        params.depth_layer = layer;
+        child_window = create_window(params);
+    }
+    auto const& child_info = basic_window_manager.info_for(child_window);
+    std::shared_ptr<mir::scene::Surface> child_surface = child_window;
+    ASSERT_THAT(child_surface, NotNull());
+
+    EXPECT_THAT(child_info.depth_layer(), Eq(layer));
+    EXPECT_THAT(child_surface->depth_layer(), Eq(layer));
+}
+
+TEST_P(DepthLayer, child_on_default_layer_moved_with_parent)
+{
+    MirDepthLayer layer = GetParam();
+
+    Window parent_window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        parent_window = create_window(params);
+    }
+    std::shared_ptr<mir::scene::Surface> parent_surface = parent_window;
+
+    Window child_window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.parent = parent_window;
+        child_window = create_window(params);
+    }
+    auto const& child_info = basic_window_manager.info_for(child_window);
+    std::shared_ptr<mir::scene::Surface> child_surface = child_window;
+    ASSERT_THAT(child_surface, NotNull());
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.depth_layer = layer;
+    basic_window_manager.modify_surface(session, parent_surface, modifications);
+
+    EXPECT_THAT(child_info.depth_layer(), Eq(layer));
+    EXPECT_THAT(child_surface->depth_layer(), Eq(layer));
+}
+
+/**
+ * If in the future we implement better control over the depth layer of child windows, this behavior will change
+ */
+TEST_P(DepthLayer, child_on_explicit_layer_moved_with_parent)
+{
+    MirDepthLayer layer = GetParam();
+
+    Window parent_window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        parent_window = create_window(params);
+    }
+    std::shared_ptr<mir::scene::Surface> parent_surface = parent_window;
+
+    Window child_window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.parent = parent_window;
+        params.depth_layer = mir_depth_layer_application;
+        child_window = create_window(params);
+    }
+    auto const& child_info = basic_window_manager.info_for(child_window);
+    std::shared_ptr<mir::scene::Surface> child_surface = child_window;
+    ASSERT_THAT(child_surface, NotNull());
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.depth_layer = layer;
+    basic_window_manager.modify_surface(session, parent_surface, modifications);
+
+    EXPECT_THAT(child_info.depth_layer(), Eq(layer));
+    EXPECT_THAT(child_surface->depth_layer(), Eq(layer));
+}
+
+TEST_P(DepthLayer, grand_child_moved_with_grand_parent)
+{
+    MirDepthLayer layer = GetParam();
+
+    Window parent_window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        parent_window = create_window(params);
+    }
+    std::shared_ptr<mir::scene::Surface> parent_surface = parent_window;
+
+    Window child_window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.parent = parent_window;
+        child_window = create_window(params);
+    }
+
+    Window grand_child_window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.parent = child_window;
+        grand_child_window = create_window(params);
+    }
+    auto const& grand_child_info = basic_window_manager.info_for(grand_child_window);
+    std::shared_ptr<mir::scene::Surface> grand_child_surface = grand_child_window;
+    ASSERT_THAT(grand_child_surface, NotNull());
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.depth_layer = layer;
+    basic_window_manager.modify_surface(session, parent_surface, modifications);
+
+    EXPECT_THAT(grand_child_info.depth_layer(), Eq(layer));
+    EXPECT_THAT(grand_child_surface->depth_layer(), Eq(layer));
+}
+
 INSTANTIATE_TEST_CASE_P(DepthLayer, DepthLayer, ::testing::Values(
     mir_depth_layer_background,
     mir_depth_layer_below,
