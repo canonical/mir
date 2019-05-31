@@ -33,6 +33,14 @@ namespace mir { class Server; }
 
 namespace miral
 {
+
+/// Enables shell components such as panels, notifications and lock screens. Malicious clients could potentially
+/// use this protocol to steal input focus or otherwise bother the user
+static char constexpr zwlr_layer_shell_v1[] = "zwlr_layer_shell_v1";
+
+/// Allows clients to retrieve additional information about outputs
+static char constexpr zxdg_output_manager_v1[] = "zxdg_output_manager_v1";
+
 class Window;
 
 /// Enable configuration of the Wayland extensions enabled at runtime.
@@ -53,6 +61,8 @@ public:
     /// Initialize "enabled by default" to a custom set of extensions (colon
     /// separated list).
     /// \note This can only be a subset of supported_extensions()
+    /// \deprecated A better option is to use the default constructor, enable()
+    /// and disable()
     explicit WaylandExtensions(std::string const& default_value);
 
     void operator()(mir::Server& server) const;
@@ -66,6 +76,8 @@ public:
 
     /// Default for extensions to enabled recommended by Mir (colon separated list)
     /// \remark Since MirAL 2.5
+    /// \deprecated Instead of overridding the whole extension list in the constructor and using this to get the
+    /// recommended ones, you can now just enable() the extensions you want.
     static auto recommended_extensions() -> std::string;
 
     ~WaylandExtensions();
@@ -116,6 +128,14 @@ public:
     /// Add a bespoke Wayland extension both to "supported" but not "enabled by default".
     /// \remark Since MirAL 2.5
     void add_extension_disabled_by_default(Builder const& builder);
+
+    /// Enable a Wayland extension
+    /// If the extension is not supported, an error is logged
+    auto enable(std::string name) -> WaylandExtensions&;
+
+    /// Disable a Wayand extension
+    /// If the extension is not supported, an error is logged
+    auto disabe(std::string name) -> WaylandExtensions&;
 
 private:
     struct Self;

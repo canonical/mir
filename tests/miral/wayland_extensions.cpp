@@ -175,6 +175,10 @@ struct ClientDecorationCreator
 
     void operator()(wl_display* display)
     {
+        ASSERT_THAT(compositor, NotNull());
+        ASSERT_THAT(decoration_manager, NotNull());
+        ASSERT_THAT(shell, NotNull());
+
         auto const registry = make_scoped(wl_display_get_registry(display), &wl_registry_destroy);
         wl_registry_add_listener(registry.get(), &registry_listener, this);
         wl_display_roundtrip(display);
@@ -185,7 +189,7 @@ struct ClientDecorationCreator
             &wl_surface_destroy);
         wl_display_roundtrip(display);
 
-        auto  const decoration = make_scoped(
+        auto const decoration = make_scoped(
             org_kde_kwin_server_decoration_manager_create(decoration_manager, surface.get()),
             &org_kde_kwin_server_decoration_release);
         wl_display_roundtrip(display);

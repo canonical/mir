@@ -26,6 +26,7 @@
 #include <mir/server.h>
 #include <mir/options/option.h>
 #include <mir/options/configuration.h>
+#include <mir/log.h>
 
 #include <set>
 
@@ -90,6 +91,17 @@ struct miral::WaylandExtensions::Self
     void add_to_default(Builder const& builder)
     {
         default_value += ":" + builder.name;
+    }
+
+    void enable_extension(std::string name)
+    {
+        default_value += ":" + name;
+    }
+
+    void disable_extension(std::string name)
+    {
+        (void)name;
+        // TODO
     }
 
     WaylandExtensions::Filter extensions_filter = [](Application const&, char const*) { return true; };
@@ -178,6 +190,18 @@ void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const
 void miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const& builder)
 {
     self->add_extension(builder);
+}
+
+auto miral::WaylandExtensions::enable(std::string name) -> WaylandExtensions&
+{
+    self->enable_extension(name);
+    return *this;
+}
+
+auto miral::WaylandExtensions::disabe(std::string name) -> WaylandExtensions&
+{
+    self->disable_extension(name);
+    return *this;
 }
 
 auto miral::application_for(wl_client* client) -> Application
