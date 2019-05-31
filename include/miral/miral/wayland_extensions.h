@@ -135,7 +135,7 @@ public:
 
     /// Disable a Wayand extension
     /// If the extension is not supported, an error is logged
-    auto disabe(std::string name) -> WaylandExtensions&;
+    auto disable(std::string name) -> WaylandExtensions&;
 
 private:
     struct Self;
