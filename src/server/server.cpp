@@ -527,6 +527,14 @@ void mir::Server::set_wayland_extension_filter(
     }
 }
 
+void mir::Server::set_enabled_wayland_extensions(std::vector<std::string> const& extensions)
+{
+    if (auto const config = self->server_config)
+    {
+        config->set_enabled_wayland_extensions(extensions);
+    }
+}
+
 auto mir::Server::open_client_socket(ConnectHandler const& connect_handler) -> Fd
 {
     if (auto const config = self->server_config)

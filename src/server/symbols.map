@@ -961,3 +961,13 @@ MIR_SERVER_1.2 {
     mir::shell::ShellWrapper::focus_prev_session*;
   };
 } MIR_SERVER_0.32;
+
+MIR_SERVER_1.3 {
+ global:
+  extern "C++" {
+    mir::frontend::get_standard_extensions*;
+    mir::frontend::get_supported_extensions*;
+    mir::Server::set_enabled_wayland_extensions*;
+    mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
+  };
+} MIR_SERVER_1.2;
