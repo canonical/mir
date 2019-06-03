@@ -355,8 +355,7 @@ bool miral::MinimalWindowManager::Impl::handle_pointer_event(MirPointerEvent con
     {
         if (auto const window = tools.window_at(new_cursor))
         {
-            if (tools.active_window() != tools.select_active_window(window))
-                consumes_event = true;
+            tools.select_active_window(window);
         }
     }
 
