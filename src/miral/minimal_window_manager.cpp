@@ -434,8 +434,7 @@ bool miral::MinimalWindowManager::Impl::handle_touch_event(MirTouchEvent const* 
     {
         if (auto const window = tools.window_at(new_touch))
         {
-            if (tools.active_window() != tools.select_active_window(window))
-                consumes_event = true;
+            tools.select_active_window(window);
         }
     }
 
