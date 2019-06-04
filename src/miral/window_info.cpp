@@ -93,6 +93,7 @@ struct miral::WindowInfo::Self
     AspectRatio max_aspect;
     mir::optional_value<int> output_id;
     MirShellChrome shell_chrome;
+    MirDepthLayer depth_layer;
     std::shared_ptr<void> userdata;
 };
 
@@ -112,7 +113,8 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
     height_inc{optional_value_or_default(params.height_inc(), default_height_inc)},
     min_aspect(optional_value_or_default(params.min_aspect(), default_min_aspect_ratio)),
     max_aspect(optional_value_or_default(params.max_aspect(), default_max_aspect_ratio)),
-    shell_chrome(optional_value_or_default(params.shell_chrome(), mir_shell_chrome_normal))
+    shell_chrome(optional_value_or_default(params.shell_chrome(), mir_shell_chrome_normal)),
+    depth_layer(optional_value_or_default(params.depth_layer(), mir_depth_layer_application))
 {
     if (params.output_id().is_set())
         output_id = params.output_id().value();
@@ -613,4 +615,14 @@ auto miral::WindowInfo::name() const -> std::string
 void miral::WindowInfo::name(std::string const& name)
 {
     self->name = name;
+}
+
+auto miral::WindowInfo::depth_layer() const -> MirDepthLayer
+{
+    return self->depth_layer;
+}
+
+void miral::WindowInfo::depth_layer(MirDepthLayer depth_layer)
+{
+    self->depth_layer = depth_layer;
 }

@@ -113,3 +113,7 @@ void ms::LegacySurfaceChangeNotification::input_consumed(Surface const*, MirEven
 void ms::LegacySurfaceChangeNotification::start_drag_and_drop(Surface const*, std::vector<uint8_t> const&)
 {
 }
+
+void ms::LegacySurfaceChangeNotification::depth_layer_set_to(Surface const*, MirDepthLayer)
+{
+}

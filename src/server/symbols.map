@@ -961,3 +961,11 @@ MIR_SERVER_1.2 {
     mir::shell::ShellWrapper::focus_prev_session*;
   };
 } MIR_SERVER_0.32;
+
+MIR_SERVER_1.3 {
+ global:
+  extern "C++" {
+    mir::scene::NullSurfaceObserver::depth_layer_set_to*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::depth_layer_set_to*;
+  };
+} MIR_SERVER_1.2;

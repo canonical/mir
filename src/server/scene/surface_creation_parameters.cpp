@@ -196,6 +196,8 @@ void ms::SurfaceCreationParameters::update_from(msh::SurfaceSpecification const&
         shell_chrome = that.shell_chrome;
     if (that.confine_pointer.is_set())
         confine_pointer = that.confine_pointer;
+    if (that.depth_layer.is_set())
+        depth_layer = that.depth_layer;
     // TODO: should SurfaceCreationParameters support cursors?
 //     if (that.cursor_image.is_set())
 //         cursor_image = that.cursor_image;

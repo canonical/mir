@@ -87,6 +87,7 @@ public:
     MOCK_METHOD2(placed_relative, void(msc::Surface const*, geom::Rectangle const& placement));
     MOCK_METHOD2(input_consumed, void(msc::Surface const*, MirEvent const*));
     MOCK_METHOD2(start_drag_and_drop, void(msc::Surface const*, std::vector<uint8_t> const& handle));
+    MOCK_METHOD2(depth_layer_set_to, void(msc::Surface const*, MirDepthLayer depth_layer));
 };
 
 

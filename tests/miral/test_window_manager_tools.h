@@ -79,8 +79,15 @@ struct StubPersistentSurfaceStore : mir::shell::PersistentSurfaceStore
 
 struct StubSurface : mir::test::doubles::StubSurface
 {
-    StubSurface(std::string name, MirWindowType type, mir::geometry::Point top_left, mir::geometry::Size size) :
-        name_{name}, type_{type}, top_left_{top_left}, size_{size} {}
+    StubSurface(
+        std::string name,
+        MirWindowType type,
+        mir::geometry::Point top_left,
+        mir::geometry::Size size,
+        MirDepthLayer depth_layer)
+        : name_{name}, type_{type}, top_left_{top_left}, size_{size}, depth_layer_{depth_layer}
+    {
+    }
 
     std::string name() const override { return name_; };
     MirWindowType type() const override { return type_; }
@@ -105,11 +112,15 @@ struct StubSurface : mir::test::doubles::StubSurface
 
     bool visible() const override { return  state() != mir_window_state_hidden; }
 
+    auto depth_layer() const -> MirDepthLayer override { return depth_layer_; }
+    void set_depth_layer(MirDepthLayer depth_layer) override { depth_layer_ = depth_layer; }
+
     std::string name_;
     MirWindowType type_;
     mir::geometry::Point top_left_;
     mir::geometry::Size size_;
     MirWindowState state_ = mir_window_state_restored;
+    MirDepthLayer depth_layer_;
 };
 
 struct StubStubSession : mir::test::doubles::StubSession
@@ -119,7 +130,14 @@ struct StubStubSession : mir::test::doubles::StubSession
         std::shared_ptr<mir::frontend::EventSink> const& /*sink*/) override
     {
         auto id = mir::frontend::SurfaceId{next_surface_id.fetch_add(1)};
-        auto surface = std::make_shared<StubSurface>(params.name, params.type.value(), params.top_left, params.size);
+        auto surface = std::make_shared<StubSurface>(
+            params.name,
+            params.type.value(),
+            params.top_left,
+            params.size,
+            params.depth_layer.is_set() ?
+                params.depth_layer.value()
+                : mir_depth_layer_application);
         surfaces[id] = surface;
         return id;
     }

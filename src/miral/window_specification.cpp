@@ -59,6 +59,7 @@ struct miral::WindowSpecification::Self
     mir::optional_value<InputReceptionMode> input_mode;
     mir::optional_value<MirShellChrome> shell_chrome;
     mir::optional_value<MirPointerConfinementState> confine_pointer;
+    mir::optional_value<MirDepthLayer> depth_layer;
     mir::optional_value<std::shared_ptr<void>> userdata;
 };
 
@@ -88,8 +89,9 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     parent(spec.parent),
     input_shape(spec.input_shape),
     input_mode(),
-    shell_chrome(spec.shell_chrome)
-    ,confine_pointer(spec.confine_pointer)
+    shell_chrome(spec.shell_chrome),
+    confine_pointer(spec.confine_pointer),
+    depth_layer(spec.depth_layer)
 {
     if (spec.aux_rect_placement_offset_x.is_set() && spec.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{spec.aux_rect_placement_offset_x.value(), spec.aux_rect_placement_offset_y.value()};
@@ -213,8 +215,9 @@ miral::WindowSpecification::Self::Self(mir::scene::SurfaceCreationParameters con
     parent(params.parent),
     input_shape(params.input_shape),
     input_mode(static_cast<InputReceptionMode>(params.input_mode)),
-    shell_chrome(params.shell_chrome)
-    ,confine_pointer(params.confine_pointer)
+    shell_chrome(params.shell_chrome),
+    confine_pointer(params.confine_pointer),
+    depth_layer(params.depth_layer)
 {
     if (params.aux_rect_placement_offset_x.is_set() && params.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{params.aux_rect_placement_offset_x.value(), params.aux_rect_placement_offset_y.value()};
@@ -283,6 +286,7 @@ void miral::WindowSpecification::Self::update(mir::scene::SurfaceCreationParamet
     copy_if_set(params.placement_hints, placement_hints);
     copy_if_set(params.surface_placement_gravity, window_placement_gravity);
     copy_if_set(params.aux_rect_placement_gravity, aux_rect_placement_gravity);
+    copy_if_set(params.depth_layer, depth_layer);
 
     if (aux_rect_placement_offset.is_set())
     {
@@ -583,4 +587,14 @@ auto miral::WindowSpecification::confine_pointer() -> mir::optional_value<MirPoi
 auto miral::WindowSpecification::userdata() -> mir::optional_value<std::shared_ptr<void>>&
 {
     return self->userdata;
+}
+
+auto miral::WindowSpecification::depth_layer() const -> mir::optional_value<MirDepthLayer> const&
+{
+    return self->depth_layer;
+}
+
+auto miral::WindowSpecification::depth_layer() -> mir::optional_value<MirDepthLayer>&
+{
+    return self->depth_layer;
 }
