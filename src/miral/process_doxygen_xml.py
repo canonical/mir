@@ -456,9 +456,64 @@ global:
 } MIRAL_2.3;
 
 MIRAL_2.5 {
+global:
+  extern "C++" {
+    miral::MinimalWindowManager::?MinimalWindowManager*;
+    miral::MinimalWindowManager::MinimalWindowManager*;
+    miral::MinimalWindowManager::advise_focus_gained*;
+    miral::MinimalWindowManager::begin_pointer_move*;
+    miral::MinimalWindowManager::begin_pointer_resize*;
+    miral::MinimalWindowManager::begin_touch_move*;
+    miral::MinimalWindowManager::begin_touch_resize*;
+    miral::MinimalWindowManager::confirm_inherited_move*;
+    miral::MinimalWindowManager::confirm_placement_on_display*;
+    miral::MinimalWindowManager::handle_keyboard_event*;
+    miral::MinimalWindowManager::handle_modify_window*;
+    miral::MinimalWindowManager::handle_pointer_event*;
+    miral::MinimalWindowManager::handle_raise_window*;
+    miral::MinimalWindowManager::handle_request_drag_and_drop*;
+    miral::MinimalWindowManager::handle_request_move*;
+    miral::MinimalWindowManager::handle_request_resize*;
+    miral::MinimalWindowManager::handle_touch_event*;
+    miral::MinimalWindowManager::handle_window_ready*;
+    miral::MinimalWindowManager::place_new_window*;
+    miral::WaylandExtensions::Context::?Context*;
+    miral::WaylandExtensions::Context::Context*;
+    miral::WaylandExtensions::Context::operator*;
+    miral::WaylandExtensions::add_extension*;
+    miral::WaylandExtensions::add_extension_disabled_by_default*;
+    miral::WaylandExtensions::recommended_extensions*;
+    miral::WaylandExtensions::set_filter*;
+    miral::WindowManagerTools::focus_prev_application*;
+    miral::application_for*;
+    miral::window_for*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::advise_focus_gained*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::confirm_inherited_move*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::confirm_placement_on_display*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::handle_keyboard_event*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::handle_modify_window*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::handle_pointer_event*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::handle_raise_window*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::handle_request_drag_and_drop*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::handle_request_move*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::handle_request_resize*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::handle_touch_event*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::handle_window_ready*;
+    non-virtual?thunk?to?miral::MinimalWindowManager::place_new_window*;
+    non-virtual?thunk?to?miral::WaylandExtensions::Context::?Context*;
+    typeinfo?for?miral::MinimalWindowManager;
+    typeinfo?for?miral::WaylandExtensions::Builder;
+    typeinfo?for?miral::WaylandExtensions::Context;
+    vtable?for?miral::MinimalWindowManager;
+    vtable?for?miral::WaylandExtensions::Builder;
+    vtable?for?miral::WaylandExtensions::Context;
+  };
+} MIRAL_2.4;
+
+MIRAL_2.6 {
 global:'''
 
-END_NEW_STANZA = '''} MIRAL_2.4;'''
+END_NEW_STANZA = '''} MIRAL_2.5;'''
 
 def _print_report():
     print(OLD_STANZAS)
