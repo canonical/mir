@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -128,6 +128,18 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
                 .WillOnce(Return(false));
             EXPECT_CALL(mock_authorizer,
                 prompt_session_is_allowed(Truly(matches_creds)))
+                .Times(1)
+                .WillOnce(Return(false));
+            EXPECT_CALL(mock_authorizer,
+                configure_input_is_allowed(Truly(matches_creds)))
+                .Times(1)
+                .WillOnce(Return(false));
+            EXPECT_CALL(mock_authorizer,
+                set_base_input_configuration_is_allowed(Truly(matches_creds)))
+                .Times(1)
+                .WillOnce(Return(false));
+            EXPECT_CALL(mock_authorizer,
+                set_base_display_configuration_is_allowed(Truly(matches_creds)))
                 .Times(1)
                 .WillOnce(Return(false));
         });
