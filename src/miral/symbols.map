@@ -432,5 +432,10 @@ global:
   extern "C++" {
     miral::WindowInfo::depth_layer*;
     miral::WindowSpecification::depth_layer*;
+    miral::Zone::Zone*;
+    miral::Zone::?Zone*;
+    miral::Zone::operator*;
+    miral::Zone::is_same_zone*;
+    miral::Zone::extents*;
   };
 } MIRAL_2.5;
