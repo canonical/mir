@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -618,4 +618,31 @@ TEST_F(MultiMonitorArbiter, releases_buffer_on_destruction)
         arbiter.advance_schedule();
     }
     EXPECT_TRUE(*buffer_released);
+}
+
+TEST_F(MultiMonitorArbiter, aquires_buffer_after_schedule_runs_out_and_is_refilled)
+{
+    schedule.set_schedule({buffers[0]});
+    auto cbuffer1 = arbiter.compositor_acquire(this);
+    auto cbuffer2 = arbiter.compositor_acquire(this);
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(cbuffer2));
+    schedule.set_schedule({buffers[1]});
+    auto cbuffer3 = arbiter.compositor_acquire(this);
+    EXPECT_THAT(cbuffer2, Not(IsSameBufferAs(cbuffer3)));
+}
+
+TEST_F(MultiMonitorArbiter, other_compositor_aquires_buffer_after_schedule_runs_out_and_is_refilled)
+{
+    int comp_id1{0};
+    int comp_id2{1};
+
+    schedule.set_schedule({buffers[0]});
+    auto cbuffer1 = arbiter.compositor_acquire(&comp_id1);
+    auto cbuffer2 = arbiter.compositor_acquire(&comp_id2);
+    auto cbuffer3 = arbiter.compositor_acquire(&comp_id1);
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(cbuffer2));
+    EXPECT_THAT(cbuffer1, IsSameBufferAs(cbuffer3));
+    schedule.set_schedule({buffers[1]});
+    auto cbuffer4 = arbiter.compositor_acquire(&comp_id2);
+    EXPECT_THAT(cbuffer1, Not(IsSameBufferAs(cbuffer4)));
 }
