@@ -50,7 +50,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     static_display_config.cpp
     client_mediated_gestures.cpp
     window_info.cpp
-    test_window_manager_tools.h
+    test_window_manager_tools.cpp           test_window_manager_tools.h
     depth_layer.cpp
 )
 

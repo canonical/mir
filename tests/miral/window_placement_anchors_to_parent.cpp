@@ -44,7 +44,7 @@ auto placement(
     return modification;
 }
 
-struct WindowPlacementAnchorsToParent : TestWindowManagerTools
+struct WindowPlacementAnchorsToParent : mt::TestWindowManagerTools
 {
     Size const parent_size{parent_width, parent_height};
     Size const initial_child_size{100, 50};
