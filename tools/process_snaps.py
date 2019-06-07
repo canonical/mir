@@ -30,19 +30,19 @@ TEAM = "mir-team"
 SOURCE_NAME = "mir"
 SNAPS = {
     "mir-kiosk": {
-        "edge": ("dev", "mir-kiosk-edge"),
-        "candidate": ("rc", "mir-kiosk-candidate"),
+        "edge": {"ppa": "dev", "recipe": "mir-kiosk-edge"},
+        "candidate": {"ppa": "rc", "recipe": "mir-kiosk-candidate"},
     },
     "mir-test-tools": {
-        "edge": ("dev", "mir-test-tools-edge"),
-        "candidate": ("rc", "mir-test-tools"),
+        "edge": {"ppa": "dev", "recipe": "mir-test-tools-edge"},
+        "candidate": {"ppa": "rc", "recipe": "mir-test-tools"},
     },
     "egmde": {
-        "edge": ("dev", "egmde-mir-master"),
-        "beta": ("release", "egmde-mir-release"),
+        "edge": {"ppa": "dev", "recipe": "egmde-mir-master"},
+        "beta": {"ppa": "release", "recipe": "egmde-mir-release"},
     },
     "egmde-confined-desktop": {
-        "edge": ("dev", "egmde-confined-desktop"),
+        "edge": {"ppa": "dev", "recipe": "egmde-confined-desktop"},
     },
 }
 
@@ -156,44 +156,47 @@ if __name__ == '__main__':
         for channel, snap_map in channels.items():
             logger.info("Processing channel %s for snap %s…", channel, snap)
 
-            ppa = team.getPPAByName(name=snap_map[0])
-            logger.debug("Got ppa: %s", ppa)
-
             try:
-                snap_recipe = lp.snaps.getByName(owner=team, name=snap_map[1])
+                snap_recipe = lp.snaps.getByName(owner=team, name=snap_map["recipe"])
                 logger.debug("Got snap: %s", snap_recipe)
             except lp_errors.NotFound as ex:
-                logger.error("Snap not found: %s", snap_map[1])
+                logger.error("Snap not found: %s", snap_map["recipe"])
                 errors.append(ex)
                 continue
 
-            latest_source = ppa.getPublishedSources(
-                source_name=SOURCE_NAME,
-                distro_series=series
-            )[0]
-            logger.debug("Latest source: %s", latest_source.display_name)
+            if "ppa" in snap_map:
+                ppa = team.getPPAByName(name=snap_map["ppa"])
+                logger.debug("Got ppa: %s", ppa)
 
-            version = (
-                MIR_VERSION_RE.match(latest_source.source_package_version)[1]
-            )
-            logger.debug("Parsed upstream version: %s", version)
+                latest_source = ppa.getPublishedSources(
+                    source_name=SOURCE_NAME,
+                    distro_series=series
+                )[0]
+                logger.debug("Latest source: %s", latest_source.display_name)
 
-            if latest_source.status != "Published":
-                logger.info("Skipping %s: %s",
-                            latest_source.display_name, latest_source.status)
-                continue
+                mir_version = (
+                    MIR_VERSION_RE.match(latest_source.source_package_version)[1]
+                )
+                logger.debug("Parsed upstream version: %s", mir_version)
 
-            if any(build.buildstate in PENDING_BUILD
-                   for build in latest_source.getBuilds()):
-                logger.info("Skipping %s: builds pending…",
-                            latest_source.display_name)
-                continue
+                if latest_source.status != "Published":
+                    logger.info("Skipping %s: %s",
+                                latest_source.display_name, latest_source.status)
+                    continue
 
-            if any(binary.status != "Published"
-                   for binary in latest_source.getPublishedBinaries()):
-                logger.info("Skipping %s: binaries pending…",
-                            latest_source.display_name)
-                continue
+                if any(build.buildstate in PENDING_BUILD
+                    for build in latest_source.getBuilds()):
+                    logger.info("Skipping %s: builds pending…",
+                                latest_source.display_name)
+                    continue
+
+                if any(binary.status != "Published"
+                    for binary in latest_source.getPublishedBinaries()):
+                    logger.info("Skipping %s: binaries pending…",
+                                latest_source.display_name)
+                    continue
+            else:
+                mir_version = None
 
             if len(snap_recipe.pending_builds) > 0:
                 logger.info("Skipping %s: snap builds pending…",
@@ -210,7 +213,8 @@ if __name__ == '__main__':
             logger.debug("Got store versions: %s", {snap["architecture"][0]: snap["version"] for snap in store_snaps})
 
             if all(store_snap is None
-                   or version.startswith(SNAP_VERSION_RE.match(store_snap["version"]).group("mir"))
+                   or mir_version is None
+                   or mir_version.startswith(SNAP_VERSION_RE.match(store_snap["version"]).group("mir"))
                    for store_snap in store_snaps):
 
                 if check_notices:
@@ -232,7 +236,7 @@ if __name__ == '__main__':
                     )
                     continue
 
-            logger.info("Triggering for %s…", latest_source.display_name)
+            logger.info("Triggering %s…", snap_recipe.description or snap_recipe.name)
 
             builds = snap_recipe.requestAutoBuilds()
             logger.debug("Triggered builds: %s", snap_recipe.web_link)
