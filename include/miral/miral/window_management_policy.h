@@ -31,6 +31,7 @@ class Window;
 class WindowSpecification;
 struct ApplicationInfo;
 class Output;
+class Zone;
 struct WindowInfo;
 
 /**
@@ -267,6 +268,18 @@ public:
      * @return the confirmed placement of the window
      */
     virtual auto confirm_inherited_move(WindowInfo const& window_info, Displacement movement) -> Rectangle = 0;
+
+/** @name notification of changes to the current application zones
+ * An application zone is the area a maximized application will fill.
+ * There is often (but not necessarily) one zone per output.
+ * The areas normal applications windows should avoid (such as the areas covered by panels)
+ * will not be part of an application zone
+ *  @{ */
+    virtual void advise_application_zone_create(Zone const& application_zone);
+    virtual void advise_application_zone_update(Zone const& updated, Zone const& original);
+    virtual void advise_application_zone_delete(Zone const& application_zone);
+
+/** @} */
 
     virtual ~WindowManagementPolicy() = default;
     WindowManagementPolicy() = default;

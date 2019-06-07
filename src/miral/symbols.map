@@ -437,5 +437,8 @@ global:
     miral::Zone::operator*;
     miral::Zone::is_same_zone*;
     miral::Zone::extents*;
+    miral::WindowManagementPolicy::advise_application_zone_create*;
+    miral::WindowManagementPolicy::advise_application_zone_delete*;
+    miral::WindowManagementPolicy::advise_application_zone_update*;
   };
 } MIRAL_2.5;
