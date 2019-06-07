@@ -33,6 +33,9 @@ SNAPS = {
         "edge": {"ppa": "dev", "recipe": "mir-kiosk-edge"},
         "candidate": {"ppa": "rc", "recipe": "mir-kiosk-candidate"},
     },
+    "mir-kiosk-apps": {
+        "edge": {"recipe": "mir-kiosk-apps"},
+    },
     "mir-test-tools": {
         "edge": {"ppa": "dev", "recipe": "mir-test-tools-edge"},
         "candidate": {"ppa": "rc", "recipe": "mir-test-tools"},
