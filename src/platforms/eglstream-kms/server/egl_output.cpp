@@ -150,19 +150,18 @@ mgek::EGLOutput::EGLOutput(
 
 }
 
-mgek::EGLOutput::~EGLOutput() noexcept(false)
+mgek::EGLOutput::~EGLOutput()
 {
-    auto const uncaught_exception = std::uncaught_exception();
     try
     {
         restore_saved_crtc();
     }
-    catch(...)
+    catch(std::exception const& e)
     {
-        if (!uncaught_exception)
-        {
-            throw;
-        }
+        log(logging::Severity::error,
+            MIR_LOG_COMPONENT_FALLBACK,
+            std::make_exception_ptr(e),
+            "Failed to restore saved crtc");
     }
 }
 
