@@ -53,6 +53,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     test_window_manager_tools.cpp           test_window_manager_tools.h
     depth_layer.cpp
     output_updates.cpp
+    application_zone.cpp
 )
 
 set_source_files_properties(static_display_config.cpp PROPERTIES COMPILE_FLAGS
