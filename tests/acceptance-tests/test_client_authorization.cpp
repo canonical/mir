@@ -32,6 +32,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include <atomic>
+
 namespace mf = mir::frontend;
 namespace mt = mir::test;
 namespace mtf = mir_test_framework;
@@ -61,11 +63,16 @@ struct ClientCredsTestFixture : mtf::InterprocessClientServerTest
                 MAP_ANONYMOUS | MAP_SHARED, 0, 0));
     }
 
+    ~ClientCredsTestFixture()
+    {
+        munmap(shared_region, sizeof(SharedRegion));
+    }
+
     struct SharedRegion
     {
-        pid_t client_pid = -1;
-        uid_t client_uid = -1;
-        gid_t client_gid = -1;
+        std::atomic<pid_t> client_pid{-1};
+        std::atomic<uid_t> client_uid{0xFFFF};
+        std::atomic<gid_t> client_gid{0xFFFF};
 
         bool matches_client_process_creds(mf::SessionCredentials const& creds)
         {
