@@ -27,9 +27,11 @@
 #include <mir/shell/display_layout.h>
 #include <mir/shell/focus_controller.h>
 #include <mir/shell/persistent_surface_store.h>
+#include "mir/graphics/display_configuration_observer.h"
 
 #include <mir/test/doubles/stub_session.h>
 #include <mir/test/doubles/stub_surface.h>
+#include "mir/test/doubles/mock_display_configuration.h"
 #include <mir/test/fake_shared.h>
 
 #include <gtest/gtest.h>
@@ -164,6 +166,9 @@ struct MockWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
     MOCK_METHOD2(advise_move_to, void(miral::WindowInfo const& window_info, mir::geometry::Point top_left));
     MOCK_METHOD2(advise_resize, void(miral::WindowInfo const& window_info, mir::geometry::Size const& new_size));
     MOCK_METHOD1(advise_raise, void(std::vector<miral::Window> const&));
+    MOCK_METHOD1(advise_output_create, void(miral::Output const&));
+    MOCK_METHOD2(advise_output_update, void(miral::Output const&, miral::Output const&));
+    MOCK_METHOD1(advise_output_delete, void(miral::Output const&));
 
     void handle_request_drag_and_drop(miral::WindowInfo& /*window_info*/) {}
     void handle_request_move(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/) {}
@@ -174,13 +179,27 @@ struct MockWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
     }
 };
 
-struct StubDisplayConfigurationObserver : mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>
+struct TestDisplayConfigurationObserver : mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>
 {
-    void register_interest(std::weak_ptr<mir::graphics::DisplayConfigurationObserver> const&) override {}
+    void register_interest(std::weak_ptr<mir::graphics::DisplayConfigurationObserver> const& o) override
+    {
+        ASSERT_THAT(observer.lock(), testing::IsNull())
+            << "TestDisplayConfigurationObserver does not support multiple observers";
+        observer = o;
+    }
 
-    void register_interest(std::weak_ptr<mir::graphics::DisplayConfigurationObserver> const&, mir::Executor&) override {}
+    void register_interest(std::weak_ptr<mir::graphics::DisplayConfigurationObserver> const& o, mir::Executor&) override
+    {
+        register_interest(o);
+    }
 
-    void unregister_interest(mir::graphics::DisplayConfigurationObserver const&) override {}
+    void unregister_interest(mir::graphics::DisplayConfigurationObserver const& o) override
+    {
+        ASSERT_THAT(observer.lock().get(), testing::Eq(&o));
+        observer = std::weak_ptr<mir::graphics::DisplayConfigurationObserver>(); // set to null
+    }
+
+    std::weak_ptr<mir::graphics::DisplayConfigurationObserver> observer;
 };
 
 struct TestWindowManagerTools : testing::Test
@@ -188,7 +207,7 @@ struct TestWindowManagerTools : testing::Test
     StubFocusController focus_controller;
     StubDisplayLayout display_layout;
     StubPersistentSurfaceStore persistent_surface_store;
-    StubDisplayConfigurationObserver display_configuration_observer;
+    TestDisplayConfigurationObserver display_configuration_observer;
     std::shared_ptr<StubStubSession> session{std::make_shared<StubStubSession>()};
 
     MockWindowManagerPolicy* window_manager_policy{nullptr};
@@ -215,6 +234,45 @@ struct TestWindowManagerTools : testing::Test
         // This type is Mir-internal, I hope we don't need to create it here
         std::shared_ptr<mir::frontend::EventSink> const sink;
         return session->create_surface(params, sink);
+    }
+
+    void set_outputs(std::vector<miral::Rectangle> outputs)
+    {
+        auto const display_config = std::make_shared<const mir::test::doubles::MockDisplayConfiguration>();
+        EXPECT_CALL(*display_config, for_each_output(testing::_))
+            .WillOnce(testing::Invoke([outputs](std::function<void(mir::graphics::DisplayConfigurationOutput const&)> func){
+                for (auto i = 0u; i < outputs.size(); i++)
+                {
+                    auto const& rect = outputs[i];
+                    mir::graphics::DisplayConfigurationOutput display_config_output{
+                        mir::graphics::DisplayConfigurationOutputId{(int)i}, // id
+                        mir::graphics::DisplayConfigurationCardId{1}, // card_id
+                        mir::graphics::DisplayConfigurationOutputType::unknown, // type
+                        {mir_pixel_format_abgr_8888}, // pixel_formats
+                        {{rect.size, 60}}, // modes
+                        0, // prefered_mode_index
+                        {rect.size}, // physical_size_mm
+                        true, // connected
+                        true, // used
+                        rect.top_left, // top_left
+                        0, // current_mode_index
+                        mir_pixel_format_abgr_8888, // current_format
+                        mir_power_mode_on, // power_mode
+                        mir_orientation_normal, // orientation
+                        1.0, // scale
+                        mir_form_factor_unknown, // form_factor
+                        mir_subpixel_arrangement_unknown, // subpixel_arrangement
+                        {}, // gamma
+                        mir_output_gamma_unsupported, // gamma_supported
+                        {}, // edid
+                        {}, // custom_logical_size
+                    };
+                    func(display_config_output);
+                }
+            }));
+        auto config_observer = display_configuration_observer.observer.lock();
+        ASSERT_THAT(config_observer, testing::NotNull());
+        config_observer->configuration_applied(display_config);
     }
 };
 
