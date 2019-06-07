@@ -54,8 +54,7 @@ env:
   - SYSTEM=google:fedora-30-64 VARIANT=amd64
 
 matrix:
-# Commented out, not deleted, as a reminder of the syntax
-#  allow_failures:
+  allow_failures:
 #    - env: SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
   fast_finish: true
 
