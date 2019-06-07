@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013-2014 Canonical Ltd.
+ * Copyright © 2013-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 or 3 as
@@ -30,9 +30,9 @@
 
 #include <sys/mman.h>
 #include <sys/types.h>
-#include <semaphore.h>
-#include <time.h>
 #include <unistd.h>
+
+#include <atomic>
 
 namespace mf = mir::frontend;
 namespace mt = mir::test;
@@ -61,15 +61,18 @@ struct ClientCredsTestFixture : mtf::InterprocessClientServerTest
         shared_region = static_cast<SharedRegion*>(
             mmap(NULL, sizeof(SharedRegion), PROT_READ | PROT_WRITE,
                 MAP_ANONYMOUS | MAP_SHARED, 0, 0));
-        sem_init(&shared_region->client_creds_set, 1, 0);
+    }
+
+    ~ClientCredsTestFixture()
+    {
+        munmap(shared_region, sizeof(SharedRegion));
     }
 
     struct SharedRegion
     {
-        sem_t client_creds_set;
-        pid_t client_pid = -1;
-        uid_t client_uid = -1;
-        gid_t client_gid = -1;
+        std::atomic<pid_t> client_pid{-1};
+        std::atomic<uid_t> client_uid{0xFFFF};
+        std::atomic<gid_t> client_gid{0xFFFF};
 
         bool matches_client_process_creds(mf::SessionCredentials const& creds)
         {
@@ -81,19 +84,11 @@ struct ClientCredsTestFixture : mtf::InterprocessClientServerTest
                    (client_gid == 0 || client_gid == creds.gid());
         }
 
-        bool wait_for_client_creds()
-        {
-            static time_t const timeout_seconds = 60;
-            struct timespec abs_timeout = { time(NULL) + timeout_seconds, 0 };
-            return sem_timedwait(&client_creds_set, &abs_timeout) == 0;
-        }
-
         void post_client_creds()
         {
             client_pid = getpid();
             client_uid = geteuid();
             client_gid = getegid();
-            sem_post(&client_creds_set);
         }
     };
 
@@ -130,12 +125,21 @@ TEST_F(ClientCredsTestFixture, session_authorizer_receives_pid_of_connecting_cli
                 prompt_session_is_allowed(Truly(matches_creds)))
                 .Times(1)
                 .WillOnce(Return(false));
+            EXPECT_CALL(mock_authorizer,
+                configure_input_is_allowed(Truly(matches_creds)))
+                .Times(1)
+                .WillOnce(Return(false));
+            EXPECT_CALL(mock_authorizer,
+                set_base_input_configuration_is_allowed(Truly(matches_creds)))
+                .Times(1)
+                .WillOnce(Return(false));
+            EXPECT_CALL(mock_authorizer,
+                set_base_display_configuration_is_allowed(Truly(matches_creds)))
+                .Times(1)
+                .WillOnce(Return(false));
         });
 
-    run_in_server([&]
-       {
-           EXPECT_TRUE(shared_region->wait_for_client_creds());
-       });
+    run_in_server([&]{});
 
     run_in_client([&]
         {
