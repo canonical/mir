@@ -36,6 +36,25 @@ struct OutputUpdates : mt::TestWindowManagerTools
     {
         basic_window_manager.add_session(session);
     }
+
+    auto create_window(mir::scene::SurfaceCreationParameters creation_parameters) -> Window
+    {
+        Window result;
+
+        EXPECT_CALL(*window_manager_policy, advise_new_window(_))
+            .WillOnce(
+                Invoke(
+                    [&result](WindowInfo const& window_info)
+                        { result = window_info.window(); }));
+
+        basic_window_manager.add_surface(session, creation_parameters, &create_surface);
+        basic_window_manager.select_active_window(result);
+
+        // Clear the expectations used to capture parent & child
+        Mock::VerifyAndClearExpectations(window_manager_policy);
+
+        return result;
+    }
 };
 }
 
@@ -130,4 +149,61 @@ TEST_F(OutputUpdates, policy_notified_of_output_delete)
 
     EXPECT_TRUE(output_b_deleted.value().is_same_output(output_b.value()));
     EXPECT_THAT(output_b_deleted.value().extents(), Eq(output_b.value().extents()));
+}
+
+TEST_F(OutputUpdates, maximized_window_not_moved_when_new_output_connected)
+{
+    auto display_config_a = create_mock_display_configuration({display_area_a});
+    auto display_config_a_b = create_mock_display_configuration({display_area_a, display_area_b});
+    notify_configuration_applied(display_config_a);
+
+    mir::scene::SurfaceCreationParameters creation_parameters;
+    creation_parameters.type = mir_window_type_normal;
+    creation_parameters.state = mir_window_state_maximized;
+
+    Window window = create_window(creation_parameters);
+
+    ASSERT_THAT(window.top_left(), Eq(display_area_a.top_left));
+    ASSERT_THAT(window.size(), Eq(display_area_a.size));
+
+    notify_configuration_applied(display_config_a_b);
+    Mock::VerifyAndClearExpectations(window_manager_policy);
+
+    ASSERT_THAT(window.top_left(), Eq(display_area_a.top_left));
+    ASSERT_THAT(window.size(), Eq(display_area_a.size));
+}
+
+TEST_F(OutputUpdates, maximized_window_moved_with_its_output)
+{
+    auto display_config_a = create_mock_display_configuration({display_area_a});
+    auto display_config_b = create_mock_display_configuration({display_area_b});
+    notify_configuration_applied(display_config_a);
+
+    mir::scene::SurfaceCreationParameters creation_parameters;
+    creation_parameters.type = mir_window_type_normal;
+    creation_parameters.state = mir_window_state_maximized;
+
+    Window window = create_window(creation_parameters);
+
+    ASSERT_THAT(window.top_left(), Eq(display_area_a.top_left));
+    ASSERT_THAT(window.size(), Eq(display_area_a.size));
+
+    EXPECT_CALL(*window_manager_policy, advise_move_to(_, _))
+        .WillOnce(Invoke([&](miral::WindowInfo const& window_info, mir::geometry::Point top_left)
+            {
+                EXPECT_THAT(window_info.window(), Eq(window));
+                EXPECT_THAT(top_left, Eq(display_area_b.top_left));
+            }));
+    EXPECT_CALL(*window_manager_policy, advise_resize(_, _))
+        .WillOnce(Invoke([&](miral::WindowInfo const& window_info, mir::geometry::Size size)
+            {
+                EXPECT_THAT(window_info.window(), Eq(window));
+                EXPECT_THAT(size, Eq(display_area_b.size));
+            }));
+
+    notify_configuration_applied(display_config_b);
+    Mock::VerifyAndClearExpectations(window_manager_policy);
+
+    ASSERT_THAT(window.top_left(), Eq(display_area_b.top_left));
+    ASSERT_THAT(window.size(), Eq(display_area_b.size));
 }
