@@ -26,6 +26,8 @@
 #include "active_outputs.h"
 #include "miral/application.h"
 #include "miral/application_info.h"
+#include "miral/zone.h"
+#include "miral/output.h"
 #include "mru_window_list.h"
 
 #include <mir/geometry/rectangles.h>
@@ -35,6 +37,7 @@
 
 #include <boost/bimap.hpp>
 #include <boost/bimap/multiset_of.hpp>
+#include <experimental/optional>
 
 #include <map>
 #include <mutex>
@@ -197,6 +200,28 @@ public:
     void invoke_under_lock(std::function<void()> const& callback) override;
 
 private:
+    /// An area for windows to be placed in
+    struct WindowArea
+    {
+        WindowArea(Output const& output)
+            : area{output.extents()},
+              application_zone{Zone{output.extents()}},
+              output{output}
+        {
+        }
+
+        WindowArea(Rectangle const& area)
+            : area{area},
+              application_zone{Zone{area}}
+        {
+        }
+
+        Rectangle area; ///< The full area. If there is an output this is the same as the output's extents
+        Zone application_zone;
+        std::experimental::optional<Output> output;
+        std::set<Window> attached_windows; ///< Maximized/anchored/etc windows attached to this area
+    };
+
     using SurfaceInfoMap = std::map<std::weak_ptr<mir::scene::Surface>, WindowInfo, std::owner_less<std::weak_ptr<mir::scene::Surface>>>;
     using SessionInfoMap = std::map<std::weak_ptr<mir::scene::Session>, ApplicationInfo, std::owner_less<std::weak_ptr<mir::scene::Session>>>;
 
@@ -224,7 +249,7 @@ private:
     MirEvent const* last_input_event{nullptr};
     miral::MRUWindowList mru_active_windows;
     std::set<Window> fullscreen_surfaces;
-    std::set<Window> maximized_surfaces;
+    std::vector<std::shared_ptr<WindowArea>> window_areas; ///< For now these will map 1:1 to outputs, but this should not be assumed
 
     friend class Workspace;
     using wwbimap_t = boost::bimap<
@@ -262,6 +287,7 @@ private:
     void refocus(Application const& application, Window const& parent,
                  std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window);
     auto workspaces_containing(Window const& window) const -> std::vector<std::shared_ptr<Workspace>>;
+    auto area_for_window(Window const& window) const -> std::shared_ptr<WindowArea>;
 
     void advise_output_create(Output const& output) override;
     void advise_output_update(Output const& updated, Output const& original) override;
