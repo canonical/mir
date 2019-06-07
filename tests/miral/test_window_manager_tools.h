@@ -22,6 +22,7 @@
 #include "basic_window_manager.h"
 
 #include <miral/canonical_window_manager.h>
+#include <miral/output.h>
 
 #include <mir/scene/surface_creation_parameters.h>
 #include <mir/shell/display_layout.h>
