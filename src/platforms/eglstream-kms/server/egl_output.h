@@ -41,7 +41,7 @@ class EGLOutput : public DisplayConfigurationOutput
 {
 public:
     EGLOutput(int drm_fd, EGLDisplay dpy, EGLOutputPortEXT connector);
-    ~EGLOutput() noexcept(false);
+    ~EGLOutput();
 
     void reset();
     void configure(size_t kms_mode_index);
