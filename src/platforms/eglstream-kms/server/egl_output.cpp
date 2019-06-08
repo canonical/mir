@@ -16,6 +16,8 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
+#include "mir/log.h"
+
 #include <epoxy/egl.h>
 
 #include "egl_output.h"
