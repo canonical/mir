@@ -3,9 +3,14 @@
 
 import json
 import logging
+import multiprocessing
 import os
+import pathlib
+import pprint
 import re
 import sys
+import subprocess
+import tempfile
 
 from launchpadlib import errors as lp_errors  # fades
 from launchpadlib.credentials import (RequestTokenAuthorizationEngine,
@@ -25,19 +30,22 @@ TEAM = "mir-team"
 SOURCE_NAME = "mir"
 SNAPS = {
     "mir-kiosk": {
-        "edge": ("dev", "mir-kiosk-edge"),
-        "candidate": ("rc", "mir-kiosk-candidate"),
+        "edge": {"ppa": "dev", "recipe": "mir-kiosk-edge"},
+        "candidate": {"ppa": "rc", "recipe": "mir-kiosk-candidate"},
+    },
+    "mir-kiosk-apps": {
+        "edge": {"recipe": "mir-kiosk-apps"},
     },
     "mir-test-tools": {
-        "edge": ("dev", "mir-test-tools-edge"),
-        "candidate": ("rc", "mir-test-tools"),
+        "edge": {"ppa": "dev", "recipe": "mir-test-tools-edge"},
+        "candidate": {"ppa": "rc", "recipe": "mir-test-tools"},
     },
     "egmde": {
-        "edge": ("dev", "egmde-mir-master"),
-        "beta": ("release", "egmde-mir-release"),
+        "edge": {"ppa": "dev", "recipe": "egmde-mir-master"},
+        "beta": {"ppa": "release", "recipe": "egmde-mir-release"},
     },
     "egmde-confined-desktop": {
-        "edge": ("dev", "egmde-confined-desktop"),
+        "edge": {"ppa": "dev", "recipe": "egmde-confined-desktop"},
     },
 }
 
@@ -61,9 +69,11 @@ STORE_HEADERS = {
     "X-Ubuntu-Architecture": "{arch}"
 }
 
+CHECK_NOTICES_PATH = "/snap/bin/review-tools.check-notices"
 
-def check_store_version(processor, snap, channel):
-    logger.debug("Checking version for: %s", processor)
+
+def get_store_snap(processor, snap, channel):
+    logger.debug("Checking for snap %s on %s in channel %s", snap, processor, channel)
     data = {
         "snap": snap,
         "channel": channel,
@@ -80,14 +90,38 @@ def check_store_version(processor, snap, channel):
     except json.JSONDecodeError:
         logger.error("Could not parse store response: %s",
                      resp.content)
-        return
+    else:
+        return result
 
-    try:
-        return result["version"]
-    except KeyError:
-        logger.debug("Could not find version for %s (%s): %s",
-                     snap, processor, result["error_list"])
-    return None
+
+def fetch_url(entry):
+    dest, uri = entry
+    r = requests.get(uri, stream=True)
+    logger.debug("Downloading %s to %s…", uri, dest)
+    if r.status_code == 200:
+        with open(dest, "wb") as f:
+            for chunk in r:
+                f.write(chunk)
+    return dest
+
+
+def check_snap_notices(store_snaps):
+    with tempfile.TemporaryDirectory(dir=pathlib.Path.home()) as dir:
+        snaps = multiprocessing.Pool(8).map(
+            fetch_url,
+            ((pathlib.Path(dir) / f"{snap['package_name']}_{snap['revision']}.snap",
+                snap["download_url"])
+                for snap in store_snaps)
+        )
+
+        try:
+            notices = subprocess.check_output([CHECK_NOTICES_PATH] + snaps)
+            logger.debug("Got check_notices output:\n%s", notices.decode())
+        except subprocess.CalledProcessError as e:
+            logger.error("Failed to check notices:\n%s", e.output)
+        else:
+            notices = json.loads(notices)
+            return notices
 
 
 if __name__ == '__main__':
@@ -104,6 +138,12 @@ if __name__ == '__main__':
     except NotImplementedError:
         raise RuntimeError("Invalid credentials.")
 
+    check_notices = (os.path.isfile(CHECK_NOTICES_PATH)
+                     and os.access(CHECK_NOTICES_PATH, os.X_OK)
+                     and CHECK_NOTICES_PATH)
+    if not check_notices:
+        logger.info("`review-tools` not found, skipping USN checks…")
+
     ubuntu = lp.distributions["ubuntu"]
     logger.debug("Got ubuntu: %s", ubuntu)
 
@@ -119,67 +159,87 @@ if __name__ == '__main__':
         for channel, snap_map in channels.items():
             logger.info("Processing channel %s for snap %s…", channel, snap)
 
-            ppa = team.getPPAByName(name=snap_map[0])
-            logger.debug("Got ppa: %s", ppa)
-
             try:
-                snap_recipe = lp.snaps.getByName(owner=team, name=snap_map[1])
+                snap_recipe = lp.snaps.getByName(owner=team, name=snap_map["recipe"])
                 logger.debug("Got snap: %s", snap_recipe)
             except lp_errors.NotFound as ex:
-                logger.error("Snap not found: %s", snap_map[1])
+                logger.error("Snap not found: %s", snap_map["recipe"])
                 errors.append(ex)
                 continue
 
-            latest_source = ppa.getPublishedSources(
-                source_name=SOURCE_NAME,
-                distro_series=series
-            )[0]
-            logger.debug("Latest source: %s", latest_source.display_name)
+            if "ppa" in snap_map:
+                ppa = team.getPPAByName(name=snap_map["ppa"])
+                logger.debug("Got ppa: %s", ppa)
 
-            version = (
-                MIR_VERSION_RE.match(latest_source.source_package_version)[1]
-            )
-            logger.debug("Parsed upstream version: %s", version)
+                latest_source = ppa.getPublishedSources(
+                    source_name=SOURCE_NAME,
+                    distro_series=series
+                )[0]
+                logger.debug("Latest source: %s", latest_source.display_name)
 
-            store_versions = {
-                processor.name: check_store_version(processor.name,
-                                                    snap,
-                                                    channel)
-                for processor in snap_recipe.processors
-            }
+                mir_version = (
+                    MIR_VERSION_RE.match(latest_source.source_package_version)[1]
+                )
+                logger.debug("Parsed upstream version: %s", mir_version)
 
-            logger.debug("Got store versions: %s", store_versions)
+                if latest_source.status != "Published":
+                    logger.info("Skipping %s: %s",
+                                latest_source.display_name, latest_source.status)
+                    continue
 
-            if all(store_version is None
-                   or version.startswith(SNAP_VERSION_RE.match(store_version).group("mir"))
-                   for store_version in store_versions.values()):
-                logger.info("Skipping %s: store versions are current",
-                            latest_source.display_name)
-                continue
+                if any(build.buildstate in PENDING_BUILD
+                    for build in latest_source.getBuilds()):
+                    logger.info("Skipping %s: builds pending…",
+                                latest_source.display_name)
+                    continue
 
-            if latest_source.status != "Published":
-                logger.info("Skipping %s: %s",
-                            latest_source.display_name, latest_source.status)
-                continue
-
-            if any(build.buildstate in PENDING_BUILD
-                   for build in latest_source.getBuilds()):
-                logger.info("Skipping %s: builds pending…",
-                            latest_source.display_name)
-                continue
-
-            if any(binary.status != "Published"
-                   for binary in latest_source.getPublishedBinaries()):
-                logger.info("Skipping %s: binaries pending…",
-                            latest_source.display_name)
-                continue
+                if any(binary.status != "Published"
+                    for binary in latest_source.getPublishedBinaries()):
+                    logger.info("Skipping %s: binaries pending…",
+                                latest_source.display_name)
+                    continue
+            else:
+                mir_version = None
 
             if len(snap_recipe.pending_builds) > 0:
                 logger.info("Skipping %s: snap builds pending…",
                             snap_recipe.web_link)
                 continue
 
-            logger.info("Triggering for %s…", latest_source.display_name)
+            store_snaps = tuple(filter(lambda snap: snap.get("result") != "error", (
+                get_store_snap(processor.name,
+                               snap,
+                               channel)
+                for processor in snap_recipe.processors
+            )))
+
+            logger.debug("Got store versions: %s", {snap["architecture"][0]: snap["version"] for snap in store_snaps})
+
+            if all(store_snap is None
+                   or mir_version is None
+                   or mir_version.startswith(SNAP_VERSION_RE.match(store_snap["version"]).group("mir"))
+                   for store_snap in store_snaps):
+
+                if check_notices:
+                    snap_notices = check_snap_notices(store_snaps)[snap]
+
+                    if any(snap_notices.values()):
+                        logger.info("Found USNs:\n%s", pprint.pformat(snap_notices))
+                    else:
+                        logger.info(
+                            "Skipping %s: store versions are current and no USNs found",
+                            snap
+                        )
+                        continue
+
+                else:
+                    logger.info(
+                        "Skipping %s: store versions are current",
+                        snap
+                    )
+                    continue
+
+            logger.info("Triggering %s…", snap_recipe.description or snap_recipe.name)
 
             builds = snap_recipe.requestAutoBuilds()
             logger.debug("Triggered builds: %s", snap_recipe.web_link)
