@@ -269,22 +269,38 @@ public:
      */
     virtual auto confirm_inherited_move(WindowInfo const& window_info, Displacement movement) -> Rectangle = 0;
 
-/** @name notification of changes to the current application zones
- * An application zone is the area a maximized application will fill.
- * There is often (but not necessarily) one zone per output.
- * The areas normal applications windows should avoid (such as the areas covered by panels)
- * will not be part of an application zone
- *  @{ */
-    virtual void advise_application_zone_create(Zone const& application_zone);
-    virtual void advise_application_zone_update(Zone const& updated, Zone const& original);
-    virtual void advise_application_zone_delete(Zone const& application_zone);
-
-/** @} */
-
     virtual ~WindowManagementPolicy() = default;
     WindowManagementPolicy() = default;
     WindowManagementPolicy(WindowManagementPolicy const&) = delete;
     WindowManagementPolicy& operator=(WindowManagementPolicy const&) = delete;
+
+/**
+* Handle additional requests related to application zones
+*
+* \note This interface is intended to be implemented by a WindowManagementPolicy implementation. We can't add these
+* functions directly to that interface without breaking ABI (the vtable could be incompatible). When initializing the
+* window manager this interface will be detected by dynamic_cast and registered accordingly.
+*  @{ */
+    class ApplicationZoneAddendum
+    {
+    public:
+        ApplicationZoneAddendum() = default;
+        virtual ~ApplicationZoneAddendum() = default;
+        ApplicationZoneAddendum(ApplicationZoneAddendum const&) = delete;
+        ApplicationZoneAddendum& operator=(ApplicationZoneAddendum const&) = delete;
+
+    /** @name notification of changes to the current application zones
+    * An application zone is the area a maximized application will fill.
+    * There is often (but not necessarily) one zone per output.
+    * The areas normal applications windows should avoid (such as the areas covered by panels)
+    * will not be part of an application zone
+    *  @{ */
+        virtual void advise_application_zone_create(Zone const& application_zone);
+        virtual void advise_application_zone_update(Zone const& updated, Zone const& original);
+        virtual void advise_application_zone_delete(Zone const& application_zone);
+    /** @} */
+    };
+/** @} */
 };
 
 class WindowManagerTools;

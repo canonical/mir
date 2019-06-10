@@ -38,6 +38,19 @@ using namespace mir::geometry;
 namespace
 {
 int const title_bar_height = 12;
+
+auto get_application_zone_addendum(std::unique_ptr<miral::WindowManagementPolicy> const& policy)
+    -> miral::WindowManagementPolicy::ApplicationZoneAddendum*
+{
+    auto result = dynamic_cast<miral::WindowManagementPolicy::ApplicationZoneAddendum*>(policy.get());
+
+    if (result)
+        return result;
+
+    static miral::WindowManagementPolicy::ApplicationZoneAddendum null_application_zone_addendum;
+
+    return &null_application_zone_addendum;
+}
 }
 
 struct miral::BasicWindowManager::Locker
@@ -78,6 +91,7 @@ miral::BasicWindowManager::BasicWindowManager(
     display_layout(display_layout),
     persistent_surface_store{persistent_surface_store},
     policy(build(WindowManagerTools{this})),
+    policy_application_zone_addendum{get_application_zone_addendum(policy)},
     display_config_monitor{std::make_shared<DisplayConfigurationListeners>()}
 {
     display_config_monitor->add_listener(this);
@@ -2297,7 +2311,7 @@ void miral::BasicWindowManager::advise_output_create(miral::Output const& output
 
     update_windows_for_outputs();
     policy->advise_output_create(output);
-    policy->advise_application_zone_create(area->application_zone);
+    policy_application_zone_addendum->advise_application_zone_create(area->application_zone);
 }
 
 void miral::BasicWindowManager::advise_output_update(miral::Output const& updated, miral::Output const& original)
@@ -2323,7 +2337,7 @@ void miral::BasicWindowManager::advise_output_update(miral::Output const& update
     update_windows_for_outputs();
     policy->advise_output_update(updated, original);
     for (auto& i : zone_updates)
-        policy->advise_application_zone_update(i.first, i.second);
+        policy_application_zone_addendum->advise_application_zone_update(i.first, i.second);
 }
 
 void miral::BasicWindowManager::advise_output_delete(miral::Output const& output)
@@ -2350,7 +2364,7 @@ void miral::BasicWindowManager::advise_output_delete(miral::Output const& output
 
     update_windows_for_outputs();
     for (auto& area : removed_areas)
-        policy->advise_application_zone_delete(area->application_zone);
+        policy_application_zone_addendum->advise_application_zone_delete(area->application_zone);
     policy->advise_output_delete(output);
 }
 
