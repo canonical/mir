@@ -44,7 +44,9 @@ using namespace mir::geometry;
 //  o Maximize/restore current window (to tile height): Shift-F11
 //  o Maximize/restore current window (to tile width): Ctrl-F11
 //  o client requests to maximize, vertically maximize & restore
-class TilingWindowManagerPolicy : public miral::WindowManagementPolicy
+class TilingWindowManagerPolicy
+    : public miral::WindowManagementPolicy,
+      public miral::WindowManagementPolicy::ApplicationZoneAddendum
 {
 public:
     explicit TilingWindowManagerPolicy(miral::WindowManagerTools const& tools, std::shared_ptr<SplashSession> const& spinner,
@@ -79,9 +81,9 @@ public:
         Rectangle const& new_placement) override;
 
 private:
-    void advise_output_create(miral::Output const& output) override;
-    void advise_output_update(miral::Output const& updated, miral::Output const& original) override;
-    void advise_output_delete(miral::Output const& output) override;
+    void advise_application_zone_create(miral::Zone const& zone) override;
+    void advise_application_zone_update(miral::Zone const& updated, miral::Zone const& original) override;
+    void advise_application_zone_delete(miral::Zone const& zone) override;
 
     static const int modifier_mask =
         mir_input_event_modifier_alt |

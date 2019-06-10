@@ -21,7 +21,7 @@
 #include <miral/application_info.h>
 #include <miral/window_info.h>
 #include <miral/window_manager_tools.h>
-#include <miral/output.h>
+#include <miral/zone.h>
 
 #include <linux/input.h>
 #include <algorithm>
@@ -655,15 +655,15 @@ void TilingWindowManagerPolicy::advise_end()
     dirty_tiles = false;
 }
 
-void TilingWindowManagerPolicy::advise_output_create(const Output& output)
+void TilingWindowManagerPolicy::advise_application_zone_create(miral::Zone const& zone)
 {
-    displays.add(output.extents());
+    displays.add(zone.extents());
     dirty_tiles = true;
 }
 
-void TilingWindowManagerPolicy::advise_output_update(const Output& updated, const Output& original)
+void TilingWindowManagerPolicy::advise_application_zone_update(miral::Zone const& updated, miral::Zone const& original)
 {
-    if (!equivalent_display_area(updated, original))
+    if (original.extents() != updated.extents())
     {
         displays.remove(original.extents());
         displays.add(updated.extents());
@@ -672,9 +672,9 @@ void TilingWindowManagerPolicy::advise_output_update(const Output& updated, cons
     }
 }
 
-void TilingWindowManagerPolicy::advise_output_delete(Output const& output)
+void TilingWindowManagerPolicy::advise_application_zone_delete(miral::Zone const& zone)
 {
-    displays.remove(output.extents());
+    displays.remove(zone.extents());
     dirty_tiles = true;
 }
 
