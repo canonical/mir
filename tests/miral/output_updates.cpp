@@ -80,6 +80,7 @@ TEST_F(OutputUpdates, policy_notified_of_output_update)
 
     set_outputs({display_area_a});
 
+    // Before continuing with the test, we must insure output_initial has been set
     Mock::VerifyAndClearExpectations(window_manager_policy);
 
     EXPECT_CALL(*window_manager_policy, advise_output_update(_, _))
@@ -111,6 +112,7 @@ TEST_F(OutputUpdates, policy_notified_of_output_delete)
 
     set_outputs({display_area_a, display_area_b});
 
+    // Before continuing with the test, we must insure output_a and output_b have been set
     Mock::VerifyAndClearExpectations(window_manager_policy);
 
     EXPECT_CALL(*window_manager_policy, advise_output_delete(_))
