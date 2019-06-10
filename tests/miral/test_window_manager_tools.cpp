@@ -182,12 +182,12 @@ struct MockWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
     }
 };
 
-struct TestDisplayConfigurationObserver : mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>
+struct FakeDisplayConfigurationObserverRegistrar : mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>
 {
     void register_interest(std::weak_ptr<mir::graphics::DisplayConfigurationObserver> const& o) override
     {
         ASSERT_THAT(observer.lock(), testing::IsNull())
-            << "TestDisplayConfigurationObserver does not support multiple observers";
+            << "FakeDisplayConfigurationObserverRegistrar does not support multiple observers";
         observer = o;
     }
 
@@ -214,7 +214,7 @@ struct mt::TestWindowManagerTools::Self
     StubFocusController focus_controller;
     StubDisplayLayout display_layout;
     StubPersistentSurfaceStore persistent_surface_store;
-    TestDisplayConfigurationObserver display_configuration_observer;
+    FakeDisplayConfigurationObserverRegistrar display_configuration_observer;
 
 };
 
