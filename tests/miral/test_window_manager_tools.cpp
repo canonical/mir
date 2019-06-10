@@ -255,7 +255,7 @@ auto mt::TestWindowManagerTools::create_mock_display_configuration(std::vector<m
 {
     auto const display_config = std::make_shared<const mir::test::doubles::MockDisplayConfiguration>();
     EXPECT_CALL(*display_config, for_each_output(testing::_))
-        .WillOnce(testing::Invoke([outputs](std::function<void(mir::graphics::DisplayConfigurationOutput const&)> func){
+        .WillRepeatedly(testing::Invoke([outputs](std::function<void(mir::graphics::DisplayConfigurationOutput const&)> func){
             for (auto i = 0u; i < outputs.size(); i++)
             {
                 auto const& rect = outputs[i];
