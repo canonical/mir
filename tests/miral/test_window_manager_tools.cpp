@@ -250,7 +250,8 @@ auto mt::TestWindowManagerTools::create_surface(
     return session->create_surface(params, sink);
 }
 
-void mt::TestWindowManagerTools::set_outputs(std::vector<miral::Rectangle> outputs)
+auto mt::TestWindowManagerTools::create_mock_display_configuration(std::vector<miral::Rectangle> outputs)
+    -> std::shared_ptr<graphics::DisplayConfiguration const>
 {
     auto const display_config = std::make_shared<const mir::test::doubles::MockDisplayConfiguration>();
     EXPECT_CALL(*display_config, for_each_output(testing::_))
@@ -284,6 +285,12 @@ void mt::TestWindowManagerTools::set_outputs(std::vector<miral::Rectangle> outpu
                 func(display_config_output);
             }
         }));
+    return display_config;
+}
+
+void mt::TestWindowManagerTools::notify_configuration_applied(
+    std::shared_ptr<graphics::DisplayConfiguration const> display_config)
+{
     auto config_observer = self->display_configuration_observer.observer.lock();
     ASSERT_THAT(config_observer, testing::NotNull());
     config_observer->configuration_applied(display_config);

@@ -32,6 +32,11 @@
 
 namespace mir
 {
+namespace graphics
+{
+class DisplayConfiguration;
+}
+
 namespace test
 {
 
@@ -79,7 +84,10 @@ public:
         std::shared_ptr<mir::scene::Session> const& session,
         mir::scene::SurfaceCreationParameters const& params) -> mir::frontend::SurfaceId;
 
-    void set_outputs(std::vector<miral::Rectangle> outputs);
+    auto static create_mock_display_configuration(std::vector<miral::Rectangle> outputs)
+        -> std::shared_ptr<graphics::DisplayConfiguration const>;
+    void notify_configuration_applied(
+        std::shared_ptr<graphics::DisplayConfiguration const> display_config);
 };
 
 }

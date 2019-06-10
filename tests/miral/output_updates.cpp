@@ -42,11 +42,12 @@ struct OutputUpdates : mt::TestWindowManagerTools
 TEST_F(OutputUpdates, policy_notified_of_output_creation)
 {
     std::experimental::optional<Output> output_a;
+    auto display_config_a = create_mock_display_configuration({display_area_a});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
         .WillOnce(Invoke([&](Output const& output){ output_a = output; }));
 
-    set_outputs({display_area_a});
+    notify_configuration_applied(display_config_a);
 
     Mock::VerifyAndClearExpectations(window_manager_policy);
     EXPECT_THAT(output_a.value().extents(), Eq(display_area_a));
@@ -56,12 +57,13 @@ TEST_F(OutputUpdates, policy_notified_of_multiple_outputs)
 {
     std::experimental::optional<Output> output_a;
     std::experimental::optional<Output> output_b;
+    auto display_config_a_b = create_mock_display_configuration({display_area_a, display_area_b});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
         .WillOnce(Invoke([&](Output const& output){ output_a = output; }))
         .WillOnce(Invoke([&](Output const& output){ output_b = output; }));
 
-    set_outputs({display_area_a, display_area_b});
+    notify_configuration_applied(display_config_a_b);
 
     Mock::VerifyAndClearExpectations(window_manager_policy);
     EXPECT_THAT(output_a.value().extents(), Eq(display_area_a));
@@ -74,11 +76,13 @@ TEST_F(OutputUpdates, policy_notified_of_output_update)
     std::experimental::optional<Output> output_initial;
     std::experimental::optional<Output> output_original;
     std::experimental::optional<Output> output_updated;
+    auto display_config_a = create_mock_display_configuration({display_area_a});
+    auto display_config_b = create_mock_display_configuration({display_area_b});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
         .WillOnce(Invoke([&](Output const& output){ output_initial = output; }));
 
-    set_outputs({display_area_a});
+    notify_configuration_applied(display_config_a);
 
     // Before continuing with the test, we must insure output_initial has been set
     Mock::VerifyAndClearExpectations(window_manager_policy);
@@ -89,7 +93,7 @@ TEST_F(OutputUpdates, policy_notified_of_output_update)
             output_updated = updated;
         }));
 
-    set_outputs({display_area_b});
+    notify_configuration_applied(display_config_b);
 
     Mock::VerifyAndClearExpectations(window_manager_policy);
     EXPECT_TRUE(output_initial.value().is_same_output(output_original.value()));
@@ -105,12 +109,14 @@ TEST_F(OutputUpdates, policy_notified_of_output_delete)
     std::experimental::optional<Output> output_a;
     std::experimental::optional<Output> output_b;
     std::experimental::optional<Output> output_b_deleted;
+    auto display_config_a_b = create_mock_display_configuration({display_area_a, display_area_b});
+    auto display_config_a = create_mock_display_configuration({display_area_a});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
         .WillOnce(Invoke([&](Output const& output){ output_a = output; }))
         .WillOnce(Invoke([&](Output const& output){ output_b = output; }));
 
-    set_outputs({display_area_a, display_area_b});
+    notify_configuration_applied(display_config_a_b);
 
     // Before continuing with the test, we must insure output_a and output_b have been set
     Mock::VerifyAndClearExpectations(window_manager_policy);
@@ -118,7 +124,7 @@ TEST_F(OutputUpdates, policy_notified_of_output_delete)
     EXPECT_CALL(*window_manager_policy, advise_output_delete(_))
         .WillOnce(Invoke([&](Output const& output){ output_b_deleted = output; }));
 
-    set_outputs({display_area_a});
+    notify_configuration_applied(display_config_a);
 
     Mock::VerifyAndClearExpectations(window_manager_policy);
 
