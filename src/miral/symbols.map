@@ -430,17 +430,36 @@ global:
 MIRAL_2.6 {
 global:
   extern "C++" {
+    miral::WaylandExtension::?WaylandExtension*;
+    miral::WaylandExtension::Context::run_on_wayland_mainloop*;
+    miral::WaylandExtension::Context::wayland_display*;
     miral::WindowInfo::depth_layer*;
-    miral::WindowSpecification::depth_layer*;
-    miral::Zone::Zone*;
-    miral::Zone::?Zone*;
-    miral::Zone::operator*;
-    miral::Zone::is_same_zone*;
-    miral::Zone::extents*;
-    typeinfo?for?miral::WindowManagementPolicy::ApplicationZoneAddendum;
-    vtable?for?miral::WindowManagementPolicy::ApplicationZoneAddendum;
+    miral::WindowManagementPolicy::ApplicationZoneAddendum::?ApplicationZoneAddendum*;
+    miral::WindowManagementPolicy::ApplicationZoneAddendum::ApplicationZoneAddendum*;
     miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_create*;
     miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_delete*;
     miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_update*;
+    miral::WindowManagementPolicy::ApplicationZoneAddendum::operator*;
+    miral::WindowSpecification::depth_layer*;
+    miral::Zone::?Zone*;
+    miral::Zone::Zone*;
+    miral::Zone::extents*;
+    miral::Zone::is_same_zone*;
+    miral::Zone::operator*;
+    non-virtual?thunk?to?miral::WaylandExtension::?WaylandExtension*;
+    non-virtual?thunk?to?miral::WindowManagementPolicy::ApplicationZoneAddendum::?ApplicationZoneAddendum*;
+    non-virtual?thunk?to?miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_create*;
+    non-virtual?thunk?to?miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_delete*;
+    non-virtual?thunk?to?miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_update*;
+    typeinfo?for?miral::WaylandExtension;
+    typeinfo?for?miral::WaylandExtension::Context;
+    typeinfo?for?miral::WaylandExtension::Instance;
+    typeinfo?for?miral::WindowManagementPolicy::ApplicationZoneAddendum;
+    typeinfo?for?miral::Zone;
+    vtable?for?miral::WaylandExtension;
+    vtable?for?miral::WaylandExtension::Context;
+    vtable?for?miral::WaylandExtension::Instance;
+    vtable?for?miral::WindowManagementPolicy::ApplicationZoneAddendum;
+    vtable?for?miral::Zone;
   };
 } MIRAL_2.5;
