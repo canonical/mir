@@ -139,7 +139,7 @@ mtf::Result mtf::Process::wait_for_termination(const std::chrono::milliseconds& 
             {
                 if (std::chrono::steady_clock::now() < tp)
                 {
-                    std::this_thread::yield();
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
                     continue;
                 }
                 else
