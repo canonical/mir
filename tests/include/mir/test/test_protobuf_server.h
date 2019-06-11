@@ -47,6 +47,8 @@ struct TestProtobufServer
         std::shared_ptr<frontend::detail::DisplayServer> const& tool,
         std::shared_ptr<frontend::ConnectorReport> const& report);
 
+    ~TestProtobufServer();
+
     // "Server" side
     std::shared_ptr<frontend::Connector> const comm;
 };
