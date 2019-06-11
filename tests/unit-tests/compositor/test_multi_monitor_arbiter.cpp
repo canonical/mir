@@ -631,7 +631,22 @@ TEST_F(MultiMonitorArbiter, aquires_buffer_after_schedule_runs_out_and_is_refill
     EXPECT_THAT(cbuffer2, Not(IsSameBufferAs(cbuffer3)));
 }
 
-TEST_F(MultiMonitorArbiter, other_compositor_aquires_buffer_after_schedule_runs_out_and_is_refilled)
+/**
+ * Tests a bug that was never observed, but determined to be in MultiMonitorArbiter before
+ * https://github.com/MirServer/mir/pull/862. What was happening was the current_buffer_users set was getting cleared
+ * even if the schedule wasn't advancing. To insure this is no longer happening, we follow the specific series of
+ * actions that expose the problem:
+ * 1. Compositor A acquires a buffer (A gets added to current_buffer_users)
+ * 2. Compositor B acquires the same buffer (B get's added to current_buffer_users)
+ * 3. Compositor A acquires the buffer again (Since the schedule has nothing left in it, it can not advance. Should not
+ *    effect current_buffer_users, but may clear it. Either way re-adds Compositor A to it)
+ * 4. A new buffer is added to the schedule
+ * 5. Compositor B tries to acquire
+ * If the bug exists, Compositor B will have been cleared from current_buffer_users in step 3. Therefore
+ * MultiMonitorArbiter will not know it already has been given the current buffer (buffers[0]) and will not advance the
+ * schedule, even though there is a new buffer in it.
+ */
+TEST_F(MultiMonitorArbiter, second_compositor_advances_schedule_after_both_aquire_first_buffer)
 {
     int comp_id1{0};
     int comp_id2{1};
