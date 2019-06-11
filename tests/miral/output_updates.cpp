@@ -42,7 +42,7 @@ struct OutputUpdates : mt::TestWindowManagerTools
 TEST_F(OutputUpdates, policy_notified_of_output_creation)
 {
     std::experimental::optional<Output> output_a;
-    auto display_config_a = create_mock_display_configuration({display_area_a});
+    auto display_config_a = create_fake_display_configuration({display_area_a});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
         .WillOnce(Invoke([&](Output const& output){ output_a = output; }));
@@ -57,7 +57,7 @@ TEST_F(OutputUpdates, policy_notified_of_multiple_outputs)
 {
     std::experimental::optional<Output> output_a;
     std::experimental::optional<Output> output_b;
-    auto display_config_a_b = create_mock_display_configuration({display_area_a, display_area_b});
+    auto display_config_a_b = create_fake_display_configuration({display_area_a, display_area_b});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
         .WillOnce(Invoke([&](Output const& output){ output_a = output; }))
@@ -76,8 +76,8 @@ TEST_F(OutputUpdates, policy_notified_of_output_update)
     std::experimental::optional<Output> output_initial;
     std::experimental::optional<Output> output_original;
     std::experimental::optional<Output> output_updated;
-    auto display_config_a = create_mock_display_configuration({display_area_a});
-    auto display_config_b = create_mock_display_configuration({display_area_b});
+    auto display_config_a = create_fake_display_configuration({display_area_a});
+    auto display_config_b = create_fake_display_configuration({display_area_b});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
         .WillOnce(Invoke([&](Output const& output){ output_initial = output; }));
@@ -109,8 +109,8 @@ TEST_F(OutputUpdates, policy_notified_of_output_delete)
     std::experimental::optional<Output> output_a;
     std::experimental::optional<Output> output_b;
     std::experimental::optional<Output> output_b_deleted;
-    auto display_config_a_b = create_mock_display_configuration({display_area_a, display_area_b});
-    auto display_config_a = create_mock_display_configuration({display_area_a});
+    auto display_config_a_b = create_fake_display_configuration({display_area_a, display_area_b});
+    auto display_config_a = create_fake_display_configuration({display_area_a});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
         .WillOnce(Invoke([&](Output const& output){ output_a = output; }))

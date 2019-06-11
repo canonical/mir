@@ -84,7 +84,7 @@ public:
         std::shared_ptr<mir::scene::Session> const& session,
         mir::scene::SurfaceCreationParameters const& params) -> mir::frontend::SurfaceId;
 
-    auto static create_mock_display_configuration(std::vector<miral::Rectangle> outputs)
+    auto static create_fake_display_configuration(std::vector<miral::Rectangle> outputs)
         -> std::shared_ptr<graphics::DisplayConfiguration const>;
     void notify_configuration_applied(
         std::shared_ptr<graphics::DisplayConfiguration const> display_config);

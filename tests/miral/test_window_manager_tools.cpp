@@ -213,6 +213,41 @@ struct FakeDisplayConfigurationObserverRegistrar : mir::ObserverRegistrar<mir::g
     std::weak_ptr<mir::graphics::DisplayConfigurationObserver> observer;
 };
 
+struct FakeDisplayConfiguration : public mir::graphics::DisplayConfiguration
+{
+    FakeDisplayConfiguration(std::vector<mir::graphics::DisplayConfigurationOutput> const& outputs)
+        : outputs{outputs}
+    {
+    }
+
+    void for_each_card(std::function<void(mir::graphics::DisplayConfigurationCard const&)> /*f*/) const override
+    {
+        throw std::runtime_error("FakeDisplayConfiguration::for_each_card is not implemented");
+    }
+
+    void for_each_output(std::function<void(mir::graphics::DisplayConfigurationOutput const&)> f) const override
+    {
+        for (auto const& output : outputs)
+        {
+            f(output);
+        }
+    }
+
+    void for_each_output(std::function<void(mir::graphics::UserDisplayConfigurationOutput&)> /*f*/) override
+    {
+        throw std::runtime_error(
+            "FakeDisplayConfiguration::for_each_output(function<void(UserDisplayConfigurationOutput&)>)"
+            " is not implemented");
+    }
+
+    virtual std::unique_ptr<DisplayConfiguration> clone() const override
+    {
+        throw std::runtime_error("FakeDisplayConfiguration::clone is not implemented");
+    }
+
+    std::vector<mir::graphics::DisplayConfigurationOutput> const outputs;
+};
+
 }
 
 namespace mt = mir::test;
@@ -258,42 +293,38 @@ auto mt::TestWindowManagerTools::create_surface(
     return session->create_surface(params, sink);
 }
 
-auto mt::TestWindowManagerTools::create_mock_display_configuration(std::vector<miral::Rectangle> outputs)
+auto mt::TestWindowManagerTools::create_fake_display_configuration(std::vector<miral::Rectangle> outputs)
     -> std::shared_ptr<graphics::DisplayConfiguration const>
 {
-    auto const display_config = std::make_shared<const mir::test::doubles::MockDisplayConfiguration>();
-    EXPECT_CALL(*display_config, for_each_output(testing::_))
-        .WillRepeatedly(testing::Invoke([outputs](std::function<void(mir::graphics::DisplayConfigurationOutput const&)> func){
-            for (auto i = 0u; i < outputs.size(); i++)
-            {
-                auto const& rect = outputs[i];
-                mir::graphics::DisplayConfigurationOutput display_config_output{
-                    mir::graphics::DisplayConfigurationOutputId{(int)i}, // id
-                    mir::graphics::DisplayConfigurationCardId{1}, // card_id
-                    mir::graphics::DisplayConfigurationOutputType::unknown, // type
-                    {mir_pixel_format_abgr_8888}, // pixel_formats
-                    {{rect.size, 60}}, // modes
-                    0, // prefered_mode_index
-                    {rect.size}, // physical_size_mm
-                    true, // connected
-                    true, // used
-                    rect.top_left, // top_left
-                    0, // current_mode_index
-                    mir_pixel_format_abgr_8888, // current_format
-                    mir_power_mode_on, // power_mode
-                    mir_orientation_normal, // orientation
-                    1.0, // scale
-                    mir_form_factor_unknown, // form_factor
-                    mir_subpixel_arrangement_unknown, // subpixel_arrangement
-                    {}, // gamma
-                    mir_output_gamma_unsupported, // gamma_supported
-                    {}, // edid
-                    {}, // custom_logical_size
-                };
-                func(display_config_output);
-            }
-        }));
-    return display_config;
+    std::vector<mir::graphics::DisplayConfigurationOutput> config_outputs;
+    for (auto i = 0u; i < outputs.size(); i++)
+    {
+        auto const& rect = outputs[i];
+        config_outputs.push_back(mir::graphics::DisplayConfigurationOutput{
+            mir::graphics::DisplayConfigurationOutputId{(int)i}, // id
+            mir::graphics::DisplayConfigurationCardId{1}, // card_id
+            mir::graphics::DisplayConfigurationOutputType::unknown, // type
+            {mir_pixel_format_abgr_8888}, // pixel_formats
+            {{rect.size, 60}}, // modes
+            0, // prefered_mode_index
+            {rect.size}, // physical_size_mm
+            true, // connected
+            true, // used
+            rect.top_left, // top_left
+            0, // current_mode_index
+            mir_pixel_format_abgr_8888, // current_format
+            mir_power_mode_on, // power_mode
+            mir_orientation_normal, // orientation
+            1.0, // scale
+            mir_form_factor_unknown, // form_factor
+            mir_subpixel_arrangement_unknown, // subpixel_arrangement
+            {}, // gamma
+            mir_output_gamma_unsupported, // gamma_supported
+            {}, // edid
+            {}, // custom_logical_size
+        });
+    }
+    return std::make_shared<const FakeDisplayConfiguration>(config_outputs);
 }
 
 void mt::TestWindowManagerTools::notify_configuration_applied(
