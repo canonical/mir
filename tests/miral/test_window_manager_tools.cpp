@@ -202,6 +202,14 @@ struct FakeDisplayConfigurationObserverRegistrar : mir::ObserverRegistrar<mir::g
         observer = std::weak_ptr<mir::graphics::DisplayConfigurationObserver>(); // set to null
     }
 
+    void notify_configuration_applied(
+        std::shared_ptr<mir::graphics::DisplayConfiguration const> display_config)
+    {
+        auto config_observer = observer.lock();
+        EXPECT_THAT(config_observer, testing::NotNull());
+        config_observer->configuration_applied(display_config);
+    }
+
     std::weak_ptr<mir::graphics::DisplayConfigurationObserver> observer;
 };
 
@@ -291,7 +299,5 @@ auto mt::TestWindowManagerTools::create_mock_display_configuration(std::vector<m
 void mt::TestWindowManagerTools::notify_configuration_applied(
     std::shared_ptr<graphics::DisplayConfiguration const> display_config)
 {
-    auto config_observer = self->display_configuration_observer.observer.lock();
-    ASSERT_THAT(config_observer, testing::NotNull());
-    config_observer->configuration_applied(display_config);
+    self->display_configuration_observer.notify_configuration_applied(display_config);
 }
