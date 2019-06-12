@@ -50,10 +50,6 @@ namespace graphics { class DisplayConfigurationObserver; }
 
 namespace miral
 {
-class WorkspacePolicy;
-class WindowManagementPolicyAddendum2;
-class WindowManagementPolicyAddendum3;
-class WindowManagementPolicyAddendum4;
 class DisplayConfigurationListeners;
 
 using mir::shell::SurfaceSet;

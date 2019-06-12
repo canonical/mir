@@ -38,19 +38,6 @@ using namespace mir::geometry;
 namespace
 {
 int const title_bar_height = 12;
-
-auto get_application_zone_addendum(std::unique_ptr<miral::WindowManagementPolicy> const& policy)
-    -> miral::WindowManagementPolicy::ApplicationZoneAddendum*
-{
-    auto result = dynamic_cast<miral::WindowManagementPolicy::ApplicationZoneAddendum*>(policy.get());
-
-    if (result)
-        return result;
-
-    static miral::WindowManagementPolicy::ApplicationZoneAddendum null_application_zone_addendum;
-
-    return &null_application_zone_addendum;
-}
 }
 
 struct miral::BasicWindowManager::Locker
@@ -91,7 +78,7 @@ miral::BasicWindowManager::BasicWindowManager(
     display_layout(display_layout),
     persistent_surface_store{persistent_surface_store},
     policy(build(WindowManagerTools{this})),
-    policy_application_zone_addendum{get_application_zone_addendum(policy)},
+    policy_application_zone_addendum{WindowManagementPolicy::ApplicationZoneAddendum::from(policy.get())},
     display_config_monitor{std::make_shared<DisplayConfigurationListeners>()}
 {
     display_config_monitor->add_listener(this);

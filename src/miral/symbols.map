@@ -439,6 +439,7 @@ global:
     miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_create*;
     miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_delete*;
     miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_update*;
+    miral::WindowManagementPolicy::ApplicationZoneAddendum::from*;
     miral::WindowManagementPolicy::ApplicationZoneAddendum::operator*;
     miral::WindowSpecification::depth_layer*;
     miral::Zone::?Zone*;

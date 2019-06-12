@@ -288,6 +288,12 @@ public:
         virtual ~ApplicationZoneAddendum() = default;
         ApplicationZoneAddendum(ApplicationZoneAddendum const&) = delete;
         ApplicationZoneAddendum& operator=(ApplicationZoneAddendum const&) = delete;
+        /**
+         * Attempts to dynamic_cast the given policy into an ApplicationZoneAddendum.
+         * If successful, returns the casted pointer.
+         * If unsuccessful, retuns a static instance of an ApplicationZoneAddendum with the functions stubbed out.
+         */
+        static auto from(WindowManagementPolicy* policy) -> ApplicationZoneAddendum*;
 
     /** @name notification of changes to the current application zones
     * An application zone is the area a maximized application will fill.
