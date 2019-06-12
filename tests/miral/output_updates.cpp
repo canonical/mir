@@ -153,8 +153,8 @@ TEST_F(OutputUpdates, policy_notified_of_output_delete)
 
 TEST_F(OutputUpdates, maximized_window_not_moved_when_new_output_connected)
 {
-    auto display_config_a = create_mock_display_configuration({display_area_a});
-    auto display_config_a_b = create_mock_display_configuration({display_area_a, display_area_b});
+    auto display_config_a = create_fake_display_configuration({display_area_a});
+    auto display_config_a_b = create_fake_display_configuration({display_area_a, display_area_b});
     notify_configuration_applied(display_config_a);
 
     mir::scene::SurfaceCreationParameters creation_parameters;
@@ -175,8 +175,8 @@ TEST_F(OutputUpdates, maximized_window_not_moved_when_new_output_connected)
 
 TEST_F(OutputUpdates, maximized_window_moved_with_its_output)
 {
-    auto display_config_a = create_mock_display_configuration({display_area_a});
-    auto display_config_b = create_mock_display_configuration({display_area_b});
+    auto display_config_a = create_fake_display_configuration({display_area_a});
+    auto display_config_b = create_fake_display_configuration({display_area_b});
     notify_configuration_applied(display_config_a);
 
     mir::scene::SurfaceCreationParameters creation_parameters;
