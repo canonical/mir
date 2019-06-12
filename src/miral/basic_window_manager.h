@@ -197,16 +197,16 @@ public:
 
 private:
     /// An area for windows to be placed in
-    struct WindowArea
+    struct DisplayArea
     {
-        WindowArea(Output const& output)
+        DisplayArea(Output const& output)
             : area{output.extents()},
               application_zone{Zone{output.extents()}},
               output{output}
         {
         }
 
-        WindowArea(Rectangle const& area)
+        DisplayArea(Rectangle const& area)
             : area{area},
               application_zone{Zone{area}}
         {
@@ -246,7 +246,7 @@ private:
     MirEvent const* last_input_event{nullptr};
     miral::MRUWindowList mru_active_windows;
     std::set<Window> fullscreen_surfaces;
-    std::vector<std::shared_ptr<WindowArea>> window_areas; ///< For now these will map 1:1 to outputs, but this should not be assumed
+    std::vector<std::shared_ptr<DisplayArea>> display_areas; ///< For now these will map 1:1 to outputs, but this should not be assumed
 
     friend class Workspace;
     using wwbimap_t = boost::bimap<
@@ -284,7 +284,7 @@ private:
     void refocus(Application const& application, Window const& parent,
                  std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window);
     auto workspaces_containing(Window const& window) const -> std::vector<std::shared_ptr<Workspace>>;
-    auto area_for_window(Window const& window) const -> std::shared_ptr<WindowArea>;
+    auto display_area_for(Window const& window) const -> std::shared_ptr<DisplayArea>;
 
     void advise_output_create(Output const& output) override;
     void advise_output_update(Output const& updated, Output const& original) override;

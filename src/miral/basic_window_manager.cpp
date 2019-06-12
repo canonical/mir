@@ -153,8 +153,8 @@ auto miral::BasicWindowManager::add_surface(
     case mir_window_state_vertmaximized:
     case mir_window_state_horizmaximized:
     {
-        auto window_area = area_for_window(window);
-        window_area->attached_windows.insert(window);
+        auto display_area = display_area_for(window);
+        display_area->attached_windows.insert(window);
         break;
     }
 
@@ -230,7 +230,7 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
     info_for(application).remove_window(info.window());
     mru_active_windows.erase(info.window());
     fullscreen_surfaces.erase(info.window());
-    for (auto& area : window_areas)
+    for (auto& area : display_areas)
         area->attached_windows.erase(info.window());
 
     application->destroy_surface(info.window());
@@ -641,9 +641,9 @@ auto miral::BasicWindowManager::workspaces_containing(Window const& window) cons
     return workspaces_containing_window;
 }
 
-auto miral::BasicWindowManager::area_for_window(Window const& window) const -> std::shared_ptr<WindowArea>
+auto miral::BasicWindowManager::display_area_for(Window const& window) const -> std::shared_ptr<DisplayArea>
 {
-    for (auto& area : window_areas)
+    for (auto& area : display_areas)
     {
         for (auto& area_window : area->attached_windows)
         {
@@ -656,8 +656,8 @@ auto miral::BasicWindowManager::area_for_window(Window const& window) const -> s
     Rectangle window_rect{window.top_left(), window.size()};
     int max_overlap_area = 0;
     int min_distance = INT_MAX;
-    std::experimental::optional<std::shared_ptr<WindowArea>> best_area;
-    for (auto& area : window_areas)
+    std::experimental::optional<std::shared_ptr<DisplayArea>> best_area;
+    for (auto& area : display_areas)
     {
         auto const intersection = window_rect.intersection_with(area->area).size;
         auto const intersection_area = intersection.width.as_int() * intersection.height.as_int();
@@ -688,7 +688,7 @@ auto miral::BasicWindowManager::area_for_window(Window const& window) const -> s
     if (best_area)
         return best_area.value();
     else
-        return std::make_shared<WindowArea>(window_rect);
+        return std::make_shared<DisplayArea>(window_rect);
 }
 
 void miral::BasicWindowManager::focus_next_within_application()
@@ -1185,8 +1185,8 @@ void miral::BasicWindowManager::place_and_size_for_state(
     if (modifications.size().is_set())
         restore_rect.size = modifications.size().value();
 
-    auto const window_area = area_for_window(window);
-    auto const application_zone = window_area->application_zone.extents();
+    auto const display_area = display_area_for(window);
+    auto const application_zone = display_area->application_zone.extents();
     Rectangle rect;
 
     switch (new_state)
@@ -1264,13 +1264,13 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
     case mir_window_state_vertmaximized:
     case mir_window_state_horizmaximized:
     {
-        auto area = area_for_window(window);
+        auto area = display_area_for(window);
         area->attached_windows.insert(window);
         break;
     }
 
     default:
-        for (auto& area : window_areas)
+        for (auto& area : display_areas)
             area->attached_windows.erase(window);
     }
 
@@ -2282,7 +2282,7 @@ void miral::BasicWindowManager::add_display_for_testing(mir::geometry::Rectangle
 {
     Locker lock{this};
     outputs.add(area);
-    window_areas.push_back(std::make_shared<WindowArea>(area));
+    display_areas.push_back(std::make_shared<DisplayArea>(area));
 
     update_windows_for_outputs();
 }
@@ -2293,8 +2293,8 @@ void miral::BasicWindowManager::advise_output_create(miral::Output const& output
 
     outputs.add(output.extents());
 
-    auto area = std::make_shared<WindowArea>(output);
-    window_areas.push_back(area);
+    auto area = std::make_shared<DisplayArea>(output);
+    display_areas.push_back(area);
 
     update_windows_for_outputs();
     policy->advise_output_create(output);
@@ -2309,7 +2309,7 @@ void miral::BasicWindowManager::advise_output_update(miral::Output const& update
     outputs.add(updated.extents());
 
     std::vector<std::pair<Zone, Zone>> zone_updates;
-    for (auto& area : window_areas)
+    for (auto& area : display_areas)
     {
         if (area->output && area->output.value().is_same_output(original))
         {
@@ -2331,21 +2331,21 @@ void miral::BasicWindowManager::advise_output_delete(miral::Output const& output
 {
     Locker lock{this};
 
-    std::vector<std::shared_ptr<WindowArea>> removed_areas;
-    for (auto const& area : window_areas)
+    std::vector<std::shared_ptr<DisplayArea>> removed_areas;
+    for (auto const& area : display_areas)
     {
         if (area->output && area->output.value().is_same_output(output))
             removed_areas.push_back(area);
     }
 
-    window_areas.erase(
+    display_areas.erase(
         std::remove_if(
-            window_areas.begin(),
-            window_areas.end(),
+            display_areas.begin(),
+            display_areas.end(),
             [&](auto area){
                 return area->output && area->output.value().is_same_output(output);
             }),
-        window_areas.end());
+        display_areas.end());
 
     outputs.remove(output.extents());
 
@@ -2371,7 +2371,7 @@ void miral::BasicWindowManager::update_windows_for_outputs()
     if (outputs.size() == 0)
         return;
 
-    for (auto& area : window_areas)
+    for (auto& area : display_areas)
     {
         for (auto const& window : area->attached_windows)
         {
