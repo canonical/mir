@@ -111,6 +111,11 @@ struct SurfaceCreationParameters
     mir::optional_value<MirShellChrome> shell_chrome;
     mir::optional_value<std::vector<shell::StreamSpecification>> streams;
     mir::optional_value<MirPointerConfinementState> confine_pointer;
+
+    /**
+     * If the depth layer of a child surface isn't set, it gets the layer of its parent
+     */
+    optional_value<MirDepthLayer> depth_layer;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);

@@ -436,5 +436,7 @@ global:
     miral::WaylandExtensions::supported*;
     miral::WaylandExtensions::enable*;
     miral::WaylandExtensions::disable*;
+    miral::WindowInfo::depth_layer*;
+    miral::WindowSpecification::depth_layer*;
   };
 } MIRAL_2.5;

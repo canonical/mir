@@ -52,22 +52,6 @@ using namespace testing;
 namespace
 {
 
-struct TestDisplayConfiguration : mtd::NullDisplayConfiguration
-{
-    std::vector<mg::DisplayConfigurationOutput> const outputs;
-    TestDisplayConfiguration(std::vector<mg::DisplayConfigurationOutput> const& items)
-        : outputs{items} {}
-    void for_each_output(std::function<void(mg::DisplayConfigurationOutput const&)> fun) const override
-    {
-        for (auto const& output : outputs)
-            fun(output);
-    }
-    std::unique_ptr<mg::DisplayConfiguration> clone() const override
-    {
-        return std::make_unique<TestDisplayConfiguration>(outputs);
-    }
-};
-
 class MockDisplayConfigurationPolicy : public mg::DisplayConfigurationPolicy
 {
 public:

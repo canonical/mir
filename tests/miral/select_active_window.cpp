@@ -32,7 +32,7 @@ Height const display_height{720};
 Rectangle const display_area{{display_left,  display_top},
                              {display_width, display_height}};
 
-struct SelectActiveWindow : TestWindowManagerTools
+struct SelectActiveWindow : mt::TestWindowManagerTools
 {
 
     void SetUp() override

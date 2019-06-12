@@ -66,3 +66,8 @@ mt::TestProtobufServer::TestProtobufServer(
     comm(make_connector(socket_name, std::make_shared<mtd::StubIpcFactory>(*tool), report))
 {
 }
+
+mt::TestProtobufServer::~TestProtobufServer()
+{
+    comm->stop();
+}

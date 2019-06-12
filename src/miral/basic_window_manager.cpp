@@ -114,7 +114,12 @@ auto miral::BasicWindowManager::add_surface(
 
     auto& session_info = info_for(session);
 
-    WindowSpecification const& spec = policy->place_new_window(session_info, place_new_surface(session_info, params));
+    WindowSpecification spec = policy->place_new_window(session_info, place_new_surface(session_info, params));
+
+    if (!spec.depth_layer().is_set() && spec.parent().is_set())
+        if (auto parent_surface = spec.parent().value().lock())
+            spec.depth_layer() = parent_surface->depth_layer();
+
     scene::SurfaceCreationParameters parameters;
     spec.update(parameters);
     auto const surface_id = build(session, parameters);
@@ -854,6 +859,20 @@ void miral::BasicWindowManager::move_tree(miral::WindowInfo& root, mir::geometry
     }
 }
 
+void miral::BasicWindowManager::set_tree_depth_layer(miral::WindowInfo& root, MirDepthLayer new_layer)
+{
+    std::shared_ptr<scene::Surface> surface = root.window();
+    if (surface->depth_layer() != new_layer || root.depth_layer() != new_layer)
+    {
+        surface->set_depth_layer(new_layer);
+        root.depth_layer(new_layer);
+        for (auto& window : root.children())
+        {
+            set_tree_depth_layer(info_for(window), new_layer);
+        }
+    }
+}
+
 void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpecification const& modifications)
 {
     WindowInfo window_info_tmp{window_info};
@@ -878,6 +897,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     COPY_IF_SET(confine_pointer);
     COPY_IF_SET(userdata);
     COPY_IF_SET(shell_chrome);
+    COPY_IF_SET(depth_layer);
 
 #undef COPY_IF_SET
 
@@ -919,6 +939,9 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     std::swap(window_info_tmp, window_info);
 
     auto& window = window_info.window();
+
+    if (modifications.depth_layer().is_set())
+        set_tree_depth_layer(window_info, modifications.depth_layer().value());
 
     if (window_info.type() != window_info_tmp.type())
         std::shared_ptr<scene::Surface>(window)->configure(mir_window_attrib_type, window_info.type());

@@ -31,7 +31,7 @@ Height const display_height{480};
 
 Rectangle const display_area{{display_left, display_top}, {display_width, display_height}};
 
-struct RaiseTree : TestWindowManagerTools
+struct RaiseTree : mt::TestWindowManagerTools
 {
     Size const initial_parent_size{600, 400};
     Size const initial_child_size{300, 300};

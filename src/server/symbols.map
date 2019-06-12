@@ -969,5 +969,7 @@ MIR_SERVER_1.3 {
     mir::frontend::get_supported_extensions*;
     mir::Server::set_enabled_wayland_extensions*;
     mir::DefaultServerConfiguration::set_enabled_wayland_extensions*;
+    mir::scene::NullSurfaceObserver::depth_layer_set_to*;
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::depth_layer_set_to*;
   };
 } MIR_SERVER_1.2;

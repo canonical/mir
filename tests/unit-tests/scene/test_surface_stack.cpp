@@ -1027,3 +1027,192 @@ TEST_F(SurfaceStack, raise_surfaces_to_top)
             SceneElementForStream(stub_buffer_stream2),
             SceneElementForStream(stub_buffer_stream3)));
 }
+
+TEST_F(SurfaceStack, new_surface_is_placed_under_old_according_to_depth_layer)
+{
+    stub_surface1->set_depth_layer(mir_depth_layer_application);
+    stub_surface2->set_depth_layer(mir_depth_layer_below);
+
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.input_mode);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream2),
+            SceneElementForStream(stub_buffer_stream1)));
+}
+
+TEST_F(SurfaceStack, raise_does_not_reorder_surfaces_when_depth_layers_are_different)
+{
+    stub_surface1->set_depth_layer(mir_depth_layer_below);
+    stub_surface2->set_depth_layer(mir_depth_layer_application);
+    stub_surface3->set_depth_layer(mir_depth_layer_above);
+
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface3, default_params.input_mode);
+
+    NiceMock<MockSceneObserver> observer;
+    stack.add_observer(mt::fake_shared(observer));
+
+    EXPECT_CALL(observer, surfaces_reordered()).Times(0);
+
+    stack.raise({stub_surface1, stub_surface3});
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream1),
+            SceneElementForStream(stub_buffer_stream2),
+            SceneElementForStream(stub_buffer_stream3)));
+}
+
+TEST_F(SurfaceStack, changing_depth_layer_causes_reorder)
+{
+    NiceMock<MockSceneObserver> observer;
+    stack.add_observer(mt::fake_shared(observer));
+
+    EXPECT_CALL(observer, surfaces_reordered()).Times(0);
+
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.input_mode);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream1),
+            SceneElementForStream(stub_buffer_stream2)));
+
+    Mock::VerifyAndClearExpectations(&observer);
+    EXPECT_CALL(observer, surfaces_reordered()).Times(1);
+
+    stub_surface1->set_depth_layer(mir_depth_layer_above);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream2),
+            SceneElementForStream(stub_buffer_stream1)));
+}
+
+TEST_F(SurfaceStack, changing_depth_layer_does_not_cause_reorder_when_it_shouldnt)
+{
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.input_mode);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream1),
+            SceneElementForStream(stub_buffer_stream2)));
+
+    stub_surface1->set_depth_layer(mir_depth_layer_below);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream1),
+            SceneElementForStream(stub_buffer_stream2)));
+}
+
+TEST_F(SurfaceStack, raising_surface_set_respects_depth_layers)
+{
+    stub_surface1->set_depth_layer(mir_depth_layer_application);
+    stub_surface2->set_depth_layer(mir_depth_layer_above);
+    stub_surface3->set_depth_layer(mir_depth_layer_above);
+
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.input_mode);
+    stack.add_surface(stub_surface3, default_params.input_mode);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream1),
+            SceneElementForStream(stub_buffer_stream2),
+            SceneElementForStream(stub_buffer_stream3)));
+
+    NiceMock<MockSceneObserver> observer;
+    stack.add_observer(mt::fake_shared(observer));
+
+    EXPECT_CALL(observer, surfaces_reordered()).Times(1);
+
+    stack.raise({stub_surface1, stub_surface2});
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(stub_buffer_stream1),
+            SceneElementForStream(stub_buffer_stream3),
+            SceneElementForStream(stub_buffer_stream2)));
+}
+
+TEST_F(SurfaceStack, all_depth_layers_are_handled)
+{
+    std::vector<MirDepthLayer> depth_layers_in_order{
+        mir_depth_layer_background,
+        mir_depth_layer_below,
+        mir_depth_layer_application,
+        mir_depth_layer_always_on_top,
+        mir_depth_layer_above,
+        mir_depth_layer_overlay,
+    };
+
+    std::vector<std::string> depth_layer_names;
+
+    for (auto layer : depth_layers_in_order)
+    {
+        switch (layer)
+        {
+        case mir_depth_layer_background:
+            depth_layer_names.push_back("mir_depth_layer_background");
+            break;
+        case mir_depth_layer_below:
+            depth_layer_names.push_back("mir_depth_layer_below");
+            break;
+        case mir_depth_layer_application:
+            depth_layer_names.push_back("mir_depth_layer_application");
+            break;
+        case mir_depth_layer_always_on_top:
+            depth_layer_names.push_back("mir_depth_layer_always_on_top");
+            break;
+        case mir_depth_layer_above:
+            depth_layer_names.push_back("mir_depth_layer_above");
+            break;
+        case mir_depth_layer_overlay:
+            depth_layer_names.push_back("mir_depth_layer_overlay");
+            break;
+        // NOTE: when adding a depth layer, be sure to add it to depth_layers_in_order
+        // (This switch mostly exists for that reminder)
+        }
+    }
+
+    stub_surface1->set_depth_layer(depth_layers_in_order[0]);
+    stub_surface2->set_depth_layer(depth_layers_in_order[0]);
+
+    stack.add_surface(stub_surface1, default_params.input_mode);
+    stack.add_surface(stub_surface2, default_params.input_mode);
+
+    for (auto i = 1u; i < depth_layers_in_order.size(); i++)
+    {
+        stub_surface1->set_depth_layer(depth_layers_in_order[i]);
+        stack.raise(stub_surface2);
+
+        EXPECT_THAT(
+            stack.scene_elements_for(compositor_id),
+            ElementsAre(
+                SceneElementForStream(stub_buffer_stream2),
+                SceneElementForStream(stub_buffer_stream1)))
+            << depth_layer_names[i] << " not kept on top of " << depth_layer_names[i - 1];
+
+        stub_surface2->set_depth_layer(depth_layers_in_order[i]);
+
+        EXPECT_THAT(
+            stack.scene_elements_for(compositor_id),
+            ElementsAre(
+                SceneElementForStream(stub_buffer_stream1),
+                SceneElementForStream(stub_buffer_stream2)))
+            << "A surface at " << depth_layer_names[i] << " could not be raised over another on the same layer";
+    }
+
+}

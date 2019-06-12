@@ -197,6 +197,15 @@ void mtd::StubSurface::start_drag_and_drop(std::vector<uint8_t> const& /*handle*
 {
 }
 
+auto mtd::StubSurface::depth_layer() const -> MirDepthLayer
+{
+    return mir_depth_layer_application;
+}
+
+void mtd::StubSurface::set_depth_layer(MirDepthLayer /*depth_layer*/)
+{
+}
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class

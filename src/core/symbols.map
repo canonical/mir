@@ -73,3 +73,10 @@ MIR_CORE_1.0 {
   };
   local: *;
 } MIR_CORE_0.25;
+
+MIR_CORE_1.1 {
+ global:
+  extern "C++" {
+    mir::mir_depth_layer_get_index?MirDepthLayer?;
+  };
+} MIR_CORE_1.0;

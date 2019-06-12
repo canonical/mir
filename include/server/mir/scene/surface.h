@@ -116,6 +116,12 @@ public:
 
     virtual void placed_relative(geometry::Rectangle const& placement) = 0;
     virtual void start_drag_and_drop(std::vector<uint8_t> const& handle) = 0;
+
+    virtual auto depth_layer() const -> MirDepthLayer = 0;
+    /**
+     * When the depth layer is changed, the surface becomes the top surface on that layer
+     */
+    virtual void set_depth_layer(MirDepthLayer depth_layer) = 0;
 };
 }
 }

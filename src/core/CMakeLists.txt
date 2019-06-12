@@ -7,6 +7,7 @@ add_library(mircore SHARED
     anonymous_shm_file.cpp
     fatal.cpp
     fd.cpp
+    depth_layer.cpp
     geometry/rectangle.cpp
     geometry/rectangles.cpp
     geometry/ostream.cpp
@@ -24,6 +25,7 @@ add_library(mircore SHARED
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/forward.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/dimensions.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/shm_file.h
+    ${PROJECT_SOURCE_DIR}/include/core/mir/depth_layer.h
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/common.h
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/mir_version_number.h
 )

@@ -55,7 +55,7 @@ env:
 
 matrix:
   allow_failures:
-    - env: SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
+#    - env: SYSTEM=google:fedora-rawhide-64 VARIANT=amd64
   fast_finish: true
 
 before_install:
@@ -99,6 +99,7 @@ jobs:
     env: RELEASE=19.04
   - <<: *ppa-upload
     env: RELEASE=devel
+
   - &sanitize
     stage: sanitize
     notifications:
@@ -115,12 +116,15 @@ jobs:
     env: SYSTEM=google:ubuntu-18.04-64 VARIANT=tsan_clang
   - <<: *sanitize
     env: SYSTEM=google:ubuntu-18.04-64 VARIANT=ubsan_clang
+
   - stage: process snaps
     env: ~
     language: python
     python: [3.6]
+    dist: xenial
     before_install: *decrypt-bot-data
     install:
     - pip install -r tools/requirements.txt
+    - if [ ${TRAVIS_EVENT_TYPE} == cron ]; then sudo snap install review-tools; fi
     script:
     - tools/process_snaps.py

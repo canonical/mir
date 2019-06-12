@@ -158,6 +158,10 @@ struct InputDispatcherSceneObserver :
     {
     }
 
+    void depth_layer_set_to(ms::Surface const*, MirDepthLayer) override
+    {
+    }
+
     std::function<void(ms::Surface*)> const on_removed;
     std::function<void(ms::Surface const*)> const on_surface_moved;
     std::function<void()> const on_surface_resized;

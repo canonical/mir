@@ -34,7 +34,7 @@ Height const display_height{480};
 Rectangle const display_area{{display_left,  display_top},
                              {display_width, display_height}};
 
-struct ModifyWindowState : TestWindowManagerTools, WithParamInterface<MirWindowType>
+struct ModifyWindowState : mt::TestWindowManagerTools, WithParamInterface<MirWindowType>
 {
     Size const initial_parent_size{600, 400};
 
