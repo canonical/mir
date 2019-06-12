@@ -26,11 +26,13 @@
 #include <mir/server.h>
 #include <mir/options/option.h>
 #include <mir/options/configuration.h>
-#include <mir/log.h>
 
 #include <set>
 
 namespace mo = mir::options;
+
+char const* const miral::zwlr_layer_shell_v1{"zwlr_layer_shell_v1"};
+char const* const miral::zxdg_output_manager_v1{"zxdg_output_manager_v1"};
 
 struct miral::WaylandExtensions::Self
 {

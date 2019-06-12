@@ -33,13 +33,21 @@ namespace mir { class Server; }
 
 namespace miral
 {
+/**
+ * Supported wayland extensions that are not enabled by default.
+ * These can be passed into WaylandExtensions::enable() to turn them on.
+ * @{ */
 
 /// Enables shell components such as panels, notifications and lock screens. Malicious clients could potentially
 /// use this protocol to steal input focus or otherwise bother the user
-static char constexpr zwlr_layer_shell_v1[] = "zwlr_layer_shell_v1";
+/// \remark Since MirAL 2.6
+extern char const* const zwlr_layer_shell_v1;
 
 /// Allows clients to retrieve additional information about outputs
-static char constexpr zxdg_output_manager_v1[] = "zxdg_output_manager_v1";
+/// \remark Since MirAL 2.6
+extern char const* const zxdg_output_manager_v1;
+
+/** @} */
 
 class Window;
 
