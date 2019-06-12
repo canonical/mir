@@ -41,7 +41,7 @@ mir::shell::SurfaceSpecification edge_attachment(Rectangle const& aux_rect, MirE
     return result;
 }
 
-struct WindowPlacement : TestWindowManagerTools
+struct WindowPlacement : mt::TestWindowManagerTools
 {
     Size const initial_parent_size{600, 400};
     Size const initial_child_size{300, 300};

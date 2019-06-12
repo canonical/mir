@@ -23,134 +23,22 @@
 
 #include <miral/canonical_window_manager.h>
 
+#include <mir/shell/surface_specification.h>
 #include <mir/scene/surface_creation_parameters.h>
-#include <mir/shell/display_layout.h>
-#include <mir/shell/focus_controller.h>
-#include <mir/shell/persistent_surface_store.h>
-
-#include <mir/test/doubles/stub_session.h>
-#include <mir/test/doubles/stub_surface.h>
-#include <mir/test/fake_shared.h>
+#include <mir/scene/surface.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <atomic>
-
-struct StubFocusController : mir::shell::FocusController
+namespace mir
 {
-    void focus_next_session() override {}
-    void focus_prev_session() override {}
-
-    auto focused_session() const -> std::shared_ptr<mir::scene::Session> override { return {}; }
-
-    void set_focus_to(
-        std::shared_ptr<mir::scene::Session> const& /*focus_session*/,
-        std::shared_ptr<mir::scene::Surface> const& /*focus_surface*/) override {}
-
-    auto focused_surface() const -> std::shared_ptr<mir::scene::Surface> override { return {}; }
-
-    void raise(mir::shell::SurfaceSet const& /*windows*/) override {}
-
-    virtual auto surface_at(mir::geometry::Point /*cursor*/) const -> std::shared_ptr<mir::scene::Surface> override
-        { return {}; }
-
-    void set_drag_and_drop_handle(std::vector<uint8_t> const& /*handle*/) override {}
-
-    void clear_drag_and_drop_handle() override {}
-};
-
-struct StubDisplayLayout : mir::shell::DisplayLayout
+namespace graphics
 {
-    void clip_to_output(mir::geometry::Rectangle& /*rect*/) override {}
+class DisplayConfiguration;
+}
 
-    void size_to_output(mir::geometry::Rectangle& /*rect*/) override {}
-
-    bool place_in_output(mir::graphics::DisplayConfigurationOutputId /*id*/, mir::geometry::Rectangle& /*rect*/) override
-        { return false; }
-};
-
-struct StubPersistentSurfaceStore : mir::shell::PersistentSurfaceStore
+namespace test
 {
-    Id id_for_surface(std::shared_ptr<mir::scene::Surface> const& /*surface*/) override { return {}; }
-
-    auto surface_for_id(Id const& /*id*/) const -> std::shared_ptr<mir::scene::Surface> override { return {}; }
-};
-
-struct StubSurface : mir::test::doubles::StubSurface
-{
-    StubSurface(
-        std::string name,
-        MirWindowType type,
-        mir::geometry::Point top_left,
-        mir::geometry::Size size,
-        MirDepthLayer depth_layer)
-        : name_{name}, type_{type}, top_left_{top_left}, size_{size}, depth_layer_{depth_layer}
-    {
-    }
-
-    std::string name() const override { return name_; };
-    MirWindowType type() const override { return type_; }
-
-    mir::geometry::Point top_left() const override { return top_left_; }
-    void move_to(mir::geometry::Point const& top_left) override { top_left_ = top_left; }
-
-    mir::geometry::Size size() const override { return  size_; }
-    void resize(mir::geometry::Size const& size) override { size_ = size; }
-
-    auto state() const -> MirWindowState override { return state_; }
-    auto configure(MirWindowAttrib attrib, int value) -> int override {
-        switch (attrib)
-        {
-        case mir_window_attrib_state:
-            state_ = MirWindowState(value);
-            return state_;
-        default:
-            return value;
-        }
-    }
-
-    bool visible() const override { return  state() != mir_window_state_hidden; }
-
-    auto depth_layer() const -> MirDepthLayer override { return depth_layer_; }
-    void set_depth_layer(MirDepthLayer depth_layer) override { depth_layer_ = depth_layer; }
-
-    std::string name_;
-    MirWindowType type_;
-    mir::geometry::Point top_left_;
-    mir::geometry::Size size_;
-    MirWindowState state_ = mir_window_state_restored;
-    MirDepthLayer depth_layer_;
-};
-
-struct StubStubSession : mir::test::doubles::StubSession
-{
-    mir::frontend::SurfaceId create_surface(
-        mir::scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<mir::frontend::EventSink> const& /*sink*/) override
-    {
-        auto id = mir::frontend::SurfaceId{next_surface_id.fetch_add(1)};
-        auto surface = std::make_shared<StubSurface>(
-            params.name,
-            params.type.value(),
-            params.top_left,
-            params.size,
-            params.depth_layer.is_set() ?
-                params.depth_layer.value()
-                : mir_depth_layer_application);
-        surfaces[id] = surface;
-        return id;
-    }
-
-    std::shared_ptr<mir::scene::Surface> surface(mir::frontend::SurfaceId surface) const override
-    {
-        return surfaces.at(surface);
-    }
-
-private:
-    std::atomic<int> next_surface_id;
-    std::map<mir::frontend::SurfaceId, std::shared_ptr<mir::scene::Surface>> surfaces;
-};
 
 struct MockWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
 {
@@ -164,6 +52,9 @@ struct MockWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
     MOCK_METHOD2(advise_move_to, void(miral::WindowInfo const& window_info, mir::geometry::Point top_left));
     MOCK_METHOD2(advise_resize, void(miral::WindowInfo const& window_info, mir::geometry::Size const& new_size));
     MOCK_METHOD1(advise_raise, void(std::vector<miral::Window> const&));
+    MOCK_METHOD1(advise_output_create, void(miral::Output const&));
+    MOCK_METHOD2(advise_output_update, void(miral::Output const&, miral::Output const&));
+    MOCK_METHOD1(advise_output_delete, void(miral::Output const&));
 
     void handle_request_drag_and_drop(miral::WindowInfo& /*window_info*/) {}
     void handle_request_move(miral::WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/) {}
@@ -174,48 +65,32 @@ struct MockWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
     }
 };
 
-struct StubDisplayConfigurationObserver : mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>
+class TestWindowManagerTools : public testing::Test
 {
-    void register_interest(std::weak_ptr<mir::graphics::DisplayConfigurationObserver> const&) override {}
+private:
+    struct Self;
+    std::unique_ptr<Self> self;
 
-    void register_interest(std::weak_ptr<mir::graphics::DisplayConfigurationObserver> const&, mir::Executor&) override {}
+public:
+    TestWindowManagerTools();
+    ~TestWindowManagerTools();
 
-    void unregister_interest(mir::graphics::DisplayConfigurationObserver const&) override {}
-};
-
-struct TestWindowManagerTools : testing::Test
-{
-    StubFocusController focus_controller;
-    StubDisplayLayout display_layout;
-    StubPersistentSurfaceStore persistent_surface_store;
-    StubDisplayConfigurationObserver display_configuration_observer;
-    std::shared_ptr<StubStubSession> session{std::make_shared<StubStubSession>()};
-
-    MockWindowManagerPolicy* window_manager_policy{nullptr};
-    miral::WindowManagerTools window_manager_tools{nullptr};
-
-    miral::BasicWindowManager basic_window_manager{
-        &focus_controller,
-        mir::test::fake_shared(display_layout),
-        mir::test::fake_shared(persistent_surface_store),
-        display_configuration_observer,
-        [this](miral::WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
-            {
-                auto policy = std::make_unique<testing::NiceMock<MockWindowManagerPolicy>>(tools);
-                window_manager_policy = policy.get();
-                window_manager_tools = tools;
-                return policy;
-            }
-    };
+    std::shared_ptr<mir::scene::Session> session;
+    MockWindowManagerPolicy* window_manager_policy;
+    miral::WindowManagerTools window_manager_tools;
+    miral::BasicWindowManager basic_window_manager;
 
     static auto create_surface(
         std::shared_ptr<mir::scene::Session> const& session,
-        mir::scene::SurfaceCreationParameters const& params) -> mir::frontend::SurfaceId
-    {
-        // This type is Mir-internal, I hope we don't need to create it here
-        std::shared_ptr<mir::frontend::EventSink> const sink;
-        return session->create_surface(params, sink);
-    }
+        mir::scene::SurfaceCreationParameters const& params) -> mir::frontend::SurfaceId;
+
+    auto static create_fake_display_configuration(std::vector<miral::Rectangle> outputs)
+        -> std::shared_ptr<graphics::DisplayConfiguration const>;
+    void notify_configuration_applied(
+        std::shared_ptr<graphics::DisplayConfiguration const> display_config);
 };
+
+}
+}
 
 #endif //MIRAL_TEST_WINDOW_MANAGER_TOOLS_H
