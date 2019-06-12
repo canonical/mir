@@ -21,6 +21,7 @@
 
 #include <miral/application_info.h>
 #include <miral/output.h>
+#include <miral/zone.h>
 #include <miral/window_info.h>
 
 #include <mir/scene/session.h>
@@ -344,13 +345,19 @@ auto dump_of(miral::Output const& output) -> std::string
 {
     return dump_of(output.extents());
 }
+
+auto dump_of(miral::Zone const& zone) -> std::string
+{
+    return dump_of(zone.extents());
+}
 }
 
 miral::WindowManagementTrace::WindowManagementTrace(
     WindowManagerTools const& wrapped,
     WindowManagementPolicyBuilder const& builder) :
     wrapped{wrapped},
-    policy(builder(WindowManagerTools{this}))
+    policy(builder(WindowManagerTools{this})),
+    policy_application_zone_addendum{WindowManagementPolicy::ApplicationZoneAddendum::from(policy.get())}
 {
 }
 
@@ -891,5 +898,26 @@ void miral::WindowManagementTrace::advise_output_delete(Output const& output)
 try {
     mir::log_info("%s output=%s", __func__, dump_of(output).c_str());
     return policy->advise_output_delete(output);
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::advise_application_zone_create(Zone const& application_zone)
+try {
+    mir::log_info("%s application_zone=%s", __func__, dump_of(application_zone).c_str());
+    return policy_application_zone_addendum->advise_application_zone_create(application_zone);
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::advise_application_zone_update(Zone const& updated, Zone const& original)
+try {
+    mir::log_info("%s updated=%s, original=%s", __func__, dump_of(updated).c_str(), dump_of(original).c_str());
+    return policy_application_zone_addendum->advise_application_zone_update(updated, original);
+}
+MIRAL_TRACE_EXCEPTION
+
+void miral::WindowManagementTrace::advise_application_zone_delete(Zone const& application_zone)
+try {
+    mir::log_info("%s application_zone=%s", __func__, dump_of(application_zone).c_str());
+    return policy_application_zone_addendum->advise_application_zone_delete(application_zone);
 }
 MIRAL_TRACE_EXCEPTION
