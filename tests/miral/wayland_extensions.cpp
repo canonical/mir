@@ -429,6 +429,24 @@ TEST_F(WaylandExtensions, can_retrieve_window_for_surface)
         }});
 }
 
+TEST_F(WaylandExtensions, some_extensions_are_supported)
+{
+    EXPECT_THAT(miral::WaylandExtensions::supported(), Not(IsEmpty()));
+}
+
+TEST_F(WaylandExtensions, some_extensions_are_recommended)
+{
+    EXPECT_THAT(miral::WaylandExtensions::recommended(), Not(IsEmpty()));
+}
+
+TEST_F(WaylandExtensions, recommeded_extensions_subset_of_supported_extensions)
+{
+    for (auto const& e : miral::WaylandExtensions::recommended())
+    {
+        EXPECT_THAT(miral::WaylandExtensions::supported(), Contains(e));
+    }
+}
+
 TEST_F(WaylandExtensions, disable_can_remove_default_extensions)
 {
     std::string const extension_to_remove{"zxdg_shell_v6"};

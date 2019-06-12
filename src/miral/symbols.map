@@ -432,6 +432,8 @@ global:
   extern "C++" {
     miral::zwlr_layer_shell_v1*;
     miral::zxdg_output_manager_v1*;
+    miral::WaylandExtensions::recommended*;
+    miral::WaylandExtensions::supported*;
     miral::WaylandExtensions::enable*;
     miral::WaylandExtensions::disable*;
   };

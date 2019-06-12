@@ -24,6 +24,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <set>
 
 struct wl_display;
 struct wl_client;
@@ -70,7 +71,8 @@ public:
     /// separated list).
     /// \note This can only be a subset of supported_extensions()
     /// \deprecated A better option is to use the default constructor, enable()
-    /// and disable()
+    /// and disable(). You can call disable() on all recommended() extensions
+    /// if you want complete control over which are enabled
     explicit WaylandExtensions(std::string const& default_value);
 
     void operator()(mir::Server& server) const;
@@ -136,6 +138,17 @@ public:
     /// Add a bespoke Wayland extension both to "supported" but not "enabled by default".
     /// \remark Since MirAL 2.5
     void add_extension_disabled_by_default(Builder const& builder);
+
+    /// The set of Wayland extensions that Mir recommends.
+    /// Also the set that is enabled by default upon construction of a WaylandExtensions object.
+    /// \remark Since MirAL 2.6
+    static auto recommended() -> std::set<std::string>;
+
+    /// The set of Wayland extensions that core Mir supports.
+    /// Does not include bespoke extensions
+    /// A superset of recommended()
+    /// \remark Since MirAL 2.6
+    static auto supported() -> std::set<std::string>;
 
     /// Enable a Wayland extension
     /// Throws a std::runtime_error if the extension is not supported

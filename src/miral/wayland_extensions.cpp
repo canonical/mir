@@ -34,16 +34,20 @@ namespace mo = mir::options;
 char const* const miral::zwlr_layer_shell_v1{"zwlr_layer_shell_v1"};
 char const* const miral::zxdg_output_manager_v1{"zxdg_output_manager_v1"};
 
+namespace
+{
+auto vec2set(std::vector<std::string> vec) -> std::set<std::string>
+{
+    return std::set<std::string>{vec.begin(), vec.end()};
+}
+}
+
 struct miral::WaylandExtensions::Self
 {
-    static auto vec2set(std::vector<std::string> vec) -> std::set<std::string>
-    {
-        return std::set<std::string>{vec.begin(), vec.end()};
-    }
 
     Self()
-        : default_extensions{vec2set(mir::frontend::get_standard_extensions())},
-          supported_extensions{vec2set(mir::frontend::get_supported_extensions())}
+        : default_extensions{WaylandExtensions::recommended()},
+          supported_extensions{WaylandExtensions::supported()}
     {
     }
 
@@ -228,6 +232,16 @@ void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const
 void miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const& builder)
 {
     self->add_extension(builder);
+}
+
+auto miral::WaylandExtensions::recommended() -> std::set<std::string>
+{
+    return vec2set(mir::frontend::get_standard_extensions());
+}
+
+auto miral::WaylandExtensions::supported() -> std::set<std::string>
+{
+    return vec2set(mir::frontend::get_supported_extensions());
 }
 
 auto miral::WaylandExtensions::enable(std::string name) -> WaylandExtensions&
