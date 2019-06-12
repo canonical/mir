@@ -82,9 +82,20 @@ class Run:
             '  OUT: ' + '\n       '.join(line for line in self.stdout.split('\n')) + '\n' +
             '  ERR: ' + '\n       '.join(line for line in self.stderr.split('\n')))
 
+def new_lines_from_unfiltered(unfiltered):
+    '''From the unfiltered (mangled) output of dpkg-gensymbols, returns a usable patch'''
+    result = Run(['c++filt'], stdin=unfiltered)
+    result.assert_success()
+    searched = re.findall('^\+ (.+::.+) ([\.\d]+)$', result.stdout, flags=re.MULTILINE)
+    if searched:
+        filtered = '\n'.join([' (c++)"' + symbol + '" ' + version for symbol, version in searched]) + '\n'
+        return filtered
+    else:
+        return None
+
 def check_symbols(context):
     '''Checks the symbols.
-    Returns None if all is good, or the unprocessed stdout of dpkg-gensymbols otherwise'''
+    Returns None if all is good, or the lines that need to get added to the debian symbols file otherwise'''
     assert isinstance(context, Context)
     if (path.isfile(context.output_symbols_path)):
         os.remove(context.output_symbols_path)
@@ -100,15 +111,11 @@ def check_symbols(context):
     if result.success():
         return None
     else:
-        return result.stdout
-
-def new_lines_from_unfiltered(unfiltered):
-    '''From the unfiltered (mangled) output of dpkg-gensymbols, returns a usable patch'''
-    result = Run(['c++filt'], stdin=unfiltered)
-    result.assert_success()
-    searched = re.findall('^\+ (.+::.+) ([\.\d]+)$', result.stdout, flags=re.MULTILINE)
-    filtered = '\n'.join([' (c++)"' + symbol + '" ' + version for symbol, version in searched]) + '\n'
-    return filtered
+        symbols_to_add = new_lines_from_unfiltered(result.stdout)
+        if symbols_to_add:
+            return symbols_to_add
+        else:
+            result.assert_success() # Something's not right. This will fail with a useful error
 
 def append_to_symbols_file(new_symbols, context):
     '''Append a string to the end of the debian symbols file'''
@@ -119,9 +126,8 @@ def append_to_symbols_file(new_symbols, context):
 if __name__ == '__main__':
     context = Context(sys.argv[1:])
     context.validate()
-    unfiltered = check_symbols(context)
-    if unfiltered != None:
-        new_symbols = new_lines_from_unfiltered(unfiltered)
-        print('Adding symbols to ' + context.deb_symbols_path + ':\n' + new_symbols)
-        append_to_symbols_file(new_symbols, context)
+    symbols_to_add = check_symbols(context)
+    if symbols_to_add != None:
+        print('Adding symbols to ' + context.deb_symbols_path + ':\n' + symbols_to_add)
+        append_to_symbols_file(symbols_to_add, context)
         print('Debian symbols added')
