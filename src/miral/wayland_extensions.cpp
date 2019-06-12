@@ -100,7 +100,7 @@ struct miral::WaylandExtensions::Self
     void enable_extension(std::string name)
     {
         if (supported_extensions.find(name) == supported_extensions.end())
-            mir::log_error("Attempted to enable unsupported extension " + name);
+            BOOST_THROW_EXCEPTION(std::runtime_error("Attempted to enable unsupported extension " + name));
         else
             default_extensions.insert(name);
     }
@@ -108,7 +108,7 @@ struct miral::WaylandExtensions::Self
     void disable_extension(std::string name)
     {
         if (supported_extensions.find(name) == supported_extensions.end())
-            mir::log_error("Attempted to disable unsupported extension " + name);
+            BOOST_THROW_EXCEPTION(std::runtime_error("Attempted to disable unsupported extension " + name));
         else
             default_extensions.erase(name);
     }

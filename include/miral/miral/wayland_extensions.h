@@ -138,11 +138,13 @@ public:
     void add_extension_disabled_by_default(Builder const& builder);
 
     /// Enable a Wayland extension
-    /// If the extension is not supported, an error is logged
+    /// Throws a std::runtime_error if the extension is not supported
+    /// \remark Since MirAL 2.6
     auto enable(std::string name) -> WaylandExtensions&;
 
     /// Disable a Wayand extension
-    /// If the extension is not supported, an error is logged
+    /// Throws a std::runtime_error if the extension is not supported
+    /// \remark Since MirAL 2.6
     auto disable(std::string name) -> WaylandExtensions&;
 
 private:
