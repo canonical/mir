@@ -364,13 +364,30 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_2.5" 2.5.0
  (c++)"miral::WindowManagerTools::focus_prev_application()@MIRAL_2.5" 2.5.0
  MIRAL_2.6@MIRAL_2.6 2.6.0
- (c++)"miral::WindowInfo::depth_layer() const@MIRAL_2.6" 2.6.0
- (c++)"miral::WindowInfo::depth_layer(MirDepthLayer)@MIRAL_2.6" 2.6.0
- (c++)"miral::WindowSpecification::depth_layer() const@MIRAL_2.6" 2.6.0
- (c++)"miral::WindowSpecification::depth_layer()@MIRAL_2.6" 2.6.0
  (c++)"miral::WaylandExtensions::recommended[abi:cxx11]()@MIRAL_2.6" 2.6.0
  (c++)"miral::WaylandExtensions::enable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_2.6" 2.6.0
  (c++)"miral::WaylandExtensions::disable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_2.6" 2.6.0
  (c++)"miral::WaylandExtensions::supported[abi:cxx11]()@MIRAL_2.6" 2.6.0
  (c++)"miral::WaylandExtensions::zwlr_layer_shell_v1@MIRAL_2.6" 2.6.0
  (c++)"miral::WaylandExtensions::zxdg_output_manager_v1@MIRAL_2.6" 2.6.0
+ (c++)"miral::WindowInfo::depth_layer() const@MIRAL_2.6" 2.6.0
+ (c++)"miral::WindowInfo::depth_layer(MirDepthLayer)@MIRAL_2.6" 2.6.0
+ (c++)"miral::WindowSpecification::depth_layer() const@MIRAL_2.6" 2.6.0
+ (c++)"miral::WindowSpecification::depth_layer()@MIRAL_2.6" 2.6.0
+ (c++)"miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_create(miral::Zone const&)@MIRAL_2.6" 2.6.0
+ (c++)"miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_delete(miral::Zone const&)@MIRAL_2.6" 2.6.0
+ (c++)"miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_update(miral::Zone const&, miral::Zone const&)@MIRAL_2.6" 2.6.0
+ (c++)"miral::Zone::extents(mir::geometry::Rectangle const&)@MIRAL_2.6" 2.6.0
+ (c++)"miral::Zone::Zone(mir::geometry::Rectangle const&)@MIRAL_2.6" 2.6.0
+ (c++)"miral::Zone::Zone(miral::Zone const&)@MIRAL_2.6" 2.6.0
+ (c++)"miral::Zone::Zone(mir::geometry::Rectangle const&)@MIRAL_2.6" 2.6.0
+ (c++)"miral::Zone::Zone(miral::Zone const&)@MIRAL_2.6" 2.6.0
+ (c++)"miral::Zone::~Zone()@MIRAL_2.6" 2.6.0
+ (c++)"miral::Zone::~Zone()@MIRAL_2.6" 2.6.0
+ (c++)"miral::Zone::operator=(miral::Zone const&)@MIRAL_2.6" 2.6.0
+ (c++)"miral::Zone::is_same_zone(miral::Zone const&) const@MIRAL_2.6" 2.6.0
+ (c++)"miral::Zone::extents() const@MIRAL_2.6" 2.6.0
+ (c++)"miral::Zone::operator==(miral::Zone const&) const@MIRAL_2.6" 2.6.0
+ (c++)"typeinfo for miral::WindowManagementPolicy::ApplicationZoneAddendum@MIRAL_2.6" 2.6.0
+ (c++)"vtable for miral::WindowManagementPolicy::ApplicationZoneAddendum@MIRAL_2.6" 2.6.0
+ (c++)"miral::WindowManagementPolicy::ApplicationZoneAddendum::from(miral::WindowManagementPolicy*)@MIRAL_2.6" 2.6.0

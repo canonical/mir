@@ -31,6 +31,7 @@ class Window;
 class WindowSpecification;
 struct ApplicationInfo;
 class Output;
+class Zone;
 struct WindowInfo;
 
 /**
@@ -272,6 +273,40 @@ public:
     WindowManagementPolicy() = default;
     WindowManagementPolicy(WindowManagementPolicy const&) = delete;
     WindowManagementPolicy& operator=(WindowManagementPolicy const&) = delete;
+
+/**
+* Handle additional requests related to application zones
+*
+* \note This interface is intended to be implemented by a WindowManagementPolicy implementation. We can't add these
+* functions directly to that interface without breaking ABI (the vtable could be incompatible). When initializing the
+* window manager this interface will be detected by dynamic_cast and registered accordingly.
+*  @{ */
+    class ApplicationZoneAddendum
+    {
+    public:
+        ApplicationZoneAddendum() = default;
+        virtual ~ApplicationZoneAddendum() = default;
+        ApplicationZoneAddendum(ApplicationZoneAddendum const&) = delete;
+        ApplicationZoneAddendum& operator=(ApplicationZoneAddendum const&) = delete;
+        /**
+         * Attempts to dynamic_cast the given policy into an ApplicationZoneAddendum.
+         * If successful, returns the casted pointer.
+         * If unsuccessful, retuns a static instance of an ApplicationZoneAddendum with the functions stubbed out.
+         */
+        static auto from(WindowManagementPolicy* policy) -> ApplicationZoneAddendum*;
+
+    /** @name notification of changes to the current application zones
+    * An application zone is the area a maximized application will fill.
+    * There is often (but not necessarily) one zone per output.
+    * The areas normal applications windows should avoid (such as the areas covered by panels)
+    * will not be part of an application zone
+    *  @{ */
+        virtual void advise_application_zone_create(Zone const& application_zone);
+        virtual void advise_application_zone_update(Zone const& updated, Zone const& original);
+        virtual void advise_application_zone_delete(Zone const& application_zone);
+    /** @} */
+    };
+/** @} */
 };
 
 class WindowManagerTools;

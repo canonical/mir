@@ -29,8 +29,10 @@
 
 namespace miral
 {
-class WindowManagementTrace : public WindowManagementPolicy,
-    WindowManagerToolsImplementation
+class WindowManagementTrace
+    : public WindowManagementPolicy,
+      public WindowManagementPolicy::ApplicationZoneAddendum,
+      WindowManagerToolsImplementation
 {
 public:
     WindowManagementTrace(WindowManagerTools const& wrapped, WindowManagementPolicyBuilder const& builder);
@@ -160,9 +162,16 @@ public:
 
     void advise_output_delete(Output const& output) override;
 
+    void advise_application_zone_create(Zone const& application_zone) override;
+
+    void advise_application_zone_update(Zone const& updated, Zone const& original) override;
+
+    void advise_application_zone_delete(Zone const& application_zone) override;
+
 private:
     WindowManagerTools wrapped;
     std::unique_ptr<miral::WindowManagementPolicy> const policy;
+    miral::WindowManagementPolicy::ApplicationZoneAddendum* const policy_application_zone_addendum;
     std::atomic<unsigned> mutable trace_count;
     std::function<void()> log_input;
 };

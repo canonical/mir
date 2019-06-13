@@ -35,3 +35,18 @@ void miral::WindowManagementPolicy::advise_removing_from_workspace(std::shared_p
 void miral::WindowManagementPolicy::advise_output_create(Output const& /*output*/) {}
 void miral::WindowManagementPolicy::advise_output_update(Output const& /*updated*/, Output const& /*original*/) {}
 void miral::WindowManagementPolicy::advise_output_delete(Output const& /*output*/) {}
+
+auto miral::WindowManagementPolicy::ApplicationZoneAddendum::from(WindowManagementPolicy* policy)
+    -> ApplicationZoneAddendum*
+{
+    auto result = dynamic_cast<miral::WindowManagementPolicy::ApplicationZoneAddendum*>(policy);
+    if (result)
+        return result;
+
+    static miral::WindowManagementPolicy::ApplicationZoneAddendum null_application_zone_addendum;
+    return &null_application_zone_addendum;
+}
+
+void miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_create(Zone const& /*application_zone*/) {}
+void miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_update(Zone const& /*updated*/, Zone const& /*original*/) {}
+void miral::WindowManagementPolicy::ApplicationZoneAddendum::advise_application_zone_delete(Zone const& /*application_zone*/) {}

@@ -53,6 +53,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     test_window_manager_tools.cpp           test_window_manager_tools.h
     depth_layer.cpp
     output_updates.cpp
+    application_zone.cpp
 )
 
 set_source_files_properties(static_display_config.cpp PROPERTIES COMPILE_FLAGS
@@ -77,6 +78,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     wayland_extensions.cpp
     workspaces.cpp
     drag_and_drop.cpp
+    zone.cpp
     server_example_decoration.cpp server_example_decoration.h
     org_kde_kwin_server_decoration.c org_kde_kwin_server_decoration.h
     generated/server-decoration_wrapper.cpp generated/server-decoration_wrapper.h
