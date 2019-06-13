@@ -31,8 +31,8 @@
 
 namespace mo = mir::options;
 
-char const* const miral::zwlr_layer_shell_v1{"zwlr_layer_shell_v1"};
-char const* const miral::zxdg_output_manager_v1{"zxdg_output_manager_v1"};
+char const* const miral::WaylandExtensions::zwlr_layer_shell_v1{"zwlr_layer_shell_v1"};
+char const* const miral::WaylandExtensions::zxdg_output_manager_v1{"zxdg_output_manager_v1"};
 
 namespace
 {

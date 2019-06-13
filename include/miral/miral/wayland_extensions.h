@@ -34,22 +34,6 @@ namespace mir { class Server; }
 
 namespace miral
 {
-/**
- * Supported wayland extensions that are not enabled by default.
- * These can be passed into WaylandExtensions::enable() to turn them on.
- * @{ */
-
-/// Enables shell components such as panels, notifications and lock screens. Malicious clients could potentially
-/// use this protocol to steal input focus or otherwise bother the user
-/// \remark Since MirAL 2.6
-extern char const* const zwlr_layer_shell_v1;
-
-/// Allows clients to retrieve additional information about outputs
-/// \remark Since MirAL 2.6
-extern char const* const zxdg_output_manager_v1;
-
-/** @} */
-
 class Window;
 
 /// Enable configuration of the Wayland extensions enabled at runtime.
@@ -130,6 +114,23 @@ public:
     /// Set an extension filter callback to control the extensions available to specific clients
     /// \remark Since MirAL 2.5
     void set_filter(Filter const& extension_filter);
+
+    /**
+     * Supported wayland extensions that are not enabled by default.
+     * These can be passed into WaylandExtensions::enable() to turn them on.
+     * @{ */
+
+    /// Enables shell components such as panels, notifications and lock screens.
+    /// It is recommended to use this in conjunction with set_filter() as malicious
+    /// clients could potentially use this protocol to steal input focus or
+    /// otherwise bother the user.
+    /// \remark Since MirAL 2.6
+    static char const* const zwlr_layer_shell_v1;
+
+    /// Allows clients to retrieve additional information about outputs
+    /// \remark Since MirAL 2.6
+    static char const* const zxdg_output_manager_v1;
+    /** @} */
 
     /// Add a bespoke Wayland extension both to "supported" and "enabled by default".
     /// \remark Since MirAL 2.5
