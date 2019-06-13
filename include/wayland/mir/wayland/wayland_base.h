@@ -57,7 +57,6 @@ public:
     Global(Global const&) = delete;
     Global& operator=(Global const&) = delete;
 
-
     virtual auto interface_name() const -> char const* = 0;
 
     wl_global* const global;

@@ -27,6 +27,7 @@
 #include "xwayland_wm_shell.h"
 #include "mir_display.h"
 #include "wl_seat.h"
+#include "xdg-output-unstable-v1_wrapper.h"
 
 #include "mir/graphics/platform.h"
 #include "mir/options/default_configuration.h"
@@ -34,16 +35,35 @@
 
 namespace mf = mir::frontend;
 namespace mo = mir::options;
+namespace mw = mir::wayland;
+
+auto mf::get_standard_extensions() -> std::vector<std::string>
+{
+    return std::vector<std::string>{
+        mw::Shell::interface_name,
+        mw::XdgWmBase::interface_name,
+        mw::XdgShellV6::interface_name};
+}
+
+auto mf::get_supported_extensions() -> std::vector<std::string>
+{
+    /**
+     * Extension names here that are not in the standard set should generally be listed in
+     * include/miral/miral/wayland_extensions.h for easy access by shells.
+     */
+    return std::vector<std::string>{
+        mw::Shell::interface_name,
+        mw::XdgWmBase::interface_name,
+        mw::XdgShellV6::interface_name,
+        mw::LayerShellV1::interface_name,
+        mw::XdgOutputManagerV1::interface_name};
+}
 
 namespace
 {
-auto const wl_shell       = "wl_shell";
-auto const xdg_shell      = "xdg_wm_base";
-auto const xdg_shell_v6   = "zxdg_shell_v6";
-auto const layer_shell_v1 = "zwlr_layer_shell_v1";
-auto const xdg_output_v1  = "zxdg_output_manager_v1";
 
-auto configure_wayland_extensions(std::string extensions,
+auto configure_wayland_extensions(
+    std::set<std::string> const& extensions,
     bool x11_enabled,
     std::vector<mir::WaylandExtensionHook> const& wayland_extension_hooks)
     -> std::unique_ptr<mf::WaylandExtensions>
@@ -63,25 +83,30 @@ auto configure_wayland_extensions(std::string extensions,
             mf::WlSeat* seat,
             mf::OutputManager* const output_manager)
         {
-            if (extension.find(wl_shell) != extension.end())
-                add_extension(wl_shell, mf::create_wl_shell(display, shell, seat, output_manager));
-
-            if (extension.find(xdg_shell_v6) != extension.end())
-                add_extension(xdg_shell_v6, std::make_shared<mf::XdgShellV6>(display, shell, *seat, output_manager));
-
-            if (extension.find(xdg_shell) != extension.end())
-                add_extension(xdg_shell, std::make_shared<mf::XdgShellStable>(display, shell, *seat, output_manager));
-
-            if (extension.find(layer_shell_v1) != extension.end())
-                add_extension(layer_shell_v1, std::make_shared<mf::LayerShellV1>(display, shell, *seat,
-                                                                                 output_manager));
-
-            if (extension.find(xdg_output_v1) != extension.end())
-            {
+            if (extension.find(mw::Shell::interface_name) != extension.end())
                 add_extension(
-                    xdg_output_v1,
+                    mw::Shell::interface_name,
+                    mf::create_wl_shell(display, shell, seat, output_manager));
+
+            if (extension.find(mw::XdgShellV6::interface_name) != extension.end())
+                add_extension(
+                    mw::XdgShellV6::interface_name,
+                    std::make_shared<mf::XdgShellV6>(display, shell, *seat, output_manager));
+
+            if (extension.find(mw::XdgWmBase::interface_name) != extension.end())
+                add_extension(
+                    mw::XdgWmBase::interface_name,
+                    std::make_shared<mf::XdgShellStable>(display, shell, *seat, output_manager));
+
+            if (extension.find(mw::LayerShellV1::interface_name) != extension.end())
+                add_extension(
+                    mw::LayerShellV1::interface_name,
+                    std::make_shared<mf::LayerShellV1>(display, shell, *seat, output_manager));
+
+            if (extension.find(mw::XdgOutputManagerV1::interface_name) != extension.end())
+                add_extension(
+                    mw::XdgOutputManagerV1::interface_name,
                     create_xdg_output_manager_v1(display, output_manager));
-            }
 
             std::function<void(std::function<void()>&& work)> run_on_wayland_mainloop = [seat](std::function<void()>&& work)
                 {
@@ -102,16 +127,7 @@ auto configure_wayland_extensions(std::string extensions,
         std::vector<mir::WaylandExtensionHook> const wayland_extension_hooks;
     };
 
-    std::set<std::string> extension;
-    extensions += ':';
-
-    for (char const* start = extensions.c_str(); char const* end = strchr(start, ':'); start = end+1)
-    {
-        if (start != end)
-            extension.insert(std::string{start, end});
-    }
-
-    return std::make_unique<WaylandExtensions>(extension, x11_enabled, wayland_extension_hooks);
+    return std::make_unique<WaylandExtensions>(extensions, x11_enabled, wayland_extension_hooks);
 }
 }
 
@@ -129,8 +145,9 @@ std::shared_ptr<mf::Connector>
             if (options->is_set(options::wayland_socket_name_opt))
                 display_name = options->get<std::string>(options::wayland_socket_name_opt);
 
-            auto const wayland_extensions =
-                options->get(mo::wayland_extensions_opt, mo::wayland_extensions_value);
+            auto wayland_extensions = std::set<std::string>{
+                enabled_wayland_extensions.begin(),
+                enabled_wayland_extensions.end()};
 
             auto const display_config = std::make_shared<mf::MirDisplay>(
                 the_frontend_display_changer(),
@@ -167,6 +184,11 @@ void mir::DefaultServerConfiguration::add_wayland_extension(
 void mir::DefaultServerConfiguration::set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter)
 {
     wayland_extension_filter = extension_filter;
+}
+
+void mir::DefaultServerConfiguration::set_enabled_wayland_extensions(std::vector<std::string> const& extensions)
+{
+    enabled_wayland_extensions = extensions;
 }
 
 auto mir::frontend::get_window(wl_resource* surface) -> std::shared_ptr<Surface>

@@ -203,6 +203,7 @@ public:
             std::function<void(std::function<void()>&& work)> const&)> builder) override;
 
     void set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter) override;
+    void set_enabled_wayland_extensions(std::vector<std::string> const& extensions) override;
 
     /**
      * Function to call when a "fatal" error occurs. This implementation allows
@@ -490,6 +491,7 @@ private:
     std::vector<WaylandExtensionHook> wayland_extension_hooks;
     WaylandProtocolExtensionFilter wayland_extension_filter =
         [](std::shared_ptr<scene::Session> const&, char const*) { return true; };
+    std::vector<std::string> enabled_wayland_extensions;
 };
 }
 

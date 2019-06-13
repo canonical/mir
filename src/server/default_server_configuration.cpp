@@ -25,6 +25,7 @@
 #include "mir/emergency_cleanup.h"
 #include "mir/default_configuration.h"
 #include "mir/cookie/authority.h"
+#include "mir/frontend/wayland.h"
 
 #include "mir/logging/dumb_console_logger.h"
 #include "mir/options/program_option.h"
@@ -68,7 +69,8 @@ mir::DefaultServerConfiguration::DefaultServerConfiguration(int argc, char const
 }
 
 mir::DefaultServerConfiguration::DefaultServerConfiguration(std::shared_ptr<mo::Configuration> const& configuration_options) :
-    configuration_options(configuration_options)
+    configuration_options(configuration_options),
+    enabled_wayland_extensions(frontend::get_standard_extensions())
 {
 }
 

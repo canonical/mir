@@ -24,6 +24,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <set>
 
 struct wl_display;
 struct wl_client;
@@ -53,6 +54,9 @@ public:
     /// Initialize "enabled by default" to a custom set of extensions (colon
     /// separated list).
     /// \note This can only be a subset of supported_extensions()
+    /// \deprecated A better option is to use the default constructor, enable()
+    /// and disable(). You can call disable() on all recommended() extensions
+    /// if you want complete control over which are enabled
     explicit WaylandExtensions(std::string const& default_value);
 
     void operator()(mir::Server& server) const;
@@ -66,6 +70,8 @@ public:
 
     /// Default for extensions to enabled recommended by Mir (colon separated list)
     /// \remark Since MirAL 2.5
+    /// \deprecated Instead of overridding the whole extension list in the constructor and using this to get the
+    /// recommended ones, you can now just enable() the extensions you want.
     static auto recommended_extensions() -> std::string;
 
     ~WaylandExtensions();
@@ -109,6 +115,23 @@ public:
     /// \remark Since MirAL 2.5
     void set_filter(Filter const& extension_filter);
 
+    /**
+     * Supported wayland extensions that are not enabled by default.
+     * These can be passed into WaylandExtensions::enable() to turn them on.
+     * @{ */
+
+    /// Enables shell components such as panels, notifications and lock screens.
+    /// It is recommended to use this in conjunction with set_filter() as malicious
+    /// clients could potentially use this protocol to steal input focus or
+    /// otherwise bother the user.
+    /// \remark Since MirAL 2.6
+    static char const* const zwlr_layer_shell_v1;
+
+    /// Allows clients to retrieve additional information about outputs
+    /// \remark Since MirAL 2.6
+    static char const* const zxdg_output_manager_v1;
+    /** @} */
+
     /// Add a bespoke Wayland extension both to "supported" and "enabled by default".
     /// \remark Since MirAL 2.5
     void add_extension(Builder const& builder);
@@ -116,6 +139,27 @@ public:
     /// Add a bespoke Wayland extension both to "supported" but not "enabled by default".
     /// \remark Since MirAL 2.5
     void add_extension_disabled_by_default(Builder const& builder);
+
+    /// The set of Wayland extensions that Mir recommends.
+    /// Also the set that is enabled by default upon construction of a WaylandExtensions object.
+    /// \remark Since MirAL 2.6
+    static auto recommended() -> std::set<std::string>;
+
+    /// The set of Wayland extensions that core Mir supports.
+    /// Does not include bespoke extensions
+    /// A superset of recommended()
+    /// \remark Since MirAL 2.6
+    static auto supported() -> std::set<std::string>;
+
+    /// Enable a Wayland extension
+    /// Throws a std::runtime_error if the extension is not supported
+    /// \remark Since MirAL 2.6
+    auto enable(std::string name) -> WaylandExtensions&;
+
+    /// Disable a Wayand extension
+    /// Throws a std::runtime_error if the extension is not supported
+    /// \remark Since MirAL 2.6
+    auto disable(std::string name) -> WaylandExtensions&;
 
 private:
     struct Self;

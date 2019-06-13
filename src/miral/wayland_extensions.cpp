@@ -31,97 +31,137 @@
 
 namespace mo = mir::options;
 
+char const* const miral::WaylandExtensions::zwlr_layer_shell_v1{"zwlr_layer_shell_v1"};
+char const* const miral::WaylandExtensions::zxdg_output_manager_v1{"zxdg_output_manager_v1"};
+
+namespace
+{
+auto vec2set(std::vector<std::string> vec) -> std::set<std::string>
+{
+    return std::set<std::string>{vec.begin(), vec.end()};
+}
+}
+
 struct miral::WaylandExtensions::Self
 {
-    Self(std::string const& default_value) : default_value{default_value}
+
+    Self()
+        : default_extensions{WaylandExtensions::recommended()},
+          supported_extensions{WaylandExtensions::supported()}
     {
-        available_extensions += ":zwlr_layer_shell_v1:zxdg_output_manager_v1:";
-        validate(default_value);
     }
 
-    void callback(mir::Server& server) const
+    static auto parse_extensions_option(std::string extensions) -> std::set<std::string>
     {
-        validate(server.get_options()->get<std::string>(mo::wayland_extensions_opt));
-        // TODO pass bespoke stuff into server!
+        std::set<std::string> extension;
+        extensions += ':';
+
+        for (char const* start = extensions.c_str(); char const* end = strchr(start, ':'); start = end+1)
+        {
+            if (start != end)
+                extension.insert(std::string{start, end});
+        }
+
+        return extension;
     }
 
-    std::string default_value;
-    std::string available_extensions = mo::wayland_extensions_value;
-
-    void validate(std::string extensions) const
+    static auto serialize_colon_list(std::vector<std::string> extensions) -> std::string
     {
-        std::set<std::string> selected_extension;
-        auto extensions_ = extensions + ':';
-
-        for (char const* start = extensions_.c_str(); char const* end = strchr(start, ':'); start = end+1)
+        bool at_start = true;
+        std::string result;
+        for (auto extension : extensions)
         {
-            if (start != end)
-                selected_extension.insert(std::string{start, end});
+            if (at_start)
+                at_start = false;
+            else
+                result += ":";
+            result += extension;
         }
+        return result;
+    }
 
-        std::set<std::string> supported_extension;
+    void validate(std::set<std::string> extensions) const
+    {
+        std::vector<std::string> errors;
 
-        for (char const* start = available_extensions.c_str(); char const* end = strchr(start, ':'); start = end+1)
-        {
-            if (start != end)
-                supported_extension.insert(std::string{start, end});
-        }
-
-        std::set<std::string> errors;
-
-        set_difference(begin(selected_extension), end(selected_extension),
-                       begin(supported_extension), end(supported_extension),
-                       std::inserter(errors, begin(errors)));
+        set_difference(
+            begin(extensions), end(extensions),
+            begin(supported_extensions), end(supported_extensions),
+            std::inserter(errors, begin(errors)));
 
         if (!errors.empty())
         {
-            throw mir::AbnormalExit{"Unsupported wayland extensions in: " + extensions};
+            throw mir::AbnormalExit{"Unsupported wayland extensions: " + serialize_colon_list(errors)};
         }
     }
-
-    std::vector<Builder> wayland_extension_hooks;
 
     void add_extension(Builder const& builder)
     {
         wayland_extension_hooks.push_back(builder);
-        available_extensions += builder.name + ":";
+        supported_extensions.insert(builder.name);
     }
 
-    void add_to_default(Builder const& builder)
+    void enable_extension(std::string name)
     {
-        default_value += ":" + builder.name;
+        if (supported_extensions.find(name) == supported_extensions.end())
+            BOOST_THROW_EXCEPTION(std::runtime_error("Attempted to enable unsupported extension " + name));
+        else
+            default_extensions.insert(name);
     }
 
+    void disable_extension(std::string name)
+    {
+        if (supported_extensions.find(name) == supported_extensions.end())
+            BOOST_THROW_EXCEPTION(std::runtime_error("Attempted to disable unsupported extension " + name));
+        else
+            default_extensions.erase(name);
+    }
+
+    std::vector<Builder> wayland_extension_hooks;
+    /**
+     * Extensions to enable by default if the user does not override with a command line options
+     * This starts set to mir::frontend::get_standard_extensions()
+     */
+    std::set<std::string> default_extensions;
+    /**
+     * All the extensions this shell supports
+     * This includes extensions returned by mir::frontend::get_supported_extensions() and any bespoke extensions added
+     */
+    std::set<std::string> supported_extensions;
     WaylandExtensions::Filter extensions_filter = [](Application const&, char const*) { return true; };
 };
 
-miral::WaylandExtensions::WaylandExtensions() :
-    WaylandExtensions{mo::wayland_extensions_value}
+
+miral::WaylandExtensions::WaylandExtensions()
+    : self{std::make_shared<Self>()}
 {
 }
 
-miral::WaylandExtensions::WaylandExtensions(std::string const& default_value) :
-    self{std::make_shared<Self>(default_value)}
+miral::WaylandExtensions::WaylandExtensions(std::string const& default_value)
+    : WaylandExtensions{}
 {
+    auto extensions = Self::parse_extensions_option(default_value);
+    self->validate(extensions);
+    self->default_extensions = extensions;
 }
 
 auto miral::WaylandExtensions::supported_extensions() const -> std::string
 {
-    return self->available_extensions.substr(0, self->available_extensions.size()-1);
+    std::vector<std::string> extensions{self->supported_extensions.begin(), self->supported_extensions.end()};
+    return Self::serialize_colon_list(extensions);
 }
 
 auto miral::WaylandExtensions::recommended_extensions() -> std::string
 {
-    return mo::wayland_extensions_value;
+    return Self::serialize_colon_list(mir::frontend::get_standard_extensions());
 }
 
 void miral::WaylandExtensions::operator()(mir::Server& server) const
 {
-    self->validate(self->default_value);
     server.add_configuration_option(
         mo::wayland_extensions_opt,
         ("Wayland extensions to enable. [" + supported_extensions() + "]"),
-        self->default_value);
+        mir::OptionType::string);
 
     server.add_pre_init_callback([self=self, &server]
         {
@@ -155,9 +195,23 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
             }
 
             server.set_wayland_extension_filter(self->extensions_filter);
-        });
 
-    server.add_init_callback([this, &server]{ self->callback(server); });
+            std::set<std::string> selected_extensions;
+            if (server.get_options()->is_set(mo::wayland_extensions_opt))
+            {
+                selected_extensions = Self::parse_extensions_option(
+                    server.get_options()->get<std::string>(mo::wayland_extensions_opt));
+            }
+            else
+            {
+                selected_extensions = self->default_extensions;
+            }
+            self->validate(selected_extensions);
+            server.set_enabled_wayland_extensions(
+                std::vector<std::string>{
+                    selected_extensions.begin(),
+                    selected_extensions.end()});
+        });
 }
 
 miral::WaylandExtensions::~WaylandExtensions() = default;
@@ -167,7 +221,7 @@ auto miral::WaylandExtensions::operator=(WaylandExtensions const&) -> WaylandExt
 void miral::WaylandExtensions::add_extension(Builder const& builder)
 {
     self->add_extension(builder);
-    self->add_to_default(builder);
+    self->enable_extension(builder.name);
 }
 
 void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const& extension_filter)
@@ -178,6 +232,28 @@ void miral::WaylandExtensions::set_filter(miral::WaylandExtensions::Filter const
 void miral::WaylandExtensions::add_extension_disabled_by_default(miral::WaylandExtensions::Builder const& builder)
 {
     self->add_extension(builder);
+}
+
+auto miral::WaylandExtensions::recommended() -> std::set<std::string>
+{
+    return vec2set(mir::frontend::get_standard_extensions());
+}
+
+auto miral::WaylandExtensions::supported() -> std::set<std::string>
+{
+    return vec2set(mir::frontend::get_supported_extensions());
+}
+
+auto miral::WaylandExtensions::enable(std::string name) -> WaylandExtensions&
+{
+    self->enable_extension(name);
+    return *this;
+}
+
+auto miral::WaylandExtensions::disable(std::string name) -> WaylandExtensions&
+{
+    self->disable_extension(name);
+    return *this;
 }
 
 auto miral::application_for(wl_client* client) -> Application
