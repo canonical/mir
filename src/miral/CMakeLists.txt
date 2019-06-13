@@ -127,7 +127,7 @@ if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols
     if (MIR_DPKG_GENSYMBOLS)
         add_custom_target(check-miral-symbols ALL
             DEPENDS miral ${PROJECT_SOURCE_DIR}/debian/libmiral${MIRAL_ABI}.symbols
-            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} libmiral ${MIRAL_VERSION} ${MIRAL_ABI}
+            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miral ${MIRAL_VERSION} ${MIRAL_ABI}
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
             VERBATIM)
     endif()
