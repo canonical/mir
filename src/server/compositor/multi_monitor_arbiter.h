@@ -23,8 +23,8 @@
 #include "buffer_acquisition.h"
 #include <memory>
 #include <mutex>
-#include <deque>
-#include <set>
+#include <vector>
+#include <experimental/optional>
 
 namespace mir
 {
@@ -48,9 +48,13 @@ public:
     void advance_schedule();
 
 private:
+    void add_current_buffer_user(compositor::CompositorID id);
+    bool is_user_of_current_buffer(compositor::CompositorID id);
+    void clear_current_users();
+
     std::mutex mutable mutex;
     std::shared_ptr<graphics::Buffer> current_buffer;
-    std::set<compositor::CompositorID> current_buffer_users;
+    std::vector<std::experimental::optional<compositor::CompositorID>> current_buffer_users;
     std::shared_ptr<Schedule> schedule;
 };
 
