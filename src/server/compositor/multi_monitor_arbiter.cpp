@@ -42,17 +42,26 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
 
-    if (!current_buffer && !schedule->num_scheduled())
+    // If there is no current buffer or there is, but this compositor is already using it...
+    if (!current_buffer || current_buffer_users.find(id) != current_buffer_users.end())
+    {
+        // And if there is a scheduled buffer
+        if (schedule->num_scheduled() > 0)
+        {
+            // Advance the current buffer
+            current_buffer = schedule->next_buffer();
+            current_buffer_users.clear();
+        }
+        // Otherwise leave the current buffer alone
+    }
+
+    // If there was no current buffer and we weren't able to set one, throw and exception
+    if (!current_buffer)
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to compositor"));
 
-    if (current_buffer_users.find(id) != current_buffer_users.end() || !current_buffer)
-    {
-        if (schedule->num_scheduled())
-            current_buffer = schedule->next_buffer();
-        current_buffer_users.clear();
-    }
+    // The compositor is now a user of the current buffer
+    // This means we will try to give it a new buffer next time it asks
     current_buffer_users.insert(id);
-
     return current_buffer;
 }
 
@@ -60,13 +69,17 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
 
-    if (!current_buffer && !schedule->num_scheduled())
-        BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to snapshotter"));
-
     if (!current_buffer)
     {
-        if (schedule->num_scheduled())
+        if (schedule->num_scheduled() > 0)
+        {
             current_buffer = schedule->next_buffer();
+            current_buffer_users.clear();
+        }
+        else
+        {
+            BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to snapshotter"));
+        }
     }
 
     return current_buffer;
@@ -81,14 +94,21 @@ void mc::MultiMonitorArbiter::set_schedule(std::shared_ptr<Schedule> const& new_
 bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-    return schedule->num_scheduled() ||
-       ((current_buffer_users.find(id) == current_buffer_users.end()) && current_buffer);
+    // If there are scheduled buffers then there is one ready for any compositor
+    if (schedule->num_scheduled() > 0)
+        return true;
+    // If we have a current buffer that the compositor isn't yet using, it is ready
+    else if (current_buffer && current_buffer_users.find(id) == current_buffer_users.end())
+        return true;
+    // There are no schedualed buffers and either no current buffer, or a current buffer already used by this compositor
+    else
+        return false;
 }
 
 void mc::MultiMonitorArbiter::advance_schedule()
 {
     std::lock_guard<decltype(mutex)> lk(mutex);
-    if (schedule->num_scheduled())
+    if (schedule->num_scheduled() > 0)
     {
         current_buffer = schedule->next_buffer();
         current_buffer_users.clear();
