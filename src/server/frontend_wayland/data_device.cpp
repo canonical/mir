@@ -25,14 +25,6 @@
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
-namespace mir
-{
-namespace wayland
-{
-extern struct wl_interface const wl_data_offer_interface_data;
-}
-}
-
 namespace
 {
 class DataDeviceManager;
@@ -41,7 +33,7 @@ struct DataDevice;
 
 struct DataOffer : mw::DataOffer
 {
-    DataOffer(wl_resource* new_resource, DataSource* source, DataDevice* device);
+    DataOffer(wl_client* client, int protocol_version, DataSource* source, DataDevice* device);
 
     void accept(uint32_t serial, std::experimental::optional<std::string> const& mime_type) override
     {
@@ -288,12 +280,7 @@ void DataDevice::notify_new(DataSource* source)
 
     if (has_focus)
     {
-        wl_resource* new_resource = wl_resource_create(
-            client,
-            &mw::wl_data_offer_interface_data,
-            wl_resource_get_version(resource),
-            0);
-        current_offer = new DataOffer{new_resource, source, this};
+        current_offer = new DataOffer{client, wl_resource_get_version(resource), source, this};
     }
 }
 
@@ -320,17 +307,12 @@ void DataDevice::focus_on(wl_client* focus)
 
     if (has_focus && current_source && !current_offer)
     {
-        wl_resource* new_resource = wl_resource_create(
-            client,
-            &mw::wl_data_offer_interface_data,
-            wl_resource_get_version(resource),
-            0);
-        current_offer = new DataOffer{new_resource, current_source, this};
+        current_offer = new DataOffer{client, wl_resource_get_version(resource), current_source, this};
     }
 }
 
-DataOffer::DataOffer(wl_resource* new_resource, DataSource* source, DataDevice* device) :
-    mw::DataOffer(new_resource, Version<3>()),
+DataOffer::DataOffer(wl_client* client, int protocol_version, DataSource* source, DataDevice* device) :
+    mw::DataOffer(client, protocol_version, Version<3>()),
     source{source}
 {
     source->add_listener(this);
