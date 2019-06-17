@@ -121,6 +121,9 @@ mw::LayerShellV1::LayerShellV1(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::LayerShellV1::LayerShellV1(struct wl_client* client, int runtime_version, Version<1> static_version)
+    : LayerShellV1{wl_resource_create(client, &zwlr_layer_shell_v1_interface_data , runtime_version, 0), static_version} {}
+
 bool mw::LayerShellV1::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zwlr_layer_shell_v1_interface_data, Thunks::request_vtable);
@@ -297,6 +300,9 @@ mw::LayerSurfaceV1::LayerSurfaceV1(struct wl_resource* resource, Version<1>)
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
+
+mw::LayerSurfaceV1::LayerSurfaceV1(struct wl_client* client, int runtime_version, Version<1> static_version)
+    : LayerSurfaceV1{wl_resource_create(client, &zwlr_layer_surface_v1_interface_data , runtime_version, 0), static_version} {}
 
 void mw::LayerSurfaceV1::send_configure_event(uint32_t serial, uint32_t width, uint32_t height) const
 {

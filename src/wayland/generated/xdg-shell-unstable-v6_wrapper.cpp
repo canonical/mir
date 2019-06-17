@@ -167,6 +167,9 @@ mw::XdgShellV6::XdgShellV6(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::XdgShellV6::XdgShellV6(struct wl_client* client, int runtime_version, Version<1> static_version)
+    : XdgShellV6{wl_resource_create(client, &zxdg_shell_v6_interface_data , runtime_version, 0), static_version} {}
+
 void mw::XdgShellV6::send_ping_event(uint32_t serial) const
 {
     wl_resource_post_event(resource, Opcode::ping, serial);
@@ -343,6 +346,9 @@ mw::XdgPositionerV6::XdgPositionerV6(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::XdgPositionerV6::XdgPositionerV6(struct wl_client* client, int runtime_version, Version<1> static_version)
+    : XdgPositionerV6{wl_resource_create(client, &zxdg_positioner_v6_interface_data , runtime_version, 0), static_version} {}
+
 bool mw::XdgPositionerV6::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zxdg_positioner_v6_interface_data, Thunks::request_vtable);
@@ -485,6 +491,9 @@ mw::XdgSurfaceV6::XdgSurfaceV6(struct wl_resource* resource, Version<1>)
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
+
+mw::XdgSurfaceV6::XdgSurfaceV6(struct wl_client* client, int runtime_version, Version<1> static_version)
+    : XdgSurfaceV6{wl_resource_create(client, &zxdg_surface_v6_interface_data , runtime_version, 0), static_version} {}
 
 void mw::XdgSurfaceV6::send_configure_event(uint32_t serial) const
 {
@@ -757,6 +766,9 @@ mw::XdgToplevelV6::XdgToplevelV6(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::XdgToplevelV6::XdgToplevelV6(struct wl_client* client, int runtime_version, Version<1> static_version)
+    : XdgToplevelV6{wl_resource_create(client, &zxdg_toplevel_v6_interface_data , runtime_version, 0), static_version} {}
+
 void mw::XdgToplevelV6::send_configure_event(int32_t width, int32_t height, struct wl_array* states) const
 {
     wl_resource_post_event(resource, Opcode::configure, width, height, states);
@@ -894,6 +906,9 @@ mw::XdgPopupV6::XdgPopupV6(struct wl_resource* resource, Version<1>)
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
+
+mw::XdgPopupV6::XdgPopupV6(struct wl_client* client, int runtime_version, Version<1> static_version)
+    : XdgPopupV6{wl_resource_create(client, &zxdg_popup_v6_interface_data , runtime_version, 0), static_version} {}
 
 void mw::XdgPopupV6::send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height) const
 {

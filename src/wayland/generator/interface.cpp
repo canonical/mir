@@ -84,6 +84,7 @@ Emitter Interface::implementation() const
             },
             thunks_impl(),
             constructor_impl(),
+            server_side_constructor_impl(),
             event_impls(),
             is_instance_impl(),
             Lines{
@@ -128,7 +129,10 @@ void Interface::populate_required_interfaces(std::set<std::string>& interfaces) 
 
 Emitter Interface::constructor_prototype() const
 {
-    return Line{generated_name, "(", constructor_args(), ");"};
+    return Lines{
+        {generated_name, "(", constructor_args(), ");"},
+        {generated_name, "(", server_side_constructor_args(), ");"}
+    };
 }
 
 Emitter Interface::constructor_impl() const
@@ -143,15 +147,28 @@ Emitter Interface::constructor_impl() const
                 "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
             },
             (has_vtable ?
-                "wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);" :
-                Emitter{nullptr})
+             "wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);" :
+             Emitter{nullptr})
         }
+    };
+}
+
+Emitter Interface::server_side_constructor_impl() const
+{
+    return Lines{
+        {nmspace, generated_name, "(", server_side_constructor_args(), ")"},
+        {"    : ", generated_name, "{wl_resource_create(client, &", wl_name, "_interface_data , runtime_version, 0), static_version} {}"},
     };
 }
 
 Emitter Interface::constructor_args() const
 {
     return {"struct wl_resource* resource, Version<", std::to_string(version), ">"};
+}
+
+Emitter Interface::server_side_constructor_args() const
+{
+    return {"struct wl_client* client, int runtime_version, Version<", std::to_string(version), "> static_version"};
 }
 
 Emitter Interface::destructor_prototype() const

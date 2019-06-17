@@ -52,6 +52,8 @@ private:
     Emitter constructor_prototype() const;
     Emitter constructor_impl() const;
     Emitter constructor_args() const;
+    Emitter server_side_constructor_args() const;
+    Emitter server_side_constructor_impl() const;
     Emitter destructor_prototype() const;
     Emitter virtual_request_prototypes() const;
     Emitter event_prototypes() const;

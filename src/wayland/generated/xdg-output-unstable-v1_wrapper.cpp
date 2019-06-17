@@ -127,6 +127,9 @@ mw::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_resource* resource, Version
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::XdgOutputManagerV1::XdgOutputManagerV1(struct wl_client* client, int runtime_version, Version<2> static_version)
+    : XdgOutputManagerV1{wl_resource_create(client, &zxdg_output_manager_v1_interface_data , runtime_version, 0), static_version} {}
+
 bool mw::XdgOutputManagerV1::is_instance(wl_resource* resource)
 {
     return wl_resource_instance_of(resource, &zxdg_output_manager_v1_interface_data, Thunks::request_vtable);
@@ -210,6 +213,9 @@ mw::XdgOutputV1::XdgOutputV1(struct wl_resource* resource, Version<2>)
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
+
+mw::XdgOutputV1::XdgOutputV1(struct wl_client* client, int runtime_version, Version<2> static_version)
+    : XdgOutputV1{wl_resource_create(client, &zxdg_output_v1_interface_data , runtime_version, 0), static_version} {}
 
 void mw::XdgOutputV1::send_logical_position_event(int32_t x, int32_t y) const
 {

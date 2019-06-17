@@ -28,6 +28,7 @@ public:
     static XdgWmBase* from(struct wl_resource*);
 
     XdgWmBase(struct wl_resource* resource, Version<1>);
+    XdgWmBase(struct wl_client* client, int runtime_version, Version<1> static_version);
     virtual ~XdgWmBase() = default;
 
     void send_ping_event(uint32_t serial) const;
@@ -83,6 +84,7 @@ public:
     static XdgPositioner* from(struct wl_resource*);
 
     XdgPositioner(struct wl_resource* resource, Version<1>);
+    XdgPositioner(struct wl_client* client, int runtime_version, Version<1> static_version);
     virtual ~XdgPositioner() = default;
 
     void destroy_wayland_object() const;
@@ -154,6 +156,7 @@ public:
     static XdgSurface* from(struct wl_resource*);
 
     XdgSurface(struct wl_resource* resource, Version<1>);
+    XdgSurface(struct wl_client* client, int runtime_version, Version<1> static_version);
     virtual ~XdgSurface() = default;
 
     void send_configure_event(uint32_t serial) const;
@@ -195,6 +198,7 @@ public:
     static XdgToplevel* from(struct wl_resource*);
 
     XdgToplevel(struct wl_resource* resource, Version<1>);
+    XdgToplevel(struct wl_client* client, int runtime_version, Version<1> static_version);
     virtual ~XdgToplevel() = default;
 
     void send_configure_event(int32_t width, int32_t height, struct wl_array* states) const;
@@ -261,6 +265,7 @@ public:
     static XdgPopup* from(struct wl_resource*);
 
     XdgPopup(struct wl_resource* resource, Version<1>);
+    XdgPopup(struct wl_client* client, int runtime_version, Version<1> static_version);
     virtual ~XdgPopup() = default;
 
     void send_configure_event(int32_t x, int32_t y, int32_t width, int32_t height) const;
