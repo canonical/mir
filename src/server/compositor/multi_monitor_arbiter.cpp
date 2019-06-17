@@ -32,6 +32,8 @@ mc::MultiMonitorArbiter::MultiMonitorArbiter(
     std::shared_ptr<Schedule> const& schedule) :
     schedule(schedule)
 {
+    // We're highly unlikely to have more than 6 outputs
+    current_buffer_users.reserve(6);
 }
 
 mc::MultiMonitorArbiter::~MultiMonitorArbiter()
@@ -43,14 +45,14 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
     std::lock_guard<decltype(mutex)> lk(mutex);
 
     // If there is no current buffer or there is, but this compositor is already using it...
-    if (!current_buffer || current_buffer_users.find(id) != current_buffer_users.end())
+    if (!current_buffer || is_user_of_current_buffer(id))
     {
         // And if there is a scheduled buffer
         if (schedule->num_scheduled() > 0)
         {
             // Advance the current buffer
             current_buffer = schedule->next_buffer();
-            current_buffer_users.clear();
+            clear_current_users();
         }
         // Otherwise leave the current buffer alone
     }
@@ -61,7 +63,7 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::compositor_acquire(composit
 
     // The compositor is now a user of the current buffer
     // This means we will try to give it a new buffer next time it asks
-    current_buffer_users.insert(id);
+    add_current_buffer_user(id);
     return current_buffer;
 }
 
@@ -74,7 +76,7 @@ std::shared_ptr<mg::Buffer> mc::MultiMonitorArbiter::snapshot_acquire()
         if (schedule->num_scheduled() > 0)
         {
             current_buffer = schedule->next_buffer();
-            current_buffer_users.clear();
+            clear_current_users();
         }
         else
         {
@@ -98,9 +100,9 @@ bool mc::MultiMonitorArbiter::buffer_ready_for(mc::CompositorID id)
     if (schedule->num_scheduled() > 0)
         return true;
     // If we have a current buffer that the compositor isn't yet using, it is ready
-    else if (current_buffer && current_buffer_users.find(id) == current_buffer_users.end())
+    else if (current_buffer && !is_user_of_current_buffer(id))
         return true;
-    // There are no schedualed buffers and either no current buffer, or a current buffer already used by this compositor
+    // There are no scheduled buffers and either no current buffer, or a current buffer already used by this compositor
     else
         return false;
 }
@@ -111,6 +113,44 @@ void mc::MultiMonitorArbiter::advance_schedule()
     if (schedule->num_scheduled() > 0)
     {
         current_buffer = schedule->next_buffer();
-        current_buffer_users.clear();
+        clear_current_users();
     } 
+}
+
+void mc::MultiMonitorArbiter::add_current_buffer_user(mc::CompositorID id)
+{
+    // First try and find an empty slot in our vector…
+    for (auto& slot : current_buffer_users)
+    {
+        if (!slot)
+        {
+            slot = id;
+            return;
+        }
+    }
+    //…no empty slot, so we'll need to grow the vector.
+    current_buffer_users.push_back({id});
+}
+
+bool mc::MultiMonitorArbiter::is_user_of_current_buffer(mir::compositor::CompositorID id)
+{
+    return std::any_of(
+        current_buffer_users.begin(),
+        current_buffer_users.end(),
+        [id](auto const& slot)
+        {
+            if (slot)
+            {
+                return *slot == id;
+            }
+            return false;
+        });
+}
+
+void mc::MultiMonitorArbiter::clear_current_users()
+{
+    for (auto& slot : current_buffer_users)
+    {
+        slot = {};
+    }
 }
