@@ -5,6 +5,6 @@ includedir=@INCLUDEDIR@
 Name: mirwayland
 Description: Mir Wayland library
 Version: @MIRAL_VERSION@
-Requires: mircore
+Requires: mircommon, mircore
 Libs: -L${libdir} -lmirwayland
 Cflags: -I${includedir}

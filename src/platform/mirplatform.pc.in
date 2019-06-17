@@ -6,6 +6,6 @@ includedir=@INCLUDEDIR@
 Name: mirplatform
 Description: Mir platform library
 Version: @MIR_VERSION@
-Requires: mircore
-Libs: -L@LIBDIR@ -lmirplatform -lmircommon
+Requires: mircommon, mircore
+Libs: -L@LIBDIR@ -lmirplatform
 Cflags: -I@INCLUDEDIR@ -I@COMMON_INCLUDEDIR@
