@@ -49,6 +49,8 @@ public:
     void populate_required_interfaces(std::set<std::string>& interfaces) const; // fills the set with interfaces used
 
 private:
+    Emitter make_resource_prototype() const;
+    Emitter make_resource_impl() const;
     Emitter constructor_prototype() const;
     Emitter constructor_impl() const;
     Emitter constructor_args() const;

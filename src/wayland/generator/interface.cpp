@@ -49,6 +49,7 @@ Emitter Interface::declaration() const
             {"static char const constexpr* interface_name = \"", wl_name, "\";"},
             {"static ", generated_name, "* from(struct wl_resource*);"},
             Lines {
+                make_resource_prototype(),
                 constructor_prototype(),
                 destructor_prototype(),
             },
@@ -83,6 +84,7 @@ Emitter Interface::implementation() const
                 }
             },
             thunks_impl(),
+            make_resource_impl(),
             constructor_impl(),
             event_impls(),
             is_instance_impl(),
@@ -124,6 +126,29 @@ void Interface::populate_required_interfaces(std::set<std::string>& interfaces) 
     {
         event.populate_required_interfaces(interfaces);
     }
+}
+
+Emitter Interface::make_resource_prototype() const
+{
+    return Line{"static auto make_resource(wl_resource* parent_resource) -> wl_resource*;"};
+}
+
+Emitter Interface::make_resource_impl() const
+{
+    return Lines{
+        {"auto ", nmspace, "make_resource(wl_resource* parent_resource) -> wl_resource*"},
+        Block{
+            {"wl_client* client = wl_resource_get_client(parent_resource);"},
+            {"int version = wl_resource_get_version(parent_resource);"},
+            {"wl_resource* new_resource = wl_resource_create(client, &" + wl_name + "_interface_data, version, 0);"},
+            {"if (new_resource == nullptr)"},
+            Block{
+                {"wl_client_post_no_memory(client);"},
+                {"BOOST_THROW_EXCEPTION(std::bad_alloc{});"},
+            },
+            {"return new_resource;"}
+        }
+    };
 }
 
 Emitter Interface::constructor_prototype() const
