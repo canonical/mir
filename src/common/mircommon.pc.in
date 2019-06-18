@@ -1,0 +1,9 @@
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@/mircommon
+
+Name: mircommon
+Description: Mir server library
+Version: @MIR_VERSION@
+Requires: mircore
+Libs: -L${libdir} -lmircommon
+Cflags: -I${includedir}

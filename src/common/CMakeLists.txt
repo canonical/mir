@@ -79,3 +79,12 @@ install(
   DIRECTORY ${CMAKE_SOURCE_DIR}/include/common/mir
   DESTINATION "include/mircommon"
 )
+
+set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
+set(INCLUDEDIR "${CMAKE_INSTALL_PREFIX}/include")
+
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/mircommon.pc.in
+    ${CMAKE_CURRENT_BINARY_DIR}/mircommon.pc
+    @ONLY
+)
+install(FILES       ${CMAKE_CURRENT_BINARY_DIR}/mircommon.pc    DESTINATION "${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig")
