@@ -135,6 +135,11 @@ option(MIR_BUILD_PERFORMANCE_TESTS "Build performance tests" ON)
 option(MIR_BUILD_PRIVILEGED_TESTS "Build privileged tests" ON)
 option(MIR_BUILD_UNIT_TESTS "Build unit tests" ON)
 
+cmake_dependent_option(MIR_BUILD_INTERPROCESS_TESTS
+  "Build interprocess acceptance tests as part of default testing" ON
+  "MIR_BUILD_ACCEPTANCE_TESTS" OFF)
+
+
 if (MIR_BUILD_ACCEPTANCE_TESTS)
   add_subdirectory(acceptance-tests/)
   add_subdirectory(umock-acceptance-tests/)

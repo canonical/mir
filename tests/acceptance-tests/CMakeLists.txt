@@ -15,13 +15,11 @@ set(
 
   server_configuration_wrapping.cpp
   server_configuration_options.cpp
-  server_signal_handling.cpp
   server_stop_callback.cpp
   test_application_not_responding_detection.cpp
   test_client_header_version.cpp
   test_client_input.cpp
   test_client_library_callbacks.cpp
-  test_client_library_old.cpp
   test_client_surface_events.cpp
   test_client_surface_swap_buffers.cpp
   test_command_line_handling.cpp
@@ -30,15 +28,12 @@ set(
   test_client_logging.cpp
   test_custom_window_management.cpp
   test_custom_input_dispatcher.cpp
-  test_server_shutdown.cpp
   test_client_focus_notification.cpp
-  test_client_authorization.cpp
   test_mirblob.cpp
   test_nested_mir.cpp
   test_nested_input.cpp
   test_display_configuration.cpp
   test_surfaces_with_output_id.cpp
-  test_server_disconnect.cpp
   test_prompt_session_client_api.cpp
   test_client_scaling.cpp
   test_client_screencast.cpp
@@ -46,9 +41,7 @@ set(
   test_buffer_stream_arrangement.cpp
   test_client_with_custom_display_config_deadlock.cpp
   test_server_without_active_outputs.cpp
-  test_server_startup.cpp
   test_debug_api.cpp
-  test_unresponsive_client.cpp
   test_client_platform_operation.cpp
   test_input_device_hub.cpp
   test_render_override.cpp
@@ -71,6 +64,18 @@ set(
   test_buffer_stream_arrangement1.cpp
   test_seat_report.cpp
 )
+
+if (MIR_BUILD_INTERPROCESS_TESTS)
+  list(APPEND SOURCES
+    server_signal_handling.cpp
+    test_client_authorization.cpp
+    test_client_library_old.cpp
+    test_server_disconnect.cpp
+    test_server_shutdown.cpp
+    test_server_startup.cpp
+    test_unresponsive_client.cpp
+  )
+endif()
 
 if (MIR_TEST_PLATFORM STREQUAL "mesa-kms" OR MIR_TEST_PLATFORM STREQUAL "mesa-x11")
   list(APPEND SOURCES test_symbols_required_by_mesa.cpp)
