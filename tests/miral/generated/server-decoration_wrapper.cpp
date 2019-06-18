@@ -115,6 +115,9 @@ mw::ServerDecorationManager::ServerDecorationManager(struct wl_resource* resourc
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
+mw::ServerDecorationManager::ServerDecorationManager(struct wl_client* client, struct wl_resource* parent, Version<1> static_version)
+    : ServerDecorationManager{wl_resource_create(client, &org_kde_kwin_server_decoration_manager_interface_data , wl_resource_get_version(parent), 0), static_version} {}
+
 void mw::ServerDecorationManager::send_default_mode_event(uint32_t mode) const
 {
     wl_resource_post_event(resource, Opcode::default_mode, mode);
@@ -217,6 +220,9 @@ mw::ServerDecoration::ServerDecoration(struct wl_resource* resource, Version<1>)
     }
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
+
+mw::ServerDecoration::ServerDecoration(struct wl_client* client, struct wl_resource* parent, Version<1> static_version)
+    : ServerDecoration{wl_resource_create(client, &org_kde_kwin_server_decoration_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::ServerDecoration::send_mode_event(uint32_t mode) const
 {

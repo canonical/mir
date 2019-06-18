@@ -28,6 +28,7 @@ public:
     static ServerDecorationManager* from(struct wl_resource*);
 
     ServerDecorationManager(struct wl_resource* resource, Version<1>);
+    ServerDecorationManager(struct wl_client* client, struct wl_resource* parent, Version<1> static_version);
     virtual ~ServerDecorationManager() = default;
 
     void send_default_mode_event(uint32_t mode) const;
@@ -77,6 +78,7 @@ public:
     static ServerDecoration* from(struct wl_resource*);
 
     ServerDecoration(struct wl_resource* resource, Version<1>);
+    ServerDecoration(struct wl_client* client, struct wl_resource* parent, Version<1> static_version);
     virtual ~ServerDecoration() = default;
 
     void send_mode_event(uint32_t mode) const;
