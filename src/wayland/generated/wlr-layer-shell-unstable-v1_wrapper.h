@@ -28,7 +28,7 @@ public:
     static LayerShellV1* from(struct wl_resource*);
 
     LayerShellV1(struct wl_resource* resource, Version<1>);
-    LayerShellV1(struct wl_client* client, int runtime_version, Version<1> static_version);
+    LayerShellV1(struct wl_client* client, struct wl_resource* parent, Version<1> static_version);
     virtual ~LayerShellV1() = default;
 
     void destroy_wayland_object() const;
@@ -79,7 +79,7 @@ public:
     static LayerSurfaceV1* from(struct wl_resource*);
 
     LayerSurfaceV1(struct wl_resource* resource, Version<1>);
-    LayerSurfaceV1(struct wl_client* client, int runtime_version, Version<1> static_version);
+    LayerSurfaceV1(struct wl_client* client, struct wl_resource* parent, Version<1> static_version);
     virtual ~LayerSurfaceV1() = default;
 
     void send_configure_event(uint32_t serial, uint32_t width, uint32_t height) const;

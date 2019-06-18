@@ -28,7 +28,7 @@ public:
     static Callback* from(struct wl_resource*);
 
     Callback(struct wl_resource* resource, Version<1>);
-    Callback(struct wl_client* client, int runtime_version, Version<1> static_version);
+    Callback(struct wl_client* client, struct wl_resource* parent, Version<1> static_version);
     virtual ~Callback() = default;
 
     void send_done_event(uint32_t callback_data) const;
@@ -58,7 +58,7 @@ public:
     static Compositor* from(struct wl_resource*);
 
     Compositor(struct wl_resource* resource, Version<4>);
-    Compositor(struct wl_client* client, int runtime_version, Version<4> static_version);
+    Compositor(struct wl_client* client, struct wl_resource* parent, Version<4> static_version);
     virtual ~Compositor() = default;
 
     void destroy_wayland_object() const;
@@ -95,7 +95,7 @@ public:
     static ShmPool* from(struct wl_resource*);
 
     ShmPool(struct wl_resource* resource, Version<1>);
-    ShmPool(struct wl_client* client, int runtime_version, Version<1> static_version);
+    ShmPool(struct wl_client* client, struct wl_resource* parent, Version<1> static_version);
     virtual ~ShmPool() = default;
 
     void destroy_wayland_object() const;
@@ -121,7 +121,7 @@ public:
     static Shm* from(struct wl_resource*);
 
     Shm(struct wl_resource* resource, Version<1>);
-    Shm(struct wl_client* client, int runtime_version, Version<1> static_version);
+    Shm(struct wl_client* client, struct wl_resource* parent, Version<1> static_version);
     virtual ~Shm() = default;
 
     void send_format_event(uint32_t format) const;
@@ -233,7 +233,7 @@ public:
     static Buffer* from(struct wl_resource*);
 
     Buffer(struct wl_resource* resource, Version<1>);
-    Buffer(struct wl_client* client, int runtime_version, Version<1> static_version);
+    Buffer(struct wl_client* client, struct wl_resource* parent, Version<1> static_version);
     virtual ~Buffer() = default;
 
     void send_release_event() const;
@@ -264,7 +264,7 @@ public:
     static DataOffer* from(struct wl_resource*);
 
     DataOffer(struct wl_resource* resource, Version<3>);
-    DataOffer(struct wl_client* client, int runtime_version, Version<3> static_version);
+    DataOffer(struct wl_client* client, struct wl_resource* parent, Version<3> static_version);
     virtual ~DataOffer() = default;
 
     void send_offer_event(std::string const& mime_type) const;
@@ -313,7 +313,7 @@ public:
     static DataSource* from(struct wl_resource*);
 
     DataSource(struct wl_resource* resource, Version<3>);
-    DataSource(struct wl_client* client, int runtime_version, Version<3> static_version);
+    DataSource(struct wl_client* client, struct wl_resource* parent, Version<3> static_version);
     virtual ~DataSource() = default;
 
     void send_target_event(std::experimental::optional<std::string> const& mime_type) const;
@@ -365,7 +365,7 @@ public:
     static DataDevice* from(struct wl_resource*);
 
     DataDevice(struct wl_resource* resource, Version<3>);
-    DataDevice(struct wl_client* client, int runtime_version, Version<3> static_version);
+    DataDevice(struct wl_client* client, struct wl_resource* parent, Version<3> static_version);
     virtual ~DataDevice() = default;
 
     void send_data_offer_event(struct wl_resource* id) const;
@@ -413,7 +413,7 @@ public:
     static DataDeviceManager* from(struct wl_resource*);
 
     DataDeviceManager(struct wl_resource* resource, Version<3>);
-    DataDeviceManager(struct wl_client* client, int runtime_version, Version<3> static_version);
+    DataDeviceManager(struct wl_client* client, struct wl_resource* parent, Version<3> static_version);
     virtual ~DataDeviceManager() = default;
 
     void destroy_wayland_object() const;
@@ -458,7 +458,7 @@ public:
     static Shell* from(struct wl_resource*);
 
     Shell(struct wl_resource* resource, Version<1>);
-    Shell(struct wl_client* client, int runtime_version, Version<1> static_version);
+    Shell(struct wl_client* client, struct wl_resource* parent, Version<1> static_version);
     virtual ~Shell() = default;
 
     void destroy_wayland_object() const;
@@ -499,7 +499,7 @@ public:
     static ShellSurface* from(struct wl_resource*);
 
     ShellSurface(struct wl_resource* resource, Version<1>);
-    ShellSurface(struct wl_client* client, int runtime_version, Version<1> static_version);
+    ShellSurface(struct wl_client* client, struct wl_resource* parent, Version<1> static_version);
     virtual ~ShellSurface() = default;
 
     void send_ping_event(uint32_t serial) const;
@@ -569,7 +569,7 @@ public:
     static Surface* from(struct wl_resource*);
 
     Surface(struct wl_resource* resource, Version<4>);
-    Surface(struct wl_client* client, int runtime_version, Version<4> static_version);
+    Surface(struct wl_client* client, struct wl_resource* parent, Version<4> static_version);
     virtual ~Surface() = default;
 
     void send_enter_event(struct wl_resource* output) const;
@@ -617,7 +617,7 @@ public:
     static Seat* from(struct wl_resource*);
 
     Seat(struct wl_resource* resource, Version<6>);
-    Seat(struct wl_client* client, int runtime_version, Version<6> static_version);
+    Seat(struct wl_client* client, struct wl_resource* parent, Version<6> static_version);
     virtual ~Seat() = default;
 
     void send_capabilities_event(uint32_t capabilities) const;
@@ -673,7 +673,7 @@ public:
     static Pointer* from(struct wl_resource*);
 
     Pointer(struct wl_resource* resource, Version<6>);
-    Pointer(struct wl_client* client, int runtime_version, Version<6> static_version);
+    Pointer(struct wl_client* client, struct wl_resource* parent, Version<6> static_version);
     virtual ~Pointer() = default;
 
     void send_enter_event(uint32_t serial, struct wl_resource* surface, double surface_x, double surface_y) const;
@@ -750,7 +750,7 @@ public:
     static Keyboard* from(struct wl_resource*);
 
     Keyboard(struct wl_resource* resource, Version<6>);
-    Keyboard(struct wl_client* client, int runtime_version, Version<6> static_version);
+    Keyboard(struct wl_client* client, struct wl_resource* parent, Version<6> static_version);
     virtual ~Keyboard() = default;
 
     void send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const;
@@ -804,7 +804,7 @@ public:
     static Touch* from(struct wl_resource*);
 
     Touch(struct wl_resource* resource, Version<6>);
-    Touch(struct wl_client* client, int runtime_version, Version<6> static_version);
+    Touch(struct wl_client* client, struct wl_resource* parent, Version<6> static_version);
     virtual ~Touch() = default;
 
     void send_down_event(uint32_t serial, uint32_t time, struct wl_resource* surface, int32_t id, double x, double y) const;
@@ -849,7 +849,7 @@ public:
     static Output* from(struct wl_resource*);
 
     Output(struct wl_resource* resource, Version<3>);
-    Output(struct wl_client* client, int runtime_version, Version<3> static_version);
+    Output(struct wl_client* client, struct wl_resource* parent, Version<3> static_version);
     virtual ~Output() = default;
 
     void send_geometry_event(int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const;
@@ -928,7 +928,7 @@ public:
     static Region* from(struct wl_resource*);
 
     Region(struct wl_resource* resource, Version<1>);
-    Region(struct wl_client* client, int runtime_version, Version<1> static_version);
+    Region(struct wl_client* client, struct wl_resource* parent, Version<1> static_version);
     virtual ~Region() = default;
 
     void destroy_wayland_object() const;
@@ -954,7 +954,7 @@ public:
     static Subcompositor* from(struct wl_resource*);
 
     Subcompositor(struct wl_resource* resource, Version<1>);
-    Subcompositor(struct wl_client* client, int runtime_version, Version<1> static_version);
+    Subcompositor(struct wl_client* client, struct wl_resource* parent, Version<1> static_version);
     virtual ~Subcompositor() = default;
 
     void destroy_wayland_object() const;
@@ -996,7 +996,7 @@ public:
     static Subsurface* from(struct wl_resource*);
 
     Subsurface(struct wl_resource* resource, Version<1>);
-    Subsurface(struct wl_client* client, int runtime_version, Version<1> static_version);
+    Subsurface(struct wl_client* client, struct wl_resource* parent, Version<1> static_version);
     virtual ~Subsurface() = default;
 
     void destroy_wayland_object() const;

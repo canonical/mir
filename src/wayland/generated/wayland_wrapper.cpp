@@ -80,8 +80,8 @@ mw::Callback::Callback(struct wl_resource* resource, Version<1>)
     }
 }
 
-mw::Callback::Callback(struct wl_client* client, int runtime_version, Version<1> static_version)
-    : Callback{wl_resource_create(client, &wl_callback_interface_data , runtime_version, 0), static_version} {}
+mw::Callback::Callback(struct wl_client* client, struct wl_resource* parent, Version<1> static_version)
+    : Callback{wl_resource_create(client, &wl_callback_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::Callback::send_done_event(uint32_t callback_data) const
 {
@@ -194,8 +194,8 @@ mw::Compositor::Compositor(struct wl_resource* resource, Version<4>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::Compositor::Compositor(struct wl_client* client, int runtime_version, Version<4> static_version)
-    : Compositor{wl_resource_create(client, &wl_compositor_interface_data , runtime_version, 0), static_version} {}
+mw::Compositor::Compositor(struct wl_client* client, struct wl_resource* parent, Version<4> static_version)
+    : Compositor{wl_resource_create(client, &wl_compositor_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 bool mw::Compositor::is_instance(wl_resource* resource)
 {
@@ -316,8 +316,8 @@ mw::ShmPool::ShmPool(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::ShmPool::ShmPool(struct wl_client* client, int runtime_version, Version<1> static_version)
-    : ShmPool{wl_resource_create(client, &wl_shm_pool_interface_data , runtime_version, 0), static_version} {}
+mw::ShmPool::ShmPool(struct wl_client* client, struct wl_resource* parent, Version<1> static_version)
+    : ShmPool{wl_resource_create(client, &wl_shm_pool_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 bool mw::ShmPool::is_instance(wl_resource* resource)
 {
@@ -426,8 +426,8 @@ mw::Shm::Shm(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::Shm::Shm(struct wl_client* client, int runtime_version, Version<1> static_version)
-    : Shm{wl_resource_create(client, &wl_shm_interface_data , runtime_version, 0), static_version} {}
+mw::Shm::Shm(struct wl_client* client, struct wl_resource* parent, Version<1> static_version)
+    : Shm{wl_resource_create(client, &wl_shm_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::Shm::send_format_event(uint32_t format) const
 {
@@ -520,8 +520,8 @@ mw::Buffer::Buffer(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::Buffer::Buffer(struct wl_client* client, int runtime_version, Version<1> static_version)
-    : Buffer{wl_resource_create(client, &wl_buffer_interface_data , runtime_version, 0), static_version} {}
+mw::Buffer::Buffer(struct wl_client* client, struct wl_resource* parent, Version<1> static_version)
+    : Buffer{wl_resource_create(client, &wl_buffer_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::Buffer::send_release_event() const
 {
@@ -652,8 +652,8 @@ mw::DataOffer::DataOffer(struct wl_resource* resource, Version<3>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::DataOffer::DataOffer(struct wl_client* client, int runtime_version, Version<3> static_version)
-    : DataOffer{wl_resource_create(client, &wl_data_offer_interface_data , runtime_version, 0), static_version} {}
+mw::DataOffer::DataOffer(struct wl_client* client, struct wl_resource* parent, Version<3> static_version)
+    : DataOffer{wl_resource_create(client, &wl_data_offer_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::DataOffer::send_offer_event(std::string const& mime_type) const
 {
@@ -783,8 +783,8 @@ mw::DataSource::DataSource(struct wl_resource* resource, Version<3>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::DataSource::DataSource(struct wl_client* client, int runtime_version, Version<3> static_version)
-    : DataSource{wl_resource_create(client, &wl_data_source_interface_data , runtime_version, 0), static_version} {}
+mw::DataSource::DataSource(struct wl_client* client, struct wl_resource* parent, Version<3> static_version)
+    : DataSource{wl_resource_create(client, &wl_data_source_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::DataSource::send_target_event(std::experimental::optional<std::string> const& mime_type) const
 {
@@ -959,8 +959,8 @@ mw::DataDevice::DataDevice(struct wl_resource* resource, Version<3>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::DataDevice::DataDevice(struct wl_client* client, int runtime_version, Version<3> static_version)
-    : DataDevice{wl_resource_create(client, &wl_data_device_interface_data , runtime_version, 0), static_version} {}
+mw::DataDevice::DataDevice(struct wl_client* client, struct wl_resource* parent, Version<3> static_version)
+    : DataDevice{wl_resource_create(client, &wl_data_device_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::DataDevice::send_data_offer_event(struct wl_resource* id) const
 {
@@ -1155,8 +1155,8 @@ mw::DataDeviceManager::DataDeviceManager(struct wl_resource* resource, Version<3
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::DataDeviceManager::DataDeviceManager(struct wl_client* client, int runtime_version, Version<3> static_version)
-    : DataDeviceManager{wl_resource_create(client, &wl_data_device_manager_interface_data , runtime_version, 0), static_version} {}
+mw::DataDeviceManager::DataDeviceManager(struct wl_client* client, struct wl_resource* parent, Version<3> static_version)
+    : DataDeviceManager{wl_resource_create(client, &wl_data_device_manager_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 bool mw::DataDeviceManager::is_instance(wl_resource* resource)
 {
@@ -1275,8 +1275,8 @@ mw::Shell::Shell(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::Shell::Shell(struct wl_client* client, int runtime_version, Version<1> static_version)
-    : Shell{wl_resource_create(client, &wl_shell_interface_data , runtime_version, 0), static_version} {}
+mw::Shell::Shell(struct wl_client* client, struct wl_resource* parent, Version<1> static_version)
+    : Shell{wl_resource_create(client, &wl_shell_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 bool mw::Shell::is_instance(wl_resource* resource)
 {
@@ -1493,8 +1493,8 @@ mw::ShellSurface::ShellSurface(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::ShellSurface::ShellSurface(struct wl_client* client, int runtime_version, Version<1> static_version)
-    : ShellSurface{wl_resource_create(client, &wl_shell_surface_interface_data , runtime_version, 0), static_version} {}
+mw::ShellSurface::ShellSurface(struct wl_client* client, struct wl_resource* parent, Version<1> static_version)
+    : ShellSurface{wl_resource_create(client, &wl_shell_surface_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::ShellSurface::send_ping_event(uint32_t serial) const
 {
@@ -1773,8 +1773,8 @@ mw::Surface::Surface(struct wl_resource* resource, Version<4>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::Surface::Surface(struct wl_client* client, int runtime_version, Version<4> static_version)
-    : Surface{wl_resource_create(client, &wl_surface_interface_data , runtime_version, 0), static_version} {}
+mw::Surface::Surface(struct wl_client* client, struct wl_resource* parent, Version<4> static_version)
+    : Surface{wl_resource_create(client, &wl_surface_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::Surface::send_enter_event(struct wl_resource* output) const
 {
@@ -1977,8 +1977,8 @@ mw::Seat::Seat(struct wl_resource* resource, Version<6>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::Seat::Seat(struct wl_client* client, int runtime_version, Version<6> static_version)
-    : Seat{wl_resource_create(client, &wl_seat_interface_data , runtime_version, 0), static_version} {}
+mw::Seat::Seat(struct wl_client* client, struct wl_resource* parent, Version<6> static_version)
+    : Seat{wl_resource_create(client, &wl_seat_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::Seat::send_capabilities_event(uint32_t capabilities) const
 {
@@ -2114,8 +2114,8 @@ mw::Pointer::Pointer(struct wl_resource* resource, Version<6>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::Pointer::Pointer(struct wl_client* client, int runtime_version, Version<6> static_version)
-    : Pointer{wl_resource_create(client, &wl_pointer_interface_data , runtime_version, 0), static_version} {}
+mw::Pointer::Pointer(struct wl_client* client, struct wl_resource* parent, Version<6> static_version)
+    : Pointer{wl_resource_create(client, &wl_pointer_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::Pointer::send_enter_event(uint32_t serial, struct wl_resource* surface, double surface_x, double surface_y) const
 {
@@ -2281,8 +2281,8 @@ mw::Keyboard::Keyboard(struct wl_resource* resource, Version<6>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::Keyboard::Keyboard(struct wl_client* client, int runtime_version, Version<6> static_version)
-    : Keyboard{wl_resource_create(client, &wl_keyboard_interface_data , runtime_version, 0), static_version} {}
+mw::Keyboard::Keyboard(struct wl_client* client, struct wl_resource* parent, Version<6> static_version)
+    : Keyboard{wl_resource_create(client, &wl_keyboard_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::Keyboard::send_keymap_event(uint32_t format, mir::Fd fd, uint32_t size) const
 {
@@ -2401,8 +2401,8 @@ mw::Touch::Touch(struct wl_resource* resource, Version<6>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::Touch::Touch(struct wl_client* client, int runtime_version, Version<6> static_version)
-    : Touch{wl_resource_create(client, &wl_touch_interface_data , runtime_version, 0), static_version} {}
+mw::Touch::Touch(struct wl_client* client, struct wl_resource* parent, Version<6> static_version)
+    : Touch{wl_resource_create(client, &wl_touch_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::Touch::send_down_event(uint32_t serial, uint32_t time, struct wl_resource* surface, int32_t id, double x, double y) const
 {
@@ -2560,8 +2560,8 @@ mw::Output::Output(struct wl_resource* resource, Version<3>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::Output::Output(struct wl_client* client, int runtime_version, Version<3> static_version)
-    : Output{wl_resource_create(client, &wl_output_interface_data , runtime_version, 0), static_version} {}
+mw::Output::Output(struct wl_client* client, struct wl_resource* parent, Version<3> static_version)
+    : Output{wl_resource_create(client, &wl_output_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 void mw::Output::send_geometry_event(int32_t x, int32_t y, int32_t physical_width, int32_t physical_height, int32_t subpixel, std::string const& make, std::string const& model, int32_t transform) const
 {
@@ -2714,8 +2714,8 @@ mw::Region::Region(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::Region::Region(struct wl_client* client, int runtime_version, Version<1> static_version)
-    : Region{wl_resource_create(client, &wl_region_interface_data , runtime_version, 0), static_version} {}
+mw::Region::Region(struct wl_client* client, struct wl_resource* parent, Version<1> static_version)
+    : Region{wl_resource_create(client, &wl_region_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 bool mw::Region::is_instance(wl_resource* resource)
 {
@@ -2827,8 +2827,8 @@ mw::Subcompositor::Subcompositor(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::Subcompositor::Subcompositor(struct wl_client* client, int runtime_version, Version<1> static_version)
-    : Subcompositor{wl_resource_create(client, &wl_subcompositor_interface_data , runtime_version, 0), static_version} {}
+mw::Subcompositor::Subcompositor(struct wl_client* client, struct wl_resource* parent, Version<1> static_version)
+    : Subcompositor{wl_resource_create(client, &wl_subcompositor_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 bool mw::Subcompositor::is_instance(wl_resource* resource)
 {
@@ -2981,8 +2981,8 @@ mw::Subsurface::Subsurface(struct wl_resource* resource, Version<1>)
     wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);
 }
 
-mw::Subsurface::Subsurface(struct wl_client* client, int runtime_version, Version<1> static_version)
-    : Subsurface{wl_resource_create(client, &wl_subsurface_interface_data , runtime_version, 0), static_version} {}
+mw::Subsurface::Subsurface(struct wl_client* client, struct wl_resource* parent, Version<1> static_version)
+    : Subsurface{wl_resource_create(client, &wl_subsurface_interface_data , wl_resource_get_version(parent), 0), static_version} {}
 
 bool mw::Subsurface::is_instance(wl_resource* resource)
 {

@@ -157,7 +157,7 @@ Emitter Interface::server_side_constructor_impl() const
 {
     return Lines{
         {nmspace, generated_name, "(", server_side_constructor_args(), ")"},
-        {"    : ", generated_name, "{wl_resource_create(client, &", wl_name, "_interface_data , runtime_version, 0), static_version} {}"},
+        {"    : ", generated_name, "{wl_resource_create(client, &", wl_name, "_interface_data , wl_resource_get_version(parent), 0), static_version} {}"},
     };
 }
 
@@ -168,7 +168,7 @@ Emitter Interface::constructor_args() const
 
 Emitter Interface::server_side_constructor_args() const
 {
-    return {"struct wl_client* client, int runtime_version, Version<", std::to_string(version), "> static_version"};
+    return {"struct wl_client* client, struct wl_resource* parent, Version<", std::to_string(version), "> static_version"};
 }
 
 Emitter Interface::destructor_prototype() const
