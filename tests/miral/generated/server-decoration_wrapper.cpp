@@ -104,6 +104,19 @@ struct mw::ServerDecorationManager::Thunks
 
 int const mw::ServerDecorationManager::Thunks::supported_version = 1;
 
+auto mw::ServerDecorationManager::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &org_kde_kwin_server_decoration_manager_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::ServerDecorationManager::ServerDecorationManager(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -206,6 +219,19 @@ struct mw::ServerDecoration::Thunks
 };
 
 int const mw::ServerDecoration::Thunks::supported_version = 1;
+
+auto mw::ServerDecoration::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &org_kde_kwin_server_decoration_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::ServerDecoration::ServerDecoration(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},

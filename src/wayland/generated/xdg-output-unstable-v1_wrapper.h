@@ -27,6 +27,7 @@ public:
 
     static XdgOutputManagerV1* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     XdgOutputManagerV1(struct wl_resource* resource, Version<2>);
     virtual ~XdgOutputManagerV1() = default;
 
@@ -63,6 +64,7 @@ public:
 
     static XdgOutputV1* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     XdgOutputV1(struct wl_resource* resource, Version<2>);
     virtual ~XdgOutputV1() = default;
 

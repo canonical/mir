@@ -27,6 +27,7 @@ public:
 
     static XdgShellV6* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     XdgShellV6(struct wl_resource* resource, Version<1>);
     virtual ~XdgShellV6() = default;
 
@@ -82,6 +83,7 @@ public:
 
     static XdgPositionerV6* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     XdgPositionerV6(struct wl_resource* resource, Version<1>);
     virtual ~XdgPositionerV6() = default;
 
@@ -145,6 +147,7 @@ public:
 
     static XdgSurfaceV6* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     XdgSurfaceV6(struct wl_resource* resource, Version<1>);
     virtual ~XdgSurfaceV6() = default;
 
@@ -186,6 +189,7 @@ public:
 
     static XdgToplevelV6* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     XdgToplevelV6(struct wl_resource* resource, Version<1>);
     virtual ~XdgToplevelV6() = default;
 
@@ -252,6 +256,7 @@ public:
 
     static XdgPopupV6* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     XdgPopupV6(struct wl_resource* resource, Version<1>);
     virtual ~XdgPopupV6() = default;
 

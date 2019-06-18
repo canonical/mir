@@ -27,6 +27,7 @@ public:
 
     static LayerShellV1* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     LayerShellV1(struct wl_resource* resource, Version<1>);
     virtual ~LayerShellV1() = default;
 
@@ -77,6 +78,7 @@ public:
 
     static LayerSurfaceV1* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     LayerSurfaceV1(struct wl_resource* resource, Version<1>);
     virtual ~LayerSurfaceV1() = default;
 

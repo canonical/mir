@@ -70,6 +70,19 @@ struct mw::Callback::Thunks
 
 int const mw::Callback::Thunks::supported_version = 1;
 
+auto mw::Callback::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_callback_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::Callback::Callback(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -179,6 +192,19 @@ struct mw::Compositor::Thunks
 };
 
 int const mw::Compositor::Thunks::supported_version = 4;
+
+auto mw::Compositor::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_compositor_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::Compositor::Compositor(struct wl_resource* resource, Version<4>)
     : client{wl_resource_get_client(resource)},
@@ -299,6 +325,19 @@ struct mw::ShmPool::Thunks
 
 int const mw::ShmPool::Thunks::supported_version = 1;
 
+auto mw::ShmPool::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_shm_pool_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::ShmPool::ShmPool(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -406,6 +445,19 @@ struct mw::Shm::Thunks
 
 int const mw::Shm::Thunks::supported_version = 1;
 
+auto mw::Shm::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_shm_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::Shm::Shm(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -496,6 +548,19 @@ struct mw::Buffer::Thunks
 };
 
 int const mw::Buffer::Thunks::supported_version = 1;
+
+auto mw::Buffer::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_buffer_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::Buffer::Buffer(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
@@ -626,6 +691,19 @@ struct mw::DataOffer::Thunks
 
 int const mw::DataOffer::Thunks::supported_version = 3;
 
+auto mw::DataOffer::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_data_offer_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::DataOffer::DataOffer(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -753,6 +831,19 @@ struct mw::DataSource::Thunks
 };
 
 int const mw::DataSource::Thunks::supported_version = 3;
+
+auto mw::DataSource::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_data_source_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::DataSource::DataSource(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
@@ -926,6 +1017,19 @@ struct mw::DataDevice::Thunks
 };
 
 int const mw::DataDevice::Thunks::supported_version = 3;
+
+auto mw::DataDevice::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_data_device_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::DataDevice::DataDevice(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
@@ -1120,6 +1224,19 @@ struct mw::DataDeviceManager::Thunks
 
 int const mw::DataDeviceManager::Thunks::supported_version = 3;
 
+auto mw::DataDeviceManager::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_data_device_manager_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::DataDeviceManager::DataDeviceManager(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -1236,6 +1353,19 @@ struct mw::Shell::Thunks
 };
 
 int const mw::Shell::Thunks::supported_version = 1;
+
+auto mw::Shell::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_shell_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::Shell::Shell(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
@@ -1451,6 +1581,19 @@ struct mw::ShellSurface::Thunks
 };
 
 int const mw::ShellSurface::Thunks::supported_version = 1;
+
+auto mw::ShellSurface::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_shell_surface_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::ShellSurface::ShellSurface(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
@@ -1729,6 +1872,19 @@ struct mw::Surface::Thunks
 
 int const mw::Surface::Thunks::supported_version = 4;
 
+auto mw::Surface::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_surface_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::Surface::Surface(struct wl_resource* resource, Version<4>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -1930,6 +2086,19 @@ struct mw::Seat::Thunks
 
 int const mw::Seat::Thunks::supported_version = 6;
 
+auto mw::Seat::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_seat_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::Seat::Seat(struct wl_resource* resource, Version<6>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -2063,6 +2232,19 @@ struct mw::Pointer::Thunks
 };
 
 int const mw::Pointer::Thunks::supported_version = 6;
+
+auto mw::Pointer::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_pointer_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::Pointer::Pointer(struct wl_resource* resource, Version<6>)
     : client{wl_resource_get_client(resource)},
@@ -2228,6 +2410,19 @@ struct mw::Keyboard::Thunks
 
 int const mw::Keyboard::Thunks::supported_version = 6;
 
+auto mw::Keyboard::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_keyboard_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::Keyboard::Keyboard(struct wl_resource* resource, Version<6>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -2344,6 +2539,19 @@ struct mw::Touch::Thunks
 };
 
 int const mw::Touch::Thunks::supported_version = 6;
+
+auto mw::Touch::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_touch_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::Touch::Touch(struct wl_resource* resource, Version<6>)
     : client{wl_resource_get_client(resource)},
@@ -2501,6 +2709,19 @@ struct mw::Output::Thunks
 
 int const mw::Output::Thunks::supported_version = 3;
 
+auto mw::Output::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_output_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::Output::Output(struct wl_resource* resource, Version<3>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -2652,6 +2873,19 @@ struct mw::Region::Thunks
 
 int const mw::Region::Thunks::supported_version = 1;
 
+auto mw::Region::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_region_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::Region::Region(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -2761,6 +2995,19 @@ struct mw::Subcompositor::Thunks
 };
 
 int const mw::Subcompositor::Thunks::supported_version = 1;
+
+auto mw::Subcompositor::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_subcompositor_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::Subcompositor::Subcompositor(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
@@ -2912,6 +3159,19 @@ struct mw::Subsurface::Thunks
 };
 
 int const mw::Subsurface::Thunks::supported_version = 1;
+
+auto mw::Subsurface::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &wl_subsurface_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::Subsurface::Subsurface(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},

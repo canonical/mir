@@ -27,6 +27,7 @@ public:
 
     static ServerDecorationManager* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     ServerDecorationManager(struct wl_resource* resource, Version<1>);
     virtual ~ServerDecorationManager() = default;
 
@@ -76,6 +77,7 @@ public:
 
     static ServerDecoration* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     ServerDecoration(struct wl_resource* resource, Version<1>);
     virtual ~ServerDecoration() = default;
 

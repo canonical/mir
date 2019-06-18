@@ -156,6 +156,19 @@ struct mw::XdgShellV6::Thunks
 
 int const mw::XdgShellV6::Thunks::supported_version = 1;
 
+auto mw::XdgShellV6::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &zxdg_shell_v6_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::XdgShellV6::XdgShellV6(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -332,6 +345,19 @@ struct mw::XdgPositionerV6::Thunks
 
 int const mw::XdgPositionerV6::Thunks::supported_version = 1;
 
+auto mw::XdgPositionerV6::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &zxdg_positioner_v6_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::XdgPositionerV6::XdgPositionerV6(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -474,6 +500,19 @@ struct mw::XdgSurfaceV6::Thunks
 };
 
 int const mw::XdgSurfaceV6::Thunks::supported_version = 1;
+
+auto mw::XdgSurfaceV6::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &zxdg_surface_v6_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::XdgSurfaceV6::XdgSurfaceV6(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
@@ -746,6 +785,19 @@ struct mw::XdgToplevelV6::Thunks
 
 int const mw::XdgToplevelV6::Thunks::supported_version = 1;
 
+auto mw::XdgToplevelV6::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &zxdg_toplevel_v6_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::XdgToplevelV6::XdgToplevelV6(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -883,6 +935,19 @@ struct mw::XdgPopupV6::Thunks
 };
 
 int const mw::XdgPopupV6::Thunks::supported_version = 1;
+
+auto mw::XdgPopupV6::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &zxdg_popup_v6_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::XdgPopupV6::XdgPopupV6(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},

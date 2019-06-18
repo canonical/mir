@@ -27,6 +27,7 @@ public:
 
     static Callback* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Callback(struct wl_resource* resource, Version<1>);
     virtual ~Callback() = default;
 
@@ -56,6 +57,7 @@ public:
 
     static Compositor* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Compositor(struct wl_resource* resource, Version<4>);
     virtual ~Compositor() = default;
 
@@ -92,6 +94,7 @@ public:
 
     static ShmPool* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     ShmPool(struct wl_resource* resource, Version<1>);
     virtual ~ShmPool() = default;
 
@@ -117,6 +120,7 @@ public:
 
     static Shm* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Shm(struct wl_resource* resource, Version<1>);
     virtual ~Shm() = default;
 
@@ -228,6 +232,7 @@ public:
 
     static Buffer* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Buffer(struct wl_resource* resource, Version<1>);
     virtual ~Buffer() = default;
 
@@ -258,6 +263,7 @@ public:
 
     static DataOffer* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     DataOffer(struct wl_resource* resource, Version<3>);
     virtual ~DataOffer() = default;
 
@@ -306,6 +312,7 @@ public:
 
     static DataSource* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     DataSource(struct wl_resource* resource, Version<3>);
     virtual ~DataSource() = default;
 
@@ -357,6 +364,7 @@ public:
 
     static DataDevice* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     DataDevice(struct wl_resource* resource, Version<3>);
     virtual ~DataDevice() = default;
 
@@ -404,6 +412,7 @@ public:
 
     static DataDeviceManager* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     DataDeviceManager(struct wl_resource* resource, Version<3>);
     virtual ~DataDeviceManager() = default;
 
@@ -448,6 +457,7 @@ public:
 
     static Shell* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Shell(struct wl_resource* resource, Version<1>);
     virtual ~Shell() = default;
 
@@ -488,6 +498,7 @@ public:
 
     static ShellSurface* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     ShellSurface(struct wl_resource* resource, Version<1>);
     virtual ~ShellSurface() = default;
 
@@ -557,6 +568,7 @@ public:
 
     static Surface* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Surface(struct wl_resource* resource, Version<4>);
     virtual ~Surface() = default;
 
@@ -604,6 +616,7 @@ public:
 
     static Seat* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Seat(struct wl_resource* resource, Version<6>);
     virtual ~Seat() = default;
 
@@ -659,6 +672,7 @@ public:
 
     static Pointer* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Pointer(struct wl_resource* resource, Version<6>);
     virtual ~Pointer() = default;
 
@@ -735,6 +749,7 @@ public:
 
     static Keyboard* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Keyboard(struct wl_resource* resource, Version<6>);
     virtual ~Keyboard() = default;
 
@@ -788,6 +803,7 @@ public:
 
     static Touch* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Touch(struct wl_resource* resource, Version<6>);
     virtual ~Touch() = default;
 
@@ -832,6 +848,7 @@ public:
 
     static Output* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Output(struct wl_resource* resource, Version<3>);
     virtual ~Output() = default;
 
@@ -910,6 +927,7 @@ public:
 
     static Region* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Region(struct wl_resource* resource, Version<1>);
     virtual ~Region() = default;
 
@@ -935,6 +953,7 @@ public:
 
     static Subcompositor* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Subcompositor(struct wl_resource* resource, Version<1>);
     virtual ~Subcompositor() = default;
 
@@ -976,6 +995,7 @@ public:
 
     static Subsurface* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     Subsurface(struct wl_resource* resource, Version<1>);
     virtual ~Subsurface() = default;
 

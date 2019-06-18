@@ -27,6 +27,7 @@ public:
 
     static XdgWmBase* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     XdgWmBase(struct wl_resource* resource, Version<1>);
     virtual ~XdgWmBase() = default;
 
@@ -82,6 +83,7 @@ public:
 
     static XdgPositioner* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     XdgPositioner(struct wl_resource* resource, Version<1>);
     virtual ~XdgPositioner() = default;
 
@@ -153,6 +155,7 @@ public:
 
     static XdgSurface* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     XdgSurface(struct wl_resource* resource, Version<1>);
     virtual ~XdgSurface() = default;
 
@@ -194,6 +197,7 @@ public:
 
     static XdgToplevel* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     XdgToplevel(struct wl_resource* resource, Version<1>);
     virtual ~XdgToplevel() = default;
 
@@ -260,6 +264,7 @@ public:
 
     static XdgPopup* from(struct wl_resource*);
 
+    static auto make_resource(wl_resource* parent_resource) -> wl_resource*;
     XdgPopup(struct wl_resource* resource, Version<1>);
     virtual ~XdgPopup() = default;
 

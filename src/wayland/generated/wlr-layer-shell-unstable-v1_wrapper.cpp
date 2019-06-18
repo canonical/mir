@@ -110,6 +110,19 @@ struct mw::LayerShellV1::Thunks
 
 int const mw::LayerShellV1::Thunks::supported_version = 1;
 
+auto mw::LayerShellV1::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &zwlr_layer_shell_v1_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
+
 mw::LayerShellV1::LayerShellV1(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
       resource{resource}
@@ -286,6 +299,19 @@ struct mw::LayerSurfaceV1::Thunks
 };
 
 int const mw::LayerSurfaceV1::Thunks::supported_version = 1;
+
+auto mw::LayerSurfaceV1::make_resource(wl_resource* parent_resource) -> wl_resource*
+{
+    wl_client* client = wl_resource_get_client(parent_resource);
+    int version = wl_resource_get_version(parent_resource);
+    wl_resource* new_resource = wl_resource_create(client, &zwlr_layer_surface_v1_interface_data, version, 0);
+    if (new_resource == nullptr)
+    {
+        wl_client_post_no_memory(client);
+        BOOST_THROW_EXCEPTION(std::bad_alloc{});
+    }
+    return new_resource;
+}
 
 mw::LayerSurfaceV1::LayerSurfaceV1(struct wl_resource* resource, Version<1>)
     : client{wl_resource_get_client(resource)},
