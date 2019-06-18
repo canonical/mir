@@ -23,6 +23,8 @@
 #include <miral/command_line_option.h>
 #include <miral/set_window_management_policy.h>
 
+#include <mir/client/connection.h>
+
 #include <mir_test_framework/executable_path.h>
 #include <mir_test_framework/stub_server_platform_factory.h>
 #include <mir_test_framework/headless_display_buffer_compositor_factory.h>
@@ -71,18 +73,7 @@ miral::TestDisplayServer::~TestDisplayServer() = default;
 auto miral::TestDisplayServer::build_window_manager_policy(WindowManagerTools const& tools)
 -> std::unique_ptr<TestWindowManagerPolicy>
 {
-    // TODO: Fix the acceptance tests that rely on this
-    // (And then remove MirWlcsDisplayServer::build_window_manager_policy()
-    // which reinstates the correct behaviour.)
-    struct XX : TestWindowManagerPolicy
-    {
-        using TestWindowManagerPolicy::TestWindowManagerPolicy;
-        bool handle_pointer_event(MirPointerEvent const*) override
-        {
-            return false;
-        }
-    };
-    return std::make_unique<XX>(tools, *this);
+    return std::make_unique<TestWindowManagerPolicy>(tools, *this);
 }
 
 void miral::TestDisplayServer::start_server()

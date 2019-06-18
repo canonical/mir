@@ -19,6 +19,7 @@
 #include <miral/window_management_policy.h>
 
 #include <mir/client/blob.h>
+#include <mir/client/connection.h>
 #include <mir/client/cookie.h>
 #include <mir/client/surface.h>
 #include <mir/client/window.h>

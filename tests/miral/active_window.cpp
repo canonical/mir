@@ -18,6 +18,7 @@
 
 #include "test_server.h"
 
+#include <mir/client/connection.h>
 #include <mir/client/surface.h>
 #include <mir/client/window.h>
 #include <mir/client/window_spec.h>

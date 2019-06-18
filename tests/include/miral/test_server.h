@@ -19,8 +19,6 @@
 #ifndef MIRAL_TEST_SERVER_H
 #define MIRAL_TEST_SERVER_H
 
-#include <mir/client/connection.h>
-
 #include <miral/minimal_window_manager.h>
 #include <miral/runner.h>
 #include <miral/window_manager_tools.h>
@@ -35,7 +33,7 @@
 #include <mutex>
 
 namespace mir { namespace shell { class WindowManager; }}
-
+namespace mir { namespace client { class Connection; }}
 namespace miral
 {
 class WindowManagementPolicy;

@@ -18,6 +18,7 @@
 
 #include <mir_toolkit/events/window_placement.h>
 
+#include <mir/client/connection.h>
 #include <mir/client/window_spec.h>
 #include <mir/client/window.h>
 

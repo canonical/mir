@@ -21,6 +21,7 @@
 #include <mir/client/window_spec.h>
 
 #include <miral/application_info.h>
+#include <mir/client/connection.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
