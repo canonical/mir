@@ -33,7 +33,7 @@ struct DataDevice;
 
 struct DataOffer : mw::DataOffer
 {
-    DataOffer(wl_client* client, wl_resource* parent, DataSource* source, DataDevice* device);
+    DataOffer(DataSource* source, DataDevice* device);
 
     void accept(uint32_t serial, std::experimental::optional<std::string> const& mime_type) override
     {
@@ -280,7 +280,7 @@ void DataDevice::notify_new(DataSource* source)
 
     if (has_focus)
     {
-        current_offer = new DataOffer{client, resource, source, this};
+        current_offer = new DataOffer{source, this};
     }
 }
 
@@ -307,12 +307,12 @@ void DataDevice::focus_on(wl_client* focus)
 
     if (has_focus && current_source && !current_offer)
     {
-        current_offer = new DataOffer{client, resource, current_source, this};
+        current_offer = new DataOffer{current_source, this};
     }
 }
 
-DataOffer::DataOffer(wl_client* client, wl_resource* parent, DataSource* source, DataDevice* device) :
-    mw::DataOffer(client, parent, Version<3>()),
+DataOffer::DataOffer(DataSource* source, DataDevice* device) :
+    mw::DataOffer(device->client, device->resource, Version<3>()),
     source{source}
 {
     source->add_listener(this);
