@@ -24,20 +24,38 @@
 
 namespace
 {
+class AsRange
+{
+public:
+    using const_iterator = std::unordered_multimap<std::string, std::string>::const_iterator;
+    explicit AsRange(std::pair<const_iterator, const_iterator> stupid_api)
+        : range{std::move(stupid_api)}
+    {
+    }
+
+    const_iterator begin()
+    {
+        return range.first;
+    }
+
+    const_iterator end()
+    {
+        return range.second;
+    }
+
+private:
+    std::pair<const_iterator, const_iterator> const range;
+};
+
 auto matching_keys_to_vector(
     std::unordered_multimap<std::string, std::string> const& map,
     std::function<std::string(std::string)> const& name_transform,
     std::string key)
 {
-    auto range = map.equal_range(key);
-
-    if (range.first == map.end())
-        return std::vector<std::string>{};
-
     std::vector<std::string> interfaces;
-    for (auto it = range.first; it != range.second; ++it)
+    for (auto const& i : AsRange{map.equal_range(key)})
     {
-        interfaces.push_back(name_transform(it->second));
+        interfaces.push_back(name_transform(i.second));
     }
     return interfaces;
 }
