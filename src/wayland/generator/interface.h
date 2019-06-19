@@ -27,6 +27,7 @@
 
 #include <experimental/optional>
 #include <functional>
+#include <map>
 #include <unordered_set>
 
 class Method;
@@ -41,17 +42,21 @@ class Interface
 public:
     Interface(xmlpp::Element const& node,
               std::function<std::string(std::string)> const& name_transform,
-              std::unordered_set<std::string> const& constructable_interfaces);
+              std::unordered_set<std::string> const& constructible_interfaces,
+              std::unordered_multimap<std::string, std::string> const& event_constructable_interfaces);
 
+    std::string class_name() const;
     Emitter declaration() const;
     Emitter implementation() const;
     Emitter wl_interface_init() const;
     void populate_required_interfaces(std::set<std::string>& interfaces) const; // fills the set with interfaces used
 
 private:
-    Emitter constructor_prototype() const;
+    Emitter constructor_prototypes() const;
     Emitter constructor_impl() const;
+    Emitter constructor_impl(std::string const& parent_interface) const;
     Emitter constructor_args() const;
+    Emitter constructor_args(std::string const& parent_interface) const;
     Emitter destructor_prototype() const;
     Emitter virtual_request_prototypes() const;
     Emitter event_prototypes() const;
@@ -74,10 +79,13 @@ private:
     int const version;
     std::string const generated_name;
     std::string const nmspace;
+    bool const has_server_constructor;
+    bool const has_client_constructor;
     std::experimental::optional<Global> const global;
     std::vector<Request> const requests;
     std::vector<Event> const events;
     std::vector<Enum> const enums;
+    std::vector<std::string> const parent_interfaces;
     bool const has_vtable;
 };
 

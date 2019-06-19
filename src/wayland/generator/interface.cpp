@@ -22,21 +22,51 @@
 
 #include "method.h"
 
+namespace
+{
+auto matching_keys_to_vector(
+    std::unordered_multimap<std::string, std::string> const& map,
+    std::function<std::string(std::string)> const& name_transform,
+    std::string key)
+{
+    auto range = map.equal_range(key);
+
+    if (range.first == map.end())
+        return std::vector<std::string>{};
+
+    std::vector<std::string> interfaces;
+    for (auto it = range.first; it != range.second; ++it)
+    {
+        interfaces.push_back(name_transform(it->second));
+    }
+    return interfaces;
+}
+}
+
 Interface::Interface(xmlpp::Element const& node,
                      std::function<std::string(std::string)> const& name_transform,
-                     std::unordered_set<std::string> const& constructable_interfaces)
+                     std::unordered_set<std::string> const& constructable_interfaces,
+                     std::unordered_multimap<std::string, std::string> const& event_constructable_interfaces)
     : wl_name{node.get_attribute_value("name")},
       version{std::stoi(node.get_attribute_value("version"))},
       generated_name{name_transform(wl_name)},
       nmspace{"mw::" + generated_name + "::"},
-      global{(constructable_interfaces.count(wl_name) == 0) ?
+      has_server_constructor{event_constructable_interfaces.count(wl_name) != 0},
+      has_client_constructor{constructable_interfaces.count(wl_name) != 0},
+      global{!(has_server_constructor || has_client_constructor) ?
           std::experimental::make_optional(Global{wl_name, generated_name, version, nmspace}) :
           std::experimental::nullopt},
       requests{get_requests(node, generated_name)},
       events{get_events(node, generated_name)},
       enums{get_enums(node)},
+      parent_interfaces{matching_keys_to_vector(event_constructable_interfaces, name_transform, wl_name)},
       has_vtable{!requests.empty()}
 {
+}
+
+std::string Interface::class_name() const
+{
+    return generated_name;
 }
 
 Emitter Interface::declaration() const
@@ -49,7 +79,7 @@ Emitter Interface::declaration() const
             {"static char const constexpr* interface_name = \"", wl_name, "\";"},
             {"static ", generated_name, "* from(struct wl_resource*);"},
             Lines {
-                constructor_prototype(),
+                             constructor_prototypes(),
                 destructor_prototype(),
             },
             event_prototypes(),
@@ -126,25 +156,62 @@ void Interface::populate_required_interfaces(std::set<std::string>& interfaces) 
     }
 }
 
-Emitter Interface::constructor_prototype() const
+Emitter Interface::constructor_prototypes() const
 {
-    return Line{generated_name, "(", constructor_args(), ");"};
+    std::vector<Emitter> prototypes;
+    if (has_client_constructor || global)
+    {
+        prototypes.push_back(Line{generated_name, "(", constructor_args(), ");"});
+    }
+    if (has_server_constructor)
+    {
+        for (auto const &parent : parent_interfaces)
+        {
+            prototypes.push_back(Line{generated_name, "(", constructor_args(parent), ");"});
+        }
+    }
+    return Lines{prototypes};
 }
 
 Emitter Interface::constructor_impl() const
 {
+    std::vector<Emitter> impls;
+    if (has_client_constructor || global)
+    {
+        impls.push_back(Lines{
+            {nmspace, generated_name, "(", constructor_args(), ")"},
+            {"    : client{wl_resource_get_client(resource)},"},
+            {"      resource{resource}"},
+            Block{
+                "if (resource == nullptr)",
+                Block{
+                    "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
+                },
+                (has_vtable ? "wl_resource_set_implementation(resource, Thunks::request_vtable, "
+                              "this, &Thunks::resource_destroyed_thunk);" :
+                              Emitter{nullptr})}});
+    }
+    for (auto const& parent : parent_interfaces)
+    {
+        impls.push_back(constructor_impl(parent));
+    }
+    return Lines{impls};
+}
+
+Emitter Interface::constructor_impl(std::string const& parent_interface) const
+{
     return Lines{
-        {nmspace, generated_name, "(", constructor_args(), ")"},
-        {"    : client{wl_resource_get_client(resource)},"},
-        {"      resource{resource}"},
+        {nmspace, generated_name, "(", constructor_args(parent_interface), ")"},
+        {"    : client{wl_resource_get_client(parent.resource)},"},
+        {"      resource{wl_resource_create(client, &", wl_name, "_interface_data, wl_resource_get_version(parent.resource), 0)}"},
         Block{
             "if (resource == nullptr)",
             Block{
                 "BOOST_THROW_EXCEPTION((std::bad_alloc{}));",
             },
             (has_vtable ?
-                "wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);" :
-                Emitter{nullptr})
+             "wl_resource_set_implementation(resource, Thunks::request_vtable, this, &Thunks::resource_destroyed_thunk);" :
+             Emitter{nullptr})
         }
     };
 }
@@ -152,6 +219,11 @@ Emitter Interface::constructor_impl() const
 Emitter Interface::constructor_args() const
 {
     return {"struct wl_resource* resource, Version<", std::to_string(version), ">"};
+}
+
+Emitter Interface::constructor_args(std::string const& parent_interface) const
+{
+    return {parent_interface, " const& parent"};
 }
 
 Emitter Interface::destructor_prototype() const

@@ -76,6 +76,16 @@ Emitter include_guard_bottom(std::string const& macro)
     };
 }
 
+Emitter forward_declarations_for(std::vector<Interface> const& interfaces)
+{
+    std::vector<Emitter> decls;
+    for (auto const& interface : interfaces)
+    {
+        decls.push_back(Line{"class ", interface.class_name(), ";"});
+    }
+    return Lines{decls};
+}
+
 Emitter header_file(std::string input_file_path, std::vector<Interface> const& interfaces)
 {
     std::string const include_guard_macro = to_upper_case("MIR_FRONTEND_WAYLAND_" + file_name_from_path(input_file_path) + "_WRAPPER");
@@ -97,6 +107,8 @@ Emitter header_file(std::string input_file_path, std::vector<Interface> const& i
         "{",
         "namespace wayland",
         "{",
+        empty_line,
+        forward_declarations_for(interfaces),
         empty_line,
         EmptyLineList{interface_emitters},
         empty_line,
@@ -223,11 +235,28 @@ int main(int argc, char** argv)
     auto root_node = document->get_root_node();
 
     auto constructor_nodes = root_node->find("//arg[@type='new_id']");
-    std::unordered_set<std::string> constructible_interfaces;
+    std::unordered_set<std::string> client_constructable_interfaces;
+    std::unordered_multimap<std::string, std::string> server_constructable_interfaces;
     for (auto const node : constructor_nodes)
     {
         auto arg = dynamic_cast<xmlpp::Element const*>(node);
-        constructible_interfaces.insert(arg->get_attribute_value("interface"));
+
+        auto const constructor_request = arg->get_parent();
+        auto const interface_name = arg->get_attribute_value("interface");
+        if (constructor_request->get_name() == "event")
+        {
+            // An new_id in an event means the server has constructed the object,
+            // and hence will choose the ID.
+            auto const parent_interface = constructor_request->get_parent();
+            auto const parent_name = parent_interface->get_attribute_value("name");
+            server_constructable_interfaces.insert({interface_name, parent_name});
+        }
+        else if (constructor_request->get_name() == "request")
+        {
+            // new_id in a request is a client-initiated construction;
+            // the client has already selected the ID
+            client_constructable_interfaces.insert(interface_name);
+        }
     }
 
     std::vector<Interface> interfaces;
@@ -241,7 +270,11 @@ int main(int argc, char** argv)
             // These are special, and don't need binding.
             continue;
         }
-        interfaces.emplace_back(*interface, name_transform, constructible_interfaces);
+        interfaces.emplace_back(
+            *interface,
+            name_transform,
+            client_constructable_interfaces,
+            server_constructable_interfaces);
     }
 
     Emitter emitter{nullptr};

@@ -626,9 +626,9 @@ struct mw::DataOffer::Thunks
 
 int const mw::DataOffer::Thunks::supported_version = 3;
 
-mw::DataOffer::DataOffer(struct wl_resource* resource, Version<3>)
-    : client{wl_resource_get_client(resource)},
-      resource{resource}
+mw::DataOffer::DataOffer(DataDevice const& parent)
+    : client{wl_resource_get_client(parent.resource)},
+      resource{wl_resource_create(client, &wl_data_offer_interface_data, wl_resource_get_version(parent.resource), 0)}
 {
     if (resource == nullptr)
     {
