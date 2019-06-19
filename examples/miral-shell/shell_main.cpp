@@ -79,7 +79,7 @@ int main(int argc, char const* argv[])
                 return true;
 
             case KEY_T:
-                external_client_launcher.launch({"gnome-terminal", "--app-id", "com.canonical.miral.Terminal"});
+                external_client_launcher.launch({"weston-terminal"});
                 return false;
 
             default:
