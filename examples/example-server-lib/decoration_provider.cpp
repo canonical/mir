@@ -136,6 +136,8 @@ void Printer::printhelp(BackgroundInfo const& region)
             "",
             "Keyboard shortcuts:",
             "",
+            "  o Terminal: Ctrl-Alt-T/Ctrl-Alt-Shift-T",
+            "",
             "  o Switch apps: Alt-Tab, tap or click on the corresponding window",
             "  o Next (previous) app window: Alt-` (Alt-Shift-`)",
             "",

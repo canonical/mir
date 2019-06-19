@@ -22,6 +22,7 @@
 #include "spinner/splash.h"
 
 #include <miral/display_configuration_option.h>
+#include <miral/external_client.h>
 #include <miral/runner.h>
 #include <miral/window_management_options.h>
 #include <miral/append_event_filter.h>
@@ -52,6 +53,8 @@ int main(int argc, char const* argv[])
 
     runner.add_stop_callback([&] { shutdown_hook(); });
 
+    ExternalClientLauncher external_client_launcher;
+
     auto const quit_on_ctrl_alt_bksp = [&](MirEvent const* event)
         {
             if (mir_event_get_type(event) != mir_event_type_input)
@@ -69,11 +72,19 @@ int main(int argc, char const* argv[])
             if (!(mods & mir_input_event_modifier_alt) || !(mods & mir_input_event_modifier_ctrl))
                 return false;
 
-            if (mir_keyboard_event_scan_code(kev) != KEY_BACKSPACE)
+            switch (mir_keyboard_event_scan_code(kev))
+            {
+            case KEY_BACKSPACE:
+                runner.stop();
+                return true;
+
+            case KEY_T:
+                external_client_launcher.launch({"weston-terminal"});
                 return false;
 
-            runner.stop();
-            return true;
+            default:
+                return false;
+            };
         };
 
     Keymap config_keymap;
@@ -85,6 +96,7 @@ int main(int argc, char const* argv[])
             WaylandExtensions{},
             window_managers,
             display_configuration_options,
+            external_client_launcher,
             launcher,
             config_keymap,
             debug_extensions,
