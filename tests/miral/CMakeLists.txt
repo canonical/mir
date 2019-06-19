@@ -35,6 +35,10 @@ PRIVATE
     miral-internal
 )
 
+if (MIR_BUILD_INTERPROCESS_TESTS)
+    list(APPEND MIRAL_TEST_SOURCES window_info.cpp)
+endif()
+
 mir_add_wrapped_executable(miral-test-internal NOINSTALL
     mru_window_list.cpp
     active_outputs.cpp
@@ -49,11 +53,11 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     raise_tree.cpp
     static_display_config.cpp
     client_mediated_gestures.cpp
-    window_info.cpp
     test_window_manager_tools.cpp           test_window_manager_tools.h
     depth_layer.cpp
     output_updates.cpp
     application_zone.cpp
+    ${MIRAL_TEST_SOURCES}
 )
 
 set_source_files_properties(static_display_config.cpp PROPERTIES COMPILE_FLAGS

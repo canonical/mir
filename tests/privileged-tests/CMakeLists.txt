@@ -3,9 +3,12 @@ include_directories (${LIBEVDEV_INCLUDE_DIRS})
 set(
   PRIVILEGED_TESTS_SOURCES
 
-  test_input_events.cpp
   ui_get_sysname_ioctl_override.cpp
 )
+
+if (MIR_BUILD_INTERPROCESS_TESTS)
+    list(APPEND PRIVILEGED_TESTS_SOURCES test_input_events.cpp)
+endif()
 
 mir_add_wrapped_executable(mir_privileged_tests NOINSTALL
 
