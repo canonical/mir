@@ -79,7 +79,7 @@ Emitter Interface::declaration() const
             {"static char const constexpr* interface_name = \"", wl_name, "\";"},
             {"static ", generated_name, "* from(struct wl_resource*);"},
             Lines {
-                             constructor_prototypes(),
+                constructor_prototypes(),
                 destructor_prototype(),
             },
             event_prototypes(),
