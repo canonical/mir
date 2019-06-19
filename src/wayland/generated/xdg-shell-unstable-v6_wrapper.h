@@ -20,6 +20,12 @@ namespace mir
 namespace wayland
 {
 
+class XdgShellV6;
+class XdgPositionerV6;
+class XdgSurfaceV6;
+class XdgToplevelV6;
+class XdgPopupV6;
+
 class XdgShellV6 : public Resource
 {
 public:

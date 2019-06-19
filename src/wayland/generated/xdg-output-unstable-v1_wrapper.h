@@ -20,6 +20,9 @@ namespace mir
 namespace wayland
 {
 
+class XdgOutputManagerV1;
+class XdgOutputV1;
+
 class XdgOutputManagerV1 : public Resource
 {
 public:

@@ -20,6 +20,27 @@ namespace mir
 namespace wayland
 {
 
+class Callback;
+class Compositor;
+class ShmPool;
+class Shm;
+class Buffer;
+class DataOffer;
+class DataSource;
+class DataDevice;
+class DataDeviceManager;
+class Shell;
+class ShellSurface;
+class Surface;
+class Seat;
+class Pointer;
+class Keyboard;
+class Touch;
+class Output;
+class Region;
+class Subcompositor;
+class Subsurface;
+
 class Callback : public Resource
 {
 public:
@@ -258,7 +279,7 @@ public:
 
     static DataOffer* from(struct wl_resource*);
 
-    DataOffer(struct wl_resource* resource, Version<3>);
+    DataOffer(DataDevice const& parent);
     virtual ~DataOffer() = default;
 
     void send_offer_event(std::string const& mime_type) const;

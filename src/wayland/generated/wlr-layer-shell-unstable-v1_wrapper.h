@@ -20,6 +20,9 @@ namespace mir
 namespace wayland
 {
 
+class LayerShellV1;
+class LayerSurfaceV1;
+
 class LayerShellV1 : public Resource
 {
 public:
