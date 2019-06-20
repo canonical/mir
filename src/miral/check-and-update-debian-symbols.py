@@ -119,7 +119,7 @@ def new_lines_from_unfiltered(unfiltered):
     searched = re.findall('^\+ (.+::.+) ([\.\d]+)$', result.stdout, flags=re.MULTILINE)
     if searched:
         filtered = [' (c++)"' + symbol + '" ' + version + '\n' for symbol, version in searched]
-        return filtered
+        return list(set(filtered))
     else:
         return None
 
