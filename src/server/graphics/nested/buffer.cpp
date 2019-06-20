@@ -55,6 +55,14 @@ public:
     {
     }
 
+    ~TextureAccess() {
+    	for(auto& it : egl_image_map)
+    	{
+            EGLDisplay disp = it.first.first;
+            extensions.eglDestroyImageKHR(disp, it.second);
+    	}
+    }
+
     void bind() override
     {
         using namespace std::chrono;
@@ -70,24 +78,15 @@ public:
         auto it = egl_image_map.find(resources);
         if (it == egl_image_map.end())
         {
-            auto ext = extensions;
-            auto display = resources.first;
             auto hints = native_buffer->egl_image_creation_hints();
-            auto i = EGLImageUPtr{
-                new EGLImageKHR(ext.eglCreateImageKHR(
-                    display, EGL_NO_CONTEXT,
-                    std::get<0>(hints), std::get<1>(hints), std::get<2>(hints))),
-                [ext, display](EGLImageKHR* image)
-                {
-                    ext.eglDestroyImageKHR(display, image); delete image;
-                }
-            };
-            image = *i;
-            egl_image_map[resources] = std::move(i);
+            image = extensions.eglCreateImageKHR(
+                    resources.first, EGL_NO_CONTEXT,
+                    std::get<0>(hints), std::get<1>(hints), std::get<2>(hints));
+            egl_image_map[resources] = image;
         }
         else
         {
-            image = *(it->second);
+            image = it->second;
         }
 
         extensions.glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
@@ -116,8 +115,7 @@ private:
     std::shared_ptr<mgn::HostConnection> const connection;
     mg::EGLExtensions extensions;
     typedef std::pair<EGLDisplay, EGLContext> ImageResources;
-    typedef std::unique_ptr<EGLImageKHR, std::function<void(EGLImageKHR*)>> EGLImageUPtr;
-    std::map<ImageResources, EGLImageUPtr> egl_image_map;
+    std::map<ImageResources, EGLImageKHR> egl_image_map;
 };
 
 class PixelAndTextureAccess :
