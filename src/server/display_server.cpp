@@ -45,6 +45,65 @@ namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace msh = mir::shell;
 
+namespace
+{
+class StubConnector : public mir::frontend::Connector
+{
+public:
+    void start() override
+    {
+    }
+
+    void stop() override
+    {
+    }
+
+    auto client_socket_fd() const -> int override
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"mirclient support unavailable"}));
+    }
+
+    auto client_socket_fd(std::function<void(std::shared_ptr<mir::frontend::Session> const&)> const&) const
+        -> int override
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"mirclient support unavailable"}));
+    }
+
+    auto socket_name() const -> mir::optional_value<std::string> override
+    {
+        return mir::optional_value<std::string>{};
+    }
+};
+
+auto connector_or_stub(mir::ServerConfiguration& config)
+    -> std::shared_ptr<mir::frontend::Connector>
+{
+    try
+    {
+        return config.the_connector();
+    }
+    catch (std::runtime_error const&)
+    {
+        mir::log_info("Server does not support mirclient connections");
+        return std::make_shared<StubConnector>();
+    }
+}
+
+auto prompt_connector_or_stub(mir::ServerConfiguration& config)
+    -> std::shared_ptr<mir::frontend::Connector>
+{
+    try
+    {
+        return config.the_connector();
+    }
+    catch (std::runtime_error const&)
+    {
+        mir::log_info("Server does not support mirclient connections");
+        return std::make_shared<StubConnector>();
+    }
+}
+}
+
 struct mir::DisplayServer::Private
 {
     Private(ServerConfiguration& config)
@@ -53,10 +112,10 @@ struct mir::DisplayServer::Private
           display{config.the_display()},
           input_dispatcher{config.the_input_dispatcher()},
           compositor{config.the_compositor()},
-          connector{config.the_connector()},
+          connector{connector_or_stub(config)},
           wayland_connector{config.the_wayland_connector()},
           xwayland_connector{config.the_xwayland_connector()},
-          prompt_connector{config.the_prompt_connector()},
+          prompt_connector{prompt_connector_or_stub(config)},
           input_manager{config.the_input_manager()},
           main_loop{config.the_main_loop()},
           server_status_listener{config.the_server_status_listener()},
