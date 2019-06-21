@@ -218,11 +218,19 @@ void WlInternalClientRunner<Base>::run(mir::Server& server)
 
     thread = std::thread{[this]
         {
-            if (auto const display = wl_display_connect_to_fd(fd))
+            try
             {
-                auto const deleter = mir::raii::deleter_for(display, &wl_display_disconnect);
-                client_code(display);
-                wl_display_roundtrip(display);
+                if (auto const display = wl_display_connect_to_fd(fd))
+                {
+                    auto const deleter = mir::raii::deleter_for(display, &wl_display_disconnect);
+                    client_code(display);
+                    wl_display_roundtrip(display);
+                }
+            }
+            catch (std::exception const& e)
+            {
+                mir::log(mir::logging::Severity::informational, MIR_LOG_COMPONENT,
+                         std::make_exception_ptr(e), e.what());
             }
         }};
 }
