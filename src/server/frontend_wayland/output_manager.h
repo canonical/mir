@@ -67,7 +67,7 @@ private:
 class OutputManager : public OutputObserver
 {
 public:
-    OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config);
+    OutputManager(wl_display* display, std::shared_ptr<MirDisplay> const& display_config, std::shared_ptr<Executor> const& executor);
     ~OutputManager();
 
     auto output_id_for(wl_client* client, std::experimental::optional<struct wl_resource*> const& /*output*/) const
@@ -85,6 +85,7 @@ private:
 
     std::shared_ptr<MirDisplay> const display_config_;
     wl_display* const display;
+    std::shared_ptr<Executor> const executor;
     std::unordered_map<graphics::DisplayConfigurationOutputId, std::unique_ptr<Output>> outputs;
 };
 }

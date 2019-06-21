@@ -660,7 +660,8 @@ mf::WaylandConnector::WaylandConnector(
     seat_global = std::make_unique<mf::WlSeat>(display.get(), input_hub, seat, executor);
     output_manager = std::make_unique<mf::OutputManager>(
         display.get(),
-        display_config);
+        display_config,
+        executor);
 
     data_device_manager_global = mf::create_data_device_manager(display.get());
 
