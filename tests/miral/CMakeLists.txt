@@ -41,6 +41,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     output_updates.cpp
     application_zone.cpp
     initial_window_placement.cpp
+    window_placement_attached.cpp
     ${MIRAL_TEST_SOURCES}
 )
 
