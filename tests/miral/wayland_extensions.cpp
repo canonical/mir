@@ -76,17 +76,6 @@ struct WaylandExtensions : miral::TestServer
         add_server_init(launcher);
     }
 
-    void add_server_init(std::function<void(mir::Server&)>&& init)
-    {
-        auto temp = [old_init=init_server, new_init=init](mir::Server& server)
-            {
-                old_init(server);
-                new_init(server);
-            };
-
-        init_server = temp;
-    }
-
     void run_as_client(std::function<void (struct wl_display*)>&& code)
     {
         bool client_run = false;

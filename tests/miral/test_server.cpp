@@ -210,6 +210,17 @@ void miral::TestDisplayServer::invoke_window_manager(std::function<void(mir::she
 
 }
 
+void TestDisplayServer::add_server_init(std::function<void(mir::Server&)>&& init)
+{
+    auto temp = [old_init=init_server, new_init=std::move(init)](mir::Server& server)
+        {
+            old_init(server);
+            new_init(server);
+        };
+
+    init_server = temp;
+}
+
 void miral::TestRuntimeEnvironment::add_to_environment(char const* key, char const* value)
 {
     env.emplace_back(key, value);

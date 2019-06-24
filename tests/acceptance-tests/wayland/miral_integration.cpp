@@ -688,7 +688,7 @@ WlcsDisplayServer* wlcs_create_server(int argc, char const** argv)
 
     runner->event_listener = std::make_shared<InputEventListener>(*runner);
 
-    runner->init_server = [runner, argc, argv](mir::Server& server)
+    runner->add_server_init([runner, argc, argv](mir::Server& server)
         {
             server.override_the_session_listener(
                 [runner]()
@@ -727,7 +727,7 @@ WlcsDisplayServer* wlcs_create_server(int argc, char const** argv)
                     });
 
             runner->server = &server;
-        };
+        });
 
     return static_cast<WlcsDisplayServer*>(runner);
 }
