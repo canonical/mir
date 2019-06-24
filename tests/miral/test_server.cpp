@@ -243,7 +243,8 @@ void miral::TestRuntimeEnvironment::add_to_environment(char const* key, char con
 
 void miral::TestServer::SetUp()
 {
-    TestDisplayServer::start_server();
+    if (start_server_in_setup)
+        start_server();
     testing::Test::SetUp();
 }
 
@@ -254,7 +255,7 @@ void miral::TestServer::TearDown()
     // This sleep() is not a good fix, but a good fix would be deep in legacy code.
     std::this_thread::sleep_for(100ms);
 
-    TestDisplayServer::stop_server();
+    stop_server();
     testing::Test::TearDown();
 }
 

@@ -70,9 +70,9 @@ private:
 
 struct WaylandExtensions : miral::TestServer
 {
-    void SetUp() override
+    WaylandExtensions()
     {
-        testing::Test::SetUp();
+        start_server_in_setup = false;
         add_server_init(launcher);
     }
 

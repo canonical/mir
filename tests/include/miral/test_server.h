@@ -51,21 +51,47 @@ struct TestDisplayServer : private TestRuntimeEnvironment
     TestDisplayServer();
     virtual ~TestDisplayServer();
 
-    void start_server();
-    void stop_server();
-
-    auto connect_client(std::string name) -> mir::client::Connection;
-
+    /// Add an environment variable for the duration of the test run
     using TestRuntimeEnvironment::add_to_environment;
+
+    /// Add a callback to be invoked when the server has started,
+    /// If multiple callbacks are added they will be invoked in the sequence added.
+    /// \note call before start_server()
     void add_start_callback(std::function<void()> const& start_callback);
+
+    /// Add a callback to be invoked when the server is about to stop,
+    /// If multiple callbacks are added they will be invoked in the reverse sequence added.
+    /// \note call before start_server()
     void add_stop_callback(std::function<void()> const& stop_callback);
+
+    /// Set a handler for exceptions caught in run_with().
+    /// The default action is to call mir::report_exception(std::cerr)
+    /// \note call before start_server()
     void set_exception_handler(std::function<void()> const& handler);
 
-    // Add configuration code to be passed to runner.run_with() by start_server()
+    /// Add configuration code to be passed to runner.run_with() by start_server()
+    /// \note call before start_server()
     void add_server_init(std::function<void(mir::Server&)>&& init);
 
+    /// Start the server
+    /// \note Typically called by TestServer::SetUp()
+    void start_server();
+
+    /// Get a connection for a mirclient
+    /// \note call after start_server()
+    auto connect_client(std::string name) -> mir::client::Connection;
+
+    /// Wrapper to gain access to WindowManagerTools API (with correct locking in place)
+    /// \note call after start_server()
     void invoke_tools(std::function<void(WindowManagerTools& tools)> const& f);
+
+    /// Wrapper to gain access to WindowManager API (with correct locking in place)
+    /// \note call after start_server()
     void invoke_window_manager(std::function<void(mir::shell::WindowManager& wm)> const& f);
+
+    /// Stop the server
+    /// \note Typically called by TestServer::TearDown()
+    void stop_server();
 
     struct TestWindowManagerPolicy;
     virtual auto build_window_manager_policy(WindowManagerTools const& tools) -> std::unique_ptr<TestWindowManagerPolicy>;
@@ -84,7 +110,12 @@ private:
 
 struct TestServer : TestDisplayServer, testing::Test
 {
+    bool start_server_in_setup = true;
+
+    // Start the server (unless start_server_in_setup is false)
     void SetUp() override;
+
+    // Stop the server
     void TearDown() override;
 };
 
