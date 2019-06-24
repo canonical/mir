@@ -32,7 +32,7 @@
 #include <mir/input/device_capability.h>
 #include <mir/shell/shell.h>
 
-#include "test_server.h"
+#include <miral/test_server.h>
 #include <mir_test_framework/fake_input_device.h>
 #include <mir_test_framework/stub_server_platform_factory.h>
 #include <mir/test/event_factory.h>

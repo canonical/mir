@@ -20,10 +20,8 @@ string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_CXX_FLAGS})
 set(CMAKE_CXX_FLAGS ${NO_NO_LTO_FLAGS})
 
 add_library(miral-test-framework STATIC
-    test_server.cpp     ../include/miral/test_server.h
+    test_server.cpp  ${PROJECT_SOURCE_DIR}/include/test/miral/test_server.h
 )
-
-target_include_directories(miral-test-framework PUBLIC ../include/miral)
 
 target_link_libraries(miral-test-framework
 PUBLIC
@@ -92,6 +90,7 @@ set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLA
 
 target_link_libraries(miral-test
     miral-test-framework
+    ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
     ${UUID_LDFLAGS} ${UUID_LIBRARIES}
 )
 

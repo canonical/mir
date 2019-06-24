@@ -26,7 +26,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "test_server.h"
+#include <miral/test_server.h>
 
 using namespace testing;
 

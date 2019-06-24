@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "test_server.h"
+#include <miral/test_server.h>
 #include "server_example_decoration.h"
 #include "org_kde_kwin_server_decoration.h"
 

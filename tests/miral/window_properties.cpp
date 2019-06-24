@@ -24,7 +24,7 @@
 #include <mir/client/window_spec.h>
 #include <mir_toolkit/mir_buffer_stream.h>
 
-#include "test_server.h"
+#include <miral/test_server.h>
 
 #include <gmock/gmock.h>
 #include <mir/test/signal.h>

@@ -43,7 +43,7 @@
 
 #include "mir/server.h"
 #include "mir/options/option.h"
-#include "test_server.h"
+#include <miral/test_server.h>
 
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/stub_server_platform_factory.h"

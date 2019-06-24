@@ -23,7 +23,7 @@
 #include <mir/client/window.h>
 
 #include <mir/test/signal.h>
-#include "test_server.h"
+#include <miral/test_server.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
