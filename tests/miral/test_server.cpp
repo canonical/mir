@@ -21,6 +21,7 @@
 #include "window_management_trace.h"
 
 #include <miral/command_line_option.h>
+#include <miral/minimal_window_manager.h>
 #include <miral/set_window_management_policy.h>
 
 #include <mir/client/connection.h>
@@ -52,13 +53,6 @@ char const* dummy_args[2] = { "TestServer", nullptr };
 char const* const trace_option = "window-management-trace";
 }
 
-miral::TestDisplayServer::TestWindowManagerPolicy::TestWindowManagerPolicy(
-    WindowManagerTools const& tools, TestDisplayServer& test_fixture) :
-    MinimalWindowManager{tools}
-{
-    test_fixture.tools = tools;
-}
-
 miral::TestDisplayServer::TestDisplayServer() :
     runner{1, dummy_args}
 {
@@ -71,9 +65,9 @@ miral::TestDisplayServer::TestDisplayServer() :
 miral::TestDisplayServer::~TestDisplayServer() = default;
 
 auto miral::TestDisplayServer::build_window_manager_policy(WindowManagerTools const& tools)
--> std::unique_ptr<TestWindowManagerPolicy>
+-> std::unique_ptr<WindowManagementPolicy>
 {
-    return std::make_unique<TestWindowManagerPolicy>(tools, *this);
+    return std::make_unique<MinimalWindowManager>(tools);
 }
 
 void miral::TestDisplayServer::start_server()
@@ -114,6 +108,7 @@ void miral::TestDisplayServer::start_server()
                             std::function<std::unique_ptr<miral::WindowManagementPolicy>(WindowManagerTools const&)>
                                 builder = [this](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
                                 {
+                                    this->tools = tools;
                                     return build_window_manager_policy(tools);
                                 };
 

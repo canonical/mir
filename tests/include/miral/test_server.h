@@ -19,7 +19,7 @@
 #ifndef MIRAL_TEST_SERVER_H
 #define MIRAL_TEST_SERVER_H
 
-#include <miral/minimal_window_manager.h>
+#include <miral/window_management_policy.h>
 #include <miral/runner.h>
 #include <miral/window_manager_tools.h>
 
@@ -93,8 +93,7 @@ struct TestDisplayServer : private TestRuntimeEnvironment
     /// \note Typically called by TestServer::TearDown()
     void stop_server();
 
-    struct TestWindowManagerPolicy;
-    virtual auto build_window_manager_policy(WindowManagerTools const& tools) -> std::unique_ptr<TestWindowManagerPolicy>;
+    virtual auto build_window_manager_policy(WindowManagerTools const& tools) -> std::unique_ptr<WindowManagementPolicy>;
 
 private:
     MirRunner runner;
@@ -118,12 +117,6 @@ struct TestServer : TestDisplayServer, testing::Test
     // Stop the server
     void TearDown() override;
 };
-
-struct TestDisplayServer::TestWindowManagerPolicy : MinimalWindowManager
-{
-    TestWindowManagerPolicy(WindowManagerTools const& tools, TestDisplayServer& test_fixture);
-};
-
 }
 
 #endif //MIRAL_TEST_SERVER_H
