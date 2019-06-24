@@ -221,6 +221,21 @@ void TestDisplayServer::add_server_init(std::function<void(mir::Server&)>&& init
     init_server = temp;
 }
 
+void TestDisplayServer::add_start_callback(std::function<void()> const& start_callback)
+{
+    runner.add_start_callback(start_callback);
+}
+
+void TestDisplayServer::add_stop_callback(std::function<void()> const& stop_callback)
+{
+    runner.add_stop_callback(stop_callback);
+}
+
+void TestDisplayServer::set_exception_handler(std::function<void()> const& handler)
+{
+    runner.set_exception_handler(handler);
+}
+
 void miral::TestRuntimeEnvironment::add_to_environment(char const* key, char const* value)
 {
     env.emplace_back(key, value);

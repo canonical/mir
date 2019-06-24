@@ -57,8 +57,9 @@ struct TestDisplayServer : private TestRuntimeEnvironment
     auto connect_client(std::string name) -> mir::client::Connection;
 
     using TestRuntimeEnvironment::add_to_environment;
-
-    MirRunner runner;
+    void add_start_callback(std::function<void()> const& start_callback);
+    void add_stop_callback(std::function<void()> const& stop_callback);
+    void set_exception_handler(std::function<void()> const& handler);
 
     // Add configuration code to be passed to runner.run_with() by start_server()
     void add_server_init(std::function<void(mir::Server&)>&& init);
@@ -70,6 +71,8 @@ struct TestDisplayServer : private TestRuntimeEnvironment
     virtual auto build_window_manager_policy(WindowManagerTools const& tools) -> std::unique_ptr<TestWindowManagerPolicy>;
 
 private:
+    MirRunner runner;
+
     WindowManagerTools tools{nullptr};
     std::weak_ptr<mir::shell::WindowManager> window_manager;
     mir::test::AutoJoinThread server_thread;

@@ -41,7 +41,7 @@ struct Runner : miral::TestServer
 
 TEST_F(Runner, stop_callback_is_called)
 {
-    runner.add_stop_callback([this] { callback(); });
+    add_stop_callback([this] { callback(); });
     miral::TestServer::SetUp();
     EXPECT_CALL(*this, callback());
 }
@@ -50,7 +50,7 @@ TEST_F(Runner, start_callback_is_called)
 {
     mir::test::Signal signal;
 
-    runner.add_start_callback([this] { callback(); });
+    add_start_callback([this] { callback(); });
     EXPECT_CALL(*this, callback())
         .WillOnce(InvokeWithoutArgs([&] { signal.raise(); }));
 
