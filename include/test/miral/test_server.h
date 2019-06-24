@@ -85,10 +85,6 @@ struct TestDisplayServer : private TestRuntimeEnvironment
     /// \note call after start_server()
     void invoke_tools(std::function<void(WindowManagerTools& tools)> const& f);
 
-    /// Wrapper to gain access to WindowManager API (with correct locking in place)
-    /// \note call after start_server()
-    void invoke_window_manager(std::function<void(mir::shell::WindowManager& wm)> const& f);
-
     /// Stop the server
     /// \note Typically called by TestServer::TearDown()
     void stop_server();
@@ -99,7 +95,6 @@ private:
     MirRunner runner;
 
     WindowManagerTools tools{nullptr};
-    std::weak_ptr<mir::shell::WindowManager> window_manager;
     mir::test::AutoJoinThread server_thread;
     std::mutex mutex;
     std::condition_variable started;

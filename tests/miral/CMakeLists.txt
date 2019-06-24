@@ -9,7 +9,6 @@ elseif(MIRAL_COMPILE_WITH_W_NO_PEDANTIC)
 endif()
 
 include_directories(
-    ${PROJECT_SOURCE_DIR}/src/miral
     ${GMOCK_INCLUDE_DIR}
     ${GTEST_INCLUDE_DIR}
 )
@@ -29,8 +28,6 @@ PUBLIC
     ${GMOCK_LIBRARIES}
     miral
     mir-test-assist
-PRIVATE
-    miral-internal
 )
 
 if (MIR_BUILD_INTERPROCESS_TESTS)
@@ -61,6 +58,8 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
 set_source_files_properties(static_display_config.cpp PROPERTIES COMPILE_FLAGS
     "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/common")
 
+target_include_directories(miral-test-internal
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/miral)
 
 target_link_libraries(miral-test-internal
     ${GTEST_BOTH_LIBRARIES}
