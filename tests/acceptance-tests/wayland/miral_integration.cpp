@@ -545,9 +545,6 @@ struct MirWlcsDisplayServer : miral::TestDisplayServer, public WlcsDisplayServer
 {
     MirWlcsDisplayServer();
 
-    auto build_window_manager_policy(miral::WindowManagerTools const& tools)
-    -> std::unique_ptr<TestWindowManagerPolicy> override;
-
     testing::NiceMock<mir::test::doubles::MockGL> mockgl;
     std::shared_ptr<ResourceMapper> const resource_mapper{std::make_shared<ResourceMapper>()};
     std::shared_ptr<InputEventListener> event_listener;
@@ -1082,9 +1079,4 @@ MirWlcsDisplayServer::MirWlcsDisplayServer()
     get_descriptor = &::get_descriptor;
 }
 
-auto MirWlcsDisplayServer::build_window_manager_policy(miral::WindowManagerTools const& tools)
-->std::unique_ptr<TestWindowManagerPolicy>
-{
-    return std::make_unique<TestWindowManagerPolicy>(tools, *this);
-}
 }
