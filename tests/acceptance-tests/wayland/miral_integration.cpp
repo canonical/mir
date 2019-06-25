@@ -544,6 +544,8 @@ struct MirWlcsDisplayServer : miral::TestDisplayServer, public WlcsDisplayServer
 {
     MirWlcsDisplayServer(int argc, char const** argv);
 
+    void start_server();
+
     std::shared_ptr<ResourceMapper> const resource_mapper{std::make_shared<ResourceMapper>()};
     std::shared_ptr<InputEventListener> const event_listener = std::make_shared<InputEventListener>(*this);
     std::shared_ptr<mir::Executor> executor;
@@ -641,29 +643,9 @@ void emit_mir_event(MirWlcsDisplayServer* runner,
 
 void wlcs_server_start(WlcsDisplayServer* server)
 {
-    mir::test::Signal started;
-
     auto runner = static_cast<MirWlcsDisplayServer*>(server);
 
     runner->start_server();
-
-    runner->mir_server->run_on_wayland_display(
-        [runner, &started](auto wayland_display)
-            {
-                runner->resource_mapper->init(wayland_display);
-                runner->executor = WaylandExecutor::executor_for_event_loop(
-                    wl_display_get_event_loop(wayland_display));
-
-                // Execute all observations on the Wayland event loop…
-                runner->mir_server->the_seat_observer_registrar()->register_interest(
-                    runner->event_listener,
-                    *runner->executor);
-
-                started.raise();
-            });
-
-
-    started.wait_for(a_long_time);
 }
 
 void wlcs_server_stop(WlcsDisplayServer* server)
@@ -1071,6 +1053,28 @@ MirWlcsDisplayServer::MirWlcsDisplayServer(int argc, char const** argv)
 
             mir_server = &server;
         });
+}
+
+void MirWlcsDisplayServer::start_server()
+{
+    TestDisplayServer::start_server();
+
+    mir::test::Signal started;
+
+    mir_server->run_on_wayland_display(
+        [this, &started](auto wayland_display)
+            {
+                resource_mapper->init(wayland_display);
+                executor = WaylandExecutor::executor_for_event_loop(
+                    wl_display_get_event_loop(wayland_display));
+
+                // Execute all observations on the Wayland event loop…
+                mir_server->the_seat_observer_registrar()->register_interest(event_listener, *executor);
+
+                started.raise();
+            });
+
+    started.wait_for(a_long_time);
 }
 
 }
