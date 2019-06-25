@@ -647,16 +647,12 @@ void emit_mir_event(MirWlcsDisplayServer* runner,
 
 void wlcs_server_start(WlcsDisplayServer* server)
 {
-    auto runner = static_cast<MirWlcsDisplayServer*>(server);
-
-    runner->start_server();
+    static_cast<MirWlcsDisplayServer*>(server)->start_server();
 }
 
 void wlcs_server_stop(WlcsDisplayServer* server)
 {
-    auto runner = static_cast<MirWlcsDisplayServer*>(server);
-
-    runner->stop_server();
+    static_cast<MirWlcsDisplayServer*>(server)->stop_server();
 }
 
 
@@ -667,14 +663,12 @@ WlcsDisplayServer* wlcs_create_server(int argc, char const** argv)
 
 void wlcs_destroy_server(WlcsDisplayServer* server)
 {
-    auto runner = static_cast<MirWlcsDisplayServer*>(server);
-    delete runner;
+    delete static_cast<MirWlcsDisplayServer*>(server);
 }
 
 int wlcs_server_create_client_socket(WlcsDisplayServer* server)
 {
-    auto runner = static_cast<MirWlcsDisplayServer*>(server);
-    return runner->create_client_socket();
+    return static_cast<MirWlcsDisplayServer*>(server)->create_client_socket();
 }
 
 struct FakePointer : public WlcsPointer
@@ -687,8 +681,7 @@ struct FakePointer : public WlcsPointer
 
 WlcsPointer* wlcs_server_create_pointer(WlcsDisplayServer* server)
 {
-    auto runner = static_cast<MirWlcsDisplayServer*>(server);
-    return runner->create_pointer();
+    return static_cast<MirWlcsDisplayServer*>(server)->create_pointer();
 }
 
 void wlcs_destroy_pointer(WlcsPointer* pointer)
@@ -757,8 +750,7 @@ struct FakeTouch : public WlcsTouch
 
 WlcsTouch* wlcs_server_create_touch(WlcsDisplayServer* server)
 {
-    auto runner = static_cast<MirWlcsDisplayServer*>(server);
-    return runner->create_touch();
+    return static_cast<MirWlcsDisplayServer*>(server)->create_touch();
 }
 
 void wlcs_destroy_touch(WlcsTouch* touch)
@@ -819,8 +811,7 @@ FakeTouch::FakeTouch()
 void wlcs_server_position_window_absolute(WlcsDisplayServer* server, wl_display* client, wl_surface* surface, int x, int y)
 try
 {
-    auto runner = static_cast<MirWlcsDisplayServer*>(server);
-        runner->position_window(client, surface, mir::geometry::Point{x, y});
+    static_cast<MirWlcsDisplayServer*>(server)->position_window(client, surface, mir::geometry::Point{x, y});
 }
 catch(std::out_of_range const&)
 {
