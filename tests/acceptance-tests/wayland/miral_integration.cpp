@@ -546,6 +546,8 @@ struct MirWlcsDisplayServer : miral::TestDisplayServer, public WlcsDisplayServer
 
     void start_server();
 
+    int create_client_socket();
+
     std::shared_ptr<ResourceMapper> const resource_mapper{std::make_shared<ResourceMapper>()};
     std::shared_ptr<InputEventListener> const event_listener = std::make_shared<InputEventListener>(*this);
     std::shared_ptr<mir::Executor> executor;
@@ -671,27 +673,7 @@ int wlcs_server_create_client_socket(WlcsDisplayServer* server)
 {
     auto runner = static_cast<MirWlcsDisplayServer*>(server);
 
-    try
-    {
-        auto client_fd = fcntl(
-            runner->mir_server->open_wayland_client_socket(),
-            F_DUPFD_CLOEXEC,
-            3);
-
-        runner->resource_mapper->associate_client_socket(client_fd);
-
-        return client_fd;
-    }
-    catch (std::exception const&)
-    {
-        mir::log(
-            mir::logging::Severity::critical,
-            "wlcs-bindings",
-            std::current_exception(),
-            "Failed to create Wayland client socket");
-    }
-
-    return -1;
+    return runner->create_client_socket();
 }
 
 struct FakePointer : public WlcsPointer
@@ -1077,4 +1059,28 @@ void MirWlcsDisplayServer::start_server()
     started.wait_for(a_long_time);
 }
 
+int MirWlcsDisplayServer::create_client_socket()
+{
+    try
+    {
+        auto client_fd = fcntl(
+            mir_server->open_wayland_client_socket(),
+            F_DUPFD_CLOEXEC,
+            3);
+
+        resource_mapper->associate_client_socket(client_fd);
+
+        return client_fd;
+    }
+    catch (std::exception const&)
+    {
+        mir::log(
+            mir::logging::Severity::critical,
+            "wlcs-bindings",
+            std::current_exception(),
+            "Failed to create Wayland client socket");
+    }
+
+    return -1;
+}
 }
