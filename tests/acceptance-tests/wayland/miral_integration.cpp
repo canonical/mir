@@ -542,14 +542,14 @@ class InputEventListener;
 
 struct MirWlcsDisplayServer : miral::TestDisplayServer, public WlcsDisplayServer
 {
-    MirWlcsDisplayServer();
+    MirWlcsDisplayServer(int argc, char const** argv);
 
     std::shared_ptr<ResourceMapper> const resource_mapper{std::make_shared<ResourceMapper>()};
-    std::shared_ptr<InputEventListener> event_listener;
+    std::shared_ptr<InputEventListener> const event_listener = std::make_shared<InputEventListener>(*this);
     std::shared_ptr<mir::Executor> executor;
     std::atomic<double> cursor_x{0}, cursor_y{0};
 
-    mir::Server* server = nullptr;
+    mir::Server* mir_server = nullptr;
 };
 
 class InputEventListener : public mir::input::SeatObserver
@@ -647,7 +647,7 @@ void wlcs_server_start(WlcsDisplayServer* server)
 
     runner->start_server();
 
-    runner->server->run_on_wayland_display(
+    runner->mir_server->run_on_wayland_display(
         [runner, &started](auto wayland_display)
             {
                 runner->resource_mapper->init(wayland_display);
@@ -655,7 +655,7 @@ void wlcs_server_start(WlcsDisplayServer* server)
                     wl_display_get_event_loop(wayland_display));
 
                 // Execute all observations on the Wayland event loop…
-                runner->server->the_seat_observer_registrar()->register_interest(
+                runner->mir_server->the_seat_observer_registrar()->register_interest(
                     runner->event_listener,
                     *runner->executor);
 
@@ -676,55 +676,7 @@ void wlcs_server_stop(WlcsDisplayServer* server)
 
 WlcsDisplayServer* wlcs_create_server(int argc, char const** argv)
 {
-    auto runner = new MirWlcsDisplayServer;
-    runner->add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
-    runner->add_to_environment("MIR_SERVER_WAYLAND_SOCKET_NAME", "wlcs-tests");
-    runner->add_to_environment("WAYLAND_DISPLAY", "wlcs-tests");
-
-    runner->event_listener = std::make_shared<InputEventListener>(*runner);
-
-    runner->add_server_init([runner, argc, argv](mir::Server& server)
-        {
-            server.override_the_session_listener(
-                [runner]()
-                    {
-                        return runner->resource_mapper;
-                    });
-
-            server.set_command_line(argc, argv);
-
-            server.wrap_cursor_listener(
-                [runner](auto const& wrappee)
-                    {
-                        class ListenerWrapper : public mir::input::CursorListener
-                        {
-                        public:
-                            ListenerWrapper(
-                                MirWlcsDisplayServer* runner,
-                                std::shared_ptr<mir::input::CursorListener> const& wrapped)
-                                : runner{runner},
-                                wrapped{wrapped}
-                            {
-                            }
-
-                            void cursor_moved_to(float abs_x, float abs_y) override
-                            {
-                                runner->cursor_x = abs_x;
-                                runner->cursor_y = abs_y;
-                                wrapped->cursor_moved_to(abs_x, abs_y);
-                            }
-
-                        private:
-                            MirWlcsDisplayServer* const runner;
-                            std::shared_ptr<mir::input::CursorListener> const wrapped;
-                        };
-                        return std::make_shared<ListenerWrapper>(runner, wrappee);
-                    });
-
-            runner->server = &server;
-        });
-
-    return static_cast<WlcsDisplayServer*>(runner);
+    return new MirWlcsDisplayServer(argc, argv);
 }
 
 void wlcs_destroy_server(WlcsDisplayServer* server)
@@ -740,7 +692,7 @@ int wlcs_server_create_client_socket(WlcsDisplayServer* server)
     try
     {
         auto client_fd = fcntl(
-            runner->server->open_wayland_client_socket(),
+            runner->mir_server->open_wayland_client_socket(),
             F_DUPFD_CLOEXEC,
             3);
 
@@ -809,14 +761,14 @@ WlcsPointer* wlcs_server_create_pointer(WlcsDisplayServer* server)
 
     auto mouse_added = std::make_shared<mir::test::Signal>();
     auto observer = std::make_shared<DeviceObserver>(mouse_added);
-    runner->server->the_input_device_hub()->add_observer(observer);
+    runner->mir_server->the_input_device_hub()->add_observer(observer);
 
 
     auto fake_mouse = mtf::add_fake_input_device(
         mi::InputDeviceInfo{"mouse", uid, mi::DeviceCapability::pointer});
 
     mouse_added->wait_for(a_long_time);
-    runner->executor->spawn([observer=std::move(observer), the_input_device_hub=runner->server->the_input_device_hub()]
+    runner->executor->spawn([observer=std::move(observer), the_input_device_hub=runner->mir_server->the_input_device_hub()]
         { the_input_device_hub->remove_observer(observer); });
 
     auto fake_pointer = new FakePointer;
@@ -931,13 +883,13 @@ WlcsTouch* wlcs_server_create_touch(WlcsDisplayServer* server)
 
     auto touch_added = std::make_shared<mir::test::Signal>();
     auto observer = std::make_shared<DeviceObserver>(touch_added);
-    runner->server->the_input_device_hub()->add_observer(observer);
+    runner->mir_server->the_input_device_hub()->add_observer(observer);
 
     auto fake_touch_dev = mtf::add_fake_input_device(
         mi::InputDeviceInfo{"touch", uid, mi::DeviceCapability::multitouch});
 
     touch_added->wait_for(a_long_time);
-    runner->executor->spawn([observer=std::move(observer), the_input_device_hub=runner->server->the_input_device_hub()]
+    runner->executor->spawn([observer=std::move(observer), the_input_device_hub=runner->mir_server->the_input_device_hub()]
         { the_input_device_hub->remove_observer(observer); });
 
     auto fake_touch = new FakeTouch;
@@ -1065,7 +1017,7 @@ WlcsIntegrationDescriptor const* get_descriptor(WlcsDisplayServer const* /*serve
     return &descriptor;
 }
 
-MirWlcsDisplayServer::MirWlcsDisplayServer()
+MirWlcsDisplayServer::MirWlcsDisplayServer(int argc, char const** argv)
 {
     version = 2;
     start = &wlcs_server_start;
@@ -1075,6 +1027,50 @@ MirWlcsDisplayServer::MirWlcsDisplayServer()
     create_pointer = &wlcs_server_create_pointer;
     create_touch = &wlcs_server_create_touch;
     get_descriptor = &::get_descriptor;
+
+    add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
+    add_to_environment("MIR_SERVER_WAYLAND_SOCKET_NAME", "wlcs-tests");
+    add_to_environment("WAYLAND_DISPLAY", "wlcs-tests");
+
+    add_server_init([this, argc, argv](mir::Server& server)
+        {
+            server.override_the_session_listener([this]()
+                    {
+                        return resource_mapper;
+                    });
+
+            server.set_command_line(argc, argv);
+
+            server.wrap_cursor_listener(
+                [this](auto const& wrappee)
+                    {
+                        class ListenerWrapper : public mir::input::CursorListener
+                        {
+                        public:
+                            ListenerWrapper(
+                                MirWlcsDisplayServer* runner,
+                                std::shared_ptr<mir::input::CursorListener> const& wrapped)
+                                : runner{runner},
+                                wrapped{wrapped}
+                            {
+                            }
+
+                            void cursor_moved_to(float abs_x, float abs_y) override
+                            {
+                                runner->cursor_x = abs_x;
+                                runner->cursor_y = abs_y;
+                                wrapped->cursor_moved_to(abs_x, abs_y);
+                            }
+
+                        private:
+                            MirWlcsDisplayServer* const runner;
+                            std::shared_ptr<mir::input::CursorListener> const wrapped;
+                        };
+                        return std::make_shared<ListenerWrapper>(this, wrappee);
+                    });
+
+            mir_server = &server;
+        });
 }
 
 }
