@@ -851,18 +851,17 @@ WlcsIntegrationDescriptor const* get_descriptor(WlcsDisplayServer const* /*serve
     return &descriptor;
 }
 
-MirWlcsDisplayServer::MirWlcsDisplayServer(int argc, char const** argv) :
-    WlcsDisplayServer{
-        2,
-        &wlcs_server_start,                     // WlcsDisplayServer::start
-        &wlcs_server_stop,                      // WlcsDisplayServer::stop
-        &wlcs_server_create_client_socket,      // WlcsDisplayServer::create_client_socket
-        &wlcs_server_position_window_absolute,  // WlcsDisplayServer::position_window_absolute
-        &wlcs_server_create_pointer,            // WlcsDisplayServer::create_pointer
-        &wlcs_server_create_touch,              // WlcsDisplayServer::create_touch
-        &::get_descriptor,                      // WlcsDisplayServer::get_descriptor
-        nullptr}
+MirWlcsDisplayServer::MirWlcsDisplayServer(int argc, char const** argv)
 {
+    WlcsDisplayServer::version = 2;
+    WlcsDisplayServer::start = &wlcs_server_start;
+    WlcsDisplayServer::stop = &wlcs_server_stop;
+    WlcsDisplayServer::create_client_socket = &wlcs_server_create_client_socket;
+    WlcsDisplayServer::position_window_absolute = &wlcs_server_position_window_absolute;
+    WlcsDisplayServer::create_pointer = &wlcs_server_create_pointer;
+    WlcsDisplayServer::create_touch = &wlcs_server_create_touch;
+    WlcsDisplayServer::get_descriptor = &::get_descriptor;
+
     add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
     add_to_environment("MIR_SERVER_WAYLAND_SOCKET_NAME", "wlcs-tests");
     add_to_environment("WAYLAND_DISPLAY", "wlcs-tests");
