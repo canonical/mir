@@ -547,6 +547,7 @@ struct MirWlcsDisplayServer : miral::TestDisplayServer, public WlcsDisplayServer
     void start_server();
     int create_client_socket();
     void position_window(wl_display* client, wl_surface* surface, mir::geometry::Point point);
+    WlcsPointer* create_pointer();
 
     std::shared_ptr<ResourceMapper> const resource_mapper{std::make_shared<ResourceMapper>()};
     std::shared_ptr<InputEventListener> const event_listener = std::make_shared<InputEventListener>(*this);
@@ -686,59 +687,7 @@ struct FakePointer : public WlcsPointer
 WlcsPointer* wlcs_server_create_pointer(WlcsDisplayServer* server)
 {
     auto runner = static_cast<MirWlcsDisplayServer*>(server);
-
-    auto constexpr uid = "mouse-uid";
-
-    class DeviceObserver : public mir::input::InputDeviceObserver
-    {
-    public:
-        DeviceObserver(std::shared_ptr<mir::test::Signal> const& done)
-            : done{done}
-        {
-        }
-
-        void device_added(std::shared_ptr<mir::input::Device> const& device) override
-        {
-            if (device->unique_id() == uid)
-                seen_device = true;
-        }
-
-        void device_changed(std::shared_ptr<mir::input::Device> const&) override
-        {
-        }
-
-        void device_removed(std::shared_ptr<mir::input::Device> const&) override
-        {
-        }
-
-        void changes_complete() override
-        {
-            if (seen_device)
-                done->raise();
-        }
-
-    private:
-        std::shared_ptr<mir::test::Signal> const done;
-        bool seen_device{false};
-    };
-
-    auto mouse_added = std::make_shared<mir::test::Signal>();
-    auto observer = std::make_shared<DeviceObserver>(mouse_added);
-    runner->mir_server->the_input_device_hub()->add_observer(observer);
-
-
-    auto fake_mouse = mtf::add_fake_input_device(
-        mi::InputDeviceInfo{"mouse", uid, mi::DeviceCapability::pointer});
-
-    mouse_added->wait_for(a_long_time);
-    runner->executor->spawn([observer=std::move(observer), the_input_device_hub=runner->mir_server->the_input_device_hub()]
-        { the_input_device_hub->remove_observer(observer); });
-
-    auto fake_pointer = new FakePointer;
-    fake_pointer->runner = runner;
-    fake_pointer->pointer = std::move(fake_mouse);
-
-    return static_cast<WlcsPointer*>(fake_pointer);
+    return runner->create_pointer();
 }
 
 void wlcs_destroy_pointer(WlcsPointer* pointer)
@@ -963,14 +912,14 @@ WlcsIntegrationDescriptor const* get_descriptor(WlcsDisplayServer const* /*serve
 
 MirWlcsDisplayServer::MirWlcsDisplayServer(int argc, char const** argv)
 {
-    version = 2;
-    start = &wlcs_server_start;
-    stop = &wlcs_server_stop;
-    create_client_socket = &wlcs_server_create_client_socket;
-    position_window_absolute = &wlcs_server_position_window_absolute;
-    create_pointer = &wlcs_server_create_pointer;
-    create_touch = &wlcs_server_create_touch;
-    get_descriptor = &::get_descriptor;
+    WlcsDisplayServer::version = 2;
+    WlcsDisplayServer::start = &wlcs_server_start;
+    WlcsDisplayServer::stop = &wlcs_server_stop;
+    WlcsDisplayServer::create_client_socket = &wlcs_server_create_client_socket;
+    WlcsDisplayServer::position_window_absolute = &wlcs_server_position_window_absolute;
+    WlcsDisplayServer::create_pointer = &wlcs_server_create_pointer;
+    WlcsDisplayServer::create_touch = &wlcs_server_create_touch;
+    WlcsDisplayServer::get_descriptor = &::get_descriptor;
 
     add_to_environment("MIR_SERVER_ENABLE_KEY_REPEAT", "false");
     add_to_environment("MIR_SERVER_WAYLAND_SOCKET_NAME", "wlcs-tests");
@@ -1080,5 +1029,61 @@ void MirWlcsDisplayServer::position_window(wl_display* client_, wl_surface* surf
         abort();
         // TODO: log? Error handling?
     }
+}
+
+WlcsPointer* MirWlcsDisplayServer::create_pointer()
+{
+    auto constexpr uid = "mouse-uid";
+
+    class DeviceObserver : public mir::input::InputDeviceObserver
+    {
+    public:
+        DeviceObserver(std::shared_ptr<mir::test::Signal> const& done)
+            : done{done}
+        {
+        }
+
+        void device_added(std::shared_ptr<mir::input::Device> const& device) override
+        {
+            if (device->unique_id() == uid)
+                seen_device = true;
+        }
+
+        void device_changed(std::shared_ptr<mir::input::Device> const&) override
+        {
+        }
+
+        void device_removed(std::shared_ptr<mir::input::Device> const&) override
+        {
+        }
+
+        void changes_complete() override
+        {
+            if (seen_device)
+                done->raise();
+        }
+
+    private:
+        std::shared_ptr<mir::test::Signal> const done;
+        bool seen_device{false};
+    };
+
+    auto mouse_added = std::make_shared<mir::test::Signal>();
+    auto observer = std::make_shared<DeviceObserver>(mouse_added);
+    mir_server->the_input_device_hub()->add_observer(observer);
+
+
+    auto fake_mouse = mtf::add_fake_input_device(
+        mi::InputDeviceInfo{"mouse", uid, mi::DeviceCapability::pointer});
+
+    mouse_added->wait_for(a_long_time);
+    executor->spawn([observer=std::move(observer), the_input_device_hub=mir_server->the_input_device_hub()]
+                                { the_input_device_hub->remove_observer(observer); });
+
+    auto fake_pointer = new FakePointer;
+    fake_pointer->runner = this;
+    fake_pointer->pointer = std::move(fake_mouse);
+
+    return static_cast<WlcsPointer*>(fake_pointer);
 }
 }
