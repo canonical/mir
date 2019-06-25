@@ -21,6 +21,8 @@
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"
 
+#include "mir/shell/surface_specification.h"
+
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
@@ -121,6 +123,9 @@ mf::LayerSurfaceV1::LayerSurfaceV1(wl_resource* new_resource, WlSurface* surface
           layer_shell.shell,
           layer_shell.output_manager)
 {
+    shell::SurfaceSpecification spec;
+    spec.state = mir_window_state_attached;
+    apply_spec(spec);
 }
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
