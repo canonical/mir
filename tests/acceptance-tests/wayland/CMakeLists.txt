@@ -10,7 +10,6 @@ target_link_libraries(
   miral_wlcs_integration
 
   mir-test-assist
-  mir-test-doubles-platform-static
   ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
 )
 

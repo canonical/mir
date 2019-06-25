@@ -50,7 +50,6 @@
 #include "mir_test_framework/fake_input_device.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/input_device_info.h"
-#include "mir/test/doubles/mock_gl.h"
 #include "mir/frontend/session.h"
 #include "mir/scene/session_listener.h"
 #include "mir/scene/surface.h"
@@ -545,7 +544,6 @@ struct MirWlcsDisplayServer : miral::TestDisplayServer, public WlcsDisplayServer
 {
     MirWlcsDisplayServer();
 
-    testing::NiceMock<mir::test::doubles::MockGL> mockgl;
     std::shared_ptr<ResourceMapper> const resource_mapper{std::make_shared<ResourceMapper>()};
     std::shared_ptr<InputEventListener> event_listener;
     std::shared_ptr<mir::Executor> executor;
