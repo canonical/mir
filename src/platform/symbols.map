@@ -234,3 +234,10 @@ MIR_PLATFORM_1.1.1 {
     mir::graphics::EGLExtensions::PlatformBaseEXT*;
   };
 } MIR_PLATFORM_1.1.0;
+
+MIR_PLATFORM_1.2.0 {
+ global:
+  extern "C++" {
+    mir::options::enable_mirclient_opt;
+  };
+} MIR_PLATFORM_1.1.1;

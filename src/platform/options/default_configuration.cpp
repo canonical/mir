@@ -57,6 +57,7 @@ char const* const mo::composite_delay_opt         = "composite-delay";
 char const* const mo::enable_key_repeat_opt       = "enable-key-repeat";
 char const* const mo::x11_display_opt             = "x11-display-experimental";
 char const* const mo::wayland_extensions_opt      = "wayland-extensions";
+char const* const mo::enable_mirclient_opt        = "enable-mirclient";
 
 char const* const mo::off_opt_value = "off";
 char const* const mo::log_opt_value = "log";
@@ -213,6 +214,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "in unexpected ways] throw an exception (instead of a core dump)")
         (debug_opt, "Enable extra development debugging. "
             "This is only interesting for people doing Mir server or client development.")
+        (enable_mirclient_opt, po::value<bool>()->default_value(false),
+            "Enable deprecated mirclient socket (for running old clients)")
         (console_provider,
             po::value<std::string>()->default_value("auto"),
             "Console device handling\n"
