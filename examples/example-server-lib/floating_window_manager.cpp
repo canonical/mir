@@ -488,6 +488,7 @@ WindowSpecification FloatingWindowManagerPolicy::place_new_window(
     if (app_info.application() == decoration_provider->session())
     {
         parameters.type() = mir_window_type_decoration;
+        parameters.depth_layer() = mir_depth_layer_background;
     }
 
     bool const needs_titlebar = WindowInfo::needs_titlebar(parameters.type().value());
