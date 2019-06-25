@@ -545,8 +545,8 @@ struct MirWlcsDisplayServer : miral::TestDisplayServer, public WlcsDisplayServer
     MirWlcsDisplayServer(int argc, char const** argv);
 
     void start_server();
-
     int create_client_socket();
+    void position_window(wl_display* client, wl_surface* surface, mir::geometry::Point point);
 
     std::shared_ptr<ResourceMapper> const resource_mapper{std::make_shared<ResourceMapper>()};
     std::shared_ptr<InputEventListener> const event_listener = std::make_shared<InputEventListener>(*this);
@@ -918,34 +918,15 @@ FakeTouch::FakeTouch()
 }
 
 void wlcs_server_position_window_absolute(WlcsDisplayServer* server, wl_display* client, wl_surface* surface, int x, int y)
+try
 {
     auto runner = static_cast<MirWlcsDisplayServer*>(server);
-
-    try
-    {
-        auto const fd = wl_display_get_fd(client);
-        auto const client = runner->resource_mapper->client_for_fd(fd);
-        auto const id = wl_proxy_get_id(reinterpret_cast<wl_proxy*>(surface));
-
-        auto resource = wl_client_get_object(client, id);
-
-        auto mir_surface = runner->resource_mapper->surface_for_resource(resource);
-
-        if (auto live_surface = mir_surface.lock())
-        {
-            live_surface->move_to(mir::geometry::Point{x, y});
-        }
-        else
-        {
-            abort();
-            // TODO: log? Error handling?
-        }
-    }
-    catch(std::out_of_range const&)
-    {
-        abort();
-        // TODO: Error handling.
-    }
+        runner->position_window(client, surface, mir::geometry::Point{x, y});
+}
+catch(std::out_of_range const&)
+{
+    abort();
+    // TODO: Error handling.
 }
 
 extern WlcsServerIntegration const wlcs_server_integration {
@@ -1078,5 +1059,26 @@ int MirWlcsDisplayServer::create_client_socket()
     }
 
     return -1;
+}
+
+void MirWlcsDisplayServer::position_window(wl_display* client_, wl_surface* surface, mir::geometry::Point point)
+{
+    auto const fd = wl_display_get_fd(client_);
+    auto const client = resource_mapper->client_for_fd(fd);
+    auto const id = wl_proxy_get_id(reinterpret_cast<wl_proxy*>(surface));
+
+    auto resource = wl_client_get_object(client, id);
+
+    auto mir_surface = resource_mapper->surface_for_resource(resource);
+
+    if (auto live_surface = mir_surface.lock())
+    {
+        live_surface->move_to(point);
+    }
+    else
+    {
+        abort();
+        // TODO: log? Error handling?
+    }
 }
 }
