@@ -672,7 +672,6 @@ void wlcs_destroy_server(WlcsDisplayServer* server)
 int wlcs_server_create_client_socket(WlcsDisplayServer* server)
 {
     auto runner = static_cast<MirWlcsDisplayServer*>(server);
-
     return runner->create_client_socket();
 }
 
@@ -999,39 +998,39 @@ MirWlcsDisplayServer::MirWlcsDisplayServer(int argc, char const** argv)
     add_server_init([this, argc, argv](mir::Server& server)
         {
             server.override_the_session_listener([this]()
-                    {
-                        return resource_mapper;
-                    });
+                {
+                    return resource_mapper;
+                });
 
             server.set_command_line(argc, argv);
 
             server.wrap_cursor_listener(
                 [this](auto const& wrappee)
+                {
+                    class ListenerWrapper : public mir::input::CursorListener
                     {
-                        class ListenerWrapper : public mir::input::CursorListener
+                    public:
+                        ListenerWrapper(
+                            MirWlcsDisplayServer* runner,
+                            std::shared_ptr<mir::input::CursorListener> const& wrapped)
+                            : runner{runner},
+                            wrapped{wrapped}
                         {
-                        public:
-                            ListenerWrapper(
-                                MirWlcsDisplayServer* runner,
-                                std::shared_ptr<mir::input::CursorListener> const& wrapped)
-                                : runner{runner},
-                                wrapped{wrapped}
-                            {
-                            }
+                        }
 
-                            void cursor_moved_to(float abs_x, float abs_y) override
-                            {
-                                runner->cursor_x = abs_x;
-                                runner->cursor_y = abs_y;
-                                wrapped->cursor_moved_to(abs_x, abs_y);
-                            }
+                        void cursor_moved_to(float abs_x, float abs_y) override
+                        {
+                            runner->cursor_x = abs_x;
+                            runner->cursor_y = abs_y;
+                            wrapped->cursor_moved_to(abs_x, abs_y);
+                        }
 
-                        private:
-                            MirWlcsDisplayServer* const runner;
-                            std::shared_ptr<mir::input::CursorListener> const wrapped;
-                        };
-                        return std::make_shared<ListenerWrapper>(this, wrappee);
-                    });
+                    private:
+                        MirWlcsDisplayServer* const runner;
+                        std::shared_ptr<mir::input::CursorListener> const wrapped;
+                    };
+                    return std::make_shared<ListenerWrapper>(this, wrappee);
+                });
 
             mir_server = &server;
         });
@@ -1045,16 +1044,16 @@ void MirWlcsDisplayServer::start_server()
 
     mir_server->run_on_wayland_display(
         [this, &started](auto wayland_display)
-            {
-                resource_mapper->init(wayland_display);
-                executor = WaylandExecutor::executor_for_event_loop(
-                    wl_display_get_event_loop(wayland_display));
+        {
+            resource_mapper->init(wayland_display);
+            executor = WaylandExecutor::executor_for_event_loop(
+                wl_display_get_event_loop(wayland_display));
 
-                // Execute all observations on the Wayland event loop…
-                mir_server->the_seat_observer_registrar()->register_interest(event_listener, *executor);
+            // Execute all observations on the Wayland event loop…
+            mir_server->the_seat_observer_registrar()->register_interest(event_listener, *executor);
 
-                started.raise();
-            });
+            started.raise();
+        });
 
     started.wait_for(a_long_time);
 }
@@ -1063,10 +1062,7 @@ int MirWlcsDisplayServer::create_client_socket()
 {
     try
     {
-        auto client_fd = fcntl(
-            mir_server->open_wayland_client_socket(),
-            F_DUPFD_CLOEXEC,
-            3);
+        auto client_fd = fcntl(mir_server->open_wayland_client_socket(), F_DUPFD_CLOEXEC, 3);
 
         resource_mapper->associate_client_socket(client_fd);
 
