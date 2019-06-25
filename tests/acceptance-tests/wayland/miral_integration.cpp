@@ -548,6 +548,7 @@ struct MirWlcsDisplayServer : miral::TestDisplayServer, public WlcsDisplayServer
     int create_client_socket();
     void position_window(wl_display* client, wl_surface* surface, mir::geometry::Point point);
     WlcsPointer* create_pointer();
+    WlcsTouch* create_touch();
 
     std::shared_ptr<ResourceMapper> const resource_mapper{std::make_shared<ResourceMapper>()};
     std::shared_ptr<InputEventListener> const event_listener = std::make_shared<InputEventListener>(*this);
@@ -757,58 +758,7 @@ struct FakeTouch : public WlcsTouch
 WlcsTouch* wlcs_server_create_touch(WlcsDisplayServer* server)
 {
     auto runner = static_cast<MirWlcsDisplayServer*>(server);
-
-    auto constexpr uid = "touch-uid";
-
-    class DeviceObserver : public mir::input::InputDeviceObserver
-    {
-    public:
-        DeviceObserver(std::shared_ptr<mir::test::Signal> const& done)
-            : done{done}
-        {
-        }
-
-        void device_added(std::shared_ptr<mir::input::Device> const& device) override
-        {
-            if (device->unique_id() == uid)
-                seen_device = true;
-        }
-
-        void device_changed(std::shared_ptr<mir::input::Device> const&) override
-        {
-        }
-
-        void device_removed(std::shared_ptr<mir::input::Device> const&) override
-        {
-        }
-
-        void changes_complete() override
-        {
-            if (seen_device)
-                done->raise();
-        }
-
-    private:
-        std::shared_ptr<mir::test::Signal> const done;
-        bool seen_device{false};
-    };
-
-    auto touch_added = std::make_shared<mir::test::Signal>();
-    auto observer = std::make_shared<DeviceObserver>(touch_added);
-    runner->mir_server->the_input_device_hub()->add_observer(observer);
-
-    auto fake_touch_dev = mtf::add_fake_input_device(
-        mi::InputDeviceInfo{"touch", uid, mi::DeviceCapability::multitouch});
-
-    touch_added->wait_for(a_long_time);
-    runner->executor->spawn([observer=std::move(observer), the_input_device_hub=runner->mir_server->the_input_device_hub()]
-        { the_input_device_hub->remove_observer(observer); });
-
-    auto fake_touch = new FakeTouch;
-    fake_touch->runner = runner;
-    fake_touch->touch = std::move(fake_touch_dev);
-
-    return static_cast<WlcsTouch*>(fake_touch);
+    return runner->create_touch();
 }
 
 void wlcs_destroy_touch(WlcsTouch* touch)
@@ -1085,5 +1035,60 @@ WlcsPointer* MirWlcsDisplayServer::create_pointer()
     fake_pointer->pointer = std::move(fake_mouse);
 
     return static_cast<WlcsPointer*>(fake_pointer);
+}
+
+WlcsTouch* MirWlcsDisplayServer::create_touch()
+{
+    auto constexpr uid = "touch-uid";
+
+    class DeviceObserver : public mir::input::InputDeviceObserver
+    {
+    public:
+        DeviceObserver(std::shared_ptr<mir::test::Signal> const& done)
+            : done{done}
+        {
+        }
+
+        void device_added(std::shared_ptr<mir::input::Device> const& device) override
+        {
+            if (device->unique_id() == uid)
+                seen_device = true;
+        }
+
+        void device_changed(std::shared_ptr<mir::input::Device> const&) override
+        {
+        }
+
+        void device_removed(std::shared_ptr<mir::input::Device> const&) override
+        {
+        }
+
+        void changes_complete() override
+        {
+            if (seen_device)
+                done->raise();
+        }
+
+    private:
+        std::shared_ptr<mir::test::Signal> const done;
+        bool seen_device{false};
+    };
+
+    auto touch_added = std::make_shared<mir::test::Signal>();
+    auto observer = std::make_shared<DeviceObserver>(touch_added);
+    mir_server->the_input_device_hub()->add_observer(observer);
+
+    auto fake_touch_dev = mtf::add_fake_input_device(
+        mi::InputDeviceInfo{"touch", uid, mi::DeviceCapability::multitouch});
+
+    touch_added->wait_for(a_long_time);
+    executor->spawn([observer=std::move(observer), the_input_device_hub=mir_server->the_input_device_hub()]
+                                { the_input_device_hub->remove_observer(observer); });
+
+    auto fake_touch = new FakeTouch;
+    fake_touch->runner = this;
+    fake_touch->touch = std::move(fake_touch_dev);
+
+    return static_cast<WlcsTouch*>(fake_touch);
 }
 }
