@@ -345,7 +345,8 @@ void emit_mir_event(miral::TestWlcsDisplayServer* runner,
 
     emitter->emit_event(event.with_event_time(event_time));
 
-    EXPECT_THAT(event_sent->wait_for(a_long_time), testing::Eq(true)) << "fake event failed to go through";
+    if (!event_sent->wait_for(a_long_time))
+        mir::fatal_error("fake event failed to go through");
 }
 }
 

@@ -20,7 +20,7 @@
 #ifndef MIR_TESTWLCSDISPLAYSERVER_H
 #define MIR_TESTWLCSDISPLAYSERVER_H
 
-#include <miral/test_server.h>
+#include <miral/test_display_server.h>
 #include <wlcs/display_server.h>
 
 #include <atomic>

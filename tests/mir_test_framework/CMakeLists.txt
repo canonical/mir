@@ -45,6 +45,7 @@ add_library(mir-public-test-framework OBJECT
   interprocess_client_server_test.cpp
   main.cpp
   observant_shell.cpp
+  passthrough_tracker.cpp       ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/passthrough_tracker.h
   placement_applying_shell.cpp
   process.cpp
   server_runner.cpp
@@ -68,6 +69,7 @@ add_library(mir-public-test-framework OBJECT
   open_wrapper.cpp
   ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/open_wrapper.h
   test_server.cpp  ${PROJECT_SOURCE_DIR}/include/test/miral/test_server.h
+  test_display_server.cpp  ${PROJECT_SOURCE_DIR}/include/test/miral/test_display_server.h
   ${MIR_WLCS_TEST_FRAMEWORK}
 )
 
