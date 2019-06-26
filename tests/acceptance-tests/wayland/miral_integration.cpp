@@ -61,6 +61,43 @@ namespace mi = mir::input;
 namespace mf = mir::frontend;
 using namespace std::chrono_literals;
 
+namespace
+{
+struct MirWlcsDisplayServer : miral::TestDisplayServer, public WlcsDisplayServer
+{
+    MirWlcsDisplayServer(int argc, char const** argv);
+
+    void start_server();
+
+    int create_client_socket();
+
+    void position_window(wl_display* client, wl_surface* surface, mir::geometry::Point point);
+
+    WlcsPointer* create_pointer();
+
+    WlcsTouch* create_touch();
+
+    std::shared_ptr<mir::test::Signal> expect_event_with_time(std::chrono::nanoseconds event_time);
+
+    struct FakePointer;
+private:
+    class InputEventListener;
+    class ResourceMapper;
+
+    std::shared_ptr<ResourceMapper> const resource_mapper;
+    std::shared_ptr<InputEventListener> const event_listener;
+    std::shared_ptr<mir::Executor> executor;
+    std::atomic<double> cursor_x{0}, cursor_y{0};
+
+    mir::Server* mir_server = nullptr;
+};
+}
+
+WlcsDisplayServer* wlcs_create_server(int argc, char const** argv)
+{
+    return new MirWlcsDisplayServer(argc, argv);
+}
+
 namespace std
 {
 // std::chrono::nanoseconds doesn't have a standard hash<> implementation?!
@@ -189,7 +226,7 @@ auto constexpr a_long_time = 5s;
 
 using ClientFd = int;
 
-class ResourceMapper : public mir::scene::SessionListener
+class MirWlcsDisplayServer::ResourceMapper : public mir::scene::SessionListener
 {
 public:
     ResourceMapper()
@@ -538,27 +575,7 @@ private:
 };
 }
 
-class InputEventListener;
-
-struct MirWlcsDisplayServer : miral::TestDisplayServer, public WlcsDisplayServer
-{
-    MirWlcsDisplayServer(int argc, char const** argv);
-
-    void start_server();
-    int create_client_socket();
-    void position_window(wl_display* client, wl_surface* surface, mir::geometry::Point point);
-    WlcsPointer* create_pointer();
-    WlcsTouch* create_touch();
-
-    std::shared_ptr<ResourceMapper> const resource_mapper{std::make_shared<ResourceMapper>()};
-    std::shared_ptr<InputEventListener> const event_listener = std::make_shared<InputEventListener>(*this);
-    std::shared_ptr<mir::Executor> executor;
-    std::atomic<double> cursor_x{0}, cursor_y{0};
-
-    mir::Server* mir_server = nullptr;
-};
-
-class InputEventListener : public mir::input::SeatObserver
+class MirWlcsDisplayServer::InputEventListener : public mir::input::SeatObserver
 {
 public:
     InputEventListener(MirWlcsDisplayServer& runner)
@@ -637,7 +654,7 @@ void emit_mir_event(MirWlcsDisplayServer* runner,
     auto event_time = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::steady_clock::now().time_since_epoch());
 
-    auto event_sent = runner->event_listener->expect_event_with_time(event_time);
+    auto event_sent = runner->expect_event_with_time(event_time);
 
     emitter->emit_event(event.with_event_time(event_time));
 
@@ -655,12 +672,6 @@ void wlcs_server_stop(WlcsDisplayServer* server)
     static_cast<MirWlcsDisplayServer*>(server)->stop_server();
 }
 
-
-WlcsDisplayServer* wlcs_create_server(int argc, char const** argv)
-{
-    return new MirWlcsDisplayServer(argc, argv);
-}
-
 void wlcs_destroy_server(WlcsDisplayServer* server)
 {
     delete static_cast<MirWlcsDisplayServer*>(server);
@@ -671,9 +682,13 @@ int wlcs_server_create_client_socket(WlcsDisplayServer* server)
     return static_cast<MirWlcsDisplayServer*>(server)->create_client_socket();
 }
 
-struct FakePointer : public WlcsPointer
+struct MirWlcsDisplayServer::FakePointer : public WlcsPointer
 {
     FakePointer();
+
+
+    double cursor_x() const { return runner->cursor_x; }
+    double cursor_y() const { return runner->cursor_y; }
 
     decltype(mtf::add_fake_input_device(mi::InputDeviceInfo())) pointer;
     MirWlcsDisplayServer* runner;
@@ -686,12 +701,12 @@ WlcsPointer* wlcs_server_create_pointer(WlcsDisplayServer* server)
 
 void wlcs_destroy_pointer(WlcsPointer* pointer)
 {
-    delete static_cast<FakePointer*>(pointer);
+    delete static_cast<MirWlcsDisplayServer::FakePointer*>(pointer);
 }
 
 void wlcs_pointer_move_relative(WlcsPointer* pointer, wl_fixed_t x, wl_fixed_t y)
 {
-    auto device = static_cast<FakePointer*>(pointer);
+    auto device = static_cast<MirWlcsDisplayServer::FakePointer*>(pointer);
 
     auto event = mir::input::synthesis::a_pointer_event()
                     .with_movement(wl_fixed_to_int(x), wl_fixed_to_int(y));
@@ -701,17 +716,17 @@ void wlcs_pointer_move_relative(WlcsPointer* pointer, wl_fixed_t x, wl_fixed_t y
 
 void wlcs_pointer_move_absolute(WlcsPointer* pointer, wl_fixed_t x, wl_fixed_t y)
 {
-    auto device = static_cast<FakePointer*>(pointer);
+    auto device = static_cast<MirWlcsDisplayServer::FakePointer*>(pointer);
 
-    auto rel_x = wl_fixed_to_double(x) - device->runner->cursor_x;
-    auto rel_y = wl_fixed_to_double(y) - device->runner->cursor_y;
+    auto rel_x = wl_fixed_to_double(x) - device->cursor_x();
+    auto rel_y = wl_fixed_to_double(y) - device->cursor_y();
 
     wlcs_pointer_move_relative(pointer, wl_fixed_from_double(rel_x), wl_fixed_from_double(rel_y));
 }
 
 void wlcs_pointer_button_down(WlcsPointer* pointer, int button)
 {
-    auto device = static_cast<FakePointer*>(pointer);
+    auto device = static_cast<MirWlcsDisplayServer::FakePointer*>(pointer);
 
     auto event = mir::input::synthesis::a_button_down_event()
                     .of_button(button);
@@ -721,7 +736,7 @@ void wlcs_pointer_button_down(WlcsPointer* pointer, int button)
 
 void wlcs_pointer_button_up(WlcsPointer* pointer, int button)
 {
-    auto device = static_cast<FakePointer*>(pointer);
+    auto device = static_cast<MirWlcsDisplayServer::FakePointer*>(pointer);
 
     auto event = mir::input::synthesis::a_button_up_event()
                     .of_button(button);
@@ -729,7 +744,7 @@ void wlcs_pointer_button_up(WlcsPointer* pointer, int button)
     emit_mir_event(device->runner, device->pointer, event);
 }
 
-FakePointer::FakePointer()
+MirWlcsDisplayServer::FakePointer::FakePointer()
 {
     version = 1;
     move_absolute = &wlcs_pointer_move_absolute;
@@ -851,7 +866,9 @@ WlcsIntegrationDescriptor const* get_descriptor(WlcsDisplayServer const* /*serve
     return &descriptor;
 }
 
-MirWlcsDisplayServer::MirWlcsDisplayServer(int argc, char const** argv)
+MirWlcsDisplayServer::MirWlcsDisplayServer(int argc, char const** argv) :
+    resource_mapper{std::make_shared<ResourceMapper>()},
+    event_listener{std::make_shared<InputEventListener>(*this)}
 {
     WlcsDisplayServer::version = 2;
     WlcsDisplayServer::start = &wlcs_server_start;
@@ -1081,5 +1098,10 @@ WlcsTouch* MirWlcsDisplayServer::create_touch()
     fake_touch->touch = std::move(fake_touch_dev);
 
     return static_cast<WlcsTouch*>(fake_touch);
+}
+
+std::shared_ptr<mir::test::Signal> MirWlcsDisplayServer::expect_event_with_time(std::chrono::nanoseconds event_time)
+{
+    return event_listener->expect_event_with_time(event_time);
 }
 }
