@@ -880,6 +880,28 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
         });
 }
 
+void miral::TestWlcsDisplayServer::start_server()
+{
+    TestDisplayServer::start_server();
+
+    mir::test::Signal started;
+
+    mir_server->run_on_wayland_display(
+        [this, &started](auto wayland_display)
+            {
+                resource_mapper->init(wayland_display);
+                executor = WaylandExecutor::executor_for_event_loop(
+                    wl_display_get_event_loop(wayland_display));
+
+                // Execute all observations on the Wayland event loop…
+                mir_server->the_seat_observer_registrar()->register_interest(event_listener, *executor);
+
+                started.raise();
+            });
+
+    started.wait_for(a_long_time);
+}
+
 int miral::TestWlcsDisplayServer::create_client_socket()
 {
     try
