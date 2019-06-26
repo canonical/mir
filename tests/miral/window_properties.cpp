@@ -18,16 +18,17 @@
 
 #include <miral/window_manager_tools.h>
 
+#include <mir/client/connection.h>
 #include <mir/client/surface.h>
 #include <mir/client/window.h>
 #include <mir/client/window_spec.h>
 #include <mir_toolkit/mir_buffer_stream.h>
 
-#include "test_server.h"
+#include <miral/test_server.h>
 
 #include <gmock/gmock.h>
 #include <mir/test/signal.h>
-
+#include <miral/minimal_window_manager.h>
 
 using namespace testing;
 using namespace mir::client;
@@ -59,7 +60,7 @@ struct WindowProperties : public miral::TestServer
     Connection client_connection;
     Surface surface;
 
-    std::unique_ptr<TestWindowManagerPolicy> build_window_manager_policy(WindowManagerTools const& tools) override;
+    std::unique_ptr<miral::WindowManagementPolicy> build_window_manager_policy(WindowManagerTools const& tools) override;
 
     void paint(Surface const& surface)
     {
@@ -71,15 +72,15 @@ struct WindowProperties : public miral::TestServer
 };
 
 auto WindowProperties::build_window_manager_policy(WindowManagerTools const& tools)
--> std::unique_ptr<miral::TestServer::TestWindowManagerPolicy>
+-> std::unique_ptr<miral::WindowManagementPolicy>
 {
-    struct MockWindowManagerPolicy : miral::TestServer::TestWindowManagerPolicy
+    struct MockWindowManagerPolicy : miral::MinimalWindowManager
     {
-        using miral::TestServer::TestWindowManagerPolicy::TestWindowManagerPolicy;
+        using miral::MinimalWindowManager::MinimalWindowManager;
         MOCK_METHOD1(advise_focus_gained, void (miral::WindowInfo const& window_info));
     };
 
-    auto result = std::make_unique<MockWindowManagerPolicy>(tools, *this);
+    auto result = std::make_unique<MockWindowManagerPolicy>(tools);
 
     ON_CALL(*result, advise_focus_gained(_))
         .WillByDefault(InvokeWithoutArgs([this] { window_ready.raise(); }));

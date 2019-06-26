@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "test_server.h"
+#include <miral/test_server.h>
 #include "server_example_decoration.h"
 #include "org_kde_kwin_server_decoration.h"
 
@@ -70,21 +70,10 @@ private:
 
 struct WaylandExtensions : miral::TestServer
 {
-    void SetUp() override
+    WaylandExtensions()
     {
-        testing::Test::SetUp();
+        start_server_in_setup = false;
         add_server_init(launcher);
-    }
-
-    void add_server_init(std::function<void(mir::Server&)>&& init)
-    {
-        auto temp = [old_init=init_server, new_init=init](mir::Server& server)
-            {
-                old_init(server);
-                new_init(server);
-            };
-
-        init_server = temp;
     }
 
     void run_as_client(std::function<void (struct wl_display*)>&& code)

@@ -63,6 +63,7 @@ add_library(mir-public-test-framework OBJECT
   input_device_faker.cpp ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/input_device_faker.h
   open_wrapper.cpp
   ${PROJECT_SOURCE_DIR}/tests/include/mir_test_framework/open_wrapper.h
+  test_server.cpp  ${PROJECT_SOURCE_DIR}/include/test/miral/test_server.h
 )
 
 set_property(

@@ -43,14 +43,13 @@
 
 #include "mir/server.h"
 #include "mir/options/option.h"
-#include "test_server.h"
+#include <miral/test_server.h>
 
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir/input/device_capability.h"
 #include "mir/input/input_device_info.h"
-#include "mir/test/doubles/mock_gl.h"
 #include "mir/frontend/session.h"
 #include "mir/scene/session_listener.h"
 #include "mir/scene/surface.h"
@@ -545,10 +544,6 @@ struct MirWlcsDisplayServer : miral::TestDisplayServer, public WlcsDisplayServer
 {
     MirWlcsDisplayServer();
 
-    auto build_window_manager_policy(miral::WindowManagerTools const& tools)
-    -> std::unique_ptr<TestWindowManagerPolicy> override;
-
-    testing::NiceMock<mir::test::doubles::MockGL> mockgl;
     std::shared_ptr<ResourceMapper> const resource_mapper{std::make_shared<ResourceMapper>()};
     std::shared_ptr<InputEventListener> event_listener;
     std::shared_ptr<mir::Executor> executor;
@@ -688,7 +683,7 @@ WlcsDisplayServer* wlcs_create_server(int argc, char const** argv)
 
     runner->event_listener = std::make_shared<InputEventListener>(*runner);
 
-    runner->init_server = [runner, argc, argv](mir::Server& server)
+    runner->add_server_init([runner, argc, argv](mir::Server& server)
         {
             server.override_the_session_listener(
                 [runner]()
@@ -727,7 +722,7 @@ WlcsDisplayServer* wlcs_create_server(int argc, char const** argv)
                     });
 
             runner->server = &server;
-        };
+        });
 
     return static_cast<WlcsDisplayServer*>(runner);
 }
@@ -1082,9 +1077,4 @@ MirWlcsDisplayServer::MirWlcsDisplayServer()
     get_descriptor = &::get_descriptor;
 }
 
-auto MirWlcsDisplayServer::build_window_manager_policy(miral::WindowManagerTools const& tools)
-->std::unique_ptr<TestWindowManagerPolicy>
-{
-    return std::make_unique<TestWindowManagerPolicy>(tools, *this);
-}
 }

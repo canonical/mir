@@ -16,15 +16,16 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include <miral/window_management_policy.h>
+#include <miral/minimal_window_manager.h>
 #include <miral/window_manager_tools.h>
 
+#include <mir/client/connection.h>
 #include <mir/client/surface.h>
 #include <mir/client/window.h>
 #include <mir/client/window_spec.h>
 #include <mir_toolkit/mir_buffer_stream.h>
 
-#include "test_server.h"
+#include <miral/test_server.h>
 
 #include <gmock/gmock.h>
 #include <mir/test/signal.h>
@@ -45,7 +46,7 @@ std::string const another_window{"another window"};
 
 struct Workspaces;
 
-struct WorkspacesWindowManagerPolicy : miral::TestServer::TestWindowManagerPolicy
+struct WorkspacesWindowManagerPolicy : miral::MinimalWindowManager
 {
     WorkspacesWindowManagerPolicy(WindowManagerTools const& tools, Workspaces& test_fixture);
     ~WorkspacesWindowManagerPolicy();
@@ -227,14 +228,14 @@ private:
     friend struct WorkspacesWindowManagerPolicy;
 
     auto build_window_manager_policy(WindowManagerTools const& tools)
-    -> std::unique_ptr<TestWindowManagerPolicy> override
+    -> std::unique_ptr<miral::WindowManagementPolicy> override
     {
         return std::make_unique<WorkspacesWindowManagerPolicy>(tools, *this);
     }
 };
 
 WorkspacesWindowManagerPolicy::WorkspacesWindowManagerPolicy(WindowManagerTools const& tools, Workspaces& test_fixture) :
-TestWindowManagerPolicy(tools, test_fixture), test_fixture{test_fixture}
+MinimalWindowManager(tools), test_fixture{test_fixture}
 {
     test_fixture.the_policy = this;
 }
@@ -247,7 +248,7 @@ WorkspacesWindowManagerPolicy::~WorkspacesWindowManagerPolicy()
 
 void WorkspacesWindowManagerPolicy::advise_new_window(miral::WindowInfo const& window_info)
 {
-    miral::TestServer::TestWindowManagerPolicy::advise_new_window(window_info);
+    MinimalWindowManager::advise_new_window(window_info);
 
     std::lock_guard<decltype(test_fixture.mutex)> lock{test_fixture.mutex};
     test_fixture.server_windows[window_info.name()] = window_info.window();
@@ -255,7 +256,7 @@ void WorkspacesWindowManagerPolicy::advise_new_window(miral::WindowInfo const& w
 
 void WorkspacesWindowManagerPolicy::handle_window_ready(miral::WindowInfo& window_info)
 {
-    miral::TestServer::TestWindowManagerPolicy::handle_window_ready(window_info);
+    MinimalWindowManager::handle_window_ready(window_info);
     advise_window_ready(window_info);
 }
 }

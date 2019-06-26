@@ -19,6 +19,7 @@
 #include <miral/window_management_policy.h>
 
 #include <mir/client/blob.h>
+#include <mir/client/connection.h>
 #include <mir/client/cookie.h>
 #include <mir/client/surface.h>
 #include <mir/client/window.h>
@@ -31,7 +32,7 @@
 #include <mir/input/device_capability.h>
 #include <mir/shell/shell.h>
 
-#include "test_server.h"
+#include <miral/test_server.h>
 #include <mir_test_framework/fake_input_device.h>
 #include <mir_test_framework/stub_server_platform_factory.h>
 #include <mir/test/event_factory.h>
@@ -45,6 +46,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <atomic>
+#include <miral/minimal_window_manager.h>
 
 using namespace std::chrono_literals;
 using namespace mir::client;
@@ -153,7 +155,7 @@ struct DragAndDrop : ConnectedClientWithAWindow,
     auto count_of_handles_when_moving_mouse() -> int;
 
 private:
-    auto build_window_manager_policy(miral::WindowManagerTools const& tools) -> std::unique_ptr<TestWindowManagerPolicy> override;
+    auto build_window_manager_policy(miral::WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy> override;
     void center_mouse();
     void paint_window(MirRenderSurface* s, MirWindow* w);
     void set_window_event_handler(MirWindow* window, std::function<void(MirEvent const* event)> const& handler);
@@ -545,11 +547,12 @@ auto DragAndDrop::count_of_handles_when_moving_mouse() -> int
     return handles;
 }
 
-auto DragAndDrop::build_window_manager_policy(miral::WindowManagerTools const& tools) -> std::unique_ptr<TestWindowManagerPolicy>
+auto DragAndDrop::build_window_manager_policy(miral::WindowManagerTools const& tools)
+-> std::unique_ptr<miral::WindowManagementPolicy>
 {
-    struct DnDWindowManagerPolicy : miral::TestServer::TestWindowManagerPolicy
+    struct DnDWindowManagerPolicy : miral::MinimalWindowManager
     {
-        using miral::TestServer::TestWindowManagerPolicy::TestWindowManagerPolicy;
+        using miral::MinimalWindowManager::MinimalWindowManager;
 
         void handle_request_drag_and_drop(miral::WindowInfo& window_info) override
         {
@@ -579,7 +582,7 @@ auto DragAndDrop::build_window_manager_policy(miral::WindowManagerTools const& t
         void handle_request_move(miral::WindowInfo&, MirInputEvent const*) override {}
     };
 
-    return std::make_unique<DnDWindowManagerPolicy>(tools, *this);
+    return std::make_unique<DnDWindowManagerPolicy>(tools);
 }
 
 MATCHER_P(BlobContentEq, p, "")

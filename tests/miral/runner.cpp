@@ -16,7 +16,7 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "test_server.h"
+#include <miral/test_server.h>
 
 #include <mir/test/signal.h>
 
@@ -41,7 +41,7 @@ struct Runner : miral::TestServer
 
 TEST_F(Runner, stop_callback_is_called)
 {
-    runner.add_stop_callback([this] { callback(); });
+    add_stop_callback([this] { callback(); });
     miral::TestServer::SetUp();
     EXPECT_CALL(*this, callback());
 }
@@ -50,7 +50,7 @@ TEST_F(Runner, start_callback_is_called)
 {
     mir::test::Signal signal;
 
-    runner.add_start_callback([this] { callback(); });
+    add_start_callback([this] { callback(); });
     EXPECT_CALL(*this, callback())
         .WillOnce(InvokeWithoutArgs([&] { signal.raise(); }));
 

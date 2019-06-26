@@ -18,11 +18,12 @@
 
 #include <mir_toolkit/events/window_placement.h>
 
+#include <mir/client/connection.h>
 #include <mir/client/window_spec.h>
 #include <mir/client/window.h>
 
 #include <mir/test/signal.h>
-#include "test_server.h"
+#include <miral/test_server.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>

@@ -9,7 +9,6 @@ elseif(MIRAL_COMPILE_WITH_W_NO_PEDANTIC)
 endif()
 
 include_directories(
-    ${PROJECT_SOURCE_DIR}/src/miral
     ${GMOCK_INCLUDE_DIR}
     ${GTEST_INCLUDE_DIR}
 )
@@ -18,22 +17,6 @@ string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_C_FLAGS})
 set(CMAKE_C_FLAGS ${NO_NO_LTO_FLAGS})
 string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_CXX_FLAGS})
 set(CMAKE_CXX_FLAGS ${NO_NO_LTO_FLAGS})
-
-add_library(miral-test-framework STATIC
-    test_server.cpp     ../include/miral/test_server.h
-)
-
-target_include_directories(miral-test-framework PUBLIC ../include/miral)
-
-target_link_libraries(miral-test-framework
-PUBLIC
-    ${GTEST_BOTH_LIBRARIES}
-    ${GMOCK_LIBRARIES}
-    miral
-    mir-test-assist
-PRIVATE
-    miral-internal
-)
 
 if (MIR_BUILD_INTERPROCESS_TESTS)
     list(APPEND MIRAL_TEST_SOURCES window_info.cpp)
@@ -63,6 +46,8 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
 set_source_files_properties(static_display_config.cpp PROPERTIES COMPILE_FLAGS
     "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/common")
 
+target_include_directories(miral-test-internal
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/miral)
 
 target_link_libraries(miral-test-internal
     ${GTEST_BOTH_LIBRARIES}
@@ -91,7 +76,8 @@ mir_add_wrapped_executable(miral-test NOINSTALL
 set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_SOURCE_DIR}/generated/")
 
 target_link_libraries(miral-test
-    miral-test-framework
+    mir-test-assist
+    ${WAYLAND_CLIENT_LDFLAGS} ${WAYLAND_CLIENT_LIBRARIES}
     ${UUID_LDFLAGS} ${UUID_LIBRARIES}
 )
 
