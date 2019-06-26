@@ -17,7 +17,7 @@
  *              Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "test_wlcs_display_server.h"
+#include <miral/test_wlcs_display_server.h>
 
 #include <wlcs/pointer.h>
 #include <wlcs/touch.h>
