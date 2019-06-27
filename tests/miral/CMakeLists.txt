@@ -40,6 +40,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     depth_layer.cpp
     output_updates.cpp
     application_zone.cpp
+    initial_window_placement.cpp
     ${MIRAL_TEST_SOURCES}
 )
 
