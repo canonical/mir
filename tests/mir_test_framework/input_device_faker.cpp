@@ -20,7 +20,7 @@
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/fake_input_device.h"
 
-#include "mir/test/signal.h"
+#include "mir/test/signal_actions.h"
 
 #include <mir/input/input_device_hub.h>
 #include <mir/input/input_device_observer.h>

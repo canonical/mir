@@ -35,7 +35,7 @@
 #include "mir/test/doubles/stub_session_authorizer.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/pipe.h"
-#include "mir/test/signal.h"
+#include "mir/test/signal_actions.h"
 
 #include "mir_toolkit/mir_client_library.h"
 

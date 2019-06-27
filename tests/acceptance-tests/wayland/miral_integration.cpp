@@ -54,7 +54,7 @@
 #include "mir/scene/session_listener.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/session.h"
-#include "mir/test/signal.h"
+#include "mir/test/signal_actions.h"
 
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;

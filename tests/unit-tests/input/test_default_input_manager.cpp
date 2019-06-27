@@ -19,7 +19,7 @@
 #include "src/server/input/default_input_manager.h"
 
 #include "mir/test/fd_utils.h"
-#include "mir/test/signal.h"
+#include "mir/test/signal_actions.h"
 #include "mir/test/fake_shared.h"
 #include "mir/test/doubles/mock_input_platform.h"
 
