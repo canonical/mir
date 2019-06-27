@@ -19,7 +19,7 @@
 #include "mir/scene/null_session_listener.h"
 #include "src/server/scene/application_session.h"
 
-#include "mir/test/signal.h"
+#include "mir/test/signal_actions.h"
 #include "mir_test_framework/stubbed_server_configuration.h"
 #include "mir_test_framework/basic_client_server_fixture.h"
 #include "mir_test_framework/in_process_server.h"

@@ -25,7 +25,7 @@
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/temporary_environment_value.h"
 #include "mir/test/doubles/stub_touch_visualizer.h"
-#include "mir/test/signal.h"
+#include "mir/test/signal_actions.h"
 #include "mir/test/event_factory.h"
 
 #include "mir/input/cursor_listener.h"

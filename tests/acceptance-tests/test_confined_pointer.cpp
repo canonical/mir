@@ -23,7 +23,7 @@
 
 #include "mir/test/event_matchers.h"
 #include "mir/test/fake_shared.h"
-#include "mir/test/signal.h"
+#include "mir/test/signal_actions.h"
 #include "mir/test/doubles/mock_seat_report.h"
 #include "mir_test_framework/fake_input_device.h"
 #include "mir_test_framework/headless_in_process_server.h"
