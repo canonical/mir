@@ -41,7 +41,7 @@ mir::shell::SurfaceSpecification edge_attachment(Rectangle const& aux_rect, MirE
     return result;
 }
 
-struct WindowPlacement : mt::TestWindowManagerTools
+struct PopupWindowPlacement : mt::TestWindowManagerTools
 {
     Size const initial_parent_size{600, 400};
     Size const initial_child_size{300, 300};
@@ -116,7 +116,7 @@ struct WindowPlacement : mt::TestWindowManagerTools
 };
 }
 
-TEST_F(WindowPlacement, fixture_sets_up_parent_and_child)
+TEST_F(PopupWindowPlacement, fixture_sets_up_parent_and_child)
 {
     ASSERT_THAT(parent, Ne(null_window));
     ASSERT_THAT(parent.size(), Eq(initial_parent_size));
@@ -139,7 +139,7 @@ TEST_F(WindowPlacement, fixture_sets_up_parent_and_child)
  * edges in the given rectangle.
  */
 
-TEST_F(WindowPlacement, given_aux_rect_away_from_right_side_edge_attachment_vertical_attaches_to_right_edge)
+TEST_F(PopupWindowPlacement, given_aux_rect_away_from_right_side_edge_attachment_vertical_attaches_to_right_edge)
 {
     modification = edge_attachment(rectangle_away_from_rhs, mir_edge_attachment_vertical);
 
@@ -150,7 +150,7 @@ TEST_F(WindowPlacement, given_aux_rect_away_from_right_side_edge_attachment_vert
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_right_side_edge_attachment_vertical_attaches_to_left_edge)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_right_side_edge_attachment_vertical_attaches_to_left_edge)
 {
     modification = edge_attachment(rectangle_near_rhs, mir_edge_attachment_vertical);
 
@@ -161,7 +161,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_right_side_edge_attachment_vertical_
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_both_sides_edge_attachment_vertical_attaches_to_right_edge)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_both_sides_edge_attachment_vertical_attaches_to_right_edge)
 {
     modification = edge_attachment(rectangle_near_both_sides, mir_edge_attachment_vertical);
 
@@ -172,7 +172,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_both_sides_edge_attachment_vertical_
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_away_from_bottom_edge_attachment_horizontal_attaches_to_bottom_edge)
+TEST_F(PopupWindowPlacement, given_aux_rect_away_from_bottom_edge_attachment_horizontal_attaches_to_bottom_edge)
 {
     modification = edge_attachment(rectangle_away_from_bottom, mir_edge_attachment_horizontal);
 
@@ -183,7 +183,7 @@ TEST_F(WindowPlacement, given_aux_rect_away_from_bottom_edge_attachment_horizont
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_bottom_edge_attachment_horizontal_attaches_to_top_edge)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_bottom_edge_attachment_horizontal_attaches_to_top_edge)
 {
     modification = edge_attachment(rectangle_near_bottom, mir_edge_attachment_horizontal);
 
@@ -194,7 +194,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_bottom_edge_attachment_horizontal_at
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_both_sides_edge_attachment_any_attaches_to_bottom_edge)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_both_sides_edge_attachment_any_attaches_to_bottom_edge)
 {
     modification = edge_attachment(rectangle_near_both_sides, mir_edge_attachment_any);
 
@@ -205,7 +205,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_both_sides_edge_attachment_any_attac
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_both_sides_and_bottom_edge_attachment_any_attaches_to_top_edge)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_both_sides_and_bottom_edge_attachment_any_attaches_to_top_edge)
 {
     modification = edge_attachment(rectangle_near_both_sides_and_bottom, mir_edge_attachment_any);
 
@@ -216,7 +216,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_both_sides_and_bottom_edge_attachmen
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_all_sides_attachment_any_attaches_to_right_edge)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_all_sides_attachment_any_attaches_to_right_edge)
 {
     modification = edge_attachment(rectangle_near_all_sides, mir_edge_attachment_any);
 
@@ -282,7 +282,7 @@ auto position_of(MirPlacementGravity rect_gravity, Rectangle rectangle) -> Point
 }
 }
 
-TEST_F(WindowPlacement, given_no_hints_can_attach_by_every_gravity)
+TEST_F(PopupWindowPlacement, given_no_hints_can_attach_by_every_gravity)
 {
     modification.aux_rect() = Rectangle{{100, 50}, { 20, 20}};
     modification.placement_hints() = MirPlacementHints{};
@@ -309,7 +309,7 @@ TEST_F(WindowPlacement, given_no_hints_can_attach_by_every_gravity)
     }
 }
 
-TEST_F(WindowPlacement, given_no_hints_can_attach_by_offset_at_every_gravity)
+TEST_F(PopupWindowPlacement, given_no_hints_can_attach_by_offset_at_every_gravity)
 {
     auto const offset = Displacement{42, 13};
 
@@ -339,7 +339,7 @@ TEST_F(WindowPlacement, given_no_hints_can_attach_by_offset_at_every_gravity)
     }
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_right_side_and_offset_placement_is_flipped)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_right_side_and_offset_placement_is_flipped)
 {
     DeltaX const x_offset{42};
     DeltaY const y_offset{13};
@@ -357,7 +357,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_right_side_and_offset_placement_is_f
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_bottom_and_offset_placement_is_flipped)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_bottom_and_offset_placement_is_flipped)
 {
     DeltaX const x_offset{42};
     DeltaY const y_offset{13};
@@ -375,7 +375,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_bottom_and_offset_placement_is_flipp
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_bottom_right_and_offset_placement_is_flipped_both_ways)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_bottom_right_and_offset_placement_is_flipped_both_ways)
 {
     Displacement const displacement{42, 13};
 
@@ -392,7 +392,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_bottom_right_and_offset_placement_is
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_right_side_placement_can_slide_in_x)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_right_side_placement_can_slide_in_x)
 {
     modification.aux_rect() = rectangle_near_rhs;
     modification.placement_hints() = mir_placement_hints_slide_x;
@@ -406,7 +406,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_right_side_placement_can_slide_in_x)
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_left_side_placement_can_slide_in_x)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_left_side_placement_can_slide_in_x)
 {
     Rectangle const rectangle_near_left_side{{0, 20}, {20, 20}};
 
@@ -422,7 +422,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_left_side_placement_can_slide_in_x)
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_bottom_placement_can_slide_in_y)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_bottom_placement_can_slide_in_y)
 {
     modification.aux_rect() = rectangle_near_bottom;
     modification.placement_hints() = mir_placement_hints_slide_y;
@@ -438,7 +438,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_bottom_placement_can_slide_in_y)
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_top_placement_can_slide_in_y)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_top_placement_can_slide_in_y)
 {
     modification.aux_rect() = rectangle_near_all_sides;
     modification.placement_hints() = mir_placement_hints_slide_y;
@@ -452,7 +452,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_top_placement_can_slide_in_y)
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_bottom_right_and_offset_placement_can_slide_in_x_and_y)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_bottom_right_and_offset_placement_can_slide_in_x_and_y)
 {
     modification.aux_rect() = rectangle_near_both_bottom_right;
     modification.placement_hints() = mir_placement_hints_slide_any;
@@ -466,7 +466,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_bottom_right_and_offset_placement_ca
     ASSERT_THAT(child.top_left(), Eq(expected_position));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_right_side_placement_can_resize_in_x)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_right_side_placement_can_resize_in_x)
 {
     modification.aux_rect() = rectangle_near_rhs;
     modification.placement_hints() = mir_placement_hints_resize_x;
@@ -483,7 +483,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_right_side_placement_can_resize_in_x
     ASSERT_THAT(child.size(), Eq(expected_size));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_left_side_placement_can_resize_in_x)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_left_side_placement_can_resize_in_x)
 {
     Rectangle const rectangle_near_left_side{{0, 20}, {20, 20}};
 
@@ -502,7 +502,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_left_side_placement_can_resize_in_x)
     ASSERT_THAT(child.size(), Eq(expected_size));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_bottom_placement_can_resize_in_y)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_bottom_placement_can_resize_in_y)
 {
     modification.aux_rect() = rectangle_near_bottom;
     modification.placement_hints() = mir_placement_hints_resize_y;
@@ -519,7 +519,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_bottom_placement_can_resize_in_y)
     ASSERT_THAT(child.size(), Eq(expected_size));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_top_placement_can_resize_in_y)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_top_placement_can_resize_in_y)
 {
     modification.aux_rect() = rectangle_near_all_sides;
     modification.placement_hints() = mir_placement_hints_resize_y;
@@ -536,7 +536,7 @@ TEST_F(WindowPlacement, given_aux_rect_near_top_placement_can_resize_in_y)
     ASSERT_THAT(child.size(), Eq(expected_size));
 }
 
-TEST_F(WindowPlacement, given_aux_rect_near_bottom_right_and_offset_placement_can_resize_in_x_and_y)
+TEST_F(PopupWindowPlacement, given_aux_rect_near_bottom_right_and_offset_placement_can_resize_in_x_and_y)
 {
     modification.aux_rect() = rectangle_near_both_bottom_right;
     modification.placement_hints() = mir_placement_hints_resize_any;
