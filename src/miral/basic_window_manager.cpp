@@ -35,11 +35,6 @@
 using namespace mir;
 using namespace mir::geometry;
 
-namespace
-{
-int const title_bar_height = 12;
-}
-
 struct miral::BasicWindowManager::Locker
 {
     explicit Locker(miral::BasicWindowManager* self);
@@ -115,7 +110,7 @@ auto miral::BasicWindowManager::add_surface(
 
     auto& session_info = info_for(session);
 
-    WindowSpecification spec = policy->place_new_window(session_info, place_new_surface(session_info, params));
+    WindowSpecification spec = policy->place_new_window(session_info, place_new_surface(params));
 
     if (!spec.depth_layer().is_set() && spec.parent().is_set())
         if (auto parent_surface = spec.parent().value().lock())
@@ -1569,8 +1564,7 @@ auto miral::BasicWindowManager::can_activate_window_for_session_in_workspace(
     return new_focus;
 }
 
-auto miral::BasicWindowManager::place_new_surface(ApplicationInfo const& app_info, WindowSpecification parameters)
--> WindowSpecification
+auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters) -> WindowSpecification
 {
     if (!parameters.type().is_set())
         parameters.type() = mir_window_type_normal;
@@ -1594,24 +1588,6 @@ auto miral::BasicWindowManager::place_new_surface(ApplicationInfo const& app_inf
         parameters.size() = rect.size;
         parameters.state() = mir_window_state_fullscreen;
         positioned = true;
-    }
-    else if (!has_parent) // No parent => client can't suggest positioning
-    {
-        if (app_info.windows().size() > 0)
-        {
-            if (auto const default_window = app_info.windows()[0])
-            {
-                static Displacement const offset{title_bar_height, title_bar_height};
-
-                parameters.top_left() = default_window.top_left() + offset;
-
-                Rectangle display_for_app{default_window.top_left(), default_window.size()};
-
-                display_layout->size_to_output(display_for_app);
-
-                positioned = display_for_app.overlaps(Rectangle{parameters.top_left().value(), parameters.size().value()});
-            }
-        }
     }
 
     if (has_parent)

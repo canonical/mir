@@ -269,7 +269,7 @@ private:
         miral::Application const& session,
         std::vector<std::shared_ptr<Workspace>> const& workspaces) -> bool;
 
-    auto place_new_surface(ApplicationInfo const& app_info, WindowSpecification parameters) -> WindowSpecification;
+    auto place_new_surface(WindowSpecification parameters) -> WindowSpecification;
     auto place_relative(mir::geometry::Rectangle const& parent, miral::WindowSpecification const& parameters, Size size)
         -> mir::optional_value<Rectangle>;
 

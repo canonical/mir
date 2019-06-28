@@ -27,7 +27,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     active_outputs.cpp
     command_line_option.cpp
     select_active_window.cpp
-    window_placement.cpp
+    popup_window_placement.cpp
     window_placement_anchors_to_parent.cpp
     drag_active_window.cpp
     modify_window_state.cpp
@@ -40,6 +40,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     depth_layer.cpp
     output_updates.cpp
     application_zone.cpp
+    initial_window_placement.cpp
     ${MIRAL_TEST_SOURCES}
 )
 
