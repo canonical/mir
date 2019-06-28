@@ -5,6 +5,6 @@ includedir=@INCLUDEDIR@
 Name: mirtest
 Description: Mir test assist library
 Version: @MIR_VERSION@
-Requires: mirserver mirplatform mirclient mir-renderer-gl-dev protobuf-lite
+Requires: miral mirserver mirplatform mirclient mir-renderer-gl-dev protobuf-lite
 Libs: -L@LIBDIR@ -lmir-test-assist -ldl -lboost_filesystem -lboost_system
 Cflags: -I@INCLUDEDIR@

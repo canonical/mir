@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -13,25 +13,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored By: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_FRAMEWORK_HEADLESS_NESTED_SERVER_RUNNER_H_
-#define MIR_TEST_FRAMEWORK_HEADLESS_NESTED_SERVER_RUNNER_H_
+#include "mir_test_framework/passthrough_tracker.h"
 
-#include "mir_test_framework/async_server_runner.h"
-#include <atomic>
+namespace mtf = mir_test_framework;
 
-namespace mir_test_framework
+void mtf::PassthroughTracker::note_passthrough()
 {
-class PassthroughTracker;
-
-class HeadlessNestedServerRunner : public AsyncServerRunner
-{
-public:
-    HeadlessNestedServerRunner(std::string const& connect_string);
-    std::shared_ptr<PassthroughTracker> const passthrough_tracker;
-};
+    std::unique_lock<std::mutex> lk(mutex);
+    num_passthrough++;
+    cv.notify_all();
 }
 
-#endif /* MIR_TEST_FRAMEWORK_HEADLESS_NESTED_SERVER_RUNNER_H_ */
+bool mtf::PassthroughTracker::wait_for_passthrough_frames(size_t nframes, std::chrono::milliseconds ms)
+{
+    std::unique_lock<std::mutex> lk(mutex);
+    return cv.wait_for(lk, ms, [&] { return num_passthrough >= nframes; } );
+}
+
