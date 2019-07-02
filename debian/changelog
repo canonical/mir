@@ -1,6 +1,51 @@
+mir (1.3.0) UNRELEASED; urgency=medium
+
+  * New upstream release 1.3.0
+
+    - ABI summary:
+      . mirclient ABI unchanged at 9
+      . miral ABI unchanged at 3
+      . mirserver ABI bumped to 49
+      . mircommon ABI unchanged at 7
+      . mirplatform ABI unchanged at 16
+      . mirprotobuf ABI unchanged at 3
+      . mirplatformgraphics ABI unchanged to 16
+      . mirclientplatform ABI unchanged at 5
+      . mirinputplatform ABI unchanged at 7
+      . mircore ABI unchanged at 1
+      . mircookie ABI unchanged at 2
+    - Enhancements:
+      . [Wayland] Rename zxdg_output_v1 -> zxdg_output_manager_v1
+      . [Wayland] Eagerly send buffer release events
+      . [Wayland] Eagerly execute work when on Wayland thread
+      . [MirAL] Surface depth layer support
+      . [MirAL] Application Zone support
+      . [MirAL] Explicit handling of Wayland extensions in MirAL and Mir
+      . [MirAL] Do not place parentless windows relative to existing windows
+      . [Wayland/mirtest] publish miral::TestWlcsDisplayServer and
+        miral::TestServer fixtures in mirtest-dev. (Fixes #878)
+      . [Wayland/generator] Force compile-time error if XML/generated classes
+        are updated to a new version without also updating the child classes
+      . [Wayland/generator] Add base objects for Wayland objects and globals
+      . [Wayland/generator] Add a constructor-from-parent for objects that can
+        be server-constructed
+      . [Examples] Implement Ctrl-Alt-T handling for miral-shell
+    - Bugs fixed:
+      . [Wayland] Better handle window role state changes. (Fixes #836)
+      . [Wayland] Fix INCLUDEDIR for the mirwayland.pc file. (Fixes #873)
+      . [Wayland] Process output update notifications on the correct thread.
+        (Fixes: #886)
+      . [MirAL] Allow unfocused windows to receive mouse down events
+      . [MirAL] Handle exceptions propagating from InternalClient code
+      . Add a package config file for mircommon and reference it mirwayland and
+        mirplatform. (Fixes: #868)
+      . [nested] Make sure we destroy eglImage before class gets destructed
+
+ -- Alan Griffiths <alan.griffiths@canonical.com>  Mon, 1 Jul 2019 11:24:00 +0100
+
 mir (1.2.0) UNRELEASED; urgency=medium
 
-  * New upstream release 1.1.2
+  * New upstream release 1.2.0
 
     - ABI summary:
       . mirclient ABI unchanged at 9
