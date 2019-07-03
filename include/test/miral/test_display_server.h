@@ -48,6 +48,7 @@ private:
 struct TestDisplayServer : private TestRuntimeEnvironment
 {
     TestDisplayServer();
+    TestDisplayServer(int argc, char const** argv);
 
     virtual ~TestDisplayServer();
 
