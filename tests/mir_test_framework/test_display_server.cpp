@@ -50,7 +50,12 @@ char const* const trace_option = "window-management-trace";
 }
 
 miral::TestDisplayServer::TestDisplayServer() :
-    runner{1, dummy_args}
+    TestDisplayServer{1, dummy_args}
+{
+}
+
+miral::TestDisplayServer::TestDisplayServer(int argc, char const** argv) :
+    runner{argc, argv}
 {
     add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
     add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());

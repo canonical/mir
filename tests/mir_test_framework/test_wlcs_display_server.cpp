@@ -800,6 +800,7 @@ WlcsTouch* wlcs_server_create_touch(WlcsDisplayServer* server)
 }
 
 miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv) :
+    TestDisplayServer{argc, argv},
     resource_mapper{std::make_shared<ResourceMapper>()},
     event_listener{std::make_shared<InputEventListener>(*this)}
 {
@@ -815,14 +816,12 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
     add_to_environment("MIR_SERVER_WAYLAND_SOCKET_NAME", "wlcs-tests");
     add_to_environment("WAYLAND_DISPLAY", "wlcs-tests");
 
-    add_server_init([this, argc, argv](mir::Server& server)
+    add_server_init([this](mir::Server& server)
         {
             server.override_the_session_listener([this]()
                 {
                     return resource_mapper;
                 });
-
-            server.set_command_line(argc, argv);
 
             server.wrap_cursor_listener(
                 [this](auto const& wrappee)
