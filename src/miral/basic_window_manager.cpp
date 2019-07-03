@@ -147,19 +147,19 @@ auto miral::BasicWindowManager::add_surface(
     case mir_window_state_maximized:
     case mir_window_state_vertmaximized:
     case mir_window_state_horizmaximized:
+    case mir_window_state_attached:
     {
         auto display_area = display_area_for(window);
         display_area->attached_windows.insert(window);
         break;
     }
 
-    case mir_window_state_attached:
-        place_attached(window_info);
-        break;
-
     default:
         break;
     }
+
+    if (window_info.state() == mir_window_state_attached)
+        update_windows_for_outputs();
 
     policy->advise_new_window(window_info);
 
@@ -231,6 +231,11 @@ void miral::BasicWindowManager::remove_window(Application const& application, mi
     fullscreen_surfaces.erase(info.window());
     for (auto& area : display_areas)
         area->attached_windows.erase(info.window());
+    if (info.state() == mir_window_state_attached &&
+        info.exclusive_rect().is_set())
+    {
+        update_windows_for_outputs();
+    }
 
     application->destroy_surface(info.window());
 
@@ -1097,8 +1102,12 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
     if (window_info.state() == mir_window_state_attached)
     {
-        if (modifications.state().is_set() || modifications.attached_edges().is_set())
-            place_attached(window_info);
+        if (modifications.state().is_set() ||
+            modifications.attached_edges().is_set() ||
+            modifications.exclusive_rect().is_set())
+        {
+            update_windows_for_outputs();
+        }
     }
 
     if (modifications.confine_pointer().is_set())
@@ -1134,52 +1143,79 @@ void miral::BasicWindowManager::place_and_size(WindowInfo& root, Point const& ne
     move_tree(root, new_pos - root.window().top_left());
 }
 
-void miral::BasicWindowManager::place_attached(WindowInfo& root)
+void miral::BasicWindowManager::place_attached_to_zone(
+    WindowInfo& info,
+    mir::geometry::Rectangle const& application_zone)
 {
-    if (root.state() != mir_window_state_attached)
-        fatal_error("BasicWindowManager::place_attached() called for window not in state mir_window_state_attached");
+    Point top_left = info.window().top_left();
+    Size size = info.window().size();
+    bool update_window = false;
 
-    MirPlacementGravity edges = root.attached_edges();
-    Size size = root.window().size();
-    auto area = display_area_for(root.window());
-    Rectangle application_zone = area->application_zone.extents();
-    Point top_left{};
-    bool needs_resize = true;
-
-    if ((edges & mir_placement_gravity_west) &&
-        (edges & mir_placement_gravity_east))
+    switch (info.state())
     {
+    case mir_window_state_maximized:
+        top_left = application_zone.top_left;
+        size = application_zone.size;
+        update_window = true;
+        break;
+
+    case mir_window_state_horizmaximized:
+        top_left.x = application_zone.top_left.x;
         size.width = application_zone.size.width;
-        needs_resize = true;
-    }
+        update_window = true;
+        break;
 
-    if ((edges & mir_placement_gravity_north) &&
-        (edges & mir_placement_gravity_south))
-    {
+    case mir_window_state_vertmaximized:
+        top_left.y = application_zone.top_left.y;
         size.height = application_zone.size.height;
-        needs_resize = true;
-    }
+        update_window = true;
+        break;
 
-    if (needs_resize)
+    case mir_window_state_attached:
     {
-        root.window().resize(size);
+        MirPlacementGravity edges = info.attached_edges();
+
+        if ((edges & mir_placement_gravity_west) &&
+            (edges & mir_placement_gravity_east))
+        {
+            size.width = application_zone.size.width;
+        }
+
+        if ((edges & mir_placement_gravity_north) &&
+            (edges & mir_placement_gravity_south))
+        {
+            size.height = application_zone.size.height;
+        }
+
+        if (edges & mir_placement_gravity_west)
+            top_left.x = application_zone.left();
+        else if (edges & mir_placement_gravity_east)
+            top_left.x = application_zone.right() - (size.width - Width{0});
+        else
+            top_left.x = application_zone.top_left.x + (application_zone.size.width - size.width) * 0.5;
+
+        if (edges & mir_placement_gravity_north)
+            top_left.y = application_zone.top();
+        else if (edges & mir_placement_gravity_south)
+            top_left.y = application_zone.bottom() - (size.height - Height{0});
+        else
+            top_left.y = application_zone.top_left.y + (application_zone.size.height - size.height) * 0.5;
+        update_window = true;
+        break;
     }
 
-    if (edges & mir_placement_gravity_west)
-        top_left.x = application_zone.left();
-    else if (edges & mir_placement_gravity_east)
-        top_left.x = application_zone.right() - (size.width - Width{0});
-    else
-        top_left.x = application_zone.top_left.x + (application_zone.size.width - size.width) * 0.5;
+    default:
+        fatal_error("BasicWindowManager::place_maximized() called for window not in a maximized or attached state");
+    }
 
-    if (edges & mir_placement_gravity_north)
-        top_left.y = application_zone.top();
-    else if (edges & mir_placement_gravity_south)
-        top_left.y = application_zone.bottom() - (size.height - Height{0});
-    else
-        top_left.y = application_zone.top_left.y + (application_zone.size.height - size.height) * 0.5;
+    // TODO: Maybe remove update_window and update only if the rect has changed?
+    // This would probably be more correct, but also may or may not break existing users
 
-    move_tree(root, top_left - root.window().top_left());
+    if (update_window)
+    {
+        auto updated_rect = policy->confirm_placement_on_display(info, info.state(), Rectangle{top_left, size});
+        place_and_size(info, updated_rect.top_left, updated_rect.size);
+    }
 }
 
 void miral::BasicWindowManager::place_and_size_for_state(
@@ -1318,6 +1354,7 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
     case mir_window_state_maximized:
     case mir_window_state_vertmaximized:
     case mir_window_state_horizmaximized:
+    case mir_window_state_attached:
     {
         auto area = display_area_for(window);
         area->attached_windows.insert(window);
@@ -2404,56 +2441,14 @@ void miral::BasicWindowManager::update_windows_for_outputs()
         }
     }
 
-    if (outputs.size() == 0)
-        return;
-
     for (auto& area : display_areas)
     {
         for (auto const& window : area->attached_windows)
         {
-            if (!window)
-                continue;
-
-            auto& window_info = info_for(window);
-            Rectangle const original_window_rect{window.top_left(), window.size()};
-            Rectangle updated_window_rect{original_window_rect};
-            Rectangle application_zone = area->application_zone.extents();
-            bool update_window = false;
-
-            switch (window_info.state())
+            if (window)
             {
-            case mir_window_state_maximized:
-                updated_window_rect = application_zone;
-                update_window = true;
-                break;
-
-            case mir_window_state_horizmaximized:
-                updated_window_rect.top_left.x = application_zone.top_left.x;
-                updated_window_rect.size.width = application_zone.size.width;
-                update_window = true;
-                break;
-
-            case mir_window_state_vertmaximized:
-                updated_window_rect.top_left.y = application_zone.top_left.y;
-                updated_window_rect.size.height = application_zone.size.height;
-                update_window = true;
-                break;
-
-            default:
-                break;
-            }
-
-            // TODO: Maybe remove update_window and update only if the rect has changed?
-            // This would probably be more correct, but also may or may not break existing users
-            // if (updated_window_rect != original_window_rect)
-
-            if (update_window)
-            {
-                updated_window_rect = policy->confirm_placement_on_display(
-                    window_info,
-                    window_info.state(),
-                    updated_window_rect);
-                place_and_size(window_info, updated_window_rect.top_left, updated_window_rect.size);
+                auto& info = info_for(window);
+                place_attached_to_zone(info, area->application_zone.extents());
             }
         }
     }
