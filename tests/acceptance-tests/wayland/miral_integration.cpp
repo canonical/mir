@@ -18,6 +18,7 @@
  */
 
 #include <miral/test_wlcs_display_server.h>
+#include <miral/wayland_extensions.h>
 
 namespace
 {
@@ -45,9 +46,24 @@ WlcsIntegrationDescriptor const* get_descriptor(WlcsDisplayServer const* /*serve
     return &descriptor;
 }
 
+struct TestWlcsDisplayServer : miral::TestWlcsDisplayServer
+{
+    miral::WaylandExtensions wayland_extensions;
+
+    TestWlcsDisplayServer(int argc, char const** argv) :
+        miral::TestWlcsDisplayServer{argc, argv}
+    {
+        for (auto const& extension : wayland_extensions.supported())
+        {
+            wayland_extensions.enable(extension);
+        }
+        add_server_init(wayland_extensions);
+    }
+};
+
 WlcsDisplayServer* wlcs_create_server(int argc, char const** argv)
 {
-    auto server = new miral::TestWlcsDisplayServer(argc, argv);
+    auto server = new TestWlcsDisplayServer(argc, argv);
 
     server->get_descriptor = &get_descriptor;
     return server;
