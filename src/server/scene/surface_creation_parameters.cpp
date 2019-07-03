@@ -198,6 +198,10 @@ void ms::SurfaceCreationParameters::update_from(msh::SurfaceSpecification const&
         confine_pointer = that.confine_pointer;
     if (that.depth_layer.is_set())
         depth_layer = that.depth_layer;
+    if (that.attached_edges.is_set())
+        attached_edges = that.attached_edges;
+    if (that.exclusive_rect.is_set())
+        exclusive_rect = that.exclusive_rect.value();
     // TODO: should SurfaceCreationParameters support cursors?
 //     if (that.cursor_image.is_set())
 //         cursor_image = that.cursor_image;

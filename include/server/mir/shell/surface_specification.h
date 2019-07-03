@@ -105,6 +105,9 @@ struct SurfaceSpecification
      * also updates all children.
      */
     optional_value<MirDepthLayer> depth_layer;
+
+    optional_value<MirPlacementGravity> attached_edges;
+    optional_value<optional_value<geometry::Rectangle>> exclusive_rect;
 };
 }
 }

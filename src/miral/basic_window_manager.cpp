@@ -153,6 +153,10 @@ auto miral::BasicWindowManager::add_surface(
         break;
     }
 
+    case mir_window_state_attached:
+        place_attached(window_info);
+        break;
+
     default:
         break;
     }
@@ -948,6 +952,8 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     COPY_IF_SET(userdata);
     COPY_IF_SET(shell_chrome);
     COPY_IF_SET(depth_layer);
+    COPY_IF_SET(attached_edges);
+    COPY_IF_SET(exclusive_rect);
 
 #undef COPY_IF_SET
 
@@ -1089,6 +1095,12 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
         set_state(window_info, modifications.state().value());
     }
 
+    if (window_info.state() == mir_window_state_attached)
+    {
+        if (modifications.state().is_set() || modifications.attached_edges().is_set())
+            place_attached(window_info);
+    }
+
     if (modifications.confine_pointer().is_set())
         std::shared_ptr<scene::Surface>(window)->set_confine_pointer_state(modifications.confine_pointer().value());
 }
@@ -1120,6 +1132,54 @@ void miral::BasicWindowManager::place_and_size(WindowInfo& root, Point const& ne
     }
 
     move_tree(root, new_pos - root.window().top_left());
+}
+
+void miral::BasicWindowManager::place_attached(WindowInfo& root)
+{
+    if (root.state() != mir_window_state_attached)
+        fatal_error("BasicWindowManager::place_attached() called for window not in state mir_window_state_attached");
+
+    MirPlacementGravity edges = root.attached_edges();
+    Size size = root.window().size();
+    auto area = display_area_for(root.window());
+    Rectangle application_zone = area->application_zone.extents();
+    Point top_left{};
+    bool needs_resize = true;
+
+    if ((edges & mir_placement_gravity_west) &&
+        (edges & mir_placement_gravity_east))
+    {
+        size.width = application_zone.size.width;
+        needs_resize = true;
+    }
+
+    if ((edges & mir_placement_gravity_north) &&
+        (edges & mir_placement_gravity_south))
+    {
+        size.height = application_zone.size.height;
+        needs_resize = true;
+    }
+
+    if (needs_resize)
+    {
+        root.window().resize(size);
+    }
+
+    if (edges & mir_placement_gravity_west)
+        top_left.x = application_zone.left();
+    else if (edges & mir_placement_gravity_east)
+        top_left.x = application_zone.right() - (size.width - Width{0});
+    else
+        top_left.x = application_zone.top_left.x + (application_zone.size.width - size.width) * 0.5;
+
+    if (edges & mir_placement_gravity_north)
+        top_left.y = application_zone.top();
+    else if (edges & mir_placement_gravity_south)
+        top_left.y = application_zone.bottom() - (size.height - Height{0});
+    else
+        top_left.y = application_zone.top_left.y + (application_zone.size.height - size.height) * 0.5;
+
+    move_tree(root, top_left - root.window().top_left());
 }
 
 void miral::BasicWindowManager::place_and_size_for_state(

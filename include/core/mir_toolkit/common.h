@@ -134,6 +134,7 @@ typedef enum MirSurfaceState
     mir_surface_state_fullscreen,
     mir_surface_state_horizmaximized,
     mir_surface_state_hidden,
+    mir_surface_state_attached,       /**< Used for panels, notifications and other windows attached to output edges */
     mir_surface_states
 } MirSurfaceState MIR_FOR_REMOVAL_IN_VERSION_1("use MirWindowState");
 
@@ -150,6 +151,7 @@ typedef enum MirWindowState
     mir_window_state_fullscreen,
     mir_window_state_horizmaximized,
     mir_window_state_hidden,
+    mir_window_state_attached,       /**< Used for panels, notifications and other windows attached to output edges */
     mir_window_states
 } MirWindowState;
 
