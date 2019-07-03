@@ -117,6 +117,16 @@ inline constexpr Size as_size(Displacement const& disp)
 {
     return Size{disp.dx.as_int(), disp.dy.as_int()};
 }
+
+inline constexpr Displacement as_displacement(Point const& point)
+{
+    return Displacement{point.x.as_int(), point.y.as_int()};
+}
+
+inline constexpr Point as_point(Displacement const& disp)
+{
+    return Point{disp.dx.as_int(), disp.dy.as_int()};
+}
 }
 }
 

@@ -20,6 +20,7 @@
 #define MIR_GEOMETRY_SIZE_H_
 
 #include "mir/geometry/dimensions.h"
+#include "point.h"
 #include <iosfwd>
 
 namespace mir
@@ -62,6 +63,16 @@ template<typename Scalar>
 inline constexpr Size operator*(Size const& size, Scalar scale)
 {
     return scale*size;
+}
+
+inline constexpr Size as_size(Point const& point)
+{
+    return Size{point.x.as_int(), point.y.as_int()};
+}
+
+inline constexpr Point as_point(Size const& size)
+{
+    return Point{size.width.as_int(), size.height.as_int()};
 }
 }
 }
