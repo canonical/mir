@@ -63,18 +63,6 @@ inline constexpr Size operator*(Size const& size, Scalar scale)
 {
     return scale*size;
 }
-
-#ifdef MIR_GEOMETRY_DISPLACEMENT_H_
-inline constexpr Displacement as_displacement(Size const& size)
-{
-    return Displacement{size.width.as_int(), size.height.as_int()};
-}
-
-inline constexpr Size as_size(Displacement const& disp)
-{
-    return Size{disp.dx.as_int(), disp.dy.as_int()};
-}
-#endif
 }
 }
 
