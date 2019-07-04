@@ -21,6 +21,7 @@
 
 #include "mir/geometry/dimensions.h"
 #include "mir/geometry/point.h"
+#include "mir/geometry/size.h"
 
 #include <iosfwd>
 
@@ -107,7 +108,6 @@ inline constexpr Displacement operator*(Displacement const& disp, Scalar scale)
     return scale*disp;
 }
 
-#ifdef MIR_GEOMETRY_SIZE_H_
 inline constexpr Displacement as_displacement(Size const& size)
 {
     return Displacement{size.width.as_int(), size.height.as_int()};
@@ -117,7 +117,16 @@ inline constexpr Size as_size(Displacement const& disp)
 {
     return Size{disp.dx.as_int(), disp.dy.as_int()};
 }
-#endif
+
+inline constexpr Displacement as_displacement(Point const& point)
+{
+    return Displacement{point.x.as_int(), point.y.as_int()};
+}
+
+inline constexpr Point as_point(Displacement const& disp)
+{
+    return Point{disp.dx.as_int(), disp.dy.as_int()};
+}
 }
 }
 

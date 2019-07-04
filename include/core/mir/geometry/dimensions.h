@@ -118,22 +118,30 @@ inline constexpr DeltaX operator+(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as
 inline constexpr DeltaY operator+(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_int() + rhs.as_int()); }
 inline constexpr DeltaX operator-(DeltaX lhs, DeltaX rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
 inline constexpr DeltaY operator-(DeltaY lhs, DeltaY rhs) { return DeltaY(lhs.as_int() - rhs.as_int()); }
+inline DeltaX& operator+=(DeltaX& lhs, DeltaX rhs) { return lhs = lhs + rhs; }
+inline DeltaY& operator+=(DeltaY& lhs, DeltaY rhs) { return lhs = lhs + rhs; }
+inline DeltaX& operator-=(DeltaX& lhs, DeltaX rhs) { return lhs = lhs - rhs; }
+inline DeltaY& operator-=(DeltaY& lhs, DeltaY rhs) { return lhs = lhs - rhs; }
 
 // Adding deltas to co-ordinates is fine
 inline constexpr X operator+(X lhs, DeltaX rhs) { return X(lhs.as_int() + rhs.as_int()); }
 inline constexpr Y operator+(Y lhs, DeltaY rhs) { return Y(lhs.as_int() + rhs.as_int()); }
 inline constexpr X operator-(X lhs, DeltaX rhs) { return X(lhs.as_int() - rhs.as_int()); }
 inline constexpr Y operator-(Y lhs, DeltaY rhs) { return Y(lhs.as_int() - rhs.as_int()); }
-inline X& operator+=(X& lhs, DeltaX rhs) { return lhs = X(lhs.as_int() + rhs.as_int()); }
-inline Y& operator+=(Y& lhs, DeltaY rhs) { return lhs = Y(lhs.as_int() + rhs.as_int()); }
-inline X& operator-=(X& lhs, DeltaX rhs) { return lhs = X(lhs.as_int() - rhs.as_int()); }
-inline Y& operator-=(Y& lhs, DeltaY rhs) { return lhs = Y(lhs.as_int() - rhs.as_int()); }
+inline X& operator+=(X& lhs, DeltaX rhs) { return lhs = lhs + rhs; }
+inline Y& operator+=(Y& lhs, DeltaY rhs) { return lhs = lhs + rhs; }
+inline X& operator-=(X& lhs, DeltaX rhs) { return lhs = lhs - rhs; }
+inline Y& operator-=(Y& lhs, DeltaY rhs) { return lhs = lhs - rhs; }
 
 // Adding deltas to Width and Height is fine
 inline constexpr Width operator+(Width lhs, DeltaX rhs) { return Width(lhs.as_int() + rhs.as_int()); }
 inline constexpr Height operator+(Height lhs, DeltaY rhs) { return Height(lhs.as_int() + rhs.as_int()); }
 inline constexpr Width operator-(Width lhs, DeltaX rhs) { return Width(lhs.as_int() - rhs.as_int()); }
 inline constexpr Height operator-(Height lhs, DeltaY rhs) { return Height(lhs.as_int() - rhs.as_int()); }
+inline Width& operator+=(Width& lhs, DeltaX rhs) { return lhs = lhs + rhs; }
+inline Height& operator+=(Height& lhs, DeltaY rhs) { return lhs = lhs + rhs; }
+inline Width& operator-=(Width& lhs, DeltaX rhs) { return lhs = lhs - rhs; }
+inline Height& operator-=(Height& lhs, DeltaY rhs) { return lhs = lhs - rhs; }
 
 // Subtracting coordinates is fine
 inline constexpr DeltaX operator-(X lhs, X rhs) { return DeltaX(lhs.as_int() - rhs.as_int()); }
@@ -160,6 +168,20 @@ template<typename Scalar>
 inline constexpr DeltaX operator*(DeltaX const& dx, Scalar scale) { return scale*dx; }
 template<typename Scalar>
 inline constexpr DeltaY operator*(DeltaY const& dy, Scalar scale) { return scale*dy; }
+
+// Converting between types is fine, as long as they are along the same axis
+inline constexpr Width as_width(DeltaX const& dx) { return Width{dx.as_int()}; }
+inline constexpr Height as_height(DeltaY const& dy) { return Height{dy.as_int()}; }
+inline constexpr X as_x(DeltaX const& dx) { return X{dx.as_int()}; }
+inline constexpr Y as_y(DeltaY const& dy) { return Y{dy.as_int()}; }
+inline constexpr DeltaX as_delta(X const& x) { return DeltaX{x.as_int()}; }
+inline constexpr DeltaY as_delta(Y const& y) { return DeltaY{y.as_int()}; }
+inline constexpr X as_x(Width const& w) { return X{w.as_int()}; }
+inline constexpr Y as_y(Height const& h) { return Y{h.as_int()}; }
+inline constexpr Width as_width(X const& x) { return Width{x.as_int()}; }
+inline constexpr Height as_height(Y const& y) { return Height{y.as_int()}; }
+inline constexpr DeltaX as_delta(Width const& w) { return DeltaX{w.as_int()}; }
+inline constexpr DeltaY as_delta(Height const& h) { return DeltaY{h.as_int()}; }
 
 template<typename Target, typename Source>
 inline constexpr Target dim_cast(Source s) { return Target(s.as_int()); }

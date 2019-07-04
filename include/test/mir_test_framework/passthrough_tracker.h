@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015 Canonical Ltd.
+ * Copyright © 2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3,
@@ -13,25 +13,28 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored By: Robert Carr <robert.carr@canonical.com>
+ * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#ifndef MIR_TEST_FRAMEWORK_HEADLESS_NESTED_SERVER_RUNNER_H_
-#define MIR_TEST_FRAMEWORK_HEADLESS_NESTED_SERVER_RUNNER_H_
+#ifndef MIR_TEST_FRAMEWORK_PASSTHROUGH_TRACKER_H
+#define MIR_TEST_FRAMEWORK_PASSTHROUGH_TRACKER_H
 
-#include "mir_test_framework/async_server_runner.h"
-#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <mutex>
 
 namespace mir_test_framework
 {
-class PassthroughTracker;
-
-class HeadlessNestedServerRunner : public AsyncServerRunner
+struct PassthroughTracker
 {
-public:
-    HeadlessNestedServerRunner(std::string const& connect_string);
-    std::shared_ptr<PassthroughTracker> const passthrough_tracker;
+    bool wait_for_passthrough_frames(size_t num_frames, std::chrono::milliseconds ms);
+    void note_passthrough();
+
+private:
+    std::mutex mutex;
+    std::condition_variable cv;
+    size_t num_passthrough;
 };
 }
 
-#endif /* MIR_TEST_FRAMEWORK_HEADLESS_NESTED_SERVER_RUNNER_H_ */
+#endif //MIR_TEST_FRAMEWORK_PASSTHROUGH_TRACKER_H

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016 Canonical Ltd.
+ * Copyright © 2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 or 3 as
@@ -16,15 +16,15 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "test_server.h"
-#include "basic_window_manager.h"
-#include "window_management_trace.h"
+#include <miral/test_display_server.h>
 
 #include <miral/command_line_option.h>
+#include <miral/minimal_window_manager.h>
 #include <miral/set_window_management_policy.h>
 
+#include <mir/client/connection.h>
+
 #include <mir_test_framework/executable_path.h>
-#include <mir_test_framework/stub_server_platform_factory.h>
 #include <mir_test_framework/headless_display_buffer_compositor_factory.h>
 #include <mir/test/doubles/null_logger.h>
 
@@ -36,7 +36,6 @@
 #include <boost/throw_exception.hpp>
 
 using namespace miral;
-using namespace testing;
 using namespace std::chrono_literals;
 namespace mtf = mir_test_framework;
 namespace msh = mir::shell;
@@ -50,15 +49,13 @@ char const* dummy_args[2] = { "TestServer", nullptr };
 char const* const trace_option = "window-management-trace";
 }
 
-miral::TestDisplayServer::TestWindowManagerPolicy::TestWindowManagerPolicy(
-    WindowManagerTools const& tools, TestDisplayServer& test_fixture) :
-    MinimalWindowManager{tools}
+miral::TestDisplayServer::TestDisplayServer() :
+    TestDisplayServer{1, dummy_args}
 {
-    test_fixture.tools = tools;
 }
 
-miral::TestDisplayServer::TestDisplayServer() :
-    runner{1, dummy_args}
+miral::TestDisplayServer::TestDisplayServer(int argc, char const** argv) :
+    runner{argc, argv}
 {
     add_to_environment("MIR_SERVER_PLATFORM_GRAPHICS_LIB", mtf::server_platform("graphics-dummy.so").c_str());
     add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
@@ -70,26 +67,22 @@ miral::TestDisplayServer::TestDisplayServer() :
 miral::TestDisplayServer::~TestDisplayServer() = default;
 
 auto miral::TestDisplayServer::build_window_manager_policy(WindowManagerTools const& tools)
--> std::unique_ptr<TestWindowManagerPolicy>
+-> std::unique_ptr<WindowManagementPolicy>
 {
-    // TODO: Fix the acceptance tests that rely on this
-    // (And then remove MirWlcsDisplayServer::build_window_manager_policy()
-    // which reinstates the correct behaviour.)
-    struct XX : TestWindowManagerPolicy
-    {
-        using TestWindowManagerPolicy::TestWindowManagerPolicy;
-        bool handle_pointer_event(MirPointerEvent const*) override
-        {
-            return false;
-        }
-    };
-    return std::make_unique<XX>(tools, *this);
+    return std::make_unique<MinimalWindowManager>(tools);
 }
 
 void miral::TestDisplayServer::start_server()
 {
     mir::test::AutoJoinThread t([this]
          {
+            SetWindowManagementPolicy wm_policy{
+                [this](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
+                {
+                    this->tools = tools;
+                    return build_window_manager_policy(tools);
+                }};
+
             auto init = [this](mir::Server& server)
                 {
                     server.add_configuration_option(trace_option, "log trace message", mir::OptionType::null);
@@ -114,37 +107,6 @@ void miral::TestDisplayServer::start_server()
                             return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>();
                         });
 
-                    server.override_the_window_manager_builder([this, &server](msh::FocusController* focus_controller)
-                        -> std::shared_ptr<msh::WindowManager>
-                        {
-                            auto const display_layout = server.the_shell_display_layout();
-
-                            auto const persistent_surface_store = server.the_persistent_surface_store();
-
-                            std::function<std::unique_ptr<miral::WindowManagementPolicy>(WindowManagerTools const&)>
-                                builder = [this](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
-                                {
-                                    return build_window_manager_policy(tools);
-                                };
-
-                            if (server.get_options()->is_set(trace_option))
-                            {
-                                builder = [builder](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
-                                    {
-                                        return std::make_unique<WindowManagementTrace>(tools, builder);
-                                    };
-                            }
-
-                            auto wm = std::make_shared<miral::BasicWindowManager>(
-                                focus_controller,
-                                display_layout,
-                                persistent_surface_store,
-                                *server.the_display_configuration_observer_registrar(),
-                                builder);
-                            window_manager = wm;
-                            return wm;
-                        });
-
                     server.override_the_logger([&]()
                         {
                             std::shared_ptr<ml::Logger> result{};
@@ -158,11 +120,11 @@ void miral::TestDisplayServer::start_server()
 
             try
             {
-                runner.run_with({init, init_server});
+                runner.run_with({wm_policy, init, init_server});
             }
             catch (std::exception const& e)
             {
-                FAIL() << e.what();
+                mir::fatal_error(e.what());
             }
 
             std::lock_guard<std::mutex> lock(mutex);
@@ -211,43 +173,33 @@ void miral::TestDisplayServer::invoke_tools(std::function<void(WindowManagerTool
     tools.invoke_under_lock([&]{f(tools); });
 }
 
-void miral::TestDisplayServer::invoke_window_manager(std::function<void(mir::shell::WindowManager& wm)> const& f)
+void TestDisplayServer::add_server_init(std::function<void(mir::Server&)>&& init)
 {
-    if (auto const wm = window_manager.lock())
-        f(*wm);
-    else
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Server not running"});
+    auto temp = [old_init=init_server, new_init=std::move(init)](mir::Server& server)
+        {
+            old_init(server);
+            new_init(server);
+        };
 
+    init_server = temp;
+}
+
+void TestDisplayServer::add_start_callback(std::function<void()> const& start_callback)
+{
+    runner.add_start_callback(start_callback);
+}
+
+void TestDisplayServer::add_stop_callback(std::function<void()> const& stop_callback)
+{
+    runner.add_stop_callback(stop_callback);
+}
+
+void TestDisplayServer::set_exception_handler(std::function<void()> const& handler)
+{
+    runner.set_exception_handler(handler);
 }
 
 void miral::TestRuntimeEnvironment::add_to_environment(char const* key, char const* value)
 {
     env.emplace_back(key, value);
-}
-
-void miral::TestServer::SetUp()
-{
-    TestDisplayServer::start_server();
-    testing::Test::SetUp();
-}
-
-void miral::TestServer::TearDown()
-{
-    // There's a race between closing a client and closing the server.
-    // AutoSendBuffer is trying to send *after* SessionMediator is destroyed.
-    // This sleep() is not a good fix, but a good fix would be deep in legacy code.
-    std::this_thread::sleep_for(100ms);
-
-    TestDisplayServer::stop_server();
-    testing::Test::TearDown();
-}
-
-using miral::TestServer;
-
-// Minimal test to ensure the server runs and exits
-TEST_F(TestServer, connect_client_works)
-{
-    auto const connection = connect_client(__PRETTY_FUNCTION__);
-
-    EXPECT_TRUE(mir_connection_is_valid(connection));
 }

@@ -36,7 +36,7 @@
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/spin_wait.h"
-#include "mir/test/signal.h"
+#include "mir/test/signal_actions.h"
 
 #include "mir_toolkit/mir_client_library.h"
 

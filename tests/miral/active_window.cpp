@@ -16,8 +16,9 @@
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "test_server.h"
+#include <miral/test_server.h>
 
+#include <mir/client/connection.h>
 #include <mir/client/surface.h>
 #include <mir/client/window.h>
 #include <mir/client/window_spec.h>

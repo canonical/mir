@@ -21,11 +21,12 @@
 #include <mir/client/window_spec.h>
 
 #include <miral/application_info.h>
+#include <mir/client/connection.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include "test_server.h"
+#include <miral/test_server.h>
 
 using namespace testing;
 

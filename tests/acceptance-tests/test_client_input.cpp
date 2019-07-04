@@ -33,7 +33,7 @@
 #include "mir_test_framework/placement_applying_shell.h"
 #include "mir_test_framework/stub_server_platform_factory.h"
 #include "mir_test_framework/temporary_environment_value.h"
-#include "mir/test/signal.h"
+#include "mir/test/signal_actions.h"
 #include "mir/test/spin_wait.h"
 #include "mir/test/event_matchers.h"
 #include "mir/test/event_factory.h"

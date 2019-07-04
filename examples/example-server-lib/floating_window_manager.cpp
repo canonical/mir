@@ -374,8 +374,8 @@ bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* 
                     (modifications.size().is_set() ? modifications.size().value() : active_window.size()).width;
 
                 modifications.top_left() = window_info.needs_titlebar(window_info.type()) ?
-                                           active_output.top_right() - as_displacement({new_width, 0}) + title_bar_height :
-                                           active_output.top_right() - as_displacement({new_width, 0});
+                                           active_output.top_right() - Displacement{as_delta(new_width), 0} + title_bar_height :
+                                           active_output.top_right() - Displacement{as_delta(new_width), 0};
                 break;
             }
 
@@ -488,6 +488,7 @@ WindowSpecification FloatingWindowManagerPolicy::place_new_window(
     if (app_info.application() == decoration_provider->session())
     {
         parameters.type() = mir_window_type_decoration;
+        parameters.depth_layer() = mir_depth_layer_background;
     }
 
     bool const needs_titlebar = WindowInfo::needs_titlebar(parameters.type().value());

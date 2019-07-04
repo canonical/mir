@@ -94,6 +94,8 @@ struct miral::WindowInfo::Self
     mir::optional_value<int> output_id;
     MirShellChrome shell_chrome;
     MirDepthLayer depth_layer;
+    MirPlacementGravity attached_edges;
+    mir::optional_value<mir::geometry::Rectangle> exclusive_rect;
     std::shared_ptr<void> userdata;
 };
 
@@ -114,10 +116,14 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
     min_aspect(optional_value_or_default(params.min_aspect(), default_min_aspect_ratio)),
     max_aspect(optional_value_or_default(params.max_aspect(), default_max_aspect_ratio)),
     shell_chrome(optional_value_or_default(params.shell_chrome(), mir_shell_chrome_normal)),
-    depth_layer(optional_value_or_default(params.depth_layer(), mir_depth_layer_application))
+    depth_layer(optional_value_or_default(params.depth_layer(), mir_depth_layer_application)),
+    attached_edges(optional_value_or_default(params.attached_edges(), mir_placement_gravity_center))
 {
     if (params.output_id().is_set())
         output_id = params.output_id().value();
+
+    if (params.exclusive_rect().is_set())
+        exclusive_rect = params.exclusive_rect().value();
 
     if (params.userdata().is_set())
         userdata = params.userdata().value();
@@ -625,4 +631,24 @@ auto miral::WindowInfo::depth_layer() const -> MirDepthLayer
 void miral::WindowInfo::depth_layer(MirDepthLayer depth_layer)
 {
     self->depth_layer = depth_layer;
+}
+
+auto miral::WindowInfo::attached_edges() const -> MirPlacementGravity
+{
+    return self->attached_edges;
+}
+
+void miral::WindowInfo::attached_edges(MirPlacementGravity edges)
+{
+    self->attached_edges = edges;
+}
+
+auto miral::WindowInfo::exclusive_rect() const -> mir::optional_value<mir::geometry::Rectangle>
+{
+    return self->exclusive_rect;
+}
+
+void miral::WindowInfo::exclusive_rect(mir::optional_value<mir::geometry::Rectangle> const& rect)
+{
+    self->exclusive_rect = rect;
 }

@@ -19,6 +19,7 @@
 #include "mir_test_framework/headless_nested_server_runner.h"
 #include "mir_test_framework/executable_path.h"
 #include "mir_test_framework/headless_display_buffer_compositor_factory.h"
+#include "mir_test_framework/passthrough_tracker.h"
 
 namespace mtf = mir_test_framework;
 
@@ -31,17 +32,4 @@ mtf::HeadlessNestedServerRunner::HeadlessNestedServerRunner(std::string const& c
     {
         return std::make_shared<mtf::HeadlessDisplayBufferCompositorFactory>(passthrough_tracker);
     });
-}
-
-void mtf::PassthroughTracker::note_passthrough()
-{
-    std::unique_lock<std::mutex> lk(mutex);
-    num_passthrough++;
-    cv.notify_all();
-}
-
-bool mtf::PassthroughTracker::wait_for_passthrough_frames(size_t nframes, std::chrono::milliseconds ms)
-{
-    std::unique_lock<std::mutex> lk(mutex);
-    return cv.wait_for(lk, ms, [&] { return num_passthrough >= nframes; } );
 }

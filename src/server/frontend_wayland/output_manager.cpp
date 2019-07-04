@@ -144,7 +144,7 @@ wl_global* mf::Output::make_output(wl_display* display)
     return wl_global_create(
         display,
         &wl_output_interface,
-        2,
+        3,
         this, &on_bind);
 }
 
@@ -153,7 +153,7 @@ void mf::Output::on_bind(wl_client* client, void* data, uint32_t version, uint32
     auto output = reinterpret_cast<Output*>(data);
     auto resource = wl_resource_create(
         client, &wl_output_interface,
-        std::min(version, 2u), id);
+        std::min(version, 3u), id);
     if (resource == NULL)
     {
         wl_client_post_no_memory(client);
