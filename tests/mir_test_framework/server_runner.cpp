@@ -37,10 +37,13 @@ namespace
 char const* const env_no_file = "MIR_SERVER_NO_FILE";
 }
 
-mtf::ServerRunner::ServerRunner() :
-    old_env(getenv(env_no_file))
+mtf::ServerRunner::ServerRunner()
 {
-    if (!old_env) setenv(env_no_file, "", true);
+    if (!getenv(env_no_file))
+    {
+        env.emplace_back(env_no_file, "");
+    }
+    env.emplace_back("MIR_SERVER_ENABLE_MIRCLIENT", "");
 }
 
 void mtf::ServerRunner::start_server()
@@ -92,8 +95,6 @@ void mtf::ServerRunner::stop_server()
 mtf::ServerRunner::~ServerRunner()
 {
     if (server_thread.joinable()) server_thread.join();
-
-    if (!old_env) unsetenv(env_no_file);
 }
 
 std::shared_ptr<mir::MainLoop> mtf::ServerRunner::start_mir_server()

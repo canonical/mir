@@ -23,6 +23,7 @@
 #include "published_socket_connector.h"
 #include "session_mediator_observer_multiplexer.h"
 
+#include "mir/frontend/connector.h"
 #include "mir/graphics/platform.h"
 #include "mir/graphics/platform_ipc_operations.h"
 #include "mir/frontend/protobuf_connection_creator.h"
@@ -33,6 +34,33 @@
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
+
+namespace
+{
+class StubConnector : public mf::Connector
+{
+public:
+    void start() override
+    {
+    }
+    void stop() override
+    {
+    }
+    auto client_socket_fd() const -> int override
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"mirclient support not enabled (pass --enable-mirclient option?)"}));
+    }
+    auto client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const
+        -> int override
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"mirclient support not enabled (pass --enable-mirclient option?)"}));
+    }
+    auto socket_name() const -> mir::optional_value<std::string> override
+    {
+        return mir::optional_value<std::string>{};
+    }
+};
+}
 
 std::shared_ptr<mf::ConnectionCreator>
 mir::DefaultServerConfiguration::the_connection_creator()
@@ -54,7 +82,11 @@ mir::DefaultServerConfiguration::the_connector()
     return connector(
         [&,this]() -> std::shared_ptr<mf::Connector>
         {
-            if (the_options()->is_set(options::no_server_socket_opt))
+            if (!the_options()->is_set(options::enable_mirclient_opt))
+            {
+                return std::make_shared<StubConnector>();
+            }
+            else if (the_options()->is_set(options::no_server_socket_opt))
             {
                 return std::make_shared<mf::BasicConnector>(
                     the_connection_creator(),
@@ -134,6 +166,10 @@ mir::DefaultServerConfiguration::the_prompt_connector()
     return prompt_connector(
         [&,this]() -> std::shared_ptr<mf::Connector>
         {
+            if (!the_options()->is_set(options::enable_mirclient_opt))
+            {
+                return std::make_shared<StubConnector>();
+            }
             if (the_options()->is_set(options::prompt_socket_opt))
             {
                 return std::make_shared<mf::PublishedSocketConnector>(

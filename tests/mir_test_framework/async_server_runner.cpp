@@ -48,6 +48,7 @@ std::chrono::seconds const timeout{20};
 mtf::AsyncServerRunner::AsyncServerRunner() :
     set_window_management_policy{[](auto&){}}
 {
+    add_to_environment("MIR_SERVER_ENABLE_MIRCLIENT", "");
     configure_from_commandline(server);
 
     server.add_configuration_option(mtd::logging_opt, mtd::logging_descr, false);

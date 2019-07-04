@@ -61,6 +61,7 @@ miral::TestDisplayServer::TestDisplayServer(int argc, char const** argv) :
     add_to_environment("MIR_SERVER_PLATFORM_INPUT_LIB", mtf::server_platform("input-stub.so").c_str());
     add_to_environment("MIR_SERVER_NO_FILE", "on");
     add_to_environment("MIR_SERVER_CONSOLE_PROVIDER", "none");
+    add_to_environment("MIR_SERVER_ENABLE_MIRCLIENT", "");
 }
 
 miral::TestDisplayServer::~TestDisplayServer() = default;

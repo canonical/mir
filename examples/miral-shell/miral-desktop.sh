@@ -51,6 +51,6 @@ if [ "${vt_login_session}" == "0" ]; then echo "Error: please log into tty${vt} 
 
 oldvt=$(sudo fgconsole)
 sudo --preserve-env sh -c "MIR_SERVER_FILE=${socket} MIR_SERVER_WAYLAND_SOCKET_NAME=${wayland_display} MIR_SERVER_CONSOLE_PROVIDER=vt MIR_SERVER_VT=${vt} MIR_SERVER_ARW_FILE=on ${bindir}${miral_server} $*&\
-    while [ ! -e \"${socket}\" ]; do echo \"waiting for ${socket}\"; sleep 1 ;done;\
+    while [ ! -e \"${XDG_RUNTIME_DIR}/${wayland_display}\" ]; do echo \"waiting for ${wayland_display}\"; sleep 1 ;done;\
     su -c \"MIR_SOCKET=${socket} XDG_SESSION_TYPE=mir GDK_BACKEND=${gdk_backend} QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=${sdl_videodriver} WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 dbus-run-session -- ${launcher}\" $USER;\
     (sudo killall -w ${bindir}${miral_server} || sudo killall -w ${bindir}${miral_server}.bin); chvt ${oldvt}"

@@ -59,7 +59,7 @@ if [ -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; then echo "Error: wayland end
 
 sh -c "MIR_SERVER_FILE=${socket} MIR_SERVER_WAYLAND_SOCKET_NAME=${wayland_display} ${hostsocket} ${bindir}${miral_server} $*"&
 
-while [ ! -e "${socket}" ]; do echo "waiting for ${socket}"; sleep 1 ;done
+while [ ! -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; do echo "waiting for ${wayland_display}"; sleep 1 ;done
 
 unset QT_QPA_PLATFORMTHEME
 MIR_SOCKET=${socket} XDG_SESSION_TYPE=mir GDK_BACKEND=${gdk_backend} QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=${sdl_videodriver} WAYLAND_DISPLAY=${wayland_display} NO_AT_BRIDGE=1 dbus-run-session -- ${launcher}
