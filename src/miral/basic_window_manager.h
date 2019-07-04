@@ -278,7 +278,7 @@ private:
     void erase(miral::WindowInfo const& info);
     void validate_modification_request(WindowSpecification const& modifications, WindowInfo const& window_info) const;
     void place_and_size(WindowInfo& root, Point const& new_pos, Size const& new_size);
-    void place_attached(WindowInfo& root);
+    void place_attached_to_zone(WindowInfo& info, mir::geometry::Rectangle const& application_zone);
     void set_state(miral::WindowInfo& window_info, MirWindowState value);
     auto fullscreen_rect_for(WindowInfo const& window_info) const -> Rectangle;
     void remove_window(Application const& application, miral::WindowInfo const& info);
@@ -286,6 +286,11 @@ private:
                  std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window);
     auto workspaces_containing(Window const& window) const -> std::vector<std::shared_ptr<Workspace>>;
     auto display_area_for(Window const& window) const -> std::shared_ptr<DisplayArea>;
+    /// Returns the application zone area after shrinking it for the exclusive zone if needed
+    static auto apply_exclusive_rect_to_application_zone(
+        mir::geometry::Rectangle const& original_zone,
+        mir::geometry::Rectangle const& exclusive_rect_global_coords,
+        MirPlacementGravity attached_edges) -> mir::geometry::Rectangle;
 
     void advise_output_create(Output const& output) override;
     void advise_output_update(Output const& updated, Output const& original) override;
