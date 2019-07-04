@@ -214,8 +214,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "in unexpected ways] throw an exception (instead of a core dump)")
         (debug_opt, "Enable extra development debugging. "
             "This is only interesting for people doing Mir server or client development.")
-        (enable_mirclient_opt, po::value<bool>()->default_value(false),
-            "Enable deprecated mirclient socket (for running old clients)")
+        (enable_mirclient_opt, "Enable deprecated mirclient socket (for running old clients)")
         (console_provider,
             po::value<std::string>()->default_value("auto"),
             "Console device handling\n"

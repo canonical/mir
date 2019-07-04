@@ -82,7 +82,7 @@ mir::DefaultServerConfiguration::the_connector()
     return connector(
         [&,this]() -> std::shared_ptr<mf::Connector>
         {
-            if (!the_options()->get<bool>(options::enable_mirclient_opt))
+            if (!the_options()->is_set(options::enable_mirclient_opt))
             {
                 return std::make_shared<StubConnector>();
             }
@@ -166,7 +166,7 @@ mir::DefaultServerConfiguration::the_prompt_connector()
     return prompt_connector(
         [&,this]() -> std::shared_ptr<mf::Connector>
         {
-            if (!the_options()->get<bool>(options::enable_mirclient_opt))
+            if (!the_options()->is_set(options::enable_mirclient_opt))
             {
                 return std::make_shared<StubConnector>();
             }
