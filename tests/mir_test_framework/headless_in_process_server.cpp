@@ -26,6 +26,7 @@ namespace msh = mir::shell;
 mtf::HeadlessInProcessServer::HeadlessInProcessServer()
 {
     add_to_environment("MIR_SERVER_NO_FILE", "");
+    add_to_environment("MIR_SERVER_ENABLE_MIRCLIENT", "");
 
     server.override_the_window_manager_builder([this](msh::FocusController* focus_controller)
         {
