@@ -19,12 +19,13 @@
 #include "xdg_shell_stable.h"
 
 #include "wl_surface.h"
-#include "window_wl_surface_role.h"
 
 #include "mir/frontend/session.h"
 #include "mir/frontend/wayland.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"
+
+#include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -68,32 +69,6 @@ private:
 
 public:
     XdgShellStable const& xdg_shell;
-};
-
-class XdgPopupStable : wayland::XdgPopup, public WindowWlSurfaceRole
-{
-public:
-    XdgPopupStable(
-        wl_resource* new_resource,
-        XdgSurfaceStable* xdg_surface,
-        WlSurfaceRole* parent_role,
-        wl_resource* positioner,
-        WlSurface* surface);
-
-    void grab(struct wl_resource* seat, uint32_t serial) override;
-    void destroy() override;
-
-    void handle_state_change(MirWindowState /*new_state*/) override {};
-    void handle_active_change(bool /*is_now_active*/) override {};
-    void handle_resize(
-        std::experimental::optional<geometry::Point> const& new_top_left,
-        geometry::Size const& new_size) override;
-
-private:
-    std::experimental::optional<geom::Point> cached_top_left;
-    std::experimental::optional<geom::Size> cached_size;
-
-    XdgSurfaceStable* const xdg_surface;
 };
 
 class XdgToplevelStable : wayland::XdgToplevel, public WindowWlSurfaceRole
@@ -238,23 +213,18 @@ void mf::XdgSurfaceStable::get_popup(
     std::experimental::optional<struct wl_resource*> const& parent_surface,
     wl_resource* positioner)
 {
-    auto parent_xdg_surface = parent_surface ?
-                                  std::experimental::make_optional(XdgSurfaceStable::from(parent_surface.value()))
-                                  : std::experimental::nullopt;
-
-    auto parent_window_role = parent_xdg_surface ?
-                                  parent_xdg_surface.value()->window_role()
-                                  : std::experimental::nullopt;
-
-    if  (!parent_window_role)
+    std::experimental::optional<WlSurfaceRole*> parent_role;
+    if (parent_surface)
     {
-        // When we implement layer shell, it will be more clear why this function might be called with a null parent,
-        // and we can revisit handling it then.
-        log_warning("tried to create XDG shell stable popup without a parent");
-        return;
+        XdgSurfaceStable* parent_xdg_surface = XdgSurfaceStable::from(parent_surface.value());
+        std::experimental::optional<WindowWlSurfaceRole*> parent_window_role = parent_xdg_surface->window_role();
+        if (parent_window_role)
+            parent_role = static_cast<WlSurfaceRole*>(parent_window_role.value());
+        else
+            log_warning("Parent window of a popup has no role");
     }
 
-    auto popup = new XdgPopupStable{new_popup, this, parent_window_role.value(), positioner, surface};
+    auto popup = new XdgPopupStable{new_popup, this, parent_role, positioner, surface};
     set_window_role(popup);
 }
 
@@ -301,10 +271,10 @@ void mf::XdgSurfaceStable::set_window_role(WindowWlSurfaceRole* role)
 mf::XdgPopupStable::XdgPopupStable(
     wl_resource* new_resource,
     XdgSurfaceStable* xdg_surface,
-    WlSurfaceRole* parent_role,
-    wl_resource* positioner,
+    std::experimental::optional<WlSurfaceRole*> parent_role,
+    struct wl_resource* positioner,
     WlSurface* surface)
-    : mw::XdgPopup(new_resource, Version<1>()),
+    : wayland::XdgPopup(new_resource, Version<1>()),
       WindowWlSurfaceRole(
           &xdg_surface->xdg_shell.seat,
           mw::XdgPopup::client,
@@ -320,7 +290,8 @@ mf::XdgPopupStable::XdgPopupStable(
 
     specification->type = mir_window_type_freestyle;
     specification->placement_hints = mir_placement_hints_slide_any;
-    specification->parent_id = parent_role->surface_id();
+    if (parent_role)
+        specification->parent_id = parent_role.value()->surface_id();
 
     apply_spec(*specification);
 }
@@ -354,6 +325,14 @@ void mf::XdgPopupStable::handle_resize(const std::experimental::optional<geometr
                              cached_size.value().height.as_int());
         xdg_surface->send_configure();
     }
+}
+
+auto mf::XdgPopupStable::from(wl_resource* resource) -> XdgPopupStable*
+{
+    auto popup = dynamic_cast<XdgPopupStable*>(wayland::XdgPopup::from(resource));
+    if (!popup)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid resource given to XdgPopupStable::from()"));
+    return popup;
 }
 
 // XdgToplevelStable

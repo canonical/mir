@@ -20,6 +20,7 @@
 
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"
+#include "xdg_shell_stable.h"
 
 #include "mir/shell/surface_specification.h"
 #include <boost/throw_exception.hpp>
@@ -324,7 +325,12 @@ void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactiv
 
 void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
 {
-    (void)popup;
+    auto* const popup_window_role = XdgPopupStable::from(popup);
+
+    mir::shell::SurfaceSpecification specification;
+    specification.parent_id = surface_id();
+
+    popup_window_role->apply_spec(specification);
 }
 
 void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
