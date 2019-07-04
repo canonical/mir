@@ -87,7 +87,7 @@ public:
 protected:
     std::shared_ptr<bool> const destroyed;
 
-    std::experimental::optional<geometry::Size> window_size();
+    std::experimental::optional<geometry::Size> window_size() const;
     std::experimental::optional<geometry::Size> requested_window_size(); // Window size requested by Mir
     MirWindowState window_state();
     bool is_active();

@@ -240,7 +240,7 @@ void mf::WindowWlSurfaceRole::set_state_now(MirWindowState state)
     }
 }
 
-std::experimental::optional<geom::Size> mf::WindowWlSurfaceRole::window_size()
+std::experimental::optional<geom::Size> mf::WindowWlSurfaceRole::window_size() const
 {
     if (pending_window_size)
         return pending_window_size;
