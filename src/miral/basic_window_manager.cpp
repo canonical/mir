@@ -2360,6 +2360,55 @@ void miral::BasicWindowManager::add_display_for_testing(mir::geometry::Rectangle
     update_windows_for_outputs();
 }
 
+auto miral::BasicWindowManager::apply_exclusive_rect_to_application_zone(
+    Rectangle const& original_zone,
+    Rectangle const& exclusive_rect,
+    MirPlacementGravity edges) -> Rectangle
+{
+    /// if attached to both left and right, we can ignore both
+    if ((edges & mir_placement_gravity_west) && (edges & mir_placement_gravity_east))
+    {
+        edges = (MirPlacementGravity)(edges & ~mir_placement_gravity_west);
+        edges = (MirPlacementGravity)(edges & ~mir_placement_gravity_east);
+    }
+
+    /// If attached to both top and bottom, we can ignore both
+    if ((edges & mir_placement_gravity_north) && (edges & mir_placement_gravity_south))
+    {
+        edges = (MirPlacementGravity)(edges & ~mir_placement_gravity_north);
+        edges = (MirPlacementGravity)(edges & ~mir_placement_gravity_south);
+    }
+
+    Rectangle zone{original_zone};
+
+    /// Not that we got rid of stretched attachments, the only states we care about are the following four:
+    switch (edges)
+    {
+    case mir_placement_gravity_west:
+        zone.size.width = as_width(zone.right() - as_delta(exclusive_rect.right()));
+        zone.top_left.x = exclusive_rect.right();
+        break;
+
+    case mir_placement_gravity_east:
+        zone.size.width = as_width(exclusive_rect.left() - as_delta(zone.left()));
+        break;
+
+    case mir_placement_gravity_north:
+        zone.size.height = as_height(zone.bottom() - as_delta(exclusive_rect.bottom()));
+        zone.top_left.y = exclusive_rect.bottom();
+        break;
+
+    case mir_placement_gravity_south:
+        zone.size.height = as_height(exclusive_rect.top() - as_delta(zone.top()));
+        break;
+
+    default:
+        break;
+    }
+
+    return zone;
+}
+
 void miral::BasicWindowManager::advise_output_create(miral::Output const& output)
 {
     Locker lock{this};
@@ -2381,23 +2430,17 @@ void miral::BasicWindowManager::advise_output_update(miral::Output const& update
     outputs.remove(original.extents());
     outputs.add(updated.extents());
 
-    std::vector<std::pair<Zone, Zone>> zone_updates;
     for (auto& area : display_areas)
     {
         if (area->output && area->output.value().is_same_output(original))
         {
             area->output = updated;
-            Zone updated_zone{area->application_zone}; // Important to create from old zone, so it is seen as the same
-            updated_zone.extents(updated.extents());
-            zone_updates.push_back(std::make_pair(updated_zone, area->application_zone));
-            area->application_zone = updated_zone;
+            area->area = updated.extents();
         }
     }
 
     update_windows_for_outputs();
     policy->advise_output_update(updated, original);
-    for (auto& i : zone_updates)
-        policy_application_zone_addendum->advise_application_zone_update(i.first, i.second);
 }
 
 void miral::BasicWindowManager::advise_output_delete(miral::Output const& output)
@@ -2443,13 +2486,53 @@ void miral::BasicWindowManager::update_windows_for_outputs()
 
     for (auto& area : display_areas)
     {
+        Rectangle zone_rect = area->area;
+
+        /// The first pass will modify the application zone as it goes
+        /// The second pass will use the final application zone
+        std::vector<WindowInfo*> first_pass;
+        std::vector<WindowInfo*> second_pass;
+
         for (auto const& window : area->attached_windows)
         {
             if (window)
             {
                 auto& info = info_for(window);
-                place_attached_to_zone(info, area->application_zone.extents());
+
+                if (info.state() == mir_window_state_attached && info.exclusive_rect().is_set())
+                    first_pass.push_back(&info);
+                else
+                    second_pass.push_back(&info);
             }
+        }
+
+        for (auto info_ptr : first_pass)
+        {
+            place_attached_to_zone(*info_ptr, zone_rect);
+
+            auto& info = *info_ptr;
+            if (info.state() == mir_window_state_attached && info.exclusive_rect().is_set())
+            {
+                auto edges = info.attached_edges();
+                Rectangle exclusive_rect{
+                    info.exclusive_rect().value().top_left + as_displacement(info.window().top_left()),
+                    info.exclusive_rect().value().size};
+
+                zone_rect = apply_exclusive_rect_to_application_zone(zone_rect, exclusive_rect, edges);
+            }
+        }
+
+        for (auto info_ptr : second_pass)
+        {
+            place_attached_to_zone(*info_ptr, zone_rect);
+        }
+
+        Zone new_zone{area->application_zone};
+        new_zone.extents(zone_rect);
+        if (!(new_zone == area->application_zone))
+        {
+            policy_application_zone_addendum->advise_application_zone_update(new_zone, area->application_zone);
+            area->application_zone = new_zone;
         }
     }
 }
