@@ -160,11 +160,7 @@ void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactiv
 
 void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
 {
-    auto popup_window_role =
-        static_cast<WindowWlSurfaceRole*>(
-            static_cast<XdgPopupStable*>(
-                static_cast<wayland::XdgPopup*>(
-                    wl_resource_get_user_data(popup))));
+    auto* const popup_window_role = XdgPopupStable::from(popup);
 
     mir::shell::SurfaceSpecification specification;
     specification.parent_id = surface_id();

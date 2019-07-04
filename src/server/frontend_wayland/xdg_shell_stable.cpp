@@ -25,6 +25,8 @@
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"
 
+#include <boost/throw_exception.hpp>
+
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
@@ -323,6 +325,14 @@ void mf::XdgPopupStable::handle_resize(const std::experimental::optional<geometr
                              cached_size.value().height.as_int());
         xdg_surface->send_configure();
     }
+}
+
+auto mf::XdgPopupStable::from(wl_resource* resource) -> XdgPopupStable*
+{
+    auto popup = dynamic_cast<XdgPopupStable*>(wayland::XdgPopup::from(resource));
+    if (!popup)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid resource given to XdgPopupStable::from()"));
+    return popup;
 }
 
 // XdgToplevelStable

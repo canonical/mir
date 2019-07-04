@@ -68,6 +68,8 @@ public:
         std::experimental::optional<geometry::Point> const& new_top_left,
         geometry::Size const& new_size) override;
 
+    static auto from(wl_resource* resource) -> XdgPopupStable*;
+
 private:
     std::experimental::optional<geometry::Point> cached_top_left;
     std::experimental::optional<geometry::Size> cached_size;
