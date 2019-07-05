@@ -27,6 +27,8 @@
 #include <condition_variable>
 #include <functional>
 
+#include <google/protobuf/stubs/callback.h>
+
 namespace google
 {
 namespace protobuf

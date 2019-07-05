@@ -19,6 +19,7 @@
 #ifndef MIR_PROTOBUF_DISPLAY_SERVER_DEBUG_H_
 #define MIR_PROTOBUF_DISPLAY_SERVER_DEBUG_H_
 
+#include <google/protobuf/stubs/callback.h>
 #include "mir_protobuf.pb.h"
 
 namespace mir
