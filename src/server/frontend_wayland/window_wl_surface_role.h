@@ -87,8 +87,15 @@ public:
 protected:
     std::shared_ptr<bool> const destroyed;
 
-    std::experimental::optional<geometry::Size> window_size() const;
-    std::experimental::optional<geometry::Size> requested_window_size(); // Window size requested by Mir
+    /// The size the window will be after the next commit
+    auto pending_size() const -> geometry::Size;
+
+    /// The size the window currently is (the committed size, or a reasonable default if it has never committed)
+    auto current_size() const -> geometry::Size;
+
+    /// Window size requested by Mir
+    std::experimental::optional<geometry::Size> requested_window_size();
+
     MirWindowState window_state();
     bool is_active();
     uint64_t latest_timestamp_ns();
@@ -102,8 +109,16 @@ private:
     OutputManager* output_manager;
     std::shared_ptr<WlSurfaceEventSink> const sink;
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
-    std::experimental::optional<geometry::Size> pending_window_size;
-    std::experimental::optional<geometry::Size> committed_window_size;
+
+    /// The explicitly set (not taken from the surface buffer size) uncommitted window size
+    std::experimental::optional<geometry::Size> pending_explicit_size;
+
+    /// If the committed window size was set explicitly, rather than being taken from the buffer size
+    bool committed_size_set_explicitly{false};
+
+    /// The last committed window size (either explicitly set or taken from the surface buffer size)
+    std::experimental::optional<geometry::Size> committed_size;
+
     SurfaceId surface_id_;
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
 
