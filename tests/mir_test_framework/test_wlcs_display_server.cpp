@@ -386,9 +386,14 @@ public:
         {
             if (listeners.last_wl_window == nullptr)
             {
-                BOOST_THROW_EXCEPTION((
-                    std::runtime_error{
-                        "Called Shell::create_surface() without first creating a wl_shell_surface?"}));
+                auto message =
+                    "miral::TestWlcsDisplayServer::ResourceMapper::resource_created()"
+                    " did not detect the shell surface used for a wl_surface."
+                    " You might need to add a new protocol to the `is_window` list.";
+                // We printf because Mir logging is suppressed, the exception is not surfaced, and it's a pain to track this down
+                printf("\x1b[31;1mERROR:\x1b[0m %s\n", message);
+                fflush(stdout);
+                BOOST_THROW_EXCEPTION((std::runtime_error{message}));
             }
 
             auto stream = surface->primary_buffer_stream();
