@@ -26,6 +26,10 @@
 #include "mir/protobuf/protocol_version.h"
 #include "mir/log.h"
 
+#if GOOGLE_PROTOBUF_VERSION >= 3008000
+#include <google/protobuf/stubs/callback.h>
+#endif
+
 #include <sstream>
 
 namespace mclr = mir::client::rpc;
