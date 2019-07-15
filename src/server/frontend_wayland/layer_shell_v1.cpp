@@ -253,7 +253,7 @@ auto mf::LayerSurfaceV1::get_exclusive_rect() const -> std::experimental::option
         return std::experimental::nullopt;
 
     auto edge = get_anchored_edge();
-    auto size = window_size().value_or(geom::Size{1, 1});
+    auto size = pending_size();
 
     switch (edge)
     {
