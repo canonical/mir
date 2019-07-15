@@ -1103,6 +1103,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     if (window_info.state() == mir_window_state_attached)
     {
         if (modifications.state().is_set() ||
+            modifications.size().is_set() ||
             modifications.attached_edges().is_set() ||
             modifications.exclusive_rect().is_set())
         {
