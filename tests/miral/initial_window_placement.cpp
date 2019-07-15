@@ -90,3 +90,36 @@ TEST_F(InitialWindowPlacement, window_is_not_placed_off_screen_when_existing_win
     EXPECT_THAT(second_area.bottom(), Le(display_area.bottom()));
 }
 
+TEST_F(InitialWindowPlacement, initially_maximized_window_covers_output)
+{
+    Window window;
+    {
+        // Setting the top left in the initial params wasn't working, so we first create the window then move it
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_maximized;
+        window = create_window(params);
+    }
+
+    ASSERT_THAT(window.top_left(), Eq(display_area.top_left));
+    ASSERT_THAT(window.size(), Eq(display_area.size));
+}
+
+TEST_F(InitialWindowPlacement, initially_maximized_window_covers_only_one_output)
+{
+    auto display_config = create_fake_display_configuration({
+        display_area,
+        {display_area.top_right(), display_area.size}});
+    notify_configuration_applied(display_config);
+
+    Window window;
+    {
+        // Setting the top left in the initial params wasn't working, so we first create the window then move it
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_maximized;
+        window = create_window(params);
+    }
+
+    ASSERT_THAT(window.top_left(), Eq(display_area.top_left));
+    ASSERT_THAT(window.size(), Eq(display_area.size));
+}
+
