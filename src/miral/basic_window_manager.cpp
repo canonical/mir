@@ -1653,7 +1653,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
     if (!parameters.state().is_set())
         parameters.state() = mir_window_state_restored;
 
-    auto const active_output_area = active_output();
+    auto const active_output_area = active_display_area()->application_zone.extents();;
     auto const height = parameters.size().value().height.as_int();
 
     bool positioned = false;
