@@ -220,6 +220,35 @@ TEST_P(WindowPlacementAttached, window_is_placed_correctly_when_attached_edges_c
     EXPECT_THAT(window.size(), Eq(placement.size));
 }
 
+TEST_P(WindowPlacementAttached, window_is_placed_correctly_when_size_changes)
+{
+    AttachedEdges edges = GetParam();
+    Size initial_size{70, 90};
+    Size new_size{140, 80};
+
+    Window window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = initial_size;
+        window = create_window(params);
+    }
+    auto const& info = basic_window_manager.info_for(window);
+
+    WindowSpecification spec;
+    spec.size() = new_size;
+    window_manager_tools.modify_window(window, spec);
+
+    Rectangle placement{placement_for_attachement(display_area, new_size, edges)};
+    AttachedEdges actual_edges = info.attached_edges();
+
+    EXPECT_THAT(info.state(), Eq(mir_window_state_attached));
+    EXPECT_THAT(actual_edges, Eq(edges));
+    EXPECT_THAT(window.top_left(), Eq(placement.top_left));
+    EXPECT_THAT(window.size(), Eq(placement.size));
+}
+
 TEST_P(WindowPlacementAttached, window_is_placed_correctly_when_put_in_attached_state)
 {
     AttachedEdges edges = GetParam();
