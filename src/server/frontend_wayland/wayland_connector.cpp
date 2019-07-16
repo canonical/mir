@@ -604,6 +604,10 @@ auto mir::frontend::WaylandExtensions::get_extension(std::string const& name) co
     return {};
 }
 
+void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::function<void()>&& work)> const&)
+{
+}
+
 mf::WaylandConnector::WaylandConnector(
     optional_value<std::string> const& display_name,
     std::shared_ptr<mf::Shell> const& shell,
@@ -642,6 +646,11 @@ mf::WaylandConnector::WaylandConnector(
         "wl_display_set_global_filter() is unavailable in libwayland-dev "
         WAYLAND_VERSION);
 #endif
+
+    // Run the builders before creating the seat (because that's what GTK3 expects)
+    extensions->run_builders(
+        display.get(),
+        [executor=executor](std::function<void()>&& work) { executor->spawn(std::move(work)); });
 
     /*
      * Here be Dragons!
