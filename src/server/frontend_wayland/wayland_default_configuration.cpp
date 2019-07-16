@@ -77,11 +77,11 @@ auto configure_wayland_extensions(
             extension{extension}, x11_enabled{x11_enabled}, wayland_extension_hooks{wayland_extension_hooks} {}
 
     protected:
-        virtual void custom_extensions(
+        void custom_extensions(
             wl_display* display,
             std::shared_ptr<mf::Shell> const& shell,
             mf::WlSeat* seat,
-            mf::OutputManager* const output_manager)
+            mf::OutputManager* const output_manager) override
         {
             if (extension.find(mw::Shell::interface_name) != extension.end())
                 add_extension(
@@ -112,7 +112,9 @@ auto configure_wayland_extensions(
                 add_extension("x11-support", std::make_shared<mf::XWaylandWMShell>(shell, *seat, output_manager));
         }
 
-        void run_builders(wl_display* display, std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop) override
+        void run_builders(
+            wl_display* display,
+            std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop) override
         {
             for (auto const& hook : wayland_extension_hooks)
             {
