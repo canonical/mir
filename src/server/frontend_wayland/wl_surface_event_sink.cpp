@@ -87,9 +87,11 @@ void mf::WlSurfaceEventSink::handle_event(EventUPtr&& event)
 
 void mf::WlSurfaceEventSink::handle_resize(mir::geometry::Size const& new_size)
 {
-    requested_size = new_size;
     if (new_size != window_size)
+    {
+        requested_size = new_size;
         window->handle_resize(std::experimental::nullopt, new_size);
+    }
 }
 
 void mf::WlSurfaceEventSink::handle_input_event(MirInputEvent const* event)
