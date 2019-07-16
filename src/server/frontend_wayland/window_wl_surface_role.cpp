@@ -301,6 +301,8 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 {
     surface->commit(state);
 
+    handle_commit();
+
     auto const session = get_session(client);
     auto size = pending_size();
     sink->latest_client_size(size);

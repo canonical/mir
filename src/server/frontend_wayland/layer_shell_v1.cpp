@@ -111,6 +111,7 @@ private:
     void destroy() override;
 
     // from WindowWlSurfaceRole
+    void handle_commit() override {};
     void handle_state_change(MirWindowState /*new_state*/) override {};
     void handle_active_change(bool /*is_now_active*/) override {};
     void handle_resize(
