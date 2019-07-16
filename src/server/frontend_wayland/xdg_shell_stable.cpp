@@ -231,7 +231,11 @@ void mf::XdgSurfaceStable::get_popup(
 void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
     if (auto& role = window_role())
-        role.value()->set_geometry(x, y, width, height);
+    {
+        role.value()->set_pending_offset(geom::Displacement{-x, -y});
+        role.value()->set_pending_width(geom::Width{width});
+        role.value()->set_pending_height(geom::Height{height});
+    }
 }
 
 void mf::XdgSurfaceStable::ack_configure(uint32_t serial)

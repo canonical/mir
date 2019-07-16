@@ -68,7 +68,9 @@ public:
     void refresh_surface_data_now() override;
 
     void apply_spec(shell::SurfaceSpecification const& new_spec);
-    void set_geometry(int32_t x, int32_t y, int32_t width, int32_t height);
+    void set_pending_offset(std::experimental::optional<geometry::Displacement> const& offset);
+    void set_pending_width(std::experimental::optional<geometry::Width> const& width);
+    void set_pending_height(std::experimental::optional<geometry::Height> const& height);
     void set_title(std::string const& title);
     void initiate_interactive_move();
     void initiate_interactive_resize(MirResizeEdge edge);
@@ -111,10 +113,16 @@ private:
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
 
     /// The explicitly set (not taken from the surface buffer size) uncommitted window size
-    std::experimental::optional<geometry::Size> pending_explicit_size;
+    /// @{
+    std::experimental::optional<geometry::Width> pending_explicit_width;
+    std::experimental::optional<geometry::Height> pending_explicit_height;
+    /// @}
 
     /// If the committed window size was set explicitly, rather than being taken from the buffer size
-    bool committed_size_set_explicitly{false};
+    /// @{
+    bool committed_width_set_explicitly{false};
+    bool committed_height_set_explicitly{false};
+    /// @}
 
     /// The last committed window size (either explicitly set or taken from the surface buffer size)
     std::experimental::optional<geometry::Size> committed_size;

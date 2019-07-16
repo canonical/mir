@@ -131,7 +131,7 @@ public:
 
     void set_role(WlSurfaceRole* role_);
     void clear_role();
-    void set_pending_offset(geometry::Displacement const& offset) { pending.offset = offset; }
+    void set_pending_offset(std::experimental::optional<geometry::Displacement> const& offset);
     std::unique_ptr<WlSurface, std::function<void(WlSurface*)>> add_child(WlSubsurface* child);
     void refresh_surface_data_now();
     void pending_invalidate_surface_data() { pending.invalidate_surface_data(); }

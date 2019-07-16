@@ -148,6 +148,11 @@ void mf::WlSurface::clear_role()
     role = &null_role;
 }
 
+void mf::WlSurface::set_pending_offset(std::experimental::optional<geom::Displacement> const& offset)
+{
+    pending.offset = offset;
+}
+
 std::unique_ptr<mf::WlSurface, std::function<void(mf::WlSurface*)>> mf::WlSurface::add_child(WlSubsurface* child)
 {
     children.push_back(child);

@@ -284,14 +284,10 @@ auto mf::LayerSurfaceV1::get_exclusive_rect() const -> std::experimental::option
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
 {
-    // HACK: Leaving zero sizes zero causes a validation error, and setting them to window_size() causes
-    //       to not call WlSurfaceEventSink::handle_resize(). Setting them to 1 works for now. This will get fixed when
-    //       we refactor size negotiation between the window manager and the frontend.
-    if (width == 0)
-        width = 1;
-    if (height == 0)
-        height = 1;
-    WindowWlSurfaceRole::set_geometry(0, 0, width, height);
+    if (width > 0)
+        set_pending_width(geom::Width{width});
+    if (height > 0)
+        set_pending_height(geom::Height{height});
 }
 
 void mf::LayerSurfaceV1::set_anchor(uint32_t anchor)
