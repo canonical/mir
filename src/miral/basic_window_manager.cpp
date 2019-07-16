@@ -2381,7 +2381,7 @@ auto miral::BasicWindowManager::apply_exclusive_rect_to_application_zone(
 
     Rectangle zone{original_zone};
 
-    /// Not that we got rid of stretched attachments, the only states we care about are the following four:
+    /// Now that we got rid of stretched attachments, the only states we care about are the following four:
     switch (edges)
     {
     case mir_placement_gravity_west:
