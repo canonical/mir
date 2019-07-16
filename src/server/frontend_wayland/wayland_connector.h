@@ -69,6 +69,8 @@ public:
     WaylandExtensions(WaylandExtensions const&) = delete;
     WaylandExtensions& operator=(WaylandExtensions const&) = delete;
 
+    virtual void run_builders(wl_display* display, std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop);
+
     void init(wl_display* display, std::shared_ptr<Shell> const& shell, WlSeat* seat, OutputManager* const output_manager);
 
     auto get_extension(std::string const& name) const -> std::shared_ptr<void>;

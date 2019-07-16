@@ -77,11 +77,11 @@ auto configure_wayland_extensions(
             extension{extension}, x11_enabled{x11_enabled}, wayland_extension_hooks{wayland_extension_hooks} {}
 
     protected:
-        virtual void custom_extensions(
+        void custom_extensions(
             wl_display* display,
             std::shared_ptr<mf::Shell> const& shell,
             mf::WlSeat* seat,
-            mf::OutputManager* const output_manager)
+            mf::OutputManager* const output_manager) override
         {
             if (extension.find(mw::Shell::interface_name) != extension.end())
                 add_extension(
@@ -108,18 +108,19 @@ auto configure_wayland_extensions(
                     mw::XdgOutputManagerV1::interface_name,
                     create_xdg_output_manager_v1(display, output_manager));
 
-            std::function<void(std::function<void()>&& work)> run_on_wayland_mainloop = [seat](std::function<void()>&& work)
-                {
-                    seat->spawn(std::move(work));
-                };
+            if (x11_enabled)
+                add_extension("x11-support", std::make_shared<mf::XWaylandWMShell>(shell, *seat, output_manager));
+        }
+
+        void run_builders(
+            wl_display* display,
+            std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop) override
+        {
             for (auto const& hook : wayland_extension_hooks)
             {
                 if (extension.find(hook.name) != extension.end())
                     add_extension(hook.name, hook.builder(display, run_on_wayland_mainloop));
             }
-
-            if (x11_enabled)
-                add_extension("x11-support", std::make_shared<mf::XWaylandWMShell>(shell, *seat, output_manager));
         }
 
         std::set<std::string> const extension;
