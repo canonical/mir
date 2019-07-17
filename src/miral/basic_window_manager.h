@@ -285,6 +285,7 @@ private:
     void refocus(Application const& application, Window const& parent,
                  std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window);
     auto workspaces_containing(Window const& window) const -> std::vector<std::shared_ptr<Workspace>>;
+    auto active_display_area() const -> std::shared_ptr<DisplayArea>;
     auto display_area_for(Window const& window) const -> std::shared_ptr<DisplayArea>;
     /// Returns the application zone area after shrinking it for the exclusive zone if needed
     static auto apply_exclusive_rect_to_application_zone(

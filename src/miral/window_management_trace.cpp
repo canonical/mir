@@ -150,6 +150,9 @@ auto dump_of(miral::WindowInfo const& info) -> std::string
         if (info.height_inc() != miral::default_height_inc) APPEND(height_inc);
         if (info.min_aspect() != miral::default_min_aspect_ratio) APPEND(min_aspect);
         if (info.max_aspect() != miral::default_max_aspect_ratio) APPEND(max_aspect);
+        if (info.depth_layer() != mir_depth_layer_application) APPEND(depth_layer);
+        if (info.attached_edges() != 0) APPEND(attached_edges);
+        if (info.exclusive_rect() != mir::geometry::Rectangle{{}, {}}) APPEND(exclusive_rect);
         APPEND(preferred_orientation);
         APPEND(confine_pointer);
 
@@ -197,6 +200,9 @@ auto dump_of(miral::WindowSpecification const& specification) -> std::string
 //        APPEND_IF_SET(input_mode);
         APPEND_IF_SET(shell_chrome);
         APPEND_IF_SET(confine_pointer);
+        APPEND_IF_SET(depth_layer);
+        APPEND_IF_SET(attached_edges);
+        APPEND_IF_SET(exclusive_rect);
 #undef  APPEND_IF_SET
     }
 

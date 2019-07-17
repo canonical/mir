@@ -645,6 +645,32 @@ auto miral::BasicWindowManager::workspaces_containing(Window const& window) cons
     return workspaces_containing_window;
 }
 
+auto miral::BasicWindowManager::active_display_area() const -> std::shared_ptr<DisplayArea>
+{
+    // If a window has input focus, return its display area
+    if (auto const surface = focus_controller->focused_surface())
+    {
+        WindowInfo& info = info_for(surface);
+        return display_area_for(info.window());
+    }
+
+    // Otherwise, the display that contains the pointer, if there is one.
+    for (auto const& area : display_areas)
+    {
+        if (area->area.contains(cursor))
+        {
+            // Ignore the (unspecified) possiblity of overlapping areas
+            return area;
+        }
+    }
+
+    // Otherwise, the first display.
+    if (!display_areas.empty())
+        return *display_areas.begin();
+
+    return std::make_shared<DisplayArea>(Rectangle{{0, 0}, {100, 100}});
+}
+
 auto miral::BasicWindowManager::display_area_for(Window const& window) const -> std::shared_ptr<DisplayArea>
 {
     for (auto& area : display_areas)
@@ -816,52 +842,9 @@ auto miral::BasicWindowManager::window_at(geometry::Point cursor) const
     return surface_at ? info_for(surface_at).window() : Window{};
 }
 
-auto miral::BasicWindowManager::active_output()
--> geometry::Rectangle const
+auto miral::BasicWindowManager::active_output() -> geometry::Rectangle const
 {
-    geometry::Rectangle result;
-
-    // 1. If a window has input focus, whichever display contains the largest
-    //    proportion of the area of that window.
-    if (auto const surface = focus_controller->focused_surface())
-    {
-        auto const surface_rect = surface->input_bounds();
-        int max_overlap_area = -1;
-
-        for (auto const& output : outputs)
-        {
-            auto const intersection = surface_rect.intersection_with(output).size;
-            if (intersection.width.as_int()*intersection.height.as_int() > max_overlap_area)
-            {
-                max_overlap_area = intersection.width.as_int()*intersection.height.as_int();
-                result = output;
-            }
-        }
-        return result;
-    }
-
-    // 2. Otherwise, if any window previously had input focus, for the window that had
-    //    it most recently, the display that contained the largest proportion of the
-    //    area of that window at the moment it closed, as long as that display is still
-    //    available.
-
-    // 3. Otherwise, the display that contains the pointer, if there is one.
-    for (auto const& output : outputs)
-    {
-        if (output.contains(cursor))
-        {
-            // Ignore the (unspecified) possiblity of overlapping displays
-            return output;
-        }
-    }
-
-    // 4. Otherwise, the primary display, if there is one (for example, the laptop display).
-
-    // 5. Otherwise, the first display.
-    if (outputs.size())
-        result = *outputs.begin();
-
-    return result;
+    return active_display_area()->area;
 }
 
 void miral::BasicWindowManager::raise_tree(Window const& root)
@@ -1103,6 +1086,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     if (window_info.state() == mir_window_state_attached)
     {
         if (modifications.state().is_set() ||
+            modifications.size().is_set() ||
             modifications.attached_edges().is_set() ||
             modifications.exclusive_rect().is_set())
         {
@@ -1669,7 +1653,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
     if (!parameters.state().is_set())
         parameters.state() = mir_window_state_restored;
 
-    auto const active_output_area = active_output();
+    auto const active_output_area = active_display_area()->application_zone.extents();;
     auto const height = parameters.size().value().height.as_int();
 
     bool positioned = false;
@@ -2381,7 +2365,7 @@ auto miral::BasicWindowManager::apply_exclusive_rect_to_application_zone(
 
     Rectangle zone{original_zone};
 
-    /// Not that we got rid of stretched attachments, the only states we care about are the following four:
+    /// Now that we got rid of stretched attachments, the only states we care about are the following four:
     switch (edges)
     {
     case mir_placement_gravity_west:

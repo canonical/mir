@@ -275,6 +275,7 @@ std::ostream& mir::operator<<(std::ostream& out, MirWindowState state)
     PRINT(mir_window_state,fullscreen);
     PRINT(mir_window_state,horizmaximized);
     PRINT(mir_window_state,hidden);
+    PRINT(mir_window_state,attached);
     default:
         return out << static_cast<int>(state) << "<INVALID>";
     }
