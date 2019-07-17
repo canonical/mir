@@ -121,8 +121,11 @@ void me::TestClientRunner::operator()(mir::Server& server)
             if (pid == 0)
             {
                 // Enable tests with toolkits supporting mirclient
-                auto const mir_socket = server.mir_socket_name().value();
-                setenv("MIR_SOCKET", mir_socket.c_str(), 1);
+                if (auto mir_socket_name = server.mir_socket_name())
+                {
+                    auto const mir_socket = mir_socket_name.value();
+                    setenv("MIR_SOCKET", mir_socket.c_str(), 1);
+                }
 
                 // Enable tests with toolkits supporting Wayland
                 auto const wayland_display = server.wayland_display();
