@@ -91,15 +91,10 @@ void mf::WindowWlSurfaceRole::refresh_surface_data_now()
 
 void mf::WindowWlSurfaceRole::apply_spec(mir::shell::SurfaceSpecification const& new_spec)
 {
-    if (new_spec.width.is_set() || new_spec.height.is_set())
-    {
-        auto size = pending_size();
-        if (new_spec.width.is_set())
-            size.width = new_spec.width.value();
-        if (new_spec.height.is_set())
-            size.height = new_spec.height.value();
-        pending_explicit_size = size;
-    }
+    if (new_spec.width.is_set())
+        pending_explicit_width = new_spec.width.value();
+    if (new_spec.height.is_set())
+        pending_explicit_height = new_spec.height.value();
 
     if (surface_id().as_value())
     {
@@ -111,10 +106,19 @@ void mf::WindowWlSurfaceRole::apply_spec(mir::shell::SurfaceSpecification const&
     }
 }
 
-void mf::WindowWlSurfaceRole::set_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
+void mf::WindowWlSurfaceRole::set_pending_offset(std::experimental::optional<geom::Displacement> const& offset)
 {
-    surface->set_pending_offset({-x, -y});
-    pending_explicit_size = geom::Size{width, height};
+    surface->set_pending_offset(offset);
+}
+
+void mf::WindowWlSurfaceRole::set_pending_width(std::experimental::optional<geometry::Width> const& width)
+{
+    pending_explicit_width = width;
+}
+
+void mf::WindowWlSurfaceRole::set_pending_height(std::experimental::optional<geometry::Height> const& height)
+{
+    pending_explicit_height = height;
 }
 
 void mf::WindowWlSurfaceRole::set_title(std::string const& title)
@@ -252,20 +256,25 @@ void mf::WindowWlSurfaceRole::set_state_now(MirWindowState state)
 
 auto mf::WindowWlSurfaceRole::pending_size() const -> geom::Size
 {
-    if (pending_explicit_size)
-        return pending_explicit_size.value();
-    else
-        return current_size();
+    auto size = current_size();
+    if (pending_explicit_width)
+        size.width = pending_explicit_width.value();
+    if (pending_explicit_height)
+        size.height = pending_explicit_height.value();
+    return size;
 }
 
 auto mf::WindowWlSurfaceRole::current_size() const -> geom::Size
 {
-    if (!committed_size_set_explicitly && surface->buffer_size())
-        return surface->buffer_size().value();
-    else if (committed_size)
-        return committed_size.value();
-    else
-        return geometry::Size{640, 480};
+    auto size = committed_size.value_or(geom::Size{640, 480});
+    if (surface->buffer_size())
+    {
+        if (!committed_width_set_explicitly)
+            size.width = surface->buffer_size().value().width;
+        if (!committed_height_set_explicitly)
+            size.height = surface->buffer_size().value().height;
+    }
+    return size;
 }
 
 std::experimental::optional<geom::Size> mf::WindowWlSurfaceRole::requested_window_size()
@@ -291,6 +300,8 @@ uint64_t mf::WindowWlSurfaceRole::latest_timestamp_ns()
 void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 {
     surface->commit(state);
+
+    handle_commit();
 
     auto const session = get_session(client);
     auto size = pending_size();
@@ -323,11 +334,12 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     }
 
     committed_size = size;
-    if (pending_explicit_size)
-    {
-        committed_size_set_explicitly = true;
-        pending_explicit_size = std::experimental::nullopt;
-    }
+    if (pending_explicit_width)
+        committed_width_set_explicitly = true;
+    if (pending_explicit_height)
+        committed_height_set_explicitly = true;
+    pending_explicit_width = std::experimental::nullopt;
+    pending_explicit_height = std::experimental::nullopt;
 }
 
 void mf::WindowWlSurfaceRole::visiblity(bool visible)

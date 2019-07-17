@@ -94,6 +94,7 @@ public:
     void unset_fullscreen() override;
     void set_minimized() override;
 
+    void handle_commit() override {};
     void handle_state_change(MirWindowState /*new_state*/) override;
     void handle_active_change(bool /*is_now_active*/) override;
     void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
@@ -101,7 +102,7 @@ public:
 
 private:
     static XdgToplevelStable* from(wl_resource* surface);
-    void send_configure(std::experimental::optional<geometry::Size> new_size);
+    void send_toplevel_configure();
 
     XdgSurfaceStable* const xdg_surface;
 };
@@ -231,7 +232,11 @@ void mf::XdgSurfaceStable::get_popup(
 void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
     if (auto& role = window_role())
-        role.value()->set_geometry(x, y, width, height);
+    {
+        role.value()->set_pending_offset(geom::Displacement{-x, -y});
+        role.value()->set_pending_width(geom::Width{width});
+        role.value()->set_pending_height(geom::Height{height});
+    }
 }
 
 void mf::XdgSurfaceStable::ack_configure(uint32_t serial)
@@ -479,21 +484,21 @@ void mf::XdgToplevelStable::set_minimized()
 
 void mf::XdgToplevelStable::handle_state_change(MirWindowState /*new_state*/)
 {
-    send_configure(std::experimental::nullopt);
+    send_toplevel_configure();
 }
 
 void mf::XdgToplevelStable::handle_active_change(bool /*is_now_active*/)
 {
-    send_configure(std::experimental::nullopt);
+    send_toplevel_configure();
 }
 
 void mf::XdgToplevelStable::handle_resize(std::experimental::optional<geometry::Point> const& /*new_top_left*/,
-                                          geometry::Size const& new_size)
+                                          geometry::Size const& /*new_size*/)
 {
-    send_configure(new_size);
+    send_toplevel_configure();
 }
 
-void mf::XdgToplevelStable::send_configure(std::experimental::optional<geometry::Size> new_size)
+void mf::XdgToplevelStable::send_toplevel_configure()
 {
     wl_array states;
     wl_array_init(&states);
@@ -522,9 +527,8 @@ void mf::XdgToplevelStable::send_configure(std::experimental::optional<geometry:
         break;
     }
 
-    geom::Size size = new_size.value_or(
-        requested_window_size().value_or(
-            geom::Size{})); // 0 size values means default for toplevel comfigure
+    // 0 sizes means default for toplevel configure
+    geom::Size size = requested_window_size().value_or(geom::Size{0, 0});
 
     send_configure_event(size.width.as_int(), size.height.as_int(), &states);
     wl_array_release(&states);
