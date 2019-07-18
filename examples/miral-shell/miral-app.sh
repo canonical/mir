@@ -4,9 +4,19 @@ miral_server=miral-shell
 launcher=qterminal
 hostsocket=
 bindir=$(dirname $0)
-qt_qpa=wayland
-gdk_backend=wayland,mir
-sdl_videodriver=wayland
+
+if [ "$(lsb_release -c -s)" != "xenial" ]
+then
+  qt_qpa=wayland
+  gdk_backend=wayland
+  sdl_videodriver=wayland
+  enable_mirclient=""
+else
+  qt_qpa=ubuntumirclient
+  gdk_backend=mir
+  sdl_videodriver=mir
+  enable_mirclient="--enable-mirclient"
+fi
 
 if [ -n "${MIR_SOCKET}" ]
 then
@@ -32,9 +42,6 @@ do
     echo "    -socket <socket>              set the legacy mir socket [${socket}]"
     echo "    -wayland-socket-name <socket> set the wayland socket [${wayland_display}]"
     echo "    -bindir <bindir>              path to the miral executable [${bindir}]"
-    echo "    -qt-mirclient                 use ubuntumirclient instead of qtwayland"
-    echo "    -gtk-mirclient                GTK uses mir instead of wayland,mir"
-    echo "    -sdl-mirclient                SDL uses mir instead of wayland"
     # omit    -demo-server as mir_demo_server is in the mir-test-tools package
     exit 0
   elif [ "$1" == "-kiosk" ];              then miral_server=miral-kiosk
@@ -42,9 +49,6 @@ do
   elif [ "$1" == "-socket" ];             then shift; socket=$1
   elif [ "$1" == "-wayland-socket-name" ];then shift; wayland_display=$1
   elif [ "$1" == "-bindir" ];             then shift; bindir=$1
-  elif [ "$1" == "-qt-mirclient" ];       then qt_qpa=ubuntumirclient
-  elif [ "$1" == "-gtk-mirclient" ];      then gdk_backend=mir
-  elif [ "$1" == "-sdl-mirclient" ];      then sdl_videodriver=mir
   elif [ "$1" == "-demo-server" ];        then miral_server=mir_demo_server
   elif [ "${1:0:2}" == "--" ];            then break
   fi
@@ -57,7 +61,7 @@ if [ -e "${socket}" ]; then echo "Error: session endpoint '${socket}' already ex
 if [ -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; then echo "Error: wayland endpoint '${wayland_display}' already exists"; exit 1 ;fi
 
 
-sh -c "MIR_SERVER_FILE=${socket} MIR_SERVER_WAYLAND_SOCKET_NAME=${wayland_display} ${hostsocket} ${bindir}${miral_server} $*"&
+sh -c "MIR_SERVER_FILE=${socket} MIR_SERVER_WAYLAND_SOCKET_NAME=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $*"&
 
 while [ ! -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; do echo "waiting for ${wayland_display}"; sleep 1 ;done
 
