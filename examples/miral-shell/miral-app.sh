@@ -7,6 +7,7 @@ bindir=$(dirname $0)
 qt_qpa=wayland
 gdk_backend=wayland,mir
 sdl_videodriver=wayland
+enable_mirclient=""
 
 if [ -n "${MIR_SOCKET}" ]
 then
@@ -42,9 +43,9 @@ do
   elif [ "$1" == "-socket" ];             then shift; socket=$1
   elif [ "$1" == "-wayland-socket-name" ];then shift; wayland_display=$1
   elif [ "$1" == "-bindir" ];             then shift; bindir=$1
-  elif [ "$1" == "-qt-mirclient" ];       then qt_qpa=ubuntumirclient
-  elif [ "$1" == "-gtk-mirclient" ];      then gdk_backend=mir
-  elif [ "$1" == "-sdl-mirclient" ];      then sdl_videodriver=mir
+  elif [ "$1" == "-qt-mirclient" ];       then qt_qpa=ubuntumirclient; enable_mirclient="--enable-mirclient"
+  elif [ "$1" == "-gtk-mirclient" ];      then gdk_backend=mir; enable_mirclient="--enable-mirclient"
+  elif [ "$1" == "-sdl-mirclient" ];      then sdl_videodriver=mir; enable_mirclient="--enable-mirclient"
   elif [ "$1" == "-demo-server" ];        then miral_server=mir_demo_server
   elif [ "${1:0:2}" == "--" ];            then break
   fi
@@ -57,7 +58,7 @@ if [ -e "${socket}" ]; then echo "Error: session endpoint '${socket}' already ex
 if [ -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; then echo "Error: wayland endpoint '${wayland_display}' already exists"; exit 1 ;fi
 
 
-sh -c "MIR_SERVER_FILE=${socket} MIR_SERVER_WAYLAND_SOCKET_NAME=${wayland_display} ${hostsocket} ${bindir}${miral_server} $*"&
+sh -c "MIR_SERVER_FILE=${socket} MIR_SERVER_WAYLAND_SOCKET_NAME=${wayland_display} ${hostsocket} ${bindir}${miral_server} ${enable_mirclient} $*"&
 
 while [ ! -e "${XDG_RUNTIME_DIR}/${wayland_display}" ]; do echo "waiting for ${wayland_display}"; sleep 1 ;done
 
