@@ -1,36 +1,36 @@
 #!/usr/bin/env bash
 
-qt_qpa=wayland
-gdk_backend=wayland,mir
-sdl_videodriver=wayland
-
 while [ $# -gt 0 ]
 do
   if [ "$1" == "--help" -o "$1" == "-h" ]
   then
     echo "$(basename $0) - Handy launch script for clients of a Mir server"
-    echo "Usage: $(basename $0) [options] <client> [client args]"
-    echo "Options are:"
-    echo "    -qt-mirclient                 use ubuntumirclient instead of qtwayland"
-    echo "    -gtk-mirclient                GTK uses mir instead of wayland,mir"
-    echo "    -sdl-mirclient                SDL uses mir instead of wayland"
+    echo "Usage: $(basename $0) <client> [client args]"
     exit 0
-  elif [ "$1" == "-qt-mirclient" ];       then qt_qpa=ubuntumirclient
-  elif [ "$1" == "-gtk-mirclient" ];      then gdk_backend=mir
-  elif [ "$1" == "-sdl-mirclient" ];      then sdl_videodriver=mir
   else break
   fi
   shift
 done
 
-if   [ -e "${XDG_RUNTIME_DIR}/miral_socket" ];
+if [ "$(lsb_release -c -s)" == "xenial" ]
 then
-  mir_socket=${XDG_RUNTIME_DIR}/miral_socket
-elif [ -e "${XDG_RUNTIME_DIR}/mir_socket" ];
-then
-  mir_socket=${XDG_RUNTIME_DIR}/mir_socket
+  qt_qpa=ubuntumirclient
+  gdk_backend=mir
+  sdl_videodriver=mir
+
+  if   [ -e "${XDG_RUNTIME_DIR}/miral_socket" ];
+  then
+    mir_socket=${XDG_RUNTIME_DIR}/miral_socket
+  elif [ -e "${XDG_RUNTIME_DIR}/mir_socket" ];
+  then
+    mir_socket=${XDG_RUNTIME_DIR}/mir_socket
+  else
+    echo "Error: Cannot detect Mir endpoint"; exit 1
+  fi
 else
-  echo "Error: Cannot detect Mir endpoint"; exit 1
+  qt_qpa=wayland
+  gdk_backend=wayland
+  sdl_videodriver=wayland
 fi
 
 if [ -e "${XDG_RUNTIME_DIR}/miral_wayland" ];
@@ -47,7 +47,8 @@ else
 fi
 
 if [ "$1" = "gnome-terminal" ]
-then extras='--app-id com.canonical.miral.Terminal'
+then
+  extras='--disable-factory'
 fi
 unset QT_QPA_PLATFORMTHEME
 
