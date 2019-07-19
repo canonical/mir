@@ -27,7 +27,9 @@
 #include <mir/options/option.h>
 #include <mir/options/configuration.h>
 
+#include <mutex>
 #include <set>
+#include <vector>
 
 namespace mo = mir::options;
 
@@ -40,6 +42,52 @@ auto vec2set(std::vector<std::string> vec) -> std::set<std::string>
 {
     return std::set<std::string>{vec.begin(), vec.end()};
 }
+
+struct StaticExtensionTracker
+{
+    static void add_server_extension(mir::Server* server, void* extension)
+    {
+        std::lock_guard<decltype(mutex)> lock{mutex};
+
+        for (auto const& x : extensions)
+        {
+            if (x.server == server)
+            {
+                if (x.extension == extension)
+                {
+                    return;
+                }
+                else
+                {
+                    throw mir::AbnormalExit{"ERROR: multiple miral::WaylandExtensions registered with server"};
+                }
+            }
+        }
+        extensions.push_back({server, extension});
+    }
+
+    static void remove_extension(void* extension)
+    {
+        std::lock_guard<decltype(mutex)> lock{mutex};
+
+        for (auto x = begin(extensions); x != end(extensions); ++x)
+        {
+            if (x->extension == extension)
+            {
+                extensions.erase(x);
+                return;
+            }
+        }
+    }
+
+private:
+    struct ExtensionTracker{ mir::Server* server; void* extension; };
+    static std::mutex mutex;
+    static std::vector<ExtensionTracker> extensions;
+};
+
+decltype(StaticExtensionTracker::mutex)       StaticExtensionTracker::mutex;
+decltype(StaticExtensionTracker::extensions)  StaticExtensionTracker::extensions;
 }
 
 struct miral::WaylandExtensions::Self
@@ -49,6 +97,11 @@ struct miral::WaylandExtensions::Self
         : default_extensions{WaylandExtensions::recommended()},
           supported_extensions{WaylandExtensions::supported()}
     {
+    }
+
+    ~Self()
+    {
+        StaticExtensionTracker::remove_extension(this);
     }
 
     static auto parse_extensions_option(std::string extensions) -> std::set<std::string>
@@ -158,6 +211,8 @@ auto miral::WaylandExtensions::recommended_extensions() -> std::string
 
 void miral::WaylandExtensions::operator()(mir::Server& server) const
 {
+    StaticExtensionTracker::add_server_extension(&server, self.get());
+
     server.add_configuration_option(
         mo::wayland_extensions_opt,
         ("Wayland extensions to enable. [" + supported_extensions() + "]"),
