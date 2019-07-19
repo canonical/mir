@@ -27,10 +27,3 @@ target_link_libraries(mirscreencast
   ${EGL_LIBRARIES}
   ${GLESv2_LIBRARIES}
 )
-
-add_custom_target(mirbacklight ALL
-  cp ${CMAKE_CURRENT_SOURCE_DIR}/backlight.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mirbacklight
-)
-install(PROGRAMS ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mirbacklight
-  DESTINATION ${CMAKE_INSTALL_BINDIR}
-)
