@@ -314,7 +314,7 @@ void mf::LayerSurfaceV1::configure()
 
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
 {
-    pending_opt_size = {std::experimental::nullopt, std::experimental::nullopt};
+    pending_opt_size = OptionalSize{std::experimental::nullopt, std::experimental::nullopt};
     if (width > 0)
         pending_opt_size.value().width = geom::Width{width};
     if (height > 0)
