@@ -37,6 +37,7 @@ GENERATE_PROTOCOL("z" "xdg-shell-unstable-v6")
 GENERATE_PROTOCOL("_" "xdg-shell") # empty prefix is not allowed, but '_' won't match anything, so it is ignored
 GENERATE_PROTOCOL("z" "xdg-output-unstable-v1")
 GENERATE_PROTOCOL("zwlr_" "wlr-layer-shell-unstable-v1")
+GENERATE_PROTOCOL("zwlr_" "wlr-foreign-toplevel-management-unstable-v1")
 
 add_custom_target(refresh-wayland-wrapper
     DEPENDS ${GENERATED_FILES}
