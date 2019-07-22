@@ -508,3 +508,13 @@ void msh::AbstractShell::clear_drag_and_drop_handle()
 {
     input_targeter->clear_drag_and_drop_handle();
 }
+
+void msh::AbstractShell::add_observer(std::shared_ptr<scene::Observer> const& observer)
+{
+    surface_stack->add_observer(observer);
+}
+
+void msh::AbstractShell::remove_observer(std::weak_ptr<scene::Observer> const& observer)
+{
+    surface_stack->remove_observer(observer);
+}

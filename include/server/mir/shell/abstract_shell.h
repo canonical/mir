@@ -144,6 +144,9 @@ public:
     void set_drag_and_drop_handle(std::vector<uint8_t> const& handle) override;
     void clear_drag_and_drop_handle() override;
 
+    void add_observer(std::shared_ptr<scene::Observer> const& observer) override;
+    void remove_observer(std::weak_ptr<scene::Observer> const& observer) override;
+
 protected:
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<SurfaceStack> const surface_stack;

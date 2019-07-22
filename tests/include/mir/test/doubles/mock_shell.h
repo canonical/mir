@@ -75,6 +75,9 @@ struct MockShell : public frontend::Shell
 
     MOCK_METHOD5(request_operation, void(std::shared_ptr<frontend::Session> const &session,
         frontend::SurfaceId surface_id, uint64_t timestamp, UserRequest request, optional_value<uint32_t> hint));
+
+    MOCK_METHOD1(add_observer, void(std::shared_ptr<scene::Observer> const& observer));
+    MOCK_METHOD1(remove_observer, void(std::weak_ptr<scene::Observer> const& observer));
 };
 
 }

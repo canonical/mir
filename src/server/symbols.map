@@ -973,3 +973,13 @@ MIR_SERVER_1.3 {
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::depth_layer_set_to*;
   };
 } MIR_SERVER_1.2;
+
+MIR_SERVER_1.4 {
+ global:
+  extern "C++" {
+    mir::shell::ShellWrapper::add_observer*;
+    mir::shell::ShellWrapper::remove_observer*;
+    mir::shell::SurfaceStackWrapper::add_observer*;
+    mir::shell::SurfaceStackWrapper::remove_observer*;
+  };
+} MIR_SERVER_1.3;
