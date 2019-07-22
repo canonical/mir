@@ -35,6 +35,7 @@ namespace scene
 struct SurfaceCreationParameters;
 struct PromptSessionCreationParameters;
 class Surface;
+class Observer;
 }
 namespace shell { class SurfaceSpecification; }
 

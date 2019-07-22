@@ -85,6 +85,15 @@ struct TestSurfaceStack : public msh::SurfaceStack
         wrapped->raise(surface);
     }
 
+    void add_observer(std::shared_ptr<ms::Observer> const& observer) override
+    {
+        wrapped->add_observer(observer);
+    }
+
+    void remove_observer(std::weak_ptr<ms::Observer> const& observer) override
+    {
+        wrapped->remove_observer(observer);
+    }
 };
 
 struct TestConfiguration : public mir_test_framework::StubbedServerConfiguration

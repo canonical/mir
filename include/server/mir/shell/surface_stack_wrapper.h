@@ -42,6 +42,9 @@ public:
 
     auto surface_at(geometry::Point) const -> std::shared_ptr<scene::Surface> override;
 
+    void add_observer(std::shared_ptr<scene::Observer> const& observer) override;
+    void remove_observer(std::weak_ptr<scene::Observer> const& observer) override;
+
 protected:
     std::shared_ptr<SurfaceStack> const wrapped;
 };

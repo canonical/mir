@@ -40,6 +40,7 @@ class PromptSessionCreationParameters;
 class SessionCoordinator;
 class Surface;
 struct SurfaceCreationParameters;
+class Observer;
 }
 
 namespace shell
@@ -115,6 +116,9 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         uint64_t timestamp,
         MirResizeEdge edge) = 0;
+
+    virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
+    virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
 
 /** @} */
 };

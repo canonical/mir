@@ -150,6 +150,16 @@ void msh::ShellWrapper::request_resize(
     wrapped->request_resize(session, surface, timestamp, edge);
 }
 
+void msh::ShellWrapper::add_observer(std::shared_ptr<scene::Observer> const& observer)
+{
+    wrapped->add_observer(observer);
+}
+
+void msh::ShellWrapper::remove_observer(std::weak_ptr<scene::Observer> const& observer)
+{
+    wrapped->remove_observer(observer);
+}
+
 void msh::ShellWrapper::add_display(geometry::Rectangle const& area)
 {
     wrapped->add_display(area);

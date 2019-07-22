@@ -102,6 +102,9 @@ public:
         uint64_t timestamp,
         MirResizeEdge edge) override;
 
+    void add_observer(std::shared_ptr<scene::Observer> const& observer) override;
+    void remove_observer(std::weak_ptr<scene::Observer> const& observer) override;
+
     void add_display(geometry::Rectangle const& area) override;
     void remove_display(geometry::Rectangle const& area) override;
 

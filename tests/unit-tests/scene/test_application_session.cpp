@@ -128,6 +128,12 @@ struct StubSurfaceStack : public msh::SurfaceStack
     {
         return std::shared_ptr<ms::Surface>{};
     }
+    void add_observer(std::shared_ptr<ms::Observer> const&) override
+    {
+    }
+    void remove_observer(std::weak_ptr<ms::Observer> const&) override
+    {
+    }
 };
 
 struct ApplicationSession : public testing::Test
