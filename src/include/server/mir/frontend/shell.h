@@ -106,6 +106,9 @@ public:
         request_operation(session, surface_id, timestamp, request, optional_value<uint32_t>{});
     }
 
+    virtual void add_observer(std::shared_ptr<scene::Observer> const& observer) = 0;
+    virtual void remove_observer(std::weak_ptr<scene::Observer> const& observer) = 0;
+
 protected:
     Shell() = default;
     Shell(const Shell&) = delete;

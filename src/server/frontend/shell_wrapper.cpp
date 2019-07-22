@@ -108,3 +108,13 @@ void mf::ShellWrapper::request_operation(
 {
     wrapped->request_operation(session, surface_id, timestamp, request, hint);
 }
+
+void mf::ShellWrapper::add_observer(std::shared_ptr<scene::Observer> const& observer)
+{
+    wrapped->add_observer(observer);
+}
+
+void mf::ShellWrapper::remove_observer(std::weak_ptr<scene::Observer> const& observer)
+{
+    wrapped->remove_observer(observer);
+}

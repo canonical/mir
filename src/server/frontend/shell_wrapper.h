@@ -82,6 +82,9 @@ public:
         UserRequest request,
         optional_value <uint32_t> hint) override;
 
+    void add_observer(std::shared_ptr<scene::Observer> const& observer) override;
+    void remove_observer(std::weak_ptr<scene::Observer> const& observer) override;
+
 protected:
     std::shared_ptr<Shell> const wrapped;
 };

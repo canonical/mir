@@ -186,3 +186,13 @@ void msh::FrontendShell::request_operation(
         break;
     }
 }
+
+void msh::FrontendShell::add_observer(std::shared_ptr<scene::Observer> const& observer)
+{
+    wrapped->add_observer(observer);
+}
+
+void msh::FrontendShell::remove_observer(std::weak_ptr<scene::Observer> const& observer)
+{
+    wrapped->remove_observer(observer);
+}
