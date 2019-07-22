@@ -27,6 +27,7 @@
 #include <mir/options/option.h>
 #include <mir/options/configuration.h>
 
+#include <algorithm>
 #include <mutex>
 #include <set>
 #include <vector>
@@ -74,14 +75,9 @@ struct StaticExtensionTracker
     {
         std::lock_guard<decltype(mutex)> lock{mutex};
 
-        for (auto x = begin(extensions); x != end(extensions); ++x)
-        {
-            if (x->extension == extension)
-            {
-                extensions.erase(x);
-                return;
-            }
-        }
+        extensions.erase(
+            remove_if(begin(extensions), end(extensions), [extension](auto& x) { return x.extension == extension; }),
+            end(extensions));
     }
 
 private:
