@@ -523,7 +523,8 @@ private:
 
         bool const is_window = strcmp(wl_resource_get_class(resource), "wl_shell_surface") == 0 ||
                                strcmp(wl_resource_get_class(resource), "zxdg_surface_v6") == 0 ||
-                               strcmp(wl_resource_get_class(resource), "xdg_surface") == 0;
+                               strcmp(wl_resource_get_class(resource), "xdg_surface") == 0 ||
+                               strcmp(wl_resource_get_class(resource), "zwlr_layer_surface_v1") == 0;
 
         if (is_surface)
         {

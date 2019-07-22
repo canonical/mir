@@ -311,7 +311,6 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     {
         auto const scene_surface = scene_surface_from(session, surface_id_);
 
-
         if (!committed_size || size != committed_size.value())
         {
             spec().width = size.width;

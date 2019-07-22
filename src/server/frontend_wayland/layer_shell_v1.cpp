@@ -24,6 +24,8 @@
 
 #include "mir/shell/surface_specification.h"
 #include <boost/throw_exception.hpp>
+#include <deque>
+#include <mutex>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -88,7 +90,11 @@ public:
     ~LayerSurfaceV1() = default;
 
 private:
-    void update_mir_surface();
+    struct OptionalSize
+    {
+        std::experimental::optional<geom::Width> width;
+        std::experimental::optional<geom::Height> height;
+    };
 
     /// Returns all anchored edges ored together
     auto get_placement_gravity() const -> MirPlacementGravity;
@@ -99,6 +105,9 @@ private:
 
     /// Returns the rectangele in surface coords that this surface is exclusive for (if any)
     auto get_exclusive_rect() const -> std::experimental::optional<geom::Rectangle>;
+
+    /// Sends a configure event if needed
+    void configure();
 
     // from wayland::LayerSurfaceV1
     void set_size(uint32_t width, uint32_t height) override;
@@ -111,18 +120,24 @@ private:
     void destroy() override;
 
     // from WindowWlSurfaceRole
-    void handle_commit() override {};
+    void handle_commit() override;
     void handle_state_change(MirWindowState /*new_state*/) override {};
     void handle_active_change(bool /*is_now_active*/) override {};
     void handle_resize(
-        std::experimental::optional<geometry::Point> const& new_top_left,
-        geometry::Size const& new_size) override;
+        std::experimental::optional<geometry::Point> const& /*new_top_left*/,
+        geometry::Size const& /*new_size*/) override;
 
     uint32_t exclusive_zone{0};
     bool anchored_left{false};
     bool anchored_right{false};
     bool anchored_top{false};
     bool anchored_bottom{false};
+    std::experimental::optional<OptionalSize> pending_opt_size;
+    OptionalSize committed_opt_size;
+    bool configure_on_next_commit{true}; ///< If to send a .configure event at the end of the next or current commit
+    std::mutex commit_mutex; ///< NOT used for thready saftey. Used to check if we are currently committing
+    std::deque<std::pair<uint32_t, OptionalSize>> inflight_configures;
+    bool surface_data_dirty{false};
 };
 
 }
@@ -179,24 +194,10 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
           layer_shell.shell,
           layer_shell.output_manager)
 {
+    // TODO: Error if surface has buffer attached or committed
     shell::SurfaceSpecification spec;
     spec.state = mir_window_state_attached;
     spec.depth_layer = layer;
-    apply_spec(spec);
-    auto const serial = wl_display_next_serial(wl_client_get_display(wayland::LayerSurfaceV1::client));
-    send_configure_event (serial, 0, 0);
-}
-
-void mf::LayerSurfaceV1::update_mir_surface()
-{
-    mir::optional_value<geom::Rectangle> exclusive_rect_mir;
-    std::experimental::optional<geom::Rectangle> exclusive_rect_std = get_exclusive_rect();
-    if (exclusive_rect_std)
-        exclusive_rect_mir = exclusive_rect_std.value();
-
-    shell::SurfaceSpecification spec;
-    spec.attached_edges = get_placement_gravity();
-    spec.exclusive_rect = exclusive_rect_mir;
     apply_spec(spec);
 }
 
@@ -227,9 +228,9 @@ auto mf::LayerSurfaceV1::get_anchored_edge() const -> MirPlacementGravity
     if (anchored_left != anchored_right)
     {
         if (anchored_left)
-            h_edge = mir_placement_gravity_east;
-        else
             h_edge = mir_placement_gravity_west;
+        else
+            h_edge = mir_placement_gravity_east;
     }
 
     if (anchored_top != anchored_bottom)
@@ -283,12 +284,42 @@ auto mf::LayerSurfaceV1::get_exclusive_rect() const -> std::experimental::option
     }
 }
 
+void mf::LayerSurfaceV1::configure()
+{
+    // TODO: Error if told to configure on an axis the window is not streatched along
+
+    OptionalSize configure_size{std::experimental::nullopt, std::experimental::nullopt};
+    auto requested = requested_window_size().value_or(current_size());
+
+    if (anchored_left && anchored_right)
+        configure_size.width = requested.width;
+    if (anchored_bottom && anchored_top)
+        configure_size.height = requested.height;
+
+    if (committed_opt_size.width)
+        configure_size.width = committed_opt_size.width.value();
+    if (committed_opt_size.height)
+        configure_size.height = committed_opt_size.height.value();
+
+    auto const serial = wl_display_next_serial(wl_client_get_display(wayland::LayerSurfaceV1::client));
+    if (!inflight_configures.empty() && serial <= inflight_configures.back().first)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Generated invalid configure serial"));
+    inflight_configures.push_back(std::make_pair(serial, configure_size));
+
+    send_configure_event(
+        serial,
+        configure_size.width.value_or(geom::Width{0}).as_uint32_t(),
+        configure_size.height.value_or(geom::Height{0}).as_uint32_t());
+}
+
 void mf::LayerSurfaceV1::set_size(uint32_t width, uint32_t height)
 {
+    pending_opt_size = OptionalSize{std::experimental::nullopt, std::experimental::nullopt};
     if (width > 0)
-        set_pending_width(geom::Width{width});
+        pending_opt_size.value().width = geom::Width{width};
     if (height > 0)
-        set_pending_height(geom::Height{height});
+        pending_opt_size.value().height = geom::Height{height};
+    configure_on_next_commit = true;
 }
 
 void mf::LayerSurfaceV1::set_anchor(uint32_t anchor)
@@ -297,14 +328,13 @@ void mf::LayerSurfaceV1::set_anchor(uint32_t anchor)
     anchored_right = anchor & Anchor::right;
     anchored_top = anchor & Anchor::top;
     anchored_bottom = anchor & Anchor::bottom;
-
-    update_mir_surface();
+    surface_data_dirty = true;
 }
 
 void mf::LayerSurfaceV1::set_exclusive_zone(int32_t zone)
 {
     exclusive_zone = zone;
-    update_mir_surface();
+    surface_data_dirty = true;
 }
 
 void mf::LayerSurfaceV1::set_margin(int32_t top, int32_t right, int32_t bottom, int32_t left)
@@ -332,7 +362,19 @@ void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
 
 void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
 {
-    (void)serial;
+    while (!inflight_configures.empty() && inflight_configures.front().first < serial)
+    {
+        inflight_configures.pop_front();
+    }
+
+    if (inflight_configures.empty() || inflight_configures.front().first != serial)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            "Could not find acked configure with serial " + std::to_string(serial)));
+    }
+
+    pending_opt_size = inflight_configures.front().second;
+    inflight_configures.pop_front();
 }
 
 void mf::LayerSurfaceV1::destroy()
@@ -340,12 +382,45 @@ void mf::LayerSurfaceV1::destroy()
     destroy_wayland_object();
 }
 
-void mf::LayerSurfaceV1::handle_resize(
-    std::experimental::optional<geometry::Point> const& new_top_left,
-    geometry::Size const& new_size)
+void mf::LayerSurfaceV1::handle_commit()
 {
-    (void)new_top_left;
+    std::lock_guard<std::mutex> comitting{commit_mutex};
 
-    auto const serial = wl_display_next_serial(wl_client_get_display(wayland::LayerSurfaceV1::client));
-    send_configure_event (serial, new_size.width.as_int(), new_size.height.as_int());
+    if (pending_opt_size)
+    {
+        if (pending_opt_size.value().width)
+            set_pending_width(pending_opt_size.value().width.value());
+        if (pending_opt_size.value().height)
+            set_pending_height(pending_opt_size.value().height.value());
+        committed_opt_size = pending_opt_size.value();
+        pending_opt_size = std::experimental::nullopt;
+        surface_data_dirty = true;
+    }
+
+    if (surface_data_dirty)
+    {
+        std::experimental::optional<geom::Rectangle> exclusive_rect_std = get_exclusive_rect();
+        mir::optional_value<geom::Rectangle> exclusive_rect_mir;
+        if (exclusive_rect_std)
+            exclusive_rect_mir = exclusive_rect_std.value();
+
+        shell::SurfaceSpecification spec;
+        spec.attached_edges = get_placement_gravity();
+        spec.exclusive_rect = exclusive_rect_mir;
+        apply_spec(spec);
+        surface_data_dirty = false;
+    }
+
+    if (configure_on_next_commit)
+    {
+        configure();
+        configure_on_next_commit = false;
+    }
+}
+
+void mf::LayerSurfaceV1::handle_resize(
+    std::experimental::optional<geom::Point> const& /*new_top_left*/,
+    geom::Size const& /*new_size*/)
+{
+    configure();
 }
