@@ -72,6 +72,7 @@ public:
     void set_pending_width(std::experimental::optional<geometry::Width> const& width);
     void set_pending_height(std::experimental::optional<geometry::Height> const& height);
     void set_title(std::string const& title);
+    void set_application_id(std::string const& application_id);
     void initiate_interactive_move();
     void initiate_interactive_resize(MirResizeEdge edge);
     void set_parent(optional_value<SurfaceId> parent_id);

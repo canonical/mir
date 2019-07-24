@@ -133,6 +133,18 @@ void mf::WindowWlSurfaceRole::set_title(std::string const& title)
     }
 }
 
+void mf::WindowWlSurfaceRole::set_application_id(std::string const& application_id)
+{
+    if (surface_id().as_value())
+    {
+        spec().application_id = application_id;
+    }
+    else
+    {
+        params->application_id = application_id;
+    }
+}
+
 void mf::WindowWlSurfaceRole::initiate_interactive_move()
 {
     if (surface_id().as_value())

@@ -103,7 +103,7 @@ public:
     void destroy() override;
     void set_parent(std::experimental::optional<struct wl_resource*> const& parent) override;
     void set_title(std::string const& title) override;
-    void set_app_id(std::string const& /*app_id*/) override;
+    void set_app_id(std::string const& app_id) override;
     void show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y) override;
     void move(struct wl_resource* seat, uint32_t serial) override;
     void resize(struct wl_resource* seat, uint32_t serial, uint32_t edges) override;
@@ -394,10 +394,9 @@ void mf::XdgToplevelV6::set_title(std::string const& title)
     WindowWlSurfaceRole::set_title(title);
 }
 
-void mf::XdgToplevelV6::set_app_id(std::string const& /*app_id*/)
+void mf::XdgToplevelV6::set_app_id(std::string const& app_id)
 {
-    // Logically this sets the session name, but Mir doesn't allow this (currently) and
-    // allowing e.g. "session_for_client(client)->name(app_id);" would break the libmirserver ABI
+    WindowWlSurfaceRole::set_application_id(app_id);
 }
 
 void mf::XdgToplevelV6::show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y)
