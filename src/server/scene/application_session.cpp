@@ -144,6 +144,8 @@ auto ms::ApplicationSession::create_surface(
         surface->set_input_region(params.input_shape.value());
     if (params.depth_layer.is_set())
         surface->set_depth_layer(params.depth_layer.value());
+    if (params.application_id.is_set())
+        surface->set_application_id(params.application_id.value());
 
     return surface;
 }

@@ -65,7 +65,8 @@ bool msh::SurfaceSpecification::is_empty() const
         !shell_chrome.is_set() &&
         !depth_layer.is_set() &&
         !attached_edges.is_set() &&
-        !exclusive_rect.is_set();
+        !exclusive_rect.is_set() &&
+        !application_id.is_set();
 }
 
 void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
@@ -140,4 +141,6 @@ void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
         attached_edges = that.attached_edges;
     if (that.exclusive_rect.is_set())
         exclusive_rect = that.exclusive_rect;
+    if (that.application_id.is_set())
+        application_id = that.application_id;
 }
