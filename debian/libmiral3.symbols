@@ -397,6 +397,8 @@ libmiral.so.3 libmiral3 #MINVER#
  (c++)"miral::WindowInfo::attached_edges(MirPlacementGravity)@MIRAL_2.7" 2.7.0
  (c++)"miral::WindowInfo::exclusive_rect() const@MIRAL_2.7" 2.7.0
  (c++)"miral::WindowInfo::exclusive_rect(mir::optional_value<mir::geometry::Rectangle> const&)@MIRAL_2.7" 2.7.0
+ (c++)"miral::WindowSpecification::application_id[abi:cxx11]() const@MIRAL_2.7" 2.7.0
+ (c++)"miral::WindowSpecification::application_id[abi:cxx11]()@MIRAL_2.7" 2.7.0
  (c++)"miral::WindowSpecification::attached_edges() const@MIRAL_2.7" 2.7.0
  (c++)"miral::WindowSpecification::attached_edges()@MIRAL_2.7" 2.7.0
  (c++)"miral::WindowSpecification::exclusive_rect() const@MIRAL_2.7" 2.7.0

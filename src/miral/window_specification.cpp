@@ -62,6 +62,7 @@ struct miral::WindowSpecification::Self
     mir::optional_value<MirDepthLayer> depth_layer;
     mir::optional_value<MirPlacementGravity> attached_edges;
     mir::optional_value<mir::optional_value<mir::geometry::Rectangle>> exclusive_rect;
+    mir::optional_value<std::string> application_id;
     mir::optional_value<std::shared_ptr<void>> userdata;
 };
 
@@ -95,7 +96,8 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     confine_pointer(spec.confine_pointer),
     depth_layer(spec.depth_layer),
     attached_edges(spec.attached_edges),
-    exclusive_rect(spec.exclusive_rect)
+    exclusive_rect(spec.exclusive_rect),
+    application_id(spec.application_id)
 {
     if (spec.aux_rect_placement_offset_x.is_set() && spec.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{spec.aux_rect_placement_offset_x.value(), spec.aux_rect_placement_offset_y.value()};
@@ -230,7 +232,8 @@ miral::WindowSpecification::Self::Self(mir::scene::SurfaceCreationParameters con
     confine_pointer(params.confine_pointer),
     depth_layer(params.depth_layer),
     attached_edges(params.attached_edges),
-    exclusive_rect(params.exclusive_rect)
+    exclusive_rect(params.exclusive_rect),
+    application_id(params.application_id)
 {
     if (params.aux_rect_placement_offset_x.is_set() && params.aux_rect_placement_offset_y.is_set())
         aux_rect_placement_offset = Displacement{params.aux_rect_placement_offset_x.value(), params.aux_rect_placement_offset_y.value()};
@@ -299,6 +302,7 @@ void miral::WindowSpecification::Self::update(mir::scene::SurfaceCreationParamet
     copy_if_set(params.depth_layer, depth_layer);
     copy_if_set(params.attached_edges, attached_edges);
     copy_if_set(params.exclusive_rect, exclusive_rect.value());
+    copy_if_set(params.application_id, application_id);
 
     if (aux_rect_placement_offset.is_set())
     {
@@ -626,6 +630,16 @@ auto miral::WindowSpecification::exclusive_rect()
     -> mir::optional_value<mir::optional_value<mir::geometry::Rectangle>>&
 {
     return self->exclusive_rect;
+}
+
+auto miral::WindowSpecification::application_id() const -> mir::optional_value<std::string> const&
+{
+    return self->application_id;
+}
+
+auto miral::WindowSpecification::application_id() -> mir::optional_value<std::string>&
+{
+    return self->application_id;
 }
 
 auto miral::WindowSpecification::userdata() -> mir::optional_value<std::shared_ptr<void>>&

@@ -672,3 +672,19 @@ void miral::WindowInfo::clip_area(mir::optional_value<mir::geometry::Rectangle> 
     else
         surface->set_clip_area(std::experimental::optional<mir::geometry::Rectangle>());
 }
+
+auto miral::WindowInfo::application_id() const -> std::string
+{
+    std::shared_ptr<mir::scene::Surface> surface = window();
+    if (surface)
+        return surface->application_id();
+    else
+        return "";
+}
+
+void miral::WindowInfo::application_id(std::string const& application_id)
+{
+    std::shared_ptr<mir::scene::Surface> surface = window();
+    if (surface)
+        return surface->set_application_id(application_id);
+}
