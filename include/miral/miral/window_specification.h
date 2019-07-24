@@ -125,35 +125,29 @@ public:
     auto confine_pointer() -> mir::optional_value<MirPointerConfinementState>&;
     auto userdata() -> mir::optional_value<std::shared_ptr<void>>&;
 
-    /**
-     * The depth layer of a child window is updated with the depth layer of its parent, but can be overridden
-     *  @{
-     */
+    /// The depth layer of a child window is updated with the depth layer of its parent, but can be overridden
+    ///@{
     auto depth_layer() const -> mir::optional_value<MirDepthLayer> const&;
     auto depth_layer() -> mir::optional_value<MirDepthLayer>&;
-    /** @}*/
+    ///@}
 
-    /**
-     * The set of window eges that are attched to edges of the output
-     * If attached to perpendicular edges, it is attached to the corner where the two edges intersect
-     * If attached to oposite edges (eg left and right), it is stretched across the output in that direction
-     * If all edges are specified, it takes up the entire output
-     *  @{
-     */
+    /// The set of window eges that are attched to edges of the output
+    /// If attached to perpendicular edges, it is attached to the corner where the two edges intersect
+    /// If attached to oposite edges (eg left and right), it is stretched across the output in that direction
+    /// If all edges are specified, it takes up the entire output
+    ///@{
     auto attached_edges() const -> mir::optional_value<MirPlacementGravity> const&;
     auto attached_edges() -> mir::optional_value<MirPlacementGravity>&;
-    /** @}*/
+    ///@}
 
-    /**
-     * The area over which the window should not be occluded
-     * Only meaningful for windows attached to an edge
-     * Setting to optional_value{} will not change the rect when this specification is applied
-     * Setting to optional_value{optional_value{}} will clear the exclusive rect
-     *  @{
-     */
+    /// The area over which the window should not be occluded
+    /// Only meaningful for windows attached to an edge
+    /// Setting to optional_value{} will not change the rect when this specification is applied
+    /// Setting to optional_value{optional_value{}} will clear the exclusive rect
+    ///@{
     auto exclusive_rect() const -> mir::optional_value<mir::optional_value<mir::geometry::Rectangle>> const&;
     auto exclusive_rect() -> mir::optional_value<mir::optional_value<mir::geometry::Rectangle>>&;
-    /** @} */
+    ///@}
 
 private:
     struct Self;
