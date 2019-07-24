@@ -214,6 +214,15 @@ void mtd::StubSurface::set_clip_area(std::experimental::optional<mir::geometry::
 {
 }
 
+MirWindowFocusState mtd::StubSurface::focus_state() const
+{
+    return mir_window_focus_state_unfocused;
+}
+
+void mtd::StubSurface::set_focus_state(MirWindowFocusState /*new_state*/)
+{
+}
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class

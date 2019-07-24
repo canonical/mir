@@ -148,6 +148,9 @@ public:
     std::experimental::optional<geometry::Rectangle> clip_area() const override;
     void set_clip_area(std::experimental::optional<geometry::Rectangle> const& area) override;
 
+    auto focus_state() const -> MirWindowFocusState override;
+    void set_focus_state(MirWindowFocusState new_state) override;
+
 private:
     bool visible(std::lock_guard<std::mutex> const&) const;
     MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
@@ -155,7 +158,6 @@ private:
     int set_dpi(int);
     MirWindowVisibility set_visibility(MirWindowVisibility v);
     int set_swap_interval(int);
-    MirWindowFocusState set_focus_state(MirWindowFocusState f);
     MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
 
     SurfaceObservers observers;
