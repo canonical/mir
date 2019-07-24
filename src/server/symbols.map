@@ -941,3 +941,10 @@ MIR_SERVER_0.1.5 {
     mir::frontend::MirClientSession::*
   };
 } MIR_SERVER_0.1.4;
+
+MIR_SERVER_0.1.6 {
+ global:
+  extern "C++" {
+    mir::scene::NullSurfaceObserver::application_id_set_to*;
+  };
+} MIR_SERVER_0.1.5;

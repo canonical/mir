@@ -223,6 +223,15 @@ void mtd::StubSurface::set_focus_state(MirWindowFocusState /*new_state*/)
 {
 }
 
+std::string mtd::StubSurface::application_id() const
+{
+    return "";
+}
+
+void mtd::StubSurface::set_application_id(std::string const& /*application_id*/)
+{
+}
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class

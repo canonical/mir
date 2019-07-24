@@ -159,6 +159,12 @@ void ms::SurfaceObservers::depth_layer_set_to(Surface const* surf, MirDepthLayer
                  { observer->depth_layer_set_to(surf, depth_layer); });
 }
 
+void ms::SurfaceObservers::application_id_set_to(Surface const* surf, std::string const& application_id)
+{
+    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+                 { observer->application_id_set_to(surf, application_id); });
+}
+
 struct ms::CursorStreamImageAdapter
 {
     CursorStreamImageAdapter(ms::BasicSurface &surface)
@@ -992,4 +998,19 @@ void mir::scene::BasicSurface::set_focus_state(MirWindowFocusState new_state)
         lock.unlock();
         observers.attrib_changed(this, mir_window_attrib_focus, new_state);
     }
+}
+
+auto mir::scene::BasicSurface::application_id() const -> std::string
+{
+    std::unique_lock<std::mutex> lg(guard);
+    return application_id_;
+}
+
+void mir::scene::BasicSurface::set_application_id(std::string const& application_id)
+{
+    {
+        std::unique_lock<std::mutex> lg(guard);
+        application_id_ = application_id;
+    }
+    observers.application_id_set_to(this, application_id);
 }
