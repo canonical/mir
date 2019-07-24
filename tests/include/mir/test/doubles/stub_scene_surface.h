@@ -97,6 +97,9 @@ public:
 
     auto depth_layer() const -> MirDepthLayer override { return mir_depth_layer_application; }
     void set_depth_layer(MirDepthLayer /*depth_layer*/) override {}
+
+    auto focus_state() const -> MirWindowFocusState override { return mir_window_focus_state_unfocused; }
+    void set_focus_state(MirWindowFocusState /*focus_state*/) override {}
 };
 
 }

@@ -206,6 +206,15 @@ void mtd::StubSurface::set_depth_layer(MirDepthLayer /*depth_layer*/)
 {
 }
 
+MirWindowFocusState mtd::StubSurface::focus_state() const
+{
+    return mir_window_focus_state_unfocused;
+}
+
+void mtd::StubSurface::set_focus_state(MirWindowFocusState /*new_state*/)
+{
+}
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class

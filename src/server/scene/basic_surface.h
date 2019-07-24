@@ -145,6 +145,9 @@ public:
     auto depth_layer() const -> MirDepthLayer override;
     void set_depth_layer(MirDepthLayer depth_layer) override;
 
+    auto focus_state() const -> MirWindowFocusState override;
+    void set_focus_state(MirWindowFocusState new_state) override;
+
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
     MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
@@ -152,7 +155,6 @@ private:
     int set_dpi(int);
     MirWindowVisibility set_visibility(MirWindowVisibility v);
     int set_swap_interval(int);
-    MirWindowFocusState set_focus_state(MirWindowFocusState f);
     MirOrientationMode set_preferred_orientation(MirOrientationMode mode);
 
     SurfaceObservers observers;
