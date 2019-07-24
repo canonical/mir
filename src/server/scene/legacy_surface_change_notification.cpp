@@ -56,32 +56,9 @@ void ms::LegacySurfaceChangeNotification::alpha_set_to(Surface const*, float)
     notify_scene_change();
 }
 
-// An orientation change alone is not enough to trigger recomposition.
-void ms::LegacySurfaceChangeNotification::orientation_set_to(Surface const*, MirOrientation)
-{
-}
-
 void ms::LegacySurfaceChangeNotification::transformation_set_to(Surface const*, glm::mat4 const&)
 {
     notify_scene_change();
-}
-
-// An attrib change alone is not enough to trigger recomposition.
-void ms::LegacySurfaceChangeNotification::attrib_changed(Surface const*, MirWindowAttrib, int)
-{
-}
-
-// Cursor image change request is not enough to trigger recomposition.
-void ms::LegacySurfaceChangeNotification::cursor_image_set_to(Surface const*, graphics::CursorImage const&)
-{
-}
-
-void ms::LegacySurfaceChangeNotification::cursor_image_removed(Surface const*)
-{
-}
-
-void ms::LegacySurfaceChangeNotification::placed_relative(Surface const*, geometry::Rectangle const&)
-{
 }
 
 void ms::LegacySurfaceChangeNotification::reception_mode_set_to(Surface const*, input::InputReceptionMode)
@@ -89,31 +66,7 @@ void ms::LegacySurfaceChangeNotification::reception_mode_set_to(Surface const*, 
     notify_scene_change();
 }
 
-// A client close request is not enough to trigger recomposition.
-void ms::LegacySurfaceChangeNotification::client_surface_close_requested(Surface const*)
-{
-}
-
-// A keymap change is not enough to trigger recomposition
-void ms::LegacySurfaceChangeNotification::keymap_changed(Surface const*, MirInputDeviceId, std::string const&,
-                                                         std::string const&, std::string const&,
-                                                         std::string const&)
-{
-}
-
 void ms::LegacySurfaceChangeNotification::renamed(Surface const*, char const*)
 {
     notify_scene_change();
-}
-
-void ms::LegacySurfaceChangeNotification::input_consumed(Surface const*, MirEvent const*)
-{
-}
-
-void ms::LegacySurfaceChangeNotification::start_drag_and_drop(Surface const*, std::vector<uint8_t> const&)
-{
-}
-
-void ms::LegacySurfaceChangeNotification::depth_layer_set_to(Surface const*, MirDepthLayer)
-{
 }
