@@ -134,6 +134,13 @@ struct WindowInfo
     /// (only meaningful when the window is attached to an edge)
     void exclusive_rect(mir::optional_value<mir::geometry::Rectangle> const& rect);
 
+    /// The D-bus service name and basename of the app's .desktop file
+    /// See http://standards.freedesktop.org/desktop-entry-spec/
+    ///@{
+    auto application_id() const -> std::string;
+    void application_id(std::string const& application_id);
+    ///@}
+
 private:
     struct Self;
     std::unique_ptr<Self> self;

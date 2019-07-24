@@ -473,8 +473,10 @@ global:
 MIRAL_2.7 {
 global:
   extern "C++" {
+    miral::WindowInfo::application_id*;
     miral::WindowInfo::attached_edges*;
     miral::WindowInfo::exclusive_rect*;
+    miral::WindowSpecification::application_id*;
     miral::WindowSpecification::attached_edges*;
     miral::WindowSpecification::exclusive_rect*;
   };

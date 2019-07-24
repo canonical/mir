@@ -652,3 +652,19 @@ void miral::WindowInfo::exclusive_rect(mir::optional_value<mir::geometry::Rectan
 {
     self->exclusive_rect = rect;
 }
+
+auto miral::WindowInfo::application_id() const -> std::string
+{
+    std::shared_ptr<mir::scene::Surface> surface = window();
+    if (surface)
+        return surface->application_id();
+    else
+        return "";
+}
+
+void miral::WindowInfo::application_id(std::string const& application_id)
+{
+    std::shared_ptr<mir::scene::Surface> surface = window();
+    if (surface)
+        return surface->set_application_id(application_id);
+}
