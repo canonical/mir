@@ -127,6 +127,11 @@ public:
     virtual auto focus_state() const -> MirWindowFocusState = 0;
     virtual void set_focus_state(MirWindowFocusState focus_state) = 0;
 
+    /// Often the same as the session name, but on Wayland can be set on a per-window basis
+    /// See xdg_toplevel.set_app_id and http://standards.freedesktop.org/desktop-entry-spec/ for more details
+    /// Empty string if not set
+    virtual auto application_id() const -> std::string = 0;
+    virtual void set_application_id(std::string const& application_id) = 0;
 };
 }
 }

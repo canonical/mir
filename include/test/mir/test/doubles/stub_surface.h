@@ -74,6 +74,8 @@ struct StubSurface : scene::Surface
     void set_depth_layer(MirDepthLayer depth_layer) override;
     MirWindowFocusState focus_state() const override;
     void set_focus_state(MirWindowFocusState new_state) override;
+    std::string application_id() const override;
+    void set_application_id(std::string const& application_id) override;
 };
 }
 }
