@@ -122,6 +122,9 @@ struct SurfaceCreationParameters
     /// The area of this surface that will not be occluded
     /// Only used if surface is in state mir_window_state_attached and is attached to an edge (not a corner)
     optional_value<geometry::Rectangle> exclusive_rect;
+
+    /// See mir::scene::Surface::application_id()
+    optional_value<std::string> application_id;
 };
 
 bool operator==(const SurfaceCreationParameters& lhs, const SurfaceCreationParameters& rhs);

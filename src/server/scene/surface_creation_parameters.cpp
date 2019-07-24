@@ -202,6 +202,8 @@ void ms::SurfaceCreationParameters::update_from(msh::SurfaceSpecification const&
         attached_edges = that.attached_edges;
     if (that.exclusive_rect.is_set())
         exclusive_rect = that.exclusive_rect.value();
+    if (that.application_id.is_set())
+        application_id = that.application_id.value();
     // TODO: should SurfaceCreationParameters support cursors?
 //     if (that.cursor_image.is_set())
 //         cursor_image = that.cursor_image;
@@ -224,7 +226,11 @@ bool ms::operator==(
         lhs.type == rhs.type &&
         lhs.preferred_orientation == rhs.preferred_orientation &&
         lhs.parent_id == rhs.parent_id &&
-        lhs.content_id == rhs.content_id;
+        lhs.content_id == rhs.content_id &&
+        lhs.depth_layer == rhs.depth_layer &&
+        lhs.attached_edges == rhs.attached_edges &&
+        lhs.exclusive_rect == rhs.exclusive_rect &&
+        lhs.application_id == rhs.application_id;
 }
 
 bool ms::operator!=(
