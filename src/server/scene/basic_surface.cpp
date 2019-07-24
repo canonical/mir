@@ -507,26 +507,6 @@ int ms::BasicSurface::set_swap_interval(int interval)
     return interval;
 }
 
-MirWindowFocusState ms::BasicSurface::set_focus_state(MirWindowFocusState new_state)
-{
-    if (new_state != mir_window_focus_state_focused &&
-        new_state != mir_window_focus_state_unfocused)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid focus state."));
-    }
-
-    std::unique_lock<std::mutex> lg(guard);
-    if (focus_ != new_state)
-    {
-        focus_ = new_state;
-
-        lg.unlock();
-        observers.attrib_changed(this, mir_window_attrib_focus, new_state);
-    }
-
-    return new_state;
-}
-
 MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMode new_orientation_mode)
 {
     if ((new_orientation_mode & mir_orientation_mode_any) == 0)
@@ -558,7 +538,7 @@ int ms::BasicSurface::configure(MirWindowAttrib attrib, int value)
         result = set_state(static_cast<MirWindowState>(result));
         break;
     case mir_window_attrib_focus:
-        result = set_focus_state(static_cast<MirWindowFocusState>(result));
+        set_focus_state(static_cast<MirWindowFocusState>(result));
         break;
     case mir_window_attrib_swapinterval:
         result = set_swap_interval(result);
@@ -943,4 +923,29 @@ void mir::scene::BasicSurface::set_depth_layer(MirDepthLayer depth_layer)
         depth_layer_ = depth_layer;
     }
     observers.depth_layer_set_to(this, depth_layer);
+}
+
+auto mir::scene::BasicSurface::focus_state() const -> MirWindowFocusState
+{
+    std::unique_lock<std::mutex> lg(guard);
+    return focus_;
+}
+
+void mir::scene::BasicSurface::set_focus_state(MirWindowFocusState new_state)
+{
+    if (new_state != mir_window_focus_state_focused &&
+        new_state != mir_window_focus_state_unfocused)
+    {
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid focus state."));
+    }
+
+    bool needs_update;
+    {
+        std::unique_lock<std::mutex> lg(guard);
+        needs_update = (focus_ != new_state);
+        focus_ = new_state;
+    }
+
+    if (needs_update)
+        observers.attrib_changed(this, mir_window_attrib_focus, new_state);
 }

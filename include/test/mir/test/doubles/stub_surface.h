@@ -72,6 +72,8 @@ struct StubSurface : scene::Surface
     void start_drag_and_drop(std::vector<uint8_t> const& handle) override;
     MirDepthLayer depth_layer() const override;
     void set_depth_layer(MirDepthLayer depth_layer) override;
+    MirWindowFocusState focus_state() const override;
+    void set_focus_state(MirWindowFocusState new_state) override;
 };
 }
 }
