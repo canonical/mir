@@ -147,6 +147,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     {
         std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
         surfaces[id] = surface;
+        ids[surface.get()] = id;
         default_content_map[id] = stream_id;
     }
 
@@ -181,6 +182,14 @@ ms::ApplicationSession::Streams::const_iterator ms::ApplicationSession::checked_
     auto p = streams.find(id);
     if (p == streams.end())
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid BufferStreamId"));
+    return p;
+}
+
+ms::ApplicationSession::Ids::const_iterator ms::ApplicationSession::checked_find(Surface* surface) const
+{
+    auto p = ids.find(surface);
+    if (p == ids.end())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
     return p;
 }
 
@@ -273,7 +282,10 @@ void ms::ApplicationSession::destroy_surface(mf::SurfaceId id)
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
 
-    destroy_surface(lock, checked_find(id));
+    auto surface_iter = checked_find(id);
+    auto id_iter = checked_find(surface_iter->second.get());
+
+    destroy_surface(lock, surface_iter, id_iter);
 }
 
 std::string ms::ApplicationSession::name() const
@@ -407,21 +419,23 @@ void ms::ApplicationSession::destroy_surface(std::weak_ptr<Surface> const& surfa
 {
     auto const ss = surface.lock();
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
-    auto p = find_if(begin(surfaces), end(surfaces), [&](Surfaces::value_type const& val)
-        { return val.second == ss; });
 
-    if (p == surfaces.end())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid Surface"));
+    auto id_iter = checked_find(ss.get());
+    auto surface_iter = checked_find(id_iter->second);
 
-    destroy_surface(lock, p);
+    destroy_surface(lock, surface_iter, id_iter);
 }
 
-void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock, Surfaces::const_iterator in_surfaces)
+void ms::ApplicationSession::destroy_surface(
+    std::unique_lock<std::mutex>& lock,
+    Surfaces::const_iterator surface_iter,
+    Ids::const_iterator id_iter)
 {
-    auto const surface = in_surfaces->second;
-    auto it = default_content_map.find(in_surfaces->first); 
+    auto const surface = surface_iter->second;
+    auto it = default_content_map.find(surface_iter->first);
     session_listener->destroying_surface(*this, surface);
-    surfaces.erase(in_surfaces);
+    surfaces.erase(surface_iter);
+    ids.erase(id_iter);
 
     if (it != default_content_map.end())
         default_content_map.erase(it);

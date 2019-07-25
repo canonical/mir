@@ -122,16 +122,22 @@ private:
     OutputPropertiesCache output_cache;
 
     typedef std::map<frontend::SurfaceId, std::shared_ptr<Surface>> Surfaces;
+    typedef std::map<Surface*, frontend::SurfaceId> Ids;
     typedef std::map<frontend::BufferStreamId, std::shared_ptr<compositor::BufferStream>> Streams;
     Surfaces::const_iterator checked_find(frontend::SurfaceId id) const;
     Streams::const_iterator checked_find(frontend::BufferStreamId id) const;
+    Ids::const_iterator checked_find(Surface* surface) const;
     std::mutex mutable surfaces_and_streams_mutex;
     Surfaces surfaces;
+    Ids ids;
     Streams streams;
 
     std::map<frontend::SurfaceId, frontend::BufferStreamId> default_content_map;
 
-    void destroy_surface(std::unique_lock<std::mutex>& lock, Surfaces::const_iterator in_surfaces);
+    void destroy_surface(
+        std::unique_lock<std::mutex>& lock,
+        Surfaces::const_iterator surface_iter,
+        Ids::const_iterator id_iter);
 };
 
 }
