@@ -193,6 +193,12 @@ ms::ApplicationSession::Ids::const_iterator ms::ApplicationSession::checked_find
     return p;
 }
 
+mf::SurfaceId ms::ApplicationSession::get_surface_id(mf::Surface* surface) const
+{
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    return checked_find(dynamic_cast<Surface*>(surface))->second;
+}
+
 std::shared_ptr<mf::Surface> ms::ApplicationSession::get_surface(mf::SurfaceId id) const
 {
     return surface(id);

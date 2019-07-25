@@ -51,6 +51,7 @@ class Session
 public:
     virtual ~Session() = default;
 
+    virtual SurfaceId get_surface_id(Surface* surface) const = 0;
     virtual std::shared_ptr<Surface> get_surface(SurfaceId surface) const = 0;
 
     virtual std::shared_ptr<BufferStream> get_buffer_stream(BufferStreamId stream) const = 0;

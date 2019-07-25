@@ -71,6 +71,7 @@ public:
         SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& surface_sink) override;
     void destroy_surface(frontend::SurfaceId surface) override;
+    frontend::SurfaceId get_surface_id(frontend::Surface* surface) const override;
     std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const override;
     std::shared_ptr<Surface> surface(frontend::SurfaceId surface) const override;
     std::shared_ptr<Surface> surface_after(std::shared_ptr<Surface> const&) const override;

@@ -32,8 +32,9 @@ struct StubSession : scene::Session
 {
     StubSession(pid_t pid = -1);
 
-    std::shared_ptr<frontend::Surface> get_surface(
-        frontend::SurfaceId surface) const override;
+    frontend::SurfaceId get_surface_id(frontend::Surface* surface) const override;
+
+    std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const override;
 
     std::string name() const override;
 
