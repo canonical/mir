@@ -51,7 +51,9 @@ class Session
 public:
     virtual ~Session() = default;
 
+    /// Throws std::out_of_range if the surface is invalid
     virtual SurfaceId get_surface_id(Surface* surface) const = 0;
+    /// Throws std::out_of_range if the id is invalid
     virtual std::shared_ptr<Surface> get_surface(SurfaceId surface) const = 0;
 
     virtual std::shared_ptr<BufferStream> get_buffer_stream(BufferStreamId stream) const = 0;

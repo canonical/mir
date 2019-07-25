@@ -173,7 +173,7 @@ ms::ApplicationSession::Surfaces::const_iterator ms::ApplicationSession::checked
 {
     auto p = surfaces.find(id);
     if (p == surfaces.end())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid SurfaceId"));
+        BOOST_THROW_EXCEPTION(std::out_of_range("Invalid SurfaceId"));
     return p;
 }
 
@@ -181,7 +181,7 @@ ms::ApplicationSession::Streams::const_iterator ms::ApplicationSession::checked_
 {
     auto p = streams.find(id);
     if (p == streams.end())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid BufferStreamId"));
+        BOOST_THROW_EXCEPTION(std::out_of_range("Invalid BufferStreamId"));
     return p;
 }
 
@@ -189,7 +189,7 @@ ms::ApplicationSession::Ids::const_iterator ms::ApplicationSession::checked_find
 {
     auto p = ids.find(surface);
     if (p == ids.end())
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface"));
+        BOOST_THROW_EXCEPTION(std::out_of_range("Invalid surface"));
     return p;
 }
 
