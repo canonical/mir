@@ -224,6 +224,15 @@ void mtd::StubSurface::set_application_id(std::string const& /*application_id*/)
 {
 }
 
+std::weak_ptr<mir::scene::Session> mtd::StubSurface::session() const
+{
+    return {};
+}
+
+void mtd::StubSurface::set_session(std::weak_ptr<scene::Session> /*session*/)
+{
+}
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class

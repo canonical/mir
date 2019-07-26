@@ -970,3 +970,17 @@ void mir::scene::BasicSurface::set_application_id(std::string const& application
     }
     observers.application_id_set_to(this, application_id);
 }
+
+auto mir::scene::BasicSurface::session() const -> std::weak_ptr<Session>
+{
+    std::unique_lock<std::mutex> lg(guard);
+    return session_;
+}
+
+void mir::scene::BasicSurface::set_session(std::weak_ptr<Session> session)
+{
+    {
+        std::unique_lock<std::mutex> lg(guard);
+        session_ = session;
+    }
+}

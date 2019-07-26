@@ -151,6 +151,9 @@ public:
     auto application_id() const -> std::string override;
     void set_application_id(std::string const& application_id) override;
 
+    auto session() const -> std::weak_ptr<Session> override;
+    void set_session(std::weak_ptr<Session> session) override;
+
 private:
     bool visible(std::unique_lock<std::mutex>&) const;
     MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
@@ -189,6 +192,8 @@ private:
 
     MirDepthLayer depth_layer_ = mir_depth_layer_application;
     std::string application_id_;
+
+    std::weak_ptr<Session> session_;
 };
 
 }

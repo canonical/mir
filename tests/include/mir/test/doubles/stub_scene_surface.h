@@ -103,6 +103,9 @@ public:
 
     auto application_id() const -> std::string override { return ""; }
     void set_application_id(std::string const& /*application_id*/) override {}
+
+    auto session() const -> std::weak_ptr<scene::Session> override { return {}; }
+    void set_session(std::weak_ptr<scene::Session> /*session*/) override {}
 };
 
 }
