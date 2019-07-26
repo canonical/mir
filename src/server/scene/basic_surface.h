@@ -155,6 +155,9 @@ public:
     auto application_id() const -> std::string override;
     void set_application_id(std::string const& application_id) override;
 
+    auto session() const -> std::experimental::optional<std::shared_ptr<Session>> override;
+    void set_session(std::shared_ptr<Session> const& session) override;
+
 private:
     bool visible(std::lock_guard<std::mutex> const&) const;
     MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
@@ -195,6 +198,8 @@ private:
     MirDepthLayer depth_layer_ = mir_depth_layer_application;
     std::experimental::optional<geometry::Rectangle> clip_area_;
     std::string application_id_;
+
+    std::weak_ptr<Session> session_;
 };
 
 }

@@ -1017,3 +1017,18 @@ void mir::scene::BasicSurface::set_application_id(std::string const& application
         observers.application_id_set_to(this, application_id);
     }
 }
+
+auto mir::scene::BasicSurface::session() const -> std::experimental::optional<std::shared_ptr<Session>>
+{
+    std::lock_guard<std::mutex> lock(guard);
+    if (auto const session = session_.lock())
+        return session;
+    else
+        return std::experimental::nullopt;
+}
+
+void mir::scene::BasicSurface::set_session(std::shared_ptr<Session> const& session)
+{
+    std::lock_guard<std::mutex> lock(guard);
+    session_ = session;
+}

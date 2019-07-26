@@ -232,6 +232,15 @@ void mtd::StubSurface::set_application_id(std::string const& /*application_id*/)
 {
 }
 
+std::experimental::optional<std::shared_ptr<mir::scene::Session>> mtd::StubSurface::session() const
+{
+    return {};
+}
+
+void mtd::StubSurface::set_session(std::shared_ptr<scene::Session> const& /*session*/)
+{
+}
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class

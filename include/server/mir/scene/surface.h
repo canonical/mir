@@ -44,6 +44,7 @@ struct StreamInfo
 };
 
 class SurfaceObserver;
+class Session;
 
 class Surface :
     public input::Surface,
@@ -135,6 +136,14 @@ public:
     ///@{
     virtual auto application_id() const -> std::string = 0;
     virtual void set_application_id(std::string const& application_id) = 0;
+    ///@}
+
+    /// Defaults to nullopt
+    /// Setting to nullptr is allowed, and will result in getter returning nullopt
+    /// If the getter returns a value, it will never be nullptr
+    ///@{
+    virtual auto session() const -> std::experimental::optional<std::shared_ptr<Session>> = 0;
+    virtual void set_session(std::shared_ptr<Session> const& session) = 0;
     ///@}
 };
 }

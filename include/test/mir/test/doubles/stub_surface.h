@@ -78,6 +78,8 @@ struct StubSurface : scene::Surface
     void set_focus_state(MirWindowFocusState new_state) override;
     std::string application_id() const override;
     void set_application_id(std::string const& application_id) override;
+    std::experimental::optional<std::shared_ptr<scene::Session>> session() const  override;
+    void set_session(std::shared_ptr<scene::Session> const& session) override;
 };
 }
 }
