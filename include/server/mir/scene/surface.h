@@ -44,6 +44,7 @@ struct StreamInfo
 };
 
 class SurfaceObserver;
+class Session;
 
 class Surface :
     public input::Surface,
@@ -136,6 +137,9 @@ public:
     virtual auto application_id() const -> std::string = 0;
     virtual void set_application_id(std::string const& application_id) = 0;
     ///@}
+
+    /// The session this surface was created by
+    virtual auto session() const -> std::weak_ptr<Session> = 0;
 };
 }
 }
