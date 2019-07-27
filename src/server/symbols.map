@@ -935,3 +935,11 @@ MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
     mir::run_mir*;
   };
 } MIR_SERVER_0.1.5;
+
+MIR_SERVER_0.1.6 {
+ global:
+  extern "C++" {
+    mir::scene::NullSurfaceObserver::session_set_to*;
+    mir::scene::NullSurfaceObserver::session_cleared*;
+  };
+} MIR_SERVER_0.1.5;

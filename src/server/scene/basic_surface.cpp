@@ -165,6 +165,18 @@ void ms::SurfaceObservers::application_id_set_to(Surface const* surf, std::strin
                  { observer->application_id_set_to(surf, application_id); });
 }
 
+void ms::SurfaceObservers::session_set_to(Surface const* surf, std::shared_ptr<Session> const& session)
+{
+    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+                 { observer->session_set_to(surf, session); });
+}
+
+void ms::SurfaceObservers::session_cleared(Surface const* surf)
+{
+    for_each([&](std::shared_ptr<SurfaceObserver> const& observer)
+                 { observer->session_cleared(surf); });
+}
+
 struct ms::CursorStreamImageAdapter
 {
     CursorStreamImageAdapter(ms::BasicSurface &surface)
@@ -1029,6 +1041,15 @@ auto mir::scene::BasicSurface::session() const -> std::experimental::optional<st
 
 void mir::scene::BasicSurface::set_session(std::shared_ptr<Session> const& session)
 {
-    std::lock_guard<std::mutex> lock(guard);
-    session_ = session;
+    std::unique_lock<std::mutex> lock(guard);
+    if (session.owner_before(session_) || session_.owner_before(session))
+    {
+        session_ = session;
+
+        lock.unlock();
+        if (session)
+            observers.session_set_to(this, session);
+        else
+            observers.session_cleared(this);
+    }
 }
