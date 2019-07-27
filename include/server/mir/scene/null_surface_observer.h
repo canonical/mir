@@ -56,6 +56,7 @@ public:
     void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) override;
     void depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer) override;
     void application_id_set_to(Surface const* surf, std::string const& application_id) override;
+    void session_set_to(Surface const* surf, std::weak_ptr<Session> const& session) override;
 
 protected:
     NullSurfaceObserver(NullSurfaceObserver const&) = delete;

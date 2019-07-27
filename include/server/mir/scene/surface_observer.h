@@ -28,6 +28,7 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
+#include <memory>
 
 namespace mir
 {
@@ -44,6 +45,7 @@ class CursorImage;
 namespace scene
 {
 class Surface;
+class Session;
 
 class SurfaceObserver
 {
@@ -73,6 +75,7 @@ public:
     virtual void start_drag_and_drop(Surface const* surf, std::vector<uint8_t> const& handle) = 0;
     virtual void depth_layer_set_to(Surface const* surf, MirDepthLayer depth_layer) = 0;
     virtual void application_id_set_to(Surface const* surf, std::string const& application_id) = 0;
+    virtual void session_set_to(Surface const* surf, std::weak_ptr<Session> const& session) = 0;
 
 protected:
     SurfaceObserver() = default;

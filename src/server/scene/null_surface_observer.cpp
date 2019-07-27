@@ -46,3 +46,4 @@ void ms::NullSurfaceObserver::input_consumed(Surface const*, MirEvent const*) {}
 void ms::NullSurfaceObserver::start_drag_and_drop(Surface const*, std::vector<uint8_t> const&) {}
 void ms::NullSurfaceObserver::depth_layer_set_to(Surface const*, MirDepthLayer) {}
 void ms::NullSurfaceObserver::application_id_set_to(Surface const*, std::string const&) {}
+void ms::NullSurfaceObserver::session_set_to(Surface const*, std::weak_ptr<Session> const&) {}

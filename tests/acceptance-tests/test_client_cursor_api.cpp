@@ -89,6 +89,7 @@ public:
     MOCK_METHOD2(start_drag_and_drop, void(msc::Surface const*, std::vector<uint8_t> const& handle));
     MOCK_METHOD2(depth_layer_set_to, void(msc::Surface const*, MirDepthLayer depth_layer));
     MOCK_METHOD2(application_id_set_to, void(msc::Surface const*, std::string const& application_id));
+    MOCK_METHOD2(session_set_to, void(msc::Surface const*, std::weak_ptr<msc::Session> const& session));
 };
 
 

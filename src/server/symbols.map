@@ -978,5 +978,6 @@ MIR_SERVER_1.4 {
  global:
   extern "C++" {
     mir::scene::NullSurfaceObserver::application_id_set_to*;
+    mir::scene::NullSurfaceObserver::session_set_to*;
   };
 } MIR_SERVER_1.3;
