@@ -80,6 +80,7 @@ ms::ApplicationSession::~ApplicationSession()
     for (auto const& pair_id_surface : surfaces)
     {
         session_listener->destroying_surface(*this, pair_id_surface.second);
+        pair_id_surface.second->set_session({});
         surface_stack->remove_surface(pair_id_surface.second);
     }
 }
@@ -166,6 +167,7 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
         surface->set_depth_layer(params.depth_layer.value());
     if (params.application_id.is_set())
         surface->set_application_id(params.application_id.value());
+    surface->set_session(shared_from_this());
 
     return id;
 }
@@ -430,6 +432,7 @@ void ms::ApplicationSession::destroy_surface(std::unique_lock<std::mutex>& lock,
 
     lock.unlock();
 
+    surface->set_session({});
     surface_stack->remove_surface(surface);
 }
 
