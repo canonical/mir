@@ -287,3 +287,9 @@ void mf::XWaylandWMSurface::send_resize(const geometry::Size& new_size)
     xcb_configure_window(xwm->get_xcb_connection(), window, mask, values);
     xcb_flush(xwm->get_xcb_connection());
 }
+
+void mf::XWaylandWMSurface::send_close_request()
+{
+    xcb_destroy_window(xwm->get_xcb_connection(), window);
+    xcb_flush(xwm->get_xcb_connection());
+}

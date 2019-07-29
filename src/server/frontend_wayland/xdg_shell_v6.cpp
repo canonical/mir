@@ -86,6 +86,7 @@ public:
     void handle_resize(
         std::experimental::optional<geometry::Point> const& new_top_left,
         geometry::Size const& new_size) override;
+    void handle_close_request() override;
 
 private:
     std::experimental::optional<geom::Point> cached_top_left;
@@ -119,6 +120,7 @@ public:
     void handle_active_change(bool /*is_now_active*/) override;
     void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
                        geometry::Size const& new_size) override;
+    void handle_close_request() override;
 
 private:
     static XdgToplevelV6* from(wl_resource* surface);
@@ -346,6 +348,11 @@ void mf::XdgPopupV6::handle_resize(const std::experimental::optional<geometry::P
     }
 }
 
+void mf::XdgPopupV6::handle_close_request()
+{
+    send_popup_done_event();
+}
+
 // XdgToplevelV6
 
 mf::XdgToplevelV6::XdgToplevelV6(struct wl_resource* new_resource, XdgSurfaceV6* xdg_surface, WlSurface* surface)
@@ -502,6 +509,11 @@ void mf::XdgToplevelV6::handle_resize(std::experimental::optional<geometry::Poin
                        geometry::Size const& /*new_size*/)
 {
     send_toplevel_configure();
+}
+
+void mf::XdgToplevelV6::handle_close_request()
+{
+    send_close_event();
 }
 
 void mf::XdgToplevelV6::send_toplevel_configure()

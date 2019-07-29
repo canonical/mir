@@ -344,6 +344,11 @@ protected:
                                         new_size.height.as_int());
     }
 
+    void handle_close_request() override
+    {
+        destroy_wayland_object();
+    }
+
     void set_fullscreen(
         uint32_t /*method*/,
         uint32_t /*framerate*/,

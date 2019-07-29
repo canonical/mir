@@ -126,6 +126,7 @@ private:
     void handle_resize(
         std::experimental::optional<geometry::Point> const& /*new_top_left*/,
         geometry::Size const& /*new_size*/) override;
+    void handle_close_request() override;
 
     uint32_t exclusive_zone{0};
     bool anchored_left{false};
@@ -423,4 +424,9 @@ void mf::LayerSurfaceV1::handle_resize(
     geom::Size const& /*new_size*/)
 {
     configure();
+}
+
+void mf::LayerSurfaceV1::handle_close_request()
+{
+    send_closed_event();
 }
