@@ -75,6 +75,11 @@ void mf::XWaylandWMShellSurface::handle_resize(std::experimental::optional<geome
       surface->send_resize(new_size);
 }
 
+void mf::XWaylandWMShellSurface::handle_close_request()
+{
+    surface->send_close_request();
+}
+
 // This is just a wrapper to avoid needing nullptr to use this method
 void mf::XWaylandWMShellSurface::set_fullscreen()
 {

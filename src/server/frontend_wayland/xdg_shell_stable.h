@@ -68,6 +68,7 @@ public:
     void handle_resize(
         std::experimental::optional<geometry::Point> const& new_top_left,
         geometry::Size const& new_size) override;
+    void handle_close_request() override;
 
     static auto from(wl_resource* resource) -> XdgPopupStable*;
 

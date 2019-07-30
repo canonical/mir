@@ -99,6 +99,7 @@ public:
     void handle_active_change(bool /*is_now_active*/) override;
     void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left,
                        geometry::Size const& new_size) override;
+    void handle_close_request() override;
 
 private:
     static XdgToplevelStable* from(wl_resource* surface);
@@ -332,6 +333,11 @@ void mf::XdgPopupStable::handle_resize(const std::experimental::optional<geometr
     }
 }
 
+void mf::XdgPopupStable::handle_close_request()
+{
+    send_popup_done_event();
+}
+
 auto mf::XdgPopupStable::from(wl_resource* resource) -> XdgPopupStable*
 {
     auto popup = dynamic_cast<XdgPopupStable*>(wayland::XdgPopup::from(resource));
@@ -496,6 +502,11 @@ void mf::XdgToplevelStable::handle_resize(std::experimental::optional<geometry::
                                           geometry::Size const& /*new_size*/)
 {
     send_toplevel_configure();
+}
+
+void mf::XdgToplevelStable::handle_close_request()
+{
+    send_close_event();
 }
 
 void mf::XdgToplevelStable::send_toplevel_configure()
