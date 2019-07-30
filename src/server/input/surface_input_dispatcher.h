@@ -71,7 +71,7 @@ private:
 
     void set_focus_locked(std::lock_guard<std::mutex> const&, std::shared_ptr<input::Surface> const&);
 
-    void surface_removed(scene::Surface* surface);
+    void surface_removed(std::shared_ptr<scene::Surface> surface);
 
     void surface_moved(scene::Surface const* moved_surface);
     void surface_resized();

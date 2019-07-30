@@ -206,7 +206,7 @@ struct StubScene : public mtd::StubInputScene
         {
             observers.for_each([&target](std::shared_ptr<ms::Observer> const& observer)
             {
-                observer->surface_exists(target.get());
+                observer->surface_exists(target);
             });
         }
     }
@@ -224,7 +224,7 @@ struct StubScene : public mtd::StubInputScene
         targets.push_back(surface);
         observers.for_each([&surface](std::shared_ptr<ms::Observer> const& observer)
         {
-            observer->surface_added(surface.get());
+            observer->surface_added(surface);
         });
     }
 

@@ -75,12 +75,12 @@ struct MockCallback
 
 struct MockSceneObserver : public ms::Observer
 {
-    MOCK_METHOD1(surface_added, void(ms::Surface*));
-    MOCK_METHOD1(surface_removed, void(ms::Surface*));
+    MOCK_METHOD1(surface_added, void(std::shared_ptr<ms::Surface>));
+    MOCK_METHOD1(surface_removed, void(std::shared_ptr<ms::Surface>));
     MOCK_METHOD0(surfaces_reordered, void());
     MOCK_METHOD0(scene_changed, void());
 
-    MOCK_METHOD1(surface_exists, void(ms::Surface*));
+    MOCK_METHOD1(surface_exists, void(std::shared_ptr<ms::Surface>));
     MOCK_METHOD0(end_observation, void());
 };
 
@@ -124,7 +124,7 @@ struct SurfaceStack : public ::testing::Test
             std::list<ms::StreamInfo> { { std::make_shared<mtd::StubBufferStream>(), {}, {} } },
             std::shared_ptr<mg::CursorImage>(),
             report);
-        invisible_stub_surface->set_hidden(true);
+        invisible_stub_surface->hide();
     }
 
     ms::SurfaceCreationParameters default_params;
@@ -132,10 +132,10 @@ struct SurfaceStack : public ::testing::Test
     std::shared_ptr<mc::BufferStream> stub_buffer_stream2 = std::make_shared<mtd::StubBufferStream>();
     std::shared_ptr<mc::BufferStream> stub_buffer_stream3 = std::make_shared<mtd::StubBufferStream>();
 
-    std::shared_ptr<ms::BasicSurface> stub_surface1;
-    std::shared_ptr<ms::BasicSurface> stub_surface2;
-    std::shared_ptr<ms::BasicSurface> stub_surface3;
-    std::shared_ptr<ms::BasicSurface> invisible_stub_surface;
+    std::shared_ptr<ms::Surface> stub_surface1;
+    std::shared_ptr<ms::Surface> stub_surface2;
+    std::shared_ptr<ms::Surface> stub_surface3;
+    std::shared_ptr<ms::Surface> invisible_stub_surface;
 
     std::shared_ptr<ms::SceneReport> const report = mr::null_scene_report();
     ms::SurfaceStack stack{report};
@@ -443,8 +443,8 @@ TEST_F(SurfaceStack, scene_observer_notified_of_add_and_remove)
     MockSceneObserver observer;
 
     InSequence seq;
-    EXPECT_CALL(observer, surface_added(stub_surface1.get())).Times(1);
-    EXPECT_CALL(observer, surface_removed(stub_surface1.get()))
+    EXPECT_CALL(observer, surface_added(stub_surface1)).Times(1);
+    EXPECT_CALL(observer, surface_removed(stub_surface1))
         .Times(1);
 
     stack.add_observer(mt::fake_shared(observer));
@@ -460,8 +460,8 @@ TEST_F(SurfaceStack, multiple_observers)
     MockSceneObserver observer1, observer2;
 
     InSequence seq;
-    EXPECT_CALL(observer1, surface_added(stub_surface1.get())).Times(1);
-    EXPECT_CALL(observer2, surface_added(stub_surface1.get())).Times(1);
+    EXPECT_CALL(observer1, surface_added(stub_surface1)).Times(1);
+    EXPECT_CALL(observer2, surface_added(stub_surface1)).Times(1);
 
     stack.add_observer(mt::fake_shared(observer1));
     stack.add_observer(mt::fake_shared(observer2));
@@ -476,11 +476,11 @@ TEST_F(SurfaceStack, remove_scene_observer)
     MockSceneObserver observer;
 
     InSequence seq;
-    EXPECT_CALL(observer, surface_added(stub_surface1.get())).Times(1);
+    EXPECT_CALL(observer, surface_added(stub_surface1)).Times(1);
     // We remove the scene observer before removing the surface, and thus
     // expect to NOT see the surface_removed call
     EXPECT_CALL(observer, end_observation()).Times(1);
-    EXPECT_CALL(observer, surface_removed(stub_surface1.get()))
+    EXPECT_CALL(observer, surface_removed(stub_surface1))
         .Times(0);
 
     stack.add_observer(mt::fake_shared(observer));
@@ -501,8 +501,8 @@ TEST_F(SurfaceStack, scene_observer_informed_of_existing_surfaces)
     MockSceneObserver observer;
 
     InSequence seq;
-    EXPECT_CALL(observer, surface_exists(stub_surface1.get())).Times(1);
-    EXPECT_CALL(observer, surface_exists(stub_surface2.get())).Times(1);
+    EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1);
+    EXPECT_CALL(observer, surface_exists(stub_surface2)).Times(1);
 
     stack.add_surface(stub_surface1, default_params.input_mode);
     stack.add_surface(stub_surface2, default_params.input_mode);
@@ -521,7 +521,7 @@ TEST_F(SurfaceStack, scene_observer_can_query_scene_within_surface_exists_notifi
             EXPECT_THAT(surface.get(), Eq(stub_surface1.get()));
         });
     };
-    EXPECT_CALL(observer, surface_exists(stub_surface1.get())).Times(1)
+    EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1)
         .WillOnce(InvokeWithoutArgs(scene_query));
 
     stack.add_surface(stub_surface1, default_params.input_mode);
@@ -544,7 +544,7 @@ TEST_F(SurfaceStack, scene_observer_can_async_query_scene_within_surface_exists_
         std::async(std::launch::async, scene_query);
     };
 
-    EXPECT_CALL(observer, surface_exists(stub_surface1.get())).Times(1)
+    EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1)
         .WillOnce(InvokeWithoutArgs(async_scene_query));
 
     stack.add_surface(stub_surface1, default_params.input_mode);
@@ -561,7 +561,7 @@ TEST_F(SurfaceStack, scene_observer_can_remove_surface_from_scene_within_surface
     auto const surface_removal = [&]{
         stack.remove_surface(stub_surface1);
     };
-    EXPECT_CALL(observer, surface_exists(stub_surface1.get())).Times(1)
+    EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1)
         .WillOnce(InvokeWithoutArgs(surface_removal));
 
     stack.add_surface(stub_surface1, default_params.input_mode);
@@ -785,7 +785,7 @@ TEST_F(SurfaceStack, observer_can_trigger_state_change_within_notification)
         std::async(std::launch::async, state_changer);
     };
 
-    EXPECT_CALL(observer, surface_added(stub_surface1.get())).Times(3)
+    EXPECT_CALL(observer, surface_added(stub_surface1)).Times(3)
         .WillOnce(InvokeWithoutArgs(state_changer))
         .WillOnce(InvokeWithoutArgs(async_state_changer))
         .WillOnce(Return());
@@ -809,11 +809,11 @@ TEST_F(SurfaceStack, observer_can_remove_itself_within_notification)
 
     //Both of these observers should still get their notifications
     //regardless of the removal of observer2
-    EXPECT_CALL(observer1, surface_added(stub_surface1.get())).Times(2);
-    EXPECT_CALL(observer3, surface_added(stub_surface1.get())).Times(2);
+    EXPECT_CALL(observer1, surface_added(stub_surface1)).Times(2);
+    EXPECT_CALL(observer3, surface_added(stub_surface1)).Times(2);
 
     InSequence seq;
-    EXPECT_CALL(observer2, surface_added(stub_surface1.get())).Times(1)
+    EXPECT_CALL(observer2, surface_added(stub_surface1)).Times(1)
          .WillOnce(InvokeWithoutArgs(remove_observer));
     EXPECT_CALL(observer2, end_observation()).Times(1);
 

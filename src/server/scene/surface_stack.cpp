@@ -273,7 +273,7 @@ void ms::SurfaceStack::add_surface(
         surface->add_observer(surface_observer);
     }
     surface->set_reception_mode(input_mode);
-    observers.surface_added(surface.get());
+    observers.surface_added(surface);
 
     report->surface_added(surface.get(), surface.get()->name());
 }
@@ -303,7 +303,7 @@ void ms::SurfaceStack::remove_surface(std::weak_ptr<Surface> const& surface)
 
     if (found_surface)
     {
-        observers.surface_removed(keep_alive.get());
+        observers.surface_removed(keep_alive);
         report->surface_removed(keep_alive.get(), keep_alive.get()->name());
     }
     // TODO: error logging when surface not found
@@ -462,7 +462,7 @@ void ms::SurfaceStack::add_observer(std::shared_ptr<ms::Observer> const& observe
     {
         for (auto const& surface : layer)
         {
-            observer->surface_exists(surface.get());
+            observer->surface_exists(surface);
         }
     }
 }
@@ -478,13 +478,13 @@ void ms::SurfaceStack::remove_observer(std::weak_ptr<ms::Observer> const& observ
     observers.remove(o);
 }
 
-void ms::Observers::surface_added(ms::Surface* surface) 
+void ms::Observers::surface_added(std::shared_ptr<Surface> surface)
 {
     for_each([&](std::shared_ptr<Observer> const& observer)
         { observer->surface_added(surface); });
 }
 
-void ms::Observers::surface_removed(ms::Surface* surface)
+void ms::Observers::surface_removed(std::shared_ptr<Surface> surface)
 {
     for_each([&](std::shared_ptr<Observer> const& observer)
         { observer->surface_removed(surface); });
@@ -502,7 +502,7 @@ void ms::Observers::scene_changed()
         { observer->scene_changed(); });
 }
 
-void ms::Observers::surface_exists(ms::Surface* surface)
+void ms::Observers::surface_exists(std::shared_ptr<Surface> surface)
 {
     for_each([&](std::shared_ptr<Observer> const& observer)
         { observer->surface_exists(surface); });
