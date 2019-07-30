@@ -23,7 +23,7 @@ backends:
             - ubuntu-19.04-64:
                 image: ubuntu-os-cloud/ubuntu-1904
             - ubuntu-devel-64:
-                image: ubuntu-os-cloud/ubuntu-1810
+                image: ubuntu-os-cloud-devel/ubuntu-1910
             - fedora-29-64
             - fedora-30-64
             - fedora-rawhide-64
