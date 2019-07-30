@@ -142,8 +142,8 @@ public:
 
     /// The area over which the window should not be occluded
     /// Only meaningful for windows attached to an edge
-    /// Setting to optional_value{} will not change the rect when this specification is applied
-    /// Setting to optional_value{optional_value{}} will clear the exclusive rect
+    /// If the outer optional is unset (the default), the window's exclusive rect is not changed by this spec
+    /// If the outer optional is set but the inner is not, the window's exclusive rect is cleared
     ///@{
     auto exclusive_rect() const -> mir::optional_value<mir::optional_value<mir::geometry::Rectangle>> const&;
     auto exclusive_rect() -> mir::optional_value<mir::optional_value<mir::geometry::Rectangle>>&;
