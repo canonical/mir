@@ -112,21 +112,15 @@ struct SurfaceCreationParameters
     mir::optional_value<std::vector<shell::StreamSpecification>> streams;
     mir::optional_value<MirPointerConfinementState> confine_pointer;
 
-    /**
-     * If the depth layer of a child surface isn't set, it gets the layer of its parent
-     */
+    /// If the depth layer of a child surface isn't set, it gets the layer of its parent
     optional_value<MirDepthLayer> depth_layer;
 
-    /**
-     * The edge of the output to attach this surface to
-     * Only used if the surface is in state mir_window_state_attached
-     */
+    /// The edge of the output to attach this surface to
+    /// Only used if the surface is in state mir_window_state_attached
     optional_value<MirPlacementGravity> attached_edges;
 
-    /**
-     * The area of this surface that will not be occluded
-     * Only used if surface is in state mir_window_state_attached and is attached to an edge (not a corner)
-     */
+    /// The area of this surface that will not be occluded
+    /// Only used if surface is in state mir_window_state_attached and is attached to an edge (not a corner)
     optional_value<geometry::Rectangle> exclusive_rect;
 };
 
