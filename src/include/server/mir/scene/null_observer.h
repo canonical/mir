@@ -35,6 +35,9 @@ public:
     void surface_removed(Surface* surface);
     void surfaces_reordered();
 
+    // Used to indicate the scene has changed in some way beyond the present surfaces
+    // and will require full recomposition.
+    void scene_changed();
     // Called at observer registration to notify of already existing surfaces.
     void surface_exists(Surface* surface);
     // Called when observer is unregistered, for example, to provide a place to

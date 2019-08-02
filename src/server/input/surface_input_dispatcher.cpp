@@ -20,9 +20,9 @@
 
 #include "mir/input/scene.h"
 #include "mir/input/surface.h"
-#include "mir/scene/observer.h"
+#include "mir/scene/null_observer.h"
 #include "mir/scene/surface.h"
-#include "mir/scene/surface_observer.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/events/event_builders.h"
 #include "mir_toolkit/mir_cookie.h"
 
@@ -40,8 +40,8 @@ namespace geom = mir::geometry;
 namespace
 {
 struct InputDispatcherSceneObserver :
-    public ms::Observer,
-    public ms::SurfaceObserver,
+    public ms::NullObserver,
+    public ms::NullSurfaceObserver,
     public std::enable_shared_from_this<InputDispatcherSceneObserver>
 {
     InputDispatcherSceneObserver(
@@ -61,19 +61,10 @@ struct InputDispatcherSceneObserver :
     {
         on_removed(surface);
     }
-    void surfaces_reordered() override
-    {
-    }
-    void scene_changed() override
-    {
-    }
 
     void surface_exists(ms::Surface* surface) override
     {
         surface->add_observer(shared_from_this());
-    }
-    void end_observation() override
-    {
     }
 
     void attrib_changed(ms::Surface const*, MirWindowAttrib /*attrib*/, int /*value*/) override
@@ -94,72 +85,6 @@ struct InputDispatcherSceneObserver :
     void hidden_set_to(ms::Surface const*, bool /*hide*/) override
     {
         // TODO: Do we need to listen to this?
-    }
-
-    void frame_posted(ms::Surface const*, int, mir::geometry::Size const&) override
-    {
-
-    }
-
-    void alpha_set_to(ms::Surface const*, float) override
-    {
-
-    }
-
-    void orientation_set_to(ms::Surface const*, MirOrientation) override
-    {
-
-    }
-
-    void transformation_set_to(ms::Surface const*, glm::mat4 const&) override
-    {
-
-    }
-
-    void reception_mode_set_to(ms::Surface const*, mir::input::InputReceptionMode) override
-    {
-    }
-
-    void cursor_image_set_to(ms::Surface const*, mir::graphics::CursorImage const&) override
-    {
-    }
-
-    void client_surface_close_requested(ms::Surface const*) override
-    {
-    }
-
-    void keymap_changed(
-        ms::Surface const*,
-        MirInputDeviceId,
-        std::string const&,
-        std::string const&,
-        std::string const&,
-        std::string const&) override
-    {
-    }
-
-    void renamed(ms::Surface const*, char const*) override
-    {
-    }
-
-    void cursor_image_removed(ms::Surface const*) override
-    {
-    }
-
-    void placed_relative(ms::Surface const*, mir::geometry::Rectangle const&) override
-    {
-    }
-
-    void input_consumed(ms::Surface const*, MirEvent const*) override
-    {
-    }
-
-    void start_drag_and_drop(ms::Surface const*, std::vector<uint8_t> const&) override
-    {
-    }
-
-    void depth_layer_set_to(ms::Surface const*, MirDepthLayer) override
-    {
     }
 
     std::function<void(ms::Surface*)> const on_removed;
