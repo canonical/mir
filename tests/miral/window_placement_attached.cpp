@@ -342,6 +342,62 @@ TEST_P(WindowPlacementAttached, window_respects_exclusive_zone_when_maximized)
     EXPECT_THAT(normal.size(), Eq(zone.size));
 }
 
+TEST_P(WindowPlacementAttached, fullscreen_window_ignores_exclusive_zone)
+{
+    AttachedEdges edges = GetParam();
+    Size window_size{120, 80};
+    Rectangle exclusive_rect{{0, 0}, window_size};
+
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        params.exclusive_rect = exclusive_rect;
+        create_window(params);
+    }
+
+    Window normal;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_fullscreen;
+        normal = create_window(params);
+    }
+
+    EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));
+    EXPECT_THAT(normal.size(), Eq(display_area.size));
+}
+
+TEST_P(WindowPlacementAttached, window_ignores_exclusive_zone_when_fullscreened)
+{
+    AttachedEdges edges = GetParam();
+    Size window_size{120, 80};
+    Rectangle exclusive_rect{{0, 0}, window_size};
+
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        params.exclusive_rect = exclusive_rect;
+        create_window(params);
+    }
+
+    Window normal;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_restored;
+        normal = create_window(params);
+    }
+
+    mir::shell::SurfaceSpecification spec;
+    spec.state = mir_window_state_fullscreen;
+    basic_window_manager.modify_surface(session, normal, spec);
+
+    EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));
+    EXPECT_THAT(normal.size(), Eq(display_area.size));
+}
+
 TEST_P(WindowPlacementAttached, stretched_attached_window_ignores_exclusive_zone)
 {
     AttachedEdges edges = GetParam();
