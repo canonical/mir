@@ -85,6 +85,11 @@ auto miral::Output::extents() const -> Rectangle
     return self->extents();
 }
 
+auto miral::Output::id() const -> int
+{
+    return self->id.as_value();
+}
+
 auto miral::Output::valid() const -> bool
 {
     return self->valid();

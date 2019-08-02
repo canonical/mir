@@ -95,6 +95,10 @@ public:
     /// current mode and orientation (rotation)
     auto extents() const -> Rectangle;
 
+    /// Mir's internal output ID
+    /// mostly useful for matching against a miral::WindowInfo::output_id
+    auto id() const -> int;
+
     auto valid() const -> bool;
 
     auto is_same_output(Output const& other) const -> bool;
