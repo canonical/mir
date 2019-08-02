@@ -525,6 +525,68 @@ TEST_P(WindowPlacementAttached, exclusive_zone_is_cleared_when_window_is_removed
     EXPECT_THAT(normal.size(), Eq(display_area.size));
 }
 
+TEST_P(WindowPlacementAttached, exclusive_zone_is_cleared_when_window_becomes_non_attached)
+{
+    AttachedEdges edges = GetParam();
+    Size window_size{120, 80};
+    Rectangle exclusive_rect{{0, 0}, window_size};
+
+    Window attached;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        params.exclusive_rect = exclusive_rect;
+        attached = create_window(params);
+    }
+
+    Window normal;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_maximized;
+        normal = create_window(params);
+    }
+
+    mir::shell::SurfaceSpecification spec;
+    spec.state = mir_window_state_restored;
+    basic_window_manager.modify_surface(session, attached, spec);
+
+    EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));
+    EXPECT_THAT(normal.size(), Eq(display_area.size));
+}
+
+TEST_P(WindowPlacementAttached, exclusive_zone_is_cleared_when_exclusive_rect_cleared)
+{
+    AttachedEdges edges = GetParam();
+    Size window_size{120, 80};
+    Rectangle exclusive_rect{{0, 0}, window_size};
+
+    Window attached;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        params.exclusive_rect = exclusive_rect;
+        attached = create_window(params);
+    }
+
+    Window normal;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_maximized;
+        normal = create_window(params);
+    }
+
+    mir::shell::SurfaceSpecification spec;
+    spec.exclusive_rect = mir::optional_value<mir::optional_value<Rectangle>>{{}};
+    basic_window_manager.modify_surface(session, attached, spec);
+
+    EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));
+    EXPECT_THAT(normal.size(), Eq(display_area.size));
+}
+
 INSTANTIATE_TEST_CASE_P(WindowPlacementAttached, WindowPlacementAttached, ::testing::Values(
     mir_placement_gravity_center,
     mir_placement_gravity_west,
