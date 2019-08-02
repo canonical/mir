@@ -980,6 +980,20 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
         }
     }
 
+    bool application_zones_need_update = false;
+    if (window_info.state() == mir_window_state_attached ||
+          (modifications.state().is_set() &&
+           modifications.state().value() == mir_window_state_attached))
+    {
+        if (modifications.state().is_set() ||
+            modifications.size().is_set() ||
+            modifications.attached_edges().is_set() ||
+            modifications.exclusive_rect().is_set())
+        {
+            application_zones_need_update = true;
+        }
+    }
+
     std::swap(window_info_tmp, window_info);
 
     auto& window = window_info.window();
@@ -1083,15 +1097,9 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
         set_state(window_info, modifications.state().value());
     }
 
-    if (window_info.state() == mir_window_state_attached)
+    if (application_zones_need_update)
     {
-        if (modifications.state().is_set() ||
-            modifications.size().is_set() ||
-            modifications.attached_edges().is_set() ||
-            modifications.exclusive_rect().is_set())
-        {
-            update_windows_for_outputs();
-        }
+        update_windows_for_outputs();
     }
 
     if (modifications.confine_pointer().is_set())
