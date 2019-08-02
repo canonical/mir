@@ -32,6 +32,8 @@
 
 namespace mir
 {
+class Executor;
+
 namespace frontend
 {
 
@@ -46,6 +48,7 @@ public:
 
     static std::shared_ptr <graphics::Buffer> mir_buffer_from_wl_buffer(
         wl_resource *buffer,
+        std::shared_ptr<Executor> executor,
         std::function<void()> &&on_consumed);
 
     std::shared_ptr <graphics::NativeBuffer> native_buffer_handle() const override;
@@ -71,6 +74,7 @@ public:
 private:
     WlShmBuffer(
         wl_resource *buffer,
+        std::shared_ptr<Executor>,
         std::function<void()> &&on_consumed);
 
     static void on_buffer_destroyed(wl_listener *listener, void *);
@@ -95,6 +99,8 @@ private:
 
     bool consumed;
     std::function<void()> on_consumed;
+
+    std::shared_ptr<Executor> executor;
 };
 }
 }

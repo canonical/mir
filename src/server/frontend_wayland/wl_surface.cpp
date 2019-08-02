@@ -337,6 +337,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             {
                 mir_buffer = WlShmBuffer::mir_buffer_from_wl_buffer(
                     buffer,
+                    executor,
                     std::move(executor_send_frame_callbacks));
                 tracepoint(
                     mir_server_wayland,

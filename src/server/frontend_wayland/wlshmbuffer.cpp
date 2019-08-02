@@ -19,6 +19,7 @@
  */
 
 #include "wlshmbuffer.h"
+#include "wayland_executor.h"
 
 #include <mir/log.h>
 
@@ -128,14 +129,18 @@ using namespace mir::geometry;
 
 mf::WlShmBuffer::~WlShmBuffer()
 {
-    std::lock_guard <std::mutex> lock{*buffer_mutex};
-    if (buffer) {
-        wl_resource_queue_event(resource, WL_BUFFER_RELEASE);
-    }
+    executor->spawn([buffer_mutex = buffer_mutex, buffer = buffer, resource = resource]()
+        {
+            std::lock_guard <std::mutex> lock{*buffer_mutex};
+            if (buffer) {
+                wl_resource_queue_event(resource, WL_BUFFER_RELEASE);
+            }
+        });
 }
 
 std::shared_ptr<mg::Buffer> mf::WlShmBuffer::mir_buffer_from_wl_buffer(
     wl_resource *buffer,
+    std::shared_ptr<Executor> executor,
     std::function<void()> &&on_consumed)
 {
     std::shared_ptr <WlShmBuffer> mir_buffer;
@@ -152,11 +157,11 @@ std::shared_ptr<mg::Buffer> mf::WlShmBuffer::mir_buffer_from_wl_buffer(
              *
              * Recreate a new WlShmBuffer to track the new compositor lifetime.
              */
-            mir_buffer = std::shared_ptr < WlShmBuffer > {new WlShmBuffer{buffer, std::move(on_consumed)}};
+            mir_buffer = std::shared_ptr < WlShmBuffer > {new WlShmBuffer{buffer, executor, std::move(on_consumed)}};
             shim->associated_buffer = mir_buffer;
         }
     } else {
-        mir_buffer = std::shared_ptr < WlShmBuffer > {new WlShmBuffer{buffer, std::move(on_consumed)}};
+        mir_buffer = std::shared_ptr < WlShmBuffer > {new WlShmBuffer{buffer, executor, std::move(on_consumed)}};
         shim = new DestructionShim;
         shim->destruction_listener.notify = &on_buffer_destroyed;
         shim->associated_buffer = mir_buffer;
@@ -257,6 +262,7 @@ Stride mf::WlShmBuffer::stride() const
 
 mf::WlShmBuffer::WlShmBuffer(
     wl_resource *buffer,
+    std::shared_ptr<Executor> executor,
     std::function<void()> &&on_consumed)
     :
     buffer{shm_buffer_from_resource_checked(buffer)},
@@ -266,7 +272,8 @@ mf::WlShmBuffer::WlShmBuffer(
     format_{wl_format_to_mir_format(wl_shm_buffer_get_format(this->buffer))},
     data{std::make_unique<uint8_t[]>(size_.height.as_int() * stride_.as_int())},
     consumed{false},
-    on_consumed{std::move(on_consumed)}
+    on_consumed{std::move(on_consumed)},
+    executor{executor}
 {
     if (stride_.as_int() < size_.width.as_int() * MIR_BYTES_PER_PIXEL(format_)) {
         wl_resource_post_error(
