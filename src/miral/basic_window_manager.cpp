@@ -1310,19 +1310,18 @@ void miral::BasicWindowManager::place_and_size_for_state(
 
 auto miral::BasicWindowManager::fullscreen_rect_for(miral::WindowInfo const& window_info) const -> Rectangle
 {
-    auto const w = window_info.window();
-    Rectangle r = {(w.top_left()), w.size()};
-
     if (window_info.has_output_id())
     {
-        graphics::DisplayConfigurationOutputId id{window_info.output_id()};
-        if (display_layout->place_in_output(id, r))
-            return r;
+        for (auto const& display_area : display_areas)
+        {
+            if (display_area->output && display_area->output->id() == window_info.output_id())
+            {
+                return display_area->area;
+            }
+        }
     }
 
-    display_layout->size_to_output(r);
-
-    return r;
+    return display_area_for(window_info.window())->area;
 }
 
 void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWindowState value)
