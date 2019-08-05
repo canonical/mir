@@ -31,15 +31,15 @@ public:
     NullObserver() = default;
     virtual ~NullObserver() = default;
 
-    void surface_added(std::shared_ptr<Surface> surface) override;
-    void surface_removed(std::shared_ptr<Surface> surface) override;
+    void surface_added(std::shared_ptr<Surface> const& surface) override;
+    void surface_removed(std::shared_ptr<Surface> const& surface) override;
     void surfaces_reordered() override;
 
     // Used to indicate the scene has changed in some way beyond the present surfaces
     // and will require full recomposition.
     void scene_changed() override;
     // Called at observer registration to notify of already existing surfaces.
-    void surface_exists(std::shared_ptr<Surface> surface) override;
+    void surface_exists(std::shared_ptr<Surface> const& surface) override;
     // Called when observer is unregistered, for example, to provide a place to
     // unregister SurfaceObservers which may have been added in surface_added/exists
     void end_observation() override;

@@ -54,11 +54,11 @@ class Observers : public Observer, BasicObservers<Observer>
 {
 public:
    // ms::Observer
-   void surface_added(std::shared_ptr<Surface> surface) override;
-   void surface_removed(std::shared_ptr<Surface> surface) override;
+   void surface_added(std::shared_ptr<Surface> const& surface) override;
+   void surface_removed(std::shared_ptr<Surface> const& surface) override;
    void surfaces_reordered() override;
    void scene_changed() override;
-   void surface_exists(std::shared_ptr<Surface> surface) override;
+   void surface_exists(std::shared_ptr<Surface> const& surface) override;
    void end_observation() override;
 
    using BasicObservers<Observer>::add;

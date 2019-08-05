@@ -54,17 +54,17 @@ struct InputDispatcherSceneObserver :
     {
     }
 
-    void surface_added(std::shared_ptr<ms::Surface> surface) override
+    void surface_added(std::shared_ptr<ms::Surface> const& surface) override
     {
         surface->add_observer(shared_from_this());
     }
 
-    void surface_removed(std::shared_ptr<ms::Surface> surface) override
+    void surface_removed(std::shared_ptr<ms::Surface> const& surface) override
     {
         on_removed(surface);
     }
 
-    void surface_exists(std::shared_ptr<ms::Surface> surface) override
+    void surface_exists(std::shared_ptr<ms::Surface> const& surface) override
     {
         surface->add_observer(shared_from_this());
     }

@@ -122,13 +122,13 @@ struct UpdateCursorOnSceneChanges : ms::Observer
         }
     }
 
-    void surface_added(std::shared_ptr<ms::Surface> surface) override
+    void surface_added(std::shared_ptr<ms::Surface> const& surface) override
     {
         add_surface_observer(surface.get());
         cursor_controller->update_cursor_image();
     }
 
-    void surface_removed(std::shared_ptr<ms::Surface> surface) override
+    void surface_removed(std::shared_ptr<ms::Surface> const& surface) override
     {
         {
             std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
@@ -152,7 +152,7 @@ struct UpdateCursorOnSceneChanges : ms::Observer
         cursor_controller->update_cursor_image();
     }
 
-    void surface_exists(std::shared_ptr<ms::Surface> surface) override
+    void surface_exists(std::shared_ptr<ms::Surface> const& surface) override
     {
         add_surface_observer(surface.get());
         cursor_controller->update_cursor_image();

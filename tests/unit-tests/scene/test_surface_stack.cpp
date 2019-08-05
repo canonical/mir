@@ -75,12 +75,12 @@ struct MockCallback
 
 struct MockSceneObserver : public ms::Observer
 {
-    MOCK_METHOD1(surface_added, void(std::shared_ptr<ms::Surface>));
-    MOCK_METHOD1(surface_removed, void(std::shared_ptr<ms::Surface>));
+    MOCK_METHOD1(surface_added, void(std::shared_ptr<ms::Surface> const&));
+    MOCK_METHOD1(surface_removed, void(std::shared_ptr<ms::Surface> const&));
     MOCK_METHOD0(surfaces_reordered, void());
     MOCK_METHOD0(scene_changed, void());
 
-    MOCK_METHOD1(surface_exists, void(std::shared_ptr<ms::Surface>));
+    MOCK_METHOD1(surface_exists, void(std::shared_ptr<ms::Surface> const&));
     MOCK_METHOD0(end_observation, void());
 };
 

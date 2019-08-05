@@ -33,8 +33,8 @@ class Surface;
 class Observer
 {
 public:
-    virtual void surface_added(std::shared_ptr<Surface> surface) = 0;
-    virtual void surface_removed(std::shared_ptr<Surface> surface) = 0;
+    virtual void surface_added(std::shared_ptr<Surface> const& surface) = 0;
+    virtual void surface_removed(std::shared_ptr<Surface> const& surface) = 0;
     virtual void surfaces_reordered() = 0;
 
     /// Used to indicate the scene has changed in some way beyond the present surfaces
@@ -42,7 +42,7 @@ public:
     virtual void scene_changed() = 0;
 
     /// Called at observer registration to notify of already existing surfaces.
-    virtual void surface_exists(std::shared_ptr<Surface> surface) = 0;
+    virtual void surface_exists(std::shared_ptr<Surface> const& surface) = 0;
 
     /// Called when observer is unregistered, for example, to provide a place to
     /// unregister SurfaceObservers which may have been added in surface_added/exists

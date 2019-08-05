@@ -478,13 +478,13 @@ void ms::SurfaceStack::remove_observer(std::weak_ptr<ms::Observer> const& observ
     observers.remove(o);
 }
 
-void ms::Observers::surface_added(std::shared_ptr<Surface> surface)
+void ms::Observers::surface_added(std::shared_ptr<Surface> const& surface)
 {
     for_each([&](std::shared_ptr<Observer> const& observer)
         { observer->surface_added(surface); });
 }
 
-void ms::Observers::surface_removed(std::shared_ptr<Surface> surface)
+void ms::Observers::surface_removed(std::shared_ptr<Surface> const& surface)
 {
     for_each([&](std::shared_ptr<Observer> const& observer)
         { observer->surface_removed(surface); });
@@ -502,7 +502,7 @@ void ms::Observers::scene_changed()
         { observer->scene_changed(); });
 }
 
-void ms::Observers::surface_exists(std::shared_ptr<Surface> surface)
+void ms::Observers::surface_exists(std::shared_ptr<Surface> const& surface)
 {
     for_each([&](std::shared_ptr<Observer> const& observer)
         { observer->surface_exists(surface); });
