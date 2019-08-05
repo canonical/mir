@@ -29,6 +29,7 @@
 #include <functional>
 #include <mutex>
 #include <string>
+#include <experimental/optional>
 
 namespace mir
 {
@@ -79,17 +80,22 @@ private:
 
     static void on_buffer_destroyed(wl_listener *listener, void *);
 
+    struct WaylandResources
+    {
+        WaylandResources(wl_resource *resource);
+
+        std::mutex mutex;
+        wl_resource* const resource;
+        std::experimental::optional<wl_shm_buffer* const> buffer;
+    };
+
     struct DestructionShim
     {
-        std::shared_ptr <std::mutex> const mutex = std::make_shared<std::mutex>();
-        std::weak_ptr <WlShmBuffer> associated_buffer;
+        std::weak_ptr<WaylandResources> resources;
         wl_listener destruction_listener;
     };
 
-    std::shared_ptr <std::mutex> buffer_mutex;
-
-    wl_shm_buffer *buffer;
-    wl_resource *const resource;
+    std::shared_ptr<WaylandResources> wayland;
 
     geometry::Size const size_;
     geometry::Stride const stride_;
