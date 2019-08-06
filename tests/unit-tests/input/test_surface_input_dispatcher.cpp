@@ -73,7 +73,7 @@ struct StubInputScene : public mtd::StubInputScene
         auto surface = std::make_shared<MockSurfaceWithGeometry>(geometry);
         surfaces.add(surface);
 
-        observer->surface_added(surface.get());
+        observer->surface_added(surface);
         
         return surface;
     }
@@ -81,7 +81,7 @@ struct StubInputScene : public mtd::StubInputScene
     void remove_surface(std::shared_ptr<ms::Surface> const& surface)
     {
         surfaces.remove(surface);
-        observer->surface_removed(surface.get());
+        observer->surface_removed(surface);
     }
 
     std::shared_ptr<mtd::MockSurface> add_surface()
@@ -101,7 +101,7 @@ struct StubInputScene : public mtd::StubInputScene
         assert(observer == nullptr);
         observer = new_observer;
 	surfaces.for_each([this](std::shared_ptr<ms::Surface> const& surface) {
-		observer->surface_exists(surface.get());
+		observer->surface_exists(surface);
         });
     }
     

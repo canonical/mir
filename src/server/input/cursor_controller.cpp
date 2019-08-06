@@ -122,16 +122,17 @@ struct UpdateCursorOnSceneChanges : ms::Observer
         }
     }
 
-    void surface_added(ms::Surface *surface)
+    void surface_added(std::shared_ptr<ms::Surface> const& surface) override
     {
-        add_surface_observer(surface);
+        add_surface_observer(surface.get());
         cursor_controller->update_cursor_image();
     }
-    void surface_removed(ms::Surface *surface)
+
+    void surface_removed(std::shared_ptr<ms::Surface> const& surface) override
     {
         {
             std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
-            auto it = surface_observers.find(surface);
+            auto it = surface_observers.find(surface.get());
             if (it != surface_observers.end())
             {
                 surface->remove_observer(it->second);
@@ -140,23 +141,24 @@ struct UpdateCursorOnSceneChanges : ms::Observer
         }
         cursor_controller->update_cursor_image();
     }
-    void surfaces_reordered()
+
+    void surfaces_reordered() override
     {
         cursor_controller->update_cursor_image();
     }
 
-    void scene_changed()
+    void scene_changed() override
     {
         cursor_controller->update_cursor_image();
     }
 
-    void surface_exists(ms::Surface *surface)
+    void surface_exists(std::shared_ptr<ms::Surface> const& surface) override
     {
-        add_surface_observer(surface);
+        add_surface_observer(surface.get());
         cursor_controller->update_cursor_image();
     }
 
-    void end_observation()
+    void end_observation() override
     {
         std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
         for (auto &kv : surface_observers)

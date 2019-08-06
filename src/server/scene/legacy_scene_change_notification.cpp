@@ -115,25 +115,25 @@ void ms::LegacySceneChangeNotification::add_surface_observer(ms::Surface* surfac
     }
 }
 
-void ms::LegacySceneChangeNotification::surface_added(ms::Surface* surface)
+void ms::LegacySceneChangeNotification::surface_added(std::shared_ptr<ms::Surface> const& surface)
 {
-    add_surface_observer(surface);
+    add_surface_observer(surface.get());
 
     // If the surface already has content we need to (re)composite
     if (!buffer_notify_change && surface->visible())
         scene_notify_change();
 }
 
-void ms::LegacySceneChangeNotification::surface_exists(ms::Surface* surface)
+void ms::LegacySceneChangeNotification::surface_exists(std::shared_ptr<ms::Surface> const& surface)
 {
-    add_surface_observer(surface);
+    add_surface_observer(surface.get());
 }
     
-void ms::LegacySceneChangeNotification::surface_removed(ms::Surface* surface)
+void ms::LegacySceneChangeNotification::surface_removed(std::shared_ptr<ms::Surface> const& surface)
 {
     {
         std::unique_lock<decltype(surface_observers_guard)> lg(surface_observers_guard);
-        auto it = surface_observers.find(surface);
+        auto it = surface_observers.find(surface.get());
         if (it != surface_observers.end())
         {
             surface->remove_observer(it->second);

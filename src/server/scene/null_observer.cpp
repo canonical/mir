@@ -20,9 +20,9 @@
 
 namespace ms = mir::scene;
 
-void ms::NullObserver::surface_added(ms::Surface* /* surface */) {}
-void ms::NullObserver::surface_removed(ms::Surface* /* surface */) {}
+void ms::NullObserver::surface_added(std::shared_ptr<ms::Surface> const& /* surface */) {}
+void ms::NullObserver::surface_removed(std::shared_ptr<ms::Surface> const& /* surface */) {}
 void ms::NullObserver::surfaces_reordered() {}
 void ms::NullObserver::scene_changed() {}
-void ms::NullObserver::surface_exists(ms::Surface* /* surface */) {}
+void ms::NullObserver::surface_exists(std::shared_ptr<ms::Surface> const& /* surface */) {}
 void ms::NullObserver::end_observation() {}

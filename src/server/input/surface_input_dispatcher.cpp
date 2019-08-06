@@ -45,7 +45,7 @@ struct InputDispatcherSceneObserver :
     public std::enable_shared_from_this<InputDispatcherSceneObserver>
 {
     InputDispatcherSceneObserver(
-        std::function<void(ms::Surface*)> const& on_removed,
+        std::function<void(std::shared_ptr<ms::Surface>)> const& on_removed,
         std::function<void(ms::Surface const*)> const& on_surface_moved,
         std::function<void()> const& on_surface_resized)
         : on_removed(on_removed),
@@ -53,16 +53,18 @@ struct InputDispatcherSceneObserver :
           on_surface_resized{on_surface_resized}
     {
     }
-    void surface_added(ms::Surface* surface) override
+
+    void surface_added(std::shared_ptr<ms::Surface> const& surface) override
     {
         surface->add_observer(shared_from_this());
     }
-    void surface_removed(ms::Surface* surface) override
+
+    void surface_removed(std::shared_ptr<ms::Surface> const& surface) override
     {
         on_removed(surface);
     }
 
-    void surface_exists(ms::Surface* surface) override
+    void surface_exists(std::shared_ptr<ms::Surface> const& surface) override
     {
         surface->add_observer(shared_from_this());
     }
@@ -87,7 +89,7 @@ struct InputDispatcherSceneObserver :
         // TODO: Do we need to listen to this?
     }
 
-    std::function<void(ms::Surface*)> const on_removed;
+    std::function<void(std::shared_ptr<ms::Surface>)> const on_removed;
     std::function<void(ms::Surface const*)> const on_surface_moved;
     std::function<void()> const on_surface_resized;
 };
@@ -150,7 +152,10 @@ mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> co
       started(false)
 {
     scene_observer = std::make_shared<InputDispatcherSceneObserver>(
-        [this](ms::Surface* s){surface_removed(s);},
+        std::bind(
+            std::mem_fn(&SurfaceInputDispatcher::surface_removed),
+            this,
+            std::placeholders::_1),
         std::bind(
             std::mem_fn(&SurfaceInputDispatcher::surface_moved),
             this,
@@ -185,12 +190,12 @@ bool compare_surfaces(std::shared_ptr<mi::Surface> const& input_surface, ms::Sur
 }
 }
 
-void mi::SurfaceInputDispatcher::surface_removed(ms::Surface *surface)
+void mi::SurfaceInputDispatcher::surface_removed(std::shared_ptr<ms::Surface> surface)
 {
     std::lock_guard<std::mutex> lg(dispatcher_mutex);
 
     auto strong_focus = focus_surface.lock();
-    if (strong_focus && compare_surfaces(strong_focus, surface))
+    if (strong_focus && compare_surfaces(strong_focus, surface.get()))
     {
         set_focus_locked(lg, nullptr);
     }
@@ -198,16 +203,16 @@ void mi::SurfaceInputDispatcher::surface_removed(ms::Surface *surface)
     for (auto& kv : pointer_state_by_id)
     {
         auto& state = kv.second;
-        if (compare_surfaces(state.current_target, surface))
+        if (compare_surfaces(state.current_target, surface.get()))
             state.current_target.reset();
-        if (compare_surfaces(state.gesture_owner, surface))
+        if (compare_surfaces(state.gesture_owner, surface.get()))
             state.gesture_owner.reset();
     }
 
     for (auto& kv : touch_state_by_id)
     {
         auto& state = kv.second;
-        if (compare_surfaces(state.gesture_owner, surface))
+        if (compare_surfaces(state.gesture_owner, surface.get()))
             state.gesture_owner.reset();
     }
 }
