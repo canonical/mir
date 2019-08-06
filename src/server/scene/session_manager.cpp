@@ -177,15 +177,13 @@ void ms::SessionManager::unset_focus()
 
 void ms::SessionManager::close_session(std::shared_ptr<Session> const& session)
 {
-    auto scene_session = std::dynamic_pointer_cast<Session>(session);
-
     anr_detector->unregister_session(session.get());
 
-    session_event_sink->handle_session_stopping(scene_session);
+    session_event_sink->handle_session_stopping(session);
 
-    observers->stopping(scene_session);
+    observers->stopping(session);
 
-    app_container->remove_session(scene_session);
+    app_container->remove_session(session);
 }
 
 

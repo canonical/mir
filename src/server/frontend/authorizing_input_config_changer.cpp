@@ -61,7 +61,7 @@ MirInputConfig mf::AuthorizingInputConfigChanger::base_configuration()
     return changer->base_configuration();
 }
 
-void mf::AuthorizingInputConfigChanger::configure(std::shared_ptr<Session> const& session, MirInputConfig && config)
+void mf::AuthorizingInputConfigChanger::configure(std::shared_ptr<scene::Session> const& session, MirInputConfig && config)
 {
     if (configure_input_is_allowed)
         changer->configure(session, std::move(config));

@@ -18,6 +18,7 @@
 
 #include "mir/default_server_configuration.h"
 #include "mir/frontend/wayland.h"
+#include "mir/frontend/session.h"
 
 #include "wayland_connector.h"
 #include "xdg_shell_v6.h"
@@ -156,7 +157,7 @@ std::shared_ptr<mf::Connector>
 
             auto wayland_filter = [this](std::shared_ptr<frontend::Session> const& session, char const* protocol)
                 {
-                    return wayland_extension_filter(std::static_pointer_cast<scene::Session>(session), protocol);
+                    return wayland_extension_filter(session, protocol);
                 };
 
             return std::make_shared<mf::WaylandConnector>(

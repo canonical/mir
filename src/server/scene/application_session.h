@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_APPLICATION_SESSION_H_
 #define MIR_SCENE_APPLICATION_SESSION_H_
 
-#include "mir/scene/session.h"
+#include "mir/frontend/session.h"
 
 #include "output_properties_cache.h"
 
@@ -50,7 +50,8 @@ class SnapshotStrategy;
 class BufferStreamFactory;
 class SurfaceFactory;
 
-class ApplicationSession : public Session
+class ApplicationSession
+    : public frontend::Session
 {
 public:
     ApplicationSession(

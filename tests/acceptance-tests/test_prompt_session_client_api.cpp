@@ -21,6 +21,7 @@
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
 #include "mir/scene/session.h"
+#include "mir/frontend/session.h"
 #include "mir/shell/shell_wrapper.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/cached_ptr.h"
@@ -102,7 +103,7 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
     MirConnection* connection = nullptr;
 
     static constexpr pid_t application_session_pid = __LINE__;
-    std::shared_ptr<mf::Session> application_session;
+    std::shared_ptr<ms::Session> application_session;
     MirConnection* application_connection{nullptr};
 
     std::shared_ptr<ms::PromptSession> server_prompt_session;
@@ -229,10 +230,10 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
 
     MOCK_METHOD1(process_line, void(std::string const&));
 
-    std::vector<std::shared_ptr<mf::Session>> list_providers_for(
+    std::vector<std::shared_ptr<ms::Session>> list_providers_for(
         std::shared_ptr<ms::PromptSession> const& prompt_session)
     {
-        std::vector<std::shared_ptr<mf::Session>> results;
+        std::vector<std::shared_ptr<ms::Session>> results;
         auto providers_fn = [&results](std::weak_ptr<ms::Session> const& session)
         {
             results.push_back(session.lock());

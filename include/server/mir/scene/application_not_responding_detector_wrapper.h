@@ -33,9 +33,9 @@ public:
     ApplicationNotRespondingDetectorWrapper(std::shared_ptr<ApplicationNotRespondingDetector> const& wrapped);
     ~ApplicationNotRespondingDetectorWrapper();
 
-    virtual void register_session(frontend::Session const* session, std::function<void()> const& pinger) override;
-    virtual void unregister_session(frontend::Session const* session) override;
-    virtual void pong_received(frontend::Session const* received_for) override;
+    virtual void register_session(scene::Session const* session, std::function<void()> const& pinger) override;
+    virtual void unregister_session(scene::Session const* session) override;
+    virtual void pong_received(scene::Session const* received_for) override;
     virtual void register_observer(std::shared_ptr<Observer> const& observer) override;
     virtual void unregister_observer(std::shared_ptr<Observer> const& observer) override;
 

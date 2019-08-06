@@ -34,35 +34,112 @@ struct StubSession : public frontend::Session
     {
         return std::shared_ptr<frontend::Surface>();
     }
-    std::string name() const override
+
+    auto process_id() const -> pid_t override
     {
-        return std::string();
+        return 0;
     }
 
-    std::shared_ptr<frontend::BufferStream> get_buffer_stream(frontend::BufferStreamId) const override
+    auto name() const -> std::string override
+    {
+        return "";
+    }
+
+    void send_display_config(graphics::DisplayConfiguration const&) override
+    {
+    }
+
+    void send_error(ClientVisibleError const& /* error */) override
+    {
+    }
+
+    void send_input_config(MirInputConfig const& /* config */) override
+    {
+    }
+
+    void take_snapshot(scene::SnapshotCallback const& /* snapshot_taken */) override
+    {
+    }
+
+    auto default_surface() const -> std::shared_ptr<scene::Surface> override
     {
         return nullptr;
     }
-    void destroy_buffer_stream(frontend::BufferStreamId) override
-    {
-    }
-    frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const&) override
-    {
-        return frontend::BufferStreamId();
-    }
-    
-    graphics::BufferID create_buffer(graphics::BufferProperties const&) override
-    {
-        return graphics::BufferID(3);
-    }
 
-    void destroy_buffer(graphics::BufferID) override
+    void set_lifecycle_state(MirLifecycleState /* state */) override
     {
     }
 
-    std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) override
+    void hide() override
+    {
+    }
+
+    void show() override
+    {
+    }
+
+    void start_prompt_session() override
+    {
+    }
+
+    void stop_prompt_session() override
+    {
+    }
+
+    void suspend_prompt_session() override
+    {
+    }
+
+    void resume_prompt_session() override
+    {
+    }
+
+    auto create_surface(
+        scene::SurfaceCreationParameters const& /* params */,
+        std::shared_ptr<frontend::EventSink> const& /* sink */) -> frontend::SurfaceId override
+    {
+        return {};
+    }
+
+    void destroy_surface(frontend::SurfaceId /* surface */) override
+    {
+    }
+
+    auto surface(frontend::SurfaceId /* surface */) const -> std::shared_ptr<scene::Surface> override
     {
         return nullptr;
+    }
+
+    void destroy_surface(std::weak_ptr<scene::Surface> const& /* surface */) override
+    {
+    }
+
+    auto surface_after(std::shared_ptr<scene::Surface> const& /* surface */) const
+        -> std::shared_ptr<scene::Surface> override
+    {
+        return nullptr;
+    }
+
+    auto create_buffer_stream(graphics::BufferProperties const& /* props */)
+        -> frontend::BufferStreamId override
+    {
+        return {};
+    }
+
+    auto get_buffer_stream(frontend::BufferStreamId /* stream */) const
+        -> std::shared_ptr<frontend::BufferStream> override
+    {
+        return nullptr;
+    }
+
+    void destroy_buffer_stream(frontend::BufferStreamId /* stream */) override
+    {
+    }
+
+    void configure_streams(
+        scene::Surface& /* surface */,
+        std::vector<shell::StreamSpecification> const& /* config */) override
+    {
     }
 };
 

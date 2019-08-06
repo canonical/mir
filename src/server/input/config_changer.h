@@ -51,13 +51,13 @@ public:
                   std::shared_ptr<InputDeviceHub> const& devices_wrapper);
     ~ConfigChanger();
     MirInputConfig base_configuration() override;
-    void configure(std::shared_ptr<frontend::Session> const&, MirInputConfig &&) override;
+    void configure(std::shared_ptr<scene::Session> const&, MirInputConfig &&) override;
     void set_base_configuration(MirInputConfig &&) override;
 
     void devices_updated(std::vector<std::shared_ptr<Device>> const& added, std::vector<MirInputDeviceId> const& removed);
 private:
     void apply_config(MirInputConfig const& config);
-    void apply_config_at_session(MirInputConfig const& config, std::shared_ptr<frontend::Session> const& session);
+    void apply_config_at_session(MirInputConfig const& config, std::shared_ptr<scene::Session> const& session);
     void apply_base_config();
     void send_base_config_to_all_sessions();
     void focus_change_handler(std::shared_ptr<scene::Session> const& session);
@@ -74,10 +74,10 @@ private:
     std::unique_ptr<SessionObserver> const session_observer;
     bool base_configuration_applied;
 
-    std::weak_ptr<frontend::Session> focused_session;
+    std::weak_ptr<scene::Session> focused_session;
     MirInputConfig base;
     std::mutex config_mutex;
-    std::map<std::weak_ptr<frontend::Session>, MirInputConfig, std::owner_less<std::weak_ptr<frontend::Session>>> config_map;
+    std::map<std::weak_ptr<scene::Session>, MirInputConfig, std::owner_less<std::weak_ptr<scene::Session>>> config_map;
 };
 
 }

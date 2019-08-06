@@ -28,17 +28,17 @@ ms::ApplicationNotRespondingDetectorWrapper::ApplicationNotRespondingDetectorWra
 
 ms::ApplicationNotRespondingDetectorWrapper::~ApplicationNotRespondingDetectorWrapper() = default;
 
-void ms::ApplicationNotRespondingDetectorWrapper::register_session(frontend::Session const* session, std::function<void()> const& pinger)
+void ms::ApplicationNotRespondingDetectorWrapper::register_session(scene::Session const* session, std::function<void()> const& pinger)
 {
     wrapped->register_session(session, pinger);
 }
 
-void ms::ApplicationNotRespondingDetectorWrapper::unregister_session(frontend::Session const* session)
+void ms::ApplicationNotRespondingDetectorWrapper::unregister_session(scene::Session const* session)
 {
     wrapped->unregister_session(session);
 }
 
-void ms::ApplicationNotRespondingDetectorWrapper::pong_received(frontend::Session const* received_for)
+void ms::ApplicationNotRespondingDetectorWrapper::pong_received(scene::Session const* received_for)
 {
     wrapped->pong_received(received_for);
 }

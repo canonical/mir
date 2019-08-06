@@ -23,6 +23,7 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace ms = mir::scene;
 
 namespace
 {
@@ -60,7 +61,7 @@ std::shared_ptr<mg::DisplayConfiguration> mf::AuthorizingDisplayChanger::base_co
 }
 
 void mf::AuthorizingDisplayChanger::configure(
-    std::shared_ptr<mf::Session> const& session,
+    std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& config)
 {
     if (configure_display_is_allowed)
@@ -70,7 +71,7 @@ void mf::AuthorizingDisplayChanger::configure(
 }
 
 void mf::AuthorizingDisplayChanger::remove_session_configuration(
-    std::shared_ptr<mf::Session> const& session)
+    std::shared_ptr<ms::Session> const& session)
 {
     if (configure_display_is_allowed)
         changer->remove_session_configuration(session);
@@ -88,7 +89,7 @@ void mf::AuthorizingDisplayChanger::set_base_configuration(
 }
 
 void mf::AuthorizingDisplayChanger::preview_base_configuration(
-    std::weak_ptr<Session> const& session,
+    std::weak_ptr<ms::Session> const& session,
     std::shared_ptr<graphics::DisplayConfiguration> const& config,
     std::chrono::seconds timeout)
 {
@@ -103,7 +104,7 @@ void mf::AuthorizingDisplayChanger::preview_base_configuration(
 }
 
 void mf::AuthorizingDisplayChanger::confirm_base_configuration(
-    std::shared_ptr<Session> const& session,
+    std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<graphics::DisplayConfiguration> const& config)
 {
     if (set_base_configuration_is_allowed)
@@ -117,7 +118,7 @@ void mf::AuthorizingDisplayChanger::confirm_base_configuration(
 }
 
 void
-mir::frontend::AuthorizingDisplayChanger::cancel_base_configuration_preview(std::shared_ptr<mir::frontend::Session> const& session)
+mf::AuthorizingDisplayChanger::cancel_base_configuration_preview(std::shared_ptr<ms::Session> const& session)
 {
     // There's no particular reason to require authorisation here - it only takes effect if the client
     // has already been authorised to change configuration.

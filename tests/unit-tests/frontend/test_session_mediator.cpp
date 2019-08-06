@@ -52,7 +52,7 @@
 #include "mir/test/doubles/mock_screencast.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/mock_buffer.h"
-#include "mir/test/doubles/stub_session.h"
+#include "tests/include/mir/test/doubles/stub_session.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/null_screencast.h"

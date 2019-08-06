@@ -23,6 +23,7 @@
 #include <mir/main_loop.h>
 #include <mir/server.h>
 #include <mir/scene/session.h>
+#include <mir/frontend/session.h>
 #include <mir/raii.h>
 
 #define MIR_LOG_COMPONENT "miral::Internal Client"
@@ -126,7 +127,7 @@ void MirInternalClientRunner<Base>::run(mir::Server& server)
     fd = server.open_client_socket([this](std::shared_ptr<mir::frontend::Session> const& mf_session)
         {
             std::lock_guard<decltype(mutex)> lock_guard{mutex};
-            session = std::dynamic_pointer_cast<mir::scene::Session>(mf_session);
+            session = mf_session;
             connect_notification(session);
             cv.notify_one();
         });

@@ -17,10 +17,11 @@
  */
 
 #include "frontend_shell.h"
+#include "mir/frontend/session.h"
+
 #include "mir/shell/persistent_surface_store.h"
 #include "mir/shell/shell.h"
 
-#include "mir/scene/session.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/prompt_session.h"
@@ -36,7 +37,8 @@ std::shared_ptr<mf::Session> msh::FrontendShell::open_session(
     std::string const& name,
     std::shared_ptr<mf::EventSink> const& sink)
 {
-    return wrapped->open_session(client_pid, name, sink);
+    auto shell_session = wrapped->open_session(client_pid, name, sink);
+    return std::dynamic_pointer_cast<frontend::Session>(shell_session);
 }
 
 void msh::FrontendShell::close_session(std::shared_ptr<mf::Session> const& session)
