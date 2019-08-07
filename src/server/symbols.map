@@ -366,12 +366,10 @@ MIR_SERVER_0.31 {
     mir::shell::SurfaceInfo::can_be_active*;
     mir::shell::SurfaceInfo::can_morph_to*;
     mir::shell::SurfaceInfo::constrain_resize*;
-    mir::shell::SurfaceInfo::init_titlebar*;
     mir::shell::SurfaceInfo::is_visible*;
     mir::shell::SurfaceInfo::must_have_parent*;
     mir::shell::SurfaceInfo::must_not_have_parent*;
     mir::shell::SurfaceInfo::needs_titlebar*;
-    mir::shell::SurfaceInfo::paint_titlebar*;
     mir::shell::SurfaceInfo::SurfaceInfo*;
     mir::shell::SurfaceReadyObserver::frame_posted*;
     mir::shell::SurfaceReadyObserver::?SurfaceReadyObserver*;

@@ -22,13 +22,8 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 
-#include "mir/graphics/buffer.h"
-#include "mir/renderer/sw/pixel_source.h"
-#include "mir/graphics/graphic_buffer_allocator.h"
-
 #include <atomic>
 
-namespace mrs = mir::renderer::software;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
@@ -159,61 +154,6 @@ bool msh::SurfaceInfo::is_visible() const
         break;
     }
     return true;
-}
-
-struct msh::SurfaceInfo::StreamPainter
-{
-    virtual void paint(int) = 0;
-    virtual ~StreamPainter() = default;
-    StreamPainter() = default;
-    StreamPainter(StreamPainter const&) = delete;
-    StreamPainter& operator=(StreamPainter const&) = delete;
-};
-
-struct msh::SurfaceInfo::AllocatingPainter
-    : msh::SurfaceInfo::StreamPainter
-{
-    AllocatingPainter(
-        std::shared_ptr<frontend::BufferStream> const& buffer_stream,
-        mg::GraphicBufferAllocator& allocator,
-        Size size) :
-        buffer_stream(buffer_stream),
-        front_buffer{allocator.alloc_software_buffer(size, buffer_stream->pixel_format())},
-        back_buffer{allocator.alloc_software_buffer(size, buffer_stream->pixel_format())}
-    {
-    }
-
-    void paint(int intensity) override
-    {
-        auto const format = back_buffer->pixel_format();
-        auto const sz = back_buffer->size().height.as_int() *
-            back_buffer->size().width.as_int() * MIR_BYTES_PER_PIXEL(format);
-        std::vector<unsigned char> pixels(sz, intensity);
-        if (auto pixel_source = dynamic_cast<mrs::PixelSource*>(back_buffer->native_buffer_base()))
-            pixel_source->write(pixels.data(), sz);
-        buffer_stream->submit_buffer(back_buffer);
-
-        std::swap(front_buffer, back_buffer);
-    }
-
-    std::shared_ptr<frontend::BufferStream> const buffer_stream;
-    std::shared_ptr<scene::Session> const session;
-    mg::BufferProperties properties;
-    std::shared_ptr<mg::Buffer> front_buffer;
-    std::shared_ptr<mg::Buffer> back_buffer;
-};
-
-void msh::SurfaceInfo::init_titlebar(
-    mg::GraphicBufferAllocator& allocator,
-    std::shared_ptr<scene::Surface> const& surface)
-{
-    auto stream = surface->primary_buffer_stream();
-    stream_painter = std::make_shared<AllocatingPainter>(stream, allocator, surface->size());
-}
-
-void msh::SurfaceInfo::paint_titlebar(int intensity)
-{
-    stream_painter->paint(intensity);
 }
 
 void msh::SurfaceInfo::constrain_resize(

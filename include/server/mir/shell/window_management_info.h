@@ -28,10 +28,6 @@
 namespace mir
 {
 namespace scene { class Session; class Surface; struct SurfaceCreationParameters; }
-namespace graphics
-{
-class GraphicBufferAllocator;
-}
 namespace shell
 {
 struct SurfaceInfo
@@ -81,17 +77,6 @@ struct SurfaceInfo
     mir::optional_value<shell::SurfaceAspectRatio> max_aspect;
     mir::optional_value<graphics::DisplayConfigurationOutputId> output_id;
     mir::optional_value<MirPointerConfinementState> confine_pointer;
-
-    void init_titlebar(graphics::GraphicBufferAllocator& allocator, std::shared_ptr<scene::Surface> const& surface);
-    void paint_titlebar(int intensity);
-
-private:
-
-    struct StreamPainter;
-    struct AllocatingPainter;
-    struct SwappingPainter;
-
-    std::shared_ptr <StreamPainter> stream_painter;
 };
 
 struct SessionInfo
