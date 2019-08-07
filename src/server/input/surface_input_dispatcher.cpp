@@ -152,8 +152,8 @@ mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> co
       started(false)
 {
     scene_observer = std::make_shared<InputDispatcherSceneObserver>(
-        [this](auto const& s) { surface_removed(s); },
-        [this](auto const& s) { surface_moved(s); },
+        [this](std::shared_ptr<ms::Surface> const& s) { surface_removed(s); },
+        [this](scene::Surface const* s) { surface_moved(s); },
         [this] { surface_resized(); });
     scene->add_observer(scene_observer);
 }
