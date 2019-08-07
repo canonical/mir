@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -x
+
 while [ $# -gt 0 ]
 do
   if [ "$1" == "--help" -o "$1" == "-h" ]
@@ -33,17 +35,15 @@ else
   sdl_videodriver=wayland
 fi
 
-if [ -e "${XDG_RUNTIME_DIR}/miral_wayland" ];
+if [ -v WAYLAND_DISPLAY ]
 then
-  wayland_socket=miral_wayland
-elif [ -e "${XDG_RUNTIME_DIR}/wayland-1" ]
-then
-  wayland_socket=wayland-1
-elif [ -e "${XDG_RUNTIME_DIR}/wayland-0" ]
-then
-  wayland_socket=wayland-0
+  wayland_display=${WAYLAND_DISPLAY}
 else
-  echo "Error: Cannot detect Mir-Wayland endpoint"; exit 1
+  port=0
+  while [ -e "${XDG_RUNTIME_DIR}/wayland-${port}" ]; do
+    wayland_display=wayland-${port}
+    let port+=1
+  done
 fi
 
 if [ "$1" = "gnome-terminal" ]
@@ -54,8 +54,8 @@ unset QT_QPA_PLATFORMTHEME
 
 if [ "$1" = "gdb" ]
 then
-  MIR_SOCKET=${mir_socket} WAYLAND_DISPLAY=${wayland_socket} XDG_SESSION_TYPE=mir GDK_BACKEND=${gdk_backend} QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=${sdl_videodriver} NO_AT_BRIDGE=1 "$@" ${extras}
+  MIR_SOCKET=${mir_socket} WAYLAND_DISPLAY=${wayland_display} XDG_SESSION_TYPE=mir GDK_BACKEND=${gdk_backend} QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=${sdl_videodriver} NO_AT_BRIDGE=1 "$@" ${extras}
 else
-  MIR_SOCKET=${mir_socket} WAYLAND_DISPLAY=${wayland_socket} XDG_SESSION_TYPE=mir GDK_BACKEND=${gdk_backend} QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=${sdl_videodriver} NO_AT_BRIDGE=1 "$@" ${extras}&
+  MIR_SOCKET=${mir_socket} WAYLAND_DISPLAY=${wayland_display} XDG_SESSION_TYPE=mir GDK_BACKEND=${gdk_backend} QT_QPA_PLATFORM=${qt_qpa} SDL_VIDEODRIVER=${sdl_videodriver} NO_AT_BRIDGE=1 "$@" ${extras}&
 fi
 

@@ -60,17 +60,12 @@ then
   if [ -v WAYLAND_DISPLAY ]
   then
     wayland_display=${WAYLAND_DISPLAY}
-  elif [ -e "${XDG_RUNTIME_DIR}/miral_wayland" ];
-  then
-    wayland_display=miral_wayland
-  elif [ -e "${XDG_RUNTIME_DIR}/wayland-1" ]
-  then
-    wayland_display=wayland-1
-  elif [ -e "${XDG_RUNTIME_DIR}/wayland-0" ]
-  then
-    wayland_display=wayland-0
   else
-    echo "Error: Cannot detect Mir-Wayland endpoint"; exit 1
+    port=0
+    while [ -e "${XDG_RUNTIME_DIR}/wayland-${port}" ]; do
+      wayland_display=wayland-${port}
+      let port+=1
+    done
   fi
   x11_server_args=
 fi
