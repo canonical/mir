@@ -28,7 +28,12 @@ then
 fi
 
 socket=${XDG_RUNTIME_DIR}/miral_socket
-wayland_display=miral_wayland
+
+port=0
+while [ -e "${XDG_RUNTIME_DIR}/wayland-${port}" ]; do
+    let port+=1
+done
+wayland_display=wayland-${port}
 
 while [ $# -gt 0 ]
 do

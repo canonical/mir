@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 
 socket=${XDG_RUNTIME_DIR}/miral_socket
-wayland_display=miral_wayland
+port=0
+while [ -e "${XDG_RUNTIME_DIR}/wayland-${port}" ]; do
+    let port+=1
+done
+wayland_display=wayland-${port}
 miral_server=miral-shell
 launcher=qterminal
 bindir=$(dirname $0)
