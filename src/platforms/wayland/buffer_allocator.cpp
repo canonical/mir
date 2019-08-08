@@ -83,14 +83,14 @@ std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_buffer(
 
 std::shared_ptr<mg::Buffer> mgw::BufferAllocator::alloc_software_buffer(geom::Size size, MirPixelFormat format)
 {
-    class SoftwareBuffer: public common::ShmBuffer
+    class SoftwareBuffer: public common::FileBackedShmBuffer
     {
     public:
         SoftwareBuffer(
             std::unique_ptr<ShmFile> shm_file,
             geometry::Size const& size,
             MirPixelFormat const& pixel_format) :
-            ShmBuffer(std::move(shm_file), size, pixel_format)
+            FileBackedShmBuffer(std::move(shm_file), size, pixel_format)
         {
         }
 

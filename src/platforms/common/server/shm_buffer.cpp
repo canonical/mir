@@ -93,13 +93,20 @@ bool mgc::ShmBuffer::supports(MirPixelFormat mir_format)
 }
 
 mgc::ShmBuffer::ShmBuffer(
+    geom::Size const& size,
+    MirPixelFormat const& format)
+    : size_{size},
+      pixel_format_{format}
+{
+}
+
+mgc::FileBackedShmBuffer::FileBackedShmBuffer(
     std::unique_ptr<ShmFile> shm_file,
     geom::Size const& size,
     MirPixelFormat const& pixel_format)
-    : shm_file{std::move(shm_file)},
-      size_{size},
-      pixel_format_{pixel_format},
-      stride_{MIR_BYTES_PER_PIXEL(pixel_format_) * size_.width.as_uint32_t()},
+    : ShmBuffer(size, pixel_format),
+      shm_file{std::move(shm_file)},
+      stride_{MIR_BYTES_PER_PIXEL(pixel_format) * size.width.as_uint32_t()},
       pixels{this->shm_file->base_ptr()}
 {
 }
@@ -117,7 +124,7 @@ geom::Size mgc::ShmBuffer::size() const
     return size_;
 }
 
-geom::Stride mgc::ShmBuffer::stride() const
+geom::Stride mgc::FileBackedShmBuffer::stride() const
 {
     return stride_;
 }
@@ -127,7 +134,28 @@ MirPixelFormat mgc::ShmBuffer::pixel_format() const
     return pixel_format_;
 }
 
-std::shared_ptr<MirBufferPackage> mgc::ShmBuffer::to_mir_buffer_package() const
+void mgc::ShmBuffer::upload_to_texture(void const* pixels)
+{
+    GLenum format, type;
+
+    if (mg::get_gl_pixel_format(pixel_format_, format, type))
+    {
+        /*
+         * All existing Mir logic assumes that strides are whole multiples of
+         * pixels. And OpenGL defaults to expecting strides are multiples of
+         * 4 bytes. These assumptions used to be compatible when we only had
+         * 4-byte pixels but now we support 2/3-byte pixels we need to be more
+         * careful...
+         */
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, format,
+                     size_.width.as_int(), size_.height.as_int(),
+                     0, format, type, pixels);
+    }
+}
+
+std::shared_ptr<MirBufferPackage> mgc::FileBackedShmBuffer::to_mir_buffer_package() const
 {
     auto native_buffer = std::make_shared<MirNativeBuffer>();
 
@@ -143,14 +171,14 @@ std::shared_ptr<MirBufferPackage> mgc::ShmBuffer::to_mir_buffer_package() const
     return native_buffer;
 }
 
-void mgc::ShmBuffer::write(unsigned char const* data, size_t data_size)
+void mgc::FileBackedShmBuffer::write(unsigned char const* data, size_t data_size)
 {
     if (data_size != stride_.as_uint32_t()*size().height.as_uint32_t())
         BOOST_THROW_EXCEPTION(std::logic_error("Size is not equal to number of pixels in buffer"));
     memcpy(pixels, data, data_size);
 }
 
-void mgc::ShmBuffer::read(std::function<void(unsigned char const*)> const& do_with_pixels)
+void mgc::FileBackedShmBuffer::read(std::function<void(unsigned char const*)> const& do_with_pixels)
 {
     do_with_pixels(static_cast<unsigned char const*>(pixels));
 }
@@ -175,25 +203,13 @@ void mgc::ShmBuffer::bind()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        GLenum format, type;
-
-        if (mg::get_gl_pixel_format(pixel_format_, format, type))
-        {
-            /*
-             * All existing Mir logic assumes that strides are whole multiples of
-             * pixels. And OpenGL defaults to expecting strides are multiples of
-             * 4 bytes. These assumptions used to be compatible when we only had
-             * 4-byte pixels but now we support 2/3-byte pixels we need to be more
-             * careful...
-             */
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-            glTexImage2D(GL_TEXTURE_2D, 0, format,
-                         size_.width.as_int(), size_.height.as_int(),
-                         0, format, type, pixels);
-        }
     }
+}
+
+void mgc::FileBackedShmBuffer::bind()
+{
+    mgc::ShmBuffer::bind();
+    upload_to_texture(pixels);
 }
 
 mg::gl::Program const& mgc::ShmBuffer::shader(mg::gl::ProgramFactory& cache) const

@@ -44,13 +44,12 @@ struct StubShmFile : public mir::ShmFile
     int const fake_fd = 17;
 };
 
-struct PlatformlessShmBuffer : mgc::ShmBuffer
+struct PlatformlessShmBuffer : mgc::FileBackedShmBuffer
 {
     PlatformlessShmBuffer(
         std::unique_ptr<mir::ShmFile> shm_file,
         geom::Size const& size,
-        MirPixelFormat const& pixel_format) :
-        ShmBuffer(std::move(shm_file), size, pixel_format)
+        MirPixelFormat const& pixel_format) : FileBackedShmBuffer(std::move(shm_file), size, pixel_format)
     {
     }
 

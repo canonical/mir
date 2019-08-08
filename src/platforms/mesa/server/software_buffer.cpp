@@ -28,8 +28,7 @@ namespace geom = mir::geometry;
 mgm::SoftwareBuffer::SoftwareBuffer(
     std::unique_ptr<mir::ShmFile> shm_file,
     geom::Size const& size,
-    MirPixelFormat const& pixel_format) :
-    ShmBuffer(std::move(shm_file), size, pixel_format),
+    MirPixelFormat const& pixel_format) : FileBackedShmBuffer(std::move(shm_file), size, pixel_format),
     native_buffer(create_native_buffer())
 {
 }

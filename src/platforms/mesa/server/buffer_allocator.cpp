@@ -322,7 +322,7 @@ std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_buffer(
 std::shared_ptr<mg::Buffer> mgm::BufferAllocator::alloc_software_buffer(
     geom::Size size, MirPixelFormat format)
 {
-    if (!mgc::ShmBuffer::supports(format))
+    if (!mgc::FileBackedShmBuffer::supports(format))
     {
         BOOST_THROW_EXCEPTION(
             std::runtime_error(

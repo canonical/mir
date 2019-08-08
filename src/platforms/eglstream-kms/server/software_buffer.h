@@ -30,7 +30,7 @@ namespace graphics
 namespace eglstream
 {
 
-class SoftwareBuffer: public common::ShmBuffer
+class SoftwareBuffer: public common::FileBackedShmBuffer
 {
 public:
     SoftwareBuffer(
