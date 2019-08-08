@@ -132,8 +132,8 @@ mf::WlShmBuffer::~WlShmBuffer()
     executor->spawn([wayland = wayland]()
         {
             std::lock_guard <std::mutex> lock{wayland->mutex};
-            if (wayland->buffer) {
-                wl_resource_queue_event(wayland->resource, WL_BUFFER_RELEASE);
+            if (wayland->resource) {
+                wl_resource_queue_event(wayland->resource.value(), WL_BUFFER_RELEASE);
             }
         });
 }
@@ -143,32 +143,43 @@ std::shared_ptr<mg::Buffer> mf::WlShmBuffer::mir_buffer_from_wl_buffer(
     std::shared_ptr<Executor> executor,
     std::function<void()> &&on_consumed)
 {
-    std::shared_ptr <WlShmBuffer> mir_buffer;
-    DestructionShim *shim;
+    DestructionShim* shim = nullptr;
 
-    if (auto notifier = wl_resource_get_destroy_listener(buffer, &on_buffer_destroyed)) {
+    if (auto notifier = wl_resource_get_destroy_listener(buffer, &on_buffer_destroyed))
+    {
         // We've already constructed a shim for this buffer, update it.
         shim = wl_container_of(notifier, shim, destruction_listener);
 
-        if (!shim->resources.lock()) {
-            /*
-             * We've seen this wl_buffer before, but all the WlShmBuffers associated with it
-             * have been destroyed.
-             *
-             * Recreate a new WlShmBuffer to track the new compositor lifetime.
-             */
-            mir_buffer = std::shared_ptr < WlShmBuffer > {new WlShmBuffer{buffer, executor, std::move(on_consumed)}};
-            shim->resources = mir_buffer->wayland;
+        if (auto mir_buffer = shim->mir_buffer.lock())
+        {
+            // There's already a Mir buffer for this wl_buffer
+            // Add the new on_consumed, and we're ready to go
+            mir_buffer->on_consumed = [a = mir_buffer->on_consumed, b = on_consumed]()
+                {
+                    a();
+                    b();
+                };
+            return mir_buffer;
         }
-    } else {
-        mir_buffer = std::shared_ptr < WlShmBuffer > {new WlShmBuffer{buffer, executor, std::move(on_consumed)}};
-        shim = new DestructionShim;
-        shim->destruction_listener.notify = &on_buffer_destroyed;
-        shim->resources = mir_buffer->wayland;
+        else if (auto resources = shim->resources.lock())
+        {
+            // There's not a Mir buffer, but there used to be
+            // The resources are still alive, which means the destructor's spawn() is still inflight
+            // We null out the resources so it will not destroy them when it runs
 
-        wl_resource_add_destroy_listener(buffer, &shim->destruction_listener);
+            std::lock_guard <std::mutex> lock{resources->mutex}; // possibly not necessary, but can't hurt
+            resources->buffer = std::experimental::nullopt;
+            resources->resource = std::experimental::nullopt;
+        }
+    }
+    else
+    {
+        shim = new DestructionShim{buffer};
     }
 
+    auto mir_buffer = std::make_shared<WlShmBuffer>(buffer, executor, std::move(on_consumed));
+    shim->mir_buffer = mir_buffer;
+    shim->resources = mir_buffer->wayland;
     return mir_buffer;
 }
 
@@ -270,6 +281,12 @@ mf::WlShmBuffer::WaylandResources::WaylandResources(wl_resource *resource)
 {
 }
 
+mf::WlShmBuffer::DestructionShim::DestructionShim(wl_resource* buffer_resource)
+    : destruction_listener{{nullptr, nullptr}, &on_buffer_destroyed}
+{
+    wl_resource_add_destroy_listener(buffer_resource, &destruction_listener);
+}
+
 mf::WlShmBuffer::WlShmBuffer(
     wl_resource *buffer,
     std::shared_ptr<Executor> executor,
@@ -288,7 +305,7 @@ mf::WlShmBuffer::WlShmBuffer(
 {
     if (stride_.as_int() < size_.width.as_int() * MIR_BYTES_PER_PIXEL(format_)) {
         wl_resource_post_error(
-            wayland->resource,
+            wayland->resource.value(),
             WL_SHM_ERROR_INVALID_STRIDE,
             "Stride (%u) is less than width × bytes per pixel (%u×%u). "
                 "Did you accidentally specify stride in pixels?",
@@ -317,6 +334,7 @@ void mf::WlShmBuffer::on_buffer_destroyed(wl_listener *listener, void *)
         {
             std::lock_guard <std::mutex> lock{resources->mutex};
             resources->buffer = std::experimental::nullopt;
+            resources->resource = std::experimental::nullopt;
         }
     }
 

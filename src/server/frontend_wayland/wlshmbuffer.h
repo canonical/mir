@@ -45,6 +45,10 @@ class WlShmBuffer :
     public renderer::software::PixelSource
 {
 public:
+    WlShmBuffer(
+        wl_resource *buffer,
+        std::shared_ptr<Executor>,
+        std::function<void()> &&on_consumed);
     ~WlShmBuffer();
 
     static std::shared_ptr <graphics::Buffer> mir_buffer_from_wl_buffer(
@@ -73,10 +77,8 @@ public:
     geometry::Stride stride() const override;
 
 private:
-    WlShmBuffer(
-        wl_resource *buffer,
-        std::shared_ptr<Executor>,
-        std::function<void()> &&on_consumed);
+    WlShmBuffer(WlShmBuffer const&) = delete;
+    WlShmBuffer& operator=(WlShmBuffer const&) = delete;
 
     static void on_buffer_destroyed(wl_listener *listener, void *);
 
@@ -85,13 +87,16 @@ private:
         WaylandResources(wl_resource *resource);
 
         std::mutex mutex;
-        wl_resource* const resource;
+        std::experimental::optional<wl_resource* const> resource;
         std::experimental::optional<wl_shm_buffer* const> buffer;
     };
 
     struct DestructionShim
     {
+        DestructionShim(wl_resource* buffer_resource);
+
         std::weak_ptr<WaylandResources> resources;
+        std::weak_ptr<WlShmBuffer> mir_buffer;
         wl_listener destruction_listener;
     };
 
