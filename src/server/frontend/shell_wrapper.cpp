@@ -34,6 +34,12 @@ void mf::ShellWrapper::close_session(std::shared_ptr<MirClientSession> const& se
     wrapped->close_session(session);
 }
 
+auto mf::ShellWrapper::scene_session_for(
+    std::shared_ptr<MirClientSession> const& session) -> std::shared_ptr<scene::Session>
+{
+    return wrapped->scene_session_for(session);
+}
+
 std::shared_ptr<mf::PromptSession> mf::ShellWrapper::start_prompt_session_for(
     std::shared_ptr<scene::Session> const& session,
     scene::PromptSessionCreationParameters const& params)

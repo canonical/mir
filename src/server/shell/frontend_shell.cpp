@@ -39,16 +39,29 @@ std::shared_ptr<mf::MirClientSession> msh::FrontendShell::open_session(
     std::string const& name,
     std::shared_ptr<mf::EventSink> const& sink)
 {
-    auto scene_session = wrapped->open_session(client_pid, name, sink);
-    auto mir_client_session = std::make_shared<mf::BasicMirClientSession>(scene_session);
-    open_sessions.insert(mir_client_session);
+    auto const scene_session = wrapped->open_session(client_pid, name, sink);
+    auto const mir_client_session = std::make_shared<mf::BasicMirClientSession>(scene_session);
+    open_sessions[mir_client_session] = scene_session;
     return mir_client_session;
 }
 
 void msh::FrontendShell::close_session(std::shared_ptr<mf::MirClientSession> const& session)
 {
+    auto const scene_session = scene_session_for(session);
     open_sessions.erase(session);
-    wrapped->close_session(session->session());
+    wrapped->close_session(scene_session);
+}
+
+auto msh::FrontendShell::scene_session_for(
+        std::shared_ptr<mf::MirClientSession> const& session) -> std::shared_ptr<scene::Session>
+{
+    auto const iter = open_sessions.find(session);
+    if (iter == open_sessions.end())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid session"));
+    auto const scene_session = iter->second.lock();
+    if (!scene_session)
+        BOOST_THROW_EXCEPTION(std::runtime_error("Scene session already deleted"));
+    return scene_session;
 }
 
 std::shared_ptr<mf::PromptSession> msh::FrontendShell::start_prompt_session_for(
@@ -88,33 +101,37 @@ mf::SurfaceId msh::FrontendShell::create_surface(
         BOOST_THROW_EXCEPTION(std::invalid_argument("Foreign parents may only be set on surfaces of type mir_window_type_inputmethod"));
     }
 
-    if (populated_params.parent_id.is_set())
-        populated_params.parent = session->session()->surface(populated_params.parent_id.value());
+    auto const scene_session = scene_session_for(session);
 
-    return wrapped->create_surface(session->session(), populated_params, sink);
+    if (populated_params.parent_id.is_set())
+        populated_params.parent = scene_session->surface(populated_params.parent_id.value());
+
+    return wrapped->create_surface(scene_session, populated_params, sink);
 }
 
 void msh::FrontendShell::modify_surface(std::shared_ptr<mf::MirClientSession> const& session, mf::SurfaceId surface_id, SurfaceSpecification const& modifications)
 {
-    auto const surface = session->session()->surface(surface_id);
+    auto const scene_session = scene_session_for(session);
+
+    auto const surface = scene_session->surface(surface_id);
 
     auto populated_modifications = modifications;
-
     if (populated_modifications.parent_id.is_set())
-        populated_modifications.parent = session->session()->surface(populated_modifications.parent_id.value());
+        populated_modifications.parent = scene_session->surface(populated_modifications.parent_id.value());
 
-    wrapped->modify_surface(session->session(), surface, populated_modifications);
+    wrapped->modify_surface(scene_session, surface, populated_modifications);
 }
 
 void msh::FrontendShell::destroy_surface(std::shared_ptr<mf::MirClientSession> const& session, mf::SurfaceId surface)
 {
-    wrapped->destroy_surface(session->session(), surface);
+    auto const scene_session = scene_session_for(session);
+    wrapped->destroy_surface(scene_session, surface);
 }
 
 std::string msh::FrontendShell::persistent_id_for(std::shared_ptr<mf::MirClientSession> const& session, mf::SurfaceId surface_id)
 {
-    auto const surface = session->session()->surface(surface_id);
-
+    auto const scene_session = scene_session_for(session);
+    auto const surface = scene_session->surface(surface_id);
     return surface_store->id_for_surface(surface).serialize_to_string();
 }
 
@@ -130,8 +147,9 @@ int msh::FrontendShell::set_surface_attribute(
     MirWindowAttrib attrib,
     int value)
 {
-    auto const surface = session->session()->surface(surface_id);
-    return wrapped->set_surface_attribute(session->session(), surface, attrib, value);
+    auto const scene_session = scene_session_for(session);
+    auto const surface = scene_session->surface(surface_id);
+    return wrapped->set_surface_attribute(scene_session, surface, attrib, value);
 }
 
 int msh::FrontendShell::get_surface_attribute(
@@ -139,7 +157,8 @@ int msh::FrontendShell::get_surface_attribute(
     mf::SurfaceId surface_id,
     MirWindowAttrib attrib)
 {
-    auto const surface = session->session()->surface(surface_id);
+    auto const scene_session = scene_session_for(session);
+    auto const surface = scene_session->surface(surface_id);
     return wrapped->get_surface_attribute(surface, attrib);
 }
 
@@ -150,7 +169,7 @@ void msh::FrontendShell::request_operation(
     UserRequest request,
     optional_value <uint32_t> hint)
 {
-    auto const scene_session = session->session();
+    auto const scene_session = scene_session_for(session);
     auto const surface = scene_session->surface(surface_id);
 
     switch (request)

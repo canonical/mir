@@ -252,14 +252,7 @@ void miral::WaylandExtensions::operator()(mir::Server& server) const
                 server.add_wayland_extension(hook.name, std::move(frig));
             }
 
-            auto wrapped_filter = [filter = self->extensions_filter](
-                std::shared_ptr<mir::frontend::MirClientSession> const& session,
-                char const* protocol) -> bool
-                {
-                    return filter(session->session(), protocol);
-                };
-
-            server.set_wayland_extension_filter(wrapped_filter);
+            server.set_wayland_extension_filter(self->extensions_filter);
 
             std::set<std::string> selected_extensions;
             if (server.get_options()->is_set(mo::wayland_extensions_opt))
@@ -323,12 +316,12 @@ auto miral::WaylandExtensions::disable(std::string name) -> WaylandExtensions&
 
 auto miral::application_for(wl_client* client) -> Application
 {
-    return mir::frontend::get_session(client)->session();
+    return mir::frontend::get_session(client);
 }
 
 auto miral::application_for(wl_resource* resource) -> Application
 {
-    return mir::frontend::get_session(resource)->session();
+    return mir::frontend::get_session(resource);
 }
 
 auto miral::window_for(wl_resource* surface) -> Window

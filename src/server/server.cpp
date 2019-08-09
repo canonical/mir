@@ -519,7 +519,7 @@ void mir::Server::add_wayland_extension(
 }
 
 void mir::Server::set_wayland_extension_filter(
-    std::function<bool(std::shared_ptr<frontend::MirClientSession> const&, char const*)> const& extension_filter)
+    std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter)
 {
     if (auto const config = self->server_config)
     {

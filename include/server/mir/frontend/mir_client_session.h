@@ -46,8 +46,6 @@ class MirClientSession
 public:
     virtual ~MirClientSession() = default;
 
-    virtual auto session() const -> std::shared_ptr<scene::Session> = 0;
-
     virtual auto name() const -> std::string = 0;
     virtual auto get_surface(SurfaceId surface) const -> std::shared_ptr<Surface> = 0;
 

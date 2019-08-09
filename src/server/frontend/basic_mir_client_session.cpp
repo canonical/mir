@@ -30,11 +30,6 @@ mf::BasicMirClientSession::BasicMirClientSession(std::shared_ptr<scene::Session>
 {
 }
 
-auto mf::BasicMirClientSession::session() const -> std::shared_ptr<scene::Session>
-{
-    return session_;
-}
-
 auto mf::BasicMirClientSession::name() const -> std::string
 {
     return session_->name();

@@ -40,8 +40,8 @@ struct MockShell : public frontend::Shell
         pid_t client_pid,
         std::string const&,
         std::shared_ptr<frontend::EventSink> const&));
-
     MOCK_METHOD1(close_session, void(std::shared_ptr<frontend::MirClientSession> const&));
+    MOCK_METHOD1(scene_session_for, std::shared_ptr<scene::Session>(std::shared_ptr<frontend::MirClientSession> const&));
 
     MOCK_METHOD2(start_prompt_session_for, std::shared_ptr<frontend::PromptSession>(
         std::shared_ptr<scene::Session> const&,

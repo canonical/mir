@@ -43,6 +43,7 @@ namespace frontend
 {
 class ConnectionCreator;
 class ConnectorReport;
+class MirClientSession;
 
 /// provides a client-side socket fd for each connection
 class BasicConnector : public Connector

@@ -174,7 +174,7 @@ void mf::PublishedSocketConnector::on_new_connection(
 {
     if (!ec)
     {
-        create_session_for(socket, [](std::shared_ptr<scene::Session> const&) {});
+        create_session_for(socket, [](auto) {});
     }
     else
     {
@@ -244,12 +244,7 @@ void mf::BasicConnector::create_session_for(
     if (setsockopt(server_socket->native_handle(), SOL_SOCKET, SO_PASSCRED, &optval, sizeof(optval)) == -1)
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to set SO_PASSCRED"));
 
-    auto wrapped_handler = [connect_handler](std::shared_ptr<MirClientSession> const& session)
-        {
-            connect_handler(session->session());
-        };
-
-    connection_creator->create_connection_for(server_socket, {wrapped_handler, this});
+    connection_creator->create_connection_for(server_socket, {connect_handler, this});
 }
 
 int mf::BasicConnector::client_socket_fd() const

@@ -206,7 +206,7 @@ void create_client_session(wl_listener* listener, void* data)
     client_context->destroy_listener.notify = &cleanup_private;
     wl_client_add_destroy_listener(client, &client_context->destroy_listener);
 
-    connection_handler(session->session());
+    connection_handler(construction_context->shell->scene_session_for(session));
 }
 
 void cleanup_client_handler(wl_listener* listener, void*)
@@ -628,6 +628,7 @@ mf::WaylandConnector::WaylandConnector(
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
       allocator{allocator_for_display(allocator, display.get(), executor)},
+      weak_shell{shell},
       extensions{std::move(extensions_)},
       extension_filter{extension_filter}
 {
@@ -852,6 +853,9 @@ bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client
 {
 #ifndef MIR_NO_WAYLAND_FILTER
     auto const* const interface = wl_global_get_interface(global);
+    auto const shell = weak_shell.lock();
+    if (!shell)
+        BOOST_THROW_EXCEPTION(std::logic_error("Invalid shell"));
     auto const session = get_session(const_cast<wl_client*>(client));
     return extension_filter(session, interface->name);
 #else
@@ -860,7 +864,7 @@ bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client
 #endif
 }
 
-auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<MirClientSession>
+auto mir::frontend::get_mir_client_session(wl_client* client) -> std::shared_ptr<MirClientSession>
 {
     auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
 
@@ -870,7 +874,20 @@ auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<MirClientS
     return {};
 }
 
-auto mir::frontend::get_session(wl_resource* surface) -> std::shared_ptr<MirClientSession>
+auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<scene::Session>
+{
+    auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
+
+    if (listener)
+    {
+        auto client_private = private_from_listener(listener);
+        return client_private->shell->scene_session_for(client_private->session);
+    }
+
+    return {};
+}
+
+auto mir::frontend::get_session(wl_resource* surface) -> std::shared_ptr<scene::Session>
 {
     return get_session(wl_resource_get_client(surface));
 }
@@ -884,7 +901,7 @@ auto mir::frontend::get_wl_shell_window(wl_resource* surface) -> std::shared_ptr
         auto const id = wlsurface->surface_id();
         if (id.as_value())
         {
-            auto const session = get_session(wlsurface->client);
+            auto const session = get_mir_client_session(wlsurface->client);
             return session->get_surface(id);
         }
 

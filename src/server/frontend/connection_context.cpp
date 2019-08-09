@@ -23,7 +23,7 @@
 namespace mf = mir::frontend;
 
 mf::ConnectionContext::ConnectionContext(
-    std::function<void(std::shared_ptr<MirClientSession> const& session)> const connect_handler,
+    std::function<void(std::shared_ptr<scene::Session> const& session)> const connect_handler,
     Connector const* connector) :
     connect_handler(connect_handler),
     connector(connector)

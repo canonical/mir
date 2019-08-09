@@ -38,7 +38,10 @@ public:
         std::string const& name,
         std::shared_ptr<EventSink> const& sink) override;
 
-    void close_session(std::shared_ptr<MirClientSession> const& session)  override;
+    void close_session(std::shared_ptr<MirClientSession> const& session) override;
+
+    auto scene_session_for(
+        std::shared_ptr<MirClientSession> const& session) -> std::shared_ptr<scene::Session> override;
 
     std::shared_ptr<PromptSession> start_prompt_session_for(
         std::shared_ptr<scene::Session> const& session,

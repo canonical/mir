@@ -175,7 +175,8 @@ auto mf::LayerShellV1::get_window(wl_resource* surface) -> std::shared_ptr<Surfa
             auto const id = layer_surface.value()->surface_id();
             if (id.as_value())
             {
-                auto const session = get_session(static_cast<mw::LayerSurfaceV1*>(layer_surface.value())->client);
+                auto const session = get_mir_client_session(
+                    static_cast<mw::LayerSurfaceV1*>(layer_surface.value())->client);
                 return session->get_surface(id);
             }
         }

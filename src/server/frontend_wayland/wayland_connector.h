@@ -87,7 +87,7 @@ private:
 class WaylandConnector : public Connector
 {
 public:
-    using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<MirClientSession> const&, char const*)>;
+    using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<scene::Session> const&, char const*)>;
 
     WaylandConnector(
         optional_value<std::string> const& display_name,
@@ -131,6 +131,7 @@ private:
     std::unique_ptr<DataDeviceManager> data_device_manager_global;
     std::shared_ptr<Executor> const executor;
     std::shared_ptr<graphics::WaylandAllocator> const allocator;
+    std::weak_ptr<frontend::Shell> const weak_shell;
     std::unique_ptr<WaylandExtensions> const extensions;
     std::thread dispatch_thread;
     wl_event_source* pause_source;

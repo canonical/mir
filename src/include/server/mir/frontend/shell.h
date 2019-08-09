@@ -55,7 +55,10 @@ public:
         std::string const& name,
         std::shared_ptr<EventSink> const& sink) = 0;
 
-    virtual void close_session(std::shared_ptr<MirClientSession> const& session)  = 0;
+    virtual void close_session(std::shared_ptr<MirClientSession> const& session) = 0;
+
+    virtual auto scene_session_for(
+        std::shared_ptr<MirClientSession> const& session) -> std::shared_ptr<scene::Session> = 0;
 
     virtual auto start_prompt_session_for(
         std::shared_ptr<scene::Session> const& session,
@@ -69,7 +72,10 @@ public:
         std::shared_ptr<MirClientSession> const& session,
         scene::SurfaceCreationParameters const& params,
         std::shared_ptr<EventSink> const& sink) = 0;
-    virtual void modify_surface(std::shared_ptr<MirClientSession> const& session, SurfaceId surface, shell::SurfaceSpecification const& modifications) = 0;
+    virtual void modify_surface(
+        std::shared_ptr<MirClientSession> const& session,
+        SurfaceId surface,
+        shell::SurfaceSpecification const& modifications) = 0;
     virtual void destroy_surface(std::shared_ptr<MirClientSession> const& session, SurfaceId surface) = 0;
 
     virtual std::string persistent_id_for(std::shared_ptr<MirClientSession> const& session, SurfaceId surface) = 0;

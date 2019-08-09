@@ -52,6 +52,7 @@
 #include "mir/test/doubles/mock_screencast.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/mock_buffer.h"
+#include "mir/test/doubles/stub_session.h"
 #include "mir/test/doubles/stub_mir_client_session.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
@@ -119,7 +120,7 @@ public:
     MOCK_CONST_METHOD1(client_socket_fd, int (std::function<void(std::shared_ptr<ms::Session> const&)> const&));
 };
 
-class StubbedSession : public mtd::StubMirClientSession
+class StubbedMirClientSession : public mtd::StubMirClientSession
 {
 public:
     std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const override
@@ -297,7 +298,8 @@ struct SessionMediator : public ::testing::Test
           report{mr::null_session_mediator_report()},
           resource_cache{std::make_shared<mf::ResourceCache>()},
           stub_screencast{std::make_shared<StubScreencast>()},
-          stubbed_session{std::make_shared<NiceMock<StubbedSession>>()},
+          stub_scene_session{std::make_shared<mtd::StubSession>()},
+          stubbed_mir_client_session{std::make_shared<NiceMock<StubbedMirClientSession>>()},
           null_callback{google::protobuf::NewPermanentCallback(google::protobuf::DoNothing)},
           allocator{std::make_shared<RecordingBufferAllocator>()},
           mediator{
@@ -317,13 +319,15 @@ struct SessionMediator : public ::testing::Test
     {
         using namespace ::testing;
 
-        ON_CALL(*shell, open_session(_, _, _)).WillByDefault(Return(stubbed_session));
+        ON_CALL(*shell, open_session(_, _, _)).WillByDefault(Return(stubbed_mir_client_session));
+
+        ON_CALL(*shell, scene_session_for(_)).WillByDefault(Return(stub_scene_session));
 
         ON_CALL(*shell, create_surface( _, _, _)).WillByDefault(
-            WithArgs<1, 2>(Invoke(stubbed_session.get(), &StubbedSession::mock_create_surface)));
+            WithArgs<1, 2>(Invoke(stubbed_mir_client_session.get(), &StubbedMirClientSession::mock_create_surface)));
 
         ON_CALL(*shell, destroy_surface( _, _)).WillByDefault(
-            WithArg<1>(Invoke(stubbed_session.get(), &StubbedSession::mock_destroy_surface)));
+            WithArg<1>(Invoke(stubbed_mir_client_session.get(), &StubbedMirClientSession::mock_destroy_surface)));
 
         ON_CALL(mock_input_config_changer, base_configuration())
             .WillByDefault(Return(config));
@@ -478,7 +482,8 @@ struct SessionMediator : public ::testing::Test
     std::shared_ptr<mf::SessionMediatorObserver> const report;
     std::shared_ptr<mf::ResourceCache> const resource_cache;
     std::shared_ptr<StubScreencast> const stub_screencast;
-    std::shared_ptr<NiceMock<StubbedSession>> const stubbed_session;
+    std::shared_ptr<mtd::StubSession> const stub_scene_session;
+    std::shared_ptr<NiceMock<StubbedMirClientSession>> const stubbed_mir_client_session;
     std::unique_ptr<google::protobuf::Closure> null_callback;
     std::shared_ptr<RecordingBufferAllocator> const allocator;
     NiceMock<MockExecutor> executor;
@@ -513,7 +518,7 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
 
     mf::ConnectionContext const context
     {
-        [&](std::shared_ptr<mf::MirClientSession> const&) { ++connects_handled_count; },
+        [&](auto) { ++connects_handled_count; },
         nullptr
     };
 
@@ -940,7 +945,7 @@ TEST_F(SessionMediator, configures_swap_intervals_on_streams)
     auto interval = 0u;
     mtd::StubBuffer buffer;
 
-    auto stream = stubbed_session->mock_stream_at(stream_id);
+    auto stream = stubbed_mir_client_session->mock_stream_at(stream_id);
     EXPECT_CALL(*stream, allow_framedropping(true));
 
     mediator.connect(&connect_parameters, &connection, null_callback.get());
@@ -1023,7 +1028,7 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
 
     ON_CALL(*shell, create_surface( _, _, _))
         .WillByDefault(
-            Invoke([session = stubbed_session.get()](auto, auto params, auto sink)
+            Invoke([session = stubbed_mir_client_session.get()](auto, auto params, auto sink)
                    {
                        sink->send_ping(0xdeadbeef);
                        return session->mock_create_surface(params, sink);
@@ -1185,7 +1190,7 @@ TEST_F(SessionMediator, releases_buffers_of_unknown_buffer_stream_does_not_throw
 
     // Add a fake BufferStream...
     auto stream_id = mf::BufferStreamId{42};
-    auto stream = stubbed_session->create_mock_stream(stream_id);
+    auto stream = stubbed_mir_client_session->create_mock_stream(stream_id);
 
     // ...and allocate a buffer to it
     mp::BufferAllocation allocate_buffer;
@@ -1214,7 +1219,7 @@ TEST_F(SessionMediator, releases_buffers_of_unknown_buffer_stream_does_not_throw
 
     stream_to_release.set_value(stream_id.as_value());
 
-    EXPECT_CALL(*stubbed_session, destroy_buffer_stream(stream_id));
+    EXPECT_CALL(*stubbed_mir_client_session, destroy_buffer_stream(stream_id));
 
     mediator.release_buffer_stream(&stream_to_release, &null, null_callback.get());
     stream.reset();
@@ -1350,7 +1355,7 @@ TEST_F(SessionMediator, buffer_releases_are_sent_from_specified_executor)
 
     // Add a fake BufferStream...
     auto stream_id = mf::BufferStreamId{42};
-    auto stream = stubbed_session->create_mock_stream(stream_id);
+    auto stream = stubbed_mir_client_session->create_mock_stream(stream_id);
 
     // ...and allocate a buffer to it
     allocate_buffer.mutable_id()->set_value(42);
@@ -1565,7 +1570,7 @@ TEST_F(SessionMediator, release_buffer_stream_releases_associated_buffers)
 
     // Add a fake BufferStream...
     stream_id.set_value(42);
-    auto stream = stubbed_session->create_mock_stream(mf::BufferStreamId{stream_id.value()});
+    auto stream = stubbed_mir_client_session->create_mock_stream(mf::BufferStreamId{stream_id.value()});
 
     // ...and allocate some buffers to it
     *allocate_buffer.mutable_id() = stream_id;

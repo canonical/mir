@@ -36,9 +36,10 @@ struct wl_resource;
 
 namespace mir
 {
-    namespace scene
+namespace scene
 {
 struct SurfaceCreationParameters;
+class Surface;
 }
 namespace shell
 {

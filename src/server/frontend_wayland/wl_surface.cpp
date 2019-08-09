@@ -31,6 +31,7 @@
 
 #include "mir/graphics/buffer_properties.h"
 #include "mir/frontend/mir_client_session.h"
+#include "mir/frontend/wayland.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/executor.h"
 #include "mir/graphics/wayland_allocator.h"
@@ -80,7 +81,7 @@ mf::WlSurface::WlSurface(
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<graphics::WaylandAllocator> const& allocator)
     : Surface(new_resource, Version<4>()),
-        session{mf::get_session(client)},
+        session{mf::get_mir_client_session(client)},
         stream_id{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
         stream{session->get_buffer_stream(stream_id)},
         allocator{allocator},

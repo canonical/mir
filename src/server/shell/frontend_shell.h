@@ -21,7 +21,7 @@
 
 #include "mir/frontend/shell.h"
 
-#include <unordered_set>
+#include <unordered_map>
 
 namespace ms = mir::scene;
 namespace mf = mir::frontend;
@@ -38,10 +38,7 @@ namespace detail
 // Adapter class to translate types between frontend and shell
 struct FrontendShell : mf::Shell
 {
-    std::shared_ptr<shell::Shell> const wrapped;
-    std::unordered_set<std::shared_ptr<mf::MirClientSession>> open_sessions;
-    std::shared_ptr<shell::PersistentSurfaceStore> const surface_store;
-
+public:
     explicit FrontendShell(std::shared_ptr<shell::Shell> const& wrapped,
                            std::shared_ptr<shell::PersistentSurfaceStore> const& surface_store)
         : wrapped{wrapped},
@@ -55,6 +52,9 @@ struct FrontendShell : mf::Shell
         std::shared_ptr<mf::EventSink> const& sink) override;
 
     void close_session(std::shared_ptr<mf::MirClientSession> const& session) override;
+
+    auto scene_session_for(
+        std::shared_ptr<mf::MirClientSession> const& session) -> std::shared_ptr<scene::Session> override;
 
     auto start_prompt_session_for(
         std::shared_ptr<scene::Session> const& session,
@@ -96,6 +96,11 @@ struct FrontendShell : mf::Shell
         uint64_t timestamp,
         UserRequest request,
         optional_value <uint32_t> hint) override;
+
+private:
+    std::shared_ptr<shell::Shell> const wrapped;
+    std::unordered_map<std::shared_ptr<mf::MirClientSession>, std::weak_ptr<ms::Session>> open_sessions;
+    std::shared_ptr<shell::PersistentSurfaceStore> const surface_store;
 };
 }
 }

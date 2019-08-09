@@ -24,6 +24,7 @@
 #include "mir/executor.h"
 #include "mir/client/event.h"
 #include "mir/frontend/mir_client_session.h"
+#include "mir/frontend/wayland.h"
 #include "mir/frontend/surface.h"
 #include "mir/frontend/buffer_stream.h"
 #include "mir/geometry/displacement.h"
@@ -256,11 +257,11 @@ void mf::WlPointer::set_cursor(
         auto const cursor_stream = WlSurface::from(*surface)->stream;
         Displacement const cursor_hotspot{hotspot_x, hotspot_y};
 
-        cursor = std::make_unique<WlStreamCursor>(get_session(client), cursor_stream, cursor_hotspot);
+        cursor = std::make_unique<WlStreamCursor>(get_mir_client_session(client), cursor_stream, cursor_hotspot);
     }
     else
     {
-        cursor = std::make_unique<WlHiddenCursor>(get_session(client));
+        cursor = std::make_unique<WlHiddenCursor>(get_mir_client_session(client));
     }
 
     if (focused_surface)

@@ -30,11 +30,6 @@ namespace doubles
 
 struct StubMirClientSession : public frontend::MirClientSession
 {
-    auto session() const -> std::shared_ptr<scene::Session> override
-    {
-        return nullptr;
-    }
-
     auto name() const -> std::string override
     {
         return "";

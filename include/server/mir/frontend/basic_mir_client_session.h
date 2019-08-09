@@ -42,8 +42,6 @@ class BasicMirClientSession : public MirClientSession
 public:
     BasicMirClientSession(std::shared_ptr<scene::Session> session);
 
-    auto session() const -> std::shared_ptr<scene::Session> override;
-
     auto name() const -> std::string override;
     auto get_surface(SurfaceId surface) const -> std::shared_ptr<Surface> override;
 

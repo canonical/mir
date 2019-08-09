@@ -19,6 +19,7 @@
 #include "xdg_shell_stable.h"
 
 #include "wl_surface.h"
+#include "wayland_utils.h"
 
 #include "mir/frontend/mir_client_session.h"
 #include "mir/frontend/wayland.h"
@@ -693,7 +694,7 @@ auto mf::XdgShellStable::get_window(wl_resource* surface) -> std::shared_ptr<Sur
             auto const id = role.value()->surface_id();
             if (id.as_value())
             {
-                auto const session = get_session(xdgsurface->client);
+                auto const session = get_mir_client_session(xdgsurface->client);
                 return session->get_surface(id);
             }
         }

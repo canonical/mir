@@ -61,6 +61,7 @@ namespace scene
 {
 class CoordinateTranslator;
 class ApplicationNotRespondingDetector;
+class Session;
 }
 
 /// Frontend interface. Mediates the interaction between client
@@ -311,7 +312,8 @@ private:
 
     ScreencastBufferTracker screencast_buffer_tracker;
 
-    std::weak_ptr<MirClientSession> weak_session;
+    std::weak_ptr<MirClientSession> weak_mir_client_session;
+    std::weak_ptr<scene::Session> weak_scene_session;
     detail::PromptSessionStore prompt_sessions;
 
     std::map<frontend::SurfaceId, frontend::BufferStreamId> legacy_default_stream_map;

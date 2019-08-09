@@ -480,7 +480,7 @@ public:
             std::function<void(std::function<void()>&& work)> const&)> builder);
 
     void set_wayland_extension_filter(
-        std::function<bool(std::shared_ptr<frontend::MirClientSession> const&, char const*)> const& extension_filter);
+        std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& extension_filter);
 
     /// Get the name of the Mir endpoint (if any) usable as a $MIR_SERVER value
     auto mir_socket_name() const -> optional_value<std::string>;
