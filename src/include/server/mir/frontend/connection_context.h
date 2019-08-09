@@ -24,26 +24,31 @@
 
 namespace mir
 {
+namespace scene
+{
+class Session;
+}
 namespace frontend
 {
 class Connector;
-class Session;
+class MirClientSession;
 
+/// \deprecated: It is only used for the mirclient API
 class ConnectionContext
 {
 public:
     ConnectionContext(Connector const* connector) :
-        ConnectionContext([](std::shared_ptr<Session> const&){}, connector) {}
+        ConnectionContext([](std::shared_ptr<MirClientSession> const&){}, connector) {}
     ConnectionContext(
-        std::function<void(std::shared_ptr<Session> const& session)> const connect_handler,
+        std::function<void(std::shared_ptr<MirClientSession> const& session)> const connect_handler,
         Connector const* connector);
 
-    int fd_for_new_client(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const;
+    int fd_for_new_client(std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const;
 
-    void handle_client_connect(std::shared_ptr<Session> const& session) const { connect_handler(session); }
+    void handle_client_connect(std::shared_ptr<MirClientSession> const& session) const { connect_handler(session); }
 
 private:
-    std::function<void(std::shared_ptr<Session> const& session)> const connect_handler;
+    std::function<void(std::shared_ptr<MirClientSession> const& session)> const connect_handler;
     Connector const* const connector;
 };
 }

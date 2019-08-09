@@ -933,3 +933,11 @@ MIR_SERVER_DETAIL_FOR_TESTING_1.4 {
     mir::run_mir*;
   };
 } MIR_SERVER_0.1.4;
+
+MIR_SERVER_0.1.5 {
+ global:
+  extern "C++" {
+    non-virtual?thunk?to?mir::scene::NullSurfaceObserver::depth_layer_set_to*;
+    mir::frontend::MirClientSession::*
+  };
+} MIR_SERVER_0.1.4;

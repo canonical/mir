@@ -18,7 +18,6 @@
 
 #include "mir/default_server_configuration.h"
 #include "mir/frontend/wayland.h"
-#include "mir/frontend/session.h"
 
 #include "wayland_connector.h"
 #include "xdg_shell_v6.h"
@@ -35,6 +34,7 @@
 #include "mir/scene/session.h"
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace mo = mir::options;
 namespace mw = mir::wayland;
 
@@ -155,7 +155,7 @@ std::shared_ptr<mf::Connector>
                 the_frontend_display_changer(),
                 the_display_configuration_observer_registrar());
 
-            auto wayland_filter = [this](std::shared_ptr<frontend::Session> const& session, char const* protocol)
+            auto wayland_filter = [this](std::shared_ptr<mf::MirClientSession> const& session, char const* protocol)
                 {
                     return wayland_extension_filter(session, protocol);
                 };

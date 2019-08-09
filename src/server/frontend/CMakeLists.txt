@@ -33,6 +33,7 @@ set(
   screencast_buffer_tracker.cpp
   session_mediator_observer_multiplexer.cpp
   session_mediator_observer_multiplexer.h
+  basic_mir_client_session.cpp
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/shell.h
   ${PROJECT_SOURCE_DIR}/include/server/mir/frontend/buffer_stream.h
 )

@@ -19,7 +19,7 @@
 #ifndef MIR_SCENE_APPLICATION_SESSION_H_
 #define MIR_SCENE_APPLICATION_SESSION_H_
 
-#include "mir/frontend/session.h"
+#include "mir/scene/session.h"
 
 #include "output_properties_cache.h"
 
@@ -51,7 +51,7 @@ class BufferStreamFactory;
 class SurfaceFactory;
 
 class ApplicationSession
-    : public frontend::Session
+    : public Session
 {
 public:
     ApplicationSession(
@@ -72,7 +72,6 @@ public:
         SurfaceCreationParameters const& params,
         std::shared_ptr<frontend::EventSink> const& surface_sink) override;
     void destroy_surface(frontend::SurfaceId surface) override;
-    std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId surface) const override;
     std::shared_ptr<Surface> surface(frontend::SurfaceId surface) const override;
     std::shared_ptr<Surface> surface_after(std::shared_ptr<Surface> const&) const override;
 

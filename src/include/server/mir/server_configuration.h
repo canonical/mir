@@ -38,6 +38,7 @@ namespace frontend
 {
 class Connector;
 class Shell;
+class MirClientSession;
 }
 namespace shell
 {
@@ -59,7 +60,6 @@ class EventFilter;
 namespace scene
 {
 class ApplicationNotRespondingDetector;
-class Session;
 }
 
 class MainLoop;
@@ -95,7 +95,7 @@ public:
             wl_display*,
             std::function<void(std::function<void()>&& work)> const&)> builder) = 0;
 
-    using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<scene::Session> const&, char const*)>;
+    using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<frontend::MirClientSession> const&, char const*)>;
     virtual void set_wayland_extension_filter(WaylandProtocolExtensionFilter const& extension_filter) = 0;
     virtual void set_enabled_wayland_extensions(std::vector<std::string> const& extensions) = 0;
 

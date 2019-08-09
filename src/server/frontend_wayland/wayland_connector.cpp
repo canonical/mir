@@ -42,7 +42,7 @@
 
 #include "mir/compositor/buffer_stream.h"
 
-#include "mir/frontend/session.h"
+#include "mir/frontend/mir_client_session.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface.h"
 #include <mir/thread_name.h>
@@ -106,7 +106,7 @@ namespace
 {
 struct ClientPrivate
 {
-    ClientPrivate(std::shared_ptr<mf::Session> const& session, mf::Shell* shell)
+    ClientPrivate(std::shared_ptr<MirClientSession> const& session, mf::Shell* shell)
         : session{session},
           shell{shell}
     {
@@ -124,7 +124,7 @@ struct ClientPrivate
     }
 
     wl_listener destroy_listener;
-    std::shared_ptr<mf::Session> const session;
+    std::shared_ptr<MirClientSession> const session;
     /*
      * This shell is owned by the ClientSessionConstructor, which outlives all clients.
      */
@@ -150,7 +150,7 @@ struct ClientSessionConstructor
 {
     ClientSessionConstructor(std::shared_ptr<mf::Shell> const& shell,
                              std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
-                             std::unordered_map<int, std::function<void(std::shared_ptr<Session> const& session)>>* connect_handlers)
+                             std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>>* connect_handlers)
         : shell{shell},
           session_authorizer{session_authorizer},
           connect_handlers{connect_handlers}
@@ -161,7 +161,7 @@ struct ClientSessionConstructor
     wl_listener destruction_listener;
     std::shared_ptr<mf::Shell> const shell;
     std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
-    std::unordered_map<int, std::function<void(std::shared_ptr<Session> const& session)>>* connect_handlers;
+    std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>>* connect_handlers;
 
 };
 
@@ -180,7 +180,7 @@ void create_client_session(wl_listener* listener, void* data)
 
     auto const handler_iter = construction_context->connect_handlers->find(wl_client_get_fd(client));
 
-    std::function<void(std::shared_ptr<Session> const& session)> const connection_handler =
+    std::function<void(std::shared_ptr<scene::Session> const& session)> const connection_handler =
         (handler_iter != std::end(*construction_context->connect_handlers)) ? handler_iter->second : [](auto){};
 
     if (handler_iter != std::end(*construction_context->connect_handlers))
@@ -206,7 +206,7 @@ void create_client_session(wl_listener* listener, void* data)
     client_context->destroy_listener.notify = &cleanup_private;
     wl_client_add_destroy_listener(client, &client_context->destroy_listener);
 
-    connection_handler(session);
+    connection_handler(session->session());
 }
 
 void cleanup_client_handler(wl_listener* listener, void*)
@@ -219,7 +219,7 @@ void cleanup_client_handler(wl_listener* listener, void*)
 
 void setup_new_client_handler(wl_display* display, std::shared_ptr<mf::Shell> const& shell,
                               std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
-                              std::unordered_map<int, std::function<void(std::shared_ptr<Session> const& session)>>* connect_handlers)
+                              std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>>* connect_handlers)
 {
     auto context = new ClientSessionConstructor{shell, session_authorizer, connect_handlers};
     context->construction_listener.notify = &create_client_session;
@@ -789,7 +789,7 @@ int mf::WaylandConnector::client_socket_fd() const
 }
 
 int mf::WaylandConnector::client_socket_fd(
-    std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
+    std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const
 {
     enum { server, client, size };
     int socket_fd[size];
@@ -860,7 +860,7 @@ bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client
 #endif
 }
 
-auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<Session>
+auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<MirClientSession>
 {
     auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
 
@@ -870,7 +870,7 @@ auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<Session>
     return {};
 }
 
-auto mir::frontend::get_session(wl_resource* surface) -> std::shared_ptr<Session>
+auto mir::frontend::get_session(wl_resource* surface) -> std::shared_ptr<MirClientSession>
 {
     return get_session(wl_resource_get_client(surface));
 }

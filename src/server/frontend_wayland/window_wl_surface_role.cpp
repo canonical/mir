@@ -27,7 +27,7 @@
 #include "mir/shell/surface_specification.h"
 
 #include "mir/frontend/shell.h"
-#include "mir/frontend/session.h"
+#include "mir/frontend/mir_client_session.h"
 #include "mir/frontend/event_sink.h"
 
 #include "mir/scene/surface.h"
@@ -39,7 +39,7 @@ namespace geom = mir::geometry;
 
 namespace
 {
-std::shared_ptr<ms::Surface> scene_surface_from(std::shared_ptr<mf::Session> const& session, mf::SurfaceId surface_id)
+std::shared_ptr<ms::Surface> scene_surface_from(std::shared_ptr<mf::MirClientSession> const& session, mf::SurfaceId surface_id)
 {
     return std::dynamic_pointer_cast<ms::Surface>(session->get_surface(surface_id));
 }

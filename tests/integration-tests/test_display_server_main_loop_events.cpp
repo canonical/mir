@@ -50,6 +50,7 @@ namespace mi = mir::input;
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mtf = mir_test_framework;
@@ -67,7 +68,7 @@ public:
      * to silence gmock warnings.
      */
     int client_socket_fd() const override { return 0; }
-    int client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const override { return 0; }
+    int client_socket_fd(std::function<void(std::shared_ptr<ms::Session> const&)> const&) const override { return 0; }
     void remove_endpoint() const {}
     auto socket_name() const -> mir::optional_value<std::string> override { return {}; }
 };

@@ -36,44 +36,44 @@ namespace doubles
 
 struct MockShell : public frontend::Shell
 {
-    MOCK_METHOD3(open_session, std::shared_ptr<frontend::Session>(
+    MOCK_METHOD3(open_session, std::shared_ptr<frontend::MirClientSession>(
         pid_t client_pid,
         std::string const&,
         std::shared_ptr<frontend::EventSink> const&));
 
-    MOCK_METHOD1(close_session, void(std::shared_ptr<frontend::Session> const&));
+    MOCK_METHOD1(close_session, void(std::shared_ptr<frontend::MirClientSession> const&));
 
     MOCK_METHOD2(start_prompt_session_for, std::shared_ptr<frontend::PromptSession>(
-        std::shared_ptr<frontend::Session> const&,
+        std::shared_ptr<scene::Session> const&,
         scene::PromptSessionCreationParameters const&));
     MOCK_METHOD2(add_prompt_provider_for, void(
         std::shared_ptr<frontend::PromptSession> const&,
-        std::shared_ptr<frontend::Session> const&));
+        std::shared_ptr<scene::Session> const&));
     MOCK_METHOD1(stop_prompt_session, void(std::shared_ptr<frontend::PromptSession> const&));
 
     MOCK_METHOD3(create_surface,
         frontend::SurfaceId(
-            std::shared_ptr<frontend::Session> const&,
+            std::shared_ptr<frontend::MirClientSession> const&,
             scene::SurfaceCreationParameters const& params,
             std::shared_ptr<frontend::EventSink> const&));
-    MOCK_METHOD3(modify_surface, void(std::shared_ptr<frontend::Session> const&, frontend::SurfaceId, shell::SurfaceSpecification const&));
-    MOCK_METHOD2(destroy_surface, void(std::shared_ptr<frontend::Session> const&, frontend::SurfaceId));
-    MOCK_METHOD2(persistent_id_for, std::string(std::shared_ptr<frontend::Session> const&, frontend::SurfaceId));
+    MOCK_METHOD3(modify_surface, void(std::shared_ptr<frontend::MirClientSession> const&, frontend::SurfaceId, shell::SurfaceSpecification const&));
+    MOCK_METHOD2(destroy_surface, void(std::shared_ptr<frontend::MirClientSession> const&, frontend::SurfaceId));
+    MOCK_METHOD2(persistent_id_for, std::string(std::shared_ptr<frontend::MirClientSession> const&, frontend::SurfaceId));
     MOCK_METHOD1(surface_for_id, std::shared_ptr<scene::Surface>(std::string const&));
 
 
 
     MOCK_METHOD4(set_surface_attribute, int(
-        std::shared_ptr<frontend::Session> const& session, frontend::SurfaceId surface_id,
+        std::shared_ptr<frontend::MirClientSession> const& session, frontend::SurfaceId surface_id,
         MirWindowAttrib attrib, int value));
 
-    MOCK_METHOD3(get_surface_attribute, int(std::shared_ptr<frontend::Session> const& session,
+    MOCK_METHOD3(get_surface_attribute, int(std::shared_ptr<frontend::MirClientSession> const& session,
         frontend::SurfaceId surface_id, MirWindowAttrib attrib));
 
-    MOCK_METHOD3(raise_surface, void(std::shared_ptr<frontend::Session> const& session,
+    MOCK_METHOD3(raise_surface, void(std::shared_ptr<frontend::MirClientSession> const& session,
         frontend::SurfaceId surface_id, uint64_t timestamp));
 
-    MOCK_METHOD5(request_operation, void(std::shared_ptr<frontend::Session> const &session,
+    MOCK_METHOD5(request_operation, void(std::shared_ptr<frontend::MirClientSession> const &session,
         frontend::SurfaceId surface_id, uint64_t timestamp, UserRequest request, optional_value<uint32_t> hint));
 };
 

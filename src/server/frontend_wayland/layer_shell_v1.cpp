@@ -24,7 +24,7 @@
 #include "wayland_utils.h"
 
 #include "mir/shell/surface_specification.h"
-#include "mir/frontend/session.h"
+#include "mir/frontend/mir_client_session.h"
 #include "mir/log.h"
 #include <boost/throw_exception.hpp>
 #include <deque>

@@ -17,7 +17,6 @@
  */
 
 #include "timeout_application_not_responding_detector.h"
-#include "mir/frontend/session.h"
 #include "mir/scene/session.h"
 
 #include "mir/time/alarm_factory.h"

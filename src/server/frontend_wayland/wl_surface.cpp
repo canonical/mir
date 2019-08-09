@@ -30,7 +30,7 @@
 #include "wayland_frontend.tp.h"
 
 #include "mir/graphics/buffer_properties.h"
-#include "mir/frontend/session.h"
+#include "mir/frontend/mir_client_session.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/executor.h"
 #include "mir/graphics/wayland_allocator.h"

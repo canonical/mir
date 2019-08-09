@@ -45,7 +45,7 @@ namespace mir
 {
 namespace frontend
 {
-class Session;
+class MirClientSession;
 
 template<typename Callable>
 inline auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callable)
@@ -58,7 +58,7 @@ inline auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callab
         };
 }
 
-std::shared_ptr<frontend::Session> get_session(wl_client* client);
+auto get_session(wl_client* client) -> std::shared_ptr<MirClientSession>;
 
 int64_t mir_input_event_get_event_time_ms(const MirInputEvent* event);
 

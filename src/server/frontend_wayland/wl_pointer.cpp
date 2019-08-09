@@ -23,7 +23,7 @@
 
 #include "mir/executor.h"
 #include "mir/client/event.h"
-#include "mir/frontend/session.h"
+#include "mir/frontend/mir_client_session.h"
 #include "mir/frontend/surface.h"
 #include "mir/frontend/buffer_stream.h"
 #include "mir/geometry/displacement.h"
@@ -226,23 +226,23 @@ namespace
 struct WlStreamCursor : mf::WlPointer::Cursor
 {
     WlStreamCursor(
-        std::shared_ptr<mf::Session> const session,
+        std::shared_ptr<mf::MirClientSession> const session,
         std::shared_ptr<mf::BufferStream> const& stream,
         Displacement hotspot);
 
     void apply_to(mf::WlSurface* surface) override;
 
-    std::shared_ptr<mf::Session> const session;
+    std::shared_ptr<mf::MirClientSession> const session;
     std::shared_ptr<mf::BufferStream> const stream;
     Displacement const hotspot;
 };
 
 struct WlHiddenCursor : mf::WlPointer::Cursor
 {
-    WlHiddenCursor(std::shared_ptr<mf::Session> const session);
+    WlHiddenCursor(std::shared_ptr<mf::MirClientSession> const session);
     void apply_to(mf::WlSurface* surface) override;
 
-    std::shared_ptr<mf::Session> const session;
+    std::shared_ptr<mf::MirClientSession> const session;
 };
 }
 
@@ -275,7 +275,7 @@ void mf::WlPointer::release()
 }
 
 WlStreamCursor::WlStreamCursor(
-    std::shared_ptr<mf::Session> const session,
+    std::shared_ptr<mf::MirClientSession> const session,
     std::shared_ptr<mf::BufferStream> const& stream,
     Displacement hotspot) :
     session{session},
@@ -295,7 +295,7 @@ void WlStreamCursor::apply_to(mf::WlSurface* surface)
 }
 
 WlHiddenCursor::WlHiddenCursor(
-    std::shared_ptr<mf::Session> const session) :
+    std::shared_ptr<mf::MirClientSession> const session) :
     session{session}
 {
 }

@@ -35,13 +35,14 @@ namespace scene
 struct SurfaceCreationParameters;
 struct PromptSessionCreationParameters;
 class Surface;
+class Session;
 }
 namespace shell { class SurfaceSpecification; }
 
 namespace frontend
 {
 class EventSink;
-class Session;
+class MirClientSession;
 class PromptSession;
 
 class Shell
@@ -49,37 +50,39 @@ class Shell
 public:
     virtual ~Shell() = default;
 
-    virtual std::shared_ptr<Session> open_session(
+    virtual std::shared_ptr<MirClientSession> open_session(
         pid_t client_pid,
         std::string const& name,
         std::shared_ptr<EventSink> const& sink) = 0;
 
-    virtual void close_session(std::shared_ptr<Session> const& session)  = 0;
+    virtual void close_session(std::shared_ptr<MirClientSession> const& session)  = 0;
 
-    virtual std::shared_ptr<PromptSession> start_prompt_session_for(std::shared_ptr<Session> const& session,
-                                                                  scene::PromptSessionCreationParameters const& params) = 0;
-    virtual void add_prompt_provider_for(std::shared_ptr<PromptSession> const& prompt_session,
-                                                                  std::shared_ptr<Session> const& session) = 0;
+    virtual auto start_prompt_session_for(
+        std::shared_ptr<scene::Session> const& session,
+        scene::PromptSessionCreationParameters const& params) -> std::shared_ptr<PromptSession> = 0;
+    virtual void add_prompt_provider_for(
+        std::shared_ptr<PromptSession> const& prompt_session,
+        std::shared_ptr<scene::Session> const& session) = 0;
     virtual void stop_prompt_session(std::shared_ptr<PromptSession> const& prompt_session) = 0;
 
     virtual SurfaceId create_surface(
-        std::shared_ptr<Session> const& session,
+        std::shared_ptr<MirClientSession> const& session,
         scene::SurfaceCreationParameters const& params,
         std::shared_ptr<EventSink> const& sink) = 0;
-    virtual void modify_surface(std::shared_ptr<Session> const& session, SurfaceId surface, shell::SurfaceSpecification const& modifications) = 0;
-    virtual void destroy_surface(std::shared_ptr<Session> const& session, SurfaceId surface) = 0;
+    virtual void modify_surface(std::shared_ptr<MirClientSession> const& session, SurfaceId surface, shell::SurfaceSpecification const& modifications) = 0;
+    virtual void destroy_surface(std::shared_ptr<MirClientSession> const& session, SurfaceId surface) = 0;
 
-    virtual std::string persistent_id_for(std::shared_ptr<Session> const& session, SurfaceId surface) = 0;
+    virtual std::string persistent_id_for(std::shared_ptr<MirClientSession> const& session, SurfaceId surface) = 0;
     virtual std::shared_ptr<scene::Surface> surface_for_id(std::string const& serialised_id) = 0;
 
     virtual int set_surface_attribute(
-        std::shared_ptr<Session> const& session,
+        std::shared_ptr<MirClientSession> const& session,
         SurfaceId surface_id,
         MirWindowAttrib attrib,
         int value) = 0;
 
     virtual int get_surface_attribute(
-        std::shared_ptr<Session> const& session,
+        std::shared_ptr<MirClientSession> const& session,
         SurfaceId surface_id,
         MirWindowAttrib attrib) = 0;
 
@@ -92,13 +95,13 @@ public:
     };
 
     virtual void request_operation(
-        std::shared_ptr<Session> const& session,
+        std::shared_ptr<MirClientSession> const& session,
         SurfaceId surface_id, uint64_t timestamp,
         UserRequest request,
         optional_value<uint32_t> hint) = 0;
 
     void request_operation(
-        std::shared_ptr<Session> const& session,
+        std::shared_ptr<MirClientSession> const& session,
         SurfaceId surface_id, uint64_t timestamp,
         UserRequest request)
     {

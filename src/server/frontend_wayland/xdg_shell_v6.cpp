@@ -21,7 +21,7 @@
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"
 
-#include "mir/frontend/session.h"
+#include "mir/frontend/mir_client_session.h"
 #include "mir/frontend/wayland.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/log.h"

@@ -64,7 +64,7 @@ int mf::XWaylandConnector::client_socket_fd() const
     return -1;
 }
 int mf::XWaylandConnector::client_socket_fd(
-    std::function<void(std::shared_ptr<Session> const& session)> const& /*connect_handler*/) const
+    std::function<void(std::shared_ptr<scene::Session> const& session)> const& /*connect_handler*/) const
 {
     return -1;
 }

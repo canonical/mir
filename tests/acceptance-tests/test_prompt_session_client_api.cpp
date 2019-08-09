@@ -21,7 +21,6 @@
 #include "mir/scene/prompt_session.h"
 #include "mir/scene/prompt_session_manager.h"
 #include "mir/scene/session.h"
-#include "mir/frontend/session.h"
 #include "mir/shell/shell_wrapper.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/cached_ptr.h"
@@ -140,7 +139,7 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
         std::mutex application_session_mutex;
         std::condition_variable application_session_cv;
 
-        auto connect_handler = [&](std::shared_ptr<mf::Session> const& session)
+        auto connect_handler = [&](std::shared_ptr<ms::Session> const& session)
             {
                 std::lock_guard<std::mutex> lock(application_session_mutex);
                 application_session = session;

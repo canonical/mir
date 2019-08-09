@@ -22,12 +22,12 @@
 
 #include "mir/frontend/session_mediator_observer.h"
 #include "mir/frontend/shell.h"
-#include "mir/frontend/session.h"
 #include "mir/frontend/surface.h"
 #include "mir/shell/surface_specification.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/coordinate_translator.h"
 #include "mir/scene/application_not_responding_detector.h"
+#include "mir/scene/session.h"
 #include "mir/frontend/display_changer.h"
 #include "resource_cache.h"
 #include "mir_toolkit/common.h"
@@ -48,6 +48,7 @@
 #include "mir/frontend/prompt_session.h"
 #include "mir/frontend/buffer_stream.h"
 #include "mir/frontend/input_configuration_changer.h"
+#include "mir/frontend/mir_client_session.h"
 #include "mir/input/input_device_hub.h"
 #include "mir/input/mir_input_config.h"
 #include "mir/input/mir_input_config_serialization.h"
@@ -806,7 +807,7 @@ void mf::SessionMediator::configure_display(
     observer->session_configure_display_called(session->name());
 
     auto const config = unpack_and_sanitize_display_configuration(request);
-    display_changer->configure(session, config);
+    display_changer->configure(session->session(), config);
 
     auto display_config = display_changer->base_configuration();
     mfd::pack_protobuf_display_configuration(*response, *display_config);
@@ -824,7 +825,7 @@ void mf::SessionMediator::remove_session_configuration(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    display_changer->remove_session_configuration(session);
+    display_changer->remove_session_configuration(session->session());
 
     done->Run();
 }
@@ -861,7 +862,7 @@ void mf::SessionMediator::preview_base_display_configuration(
 
     auto const config = unpack_and_sanitize_display_configuration(&request->configuration());
     display_changer->preview_base_configuration(
-        weak_session,
+        session->session(),
         config,
         std::chrono::seconds{request->timeout()});
 
@@ -882,7 +883,7 @@ void mf::SessionMediator::confirm_base_display_configuration(
 
     auto const config = unpack_and_sanitize_display_configuration(request);
 
-    display_changer->confirm_base_configuration(session, config);
+    display_changer->confirm_base_configuration(session->session(), config);
 
     done->Run();
 }
@@ -897,7 +898,7 @@ void mf::SessionMediator::cancel_base_display_configuration_preview(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    display_changer->cancel_base_configuration_preview(session);
+    display_changer->cancel_base_configuration_preview(session->session());
 
     done->Run();
 }
@@ -1048,9 +1049,9 @@ void mf::SessionMediator::release_buffer_stream(
 
 
 auto mf::SessionMediator::prompt_session_connect_handler(detail::PromptSessionId prompt_session_id) const
--> std::function<void(std::shared_ptr<mf::Session> const&)>
+-> std::function<void(std::shared_ptr<scene::Session> const&)>
 {
-    return [this, prompt_session_id](std::shared_ptr<mf::Session> const& session)
+    return [this, prompt_session_id](std::shared_ptr<scene::Session> const& session)
     {
         auto prompt_session = prompt_sessions.fetch(prompt_session_id);
         if (prompt_session.get() == nullptr)
@@ -1134,7 +1135,7 @@ void mf::SessionMediator::pong(
     if (session.get() == nullptr)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
-    anr_detector->pong_received(session.get());
+    anr_detector->pong_received(session->session().get());
     done->Run();
 }
 
@@ -1208,7 +1209,7 @@ void mf::SessionMediator::start_prompt_session(
 
     observer->session_start_prompt_session_called(session->name(), parameters.application_pid);
 
-    response->set_id(prompt_sessions.insert(shell->start_prompt_session_for(session, parameters)).as_value());
+    response->set_id(prompt_sessions.insert(shell->start_prompt_session_for(session->session(), parameters)).as_value());
 
     done->Run();
 }
@@ -1351,7 +1352,7 @@ void mf::SessionMediator::apply_input_configuration(
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid application session"));
 
     auto conf = mi::deserialize_input_config(request->input_configuration());
-    input_changer->configure(session, std::move(conf));
+    input_changer->configure(session->session(), std::move(conf));
 
     done->Run();
 }

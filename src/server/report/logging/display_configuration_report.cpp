@@ -20,8 +20,8 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/output_type_names.h"
 #include "mir/logging/logger.h"
-#include "mir/frontend/session.h"
 #include "mir/graphics/edid.h"
+#include "mir/scene/session.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <cmath>

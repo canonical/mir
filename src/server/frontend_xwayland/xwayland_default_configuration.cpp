@@ -25,6 +25,7 @@
 #include "mir/options/default_configuration.h"
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace mo = mir::options;
 
 namespace
@@ -44,7 +45,7 @@ struct NullConnector : mf::Connector
         return 0;
     }
 
-    int client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const override
+    int client_socket_fd(std::function<void(std::shared_ptr<ms::Session> const&)> const&) const override
     {
         return -1;
     }

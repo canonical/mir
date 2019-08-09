@@ -490,7 +490,7 @@ private:
     std::vector<mir::ExtensionDescription> the_extensions();
     std::vector<WaylandExtensionHook> wayland_extension_hooks;
     WaylandProtocolExtensionFilter wayland_extension_filter =
-        [](std::shared_ptr<scene::Session> const&, char const*) { return true; };
+        [](std::shared_ptr<frontend::MirClientSession> const&, char const*) { return true; };
     std::vector<std::string> enabled_wayland_extensions;
 };
 }

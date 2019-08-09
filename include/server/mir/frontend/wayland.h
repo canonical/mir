@@ -30,14 +30,14 @@ namespace mir
 {
 namespace frontend
 {
-class Session;
+class MirClientSession;
 class Surface;
 
 /// Utility function to recover the session associated with a wl_client
-auto get_session(wl_client* client) -> std::shared_ptr<Session>;
+auto get_session(wl_client* client) -> std::shared_ptr<MirClientSession>;
 
 /// Utility function to recover the session associated with a wl_resource
-auto get_session(wl_resource* resource) -> std::shared_ptr<Session>;
+auto get_session(wl_resource* resource) -> std::shared_ptr<MirClientSession>;
 
 /// Utility function to recover the window associated with a wl_client
 auto get_window(wl_resource* surface) -> std::shared_ptr<Surface>;

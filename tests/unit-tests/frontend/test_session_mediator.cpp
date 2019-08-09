@@ -46,13 +46,13 @@
 #include "mir/test/doubles/mock_buffer_stream.h"
 #include "mir/test/doubles/mock_display.h"
 #include "mir/test/doubles/mock_shell.h"
-#include "mir/test/doubles/mock_frontend_surface.h"
+#include "mir/test/doubles/mock_surface.h"
 #include "mir/test/doubles/mock_event_sink.h"
 #include "mir/test/doubles/mock_event_sink_factory.h"
 #include "mir/test/doubles/mock_screencast.h"
 #include "mir/test/doubles/stub_buffer.h"
 #include "mir/test/doubles/mock_buffer.h"
-#include "tests/include/mir/test/doubles/stub_session.h"
+#include "mir/test/doubles/stub_mir_client_session.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/null_screencast.h"
@@ -116,10 +116,10 @@ public:
     int client_socket_fd() const override { return 0; }
     auto socket_name() const -> mir::optional_value<std::string> override { return {}; }
 
-    MOCK_CONST_METHOD1(client_socket_fd, int (std::function<void(std::shared_ptr<mf::Session> const&)> const&));
+    MOCK_CONST_METHOD1(client_socket_fd, int (std::function<void(std::shared_ptr<ms::Session> const&)> const&));
 };
 
-class StubbedSession : public mtd::StubSession
+class StubbedSession : public mtd::StubMirClientSession
 {
 public:
     std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const override
@@ -136,7 +136,7 @@ public:
         return mock_streams.at(stream);
     }
 
-    std::shared_ptr<mtd::MockFrontendSurface> mock_surface_at(mf::SurfaceId id)
+    std::shared_ptr<mtd::MockSurface> mock_surface_at(mf::SurfaceId id)
     {
         if (mock_surfaces.end() == mock_surfaces.find(id))
             return create_mock_surface(id); 
@@ -150,12 +150,12 @@ public:
         return mock_streams.at(id);
     }
 
-    std::shared_ptr<mtd::MockFrontendSurface> create_mock_surface(mf::SurfaceId id)
+    std::shared_ptr<mtd::MockSurface> create_mock_surface(mf::SurfaceId id)
     {
         using namespace testing;
         mg::BufferProperties properties;
         create_buffer_stream(properties);
-        auto surface = std::make_shared<testing::NiceMock<mtd::MockFrontendSurface>>();
+        auto surface = std::make_shared<testing::NiceMock<mtd::MockSurface>>();
         mock_surfaces[id] = surface;
         return surface;
     }
@@ -168,9 +168,9 @@ public:
         return mock_streams[id];
     }
 
-    mf::SurfaceId create_surface(
+    mf::SurfaceId mock_create_surface(
         ms::SurfaceCreationParameters const&,
-        std::shared_ptr<mf::EventSink> const&) override
+        std::shared_ptr<mf::EventSink> const&)
     {
         mf::SurfaceId id{last_surface_id};
         if (mock_surfaces.end() == mock_surfaces.find(id))
@@ -188,11 +188,10 @@ public:
         return id;
     }
 
-    void destroy_surface(mf::SurfaceId surface) override
+    void mock_destroy_surface(mf::SurfaceId surface)
     {
         mock_surfaces.erase(surface);
     }
-
 
     MOCK_METHOD1(destroy_buffer_stream, void(mf::BufferStreamId));
 
@@ -207,7 +206,7 @@ public:
     }
 
     std::map<mf::BufferStreamId, std::shared_ptr<mtd::MockBufferStream>> mock_streams;
-    std::map<mf::SurfaceId, std::shared_ptr<mtd::MockFrontendSurface>> mock_surfaces;
+    std::map<mf::SurfaceId, std::shared_ptr<mtd::MockSurface>> mock_surfaces;
     int last_stream_id = 0;
     int last_surface_id = 0;
     int buffer_count = 0;
@@ -321,15 +320,14 @@ struct SessionMediator : public ::testing::Test
         ON_CALL(*shell, open_session(_, _, _)).WillByDefault(Return(stubbed_session));
 
         ON_CALL(*shell, create_surface( _, _, _)).WillByDefault(
-            WithArgs<1, 2>(Invoke(stubbed_session.get(), &StubbedSession::create_surface)));
+            WithArgs<1, 2>(Invoke(stubbed_session.get(), &StubbedSession::mock_create_surface)));
 
         ON_CALL(*shell, destroy_surface( _, _)).WillByDefault(
-            WithArg<1>(Invoke(stubbed_session.get(), &StubbedSession::destroy_surface)));
+            WithArg<1>(Invoke(stubbed_session.get(), &StubbedSession::mock_destroy_surface)));
 
         ON_CALL(mock_input_config_changer, base_configuration())
             .WillByDefault(Return(config));
     }
-
 
     std::shared_ptr<mf::SessionMediator> create_session_mediator_with_display_changer(
         std::shared_ptr<mf::DisplayChanger> const& display_changer)
@@ -515,7 +513,7 @@ TEST_F(SessionMediator, connect_calls_connect_handler)
 
     mf::ConnectionContext const context
     {
-        [&](std::shared_ptr<mf::Session> const&) { ++connects_handled_count; },
+        [&](std::shared_ptr<mf::MirClientSession> const&) { ++connects_handled_count; },
         nullptr
     };
 
@@ -1028,7 +1026,7 @@ TEST_F(SessionMediator, events_sent_before_surface_creation_reply_are_buffered)
             Invoke([session = stubbed_session.get()](auto, auto params, auto sink)
                    {
                        sink->send_ping(0xdeadbeef);
-                       return session->create_surface(params, sink);
+                       return session->mock_create_surface(params, sink);
                    }));
 
     InSequence seq;
