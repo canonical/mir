@@ -19,6 +19,7 @@
  */
 
 #include "wlshmbuffer.h"
+#include "wayland_executor.h"
 
 #include <mir/log.h>
 
@@ -128,43 +129,57 @@ using namespace mir::geometry;
 
 mf::WlShmBuffer::~WlShmBuffer()
 {
-    std::lock_guard <std::mutex> lock{*buffer_mutex};
-    if (buffer) {
-        wl_resource_queue_event(resource, WL_BUFFER_RELEASE);
-    }
+    executor->spawn([wayland = wayland]()
+        {
+            std::lock_guard <std::mutex> lock{wayland->mutex};
+            if (wayland->resource) {
+                wl_resource_queue_event(wayland->resource.value(), WL_BUFFER_RELEASE);
+            }
+        });
 }
 
 std::shared_ptr<mg::Buffer> mf::WlShmBuffer::mir_buffer_from_wl_buffer(
     wl_resource *buffer,
+    std::shared_ptr<Executor> executor,
     std::function<void()> &&on_consumed)
 {
-    std::shared_ptr <WlShmBuffer> mir_buffer;
-    DestructionShim *shim;
+    DestructionShim* shim = nullptr;
 
-    if (auto notifier = wl_resource_get_destroy_listener(buffer, &on_buffer_destroyed)) {
+    if (auto notifier = wl_resource_get_destroy_listener(buffer, &on_buffer_destroyed))
+    {
         // We've already constructed a shim for this buffer, update it.
         shim = wl_container_of(notifier, shim, destruction_listener);
 
-        if (!(mir_buffer = shim->associated_buffer.lock())) {
-            /*
-             * We've seen this wl_buffer before, but all the WlShmBuffers associated with it
-             * have been destroyed.
-             *
-             * Recreate a new WlShmBuffer to track the new compositor lifetime.
-             */
-            mir_buffer = std::shared_ptr < WlShmBuffer > {new WlShmBuffer{buffer, std::move(on_consumed)}};
-            shim->associated_buffer = mir_buffer;
+        if (auto mir_buffer = shim->mir_buffer.lock())
+        {
+            // There's already a Mir buffer for this wl_buffer
+            // Add the new on_consumed, and we're ready to go
+            mir_buffer->on_consumed = [a = mir_buffer->on_consumed, b = on_consumed]()
+                {
+                    a();
+                    b();
+                };
+            return mir_buffer;
         }
-    } else {
-        mir_buffer = std::shared_ptr < WlShmBuffer > {new WlShmBuffer{buffer, std::move(on_consumed)}};
-        shim = new DestructionShim;
-        shim->destruction_listener.notify = &on_buffer_destroyed;
-        shim->associated_buffer = mir_buffer;
+        else if (auto resources = shim->resources.lock())
+        {
+            // There's not a Mir buffer, but there used to be
+            // The resources are still alive, which means the destructor's spawn() is still inflight
+            // We null out the resources so it will not destroy them when it runs
 
-        wl_resource_add_destroy_listener(buffer, &shim->destruction_listener);
+            std::lock_guard <std::mutex> lock{resources->mutex}; // possibly not necessary, but can't hurt
+            resources->buffer = std::experimental::nullopt;
+            resources->resource = std::experimental::nullopt;
+        }
+    }
+    else
+    {
+        shim = new DestructionShim{buffer};
     }
 
-    mir_buffer->buffer_mutex = shim->mutex;
+    auto mir_buffer = std::make_shared<WlShmBuffer>(buffer, executor, std::move(on_consumed));
+    shim->mir_buffer = mir_buffer;
+    shim->resources = mir_buffer->wayland;
     return mir_buffer;
 }
 
@@ -227,17 +242,22 @@ void mf::WlShmBuffer::secure_for_render()
 
 void mf::WlShmBuffer::write(unsigned char const *pixels, size_t size)
 {
-    std::lock_guard <std::mutex> lock{*buffer_mutex};
-    wl_shm_buffer_begin_access(buffer);
-    auto data = wl_shm_buffer_get_data(buffer);
+    std::lock_guard <std::mutex> lock{wayland->mutex};
+    if (!wayland->buffer) {
+        log_warning("Attempt to write to WlShmBuffer after the wl_buffer has been destroyed");
+        return;
+    }
+
+    wl_shm_buffer_begin_access(wayland->buffer.value());
+    auto data = wl_shm_buffer_get_data(wayland->buffer.value());
     ::memcpy(data, pixels, size);
-    wl_shm_buffer_end_access(buffer);
+    wl_shm_buffer_end_access(wayland->buffer.value());
 }
 
 void mf::WlShmBuffer::read(std::function<void(unsigned char const *)> const &do_with_pixels)
 {
-    std::lock_guard <std::mutex> lock{*buffer_mutex};
-    if (!buffer) {
+    std::lock_guard <std::mutex> lock{wayland->mutex};
+    if (!wayland->buffer) {
         log_warning("Attempt to read from WlShmBuffer after the wl_buffer has been destroyed");
         return;
     }
@@ -255,22 +275,37 @@ Stride mf::WlShmBuffer::stride() const
     return stride_;
 }
 
+mf::WlShmBuffer::WaylandResources::WaylandResources(wl_resource *resource)
+    : resource{resource},
+      buffer{shm_buffer_from_resource_checked(resource)}
+{
+}
+
+mf::WlShmBuffer::DestructionShim::DestructionShim(wl_resource* buffer_resource)
+    : destruction_listener{{nullptr, nullptr}, &on_buffer_destroyed}
+{
+    wl_resource_add_destroy_listener(buffer_resource, &destruction_listener);
+}
+
 mf::WlShmBuffer::WlShmBuffer(
     wl_resource *buffer,
+    std::shared_ptr<Executor> executor,
     std::function<void()> &&on_consumed)
     :
-    buffer{shm_buffer_from_resource_checked(buffer)},
-    resource{buffer},
-    size_{wl_shm_buffer_get_width(this->buffer), wl_shm_buffer_get_height(this->buffer)},
-    stride_{wl_shm_buffer_get_stride(this->buffer)},
-    format_{wl_format_to_mir_format(wl_shm_buffer_get_format(this->buffer))},
+    wayland{std::make_shared<WaylandResources>(buffer)},
+    size_{
+        wl_shm_buffer_get_width(wayland->buffer.value()),
+        wl_shm_buffer_get_height(wayland->buffer.value())},
+    stride_{wl_shm_buffer_get_stride(wayland->buffer.value())},
+    format_{wl_format_to_mir_format(wl_shm_buffer_get_format(wayland->buffer.value()))},
     data{std::make_unique<uint8_t[]>(size_.height.as_int() * stride_.as_int())},
     consumed{false},
-    on_consumed{std::move(on_consumed)}
+    on_consumed{std::move(on_consumed)},
+    executor{executor}
 {
     if (stride_.as_int() < size_.width.as_int() * MIR_BYTES_PER_PIXEL(format_)) {
         wl_resource_post_error(
-            resource,
+            wayland->resource.value(),
             WL_SHM_ERROR_INVALID_STRIDE,
             "Stride (%u) is less than width × bytes per pixel (%u×%u). "
                 "Did you accidentally specify stride in pixels?",
@@ -280,9 +315,9 @@ mf::WlShmBuffer::WlShmBuffer(
                                   std::runtime_error{"Buffer has invalid stride"}));
     }
 
-    wl_shm_buffer_begin_access(this->buffer);
-    std::memcpy(data.get(), wl_shm_buffer_get_data(this->buffer), size_.height.as_int() * stride_.as_int());
-    wl_shm_buffer_end_access(this->buffer);
+    wl_shm_buffer_begin_access(wayland->buffer.value());
+    std::memcpy(data.get(), wl_shm_buffer_get_data(wayland->buffer.value()), size_.height.as_int() * stride_.as_int());
+    wl_shm_buffer_end_access(wayland->buffer.value());
 }
 
 void mf::WlShmBuffer::on_buffer_destroyed(wl_listener *listener, void *)
@@ -295,9 +330,11 @@ void mf::WlShmBuffer::on_buffer_destroyed(wl_listener *listener, void *)
     shim = wl_container_of(listener, shim, destruction_listener);
 
     {
-        if (auto mir_buffer = shim->associated_buffer.lock()) {
-            std::lock_guard <std::mutex> lock{*shim->mutex};
-            mir_buffer->buffer = nullptr;
+        if (auto resources = shim->resources.lock())
+        {
+            std::lock_guard <std::mutex> lock{resources->mutex};
+            resources->buffer = std::experimental::nullopt;
+            resources->resource = std::experimental::nullopt;
         }
     }
 
