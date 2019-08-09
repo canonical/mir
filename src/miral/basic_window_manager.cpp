@@ -980,6 +980,20 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
         }
     }
 
+    bool application_zones_need_update = false;
+    if (window_info.state() == mir_window_state_attached ||
+          (modifications.state().is_set() &&
+           modifications.state().value() == mir_window_state_attached))
+    {
+        if (modifications.state().is_set() ||
+            modifications.size().is_set() ||
+            modifications.attached_edges().is_set() ||
+            modifications.exclusive_rect().is_set())
+        {
+            application_zones_need_update = true;
+        }
+    }
+
     std::swap(window_info_tmp, window_info);
 
     auto& window = window_info.window();
@@ -1083,15 +1097,9 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
         set_state(window_info, modifications.state().value());
     }
 
-    if (window_info.state() == mir_window_state_attached)
+    if (application_zones_need_update)
     {
-        if (modifications.state().is_set() ||
-            modifications.size().is_set() ||
-            modifications.attached_edges().is_set() ||
-            modifications.exclusive_rect().is_set())
-        {
-            update_windows_for_outputs();
-        }
+        update_windows_for_outputs();
     }
 
     if (modifications.confine_pointer().is_set())
@@ -1129,7 +1137,8 @@ void miral::BasicWindowManager::place_and_size(WindowInfo& root, Point const& ne
 
 void miral::BasicWindowManager::place_attached_to_zone(
     WindowInfo& info,
-    mir::geometry::Rectangle const& application_zone)
+    Rectangle const& application_zone,
+    Rectangle const& output_area)
 {
     Point top_left = info.window().top_left();
     Size size = info.window().size();
@@ -1158,32 +1167,37 @@ void miral::BasicWindowManager::place_attached_to_zone(
     case mir_window_state_attached:
     {
         MirPlacementGravity edges = info.attached_edges();
+        Rectangle placement_zone = application_zone;
 
         if ((edges & mir_placement_gravity_west) &&
             (edges & mir_placement_gravity_east))
         {
-            size.width = application_zone.size.width;
+            placement_zone.top_left.x = output_area.top_left.x;
+            placement_zone.size.width = output_area.size.width;
+            size.width = placement_zone.size.width;
         }
 
         if ((edges & mir_placement_gravity_north) &&
             (edges & mir_placement_gravity_south))
         {
-            size.height = application_zone.size.height;
+            placement_zone.top_left.y = output_area.top_left.y;
+            placement_zone.size.height = output_area.size.height;
+            size.height = placement_zone.size.height;
         }
 
         if (edges & mir_placement_gravity_west)
-            top_left.x = application_zone.left();
+            top_left.x = placement_zone.left();
         else if (edges & mir_placement_gravity_east)
-            top_left.x = application_zone.right() - (size.width - Width{0});
+            top_left.x = placement_zone.right() - (size.width - Width{0});
         else
-            top_left.x = application_zone.top_left.x + (application_zone.size.width - size.width) * 0.5;
+            top_left.x = placement_zone.top_left.x + (placement_zone.size.width - size.width) * 0.5;
 
         if (edges & mir_placement_gravity_north)
-            top_left.y = application_zone.top();
+            top_left.y = placement_zone.top();
         else if (edges & mir_placement_gravity_south)
-            top_left.y = application_zone.bottom() - (size.height - Height{0});
+            top_left.y = placement_zone.bottom() - (size.height - Height{0});
         else
-            top_left.y = application_zone.top_left.y + (application_zone.size.height - size.height) * 0.5;
+            top_left.y = placement_zone.top_left.y + (placement_zone.size.height - size.height) * 0.5;
         update_window = true;
         break;
     }
@@ -1304,19 +1318,18 @@ void miral::BasicWindowManager::place_and_size_for_state(
 
 auto miral::BasicWindowManager::fullscreen_rect_for(miral::WindowInfo const& window_info) const -> Rectangle
 {
-    auto const w = window_info.window();
-    Rectangle r = {(w.top_left()), w.size()};
-
     if (window_info.has_output_id())
     {
-        graphics::DisplayConfigurationOutputId id{window_info.output_id()};
-        if (display_layout->place_in_output(id, r))
-            return r;
+        for (auto const& display_area : display_areas)
+        {
+            if (display_area->output && display_area->output->id() == window_info.output_id())
+            {
+                return display_area->area;
+            }
+        }
     }
 
-    display_layout->size_to_output(r);
-
-    return r;
+    return display_area_for(window_info.window())->area;
 }
 
 void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWindowState value)
@@ -1653,7 +1666,8 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
     if (!parameters.state().is_set())
         parameters.state() = mir_window_state_restored;
 
-    auto const active_output_area = active_display_area()->application_zone.extents();;
+    auto const display_area = active_display_area();
+    auto const application_zone = display_area->application_zone.extents();;
     auto const height = parameters.size().value().height.as_int();
 
     bool positioned = false;
@@ -1710,28 +1724,32 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
 
     if (!positioned)
     {
-        auto centred = active_output_area.top_left
-                       + 0.5*(as_displacement(active_output_area.size) - as_displacement(parameters.size().value()))
-                       - DeltaY{(active_output_area.size.height.as_int()-height)/6};
+        auto centred = application_zone.top_left
+                       + 0.5*(as_displacement(application_zone.size) - as_displacement(parameters.size().value()))
+                       - DeltaY{(application_zone.size.height.as_int()-height)/6};
 
         switch (parameters.state().value())
         {
         case mir_window_state_fullscreen:
+            parameters.top_left() = display_area->area.top_left;
+            parameters.size() = display_area->area.size;
+            break;
+
         case mir_window_state_maximized:
-            parameters.top_left() = active_output_area.top_left;
-            parameters.size() = active_output_area.size;
+            parameters.top_left() = application_zone.top_left;
+            parameters.size() = application_zone.size;
             break;
 
         case mir_window_state_vertmaximized:
-            centred.y = active_output_area.top_left.y;
+            centred.y = application_zone.top_left.y;
             parameters.top_left() = centred;
-            parameters.size() = Size{parameters.size().value().width, active_output_area.size.height};
+            parameters.size() = Size{parameters.size().value().width, application_zone.size.height};
             break;
 
         case mir_window_state_horizmaximized:
-            centred.x = active_output_area.top_left.x;
+            centred.x = application_zone.top_left.x;
             parameters.top_left() = centred;
-            parameters.size() = Size{active_output_area.size.width, parameters.size().value().height};
+            parameters.size() = Size{application_zone.size.width, parameters.size().value().height};
             break;
 
         default:
@@ -2492,7 +2510,7 @@ void miral::BasicWindowManager::update_windows_for_outputs()
 
         for (auto info_ptr : first_pass)
         {
-            place_attached_to_zone(*info_ptr, zone_rect);
+            place_attached_to_zone(*info_ptr, zone_rect, area->area);
 
             auto& info = *info_ptr;
             if (info.state() == mir_window_state_attached && info.exclusive_rect().is_set())
@@ -2508,7 +2526,7 @@ void miral::BasicWindowManager::update_windows_for_outputs()
 
         for (auto info_ptr : second_pass)
         {
-            place_attached_to_zone(*info_ptr, zone_rect);
+            place_attached_to_zone(*info_ptr, zone_rect, area->area);
         }
 
         Zone new_zone{area->application_zone};

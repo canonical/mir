@@ -342,7 +342,63 @@ TEST_P(WindowPlacementAttached, window_respects_exclusive_zone_when_maximized)
     EXPECT_THAT(normal.size(), Eq(zone.size));
 }
 
-TEST_P(WindowPlacementAttached, attached_non_exclusive_window_respects_exclusive_zone)
+TEST_P(WindowPlacementAttached, fullscreen_window_ignores_exclusive_zone)
+{
+    AttachedEdges edges = GetParam();
+    Size window_size{120, 80};
+    Rectangle exclusive_rect{{0, 0}, window_size};
+
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        params.exclusive_rect = exclusive_rect;
+        create_window(params);
+    }
+
+    Window normal;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_fullscreen;
+        normal = create_window(params);
+    }
+
+    EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));
+    EXPECT_THAT(normal.size(), Eq(display_area.size));
+}
+
+TEST_P(WindowPlacementAttached, window_ignores_exclusive_zone_when_fullscreened)
+{
+    AttachedEdges edges = GetParam();
+    Size window_size{120, 80};
+    Rectangle exclusive_rect{{0, 0}, window_size};
+
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        params.exclusive_rect = exclusive_rect;
+        create_window(params);
+    }
+
+    Window normal;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_restored;
+        normal = create_window(params);
+    }
+
+    mir::shell::SurfaceSpecification spec;
+    spec.state = mir_window_state_fullscreen;
+    basic_window_manager.modify_surface(session, normal, spec);
+
+    EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));
+    EXPECT_THAT(normal.size(), Eq(display_area.size));
+}
+
+TEST_P(WindowPlacementAttached, stretched_attached_window_ignores_exclusive_zone)
 {
     AttachedEdges edges = GetParam();
     Size window_size{120, 80};
@@ -368,10 +424,10 @@ TEST_P(WindowPlacementAttached, attached_non_exclusive_window_respects_exclusive
             mir_placement_gravity_west);
         attached = create_window(params);
     }
-    Rectangle zone = apply_exclusive_zone(display_area, exclusive_rect, window_size, edges);
+    Rectangle without_exclusive_zone = display_area;
 
-    EXPECT_THAT(attached.top_left(), Eq(zone.top_left));
-    EXPECT_THAT(attached.size(), Eq(zone.size));
+    EXPECT_THAT(attached.top_left(), Eq(without_exclusive_zone.top_left));
+    EXPECT_THAT(attached.size(), Eq(without_exclusive_zone.size));
 }
 
 TEST_P(WindowPlacementAttached, maximized_window_respects_multiple_stacked_exclusive_zones)
@@ -464,6 +520,68 @@ TEST_P(WindowPlacementAttached, exclusive_zone_is_cleared_when_window_is_removed
     }
 
     basic_window_manager.remove_surface(session, attached);
+
+    EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));
+    EXPECT_THAT(normal.size(), Eq(display_area.size));
+}
+
+TEST_P(WindowPlacementAttached, exclusive_zone_is_cleared_when_window_becomes_non_attached)
+{
+    AttachedEdges edges = GetParam();
+    Size window_size{120, 80};
+    Rectangle exclusive_rect{{0, 0}, window_size};
+
+    Window attached;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        params.exclusive_rect = exclusive_rect;
+        attached = create_window(params);
+    }
+
+    Window normal;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_maximized;
+        normal = create_window(params);
+    }
+
+    mir::shell::SurfaceSpecification spec;
+    spec.state = mir_window_state_restored;
+    basic_window_manager.modify_surface(session, attached, spec);
+
+    EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));
+    EXPECT_THAT(normal.size(), Eq(display_area.size));
+}
+
+TEST_P(WindowPlacementAttached, exclusive_zone_is_cleared_when_exclusive_rect_cleared)
+{
+    AttachedEdges edges = GetParam();
+    Size window_size{120, 80};
+    Rectangle exclusive_rect{{0, 0}, window_size};
+
+    Window attached;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        params.exclusive_rect = exclusive_rect;
+        attached = create_window(params);
+    }
+
+    Window normal;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_maximized;
+        normal = create_window(params);
+    }
+
+    mir::shell::SurfaceSpecification spec;
+    spec.exclusive_rect = mir::optional_value<mir::optional_value<Rectangle>>{{}};
+    basic_window_manager.modify_surface(session, attached, spec);
 
     EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));
     EXPECT_THAT(normal.size(), Eq(display_area.size));
