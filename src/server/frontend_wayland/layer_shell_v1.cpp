@@ -21,8 +21,11 @@
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"
 #include "xdg_shell_stable.h"
+#include "wayland_utils.h"
 
 #include "mir/shell/surface_specification.h"
+#include "mir/frontend/session.h"
+#include "mir/log.h"
 #include <boost/throw_exception.hpp>
 #include <deque>
 #include <mutex>
@@ -88,6 +91,8 @@ public:
         MirDepthLayer layer);
 
     ~LayerSurfaceV1() = default;
+
+    static auto from(wl_resource* surface) -> std::experimental::optional<LayerSurfaceV1*>;
 
 private:
     struct OptionalSize
@@ -158,6 +163,29 @@ mf::LayerShellV1::LayerShellV1(
 {
 }
 
+auto mf::LayerShellV1::get_window(wl_resource* surface) -> std::shared_ptr<Surface>
+{
+    namespace mw = mir::wayland;
+
+    if (mw::LayerSurfaceV1::is_instance(surface))
+    {
+        auto const layer_surface = LayerSurfaceV1::from(surface);
+        if (layer_surface)
+        {
+            auto const id = layer_surface.value()->surface_id();
+            if (id.as_value())
+            {
+                auto const session = get_session(static_cast<mw::LayerSurfaceV1*>(layer_surface.value())->client);
+                return session->get_surface(id);
+            }
+        }
+
+        log_debug("No window currently associated with wayland::LayerSurfaceV1 %p", surface);
+    }
+
+    return {};
+}
+
 void mf::LayerShellV1::bind(wl_resource* new_resource)
 {
     new Instance{new_resource, this};
@@ -200,6 +228,18 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
     spec.state = mir_window_state_attached;
     spec.depth_layer = layer;
     apply_spec(spec);
+}
+
+auto mf::LayerSurfaceV1::from(wl_resource* surface) -> std::experimental::optional<LayerSurfaceV1*>
+{
+    if (!mw::LayerSurfaceV1::is_instance(surface))
+        return std::experimental::nullopt;
+    auto const mw_surface = mw::LayerSurfaceV1::from(surface);
+    auto const mf_surface = dynamic_cast<mf::LayerSurfaceV1*>(mw_surface);
+    if (mf_surface)
+        return mf_surface;
+    else
+        return std::experimental::nullopt;
 }
 
 auto mf::LayerSurfaceV1::get_placement_gravity() const -> MirPlacementGravity
