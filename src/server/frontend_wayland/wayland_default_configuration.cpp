@@ -203,5 +203,8 @@ auto mir::frontend::get_window(wl_resource* surface) -> std::shared_ptr<Surface>
     if (auto result = XdgShellV6::get_window(surface))
         return result;
 
+    if (auto result = LayerShellV1::get_window(surface))
+        return result;
+
     return {};
 }
