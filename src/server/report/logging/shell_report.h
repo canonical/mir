@@ -38,7 +38,7 @@ public:
 
     void created_surface(
         scene::Session const& session,
-        frontend::SurfaceId surface_id) override;
+        scene::Surface const& surface) override;
 
     void update_surface(
         scene::Session const& session,
@@ -52,7 +52,7 @@ public:
 
     void destroying_surface(
         scene::Session const& session,
-        frontend::SurfaceId surface) override;
+        scene::Surface const& surface) override;
 
     void started_prompt_session(
         scene::PromptSession const& prompt_session,

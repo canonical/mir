@@ -263,10 +263,13 @@ TEST_F(CustomWindowManagement, state_change_requests_are_associated_with_correct
         auto const grab_server_surface = [i, &server_surface](
             std::shared_ptr<ms::Session> const& session,
             ms::SurfaceCreationParameters const& params,
-            std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
+            std::function<std::shared_ptr<ms::Surface>(
+                std::shared_ptr<ms::Session> const& session,
+                ms::SurfaceCreationParameters const& params)> const& build)
+            -> std::shared_ptr<ms::Surface>
             {
                 auto const result = build(session, params);
-                server_surface[i] = session->surface(result);
+                server_surface[i] = result;
                 return result;
             };
 
@@ -314,7 +317,10 @@ TEST_F(CustomWindowManagement, create_low_chrome_surface_from_spec)
     auto const check_add_surface = [](
         std::shared_ptr<ms::Session> const& session,
         ms::SurfaceCreationParameters const& params,
-        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
+        std::function<std::shared_ptr<ms::Surface>(
+            std::shared_ptr<ms::Session> const& session,
+            ms::SurfaceCreationParameters const& params)> const& build)
+        -> std::shared_ptr<ms::Surface>
             {
                 EXPECT_TRUE(params.shell_chrome.is_set());
                 return build(session, params);
@@ -458,7 +464,10 @@ TEST_F(CustomWindowManagement, when_the_client_places_a_new_surface_the_request_
     auto const check_placement = [&](
         std::shared_ptr<ms::Session> const& session,
         ms::SurfaceCreationParameters const& params,
-        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
+        std::function<std::shared_ptr<ms::Surface>(
+            std::shared_ptr<ms::Session> const& session,
+            ms::SurfaceCreationParameters const& params)> const& build)
+        -> std::shared_ptr<ms::Surface>
         {
             EXPECT_TRUE(params.aux_rect.is_set());
             if (params.aux_rect.is_set())
@@ -662,12 +671,13 @@ TEST_F(CustomWindowManagement, when_the_window_manager_places_a_surface_the_noti
     auto capture_scene_surface = [&](
         std::shared_ptr<ms::Session> const& session,
         ms::SurfaceCreationParameters const& params,
-        std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
-        ->  mf::SurfaceId
+        std::function<std::shared_ptr<mir::scene::Surface>(
+            std::shared_ptr<ms::Session> const& session,
+            ms::SurfaceCreationParameters const& params)> const& build)
+        ->  std::shared_ptr<mir::scene::Surface>
         {
-            auto const result = build(session, params);
-            scene_surface = session->surface(result);
-            return result;
+            scene_surface = build(session, params);
+            return scene_surface;
         };
 
     EXPECT_CALL(window_manager, add_surface(_,_,_)).WillOnce(Invoke(capture_scene_surface));

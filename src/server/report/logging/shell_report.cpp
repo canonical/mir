@@ -60,14 +60,13 @@ void mrl::ShellReport::closing_session(Session const& session)
 
 void mrl::ShellReport::created_surface(
     Session const& session,
-    frontend::SurfaceId surface_id)
+    scene::Surface const& surface)
 {
-    auto const surface = session.surface(surface_id);
     std::ostringstream out;
 
-    log_basics(out, session, *surface, "created");
+    log_basics(out, session, surface, "created");
 
-    if (auto const parent = surface->parent())
+    if (auto const parent = surface.parent())
         out << ", parent=\"" << parent->name() << "\"";
 
     log->log(Severity::informational, out.str(), component);
@@ -95,10 +94,10 @@ void mrl::ShellReport::update_surface(
 
 void mrl::ShellReport::destroying_surface(
     Session const& session,
-    frontend::SurfaceId surface_id)
+    scene::Surface const& surface)
 {
     std::ostringstream out;
-    log_basics(out, session, *session.surface(surface_id), "destroying");
+    log_basics(out, session, surface, "destroying");
     log->log(Severity::informational, out.str(), component);
 }
 

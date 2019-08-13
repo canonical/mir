@@ -51,21 +51,26 @@ public:
 
     ~AbstractShell() noexcept;
 
-    std::shared_ptr<scene::Session> open_session(
+    auto open_session(
         pid_t client_pid,
         std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink) override;
+        std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<scene::Session> override;
 
     void close_session(std::shared_ptr<scene::Session> const& session) override;
 
-    frontend::SurfaceId create_surface(
+    auto create_surface(
         std::shared_ptr<scene::Session> const& session,
         scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& sink) override;
+        std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<scene::Surface> override;
 
-    void modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications) override;
+    void modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        SurfaceSpecification const& modifications) override;
 
-    void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override;
+    void destroy_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface) override;
 
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,

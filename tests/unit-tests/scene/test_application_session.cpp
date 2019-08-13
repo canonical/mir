@@ -401,21 +401,21 @@ TEST_F(ApplicationSession, default_surface_is_first_surface)
 
     ms::SurfaceCreationParameters params = ms::a_surface()
         .with_buffer_stream(app_session->create_buffer_stream(properties));
-    auto id1 = app_session->create_surface(params, nullptr);
-    auto id2 = app_session->create_surface(params, nullptr);
-    auto id3 = app_session->create_surface(params, nullptr);
+    auto surface1 = app_session->create_surface(params, nullptr);
+    auto surface2 = app_session->create_surface(params, nullptr);
+    auto surface3 = app_session->create_surface(params, nullptr);
 
     auto default_surf = app_session->default_surface();
-    EXPECT_EQ(app_session->surface(id1), default_surf);
-    app_session->destroy_surface(id1);
+    EXPECT_EQ(surface1, default_surf);
+    app_session->destroy_surface(surface1);
 
     default_surf = app_session->default_surface();
-    EXPECT_EQ(app_session->surface(id2), default_surf);
-    app_session->destroy_surface(id2);
+    EXPECT_EQ(surface2, default_surf);
+    app_session->destroy_surface(surface2);
 
     default_surf = app_session->default_surface();
-    EXPECT_EQ(app_session->surface(id3), default_surf);
-    app_session->destroy_surface(id3);
+    EXPECT_EQ(surface3, default_surf);
+    app_session->destroy_surface(surface3);
 }
 
 TEST_F(ApplicationSession, foreign_surface_has_no_successor)
@@ -423,17 +423,16 @@ TEST_F(ApplicationSession, foreign_surface_has_no_successor)
     auto session1 = make_application_session_with_stubs();
     ms::SurfaceCreationParameters params = ms::a_surface()
         .with_buffer_stream(session1->create_buffer_stream(properties));
-    auto id1 = session1->create_surface(params, nullptr);
-    auto surf1 = session1->surface(id1);
-    auto id2 = session1->create_surface(params, nullptr);
+    auto surf1 = session1->create_surface(params, nullptr);
+    auto surf2 = session1->create_surface(params, nullptr);
 
     auto session2 = make_application_session_with_stubs();
 
     EXPECT_THROW({session2->surface_after(surf1);},
                  std::runtime_error);
 
-    session1->destroy_surface(id1);
-    session1->destroy_surface(id2);
+    session1->destroy_surface(surf1);
+    session1->destroy_surface(surf2);
 }
 
 TEST_F(ApplicationSession, surface_after_one_is_self)
@@ -441,12 +440,11 @@ TEST_F(ApplicationSession, surface_after_one_is_self)
     auto session = make_application_session_with_stubs();
     ms::SurfaceCreationParameters params = ms::a_surface()
         .with_buffer_stream(session->create_buffer_stream(properties));
-    auto id = session->create_surface(params, nullptr);
-    auto surf = session->surface(id);
+    auto surf = session->create_surface(params, nullptr);
 
     EXPECT_EQ(surf, session->surface_after(surf));
 
-    session->destroy_surface(id);
+    session->destroy_surface(surf);
 }
 
 TEST_F(ApplicationSession, surface_after_cycles_through_all)
@@ -458,12 +456,10 @@ TEST_F(ApplicationSession, surface_after_cycles_through_all)
 
     int const N = 3;
     std::shared_ptr<ms::Surface> surf[N];
-    mf::SurfaceId id[N];
 
     for (int i = 0; i < N; ++i)
     {
-        id[i] = app_session->create_surface(params, nullptr);
-        surf[i] = app_session->surface(id[i]);
+        surf[i] = app_session->create_surface(params, nullptr);
 
         if (i > 0)
         {
@@ -477,7 +473,7 @@ TEST_F(ApplicationSession, surface_after_cycles_through_all)
     EXPECT_EQ(surf[0], app_session->surface_after(surf[N-1]));
 
     for (int i = 0; i < N; ++i)
-        app_session->destroy_surface(id[i]);
+        app_session->destroy_surface(surf[i]);
 }
 
 TEST_F(ApplicationSession, session_visbility_propagates_to_surfaces)
@@ -1002,8 +998,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_events_to_surfaces)
     ms::SurfaceCreationParameters params = ms::SurfaceCreationParameters{}
         .of_size({100, 100})
         .with_buffer_stream(app_session.create_buffer_stream(properties));
-    auto surf_id = app_session.create_surface(params, sender);
-    auto surface = app_session.surface(surf_id);
+    auto surface = app_session.create_surface(params, sender);
 
     ASSERT_TRUE(event_received);
     EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
@@ -1032,14 +1027,10 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
         .of_size({100, 100})
         .with_buffer_stream(app_session.create_buffer_stream(properties));
 
-    mf::SurfaceId ids[2];
     std::shared_ptr<ms::Surface> surfaces[2];
 
-    ids[0] = app_session.create_surface(params, sender);
-    ids[1] = app_session.create_surface(params, sender);
-
-    surfaces[0] = app_session.surface(ids[0]);
-    surfaces[1] = app_session.surface(ids[1]);
+    surfaces[0] = app_session.create_surface(params, sender);
+    surfaces[1] = app_session.create_surface(params, sender);
 
     surfaces[0]->move_to({0 + 100, 100});
     surfaces[1]->move_to({outputs[0]->width + 100, 100});
@@ -1061,7 +1052,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
 
     for (int i = 0; i < 2 ; ++i)
     {
-        EXPECT_THAT(event[i].to_window_output()->surface_id(), Eq(ids[i].as_value()));
+        EXPECT_THAT(app_session.surface(mf::SurfaceId{event[i].to_window_output()->surface_id()}), Eq(surfaces[i]));
         EXPECT_THAT(&event[i], SurfaceOutputEventFor(*outputs[i]));
     }
 }
@@ -1089,8 +1080,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
         .of_size({100, 100})
         .with_buffer_stream(app_session.create_buffer_stream(properties));
 
-    auto id = app_session.create_surface(params, sender);
-    auto surface = app_session.surface(id);
+    auto surface = app_session.create_surface(params, sender);
 
     // This should overlap both outputs
     surface->move_to({outputs[0]->width - 50, 100});
@@ -1110,7 +1100,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
 
     ASSERT_TRUE(event_received);
 
-    EXPECT_THAT(event.to_window_output()->surface_id(), Eq(id.as_value()));
+    EXPECT_THAT(app_session.surface(mf::SurfaceId{event.to_window_output()->surface_id()}), Eq(surface));
     EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
 }
 
@@ -1150,8 +1140,7 @@ TEST_F(ApplicationSessionSurfaceOutput, surfaces_on_edges_get_correct_values)
         .of_size({640, 480})
         .with_buffer_stream(app_session.create_buffer_stream(properties));
 
-    auto id = app_session.create_surface(params, sender);
-    auto surface = app_session.surface(id);
+    auto surface = app_session.create_surface(params, sender);
 
     // This should solidly overlap both outputs
     surface->move_to({outputs[0]->width - ((surface->size().width.as_uint32_t()) / 2), 100});
@@ -1211,8 +1200,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
         .of_size({100, 100})
         .with_buffer_stream(app_session.create_buffer_stream(properties));
 
-    auto id = app_session.create_surface(params, sender);
-    auto surface = app_session.surface(id);
+    auto surface = app_session.create_surface(params, sender);
 
     // This should overlap both outputs
     surface->move_to({outputs[0]->width - 50, 100});
@@ -1221,7 +1209,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Ge(1));
     auto events_expected = events_received + 1;
 
-    EXPECT_THAT(event.to_window_output()->surface_id(), Eq(id.as_value()));
+    EXPECT_THAT(app_session.surface(mf::SurfaceId{event.to_window_output()->surface_id()}), Eq(surface));
     EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
 
     // Now solely on the left output
@@ -1230,7 +1218,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Eq(events_expected));
     events_expected++;
 
-    EXPECT_THAT(event.to_window_output()->surface_id(), Eq(id.as_value()));
+    EXPECT_THAT(app_session.surface(mf::SurfaceId{event.to_window_output()->surface_id()}), Eq(surface));
     EXPECT_THAT(&event, SurfaceOutputEventFor(projector));
 
     // Now solely on the right output
@@ -1239,7 +1227,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Eq(events_expected));
     events_expected++;
 
-    EXPECT_THAT(event.to_window_output()->surface_id(), Eq(id.as_value()));
+    EXPECT_THAT(app_session.surface(mf::SurfaceId{event.to_window_output()->surface_id()}), Eq(surface));
     EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
 }
 
@@ -1274,8 +1262,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move_only_
         .of_size({100, 100})
         .with_buffer_stream(app_session.create_buffer_stream(properties));
 
-    auto id = app_session.create_surface(params, sender);
-    auto surface = app_session.surface(id);
+    auto surface = app_session.create_surface(params, sender);
 
     // We get an event on surface creation.
     EXPECT_THAT(events_received, Eq(1));

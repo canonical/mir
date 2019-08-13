@@ -42,10 +42,12 @@ struct MockWindowManager : shell::WindowManager
     MOCK_METHOD1(add_session, void (std::shared_ptr<scene::Session> const&));
     MOCK_METHOD1(remove_session, void (std::shared_ptr<scene::Session> const&));
 
-    MOCK_METHOD3(add_surface, frontend::SurfaceId(
+    MOCK_METHOD3(add_surface, std::shared_ptr<scene::Surface>(
         std::shared_ptr<scene::Session> const& session,
         scene::SurfaceCreationParameters const& params,
-        std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build));
+        std::function<std::shared_ptr<scene::Surface>(
+            std::shared_ptr<scene::Session> const& session,
+            scene::SurfaceCreationParameters const& params)> const& build));
 
     MOCK_METHOD3(modify_surface, void(std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, shell::SurfaceSpecification const&));
     MOCK_METHOD2(remove_surface, void(std::shared_ptr<scene::Session> const&, std::weak_ptr<scene::Surface> const&));
@@ -68,10 +70,12 @@ struct MockWindowManager : shell::WindowManager
             MirWindowAttrib attrib,
             int value));
 
-    static frontend::SurfaceId add_surface_default(
+    static auto add_surface_default(
         std::shared_ptr<scene::Session> const& session,
         scene::SurfaceCreationParameters const& params,
-        std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build)
+        std::function<std::shared_ptr<scene::Surface>(
+            std::shared_ptr<scene::Session> const& session,
+            scene::SurfaceCreationParameters const& params)> const& build) -> std::shared_ptr<scene::Surface>
         { return build(session, params); }
 };
 

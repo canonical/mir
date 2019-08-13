@@ -45,6 +45,12 @@ public:
     auto name() const -> std::string override;
     auto get_surface(SurfaceId surface) const -> std::shared_ptr<Surface> override;
 
+    auto create_surface(
+        std::shared_ptr<shell::Shell> const& shell,
+        scene::SurfaceCreationParameters const& params,
+        std::shared_ptr<EventSink> const& sink) -> SurfaceId override;
+    void destroy_surface(std::shared_ptr<shell::Shell> const& shell, SurfaceId surface) override;
+
     auto create_buffer_stream(graphics::BufferProperties const& props) -> BufferStreamId override;
     auto get_buffer_stream(BufferStreamId stream) const -> std::shared_ptr<BufferStream> override;
     void destroy_buffer_stream(BufferStreamId stream) override;

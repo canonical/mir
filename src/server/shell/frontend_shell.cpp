@@ -106,7 +106,7 @@ mf::SurfaceId msh::FrontendShell::create_surface(
     if (populated_params.parent_id.is_set())
         populated_params.parent = scene_session->surface(populated_params.parent_id.value());
 
-    return wrapped->create_surface(scene_session, populated_params, sink);
+    return session->create_surface(wrapped, populated_params, sink);
 }
 
 void msh::FrontendShell::modify_surface(std::shared_ptr<mf::MirClientSession> const& session, mf::SurfaceId surface_id, SurfaceSpecification const& modifications)
@@ -124,8 +124,7 @@ void msh::FrontendShell::modify_surface(std::shared_ptr<mf::MirClientSession> co
 
 void msh::FrontendShell::destroy_surface(std::shared_ptr<mf::MirClientSession> const& session, mf::SurfaceId surface)
 {
-    auto const scene_session = scene_session_for(session);
-    wrapped->destroy_surface(scene_session, surface);
+    session->destroy_surface(wrapped, surface);
 }
 
 std::string msh::FrontendShell::persistent_id_for(std::shared_ptr<mf::MirClientSession> const& session, mf::SurfaceId surface_id)

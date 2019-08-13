@@ -45,7 +45,7 @@ struct MockShell : msh::ShellWrapper
 {
     using msh::ShellWrapper::ShellWrapper;
     MOCK_METHOD3(create_surface,
-        mf::SurfaceId(
+        std::shared_ptr<ms::Surface>(
             std::shared_ptr<ms::Session> const&,
             ms::SurfaceCreationParameters const&,
             std::shared_ptr<mf::EventSink> const&));

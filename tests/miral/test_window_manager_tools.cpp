@@ -130,9 +130,9 @@ struct StubSurface : mir::test::doubles::StubSurface
 
 struct StubStubSession : mir::test::doubles::StubSession
 {
-    mir::frontend::SurfaceId create_surface(
+    auto create_surface(
         mir::scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<mir::frontend::EventSink> const& /*sink*/) override
+        std::shared_ptr<mir::frontend::EventSink> const& /*sink*/) -> std::shared_ptr<mir::scene::Surface> override
     {
         auto id = mir::frontend::SurfaceId{next_surface_id.fetch_add(1)};
         auto surface = std::make_shared<StubSurface>(
@@ -144,7 +144,7 @@ struct StubStubSession : mir::test::doubles::StubSession
                 params.depth_layer.value()
                 : mir_depth_layer_application);
         surfaces[id] = surface;
-        return id;
+        return surface;
     }
 
     std::shared_ptr<mir::scene::Surface> surface(mir::frontend::SurfaceId surface) const override
@@ -286,7 +286,7 @@ mt::TestWindowManagerTools::~TestWindowManagerTools() = default;
 
 auto mt::TestWindowManagerTools::create_surface(
     std::shared_ptr<mir::scene::Session> const& session,
-    mir::scene::SurfaceCreationParameters const& params) -> mir::frontend::SurfaceId
+    mir::scene::SurfaceCreationParameters const& params) -> std::shared_ptr<mir::scene::Surface>
 {
     // This type is Mir-internal, I hope we don't need to create it here
     std::shared_ptr<mir::frontend::EventSink> const sink;

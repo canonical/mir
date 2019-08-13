@@ -22,6 +22,7 @@
 #include "mir/scene/surface.h"
 
 namespace msh = mir::shell;
+namespace ms = mir::scene;
 namespace msc = mir::scene;
 namespace mf = mir::frontend;
 namespace mtf = mir_test_framework;
@@ -33,13 +34,13 @@ mtf::ObservantShell::ObservantShell(
     surface_observer(surface_observer)
 {
 }
-mf::SurfaceId mtf::ObservantShell::create_surface(
+
+auto mtf::ObservantShell::create_surface(
     std::shared_ptr<msc::Session> const& session,
     msc::SurfaceCreationParameters const& params,
-    std::shared_ptr<mf::EventSink> const& sink) 
+    std::shared_ptr<mf::EventSink> const& sink) -> std::shared_ptr<ms::Surface>
 {
-    auto id = msh::ShellWrapper::create_surface(session, params, sink);
-    auto window = session->surface(id);
+    auto window = msh::ShellWrapper::create_surface(session, params, sink);
     window->add_observer(surface_observer);
-    return id;
+    return window;
 }

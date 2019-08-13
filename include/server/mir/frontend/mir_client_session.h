@@ -27,9 +27,14 @@
 
 namespace mir
 {
+namespace shell
+{
+class Shell;
+}
 namespace scene
 {
 class Session;
+struct SurfaceCreationParameters;
 }
 namespace graphics
 {
@@ -39,6 +44,7 @@ namespace frontend
 {
 class Surface;
 class BufferStream;
+class EventSink;
 
 /// Session interface specific to applications using the deprecated mirclient protocol
 class MirClientSession
@@ -48,6 +54,12 @@ public:
 
     virtual auto name() const -> std::string = 0;
     virtual auto get_surface(SurfaceId surface) const -> std::shared_ptr<Surface> = 0;
+
+    virtual auto create_surface(
+        std::shared_ptr<shell::Shell> const& shell,
+        scene::SurfaceCreationParameters const& params,
+        std::shared_ptr<EventSink> const& sink) -> SurfaceId = 0;
+    virtual void destroy_surface(std::shared_ptr<shell::Shell> const& shell, SurfaceId surface) = 0;
 
     virtual auto create_buffer_stream(graphics::BufferProperties const& props) -> BufferStreamId = 0;
     virtual auto get_buffer_stream(BufferStreamId stream) const -> std::shared_ptr<BufferStream> = 0;

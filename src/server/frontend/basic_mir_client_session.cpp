@@ -40,6 +40,20 @@ auto mf::BasicMirClientSession::get_surface(SurfaceId surface) const -> std::sha
     return session_->surface(surface);
 }
 
+auto mf::BasicMirClientSession::create_surface(
+    std::shared_ptr<shell::Shell> const& shell,
+    scene::SurfaceCreationParameters const& params,
+    std::shared_ptr<EventSink> const& sink) -> SurfaceId
+{
+    auto surface = shell->create_surface(session_, params, sink);
+    return session_->surface_id(surface);
+}
+
+void mf::BasicMirClientSession::destroy_surface(std::shared_ptr<shell::Shell> const& shell, SurfaceId surface)
+{
+    shell->destroy_surface(session_, session_->surface(surface));
+}
+
 auto mf::BasicMirClientSession::create_buffer_stream(graphics::BufferProperties const& props) -> BufferStreamId
 {
     return session_->create_buffer_stream(props);

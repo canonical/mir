@@ -71,11 +71,12 @@ public:
 
     ~ApplicationSession();
 
-    frontend::SurfaceId create_surface(
+    auto create_surface(
         SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& surface_sink) override;
+        std::shared_ptr<frontend::EventSink> const& surface_sink) -> std::shared_ptr<scene::Surface> override;
     void destroy_surface(frontend::SurfaceId surface) override;
-    std::shared_ptr<Surface> surface(frontend::SurfaceId surface) const override;
+    auto surface(frontend::SurfaceId surface) const -> std::shared_ptr<Surface> override;
+    auto surface_id(std::shared_ptr<scene::Surface> const& surface) const -> frontend::SurfaceId override;
     std::shared_ptr<Surface> surface_after(std::shared_ptr<Surface> const&) const override;
 
     void take_snapshot(SnapshotCallback const& snapshot_taken) override;
@@ -130,8 +131,9 @@ private:
 
     typedef std::map<frontend::SurfaceId, std::shared_ptr<Surface>> Surfaces;
     typedef std::map<frontend::BufferStreamId, std::shared_ptr<compositor::BufferStream>> Streams;
-    Surfaces::const_iterator checked_find(frontend::SurfaceId id) const;
-    Streams::const_iterator checked_find(frontend::BufferStreamId id) const;
+    auto checked_find(frontend::SurfaceId id) const -> Surfaces::const_iterator;
+    auto checked_find(std::shared_ptr<scene::Surface> const& surface) const -> Surfaces::const_iterator;
+    auto checked_find(frontend::BufferStreamId id) const -> Streams::const_iterator;
     std::mutex mutable surfaces_and_streams_mutex;
     Surfaces surfaces;
     Streams streams;

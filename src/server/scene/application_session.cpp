@@ -152,9 +152,9 @@ mf::SurfaceId ms::ApplicationSession::next_id()
     return mf::SurfaceId(next_surface_id.fetch_add(1));
 }
 
-mf::SurfaceId ms::ApplicationSession::create_surface(
+auto ms::ApplicationSession::create_surface(
     SurfaceCreationParameters const& the_params,
-    std::shared_ptr<mf::EventSink> const& surface_sink)
+    std::shared_ptr<mf::EventSink> const& surface_sink) -> std::shared_ptr<scene::Surface>
 {
     auto const id = next_id();
 
@@ -228,10 +228,11 @@ mf::SurfaceId ms::ApplicationSession::create_surface(
     if (params.depth_layer.is_set())
         surface->set_depth_layer(params.depth_layer.value());
 
-    return id;
+    return surface;
 }
 
-ms::ApplicationSession::Surfaces::const_iterator ms::ApplicationSession::checked_find(mf::SurfaceId id) const
+auto ms::ApplicationSession::checked_find(
+    mf::SurfaceId id) const -> ms::ApplicationSession::Surfaces::const_iterator
 {
     auto p = surfaces.find(id);
     if (p == surfaces.end())
@@ -239,7 +240,20 @@ ms::ApplicationSession::Surfaces::const_iterator ms::ApplicationSession::checked
     return p;
 }
 
-ms::ApplicationSession::Streams::const_iterator ms::ApplicationSession::checked_find(mf::BufferStreamId id) const
+auto ms::ApplicationSession::checked_find(
+    std::shared_ptr<ms::Surface> const& surface) const -> ms::ApplicationSession::Surfaces::const_iterator
+{
+    auto p = std::find_if(surfaces.begin(), surfaces.end(), [&](auto iter)
+        {
+            return iter.second == surface;
+        });
+    if (p == surfaces.end())
+        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid Surface"));
+    return p;
+}
+
+auto ms::ApplicationSession::checked_find(
+    mf::BufferStreamId id) const -> ms::ApplicationSession::Streams::const_iterator
 {
     auto p = streams.find(id);
     if (p == streams.end())
@@ -247,10 +261,16 @@ ms::ApplicationSession::Streams::const_iterator ms::ApplicationSession::checked_
     return p;
 }
 
-std::shared_ptr<ms::Surface> ms::ApplicationSession::surface(mf::SurfaceId id) const
+auto ms::ApplicationSession::surface(mf::SurfaceId id) const -> std::shared_ptr<ms::Surface>
 {
     std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
     return checked_find(id)->second;
+}
+
+auto ms::ApplicationSession::surface_id(std::shared_ptr<ms::Surface> const& surface) const -> mf::SurfaceId
+{
+    std::unique_lock<std::mutex> lock(surfaces_and_streams_mutex);
+    return checked_find(surface)->first;
 }
 
 std::shared_ptr<ms::Surface> ms::ApplicationSession::surface_after(std::shared_ptr<ms::Surface> const& before) const
