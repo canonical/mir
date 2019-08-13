@@ -23,24 +23,27 @@
 
 namespace mir
 {
+namespace shell
+{
+class Shell;
+}
 namespace frontend
 {
 class OutputManager;
 class WlSeat;
 class WlSurface;
-class Shell;
 class XWaylandWMShellSurface;
 class XWaylandWMShell
 {
 public:
-    XWaylandWMShell(std::shared_ptr<Shell> const& shell, WlSeat& seat,
+    XWaylandWMShell(std::shared_ptr<shell::Shell> const& shell, WlSeat& seat,
                     OutputManager* const output_manager);
 
     std::shared_ptr<XWaylandWMShellSurface> get_shell_surface(wl_client* client,
                                                               WlSurface* surface);
 
 private:
-    std::shared_ptr<Shell> const shell;
+    std::shared_ptr<shell::Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;
 };

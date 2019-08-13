@@ -25,13 +25,14 @@
 #include "output_manager.h"
 
 #include "mir/shell/surface_specification.h"
-#include "mir/frontend/mir_client_session.h"
 #include "mir/log.h"
 #include <boost/throw_exception.hpp>
 #include <deque>
 #include <mutex>
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
 
@@ -155,7 +156,7 @@ private:
 
 mf::LayerShellV1::LayerShellV1(
     struct wl_display* display,
-    std::shared_ptr<Shell> const shell,
+    std::shared_ptr<msh::Shell> shell,
     WlSeat& seat,
     OutputManager* output_manager)
     : Global(display, Version<1>()),
@@ -165,21 +166,17 @@ mf::LayerShellV1::LayerShellV1(
 {
 }
 
-auto mf::LayerShellV1::get_window(wl_resource* surface) -> std::shared_ptr<Surface>
+auto mf::LayerShellV1::get_window(wl_resource* surface) -> std::shared_ptr<ms::Surface>
 {
     namespace mw = mir::wayland;
 
     if (mw::LayerSurfaceV1::is_instance(surface))
     {
-        auto const layer_surface = LayerSurfaceV1::from(surface);
-        if (layer_surface)
+        if (auto const layer_surface = LayerSurfaceV1::from(surface))
         {
-            auto const id = layer_surface.value()->surface_id();
-            if (id.as_value())
+            if (auto const scene_surface = layer_surface.value()->scene_surface())
             {
-                auto const session = get_mir_client_session(
-                    static_cast<mw::LayerSurfaceV1*>(layer_surface.value())->client);
-                return session->get_surface(id);
+                return scene_surface.value();
             }
         }
 
@@ -403,7 +400,10 @@ void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
     auto* const popup_window_role = XdgPopupStable::from(popup);
 
     mir::shell::SurfaceSpecification specification;
-    specification.parent_id = surface_id();
+    if (auto scene_surface_ = scene_surface())
+        specification.parent = scene_surface_.value();
+    else
+        log_warning("Layer surface can not be a popup parent because it does not have a Mir surface");
 
     popup_window_role->apply_spec(specification);
 }

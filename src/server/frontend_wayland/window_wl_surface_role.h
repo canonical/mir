@@ -25,7 +25,6 @@
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"
-#include "mir/optional_value.h"
 
 #include <mir_toolkit/common.h>
 
@@ -41,14 +40,15 @@ namespace scene
 {
 struct SurfaceCreationParameters;
 class Surface;
+class Session;
 }
 namespace shell
 {
 struct SurfaceSpecification;
+class Shell;
 }
 namespace frontend
 {
-class Shell;
 class WaylandSurfaceObserver;
 class OutputManager;
 class WlSurface;
@@ -58,13 +58,17 @@ class WindowWlSurfaceRole : public WlSurfaceRole
 {
 public:
 
-    WindowWlSurfaceRole(WlSeat* seat, wl_client* client, WlSurface* surface,
-                        std::shared_ptr<frontend::Shell> const& shell, OutputManager* output_manager);
+    WindowWlSurfaceRole(
+        WlSeat* seat,
+        wl_client* client,
+        WlSurface* surface,
+        std::shared_ptr<shell::Shell> const& shell,
+        OutputManager* output_manager);
 
     ~WindowWlSurfaceRole() override;
 
     std::shared_ptr<bool> destroyed_flag() const { return destroyed; }
-    SurfaceId surface_id() const override { return surface_id_; };
+    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
 
     void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
     void refresh_surface_data_now() override;
@@ -76,7 +80,7 @@ public:
     void set_title(std::string const& title);
     void initiate_interactive_move();
     void initiate_interactive_resize(MirResizeEdge edge);
-    void set_parent(optional_value<SurfaceId> parent_id);
+    void set_parent(std::experimental::optional<std::weak_ptr<scene::Surface>> const& parent);
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
     void set_fullscreen(std::experimental::optional<wl_resource*> const& output);
@@ -111,13 +115,23 @@ protected:
 
     void commit(WlSurfaceState const& state) override;
 
+    /// Locks and returns weak_shell
+    /// Throws std::logic_error if the shell is null
+    auto shell_checked() -> std::shared_ptr<shell::Shell>;
+
+    /// Locks and returns weak_session
+    /// Throws std::logic_error if the session is null
+    auto session_checked() -> std::shared_ptr<scene::Session>;
+
 private:
-    wl_client* const client;
     WlSurface* const surface;
-    std::shared_ptr<frontend::Shell> const shell;
+    wl_client* client;
+    std::weak_ptr<shell::Shell> const weak_shell;
+    std::weak_ptr<scene::Session> const weak_session;
     OutputManager* output_manager;
     std::shared_ptr<WaylandSurfaceObserver> const observer;
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
+    std::weak_ptr<scene::Surface> weak_scene_surface;
 
     /// The explicitly set (not taken from the surface buffer size) uncommitted window size
     /// @{
@@ -134,7 +148,6 @@ private:
     /// The last committed window size (either explicitly set or taken from the surface buffer size)
     std::experimental::optional<geometry::Size> committed_size;
 
-    SurfaceId surface_id_;
     std::unique_ptr<shell::SurfaceSpecification> pending_changes;
 
     void visiblity(bool visible) override;

@@ -24,10 +24,13 @@
 
 namespace mir
 {
-namespace frontend
+namespace scene
 {
 class Shell;
 class Surface;
+}
+namespace frontend
+{
 class WlSeat;
 class OutputManager;
 class WlSurface;
@@ -36,10 +39,14 @@ class XdgSurfaceStable;
 class XdgShellStable : public wayland::XdgWmBase::Global
 {
 public:
-    XdgShellStable(wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat, OutputManager* output_manager);
+    XdgShellStable(
+        wl_display* display,
+        std::shared_ptr<shell::Shell> shell,
+        WlSeat& seat,
+        OutputManager* output_manager);
 
-    static auto get_window(wl_resource* surface) -> std::shared_ptr<Surface>;
-    std::shared_ptr<Shell> const shell;
+    static auto get_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>;
+    std::shared_ptr<shell::Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;
 

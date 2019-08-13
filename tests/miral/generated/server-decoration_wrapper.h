@@ -20,6 +20,9 @@ namespace mir
 namespace wayland
 {
 
+class ServerDecorationManager;
+class ServerDecoration;
+
 class ServerDecorationManager : public Resource
 {
 public:

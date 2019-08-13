@@ -35,6 +35,7 @@
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace mo = mir::options;
 namespace mw = mir::wayland;
 
@@ -80,7 +81,7 @@ auto configure_wayland_extensions(
     protected:
         void custom_extensions(
             wl_display* display,
-            std::shared_ptr<mf::Shell> const& shell,
+            std::shared_ptr<msh::Shell> const& shell,
             mf::WlSeat* seat,
             mf::OutputManager* const output_manager) override
         {
@@ -157,7 +158,7 @@ std::shared_ptr<mf::Connector>
 
             return std::make_shared<mf::WaylandConnector>(
                 display_name,
-                the_frontend_shell(),
+                the_shell(),
                 display_config,
                 the_input_device_hub(),
                 the_seat(),
@@ -188,7 +189,7 @@ void mir::DefaultServerConfiguration::set_enabled_wayland_extensions(std::vector
     enabled_wayland_extensions = extensions;
 }
 
-auto mir::frontend::get_window(wl_resource* surface) -> std::shared_ptr<Surface>
+auto mir::frontend::get_window(wl_resource* surface) -> std::shared_ptr<ms::Surface>
 {
     if (auto result = get_wl_shell_window(surface))
         return result;

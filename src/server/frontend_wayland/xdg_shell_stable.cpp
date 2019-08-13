@@ -29,6 +29,8 @@
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
 
@@ -144,8 +146,11 @@ private:
 
 // XdgShellStable
 
-mf::XdgShellStable::XdgShellStable(struct wl_display* display, std::shared_ptr<mf::Shell> const shell, WlSeat& seat,
-                                   OutputManager* output_manager)
+mf::XdgShellStable::XdgShellStable(
+    struct wl_display* display,
+    std::shared_ptr<msh::Shell> shell,
+    WlSeat& seat,
+    OutputManager* output_manager)
     : Global(display, Version<1>()),
       shell{shell},
       seat{seat},
@@ -298,7 +303,12 @@ mf::XdgPopupStable::XdgPopupStable(
     specification->type = mir_window_type_freestyle;
     specification->placement_hints = mir_placement_hints_slide_any;
     if (parent_role)
-        specification->parent_id = parent_role.value()->surface_id();
+    {
+        if (auto scene_surface = parent_role.value()->scene_surface())
+        {
+            specification->parent = scene_surface.value();
+        }
+    }
 
     apply_spec(*specification);
 }
@@ -375,7 +385,7 @@ void mf::XdgToplevelStable::set_parent(std::experimental::optional<struct wl_res
 {
     if (parent && parent.value())
     {
-        WindowWlSurfaceRole::set_parent(XdgToplevelStable::from(parent.value())->surface_id());
+        WindowWlSurfaceRole::set_parent(XdgToplevelStable::from(parent.value())->scene_surface());
     }
     else
     {
@@ -682,7 +692,7 @@ void mf::XdgPositionerStable::set_offset(int32_t x, int32_t y)
     aux_rect_placement_offset_y = y;
 }
 
-auto mf::XdgShellStable::get_window(wl_resource* surface) -> std::shared_ptr<Surface>
+auto mf::XdgShellStable::get_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>
 {
     namespace mw = mir::wayland;
 
@@ -691,11 +701,9 @@ auto mf::XdgShellStable::get_window(wl_resource* surface) -> std::shared_ptr<Sur
         auto const xdgsurface = XdgSurfaceStable::from(surface);
         if (auto const role = xdgsurface->window_role())
         {
-            auto const id = role.value()->surface_id();
-            if (id.as_value())
+            if (auto const scene_surface = role.value()->scene_surface())
             {
-                auto const session = get_mir_client_session(xdgsurface->client);
-                return session->get_surface(id);
+                return scene_surface.value();
             }
         }
 

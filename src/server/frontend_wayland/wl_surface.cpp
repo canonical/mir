@@ -30,7 +30,7 @@
 #include "wayland_frontend.tp.h"
 
 #include "mir/graphics/buffer_properties.h"
-#include "mir/frontend/mir_client_session.h"
+#include "mir/scene/session.h"
 #include "mir/frontend/wayland.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/executor.h"
@@ -81,7 +81,7 @@ mf::WlSurface::WlSurface(
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<graphics::WaylandAllocator> const& allocator)
     : Surface(new_resource, Version<4>()),
-        session{mf::get_mir_client_session(client)},
+        session{get_session(client)},
         stream_id{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
         stream{session->get_buffer_stream(stream_id)},
         allocator{allocator},
@@ -134,9 +134,9 @@ mf::WlSurface::Position mf::WlSurface::transform_point(geom::Point point)
     return {point, this, false};
 }
 
-mf::SurfaceId mf::WlSurface::surface_id() const
+auto mf::WlSurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
 {
-    return role->surface_id();
+    return role->scene_surface();
 }
 
 void mf::WlSurface::set_role(WlSurfaceRole* role_)
@@ -412,7 +412,10 @@ mf::NullWlSurfaceRole::NullWlSurfaceRole(WlSurface* surface) :
 {
 }
 
-mf::SurfaceId mf::NullWlSurfaceRole::surface_id() const { return {}; }
+auto mf::NullWlSurfaceRole::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
+{
+    return std::experimental::nullopt;
+}
 void mf::NullWlSurfaceRole::refresh_surface_data_now() {}
 void mf::NullWlSurfaceRole::commit(WlSurfaceState const& state) { surface->commit(state); }
 void mf::NullWlSurfaceRole::visiblity(bool /*visible*/) {}

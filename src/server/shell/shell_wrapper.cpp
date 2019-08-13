@@ -51,7 +51,7 @@ void msh::ShellWrapper::focus_prev_session()
     wrapped->focus_prev_session();
 }
 
-auto msh::ShellWrapper::focused_session() const -> std::shared_ptr<ms::Session>
+std::shared_ptr<ms::Session> msh::ShellWrapper::focused_session() const
 {
     return wrapped->focused_session();
 }

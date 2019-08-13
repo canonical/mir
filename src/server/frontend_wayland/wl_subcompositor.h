@@ -60,7 +60,7 @@ public:
 
     geometry::Displacement total_offset() const override { return parent->total_offset(); }
     bool synchronized() const override;
-    SurfaceId surface_id() const override;
+    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
 
     void parent_has_committed();
 

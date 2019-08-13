@@ -22,16 +22,15 @@
 #include "wl_surface.h"
 
 #include "mir/executor.h"
-#include "mir/client/event.h"
-#include "mir/frontend/mir_client_session.h"
 #include "mir/frontend/wayland.h"
-#include "mir/frontend/surface.h"
+#include "mir/scene/surface.h"
 #include "mir/frontend/buffer_stream.h"
 #include "mir/geometry/displacement.h"
 
 #include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
 
@@ -168,23 +167,19 @@ namespace
 struct WlStreamCursor : mf::WlPointer::Cursor
 {
     WlStreamCursor(
-        std::shared_ptr<mf::MirClientSession> const session,
         std::shared_ptr<mf::BufferStream> const& stream,
         geom::Displacement hotspot);
 
     void apply_to(mf::WlSurface* surface) override;
 
-    std::shared_ptr<mf::MirClientSession> const session;
     std::shared_ptr<mf::BufferStream> const stream;
     geom::Displacement const hotspot;
 };
 
 struct WlHiddenCursor : mf::WlPointer::Cursor
 {
-    WlHiddenCursor(std::shared_ptr<mf::MirClientSession> const session);
+    WlHiddenCursor();
     void apply_to(mf::WlSurface* surface) override;
-
-    std::shared_ptr<mf::MirClientSession> const session;
 };
 }
 
@@ -198,11 +193,11 @@ void mf::WlPointer::set_cursor(
         auto const cursor_stream = WlSurface::from(*surface)->stream;
         geom::Displacement const cursor_hotspot{hotspot_x, hotspot_y};
 
-        cursor = std::make_unique<WlStreamCursor>(get_mir_client_session(client), cursor_stream, cursor_hotspot);
+        cursor = std::make_unique<WlStreamCursor>(cursor_stream, cursor_hotspot);
     }
     else
     {
-        cursor = std::make_unique<WlHiddenCursor>(get_mir_client_session(client));
+        cursor = std::make_unique<WlHiddenCursor>();
     }
 
     if (focused_surface)
@@ -217,10 +212,8 @@ void mf::WlPointer::release()
 }
 
 WlStreamCursor::WlStreamCursor(
-    std::shared_ptr<mf::MirClientSession> const session,
     std::shared_ptr<mf::BufferStream> const& stream,
     geom::Displacement hotspot) :
-    session{session},
     stream{stream},
     hotspot{hotspot}
 {
@@ -228,26 +221,20 @@ WlStreamCursor::WlStreamCursor(
 
 void WlStreamCursor::apply_to(mf::WlSurface* surface)
 {
-    auto id = surface->surface_id();
-    if (id.as_value())
+    if (auto scene_surface = surface->scene_surface())
     {
-        auto const mir_window = session->get_surface(id);
-        mir_window->set_cursor_stream(stream, hotspot);
+        scene_surface.value()->set_cursor_stream(stream, hotspot);
     }
 }
 
-WlHiddenCursor::WlHiddenCursor(
-    std::shared_ptr<mf::MirClientSession> const session) :
-    session{session}
+WlHiddenCursor::WlHiddenCursor()
 {
 }
 
 void WlHiddenCursor::apply_to(mf::WlSurface* surface)
 {
-    auto id = surface->surface_id();
-    if (id.as_value())
+    if (auto scene_surface = surface->scene_surface())
     {
-        auto const mir_window = session->get_surface(id);
-        mir_window->set_cursor_image({});
+        scene_surface.value()->set_cursor_image({});
     }
 }

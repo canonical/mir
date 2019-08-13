@@ -28,6 +28,8 @@
 #include "mir/log.h"
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
+namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
 
@@ -194,7 +196,7 @@ void mf::XdgShellV6::Instance::pong(uint32_t serial)
 
 mf::XdgShellV6::XdgShellV6(
     struct wl_display* display,
-    std::shared_ptr<mf::Shell> const shell,
+    std::shared_ptr<msh::Shell> shell,
     WlSeat& seat,
     OutputManager* output_manager) :
     Global(display, Version<1>()),
@@ -307,11 +309,12 @@ mf::XdgPopupV6::XdgPopupV6(
                                         wl_resource_get_user_data(positioner))));
 
     auto parent_role = parent_surface->window_role();
+    auto parent_scene_surface = parent_role ? parent_role.value()->scene_surface() : std::experimental::nullopt;
 
     specification->type = mir_window_type_freestyle;
     specification->placement_hints = mir_placement_hints_slide_any;
-    if (parent_role)
-        specification->parent_id = parent_role.value()->surface_id();
+    if (parent_scene_surface)
+        specification->parent = parent_scene_surface.value();
     else
         log_warning("mf::XdgSurfaceV6::get_popup() sent parent that is not yet mapped");
 
@@ -382,7 +385,7 @@ void mf::XdgToplevelV6::set_parent(std::experimental::optional<struct wl_resourc
 {
     if (parent && parent.value())
     {
-        WindowWlSurfaceRole::set_parent(XdgToplevelV6::from(parent.value())->surface_id());
+        WindowWlSurfaceRole::set_parent(XdgToplevelV6::from(parent.value())->scene_surface());
     }
     else
     {
@@ -637,7 +640,7 @@ void mf::XdgPositionerV6::set_offset(int32_t x, int32_t y)
     aux_rect_placement_offset_y = y;
 }
 
-auto mf::XdgShellV6::get_window(wl_resource* surface) -> std::shared_ptr<Surface>
+auto mf::XdgShellV6::get_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>
 {
     namespace mw = mir::wayland;
 
@@ -646,11 +649,9 @@ auto mf::XdgShellV6::get_window(wl_resource* surface) -> std::shared_ptr<Surface
         auto const v6surface = XdgSurfaceV6::from(surface);
         if (auto const role = v6surface->window_role())
         {
-            auto const id = role.value()->surface_id();
-            if (id.as_value())
+            if (auto const scene_surface = role.value()->scene_surface())
             {
-                auto const session = get_mir_client_session(v6surface->client);
-                return session->get_surface(id);
+                return scene_surface.value();
             }
         }
 
