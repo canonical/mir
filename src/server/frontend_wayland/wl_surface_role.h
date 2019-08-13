@@ -25,9 +25,14 @@
 #include <mir_toolkit/common.h>
 
 #include <memory>
+#include <experimental/optional>
 
 namespace mir
 {
+namespace scene
+{
+class Surface;
+}
 namespace frontend
 {
 struct WlSurfaceState;
@@ -36,8 +41,8 @@ class WlSurfaceRole
 {
 public:
     virtual bool synchronized() const { return false; }
-    virtual geometry::Displacement total_offset() const { return {}; }
-    virtual SurfaceId surface_id() const = 0;
+    virtual auto total_offset() const -> geometry::Displacement { return {}; }
+    virtual auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> = 0;
     virtual void refresh_surface_data_now() = 0;
     virtual void commit(WlSurfaceState const& state) = 0;
     virtual void visiblity(bool visible) = 0;

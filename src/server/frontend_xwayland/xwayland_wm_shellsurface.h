@@ -29,13 +29,15 @@ namespace frontend
 {
 class OutputManager;
 class XWaylandWMSurface;
-class Shell;
 class XWaylandWMShellSurface : public WindowWlSurfaceRole
 {
 public:
-    XWaylandWMShellSurface(wl_client* client, WlSurface* surface,
-                           std::shared_ptr<Shell> const& shell, WlSeat& seat,
-                           OutputManager* const output_manager);
+    XWaylandWMShellSurface(
+        wl_client* client,
+        WlSurface* surface,
+        std::shared_ptr<shell::Shell> const& shell,
+        WlSeat& seat,
+        OutputManager* const output_manager);
     ~XWaylandWMShellSurface();
 
     void move();
@@ -61,8 +63,6 @@ protected:
     void handle_active_change(bool /*is_now_active*/) override {};
     void handle_resize(std::experimental::optional<geometry::Point> const& new_top_left, geometry::Size const& new_size) override;
     void handle_close_request() override;
-
-    using WindowWlSurfaceRole::surface_id;
 
 private:
     XWaylandWMSurface *surface;

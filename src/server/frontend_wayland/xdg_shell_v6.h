@@ -23,25 +23,30 @@
 
 namespace mir
 {
+namespace scene
+{
+class Surface;
+}
+namespace shell
+{
+class Shell;
+}
 namespace frontend
 {
-
-class Shell;
-class Surface;
 class WlSeat;
 class OutputManager;
 
 class XdgShellV6 : public wayland::XdgShellV6::Global
 {
 public:
-    XdgShellV6(wl_display* display, std::shared_ptr<Shell> const shell, WlSeat& seat, OutputManager* output_manager);
+    XdgShellV6(wl_display* display, std::shared_ptr<shell::Shell> shell, WlSeat& seat, OutputManager* output_manager);
 
-    std::shared_ptr<Shell> const shell;
+    std::shared_ptr<shell::Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;
 
     // Returns the Mir surface if the window is recognised by XdgShellV6
-    static auto get_window(wl_resource* surface) -> std::shared_ptr<Surface>;
+    static auto get_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>;
 
 private:
     class Instance;

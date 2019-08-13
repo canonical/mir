@@ -31,10 +31,10 @@ namespace mir
 namespace scene
 {
 class Session;
+class Surface;
 }
 namespace frontend
 {
-class Surface;
 
 /// Utility function to recover the session associated with a wl_client
 auto get_session(wl_client* client) -> std::shared_ptr<scene::Session>;
@@ -43,7 +43,7 @@ auto get_session(wl_client* client) -> std::shared_ptr<scene::Session>;
 auto get_session(wl_resource* resource) -> std::shared_ptr<scene::Session>;
 
 /// Utility function to recover the window associated with a wl_client
-auto get_window(wl_resource* surface) -> std::shared_ptr<Surface>;
+auto get_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>;
 
 /// Returns the "standard" extensions Mir recomends enabling (a subset of supported extensions)
 auto get_standard_extensions() -> std::vector<std::string>;

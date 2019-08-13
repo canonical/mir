@@ -29,12 +29,15 @@
 #include "wayland_utils.h"
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
+namespace msh = mir::shell;
 
-mf::XWaylandWMShellSurface::XWaylandWMShellSurface(wl_client* client,
-                                                   WlSurface* surface,
-                                                   std::shared_ptr<mf::Shell> const& shell,
-                                                   WlSeat& seat,
-                                                   OutputManager* const output_manager)
+mf::XWaylandWMShellSurface::XWaylandWMShellSurface(
+    wl_client* client,
+    WlSurface* surface,
+    std::shared_ptr<msh::Shell> const& shell,
+    WlSeat& seat,
+    OutputManager* const output_manager)
     : WindowWlSurfaceRole{&seat, client, surface, shell, output_manager}
 {
 //    params->type = mir_window_type_normal;

@@ -34,7 +34,6 @@
 
 #include "wayland_wrapper.h"
 
-#include "mir/frontend/shell.h"
 #include "mir/frontend/surface.h"
 #include "mir/frontend/session_credentials.h"
 #include "mir/frontend/session_authorizer.h"
@@ -42,8 +41,8 @@
 
 #include "mir/compositor/buffer_stream.h"
 
-#include "mir/frontend/mir_client_session.h"
 #include "mir/scene/surface_creation_parameters.h"
+#include "mir/shell/shell.h"
 #include "mir/scene/surface.h"
 #include <mir/thread_name.h>
 
@@ -92,6 +91,8 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
+namespace msh = mir::shell;
+namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mcl = mir::client;
 namespace mi = mir::input;
@@ -106,7 +107,7 @@ namespace
 {
 struct ClientPrivate
 {
-    ClientPrivate(std::shared_ptr<MirClientSession> const& session, mf::Shell* shell)
+    ClientPrivate(std::shared_ptr<ms::Session> const& session, msh::Shell* shell)
         : session{session},
           shell{shell}
     {
@@ -124,11 +125,11 @@ struct ClientPrivate
     }
 
     wl_listener destroy_listener;
-    std::shared_ptr<MirClientSession> const session;
+    std::shared_ptr<ms::Session> const session;
     /*
      * This shell is owned by the ClientSessionConstructor, which outlives all clients.
      */
-    mf::Shell* const shell;
+    msh::Shell* const shell;
 };
 
 static_assert(
@@ -148,7 +149,7 @@ void cleanup_private(wl_listener* listener, void* /*data*/)
 
 struct ClientSessionConstructor
 {
-    ClientSessionConstructor(std::shared_ptr<mf::Shell> const& shell,
+    ClientSessionConstructor(std::shared_ptr<msh::Shell> const& shell,
                              std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
                              std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>>* connect_handlers)
         : shell{shell},
@@ -159,7 +160,7 @@ struct ClientSessionConstructor
 
     wl_listener construction_listener;
     wl_listener destruction_listener;
-    std::shared_ptr<mf::Shell> const shell;
+    std::shared_ptr<msh::Shell> const shell;
     std::shared_ptr<mf::SessionAuthorizer> const session_authorizer;
     std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>>* connect_handlers;
 
@@ -206,7 +207,7 @@ void create_client_session(wl_listener* listener, void* data)
     client_context->destroy_listener.notify = &cleanup_private;
     wl_client_add_destroy_listener(client, &client_context->destroy_listener);
 
-    connection_handler(construction_context->shell->scene_session_for(session));
+    connection_handler(session);
 }
 
 void cleanup_client_handler(wl_listener* listener, void*)
@@ -217,7 +218,7 @@ void cleanup_client_handler(wl_listener* listener, void*)
     delete construction_context;
 }
 
-void setup_new_client_handler(wl_display* display, std::shared_ptr<mf::Shell> const& shell,
+void setup_new_client_handler(wl_display* display, std::shared_ptr<msh::Shell> const& shell,
                               std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
                               std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>>* connect_handlers)
 {
@@ -279,13 +280,13 @@ void WlCompositor::Instance::create_region(wl_resource* new_region)
     new WlRegion{new_region};
 }
 
-class WlShellSurface  : public wayland::ShellSurface, public WindowWlSurfaceRole
+class WlShellSurface : public wayland::ShellSurface, public WindowWlSurfaceRole
 {
 public:
     WlShellSurface(
         wl_resource* new_resource,
         WlSurface* surface,
-        std::shared_ptr<mf::Shell> const& shell,
+        std::shared_ptr<msh::Shell> const& shell,
         WlSeat& seat,
         OutputManager* output_manager)
         : ShellSurface(new_resource, Version<1>()),
@@ -317,7 +318,8 @@ protected:
 
         if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
             mods.type = mir_window_type_gloss;
-        mods.parent_id = parent_surface.surface_id();
+        if (auto parent = parent_surface.scene_surface())
+            mods.parent = parent.value();
         mods.aux_rect = geom::Rectangle{{x, y}, {}};
         mods.surface_placement_gravity = mir_placement_gravity_northwest;
         mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
@@ -366,7 +368,8 @@ protected:
 
         if (flags & WL_SHELL_SURFACE_TRANSIENT_INACTIVE)
             mods.type = mir_window_type_gloss;
-        mods.parent_id = parent_surface.surface_id();
+        if (auto parent = parent_surface.scene_surface())
+            mods.parent = parent.value();
         mods.aux_rect = geom::Rectangle{{x, y}, {}};
         mods.surface_placement_gravity = mir_placement_gravity_northwest;
         mods.aux_rect_placement_gravity = mir_placement_gravity_southeast;
@@ -451,7 +454,7 @@ class WlShell : public wayland::Shell::Global
 public:
     WlShell(
         wl_display* display,
-        std::shared_ptr<mf::Shell> const& shell,
+        std::shared_ptr<msh::Shell> const& shell,
         WlSeat& seat,
         OutputManager* const output_manager)
         : Global(display, Version<1>()),
@@ -464,7 +467,7 @@ public:
     static auto get_window(wl_resource* window) -> std::shared_ptr<Surface>;
 
 private:
-    std::shared_ptr<mf::Shell> const shell;
+    std::shared_ptr<msh::Shell> const shell;
     WlSeat& seat;
     OutputManager* const output_manager;
 
@@ -575,13 +578,13 @@ std::shared_ptr<mg::WaylandAllocator> allocator_for_display(
 }
 }
 
-auto mf::create_wl_shell(wl_display* display, std::shared_ptr<Shell> const& shell, WlSeat* seat, OutputManager* const output_manager)
+auto mf::create_wl_shell(wl_display* display, std::shared_ptr<msh::Shell> const& shell, WlSeat* seat, OutputManager* const output_manager)
 -> std::shared_ptr<void>
 {
     return std::make_shared<mf::WlShell>(display, shell, *seat, output_manager);
 }
 
-void mf::WaylandExtensions::init(wl_display* display, std::shared_ptr<Shell> const& shell, WlSeat* seat, OutputManager* const output_manager)
+void mf::WaylandExtensions::init(wl_display* display, std::shared_ptr<msh::Shell> const& shell, WlSeat* seat, OutputManager* const output_manager)
 {
     custom_extensions(display, shell, seat, output_manager);
 }
@@ -591,7 +594,7 @@ void mf::WaylandExtensions::add_extension(std::string const name, std::shared_pt
     extension_protocols[std::move(name)] = std::move(implementation);
 }
 
-void mf::WaylandExtensions::custom_extensions(wl_display*, std::shared_ptr<Shell> const&, WlSeat*, OutputManager* const)
+void mf::WaylandExtensions::custom_extensions(wl_display*, std::shared_ptr<msh::Shell> const&, WlSeat*, OutputManager* const)
 {
 }
 
@@ -610,7 +613,7 @@ void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::fu
 
 mf::WaylandConnector::WaylandConnector(
     optional_value<std::string> const& display_name,
-    std::shared_ptr<mf::Shell> const& shell,
+    std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<MirDisplay> const& display_config,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
     std::shared_ptr<mi::Seat> const& seat,
@@ -859,16 +862,6 @@ bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client
 #endif
 }
 
-auto mir::frontend::get_mir_client_session(wl_client* client) -> std::shared_ptr<MirClientSession>
-{
-    auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
-
-    if (listener)
-        return private_from_listener(listener)->session;
-
-    return {};
-}
-
 auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<scene::Session>
 {
     auto listener = wl_client_get_destroy_listener(client, &cleanup_private);
@@ -876,28 +869,25 @@ auto mir::frontend::get_session(wl_client* client) -> std::shared_ptr<scene::Ses
     if (listener)
     {
         auto client_private = private_from_listener(listener);
-        return client_private->shell->scene_session_for(client_private->session);
+        return client_private->session;
     }
 
     return {};
 }
 
-auto mir::frontend::get_session(wl_resource* surface) -> std::shared_ptr<scene::Session>
+auto mf::get_session(wl_resource* surface) -> std::shared_ptr<ms::Session>
 {
     return get_session(wl_resource_get_client(surface));
 }
 
-auto mir::frontend::get_wl_shell_window(wl_resource* surface) -> std::shared_ptr<Surface>
+auto mf::get_wl_shell_window(wl_resource* surface) -> std::shared_ptr<ms::Surface>
 {
-    if (mir::wayland::Surface::is_instance(surface))
+    if (mw::Surface::is_instance(surface))
     {
         auto const wlsurface = WlSurface::from(surface);
-
-        auto const id = wlsurface->surface_id();
-        if (id.as_value())
+        if (auto const scene_surface = wlsurface->scene_surface())
         {
-            auto const session = get_mir_client_session(wlsurface->client);
-            return session->get_surface(id);
+            return scene_surface.value();
         }
 
         log_debug("No window currently associated with wayland::Surface %p", surface);
