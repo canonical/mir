@@ -33,28 +33,28 @@ public:
     void focus_next_session() override;
     void focus_prev_session() override;
 
-    std::shared_ptr<scene::Session> focused_session() const override;
+    auto focused_session() const -> std::shared_ptr<scene::Session> override;
 
     void set_focus_to(
         std::shared_ptr<scene::Session> const& focus_session,
         std::shared_ptr<scene::Surface> const& focus_surface) override;
 
-    std::shared_ptr<scene::Surface> focused_surface() const override;
+    auto focused_surface() const -> std::shared_ptr<scene::Surface> override;
 
     auto surface_at(geometry::Point cursor) const -> std::shared_ptr<scene::Surface> override;
 
     void raise(SurfaceSet const& surfaces) override;
 
-    std::shared_ptr<scene::Session> open_session(
+    auto open_session(
         pid_t client_pid,
         std::string const& name,
-        std::shared_ptr<frontend::EventSink> const& sink) override;
+        std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<scene::Session> override;
 
     void close_session(std::shared_ptr<scene::Session> const& session) override;
 
-    std::shared_ptr<scene::PromptSession> start_prompt_session_for(
+    auto start_prompt_session_for(
         std::shared_ptr<scene::Session> const& session,
-        scene::PromptSessionCreationParameters const& params) override;
+        scene::PromptSessionCreationParameters const& params) -> std::shared_ptr<scene::PromptSession> override;
 
     void add_prompt_provider_for(
         std::shared_ptr<scene::PromptSession> const& prompt_session,
@@ -62,14 +62,19 @@ public:
 
     void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session) override;
 
-    frontend::SurfaceId create_surface(
+    auto create_surface(
         std::shared_ptr<scene::Session> const& session,
         scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& sink) override;
+        std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<scene::Surface> override;
 
-    void modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications) override;
+    void modify_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface,
+        SurfaceSpecification const& modifications) override;
 
-    void destroy_surface(std::shared_ptr<scene::Session> const& session, frontend::SurfaceId surface) override;
+    void destroy_surface(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<scene::Surface> const& surface) override;
 
     int set_surface_attribute(
         std::shared_ptr<scene::Session> const& session,

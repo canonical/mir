@@ -50,16 +50,15 @@ public:
         msh::ShellWrapper{wrapped}
     {}
 
-    mf::SurfaceId create_surface(
+    auto create_surface(
         std::shared_ptr<ms::Session> const& session,
         ms::SurfaceCreationParameters const& params,
-        std::shared_ptr<mf::EventSink> const& sink) override
+        std::shared_ptr<mf::EventSink> const& sink) -> std::shared_ptr<ms::Surface> override
     {
-        auto const result = msh::ShellWrapper::create_surface(session, params, sink);
-        auto const window = session->surface(result);
+        auto const window = msh::ShellWrapper::create_surface(session, params, sink);
         window->move_to({0, 0});
         surfaces.push_back(window);
-        return result;
+        return window;
     }
 
     using msh::ShellWrapper::raise;

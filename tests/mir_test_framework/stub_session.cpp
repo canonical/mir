@@ -21,6 +21,7 @@
 #include "mir_test_framework/stub_platform_native_buffer.h"
 
 namespace mtd = mir::test::doubles;
+namespace ms = mir::scene;
 
 mtd::StubSession::StubSession(pid_t pid)
     : pid(pid)
@@ -84,19 +85,25 @@ void mtd::StubSession::resume_prompt_session()
 {
 }
 
-mir::frontend::SurfaceId mtd::StubSession::create_surface(
+auto mtd::StubSession::create_surface(
     mir::scene::SurfaceCreationParameters const& /*params*/,
-    std::shared_ptr<frontend::EventSink> const& /*sink*/)
+    std::shared_ptr<frontend::EventSink> const& /*sink*/) -> std::shared_ptr<ms::Surface>
 {
-    return mir::frontend::SurfaceId{0};
+    return nullptr;
 }
 
 void mtd::StubSession::destroy_surface(mir::frontend::SurfaceId /*surface*/)
 {
 }
 
-std::shared_ptr<mir::scene::Surface> mtd::StubSession::surface(
-    mir::frontend::SurfaceId /*surface*/) const
+auto mtd::StubSession::surface(
+    frontend::SurfaceId /*surface*/) const -> std::shared_ptr<scene::Surface>
+{
+    return {};
+}
+
+auto mtd::StubSession::surface_id(
+    std::shared_ptr<scene::Surface> const& /*surface*/) const -> frontend::SurfaceId
 {
     return {};
 }

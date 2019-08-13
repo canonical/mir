@@ -54,6 +54,7 @@
 #include "mir/test/doubles/mock_buffer.h"
 #include "mir/test/doubles/stub_session.h"
 #include "mir/test/doubles/stub_mir_client_session.h"
+#include "mir/test/doubles/stub_session.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
 #include "mir/test/doubles/null_screencast.h"
@@ -214,6 +215,11 @@ public:
     int buffer_count = 0;
     int native_buffer_count = 0;
     int destroy_buffers = 0;
+};
+
+class StubbedSceneSession : public mtd::StubSession
+{
+public:
 };
 
 struct StubScreencast : mtd::NullScreencast

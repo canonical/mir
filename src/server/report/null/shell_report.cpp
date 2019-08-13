@@ -30,7 +30,7 @@ void mrn::ShellReport::closing_session(scene::Session const& /*session*/)
 
 void mrn::ShellReport::created_surface(
     scene::Session const& /*session*/,
-    frontend::SurfaceId /*surface_id*/)
+    scene::Surface const& /*surface_id*/)
 {
 }
 
@@ -50,7 +50,7 @@ void mrn::ShellReport::update_surface(
 
 void mrn::ShellReport::destroying_surface(
     scene::Session const& /*session*/,
-    frontend::SurfaceId /*surface*/)
+    scene::Surface const& /*surface*/)
 {
 }
 

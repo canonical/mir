@@ -84,9 +84,10 @@ public:
 
     virtual auto create_surface(
         SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& sink) -> frontend::SurfaceId = 0;
+        std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<scene::Surface> = 0;
     virtual void destroy_surface(frontend::SurfaceId surface) = 0;
     virtual auto surface(frontend::SurfaceId surface) const -> std::shared_ptr<Surface> = 0;
+    virtual auto surface_id(std::shared_ptr<scene::Surface> const& surface) const -> frontend::SurfaceId = 0;
     virtual void destroy_surface(std::weak_ptr<Surface> const& surface) = 0;
     virtual auto surface_after(std::shared_ptr<Surface> const& surface) const -> std::shared_ptr<Surface> = 0;
 

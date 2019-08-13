@@ -127,16 +127,16 @@ struct SurfaceTrackingShell : mir::shell::ShellWrapper
         : ShellWrapper{wrapped_shell}, wrapped_shell{wrapped_shell}
     {}
 
-    mir::frontend::SurfaceId create_surface(
+    auto create_surface(
         std::shared_ptr<mir::scene::Session> const& session,
         mir::scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<mir::frontend::EventSink> const& sink) override
+        std::shared_ptr<mir::frontend::EventSink> const& sink) -> std::shared_ptr<mir::scene::Surface> override
     {
-        auto surface_id = wrapped_shell->create_surface(session, params, sink);
+        auto const surface = wrapped_shell->create_surface(session, params, sink);
 
-        tracked_surfaces[session->name()] =  TrackedSurface{session, surface_id};
+        tracked_surfaces[session->name()] =  {session, surface};
 
-        return surface_id;
+        return surface;
     }
 
     std::shared_ptr<mir::scene::Surface> get_surface(std::string const& session_name)
@@ -147,13 +147,13 @@ struct SurfaceTrackingShell : mir::shell::ShellWrapper
         auto session = tracked_surface.session.lock();
         if (!session)
             return nullptr;
-        return session->surface(tracked_surface.surface);
+        return tracked_surface.surface;
     }
 
     struct TrackedSurface
     {
         std::weak_ptr<mir::scene::Session> session;
-        mir::frontend::SurfaceId surface;
+        std::shared_ptr<mir::scene::Surface> surface;
     };
     std::unordered_map<std::string, TrackedSurface> tracked_surfaces;
     std::shared_ptr<mir::shell::Shell> wrapped_shell;

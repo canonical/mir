@@ -135,10 +135,10 @@ void msh::AbstractShell::close_session(
     window_manager->remove_session(session);
 }
 
-mf::SurfaceId msh::AbstractShell::create_surface(
+auto msh::AbstractShell::create_surface(
     std::shared_ptr<ms::Session> const& session,
     ms::SurfaceCreationParameters const& params,
-    std::shared_ptr<mf::EventSink> const& sink)
+    std::shared_ptr<mf::EventSink> const& sink) -> std::shared_ptr<ms::Surface>
 {
     auto const build = [sink](std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& placed_params)
         {
@@ -146,7 +146,7 @@ mf::SurfaceId msh::AbstractShell::create_surface(
         };
 
     auto const result = window_manager->add_surface(session, params, build);
-    report->created_surface(*session, result);
+    report->created_surface(*session, *result);
     return result;
 }
 
@@ -206,10 +206,10 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
 
 void msh::AbstractShell::destroy_surface(
     std::shared_ptr<ms::Session> const& session,
-    mf::SurfaceId surface)
+    std::shared_ptr<scene::Surface> const& surface)
 {
-    report->destroying_surface(*session, surface);
-    window_manager->remove_surface(session, session->surface(surface));
+    report->destroying_surface(*session, *surface);
+    window_manager->remove_surface(session, surface);
 }
 
 std::shared_ptr<ms::PromptSession> msh::AbstractShell::start_prompt_session_for(

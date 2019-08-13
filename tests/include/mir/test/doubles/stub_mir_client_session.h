@@ -40,6 +40,18 @@ struct StubMirClientSession : public frontend::MirClientSession
         return nullptr;
     }
 
+    auto create_surface(
+        std::shared_ptr<shell::Shell> const& /* shell */,
+        scene::SurfaceCreationParameters const& /* params */,
+        std::shared_ptr<frontend::EventSink> const& /* sink */) -> frontend::SurfaceId override
+    {
+        return {};
+    }
+
+    void destroy_surface(std::shared_ptr<shell::Shell> const& /* shell */, frontend::SurfaceId /* surface */) override
+    {
+    }
+
     auto create_buffer_stream(graphics::BufferProperties const& /* props */)
         -> frontend::BufferStreamId override
     {

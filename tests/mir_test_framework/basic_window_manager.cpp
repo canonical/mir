@@ -55,16 +55,17 @@ void msh::BasicWindowManager::remove_session(std::shared_ptr<scene::Session> con
 auto msh::BasicWindowManager::add_surface(
     std::shared_ptr<scene::Session> const& session,
     scene::SurfaceCreationParameters const& params,
-    std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build)
--> frontend::SurfaceId
+    std::function<std::shared_ptr<scene::Surface>(
+        std::shared_ptr<scene::Session> const& session,
+        scene::SurfaceCreationParameters const& params)> const& build)
+-> std::shared_ptr<scene::Surface>
 {
     std::lock_guard<decltype(mutex)> lock(mutex);
     scene::SurfaceCreationParameters const placed_params = policy->handle_place_new_surface(session, params);
-    auto const result = build(session, placed_params);
-    auto const surface = session->surface(result);
+    auto const surface = build(session, placed_params);
     surface_info.emplace(surface, SurfaceInfo{session, surface, placed_params});
     policy->handle_new_surface(session, surface);
-    return result;
+    return surface;
 }
 
 void msh::BasicWindowManager::modify_surface(

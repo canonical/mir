@@ -103,8 +103,10 @@ void miral::BasicWindowManager::remove_session(std::shared_ptr<scene::Session> c
 auto miral::BasicWindowManager::add_surface(
     std::shared_ptr<scene::Session> const& session,
     scene::SurfaceCreationParameters const& params,
-    std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build)
--> frontend::SurfaceId
+    std::function<std::shared_ptr<scene::Surface>(
+        std::shared_ptr<scene::Session> const& session,
+        scene::SurfaceCreationParameters const& params)> const& build)
+-> std::shared_ptr<scene::Surface>
 {
     Locker lock{this};
 
@@ -118,8 +120,8 @@ auto miral::BasicWindowManager::add_surface(
 
     scene::SurfaceCreationParameters parameters;
     spec.update(parameters);
-    auto const surface_id = build(session, parameters);
-    Window const window{session, session->surface(surface_id)};
+    auto const surface = build(session, parameters);
+    Window const window{session, surface};
     auto& window_info = this->window_info.emplace(window, WindowInfo{window, spec}).first->second;
 
     if (spec.parent().is_set() && spec.parent().value().lock())
@@ -159,7 +161,7 @@ auto miral::BasicWindowManager::add_surface(
         mir_surface->placed_relative(relative_placement);
     }
 
-    return surface_id;
+    return surface;
 }
 
 void miral::BasicWindowManager::modify_surface(
