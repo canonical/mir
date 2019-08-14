@@ -157,6 +157,7 @@ public:
         mg::BufferProperties properties;
         create_buffer_stream(properties);
         auto surface = std::make_shared<testing::NiceMock<mtd::MockSurface>>();
+        ON_CALL(*surface, size()).WillByDefault(Return(geom::Size{10, 10}));
         mock_surfaces[id] = surface;
         return surface;
     }
