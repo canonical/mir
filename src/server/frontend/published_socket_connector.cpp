@@ -35,6 +35,7 @@
 #include <fstream>
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 
@@ -174,7 +175,7 @@ void mf::PublishedSocketConnector::on_new_connection(
 {
     if (!ec)
     {
-        create_session_for(socket, [](auto) {});
+        create_session_for(socket, [](std::shared_ptr<ms::Session> const&) {});
     }
     else
     {
