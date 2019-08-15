@@ -22,7 +22,6 @@
 #include "wl_surface.h"
 
 #include "mir/executor.h"
-#include "mir/client/event.h"
 #include "mir/anonymous_shm_file.h"
 #include "mir/input/keymap.h"
 
@@ -33,6 +32,7 @@
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
+namespace mi = mir::input;
 
 mf::WlKeyboard::WlKeyboard(
     wl_resource* new_resource,
@@ -68,97 +68,69 @@ mf::WlKeyboard::~WlKeyboard()
     on_destroy(this);
 }
 
-void mf::WlKeyboard::handle_keyboard_event(MirKeyboardEvent const* key_event, WlSurface* /*surface*/)
+void mf::WlKeyboard::key(std::chrono::milliseconds const& ms, int scancode, bool down)
 {
-    auto const input_ev = mir_keyboard_event_input_event(key_event);
     auto const serial = wl_display_next_serial(wl_client_get_display(client));
-    auto const scancode = mir_keyboard_event_scan_code(key_event);
     /*
      * HACK! Maintain our own XKB state, so we can serialise it for
      * wl_keyboard_send_modifiers
      */
+    xkb_key_direction const xkb_state = down ? XKB_KEY_DOWN : XKB_KEY_UP;
+    auto const wayland_state = down ? KeyState::pressed : KeyState::released;
 
-    switch (mir_keyboard_event_action(key_event))
-    {
-        case mir_keyboard_action_up:
-            xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_UP);
-            send_key_event(serial,
-                           mir_input_event_get_event_time_ms(input_ev),
-                           mir_keyboard_event_scan_code(key_event),
-                           KeyState::released);
-            break;
-        case mir_keyboard_action_down:
-            xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
-            send_key_event(serial,
-                           mir_input_event_get_event_time_ms(input_ev),
-                           mir_keyboard_event_scan_code(key_event),
-                           KeyState::pressed);
-            break;
-        default:
-            break;
-    }
+    xkb_state_update_key(state.get(), scancode + 8, xkb_state);
+    send_key_event(serial, ms.count(), scancode, wayland_state);
     update_modifier_state();
 }
 
-void mf::WlKeyboard::handle_window_event(MirWindowEvent const* event, WlSurface* surface)
+void mf::WlKeyboard::focussed(WlSurface* surface, bool focussed)
 {
-    if (mir_window_event_get_attribute(event) == mir_window_attrib_focus)
+    auto const serial = wl_display_next_serial(wl_client_get_display(client));
+    if (focussed)
     {
-        auto const focussed = mir_window_event_get_attribute_value(event);
-        auto const serial = wl_display_next_serial(wl_client_get_display(client));
-        if (focussed)
+        // TODO: Send the surface's keymap here
+
+        auto const keyboard_state = acquire_current_keyboard_state();
+
+        wl_array key_state;
+        wl_array_init(&key_state);
+
+        auto* const array_storage = wl_array_add(
+            &key_state,
+            keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
+        if (!array_storage)
         {
-            /*
-                * TODO:
-                *  *) Send the surface's keymap here.
-                */
-            auto const keyboard_state = acquire_current_keyboard_state();
+            wl_resource_post_no_memory(resource);
+            BOOST_THROW_EXCEPTION(std::bad_alloc());
+        }
 
-            wl_array key_state;
-            wl_array_init(&key_state);
-
-            auto* const array_storage = wl_array_add(
-                &key_state,
+        if (!keyboard_state.empty())
+        {
+            std::memcpy(
+                array_storage,
+                keyboard_state.data(),
                 keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
-            if (!array_storage)
-            {
-                wl_resource_post_no_memory(resource);
-                BOOST_THROW_EXCEPTION(std::bad_alloc());
-            }
-
-            if (!keyboard_state.empty())
-            {
-                std::memcpy(
-                    array_storage,
-                    keyboard_state.data(),
-                    keyboard_state.size() * sizeof(decltype(keyboard_state)::value_type));
-            }
-
-            // Rebuild xkb state
-            state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
-            for (auto scancode : keyboard_state)
-            {
-                xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
-            }
-            update_modifier_state();
-
-            send_enter_event(serial, surface->raw_resource(), &key_state);
-            wl_array_release(&key_state);
         }
-        else
+
+        // Rebuild xkb state
+        state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
+        for (auto scancode : keyboard_state)
         {
-            send_leave_event(serial, surface->raw_resource());
+            xkb_state_update_key(state.get(), scancode + 8, XKB_KEY_DOWN);
         }
+        update_modifier_state();
+
+        send_enter_event(serial, surface->raw_resource(), &key_state);
+        wl_array_release(&key_state);
+    }
+    else
+    {
+        send_leave_event(serial, surface->raw_resource());
     }
 }
 
-void mf::WlKeyboard::handle_keymap_event(MirKeymapEvent const* event, WlSurface* /*surface*/)
+void mf::WlKeyboard::set_keymap(char const* const buffer, size_t length)
 {
-    char const* buffer;
-    size_t length;
-
-    mir_keymap_event_get_keymap_buffer(event, &buffer, &length);
-
     mir::AnonymousShmFile shm_buffer{length};
     memcpy(shm_buffer.base_ptr(), buffer, length);
 
@@ -177,7 +149,7 @@ void mf::WlKeyboard::handle_keymap_event(MirKeymapEvent const* event, WlSurface*
     state = decltype(state)(xkb_state_new(keymap.get()), &xkb_state_unref);
 }
 
-void mf::WlKeyboard::set_keymap(mir::input::Keymap const& new_keymap)
+void mf::WlKeyboard::set_keymap(mi::Keymap const& new_keymap)
 {
     xkb_rule_names const names = {
         "evdev",

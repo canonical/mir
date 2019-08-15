@@ -100,18 +100,30 @@ void mf::WlSurfaceEventSink::handle_resize(mir::geometry::Size const& new_size)
 
 void mf::WlSurfaceEventSink::handle_input_event(MirInputEvent const* event)
 {
+    auto const ns = std::chrono::nanoseconds{mir_input_event_get_event_time(event)};
+    auto const ms = std::chrono::duration_cast<std::chrono::milliseconds>(ns);
+
     // Remember the timestamp of any events "signed" with a cookie
     if (mir_input_event_has_cookie(event))
-        timestamp_ns = mir_input_event_get_event_time(event);
+        timestamp_ns = ns.count();
 
     switch (mir_input_event_get_type(event))
     {
     case mir_input_event_type_key:
-        seat->for_each_listener(client, [this, event = mir_input_event_get_keyboard_event(event)](WlKeyboard* keyboard)
-            {
-                keyboard->handle_keyboard_event(event, surface);
-            });
+    {
+        MirKeyboardEvent const* keyboard_ev = mir_input_event_get_keyboard_event(event);
+        MirKeyboardAction const action = mir_keyboard_event_action(keyboard_ev);
+        if (action == mir_keyboard_action_down || action == mir_keyboard_action_up)
+        {
+            int const scancode = mir_keyboard_event_scan_code(keyboard_ev);
+            bool const down = action == mir_keyboard_action_down;
+            seat->for_each_listener(client, [&ms, scancode, down](WlKeyboard* keyboard)
+                {
+                    keyboard->key(ms, scancode, down);
+                });
+        }
         break;
+    }
     case mir_input_event_type_pointer:
         seat->for_each_listener(client, [this, event = mir_input_event_get_pointer_event(event)](WlPointer* pointer)
             {
@@ -131,9 +143,14 @@ void mf::WlSurfaceEventSink::handle_input_event(MirInputEvent const* event)
 
 void mf::WlSurfaceEventSink::handle_keymap_event(MirKeymapEvent const* event)
 {
-    seat->for_each_listener(client, [this, event](WlKeyboard* keyboard)
+    char const* buffer;
+    size_t length;
+
+    mir_keymap_event_get_keymap_buffer(event, &buffer, &length);
+
+    seat->for_each_listener(client, [buffer, length](WlKeyboard* keyboard)
         {
-            keyboard->handle_keymap_event(event, surface);
+            keyboard->set_keymap(buffer, length);
         });
 }
 
@@ -146,6 +163,10 @@ void mf::WlSurfaceEventSink::handle_window_event(MirWindowEvent const* event)
         if (has_focus)
             seat->notify_focus(client);
         window->handle_active_change(has_focus);
+        seat->for_each_listener(client, [surface = surface, has_focus = has_focus](WlKeyboard* keyboard)
+            {
+                keyboard->focussed(surface, has_focus);
+            });
         break;
 
     case mir_window_attrib_state:
@@ -155,10 +176,5 @@ void mf::WlSurfaceEventSink::handle_window_event(MirWindowEvent const* event)
 
     default:;
     }
-
-    seat->for_each_listener(client, [this, event](WlKeyboard* keyboard)
-        {
-            keyboard->handle_window_event(event, surface);
-        });
 }
 
