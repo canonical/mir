@@ -97,9 +97,9 @@ private:
 class MockANRDetector : public ms::ApplicationNotRespondingDetector
 {
 public:
-    MOCK_METHOD2(register_session, void(mir::frontend::Session const*, std::function<void ()> const&));
-    MOCK_METHOD1(unregister_session, void(mir::frontend::Session const*));
-    MOCK_METHOD1(pong_received, void(mir::frontend::Session const*));
+    MOCK_METHOD2(register_session, void(mir::scene::Session const*, std::function<void ()> const&));
+    MOCK_METHOD1(unregister_session, void(mir::scene::Session const*));
+    MOCK_METHOD1(pong_received, void(mir::scene::Session const*));
 
     MOCK_METHOD1(register_observer, void(std::shared_ptr<Observer> const&));
     MOCK_METHOD1(unregister_observer, void(std::shared_ptr<Observer> const&));

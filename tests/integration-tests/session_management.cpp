@@ -16,8 +16,8 @@
  * Authored By: Alan Griffiths <alan@octopull.co.uk>
  */
 
-#include "mir/frontend/session.h"
 #include "mir/frontend/shell.h"
+#include "mir/frontend/mir_client_session.h"
 
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/session.h"

@@ -33,50 +33,53 @@ public:
 
     virtual ~ShellWrapper() = default;
 
-    std::shared_ptr<Session> open_session(
+    std::shared_ptr<MirClientSession> open_session(
         pid_t client_pid,
         std::string const& name,
         std::shared_ptr<EventSink> const& sink) override;
 
-    void close_session(std::shared_ptr<Session> const& session)  override;
+    void close_session(std::shared_ptr<MirClientSession> const& session) override;
+
+    auto scene_session_for(
+        std::shared_ptr<MirClientSession> const& session) -> std::shared_ptr<scene::Session> override;
 
     std::shared_ptr<PromptSession> start_prompt_session_for(
-        std::shared_ptr<Session> const& session,
+        std::shared_ptr<scene::Session> const& session,
         scene::PromptSessionCreationParameters const& params) override;
 
     void add_prompt_provider_for(
         std::shared_ptr<PromptSession> const& prompt_session,
-        std::shared_ptr<Session> const& session) override;
+        std::shared_ptr<scene::Session> const& session) override;
 
     void stop_prompt_session(
         std::shared_ptr<PromptSession> const& prompt_session) override;
 
     SurfaceId create_surface(
-        std::shared_ptr<Session> const& session,
+        std::shared_ptr<MirClientSession> const& session,
         scene::SurfaceCreationParameters const& params,
         std::shared_ptr<EventSink> const& sink) override;
 
-    void modify_surface(std::shared_ptr<Session> const& session, SurfaceId surface, shell::SurfaceSpecification const& modifications) override;
+    void modify_surface(std::shared_ptr<MirClientSession> const& session, SurfaceId surface, shell::SurfaceSpecification const& modifications) override;
 
-    void destroy_surface(std::shared_ptr<Session> const& session, SurfaceId surface) override;
+    void destroy_surface(std::shared_ptr<MirClientSession> const& session, SurfaceId surface) override;
 
-    std::string persistent_id_for(std::shared_ptr<Session> const& session, SurfaceId surface) override;
+    std::string persistent_id_for(std::shared_ptr<MirClientSession> const& session, SurfaceId surface) override;
 
     std::shared_ptr<scene::Surface> surface_for_id(std::string const& serialised_id) override;
 
     int set_surface_attribute(
-        std::shared_ptr<Session> const& session,
+        std::shared_ptr<MirClientSession> const& session,
         SurfaceId surface_id,
         MirWindowAttrib attrib,
         int value) override;
 
     int get_surface_attribute(
-        std::shared_ptr<Session> const& session,
+        std::shared_ptr<MirClientSession> const& session,
         SurfaceId surface_id,
         MirWindowAttrib attrib) override;
 
     void request_operation(
-        std::shared_ptr<Session> const& session,
+        std::shared_ptr<MirClientSession> const& session,
         SurfaceId surface_id,
         uint64_t timestamp,
         UserRequest request,

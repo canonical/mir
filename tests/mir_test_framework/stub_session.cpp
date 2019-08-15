@@ -26,12 +26,6 @@ mtd::StubSession::StubSession(pid_t pid)
     : pid(pid)
 {}
 
-std::shared_ptr<mir::frontend::Surface> mtd::StubSession::get_surface(
-    mir::frontend::SurfaceId /*surface*/) const
-{
-    return {};
-}
-
 std::string mtd::StubSession::name() const
 {
     return {};

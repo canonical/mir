@@ -32,12 +32,12 @@ public:
     using ShellWrapper::ShellWrapper;
 
     std::shared_ptr<PromptSession> start_prompt_session_for(
-        std::shared_ptr<Session> const& session,
+        std::shared_ptr<scene::Session> const& session,
         scene::PromptSessionCreationParameters const& params) override;
 
     void add_prompt_provider_for(
         std::shared_ptr<PromptSession> const& prompt_session,
-        std::shared_ptr<Session> const& session) override;
+        std::shared_ptr<scene::Session> const& session) override;
 
     void stop_prompt_session(
         std::shared_ptr<PromptSession> const& prompt_session) override;

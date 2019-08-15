@@ -19,6 +19,7 @@
 #include "display_configuration_observer_multiplexer.h"
 
 namespace mg = mir::graphics;
+namespace ms = mir::scene;
 
 void mg::DisplayConfigurationObserverMultiplexer::initial_configuration(
     std::shared_ptr<mg::DisplayConfiguration const> const& config)
@@ -39,14 +40,14 @@ void mg::DisplayConfigurationObserverMultiplexer::base_configuration_updated(
 }
 
 void mg::DisplayConfigurationObserverMultiplexer::session_configuration_applied(
-    std::shared_ptr<frontend::Session> const& session,
+    std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<DisplayConfiguration> const& config)
 {
     for_each_observer(&mg::DisplayConfigurationObserver::session_configuration_applied, session, config);
 }
 
 void mg::DisplayConfigurationObserverMultiplexer::session_configuration_removed(
-    std::shared_ptr<frontend::Session> const& session)
+    std::shared_ptr<ms::Session> const& session)
 {
     for_each_observer(&mg::DisplayConfigurationObserver::session_configuration_removed, session);
 }

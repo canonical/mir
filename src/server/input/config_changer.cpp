@@ -193,7 +193,7 @@ MirInputConfig mi::ConfigChanger::base_configuration()
     return base;
 }
 
-void mi::ConfigChanger::configure(std::shared_ptr<frontend::Session> const& session, MirInputConfig && config)
+void mi::ConfigChanger::configure(std::shared_ptr<scene::Session> const& session, MirInputConfig && config)
 {
     std::lock_guard<std::mutex> lg{config_mutex};
     auto const& session_config = (config_map[session] = std::move(config));
@@ -291,7 +291,7 @@ void mi::ConfigChanger::apply_config(MirInputConfig const& config)
     input_manager->continue_after_config();
 }
 
-void mi::ConfigChanger::apply_config_at_session(MirInputConfig const& config, std::shared_ptr<mf::Session> const& session)
+void mi::ConfigChanger::apply_config_at_session(MirInputConfig const& config, std::shared_ptr<ms::Session> const& session)
 {
     try
     {

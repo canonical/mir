@@ -102,7 +102,7 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
     MirConnection* connection = nullptr;
 
     static constexpr pid_t application_session_pid = __LINE__;
-    std::shared_ptr<mf::Session> application_session;
+    std::shared_ptr<ms::Session> application_session;
     MirConnection* application_connection{nullptr};
 
     std::shared_ptr<ms::PromptSession> server_prompt_session;
@@ -139,7 +139,7 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
         std::mutex application_session_mutex;
         std::condition_variable application_session_cv;
 
-        auto connect_handler = [&](std::shared_ptr<mf::Session> const& session)
+        auto connect_handler = [&](std::shared_ptr<ms::Session> const& session)
             {
                 std::lock_guard<std::mutex> lock(application_session_mutex);
                 application_session = session;
@@ -229,10 +229,10 @@ struct PromptSessionClientAPI : mtf::HeadlessInProcessServer
 
     MOCK_METHOD1(process_line, void(std::string const&));
 
-    std::vector<std::shared_ptr<mf::Session>> list_providers_for(
+    std::vector<std::shared_ptr<ms::Session>> list_providers_for(
         std::shared_ptr<ms::PromptSession> const& prompt_session)
     {
-        std::vector<std::shared_ptr<mf::Session>> results;
+        std::vector<std::shared_ptr<ms::Session>> results;
         auto providers_fn = [&results](std::weak_ptr<ms::Session> const& session)
         {
             results.push_back(session.lock());

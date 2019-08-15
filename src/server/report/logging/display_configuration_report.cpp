@@ -20,13 +20,14 @@
 #include "mir/graphics/display_configuration.h"
 #include "mir/output_type_names.h"
 #include "mir/logging/logger.h"
-#include "mir/frontend/session.h"
 #include "mir/graphics/edid.h"
+#include "mir/scene/session.h"
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <cmath>
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace mg = mir::graphics;
 namespace ml = mir::logging;
 namespace mrl= mir::report::logging;
@@ -67,14 +68,14 @@ void mrl::DisplayConfigurationReport::base_configuration_updated(
     log_configuration(severity, *base_config);
 }
 
-void mrl::DisplayConfigurationReport::session_configuration_applied(std::shared_ptr<mf::Session> const& session,
+void mrl::DisplayConfigurationReport::session_configuration_applied(std::shared_ptr<ms::Session> const& session,
                                    std::shared_ptr<mg::DisplayConfiguration> const& config)
 {
     logger->log(component, severity, "Session %s applied display configuration", session->name().c_str());
     log_configuration(severity, *config);
 }
 
-void mrl::DisplayConfigurationReport::session_configuration_removed(std::shared_ptr<frontend::Session> const& session)
+void mrl::DisplayConfigurationReport::session_configuration_removed(std::shared_ptr<ms::Session> const& session)
 {
     logger->log(component, severity, "Session %s removed display configuration", session->name().c_str());
 }

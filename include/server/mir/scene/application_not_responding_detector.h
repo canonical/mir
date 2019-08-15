@@ -24,11 +24,6 @@
 
 namespace mir
 {
-namespace frontend
-{
-class Session;
-}
-
 namespace scene
 {
 class Session;
@@ -56,9 +51,9 @@ public:
         virtual void session_now_responsive(Session const* session) = 0;
     };
 
-    virtual void register_session(frontend::Session const* session, std::function<void()> const& pinger) = 0;
-    virtual void unregister_session(frontend::Session const* session) = 0;
-    virtual void pong_received(frontend::Session const* received_for) = 0;
+    virtual void register_session(scene::Session const* session, std::function<void()> const& pinger) = 0;
+    virtual void unregister_session(scene::Session const* session) = 0;
+    virtual void pong_received(scene::Session const* received_for) = 0;
 
     virtual void register_observer(std::shared_ptr<Observer> const& observer) = 0;
     virtual void unregister_observer(std::shared_ptr<Observer> const& observer) = 0;

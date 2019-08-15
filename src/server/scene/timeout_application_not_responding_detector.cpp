@@ -17,7 +17,6 @@
  */
 
 #include "timeout_application_not_responding_detector.h"
-#include "mir/frontend/session.h"
 #include "mir/scene/session.h"
 
 #include "mir/time/alarm_factory.h"
@@ -64,7 +63,7 @@ ms::TimeoutApplicationNotRespondingDetector::~TimeoutApplicationNotRespondingDet
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::register_session(
-    frontend::Session const* session, std::function<void()> const& pinger)
+    scene::Session const* session, std::function<void()> const& pinger)
 {
     bool alarm_needs_schedule;
     {
@@ -79,14 +78,14 @@ void ms::TimeoutApplicationNotRespondingDetector::register_session(
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::unregister_session(
-    frontend::Session const* session)
+    scene::Session const* session)
 {
     std::lock_guard<std::mutex> lock{session_mutex};
     sessions.erase(dynamic_cast<Session const*>(session));
 }
 
 void ms::TimeoutApplicationNotRespondingDetector::pong_received(
-   frontend::Session const* received_for)
+   scene::Session const* received_for)
 {
     bool needs_now_responsive_notification{false};
     bool alarm_needs_rescheduling;

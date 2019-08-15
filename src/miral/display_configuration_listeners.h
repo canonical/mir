@@ -53,10 +53,10 @@ private:
 
     void base_configuration_updated(std::shared_ptr<mir::graphics::DisplayConfiguration const> const&) override;
 
-    void session_configuration_applied(std::shared_ptr<mir::frontend::Session> const&,
+    void session_configuration_applied(std::shared_ptr<mir::scene::Session> const&,
                                        std::shared_ptr<mir::graphics::DisplayConfiguration> const&) override;
 
-    void session_configuration_removed(std::shared_ptr<mir::frontend::Session> const&) override;
+    void session_configuration_removed(std::shared_ptr<mir::scene::Session> const&) override;
 
     std::mutex mutable mutex;
     std::vector<ActiveOutputsListener*> active_output_listeners;

@@ -33,7 +33,7 @@ public:
                                   bool set_base_configuration_is_allowed);
 
     MirInputConfig base_configuration() override;
-    void configure(std::shared_ptr<Session> const&, MirInputConfig &&) override;
+    void configure(std::shared_ptr<scene::Session> const&, MirInputConfig &&) override;
     void set_base_configuration(MirInputConfig &&) override;
 private:
     std::shared_ptr<InputConfigurationChanger> const changer;

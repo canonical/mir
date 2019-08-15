@@ -21,6 +21,7 @@
 
 #include <mir/abnormal_exit.h>
 #include <mir/frontend/wayland.h>
+#include <mir/frontend/mir_client_session.h>
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
 #include <mir/server.h>
@@ -315,12 +316,12 @@ auto miral::WaylandExtensions::disable(std::string name) -> WaylandExtensions&
 
 auto miral::application_for(wl_client* client) -> Application
 {
-    return std::dynamic_pointer_cast<mir::scene::Session>(mir::frontend::get_session(client));
+    return mir::frontend::get_session(client);
 }
 
 auto miral::application_for(wl_resource* resource) -> Application
 {
-    return std::dynamic_pointer_cast<mir::scene::Session>(mir::frontend::get_session(resource));
+    return mir::frontend::get_session(resource);
 }
 
 auto miral::window_for(wl_resource* surface) -> Window

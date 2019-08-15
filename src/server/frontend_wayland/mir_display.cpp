@@ -28,6 +28,7 @@
 #include <vector>
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace mg = mir::graphics;
 
 namespace 
@@ -55,11 +56,11 @@ struct DisplayConfigurationObserverAdapter : mg::DisplayConfigurationObserver
     }
 
     void session_configuration_applied(
-        std::shared_ptr<mf::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&) override
+        std::shared_ptr<ms::Session> const&, std::shared_ptr<mg::DisplayConfiguration> const&) override
     {
     }
 
-    void session_configuration_removed(std::shared_ptr<mir::frontend::Session> const&) override
+    void session_configuration_removed(std::shared_ptr<ms::Session> const&) override
     {
     }
 

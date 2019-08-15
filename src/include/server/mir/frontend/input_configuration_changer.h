@@ -24,9 +24,12 @@
 class MirInputConfig;
 namespace mir
 {
-namespace frontend
+namespace scene
 {
 class Session;
+}
+namespace frontend
+{
 
 class InputConfigurationChanger
 {
@@ -35,7 +38,7 @@ public:
     virtual ~InputConfigurationChanger() = default;
 
     virtual MirInputConfig base_configuration() = 0;
-    virtual void configure(std::shared_ptr<Session> const&, MirInputConfig &&) = 0;
+    virtual void configure(std::shared_ptr<scene::Session> const&, MirInputConfig &&) = 0;
     virtual void set_base_configuration(MirInputConfig &&) = 0;
 
 protected:

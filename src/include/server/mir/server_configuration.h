@@ -38,6 +38,7 @@ namespace frontend
 {
 class Connector;
 class Shell;
+class MirClientSession;
 }
 namespace shell
 {

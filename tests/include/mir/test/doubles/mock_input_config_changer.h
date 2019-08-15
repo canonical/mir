@@ -34,10 +34,10 @@ class MockInputConfigurationChanger : public frontend::InputConfigurationChanger
 {
 public:
     MOCK_METHOD0(base_configuration, MirInputConfig());
-    MOCK_METHOD2(configure_called, void(std::shared_ptr<frontend::Session> const&, MirInputConfig const&));
+    MOCK_METHOD2(configure_called, void(std::shared_ptr<scene::Session> const&, MirInputConfig const&));
     MOCK_METHOD1(set_base_configuration_called, void(MirInputConfig const&));
 
-    void configure(std::shared_ptr<frontend::Session> const& session, MirInputConfig && conf) override
+    void configure(std::shared_ptr<scene::Session> const& session, MirInputConfig && conf) override
     {
         configure_called(session, conf);
     }

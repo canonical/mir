@@ -30,13 +30,13 @@ namespace doubles
 class NullANRDetector : public mir::scene::ApplicationNotRespondingDetector
 {
 public:
-    void register_session(frontend::Session const*, std::function<void()> const&) override
+    void register_session(scene::Session const*, std::function<void()> const&) override
     {
     }
-    void unregister_session(frontend::Session const*) override
+    void unregister_session(scene::Session const*) override
     {
     }
-    void pong_received(frontend::Session const*) override
+    void pong_received(scene::Session const*) override
     {
     }
     void register_observer(std::shared_ptr<Observer> const&) override

@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_STUB_SESSION_H_
 #define MIR_TEST_DOUBLES_STUB_SESSION_H_
 
-#include "mir/frontend/session.h"
+#include "mir/frontend/mir_client_session.h"
 
 namespace mir
 {
@@ -28,41 +28,32 @@ namespace test
 namespace doubles
 {
 
-struct StubSession : public frontend::Session
+struct StubMirClientSession : public frontend::MirClientSession
 {
-    std::shared_ptr<frontend::Surface> get_surface(frontend::SurfaceId /* surface */) const override
+    auto name() const -> std::string override
     {
-        return std::shared_ptr<frontend::Surface>();
-    }
-    std::string name() const override
-    {
-        return std::string();
+        return "";
     }
 
-    std::shared_ptr<frontend::BufferStream> get_buffer_stream(frontend::BufferStreamId) const override
+    auto get_surface(frontend::SurfaceId /* surface */) const -> std::shared_ptr<frontend::Surface> override
     {
         return nullptr;
     }
-    void destroy_buffer_stream(frontend::BufferStreamId) override
+
+    auto create_buffer_stream(graphics::BufferProperties const& /* props */)
+        -> frontend::BufferStreamId override
     {
-    }
-    frontend::BufferStreamId create_buffer_stream(graphics::BufferProperties const&) override
-    {
-        return frontend::BufferStreamId();
-    }
-    
-    graphics::BufferID create_buffer(graphics::BufferProperties const&) override
-    {
-        return graphics::BufferID(3);
+        return {};
     }
 
-    void destroy_buffer(graphics::BufferID) override
-    {
-    }
-
-    std::shared_ptr<graphics::Buffer> get_buffer(graphics::BufferID) override
+    auto get_buffer_stream(frontend::BufferStreamId /* stream */) const
+        -> std::shared_ptr<frontend::BufferStream> override
     {
         return nullptr;
+    }
+
+    void destroy_buffer_stream(frontend::BufferStreamId /* stream */) override
+    {
     }
 };
 

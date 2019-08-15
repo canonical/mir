@@ -29,6 +29,7 @@
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 
 struct AuthorizingDisplayChangerTest : public ::testing::TestWithParam<std::tuple<bool, bool>>
 {
@@ -48,13 +49,13 @@ TEST_P(AuthorizingDisplayChangerTest, configure_throws_only_when_configure_is_di
 
     if (configure_allowed)
     {
-        EXPECT_NO_THROW({ changer.configure(std::shared_ptr<mf::Session>(), conf); });
+        EXPECT_NO_THROW({ changer.configure(std::shared_ptr<ms::Session>(), conf); });
     }
     else
     {
         EXPECT_THROW(
             {
-                changer.configure(std::shared_ptr<mf::Session>(), conf);
+                changer.configure(std::shared_ptr<ms::Session>(), conf);
             },
             std::runtime_error);
     }
@@ -81,7 +82,7 @@ TEST_P(AuthorizingDisplayChangerTest, set_base_configuration_throws_only_when_di
 TEST_P(AuthorizingDisplayChangerTest, preview_base_configuration_throws_only_when_disallowed)
 {
     bool const base_configure_allowed = std::get<1>(GetParam());
-    std::weak_ptr<mf::Session> null_session;
+    std::weak_ptr<ms::Session> null_session;
     std::chrono::seconds timeout;
 
     if (base_configure_allowed)
@@ -108,7 +109,7 @@ TEST_P(AuthorizingDisplayChangerTest, only_calls_configure_if_authorized)
 
     try
     {
-        changer.configure(std::shared_ptr<mf::Session>(), conf);
+        changer.configure(std::shared_ptr<ms::Session>(), conf);
     }
     catch (...)
     {
@@ -143,7 +144,7 @@ TEST_P(AuthorizingDisplayChangerTest, only_calls_preview_base_configuration_if_a
     try
     {
         changer.preview_base_configuration(
-            std::weak_ptr<mf::Session>{},
+            std::weak_ptr<ms::Session>{},
             conf,
             std::chrono::seconds{1});
     }

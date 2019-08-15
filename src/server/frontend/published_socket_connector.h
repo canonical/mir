@@ -43,6 +43,7 @@ namespace frontend
 {
 class ConnectionCreator;
 class ConnectorReport;
+class MirClientSession;
 
 /// provides a client-side socket fd for each connection
 class BasicConnector : public Connector
@@ -55,13 +56,13 @@ public:
     void start() override;
     void stop() override;
     int client_socket_fd() const override;
-    int client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const override;
+    int client_socket_fd(std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const override;
     auto socket_name() const -> optional_value<std::string> override;
 
 protected:
     void create_session_for(
         std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket,
-        std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const;
+        std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const;
 
     std::shared_ptr<boost::asio::io_service> const io_service;
     boost::asio::io_service::work work;

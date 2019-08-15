@@ -29,7 +29,7 @@ char const* const prompt_sessions_disabled = "Prompt sessions disabled";
 }
 
 std::shared_ptr<mf::PromptSession> mf::NoPromptShell::start_prompt_session_for(
-    std::shared_ptr<Session> const& /*session*/,
+    std::shared_ptr<scene::Session> const& /*session*/,
     scene::PromptSessionCreationParameters const& /*params*/)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error(prompt_sessions_disabled));
@@ -37,7 +37,7 @@ std::shared_ptr<mf::PromptSession> mf::NoPromptShell::start_prompt_session_for(
 
 void mf::NoPromptShell::add_prompt_provider_for(
     std::shared_ptr<PromptSession> const& /*prompt_session*/,
-    std::shared_ptr<Session> const& /*session*/)
+    std::shared_ptr<scene::Session> const& /*session*/)
 {
     BOOST_THROW_EXCEPTION(std::runtime_error(prompt_sessions_disabled));
 }

@@ -53,7 +53,7 @@ class Rectangle;
 namespace frontend
 {
 class BufferStream;
-class Session;
+class MirClientSession;
 class WlSurface;
 class WlSubsurface;
 
@@ -142,7 +142,7 @@ public:
     void add_destroy_listener(void const* key, std::function<void()> listener);
     void remove_destroy_listener(void const* key);
 
-    std::shared_ptr<mir::frontend::Session> const session;
+    std::shared_ptr<MirClientSession> const session;
     mir::frontend::BufferStreamId const stream_id;
     std::shared_ptr<mir::frontend::BufferStream> const stream;
 

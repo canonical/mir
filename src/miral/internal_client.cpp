@@ -123,10 +123,10 @@ MirInternalClientRunner<Base>::MirInternalClientRunner(
 template<typename Base>
 void MirInternalClientRunner<Base>::run(mir::Server& server)
 {
-    fd = server.open_client_socket([this](std::shared_ptr<mir::frontend::Session> const& mf_session)
+    fd = server.open_client_socket([this](std::shared_ptr<mir::scene::Session> const& mf_session)
         {
             std::lock_guard<decltype(mutex)> lock_guard{mutex};
-            session = std::dynamic_pointer_cast<mir::scene::Session>(mf_session);
+            session = mf_session;
             connect_notification(session);
             cv.notify_one();
         });
@@ -208,7 +208,7 @@ WlInternalClientRunner<Base>::WlInternalClientRunner(
 template<typename Base>
 void WlInternalClientRunner<Base>::run(mir::Server& server)
 {
-    fd = server.open_client_wayland([this](std::shared_ptr<mir::frontend::Session> const& mf_session)
+    fd = server.open_client_wayland([this](std::shared_ptr<mir::scene::Session> const& mf_session)
         {
             std::lock_guard<decltype(mutex)> lock_guard{mutex};
             session = std::dynamic_pointer_cast<mir::scene::Session>(mf_session);

@@ -42,10 +42,10 @@ public:
 
     void base_configuration_updated(std::shared_ptr<DisplayConfiguration const> const& base_config) override;
 
-    void session_configuration_applied(std::shared_ptr<frontend::Session> const& session,
+    void session_configuration_applied(std::shared_ptr<scene::Session> const& session,
                                        std::shared_ptr<DisplayConfiguration> const& config) override;
 
-    void session_configuration_removed(std::shared_ptr<frontend::Session> const& session) override;
+    void session_configuration_removed(std::shared_ptr<scene::Session> const& session) override;
 
     void configuration_failed(
         std::shared_ptr<DisplayConfiguration const> const& attempted,

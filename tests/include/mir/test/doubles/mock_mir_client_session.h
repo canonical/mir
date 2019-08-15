@@ -19,7 +19,7 @@
 #ifndef MIR_TEST_DOUBLES_MOCK_SESSION_H_
 #define MIR_TEST_DOUBLES_MOCK_SESSION_H_
 
-#include "mir/frontend/session.h"
+#include "mir/frontend/mir_client_session.h"
 
 #include <gmock/gmock.h>
 
@@ -30,7 +30,7 @@ namespace test
 namespace doubles
 {
 
-struct MockSession : public frontend::Session
+struct MockMirClientSession : public frontend::MirClientSession
 {
     MOCK_CONST_METHOD1(get_surface, std::shared_ptr<frontend::Surface>(frontend::SurfaceId));
 

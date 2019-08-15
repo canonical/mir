@@ -50,7 +50,7 @@ public:
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"mirclient support not enabled (pass --enable-mirclient option?)"}));
     }
-    auto client_socket_fd(std::function<void(std::shared_ptr<mf::Session> const&)> const&) const
+    auto client_socket_fd(std::function<void(std::shared_ptr<ms::Session> const&)> const&) const
         -> int override
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"mirclient support not enabled (pass --enable-mirclient option?)"}));

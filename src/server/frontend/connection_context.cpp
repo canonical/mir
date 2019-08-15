@@ -23,14 +23,14 @@
 namespace mf = mir::frontend;
 
 mf::ConnectionContext::ConnectionContext(
-    std::function<void(std::shared_ptr<Session> const& session)> const connect_handler,
+    std::function<void(std::shared_ptr<scene::Session> const& session)> const connect_handler,
     Connector const* connector) :
     connect_handler(connect_handler),
     connector(connector)
 {
 }
 
-int mf::ConnectionContext::fd_for_new_client(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
+int mf::ConnectionContext::fd_for_new_client(std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const
 {
     return connector->client_socket_fd(connect_handler);
 }

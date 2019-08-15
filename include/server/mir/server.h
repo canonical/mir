@@ -35,12 +35,16 @@ template<class Observer>
 class ObserverRegistrar;
 
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; }
-namespace frontend { class SessionAuthorizer; class Session; class SessionMediatorObserver; }
 namespace graphics { class Cursor; class Platform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; }
 namespace input { class CompositeEventFilter; class InputDispatcher; class CursorListener; class CursorImages; class TouchVisualizer; class InputDeviceHub;}
 namespace logging { class Logger; }
 namespace options { class Option; }
-namespace scene { class Session; }
+namespace frontend
+{
+class SessionAuthorizer;
+class SessionMediatorObserver;
+class MirClientSession;
+}
 namespace cookie
 {
 using Secret = std::vector<uint8_t>;
@@ -67,6 +71,7 @@ class SessionListener;
 class SessionCoordinator;
 class SurfaceFactory;
 class CoordinateTranslator;
+class Session;
 }
 namespace input
 {
@@ -441,7 +446,7 @@ public:
  * They should be called while the server is running (i.e. run() has been called and
  * not exited) otherwise they throw a std::logic_error.
  * @{ */
-    using ConnectHandler = std::function<void(std::shared_ptr<frontend::Session> const& session)>;
+    using ConnectHandler = std::function<void(std::shared_ptr<scene::Session> const& session)>;
 
     /// Get a file descriptor that can be used to connect a client
     /// It can be passed to another process, or used directly with mir_connect()

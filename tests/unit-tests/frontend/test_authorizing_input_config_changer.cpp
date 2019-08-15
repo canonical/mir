@@ -29,6 +29,7 @@
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 
 struct AuthorizingInputConfigChanger : public ::testing::TestWithParam<std::tuple<bool, bool>>
 {
@@ -47,13 +48,13 @@ TEST_P(AuthorizingInputConfigChanger, configure_throws_only_when_configure_is_di
 
     if (configure_allowed)
     {
-        EXPECT_NO_THROW({ changer.configure(std::shared_ptr<mf::Session>(), MirInputConfig{}); });
+        EXPECT_NO_THROW({ changer.configure(std::shared_ptr<ms::Session>(), MirInputConfig{}); });
     }
     else
     {
         EXPECT_THROW(
             {
-                changer.configure(std::shared_ptr<mf::Session>(), MirInputConfig{});
+                changer.configure(std::shared_ptr<ms::Session>(), MirInputConfig{});
             },
             std::runtime_error);
     }

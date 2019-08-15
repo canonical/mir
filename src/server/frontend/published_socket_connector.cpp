@@ -21,6 +21,7 @@
 
 #include "mir/frontend/connection_context.h"
 #include "mir/frontend/connector_report.h"
+#include "mir/frontend/mir_client_session.h"
 #include "mir/emergency_cleanup_registry.h"
 #include "mir/thread_name.h"
 
@@ -34,6 +35,7 @@
 #include <fstream>
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace mfd = mir::frontend::detail;
 namespace ba = boost::asio;
 
@@ -173,7 +175,7 @@ void mf::PublishedSocketConnector::on_new_connection(
 {
     if (!ec)
     {
-        create_session_for(socket, [](std::shared_ptr<mf::Session> const&) {});
+        create_session_for(socket, [](std::shared_ptr<ms::Session> const&) {});
     }
     else
     {
@@ -234,7 +236,7 @@ void mf::BasicConnector::stop()
 
 void mf::BasicConnector::create_session_for(
     std::shared_ptr<boost::asio::local::stream_protocol::socket> const& server_socket,
-    std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
+    std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const
 {
     report->creating_session_for(server_socket->native_handle());
 
@@ -248,10 +250,10 @@ void mf::BasicConnector::create_session_for(
 
 int mf::BasicConnector::client_socket_fd() const
 {
-    return client_socket_fd([](std::shared_ptr<mf::Session> const&) {});
+    return client_socket_fd([](std::shared_ptr<scene::Session> const&) {});
 }
 
-int mf::BasicConnector::client_socket_fd(std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const
+int mf::BasicConnector::client_socket_fd(std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const
 {
     enum { server, client, size };
     int socket_fd[size];

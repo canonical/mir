@@ -342,7 +342,7 @@ TEST_F(ApplicationSession, throws_on_get_invalid_surface)
     mf::SurfaceId invalid_surface_id(1);
 
     EXPECT_THROW({
-            app_session->get_surface(invalid_surface_id);
+            app_session->surface(invalid_surface_id);
     }, std::runtime_error);
 }
 
@@ -372,15 +372,15 @@ TEST_F(ApplicationSession, default_surface_is_first_surface)
     auto id3 = app_session->create_surface(params, nullptr);
 
     auto default_surf = app_session->default_surface();
-    EXPECT_EQ(app_session->get_surface(id1), default_surf);
+    EXPECT_EQ(app_session->surface(id1), default_surf);
     app_session->destroy_surface(id1);
 
     default_surf = app_session->default_surface();
-    EXPECT_EQ(app_session->get_surface(id2), default_surf);
+    EXPECT_EQ(app_session->surface(id2), default_surf);
     app_session->destroy_surface(id2);
 
     default_surf = app_session->default_surface();
-    EXPECT_EQ(app_session->get_surface(id3), default_surf);
+    EXPECT_EQ(app_session->surface(id3), default_surf);
     app_session->destroy_surface(id3);
 }
 

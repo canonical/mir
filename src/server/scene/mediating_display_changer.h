@@ -69,19 +69,19 @@ public:
 
         /* From mir::frontend::DisplayChanger */
     std::shared_ptr<graphics::DisplayConfiguration> base_configuration() override;
-    void configure(std::shared_ptr<frontend::Session> const& session,
+    void configure(std::shared_ptr<scene::Session> const& session,
                    std::shared_ptr<graphics::DisplayConfiguration> const& conf) override;
-    void remove_session_configuration(std::shared_ptr<frontend::Session> const& session) override;
+    void remove_session_configuration(std::shared_ptr<scene::Session> const& session) override;
     void preview_base_configuration(
-        std::weak_ptr<frontend::Session> const& session,
+        std::weak_ptr<scene::Session> const& session,
         std::shared_ptr<graphics::DisplayConfiguration> const& conf,
         std::chrono::seconds timeout) override;
     void confirm_base_configuration(
-        std::shared_ptr<frontend::Session> const& session,
+        std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_conf) override;
 
     void cancel_base_configuration_preview(
-        std::shared_ptr<frontend::Session> const& session) override;
+        std::shared_ptr<scene::Session> const& session) override;
 
     /* From mir::DisplayChanger */
     void configure_for_hardware_change(
@@ -111,15 +111,15 @@ private:
     std::shared_ptr<ServerActionQueue> const server_action_queue;
     std::shared_ptr<graphics::DisplayConfigurationObserver> const observer;
     std::mutex configuration_mutex;
-    std::map<std::weak_ptr<frontend::Session>,
+    std::map<std::weak_ptr<scene::Session>,
              std::shared_ptr<graphics::DisplayConfiguration>,
-             std::owner_less<std::weak_ptr<frontend::Session>>> config_map;
-    std::weak_ptr<frontend::Session> focused_session;
+             std::owner_less<std::weak_ptr<scene::Session>>> config_map;
+    std::weak_ptr<scene::Session> focused_session;
     std::shared_ptr<graphics::DisplayConfiguration> base_configuration_;
     bool base_configuration_applied;
     std::shared_ptr<time::AlarmFactory> const alarm_factory;
     std::unique_ptr<time::Alarm> preview_configuration_timeout;
-    std::weak_ptr<frontend::Session> currently_previewing_session;
+    std::weak_ptr<scene::Session> currently_previewing_session;
     struct SessionObserver;
     std::unique_ptr<SessionObserver> const session_observer;
 };

@@ -34,6 +34,7 @@
 #include "mir/scene/session.h"
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace mo = mir::options;
 namespace mw = mir::wayland;
 
@@ -154,11 +155,6 @@ std::shared_ptr<mf::Connector>
                 the_frontend_display_changer(),
                 the_display_configuration_observer_registrar());
 
-            auto wayland_filter = [this](std::shared_ptr<frontend::Session> const& session, char const* protocol)
-                {
-                    return wayland_extension_filter(std::static_pointer_cast<scene::Session>(session), protocol);
-                };
-
             return std::make_shared<mf::WaylandConnector>(
                 display_name,
                 the_frontend_shell(),
@@ -169,7 +165,7 @@ std::shared_ptr<mf::Connector>
                 the_session_authorizer(),
                 arw_socket,
                 configure_wayland_extensions(wayland_extensions, options->is_set(mo::x11_display_opt), wayland_extension_hooks),
-                wayland_filter);
+                wayland_extension_filter);
         });
 }
 

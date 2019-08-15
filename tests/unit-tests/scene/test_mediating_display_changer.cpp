@@ -111,9 +111,9 @@ struct StubDisplayConfigurationObserver : mg::DisplayConfigurationObserver
     void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
     void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
     void session_configuration_applied(
-        std::shared_ptr<mf::Session> const&,
+        std::shared_ptr<ms::Session> const&,
         std::shared_ptr<mg::DisplayConfiguration> const&) override {};
-    void session_configuration_removed(std::shared_ptr<mf::Session> const&) override {};
+    void session_configuration_removed(std::shared_ptr<ms::Session> const&) override {};
     void configuration_failed(
         std::shared_ptr<mg::DisplayConfiguration const> const&,
         std::exception const&) override {}

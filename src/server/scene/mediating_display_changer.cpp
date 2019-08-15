@@ -195,7 +195,7 @@ ms::MediatingDisplayChanger::~MediatingDisplayChanger()
 }
 
 void ms::MediatingDisplayChanger::configure(
-    std::shared_ptr<mf::Session> const& session,
+    std::shared_ptr<ms::Session> const& session,
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
     if (!conf->valid())
@@ -212,7 +212,7 @@ void ms::MediatingDisplayChanger::configure(
             return;
     }
 
-    std::weak_ptr<mf::Session> const weak_session{session};
+    std::weak_ptr<ms::Session> const weak_session{session};
 
     server_action_queue->enqueue(
         this,
@@ -239,7 +239,7 @@ void ms::MediatingDisplayChanger::configure(
 }
 
 void ms::MediatingDisplayChanger::remove_session_configuration(
-    std::shared_ptr<mf::Session> const& session)
+    std::shared_ptr<ms::Session> const& session)
 {
     {
         std::lock_guard<std::mutex> lg{configuration_mutex};
@@ -253,7 +253,7 @@ void ms::MediatingDisplayChanger::remove_session_configuration(
             return;
     }
 
-    std::weak_ptr<mf::Session> const weak_session{session};
+    std::weak_ptr<ms::Session> const weak_session{session};
 
     server_action_queue->enqueue(
         this,
@@ -277,7 +277,7 @@ void ms::MediatingDisplayChanger::remove_session_configuration(
 
 void
 ms::MediatingDisplayChanger::preview_base_configuration(
-    std::weak_ptr<frontend::Session> const& session,
+    std::weak_ptr<ms::Session> const& session,
     std::shared_ptr<graphics::DisplayConfiguration> const& conf,
     std::chrono::seconds timeout)
 {
@@ -329,20 +329,20 @@ ms::MediatingDisplayChanger::preview_base_configuration(
 
 void
 ms::MediatingDisplayChanger::confirm_base_configuration(
-    std::shared_ptr<frontend::Session> const& /*session*/,
+    std::shared_ptr<ms::Session> const& /*session*/,
     std::shared_ptr<graphics::DisplayConfiguration> const& confirmed_conf)
 {
     {
         std::lock_guard<std::mutex> lock{configuration_mutex};
         preview_configuration_timeout = std::unique_ptr<mt::Alarm>();
-        currently_previewing_session = std::weak_ptr<frontend::Session>{};
+        currently_previewing_session = std::weak_ptr<ms::Session>{};
     }
     set_base_configuration(confirmed_conf);
 }
 
 void
 ms::MediatingDisplayChanger::cancel_base_configuration_preview(
-    std::shared_ptr<mir::frontend::Session> const& session)
+    std::shared_ptr<ms::Session> const& session)
 {
     std::unique_ptr<mt::Alarm> previously_set_alarm;
     {
@@ -360,7 +360,7 @@ ms::MediatingDisplayChanger::cancel_base_configuration_preview(
          */
         previously_set_alarm = std::move(preview_configuration_timeout);
         preview_configuration_timeout = nullptr;
-        currently_previewing_session = std::weak_ptr<frontend::Session>{};
+        currently_previewing_session = std::weak_ptr<ms::Session>{};
     }
 
     if (previously_set_alarm->cancel())
@@ -370,7 +370,7 @@ ms::MediatingDisplayChanger::cancel_base_configuration_preview(
         // send a notification.
         server_action_queue->enqueue(
             this,
-            [this, weak_session = std::weak_ptr<mir::frontend::Session>(session)]()
+            [this, weak_session = std::weak_ptr<ms::Session>(session)]()
             {
                 if (auto live_session = weak_session.lock())
                 {

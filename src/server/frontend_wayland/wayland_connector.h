@@ -54,7 +54,7 @@ class WlSubcompositor;
 class WlApplication;
 class WlSeat;
 class OutputManager;
-
+class MirClientSession;
 class Shell;
 class Surface;
 class MirDisplay;
@@ -87,7 +87,7 @@ private:
 class WaylandConnector : public Connector
 {
 public:
-    using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<frontend::Session> const&, char const*)>;
+    using WaylandProtocolExtensionFilter = std::function<bool(std::shared_ptr<scene::Session> const&, char const*)>;
 
     WaylandConnector(
         optional_value<std::string> const& display_name,
@@ -109,7 +109,7 @@ public:
     int client_socket_fd() const override;
 
     int client_socket_fd(
-        std::function<void(std::shared_ptr<Session> const& session)> const& connect_handler) const override;
+        std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const override;
 
     void run_on_wayland_display(std::function<void(wl_display*)> const& functor);
 
@@ -131,6 +131,7 @@ private:
     std::unique_ptr<DataDeviceManager> data_device_manager_global;
     std::shared_ptr<Executor> const executor;
     std::shared_ptr<graphics::WaylandAllocator> const allocator;
+    std::weak_ptr<frontend::Shell> const weak_shell;
     std::unique_ptr<WaylandExtensions> const extensions;
     std::thread dispatch_thread;
     wl_event_source* pause_source;
@@ -139,7 +140,7 @@ private:
     WaylandProtocolExtensionFilter const extension_filter;
 
     // Only accessed on event loop
-    std::unordered_map<int, std::function<void(std::shared_ptr<Session> const& session)>> mutable connect_handlers;
+    std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>> mutable connect_handlers;
 };
 
 auto create_wl_shell(wl_display* display, std::shared_ptr<Shell> const& shell, WlSeat* seat, OutputManager* const output_manager)

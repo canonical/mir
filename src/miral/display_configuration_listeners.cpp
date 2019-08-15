@@ -64,10 +64,10 @@ void miral::DisplayConfigurationListeners::catastrophic_configuration_error(
 
 void miral::DisplayConfigurationListeners::base_configuration_updated(std::shared_ptr<mir::graphics::DisplayConfiguration const> const& ) {}
 
-void miral::DisplayConfigurationListeners::session_configuration_applied(std::shared_ptr<mir::frontend::Session> const&,
+void miral::DisplayConfigurationListeners::session_configuration_applied(std::shared_ptr<mir::scene::Session> const&,
                                    std::shared_ptr<mir::graphics::DisplayConfiguration> const&) {}
 
-void miral::DisplayConfigurationListeners::session_configuration_removed(std::shared_ptr<mir::frontend::Session> const&) {}
+void miral::DisplayConfigurationListeners::session_configuration_removed(std::shared_ptr<mir::scene::Session> const&) {}
 
 void miral::DisplayConfigurationListeners::configuration_applied(std::shared_ptr<mir::graphics::DisplayConfiguration const> const& config)
 {

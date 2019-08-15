@@ -26,7 +26,6 @@ namespace mir
 {
 namespace frontend
 {
-
 class Shell;
 class Surface;
 class WlSeat;
