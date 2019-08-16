@@ -110,25 +110,10 @@ void mf::WlSurfaceEventSink::handle_input_event(MirInputEvent const* event)
     switch (mir_input_event_get_type(event))
     {
     case mir_input_event_type_key:
-    {
-        MirKeyboardEvent const* keyboard_ev = mir_input_event_get_keyboard_event(event);
-        MirKeyboardAction const action = mir_keyboard_event_action(keyboard_ev);
-        if (action == mir_keyboard_action_down || action == mir_keyboard_action_up)
-        {
-            int const scancode = mir_keyboard_event_scan_code(keyboard_ev);
-            bool const down = action == mir_keyboard_action_down;
-            seat->for_each_listener(client, [&ms, scancode, down](WlKeyboard* keyboard)
-                {
-                    keyboard->key(ms, scancode, down);
-                });
-        }
+        handle_keyboard_event(ms, mir_input_event_get_keyboard_event(event));
         break;
-    }
     case mir_input_event_type_pointer:
-        seat->for_each_listener(client, [this, event = mir_input_event_get_pointer_event(event)](WlPointer* pointer)
-            {
-                pointer->handle_event(event, surface);
-            });
+        handle_pointer_event(ms, mir_input_event_get_pointer_event(event));
         break;
     case mir_input_event_type_touch:
         seat->for_each_listener(client, [this, event = mir_input_event_get_touch_event(event)](WlTouch* touch)
@@ -178,3 +163,125 @@ void mf::WlSurfaceEventSink::handle_window_event(MirWindowEvent const* event)
     }
 }
 
+void mf::WlSurfaceEventSink::handle_keyboard_event(std::chrono::milliseconds const& ms, MirKeyboardEvent const* event)
+{
+    MirKeyboardAction const action = mir_keyboard_event_action(event);
+    if (action == mir_keyboard_action_down || action == mir_keyboard_action_up)
+    {
+        int const scancode = mir_keyboard_event_scan_code(event);
+        bool const down = action == mir_keyboard_action_down;
+        seat->for_each_listener(client, [&ms, scancode, down](WlKeyboard* keyboard)
+            {
+                keyboard->key(ms, scancode, down);
+            });
+    }
+}
+
+void mf::WlSurfaceEventSink::handle_pointer_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event)
+{
+    switch(mir_pointer_event_action(event))
+    {
+        case mir_pointer_action_button_down:
+        case mir_pointer_action_button_up:
+            handle_pointer_button_event(ms, event);
+            break;
+        case mir_pointer_action_enter:
+        {
+            geom::Point const position{
+                mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+                mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+            seat->for_each_listener(client, [surface = surface, &position](WlPointer* pointer)
+                {
+                    pointer->enter(surface, position);
+                    pointer->frame();
+                });
+            break;
+        }
+        case mir_pointer_action_leave:
+            seat->for_each_listener(client, [](WlPointer* pointer)
+                {
+                    pointer->leave();
+                    pointer->frame();
+                });
+            break;
+        case mir_pointer_action_motion:
+            handle_pointer_motion_event(ms, event);
+            break;
+        case mir_pointer_actions:
+            break;
+    }
+}
+
+void mf::WlSurfaceEventSink::handle_pointer_button_event(
+    std::chrono::milliseconds const& ms,
+    MirPointerEvent const* event)
+{
+    MirPointerButtons const event_buttons = mir_pointer_event_buttons(event);
+    std::vector<std::pair<uint32_t, bool>> buttons;
+
+    for (auto const& mapping :
+        {
+            std::make_pair(mir_pointer_button_primary, BTN_LEFT),
+            std::make_pair(mir_pointer_button_secondary, BTN_RIGHT),
+            std::make_pair(mir_pointer_button_tertiary, BTN_MIDDLE),
+            std::make_pair(mir_pointer_button_back, BTN_BACK),
+            std::make_pair(mir_pointer_button_forward, BTN_FORWARD),
+            std::make_pair(mir_pointer_button_side, BTN_SIDE),
+            std::make_pair(mir_pointer_button_task, BTN_TASK),
+            std::make_pair(mir_pointer_button_extra, BTN_EXTRA)
+        })
+    {
+        if (mapping.first & (event_buttons ^ last_pointer_buttons))
+        {
+            bool const pressed = (mapping.first & event_buttons);
+            buttons.push_back(std::make_pair(mapping.second, pressed));
+        }
+    }
+
+    if (!buttons.empty())
+    {
+        seat->for_each_listener(client, [&ms, &buttons](WlPointer* pointer)
+            {
+                for (auto& button : buttons)
+                {
+                    pointer->button(ms, button.first, button.second);
+                }
+                pointer->frame();
+            });
+    }
+
+    last_pointer_buttons = event_buttons;
+}
+
+void mf::WlSurfaceEventSink::handle_pointer_motion_event(
+    std::chrono::milliseconds const& ms,
+    MirPointerEvent const* event)
+{
+    // TODO: send axis_source, axis_stop and axis_discrete events where appropriate
+    // (may require significant eworking of the input system)
+
+    geom::Point const position{
+        mir_pointer_event_axis_value(event, mir_pointer_axis_x),
+        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
+    geom::Displacement const axis_motion{
+        mir_pointer_event_axis_value(event, mir_pointer_axis_hscroll) * 10,
+        mir_pointer_event_axis_value(event, mir_pointer_axis_vscroll) * 10};
+    bool const send_motion = (!last_pointer_position || position != last_pointer_position.value());
+    bool const send_axis = (axis_motion != geom::Displacement{});
+
+    last_pointer_position = position;
+
+    if (send_motion || send_axis)
+    {
+        seat->for_each_listener(
+            client,
+            [&ms, surface = surface, &send_motion, &position, &send_axis, &axis_motion](WlPointer* pointer)
+            {
+                if (send_motion)
+                    pointer->motion(ms, surface, position);
+                if (send_axis)
+                    pointer->axis(ms, axis_motion);
+                pointer->frame();
+            });
+    }
+}

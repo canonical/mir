@@ -19,11 +19,14 @@
 #ifndef MIR_FRONTEND_WL_POINTER_H
 #define MIR_FRONTEND_WL_POINTER_H
 
-#include "mir/geometry/point.h"
 
 #include "wayland_wrapper.h"
 
+#include "mir/geometry/point.h"
+#include "mir/geometry/displacement.h"
+
 #include <functional>
+#include <chrono>
 
 struct MirInputEvent;
 typedef unsigned int MirPointerButtons;
@@ -51,6 +54,18 @@ public:
 
     void handle_event(MirPointerEvent const* event, WlSurface* surface);
 
+    /// Handles finding the correct subsurface and position on that subsurface if needed
+    /// Giving it an already transformed surface and position is also fine
+    void enter(WlSurface* parent_surface, geometry::Point const& position_on_parent);
+    void leave();
+    void button(std::chrono::milliseconds const& ms, uint32_t button, bool pressed);
+    void motion(
+        std::chrono::milliseconds const& ms,
+        WlSurface* parent_surface,
+        geometry::Point const& position_on_parent);
+    void axis(std::chrono::milliseconds const& ms, geometry::Displacement const& scroll);
+    void frame();
+
     struct Cursor;
 
 private:
@@ -58,15 +73,18 @@ private:
     std::function<void(WlPointer*)> on_destroy;
 
     MirPointerButtons last_buttons{0};
-    std::experimental::optional<mir::geometry::Point> last_position;
+    bool can_send_frame{false};
     std::experimental::optional<WlSurface*> focused_surface;
 
-    void handle_enter(mir::geometry::Point position, WlSurface* surface);
-    void handle_leave();
-    void handle_frame();
-
-    void set_cursor(uint32_t serial, std::experimental::optional<wl_resource*> const& surface, int32_t hotspot_x, int32_t hotspot_y) override;
+    /// Wayland request handlers
+    ///@{
+    void set_cursor(
+        uint32_t serial,
+        std::experimental::optional<wl_resource*> const& surface,
+        int32_t hotspot_x,
+        int32_t hotspot_y) override;
     void release() override;
+    ///@}
 
     std::unique_ptr<Cursor> cursor;
 };
