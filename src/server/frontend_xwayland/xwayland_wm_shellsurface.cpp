@@ -25,7 +25,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/scene/surface_creation_parameters.h"
 
-#include "wl_surface_event_sink.h"
+#include "wayland_surface_observer.h"
 #include "wayland_utils.h"
 
 namespace mf = mir::frontend;

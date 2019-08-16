@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -14,14 +14,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ *              William Wold <william.wold@canonical.com>
  */
 
-#ifndef MIR_FRONTEND_BASIC_EVENT_SINK_H_
-#define MIR_FRONTEND_BASIC_EVENT_SINK_H_
+#ifndef MIR_FRONTEND_WAYLAND_SURFACE_OBSERVER_H_
+#define MIR_FRONTEND_WAYLAND_SURFACE_OBSERVER_H_
 
-#include "mir/frontend/event_sink.h"
+#include "mir/scene/null_surface_observer.h"
 
+#include <memory>
 #include <experimental/optional>
+#include <chrono>
+#include <functional>
 
 struct wl_client;
 
@@ -33,24 +37,28 @@ class WlSurface;
 class WlSeat;
 class WindowWlSurfaceRole;
 
-class WlSurfaceEventSink : public EventSink
+class WaylandSurfaceObserver
+    : public scene::NullSurfaceObserver
 {
 public:
-    WlSurfaceEventSink(WlSeat* seat, wl_client* client, WlSurface* surface, WindowWlSurfaceRole* window);
-    ~WlSurfaceEventSink();
+    WaylandSurfaceObserver(WlSeat* seat, wl_client* client, WlSurface* surface, WindowWlSurfaceRole* window);
+    ~WaylandSurfaceObserver();
 
-    void handle_event(EventUPtr&& event) override;
-    void handle_resize(mir::geometry::Size const& new_size);
-
-    void handle_lifecycle_event(MirLifecycleState) override {}
-    void handle_display_config_change(graphics::DisplayConfiguration const&) override {}
-    void send_ping(int32_t) override {}
-    void send_buffer(BufferStreamId, graphics::Buffer&, graphics::BufferIpcMsgType) override {}
-    void handle_input_config_change(MirInputConfig const&) override {}
-    void handle_error(ClientVisibleError const&) override {}
-    void add_buffer(graphics::Buffer&) override {}
-    void error_buffer(geometry::Size, MirPixelFormat, std::string const&) override {}
-    void update_buffer(graphics::Buffer&) override {}
+    /// Overrides from scene::SurfaceObserver
+    ///@{
+    void attrib_changed(scene::Surface const*, MirWindowAttrib attrib, int value) override;
+    void resized_to(scene::Surface const*, geometry::Size const& size) override;
+    void client_surface_close_requested(scene::Surface const*) override;
+    void keymap_changed(
+        scene::Surface const*,
+        MirInputDeviceId id,
+        std::string const& model,
+        std::string const& layout,
+        std::string const& variant,
+        std::string const& options) override;
+    void placed_relative(scene::Surface const*, geometry::Rectangle const& placement) override;
+    void input_consumed(scene::Surface const*, MirEvent const* event) override;
+    ///@}
 
     void latest_client_size(geometry::Size window_size)
     {
@@ -93,16 +101,20 @@ private:
     std::experimental::optional<mir::geometry::Point> last_pointer_position;
     std::shared_ptr<bool> const destroyed;
 
+    void run_on_wayland_thread_unless_destroyed(std::function<void()>&& work);
+
+    /// Handle user input events
+    ///@{
     void handle_input_event(MirInputEvent const* event);
     void handle_keymap_event(MirKeymapEvent const* event);
-    void handle_window_event(MirWindowEvent const* event);
     void handle_keyboard_event(std::chrono::milliseconds const& ms, MirKeyboardEvent const* event);
     void handle_pointer_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
     void handle_pointer_button_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
     void handle_pointer_motion_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
     void handle_touch_event(std::chrono::milliseconds const& ms, MirTouchEvent const* event);
+    ///@}
 };
 }
 }
 
-#endif //MIR_FRONTEND_BASIC_EVENT_SINK_H_
+#endif // MIR_FRONTEND_WAYLAND_SURFACE_OBSERVER_H_

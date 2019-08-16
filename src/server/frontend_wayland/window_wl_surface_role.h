@@ -48,7 +48,7 @@ struct SurfaceSpecification;
 namespace frontend
 {
 class Shell;
-class WlSurfaceEventSink;
+class WaylandSurfaceObserver;
 class OutputManager;
 class WlSurface;
 class WlSeat;
@@ -115,7 +115,7 @@ private:
     WlSurface* const surface;
     std::shared_ptr<frontend::Shell> const shell;
     OutputManager* output_manager;
-    std::shared_ptr<WlSurfaceEventSink> const sink;
+    std::shared_ptr<WaylandSurfaceObserver> const observer;
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
 
     /// The explicitly set (not taken from the surface buffer size) uncommitted window size

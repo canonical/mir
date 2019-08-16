@@ -21,7 +21,7 @@
 #include "output_manager.h"
 #include "wayland_utils.h"
 #include "wl_surface.h"
-#include "wl_surface_event_sink.h"
+#include "wayland_surface_observer.h"
 #include "wl_seat.h"
 
 #include "mir/shell/surface_specification.h"
@@ -29,7 +29,7 @@
 #include "mir/frontend/shell.h"
 #include "mir/frontend/wayland.h"
 #include "mir/frontend/mir_client_session.h"
-#include "mir/frontend/event_sink.h"
+#include "null_event_sink.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
@@ -53,7 +53,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(WlSeat* seat, wl_client* client, Wl
           surface{surface},
           shell{shell},
           output_manager{output_manager},
-          sink{std::make_shared<WlSurfaceEventSink>(seat, client, surface, this)},
+          observer{std::make_shared<WaylandSurfaceObserver>(seat, client, surface, this)},
           params{std::make_unique<scene::SurfaceCreationParameters>(
                  scene::SurfaceCreationParameters().of_type(mir_window_type_freestyle))}
 {
@@ -63,7 +63,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(WlSeat* seat, wl_client* client, Wl
 mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
 {
     surface->clear_role();
-    sink->disconnect();
+    observer->disconnect();
     *destroyed = true;
     if (surface_id_.as_value())
     {
@@ -140,7 +140,7 @@ void mf::WindowWlSurfaceRole::initiate_interactive_move()
     {
         if (auto session = get_mir_client_session(client))
         {
-            shell->request_operation(session, surface_id(), sink->latest_timestamp_ns(), Shell::UserRequest::move);
+            shell->request_operation(session, surface_id(), observer->latest_timestamp_ns(), Shell::UserRequest::move);
         }
     }
 }
@@ -154,7 +154,7 @@ void mf::WindowWlSurfaceRole::initiate_interactive_resize(MirResizeEdge edge)
             shell->request_operation(
                 session,
                 surface_id(),
-                sink->latest_timestamp_ns(),
+                observer->latest_timestamp_ns(),
                 Shell::UserRequest::resize,
                 edge);
         }
@@ -280,22 +280,22 @@ auto mf::WindowWlSurfaceRole::current_size() const -> geom::Size
 
 std::experimental::optional<geom::Size> mf::WindowWlSurfaceRole::requested_window_size()
 {
-    return sink->requested_window_size();
+    return observer->requested_window_size();
 }
 
 MirWindowState mf::WindowWlSurfaceRole::window_state()
 {
-    return sink->state();
+    return observer->state();
 }
 
 bool mf::WindowWlSurfaceRole::is_active()
 {
-    return sink->is_active();
+    return observer->is_active();
 }
 
 uint64_t mf::WindowWlSurfaceRole::latest_timestamp_ns()
 {
-    return sink->latest_timestamp_ns();
+    return observer->latest_timestamp_ns();
 }
 
 void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
@@ -306,7 +306,7 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 
     auto const session = get_mir_client_session(client);
     auto size = pending_size();
-    sink->latest_client_size(size);
+    observer->latest_client_size(size);
 
     if (surface_id_.as_value())
     {
@@ -383,13 +383,29 @@ void mf::WindowWlSurfaceRole::create_mir_window()
     params->input_shape = std::vector<geom::Rectangle>{};
     surface->populate_surface_data(params->streams.value(), params->input_shape.value(), {});
 
-    surface_id_ = shell->create_surface(session, *params, sink);
+    surface_id_ = shell->create_surface(session, *params, std::make_shared<NullEventSink>());
 
     // The shell isn't guaranteed to respect the requested size
-    auto const window = session->get_surface(surface_id_);
-    auto const client_size = window->client_size();
+    std::shared_ptr<mf::Surface> const frontend_surface = session->get_surface(surface_id_);
+    std::shared_ptr<ms::Surface> const scene_surface = std::dynamic_pointer_cast<ms::Surface>(frontend_surface);
 
+    scene_surface->add_observer(observer);
+
+    // HACK: This is needed because the surface observer is added after the surface is created, and placed_relative() is
+    // called during creation. It will go away once the plumbing is in place to send the observer to the shell
+    if (params->aux_rect.is_set() && params->placement_hints.is_set())
+    {
+        shell::SurfaceSpecification mods;
+        mods.aux_rect = params->aux_rect;
+        mods.placement_hints = params->placement_hints;
+        mods.placement_hints = params->placement_hints;
+        mods.surface_placement_gravity = params->surface_placement_gravity;
+        mods.aux_rect_placement_gravity = params->aux_rect_placement_gravity;
+        shell->modify_surface(session, surface_id_, mods);
+    }
+
+    auto const client_size = scene_surface->client_size();
     if (client_size != params->size)
-        sink->handle_resize(client_size);
+        observer->resized_to(scene_surface.get(), client_size);
 }
 
