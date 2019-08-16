@@ -83,7 +83,7 @@ void mf::WlTouch::motion(
     }
 
     // TODO: do this better, using parent
-    auto const position_on_final = final_surface->second->total_offset() + position_on_parent;
+    auto const position_on_final = position_on_parent - final_surface->second->total_offset();
 
     send_motion_event(
         ms.count(),
