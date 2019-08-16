@@ -231,11 +231,6 @@ void setup_new_client_handler(wl_display* display, std::shared_ptr<mf::Shell> co
 }
 }
 
-int64_t mir_input_event_get_event_time_ms(const MirInputEvent* event)
-{
-    return mir_input_event_get_event_time(event) / 1000000;
-}
-
 class WlCompositor : public wayland::Compositor::Global
 {
 public:
