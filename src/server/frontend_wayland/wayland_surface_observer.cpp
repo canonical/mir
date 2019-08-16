@@ -175,7 +175,7 @@ void mf::WaylandSurfaceObserver::handle_input_event(MirInputEvent const* event)
 
     // Remember the timestamp of any events "signed" with a cookie
     if (mir_input_event_has_cookie(event))
-        timestamp_ns = ns.count();
+        timestamp = ns;
 
     switch (mir_input_event_get_type(event))
     {

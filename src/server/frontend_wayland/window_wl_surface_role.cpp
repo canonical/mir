@@ -140,7 +140,7 @@ void mf::WindowWlSurfaceRole::initiate_interactive_move()
     {
         if (auto session = get_mir_client_session(client))
         {
-            shell->request_operation(session, surface_id(), observer->latest_timestamp_ns(), Shell::UserRequest::move);
+            shell->request_operation(session, surface_id(), observer->latest_timestamp().count(), Shell::UserRequest::move);
         }
     }
 }
@@ -154,7 +154,7 @@ void mf::WindowWlSurfaceRole::initiate_interactive_resize(MirResizeEdge edge)
             shell->request_operation(
                 session,
                 surface_id(),
-                observer->latest_timestamp_ns(),
+                observer->latest_timestamp().count(),
                 Shell::UserRequest::resize,
                 edge);
         }
@@ -283,19 +283,19 @@ std::experimental::optional<geom::Size> mf::WindowWlSurfaceRole::requested_windo
     return observer->requested_window_size();
 }
 
-MirWindowState mf::WindowWlSurfaceRole::window_state()
+auto mf::WindowWlSurfaceRole::window_state() -> MirWindowState
 {
     return observer->state();
 }
 
-bool mf::WindowWlSurfaceRole::is_active()
+auto mf::WindowWlSurfaceRole::is_active() -> bool
 {
     return observer->is_active();
 }
 
-uint64_t mf::WindowWlSurfaceRole::latest_timestamp_ns()
+std::chrono::nanoseconds mf::WindowWlSurfaceRole::latest_timestamp()
 {
-    return observer->latest_timestamp_ns();
+    return observer->latest_timestamp();
 }
 
 void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)

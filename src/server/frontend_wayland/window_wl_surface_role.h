@@ -30,6 +30,7 @@
 #include <mir_toolkit/common.h>
 
 #include <experimental/optional>
+#include <chrono>
 
 struct wl_client;
 struct wl_resource;
@@ -104,9 +105,9 @@ protected:
     /// Window size requested by Mir
     std::experimental::optional<geometry::Size> requested_window_size();
 
-    MirWindowState window_state();
-    bool is_active();
-    uint64_t latest_timestamp_ns();
+    auto window_state() -> MirWindowState;
+    auto is_active() -> bool;
+    auto latest_timestamp() -> std::chrono::nanoseconds;
 
     void commit(WlSurfaceState const& state) override;
 

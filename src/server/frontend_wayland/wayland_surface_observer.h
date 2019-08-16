@@ -70,9 +70,9 @@ public:
         return requested_size;
     }
 
-    auto latest_timestamp_ns() const -> uint64_t
+    auto latest_timestamp() const -> std::chrono::nanoseconds
     {
-        return timestamp_ns;
+        return timestamp;
     }
 
     auto is_active() const -> bool
@@ -93,7 +93,7 @@ private:
     WlSurface* const surface;
     WindowWlSurfaceRole* window;
     geometry::Size window_size;
-    int64_t timestamp_ns{0};
+    std::chrono::nanoseconds timestamp{0};
     std::experimental::optional<geometry::Size> requested_size;
     bool has_focus{false};
     MirWindowState current_state{mir_window_state_unknown};
