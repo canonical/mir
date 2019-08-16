@@ -23,11 +23,9 @@
 
 #include "mir/geometry/point.h"
 
-#include <map>
+#include <unordered_map>
 #include <functional>
-
-// from "mir_toolkit/events/event.h"
-struct MirTouchEvent;
+#include <chrono>
 
 namespace mir
 {
@@ -46,14 +44,23 @@ public:
 
     ~WlTouch();
 
-    void handle_event(MirTouchEvent const* touch_ev, WlSurface* surface);
+    void down(
+        std::chrono::milliseconds const& ms,
+        int32_t touch_id,
+        WlSurface* parent,
+        geometry::Point const& position_on_parent);
+    void motion(
+        std::chrono::milliseconds const& ms,
+        int32_t touch_id,
+        WlSurface* parent,
+        geometry::Point const& position_on_parent);
+    void up(std::chrono::milliseconds const& ms, int32_t touch_id);
+    void frame();
 
 private:
     std::function<void(WlTouch*)> on_destroy;
-    std::map<int32_t, WlSurface*> focused_surface_for_ids;
-
-    void handle_down(mir::geometry::Point position, WlSurface* surface, uint32_t time, int32_t id);
-    void handle_up(uint32_t time, int32_t id);
+    std::unordered_map<int32_t, WlSurface*> focused_surface_for_ids;
+    bool can_send_frame{false};
 
     void release() override;
 };

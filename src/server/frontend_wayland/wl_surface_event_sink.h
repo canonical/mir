@@ -100,6 +100,7 @@ private:
     void handle_pointer_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
     void handle_pointer_button_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
     void handle_pointer_motion_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
+    void handle_touch_event(std::chrono::milliseconds const& ms, MirTouchEvent const* event);
 };
 }
 }

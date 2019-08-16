@@ -116,10 +116,7 @@ void mf::WlSurfaceEventSink::handle_input_event(MirInputEvent const* event)
         handle_pointer_event(ms, mir_input_event_get_pointer_event(event));
         break;
     case mir_input_event_type_touch:
-        seat->for_each_listener(client, [this, event = mir_input_event_get_touch_event(event)](WlTouch* touch)
-            {
-                touch->handle_event(event, surface);
-            });
+        handle_touch_event(ms, mir_input_event_get_touch_event(event));
         break;
     default:
         break;
@@ -284,4 +281,46 @@ void mf::WlSurfaceEventSink::handle_pointer_motion_event(
                 pointer->frame();
             });
     }
+}
+
+void mf::WlSurfaceEventSink::handle_touch_event(
+    std::chrono::milliseconds const& ms,
+    MirTouchEvent const* event)
+{
+    for (auto i = 0u; i < mir_touch_event_point_count(event); ++i)
+    {
+        geometry::Point const position{
+            mir_touch_event_axis_value(event, i, mir_touch_axis_x),
+            mir_touch_event_axis_value(event, i, mir_touch_axis_y)};
+        int const touch_id = mir_touch_event_id(event, i);
+        MirTouchAction const action = mir_touch_event_action(event, i);
+
+        switch (action)
+        {
+        case mir_touch_action_down:
+            seat->for_each_listener(client, [&ms, touch_id, surface = surface, &position](WlTouch* touch)
+                {
+                    touch->down(ms, touch_id, surface, position);
+                });
+            break;
+        case mir_touch_action_up:
+            seat->for_each_listener(client, [&ms, touch_id](WlTouch* touch)
+                {
+                    touch->up(ms, touch_id);
+                });
+            break;
+        case mir_touch_action_change:
+            seat->for_each_listener(client, [&ms, touch_id, surface = surface, &position](WlTouch* touch)
+                {
+                    touch->motion(ms, touch_id, surface, position);
+                });
+            break;
+        case mir_touch_actions:;
+        }
+    }
+
+    seat->for_each_listener(client, [](WlTouch* touch)
+        {
+            touch->frame();
+        });
 }
