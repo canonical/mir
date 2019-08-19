@@ -79,7 +79,7 @@ public:
 
     void disconnect() { *destroyed = true; }
 
-protected:
+private:
     WlSeat* const seat;
     wl_client* const client;
     WlSurface* const surface;
@@ -89,12 +89,18 @@ protected:
     std::experimental::optional<geometry::Size> requested_size;
     bool has_focus{false};
     MirWindowState current_state{mir_window_state_unknown};
+    MirPointerButtons last_pointer_buttons{0};
+    std::experimental::optional<mir::geometry::Point> last_pointer_position;
     std::shared_ptr<bool> const destroyed;
 
-private:
     void handle_input_event(MirInputEvent const* event);
     void handle_keymap_event(MirKeymapEvent const* event);
     void handle_window_event(MirWindowEvent const* event);
+    void handle_keyboard_event(std::chrono::milliseconds const& ms, MirKeyboardEvent const* event);
+    void handle_pointer_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
+    void handle_pointer_button_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
+    void handle_pointer_motion_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event);
+    void handle_touch_event(std::chrono::milliseconds const& ms, MirTouchEvent const* event);
 };
 }
 }

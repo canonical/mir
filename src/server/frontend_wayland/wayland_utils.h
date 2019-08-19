@@ -59,9 +59,6 @@ inline auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callab
 }
 
 auto get_mir_client_session(wl_client* client) -> std::shared_ptr<MirClientSession>;
-
-int64_t mir_input_event_get_event_time_ms(const MirInputEvent* event);
-
 }
 }
 

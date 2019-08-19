@@ -23,17 +23,12 @@
 
 #include <vector>
 #include <functional>
+#include <chrono>
 
 // from <xkbcommon/xkbcommon.h>
 struct xkb_keymap;
 struct xkb_state;
 struct xkb_context;
-
-// from "mir_toolkit/events/event.h"
-struct MirKeyboardEvent;
-struct MirSurfaceEvent;
-typedef struct MirSurfaceEvent MirWindowEvent;
-struct MirKeymapEvent;
 
 namespace mir
 {
@@ -60,9 +55,9 @@ public:
 
     ~WlKeyboard();
 
-    void handle_keyboard_event(MirKeyboardEvent const* event, WlSurface* surface);
-    void handle_window_event(MirWindowEvent const* event, WlSurface* surface);
-    void handle_keymap_event(MirKeymapEvent const* event, WlSurface* surface);
+    void key(std::chrono::milliseconds const& ms, int scancode, bool down);
+    void focussed(WlSurface* surface, bool focussed);
+    void set_keymap(char const* const buffer, size_t length);
     void set_keymap(mir::input::Keymap const& new_keymap);
 
 private:
