@@ -20,6 +20,21 @@
 
 namespace msh = mir::shell;
 
+auto msh::operator==(SurfaceAspectRatio const& lhs, SurfaceAspectRatio const& rhs) -> bool
+{
+    return
+        lhs.width == rhs.width &&
+        lhs.height == rhs.height;
+}
+
+auto msh::operator==(StreamSpecification const& lhs, StreamSpecification const& rhs) -> bool
+{
+    return
+        lhs.stream_id == rhs.stream_id &&
+        lhs.displacement == rhs.displacement &&
+        lhs.size == rhs.size;
+}
+
 bool msh::SurfaceSpecification::is_empty() const
 {
     // You know, compile-time reflection would be pretty
