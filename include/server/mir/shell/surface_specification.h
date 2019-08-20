@@ -39,6 +39,7 @@ namespace scene { class Surface; }
 namespace shell
 {
 struct SurfaceAspectRatio { unsigned width; unsigned height; };
+auto operator==(SurfaceAspectRatio const& lhs, SurfaceAspectRatio const& rhs) -> bool;
 
 struct StreamSpecification
 {
@@ -46,6 +47,7 @@ struct StreamSpecification
     geometry::Displacement displacement;
     optional_value<geometry::Size> size;
 };
+auto operator==(StreamSpecification const& lhs, StreamSpecification const& rhs) -> bool;
 
 struct StreamCursor
 {
