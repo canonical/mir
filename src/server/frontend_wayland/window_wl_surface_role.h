@@ -30,6 +30,7 @@
 #include <mir_toolkit/common.h>
 
 #include <experimental/optional>
+#include <chrono>
 
 struct wl_client;
 struct wl_resource;
@@ -48,7 +49,7 @@ struct SurfaceSpecification;
 namespace frontend
 {
 class Shell;
-class WlSurfaceEventSink;
+class WaylandSurfaceObserver;
 class OutputManager;
 class WlSurface;
 class WlSeat;
@@ -104,9 +105,9 @@ protected:
     /// Window size requested by Mir
     std::experimental::optional<geometry::Size> requested_window_size();
 
-    MirWindowState window_state();
-    bool is_active();
-    uint64_t latest_timestamp_ns();
+    auto window_state() -> MirWindowState;
+    auto is_active() -> bool;
+    auto latest_timestamp() -> std::chrono::nanoseconds;
 
     void commit(WlSurfaceState const& state) override;
 
@@ -115,7 +116,7 @@ private:
     WlSurface* const surface;
     std::shared_ptr<frontend::Shell> const shell;
     OutputManager* output_manager;
-    std::shared_ptr<WlSurfaceEventSink> const sink;
+    std::shared_ptr<WaylandSurfaceObserver> const observer;
     std::unique_ptr<scene::SurfaceCreationParameters> const params;
 
     /// The explicitly set (not taken from the surface buffer size) uncommitted window size

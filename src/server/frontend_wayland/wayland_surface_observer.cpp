@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018 Canonical Ltd.
+ * Copyright © 2018-2019 Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 3,
@@ -14,9 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by: Alan Griffiths <alan@octopull.co.uk>
+ *              William Wold <william.wold@canonical.com>
  */
 
-#include "wl_surface_event_sink.h"
+#include "wayland_surface_observer.h"
 #include "wl_seat.h"
 #include "wl_pointer.h"
 #include "wl_keyboard.h"
@@ -26,14 +27,26 @@
 #include "window_wl_surface_role.h"
 
 #include <mir_toolkit/events/window_placement.h>
+#include <mir_toolkit/events/event.h>
+#include <mir/events/event_builders.h>
+#include <mir/input/xkb_mapper.h>
+#include <mir/input/keymap.h>
+#include <mir/log.h>
 
 #include <linux/input-event-codes.h>
+#include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
 namespace geom = mir::geometry;
+namespace mev = mir::events;
+namespace mi = mir::input;
 
-mf::WlSurfaceEventSink::WlSurfaceEventSink(WlSeat* seat, wl_client* client, WlSurface* surface,
-                                           WindowWlSurfaceRole* window)
+mf::WaylandSurfaceObserver::WaylandSurfaceObserver(
+    WlSeat* seat,
+    wl_client* client,
+    WlSurface* surface,
+    WindowWlSurfaceRole* window)
     : seat{seat},
       client{client},
       surface{surface},
@@ -43,69 +56,126 @@ mf::WlSurfaceEventSink::WlSurfaceEventSink(WlSeat* seat, wl_client* client, WlSu
 {
 }
 
-mf::WlSurfaceEventSink::~WlSurfaceEventSink()
+mf::WaylandSurfaceObserver::~WaylandSurfaceObserver()
 {
     *destroyed = true;
 }
 
-void mf::WlSurfaceEventSink::handle_event(EventUPtr&& event)
+void mf::WaylandSurfaceObserver::attrib_changed(ms::Surface const*, MirWindowAttrib attrib, int value)
 {
-    seat->spawn(run_unless(
-        destroyed,
-        [this, event = std::shared_ptr<MirEvent>{move(event)}]()
-        {
-            switch (mir_event_get_type(event.get()))
-            {
-                case mir_event_type_resize:
-                {
-                    auto const resize_event{mir_event_get_resize_event(event.get())};
-                    geometry::Size const new_size{mir_resize_event_get_width(resize_event),
-                                                  mir_resize_event_get_height(resize_event)};
-                    handle_resize(new_size);
-                    break;
-                }
-                case mir_event_type_input:
-                    handle_input_event(mir_event_get_input_event(event.get()));
-                    break;
-                case mir_event_type_keymap:
-                    handle_keymap_event(mir_event_get_keymap_event(event.get()));
-                    break;
-                case mir_event_type_window:
-                    handle_window_event(mir_event_get_window_event(event.get()));
-                    break;
-                case mir_event_type_window_placement:
-                {
-                    auto const placement_event{mir_event_get_window_placement_event(event.get())};
-                    auto const rect = mir_window_placement_get_relative_position(placement_event);
-                    window->handle_resize(geom::Point{rect.left, rect.top}, geom::Size{rect.width, rect.height});
-                    break;
-                }
-                case mir_event_type_close_window:
-                    window->handle_close_request();
-                    break;
-                default:
-                    break;
-            }
-        }));
-}
-
-void mf::WlSurfaceEventSink::handle_resize(mir::geometry::Size const& new_size)
-{
-    if (new_size != window_size)
+    switch (attrib)
     {
-        requested_size = new_size;
-        window->handle_resize(std::experimental::nullopt, new_size);
+    case mir_window_attrib_focus:
+        run_on_wayland_thread_unless_destroyed([this, value]()
+            {
+                has_focus = static_cast<bool>(value);
+                if (has_focus)
+                    seat->notify_focus(client);
+                window->handle_active_change(has_focus);
+                seat->for_each_listener(client, [surface = surface, has_focus = has_focus](WlKeyboard* keyboard)
+                    {
+                        keyboard->focussed(surface, has_focus);
+                    });
+            });
+        break;
+
+    case mir_window_attrib_state:
+        run_on_wayland_thread_unless_destroyed([this, value]()
+            {
+                current_state = static_cast<MirWindowState>(value);
+                window->handle_state_change(current_state);
+            });
+        break;
+
+    default:;
     }
 }
 
-void mf::WlSurfaceEventSink::handle_input_event(MirInputEvent const* event)
+void mf::WaylandSurfaceObserver::resized_to(ms::Surface const*, geom::Size const& size)
+{
+    run_on_wayland_thread_unless_destroyed(
+        [this, size]()
+        {
+            if (size != window_size)
+            {
+                requested_size = size;
+                window->handle_resize(std::experimental::nullopt, size);
+            }
+        });
+}
+
+void mf::WaylandSurfaceObserver::client_surface_close_requested(ms::Surface const*)
+{
+    run_on_wayland_thread_unless_destroyed(
+        [this]()
+        {
+            window->handle_close_request();
+        });
+}
+
+void mf::WaylandSurfaceObserver::keymap_changed(
+        ms::Surface const*,
+        MirInputDeviceId /* id */,
+        std::string const& model,
+        std::string const& layout,
+        std::string const& variant,
+        std::string const& options)
+{
+    // shared pointer instead of unique so it can be owned by the lambda
+    auto const keymap = std::make_shared<mi::Keymap>(model, layout, variant, options);
+
+    run_on_wayland_thread_unless_destroyed(
+        [this, keymap]()
+        {
+            seat->for_each_listener(client, [&keymap](WlKeyboard* keyboard)
+                {
+                    keyboard->set_keymap(*keymap);
+                });
+        });
+}
+
+void mf::WaylandSurfaceObserver::placed_relative(ms::Surface const*, geometry::Rectangle const& placement)
+{
+    run_on_wayland_thread_unless_destroyed(
+        [this, placement = placement]()
+        {
+            requested_size = placement.size;
+            window->handle_resize(placement.top_left, placement.size);
+        });
+}
+
+void mf::WaylandSurfaceObserver::input_consumed(ms::Surface const*, MirEvent const* event)
+{
+    std::shared_ptr<MirEvent> owned_event = mev::clone_event(*event);
+
+    run_on_wayland_thread_unless_destroyed(
+        [this, owned_event]()
+        {
+            if (mir_event_get_type(owned_event.get()) != mir_event_type_input)
+            {
+                log_warning(
+                    "WaylandSurfaceObserver::input_consumed() got non-input event type %d",
+                    mir_event_get_type(owned_event.get()));
+                return;
+            }
+            auto const input_ev = mir_event_get_input_event(owned_event.get());
+            handle_input_event(input_ev);
+        });
+}
+
+void mf::WaylandSurfaceObserver::run_on_wayland_thread_unless_destroyed(std::function<void()>&& work)
+{
+    seat->spawn(run_unless(destroyed, work));
+}
+
+void mf::WaylandSurfaceObserver::handle_input_event(MirInputEvent const* event)
 {
     auto const ns = std::chrono::nanoseconds{mir_input_event_get_event_time(event)};
     auto const ms = std::chrono::duration_cast<std::chrono::milliseconds>(ns);
 
     // Remember the timestamp of any events "signed" with a cookie
     if (mir_input_event_has_cookie(event))
-        timestamp_ns = ns.count();
+        timestamp = ns;
 
     switch (mir_input_event_get_type(event))
     {
@@ -123,7 +193,7 @@ void mf::WlSurfaceEventSink::handle_input_event(MirInputEvent const* event)
     }
 }
 
-void mf::WlSurfaceEventSink::handle_keymap_event(MirKeymapEvent const* event)
+void mf::WaylandSurfaceObserver::handle_keymap_event(MirKeymapEvent const* event)
 {
     char const* buffer;
     size_t length;
@@ -136,31 +206,7 @@ void mf::WlSurfaceEventSink::handle_keymap_event(MirKeymapEvent const* event)
         });
 }
 
-void mf::WlSurfaceEventSink::handle_window_event(MirWindowEvent const* event)
-{
-    switch (mir_window_event_get_attribute(event))
-    {
-    case mir_window_attrib_focus:
-        has_focus = mir_window_event_get_attribute_value(event);
-        if (has_focus)
-            seat->notify_focus(client);
-        window->handle_active_change(has_focus);
-        seat->for_each_listener(client, [surface = surface, has_focus = has_focus](WlKeyboard* keyboard)
-            {
-                keyboard->focussed(surface, has_focus);
-            });
-        break;
-
-    case mir_window_attrib_state:
-        current_state = MirWindowState(mir_window_event_get_attribute_value(event));
-        window->handle_state_change(current_state);
-        break;
-
-    default:;
-    }
-}
-
-void mf::WlSurfaceEventSink::handle_keyboard_event(std::chrono::milliseconds const& ms, MirKeyboardEvent const* event)
+void mf::WaylandSurfaceObserver::handle_keyboard_event(std::chrono::milliseconds const& ms, MirKeyboardEvent const* event)
 {
     MirKeyboardAction const action = mir_keyboard_event_action(event);
     if (action == mir_keyboard_action_down || action == mir_keyboard_action_up)
@@ -174,7 +220,7 @@ void mf::WlSurfaceEventSink::handle_keyboard_event(std::chrono::milliseconds con
     }
 }
 
-void mf::WlSurfaceEventSink::handle_pointer_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event)
+void mf::WaylandSurfaceObserver::handle_pointer_event(std::chrono::milliseconds const& ms, MirPointerEvent const* event)
 {
     switch(mir_pointer_event_action(event))
     {
@@ -209,7 +255,7 @@ void mf::WlSurfaceEventSink::handle_pointer_event(std::chrono::milliseconds cons
     }
 }
 
-void mf::WlSurfaceEventSink::handle_pointer_button_event(
+void mf::WaylandSurfaceObserver::handle_pointer_button_event(
     std::chrono::milliseconds const& ms,
     MirPointerEvent const* event)
 {
@@ -250,7 +296,7 @@ void mf::WlSurfaceEventSink::handle_pointer_button_event(
     last_pointer_buttons = event_buttons;
 }
 
-void mf::WlSurfaceEventSink::handle_pointer_motion_event(
+void mf::WaylandSurfaceObserver::handle_pointer_motion_event(
     std::chrono::milliseconds const& ms,
     MirPointerEvent const* event)
 {
@@ -283,7 +329,7 @@ void mf::WlSurfaceEventSink::handle_pointer_motion_event(
     }
 }
 
-void mf::WlSurfaceEventSink::handle_touch_event(
+void mf::WaylandSurfaceObserver::handle_touch_event(
     std::chrono::milliseconds const& ms,
     MirTouchEvent const* event)
 {
