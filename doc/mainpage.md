@@ -25,3 +25,11 @@ example:
     pkg-config --cflags miral
 
 The server API is introduced here: \ref introducing_the_miral_api
+
+Community
+---------
+
+Developer blogs, develompent announcements, questions, process documentation, and design
+discussions happen on the [Mir section of the Ubuntu Discourse](https://discourse.ubuntu.com/c/mir).
+
+Mir developers and discussion can also be found on the \#mir-server IRC channel on Freenode.
