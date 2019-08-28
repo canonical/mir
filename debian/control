@@ -586,8 +586,23 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: libmirwayland0 (= ${binary:Version}),
          libmircore-dev (= ${binary:Version}),
          ${misc:Depends},
+         libmirwayland-bin (= ${binary:Version})
 Description: Display server for Ubuntu - generated wrappers for Wayland
  protocol extensions.
  .
  Contains the developer files for using the shared library containing generated
  wrappers for Wayland protocol extensions
+
+Package: libmirwayland-bin
+Section: libdevel
+Architecture: linux-any
+Multi-Arch: foreign
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+Description: Display server for Ubuntu - generator for Wayland protocol extension wrappers.
+ Contains the tool used for generating the Mir-style wrappers for Wayland
+ protocol extensions found in libmirwayland
+ .
+ This can be useful for implementing Wayland protocol extensions not already
+ implemented in Mir.
