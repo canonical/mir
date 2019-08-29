@@ -24,6 +24,7 @@
 #include "mir/scene/session_container.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface_factory.h"
+#include "mir/graphics/display_configuration_observer.h"
 
 #include "src/server/report/null/shell_report.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
@@ -42,6 +43,7 @@
 #include "mir/test/doubles/null_application_not_responding_detector.h"
 #include "mir/test/doubles/stub_display.h"
 #include "mir/test/doubles/mock_input_seat.h"
+#include "mir/test/doubles/stub_observer_registrar.h"
 
 #include "mir/test/fake_shared.h"
 #include "mir/test/event_matchers.h"
@@ -125,7 +127,8 @@ struct AbstractShell : Test
         std::make_shared<ms::NullSessionListener>(),
         mt::fake_shared(display),
         std::make_shared<mtd::NullANRDetector>(),
-        std::make_shared<mtd::StubBufferAllocator>()};
+        std::make_shared<mtd::StubBufferAllocator>(),
+        std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>()};
 
     mtd::StubInputTargeter input_targeter;
     std::shared_ptr<NiceMockWindowManager> wm;

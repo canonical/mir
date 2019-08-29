@@ -21,6 +21,7 @@
 
 #include "mir/scene/session_coordinator.h"
 #include "mir/scene/session_listener.h"
+#include "mir/observer_registrar.h"
 
 #include <memory>
 #include <vector>
@@ -32,6 +33,7 @@ namespace graphics
 class DisplayConfiguration;
 class Display;
 class GraphicBufferAllocator;
+class DisplayConfigurationObserver;
 }
 
 namespace shell { class SurfaceStack; }
@@ -61,7 +63,8 @@ public:
         std::shared_ptr<SessionListener> const& session_listener,
         std::shared_ptr<graphics::Display const> const& display,
         std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator); 
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar);
 
     virtual ~SessionManager() noexcept;
 
@@ -98,6 +101,7 @@ private:
     std::shared_ptr<graphics::Display const> const display;
     std::shared_ptr<ApplicationNotRespondingDetector> const anr_detector;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar;
 };
 
 }

@@ -37,6 +37,8 @@
 #include "mir/test/doubles/null_prompt_session.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/doubles/stub_buffer_allocator.h"
+#include "mir/test/doubles/stub_observer_registrar.h"
+#include "mir/graphics/display_configuration_observer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -145,12 +147,17 @@ struct ApplicationSession : public testing::Test
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_stubs()
     {
         return std::make_shared<ms::ApplicationSession>(
-           stub_surface_stack, stub_surface_factory, stub_buffer_stream_factory,
-           pid, name,
+           stub_surface_stack,
+           stub_surface_factory,
+           stub_buffer_stream_factory,
+           pid,
+           name,
            null_snapshot_strategy,
            stub_session_listener,
            mtd::StubDisplayConfig{},
-           event_sink, allocator);
+           event_sink,
+           allocator,
+           display_config_registrar);
     }
     
     std::shared_ptr<ms::ApplicationSession> make_application_session(
@@ -158,12 +165,17 @@ struct ApplicationSession : public testing::Test
         std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
     {
         return std::make_shared<ms::ApplicationSession>(
-           stub_surface_stack, surface_factory, bstream_factory,
-           pid, name,
+           stub_surface_stack,
+           surface_factory,
+           bstream_factory,
+           pid,
+           name,
            null_snapshot_strategy,
            stub_session_listener,
            mtd::StubDisplayConfig{},
-           event_sink, allocator);
+           event_sink,
+           allocator,
+           display_config_registrar);
     }
 
     std::shared_ptr<ms::ApplicationSession> make_application_session(
@@ -171,35 +183,50 @@ struct ApplicationSession : public testing::Test
         std::shared_ptr<ms::SurfaceFactory> const& surface_factory)
     {
         return std::make_shared<ms::ApplicationSession>(
-           surface_stack, surface_factory, stub_buffer_stream_factory,
-           pid, name,
+           surface_stack,
+           surface_factory,
+           stub_buffer_stream_factory,
+           pid,
+           name,
            null_snapshot_strategy,
            stub_session_listener,
            mtd::StubDisplayConfig{},
-           event_sink, allocator);
+           event_sink,
+           allocator,
+           display_config_registrar);
     }
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_coordinator(
         std::shared_ptr<msh::SurfaceStack> const& surface_stack)
     {
         return std::make_shared<ms::ApplicationSession>(
-           surface_stack, stub_surface_factory, stub_buffer_stream_factory,
-           pid, name,
+           surface_stack,
+           stub_surface_factory,
+           stub_buffer_stream_factory,
+           pid,
+           name,
            null_snapshot_strategy,
            stub_session_listener,
            mtd::StubDisplayConfig{},
-           event_sink, allocator);
+           event_sink,
+           allocator,
+           display_config_registrar);
     }
     
     std::shared_ptr<ms::ApplicationSession> make_application_session_with_listener(
         std::shared_ptr<ms::SessionListener> const& session_listener)
     {
         return std::make_shared<ms::ApplicationSession>(
-           stub_surface_stack, stub_surface_factory, stub_buffer_stream_factory,
-           pid, name,
+           stub_surface_stack,
+           stub_surface_factory,
+           stub_buffer_stream_factory,
+           pid,
+           name,
            null_snapshot_strategy,
            session_listener,
            mtd::StubDisplayConfig{},
-           event_sink, allocator);
+           event_sink,
+           allocator,
+           display_config_registrar);
     }
 
 
@@ -207,12 +234,17 @@ struct ApplicationSession : public testing::Test
         std::shared_ptr<ms::BufferStreamFactory> const& buffer_stream_factory)
     {
         return std::make_shared<ms::ApplicationSession>(
-           stub_surface_stack, stub_surface_factory, buffer_stream_factory,
-           pid, name,
+           stub_surface_stack,
+           stub_surface_factory,
+           buffer_stream_factory,
+           pid,
+           name,
            null_snapshot_strategy,
            stub_session_listener,
            mtd::StubDisplayConfig{},
-           event_sink, allocator);
+           event_sink,
+           allocator,
+           display_config_registrar);
     }
 
     std::shared_ptr<mtd::NullEventSink> const event_sink;
@@ -228,6 +260,8 @@ struct ApplicationSession : public testing::Test
     pid_t pid;
     std::string name;
     mg::BufferProperties properties { geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware };
+    std::shared_ptr<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>> const display_config_registrar =
+        std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>();
 };
 
 struct MockSurfaceFactory : ms::SurfaceFactory
@@ -493,11 +527,14 @@ TEST_F(ApplicationSession, takes_snapshot_of_default_surface)
         mt::fake_shared(surface_stack),
         mt::fake_shared(surface_factory),
         mt::fake_shared(mock_buffer_stream_factory),
-        pid, name,
+        pid,
+        name,
         snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
         mtd::StubDisplayConfig{},
-        event_sink, allocator);
+        event_sink,
+        allocator,
+        display_config_registrar);
 
     ms::SurfaceCreationParameters params = ms::a_surface()
         .with_buffer_stream(app_session.create_buffer_stream(properties));
@@ -514,13 +551,17 @@ TEST_F(ApplicationSession, returns_null_snapshot_if_no_default_surface)
     MockSnapshotCallback mock_snapshot_callback;
 
     ms::ApplicationSession app_session(
-        stub_surface_stack, stub_surface_factory,
+        stub_surface_stack,
+        stub_surface_factory,
         stub_buffer_stream_factory,
-        pid, name,
+        pid,
+        name,
         snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
         mtd::StubDisplayConfig{},
-        event_sink, allocator);
+        event_sink,
+        allocator,
+        display_config_registrar);
 
     EXPECT_CALL(*snapshot_strategy, take_snapshot_of(_,_)).Times(0);
     EXPECT_CALL(mock_snapshot_callback, operator_call(IsNullSnapshot()));
@@ -535,13 +576,17 @@ TEST_F(ApplicationSession, process_id)
     pid_t const session_pid{__LINE__};
 
     ms::ApplicationSession app_session(
-        stub_surface_stack, stub_surface_factory,
+        stub_surface_stack,
+        stub_surface_factory,
         stub_buffer_stream_factory,
-        session_pid, name,
+        session_pid,
+        name,
         null_snapshot_strategy,
         std::make_shared<ms::NullSessionListener>(),
         mtd::StubDisplayConfig{},
-        event_sink, allocator);
+        event_sink,
+        allocator,
+        display_config_registrar);
 
     EXPECT_THAT(app_session.process_id(), Eq(session_pid));
 }
@@ -712,7 +757,8 @@ struct ApplicationSessionSender : public ApplicationSession
             stub_session_listener,
             mtd::StubDisplayConfig{},
             mt::fake_shared(sender),
-            allocator)
+            allocator,
+            display_config_registrar)
     {
     }
 
@@ -844,7 +890,9 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
             null_snapshot_strategy,
             stub_session_listener,
             mtd::StubDisplayConfig{},
-            sender, allocator)
+            sender,
+            allocator,
+            display_config_registrar)
     {
     }
 

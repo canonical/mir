@@ -98,7 +98,8 @@ ms::SessionManager::SessionManager(
     std::shared_ptr<SessionListener> const& session_listener,
     std::shared_ptr<graphics::Display const> const& display,
     std::shared_ptr<ApplicationNotRespondingDetector> const& anr_detector,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator) :
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar) :
     observers(std::make_shared<SessionObservers>()),
     surface_stack(surface_stack),
     surface_factory(surface_factory),
@@ -109,7 +110,8 @@ ms::SessionManager::SessionManager(
     session_listener(session_listener),
     display{display},
     anr_detector{anr_detector},
-    allocator(allocator)
+    allocator{allocator},
+    display_config_registrar{display_config_registrar}
 {
     observers->register_interest(session_listener);
 }
@@ -149,7 +151,8 @@ std::shared_ptr<ms::Session> ms::SessionManager::open_session(
             observers,
             *display->configuration(),
             sender,
-            allocator);
+            allocator,
+            display_config_registrar);
 
     app_container->insert_session(new_session);
 

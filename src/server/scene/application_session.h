@@ -22,6 +22,7 @@
 #include "mir/scene/session.h"
 
 #include "output_properties_cache.h"
+#include "mir/observer_registrar.h"
 
 #include <atomic>
 #include <map>
@@ -40,6 +41,7 @@ namespace graphics
 class DisplayConfiguration;
 class GraphicBufferAllocator;
 class BufferAttribute;
+class DisplayConfigurationObserver;
 }
 namespace shell { class SurfaceStack; }
 namespace scene
@@ -64,7 +66,8 @@ public:
         std::shared_ptr<SessionListener> const& session_listener,
         graphics::DisplayConfiguration const& initial_config,
         std::shared_ptr<frontend::EventSink> const& sink,
-        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar);
 
     ~ApplicationSession();
 
@@ -105,6 +108,8 @@ protected:
     ApplicationSession& operator=(ApplicationSession const&) = delete;
 
 private:
+    class DisplayConfigurationObserver;
+
     std::shared_ptr<shell::SurfaceStack> const surface_stack;
     std::shared_ptr<SurfaceFactory> const surface_factory;
     std::shared_ptr<BufferStreamFactory> const buffer_stream_factory;
@@ -114,6 +119,8 @@ private:
     std::shared_ptr<SessionListener> const session_listener;
     std::shared_ptr<frontend::EventSink> const event_sink;
     std::shared_ptr<graphics::GraphicBufferAllocator> const gralloc;
+    std::weak_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const display_config_registrar;
+    std::shared_ptr<DisplayConfigurationObserver> const display_config_observer;
 
     frontend::SurfaceId next_id();
 
