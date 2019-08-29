@@ -50,11 +50,6 @@ void mtd::StubSession::set_lifecycle_state(MirLifecycleState /*state*/)
 {
 }
 
-void mtd::StubSession::send_display_config(
-    mir::graphics::DisplayConfiguration const& /*configuration*/)
-{
-}
-
 void mtd::StubSession::send_error(
     mir::ClientVisibleError const& /*error*/)
 {

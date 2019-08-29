@@ -87,7 +87,7 @@ public:
     void hide() override;
     void show() override;
 
-    void send_display_config(graphics::DisplayConfiguration const& info) override;
+    void send_display_config(graphics::DisplayConfiguration const& info);
     void send_error(ClientVisibleError const& error) override;
     void send_input_config(MirInputConfig const& devices) override;
 

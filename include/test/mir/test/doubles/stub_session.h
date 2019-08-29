@@ -42,8 +42,6 @@ struct StubSession : scene::Session
 
     void set_lifecycle_state(MirLifecycleState state) override;
 
-    void send_display_config(graphics::DisplayConfiguration const&) override;
-
     void send_error(ClientVisibleError const&) override;
 
     void hide() override;
