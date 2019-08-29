@@ -366,8 +366,8 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_hardware_config_cha
     session_container.insert_session(mt::fake_shared(mock_session1));
     session_container.insert_session(mt::fake_shared(mock_session2));
 
-    EXPECT_CALL(mock_session1, send_display_config(_));
-    EXPECT_CALL(mock_session2, send_display_config(_));
+    EXPECT_CALL(display_configuration_observer, session_should_send_display_configuration(Eq(mt::fake_shared(mock_session1)), _));
+    EXPECT_CALL(display_configuration_observer, session_should_send_display_configuration(Eq(mt::fake_shared(mock_session2)), _));
 
     changer->configure_for_hardware_change(mt::fake_shared(conf));
 }
@@ -387,10 +387,21 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_when_hardware_config_c
 
     EXPECT_CALL(mock_display, configure(Ref(conf)))
         .WillOnce(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Avocado!"}); }));
+
     EXPECT_CALL(mock_display, configure(Not(Ref(conf))))
         .Times(AnyNumber());
-    EXPECT_CALL(mock_session1, send_display_config(mt::DisplayConfigMatches(std::cref(*previous_base_config))));
-    EXPECT_CALL(mock_session2, send_display_config(mt::DisplayConfigMatches(std::cref(*previous_base_config))));
+
+    EXPECT_CALL(
+        display_configuration_observer,
+        session_should_send_display_configuration(
+            Eq(mt::fake_shared(mock_session1)),
+            mt::DisplayConfigMatches(std::cref(*previous_base_config))));
+
+    EXPECT_CALL(
+        display_configuration_observer,
+        session_should_send_display_configuration(
+            Eq(mt::fake_shared(mock_session2)),
+            mt::DisplayConfigMatches(std::cref(*previous_base_config))));
 
     changer->configure_for_hardware_change(mt::fake_shared(conf));
 }
@@ -827,8 +838,8 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_on_set_base_configurat
     session_container.insert_session(mt::fake_shared(mock_session1));
     session_container.insert_session(mt::fake_shared(mock_session2));
 
-    EXPECT_CALL(mock_session1, send_display_config(_));
-    EXPECT_CALL(mock_session2, send_display_config(_));
+    EXPECT_CALL(display_configuration_observer, session_should_send_display_configuration(Eq(mt::fake_shared(mock_session1)), _));
+    EXPECT_CALL(display_configuration_observer, session_should_send_display_configuration(Eq(mt::fake_shared(mock_session2)), _));
 
     changer->set_base_configuration(mt::fake_shared(conf));
 }
@@ -865,7 +876,7 @@ TEST_F(MediatingDisplayChangerTest, notifies_session_on_preview_base_configurati
 
     session_container.insert_session(mock_session);
 
-    EXPECT_CALL(*mock_session, send_display_config(_));
+    EXPECT_CALL(display_configuration_observer, session_should_send_display_configuration(Eq(mock_session), _));
 
     changer->preview_base_configuration(
         mock_session,
@@ -920,7 +931,10 @@ TEST_F(MediatingDisplayChangerTest, only_configuring_client_receives_preview_not
     session_container.insert_session(mock_session1);
     session_container.insert_session(mock_session2);
 
-    EXPECT_CALL(*mock_session2, send_display_config(_)).Times(0);
+    EXPECT_CALL(display_configuration_observer, session_should_send_display_configuration(Eq(mock_session1), _))
+        .Times(AtLeast(1));
+    EXPECT_CALL(display_configuration_observer, session_should_send_display_configuration(Eq(mock_session2), _))
+        .Times(0);
 
     std::chrono::seconds const timeout{30};
 
@@ -1010,8 +1024,11 @@ TEST_F(MediatingDisplayChangerTest, all_sessions_get_notified_on_configuration_c
 
     std::unique_ptr<mg::DisplayConfiguration> received_configuration;
 
-    ON_CALL(*mock_session2, send_display_config(_))
-        .WillByDefault(Invoke([&received_configuration](auto& conf) { received_configuration = conf.clone(); }));
+    ON_CALL(display_configuration_observer, session_should_send_display_configuration(Eq(mock_session2), _))
+        .WillByDefault(Invoke([&received_configuration](auto const&, auto const& config)
+            {
+                received_configuration = config->clone();
+            }));
 
     changer->preview_base_configuration(
         mock_session1,
