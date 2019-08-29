@@ -31,9 +31,11 @@ set(MIR_PLATFORM_REFERENCES ${MIR_PLATFORM_REFERENCES} PARENT_SCOPE)
 add_library(mirplatform SHARED
   ${MIR_PLATFORM_OBJECTS}
 
+  immediate_executor.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/input/input_sink.h
   ${PROJECT_SOURCE_DIR}/include/platform/mir/console_services.h
   ${PROJECT_SOURCE_DIR}/include/platform/mir/executor.h
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/immediate_executor.h
 )
 
 target_link_libraries(mirplatform

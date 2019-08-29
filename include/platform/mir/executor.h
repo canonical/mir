@@ -48,7 +48,6 @@ public:
      */
     virtual void spawn(std::function<void()>&& work) = 0;
 
-protected:
     virtual ~Executor() = default;
 };
 

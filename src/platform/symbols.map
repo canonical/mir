@@ -241,3 +241,12 @@ MIR_PLATFORM_1.4.0 {
     mir::options::enable_mirclient_opt;
   };
 } MIR_PLATFORM_1.1.1;
+
+MIR_PLATFORM_1.4.1 {
+ global:
+  extern "C++" {
+    typeinfo?for?mir::ImmediateExecutor;
+    vtable?for?mir::ImmediateExecutor;
+    mir::ImmediateExecutor::spawn*;
+  };
+} MIR_PLATFORM_1.4.0;
