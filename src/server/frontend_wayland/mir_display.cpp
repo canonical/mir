@@ -75,6 +75,12 @@ struct DisplayConfigurationObserverAdapter : mg::DisplayConfigurationObserver
         std::exception const&) override
     {
     }
+
+    void session_should_send_display_configuration(
+        std::shared_ptr<ms::Session> const&,
+        std::shared_ptr<mg::DisplayConfiguration const> const&) override
+    {
+    }
 };
 }
 

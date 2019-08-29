@@ -158,6 +158,12 @@ struct DisplayConfigurationTest : mtf::ConnectedClientWithAWindow
         {
         }
 
+        void session_should_send_display_configuration(
+            std::shared_ptr<ms::Session> const&,
+            std::shared_ptr<mg::DisplayConfiguration const> const&) override
+        {
+        }
+
     private:
         struct Expectation
         {

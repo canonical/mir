@@ -112,6 +112,15 @@ public:
         std::shared_ptr<DisplayConfiguration const> const& failed_fallback,
         std::exception const& error) = 0;
 
+    /**
+     * Notification that the session should send the given display configuration
+     *
+     * It may or may not be a session configuration
+     */
+    virtual void session_should_send_display_configuration(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<DisplayConfiguration const> const& config) = 0;
+
 protected:
     DisplayConfigurationObserver() = default;
     virtual ~DisplayConfigurationObserver() = default;

@@ -202,3 +202,11 @@ void mrl::DisplayConfigurationReport::catastrophic_configuration_error(
     logger->log(component, ml::Severity::critical, "Error details:");
     logger->log(component, ml::Severity::critical, "%s", boost::diagnostic_information(error).c_str());
 }
+
+void mrl::DisplayConfigurationReport::session_should_send_display_configuration(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<graphics::DisplayConfiguration const> const& config)
+{
+    logger->log(component, severity, "Sending display configuration to session %s:", session->name().c_str());
+    log_configuration(severity, *config);
+}

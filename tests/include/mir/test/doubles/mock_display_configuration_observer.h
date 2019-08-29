@@ -58,6 +58,12 @@ public:
         void(
             std::shared_ptr<graphics::DisplayConfiguration const> const& failed_fallback,
             std::exception const& error));
+
+    MOCK_METHOD2(
+        session_should_send_display_configuration,
+        void(
+            std::shared_ptr<scene::Session> const&,
+            std::shared_ptr<graphics::DisplayConfiguration const> const&));
 };
 
 }

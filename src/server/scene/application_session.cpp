@@ -92,6 +92,14 @@ public:
     {
     }
 
+    void session_should_send_display_configuration(
+        std::shared_ptr<ms::Session> const& session,
+        std::shared_ptr<mg::DisplayConfiguration const> const& config)
+    {
+        if (session.get() == this->session)
+            this->session->send_display_config(*config);
+    }
+
 private:
     ApplicationSession* const session;
 };

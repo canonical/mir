@@ -58,6 +58,10 @@ private:
 
     void session_configuration_removed(std::shared_ptr<mir::scene::Session> const&) override;
 
+    void session_should_send_display_configuration(
+        std::shared_ptr<mir::scene::Session> const& session,
+        std::shared_ptr<mir::graphics::DisplayConfiguration const> const& config) override;
+
     std::mutex mutable mutex;
     std::vector<ActiveOutputsListener*> active_output_listeners;
     std::vector<Output> active_outputs;

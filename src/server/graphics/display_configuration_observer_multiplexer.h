@@ -55,6 +55,10 @@ public:
         std::shared_ptr<DisplayConfiguration const> const& failed_fallback,
         std::exception const& error) override;
 
+    void session_should_send_display_configuration(
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<DisplayConfiguration const> const& config) override;
+
 private:
     std::shared_ptr<Executor> const executor;
 };
