@@ -95,10 +95,25 @@ static struct wl_registry_listener const registry_listener = {
 static struct wl_shm_pool*
 make_shm_pool(struct wl_shm* shm, int size, void **data)
 {
-    struct wl_shm_pool *pool;
-    int fd;
+    static char* shm_dir = NULL;
+    if (!shm_dir) shm_dir = getenv("XDG_RUNTIME_DIR");
 
-    fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
+    int fd = open(shm_dir, O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
+
+    // Workaround for filesystems that don't support O_TMPFILE
+    if (fd < 0) {
+        char template_filename[] = "/dev/shm/mir-buffer-XXXXXX";
+        fd = mkostemp(template_filename, O_CLOEXEC);
+        if (fd != -1)
+        {
+            if (unlink(template_filename) < 0)
+            {
+                close(fd);
+                fd = -1;
+            }
+        }
+    }
+
     if (fd < 0) {
         return NULL;
     }
@@ -111,7 +126,7 @@ make_shm_pool(struct wl_shm* shm, int size, void **data)
         return NULL;
     }
 
-    pool = wl_shm_create_pool(shm, fd, size);
+    struct wl_shm_pool *pool = wl_shm_create_pool(shm, fd, size);
 
     close(fd);
 

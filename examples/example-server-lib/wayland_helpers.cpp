@@ -18,35 +18,72 @@
 
 #include "wayland_helpers.h"
 
+#include <mir/fd.h>
+#include <boost/throw_exception.hpp>
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
 
 #include <cstring>
+#include <system_error>
 
 struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
 {
-    struct wl_shm_pool *pool;
-    int fd;
+    static auto (*open_shm_file)() -> mir::Fd = []
+        {
+            static char const* shm_dir;
+            open_shm_file = []{ return mir::Fd{open(shm_dir, O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU)}; };
 
-    fd = open("/dev/shm", O_TMPFILE | O_RDWR | O_EXCL, S_IRWXU);
+            // Wayland based toolkits typically use $XDG_RUNTIME_DIR to open shm pools
+            // so we try that before "/dev/shm". But confined snaps can't access "/dev/shm"
+            // so we try "/tmp" if both of the above fail.
+            for (auto dir : {const_cast<const char*>(getenv("XDG_RUNTIME_DIR")), "/dev/shm", "/tmp" })
+            {
+                if (dir)
+                {
+                    shm_dir = dir;
+                    auto fd = open_shm_file();
+                    if (fd >= 0)
+                        return fd;
+                }
+            }
+
+            // Workaround for filesystems that don't support O_TMPFILE (E.g. phones based on 3.4 or 3.10
+            open_shm_file = []
+            {
+                char template_filename[] = "/dev/shm/mir-buffer-XXXXXX";
+                mir::Fd fd{mkostemp(template_filename, O_CLOEXEC)};
+                if (fd != -1)
+                {
+                    if (unlink(template_filename) < 0)
+                    {
+                        return mir::Fd{};
+                    }
+                }
+                return fd;
+            };
+
+            return open_shm_file();
+        };
+
+    auto fd = open_shm_file();
+
     if (fd < 0) {
-        return NULL;
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to open shm buffer"}));
     }
 
-    posix_fallocate(fd, 0, size);
-
-    *data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    if (*data == MAP_FAILED) {
-        close(fd);
-        return NULL;
+    if (auto error = posix_fallocate(fd, 0, size))
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{error, std::system_category(), "Failed to allocate shm buffer"}));
     }
 
-    pool = wl_shm_create_pool(shm, fd, size);
+    if ((*data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) == MAP_FAILED)
+    {
+        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to mmap buffer"}));
+    }
 
-    close(fd);
-
-    return pool;
+    return wl_shm_create_pool(shm, fd, size);
 }
 
 void Output::output_done(void* data, struct wl_output* /*wl_output*/)
