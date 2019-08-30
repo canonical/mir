@@ -600,6 +600,8 @@ Multi-Arch: foreign
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${shlibs:Depends},
          ${misc:Depends},
+Breaks: libmirwayland-dev (<< 1.4.0+dev20)
+Replaces: libmirwayland-dev (<< 1.4.0+dev20)
 Description: Display server for Ubuntu - generator for Wayland protocol extension wrappers.
  Contains the tool used for generating the Mir-style wrappers for Wayland
  protocol extensions found in libmirwayland
