@@ -1,4 +1,3 @@
 usr/lib/*/pkgconfig/mirwayland.pc
 usr/lib/*/libmirwayland.so
-usr/bin/mir_wayland_generator
 usr/include/mirwayland
