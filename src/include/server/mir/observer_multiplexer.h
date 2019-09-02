@@ -114,10 +114,14 @@ void ObserverMultiplexer<Observer>::for_each_observer(MemberFn f, Args&&... args
     std::shared_lock<decltype(observer_mutex)> lock{observer_mutex};
     for (auto& observer_pair: observers)
     {
-        if (auto observer = observer_pair.second.lock())
-        {
-            observer_pair.first.spawn(std::bind(invokable_mem_fn, observer.get(), std::forward<Args>(args)...));
-        }
+        observer_pair.first.spawn(
+            [invokable_mem_fn, weak_observer = observer_pair.second, args...]() mutable
+            {
+                if (auto observer = weak_observer.lock())
+                {
+                    invokable_mem_fn(observer, std::forward<Args>(args)...);
+                }
+            });
     }
 }
 }

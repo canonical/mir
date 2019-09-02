@@ -606,3 +606,49 @@ TEST(ObserverMultiplexer, multi_argument_observations_work)
 
     executor.drain_work();
 }
+
+TEST(ObserverMultiplexer, destroyed_observer_is_not_called)
+{
+    using namespace testing;
+
+    class ExplicitExectutor : public mir::Executor
+    {
+    public:
+        void spawn(std::function<void()>&& work) override
+        {
+            work_queue.push(std::move(work));
+        }
+
+        void run_work_items()
+        {
+            while(!work_queue.empty())
+            {
+                auto work_item = std::move(work_queue.front());
+                work_queue.pop();
+                work_item();
+            }
+        }
+    private:
+        std::queue<std::function<void()>> work_queue;
+    };
+
+    ExplicitExectutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+
+    auto observer_owner = std::make_unique<NiceMock<MockObserver>>();
+    // We need a shared_ptr that we can release, but we also need the observer to remain live.
+    // So we construct a shared_ptr<> with an empty Deleter
+    std::shared_ptr<MockObserver> observer{observer_owner.get(), [](auto){}};
+    std::weak_ptr<MockObserver> observer_lifetime_observer{observer};
+
+    multiplexer.register_interest(observer);
+    EXPECT_CALL(*observer, observation_made(_)).Times(0);
+
+    multiplexer.observation_made("the songs that we sung when the dark days come");
+    observer.reset();
+
+    // The test requires that our observer's lifetime has ended before we dispatch the observer
+    ASSERT_THAT(observer_lifetime_observer.lock(), IsNull());
+    // Run the executor; because the observer is dead, this should not dispatch to it.
+    executor.run_work_items();
+}
