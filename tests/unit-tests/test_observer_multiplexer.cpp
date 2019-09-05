@@ -175,7 +175,9 @@ TEST(ObserverMultiplexer, removed_observers_do_not_recieve_observations)
     auto observer_two = std::make_shared<NiceMock<MockObserver>>();
 
     EXPECT_CALL(*observer_one, observation_made(StrEq(value))).Times(2);
-    EXPECT_CALL(*observer_two, observation_made(StrEq(value))).Times(1);
+    // Observer 2 gets called *at most* once; It might be called fewer than once because
+    // the unregister_interest() call races with the observation.
+    EXPECT_CALL(*observer_two, observation_made(StrEq(value))).Times(AtMost(1));
 
     multiplexer.register_interest(observer_one);
     multiplexer.register_interest(observer_two);
@@ -607,30 +609,35 @@ TEST(ObserverMultiplexer, multi_argument_observations_work)
     executor.drain_work();
 }
 
+namespace
+{
+class ExplicitExectutor : public mir::Executor
+{
+public:
+    void spawn(std::function<void()>&& work) override
+    {
+        work_queue.push(std::move(work));
+    }
+
+    void run_work_items()
+    {
+        while(!work_queue.empty())
+        {
+            auto work_item = std::move(work_queue.front());
+            work_queue.pop();
+            work_item();
+        }
+    }
+private:
+    std::queue<std::function<void()>> work_queue;
+};
+
+}
+
 TEST(ObserverMultiplexer, destroyed_observer_is_not_called)
 {
     using namespace testing;
 
-    class ExplicitExectutor : public mir::Executor
-    {
-    public:
-        void spawn(std::function<void()>&& work) override
-        {
-            work_queue.push(std::move(work));
-        }
-
-        void run_work_items()
-        {
-            while(!work_queue.empty())
-            {
-                auto work_item = std::move(work_queue.front());
-                work_queue.pop();
-                work_item();
-            }
-        }
-    private:
-        std::queue<std::function<void()>> work_queue;
-    };
 
     ExplicitExectutor executor;
     TestObserverMultiplexer multiplexer{executor};
@@ -651,4 +658,41 @@ TEST(ObserverMultiplexer, destroyed_observer_is_not_called)
     ASSERT_THAT(observer_lifetime_observer.lock(), IsNull());
     // Run the executor; because the observer is dead, this should not dispatch to it.
     executor.run_work_items();
+}
+
+TEST(ObserverMultiplexer, unregister_interest_prevents_dispatch_of_already_queued_observations)
+{
+    using namespace testing;
+
+    ExplicitExectutor executor;
+    TestObserverMultiplexer multiplexer{executor};
+
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    multiplexer.register_interest(observer);
+
+    int call_count{0};
+    ON_CALL(*observer, observation_made(_))
+        .WillByDefault(
+            Invoke(
+                [&call_count, &multiplexer, observer = std::weak_ptr<MockObserver>{observer}](auto)
+                {
+                    ++call_count;
+                    if (call_count < 2)
+                    {
+                        multiplexer.unregister_interest(*observer.lock());
+                    }
+                    else
+                    {
+                        FAIL() << "Observer called after unregister";
+                    }
+                }));
+
+    multiplexer.observation_made("Is it wicked when you smile?");
+    multiplexer.observation_made("Even though you feel like crying?");
+    multiplexer.observation_made("Even though you may be sick at any time?");
+
+    //We should now have three observations queued up in the Executor; dispatch them
+    executor.run_work_items();
+
+    EXPECT_THAT(call_count, Eq(1));
 }
