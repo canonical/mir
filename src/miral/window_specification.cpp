@@ -71,7 +71,7 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     pixel_format(spec.pixel_format),
     buffer_usage(),
     name(spec.name),
-    output_id(spec.output_id),
+    output_id(),
     type(spec.type),
     state(spec.state),
     preferred_orientation(spec.preferred_orientation),
