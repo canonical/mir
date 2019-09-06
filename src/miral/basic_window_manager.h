@@ -280,6 +280,7 @@ private:
         WindowInfo& info,
         mir::geometry::Rectangle const& application_zone,
         mir::geometry::Rectangle const& output_area);
+    void update_attached_and_fullscreen_sets(WindowInfo& window_info, MirWindowState state);
     void set_state(miral::WindowInfo& window_info, MirWindowState value);
     void remove_window(Application const& application, miral::WindowInfo const& info);
     void refocus(Application const& application, Window const& parent,
