@@ -149,7 +149,7 @@ auto miral::BasicWindowManager::add_surface(
     case mir_window_state_horizmaximized:
     case mir_window_state_attached:
     {
-        auto display_area = display_area_for(window);
+        auto display_area = display_area_for(window_info);
         display_area->attached_windows.insert(window);
         break;
     }
@@ -651,7 +651,7 @@ auto miral::BasicWindowManager::active_display_area() const -> std::shared_ptr<D
     if (auto const surface = focus_controller->focused_surface())
     {
         WindowInfo& info = info_for(surface);
-        return display_area_for(info.window());
+        return display_area_for(info);
     }
 
     // Otherwise, the display that contains the pointer, if there is one.
@@ -671,8 +671,21 @@ auto miral::BasicWindowManager::active_display_area() const -> std::shared_ptr<D
     return std::make_shared<DisplayArea>(Rectangle{{0, 0}, {100, 100}});
 }
 
-auto miral::BasicWindowManager::display_area_for(Window const& window) const -> std::shared_ptr<DisplayArea>
+auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -> std::shared_ptr<DisplayArea>
 {
+    auto const window = info.window();
+
+    if (info.has_output_id())
+    {
+        for (auto const& area : display_areas)
+        {
+            if (area->output && area->output->id() == info.output_id())
+            {
+                return area;
+            }
+        }
+    }
+
     for (auto& area : display_areas)
     {
         for (auto& area_window : area->attached_windows)
@@ -1274,7 +1287,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
     if (modifications.size().is_set())
         restore_rect.size = modifications.size().value();
 
-    auto const display_area = display_area_for(window);
+    auto const display_area = display_area_for(window_info);
     auto const application_zone = display_area->application_zone.extents();
     Rectangle rect;
 
@@ -1302,7 +1315,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
 
     case mir_window_state_fullscreen:
     {
-        rect = policy->confirm_placement_on_display(window_info, new_state, fullscreen_rect_for(window_info));
+        rect = policy->confirm_placement_on_display(window_info, new_state, display_area_for(window_info)->area);
         break;
     }
 
@@ -1314,22 +1327,6 @@ void miral::BasicWindowManager::place_and_size_for_state(
 
     modifications.top_left() = rect.top_left;
     modifications.size() = rect.size;
-}
-
-auto miral::BasicWindowManager::fullscreen_rect_for(miral::WindowInfo const& window_info) const -> Rectangle
-{
-    if (window_info.has_output_id())
-    {
-        for (auto const& display_area : display_areas)
-        {
-            if (display_area->output && display_area->output->id() == window_info.output_id())
-            {
-                return display_area->area;
-            }
-        }
-    }
-
-    return display_area_for(window_info.window())->area;
 }
 
 void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWindowState value)
@@ -1353,7 +1350,7 @@ void miral::BasicWindowManager::set_state(miral::WindowInfo& window_info, MirWin
     case mir_window_state_horizmaximized:
     case mir_window_state_attached:
     {
-        auto area = display_area_for(window);
+        auto area = display_area_for(window_info);
         area->attached_windows.insert(window);
         break;
     }
@@ -2472,7 +2469,7 @@ void miral::BasicWindowManager::update_windows_for_outputs()
         {
             auto& info = info_for(window);
             auto const rect =
-                policy->confirm_placement_on_display(info, mir_window_state_fullscreen, fullscreen_rect_for(info));
+                policy->confirm_placement_on_display(info, mir_window_state_fullscreen, display_area_for(info)->area);
             place_and_size(info, rect.top_left, rect.size);
         }
     }
