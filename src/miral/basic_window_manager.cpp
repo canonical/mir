@@ -1671,17 +1671,6 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
 
     bool const has_parent{parameters.parent().is_set() && parameters.parent().value().lock()};
 
-    if (parameters.output_id().is_set() && parameters.output_id().value() != 0)
-    {
-        Rectangle rect{parameters.top_left().value(), parameters.size().value()};
-        graphics::DisplayConfigurationOutputId id{parameters.output_id().value()};
-        display_layout->place_in_output(id, rect);
-        parameters.top_left() = rect.top_left;
-        parameters.size() = rect.size;
-        parameters.state() = mir_window_state_fullscreen;
-        positioned = true;
-    }
-
     if (has_parent)
     {
         auto const parent = info_for(parameters.parent().value()).window();
