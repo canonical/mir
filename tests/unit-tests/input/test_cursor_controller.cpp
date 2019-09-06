@@ -178,6 +178,14 @@ struct StubInputSurface : public mtd::StubSceneSurface
         cursor_image_ = image;
     }
 
+    mir::optional_value<mir::geometry::Rectangle> exclusive_display() const override
+    {
+        return mir::optional_value<mir::geometry::Rectangle>();
+    }
+    void set_exclusive_display(mir::optional_value<mir::geometry::Rectangle> /*display*/) override
+    {
+    }
+
     geom::Rectangle const bounds;
     std::shared_ptr<mg::CursorImage> cursor_image_;
 

@@ -206,6 +206,14 @@ void mtd::StubSurface::set_depth_layer(MirDepthLayer /*depth_layer*/)
 {
 }
 
+mir::optional_value<mir::geometry::Rectangle> mtd::StubSurface::exclusive_display() const
+{
+    return mir::optional_value<mir::geometry::Rectangle>();
+}
+void mtd::StubSurface::set_exclusive_display(mir::optional_value<mir::geometry::Rectangle> /*display*/)
+{
+}
+
 namespace
 {
 // Ensure we don't accidentally have an abstract class

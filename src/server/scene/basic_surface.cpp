@@ -957,3 +957,12 @@ void mir::scene::BasicSurface::set_depth_layer(MirDepthLayer depth_layer)
     }
     observers.depth_layer_set_to(this, depth_layer);
 }
+
+mir::optional_value<geom::Rectangle> mir::scene::BasicSurface::exclusive_display() const
+{
+    return exclusive_display_;
+}
+void mir::scene::BasicSurface::set_exclusive_display(optional_value<geom::Rectangle> display)
+{
+    exclusive_display_ = display;
+}

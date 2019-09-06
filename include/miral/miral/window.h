@@ -21,7 +21,9 @@
 
 #include "miral/application.h"
 
+#include <mir/optional_value.h>
 #include <mir/geometry/point.h>
+#include <mir/geometry/rectangle.h>
 #include <mir/geometry/size.h>
 
 #include <memory>
@@ -51,6 +53,9 @@ public:
     void resize(mir::geometry::Size const& size);
 
     void move_to(mir::geometry::Point top_left);
+
+    auto exclusive_display() const -> mir::optional_value<mir::geometry::Rectangle>;
+    void set_exclusive_display(mir::optional_value<mir::geometry::Rectangle> display);
 
     // Access to the underlying Mir surface
     operator std::weak_ptr<mir::scene::Surface>() const;

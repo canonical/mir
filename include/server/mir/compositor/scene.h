@@ -30,6 +30,10 @@ namespace scene
 {
 class Observer;
 }
+namespace geometry
+{
+class Rectangle;
+}
 
 namespace compositor
 {
@@ -53,7 +57,7 @@ public:
      * \returns a sequence of SceneElements for the compositor id. The
      *          sequence is in stacking order from back to front.
      */
-    virtual SceneElementSequence scene_elements_for(CompositorID id) = 0;
+    virtual SceneElementSequence scene_elements_for(CompositorID id, geometry::Rectangle display_area) = 0;
 
     /**
      * Return the number of additional frames that you need to render to get

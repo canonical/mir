@@ -145,6 +145,9 @@ public:
     auto depth_layer() const -> MirDepthLayer override;
     void set_depth_layer(MirDepthLayer depth_layer) override;
 
+    optional_value<geometry::Rectangle> exclusive_display() const override;
+    void set_exclusive_display(optional_value<geometry::Rectangle> display) override;
+
 private:
     bool visible(std::lock_guard<std::mutex> const&) const;
     MirWindowType set_type(MirWindowType t);  // Use configure() to make public changes
@@ -183,6 +186,7 @@ private:
     std::unique_ptr<CursorStreamImageAdapter> const cursor_stream_adapter;
 
     MirDepthLayer depth_layer_ = mir_depth_layer_application;
+    optional_value<geometry::Rectangle> exclusive_display_;
 };
 
 }

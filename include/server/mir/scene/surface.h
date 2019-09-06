@@ -122,6 +122,8 @@ public:
      * When the depth layer is changed, the surface becomes the top surface on that layer
      */
     virtual void set_depth_layer(MirDepthLayer depth_layer) = 0;
+    virtual optional_value<geometry::Rectangle> exclusive_display() const = 0;
+    virtual void set_exclusive_display(optional_value<geometry::Rectangle> display) = 0;
 };
 }
 }
