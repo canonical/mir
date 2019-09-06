@@ -1091,6 +1091,11 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
     {
         set_state(window_info, modifications.state().value());
     }
+    else if (modifications.output_id().is_set())
+    {
+        update_attached_and_fullscreen_sets(window_info, window_info.state());
+        application_zones_need_update = true;
+    }
 
     if (application_zones_need_update)
     {
