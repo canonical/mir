@@ -93,8 +93,6 @@ public:
     void add_display(mir::geometry::Rectangle const& area) override
     __attribute__((deprecated("Mir doesn't reliably call this: it is ignored. Use add_display_for_testing() instead")));
 
-    void add_display_for_testing(mir::geometry::Rectangle const& area);
-
     void remove_display(mir::geometry::Rectangle const& area) override;
 
     bool handle_keyboard_event(MirKeyboardEvent const* event) override;

@@ -2353,15 +2353,6 @@ void miral::BasicWindowManager::for_each_window_in_workspace(
         callback(kv->second);
 }
 
-void miral::BasicWindowManager::add_display_for_testing(mir::geometry::Rectangle const& area)
-{
-    Locker lock{this};
-    outputs.add(area);
-    display_areas.push_back(std::make_shared<DisplayArea>(area));
-
-    update_windows_for_outputs();
-}
-
 auto miral::BasicWindowManager::apply_exclusive_rect_to_application_zone(
     Rectangle const& original_zone,
     Rectangle const& exclusive_rect,
