@@ -1650,7 +1650,21 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
     if (!parameters.state().is_set())
         parameters.state() = mir_window_state_restored;
 
-    auto const display_area = active_display_area();
+    std::shared_ptr<DisplayArea> display_area;
+    if (parameters.output_id().is_set())
+    {
+        for (auto const& area : display_areas)
+        {
+            if (area->output && area->output->id() == parameters.output_id())
+            {
+                display_area = area;
+                break;
+            }
+        }
+    }
+    if (!display_area)
+        display_area = active_display_area();
+
     auto const application_zone = display_area->application_zone.extents();;
     auto const height = parameters.size().value().height.as_int();
 
