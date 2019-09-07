@@ -22,6 +22,7 @@
 #include "window_wl_surface_role.h"
 #include "xdg_shell_stable.h"
 #include "wayland_utils.h"
+#include "output_manager.h"
 
 #include "mir/shell/surface_specification.h"
 #include "mir/frontend/mir_client_session.h"
@@ -87,6 +88,7 @@ public:
     LayerSurfaceV1(
         wl_resource* new_resource,
         WlSurface* surface,
+        optional_value<graphics::DisplayConfigurationOutputId> output_id,
         LayerShellV1 const& layer_shell,
         MirDepthLayer layer);
 
@@ -199,12 +201,14 @@ void mf::LayerShellV1::Instance::get_layer_surface(
     uint32_t layer,
     std::string const& namespace_)
 {
-    (void)output; // TODO
     (void)namespace_; // TODO
+
+    auto output_id = shell->output_manager->output_id_for(client, output);
 
     new LayerSurfaceV1(
         new_layer_surface,
         WlSurface::from(surface),
+        output_id,
         *shell,
         layer_shell_layer_to_mir_depth_layer(layer));
 }
@@ -214,6 +218,7 @@ void mf::LayerShellV1::Instance::get_layer_surface(
 mf::LayerSurfaceV1::LayerSurfaceV1(
     wl_resource* new_resource,
     WlSurface* surface,
+    optional_value<graphics::DisplayConfigurationOutputId> output_id,
     LayerShellV1 const& layer_shell,
     MirDepthLayer layer)
     : mw::LayerSurfaceV1(new_resource, Version<1>()),
@@ -228,6 +233,7 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
     shell::SurfaceSpecification spec;
     spec.state = mir_window_state_attached;
     spec.depth_layer = layer;
+    spec.output_id = output_id;
     apply_spec(spec);
 }
 
