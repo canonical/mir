@@ -73,8 +73,12 @@ public:
      * Remove an observer from the set notified of all observations.
      *
      * This is threadsafe and can be called in any context.
-     * It is \b not guaranteed that methods of \p observer will not be called after
-     * this returns.
+     *
+     * It is guaranteed that once unregister_interest() returns that no
+     * other thread is in, or will receive, observations from this
+     * ObserverRegistrar. If the thread calling unregister_interest()
+     * is currently in an Observer call that call will complete, but
+     * no further ones will be dispatched.
      *
      * \param observer [in] The observer to unregister
      */

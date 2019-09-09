@@ -67,8 +67,89 @@ protected:
 private:
     Executor& default_executor;
 
+    class WeakObserver
+    {
+    public:
+        explicit WeakObserver(std::weak_ptr<Observer> observer)
+            : observer{observer}
+        {
+        }
+
+        class LockedObserver
+        {
+        public:
+            LockedObserver(LockedObserver const&) = delete;
+            LockedObserver(LockedObserver&&) = default;
+            LockedObserver& operator=(LockedObserver const&) = delete;
+            LockedObserver& operator=(LockedObserver&&) = default;
+
+            ~LockedObserver() = default;
+
+            Observer& operator*()
+            {
+                return *observer;
+            }
+            Observer* operator->()
+            {
+                return observer.get();
+            }
+            Observer* get()
+            {
+                return observer.get();
+            }
+
+            operator bool() const
+            {
+                return static_cast<bool>(observer);
+            }
+        private:
+            friend class WeakObserver;
+            LockedObserver(std::shared_ptr<Observer> observer, std::unique_lock<std::recursive_mutex>&& lock)
+                : lock{std::move(lock)},
+                  observer{std::move(observer)}
+            {
+            }
+
+            std::unique_lock<std::recursive_mutex> lock;
+            std::shared_ptr<Observer> observer;
+        };
+
+        LockedObserver lock()
+        {
+            auto live_observer = observer.lock();
+            if (live_observer)
+            {
+                return LockedObserver{live_observer, std::unique_lock<std::recursive_mutex>(mutex)};
+            }
+            else
+            {
+                return LockedObserver{nullptr, {}};
+            }
+        }
+
+        void reset()
+        {
+            std::lock_guard<std::recursive_mutex> lock{mutex};
+            observer.reset();
+        }
+
+        bool operator==(Observer const* const other) const
+        {
+            return observer.lock().get() == other;
+        }
+        bool operator==(std::nullptr_t) const
+        {
+            return observer.expired();
+        }
+    private:
+        // A recursive_mutex so that we can reset the observer pointer from a call to
+        // a LockedObserver.
+        std::recursive_mutex mutex;
+        std::weak_ptr<Observer> observer;
+    };
+
     PosixRWMutex observer_mutex;
-    std::vector<std::pair<Executor&, std::weak_ptr<Observer>>> observers;
+    std::vector<std::pair<Executor&, std::shared_ptr<WeakObserver>>> observers;
 };
 
 template<class Observer>
@@ -84,7 +165,7 @@ void ObserverMultiplexer<Observer>::register_interest(
 {
     std::lock_guard<decltype(observer_mutex)> lock{observer_mutex};
 
-    observers.emplace_back(std::make_pair(std::ref(executor), observer));
+    observers.emplace_back(std::make_pair(std::ref(executor), std::make_shared<WeakObserver>(observer)));
 }
 
 template<class Observer>
@@ -95,10 +176,17 @@ void ObserverMultiplexer<Observer>::unregister_interest(Observer const& observer
         std::remove_if(
             observers.begin(),
             observers.end(),
-            [&observer](auto const& candidate)
+            [&observer](auto& candidate)
             {
-                auto const resolved_candidate = candidate.second.lock().get();
-                return (resolved_candidate == nullptr) || (resolved_candidate == &observer);
+                if (*candidate.second == &observer)
+                {
+                    // Kill the observer; this will wait for any (other) thread
+                    // to finish with the observer first.
+                    candidate.second->reset();
+                    return true;
+                }
+                // We also might as well clean up any expired observers while we're here.
+                return candidate.second == nullptr;
             }),
         observers.end());
 }
@@ -114,10 +202,14 @@ void ObserverMultiplexer<Observer>::for_each_observer(MemberFn f, Args&&... args
     std::shared_lock<decltype(observer_mutex)> lock{observer_mutex};
     for (auto& observer_pair: observers)
     {
-        if (auto observer = observer_pair.second.lock())
-        {
-            observer_pair.first.spawn(std::bind(invokable_mem_fn, observer.get(), std::forward<Args>(args)...));
-        }
+        observer_pair.first.spawn(
+            [invokable_mem_fn, weak_observer = observer_pair.second, args...]() mutable
+            {
+                if (auto observer = weak_observer->lock())
+                {
+                    invokable_mem_fn(observer, std::forward<Args>(args)...);
+                }
+            });
     }
 }
 }
