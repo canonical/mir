@@ -52,7 +52,7 @@
 #include "mir/test/doubles/stub_cursor.h"
 #include "mir/test/doubles/stub_display_configuration.h"
 #include "mir/test/signal_actions.h"
-#include "../include/mir/test/doubles/mock_display_configuration_observer.h"
+#include "mir/test/doubles/mock_display_configuration_observer.h"
 
 #include "mir/test/doubles/nested_mock_egl.h"
 #include "mir/test/fake_shared.h"
