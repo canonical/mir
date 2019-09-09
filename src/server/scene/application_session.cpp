@@ -91,7 +91,7 @@ mf::SurfaceId ms::ApplicationSession::next_id()
 
 auto ms::ApplicationSession::create_surface(
     SurfaceCreationParameters const& the_params,
-    std::shared_ptr<mf::EventSink> const& surface_sink) -> std::shared_ptr<scene::Surface>
+    std::shared_ptr<mf::EventSink> const& surface_sink) -> std::shared_ptr<Surface>
 {
     auto const id = next_id();
 
