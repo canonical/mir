@@ -80,7 +80,7 @@ public:
     void set_title(std::string const& title);
     void initiate_interactive_move();
     void initiate_interactive_resize(MirResizeEdge edge);
-    void set_parent(std::experimental::optional<std::weak_ptr<scene::Surface>> const& parent);
+    void set_parent(std::experimental::optional<std::shared_ptr<scene::Surface>> const& parent);
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
     void set_fullscreen(std::experimental::optional<wl_resource*> const& output);
