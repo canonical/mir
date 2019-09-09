@@ -872,6 +872,11 @@ struct ApplicationSessionSurfaceOutput : public ApplicationSession
         uint32_t id;
     };
 
+    auto get_surface(MirWindowOutputEvent const& event) -> std::shared_ptr<ms::Surface>
+    {
+        return app_session.surface(mf::SurfaceId{event.to_window_output()->surface_id()});
+    }
+
     TestOutput const high_dpi;
     TestOutput const projector;
     std::shared_ptr<ms::SurfaceFactory> const stub_surface_factory;
@@ -1004,7 +1009,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_correct_surface_details_to_surface
 
     for (int i = 0; i < 2 ; ++i)
     {
-        EXPECT_THAT(app_session.surface(mf::SurfaceId{event[i].to_window_output()->surface_id()}), Eq(surfaces[i]));
+        EXPECT_THAT(get_surface(event[i]), Eq(surfaces[i]));
         EXPECT_THAT(&event[i], SurfaceOutputEventFor(*outputs[i]));
     }
 }
@@ -1052,7 +1057,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_details_of_the_hightest_scale_fact
 
     ASSERT_TRUE(event_received);
 
-    EXPECT_THAT(app_session.surface(mf::SurfaceId{event.to_window_output()->surface_id()}), Eq(surface));
+    EXPECT_THAT(get_surface(event), Eq(surface));
     EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
 }
 
@@ -1161,7 +1166,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Ge(1));
     auto events_expected = events_received + 1;
 
-    EXPECT_THAT(app_session.surface(mf::SurfaceId{event.to_window_output()->surface_id()}), Eq(surface));
+    EXPECT_THAT(get_surface(event), Eq(surface));
     EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
 
     // Now solely on the left output
@@ -1170,7 +1175,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Eq(events_expected));
     events_expected++;
 
-    EXPECT_THAT(app_session.surface(mf::SurfaceId{event.to_window_output()->surface_id()}), Eq(surface));
+    EXPECT_THAT(get_surface(event), Eq(surface));
     EXPECT_THAT(&event, SurfaceOutputEventFor(projector));
 
     // Now solely on the right output
@@ -1179,7 +1184,7 @@ TEST_F(ApplicationSessionSurfaceOutput, sends_surface_output_event_on_move)
     ASSERT_THAT(events_received, Eq(events_expected));
     events_expected++;
 
-    EXPECT_THAT(app_session.surface(mf::SurfaceId{event.to_window_output()->surface_id()}), Eq(surface));
+    EXPECT_THAT(get_surface(event), Eq(surface));
     EXPECT_THAT(&event, SurfaceOutputEventFor(high_dpi));
 }
 
