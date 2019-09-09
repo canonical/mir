@@ -165,7 +165,7 @@ void mf::WindowWlSurfaceRole::initiate_interactive_resize(MirResizeEdge edge)
     }
 }
 
-void mf::WindowWlSurfaceRole::set_parent(std::experimental::optional<std::weak_ptr<scene::Surface>> const& parent)
+void mf::WindowWlSurfaceRole::set_parent(std::experimental::optional<std::shared_ptr<scene::Surface>> const& parent)
 {
     if (weak_scene_surface.lock())
     {
