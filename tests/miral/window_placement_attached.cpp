@@ -21,6 +21,7 @@
 using namespace miral;
 using namespace testing;
 namespace mt = mir::test;
+namespace mg = mir::graphics;
 
 namespace
 {
@@ -61,7 +62,7 @@ struct WindowPlacementAttached : mt::TestWindowManagerTools, WithParamInterface<
 {
     void SetUp() override
     {
-        basic_window_manager.add_display_for_testing(display_area);
+        notify_configuration_applied(create_fake_display_configuration({display_area}));
         basic_window_manager.add_session(session);
     }
 
@@ -241,6 +242,33 @@ TEST_P(WindowPlacementAttached, window_is_placed_correctly_when_size_changes)
     window_manager_tools.modify_window(window, spec);
 
     Rectangle placement{placement_for_attachement(display_area, new_size, edges)};
+    AttachedEdges actual_edges = info.attached_edges();
+
+    EXPECT_THAT(info.state(), Eq(mir_window_state_attached));
+    EXPECT_THAT(actual_edges, Eq(edges));
+    EXPECT_THAT(window.top_left(), Eq(placement.top_left));
+    EXPECT_THAT(window.size(), Eq(placement.size));
+}
+
+TEST_P(WindowPlacementAttached, window_is_placed_correctly_when_output_changes)
+{
+    AttachedEdges edges = GetParam();
+    Size window_size{70, 90};
+    Rectangle new_display_area{{120, 18}, {600, 700}};
+
+    Window window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        window = create_window(params);
+    }
+    auto const& info = basic_window_manager.info_for(window);
+
+    notify_configuration_applied(create_fake_display_configuration({new_display_area}));
+
+    Rectangle placement{placement_for_attachement(new_display_area, window_size, edges)};
     AttachedEdges actual_edges = info.attached_edges();
 
     EXPECT_THAT(info.state(), Eq(mir_window_state_attached));
@@ -585,6 +613,73 @@ TEST_P(WindowPlacementAttached, exclusive_zone_is_cleared_when_exclusive_rect_cl
 
     EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));
     EXPECT_THAT(normal.size(), Eq(display_area.size));
+}
+
+TEST_P(WindowPlacementAttached, window_initially_placed_correctly_when_output_id_set)
+{
+    AttachedEdges const edges = GetParam();
+    Rectangle const other_display_area = {{1400, 10}, {960, 720}};
+    mg::DisplayConfigurationOutputId output_id{2};
+    Size const window_size{120, 80};
+
+    auto const display_config = create_fake_display_configuration({display_area, other_display_area});
+    notify_configuration_applied(display_config);
+
+    Window window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        params.output_id = output_id;
+        window = create_window(params);
+    }
+    auto const& info = basic_window_manager.info_for(window);
+
+    Rectangle placement{placement_for_attachement(other_display_area, window_size, edges)};
+    AttachedEdges actual_edges = info.attached_edges();
+
+    EXPECT_THAT(info.state(), Eq(mir_window_state_attached));
+    EXPECT_THAT(actual_edges, Eq(edges));
+    EXPECT_THAT(window.top_left(), Eq(placement.top_left));
+    EXPECT_THAT(window.size(), Eq(placement.size));
+}
+
+TEST_P(WindowPlacementAttached, window_placed_correctly_when_output_id_changes)
+{
+    AttachedEdges const edges = GetParam();
+    Rectangle const other_display_area = {{1400, 10}, {960, 720}};
+    mg::DisplayConfigurationOutputId output_id_a{1};
+    mg::DisplayConfigurationOutputId output_id_b{2};
+    Size const window_size{120, 80};
+
+    auto const display_config = create_fake_display_configuration({display_area, other_display_area});
+    notify_configuration_applied(display_config);
+
+    Window window;
+    {
+        mir::scene::SurfaceCreationParameters params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = edges;
+        params.size = window_size;
+        params.output_id = output_id_b;
+        window = create_window(params);
+    }
+    auto const& info = basic_window_manager.info_for(window);
+
+    {
+        WindowSpecification spec;
+        spec.output_id() = output_id_a.as_value();
+        window_manager_tools.modify_window(window, spec);
+    }
+
+    Rectangle placement{placement_for_attachement(display_area, window_size, edges)};
+    AttachedEdges actual_edges = info.attached_edges();
+
+    EXPECT_THAT(info.state(), Eq(mir_window_state_attached));
+    EXPECT_THAT(actual_edges, Eq(edges));
+    EXPECT_THAT(window.top_left(), Eq(placement.top_left));
+    EXPECT_THAT(window.size(), Eq(placement.size));
 }
 
 INSTANTIATE_TEST_CASE_P(WindowPlacementAttached, WindowPlacementAttached, ::testing::Values(

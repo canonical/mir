@@ -42,7 +42,7 @@ struct RaiseTree : mt::TestWindowManagerTools
 
     void SetUp() override
     {
-        basic_window_manager.add_display_for_testing(display_area);
+        notify_configuration_applied(create_fake_display_configuration({display_area}));
 
         mir::scene::SurfaceCreationParameters creation_parameters;
         basic_window_manager.add_session(session);

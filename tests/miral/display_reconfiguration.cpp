@@ -42,7 +42,7 @@ struct DisplayConfiguration : mt::TestWindowManagerTools
 
     void SetUp() override
     {
-        basic_window_manager.add_display_for_testing(display_area);
+        notify_configuration_applied(create_fake_display_configuration({display_area}));
         basic_window_manager.add_session(session);
     }
 
@@ -83,6 +83,6 @@ TEST_F(DisplayConfiguration, given_fullscreen_windows_reconfiguring_displays_doe
     Rectangle const new_display{
         display_area.top_left + Displacement{as_delta(display_width), 0}, display_area.size};
 
-    basic_window_manager.add_display_for_testing(new_display);
+    notify_configuration_applied(create_fake_display_configuration({display_area}));
     basic_window_manager.remove_display(new_display);
 }

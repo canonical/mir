@@ -93,8 +93,6 @@ public:
     void add_display(mir::geometry::Rectangle const& area) override
     __attribute__((deprecated("Mir doesn't reliably call this: it is ignored. Use add_display_for_testing() instead")));
 
-    void add_display_for_testing(mir::geometry::Rectangle const& area);
-
     void remove_display(mir::geometry::Rectangle const& area) override;
 
     bool handle_keyboard_event(MirKeyboardEvent const* event) override;
@@ -282,14 +280,14 @@ private:
         WindowInfo& info,
         mir::geometry::Rectangle const& application_zone,
         mir::geometry::Rectangle const& output_area);
+    void update_attached_and_fullscreen_sets(WindowInfo& window_info, MirWindowState state);
     void set_state(miral::WindowInfo& window_info, MirWindowState value);
-    auto fullscreen_rect_for(WindowInfo const& window_info) const -> Rectangle;
     void remove_window(Application const& application, miral::WindowInfo const& info);
     void refocus(Application const& application, Window const& parent,
                  std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window);
     auto workspaces_containing(Window const& window) const -> std::vector<std::shared_ptr<Workspace>>;
     auto active_display_area() const -> std::shared_ptr<DisplayArea>;
-    auto display_area_for(Window const& window) const -> std::shared_ptr<DisplayArea>;
+    auto display_area_for(WindowInfo const& info) const -> std::shared_ptr<DisplayArea>;
     /// Returns the application zone area after shrinking it for the exclusive zone if needed
     static auto apply_exclusive_rect_to_application_zone(
         mir::geometry::Rectangle const& original_zone,
