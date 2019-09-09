@@ -49,7 +49,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     : destroyed{std::make_shared<bool>(false)},
       surface{surface},
       client{client},
-      weak_shell{shell},
+      shell{shell},
       weak_session{get_session(client)},
       output_manager{output_manager},
       observer{std::make_shared<WaylandSurfaceObserver>(seat, client, surface, this)},
@@ -66,7 +66,6 @@ mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
     *destroyed = true;
     if (auto const scene_surface = weak_scene_surface.lock())
     {
-        auto const shell = shell_checked();
         auto const session = session_checked();
         shell->destroy_surface(session, scene_surface);
         weak_scene_surface.reset();
@@ -95,7 +94,6 @@ void mf::WindowWlSurfaceRole::refresh_surface_data_now()
     {
         shell::SurfaceSpecification surface_data_spec;
         populate_spec_with_surface_data(surface_data_spec);
-        auto const shell = shell_checked();
         auto const session = session_checked();
         shell->modify_surface(session, scene_surface, surface_data_spec);
     }
@@ -149,7 +147,6 @@ void mf::WindowWlSurfaceRole::initiate_interactive_move()
 {
     if (auto const scene_surface = weak_scene_surface.lock())
     {
-        auto const shell = shell_checked();
         auto const session = session_checked();
         shell->request_move(session, scene_surface, observer->latest_timestamp().count());
     }
@@ -159,7 +156,6 @@ void mf::WindowWlSurfaceRole::initiate_interactive_resize(MirResizeEdge edge)
 {
     if (auto const scene_surface = weak_scene_surface.lock())
     {
-        auto const shell = shell_checked();
         auto const session = session_checked();
         shell->request_resize(session, scene_surface, observer->latest_timestamp().count(), edge);
     }
@@ -237,7 +233,6 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::experimental::optional<struct 
         shell::SurfaceSpecification mods;
         mods.state = mir_window_state_fullscreen;
         mods.output_id = output_manager->output_id_for(client, output);
-        auto const shell = shell_checked();
         auto const session = session_checked();
         shell->modify_surface(session, scene_surface, mods);
     }
@@ -256,7 +251,6 @@ void mf::WindowWlSurfaceRole::set_state_now(MirWindowState state)
     {
         shell::SurfaceSpecification mods;
         mods.state = state;
-        auto const shell = shell_checked();
         auto const session = session_checked();
         shell->modify_surface(session, scene_surface, mods);
     }
@@ -332,7 +326,6 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
             populate_spec_with_surface_data(spec());
         }
 
-        auto const shell = shell_checked();
         auto const session = session_checked();
 
         if (pending_changes)
@@ -352,15 +345,6 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
         committed_height_set_explicitly = true;
     pending_explicit_width = std::experimental::nullopt;
     pending_explicit_height = std::experimental::nullopt;
-}
-
-auto mf::WindowWlSurfaceRole::shell_checked() -> std::shared_ptr<msh::Shell>
-{
-    auto locked = weak_shell.lock();
-    if (locked)
-        return locked;
-    else
-        BOOST_THROW_EXCEPTION(std::logic_error("weak_shell is null"));
 }
 
 auto mf::WindowWlSurfaceRole::session_checked() -> std::shared_ptr<ms::Session>
@@ -408,7 +392,6 @@ void mf::WindowWlSurfaceRole::create_mir_window()
     params->input_shape = std::vector<geom::Rectangle>{};
     surface->populate_surface_data(params->streams.value(), params->input_shape.value(), {});
 
-    auto const shell = shell_checked();
     auto const session = session_checked();
 
     auto const scene_surface = shell->create_surface(session, *params, std::make_shared<NullEventSink>());
