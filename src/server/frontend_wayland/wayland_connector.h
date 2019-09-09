@@ -136,7 +136,7 @@ private:
     std::unique_ptr<DataDeviceManager> data_device_manager_global;
     std::shared_ptr<Executor> const executor;
     std::shared_ptr<graphics::WaylandAllocator> const allocator;
-    std::weak_ptr<shell::Shell> const weak_shell;
+    std::shared_ptr<shell::Shell> const shell;
     std::unique_ptr<WaylandExtensions> const extensions;
     std::thread dispatch_thread;
     wl_event_source* pause_source;
