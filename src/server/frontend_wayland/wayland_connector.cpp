@@ -626,7 +626,7 @@ mf::WaylandConnector::WaylandConnector(
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
       allocator{allocator_for_display(allocator, display.get(), executor)},
-      weak_shell{shell},
+      shell{shell},
       extensions{std::move(extensions_)},
       extension_filter{extension_filter}
 {
@@ -851,9 +851,6 @@ bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client
 {
 #ifndef MIR_NO_WAYLAND_FILTER
     auto const* const interface = wl_global_get_interface(global);
-    auto const shell = weak_shell.lock();
-    if (!shell)
-        BOOST_THROW_EXCEPTION(std::logic_error("Invalid shell"));
     auto const session = get_session(const_cast<wl_client*>(client));
     return extension_filter(session, interface->name);
 #else
