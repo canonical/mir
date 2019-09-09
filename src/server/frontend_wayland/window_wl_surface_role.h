@@ -115,10 +115,6 @@ protected:
 
     void commit(WlSurfaceState const& state) override;
 
-    /// Locks and returns weak_shell
-    /// Throws std::logic_error if the shell is null
-    auto shell_checked() -> std::shared_ptr<shell::Shell>;
-
     /// Locks and returns weak_session
     /// Throws std::logic_error if the session is null
     auto session_checked() -> std::shared_ptr<scene::Session>;
@@ -126,7 +122,7 @@ protected:
 private:
     WlSurface* const surface;
     wl_client* client;
-    std::weak_ptr<shell::Shell> const weak_shell;
+    std::shared_ptr<shell::Shell> const shell;
     std::weak_ptr<scene::Session> const weak_session;
     OutputManager* output_manager;
     std::shared_ptr<WaylandSurfaceObserver> const observer;
