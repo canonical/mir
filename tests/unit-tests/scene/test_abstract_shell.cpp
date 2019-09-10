@@ -93,6 +93,28 @@ struct MockSessionManager : ms::SessionManager
 {
     using ms::SessionManager::SessionManager;
 
+    // Must wrap the constructor as the NiceMock<> constructor can only take 10 arguments on older platforms
+    MockSessionManager(
+        std::shared_ptr<msh::SurfaceStack> const& surface_stack,
+        std::shared_ptr<ms::SurfaceFactory> const& surface_factory,
+        std::shared_ptr<ms::SessionContainer> const& app_container,
+        std::shared_ptr<ms::SessionEventSink> const& session_event_sink,
+        std::shared_ptr<mg::Display const> const& display)
+        : ms::SessionManager{
+              surface_stack,
+              surface_factory,
+              std::make_shared<mtd::StubBufferStreamFactory>(),
+              app_container,
+              std::make_shared<mtd::NullSnapshotStrategy>(),
+              session_event_sink,
+              std::make_shared<ms::NullSessionListener>(),
+              display,
+              std::make_shared<mtd::NullANRDetector>(),
+              std::make_shared<mtd::StubBufferAllocator>(),
+              std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>()}
+    {
+    }
+
     MOCK_METHOD1(set_focus_to, void (std::shared_ptr<ms::Session> const& focus));
 
     void unmocked_set_focus_to(std::shared_ptr<ms::Session> const& focus)
@@ -120,15 +142,9 @@ struct AbstractShell : Test
     NiceMock<MockSessionManager> session_manager{
         mt::fake_shared(surface_stack),
         mt::fake_shared(surface_factory),
-        std::make_shared<mtd::StubBufferStreamFactory>(),
         mt::fake_shared(session_container),
-        std::make_shared<mtd::NullSnapshotStrategy>(),
         mt::fake_shared(session_event_sink),
-        std::make_shared<ms::NullSessionListener>(),
-        mt::fake_shared(display),
-        std::make_shared<mtd::NullANRDetector>(),
-        std::make_shared<mtd::StubBufferAllocator>(),
-        std::make_shared<mtd::StubObserverRegistrar<mir::graphics::DisplayConfigurationObserver>>()};
+        mt::fake_shared(display)};
 
     mtd::StubInputTargeter input_targeter;
     std::shared_ptr<NiceMockWindowManager> wm;
