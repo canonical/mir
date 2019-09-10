@@ -206,12 +206,16 @@ void mtd::StubSurface::set_depth_layer(MirDepthLayer /*depth_layer*/)
 {
 }
 
-mir::optional_value<mir::geometry::Rectangle> mtd::StubSurface::exclusive_display() const
+mir::optional_value<mir::geometry::Rectangle> mtd::StubSurface::clip_area() const
 {
     return mir::optional_value<mir::geometry::Rectangle>();
 }
-void mtd::StubSurface::set_exclusive_display(mir::optional_value<mir::geometry::Rectangle> /*display*/)
+void mtd::StubSurface::set_clip_area(mir::optional_value<mir::geometry::Rectangle> /*display*/)
 {
+}
+mir::geometry::Rectangle mtd::StubSurface::render_area() const
+{
+    return {};
 }
 
 namespace

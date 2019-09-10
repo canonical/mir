@@ -54,9 +54,6 @@ public:
 
     void move_to(mir::geometry::Point top_left);
 
-    auto exclusive_display() const -> mir::optional_value<mir::geometry::Rectangle>;
-    void set_exclusive_display(mir::optional_value<mir::geometry::Rectangle> display);
-
     // Access to the underlying Mir surface
     operator std::weak_ptr<mir::scene::Surface>() const;
     operator std::shared_ptr<mir::scene::Surface>() const;

@@ -94,6 +94,11 @@ public:
     {
         return rect;
     }
+    
+    mir::optional_value<geometry::Rectangle> clip_area() const override
+    {
+        return mir::optional_value<geometry::Rectangle>();
+    }
 
     unsigned int swap_interval() const override
     {

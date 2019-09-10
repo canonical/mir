@@ -105,25 +105,6 @@ auto miral::Window::application() const
     return self->session.lock();
 }
 
-auto miral::Window::exclusive_display() const -> mir::optional_value<mir::geometry::Rectangle>
-{
-    if (self)
-    {
-        if (auto const surface = self->surface.lock())
-            return surface->exclusive_display();
-    }
-
-    return {};
-}
-void miral::Window::set_exclusive_display(mir::optional_value<mir::geometry::Rectangle> display)
-{
-    if (self)
-    {
-        if (auto const surface = self->surface.lock())
-            return surface->set_exclusive_display(display);
-    }
-}
-
 bool miral::operator==(Window const& lhs, Window const& rhs)
 {
     return lhs.self == rhs.self;

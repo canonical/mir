@@ -134,6 +134,10 @@ struct WindowInfo
     /// (only meaningful when the window is attached to an edge)
     void exclusive_rect(mir::optional_value<mir::geometry::Rectangle> const& rect);
 
+    /// Mir will not render anything outside this rectangle
+    auto clip_area() const -> mir::optional_value<mir::geometry::Rectangle>;
+    void set_clip_area(mir::optional_value<mir::geometry::Rectangle> zone);
+
 private:
     struct Self;
     std::unique_ptr<Self> self;

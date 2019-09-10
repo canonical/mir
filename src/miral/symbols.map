@@ -474,10 +474,10 @@ MIRAL_2.7 {
 global:
   extern "C++" {
     miral::Output::id*;
-    miral::Window::exclusive_display*;
-    miral::Window::set_exclusive_display*;
     miral::WindowInfo::attached_edges*;
+    miral::WindowInfo::clip_area*;
     miral::WindowInfo::exclusive_rect*;
+    miral::WindowInfo::set_clip_area*;
     miral::WindowSpecification::attached_edges*;
     miral::WindowSpecification::exclusive_rect*;
   };

@@ -178,12 +178,16 @@ struct StubInputSurface : public mtd::StubSceneSurface
         cursor_image_ = image;
     }
 
-    mir::optional_value<mir::geometry::Rectangle> exclusive_display() const override
+    mir::optional_value<mir::geometry::Rectangle> clip_area() const override
     {
         return mir::optional_value<mir::geometry::Rectangle>();
     }
-    void set_exclusive_display(mir::optional_value<mir::geometry::Rectangle> /*display*/) override
+    void set_clip_area(mir::optional_value<mir::geometry::Rectangle> /*display*/) override
     {
+    }
+    mir::geometry::Rectangle render_area() const override
+    {
+        return geom::Rectangle();
     }
 
     geom::Rectangle const bounds;

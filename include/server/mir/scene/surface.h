@@ -122,8 +122,12 @@ public:
      * When the depth layer is changed, the surface becomes the top surface on that layer
      */
     virtual void set_depth_layer(MirDepthLayer depth_layer) = 0;
-    virtual optional_value<geometry::Rectangle> exclusive_display() const = 0;
-    virtual void set_exclusive_display(optional_value<geometry::Rectangle> display) = 0;
+    virtual optional_value<geometry::Rectangle> clip_area() const = 0;
+    virtual void set_clip_area(optional_value<geometry::Rectangle> area) = 0;
+    /**
+     * A rectangle from top_left and size but clipped to clip_area, if set
+     */
+    virtual geometry::Rectangle render_area() const = 0;
 };
 }
 }

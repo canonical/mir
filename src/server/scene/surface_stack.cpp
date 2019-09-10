@@ -160,7 +160,11 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
     {
         for (auto const& surface : layer)
         {
-            if (surface->visible() && (!surface->exclusive_display() || surface->exclusive_display().value() == display_area))
+            auto render_area = surface->render_area();
+            if (surface->visible() && 
+                render_area.size.height.as_int() > 0 && 
+                render_area.size.width.as_int() > 0 && 
+                render_area.overlaps(display_area))
             {
                 for (auto& renderable : surface->generate_renderables(id))
                 {
