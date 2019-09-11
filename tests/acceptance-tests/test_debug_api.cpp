@@ -46,18 +46,15 @@ class SimpleConfigurablePlacementShell : public msh::ShellWrapper
 public:
     using msh::ShellWrapper::ShellWrapper;
 
-    mir::frontend::SurfaceId create_surface(
+    auto create_surface(
         std::shared_ptr<ms::Session> const& session,
         ms::SurfaceCreationParameters const& params,
-        std::shared_ptr<mf::EventSink> const& sink) override
+        std::shared_ptr<mf::EventSink> const& sink) -> std::shared_ptr<ms::Surface> override
     {
-        auto const result = msh::ShellWrapper::create_surface(session, params, sink);
-        auto const window = session->surface(result);
-
+        auto const window = msh::ShellWrapper::create_surface(session, params, sink);
         window->move_to(placement.top_left);
         window->resize(placement.size);
-
-        return result;
+        return window;
     }
 
     mir::geometry::Rectangle placement{{0, 0}, {100, 100}};

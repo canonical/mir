@@ -67,13 +67,13 @@ class TrackingShell : public msh::ShellWrapper
 public:
     using msh::ShellWrapper::ShellWrapper;
 
-    mf::SurfaceId create_surface(
+    auto create_surface(
         std::shared_ptr<ms::Session> const& session,
         ms::SurfaceCreationParameters const& params,
-        std::shared_ptr<mf::EventSink> const& sink) override
+        std::shared_ptr<mf::EventSink> const& sink) -> std::shared_ptr<ms::Surface> override
     {
         auto const surface = msh::ShellWrapper::create_surface(session, params, sink);
-        surfaces.push_back(session->surface(surface));
+        surfaces.push_back(surface);
         return surface;
     }
 

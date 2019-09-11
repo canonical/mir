@@ -37,12 +37,11 @@ class Compositor;
 namespace frontend
 {
 class Connector;
-class Shell;
-class MirClientSession;
 }
 namespace shell
 {
 class SessionContainer;
+class Shell;
 }
 namespace graphics
 {

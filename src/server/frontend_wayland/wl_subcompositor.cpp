@@ -102,9 +102,9 @@ bool mf::WlSubsurface::synchronized() const
     return synchronized_ || parent->synchronized();
 }
 
-mf::SurfaceId mf::WlSubsurface::surface_id() const
+auto mf::WlSubsurface::scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>
 {
-    return parent->surface_id();
+    return parent->scene_surface();
 }
 
 void mf::WlSubsurface::parent_has_committed()

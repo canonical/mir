@@ -28,10 +28,10 @@ msh::ShellWrapper::ShellWrapper(std::shared_ptr<Shell> const& wrapped) :
 {
 }
 
-std::shared_ptr<ms::Session> msh::ShellWrapper::open_session(
+auto msh::ShellWrapper::open_session(
     pid_t client_pid,
     std::string const& name,
-    std::shared_ptr<mf::EventSink> const& sink)
+    std::shared_ptr<mf::EventSink> const& sink) -> std::shared_ptr<ms::Session>
 {
     return wrapped->open_session(client_pid, name, sink);
 }
@@ -83,20 +83,25 @@ void msh::ShellWrapper::stop_prompt_session(std::shared_ptr<ms::PromptSession> c
     wrapped->stop_prompt_session(prompt_session);
 }
 
-mf::SurfaceId msh::ShellWrapper::create_surface(
+auto msh::ShellWrapper::create_surface(
     std::shared_ptr<ms::Session> const& session,
     ms::SurfaceCreationParameters const& params,
-    std::shared_ptr<mf::EventSink> const& sink)
+    std::shared_ptr<mf::EventSink> const& sink) -> std::shared_ptr<ms::Surface>
 {
     return wrapped->create_surface(session, params, sink);
 }
 
-void msh::ShellWrapper::modify_surface(std::shared_ptr<scene::Session> const& session, std::shared_ptr<scene::Surface> const& surface, SurfaceSpecification const& modifications)
+void msh::ShellWrapper::modify_surface(
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<scene::Surface> const& surface,
+    SurfaceSpecification const& modifications)
 {
     wrapped->modify_surface(session, surface, modifications);
 }
 
-void msh::ShellWrapper::destroy_surface(std::shared_ptr<ms::Session> const& session, mf::SurfaceId surface)
+void msh::ShellWrapper::destroy_surface(
+    std::shared_ptr<ms::Session> const& session,
+    std::shared_ptr<ms::Surface> const& surface)
 {
     wrapped->destroy_surface(session, surface);
 }

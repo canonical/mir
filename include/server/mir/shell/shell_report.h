@@ -46,10 +46,12 @@ public:
     virtual void closing_session(scene::Session const& session) = 0;
 
     virtual void created_surface(
-        scene::Session const& session, frontend::SurfaceId surface_id) = 0;
+        scene::Session const& session,
+        scene::Surface const& surface) = 0;
 
     virtual void update_surface(
-        scene::Session const& session, scene::Surface const& surface,
+        scene::Session const& session,
+        scene::Surface const& surface,
         SurfaceSpecification const& modifications) = 0;
 
     virtual void update_surface(
@@ -57,7 +59,8 @@ public:
         MirWindowAttrib attrib, int value) = 0;
 
     virtual void destroying_surface(
-        scene::Session const& session, frontend::SurfaceId surface) = 0;
+        scene::Session const& session,
+        scene::Surface const& surface) = 0;
 
     virtual void started_prompt_session(
         scene::PromptSession const& prompt_session,

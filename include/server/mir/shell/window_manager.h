@@ -41,10 +41,12 @@ public:
 
     virtual void remove_session(std::shared_ptr<scene::Session> const& session) = 0;
 
-    virtual frontend::SurfaceId add_surface(
+    virtual auto add_surface(
         std::shared_ptr<scene::Session> const& session,
         scene::SurfaceCreationParameters const& params,
-        std::function<frontend::SurfaceId(std::shared_ptr<scene::Session> const& session, scene::SurfaceCreationParameters const& params)> const& build) = 0;
+        std::function<std::shared_ptr<scene::Surface>(
+            std::shared_ptr<scene::Session> const& session,
+            scene::SurfaceCreationParameters const& params)> const& build) -> std::shared_ptr<scene::Surface> = 0;
 
     virtual void modify_surface(
         std::shared_ptr<scene::Session> const& session,

@@ -58,14 +58,17 @@ struct StubSession : scene::Session
 
     void resume_prompt_session() override;
 
-    frontend::SurfaceId create_surface(
+    auto create_surface(
         scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& sink) override;
+        std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<scene::Surface> override;
 
     void destroy_surface(frontend::SurfaceId surface) override;
 
-    std::shared_ptr<scene::Surface> surface(
-        frontend::SurfaceId surface) const override;
+    auto surface(
+        frontend::SurfaceId surface) const -> std::shared_ptr<scene::Surface> override;
+
+    auto surface_id(
+        std::shared_ptr<scene::Surface> const& surface) const -> frontend::SurfaceId override;
 
     std::shared_ptr<scene::Surface> surface_after(
         std::shared_ptr<scene::Surface> const&) const override;

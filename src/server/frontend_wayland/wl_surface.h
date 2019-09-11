@@ -41,6 +41,10 @@ namespace graphics
 {
 class WaylandAllocator;
 }
+namespace scene
+{
+class Session;
+}
 namespace shell
 {
 struct StreamSpecification;
@@ -53,7 +57,6 @@ class Rectangle;
 namespace frontend
 {
 class BufferStream;
-class MirClientSession;
 class WlSurface;
 class WlSubsurface;
 
@@ -94,7 +97,7 @@ class NullWlSurfaceRole : public WlSurfaceRole
 {
 public:
     NullWlSurfaceRole(WlSurface* surface);
-    SurfaceId surface_id() const override;
+    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>> override;
     void refresh_surface_data_now() override;
     void commit(WlSurfaceState const& state) override;
     void visiblity(bool /*visible*/) override;
@@ -127,7 +130,7 @@ public:
     bool synchronized() const;
     Position transform_point(geometry::Point point);
     wl_resource* raw_resource() const { return resource; }
-    mir::frontend::SurfaceId surface_id() const;
+    auto scene_surface() const -> std::experimental::optional<std::shared_ptr<scene::Surface>>;
 
     void set_role(WlSurfaceRole* role_);
     void clear_role();
@@ -142,7 +145,7 @@ public:
     void add_destroy_listener(void const* key, std::function<void()> listener);
     void remove_destroy_listener(void const* key);
 
-    std::shared_ptr<MirClientSession> const session;
+    std::shared_ptr<scene::Session> const session;
     mir::frontend::BufferStreamId const stream_id;
     std::shared_ptr<mir::frontend::BufferStream> const stream;
 

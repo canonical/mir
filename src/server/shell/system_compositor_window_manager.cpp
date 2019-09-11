@@ -57,8 +57,10 @@ void msh::SystemCompositorWindowManager::remove_session(std::shared_ptr<ms::Sess
 auto msh::SystemCompositorWindowManager::add_surface(
     std::shared_ptr<ms::Session> const& session,
     ms::SurfaceCreationParameters const& params,
-    std::function<mf::SurfaceId(std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& params)> const& build)
--> mf::SurfaceId
+    std::function<std::shared_ptr<scene::Surface>(
+        std::shared_ptr<ms::Session> const& session,
+        ms::SurfaceCreationParameters const& params)> const& build)
+-> std::shared_ptr<scene::Surface>
 {
     mir::geometry::Rectangle rect{params.top_left, params.size};
 
@@ -71,8 +73,7 @@ auto msh::SystemCompositorWindowManager::add_surface(
     placed_parameters.top_left = rect.top_left;
     placed_parameters.size = rect.size;
 
-    auto const result = build(session, placed_parameters);
-    auto const surface = session->surface(result);
+    auto const surface = build(session, placed_parameters);
 
     auto const session_ready_observer = std::make_shared<SurfaceReadyObserver>(
         [this](std::shared_ptr<ms::Session> const& session, std::shared_ptr<ms::Surface> const& /*surface*/)
@@ -87,7 +88,7 @@ auto msh::SystemCompositorWindowManager::add_surface(
     std::lock_guard<decltype(mutex)> lock{mutex};
     output_map[surface] = params.output_id;
 
-    return result;
+    return surface;
 }
 
 void msh::SystemCompositorWindowManager::modify_surface(

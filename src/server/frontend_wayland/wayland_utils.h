@@ -45,7 +45,6 @@ namespace mir
 {
 namespace frontend
 {
-class MirClientSession;
 
 template<typename Callable>
 inline auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callable)
@@ -58,7 +57,6 @@ inline auto run_unless(std::shared_ptr<bool> const& condition, Callable&& callab
         };
 }
 
-auto get_mir_client_session(wl_client* client) -> std::shared_ptr<MirClientSession>;
 }
 }
 

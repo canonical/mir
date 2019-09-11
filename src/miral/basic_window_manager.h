@@ -78,8 +78,10 @@ public:
     auto add_surface(
         std::shared_ptr<mir::scene::Session> const& session,
         mir::scene::SurfaceCreationParameters const& params,
-        std::function<mir::frontend::SurfaceId(std::shared_ptr<mir::scene::Session> const& session, mir::scene::SurfaceCreationParameters const& params)> const& build)
-    -> mir::frontend::SurfaceId override;
+        std::function<std::shared_ptr<mir::scene::Surface>(
+            std::shared_ptr<mir::scene::Session> const& session,
+            mir::scene::SurfaceCreationParameters const& params)> const& build)
+    -> std::shared_ptr<mir::scene::Surface> override;
 
     void modify_surface(
         std::shared_ptr<mir::scene::Session> const& session,

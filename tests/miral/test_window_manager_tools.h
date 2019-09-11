@@ -87,7 +87,7 @@ public:
 
     static auto create_surface(
         std::shared_ptr<mir::scene::Session> const& session,
-        mir::scene::SurfaceCreationParameters const& params) -> mir::frontend::SurfaceId;
+        mir::scene::SurfaceCreationParameters const& params) -> std::shared_ptr<mir::scene::Surface>;
 
     auto static create_fake_display_configuration(std::vector<miral::Rectangle> outputs)
         -> std::shared_ptr<graphics::DisplayConfiguration const>;

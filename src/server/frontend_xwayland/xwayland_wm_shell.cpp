@@ -26,11 +26,16 @@
 #include "xwayland_wm_shellsurface.h"
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
+namespace msh = mir::shell;
 
-mf::XWaylandWMShell::XWaylandWMShell(std::shared_ptr<mf::Shell> const& shell,
-                                     mf::WlSeat& seat,
-                                     OutputManager* const output_manager)
-    : shell{shell}, seat{seat}, output_manager{output_manager}
+mf::XWaylandWMShell::XWaylandWMShell(
+    std::shared_ptr<msh::Shell> const& shell,
+    mf::WlSeat& seat,
+    OutputManager* const output_manager)
+    : shell{shell},
+      seat{seat},
+      output_manager{output_manager}
 {
 }
 
