@@ -23,6 +23,8 @@
 #include "mir/scene/session_listener.h"
 #include "mir/scene/null_session_listener.h"
 #include "mir/graphics/display_configuration_observer.h"
+#include "mir/compositor/buffer_stream.h"
+#include "mir/scene/null_surface_observer.h"
 
 #include "src/server/scene/basic_surface.h"
 #include "src/include/server/mir/scene/session_event_sink.h"
@@ -50,6 +52,7 @@ namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
+namespace mc = mir::compositor;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -166,16 +169,16 @@ TEST_F(SessionManagerSessionListenerSetup, additional_listeners_receive_focus_ch
 TEST_F(SessionManagerSessionListenerSetup, additional_listeners_receive_surface_creation)
 {
     using namespace ::testing;
-    mtd::NullEventSink event_sink;
+    ms::NullSurfaceObserver observer;
     auto additional_listener = std::make_shared<testing::NiceMock<mtd::MockSessionListener>>();
     EXPECT_CALL(*additional_listener, starting(_)).Times(1);
     EXPECT_CALL(*additional_listener, surface_created(_,_)).Times(1);
 
     session_manager.add_listener(additional_listener);
     auto session = session_manager.open_session(__LINE__, "XPlane", std::shared_ptr<mf::EventSink>());
-    auto bs = session->create_buffer_stream(
-        mg::BufferProperties{{640, 480}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware});
-    session->create_surface(ms::SurfaceCreationParameters().with_buffer_stream(bs), mt::fake_shared(event_sink));
+    auto bs = std::dynamic_pointer_cast<mc::BufferStream>(session->create_buffer_stream(
+        mg::BufferProperties{{640, 480}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware}));
+    session->create_surface(ms::SurfaceCreationParameters().with_buffer_stream(bs), mt::fake_shared(observer));
 }
 
 namespace

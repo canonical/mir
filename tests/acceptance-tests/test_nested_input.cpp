@@ -75,9 +75,9 @@ struct SurfaceTrackingShell : mir::shell::ShellWrapper
     auto create_surface(
         std::shared_ptr<mir::scene::Session> const& session,
         mir::scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<mir::frontend::EventSink> const& sink) -> std::shared_ptr<ms::Surface> override
+        std::shared_ptr<mir::scene::SurfaceObserver> const& observer) -> std::shared_ptr<ms::Surface> override
     {
-        auto surface = wrapped_shell->create_surface(session, params, sink);
+        auto surface = wrapped_shell->create_surface(session, params, observer);
 
         tracked_surfaces[session->name()] =  TrackedSurface{surface};
 

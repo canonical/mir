@@ -40,11 +40,8 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD2(create_surface,
         std::shared_ptr<scene::Surface>(
             scene::SurfaceCreationParameters const&,
-            std::shared_ptr<frontend::EventSink> const&));
-    MOCK_METHOD1(destroy_surface, void(frontend::SurfaceId));
-    MOCK_CONST_METHOD1(get_surface, std::shared_ptr<frontend::Surface>(frontend::SurfaceId));
-    MOCK_CONST_METHOD1(surface, std::shared_ptr<scene::Surface>(frontend::SurfaceId));
-    MOCK_CONST_METHOD1(surface_id, frontend::SurfaceId(std::shared_ptr<scene::Surface> const&));
+            std::shared_ptr<scene::SurfaceObserver> const&));
+    MOCK_METHOD1(destroy_surface, void(std::shared_ptr<scene::Surface> const&));
     MOCK_CONST_METHOD1(surface_after, std::shared_ptr<scene::Surface>(std::shared_ptr<scene::Surface> const&));
 
     MOCK_METHOD1(take_snapshot, void(scene::SnapshotCallback const&));
@@ -58,7 +55,6 @@ struct MockSceneSession : public scene::Session
 
     MOCK_METHOD1(send_error, void(ClientVisibleError const&));
     MOCK_METHOD1(send_input_config, void(MirInputConfig const&));
-    MOCK_METHOD3(configure_surface, int(frontend::SurfaceId, MirWindowAttrib, int));
 
     MOCK_METHOD1(set_lifecycle_state, void(MirLifecycleState state));
 
@@ -67,18 +63,11 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD0(suspend_prompt_session, void());
     MOCK_METHOD0(resume_prompt_session, void());
 
-    MOCK_CONST_METHOD1(get_buffer_stream, std::shared_ptr<frontend::BufferStream>(frontend::BufferStreamId));
-    MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));
-    MOCK_METHOD1(create_buffer_stream, frontend::BufferStreamId(graphics::BufferProperties const&));
+    MOCK_METHOD1(create_buffer_stream, std::shared_ptr<compositor::BufferStream>(graphics::BufferProperties const&));
+    MOCK_METHOD1(destroy_buffer_stream, void(std::shared_ptr<frontend::BufferStream> const&));
     
     MOCK_METHOD2(configure_streams, void(scene::Surface&, std::vector<shell::StreamSpecification> const&));
     MOCK_METHOD1(destroy_surface, void (std::weak_ptr<scene::Surface> const&));
-
-    MOCK_METHOD1(create_buffer, graphics::BufferID(graphics::BufferProperties const&));
-    MOCK_METHOD3(create_buffer, graphics::BufferID(geometry::Size, uint32_t, uint32_t));
-    MOCK_METHOD2(create_buffer, graphics::BufferID(geometry::Size, MirPixelFormat));
-    MOCK_METHOD1(destroy_buffer, void(graphics::BufferID));
-    MOCK_METHOD1(get_buffer, std::shared_ptr<graphics::Buffer>(graphics::BufferID));
 };
 
 }

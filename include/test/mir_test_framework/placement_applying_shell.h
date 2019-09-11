@@ -48,7 +48,7 @@ struct PlacementApplyingShell : mir::shell::ShellWrapper
     auto create_surface(
         std::shared_ptr<mir::scene::Session> const& session,
         mir::scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<mir::frontend::EventSink> const& sink) -> std::shared_ptr<mir::scene::Surface> override;
+        std::shared_ptr<mir::scene::SurfaceObserver> const& observer) -> std::shared_ptr<mir::scene::Surface> override;
 
     void modify_surface(
         std::shared_ptr<mir::scene::Session> const& session,

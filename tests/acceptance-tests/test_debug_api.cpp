@@ -49,9 +49,9 @@ public:
     auto create_surface(
         std::shared_ptr<ms::Session> const& session,
         ms::SurfaceCreationParameters const& params,
-        std::shared_ptr<mf::EventSink> const& sink) -> std::shared_ptr<ms::Surface> override
+        std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<ms::Surface> override
     {
-        auto const window = msh::ShellWrapper::create_surface(session, params, sink);
+        auto const window = msh::ShellWrapper::create_surface(session, params, observer);
         window->move_to(placement.top_left);
         window->resize(placement.size);
         return window;

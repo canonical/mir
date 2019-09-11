@@ -38,9 +38,9 @@ mtf::ObservantShell::ObservantShell(
 auto mtf::ObservantShell::create_surface(
     std::shared_ptr<msc::Session> const& session,
     msc::SurfaceCreationParameters const& params,
-    std::shared_ptr<mf::EventSink> const& sink) -> std::shared_ptr<ms::Surface>
+    std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<ms::Surface>
 {
-    auto window = msh::ShellWrapper::create_surface(session, params, sink);
+    auto window = msh::ShellWrapper::create_surface(session, params, observer);
     window->add_observer(surface_observer);
     return window;
 }

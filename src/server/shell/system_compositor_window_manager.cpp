@@ -120,7 +120,8 @@ void msh::SystemCompositorWindowManager::remove_surface(
     std::shared_ptr<ms::Session> const& session,
     std::weak_ptr<ms::Surface> const& surface)
 {
-    session->destroy_surface(surface);
+    if (auto const locked = surface.lock())
+        session->destroy_surface(locked);
 
     std::lock_guard<decltype(mutex)> lock{mutex};
     output_map.erase(surface);

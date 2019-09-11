@@ -22,11 +22,11 @@
 #include "mir/optional_value.h"
 #include "mir_toolkit/common.h"
 #include "mir/frontend/surface_id.h"
-#include "mir/frontend/buffer_stream_id.h"
 #include "mir/geometry/point.h"
 #include "mir/geometry/displacement.h"
 #include "mir/graphics/buffer_properties.h"
 #include "mir/graphics/display_configuration.h"
+#include "mir/frontend/buffer_stream_id.h"
 
 #include <string>
 #include <memory>
@@ -35,6 +35,10 @@ namespace mir
 {
 namespace graphics { class CursorImage; }
 namespace scene { class Surface; }
+namespace frontend
+{
+class BufferStream;
+}
 
 namespace shell
 {
@@ -43,7 +47,7 @@ auto operator==(SurfaceAspectRatio const& lhs, SurfaceAspectRatio const& rhs) ->
 
 struct StreamSpecification
 {
-    frontend::BufferStreamId stream_id;
+    std::weak_ptr<frontend::BufferStream> stream;
     geometry::Displacement displacement;
     optional_value<geometry::Size> size;
 };
@@ -51,7 +55,7 @@ auto operator==(StreamSpecification const& lhs, StreamSpecification const& rhs) 
 
 struct StreamCursor
 {
-    frontend::BufferStreamId stream_id;
+    std::weak_ptr<frontend::BufferStream> stream;
     geometry::Displacement hotspot;
 };
 

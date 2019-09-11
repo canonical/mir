@@ -32,13 +32,24 @@ namespace doubles
 
 struct MockMirClientSession : public frontend::MirClientSession
 {
-    MOCK_CONST_METHOD1(get_surface, std::shared_ptr<frontend::Surface>(frontend::SurfaceId));
+    MOCK_CONST_METHOD0(name, std::string());
+    MOCK_CONST_METHOD1(frontend_surface, std::shared_ptr<frontend::Surface>(frontend::SurfaceId));
+    MOCK_CONST_METHOD1(scene_surface, std::shared_ptr<scene::Surface>(frontend::SurfaceId));
 
-    MOCK_CONST_METHOD1(get_buffer_stream, std::shared_ptr<frontend::BufferStream>(frontend::BufferStreamId));
+    MOCK_METHOD3(
+        create_surface,
+        frontend::SurfaceId(
+            std::shared_ptr<shell::Shell> const&,
+            scene::SurfaceCreationParameters const&,
+            std::shared_ptr<frontend::EventSink> const&));
+    MOCK_METHOD2(
+        destroy_surface,
+        void(std::shared_ptr<shell::Shell> const&, frontend::SurfaceId)) = 0;
+
     MOCK_METHOD1(create_buffer_stream, frontend::BufferStreamId(graphics::BufferProperties const&));
+    MOCK_CONST_METHOD1(buffer_stream, std::shared_ptr<frontend::BufferStream>(frontend::BufferStreamId));
     MOCK_METHOD1(destroy_buffer_stream, void(frontend::BufferStreamId));
 
-    MOCK_CONST_METHOD0(name, std::string());
 };
 
 }

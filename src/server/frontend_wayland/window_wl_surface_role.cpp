@@ -375,23 +375,8 @@ void mf::WindowWlSurfaceRole::create_mir_window()
     params->input_shape = std::vector<geom::Rectangle>{};
     surface->populate_surface_data(params->streams.value(), params->input_shape.value(), {});
 
-    auto const scene_surface = shell->create_surface(session, *params, std::make_shared<NullEventSink>());
+    auto const scene_surface = shell->create_surface(session, *params, observer);
     weak_scene_surface = scene_surface;
-
-    scene_surface->add_observer(observer);
-
-    // HACK: This is needed because the surface observer is added after the surface is created, and placed_relative() is
-    // called during creation. It will go away once the plumbing is in place to send the observer to the shell
-    if (params->aux_rect.is_set() && params->placement_hints.is_set())
-    {
-        shell::SurfaceSpecification mods;
-        mods.aux_rect = params->aux_rect;
-        mods.placement_hints = params->placement_hints;
-        mods.placement_hints = params->placement_hints;
-        mods.surface_placement_gravity = params->surface_placement_gravity;
-        mods.aux_rect_placement_gravity = params->aux_rect_placement_gravity;
-        shell->modify_surface(session, scene_surface, mods);
-    }
 
     // The shell isn't guaranteed to respect the requested size
     auto const client_size = scene_surface->client_size();

@@ -46,11 +46,6 @@ struct StubSession : mir::test::doubles::StubSession
             surfaces.push_back(std::make_shared<StubSurface>());
     }
 
-    std::shared_ptr<mir::scene::Surface> surface(mir::frontend::SurfaceId surface) const override
-    {
-        return surfaces.at(surface.as_value());
-    }
-
     std::vector<std::shared_ptr<StubSurface>> surfaces;
 };
 
@@ -69,9 +64,9 @@ struct MRUWindowList : testing::Test
 
     std::shared_ptr<StubSession> const stub_session{std::make_shared<StubSession>(3)};
     miral::Application app{stub_session};
-    miral::Window window_a{app, stub_session->surface(mir::frontend::SurfaceId{window_a_id})};
-    miral::Window window_b{app, stub_session->surface(mir::frontend::SurfaceId{window_b_id})};
-    miral::Window window_c{app, stub_session->surface(mir::frontend::SurfaceId{2})};
+    miral::Window window_a{app, stub_session->surfaces[0]};
+    miral::Window window_b{app, stub_session->surfaces[1]};
+    miral::Window window_c{app, stub_session->surfaces[2]};
 
     void hide_window(int window_id)
     {

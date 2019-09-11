@@ -69,14 +69,12 @@ struct StubStreamFactory : public msc::BufferStreamFactory
     {}
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId i,
         int, mg::BufferProperties const& p) override
     {
-        return create_buffer_stream(i, p);
+        return create_buffer_stream(p);
     }
 
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId,
         mg::BufferProperties const& properties) override
     {
         return std::make_shared<mc::Stream>(properties.size, properties.format);

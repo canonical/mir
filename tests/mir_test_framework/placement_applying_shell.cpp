@@ -35,11 +35,11 @@ mtf::PlacementApplyingShell::~PlacementApplyingShell() = default;
 auto mtf::PlacementApplyingShell::create_surface(
     std::shared_ptr<mir::scene::Session> const& session,
     mir::scene::SurfaceCreationParameters const& params,
-    std::shared_ptr<mir::frontend::EventSink> const& sink) -> std::shared_ptr<mir::scene::Surface>
+    std::shared_ptr<mir::scene::SurfaceObserver> const& observer) -> std::shared_ptr<mir::scene::Surface>
 {
     auto creation_parameters = params;
 
-    auto const surface = wrapped->create_surface(session, creation_parameters, sink);
+    auto const surface = wrapped->create_surface(session, creation_parameters, observer);
     latest_surface = surface;
 
     auto position= client_positions.find(params.name);
