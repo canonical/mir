@@ -18,10 +18,10 @@
 
 #include "mir/events/event_private.h"
 #include "mir/events/event_builders.h"
+#include "mir/scene/output_properties_cache.h"
 #include "src/server/scene/basic_surface.h"
 #include "src/server/scene/legacy_surface_change_notification.h"
 #include "src/server/report/null_report_factory.h"
-#include "src/server/scene/output_properties_cache.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/surface_event_source.h"

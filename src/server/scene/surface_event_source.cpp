@@ -19,7 +19,7 @@
 #include "mir/events/event_builders.h"
 #include "mir/scene/surface_event_source.h"
 #include "mir/scene/surface.h"
-#include "output_properties_cache.h"
+#include "mir/scene/output_properties_cache.h"
 
 #include "mir/geometry/size.h"
 #include "mir/geometry/rectangle.h"

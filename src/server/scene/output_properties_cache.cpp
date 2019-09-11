@@ -16,7 +16,7 @@
  * Authored by: Christopher James Halse Rogers <christopher.halse.rogers@canonical.com>
  */
 
-#include "output_properties_cache.h"
+#include "mir/scene/output_properties_cache.h"
 
 #include "mir/geometry/rectangle.h"
 #include "mir/graphics/display_configuration.h"

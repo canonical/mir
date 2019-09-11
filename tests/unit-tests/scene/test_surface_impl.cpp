@@ -24,7 +24,7 @@
 #include "src/server/report/null_report_factory.h"
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/display_configuration.h"
-#include "src/server/scene/output_properties_cache.h"
+#include "mir/scene/output_properties_cache.h"
 
 #include "mir/test/doubles/stub_buffer_stream.h"
 #include "mir/test/doubles/mock_buffer_stream.h"
