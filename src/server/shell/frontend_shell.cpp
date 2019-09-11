@@ -28,10 +28,13 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/prompt_session.h"
 
+#include "mir/graphics/display.h"
+
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
+namespace mg = mir::graphics;
 namespace msh = mir::shell::detail;
 
 std::shared_ptr<mf::MirClientSession> msh::FrontendShell::open_session(
@@ -40,7 +43,11 @@ std::shared_ptr<mf::MirClientSession> msh::FrontendShell::open_session(
     std::shared_ptr<mf::EventSink> const& sink)
 {
     auto const scene_session = wrapped->open_session(client_pid, name, sink);
-    auto const mir_client_session = std::make_shared<mf::BasicMirClientSession>(scene_session);
+    auto const mir_client_session = std::make_shared<mf::BasicMirClientSession>(
+        scene_session,
+        sink,
+        *display->configuration(),
+        display_config_registrar);
     open_sessions[mir_client_session] = scene_session;
     return mir_client_session;
 }

@@ -20,6 +20,7 @@
 #define MIR_FRONTEND_BASIC_MIR_CLIENT_SESSION_H_
 
 #include "mir/frontend/mir_client_session.h"
+#include "mir/observer_registrar.h"
 
 #include <unordered_map>
 #include <mutex>
@@ -35,12 +36,23 @@ namespace compositor
 {
 class BufferStream;
 }
+namespace graphics
+{
+class DisplayConfiguration;
+class DisplayConfigurationObserver;
+}
 namespace frontend
 {
 class BasicMirClientSession : public MirClientSession
 {
 public:
-    BasicMirClientSession(std::shared_ptr<scene::Session> session);
+    BasicMirClientSession(
+        std::shared_ptr<scene::Session> session,
+        std::shared_ptr<frontend::EventSink> const& event_sink,
+        graphics::DisplayConfiguration const& initial_display_config,
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar);
+
+    ~BasicMirClientSession();
 
     auto name() const -> std::string override;
     auto get_surface(SurfaceId surface) const -> std::shared_ptr<Surface> override;
@@ -56,7 +68,14 @@ public:
     void destroy_buffer_stream(BufferStreamId stream) override;
 
 private:
+    class DisplayConfigurationObserver;
+
     std::shared_ptr<scene::Session> const session_;
+    std::shared_ptr<frontend::EventSink> const event_sink;
+    std::weak_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const display_config_registrar;
+    std::shared_ptr<DisplayConfigurationObserver> const display_config_observer;
+
+    void send_display_config(graphics::DisplayConfiguration const& info);
 };
 }
 }
