@@ -369,6 +369,12 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
     if (!visible(lock))
         return false;
 
+    if (clip_area_) 
+    {
+        if (!clip_area_.value().contains(point))
+            return false;
+    }
+
     if (custom_input_rectangles.empty())
     {
         // no custom input, restrict to bounding rectangle

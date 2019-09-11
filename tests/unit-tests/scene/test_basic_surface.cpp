@@ -336,6 +336,26 @@ TEST_F(BasicSurfaceTest, default_invisible_surface_doesnt_get_input)
     EXPECT_TRUE(surface.input_area_contains({50,50}));
 }
 
+TEST_F(BasicSurfaceTest, surface_doesnt_get_input_outside_clip_area)
+{
+    ms::BasicSurface surface{
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        mir_pointer_unconfined,
+        streams,
+        std::shared_ptr<mg::CursorImage>(),
+        report};
+
+    surface.set_clip_area(mir::optional_value<geom::Rectangle>({{0,0}, {50,50}}));
+
+    EXPECT_FALSE(surface.input_area_contains({75,75}));
+    EXPECT_TRUE(surface.input_area_contains({25,25}));
+
+    surface.set_clip_area(mir::optional_value<geom::Rectangle>());
+
+    EXPECT_TRUE(surface.input_area_contains({75,75}));
+}
+
 TEST_F(BasicSurfaceTest, set_input_region)
 {
     std::vector<geom::Rectangle> const rectangles = {
