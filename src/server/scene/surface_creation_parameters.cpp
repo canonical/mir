@@ -18,6 +18,7 @@
 
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/shell/surface_specification.h"
+#include "mir/compositor/buffer_stream.h"
 
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
@@ -130,9 +131,10 @@ ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_edge_attachme
     return *this;
 }
 
-ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_buffer_stream(mf::BufferStreamId const& id)
+ms::SurfaceCreationParameters& ms::SurfaceCreationParameters::with_buffer_stream(
+    std::shared_ptr<compositor::BufferStream> const& stream)
 {
-    content_id = id;
+    content = stream;
     return *this;
 }
 
@@ -225,7 +227,7 @@ bool ms::operator==(
         lhs.type == rhs.type &&
         lhs.preferred_orientation == rhs.preferred_orientation &&
         lhs.parent_id == rhs.parent_id &&
-        lhs.content_id == rhs.content_id &&
+        lhs.content.lock() == rhs.content.lock() &&
         lhs.aux_rect == rhs.aux_rect &&
         lhs.edge_attachment == rhs.edge_attachment &&
         lhs.placement_hints == rhs.placement_hints &&

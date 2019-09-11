@@ -42,11 +42,9 @@ public:
     virtual ~BufferStreamFactory() {}
 
     virtual std::shared_ptr<compositor::BufferStream> create_buffer_stream(
-        frontend::BufferStreamId,
         int nbuffers,
         graphics::BufferProperties const& buffer_properties) override;
     virtual std::shared_ptr<BufferStream> create_buffer_stream(
-        frontend::BufferStreamId,
         graphics::BufferProperties const&) override;
 };
 

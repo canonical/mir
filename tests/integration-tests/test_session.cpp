@@ -24,6 +24,7 @@
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/null_session_listener.h"
+#include "mir/scene/null_surface_observer.h"
 #include "mir/compositor/buffer_stream.h"
 #include "mir/renderer/renderer.h"
 #include "mir/renderer/renderer_factory.h"
@@ -80,7 +81,6 @@ public:
 struct StubGLBufferStreamFactory : public mtd::StubBufferStreamFactory
 {
     std::shared_ptr<mc::BufferStream> create_buffer_stream(
-        mf::BufferStreamId,
         mg::BufferProperties const&) override
     {
         return std::make_shared<StubGLBufferStream>();
@@ -103,17 +103,15 @@ TEST(ApplicationSession, stress_test_take_snapshot)
         "stress",
         conf.the_snapshot_strategy(),
         std::make_shared<ms::NullSessionListener>(),
-        mtd::StubDisplayConfig{},
         std::make_shared<mtd::NullEventSink>(),
-        conf.the_buffer_allocator(),
-        conf.the_display_configuration_observer_registrar()
+        conf.the_buffer_allocator()
     };
 
     mg::BufferProperties properties(geom::Size{1,1}, mir_pixel_format_abgr_8888, mg::BufferUsage::software);
-    auto stream_id = session.create_buffer_stream(properties);
+    auto stream = std::dynamic_pointer_cast<mc::BufferStream>(session.create_buffer_stream(properties));
     session.create_surface(
-        ms::a_surface().with_buffer_stream(stream_id),
-        std::make_shared<mtd::NullEventSink>());
+        ms::a_surface().with_buffer_stream(stream),
+        std::make_shared<ms::NullSurfaceObserver>());
 
     auto compositor = conf.the_compositor();
 
@@ -121,11 +119,10 @@ TEST(ApplicationSession, stress_test_take_snapshot)
     session.default_surface()->configure(mir_window_attrib_swapinterval, 0);
 
     std::thread client_thread{
-        [&session, stream_id]
+        [stream]
         {
             for (int i = 0; i < 500; ++i)
             {
-                auto stream = session.get_buffer_stream(stream_id);
                 stream->submit_buffer(nullptr);
                 std::this_thread::sleep_for(std::chrono::microseconds{50});
             }

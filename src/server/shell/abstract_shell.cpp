@@ -138,11 +138,11 @@ void msh::AbstractShell::close_session(
 auto msh::AbstractShell::create_surface(
     std::shared_ptr<ms::Session> const& session,
     ms::SurfaceCreationParameters const& params,
-    std::shared_ptr<mf::EventSink> const& sink) -> std::shared_ptr<ms::Surface>
+    std::shared_ptr<ms::SurfaceObserver> const& observer) -> std::shared_ptr<ms::Surface>
 {
-    auto const build = [sink](std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& placed_params)
+    auto const build = [observer](std::shared_ptr<ms::Session> const& session, ms::SurfaceCreationParameters const& placed_params)
         {
-            return session->create_surface(placed_params, sink);
+            return session->create_surface(placed_params, observer);
         };
 
     auto const result = window_manager->add_surface(session, params, build);
@@ -178,11 +178,10 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
 
     if (modifications.stream_cursor.is_set())
     {
-        auto stream_id = modifications.stream_cursor.value().stream_id;
-        if (stream_id != mir::frontend::BufferStreamId{-1})
+        auto const& cursor = modifications.stream_cursor.value();
+        if (auto const stream = cursor.stream.lock())
         {
-            auto hotspot = modifications.stream_cursor.value().hotspot;
-            auto stream = session->get_buffer_stream(modifications.stream_cursor.value().stream_id);
+            auto hotspot = cursor.hotspot;
             surface->set_cursor_stream(stream, hotspot);
         }
         else

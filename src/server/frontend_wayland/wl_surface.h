@@ -23,9 +23,6 @@
 
 #include "wl_surface_role.h"
 
-#include "mir/frontend/buffer_stream_id.h"
-#include "mir/frontend/surface_id.h"
-
 #include "mir/geometry/displacement.h"
 #include "mir/geometry/size.h"
 #include "mir/geometry/point.h"
@@ -146,7 +143,6 @@ public:
     void remove_destroy_listener(void const* key);
 
     std::shared_ptr<scene::Session> const session;
-    mir::frontend::BufferStreamId const stream_id;
     std::shared_ptr<mir::frontend::BufferStream> const stream;
 
     static WlSurface* from(wl_resource* resource);

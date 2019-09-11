@@ -124,14 +124,21 @@ public:
 class StubbedMirClientSession : public mtd::StubMirClientSession
 {
 public:
-    std::shared_ptr<mf::Surface> get_surface(mf::SurfaceId surface) const override
+    std::shared_ptr<mf::Surface> frontend_surface(mf::SurfaceId surface) const override
     {
         if (mock_surfaces.find(surface) == mock_surfaces.end())
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid SurfaceId"));
         return mock_surfaces.at(surface);
     }
 
-    std::shared_ptr<mf::BufferStream> get_buffer_stream(mf::BufferStreamId stream) const override
+    std::shared_ptr<ms::Surface> scene_surface(mf::SurfaceId surface) const override
+    {
+        if (mock_surfaces.find(surface) == mock_surfaces.end())
+            BOOST_THROW_EXCEPTION(std::logic_error("Invalid SurfaceId"));
+        return mock_surfaces.at(surface);
+    }
+
+    std::shared_ptr<mc::BufferStream> buffer_stream(mf::BufferStreamId stream) const override
     {
         if (mock_streams.find(stream) == mock_streams.end())
             BOOST_THROW_EXCEPTION(std::logic_error("Invalid StreamId"));
@@ -765,7 +772,7 @@ TEST_F(SessionMediator, prompt_provider_fds_allocated_by_connector)
 
 MATCHER(ConfigEq, "stream configurations are equivalent")
 {
-    return (std::get<0>(arg).stream_id == std::get<1>(arg).stream_id) &&
+    return (std::get<0>(arg).stream.lock() == std::get<1>(arg).stream.lock()) &&
            (std::get<0>(arg).displacement == std::get<1>(arg).displacement);
 }
 
@@ -775,7 +782,7 @@ namespace shell
 {
 void PrintTo(msh::StreamSpecification const& s, std::ostream* os)
 {
-    *os << "streams with id: " << s.stream_id.as_value(); 
+    *os << "stream: %p" << s.stream.lock().get();
 }
 }
 }
@@ -811,11 +818,13 @@ TEST_F(SessionMediator, arranges_bufferstreams_via_shell)
         stream->set_displacement_y(displacement[i].dy.as_int());
     }
 
+    auto const stream0 = stubbed_mir_client_session->buffer_stream(mf::BufferStreamId(streams[0].id().value()));
+    auto const stream1 = stubbed_mir_client_session->buffer_stream(mf::BufferStreamId(streams[1].id().value()));
     EXPECT_CALL(*shell, modify_surface(_,
         mf::SurfaceId{surface_response.id().value()},
         StreamsAre(std::vector<msh::StreamSpecification>{
-            {mf::BufferStreamId(streams[0].id().value()), displacement[0], {}},
-            {mf::BufferStreamId(streams[1].id().value()), displacement[1], {}},
+            {stream0, displacement[0], {}},
+            {stream1, displacement[1], {}},
         })));
 
     mediator.modify_surface(&mods, &null, null_callback.get());
@@ -1238,14 +1247,14 @@ TEST_F(SessionMediator, releases_buffers_of_unknown_buffer_stream_does_not_throw
     EXPECT_TRUE(allocator->allocated_buffers.front().expired());
 }
 
-MATCHER_P3(CursorIs, id_value, x_value, y_value, "cursor configuration match")
+MATCHER_P3(CursorIs, stream, x_value, y_value, "cursor configuration match")
 {
     if (!arg.stream_cursor.is_set())
         return false;
     auto& cursor = arg.stream_cursor.value();
     EXPECT_THAT(cursor.hotspot.dx.as_int(), testing::Eq(x_value));
     EXPECT_THAT(cursor.hotspot.dy.as_int(), testing::Eq(y_value));
-    EXPECT_THAT(cursor.stream_id.as_value(), testing::Eq(id_value));
+    EXPECT_THAT(cursor.stream.lock(), testing::Eq(stream));
     return !(::testing::Test::HasFailure());
 }
 
@@ -1279,9 +1288,10 @@ TEST_F(SessionMediator, arranges_cursors_via_shell)
     spec->mutable_cursor_id()->set_value(stream.id().value());
     spec->set_hotspot_x(-1);
     spec->set_hotspot_y(2);
+    auto const buffer_stream = stubbed_mir_client_session->buffer_stream(mf::BufferStreamId(stream.id().value()));
     EXPECT_CALL(*shell, modify_surface(_,
         mf::SurfaceId{surface_response.id().value()},
-        CursorIs(stream.id().value(), spec->hotspot_x(), spec->hotspot_y())));
+        CursorIs(buffer_stream, spec->hotspot_x(), spec->hotspot_y())));
     mediator.modify_surface(&mods, &null, null_callback.get());
 }
 

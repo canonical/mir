@@ -48,7 +48,7 @@ struct MockShell : msh::ShellWrapper
         std::shared_ptr<ms::Surface>(
             std::shared_ptr<ms::Session> const&,
             ms::SurfaceCreationParameters const&,
-            std::shared_ptr<mf::EventSink> const&));
+            std::shared_ptr<ms::SurfaceObserver> const&));
 };
 
 bool parent_field_matches(ms::SurfaceCreationParameters const& params,

@@ -22,7 +22,7 @@
 #include "mir/scene/surface_creation_parameters.h"
 #include "mir/scene/session.h"
 #include "mir/shell/focus_controller.h"
-
+#include "mir/compositor/buffer_stream.h"
 #include "mir/scene/surface.h"
 #include "src/server/scene/surface_stack.h"
 
@@ -38,6 +38,7 @@ namespace mf = mir::frontend;
 namespace mo = mir::options;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
+namespace mc = mir::compositor;
 namespace mtd = mir::test::doubles;
 
 using namespace testing;
@@ -129,10 +130,11 @@ TEST_F(SessionManagement, creating_a_surface_adds_it_to_scene)
 
     mir::graphics::BufferProperties properties(
         mir::geometry::Size{1,1}, mir_pixel_format_abgr_8888, mir::graphics::BufferUsage::software);
+    auto const buffer_stream = session->buffer_stream(session->create_buffer_stream(properties));
     ms::SurfaceCreationParameters const params = ms::SurfaceCreationParameters()
         .of_size(100,100)
         .of_type(mir_window_type_normal)
-        .with_buffer_stream(session->create_buffer_stream(properties));
+        .with_buffer_stream(buffer_stream);
 
     EXPECT_CALL(*test_surface_stack, add_surface(_,_)).Times(1);
     session_manager->create_surface(session, params, event_sink);

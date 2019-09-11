@@ -82,56 +82,34 @@ void mtd::StubSession::resume_prompt_session()
 
 auto mtd::StubSession::create_surface(
     mir::scene::SurfaceCreationParameters const& /*params*/,
-    std::shared_ptr<frontend::EventSink> const& /*sink*/) -> std::shared_ptr<ms::Surface>
+    std::shared_ptr<scene::SurfaceObserver> const& /*observer*/) -> std::shared_ptr<ms::Surface>
 {
     return nullptr;
 }
 
-void mtd::StubSession::destroy_surface(mir::frontend::SurfaceId /*surface*/)
+void mtd::StubSession::destroy_surface(std::shared_ptr<scene::Surface> const& /*surface*/)
 {
 }
 
-auto mtd::StubSession::surface(
-    frontend::SurfaceId /*surface*/) const -> std::shared_ptr<scene::Surface>
-{
-    return {};
-}
-
-auto mtd::StubSession::surface_id(
-    std::shared_ptr<scene::Surface> const& /*surface*/) const -> frontend::SurfaceId
+auto mtd::StubSession::surface_after(
+    std::shared_ptr<mir::scene::Surface> const& /*ptr*/) const -> std::shared_ptr<mir::scene::Surface>
 {
     return {};
 }
 
-std::shared_ptr<mir::scene::Surface> mtd::StubSession::surface_after(
-    std::shared_ptr<mir::scene::Surface> const& /*ptr*/) const
+auto mtd::StubSession::create_buffer_stream(
+    mir::graphics::BufferProperties const& /*props*/) -> std::shared_ptr<compositor::BufferStream>
 {
     return {};
 }
 
-std::shared_ptr<mir::frontend::BufferStream> mtd::StubSession::get_buffer_stream(
-    mir::frontend::BufferStreamId /*stream*/) const
-{
-    return {};
-}
-
-mir::frontend::BufferStreamId mtd::StubSession::create_buffer_stream(
-    mir::graphics::BufferProperties const& /*props*/)
-{
-    return {};
-}
-
-void mtd::StubSession::destroy_buffer_stream(mir::frontend::BufferStreamId /*stream*/)
+void mtd::StubSession::destroy_buffer_stream(std::shared_ptr<frontend::BufferStream> const& /*stream*/)
 {
 }
 
 void mtd::StubSession::configure_streams(
     mir::scene::Surface& /*surface*/,
     std::vector<mir::shell::StreamSpecification> const& /*config*/)
-{
-}
-
-void mtd::StubSession::destroy_surface(std::weak_ptr<scene::Surface> const& /*surface*/)
 {
 }
 

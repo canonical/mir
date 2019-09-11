@@ -35,7 +35,12 @@ struct StubMirClientSession : public frontend::MirClientSession
         return "";
     }
 
-    auto get_surface(frontend::SurfaceId /* surface */) const -> std::shared_ptr<frontend::Surface> override
+    auto frontend_surface(frontend::SurfaceId /* surface */) const -> std::shared_ptr<frontend::Surface> override
+    {
+        return nullptr;
+    }
+
+    auto scene_surface(frontend::SurfaceId /* surface */) const -> std::shared_ptr<scene::Surface> override
     {
         return nullptr;
     }
@@ -58,8 +63,8 @@ struct StubMirClientSession : public frontend::MirClientSession
         return {};
     }
 
-    auto get_buffer_stream(frontend::BufferStreamId /* stream */) const
-        -> std::shared_ptr<frontend::BufferStream> override
+    auto buffer_stream(frontend::BufferStreamId /* stream */) const
+        -> std::shared_ptr<compositor::BufferStream> override
     {
         return nullptr;
     }

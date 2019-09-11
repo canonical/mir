@@ -38,6 +38,7 @@ class PromptSessionManager;
 class PromptSessionCreationParameters;
 class SessionCoordinator;
 class Surface;
+class SurfaceObserver;
 struct SurfaceCreationParameters;
 }
 
@@ -75,7 +76,7 @@ public:
     virtual auto create_surface(
         std::shared_ptr<scene::Session> const& session,
         scene::SurfaceCreationParameters const& params,
-        std::shared_ptr<frontend::EventSink> const& sink) -> std::shared_ptr<scene::Surface> = 0;
+        std::shared_ptr<scene::SurfaceObserver> const& observer) -> std::shared_ptr<scene::Surface> = 0;
 
     virtual void modify_surface(
         std::shared_ptr<scene::Session> const& session,
