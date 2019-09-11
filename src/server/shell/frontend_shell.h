@@ -20,6 +20,7 @@
 #define MIR_SHELL_FRONTEND_SHELL_H_
 
 #include "mir/frontend/shell.h"
+#include "mir/observer_registrar.h"
 
 #include <unordered_map>
 
@@ -28,6 +29,11 @@ namespace mf = mir::frontend;
 
 namespace mir
 {
+namespace graphics
+{
+class Display;
+class DisplayConfigurationObserver;
+}
 namespace shell
 {
 class Shell;
@@ -39,10 +45,15 @@ namespace detail
 struct FrontendShell : mf::Shell
 {
 public:
-    explicit FrontendShell(std::shared_ptr<shell::Shell> const& wrapped,
-                           std::shared_ptr<shell::PersistentSurfaceStore> const& surface_store)
+    explicit FrontendShell(
+        std::shared_ptr<shell::Shell> const& wrapped,
+        std::shared_ptr<shell::PersistentSurfaceStore> const& surface_store,
+        std::shared_ptr<graphics::Display const> const& display,
+        std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& display_config_registrar)
         : wrapped{wrapped},
-          surface_store{surface_store}
+          surface_store{surface_store},
+          display{display},
+          display_config_registrar{display_config_registrar}
     {
     }
 
@@ -101,6 +112,8 @@ private:
     std::shared_ptr<shell::Shell> const wrapped;
     std::unordered_map<std::shared_ptr<mf::MirClientSession>, std::weak_ptr<ms::Session>> open_sessions;
     std::shared_ptr<shell::PersistentSurfaceStore> const surface_store;
+    std::shared_ptr<graphics::Display const> display;
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar;
 };
 }
 }
