@@ -21,7 +21,7 @@
 
 #include "mir/scene/session.h"
 
-#include "output_properties_cache.h"
+#include "mir/scene/output_properties_cache.h"
 #include "mir/observer_registrar.h"
 
 #include <atomic>

@@ -18,7 +18,6 @@
 
 #include "application_session.h"
 #include "snapshot_strategy.h"
-#include "output_properties_cache.h"
 
 #include "mir/scene/surface.h"
 #include "mir/scene/surface_event_source.h"
@@ -33,6 +32,7 @@
 #include "mir/frontend/event_sink.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
 #include "mir/graphics/display_configuration_observer.h"
+#include "mir/scene/output_properties_cache.h"
 
 #include <boost/throw_exception.hpp>
 
