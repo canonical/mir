@@ -908,6 +908,13 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
 {
     std::lock_guard<std::mutex> lock(guard);
     mg::RenderableList list;
+    
+    if (clip_area_)
+    {
+        if (!surface_rect.overlaps(clip_area_.value()))
+            return list;
+    }
+
     for (auto const& info : layers)
     {
         if (info.stream->has_submitted_buffer())
@@ -969,14 +976,7 @@ mir::optional_value<geom::Rectangle> mir::scene::BasicSurface::clip_area() const
 {
     return clip_area_;
 }
-void mir::scene::BasicSurface::set_clip_area(mir::optional_value<geom::Rectangle> area)
+void mir::scene::BasicSurface::set_clip_area(mir::optional_value<geom::Rectangle> const& area)
 {
     clip_area_ = area;
-}
-geom::Rectangle mir::scene::BasicSurface::render_area() const
-{
-    if (clip_area_)
-        return surface_rect.intersection_with(clip_area_.value());
-    else
-        return surface_rect;
 }

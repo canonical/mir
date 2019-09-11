@@ -73,7 +73,7 @@ public:
     virtual ~SurfaceStack() noexcept(true);
 
     // From Scene
-    compositor::SceneElementSequence scene_elements_for(compositor::CompositorID id, geometry::Rectangle display_area) override;
+    compositor::SceneElementSequence scene_elements_for(compositor::CompositorID id) override;
     int frames_pending(compositor::CompositorID) const override;
     void register_compositor(compositor::CompositorID id) override;
     void unregister_compositor(compositor::CompositorID id) override;

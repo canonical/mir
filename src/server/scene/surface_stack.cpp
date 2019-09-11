@@ -150,7 +150,7 @@ ms::SurfaceStack::~SurfaceStack() noexcept(true)
     }
 }
 
-mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID id, geom::Rectangle display_area)
+mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID id)
 {
     RecursiveReadLock lg(guard);
 
@@ -160,11 +160,7 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
     {
         for (auto const& surface : layer)
         {
-            auto render_area = surface->render_area();
-            if (surface->visible() && 
-                render_area.size.height.as_int() > 0 && 
-                render_area.size.width.as_int() > 0 && 
-                render_area.overlaps(display_area))
+            if (surface->visible())
             {
                 for (auto& renderable : surface->generate_renderables(id))
                 {

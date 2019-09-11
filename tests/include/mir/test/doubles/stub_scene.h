@@ -32,7 +32,7 @@ namespace doubles
 class StubScene : public compositor::Scene
 {
 public:
-    compositor::SceneElementSequence scene_elements_for(compositor::CompositorID, mir::geometry::Rectangle) override
+    compositor::SceneElementSequence scene_elements_for(compositor::CompositorID) override
     {
         return {};
     }

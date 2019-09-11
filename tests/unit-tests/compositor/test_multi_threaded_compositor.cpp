@@ -757,7 +757,7 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
         .Times(1);
     EXPECT_CALL(*mock_scene, remove_observer(_))
         .Times(1);
-    EXPECT_CALL(*mock_scene, scene_elements_for(_, _))
+    EXPECT_CALL(*mock_scene, scene_elements_for(_))
         .Times(AtLeast(0))
         .WillRepeatedly(Return(mc::SceneElementSequence{}));
 

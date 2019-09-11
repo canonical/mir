@@ -281,7 +281,7 @@ TEST_F(CompositingScreencastTest, captures_by_compositing_with_provided_region)
     InSequence s;
     EXPECT_CALL(mock_db_compositor_factory,
                 create_compositor_mock(DisplayBufferCoversArea(default_region)));
-    EXPECT_CALL(mock_scene, scene_elements_for(_, _))
+    EXPECT_CALL(mock_scene, scene_elements_for(_))
         .WillOnce(Return(scene_elements));
     EXPECT_CALL(mock_db_compositor_factory.mock_db_compositor, composite_(Eq(scene_elements)));
 
@@ -312,7 +312,7 @@ TEST_F(CompositingScreencastTest, captures_to_buffer_by_compositing)
     InSequence s;
     EXPECT_CALL(mock_db_compositor_factory,
                 create_compositor_mock(DisplayBufferCoversArea(default_region)));
-    EXPECT_CALL(mock_scene, scene_elements_for(_, _))
+    EXPECT_CALL(mock_scene, scene_elements_for(_))
         .WillOnce(Return(scene_elements));
     EXPECT_CALL(mock_db_compositor_factory.mock_db_compositor, composite_(Eq(scene_elements)));
 

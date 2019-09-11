@@ -146,8 +146,7 @@ public:
     void set_depth_layer(MirDepthLayer depth_layer) override;
 
     optional_value<geometry::Rectangle> clip_area() const override;
-    void set_clip_area(optional_value<geometry::Rectangle> area) override;
-    geometry::Rectangle render_area() const override;
+    void set_clip_area(optional_value<geometry::Rectangle> const& area) override;
 
 private:
     bool visible(std::lock_guard<std::mutex> const&) const;

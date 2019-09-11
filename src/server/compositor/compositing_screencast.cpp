@@ -107,7 +107,7 @@ public:
         if (last_captured_buffer)
             free_queue.schedule(last_captured_buffer);
 
-        display_buffer_compositor->composite(scene->scene_elements_for(this, display_buffer->view_area()));
+        display_buffer_compositor->composite(scene->scene_elements_for(this));
 
         last_captured_buffer = ready_queue.next_buffer();
         return last_captured_buffer;
@@ -138,7 +138,7 @@ public:
         for(auto i = 0u; i < scheduled; i++)
             free_queue.schedule(free_queue.next_buffer());
 
-        display_buffer_compositor->composite(scene->scene_elements_for(this, display_buffer->view_area()));
+        display_buffer_compositor->composite(scene->scene_elements_for(this));
         if (buffer != ready_queue.next_buffer())
             throw std::runtime_error("unable to capture to buffer");
 

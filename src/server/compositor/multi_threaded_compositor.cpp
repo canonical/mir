@@ -137,9 +137,8 @@ public:
 
                     for (auto& tuple : compositors)
                     {
-                        auto& buffer = std::get<0>(tuple);
                         auto& compositor = std::get<1>(tuple);
-                        compositor->composite(scene->scene_elements_for(compositor.get(), buffer->view_area()));
+                        compositor->composite(scene->scene_elements_for(compositor.get()));
                     }
                     group.post();
 

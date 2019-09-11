@@ -81,7 +81,7 @@ public:
                 group.for_each_display_buffer([this](mg::DisplayBuffer& display_buffer)
                 {
                     auto& dbc = display_buffer_compositor_map[&display_buffer];
-                    dbc->composite(this->scene->scene_elements_for(dbc.get(), display_buffer.view_area()));
+                    dbc->composite(this->scene->scene_elements_for(dbc.get()));
                 });
                 group.post();
             });
