@@ -431,18 +431,19 @@ void mrg::Renderer::render(mg::RenderableList const& renderables) const
 
 void mrg::Renderer::draw(mg::Renderable const& renderable) const
 {
-    if (renderable.clip_area())
+    auto const clip_area = renderable.clip_area();
+    if (clip_area)
     {
         glEnable(GL_SCISSOR_TEST);
         glScissor(
-            renderable.clip_area().value().top_left.x.as_int() -
+            clip_area.value().top_left.x.as_int() -
                 viewport.top_left.x.as_int(),
-            renderable.clip_area().value().top_left.y.as_int() +
-                renderable.clip_area().value().size.height.as_int() -
+            viewport.top_left.y.as_int() +
                 viewport.size.height.as_int() -
-                viewport.top_left.y.as_int(),
-            renderable.clip_area().value().size.width.as_int(), 
-            renderable.clip_area().value().size.height.as_int()
+                clip_area.value().top_left.y.as_int() -
+                clip_area.value().size.height.as_int(),
+            clip_area.value().size.width.as_int(), 
+            clip_area.value().size.height.as_int()
         );
     }
 

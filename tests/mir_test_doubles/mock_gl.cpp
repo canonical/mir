@@ -470,3 +470,9 @@ void glDrawElements(GLenum mode, GLsizei count, GLenum type, const void* indicie
     CHECK_GLOBAL_VOID_MOCK();
     global_mock_gl->glDrawElements(mode, count, type, indicies);
 }
+
+void glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
+{
+    CHECK_GLOBAL_VOID_MOCK();
+    global_mock_gl->glScissor(x, y, width, height);
+}
