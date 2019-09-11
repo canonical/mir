@@ -58,7 +58,7 @@ private:
 
     void session_configuration_removed(std::shared_ptr<mir::scene::Session> const&) override;
 
-    void session_should_send_display_configuration(
+    void configuration_updated_for_session(
         std::shared_ptr<mir::scene::Session> const& session,
         std::shared_ptr<mir::graphics::DisplayConfiguration const> const& config) override;
 

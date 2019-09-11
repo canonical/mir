@@ -131,7 +131,7 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
         std::exception const&) override
     {}
 
-    void session_should_send_display_configuration(
+    void configuration_updated_for_session(
         std::shared_ptr<ms::Session> const&,
         std::shared_ptr<mg::DisplayConfiguration const> const&) override
     {}

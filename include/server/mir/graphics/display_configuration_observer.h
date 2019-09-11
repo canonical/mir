@@ -115,9 +115,9 @@ public:
     /**
      * Notification that the session should send the given display configuration
      *
-     * It may or may not be a session configuration
+     * It may or may not be a session configuration. Used only to implement the mirclient API
      */
-    virtual void session_should_send_display_configuration(
+    virtual void configuration_updated_for_session(
         std::shared_ptr<scene::Session> const& session,
         std::shared_ptr<DisplayConfiguration const> const& config) = 0;
 

@@ -69,7 +69,7 @@ void miral::DisplayConfigurationListeners::session_configuration_applied(std::sh
 
 void miral::DisplayConfigurationListeners::session_configuration_removed(std::shared_ptr<mir::scene::Session> const&) {}
 
-void miral::DisplayConfigurationListeners::session_should_send_display_configuration(
+void miral::DisplayConfigurationListeners::configuration_updated_for_session(
     std::shared_ptr<mir::scene::Session> const&,
     std::shared_ptr<mir::graphics::DisplayConfiguration const> const&) {}
 
