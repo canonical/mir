@@ -136,7 +136,7 @@ struct WindowInfo
 
     /// Mir will not render anything outside this rectangle
     auto clip_area() const -> mir::optional_value<mir::geometry::Rectangle>;
-    void set_clip_area(mir::optional_value<mir::geometry::Rectangle> zone);
+    void set_clip_area(mir::optional_value<mir::geometry::Rectangle> const& area);
 
 private:
     struct Self;

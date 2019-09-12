@@ -659,7 +659,7 @@ auto miral::WindowInfo::clip_area() const -> mir::optional_value<mir::geometry::
 
     return surface->clip_area();
 }
-void miral::WindowInfo::set_clip_area(mir::optional_value<mir::geometry::Rectangle> area)
+void miral::WindowInfo::set_clip_area(mir::optional_value<mir::geometry::Rectangle> const& area)
 {
     std::shared_ptr<mir::scene::Surface> const surface = self->window;
 
