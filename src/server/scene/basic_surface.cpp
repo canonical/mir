@@ -287,6 +287,7 @@ ms::BasicSurface::~BasicSurface() noexcept
 
 std::string ms::BasicSurface::name() const
 {
+    std::unique_lock<std::mutex> lock(guard);
     return surface_name;
 }
 
@@ -322,6 +323,7 @@ mir::geometry::Size ms::BasicSurface::client_size() const
 
 std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() const
 {
+    // Doesn't lock the mutex because surface_buffer_stream is const
     return surface_buffer_stream;
 }
 
@@ -337,14 +339,14 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
     if (new_size.width <= geom::Width{0})   new_size.width = geom::Width{1};
     if (new_size.height <= geom::Height{0}) new_size.height = geom::Height{1};
 
-    if (new_size == size())
-        return;
-
+    std::unique_lock<std::mutex> lock(guard);
+    if (new_size != surface_rect.size)
     {
-        std::unique_lock<std::mutex> lock(guard);
         surface_rect.size = new_size;
+
+        lock.unlock();
+        observers.resized_to(this, new_size);
     }
-    observers.resized_to(this, new_size);
 }
 
 geom::Point ms::BasicSurface::top_left() const
@@ -443,19 +445,18 @@ MirWindowType ms::BasicSurface::type() const
 
 MirWindowType ms::BasicSurface::set_type(MirWindowType t)
 {
-    std::unique_lock<std::mutex> lg(guard);
-
     if (t < mir_window_type_normal || t >= mir_window_types)
     {
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface "
             "type."));
     }
 
+    std::unique_lock<std::mutex> lock(guard);
     if (type_ != t)
     {
         type_ = t;
-        lg.unlock();
 
+        lock.unlock();
         observers.attrib_changed(this, mir_window_attrib_type, type_);
     }
 
@@ -623,7 +624,10 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
 
 void ms::BasicSurface::remove_cursor_image()
 {
-    cursor_image_ = nullptr;
+    {
+        std::unique_lock<std::mutex> lock(guard);
+        cursor_image_ = nullptr;
+    }
     observers.cursor_image_removed(this);
 }
 
@@ -861,15 +865,19 @@ void ms::BasicSurface::set_keymap(MirInputDeviceId id, std::string const& model,
 
 void ms::BasicSurface::rename(std::string const& title)
 {
+    std::unique_lock<std::mutex> lock(guard);
     if (surface_name != title)
     {
         surface_name = title;
-        observers.renamed(this, surface_name.c_str());
+
+        lock.unlock();
+        observers.renamed(this, title.c_str());
     }
 }
 
 void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
 {
+    geom::Point surface_top_left;
     {
         std::unique_lock<std::mutex> lock(guard);
         for(auto& layer : layers)
@@ -883,8 +891,9 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
                 {
                     observers.frame_posted(this, 1, size);
                 });
+        surface_top_left = surface_rect.top_left;
     }
-    observers.moved_to(this, surface_rect.top_left);
+    observers.moved_to(this, surface_top_left);
 }
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
@@ -912,11 +921,13 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
 
 void ms::BasicSurface::set_confine_pointer_state(MirPointerConfinementState state)
 {
+    std::unique_lock<std::mutex> lock(guard);
     confine_pointer_state_ = state;
 }
 
 MirPointerConfinementState ms::BasicSurface::confine_pointer_state() const
 {
+    std::unique_lock<std::mutex> lock(guard);
     return confine_pointer_state_;
 }
 
