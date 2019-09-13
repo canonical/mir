@@ -980,9 +980,11 @@ void mir::scene::BasicSurface::set_depth_layer(MirDepthLayer depth_layer)
 
 mir::optional_value<geom::Rectangle> mir::scene::BasicSurface::clip_area() const
 {
+    std::lock_guard<std::mutex> lock(guard);
     return clip_area_;
 }
 void mir::scene::BasicSurface::set_clip_area(mir::optional_value<geom::Rectangle> const& area)
 {
+    std::lock_guard<std::mutex> lock(guard);
     clip_area_ = area;
 }
