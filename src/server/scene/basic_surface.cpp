@@ -293,7 +293,7 @@ std::string ms::BasicSurface::name() const
 void ms::BasicSurface::move_to(geometry::Point const& top_left)
 {
     {
-        std::unique_lock<std::mutex> lk(guard);
+        std::unique_lock<std::mutex> lock(guard);
         surface_rect.top_left = top_left;
     }
     observers.moved_to(this, top_left);
@@ -302,7 +302,7 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
 void ms::BasicSurface::set_hidden(bool hide)
 {
     {
-        std::unique_lock<std::mutex> lk(guard);
+        std::unique_lock<std::mutex> lock(guard);
         hidden = hide;
     }
     observers.hidden_set_to(this, hide);
@@ -310,7 +310,7 @@ void ms::BasicSurface::set_hidden(bool hide)
 
 mir::geometry::Size ms::BasicSurface::size() const
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::unique_lock<std::mutex> lock(guard);
     return surface_rect.size;
 }
 
@@ -349,14 +349,13 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
 
 geom::Point ms::BasicSurface::top_left() const
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::unique_lock<std::mutex> lock(guard);
     return surface_rect.top_left;
 }
 
 geom::Rectangle ms::BasicSurface::input_bounds() const
 {
-    std::unique_lock<std::mutex> lk(guard);
-
+    std::unique_lock<std::mutex> lock(guard);
     return surface_rect;
 }
 
@@ -388,7 +387,7 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 void ms::BasicSurface::set_alpha(float alpha)
 {
     {
-        std::unique_lock<std::mutex> lk(guard);
+        std::unique_lock<std::mutex> lock(guard);
         surface_alpha = alpha;
     }
     observers.alpha_set_to(this, alpha);
@@ -402,7 +401,7 @@ void ms::BasicSurface::set_orientation(MirOrientation orientation)
 void ms::BasicSurface::set_transformation(glm::mat4 const& t)
 {
     {
-        std::unique_lock<std::mutex> lk(guard);
+        std::unique_lock<std::mutex> lock(guard);
         transformation_matrix = t;
     }
     observers.transformation_set_to(this, t);
@@ -410,8 +409,8 @@ void ms::BasicSurface::set_transformation(glm::mat4 const& t)
 
 bool ms::BasicSurface::visible() const
 {
-    std::unique_lock<std::mutex> lk(guard);
-    return visible(lk);
+    std::unique_lock<std::mutex> lock(guard);
+    return visible(lock);
 }
 
 bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
@@ -438,7 +437,7 @@ void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
 
 MirWindowType ms::BasicSurface::type() const
 {
-    std::unique_lock<std::mutex> lg(guard);
+    std::unique_lock<std::mutex> lock(guard);
     return type_;
 }
 
@@ -465,7 +464,7 @@ MirWindowType ms::BasicSurface::set_type(MirWindowType t)
 
 MirWindowState ms::BasicSurface::state() const
 {
-    std::unique_lock<std::mutex> lg(guard);
+    std::unique_lock<std::mutex> lock(guard);
     return state_;
 }
 
@@ -474,11 +473,12 @@ MirWindowState ms::BasicSurface::set_state(MirWindowState s)
     if (s < mir_window_state_unknown || s >= mir_window_states)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid surface state."));
 
-    std::unique_lock<std::mutex> lg(guard);
+    std::unique_lock<std::mutex> lock(guard);
     if (state_ != s)
     {
         state_ = s;
-        lg.unlock();
+
+        lock.unlock();
         observers.attrib_changed(this, mir_window_attrib_state, s);
     }
 
@@ -492,7 +492,7 @@ int ms::BasicSurface::set_swap_interval(int interval)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid swapinterval"));
     }
 
-    std::unique_lock<std::mutex> lg(guard);
+    std::unique_lock<std::mutex> lock(guard);
     if (swapinterval_ != interval)
     {
         swapinterval_ = interval;
@@ -500,7 +500,7 @@ int ms::BasicSurface::set_swap_interval(int interval)
         for (auto& info : layers)
             info.stream->allow_framedropping(allow_dropping);
 
-        lg.unlock();
+        lock.unlock();
         observers.attrib_changed(this, mir_window_attrib_swapinterval, interval);
     }
 
@@ -515,12 +515,12 @@ MirWindowFocusState ms::BasicSurface::set_focus_state(MirWindowFocusState new_st
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid focus state."));
     }
 
-    std::unique_lock<std::mutex> lg(guard);
+    std::unique_lock<std::mutex> lock(guard);
     if (focus_ != new_state)
     {
         focus_ = new_state;
 
-        lg.unlock();
+        lock.unlock();
         observers.attrib_changed(this, mir_window_attrib_focus, new_state);
     }
 
@@ -534,12 +534,12 @@ MirOrientationMode ms::BasicSurface::set_preferred_orientation(MirOrientationMod
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid orientation mode"));
     }
 
-    std::unique_lock<std::mutex> lg(guard);
+    std::unique_lock<std::mutex> lock(guard);
     if (pref_orientation_mode != new_orientation_mode)
     {
         pref_orientation_mode = new_orientation_mode;
-        lg.unlock();
 
+        lock.unlock();
         observers.attrib_changed(this, mir_window_attrib_preferred_orientation, new_orientation_mode);
     }
 
@@ -581,7 +581,7 @@ int ms::BasicSurface::configure(MirWindowAttrib attrib, int value)
 
 int ms::BasicSurface::query(MirWindowAttrib attrib) const
 {
-    std::unique_lock<std::mutex> lg(guard);
+    std::unique_lock<std::mutex> lock(guard);
     switch (attrib)
     {
         case mir_window_attrib_type: return type_;
@@ -722,11 +722,11 @@ int ms::BasicSurface::set_dpi(int new_dpi)
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid DPI value"));
     }
 
-    std::unique_lock<std::mutex> lg(guard);
+    std::unique_lock<std::mutex> lock(guard);
     if (dpi_ != new_dpi)
     {
         dpi_ = new_dpi;
-        lg.unlock();
+        lock.unlock();
         observers.attrib_changed(this, mir_window_attrib_dpi, new_dpi);
     }
 
@@ -741,11 +741,11 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
         BOOST_THROW_EXCEPTION(std::logic_error("Invalid visibility value"));
     }
 
-    std::unique_lock<std::mutex> lg(guard);
+    std::unique_lock<std::mutex> lock(guard);
     if (visibility_ != new_visibility)
     {
         visibility_ = new_visibility;
-        lg.unlock();
+        lock.unlock();
         if (new_visibility == mir_window_visibility_exposed)
         {
             for (auto& info : layers)
@@ -772,7 +772,7 @@ void ms::BasicSurface::remove_observer(std::weak_ptr<SurfaceObserver> const& obs
 
 std::shared_ptr<ms::Surface> ms::BasicSurface::parent() const
 {
-    std::lock_guard<std::mutex> lg(guard);
+    std::lock_guard<std::mutex> lock(guard);
     return parent_.lock();
 }
 
@@ -841,7 +841,7 @@ private:
 
 int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::unique_lock<std::mutex> lock(guard);
     auto max_buf = 0;
     for (auto const& info : layers)
         max_buf = std::max(max_buf, info.stream->buffers_ready_for_compositor(id));
@@ -871,7 +871,7 @@ void ms::BasicSurface::rename(std::string const& title)
 void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
 {
     {
-        std::unique_lock<std::mutex> lk(guard);
+        std::unique_lock<std::mutex> lock(guard);
         for(auto& layer : layers)
             layer.stream->set_frame_posted_callback([](auto){});
 
@@ -889,7 +889,7 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
 {
-    std::unique_lock<std::mutex> lk(guard);
+    std::unique_lock<std::mutex> lock(guard);
     mg::RenderableList list;
     for (auto const& info : layers)
     {
@@ -932,14 +932,14 @@ void mir::scene::BasicSurface::start_drag_and_drop(std::vector<uint8_t> const& h
 
 auto mir::scene::BasicSurface::depth_layer() const -> MirDepthLayer
 {
-    std::unique_lock<std::mutex> lg(guard);
+    std::unique_lock<std::mutex> lock(guard);
     return depth_layer_;
 }
 
 void mir::scene::BasicSurface::set_depth_layer(MirDepthLayer depth_layer)
 {
     {
-        std::unique_lock<std::mutex> lg(guard);
+        std::unique_lock<std::mutex> lock(guard);
         depth_layer_ = depth_layer;
     }
     observers.depth_layer_set_to(this, depth_layer);
