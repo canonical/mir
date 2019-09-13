@@ -21,9 +21,7 @@
 
 #include "miral/application.h"
 
-#include <mir/optional_value.h>
 #include <mir/geometry/point.h>
-#include <mir/geometry/rectangle.h>
 #include <mir/geometry/size.h>
 
 #include <memory>
