@@ -26,6 +26,7 @@
 #include "scene_report.h"
 #include "session_mediator_report.h"
 #include "shared_library_prober_report.h"
+#include <boost/throw_exception.hpp>
 
 std::shared_ptr<mir::compositor::CompositorReport> mir::report::LttngReportFactory::create_compositor_report()
 {
