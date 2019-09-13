@@ -554,9 +554,20 @@ global:
 } MIRAL_2.5;
 
 MIRAL_2.7 {
+global:
+  extern "C++" {
+    miral::Output::id*;
+    miral::WindowInfo::attached_edges*;
+    miral::WindowInfo::exclusive_rect*;
+    miral::WindowSpecification::attached_edges*;
+    miral::WindowSpecification::exclusive_rect*;
+  };
+} MIRAL_2.6;
+
+MIRAL_2.8 {
 global:'''
 
-END_NEW_STANZA = '''} MIRAL_2.6;'''
+END_NEW_STANZA = '''} MIRAL_2.7;'''
 
 def _print_report():
     print(OLD_STANZAS)
