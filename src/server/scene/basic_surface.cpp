@@ -287,14 +287,14 @@ ms::BasicSurface::~BasicSurface() noexcept
 
 std::string ms::BasicSurface::name() const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     return surface_name;
 }
 
 void ms::BasicSurface::move_to(geometry::Point const& top_left)
 {
     {
-        std::unique_lock<std::mutex> lock(guard);
+        std::lock_guard<std::mutex> lock(guard);
         surface_rect.top_left = top_left;
     }
     observers.moved_to(this, top_left);
@@ -303,7 +303,7 @@ void ms::BasicSurface::move_to(geometry::Point const& top_left)
 void ms::BasicSurface::set_hidden(bool hide)
 {
     {
-        std::unique_lock<std::mutex> lock(guard);
+        std::lock_guard<std::mutex> lock(guard);
         hidden = hide;
     }
     observers.hidden_set_to(this, hide);
@@ -311,7 +311,7 @@ void ms::BasicSurface::set_hidden(bool hide)
 
 mir::geometry::Size ms::BasicSurface::size() const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     return surface_rect.size;
 }
 
@@ -329,7 +329,7 @@ std::shared_ptr<mf::BufferStream> ms::BasicSurface::primary_buffer_stream() cons
 
 void ms::BasicSurface::set_input_region(std::vector<geom::Rectangle> const& input_rectangles)
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     custom_input_rectangles = input_rectangles;
 }
 
@@ -351,20 +351,20 @@ void ms::BasicSurface::resize(geom::Size const& desired_size)
 
 geom::Point ms::BasicSurface::top_left() const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     return surface_rect.top_left;
 }
 
 geom::Rectangle ms::BasicSurface::input_bounds() const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     return surface_rect;
 }
 
 // TODO: Does not account for transformation().
 bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
 
     if (!visible(lock))
         return false;
@@ -389,7 +389,7 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
 void ms::BasicSurface::set_alpha(float alpha)
 {
     {
-        std::unique_lock<std::mutex> lock(guard);
+        std::lock_guard<std::mutex> lock(guard);
         surface_alpha = alpha;
     }
     observers.alpha_set_to(this, alpha);
@@ -403,7 +403,7 @@ void ms::BasicSurface::set_orientation(MirOrientation orientation)
 void ms::BasicSurface::set_transformation(glm::mat4 const& t)
 {
     {
-        std::unique_lock<std::mutex> lock(guard);
+        std::lock_guard<std::mutex> lock(guard);
         transformation_matrix = t;
     }
     observers.transformation_set_to(this, t);
@@ -411,11 +411,11 @@ void ms::BasicSurface::set_transformation(glm::mat4 const& t)
 
 bool ms::BasicSurface::visible() const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     return visible(lock);
 }
 
-bool ms::BasicSurface::visible(std::unique_lock<std::mutex>&) const
+bool ms::BasicSurface::visible(std::lock_guard<std::mutex> const&) const
 {
     bool visible{false};
     for (auto const& info : layers)
@@ -439,7 +439,7 @@ void ms::BasicSurface::set_reception_mode(mi::InputReceptionMode mode)
 
 MirWindowType ms::BasicSurface::type() const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     return type_;
 }
 
@@ -465,7 +465,7 @@ MirWindowType ms::BasicSurface::set_type(MirWindowType t)
 
 MirWindowState ms::BasicSurface::state() const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     return state_;
 }
 
@@ -582,7 +582,7 @@ int ms::BasicSurface::configure(MirWindowAttrib attrib, int value)
 
 int ms::BasicSurface::query(MirWindowAttrib attrib) const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     switch (attrib)
     {
         case mir_window_attrib_type: return type_;
@@ -610,7 +610,7 @@ void ms::BasicSurface::show()
 void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& image)
 {
     {
-        std::unique_lock<std::mutex> lock(guard);
+        std::lock_guard<std::mutex> lock(guard);
         cursor_stream_adapter->reset();
 
         cursor_image_ = image;
@@ -625,7 +625,7 @@ void ms::BasicSurface::set_cursor_image(std::shared_ptr<mg::CursorImage> const& 
 void ms::BasicSurface::remove_cursor_image()
 {
     {
-        std::unique_lock<std::mutex> lock(guard);
+        std::lock_guard<std::mutex> lock(guard);
         cursor_image_ = nullptr;
     }
     observers.cursor_image_removed(this);
@@ -633,7 +633,7 @@ void ms::BasicSurface::remove_cursor_image()
 
 std::shared_ptr<mg::CursorImage> ms::BasicSurface::cursor_image() const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     return cursor_image_;
 }
 
@@ -689,7 +689,7 @@ void ms::BasicSurface::set_cursor_from_buffer(mg::Buffer& buffer, geom::Displace
 {
     auto image = std::make_shared<CursorImageFromBuffer>(buffer, hotspot);
     {
-        std::unique_lock<std::mutex> lock(guard);
+        std::lock_guard<std::mutex> lock(guard);
         cursor_image_ = image;
     }
     observers.cursor_image_set_to(this, *image);
@@ -715,7 +715,7 @@ void ms::BasicSurface::request_client_surface_close()
 
 int ms::BasicSurface::dpi() const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     return dpi_;
 }
 
@@ -730,6 +730,7 @@ int ms::BasicSurface::set_dpi(int new_dpi)
     if (dpi_ != new_dpi)
     {
         dpi_ = new_dpi;
+
         lock.unlock();
         observers.attrib_changed(this, mir_window_attrib_dpi, new_dpi);
     }
@@ -749,6 +750,7 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
     if (visibility_ != new_visibility)
     {
         visibility_ = new_visibility;
+
         lock.unlock();
         if (new_visibility == mir_window_visibility_exposed)
         {
@@ -845,7 +847,7 @@ private:
 
 int ms::BasicSurface::buffers_ready_for_compositor(void const* id) const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     auto max_buf = 0;
     for (auto const& info : layers)
         max_buf = std::max(max_buf, info.stream->buffers_ready_for_compositor(id));
@@ -879,7 +881,7 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
 {
     geom::Point surface_top_left;
     {
-        std::unique_lock<std::mutex> lock(guard);
+        std::lock_guard<std::mutex> lock(guard);
         for(auto& layer : layers)
             layer.stream->set_frame_posted_callback([](auto){});
 
@@ -898,7 +900,7 @@ void ms::BasicSurface::set_streams(std::list<scene::StreamInfo> const& s)
 
 mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     mg::RenderableList list;
     for (auto const& info : layers)
     {
@@ -921,13 +923,13 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
 
 void ms::BasicSurface::set_confine_pointer_state(MirPointerConfinementState state)
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     confine_pointer_state_ = state;
 }
 
 MirPointerConfinementState ms::BasicSurface::confine_pointer_state() const
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     return confine_pointer_state_;
 }
 
@@ -943,14 +945,14 @@ void mir::scene::BasicSurface::start_drag_and_drop(std::vector<uint8_t> const& h
 
 auto mir::scene::BasicSurface::depth_layer() const -> MirDepthLayer
 {
-    std::unique_lock<std::mutex> lock(guard);
+    std::lock_guard<std::mutex> lock(guard);
     return depth_layer_;
 }
 
 void mir::scene::BasicSurface::set_depth_layer(MirDepthLayer depth_layer)
 {
     {
-        std::unique_lock<std::mutex> lock(guard);
+        std::lock_guard<std::mutex> lock(guard);
         depth_layer_ = depth_layer;
     }
     observers.depth_layer_set_to(this, depth_layer);
